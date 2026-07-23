@@ -1,0 +1,7 @@
+---
+source: lorvex-cli/src/render/snapshots/memory.rs
+expression: out
+---
+Lorvex AI Memories
+DB: /tmp/lorvex.db
+  ↳ No AI memory yet — let your assistant capture facts via `memory_upsert`, or seed one with `lorvex memory set <key> <content>`.

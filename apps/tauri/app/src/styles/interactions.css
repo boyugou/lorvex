@@ -1,0 +1,261 @@
+@layer components {
+  /* #3500 / #3517 / #3524 / #3531: tag-X interaction surface.
+   *
+   * Two-element split (post-#3524):
+   *   - `.tag-x-button`  — stable hit-target frame. Carries the
+   *     transparent `::before` overlay that inflates the pointer
+   *     target to a constant 24×24 (WCAG 2.5.8 — Target Size,
+   *     Minimum). The frame's own box animates with the inner
+   *     glyph (its width follows the glyph's reveal), so the
+   *     overlay must NOT be sized off the button's box: it is
+   *     centred and given an explicit 24×24 size so the hit
+   *     target is invariant to the reveal animation.
+   *   - `.tag-x-glyph`  — animated reveal mask wrapping the
+   *     icon. Owns the width 0↔0.875rem + opacity 0↔1 transition
+   *     plus `overflow: hidden` so the icon is clipped while
+   *     collapsed.
+   *
+   * State machine for the reveal lives on `.tag-x-glyph` further
+   * down. The overlay is gated to the same conditions so a
+   * collapsed-state button doesn't catch stray clicks on the
+   * chip body next door (the host chip's `gap-1.5` keeps the
+   * 24×24 footprint inside the inter-chip gap).
+   *
+   * #3540: the dedicated `.tag-x-button:focus-visible::before`
+   * arm was removed — `.group/tag:focus-within` already covers
+   * the focus state since the button is inside the group root.
+   * #3541 / #3547: focus-visible outline is rendered on the
+   * overlay (not the animating button) so the outline traces the
+   * stable 24×24 box rather than the collapsing-width frame —
+   * this `::before` arm exists for the focus *outline*, not for
+   * arming the reveal (which is handled by `.group/tag:hover` /
+   * `.group/tag:focus-within` on `.tag-x-glyph`). */
+  .tag-x-button {
+    position: relative;
+    transition: color 150ms ease;
+    /* #3552: prevent the ×-glyph (and its accessible-text fallback)
+     * from being included in drag-text-selection of the chip row,
+     * so copying selected tag chips doesn't paste a trail of
+     * "×" characters between tag names. */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  /* Shared 24×24 hit-overlay geometry for the two reveal primitives
+   * — the chip-X (`.tag-x-button`) and the generic reveal button
+   * (`.reveal-button-hit`). Constant size, transform-centred so
+   * the overlay is invariant to the host button's animating box.
+   * Sizing the overlay off the button (e.g. `inset: -5px`) would
+   * let the hit target shrink during the 150ms width reveal — see
+   * #3531. The `:where()` keeps zero specificity so per-primitive
+   * arms below can flip `content` without specificity battles
+   * (#3561). */
+  :where(.tag-x-button, .reveal-button-hit)::before {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    /* Match the host's control radius so the focus outline on
+     * the inflated box doesn't draw a sharp square halo. */
+    border-radius: var(--radius-r-control);
+  }
+  /* `content: none` keeps the pseudo-element off the page when
+   * the X is collapsed; reveal selectors below flip `content: ''`
+   * to materialise it. */
+  .tag-x-button::before {
+    content: none;
+  }
+  .group\/tag:hover .tag-x-button::before,
+  .group\/tag:focus-within .tag-x-button::before {
+    content: '';
+  }
+  @media (hover: none) {
+    /* Touch: glyph is always revealed, so the hit target must be
+     * always-on too. */
+    .tag-x-button::before {
+      content: '';
+    }
+  }
+  /* #3541: focus ring lives on the overlay so it traces the
+   * stable 24×24 hit-target frame, not the animating button. */
+  .tag-x-button:focus-visible::before {
+    content: '';
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  .tag-x-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: width 150ms ease, opacity 150ms ease;
+  }
+  .group\/tag:hover .tag-x-glyph,
+  .group\/tag:focus-within .tag-x-glyph {
+    width: 0.875rem;
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .tag-x-glyph {
+      width: 0.875rem;
+      opacity: 1;
+      /* #3521 D3: snap the reveal on touch — the chip is already
+       * always-shown, so the width/opacity transition would
+       * animate from a phantom 0/0 state on first paint. */
+      transition: none;
+    }
+  }
+
+  /* #3542 / #3544: RevealButton primitive.
+   *
+   * Generic counterpart to `.tag-x-button` for non-chip reveal
+   * affordances (unlink event, remove dependency, delete saved
+   * query, copy task ID, …). Pairs an opacity-based reveal
+   * animation with two essential affordances:
+   *
+   *   1. `@media (hover: none)` always-on fallback. Pre-#3542 the
+   *      6+ call sites this primitive replaces used Tailwind's
+   *      `opacity-0 group-hover:opacity-100` directly with no
+   *      touch escape hatch — buttons were unreachable on tablets.
+   *   2. Optional `::before` 24×24 hit-target overlay (WCAG 2.5.8
+   *      Target Size Minimum) — turned on by also applying
+   *      `.reveal-button-hit`. Without it, ×-glyph buttons can
+   *      collapse to ~16×16 sub-target hit boxes (#3543).
+   *
+   * Use plain `group` on the host. The `dep` / `ev` / `pl` named-
+   * group scopes were retired during the reveal-on-hover migration
+   * since each row is a distinct DOM element, so the unscoped
+   * `group` selector is unambiguous on its own. Other named groups
+   * in the codebase (`btn`, `tag`, `header`, `quickadd`, `slider`)
+   * remain — they gate non-reveal patterns (chip-X width animation,
+   * focus-styled button surfaces, slider track interactions) where
+   * scope isolation is still meaningful. The primitive must be a
+   * descendant of an element with the `group` class — the reveal
+   * arms below read `.group:hover` / `.group:focus-within` directly
+   * (#3572). */
+  .reveal-on-hover {
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+  /* #3564: dropped the dead `.reveal-on-hover:focus-visible` arm —
+   * `.group:focus-within .reveal-on-hover` already covers keyboard
+   * focus on the reveal target since the target sits inside its
+   * group host. */
+  .group:hover .reveal-on-hover,
+  .group:focus-within .reveal-on-hover {
+    opacity: var(--reveal-opacity, 1);
+  }
+  /* #3566: self-hover always escalates to a fully-opaque (1.0) state.
+   * `--reveal-opacity` controls only the row-hover / focus-within
+   * reveal *base* state — once the pointer is over the button itself
+   * the affordance must become unambiguous. Without this rule a
+   * button styled with `--reveal-opacity: 0.6` would stay visually
+   * dimmed even on direct hover. */
+  .reveal-on-hover:hover {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    /* Touch: no hover state, so always reveal. Override
+     * `--reveal-opacity` so dimmed-by-default buttons don't strand
+     * touch users at a sub-1.0 affordance with no way to escalate. */
+    .reveal-on-hover {
+      opacity: 1;
+      transition: none;
+    }
+  }
+
+  /* `.reveal-button-hit`: WCAG 2.5.8 (24×24) hit-target for small
+   * icon reveal buttons (×, trash, unlink, …). Mirrors the
+   * `.tag-x-button::before` shape — constant 24×24 ::before
+   * overlay, transform-centred, gated to the visible reveal state
+   * via `content: none` so the overlay is *only* present when the
+   * button is itself visible. This avoids two latent defects of
+   * the original implementation (#3553):
+   *   1. INVISIBLE FOCUS STATE — without the `content: none` base,
+   *      the overlay was always present and stole the focus
+   *      outline even when the host button was at opacity 0.
+   *   2. CLICKABLE THROUGH WHITESPACE — the always-present
+   *      overlay had `pointer-events: auto`, so the row's
+   *      inter-element whitespace caught clicks routed to the
+   *      collapsed-state button.
+   *
+   * The overlay is decorative-only (`pointer-events: none`); the
+   * real hit area lives on the button itself, which carries
+   * `min-width: 24px; min-height: 24px` so its hit area meets
+   * WCAG 2.5.8 without depending on the overlay (#3558). This
+   * also frees the overlay from any `overflow: hidden` ancestor
+   * constraints that previously clipped it (e.g. SavedQueriesMenu).
+   *
+   * Geometry + focus outline are factored into a shared base rule
+   * (`:where(.tag-x-button, .reveal-button-hit)::before`) so the
+   * two primitives stay in lockstep (#3561). */
+  .reveal-button-hit {
+    position: relative;
+    min-width: 24px;
+    min-height: 24px;
+  }
+  .reveal-button-hit::before {
+    content: none;
+    pointer-events: none;
+  }
+  .group:hover .reveal-button-hit::before,
+  .group:focus-within .reveal-button-hit::before,
+  .reveal-button-hit:focus-visible::before {
+    content: '';
+  }
+  @media (hover: none) {
+    .reveal-button-hit::before {
+      content: '';
+    }
+  }
+  .reveal-button-hit:focus-visible {
+    /* Suppress the inner button's outline; the overlay carries it. */
+    outline: none;
+  }
+  .reveal-button-hit:focus-visible::before {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  /* #3559: when the host opts out of the 24×24 overlay
+   * (`hitTarget={false}` on RevealButton), the focus-visible
+   * outline lives directly on the button so the same accent /
+   * offset contract is preserved. Both the hit and no-hit
+   * variants land on `outline: 2px solid var(--color-accent);
+   * outline-offset: 1px` — only the geometry of the box being
+   * outlined differs. */
+  .reveal-button-no-hit:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  /* #3557: `.reveal-on-hover--sm` is a width-gated variant of the
+   * shared reveal primitive. Below the `sm` breakpoint (40rem) the
+   * affordance is always visible — small viewports lack the spatial
+   * room for a hover-only cue and on touch the hover state never
+   * fires anyway. Above `sm`, gate on `(hover: hover)` so tablet-class
+   * touch devices at wide widths still keep the buttons always-on
+   * rather than stranding them behind a hover state that never
+   * triggers.
+   *
+   * Apply the `--sm` modifier *instead of* the base `.reveal-on-hover`
+   * class, not in addition. Since the base rule unconditionally sets
+   * `opacity: 0` (and the always-on opacity:1 fallbacks below the
+   * `sm` breakpoint don't fire from the base rule), stacking both
+   * classes leaves the element invisible on narrow widths — the base
+   * rule's opacity:0 dominates because nothing escalates it under
+   * 40rem (#3573). */
+  @media (min-width: 40rem) and (hover: hover) {
+    .reveal-on-hover--sm {
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+    .group:hover .reveal-on-hover--sm,
+    .group:focus-within .reveal-on-hover--sm {
+      opacity: var(--reveal-opacity, 1);
+    }
+  }
+ }

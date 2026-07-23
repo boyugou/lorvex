@@ -1,0 +1,7 @@
+---
+source: lorvex-cli/src/render/snapshots/tags.rs
+expression: out
+---
+Lorvex Tags
+DB: /tmp/lorvex.db
+  ↳ No tags yet — assistants can attach tags via `task_update`, or add them on a task with `lorvex task update <id> --add-tag <name>`.

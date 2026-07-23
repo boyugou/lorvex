@@ -1,0 +1,196 @@
+# cargo-deny configuration for Lorvex.
+#
+# `cargo audit` only catches CVEs. `cargo deny` catches the rest:
+#   * licenses — block GPL/AGPL/unknown-license crates from leaking into
+#     an Apache-2.0 project.
+#   * bans — flag duplicate crate versions (dep bloat) and wildcard
+#     version requirements.
+#   * sources — require all crates come from crates.io or an explicit
+#     git remote allow-list.
+#   * advisories — layer v2 advisory checks on top of cargo-audit.
+#
+# Run locally:
+#   cargo deny check               # all sections
+#   cargo deny check licenses      # just licenses
+#   cargo deny check bans          # just duplicate / ban / wildcard
+#
+# The equivalent can be run in CI via EmbarkStudios/cargo-deny-action@v2
+# with `command: check all`.
+#
+# See #2298 for the introduction of this file.
+
+[graph]
+# Empty `targets` means cargo-deny evaluates the whole dependency graph
+# across every target triple it can see. That matches our multi-platform
+# build surface (macOS, Windows, Linux) and catches platform-specific
+# crates that would be missed by a single-target check.
+targets = []
+all-features = false
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+# ---------------------------------------------------------------------------
+# Licenses
+# ---------------------------------------------------------------------------
+[licenses]
+version = 2
+# Default is 0.8. Bumping confidence avoids marking dual-licensed crates
+# as "unknown" when the license text is slightly non-standard.
+confidence-threshold = 0.93
+
+# Allow-list of SPDX identifiers permitted in the dependency tree. This
+# is the conservative OSI/permissive set compatible with Apache-2.0
+# (the Lorvex project license). Copyleft licenses (GPL, AGPL, LGPL)
+# are intentionally omitted — if a dependency pulls one in, we want to
+# notice and decide explicitly rather than silently shipping it.
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "MIT-0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "MPL-2.0",
+    "Zlib",
+    "0BSD",
+    "CC0-1.0",
+    "BSL-1.0",
+    "CDLA-Permissive-2.0",
+    "OpenSSL",
+]
+
+# Per-crate license exceptions. Populate only when a crate genuinely
+# requires a license outside `allow` above and the legal exposure has
+# been reviewed.
+exceptions = []
+
+# ---------------------------------------------------------------------------
+# Bans
+# ---------------------------------------------------------------------------
+[bans]
+# Duplicate versions are only a warning for now — the workspace has
+# unavoidable duplicates coming in through Tauri / windows-sys / objc2
+# transitive graphs. Flipping this to "deny" should happen after a
+# dedicated dedup pass (tracked separately from #2298).
+multiple-versions = "warn"
+# Wildcard `= "*"` requirements are always a bug in public dependencies
+# and a red flag in third-party crates — they make reproducible builds
+# impossible. We permit them ONLY on intra-workspace `path = "..."`
+# deps (which cargo records as `*`): this is idiomatic for monorepo
+# workspace members and they're resolved deterministically from
+# Cargo.lock, not from the registry.
+wildcards = "deny"
+allow-wildcard-paths = true
+# Show the full dependency path when a ban triggers so the operator
+# can see where the offending crate comes from.
+highlight = "all"
+
+# Crates we refuse to depend on, directly or transitively.
+#
+# Audit #3005-M4: keep a tripwire for the old WebKit binding stack.
+# Tauri 2.11.1's current Linux graph still contains gtk-rs 0.18 crates,
+# so `glib <0.20` / `gtk <0.19` cannot be banned while app-manifest
+# cargo-deny is active; those upstream unmaintained advisories are
+# tracked explicitly in the advisory ignore block below (#3864).
+# The `webkit2gtk` floor remains useful: the 2.x WebKit bindings are the
+# current Tauri 2 line, while older major lines should stay blocked.
+deny = [
+    { name = "webkit2gtk", version = "<2.0" },
+    { name = "webkit2gtk-sys", version = "<2.0" },
+]
+
+# Skip specific crate versions when reporting duplicates. Populate from
+# `cargo deny check bans` output when a duplicate is known and accepted.
+skip = []
+
+# Skip entire subtrees. Useful when a platform crate (e.g. `windows-sys`)
+# legitimately fans out into several minor versions.
+skip-tree = []
+
+# ---------------------------------------------------------------------------
+# Sources
+# ---------------------------------------------------------------------------
+[sources]
+# Any crate not on crates.io and not in `allow-git` is a build-time
+# supply-chain risk. Fail the check if one appears.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+# ---------------------------------------------------------------------------
+# Advisories
+# ---------------------------------------------------------------------------
+#
+# #3053 DC4: every advisory class is set explicitly. v2 defaults
+# already deny vulnerabilities and unsound code, but the prior file
+# relied on those implicit defaults and gave a future schema
+# revision room to silently relax our policy. State the contract in
+# full so reviewers can see what the project blocks vs. warns on
+# without consulting cargo-deny version notes.
+#
+# Note: the v2 advisory schema centers on RustSec severity (see
+# https://embarkstudios.github.io/cargo-deny/checks/advisories/cfg.html).
+# We pin the `yanked` outcome to "deny" (every yanked crate is
+# treated as a real bug we want CI to fail on); the
+# `vulnerability` / `unmaintained` / `unsound` policy is documented
+# below for reviewers but enforced via the v2 severity-driven
+# defaults — `cargo deny check advisories` will flag every
+# unmaintained crate as a warning and every vulnerable / unsound
+# crate as a fatal failure.
+[advisories]
+version = 2
+# Yanked crates fail the build. The lockfile occasionally pins one
+# transiently between cargo-update passes; treat that as a real bug
+# rather than a chronic warning that drifts off the operator's
+# radar. Override per-crate via the `ignore` list below if a yank
+# is documented and accepted.
+yanked = "deny"
+# RustSec advisory IDs to ignore (with a written rationale per
+# entry).
+ignore = [
+    # #3863: Tauri 2.11.1 / tauri-utils 2.9.1 still pulls
+    # urlpattern 0.3.0, which depends on the unmaintained rust-unic
+    # crates below. `cargo deny` reports "No safe upgrade is
+    # available"; remove these ignores as soon as Tauri moves off
+    # urlpattern 0.3.x or urlpattern ships a compatible fix.
+    "RUSTSEC-2025-0075", # unic-char-range
+    "RUSTSEC-2025-0080", # unic-common
+    "RUSTSEC-2025-0081", # unic-char-property
+    "RUSTSEC-2025-0098", # unic-ucd-version
+    "RUSTSEC-2025-0100", # unic-ucd-ident
+
+    # #3864: Tauri 2.11.1's Linux graph still depends on gtk-rs
+    # 0.18-era crates through tauri/wry/tao/tray-icon and on
+    # proc-macro-error through glib/gtk macros. `cargo deny` reports
+    # "No safe upgrade is available"; remove these ignores when Tauri
+    # moves Linux bindings to a maintained GTK stack.
+    "RUSTSEC-2024-0370", # proc-macro-error
+    "RUSTSEC-2024-0411", # gdkwayland-sys
+    "RUSTSEC-2024-0412", # gdk
+    "RUSTSEC-2024-0413", # atk
+    "RUSTSEC-2024-0415", # gtk
+    "RUSTSEC-2024-0416", # atk-sys
+    "RUSTSEC-2024-0418", # gdk-sys
+    "RUSTSEC-2024-0419", # gtk3-macros
+    "RUSTSEC-2024-0420", # gtk-sys
+
+    # #4074: cargo-audit 0.22.1 also surfaces glib 0.18.x's
+    # VariantStrIter unsoundness through the same Tauri 2.11.1 Linux
+    # GTK stack. The RustSec advisory is patched in glib >=0.20.0, but
+    # Tauri/wry/webkit2gtk still pin the 0.18-era graph. Remove when
+    # upstream moves Linux bindings to a glib >=0.20 path.
+    "RUSTSEC-2024-0429", # glib
+
+]
+#
+# Documented intent (v2 enforces these via severity defaults; see
+# header comment for context):
+#   vulnerability = "deny"      # any RUSTSEC vuln fails the build
+#   unsound       = "deny"      # any unsound advisory fails the build
+#   unmaintained = "deny"       # fail unless explicitly ignored above

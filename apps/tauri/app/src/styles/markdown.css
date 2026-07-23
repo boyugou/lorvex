@@ -1,0 +1,142 @@
+@layer components {
+  /* ── Markdown content rendering ───────────────────────────────────── */
+  /* Prose-quality typography for rendered markdown in notes, AI notes,
+     and daily review content areas. */
+
+  .markdown-content { line-height: 1.65; }
+  .markdown-content > *:first-child { margin-top: 0; }
+  .markdown-content > *:last-child { margin-bottom: 0; }
+
+  /* #3717 — pass-2 prose typography dedup. The byte-identical fragments
+     (h1/h3 font + color, h2 font + color, li::marker, task-list-item
+     base shape, h1 border-bottom hairline) were copied across the
+     `.markdown-content` and `.milkdown-editor-wrapper .ProseMirror`
+     blocks. Lift them into shared multi-selector rules so a future
+     theme retune (e.g. heading color, marker tone) only needs editing
+     one rule. Per-surface margins/padding stay in their own blocks
+     below to preserve historical density. */
+  .markdown-content h1,
+  .milkdown-editor-wrapper .ProseMirror h1 {
+    font-size: 1.3em; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-surface-3);
+  }
+  .markdown-content h2,
+  .milkdown-editor-wrapper .ProseMirror h2 {
+    font-size: 1.15em; font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .markdown-content h2 { letter-spacing: -0.005em; }
+  .markdown-content h3,
+  .milkdown-editor-wrapper .ProseMirror h3 {
+    font-size: 1.05em; font-weight: 600;
+    color: var(--color-text-primary);
+  }
+  .markdown-content li::marker,
+  .milkdown-editor-wrapper .ProseMirror li::marker { color: var(--color-text-muted); }
+
+  /* GFM task list checkboxes — base shape shared between renderer and
+     editor; the editor treats two selectors (`li[data-list-type='taskList']`
+     and `.task-list-item`) equivalently. */
+  .markdown-content li.task-list-item,
+  .milkdown-editor-wrapper .ProseMirror li[data-list-type='taskList'],
+  .milkdown-editor-wrapper .ProseMirror .task-list-item {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4em;
+  }
+  .markdown-content li.task-list-item { margin-inline-start: -1.5em; }
+
+  .markdown-content h1 {
+    margin-top: 1.2em; margin-bottom: 0.4em;
+    padding-bottom: 0.25em;
+  }
+  .markdown-content h2 {
+    margin-top: 1em; margin-bottom: 0.35em;
+  }
+  .markdown-content h3 {
+    margin-top: 0.8em; margin-bottom: 0.25em;
+  }
+  .markdown-content p { margin-top: 0.4em; margin-bottom: 0.4em; }
+
+  .markdown-content ul { list-style: disc; padding-inline-start: 1.6em; margin-top: 0.3em; margin-bottom: 0.3em; }
+  .markdown-content ol { list-style: decimal; padding-inline-start: 1.6em; margin-top: 0.3em; margin-bottom: 0.3em; }
+  .markdown-content li { margin-top: 0.15em; margin-bottom: 0.15em; }
+  .markdown-content li > p { margin-top: 0.1em; margin-bottom: 0.1em; }
+
+  /* Shared prose-typography rules consumed by both the static
+     `.markdown-content` renderer and the live `.ProseMirror` editor.
+     Only declarations that are byte-identical across both surfaces live
+     here; per-surface spacing/margin tweaks (h1/h2/h3, p, ul/ol/li)
+     stay in their own blocks above to preserve historical density.
+     See #3702. */
+  .markdown-content blockquote,
+  .milkdown-editor-wrapper .ProseMirror blockquote {
+    border-inline-start: 3px solid var(--color-accent);
+    padding: 0.35em 0.75em;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-2);
+    border-radius: 0;
+    border-start-end-radius: var(--radius-r-chip);
+    border-end-end-radius: var(--radius-r-chip);
+  }
+  .markdown-content blockquote { margin: 0.5em 0; }
+  .milkdown-editor-wrapper .ProseMirror blockquote { margin: 0.4em 0; }
+  .markdown-content blockquote p { margin: 0.2em 0; }
+
+  .markdown-content code,
+  .milkdown-editor-wrapper .ProseMirror code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85em;
+    background: var(--color-surface-2);
+    border: var(--border-surface-3-soft);
+    border-radius: 0.2rem;
+    padding: 0.1em 0.35em;
+  }
+
+  .markdown-content pre,
+  .milkdown-editor-wrapper .ProseMirror pre {
+    background: var(--color-surface-2);
+    border: var(--border-surface-3-soft);
+    border-radius: var(--radius-r-control);
+    overflow-x: auto;
+  }
+  .markdown-content pre {
+    padding: 0.85em 1em;
+    margin: 0.5em 0;
+    line-height: 1.5;
+  }
+  .milkdown-editor-wrapper .ProseMirror pre {
+    padding: 0.75em 1em;
+    margin: 0.4em 0;
+  }
+  .markdown-content pre code,
+  .milkdown-editor-wrapper .ProseMirror pre code {
+    background: transparent; border: none; padding: 0;
+    font-size: 0.82em;
+  }
+  .markdown-content pre code { line-height: inherit; }
+
+  .markdown-content hr,
+  .milkdown-editor-wrapper .ProseMirror hr {
+    border: none;
+    border-top: 1px solid var(--color-surface-3);
+  }
+  .markdown-content hr { margin: 0.75em 0; }
+  .milkdown-editor-wrapper .ProseMirror hr { margin: 0.6em 0; }
+
+  .markdown-content strong,
+  .milkdown-editor-wrapper .ProseMirror strong { font-weight: 600; }
+  .markdown-content strong { color: var(--color-text-primary); }
+  .markdown-content em,
+  .milkdown-editor-wrapper .ProseMirror em { font-style: italic; }
+  .markdown-content del { text-decoration: line-through; color: var(--color-text-muted); }
+  .markdown-content img { max-width: 100%; border-radius: var(--radius-r-control); margin: 0.5em 0; }
+
+  /* Nested lists get reduced spacing */
+  .markdown-content ul ul, .markdown-content ol ol,
+  .markdown-content ul ol, .markdown-content ol ul {
+    margin-top: 0.1em; margin-bottom: 0.1em;
+  }
+ }

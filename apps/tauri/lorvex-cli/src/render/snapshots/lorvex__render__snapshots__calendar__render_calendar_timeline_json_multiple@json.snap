@@ -1,0 +1,45 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.calendar.timeline",
+  "db_path": "/tmp/lorvex.db",
+  "events": [
+    {
+      "all_day": false,
+      "color": "#00aaff",
+      "editable": true,
+      "end_date": null,
+      "end_time": "09:30",
+      "event_type": "event",
+      "id": "event-alpha",
+      "location": "Zoom",
+      "person_name": null,
+      "provider_kind": null,
+      "source": "Canonical",
+      "start_date": "2026-04-10",
+      "start_time": "09:00",
+      "timezone": "America/Los_Angeles",
+      "title": "Standup"
+    },
+    {
+      "all_day": true,
+      "color": null,
+      "editable": true,
+      "end_date": "2026-04-12",
+      "end_time": null,
+      "event_type": "event",
+      "id": "event-bravo",
+      "location": null,
+      "person_name": null,
+      "provider_kind": null,
+      "source": "Canonical",
+      "start_date": "2026-04-12",
+      "start_time": null,
+      "timezone": null,
+      "title": "Conference"
+    }
+  ],
+  "label": "Calendar"
+}

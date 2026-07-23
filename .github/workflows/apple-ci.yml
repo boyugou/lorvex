@@ -1,0 +1,102 @@
+name: Apple CI
+
+# Automatic push/pull_request triggers are intentionally disabled: hosted macOS
+# minutes are paused at the account level, so every auto-run only fails at the
+# queue with a billing error. Local `apps/apple/script/verify_all.sh` runs the
+# identical gate and is the validation of record while CI is paused. Re-enable
+# the push/pull_request blocks (restoring the same `paths` filters) once hosted
+# Actions billing is restored. Until then the job is manual-dispatch only.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  swift-package:
+    name: Swift package
+    runs-on: macos-15
+    # verify_all.sh builds every product (app, mobile, vision, watch, widgets,
+    # MCP host), runs both test suites and every static verifier from a cold
+    # checkout with no dependency cache, then stages the macOS app and audits the
+    # packaged bundle (codesign/entitlements, Mach-O distribution + load closure,
+    # verify_packaging.sh); the two Release-link builds below each re-run xcodegen
+    # + a from-scratch xcodebuild. LORVEX_VERIFY_SKIP_PACKAGING=1 skips only the
+    # GUI smoke launch and the real signing/notarize path, whose identities live
+    # only on the owner's machine, so distribution is finalized locally, not in
+    # CI. Budget generously.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # The macos-15 runner ships several Xcode releases and defaults to 16.4;
+      # the App Store submission toolchain is Xcode 26 (macOS 26 SDK). Pin the
+      # newest installed Xcode 26.x for every subsequent step by exporting
+      # DEVELOPER_DIR, and hard-fail if the runner image carries no Xcode 26 (so
+      # a silent image change can't quietly drop the submission SDK).
+      - name: Select Xcode 26
+        run: |
+          set -euo pipefail
+          dev_dir=""
+          for candidate in $(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V -r); do
+            if [[ -x "$candidate/Contents/Developer/usr/bin/xcodebuild" ]]; then
+              dev_dir="$candidate/Contents/Developer"
+              break
+            fi
+          done
+          if [[ -z "$dev_dir" ]]; then
+            echo "::error::No Xcode 26.x found under /Applications; cannot pin the submission toolchain." >&2
+            ls -d /Applications/Xcode_*.app 2>/dev/null >&2 || true
+            exit 1
+          fi
+          echo "Selected $dev_dir"
+          echo "DEVELOPER_DIR=$dev_dir" >> "$GITHUB_ENV"
+          sudo xcode-select -s "$dev_dir"
+      # Prove the pinned toolchain is Xcode 26 with the macOS/iOS/xrOS/watchOS 26
+      # SDKs present; the grep fails the job if the submission SDK is not 26.
+      - name: Toolchain evidence
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -Ei 'ios 26|macos 26|xros 26|watchos 26'
+      - name: Install XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: brew install xcodegen
+      - name: Run Apple verification gate (no signing/notarize)
+        working-directory: apps/apple
+        env:
+          LORVEX_VERIFY_SKIP_PACKAGING: "1"
+        run: ./script/verify_all.sh
+      - name: iOS Release link
+        working-directory: apps/apple
+        # Exit 78 is the verifier's soft-skip convention (no xcodegen/xcodebuild,
+        # or the iOS platform SDK isn't installed on this runner) — treat it as
+        # a skip, not a failure. Any other non-zero status is a real build/link
+        # failure.
+        run: |
+          set +e
+          ./script/verify_mobile_release_link.sh
+          status=$?
+          set -e
+          if [[ "$status" -eq 78 ]]; then
+            echo "::notice::iOS Release link skipped (environment unavailable on this runner)"
+          elif [[ "$status" -ne 0 ]]; then
+            exit "$status"
+          fi
+      - name: visionOS Release link
+        working-directory: apps/apple
+        run: |
+          set +e
+          ./script/verify_vision_release_link.sh
+          status=$?
+          set -e
+          if [[ "$status" -eq 78 ]]; then
+            echo "::notice::visionOS Release link skipped (environment unavailable on this runner)"
+          elif [[ "$status" -ne 0 ]]; then
+            exit "$status"
+          fi

@@ -1,0 +1,8 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+
+Focus tasks:
+  - task-alpha: Ship feature (2026-04-10)
+  - task-bravo: Review PR

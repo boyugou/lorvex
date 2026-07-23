@@ -1,0 +1,14 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.habits.stats",
+  "completions_period": 28,
+  "completions_today": 1,
+  "db_path": "/tmp/lorvex.db",
+  "habit_id": "habit-alpha",
+  "habit_name": "Read",
+  "period_days": 30,
+  "total_completions": 120
+}

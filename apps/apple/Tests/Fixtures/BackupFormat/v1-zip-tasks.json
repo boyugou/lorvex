@@ -1,0 +1,15 @@
+[
+  {
+    "id": "55555555-5555-4555-8555-555555555552",
+    "title": "Decode the v1 ZIP backup",
+    "notes": "This row pins the first public ZIP member shape.",
+    "priority": "P2",
+    "status": "open",
+    "dueDate": "2026-07-18T17:00:00.000Z",
+    "estimatedMinutes": 25,
+    "tags": ["compatibility"],
+    "listID": "55555555-5555-4555-8555-555555555551",
+    "createdAt": "2026-07-17T12:00:00.000Z",
+    "updatedAt": "2026-07-17T12:00:00.000Z"
+  }
+]

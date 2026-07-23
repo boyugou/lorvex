@@ -1,0 +1,25 @@
+[package]
+name = "lorvex-mcp-derive"
+# Audit #3373: inherit version + MSRV from [workspace.package] so a
+# future bump stays a single edit.
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Internal proc-macro derive crate for lorvex-mcp-server contract validation"
+publish = false
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+# Standard proc-macro toolchain. These three crates are the de-facto
+# dependency set for any syn-based derive — pinned inline rather than
+# in `[workspace.dependencies]` because no other workspace crate
+# pulls them in (the proc-macro crate is the single consumer).
+syn = { version = "2", features = ["full", "extra-traits"] }
+quote = "1"
+proc-macro2 = "1"

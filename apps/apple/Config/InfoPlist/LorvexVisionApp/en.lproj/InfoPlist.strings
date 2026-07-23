@@ -1,0 +1,3 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "LorvexVisionApp";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex can read event details to build schedules and assistant context.";

@@ -1,0 +1,1395 @@
+{
+  "add_calendar_event_exception": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "event_id": "string",
+      "idempotency_key": "string",
+      "occurrence_date": "string"
+    },
+    "required": [
+      "event_id",
+      "occurrence_date"
+    ]
+  },
+  "add_daily_review": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "blockers": "string",
+      "date": "string",
+      "energy_level": "integer",
+      "idempotency_key": "string",
+      "learnings": "string",
+      "linked_list_ids": "array<string>",
+      "linked_task_ids": "array<string>",
+      "mood": "integer",
+      "summary": "string",
+      "wins": "string"
+    },
+    "required": [
+      "summary"
+    ]
+  },
+  "add_task_checklist_item": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "task_id": "string",
+      "text": "string"
+    },
+    "required": [
+      "task_id",
+      "text"
+    ]
+  },
+  "add_task_recurrence_exception": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "occurrence_date": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "occurrence_date",
+      "task_id"
+    ]
+  },
+  "add_task_reminder": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "reminder_at": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "reminder_at",
+      "task_id"
+    ]
+  },
+  "add_to_current_focus": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "briefing": "string",
+      "date": "string",
+      "idempotency_key": "string",
+      "task_ids": "array<string>",
+      "timezone": "string"
+    },
+    "required": [
+      "task_ids"
+    ]
+  },
+  "adjust_habit_completion": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "delta": "integer",
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "delta",
+      "id"
+    ]
+  },
+  "amend_daily_review": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "blockers": "string",
+      "date": "string",
+      "energy_level": "integer",
+      "idempotency_key": "string",
+      "learnings": "string",
+      "linked_list_ids": "array<string>",
+      "linked_task_ids": "array<string>",
+      "mood": "integer",
+      "summary": "string",
+      "wins": "string"
+    },
+    "required": [
+      "date"
+    ]
+  },
+  "append_to_task_body": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "task_id": "string",
+      "text": "string"
+    },
+    "required": [
+      "task_id",
+      "text"
+    ]
+  },
+  "archive_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "archive_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "batch_cancel_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "cancel_series": "boolean",
+      "idempotency_key": "string",
+      "task_ids": "array<string>"
+    },
+    "required": [
+      "task_ids"
+    ]
+  },
+  "batch_cancel_tasks_in_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "cancel_series": "boolean",
+      "idempotency_key": "string",
+      "list_id": "string",
+      "statuses": "array<enum[in_progress,open,someday]>"
+    },
+    "required": [
+      "list_id"
+    ]
+  },
+  "batch_complete_habits": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "habit_ids": "array<string>",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "date",
+      "habit_ids"
+    ]
+  },
+  "batch_complete_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "task_ids": "array<string>"
+    },
+    "required": [
+      "task_ids"
+    ]
+  },
+  "batch_create_calendar_events": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "events": "array<object{all_day:boolean,attendees:array<object{email:string,name:string}required[]>,color:string,end_date:string,end_time:string,event_type:enum[anniversary,birthday,event,memorial],location:string,notes:string,original_id:string,person_name:string,recurrence:object{byday:array<string>,bymonth:array<integer>,bymonthday:array<integer>,bysetpos:array<integer>,count:integer,freq:enum[DAILY,MONTHLY,WEEKLY,YEARLY],interval:integer,until:string,wkst:enum[FR,MO,SA,SU,TH,TU,WE]}required[freq],start_date:string,start_time:string,timezone:string,title:string,url:string}required[start_date,title]>",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "events"
+    ]
+  },
+  "batch_create_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "include_advice": "boolean",
+      "tasks": "array<object{available_from:string,checklist:array<string>,completed_at:string,created_at:string,depends_on:array<string>,due_date:string,estimated_minutes:integer,list_id:string,notes:string,original_id:string,planned_date:string,priority:enum[1,2,3],status:enum[cancelled,completed,in_progress,open,someday],tags:array<string>,title:string}required[title]>"
+    },
+    "required": [
+      "tasks"
+    ]
+  },
+  "batch_defer_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "reason": "string",
+      "structured_reason": "enum[blocked,low_energy,needs_breakdown,needs_info,not_today]",
+      "task_ids": "array<string>",
+      "until_date": "string"
+    },
+    "required": [
+      "task_ids",
+      "until_date"
+    ]
+  },
+  "batch_move_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "list_id": "string",
+      "task_ids": "array<string>"
+    },
+    "required": [
+      "list_id",
+      "task_ids"
+    ]
+  },
+  "batch_reopen_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "task_ids": "array<string>"
+    },
+    "required": [
+      "task_ids"
+    ]
+  },
+  "batch_update_tasks": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "updates": "array<object{available_from:string,depends_on:array<string>,due_date:string,estimated_minutes:integer,id:string,notes:string,planned_date:string,priority:enum[1,2,3],tags:array<string>,title:string}required[id]>"
+    },
+    "required": [
+      "updates"
+    ]
+  },
+  "cancel_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "clear_current_focus": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "idempotency_key": "string"
+    },
+    "required": []
+  },
+  "complete_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "complete_setup": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "default_list_id": "string",
+      "idempotency_key": "string",
+      "timezone": "string",
+      "working_hours": "string"
+    },
+    "required": []
+  },
+  "complete_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "create_calendar_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "all_day": "boolean",
+      "attendees": "array<object{email:string,name:string}required[]>",
+      "color": "string",
+      "end_date": "string",
+      "end_time": "string",
+      "event_type": "enum[anniversary,birthday,event,memorial]",
+      "idempotency_key": "string",
+      "location": "string",
+      "notes": "string",
+      "original_id": "string",
+      "person_name": "string",
+      "recurrence": "object{byday:array<string>,bymonth:array<integer>,bymonthday:array<integer>,bysetpos:array<integer>,count:integer,freq:enum[DAILY,MONTHLY,WEEKLY,YEARLY],interval:integer,until:string,wkst:enum[FR,MO,SA,SU,TH,TU,WE]}required[freq]",
+      "start_date": "string",
+      "start_time": "string",
+      "timezone": "string",
+      "title": "string",
+      "url": "string"
+    },
+    "required": [
+      "start_date",
+      "title"
+    ]
+  },
+  "create_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "color": "string",
+      "cue": "string",
+      "day_of_month": "integer",
+      "frequency_type": "enum[daily,monthly,times_per_week,weekly]",
+      "icon": "string",
+      "idempotency_key": "string",
+      "milestone_target": "integer",
+      "name": "string",
+      "original_id": "string",
+      "per_period_target": "integer",
+      "target_count": "integer",
+      "weekdays": "array<integer>"
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "create_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "ai_notes": "string",
+      "color": "string",
+      "description": "string",
+      "icon": "string",
+      "idempotency_key": "string",
+      "name": "string",
+      "original_id": "string"
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "create_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "available_from": "string",
+      "checklist": "array<string>",
+      "completed_at": "string",
+      "created_at": "string",
+      "depends_on": "array<string>",
+      "due_date": "string",
+      "estimated_minutes": "integer",
+      "idempotency_key": "string",
+      "list_id": "string",
+      "notes": "string",
+      "original_id": "string",
+      "planned_date": "string",
+      "priority": "enum[1,2,3]",
+      "raw_input": "string",
+      "status": "enum[cancelled,completed,in_progress,open,someday]",
+      "tags": "array<string>",
+      "title": "string"
+    },
+    "required": [
+      "title"
+    ]
+  },
+  "defer_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string",
+      "reason": "string",
+      "structured_reason": "enum[blocked,low_energy,needs_breakdown,needs_info,not_today]",
+      "until_date": "string"
+    },
+    "required": [
+      "id",
+      "until_date"
+    ]
+  },
+  "delete_calendar_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "event_id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "event_id"
+    ]
+  },
+  "delete_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "delete_habit_reminder_policy": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "delete_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "delete_memory": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "key": "string"
+    },
+    "required": [
+      "key"
+    ]
+  },
+  "delete_preference": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "key": "string"
+    },
+    "required": [
+      "key"
+    ]
+  },
+  "delete_scoped_calendar_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "event_id": "string",
+      "idempotency_key": "string",
+      "occurrence_date": "string",
+      "scope": "enum[all_in_series,this_and_following,this_only]"
+    },
+    "required": [
+      "event_id",
+      "occurrence_date",
+      "scope"
+    ]
+  },
+  "delete_tag": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "name": "string"
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "edit_scoped_calendar_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "all_day": "boolean",
+      "color": "string",
+      "end_date": "string",
+      "end_time": "string",
+      "event_id": "string",
+      "event_type": "enum[anniversary,birthday,event,memorial]",
+      "idempotency_key": "string",
+      "location": "string",
+      "notes": "string",
+      "occurrence_date": "string",
+      "person_name": "string",
+      "recurrence": "null|object",
+      "scope": "enum[all_in_series,this_and_following,this_only]",
+      "start_date": "string",
+      "start_time": "string",
+      "timezone": "string",
+      "title": "string",
+      "url": "string"
+    },
+    "required": [
+      "event_id",
+      "occurrence_date",
+      "scope"
+    ]
+  },
+  "export_calendar_ics": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "from": "string",
+      "to": "string"
+    },
+    "required": []
+  },
+  "export_data": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "entities": "array<enum[all,calendar_events,current_focus,daily_reviews,focus_schedules,habits,lists,memory,preferences,tags,task_calendar_event_links,tasks]>",
+      "format": "enum[csv,json]"
+    },
+    "required": [
+      "entities"
+    ]
+  },
+  "get_ai_changelog": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "entity_id": "string",
+      "entity_type": "string",
+      "limit": "integer",
+      "offset": "integer",
+      "operation": "string",
+      "since": "string"
+    },
+    "required": []
+  },
+  "get_all_preferences": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "get_calendar_timeline": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "fields": "array<enum[all_day,attendees,color,editable,end_date,end_time,event_type,id,is_recurring,location,notes,person_name,recurrence,source,start_date,start_time,timezone,title,url]>",
+      "from": "string",
+      "include": "array<enum[all_day,attendees,color,details,editable,end_date,end_time,event_type,id,is_recurring,location,metadata,notes,person_name,recurrence,source,start_date,start_time,time,timezone,title,url]>",
+      "include_nulls": "boolean",
+      "limit": "integer",
+      "offset": "integer",
+      "shape": "enum[compact,full]",
+      "to": "string"
+    },
+    "required": [
+      "from",
+      "to"
+    ]
+  },
+  "get_current_focus": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "date": "string"
+    },
+    "required": []
+  },
+  "get_daily_review": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "date": "string"
+    },
+    "required": []
+  },
+  "get_deferred_tasks": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "include_nulls": "boolean",
+      "limit": "integer",
+      "list_id": "string",
+      "offset": "integer",
+      "shape": "enum[compact,full]"
+    },
+    "required": []
+  },
+  "get_dependency_graph": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "include_inactive": "boolean",
+      "list_id": "string",
+      "task_id": "string"
+    },
+    "required": []
+  },
+  "get_due_task_reminders": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "as_of": "string",
+      "limit": "integer",
+      "offset": "integer"
+    },
+    "required": []
+  },
+  "get_guide": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "topic": "string"
+    },
+    "required": []
+  },
+  "get_habit_completions": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "from": "string",
+      "habit_id": "string",
+      "limit": "integer",
+      "to": "string"
+    },
+    "required": [
+      "habit_id"
+    ]
+  },
+  "get_habit_reminder_policies": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "habit_id": "string"
+    },
+    "required": []
+  },
+  "get_habit_stats": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "habit_id": "string"
+    },
+    "required": [
+      "habit_id"
+    ]
+  },
+  "get_habits": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "date": "string",
+      "include_stats": "boolean"
+    },
+    "required": []
+  },
+  "get_linked_events_for_task": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "fields": "array<enum[all_day,attendees,color,editable,end_date,end_time,event_type,id,is_recurring,location,notes,person_name,recurrence,source,start_date,start_time,timezone,title,url]>",
+      "include": "array<enum[all_day,attendees,color,details,editable,end_date,end_time,event_type,id,is_recurring,location,metadata,notes,person_name,recurrence,source,start_date,start_time,time,timezone,title,url]>",
+      "include_nulls": "boolean",
+      "shape": "enum[compact,full]",
+      "task_id": "string"
+    },
+    "required": [
+      "task_id"
+    ]
+  },
+  "get_linked_tasks_for_event": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "event_id": "string"
+    },
+    "required": [
+      "event_id"
+    ]
+  },
+  "get_list": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "id": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "get_list_health_snapshot": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "get_lists": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "include_archived": "boolean"
+    },
+    "required": []
+  },
+  "get_overview": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "shape": "enum[compact,full]"
+    },
+    "required": []
+  },
+  "get_preference": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "key": "string"
+    },
+    "required": [
+      "key"
+    ]
+  },
+  "get_recent_logs": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "include_details": "boolean",
+      "level": "enum[debug,error,info,warn]",
+      "levels": "array<enum[debug,error,info,warn]>",
+      "limit": "integer",
+      "offset": "integer",
+      "redact": "boolean",
+      "since": "string",
+      "source": "enum[ai_changelog,error_log,sync_outbox]",
+      "sources": "array<enum[ai_changelog,error_log,sync_outbox]>"
+    },
+    "required": []
+  },
+  "get_review_history": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "from": "string",
+      "limit": "integer",
+      "to": "string"
+    },
+    "required": []
+  },
+  "get_saved_focus_schedule": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "date": "string"
+    },
+    "required": []
+  },
+  "get_session_context": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "get_setup_status": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "get_sync_status": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "get_task": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "id": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "get_upcoming_task_reminders": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "hours": "integer",
+      "limit": "integer",
+      "offset": "integer"
+    },
+    "required": []
+  },
+  "get_upcoming_tasks": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "days": "integer",
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "include_nulls": "boolean",
+      "limit": "integer",
+      "offset": "integer",
+      "shape": "enum[compact,full]"
+    },
+    "required": []
+  },
+  "get_weekly_brief": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "completed_limit": "integer",
+      "deferred_limit": "integer",
+      "someday_limit": "integer",
+      "stalled_lists_limit": "integer"
+    },
+    "required": []
+  },
+  "link_task_to_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "event_id": "string",
+      "idempotency_key": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "event_id",
+      "task_id"
+    ]
+  },
+  "link_task_to_provider_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "provider_event_id": "string",
+      "provider_source": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "provider_event_id",
+      "provider_source",
+      "task_id"
+    ]
+  },
+  "list_all_tags": {
+    "advertises_idempotency_key": false,
+    "properties": {},
+    "required": []
+  },
+  "list_tasks": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "availability": "enum[all,hidden,visible]",
+      "available_from_from": "string",
+      "available_from_to": "string",
+      "blocked_only": "boolean",
+      "blocking_others": "boolean",
+      "completed_from": "string",
+      "completed_to": "string",
+      "created_from": "string",
+      "created_to": "string",
+      "due_from": "string",
+      "due_presence": "enum[absent,any,present]",
+      "due_to": "string",
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "include_nulls": "boolean",
+      "limit": "integer",
+      "list_id": "string",
+      "offset": "integer",
+      "planned_from": "string",
+      "planned_presence": "enum[absent,any,present]",
+      "planned_to": "string",
+      "priority": "enum[1,2,3]",
+      "scheduled_from": "string",
+      "scheduled_to": "string",
+      "shape": "enum[compact,full]",
+      "sort_by": "enum[created_at,due_date,planned_date,priority_due,title,updated_at]",
+      "sort_direction": "enum[asc,desc]",
+      "status": "enum[actionable,all,cancelled,completed,in_progress,open,someday]",
+      "tags": "array<string>",
+      "text": "string",
+      "updated_from": "string",
+      "updated_to": "string"
+    },
+    "required": []
+  },
+  "merge_tags": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "source": "string",
+      "target": "string"
+    },
+    "required": [
+      "source",
+      "target"
+    ]
+  },
+  "move_task_to_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string",
+      "list_id": "string"
+    },
+    "required": [
+      "id",
+      "list_id"
+    ]
+  },
+  "pause_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "permanent_delete_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "propose_daily_schedule": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "date": "string",
+      "include_calendar_events": "boolean",
+      "working_hours_end": "string",
+      "working_hours_start": "string"
+    },
+    "required": []
+  },
+  "read_memory": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "key": "string",
+      "keys": "array<string>",
+      "limit": "integer",
+      "offset": "integer"
+    },
+    "required": []
+  },
+  "remove_calendar_event_exception": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "event_id": "string",
+      "idempotency_key": "string",
+      "occurrence_date": "string"
+    },
+    "required": [
+      "event_id",
+      "occurrence_date"
+    ]
+  },
+  "remove_from_current_focus": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "idempotency_key": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "task_id"
+    ]
+  },
+  "remove_task_checklist_item": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "item_id": "string"
+    },
+    "required": [
+      "item_id"
+    ]
+  },
+  "remove_task_recurrence": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "task_id"
+    ]
+  },
+  "remove_task_recurrence_exception": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "occurrence_date": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "occurrence_date",
+      "task_id"
+    ]
+  },
+  "remove_task_reminder": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "reminder_id": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "reminder_id",
+      "task_id"
+    ]
+  },
+  "rename_memory": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "content": "string",
+      "idempotency_key": "string",
+      "new_key": "string",
+      "old_key": "string"
+    },
+    "required": [
+      "new_key",
+      "old_key"
+    ]
+  },
+  "rename_tag": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "new_name": "string",
+      "old_name": "string"
+    },
+    "required": [
+      "new_name",
+      "old_name"
+    ]
+  },
+  "reopen_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "reorder_habits": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "habit_ids": "array<string>",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "habit_ids"
+    ]
+  },
+  "reorder_lists": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "list_ids": "array<string>"
+    },
+    "required": [
+      "list_ids"
+    ]
+  },
+  "reorder_task_checklist_items": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "item_ids": "array<string>",
+      "task_id": "string"
+    },
+    "required": [
+      "item_ids",
+      "task_id"
+    ]
+  },
+  "save_focus_schedule": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "blocks": "array<object{block_type:enum[buffer,event,task],end_time:string,event_id:string,event_source:enum[canonical,freeform,provider],start_time:string,task_id:string,title:string}required[end_time,start_time]>",
+      "date": "string",
+      "idempotency_key": "string",
+      "rationale": "string"
+    },
+    "required": [
+      "blocks",
+      "date"
+    ]
+  },
+  "search_calendar_events": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "fields": "array<enum[all_day,attendees,color,editable,end_date,end_time,event_type,id,is_recurring,location,notes,person_name,recurrence,source,start_date,start_time,timezone,title,url]>",
+      "from": "string",
+      "include": "array<enum[all_day,attendees,color,details,editable,end_date,end_time,event_type,id,is_recurring,location,metadata,notes,person_name,recurrence,source,start_date,start_time,time,timezone,title,url]>",
+      "include_nulls": "boolean",
+      "limit": "integer",
+      "offset": "integer",
+      "query": "string",
+      "shape": "enum[compact,full]",
+      "to": "string"
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "search_tasks": {
+    "advertises_idempotency_key": false,
+    "properties": {
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "include_nulls": "boolean",
+      "limit": "integer",
+      "offset": "integer",
+      "query": "string",
+      "shape": "enum[compact,full]",
+      "status": "enum[all,cancelled,completed,in_progress,open,someday]"
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "set_current_focus": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "briefing": "string",
+      "date": "string",
+      "idempotency_key": "string",
+      "task_ids": "array<string>",
+      "timezone": "string"
+    },
+    "required": [
+      "task_ids"
+    ]
+  },
+  "set_list_ai_notes": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "list_id": "string",
+      "notes": "string"
+    },
+    "required": [
+      "list_id",
+      "notes"
+    ]
+  },
+  "set_preference": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "key": "string",
+      "value": "string"
+    },
+    "required": [
+      "key",
+      "value"
+    ]
+  },
+  "set_task_ai_notes": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "notes": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "notes",
+      "task_id"
+    ]
+  },
+  "set_task_recurrence": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "recurrence": "object{anchor:enum[completion,schedule],byday:array<string>,bymonth:array<integer>,bymonthday:array<integer>,bysetpos:array<integer>,count:integer,freq:enum[DAILY,MONTHLY,WEEKLY,YEARLY],interval:integer,until:string,wkst:enum[FR,MO,SA,SU,TH,TU,WE]}required[freq]",
+      "task_id": "string"
+    },
+    "required": [
+      "recurrence",
+      "task_id"
+    ]
+  },
+  "set_task_reminders": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "reminders": "array<string>",
+      "task_id": "string"
+    },
+    "required": [
+      "reminders",
+      "task_id"
+    ]
+  },
+  "set_task_someday": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "start_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "toggle_task_checklist_item": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "completed": "boolean",
+      "idempotency_key": "string",
+      "item_id": "string"
+    },
+    "required": [
+      "completed",
+      "item_id"
+    ]
+  },
+  "unarchive_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "unarchive_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "uncomplete_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "unlink_task_from_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "event_id": "string",
+      "idempotency_key": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "event_id",
+      "task_id"
+    ]
+  },
+  "unlink_task_from_provider_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "provider_event_id": "string",
+      "task_id": "string"
+    },
+    "required": [
+      "provider_event_id",
+      "task_id"
+    ]
+  },
+  "update_calendar_event": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "all_day": "boolean",
+      "attendees": "array|null",
+      "color": "string",
+      "end_date": "string",
+      "end_time": "string",
+      "event_id": "string",
+      "event_type": "enum[anniversary,birthday,event,memorial]",
+      "idempotency_key": "string",
+      "location": "string",
+      "notes": "string",
+      "person_name": "string",
+      "recurrence": "null|object",
+      "start_date": "string",
+      "start_time": "string",
+      "timezone": "string",
+      "title": "string",
+      "url": "string"
+    },
+    "required": [
+      "event_id"
+    ]
+  },
+  "update_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "archived": "boolean",
+      "color": "string",
+      "cue": "string",
+      "day_of_month": "integer",
+      "frequency_type": "enum[daily,monthly,times_per_week,weekly]",
+      "icon": "string",
+      "id": "string",
+      "idempotency_key": "string",
+      "milestone_target": "integer",
+      "name": "string",
+      "per_period_target": "integer",
+      "target_count": "integer",
+      "weekdays": "array<integer>"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_list": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "color": "string",
+      "description": "string",
+      "icon": "string",
+      "id": "string",
+      "idempotency_key": "string",
+      "name": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_task": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "available_from": "string",
+      "depends_on": "array<string>",
+      "due_date": "string",
+      "estimated_minutes": "integer",
+      "id": "string",
+      "idempotency_key": "string",
+      "notes": "string",
+      "planned_date": "string",
+      "priority": "enum[1,2,3]",
+      "raw_input": "string",
+      "tags": "array<string>",
+      "title": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
+  "update_task_checklist_item": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "idempotency_key": "string",
+      "item_id": "string",
+      "text": "string"
+    },
+    "required": [
+      "item_id",
+      "text"
+    ]
+  },
+  "upsert_habit_reminder_policy": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "enabled": "boolean",
+      "habit_id": "string",
+      "id": "string",
+      "idempotency_key": "string",
+      "reminder_time": "string"
+    },
+    "required": [
+      "habit_id",
+      "reminder_time"
+    ]
+  },
+  "write_memory": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "content": "string",
+      "idempotency_key": "string",
+      "key": "string"
+    },
+    "required": [
+      "content",
+      "key"
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "cases": [
+    {
+      "name": "create_list canonical object shape",
+      "tool": "create_list",
+      "arguments": {
+        "name": "Golden List",
+        "color": "#4F8EF7",
+        "ai_notes": "Scope: career/research only. Exclude personal admin."
+      },
+      "expect": {
+        "type": "object",
+        "required_keys": [
+          "id",
+          "name",
+          "color",
+          "ai_notes",
+          "created_at"
+        ],
+        "equals": {
+          "name": "Golden List",
+          "color": "#4F8EF7",
+          "ai_notes": "Scope: career/research only. Exclude personal admin."
+        }
+      }
+    },
+    {
+      "name": "create_task canonical envelope shape",
+      "tool": "create_task",
+      "arguments": {
+        "title": "Golden Task",
+        "raw_input": "golden harness",
+        "priority": 2
+      },
+      "expect": {
+        "type": "object",
+        "required_keys": [
+          "task",
+          "next_occurrence",
+          "newly_unblocked",
+          "advice"
+        ]
+      }
+    },
+    {
+      "name": "list_lists returns paginated envelope",
+      "tool": "list_lists",
+      "arguments": {},
+      "expect": {
+        "type": "object",
+        "required_keys": [
+          "count",
+          "returned",
+          "total_matching",
+          "limit",
+          "offset",
+          "next_offset",
+          "truncated",
+          "lists"
+        ]
+      }
+    },
+    {
+      "name": "get_overview canonical object shape",
+      "tool": "get_overview",
+      "arguments": {},
+      "expect": {
+        "type": "object",
+        "required_keys": [
+          "stats",
+          "lists",
+          "top_by_priority",
+          "recently_completed"
+        ]
+      }
+    }
+  ]
+}

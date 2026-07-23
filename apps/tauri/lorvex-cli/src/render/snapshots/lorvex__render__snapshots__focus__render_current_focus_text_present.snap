@@ -1,0 +1,14 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Today's Focus
+DB: /tmp/lorvex.db
+Date: 2026-04-10
+Briefing: Focus on shipping the sync fixes.
+Timezone: America/Los_Angeles
+Task count: 2
+
+Focus tasks:
+  - task-alpha: Ship feature (2026-04-10)
+  - task-bravo: Review PR (2026-04-11)

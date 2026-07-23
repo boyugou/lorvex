@@ -1,0 +1,2225 @@
+{
+  "contract_format": 3,
+  "entities": {
+    "ai_changelog": {
+      "fields": {
+        "after_json": {
+          "format": "json-string",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "before_json": {
+          "format": "json-string",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "entity_id": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "entity_ids": {
+          "format": "json-array-string",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "entity_type": {
+          "types": [
+            "string"
+          ]
+        },
+        "initiated_by": {
+          "types": [
+            "string"
+          ]
+        },
+        "mcp_tool": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "operation": {
+          "types": [
+            "string"
+          ]
+        },
+        "retention_epoch": {
+          "minimum": 0,
+          "types": [
+            "integer"
+          ]
+        },
+        "source_device_id": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "summary": {
+          "types": [
+            "string"
+          ]
+        },
+        "timestamp": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": []
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "after_json",
+            "before_json",
+            "entity_id",
+            "entity_ids",
+            "entity_type",
+            "initiated_by",
+            "mcp_tool",
+            "operation",
+            "retention_epoch",
+            "source_device_id",
+            "summary",
+            "timestamp",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": [
+        "entity_ids",
+        "version"
+      ]
+    },
+    "calendar_event": {
+      "fields": {
+        "all_day": {
+          "types": [
+            "boolean"
+          ]
+        },
+        "attendees": {
+          "items": {
+            "additional_properties": true,
+            "properties": {},
+            "required_properties": [],
+            "types": [
+              "object"
+            ]
+          },
+          "types": [
+            "array",
+            "null"
+          ]
+        },
+        "color": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "content_version": {
+          "format": "hlc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "description": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "end_date": {
+          "format": "civil-date",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "end_time": {
+          "format": "hh-mm",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "event_type": {
+          "enum": [
+            "anniversary",
+            "birthday",
+            "event",
+            "memorial"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "location": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "occurrence_state": {
+          "enum": [
+            "cancelled",
+            "inherit",
+            "replacement"
+          ],
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "person_name": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence": {
+          "format": "json-object-string",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_generation": {
+          "format": "hlc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_instance_date": {
+          "format": "civil-date",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_topology_version": {
+          "format": "hlc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "series_cutover_id": {
+          "format": "uuid",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "series_id": {
+          "format": "uuid",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "start_date": {
+          "format": "civil-date",
+          "types": [
+            "string"
+          ]
+        },
+        "start_time": {
+          "format": "hh-mm",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "timezone": {
+          "format": "iana-time-zone",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "title": {
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "url": {
+          "format": "calendar-url",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "all_day",
+                "attendees",
+                "color",
+                "content_version",
+                "created_at",
+                "description",
+                "end_date",
+                "end_time",
+                "event_type",
+                "id",
+                "location",
+                "occurrence_state",
+                "person_name",
+                "recurrence",
+                "recurrence_generation",
+                "recurrence_instance_date",
+                "recurrence_topology_version",
+                "series_cutover_id",
+                "series_id",
+                "start_date",
+                "start_time",
+                "timezone",
+                "title",
+                "updated_at",
+                "url"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "all_day",
+            "attendees",
+            "color",
+            "content_version",
+            "created_at",
+            "description",
+            "end_date",
+            "end_time",
+            "event_type",
+            "id",
+            "location",
+            "occurrence_state",
+            "person_name",
+            "recurrence",
+            "recurrence_generation",
+            "recurrence_instance_date",
+            "recurrence_topology_version",
+            "series_cutover_id",
+            "series_id",
+            "start_date",
+            "start_time",
+            "timezone",
+            "title",
+            "updated_at",
+            "url",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "calendar_series_cutover": {
+      "fields": {
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "cutover_date": {
+          "format": "civil-date",
+          "types": [
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "lineage_root_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "state": {
+          "enum": [
+            "active",
+            "deleted"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "invalid_peer_delete",
+              "optional_keys": [
+                "created_at",
+                "cutover_date",
+                "id",
+                "lineage_root_id",
+                "state",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "created_at",
+            "cutover_date",
+            "id",
+            "lineage_root_id",
+            "state",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "current_focus": {
+      "fields": {
+        "briefing": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "date": {
+          "format": "civil-date",
+          "types": [
+            "string"
+          ]
+        },
+        "task_ids": {
+          "items": {
+            "format": "uuid",
+            "types": [
+              "string"
+            ]
+          },
+          "types": [
+            "array"
+          ]
+        },
+        "timezone": {
+          "format": "iana-time-zone",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "briefing",
+                "created_at",
+                "date",
+                "task_ids",
+                "timezone",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "briefing",
+            "created_at",
+            "date",
+            "task_ids",
+            "timezone",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": [
+        "task_ids"
+      ]
+    },
+    "daily_review": {
+      "fields": {
+        "blockers": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "date": {
+          "format": "civil-date",
+          "types": [
+            "string"
+          ]
+        },
+        "energy_level": {
+          "maximum": 5,
+          "minimum": 1,
+          "types": [
+            "integer",
+            "null"
+          ]
+        },
+        "learnings": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "linked_list_ids": {
+          "items": {
+            "format": "uuid-or-inbox",
+            "types": [
+              "string"
+            ]
+          },
+          "types": [
+            "array"
+          ]
+        },
+        "linked_task_ids": {
+          "items": {
+            "format": "uuid",
+            "types": [
+              "string"
+            ]
+          },
+          "types": [
+            "array"
+          ]
+        },
+        "mood": {
+          "maximum": 5,
+          "minimum": 1,
+          "types": [
+            "integer",
+            "null"
+          ]
+        },
+        "summary": {
+          "types": [
+            "string"
+          ]
+        },
+        "timezone": {
+          "format": "iana-time-zone",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        },
+        "wins": {
+          "types": [
+            "null",
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "blockers",
+                "created_at",
+                "date",
+                "energy_level",
+                "learnings",
+                "linked_list_ids",
+                "linked_task_ids",
+                "mood",
+                "summary",
+                "timezone",
+                "updated_at",
+                "wins"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "blockers",
+            "created_at",
+            "date",
+            "energy_level",
+            "learnings",
+            "linked_list_ids",
+            "linked_task_ids",
+            "mood",
+            "summary",
+            "timezone",
+            "updated_at",
+            "version",
+            "wins"
+          ]
+        }
+      },
+      "synthetic_keys": [
+        "linked_list_ids",
+        "linked_task_ids"
+      ]
+    },
+    "entity_redirect": {
+      "fields": {
+        "source_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "source_type": {
+          "enum": [
+            "habit",
+            "habit_reminder_policy",
+            "memory",
+            "tag"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "target_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": []
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "source_id",
+            "source_type",
+            "target_id",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "focus_schedule": {
+      "fields": {
+        "blocks": {
+          "items": {
+            "additional_properties": false,
+            "properties": {
+              "block_type": {
+                "enum": [
+                  "buffer",
+                  "event",
+                  "task"
+                ],
+                "types": [
+                  "string"
+                ]
+              },
+              "calendar_event_id": {
+                "format": "uuid",
+                "types": [
+                  "null",
+                  "string"
+                ]
+              },
+              "end_minutes": {
+                "maximum": 1440,
+                "minimum": 0,
+                "types": [
+                  "integer"
+                ],
+                "unit": "minute-of-day"
+              },
+              "event_source": {
+                "enum": [
+                  "canonical",
+                  "freeform",
+                  "provider"
+                ],
+                "types": [
+                  "null",
+                  "string"
+                ]
+              },
+              "start_minutes": {
+                "maximum": 1440,
+                "minimum": 0,
+                "types": [
+                  "integer"
+                ],
+                "unit": "minute-of-day"
+              },
+              "task_id": {
+                "format": "uuid",
+                "types": [
+                  "null",
+                  "string"
+                ]
+              },
+              "title": {
+                "types": [
+                  "null",
+                  "string"
+                ]
+              }
+            },
+            "required_properties": [
+              "block_type",
+              "calendar_event_id",
+              "end_minutes",
+              "event_source",
+              "start_minutes",
+              "task_id",
+              "title"
+            ],
+            "types": [
+              "object"
+            ]
+          },
+          "types": [
+            "array"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "date": {
+          "format": "civil-date",
+          "types": [
+            "string"
+          ]
+        },
+        "rationale": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "timezone": {
+          "format": "iana-time-zone",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "blocks",
+                "created_at",
+                "date",
+                "rationale",
+                "timezone",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "blocks",
+            "created_at",
+            "date",
+            "rationale",
+            "timezone",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": [
+        "blocks"
+      ]
+    },
+    "habit": {
+      "fields": {
+        "archived": {
+          "types": [
+            "boolean"
+          ]
+        },
+        "color": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "cue": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "day_of_month": {
+          "maximum": 31,
+          "minimum": 1,
+          "types": [
+            "integer",
+            "null"
+          ]
+        },
+        "frequency_type": {
+          "enum": [
+            "daily",
+            "monthly",
+            "times_per_week",
+            "weekly"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "icon": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "milestone_target": {
+          "minimum": 1,
+          "types": [
+            "integer",
+            "null"
+          ]
+        },
+        "name": {
+          "types": [
+            "string"
+          ]
+        },
+        "per_period_target": {
+          "minimum": 1,
+          "types": [
+            "integer"
+          ]
+        },
+        "position": {
+          "minimum": 0,
+          "types": [
+            "integer"
+          ]
+        },
+        "target_count": {
+          "minimum": 1,
+          "types": [
+            "integer"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        },
+        "weekdays": {
+          "items": {
+            "maximum": 6,
+            "minimum": 0,
+            "types": [
+              "integer"
+            ]
+          },
+          "max_items": 7,
+          "types": [
+            "array"
+          ],
+          "unique_items": true
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "archived",
+                "color",
+                "created_at",
+                "cue",
+                "day_of_month",
+                "frequency_type",
+                "icon",
+                "id",
+                "milestone_target",
+                "name",
+                "per_period_target",
+                "position",
+                "target_count",
+                "updated_at",
+                "weekdays"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "archived",
+            "color",
+            "created_at",
+            "cue",
+            "day_of_month",
+            "frequency_type",
+            "icon",
+            "id",
+            "milestone_target",
+            "name",
+            "per_period_target",
+            "position",
+            "target_count",
+            "updated_at",
+            "version",
+            "weekdays"
+          ]
+        }
+      },
+      "synthetic_keys": [
+        "weekdays"
+      ]
+    },
+    "habit_completion": {
+      "fields": {
+        "completed_date": {
+          "format": "civil-date",
+          "types": [
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "habit_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "note": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "value": {
+          "minimum": 1,
+          "types": [
+            "integer"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "completed_date",
+                "created_at",
+                "habit_id",
+                "note",
+                "updated_at",
+                "value"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "completed_date",
+            "created_at",
+            "habit_id",
+            "note",
+            "updated_at",
+            "value",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "habit_reminder_policy": {
+      "fields": {
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "enabled": {
+          "types": [
+            "boolean"
+          ]
+        },
+        "habit_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "reminder_time": {
+          "format": "hh-mm",
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "created_at",
+                "enabled",
+                "habit_id",
+                "id",
+                "reminder_time",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "created_at",
+            "enabled",
+            "habit_id",
+            "id",
+            "reminder_time",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "list": {
+      "fields": {
+        "ai_notes": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "archived_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "color": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "description": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "icon": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid-or-inbox",
+          "types": [
+            "string"
+          ]
+        },
+        "name": {
+          "types": [
+            "string"
+          ]
+        },
+        "position": {
+          "minimum": 0,
+          "types": [
+            "integer"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "ai_notes",
+                "archived_at",
+                "color",
+                "created_at",
+                "description",
+                "icon",
+                "id",
+                "name",
+                "position",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "ai_notes",
+            "archived_at",
+            "color",
+            "created_at",
+            "description",
+            "icon",
+            "id",
+            "name",
+            "position",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "memory": {
+      "fields": {
+        "content": {
+          "types": [
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "key": {
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "content",
+                "id",
+                "key",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "content",
+            "id",
+            "key",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "preference": {
+      "fields": {
+        "key": {
+          "enum": [
+            "default_list_id",
+            "record_raw_input",
+            "setup_completed",
+            "setup_state",
+            "setup_summary",
+            "timezone",
+            "working_hours"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "value": {
+          "additional_properties": true,
+          "properties": {},
+          "required_properties": [],
+          "types": [
+            "array",
+            "boolean",
+            "integer",
+            "null",
+            "number",
+            "object",
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "key",
+                "updated_at",
+                "value"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "key",
+            "updated_at",
+            "value",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "tag": {
+      "fields": {
+        "color": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "display_name": {
+          "types": [
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "color",
+                "created_at",
+                "display_name",
+                "id",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "color",
+            "created_at",
+            "display_name",
+            "id",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "task": {
+      "fields": {
+        "ai_notes": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "archive_version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        },
+        "archived_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "available_from": {
+          "format": "civil-date",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "body": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "canonical_occurrence_date": {
+          "format": "civil-date",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "completed_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "content_version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "defer_count": {
+          "minimum": 0,
+          "types": [
+            "integer"
+          ]
+        },
+        "due_date": {
+          "format": "civil-date",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "estimated_minutes": {
+          "maximum": 1440,
+          "minimum": 1,
+          "types": [
+            "integer",
+            "null"
+          ],
+          "unit": "minutes"
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "last_defer_reason": {
+          "enum": [
+            "blocked",
+            "low_energy",
+            "needs_breakdown",
+            "needs_info",
+            "not_today"
+          ],
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "last_deferred_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "lifecycle_version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        },
+        "list_id": {
+          "format": "uuid-or-inbox",
+          "types": [
+            "string"
+          ]
+        },
+        "planned_date": {
+          "format": "civil-date",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "priority": {
+          "maximum": 3,
+          "minimum": 1,
+          "types": [
+            "integer",
+            "null"
+          ]
+        },
+        "raw_input": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence": {
+          "format": "json-object-string",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_exceptions": {
+          "format": "json-array-string",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_group_id": {
+          "format": "uuid",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_instance_key": {
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "recurrence_rollover_state": {
+          "enum": [
+            "authorized",
+            "ended",
+            "none",
+            "revoked"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "recurrence_successor_id": {
+          "format": "uuid",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "schedule_version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        },
+        "spawned_from": {
+          "format": "uuid",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "spawned_from_version": {
+          "format": "hlc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "status": {
+          "enum": [
+            "cancelled",
+            "completed",
+            "in_progress",
+            "open",
+            "someday"
+          ],
+          "types": [
+            "string"
+          ]
+        },
+        "title": {
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "ai_notes",
+                "archive_version",
+                "archived_at",
+                "available_from",
+                "body",
+                "canonical_occurrence_date",
+                "completed_at",
+                "content_version",
+                "created_at",
+                "defer_count",
+                "due_date",
+                "estimated_minutes",
+                "id",
+                "last_defer_reason",
+                "last_deferred_at",
+                "lifecycle_version",
+                "list_id",
+                "planned_date",
+                "priority",
+                "raw_input",
+                "recurrence",
+                "recurrence_exceptions",
+                "recurrence_group_id",
+                "recurrence_instance_key",
+                "recurrence_rollover_state",
+                "recurrence_successor_id",
+                "schedule_version",
+                "spawned_from",
+                "spawned_from_version",
+                "status",
+                "title",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "ai_notes",
+            "archive_version",
+            "archived_at",
+            "available_from",
+            "body",
+            "canonical_occurrence_date",
+            "completed_at",
+            "content_version",
+            "created_at",
+            "defer_count",
+            "due_date",
+            "estimated_minutes",
+            "id",
+            "last_defer_reason",
+            "last_deferred_at",
+            "lifecycle_version",
+            "list_id",
+            "planned_date",
+            "priority",
+            "raw_input",
+            "recurrence",
+            "recurrence_exceptions",
+            "recurrence_group_id",
+            "recurrence_instance_key",
+            "recurrence_rollover_state",
+            "recurrence_successor_id",
+            "schedule_version",
+            "spawned_from",
+            "spawned_from_version",
+            "status",
+            "title",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": [
+        "recurrence_exceptions"
+      ]
+    },
+    "task_calendar_event_link": {
+      "fields": {
+        "calendar_event_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "task_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "calendar_event_id",
+                "created_at",
+                "task_id",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "calendar_event_id",
+            "created_at",
+            "task_id",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "task_checklist_item": {
+      "fields": {
+        "completed_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "position": {
+          "minimum": 0,
+          "types": [
+            "integer"
+          ]
+        },
+        "task_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "text": {
+          "types": [
+            "string"
+          ]
+        },
+        "updated_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "completed_at",
+                "created_at",
+                "id",
+                "position",
+                "task_id",
+                "text",
+                "updated_at"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "completed_at",
+            "created_at",
+            "id",
+            "position",
+            "task_id",
+            "text",
+            "updated_at",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "task_dependency": {
+      "fields": {
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "depends_on_task_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "task_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "created_at",
+                "depends_on_task_id",
+                "task_id"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "created_at",
+            "depends_on_task_id",
+            "task_id",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "task_reminder": {
+      "fields": {
+        "cancelled_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "dismissed_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "original_local_time": {
+          "format": "hh-mm",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "original_tz": {
+          "format": "iana-time-zone",
+          "types": [
+            "null",
+            "string"
+          ]
+        },
+        "reminder_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "task_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "cancelled_at",
+                "created_at",
+                "dismissed_at",
+                "id",
+                "original_local_time",
+                "original_tz",
+                "reminder_at",
+                "task_id"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "cancelled_at",
+            "created_at",
+            "dismissed_at",
+            "id",
+            "original_local_time",
+            "original_tz",
+            "reminder_at",
+            "task_id",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    },
+    "task_tag": {
+      "fields": {
+        "created_at": {
+          "format": "rfc3339-utc",
+          "types": [
+            "string"
+          ]
+        },
+        "tag_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "task_id": {
+          "format": "uuid",
+          "types": [
+            "string"
+          ]
+        },
+        "version": {
+          "format": "hlc",
+          "types": [
+            "string"
+          ]
+        }
+      },
+      "operations": {
+        "delete": {
+          "shapes": [
+            {
+              "name": "tombstone",
+              "optional_keys": [
+                "created_at",
+                "tag_id",
+                "task_id"
+              ],
+              "required_keys": [
+                "version"
+              ]
+            }
+          ]
+        },
+        "upsert": {
+          "optional_keys": [],
+          "required_keys": [
+            "created_at",
+            "tag_id",
+            "task_id",
+            "version"
+          ]
+        }
+      },
+      "synthetic_keys": []
+    }
+  },
+  "field_evolution": {},
+  "golden_fixture": "fixtures/001.golden.json",
+  "golden_fixture_sha256": "39d581f4a140edf8fd4593fd294d019389bdc6a147b2d42bd8468e03949b94aa",
+  "payload_schema_version": 1,
+  "shadow_reserved_keys": {
+    "ai_changelog": [
+      "cloud_presence_possible",
+      "id",
+      "retention_account_identifier"
+    ],
+    "habit": [
+      "lookup_key"
+    ],
+    "tag": [
+      "lookup_key"
+    ]
+  }
+}

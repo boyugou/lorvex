@@ -1,0 +1,12 @@
+*
+!.gitignore
+!mcp-server/
+!mcp-server/.gitkeep
+!macos/
+!macos/**
+
+# Re-ignore sensitive files even under macos/
+macos/*.provisionprofile
+macos/*.mobileprovision
+macos/*.p12
+macos/*.key

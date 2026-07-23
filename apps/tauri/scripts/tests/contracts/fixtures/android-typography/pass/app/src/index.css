@@ -1,0 +1,7 @@
+:root[data-mobile-os='android'] {
+  --app-font-family:
+    "Roboto",
+    "Noto Sans CJK SC",
+    "Noto Sans",
+    sans-serif;
+}

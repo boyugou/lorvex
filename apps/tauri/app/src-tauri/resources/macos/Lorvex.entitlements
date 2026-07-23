@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App identity (required for provisioning profile validation) -->
+    <key>com.apple.application-identifier</key>
+    <string>VP5XSC3VN6.com.lorvex.planner</string>
+    <key>com.apple.developer.team-identifier</key>
+    <string>VP5XSC3VN6</string>
+    <!-- Audit #2988-H5: narrow keychain-access-groups from the wildcard
+         `VP5XSC3VN6.*` (which let *every* app under the team-id share
+         this app's keychain items) to a single bundle-scoped group.
+         No other Lorvex bundle currently writes to the keychain; if a
+         sibling helper (Spotlight indexer, MCP launcher) ever needs
+         shared credential access it must be added explicitly here. -->
+    <key>keychain-access-groups</key>
+    <array>
+        <string>VP5XSC3VN6.com.lorvex.planner</string>
+    </array>
+    <!-- Outbound network access for updater and user-configured subscriptions -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>

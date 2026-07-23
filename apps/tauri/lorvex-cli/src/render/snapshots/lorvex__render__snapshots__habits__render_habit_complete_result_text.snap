@@ -1,0 +1,9 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+COMPLETE habit habit-alpha
+Name: Read
+Date: 2026-04-10
+Value: 1
+DB: /tmp/lorvex.db

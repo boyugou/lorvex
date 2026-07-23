@@ -1,0 +1,16 @@
+{
+  "launched": true,
+  "policy_doc": "docs/design/SCHEMA_OPTIMALITY.md",
+  "note": "Apple schema and sync-payload launch policy. PRE-LAUNCH (launched=false): no install carries a database yet, so schema/schema.sql and the sole schema/sync_payload/001.json contract are freely editable in place, payloadSchemaVersion remains 1, checksums.lock is regenerated with `apps/apple/script/verify_migration_ladder.py --seed` (Apple-owned; it writes schema/migrations/checksums.lock and mirrors it byte-identically into apps/apple/Sources/LorvexCore/Resources/checksums.lock), and the canonical migration ladder (schema/migrations/) stays empty. Do not manufacture prelaunch migration or payload-version history. AT FIRST PUBLIC RELEASE: run `apps/apple/script/verify_schema_freeze.py --arm` to flip launched to true and atomically freeze each shipped migration identity (filename plus normalized SHA-256) and sync-payload contract hash into frozen_baseline. POST-LAUNCH (launched=true): the baseline schema.sql, every frozen migration identity, and every frozen sync-payload contract are immutable forever; change SQLite only by APPENDING a numbered migration to schema/migrations/ per schema/migrations/README.md, and change payload fields only by APPENDING the next sync-payload manifest and bumping payloadSchemaVersion. Before archiving each later public release, re-run and commit --arm so every migration and payload-contract version that build ships is captured in frozen_baseline.",
+  "frozen_baseline": {
+    "checksums_lock": {
+      "001": {
+        "name": "001_schema.sql",
+        "sha256": "0ca4e0ea52b7b3c15677b4bef90e0497d88828f17efdd8c8143d19fffd9caeeb"
+      }
+    },
+    "sync_payload_contracts": {
+      "001": "367e5d932a6d135c34dfbe9c765599cff3eabd1095ab9b9a7b708dccd4c6ce2b"
+    }
+  }
+}

@@ -1,0 +1,95 @@
+[package]
+name = "lorvex-store"
+# Audit #3008-L3: inherit version from [workspace.package].version.
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "SQLite storage layer for Lorvex — migrations, repositories, projections."
+publish = false
+# Audit #2295: inherit MSRV from [workspace.package].
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Issue #3285: opt into the `rusqlite` feature on `lorvex-domain` so the
+# typed entity-id newtypes (`TaskId`, `ListId`, …) bind transparently
+# into `params!` without going through `.as_str()`.
+lorvex-domain = { path = "../lorvex-domain", features = ["rusqlite"] }
+lorvex-runtime = { path = "../lorvex-runtime" }
+# Issue #4350: forward-compat payload shadow + attendee shadow types
+# extracted into their own crate so `lorvex-sync` can also depend on
+# them without forming a cycle through `lorvex-store`.
+lorvex-sync-payload = { path = "../lorvex-sync-payload" }
+rusqlite = { workspace = true, features = ["bundled", "hooks"] }
+chrono = { workspace = true, features = ["serde"] }
+chrono-tz.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+sha2.workspace = true
+# Audit #3008-H5: `hex` is consumed only by lorvex-store (single
+# consumer); declared inline per the workspace dep policy.
+hex = "0.4"
+thiserror.workspace = true
+# Audit follow-up (round-27 dep hygiene): default features pull in
+# aes / bzip2 / deflate64 / lzma-rs / zstd / xz2. The export/import
+# path only uses store-deflate; every other codec is unused binary
+# weight + extra audit surface. Lock to the minimum feature set.
+#
+# Audit #2294: pinned to major 4 to match tauri-plugin-updater's
+# transitive zip dep. Two major versions were being compiled into
+# the desktop binary before; the unified version halves the audit
+# surface and binary size contribution.
+zip = { version = "8", default-features = false, features = ["deflate"] }
+
+# `test_support::diag` uses `libc::statvfs` for the free-bytes probe,
+# but only when compiled under `#[cfg(test)]` or the `test-support`
+# feature (see `src/test_support.rs`). The module is fully gated out
+# of production builds (#2544).
+#
+# Audit #2931-M25: `libc` is now a non-optional unix-target dep so the
+# `test-support` feature flag does not try to toggle a dep that
+# doesn't exist on Windows. Previously the feature read
+# `test-support = ["dep:libc"]`, but `libc` is declared inside
+# `[target.'cfg(unix)'.dependencies]` and therefore is not a known
+# package on Windows — cargo errors with "feature `test-support`
+# includes `dep:libc`, but `libc` is not listed as a dependency"
+# whenever the feature is enabled on a Windows build. By making
+# `libc` a plain (non-optional) unix-only dep, it's pulled in
+# automatically on every unix build (cheap, header-only) and the
+# feature flag reduces to a pure code-gate. The diag helpers
+# themselves are already `#[cfg(unix)]`-gated in
+# `src/test_support/diag.rs`, so Windows test-support callers see a
+# no-op probe.
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[features]
+default = []
+# Opt-in test helpers consumed by downstream crates' dev-dependencies
+# (the Tauri backend, MCP server). See `src/test_support/diag.rs` and
+# `docs/execution/TEST_FLAKINESS.md` (#2544).
+test-support = []
+
+[dev-dependencies]
+tempfile.workspace = true
+# Issue #2873: enable runtime's `test-support` feature so
+# `src/path.rs` tests can reach `with_db_path_env_for_test`.
+# Production builds cannot reach the unsafe `std::env::set_var`
+# helper because it's gated behind the feature.
+lorvex-runtime = { path = "../lorvex-runtime", features = ["test-support"] }
+# Audit #2991-M6 (ERR-M3): integration tests under `tests/` build as
+# external crates and therefore do not inherit `cfg(test)` from this
+# crate. The self-reference here flips on the `test-support` feature
+# during the dev profile so those integration tests can reach
+# `open_db_in_memory` while production builds keep the helper (and
+# its panic-on-migration-failure cached-schema initializer) gated
+# out behind the feature.
+lorvex-store = { path = ".", features = ["test-support"] }
+
+# Audit #2931-M25: `libc` is now a plain unix-target dep above (no
+# longer optional / feature-gated), so the previous cfg(unix)-only
+# dev-dep duplicate has been removed. Tests inside this crate still
+# pick up `libc` automatically because `cargo test` builds the unix
+# target dep alongside `[dev-dependencies]`.

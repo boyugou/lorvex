@@ -1,0 +1,832 @@
+@theme {
+  --color-surface-0: oklch(0.16 0.0042 285.8);
+  --color-surface-1: oklch(0.21 0.0059 285.78);
+  --color-surface-2: oklch(0.254 0.0075 285.75);
+  --color-surface-3: oklch(0.303 0.009 285.75);
+  --color-hover-tint: oklch(0.303 0.009 285.75);
+
+  --color-accent: oklch(0.67 0.1616 260.05);
+  --color-accent-hover: oklch(0.732 0.1392 259.91);
+  /*
+   * Foreground color for content painted on top of an accent / success /
+   * danger fill. Pure `text-white` hard-coded against light-accent themes
+   * (cream, mustard, pale-mint) drops below WCAG AA contrast. The token
+   * defaults to white for dark accents and is overridden per theme in
+   * `themes.css` where the accent fill is light enough that ink-on-light
+   * reads better. Components reach for it via `text-[var(--color-on-accent)]`
+   * (or the Tailwind utility `text-on-accent`) rather than literal `text-white`.
+   */
+  --color-on-accent: oklch(1 0 0);
+  --color-on-accent-soft: oklch(1 0 0 / 0.92);
+
+  --color-text-primary: oklch(0.962 0 0);
+  --color-text-secondary: oklch(0.822 0.0084 285.91);
+  --color-text-muted: oklch(0.669 0.0118 285.9);
+
+  --color-danger: oklch(0.683 0.1868 23.43);
+  --color-success: oklch(0.767 0.1475 157.75);
+  --color-warning: oklch(0.824 0.1398 77.86);
+
+  /*
+   * Canonical border-alpha tokens for cards and popovers (POL-H4).
+   * Use `border-card` (~/60) for resting card / panel borders and
+   * `border-popover` (~/70) for floating popover / modal borders.
+   * These collapse the previous /30, /40, /50, /60, /70 drift across
+   * components into two semantic choices. Raw `border-surface-3/##`
+   * is forbidden in components — pick a token instead.
+   */
+  --color-card: color-mix(in oklch, var(--color-surface-3) 60%, transparent);
+  --color-popover: color-mix(in oklch, var(--color-surface-3) 70%, transparent);
+
+  /*
+   * Canonical border-radius scale (POL-H2). Every panel/popover/button/
+   * chip should reference these tokens instead of raw rounded-* values.
+   *   r-chip    : full-radius pills (status pills, filter chips)
+   *   r-control : 8px — buttons, inputs, small controls
+   *   r-card    : 12px — cards, list rows, content sections
+   *   r-panel   : 16px — popovers, dropdown panels
+   *   r-window  : 18.4px — auxiliary OS windows (focus mode)
+   *   r-modal   : 20px — modal dialogs
+   *
+   * `r-window` sits between `r-panel` and `r-modal` because the underlying
+   * macOS auxiliary window chrome rounds at ~18px on Sequoia; matching the
+   * inner content rounding to that value is what makes the corner mask
+   * read as one continuous surface instead of an inner card floating
+   * inside a square frame. Focus-mode mini-windows are the primary
+   * consumers (issue #3464).
+   */
+  --radius-r-chip: 9999px;
+  --radius-r-control: 0.5rem;
+  --radius-r-card: 0.75rem;
+  --radius-r-panel: 1rem;
+  --radius-r-window: 1.15rem;
+  --radius-r-modal: 1.25rem;
+  /* #3704 — scrollbar thumbs are 6px wide; the radius matches the
+     half-width so the thumb reads as a fully-rounded capsule without
+     being mistaken for the chip pill that scales unboundedly. */
+  --radius-scrollbar: 6px;
+
+  /*
+   * #3652 — black-shadow alpha ladder. Six discrete steps for "ink"
+   * drops + edges, parallel to the accent-tint ladder a few lines
+   * down. Every black-tinted shadow / edge / drop in the stylesheet
+   * snaps to one of these steps so depth retunes happen in one place
+   * (per-theme overrides retune the *token values*, not every call
+   * site individually).
+   *
+   * | step | alpha | use case                                          |
+   * |------|-------|---------------------------------------------------|
+   * | xxs  | 0.06  | rail edges                                        |
+   * | xs   | 0.08  | desktop card subtle drop                          |
+   * | sm   | 0.10  | tooltip secondary                                 |
+   * | md   | 0.14  | popover secondary                                 |
+   * | lg   | 0.22  | tooltip / popover primary, modal secondary        |
+   * | xl   | 0.45  | modal primary drop, event-card hairline           |
+   */
+  --shadow-ink-xxs: oklch(from black l c h / 0.06);
+  --shadow-ink-xs:  oklch(from black l c h / 0.08);
+  --shadow-ink-sm:  oklch(from black l c h / 0.10);
+  --shadow-ink-md:  oklch(from black l c h / 0.14);
+  --shadow-ink-lg:  oklch(from black l c h / 0.22);
+  --shadow-ink-xl:  oklch(from black l c h / 0.45);
+
+  /*
+   * Canonical shadow tokens (POL-H3). Floating layers must reference one
+   * of these three semantic shadows instead of raw Tailwind depth utilities, so
+   * the same role gets the same depth across the app. Default values are
+   * tuned for dark themes; light themes override below (#3613) — light
+   * surfaces need softer alphas so the same drop doesn't read as a heavy
+   * gray bruise against a near-white page. Per #3652 the alphas come
+   * from the `--shadow-ink-*` ladder above; light themes redefine the
+   * ladder values rather than respelling every literal here.
+   */
+  --shadow-tooltip: 0 2px 6px var(--shadow-ink-lg), 0 1px 2px var(--shadow-ink-sm);
+  --shadow-popover: 0 10px 30px var(--shadow-ink-lg), 0 2px 6px var(--shadow-ink-md);
+  --shadow-modal: 0 24px 64px var(--shadow-ink-xl), 0 8px 16px var(--shadow-ink-lg);
+
+  /*
+   * Glass-highlight inset (#3613) — the 0.5px top-edge sheen that pseudo-
+   * elements paint on glass panels to fake a subtle lit edge. Distinct
+   * from `--glass-shadow-inner` (which is also white-on-dark but applied
+   * to the panel itself, not a ::after pseudo). Token both alphas:
+   * `--glass-highlight-inset-strong` for liquid-glass profile (alpha
+   * 0.10) and `--glass-highlight-inset-soft` for studio panels and
+   * settings/popover panels (alpha 0.08).
+   */
+  --glass-highlight-inset-strong: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.1);
+  --glass-highlight-inset-soft: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.08);
+
+  /*
+   * Desktop card subtle drop (#3613). Replaces a bare
+   * `box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08)` literal at the
+   * `desktop-card` utility so themes can retune the depth.
+   */
+  --shadow-desktop-card: 0 4px 12px var(--shadow-ink-xs);
+
+  /*
+   * Semantic glow + edge tokens (#3430). Adopted to retire the raw
+   * `shadow-[...]` literals + hardcoded `oklch(...)` glows that bypassed
+   * the active theme. Glows that should track the user-chosen accent
+   * use `oklch(from var(--color-accent) l c h / α)` so a teal accent
+   * produces a teal glow, an orange accent produces an orange glow, etc.
+   * Edge / drop tokens use `oklch(from black l c h / α)` for the same
+   * reason — a single source of truth for the depth scale.
+   */
+  /*
+   * #3642 — accent-tint ladder. Six discrete steps so accent tints are
+   * picked from a fixed scale instead of one-off `oklch(from … / α)`
+   * literals scattered across the stylesheet. A theme retune still
+   * adjusts hue/chroma globally; the alpha ladder fixes the *contrast
+   * rhythm* so soft fills, hover halos, and glow shadows compose
+   * predictably.
+   *
+   * | step | alpha | use case                                     |
+   * |------|-------|----------------------------------------------|
+   * | xxs  | 0.06  | barely-there fills (faint hover bg)          |
+   * | xs   | 0.12  | inset rings, secondary glow halos            |
+   * | sm   | 0.20  | empty-state glow, drop-shadow bottom         |
+   * | md   | 0.32  | primary glow, hover link tint                |
+   * | lg   | 0.50  | active borders, prominent drop-shadow tops   |
+   * | xl   | 0.80  | hover link color                             |
+   * | 2xl  | 0.85  | near-opaque accent (symmetry with 2xl shadow)|
+   */
+  --accent-tint-xxs: oklch(from var(--color-accent) l c h / 0.06);
+  --accent-tint-xs:  oklch(from var(--color-accent) l c h / 0.12);
+  --accent-tint-sm:  oklch(from var(--color-accent) l c h / 0.20);
+  --accent-tint-md:  oklch(from var(--color-accent) l c h / 0.32);
+  --accent-tint-lg:  oklch(from var(--color-accent) l c h / 0.50);
+  --accent-tint-xl:  oklch(from var(--color-accent) l c h / 0.80);
+  /* #3729 — symmetry rung above `xl` so the ladder reads top-down on
+     the same alpha scale and callers needing a near-opaque accent fill
+     have a named step instead of inlining `oklch(... / 0.85)`. */
+  --accent-tint-2xl: oklch(from var(--color-accent) l c h / 0.85);
+
+  /*
+   * #3643 — half-strength surface-3 border. The four Milkdown editor
+   * shells (`.milkdown-editor-wrapper`, code blocks, blockquotes,
+   * tables) all want a hairline border that is dimmer than the full
+   * `--color-surface-3` divider but tracks the active theme. Lifting
+   * it to a token keeps the four sites in lockstep when the surface
+   * scale retunes.
+   */
+  --border-surface-3-soft: 1px solid oklch(from var(--color-surface-3) l c h / 0.5);
+  /*
+   * #3654 — strong (less translucent) surface-3 border. Used by the
+   * liquid-glass profile's `[class*='border-surface-3']` override
+   * which previously inlined `oklch(from var(--color-surface-3) l c h
+   * / 0.3)`. Lifting it to a token keeps the override aligned with
+   * `--border-surface-3-soft` (0.5 alpha) and lets future profiles
+   * retune the strong rung in one place.
+   */
+  --border-surface-3-strong: oklch(from var(--color-surface-3) l c h / 0.3);
+
+  /*
+   * #3654 — danger-tint ladder (parallel to `--accent-tint-*`). Used
+   * for danger-keyed surfaces that need a tint matching the active
+   * theme's danger hue rather than a literal red. Sites that used to
+   * inline `oklch(from var(--color-danger) l c h / α)` must pick a
+   * step here instead so a theme retune of `--color-danger`
+   * propagates uniformly.
+   *
+   * | step | alpha | use case                                       |
+   * |------|-------|------------------------------------------------|
+   * | xs   | 0.06  | error-state background tint                    |
+   * | sm   | 0.20  | error-state badge fill                         |
+   * | md   | 0.40  | error-state hairline (medium emphasis)         |
+   * | lg   | 0.60  | error-state hairline (high emphasis)           |
+   * | xl   | 0.75  | error-state CTA fill / focused destructive     |
+   * | 2xl  | 0.90  | solid destructive CTA hover                    |
+   *
+   * #3709 — extended xl/2xl steps mirror the success/warning ladder
+   * so the ~30 raw `bg-danger/N` Tailwind opacity sites can snap
+   * onto the catalog rather than inlining oklch literals.
+   */
+  --danger-tint-xs: oklch(from var(--color-danger) l c h / 0.06);
+  --danger-tint-sm: oklch(from var(--color-danger) l c h / 0.20);
+  --danger-tint-md: oklch(from var(--color-danger) l c h / 0.40);
+  --danger-tint-lg: oklch(from var(--color-danger) l c h / 0.60);
+  --danger-tint-xl: oklch(from var(--color-danger) l c h / 0.75);
+  --danger-tint-2xl: oklch(from var(--color-danger) l c h / 0.90);
+
+  /*
+   * #3703 — success/warning-tint ladders (parallel to `--danger-tint-*`).
+   * Used for status-keyed surfaces (review pills, sync badges, overdue
+   * banners, completion toasts) that need a tint matching the active
+   * theme's success/warning hue rather than a literal green/yellow.
+   * Sites that used to inline `bg-success/N` / `bg-warning/N` Tailwind
+   * opacity utilities pick a step here instead so a theme retune of
+   * `--color-success` / `--color-warning` propagates uniformly.
+   *
+   * Alphas are tuned lighter than danger because success/warning
+   * surfaces tile across full panels (StatCard, ReviewSection) where
+   * danger tints only mark single overdue lines. The 0.06/0.12/0.20/0.30
+   * steps cover the existing call-site spread (5..30).
+   *
+   * | step | alpha | use case                                       |
+   * |------|-------|------------------------------------------------|
+   * | xs   | 0.06  | broad area background (StatCard, panel fill)   |
+   * | sm   | 0.12  | chip/pill fill (status badge, count chip)      |
+   * | md   | 0.20  | hover/active emphasis on the same chip         |
+   * | lg   | 0.30  | high-emphasis hairline + selected state        |
+   * | xl   | 0.50  | timeline/list-row marker fill (mid-emphasis)   |
+   * | 2xl  | 0.85  | solid CTA hover / "primary action" surface     |
+   *
+   * #3708 — extended xl/2xl steps cover the heavy-alpha sites that
+   * cycle 28's sweep left as raw `bg-{tone}/{0.7..0.85}` literals
+   * (CTA hover backgrounds, timeline accent fills). Snapping these
+   * onto the ladder keeps theme retunes uniform.
+   */
+  --success-tint-xs: oklch(from var(--color-success) l c h / 0.06);
+  --success-tint-sm: oklch(from var(--color-success) l c h / 0.12);
+  --success-tint-md: oklch(from var(--color-success) l c h / 0.20);
+  --success-tint-lg: oklch(from var(--color-success) l c h / 0.30);
+  --success-tint-xl: oklch(from var(--color-success) l c h / 0.50);
+  --success-tint-2xl: oklch(from var(--color-success) l c h / 0.85);
+  --warning-tint-xs: oklch(from var(--color-warning) l c h / 0.06);
+  --warning-tint-sm: oklch(from var(--color-warning) l c h / 0.12);
+  --warning-tint-md: oklch(from var(--color-warning) l c h / 0.20);
+  --warning-tint-lg: oklch(from var(--color-warning) l c h / 0.30);
+  --warning-tint-xl: oklch(from var(--color-warning) l c h / 0.50);
+  --warning-tint-2xl: oklch(from var(--color-warning) l c h / 0.85);
+
+  /*
+   * #3718 — promote the last inline `color-mix(...)` literals to named
+   * tokens so a theme retune of the underlying color propagates. Each
+   * token replaces a one-off bypass that the cycle-28 ladder couldn't
+   * absorb (alpha values that don't snap to existing rungs).
+   */
+  /* Mobile swipe-affordance gradients on task-card edges (idle hint). */
+  --swipe-hint-success: oklch(from var(--color-success) l c h / 0.55);
+  --swipe-hint-warning: oklch(from var(--color-warning) l c h / 0.55);
+  /* Text-selection background. Tuned for legibility against the 25+ themes
+     the app supports — accent-tint-md (0.32) was too dim for some palettes
+     and accent-tint-lg (0.50) too saturated for others. 0.35 sits in the
+     legibility sweet spot per #2497. */
+  --accent-tint-selection: oklch(from var(--color-accent) l c h / 0.35);
+  /* #3787 — focus-ring tint. The base focus-visible outline rule for
+     buttons/links/inputs (see "POL-H8") used to inline
+     `color-mix(... var(--color-accent) 60% ...)` at two sites; promote
+     to a named token so a theme retune updates both the button and the
+     input ring in one step. 0.60 sits between `--accent-tint-lg` (0.50,
+     active borders) and `--accent-tint-xl` (0.80, hover link color)
+     because the focus ring needs more presence than a passive border
+     but less than a hover-state link to remain calm during keyboard
+     navigation. */
+  --accent-tint-focus: oklch(from var(--color-accent) l c h / 0.60);
+
+  /*
+   * #3787 — gradient stops for the shell-card backdrop. The fall-back
+   * `linear-gradient` baked into `.shell-card` mixes surface-1 and
+   * surface-0 at 95 % / 90 % / 86 % alpha. Lifting the alphas to named
+   * tokens lets a future profile retune the gradient curve without
+   * hand-editing the gradient string. The 95 → 90 → 86 sequence is
+   * intentional — the 4-pt drop between mid and bottom is what gives
+   * the card its soft-edge feel; the named tokens preserve that curve.
+   */
+  --shell-card-stop-top:    color-mix(in oklch, var(--color-surface-1) 95%, transparent);
+  --shell-card-stop-mid:    color-mix(in oklch, var(--color-surface-0) 90%, transparent);
+  --shell-card-stop-bottom: color-mix(in oklch, var(--color-surface-0) 86%, transparent);
+
+  /*
+   * #3787 — danger-tint steps used by the validated-input affordance.
+   * The `[aria-invalid='true']` rule needs a 55 %-alpha border and a
+   * 70 %-alpha focus ring; neither rung exists on the danger-tint
+   * ladder (which jumps 0.40 → 0.60 → 0.75). Splitting them keeps the
+   * existing ladder semantically clean (each rung documents a use)
+   * while still giving the validated-input recipe named tokens.
+   */
+  --danger-tint-validated-border: oklch(from var(--color-danger) l c h / 0.55);
+  --danger-tint-validated-focus:  oklch(from var(--color-danger) l c h / 0.70);
+
+  --shadow-glow-success: 0 0 8px -1px oklch(from var(--color-success) l c h / 0.4);
+  --shadow-glow-accent: 0 0 6px var(--accent-tint-md);
+  --shadow-rail-edge: -1px 0 4px var(--shadow-ink-xxs);
+  --shadow-nav-active: inset 0 0 0 1px var(--accent-tint-xs);
+  --shadow-event-card: 0 1px 1px var(--shadow-ink-xl);
+  --shadow-empty-state: 0 0 24px -4px var(--accent-tint-sm);
+
+  /*
+   * Theme-aware modal overlay backdrop (POL-H10). Hardcoded `bg-black/40`
+   * and `bg-black/50` ignore the active theme — on translucent / Mica
+   * profiles the desktop wallpaper bleeds through and the contrast
+   * becomes unpredictable. Per-appearance-profile overrides live below.
+   */
+  --color-overlay: oklch(from black l c h / 0.5);
+
+  /*
+   * Canonical Modal max-width scale (POL-H1). Modals must pick one of
+   * these four widths so the visual rhythm is consistent across
+   * Command Palette, Confirm Dialogs, Quick Capture, Welcome, Help,
+   * Keyboard Shortcuts, and History.
+   */
+  --modal-w-sm: 400px;
+  --modal-w-md: 480px;
+  --modal-w-lg: 560px;
+  --modal-w-xl: 640px;
+
+  /*
+   * Canonical popover width scale (#4373). Floating popover / dropdown
+   * panels (pickers, list filters, language pickers) pick one of these
+   * widths so the visual rhythm stays consistent across DatePicker,
+   * ListPicker, DurationPicker, RecurrencePicker, FilterDropdown,
+   * LanguagePicker. Distinct from `--modal-w-*` — modals are
+   * dialogs anchored to the viewport center at much wider scale;
+   * popovers are anchored to a trigger and shrink-wrap typically
+   * dense list content.
+   */
+  --popover-w-xs: 200px;
+  --popover-w-sm: 240px;
+  --popover-w-md: 280px;
+  --popover-w-lg: 320px;
+
+  /*
+   * Canonical context-menu min-width scale (#4560). Compact floating
+   * menus — right-click context menus, hashtag autocomplete dropdowns,
+   * filter pickers — anchor to a trigger and shrink-wrap a short label
+   * list. They consistently undershot the `--popover-w-*` picker scale
+   * (which starts at 200 px for full pickers like DatePicker), so a
+   * separate sm/md/lg trio gives the same single-source guarantee at
+   * the compact end without inflating the menu chrome to picker size.
+   *
+   * | token              | width  | use case                                                |
+   * |--------------------|--------|---------------------------------------------------------|
+   * | `--menu-min-w-sm`  | 140 px | Filter chips, single-column toggles, small dropdowns    |
+   * | `--menu-min-w-md`  | 160 px | Context menus with 4–6 short actions                    |
+   * | `--menu-min-w-lg`  | 180 px | Context menus with longer labels or grouped sections    |
+   *
+   * Apply via `min-w-[var(--menu-min-w-md)]` etc. Use the picker
+   * `--popover-w-*` tokens instead when the panel hosts a 7-column
+   * calendar grid, embedded form, or other content that needs a fixed
+   * width rather than a shrink-wrap floor.
+   */
+  --menu-min-w-sm: 140px;
+  --menu-min-w-md: 160px;
+  --menu-min-w-lg: 180px;
+
+  /*
+   * WCAG 2.5.5 minimum tap-target size (#4374). Applied via the
+   * `min-tap` utility on touch-driven affordances that would
+   * otherwise undershoot the 44 px contract (small day-grid
+   * buttons, mobile week navigation chevrons). Single source so a
+   * future platform retune (Android 48-dp guideline, mobile 44-pt
+   * default) updates every consumer at once.
+   */
+  --tap-target: 44px;
+
+  /*
+   * Toggle focus-ring cutout (#4371). The `<Toggle>` track paints a
+   * 2 px halo around its focus outline; the halo color must match
+   * the local surface so the outline reads as a halo rather than a
+   * stray ring. Defaults to `--color-surface-0` (the document body)
+   * so the contract works in every theme. Ancestors that paint a
+   * non-surface-0 background (settings cards on surface-1, toolbar
+   * chips on surface-2) override this token locally so the cutout
+   * matches their fill.
+   */
+  --toggle-ring-cutout: var(--color-surface-0);
+
+  /*
+   * Canonical z-index scale. Always reference via `z-[var(--z-*)]` utility.
+   * Layers are separated by 10 so ad-hoc offsets can be layered between
+   * tiers without colliding with the next tier.
+   */
+  --z-base: 0;
+  --z-elevated: 10;
+  /* Calendar "now" indicator (the horizontal accent line that marks the
+     current time on week/day grids). Sits one rung above `--z-elevated`
+     so it paints over per-event/per-task pills (which already lift to
+     `--z-elevated` on focus) but stays below `--z-sticky` chrome. A
+     dedicated tier rather than a magic `z-10`: the now-line is a
+     cross-cutting overlay shared by WeekGridCell + DesktopMonthGrid +
+     the day-panel timeline. */
+  --z-now-indicator: 15;
+  --z-sticky: 30;
+  --z-overlay: 40;
+  --z-popover: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-critical: 80;
+  /* Tooltips canonically render above every other surface (modals,
+     toasts, even critical banners) — they label whatever currently
+     has pointer/keyboard focus, so anything that occludes them is
+     wrong. The dedicated tier above `--z-critical` lets <Tooltip>
+     join the z-index scale instead of carrying a bare `z-[200]`
+     magic number. */
+  --z-tooltip: 90;
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, SF Pro Text, system-ui, sans-serif;
+  --font-mono: SF Mono, JetBrains Mono, Fira Code, "Ubuntu Mono", "Noto Mono", monospace;
+
+  /*
+   * Sub-`text-xs` typography tokens (POL-L3). Before this scale, ad-hoc
+   * `text-[10px]` and `text-[11px]` were sprinkled across 30+ call sites
+   * for status pills, tabular metadata, and chevron icons. Two semantic
+   * tokens collapse the drift:
+   *   text-2xs → 11px / 14px line — pill chips, tabular metadata
+   *   text-3xs → 10px / 13px line — last-resort tiny labels (badge tag
+   *              labels, recurring frequency caps)
+   * Raw `text-[10px]` / `text-[11px]` arbitrary values are now forbidden
+   * in components — pick a token instead.
+   */
+  --text-2xs: 0.6875rem;        /* 11px */
+  --text-2xs--line-height: 1rem;
+  --text-3xs: 0.625rem;         /* 10px */
+  --text-3xs--line-height: 0.8125rem;
+
+  /*
+   * Mid-rung typography tokens (between text-xs 12px and text-sm 14px,
+   * and between text-sm 14px and text-base 16px). Footer CTAs, focus-
+   * mode chrome, and onboarding banners had drifted to `text-[13px]` /
+   * `text-[15px]` arbitrary values. Two semantic tokens collapse the
+   * drift; raw `text-[13px]` / `text-[15px]` arbitrary values are now
+   * forbidden — pick a token instead.
+   *   text-13 → 13px / 17.6px line — focus-mode footer CTAs, stepper
+   *             metadata, onboarding row metadata
+   *   text-15 → 15px / 22.4px line — mobile focus footer CTAs, sticky-
+   *             note compact-body text
+   */
+  --text-13: 0.8125rem;         /* 13px */
+  --text-13--line-height: 1.1rem;
+  --text-15: 0.9375rem;         /* 15px */
+  --text-15--line-height: 1.4rem;
+
+  /*
+   * Pill chip density tokens (POL-M1). Before this scale, similar-role
+   * chips drifted between four hand-tuned padding pairs:
+   *   px-1.5 py-0.5 — count badges
+   *   px-2   py-0.5 — small status pills
+   *   px-2.5 py-0.5 — count chips next to titles
+   *   px-2.5 py-1   — interactive filter pills
+   * Two semantic densities collapse the drift; pick by role:
+   *   chip-tight  : passive count / status badges (`text-2xs/3xs`)
+   *   chip-cozy   : interactive filter pills (`text-xs`)
+   * Apply via the `chip-tight` / `chip-cozy` utility classes below; they
+   * also pin `rounded-full` so callers don't need to pair the tokens
+   * with `rounded-full` everywhere.
+   */
+  --chip-tight-px: 0.5rem;     /* 8px  */
+  --chip-tight-py: 0.125rem;   /* 2px  */
+  --chip-cozy-px: 0.625rem;    /* 10px */
+  --chip-cozy-py: 0.25rem;     /* 4px  */
+
+  /*
+   * List-row density tokens (POL-M8). Same-role list rows were drifting
+   * between `px-4 py-3` (TaskCard), `py-2.5` (Eisenhower row),
+   * `py-1.5` (Upcoming task row), and `py-1` (popover task row),
+   * which made the visual rhythm jump as the user scrolled across
+   * Today → Upcoming → Calendar. Two density modes collapse the drift:
+   *   row-comfortable : full task cards (TaskCard / SelectableTaskCard)
+   *   row-compact     : section rows (overdue / upcoming / popover)
+   * The horizontal padding stays per-component since some rows have a
+   * leading checkbox and others don't.
+   */
+  --row-comfortable-py: 0.625rem; /* 10px — `py-2.5` */
+  --row-compact-py: 0.375rem;     /* 6px  — between `py-1` and `py-1.5` */
+
+  /*
+   * Section-heading typography (POL-M2). Body-level section headers
+   * were drifting between `text-sm font-medium`, `text-sm font-semibold`,
+   * and `text-base font-medium`. The canonical role-based scale is:
+   *   heading-section : in-page section titles inside a panel
+   *   heading-meta    : list-group / breakpoint titles ("Past entries")
+   * Apply via the utility classes below. Page-level `<h1>` titles keep
+   * their bespoke `text-2xl font-light` treatment defined per view.
+   */
+
+  /*
+   * Icon size tokens (POL-M4). Before this scale, the same-role icons
+   * (inline metadata glyphs) shipped in 12 / 14 / 16 px in the same row.
+   * Pick by role:
+   *   icon-xs (12px) : inline glyphs adjacent to `text-2xs/3xs` pills
+   *   icon-sm (14px) : inline glyphs adjacent to `text-xs` body
+   *   icon-md (16px) : button affordances, toolbar glyphs
+   *   icon-lg (20px) : standalone action buttons
+   * Tailwind `w-3 h-3` / `w-3.5 h-3.5` / `w-4 h-4` / `w-5 h-5` map 1:1 —
+   * tokens here are reference, not new utilities.
+   */
+
+  /*
+   * #3627 — easing-curve tokens. Tailwind 4's `@theme` block can't dereference
+   * `var(--ease-*)` inside the same block (the values are emitted into
+   * `@property` registrations, where `var()` is undefined-at-parse-time), so
+   * the `--animate-*` values below repeat the literal `cubic-bezier(...)`
+   * tuples. The `--ease-*` tokens are still useful for non-`@theme` rules
+   * (`transition` shorthands, hand-rolled animations) — referencing them
+   * there keeps the curves canonical.
+   */
+  --ease-overshoot: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-modal-settle: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-glow-cycle: cubic-bezier(0.37, 0, 0.63, 1);
+
+  --animate-toast-in: toast-in 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+  /* Modals are large surfaces — the springy overshoot in
+   * --animate-toast-in (cubic-bezier(0.34, 1.4, 0.64, 1) / --ease-overshoot)
+   * reads as visual noise on a 480-640px panel that's already drawing the
+   * user's full attention. Use a calm easeOutCubic with no overshoot
+   * so the modal settles into place rather than wobbling. Toasts
+   * keep the springy curve because their bouncy-ness is part of how
+   * they grab attention peripherally. */
+  --animate-modal-in: modal-in 0.18s cubic-bezier(0.215, 0.61, 0.355, 1);
+  --animate-check-pop: check-pop 0.22s ease-out;
+  --animate-ring-glow: ring-glow 3s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  --animate-ring-glow-paused: ring-glow-paused 4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+
+  /*
+   * #3627 — backdrop-filter saturate tokens for liquid-theme glass surfaces.
+   * Composed surfaces (those layered atop the `glass-surface-tint`) need
+   * extra saturation to compensate for the additional translucent fill;
+   * standalone surfaces sit closer to the underlying desktop and use a
+   * gentler boost. Per-profile overrides slot in alongside the existing
+   * `--profile-material-*-blur` tokens further down.
+   */
+  --profile-material-shell-saturate-composed: 138%;
+  --profile-material-shell-saturate-standalone: 122%;
+  --profile-material-panel-saturate-composed: 148%;
+  --profile-material-panel-saturate-standalone: 132%;
+
+  @keyframes ring-glow {
+    /* Source the glow hue from `--color-accent` via `oklch(from ...)`
+       (same pattern as `--shadow-glow-accent` above). Pre-#3593 the
+       L/C/H components were hardcoded to a dark-theme accent, so a
+       light-theme or alternative-accent palette glowed in the wrong
+       hue. */
+    0%, 100% {
+      filter: drop-shadow(0 0 3px var(--accent-tint-sm));
+    }
+    50% {
+      filter: drop-shadow(0 0 8px var(--accent-tint-md))
+        drop-shadow(0 0 16px var(--accent-tint-xs));
+    }
+  }
+  @keyframes ring-glow-paused {
+    0%, 100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  @keyframes toast-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scale(0.94);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes modal-in {
+    0% {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes check-pop {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.4);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes slide-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /*
+   * Invalid-input shake (#4587 item 7). Used by surfaces where a
+   * fast typist would otherwise miss a soft border-color + inline
+   * error swap — DatePicker stepper today, extendable to any single-
+   * field validation that wants a clearly-rejected motion cue.
+   * Damped six-cycle horizontal nudge; total run ~320ms so it
+   * resolves before the next keystroke. Always wrap usage in the
+   * `motion-safe:` Tailwind variant so reduced-motion users get the
+   * static error state only.
+   */
+  @keyframes shake-x {
+    0%, 100% { transform: translateX(0); }
+    10% { transform: translateX(-3px); }
+    30% { transform: translateX(3px); }
+    50% { transform: translateX(-2px); }
+    70% { transform: translateX(2px); }
+    90% { transform: translateX(-1px); }
+  }
+
+  /*
+   * R2 polish (#4386) — FLIP-style settle for a just-dropped card. The
+   * card mounts with a small downward translate + scale dip, then
+   * springs back to its resting position. Pair with the
+   * `drop-afterglow` ring utility for a ~600ms accent halo so the eye
+   * can re-find the moved row.
+   */
+  --animate-drop-settle: dropSettle 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes dropSettle {
+    0% {
+      transform: translateY(-6px) scale(0.985);
+      opacity: 0.85;
+    }
+    60% {
+      transform: translateY(1px) scale(1.005);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  /*
+   * R2 polish (#4385) — task completion checkmark stroke draw. The
+   * checkmark path renders with a 24-unit dasharray; the offset
+   * collapses from 24 to 0 over 160ms so the stroke "draws" in from
+   * one end. Pair with `task-strike-sweep` below.
+   */
+  --animate-check-draw: checkDraw 160ms cubic-bezier(0.65, 0, 0.35, 1) both;
+
+  @keyframes checkDraw {
+    0% { stroke-dashoffset: 24; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  /*
+   * R2 polish (#4385) — completion-time strikethrough sweep. A
+   * background-gradient line grows left→right under the title; the
+   * pre-existing `line-through` decoration takes over once isDone
+   * flips, so the gradient is only the in-flight choreography.
+   */
+  --animate-strike-sweep: strikeSweep 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+
+  @keyframes strikeSweep {
+    0% { background-size: 0% 1px; }
+    100% { background-size: 100% 1px; }
+  }
+
+  /*
+   * R2 polish (#4388) — 4-7-8 breathing cycle for the focus-mode break
+   * screen. Inhale 4s, hold 7s, exhale 8s. Total 19s loop. The scale
+   * range is intentionally narrow (1 → 1.08) so the rhythm reads as
+   * calm, not pulsing.
+   */
+  --animate-breathing-478: breathing478 19s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+
+  @keyframes breathing478 {
+    0%   { transform: scale(1); }
+    /* 4s inhale: 0% → 4/19 ≈ 21.05% */
+    21%  { transform: scale(1.08); }
+    /* 7s hold: 21% → 11/19 ≈ 57.89% */
+    58%  { transform: scale(1.08); }
+    /* 8s exhale: 58% → 100% */
+    100% { transform: scale(1); }
+  }
+
+  /*
+   * R2 polish (#4388) — ambient radial-gradient drift behind the break
+   * screen. Slow 30s background-position pan keeps the surface alive
+   * without competing with the breathing circle for attention.
+   */
+  --animate-ambient-drift: ambientDrift 30s linear infinite;
+
+  @keyframes ambientDrift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /*
+   * R2 polish (#4389) — focus-mode active-task cross-fade. The current
+   * card eases out (180ms), the next card eases in with a 60ms delay
+   * (240ms). Two separate keyframes so callers can drive them off the
+   * `key={task.id}` mount swap.
+   */
+  --animate-focus-task-in: focusTaskIn 240ms cubic-bezier(0.215, 0.61, 0.355, 1) 60ms both;
+  --animate-focus-task-out: focusTaskOut 180ms cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
+
+  @keyframes focusTaskIn {
+    0%   { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes focusTaskOut {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-8px); }
+  }
+
+  /*
+   * R2 polish (#4389) — "up next" footer chip slides up from the
+   * bottom rail when an action is in flight.
+   */
+  --animate-focus-footer-slide: focusFooterSlide 220ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+
+  @keyframes focusFooterSlide {
+    0%   { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /*
+   * R2 polish (#4396) — Quick Capture NL-date sparkle stroke draw.
+   * Uses the same dasharray choreography as the check draw, scaled to
+   * 200ms for the slightly longer sparkle path.
+   */
+  --animate-sparkle-draw: sparkleDraw 200ms cubic-bezier(0.65, 0, 0.35, 1) both;
+
+  @keyframes sparkleDraw {
+    0%   { stroke-dashoffset: 36; opacity: 0; }
+    20%  { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  /*
+   * R2 polish (#4396) — chip-scale-in for the Quick Capture detected-
+   * date pill. Fades + scales up from 0.9 so the chip lands with a
+   * gentle pop when the natural-language parser first attaches a
+   * date to the draft.
+   */
+  --animate-chip-scale-in: chip-scale-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes chip-scale-in {
+    0%   { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /*
+   * R2 polish (#4386) — drop afterglow ring. A short-lived ring tinted
+   * with the accent token so the just-moved card holds the user's eye
+   * for ~600ms after settle. Driven via animation rather than a
+   * setTimeout-managed class for predictability under reduced motion
+   * (the universal `*` reset in `accessibility.css` collapses this to
+   * 0.01ms automatically).
+   */
+  --animate-drop-afterglow: dropAfterglow 600ms ease-out both;
+
+  @keyframes dropAfterglow {
+    0%   { box-shadow: 0 0 0 1px var(--accent-tint-md), 0 0 12px var(--accent-tint-sm); }
+    100% { box-shadow: 0 0 0 1px transparent, 0 0 0 transparent; }
+  }
+}
+
+/*
+ * Clarity-first surface overrides (#3592). The `clarity-first-surface`
+ * utility (and its descendants) used to repeat the same three
+ * declarations — `backdrop-filter: none`, the dimmer surface-1 bg,
+ * and the dimmer surface-3 border — eight times across four panel
+ * utilities, each block carrying `!important` because the cascade
+ * couldn't otherwise outrank the panel's `:root[data-theme='liquid']`
+ * declarations cleanly. They are now pulled into custom properties so
+ * every override block reads `var(--clarity-override-*)`. The values
+ * live in exactly one place — here. Defaulting them at `:root` means
+ * every override block resolves to the canonical clarity look even
+ * without an ancestor explicitly scoping them; what makes the override
+ * conditional is the selector that applies the `var(--*)` declaration,
+ * not the variable's value.
+ */
+:root {
+  --clarity-override-backdrop: none;
+  --clarity-override-bg: color-mix(in oklch, var(--color-surface-1) 94%, transparent);
+
+  /*
+   * Sticky-header background. Sticky section headers (CommandPalette
+   * groups, AI Memory cluster headers, etc.) need a near-opaque
+   * surface-1 wash so the scrolled-under content doesn't bleed through.
+   * Routing through this token instead of `bg-surface-1/95
+   * backdrop-blur-sm` (#4559 item 8) lets reduced-transparency themes
+   * — the high-contrast / forced-colors profile, plus user accessibility
+   * preferences — override to a flat opaque surface without `backdrop-
+   * filter`, which is expensive and visually muddy under HCM. The
+   * default sits at 96 % opacity for a hair of see-through; theme
+   * overrides bump it to 100 % where motion/transparency is reduced.
+   */
+  --surface-sticky-bg: color-mix(in oklch, var(--color-surface-1) 96%, transparent);
+  --clarity-override-border: color-mix(in oklch, var(--color-surface-3) 72%, transparent);
+}
+
+/* Flatten sticky-header tint under reduced-transparency / forced-colors
+   themes so sticky chrome stays legible without a backdrop blur. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  :root {
+    --surface-sticky-bg: var(--color-surface-1);
+  }
+}

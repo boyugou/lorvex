@@ -1,0 +1,11 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Habit Stats
+DB: /tmp/lorvex.db
+ID: habit-alpha
+Name: Read
+Total completions: 120
+Today: 1
+Last 30 days: 28

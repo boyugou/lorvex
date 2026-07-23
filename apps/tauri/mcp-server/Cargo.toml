@@ -1,0 +1,96 @@
+[package]
+name = "lorvex-mcp-server"
+# Audit #3008-L3: inherit version from [workspace.package].version.
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Rust-native MCP runtime for Lorvex"
+publish = false
+# Audit #2295: inherit MSRV from [workspace.package].
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "lorvex-mcp-server"
+path = "src/main.rs"
+
+[dependencies]
+# Audit #3008-H5: `anyhow` is consumed only by mcp-server (single
+# consumer); declared inline rather than via `[workspace.dependencies]`
+# per the workspace dep policy.
+anyhow = "1"
+# Audit #2931-M4: enable `serde` explicitly so the MCP server does not
+# rely on `lorvex_store` / `lorvex_domain` transitively turning the feature
+# on. Cargo unifies features across the build graph, so the previous
+# omission worked in practice — but a future reorg that drops the
+# transitive enable would silently break MCP serialization paths
+# (calendar event JSON, changelog payloads, etc).
+chrono = { workspace = true, features = ["serde"] }
+lorvex-domain = { path = "../lorvex-domain", features = ["schemars"] }
+lorvex-mcp-derive = { path = "../lorvex-mcp-derive" }
+lorvex-runtime = { path = "../lorvex-runtime" }
+lorvex-store = { path = "../lorvex-store" }
+lorvex-sync = { path = "../lorvex-sync" }
+lorvex-sync-payload = { path = "../lorvex-sync-payload", features = ["schemars"] }
+lorvex-workflow = { path = "../lorvex-workflow" }
+# Audit #3008-H5: single-consumer dep — pinned inline.
+rmcp = { version = "1.6.0", features = ["transport-io"] }
+rusqlite = { workspace = true, features = ["bundled", "hooks"] }
+serde = { workspace = true }
+serde_json.workspace = true
+thiserror.workspace = true
+schemars = "1"
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal", "time"] }
+tokio-util = "0.7"
+# Audit #3035-M9: structured stderr logging. The mcp-server is
+# spawned by the Tauri parent; pre-fix the 35 `eprintln!` call
+# sites scattered across `mcp-server/src` produced unstructured
+# text stderr that the parent did not capture into `error_logs`.
+# Wiring `tracing` + `tracing-subscriber`'s JSON layer to stderr
+# at startup gives the Tauri parent a parseable stream it can
+# route into the diagnostics surface (the parent owns the IPC
+# spawn so it has the child's stderr handle).
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json", "env-filter"] }
+uuid = { workspace = true, features = ["v7"] }
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+# Issue #2873: enable runtime's `test-support` feature so tests
+# that wrap `DB_PATH` env mutation can reach the helper. Production
+# binaries cannot reach the unsafe `std::env::set_var` path because
+# it's gated behind the feature.
+lorvex-runtime = { path = "../lorvex-runtime", features = ["test-support"] }
+# Audit #2931-L14: criterion benchmark harness for the MCP server's
+# hot paths (router dispatch, FTS query, changelog assembly). The
+# JS-side `npm run benchmark:mcp:scale` exercises the binary end-to-
+# end; criterion gives us crate-local microbenchmark coverage that
+# isolates regressions to a single function. See `benches/router.rs`.
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
+
+# Audit #2965-H2: enable `test-support` so `make_server` can use
+# `ConnectionPool::new_in_memory` and skip the per-test tempdir +
+# WAL/SHM disk IO. Production code cannot reach this path because
+# the constructor itself is `#[cfg(any(test, feature = "test-support"))]`.
+lorvex-store = { path = "../lorvex-store", features = ["test-support"] }
+
+# #4423: process-wide HLC state (`HLC_RUNTIME`) cannot be safely
+# concurrently re-initialised across tests that open distinct temp
+# databases (each with its own device id). `serial_test` lets us
+# annotate every test that touches that state with `#[serial(hlc)]`
+# so libtest schedules them one at a time without serialising the
+# entire suite. Default features only; no async / file-locking
+# extensions needed.
+serial_test = { version = "3.2", default-features = false }
+
+# Register the criterion harness so `cargo bench` picks up the
+# router benchmark. `harness = false` lets criterion own its own
+# main(), bypassing libtest's runner.
+[[bench]]
+name = "router"
+harness = false

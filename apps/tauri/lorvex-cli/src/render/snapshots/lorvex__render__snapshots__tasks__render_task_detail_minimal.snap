@@ -1,0 +1,14 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Task
+DB: /tmp/lorvex.db
+ID: task-bravo
+Title: Minimal task
+Status: open
+Due: none
+Planned: none
+Priority: none
+List: list-work
+Notes: none

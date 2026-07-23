@@ -1,0 +1,29 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.calendar.event_detail",
+  "db_path": "/tmp/lorvex.db",
+  "event": {
+    "all_day": false,
+    "color": "#00aaff",
+    "created_at": "2026-04-01T10:00:00Z",
+    "description": "Daily team sync",
+    "end_date": null,
+    "end_time": "09:30",
+    "event_type": "event",
+    "id": "event-alpha",
+    "location": "Zoom",
+    "person_name": null,
+    "recurrence": "FREQ=DAILY",
+    "recurrence_exceptions": null,
+    "start_date": "2026-04-10",
+    "start_time": "09:00",
+    "timezone": "America/Los_Angeles",
+    "title": "Standup",
+    "updated_at": "2026-04-02T10:00:00Z",
+    "url": "https://example.com/zoom",
+    "version": "2026-04-02T10:00:00Z_0000000000000000"
+  }
+}

@@ -1,0 +1,13 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex List
+DB: /tmp/lorvex.db
+ID: list-work
+Name: Work
+Description: Work-related tasks
+Tasks:
+  - Ship feature [open] P1 due:2026-04-10 [task-alp]
+  - Review PR [in_progress] P2 due:2026-04-12 planned:2026-04-11 [task-bra]
+  - Plain task [completed] [task-cha]

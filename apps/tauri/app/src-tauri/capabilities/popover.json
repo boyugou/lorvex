@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "popover",
+  "description": "Capability for the popover window",
+  "windows": ["popover"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-hide"
+  ]
+}

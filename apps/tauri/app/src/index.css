@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/utilities.css';
+@import './styles/themes.css';
+@import './styles/components.css';
+@import './styles/platform.css';
+@import './styles/markdown.css';
+@import './styles/milkdown.css';
+@import './styles/interactions.css';
+@import './styles/accessibility.css';

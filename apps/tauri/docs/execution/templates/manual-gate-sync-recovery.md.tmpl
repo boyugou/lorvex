@@ -1,0 +1,70 @@
+# Manual Gate Evidence Report: Sync Recovery Playbook
+
+- Evidence target: {{EVIDENCE_TARGET}}
+- Date: {{DATE}}
+- Build commit: {{COMMIT}}
+- Runbook: `docs/execution/SYNC_RECOVERY_PLAYBOOK.md`
+
+## Evidence Metadata
+
+- Operator: <name/role>
+- Runtime: <macOS version + architecture>
+- App/MCP build notes: <build profile, local/CI artifact source>
+- Evidence bundle: <artifact path or issue attachment links>
+- Evidence permalink: <GitHub issue/PR comment URL>
+
+## Evidence Freshness
+
+- Captured at (UTC): {{CAPTURED_AT_UTC}}
+- Fresh until (UTC): {{FRESH_UNTIL_UTC}}
+- Evidence owner: <name/role>
+
+## Overall Outcome
+
+- Status: <PASS | PARTIAL | FAIL>
+- Blocking defects: <none OR issue links>
+- Summary: <2-4 sentences>
+
+## Fast Triage Snapshot
+
+| Metric | Before | After one manual `Sync now` |
+|---|---|---|
+| pending_count | <value> | <value> |
+| retrying_count | <value> | <value> |
+| failed_count | <value> | <value> |
+| last_success_at | <value> | <value> |
+| last_pull_at | <value> | <value> |
+| last_error | <value> | <value> |
+
+## Failure Mode Coverage
+
+| Mode | Attempted | Result | Evidence |
+|---|---|---|---|
+| A) Push write errors | Yes / No | Recovered / Failed / N/A | <logs/screenshots> |
+| B) Pull parse errors | Yes / No | Recovered / Failed / N/A | <logs/screenshots> |
+| C) Retries accumulating | Yes / No | Recovered / Failed / N/A | <logs/screenshots> |
+| D) Conflict suspicion | Yes / No | Recovered / Failed / N/A | <entity IDs + logs> |
+
+## Post-Recovery Verification
+
+| Check | Result | Evidence |
+|---|---|---|
+| `pending_count == 0` (or trending down under active writes) | Pass / Fail | <status snapshot> |
+| `failed_count == 0` | Pass / Fail | <status snapshot> |
+| `last_success_at` recent | Pass / Fail | <status snapshot> |
+| `last_pull_at` recent | Pass / Fail | <status snapshot> |
+| `last_error` empty | Pass / Fail | <status snapshot> |
+| known conflict entities converge to intended values | Pass / Fail | <entity IDs + values> |
+
+## Issue Comment Draft
+
+```md
+Manual sync recovery playbook run on {{DATE}} (commit {{COMMIT}}): <PASS|PARTIAL|FAIL>.
+
+- Triage counters moved as expected: <yes/no + details>
+- Failure mode coverage: A=<result>, B=<result>, C=<result>, D=<result>
+- Post-recovery verification: <pass/fail summary>
+- Blocking defects: <none OR issue links>
+- Evidence target: {{EVIDENCE_TARGET}}
+- Evidence report: `artifacts/manual-gates/sync-recovery/{{DATE}}/{{EVIDENCE_TARGET_SLUG}}.md`
+```

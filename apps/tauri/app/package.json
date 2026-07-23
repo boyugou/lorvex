@@ -1,0 +1,72 @@
+{
+  "name": "lorvex-app",
+  "private": true,
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "sideEffects": [
+    "./src/main.tsx",
+    "**/*.css"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "prepare:mcp": "node ../scripts/mcp/prepare_runtime.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "tauri": "node ../node_modules/@tauri-apps/cli/tauri.js",
+    "tauri:dev": "node ../node_modules/@tauri-apps/cli/tauri.js dev",
+    "tauri:build": "node ../node_modules/@tauri-apps/cli/tauri.js build",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test --ignore-snapshots",
+    "test:e2e:visual": "playwright test e2e/i18n-visual.spec.ts",
+    "test:e2e:install": "playwright install chromium",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:tailwind": "node ../scripts/lint/tailwind_class_audit.mjs"
+  },
+  "dependencies": {
+    "@lorvex/shared": "*",
+    "@milkdown/kit": "^7.19.2",
+    "@milkdown/react": "^7.19.2",
+    "@milkdown/utils": "^7.19.2",
+    "@tanstack/react-query": "^5.100.9",
+    "@tanstack/react-virtual": "^3.13.24",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-autostart": "^2.5.1",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-notification": "^2.3.3",
+    "@tauri-apps/plugin-opener": "^2.5.4",
+    "chrono-node": "^2.9.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.58.2",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tauri-apps/cli": "^2.11.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "~6.0.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "eslint": "^9.39.4",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "rollup-plugin-visualizer": "^7.0.1",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
+    "vite": "~8.0.11",
+    "vitest": "^4.1.5"
+  }
+}

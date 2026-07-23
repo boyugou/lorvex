@@ -1,0 +1,67 @@
+@layer components {
+  /* ── Platform-specific overrides ───────────────────────────────────── */
+
+  /* Windows: Segoe UI, smaller radii, Windows-style scrollbars */
+  :root[data-desktop-os='windows'] {
+    --app-font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Noto Sans CJK SC", "Noto Sans CJK TC", "Noto Sans CJK JP", "Noto Sans CJK KR", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Thai", sans-serif;
+  }
+  :root[data-desktop-os='windows'] button,
+  :root[data-desktop-os='windows'] input,
+  :root[data-desktop-os='windows'] select,
+  :root[data-desktop-os='windows'] textarea {
+    font-family: var(--app-font-family);
+  }
+
+  /* Linux: system font (respects GNOME/KDE font settings) */
+  :root[data-desktop-os='linux'] {
+    --app-font-family: system-ui, 'Ubuntu', 'Cantarell', 'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', sans-serif;
+  }
+
+  /* Android: Material You system font, 48dp touch targets */
+  :root[data-mobile-os='android'] {
+    --app-font-family: 'Roboto', system-ui, 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', sans-serif;
+  }
+  :root[data-mobile-os='android'] button,
+  :root[data-mobile-os='android'] [role='button'] {
+    min-height: 48px; /* Material Design minimum touch target */
+  }
+
+  /* Mobile shared: no hover effects, larger touch areas */
+  :root[data-mobile-os='android'] * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Reachability data attribute (#2997 IOS-L). `useNetworkStatus`
+     mirrors the online boolean onto `<html data-online="…">` so any
+     surface can react to offline transitions without re-subscribing.
+     The default style fades the chrome ~15% so the user notices the
+     drop without losing readability. Specific surfaces (sidebar
+     "Offline" badge, Sync Now button) keep their explicit treatments
+     and are not affected because the cascade scopes to chrome-class
+     containers only. */
+  :root[data-online='false'] .cv-network-aware {
+    opacity: 0.65;
+    transition: opacity 200ms ease-out;
+  }
+  :root[data-online='false'] .cv-network-aware-hidden {
+    visibility: hidden;
+  }
+
+  /* Thermal state hook. Mobile platforms can expose
+     thermal pressure to native code; we cannot read it
+     from a webview directly, but the bridge can mirror the value
+     onto `data-thermal-state` so global CSS can drop animations
+     when the device is under thermal pressure. The two CSS rules
+     below are the declarative half — the runtime side will land in
+     a follow-up Swift bridge (deferred per worktree scope, requires
+     mobile hardware to verify). Until then the rules sit dormant; they
+     do not affect any surface unless the attribute is set. */
+  :root[data-thermal-state='serious'] *,
+  :root[data-thermal-state='critical'] * {
+    /* Pause expensive transitions. Critical thermal events are rare
+       and short-lived; cutting animation budget protects the rest of
+       the system from thermal throttling that would slow input. */
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+ }

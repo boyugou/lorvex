@@ -1,0 +1,14 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Calendar Event
+DB: /tmp/lorvex.db
+ID: event-alpha
+Title: Standup
+Start: 2026-04-10 09:00
+End: 2026-04-10 09:30
+All-day: no
+Type: event
+Location: Zoom
+Description: Daily team sync

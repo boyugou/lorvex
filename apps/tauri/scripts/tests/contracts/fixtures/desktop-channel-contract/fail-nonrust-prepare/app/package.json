@@ -1,0 +1,7 @@
+{
+  "name": "fixture-app",
+  "scripts": {
+    "prepare:mcp": "node ../scripts/mcp/prepare_runtime.mjs",
+    "tauri:build": "tauri build"
+  }
+}

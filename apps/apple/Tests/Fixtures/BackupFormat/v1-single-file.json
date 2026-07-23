@@ -1,0 +1,76 @@
+{
+  "formatVersion": "1",
+  "manifest": {
+    "formatVersion": "1",
+    "schemaVersion": "1",
+    "generatedAt": "2026-07-17T12:00:00.000Z",
+    "source": {
+      "platform": "apple",
+      "appVersion": "1.0.0",
+      "deviceID": "fixture-device"
+    },
+    "entityCounts": {
+      "lists": 1,
+      "tasks": 1
+    }
+  },
+  "lists": [
+    {
+      "id": "55555555-5555-4555-8555-555555555551",
+      "name": "Public v1 fixture",
+      "description": "Pins the first public backup decoder.",
+      "color": "#5E5CE6",
+      "icon": "archivebox",
+      "aiNotes": "Keep this list stable.",
+      "position": 7
+    }
+  ],
+  "tasks": [
+    {
+      "id": "55555555-5555-4555-8555-555555555552",
+      "title": "Decode the v1 backup",
+      "notes": "This row intentionally exercises the public v1 task shape.",
+      "priority": "P2",
+      "status": "open",
+      "dueDate": "2026-07-18T17:00:00.000Z",
+      "plannedDate": "2026-07-18T00:00:00.000Z",
+      "availableFrom": "2026-07-17T00:00:00.000Z",
+      "estimatedMinutes": 25,
+      "tags": ["compatibility"],
+      "rawInput": "Remember this backup",
+      "listID": "55555555-5555-4555-8555-555555555551",
+      "aiNotes": "Golden fixture",
+      "checklist": [
+        {
+          "id": "55555555-5555-4555-8555-555555555553",
+          "position": 0,
+          "text": "Decode successfully",
+          "completed": false,
+          "createdAt": "2026-07-17T12:00:00.000Z",
+          "updatedAt": "2026-07-17T12:00:00.000Z"
+        }
+      ],
+      "reminders": [
+        {
+          "id": "55555555-5555-4555-8555-555555555554",
+          "reminderAt": "2026-07-18T16:30:00.000Z",
+          "createdAt": "2026-07-17T12:00:00.000Z",
+          "originalLocalTime": "2026-07-18T09:30:00",
+          "originalTz": "America/Los_Angeles"
+        }
+      ],
+      "recurrence": {
+        "freq": "WEEKLY",
+        "interval": 1,
+        "byDay": ["FR"],
+        "wkst": "MO"
+      },
+      "recurrenceExceptions": ["2026-07-25"],
+      "deferCount": 1,
+      "lastDeferReason": "needs_info",
+      "lastDeferredAt": "2026-07-16T12:00:00.000Z",
+      "createdAt": "2026-07-17T12:00:00.000Z",
+      "updatedAt": "2026-07-17T12:00:00.000Z"
+    }
+  ]
+}

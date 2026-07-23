@@ -1,0 +1,14 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.memory.detail",
+  "db_path": "/tmp/lorvex.db",
+  "memory": {
+    "content": "friendly",
+    "key": "preferences.tone",
+    "updated_at": "2026-04-01T10:00:00.000Z",
+    "version": "v1"
+  }
+}

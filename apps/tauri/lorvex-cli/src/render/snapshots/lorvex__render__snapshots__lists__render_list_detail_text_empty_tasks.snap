@@ -1,0 +1,11 @@
+---
+source: lorvex-cli/src/render/snapshots/lists.rs
+expression: out
+---
+Lorvex List
+DB: /tmp/lorvex.db
+ID: list-work
+Name: Work
+Description: Work-related tasks
+Tasks:
+  ↳ List is empty — capture a task into it with `lorvex task capture "<title>" --list <list-id>`.

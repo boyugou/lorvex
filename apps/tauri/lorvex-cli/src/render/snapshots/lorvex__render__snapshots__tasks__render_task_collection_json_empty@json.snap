@@ -1,0 +1,10 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.tasks.collection",
+  "db_path": "/tmp/lorvex.db",
+  "label": "Today",
+  "tasks": []
+}

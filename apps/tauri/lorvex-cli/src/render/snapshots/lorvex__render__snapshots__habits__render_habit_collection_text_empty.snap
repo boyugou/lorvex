@@ -1,0 +1,7 @@
+---
+source: lorvex-cli/src/render/snapshots/habits.rs
+expression: out
+---
+Lorvex Habits (2026-04-10)
+DB: /tmp/lorvex.db
+  ↳ No habits yet — create one with `lorvex habit create "<title>" --cadence daily`.

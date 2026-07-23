@@ -1,0 +1,1 @@
+export { useAssistantSyncController } from './useAssistantSyncController';

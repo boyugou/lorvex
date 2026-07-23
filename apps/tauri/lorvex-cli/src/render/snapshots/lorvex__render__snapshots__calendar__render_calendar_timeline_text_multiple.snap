@@ -1,0 +1,8 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Calendar
+DB: /tmp/lorvex.db
+  - 2026-04-10 09:00: Standup @ Zoom
+  - 2026-04-12: Conference

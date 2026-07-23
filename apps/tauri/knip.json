@@ -1,0 +1,48 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "app/e2e/**/*.spec.ts",
+    "**/*.test.{ts,tsx}",
+    "app/src/main.tsx",
+    "mcp-server/**/*.rs"
+  ],
+  "ignore": [
+    "scripts/tests/contracts/fixtures/**"
+  ],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/**/*.{mjs,ts,js}"
+      ]
+    },
+    "app": {
+      "entry": [
+        "src/main.tsx",
+        "e2e/**/*.spec.ts",
+        "src/**/*.test.{ts,tsx}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "e2e/**/*.{ts,tsx}"
+      ],
+      "vitest": {
+        "entry": [
+          "vitest.config.{ts,js,mjs}",
+          "src/**/*.test.{ts,tsx}"
+        ]
+      },
+      "playwright": {
+        "entry": [
+          "playwright.config.{ts,js,mjs}",
+          "e2e/**/*.spec.ts"
+        ]
+      },
+      "ignoreBinaries": ["vite", "vitest", "eslint", "tauri", "playwright"],
+      "ignoreDependencies": [
+        "vitest",
+        "@playwright/test",
+        "@vitest/coverage-v8"
+      ]
+    }
+  }
+}

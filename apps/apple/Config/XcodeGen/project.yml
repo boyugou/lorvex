@@ -1,0 +1,719 @@
+name: LorvexAppleNative
+options:
+  minimumXcodeGenVersion: 2.42.0
+  # English is the development language. The runtime-authoritative localization
+  # list is CFBundleLocalizations in each app's Info.plist
+  # (LorvexMobileApp-Info.plist, LorvexVisionApp-Info.plist); add future
+  # languages there and to every String Catalog instead of hardcoding language
+  # pairs in build logic.
+  developmentLanguage: en
+  deploymentTarget:
+    iOS: "18.0"
+    visionOS: "2.0"
+    watchOS: "11.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.0.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    # Lorvex is Apple-Silicon-only: drop the x86_64 slice on every SDK (device,
+    # simulator, Mac Catalyst). Simulators run arm64 on Apple Silicon and the App
+    # Store / device builds are arm64 anyway, so this excludes the unused (and, for
+    # the embedded watchOS-simulator slice, link-failing) Intel architecture rather
+    # than shipping a universal binary.
+    EXCLUDED_ARCHS[sdk=*]: x86_64
+packages:
+  # The pure-Swift core, consumed as a local SwiftPM package (mirrors the
+  # .package(path: "core") in Package.swift). LorvexCore links its five
+  # products; downstream targets link LorvexCore.
+  LorvexAppleCore:
+    path: core
+  # GRDB.swift — imported directly by LorvexCore's store-facing service code
+  # (DatabaseWriter etc.). Pinned to match core/Package.swift.
+  GRDB:
+    url: https://github.com/groue/GRDB.swift.git
+    from: 6.0.0
+  # swift-markdown — the AST parser backing LorvexMarkdownUI's renderer. Pinned
+  # to match Package.swift.
+  SwiftMarkdown:
+    url: https://github.com/swiftlang/swift-markdown.git
+    from: 0.8.0
+targets:
+  LorvexCore:
+    type: framework
+    platform: iOS
+    sources:
+      # SwiftPM's `.copy("Resources/Migrations")` preserves that directory as
+      # a folder at the resource-bundle root; XcodeGen's default `group`
+      # source type flattens nested directories into individual file
+      # references instead, which would drop the `Migrations/` folder the
+      # loader (SwiftLorvexCoreService+Migrations.swift) expects. Excluding
+      # it from the group scan and re-adding it as its own `folder`-type
+      # source (a blue folder reference) makes Xcode copy it verbatim.
+      #
+      # XcodeGen writes a `folder`-type source's `path` into the pbxproj
+      # unmodified with `sourceTree = SOURCE_ROOT` (unlike `group`/`file`
+      # sources, whose path XcodeGen recomputes relative to wherever the
+      # .xcodeproj actually lands). SOURCE_ROOT is the directory *containing*
+      # the generated .xcodeproj, which every script in this repo places at
+      # `$ROOT_DIR/dist/<subdir>/LorvexAppleNative.xcodeproj` — two levels
+      # below this package root — exactly the layout every
+      # `$(SRCROOT)/../../Config/...` build setting elsewhere in this file
+      # already assumes. The `../../` prefix here (with `optional: true` to
+      # skip XcodeGen's own project-root-relative existence check, which
+      # would otherwise look in the wrong place) follows that same
+      # convention so the folder resolves correctly at build time.
+      - path: Sources/LorvexCore
+        excludes:
+          - Resources/Migrations/**
+      - path: ../../Sources/LorvexCore/Resources/Migrations
+        type: folder
+        buildPhase: resources
+        optional: true
+    dependencies:
+      - package: LorvexAppleCore
+        product: LorvexDomain
+      - package: LorvexAppleCore
+        product: LorvexStore
+      - package: LorvexAppleCore
+        product: LorvexWorkflow
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: LorvexAppleCore
+        product: LorvexRuntime
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.core
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexMarkdownUI:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexMarkdownUI
+    dependencies:
+      - target: LorvexCore
+      - package: SwiftMarkdown
+        product: Markdown
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.markdownui
+        GENERATE_INFOPLIST_FILE: YES
+
+  # CloudKit sync engine, extracted into its own module so every surface that
+  # drives sync (macOS app, iOS app, mobile kit) links the same code. Mirrors
+  # the LorvexCloudSync target in Package.swift.
+  LorvexCloudSync:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexCloudSync
+    dependencies:
+      - target: LorvexCore
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: LorvexAppleCore
+        product: LorvexDomain
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.cloudsync
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexMobile:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexMobile
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexCloudSync
+      - target: LorvexMarkdownUI
+      - target: LorvexWidgetKitSupport
+      # MobileSettingsSections handles CloudTraversalAccountBinding values
+      # surfaced by LorvexCloudSync; the type lives in LorvexSync. A framework
+      # link does not re-export a dependency's Swift type metadata, so link
+      # LorvexSync directly or the Release archive fails with an undefined
+      # `type metadata for LorvexSync.CloudTraversalAccountBinding`.
+      - package: LorvexAppleCore
+        product: LorvexSync
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.mobilekit
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexMobileApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/LorvexMobileApp
+      - path: Config/Assets.xcassets
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Config/InfoPlist/LorvexMobileApp
+        buildPhase: resources
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexCloudSync
+      - target: LorvexMarkdownUI
+      - target: LorvexMobile
+      - target: LorvexCarPlay
+      - target: LorvexSystemIntents
+      # Widget sub-modules: the app embeds them so the focus widget extension
+      # can link against the shared copies at runtime. Mirrors the Package.swift
+      # module graph: LorvexWidgetExtension transitively pulls KitSupport,
+      # Views, and Intents; we list them explicitly here so XcodeGen marks each
+      # for embedding into the host app's Frameworks directory. LorvexWidgetIntents
+      # MUST be listed even though no app source imports it directly:
+      # LorvexWidgetViews (embedded) links against it, so omitting it leaves a
+      # dangling @rpath/LorvexWidgetIntents.framework load and the app (and its
+      # widget extension) crash on launch with dyld "Library not loaded".
+      - target: LorvexWidgetKitSupport
+      - target: LorvexWidgetViews
+      - target: LorvexWidgetIntents
+      - target: LorvexWidgetExtension
+      - target: LorvexFocusWidgetExtension
+        embed: true
+      - target: LorvexFocusFilterExtension
+        embed: true
+      # The watchOS app ships inside its companion iOS app for App Store
+      # distribution (a standalone watch app cannot be submitted on its own).
+      # XcodeGen copies the built LorvexWatchApp.app into the host's
+      # Watch/ directory. See docs/DISTRIBUTION.md §5 and the archive guard in
+      # script/archive_ios.sh (script/xcodegen_dependency_check.py).
+      - target: LorvexWatchApp
+        embed: true
+      # Dynamic package-product closure. Xcode builds a SwiftPM library
+      # product as a DYNAMIC `…PackageProduct` framework whenever two targets
+      # that share one process link the same product (here: this app target
+      # plus LorvexCore, and LorvexCore plus LorvexCloudSync for
+      # LorvexDomain/LorvexSync — which also drags GRDB dynamic). Linking a
+      # wrapper framework does NOT copy the wrapper's dynamic package
+      # dependencies into the host app: without these direct entries the app
+      # links fine and dies at launch with dyld "Library not loaded:
+      # @rpath/LorvexDomain.framework/…". A direct app-target dependency is
+      # what makes Xcode embed the dynamic product into Frameworks/ — do NOT
+      # add `embed: true` here, the automatic embed already exists and a
+      # second explicit copy fails the build ("Unexpected duplicate tasks").
+      # Declaring LorvexStore/LorvexWorkflow is also what MAKES them dynamic:
+      # left as single-client products they are statically linked into both
+      # LorvexCore.framework and the dynamic LorvexSync product — two copies
+      # of the same Swift types in one process.
+      # LorvexRuntime and swift-markdown's Markdown stay single-client and
+      # static (inside LorvexCore / LorvexMarkdownUI), so they are
+      # deliberately not listed.
+      # script/verify_macho_closure.py (run by
+      # script/verify_mobile_release_link.sh) gates this closure.
+      - package: LorvexAppleCore
+        product: LorvexDomain
+      - package: LorvexAppleCore
+        product: LorvexStore
+      - package: LorvexAppleCore
+        product: LorvexWorkflow
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple
+        # The app icon ships in Config/Assets.xcassets; without naming it the
+        # Home Screen icon renders blank.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Use LorvexCarPlay.entitlements once Apple approves the CarPlay
+        # entitlement for this App ID. Until then, keep the base entitlements
+        # file which does not include the CarPlay keys.
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexMobileApp.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexMobileApp-Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+      # App Store archives (script/archive_ios.sh, -configuration Release)
+      # swap in the CloudKit/APNs entitlements; the base entitlements above
+      # stay minimal so local/dev Debug builds don't require those
+      # capabilities. This is scoped to this target's Release configuration
+      # only — a command-line CODE_SIGN_ENTITLEMENTS override on xcodebuild is
+      # project-wide and would leak the iPhone app's entitlements onto every
+      # other target in the archive (widgets, watch app, watch complication).
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexMobileAppCloudKitAppStore.entitlements
+
+  # The widget sub-modules are separate frameworks (matching Package.swift's
+  # module graph). The app-extension below compiles only the @main
+  # LorvexWidgetBundle sources and links against these frameworks, which the
+  # host app (LorvexMobileApp) embeds.
+  LorvexWidgetKitSupport:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexWidgetKitSupport
+    dependencies:
+      - target: LorvexCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.widgetkitsupport
+        GENERATE_INFOPLIST_FILE: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  LorvexWidgetViews:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexWidgetViews
+    dependencies:
+      - target: LorvexWidgetKitSupport
+      - target: LorvexWidgetIntents
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.widgetviews
+        GENERATE_INFOPLIST_FILE: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  LorvexWidgetExtension:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexWidgetExtension
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexWidgetKitSupport
+      - target: LorvexWidgetViews
+      - target: LorvexWidgetIntents
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.widgetextensionlib
+        GENERATE_INFOPLIST_FILE: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  LorvexFocusWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Sources/LorvexWidgetBundle
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Config/InfoPlist/LorvexFocusWidgetExtension
+        buildPhase: resources
+    dependencies:
+      - target: LorvexWidgetExtension
+      - target: LorvexWidgetIntents
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.focuswidget
+        PRODUCT_NAME: LorvexFocusWidget
+        # iOS-only entitlements: app group without the macOS `app-sandbox` key.
+        # The macOS widget uses Config/LorvexWidgetExtension.entitlements (which
+        # keeps the sandbox key an iOS extension must not declare).
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexFocusWidgetExtension.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexWidgetExtension-Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  LorvexCarPlay:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexCarPlay
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexMobile
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.carplay
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexSystemIntents:
+    type: framework
+    platform: iOS
+    sources:
+      # The Focus filter must belong to the App Intents extension only; keeping
+      # it out of the host-linked framework prevents duplicate app/extension
+      # registration while the rest of the Shortcuts catalog stays here.
+      - path: Sources/LorvexSystemIntents
+        excludes:
+          - LorvexFocusFilterIntent.swift
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexWidgetKitSupport
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.systemintents
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexFocusFilterExtension:
+    type: extensionkit-extension
+    platform: iOS
+    sources:
+      - path: Sources/LorvexFocusFilterExtension
+      - path: Sources/LorvexSystemIntents/LorvexFocusFilterIntent.swift
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Config/InfoPlist/LorvexFocusFilterExtension
+        buildPhase: resources
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexWidgetKitSupport
+      - target: LorvexSystemIntents
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.focus-filter
+        PRODUCT_NAME: LorvexFocusFilterExtension
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexFocusFilterExtension.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexFocusFilterExtension-Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) LORVEX_FOCUS_FILTER_EXTENSION
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@executable_path/Frameworks"
+          - "@executable_path/../../Frameworks"
+
+  LorvexWidgetIntents:
+    type: framework
+    platform: iOS
+    sources:
+      - path: Sources/LorvexWidgetIntents
+    dependencies:
+      - target: LorvexCore
+      - target: LorvexWidgetKitSupport
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.widgetintents
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexCoreVision:
+    type: framework
+    platform: visionOS
+    sources:
+      # See LorvexCore's sources block above for why Migrations/ needs its
+      # own `folder`-type source (with the `../../`-prefixed path and
+      # `optional: true`) instead of being scanned as part of the group.
+      - path: Sources/LorvexCore
+        excludes:
+          - Resources/Migrations/**
+      - path: ../../Sources/LorvexCore/Resources/Migrations
+        type: folder
+        buildPhase: resources
+        optional: true
+    dependencies:
+      - package: LorvexAppleCore
+        product: LorvexDomain
+      - package: LorvexAppleCore
+        product: LorvexStore
+      - package: LorvexAppleCore
+        product: LorvexWorkflow
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: LorvexAppleCore
+        product: LorvexRuntime
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision.core
+        PRODUCT_NAME: LorvexCore
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexMarkdownUIVision:
+    type: framework
+    platform: visionOS
+    sources:
+      - path: Sources/LorvexMarkdownUI
+    dependencies:
+      - target: LorvexCoreVision
+      - package: SwiftMarkdown
+        product: Markdown
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision.markdownui
+        PRODUCT_NAME: LorvexMarkdownUI
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexCloudSyncVision:
+    type: framework
+    platform: visionOS
+    sources:
+      - path: Sources/LorvexCloudSync
+    dependencies:
+      - target: LorvexCoreVision
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: LorvexAppleCore
+        product: LorvexDomain
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision.cloudsync
+        PRODUCT_NAME: LorvexCloudSync
+        GENERATE_INFOPLIST_FILE: YES
+
+  # visionOS twin of LorvexWidgetKitSupport. LorvexMobile imports it (e.g.
+  # MobileStoreRuntimeActions), so the visionOS reuse of those sources needs a
+  # matching framework, exactly like LorvexWidgetKitSupportWatch on watchOS.
+  LorvexWidgetKitSupportVision:
+    type: framework
+    platform: visionOS
+    sources:
+      - path: Sources/LorvexWidgetKitSupport
+    dependencies:
+      - target: LorvexCoreVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision.widgetkitsupport
+        PRODUCT_NAME: LorvexWidgetKitSupport
+        GENERATE_INFOPLIST_FILE: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+  LorvexMobileVision:
+    type: framework
+    platform: visionOS
+    sources:
+      - path: Sources/LorvexMobile
+    dependencies:
+      - target: LorvexCoreVision
+      - target: LorvexCloudSyncVision
+      - target: LorvexMarkdownUIVision
+      - target: LorvexWidgetKitSupportVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision.mobilekit
+        PRODUCT_NAME: LorvexMobile
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexVisionApp:
+    type: application
+    platform: visionOS
+    sources:
+      - path: Sources/LorvexVisionApp
+      - path: Config/VisionAssets.xcassets
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Config/InfoPlist/LorvexVisionApp
+        buildPhase: resources
+    dependencies:
+      - target: LorvexCoreVision
+      - target: LorvexCloudSyncVision
+      - target: LorvexMarkdownUIVision
+      - target: LorvexWidgetKitSupportVision
+      - target: LorvexMobileVision
+      - target: LorvexSystemIntentsVision
+      # Dynamic package-product closure — see LorvexMobileApp's dependency
+      # block for why every host app declares and embeds these.
+      - package: LorvexAppleCore
+        product: LorvexDomain
+      - package: LorvexAppleCore
+        product: LorvexStore
+      - package: LorvexAppleCore
+        product: LorvexWorkflow
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision
+        PRODUCT_NAME: LorvexVisionApp
+        # visionOS needs a layered .solidimagestack icon; without naming it the
+        # Vision Pro home shows a generated placeholder instead of the brand mark.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexVisionApp.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexVisionApp-Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+      # See LorvexMobileApp's Release config above for why this is per-target
+      # and per-configuration. visionOS holds a synced on-disk DB and needs
+      # CloudKit like iOS, but registers no push subscription, so its
+      # App Store entitlements omit `aps-environment` entirely (see
+      # LorvexVisionAppCloudKitAppStore.entitlements).
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexVisionAppCloudKitAppStore.entitlements
+
+  LorvexSystemIntentsVision:
+    type: framework
+    platform: visionOS
+    sources:
+      - path: Sources/LorvexSystemIntents
+    dependencies:
+      - target: LorvexCoreVision
+      - target: LorvexWidgetKitSupportVision
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision.systemintents
+        PRODUCT_NAME: LorvexSystemIntents
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexCoreWatch:
+    type: framework
+    platform: watchOS
+    sources:
+      # See LorvexCore's sources block above for why Migrations/ needs its
+      # own `folder`-type source (with the `../../`-prefixed path and
+      # `optional: true`) instead of being scanned as part of the group.
+      - path: Sources/LorvexCore
+        excludes:
+          - Resources/Migrations/**
+      - path: ../../Sources/LorvexCore/Resources/Migrations
+        type: folder
+        buildPhase: resources
+        optional: true
+    dependencies:
+      - package: LorvexAppleCore
+        product: LorvexDomain
+      - package: LorvexAppleCore
+        product: LorvexStore
+      - package: LorvexAppleCore
+        product: LorvexWorkflow
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: LorvexAppleCore
+        product: LorvexRuntime
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watch.core
+        PRODUCT_NAME: LorvexCore
+        GENERATE_INFOPLIST_FILE: YES
+
+  # watchOS twin of LorvexWidgetKitSupport. Separate target (rather than
+  # squashing into LorvexWatch) so `Sources/LorvexWatch/*.swift` can
+  # `import LorvexWidgetKitSupport` exactly as it does under Package.swift.
+  LorvexWidgetKitSupportWatch:
+    type: framework
+    platform: watchOS
+    sources:
+      - path: Sources/LorvexWidgetKitSupport
+    dependencies:
+      - target: LorvexCoreWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watch.widgetkitsupport
+        PRODUCT_NAME: LorvexWidgetKitSupport
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexWatch:
+    type: framework
+    platform: watchOS
+    sources:
+      - path: Sources/LorvexWatch
+    dependencies:
+      - target: LorvexCoreWatch
+      - target: LorvexWidgetKitSupportWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watch.watchkit
+        PRODUCT_NAME: LorvexWatch
+        GENERATE_INFOPLIST_FILE: YES
+
+  LorvexWatchApp:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Sources/LorvexWatchApp
+      - path: Config/Assets.xcassets
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Config/InfoPlist/LorvexWatchApp
+        buildPhase: resources
+    dependencies:
+      - target: LorvexCoreWatch
+      - target: LorvexWatch
+      # LorvexWatch links LorvexWidgetKitSupport (@rpath load command), and so
+      # does the complication app-extension below. XcodeGen embeds an app
+      # target's *direct* framework deps only, so this transitive framework
+      # must be listed explicitly or the watch app (and its appex) crash on
+      # launch with dyld "Library not loaded:
+      # @rpath/LorvexWidgetKitSupport.framework". Mirrors why LorvexMobileApp
+      # lists every widget framework in its own dependency block.
+      - target: LorvexWidgetKitSupportWatch
+        embed: true
+      # The complication is a watchOS app-extension that ships inside the watch
+      # app's PlugIns/ directory; embed it so the bundled watch app is complete.
+      - target: LorvexWatchComplication
+        embed: true
+      # Dynamic package-product closure — see LorvexMobileApp's dependency
+      # block for why every host app declares and embeds these.
+      - package: LorvexAppleCore
+        product: LorvexDomain
+      - package: LorvexAppleCore
+        product: LorvexStore
+      - package: LorvexAppleCore
+        product: LorvexWorkflow
+      - package: LorvexAppleCore
+        product: LorvexSync
+      - package: GRDB
+        product: GRDB
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watchkitapp
+        PRODUCT_NAME: LorvexWatchApp
+        # XcodeGen's watchOS platform preset predates single-target watch
+        # apps and sets no LD_RUNPATH_SEARCH_PATHS (iOS/visionOS presets set
+        # it platform-wide), so without this the watch executable ships with
+        # only the /usr/lib/swift run path and cannot resolve a single
+        # @rpath framework load from its own Frameworks/ directory.
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - "@executable_path/Frameworks"
+        # Shares the AppIcon set in Config/Assets.xcassets (it carries a watchOS
+        # entry); without naming it the watch app ships a blank icon.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # watchOS is a read-only snapshot client (no CloudKit): this app-group-only
+        # file is correct for every configuration, including the App Store archive
+        # — no Release-config override needed here.
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexWatchApp.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexWatchApp-Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+
+  LorvexWatchComplication:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: Sources/LorvexWatchComplication
+      - path: Config/PrivacyInfo.xcprivacy
+        buildPhase: resources
+      - path: Config/InfoPlist/LorvexWatchComplication
+        buildPhase: resources
+    dependencies:
+      - target: LorvexWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watchkitapp.widgets
+        PRODUCT_NAME: LorvexWatchComplication
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexWatchComplication.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexWatchComplication-Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        APPLICATION_EXTENSION_API_ONLY: YES
+
+schemes:
+  LorvexMobileApp:
+    build:
+      targets:
+        LorvexMobileApp: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
+  LorvexVisionApp:
+    build:
+      targets:
+        LorvexVisionApp: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release
+  LorvexWatchApp:
+    build:
+      targets:
+        LorvexWatchApp: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    archive:
+      config: Release

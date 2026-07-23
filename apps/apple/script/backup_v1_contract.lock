@@ -1,0 +1,29 @@
+{
+  "files": {
+    "Sources/LorvexCore/Support/BackupV1Archive.swift": "a848391fbf180e77b0c024208ca00ed296ddc6b181c7abf5101797e49480398d",
+    "Sources/LorvexCore/Support/BackupV1Contract.swift": "f36d1b351f544d9411017fd99c201526bbcabdae663cee39c97369aa2a6b8f8f",
+    "Sources/LorvexCore/Support/BackupV1NativeTaskGraphSemantics.swift": "a6e1671f7493003bdeac5d4135c18ac6ff70f48c0d72d6724c174f59b814bbdc",
+    "Sources/LorvexCore/Support/BackupV1NativeTaskWire.swift": "d6ae1d3ee5391739df8ef7d450ce1d84b8596c38fb002dc3b548ee0ef2535716",
+    "Sources/LorvexCore/Support/BackupV1PayloadPreflight.swift": "e3e3aff37a389a6822fba0d1310a2eb67cb5311dadf76fbea9b8641fd91bef9c",
+    "Sources/LorvexCore/Support/BackupV1PortableWire.swift": "147f6c31f00c56ca081082dfac7cffc0346674bfc92ec64e0eef6275249deae5",
+    "Sources/LorvexCore/Support/BackupV1RecurrenceSemantics.swift": "5112278c6b29a4d2018d0e808bd4a6a043f71fe5bdc866c8b864926f20821bd0",
+    "Sources/LorvexCore/Support/BackupV1SingleFileInventory.swift": "01acbf59f20ba0f0c933df2a931b782ac8655f5d6137b84f90443a0483119aca",
+    "Sources/LorvexCore/Support/BackupV1TaskProjectionConsistency.swift": "fb28f79bdf40c89b42c4ddefc14436f0291ef71e61e1f5394e6a23016edc2461",
+    "Sources/LorvexCore/Support/BackupV1Wire.swift": "20e54481c40dc76b3f521bae8b95b4c867ab8b0c9326ebac97852b688aa8d9c2",
+    "Sources/LorvexCore/Support/NativeTaskGraphV1Validator.swift": "91d3121de831cb6d6aa1f9f2d5096ca6eb9fa1b72f92b7655ec0d591c88c5751",
+    "Sources/LorvexCore/Support/NativeTaskGraphValidation.swift": "b9d49dce0202013e3c7387580fbd52aef2c7bac4bd5d3a37ea50f4fce4a0af86",
+    "Tests/Fixtures/BackupFormat/v1-single-file.json": "74def953e95b40bb087b80c6fe11102bcde916ce5c3ede572583acc5c54832aa",
+    "Tests/Fixtures/BackupFormat/v1-zip-lists.json": "a4201c3e77b8d36abfb24622b4e499749d10cd8733ac907f34326020ea83596f",
+    "Tests/Fixtures/BackupFormat/v1-zip-manifest.json": "538bfe4723b03e941caa88a125917f17039fc96298364d0ea87fa855a512174d",
+    "Tests/Fixtures/BackupFormat/v1-zip-tasks.json": "56201b38e8ed95d1ec73901f9df285796661c3d569ab8c61631d8ac99432f069",
+    "Tests/LorvexAppleTests/BackupV1GoldenFixture.swift": "2d3ab39b6bf3ee9fb6174233a3594d4683a6f8b29064250827559e0e13f7b55d",
+    "core/Sources/LorvexDomain/CanonicalJSON.swift": "a5258ef7112a539f2b35368b6fb0468b373743c6ed48a93ce31d7603184b1d01",
+    "core/Sources/LorvexDomain/Hlc.swift": "5a3529a3315abff7c03bfa632a75469e03eb2775cc7a470f5dd3d1236de4a48c",
+    "core/Sources/LorvexDomain/JSONParse.swift": "cb44f686ff964eeb6b8440dd2032bcdfcecd83958463877049b3f5b3bcc6f710",
+    "core/Sources/LorvexDomain/JSONValue.swift": "72fbb1dcb3240988155daf0cc6e1a3d2e719ce29b99c07a3df7b005c6e266ca7"
+  },
+  "format_version": "1",
+  "golden_payload_sha256": "795964add8178b3ed5a6fca854bc6824b6a9e41aa100055a45920945b170827f",
+  "golden_production_json_sha256": "cb9ccbef39141b8106ea9ab292440a776cf6cc20405bdf612ea44bfc3759258f",
+  "golden_production_zip_sha256": "f0505ada6ef562686145cc71fb5fb3bcd357d144aefd1bff1965e894ed7956d8"
+}

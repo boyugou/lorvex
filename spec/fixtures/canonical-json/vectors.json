@@ -1,0 +1,94 @@
+{
+  "description": "Cross-language canonical-JSON parity vectors. Each `input` must canonicalize to the byte-identical `canonical` string in BOTH cores — Rust `lorvex_domain::canonical_json` and Swift `LorvexDomain.canonicalizeJSON` — because sync checksums are computed over these bytes. Expected outputs originate from the Rust implementation's test assertions and the shared escape-table contract. Integer numbers only: float formatting parity is asserted in implementation-level tests, not fixtures.",
+  "vectors": [
+    {
+      "name": "sorted_keys",
+      "input": {
+        "z": 1,
+        "a": 2,
+        "m": 3
+      },
+      "canonical": "{\"a\":2,\"m\":3,\"z\":1}"
+    },
+    {
+      "name": "nested_objects_sorted_recursively",
+      "input": {
+        "outer_b": {
+          "inner_z": 1,
+          "inner_a": 2
+        },
+        "outer_a": "value"
+      },
+      "canonical": "{\"outer_a\":\"value\",\"outer_b\":{\"inner_a\":2,\"inner_z\":1}}"
+    },
+    {
+      "name": "arrays_preserve_order",
+      "input": {
+        "items": [
+          3,
+          1,
+          2
+        ]
+      },
+      "canonical": "{\"items\":[3,1,2]}"
+    },
+    {
+      "name": "sync_layer_simple_payload",
+      "input": {
+        "title": "Buy milk",
+        "status": "open",
+        "priority": 2
+      },
+      "canonical": "{\"priority\":2,\"status\":\"open\",\"title\":\"Buy milk\"}"
+    },
+    {
+      "name": "string_escape_table",
+      "input": {
+        "s": "q\" b\\ n\n r\r t\t bs\b ff\f soh\u0001"
+      },
+      "canonical": "{\"s\":\"q\\\" b\\\\ n\\n r\\r t\\t bs\\b ff\\f soh\\u0001\"}"
+    },
+    {
+      "name": "unicode_passes_through_unescaped",
+      "input": {
+        "s": "héllo 🌍 中文"
+      },
+      "canonical": "{\"s\":\"héllo 🌍 中文\"}"
+    },
+    {
+      "name": "null_and_bools",
+      "input": {
+        "t": true,
+        "f": false,
+        "n": null
+      },
+      "canonical": "{\"f\":false,\"n\":null,\"t\":true}"
+    },
+    {
+      "name": "negative_and_64bit_integers",
+      "input": {
+        "neg": -42,
+        "big": 9223372036854775807
+      },
+      "canonical": "{\"big\":9223372036854775807,\"neg\":-42}"
+    },
+    {
+      "name": "empty_containers",
+      "input": {
+        "arr": [],
+        "obj": {}
+      },
+      "canonical": "{\"arr\":[],\"obj\":{}}"
+    },
+    {
+      "name": "keys_sort_by_utf8_bytes_not_collation",
+      "input": {
+        "b": 1,
+        "B": 2,
+        "a": 3,
+        "A": 4
+      },
+      "canonical": "{\"A\":4,\"B\":2,\"a\":3,\"b\":1}"
+    }
+  ]
+}

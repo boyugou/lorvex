@@ -1,0 +1,30 @@
+[package]
+name = "lorvex-runtime"
+# Audit #3008-L3: inherit version from [workspace.package].version.
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Shared desktop runtime primitives for Lorvex surfaces"
+publish = false
+# Audit #2295: inherit MSRV from [workspace.package].
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+dirs.workspace = true
+lorvex-domain = { path = "../lorvex-domain" }
+rusqlite = { workspace = true, features = ["bundled"] }
+sha2.workspace = true
+thiserror.workspace = true
+
+[features]
+# Issue #2873/#3098: gate `test_support::with_db_path_env_for_test`
+# behind a feature so unsafe `std::env::set_var` is unreachable from
+# production binaries. Downstream test consumers enable this feature
+# via dev-dependencies.
+test-support = []
+
+[dev-dependencies]
+tempfile.workspace = true

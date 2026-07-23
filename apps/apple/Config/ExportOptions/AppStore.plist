@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  ExportOptions for App Store Connect distribution.
+
+  Required environment:
+    APPLE_TEAM_ID   — 10-character Apple Developer Team ID (e.g. ABCDE12345)
+
+  Replace TEAM_ID_PLACEHOLDER with the actual value, or use
+  archive_ios.sh which performs the substitution automatically.
+
+  method: "app-store-connect" is the current Xcode 15+ key. The legacy
+  alias "app-store" still works but is deprecated.
+-->
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store-connect</string>
+  <key>teamID</key>
+  <string>TEAM_ID_PLACEHOLDER</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+  <key>uploadSymbols</key>
+  <true/>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>compileBitcode</key>
+  <false/>
+</dict>
+</plist>

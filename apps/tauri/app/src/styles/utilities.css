@@ -1,0 +1,873 @@
+/*
+ * POL-M1 — pill chip density utilities. Pair with `bg-*` and `text-*`
+ * tokens from the caller. `chip-tight` is the passive-badge default;
+ * `chip-cozy` is for interactive filter pills with hover/focus.
+ */
+@utility chip-tight {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--chip-tight-px);
+  padding-block: var(--chip-tight-py);
+  border-radius: var(--radius-r-chip);
+}
+
+@utility chip-cozy {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--chip-cozy-px);
+  padding-block: var(--chip-cozy-py);
+  border-radius: var(--radius-r-chip);
+}
+
+/*
+ * #3719 — tone-keyed chip utilities. The pattern
+ * the tone tint-sm fill plus `text-{tone}` was repeated across 7+
+ * sites (UpcomingView overdue/dependency chips, DependencyGraphView
+ * cycle/blocked/ready badges, PopoverTaskItem snooze chip). Pulling
+ * the duplication into a per-tone `@utility` keeps the chip recipe
+ * in one place — when the visual rhythm changes (tint step, text
+ * weight, future hover state), every chip moves together.
+ *
+ * Compose with `chip-tight` / `chip-cozy` for the padding/radius;
+ * these utilities only set the tone-specific fill + foreground.
+ */
+/*
+ * #3756 — split the chip-{tone} utility back into a static base (just
+ * background + foreground colour) and an `-interactive` modifier that
+ * layers in the transition + hover step. Cycle-31 #3745 baked the
+ * hover/transition into the base utility on the theory that read-only
+ * spans never fire `:hover` so the cost was free; in practice every
+ * chip-{tone} consumer paid the transition payload regardless of
+ * whether they were interactive. Re-introducing the dual-utility
+ * pattern restores separation of concerns at the cost of a second
+ * class name on interactive sites — the trade-off worth taking.
+ *
+ * Pair with `chip-tight` / `chip-cozy` for padding/radius — these
+ * utilities only set the tone-specific fill + foreground.
+ * For an interactive site (filter pill, dismissable affordance) add
+ * `chip-{tone}-interactive`. For a fainter base step (tint-xs), use
+ * `chip-{tone}-subtle` and pair with `-interactive` if hoverable.
+ */
+@utility chip-success {
+  background-color: var(--success-tint-sm);
+  color: var(--color-success);
+}
+
+@utility chip-warning {
+  background-color: var(--warning-tint-sm);
+  color: var(--color-warning);
+}
+
+@utility chip-danger {
+  background-color: var(--danger-tint-sm);
+  color: var(--color-danger);
+}
+
+/*
+ * #3744 — chip-{tone}-subtle. A fainter starting tier (tint-xs) for
+ * surfaces where the standard chip-{tone} fill is too loud — quiet
+ * "completed today" affordances, AI-suggested chips, secondary danger
+ * dismissals. Pair with `chip-{tone}-interactive` (#3756) when hover
+ * affordance is wanted.
+ */
+@utility chip-success-subtle {
+  background-color: var(--success-tint-xs);
+  color: var(--color-success);
+}
+
+@utility chip-warning-subtle {
+  background-color: var(--warning-tint-xs);
+  color: var(--color-warning);
+}
+
+@utility chip-danger-subtle {
+  background-color: var(--danger-tint-xs);
+  color: var(--color-danger);
+}
+
+/*
+ * #3756 — interactive chip modifiers. Add alongside `chip-{tone}` (or
+ * `chip-{tone}-subtle`) when the chip is a button / filter pill /
+ * other affordance that benefits from a transition + hover step. A
+ * read-only `<span>` should NOT carry this utility — keeping the
+ * transition declaration off static spans is the whole point of the
+ * split.
+ *
+ * The hover step matches the previous baked-in behaviour:
+ *   - chip-{tone}        hover → tint-md
+ *   - chip-{tone}-subtle hover → tint-sm  (apply via the same
+ *     `-interactive` utility — the tint ladder for both is one step
+ *     louder than the resting fill, and the modifier targets the
+ *     *current* background-color on hover)
+ */
+@utility chip-success-interactive {
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+  &:hover {
+    background-color: var(--success-tint-md);
+  }
+  &.chip-success-subtle:hover {
+    background-color: var(--success-tint-sm);
+  }
+}
+
+@utility chip-warning-interactive {
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+  &:hover {
+    background-color: var(--warning-tint-md);
+  }
+  &.chip-warning-subtle:hover {
+    background-color: var(--warning-tint-sm);
+  }
+}
+
+@utility chip-danger-interactive {
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+  &:hover {
+    background-color: var(--danger-tint-md);
+  }
+  &.chip-danger-subtle:hover {
+    background-color: var(--danger-tint-sm);
+  }
+}
+
+/*
+ * #3759 — tonal-surface-{tone}-xs. Faint tonal panel recipe — the
+ * tone tint-xs fill plus `border-{tone}/15` pattern was repeated
+ * across StatCard's BG_MAP, OverdueSeveritySection's row backgrounds,
+ * eisenhower quadrant defaults, and SectionOverdueAlertCard. Pulling
+ * the recipe into one utility per tone keeps the rest tier of every
+ * tonal panel walking the same ladder; combine with structural
+ * utilities (rounded, padding) at the call site.
+ */
+@utility tonal-surface-success-xs {
+  background-color: var(--success-tint-xs);
+  border-color: oklch(from var(--color-success) l c h / 0.15);
+}
+
+@utility tonal-surface-warning-xs {
+  background-color: var(--warning-tint-xs);
+  border-color: oklch(from var(--color-warning) l c h / 0.15);
+}
+
+@utility tonal-surface-danger-xs {
+  background-color: var(--danger-tint-xs);
+  border-color: oklch(from var(--color-danger) l c h / 0.15);
+}
+
+@utility tonal-surface-accent-xs {
+  background-color: var(--accent-tint-xxs);
+  border-color: oklch(from var(--color-accent) l c h / 0.15);
+}
+
+/*
+ * #3768 — tonal-surface-{tone}-sm. The next step on the tonal-panel
+ * ladder above the `-xs` faint tier — the Banner tone shell, the
+ * AlertBox tone shell, the manual-gate result row, and other "this
+ * panel is the surface of an alert/state" recipes all want the
+ * tone tint-sm fill plus `border-{tone}/40` pair, hand-rolled
+ * across 30+ sites pre-#3768. The `/40` border opacity matches the
+ * `--{tone}-tint-md` rail and reads as a clearly bordered tonal panel
+ * without dragging the eye away from the body content. Compose with
+ * structural utilities (`rounded`, `p-*`, `border`) at the call site
+ * — these utilities only own the fill + border colour pair.
+ */
+@utility tonal-surface-success-sm {
+  background-color: var(--success-tint-sm);
+  border-color: oklch(from var(--color-success) l c h / 0.40);
+}
+
+@utility tonal-surface-warning-sm {
+  background-color: var(--warning-tint-sm);
+  border-color: oklch(from var(--color-warning) l c h / 0.40);
+}
+
+@utility tonal-surface-danger-sm {
+  background-color: var(--danger-tint-sm);
+  border-color: oklch(from var(--color-danger) l c h / 0.40);
+}
+
+@utility tonal-surface-accent-sm {
+  background-color: var(--accent-tint-sm);
+  border-color: oklch(from var(--color-accent) l c h / 0.40);
+}
+
+/*
+ * POL-M2 — section-heading typography utilities. Two semantic roles:
+ *   heading-section : `text-sm font-medium text-text-primary`
+ *   heading-meta    : `text-xs font-medium text-text-secondary`
+ * Use these on `<h2>` / `<h3>` elements rather than re-deriving the
+ * same Tailwind triple in every view.
+ */
+@utility heading-section {
+  font-size: 0.875rem;        /* text-sm */
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+@utility heading-meta {
+  font-size: 0.75rem;         /* text-xs */
+  line-height: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/*
+ * POL-M7 — canonical disabled state. Matches the Button primitive so
+ * non-Button buttons (icon buttons, link-style buttons, custom rows)
+ * have the same affordance: 50% opacity + not-allowed cursor + cancel
+ * the active:scale press effect. Use as `disabled-state` instead of
+ * pasting the four utilities by hand.
+ */
+@utility disabled-state {
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  &:disabled:active {
+    transform: none;
+  }
+}
+
+/*
+ * #3603 — canonical focus-visible affordances. We previously hand-rolled
+ * `focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/60 — @verify-exempt: focus-ring-doc
+ * focus-visible:ring-offset-2 focus-visible:ring-offset-surface-0` (or the
+ * single-ring variant) at hundreds of sites; that drifted in subtle ways
+ * (different opacity, missing `outline-hidden`, ring color picked up
+ * `--color-card` instead of `--color-accent`).
+ *
+ * Two policy levels:
+ *   - `focus-ring-soft` — for compact controls (icon buttons, list rows,
+ *     chips). Single 2px outline with no surface offset; cheap, doesn't
+ *     fight tight layouts.
+ *   - `focus-ring-strong` — for prominent controls (primary actions,
+ *     cards, dialog buttons). 2px outline + 2px surface-colored "halo"
+ *     so the ring is legible against busy backgrounds and meets WCAG
+ *     2.4.7 / 1.4.11 non-text contrast.
+ *
+ * Both anchor to `--color-accent` so a theme retune updates the ring
+ * everywhere; `outline` (not `box-shadow ring`) keeps the ring outside
+ * the layout box and works inside Tailwind 4's structural-override
+ * themes without touching parent overflow.
+ */
+@utility focus-ring-soft {
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  /* #3633 — match any non-"false" aria-invalid value (true, grammar,
+     spelling). The literal '=true' selector silently failed for the
+     spec-valid token values. */
+  &[aria-invalid]:not([aria-invalid='false']):focus-visible {
+    outline-color: var(--color-danger);
+  }
+}
+
+@utility focus-ring-strong {
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-surface-0);
+  }
+  /* #3633 — match any non-"false" aria-invalid value (true, grammar,
+     spelling). The literal '=true' selector silently failed for the
+     spec-valid token values. */
+  &[aria-invalid]:not([aria-invalid='false']):focus-visible {
+    outline-color: var(--color-danger);
+  }
+}
+
+/*
+ * #3688 — semantic-tone focus rings for controls whose primary color
+ * is success/danger/warning rather than accent. The default
+ * `focus-ring-soft` always anchors to `--color-accent`; on a green
+ * "Complete" button or a red "Delete" confirm input that produces a
+ * jarring color collision. These tone-matched variants keep the same
+ * 2px outline + 1px offset geometry as `focus-ring-soft` so the
+ * affordance reads as the same family.
+ */
+@utility focus-ring-soft-success {
+  &:focus-visible {
+    outline: 2px solid var(--color-success);
+    outline-offset: 1px;
+  }
+}
+
+@utility focus-ring-soft-danger {
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 1px;
+  }
+}
+
+@utility focus-ring-soft-warning {
+  &:focus-visible {
+    outline: 2px solid var(--color-warning);
+    outline-offset: 1px;
+  }
+}
+
+/*
+ * #3626 — `liquid` theme sidebar-shell body shared by the
+ * (liquid-sidebar-shell × profile-material-shell) composition. Tailwind 4's
+ * `@utility` composition previously forced two mirror copies of the same
+ * eight-declaration body inside both `@utility liquid-sidebar-shell` and
+ * `@utility profile-material-shell`. We now collapse to a single regular
+ * CSS rule that matches any element carrying both classes; the profile utility
+ * below carries only the standalone material-shell treatment without the
+ * liquid theme tint.
+ */
+:root[data-theme='liquid'] .liquid-sidebar-shell.profile-material-shell {
+  position: relative;
+  border-inline-end: 1px solid
+    color-mix(in oklch, var(--color-surface-3) var(--profile-material-border-alpha), transparent);
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--color-surface-1) var(--profile-material-shell-alpha-top), transparent),
+      color-mix(in oklch, var(--color-surface-0) var(--profile-material-shell-alpha-bottom), transparent)
+    ),
+    color-mix(in oklch, var(--glass-surface-tint) var(--glass-surface-alpha), transparent);
+  backdrop-filter: blur(var(--profile-material-shell-blur)) saturate(var(--profile-material-shell-saturate-composed));
+  box-shadow: var(--glass-shadow-inner);
+}
+
+/*
+ * #3705 — clarity-first override mixin. The same three `!important`
+ * declarations were duplicated across `profile-material-shell`,
+ * `profile-material-panel`, and `clarity-first-surface` to flatten
+ * the panel/shell glass treatment when the user opts into the
+ * "clarity first" appearance profile. Extracting them behind a
+ * single `@utility` lets every site `@apply clarity-override` so
+ * future tweaks to the override fall in one place.
+ *
+ * The `!important` flags are necessary: the parent panel/shell
+ * utilities set the same backdrop-filter / background / border-color
+ * via the regular cascade, and the `clarity-first-surface` selector
+ * does not always nest deeper than them (e.g. when both classes co-
+ * occur on the same element). See `clarity-first-surface` below for
+ * the consumer-side selector logic.
+ */
+@utility clarity-override {
+  backdrop-filter: var(--clarity-override-backdrop) !important;
+  background: var(--clarity-override-bg) !important;
+  border-color: var(--clarity-override-border) !important;
+}
+
+@utility profile-material-shell {
+  position: relative;
+  overflow: hidden;
+  border-inline-end: 1px solid
+    color-mix(in oklch, var(--color-surface-3) var(--profile-material-border-alpha), transparent);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--color-surface-1) var(--profile-material-shell-alpha-top), transparent),
+    color-mix(in oklch, var(--color-surface-0) var(--profile-material-shell-alpha-bottom), transparent)
+  );
+  backdrop-filter: blur(var(--profile-material-shell-blur)) saturate(var(--profile-material-shell-saturate-standalone));
+
+  /* liquid_glass: subtle top-edge highlight only (no radial blob) */
+  :root[data-appearance-profile='liquid_glass'] &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: var(--glass-highlight-inset-strong);
+  }
+
+  :root[data-appearance-profile='studio'] &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 14% 12%,
+      color-mix(in oklch, white var(--profile-material-highlight-alpha), transparent),
+      transparent 44%
+    );
+    mix-blend-mode: screen;
+  }
+
+  &.clarity-first-surface,
+  .clarity-first-surface & {
+    @apply clarity-override;
+  }
+}
+
+/*
+ * #3612 — `liquid` theme glass-panel body shared across three @utility
+ * compositions: (liquid-settings-panel × profile-material-panel) and
+ * (liquid-popover-panel × profile-material-panel). Each pair triggers the
+ * same five-declaration body (position/border-color/background/
+ * backdrop-filter/box-shadow) plus the same `::after` highlight inset.
+ *
+ * Tailwind 4's `@utility` composition forced four mirror copies of the
+ * body before; we now collapse to a single regular CSS rule that matches
+ * any element carrying both `profile-material-panel` and one of the
+ * liquid-* panel utility classes. The per-utility blocks below keep only
+ * their unique surface treatment (overflow / isolation), and reference
+ * the shared body via class composition at the call site.
+ */
+:root[data-theme='liquid'] .profile-material-panel.liquid-settings-panel,
+:root[data-theme='liquid'] .profile-material-panel.liquid-popover-panel {
+  position: relative;
+  border-color: color-mix(
+    in oklch, var(--color-surface-3) var(--profile-material-border-alpha), transparent
+  );
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--color-surface-1) var(--profile-material-panel-alpha-top), transparent),
+      color-mix(in oklch, var(--color-surface-0) var(--profile-material-panel-alpha-bottom), transparent)
+    ),
+    color-mix(in oklch, var(--glass-surface-tint) var(--glass-surface-alpha), transparent);
+  backdrop-filter: blur(var(--profile-material-panel-blur)) saturate(var(--profile-material-panel-saturate-composed));
+  box-shadow: var(--glass-shadow-soft), var(--glass-shadow-inner);
+}
+
+:root[data-theme='liquid'] .profile-material-panel.liquid-settings-panel::after,
+:root[data-theme='liquid'] .profile-material-panel.liquid-popover-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--glass-highlight-inset-soft);
+}
+
+@utility liquid-settings-panel {
+  :root[data-theme='liquid'] &.profile-material-panel {
+    overflow: visible;
+    isolation: isolate;
+  }
+}
+
+@utility profile-material-panel {
+  /*
+   * #3668 — token-driven shell tokens (`--shell-panel-*`,
+   * `--structural-panel-*`) re-tune the panel for the
+   * structural-override themes (mica/adwaita/liquid + light variants);
+   * default themes use the profile-driven look via the fallbacks.
+   */
+  position: relative;
+  border: var(--structural-panel-border, 1px solid color-mix(
+    in oklch, var(--color-surface-3) var(--profile-material-border-alpha), transparent
+  ));
+  background: var(
+    --shell-panel-bg,
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--color-surface-1) var(--profile-material-panel-alpha-top), transparent),
+      color-mix(in oklch, var(--color-surface-0) var(--profile-material-panel-alpha-bottom), transparent)
+    )
+  );
+  border-radius: var(--structural-panel-radius, calc(0.75rem * var(--profile-radius-scale)));
+  box-shadow: var(--structural-panel-shadow, none);
+  backdrop-filter: var(--shell-panel-backdrop, blur(var(--profile-material-panel-blur)) saturate(var(--profile-material-panel-saturate-standalone)));
+
+  /* liquid_glass: subtle top-edge highlight only (no radial blob) */
+  :root[data-appearance-profile='liquid_glass'] &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: var(--glass-highlight-inset-strong);
+  }
+
+  :root[data-appearance-profile='studio'] &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 14% 12%,
+      color-mix(in oklch, white var(--profile-material-highlight-alpha), transparent),
+      transparent 44%
+    );
+    mix-blend-mode: screen;
+  }
+
+  & .clarity-first-surface,
+  .clarity-first-surface & {
+    @apply clarity-override;
+  }
+}
+
+@utility liquid-popover-panel {
+  :root[data-theme='liquid'] &.profile-material-panel {
+    overflow: hidden;
+  }
+}
+
+@utility clarity-first-surface {
+  /* Override panel-shell visuals when this surface is itself one of
+     the material panel/shell utilities, OR when one of those panels
+     appears as a descendant. Values come from `--clarity-override-*`
+     defined at `:root` — see the comment block near the top of the
+     stylesheet for the design rationale. */
+  &.profile-material-shell,
+  &.profile-material-panel,
+  & .profile-material-shell,
+  & .profile-material-panel {
+    @apply clarity-override;
+  }
+}
+
+@utility desktop-shell {
+  /*
+   * #3668 — token-driven background. The structural-override themes
+   * (mica/adwaita/liquid + light variants) want a flush, single-color
+   * shell — they re-tune `--shell-bg` to `var(--color-surface-0)` and
+   * the layered gradient default is bypassed.
+   */
+  position: relative;
+  isolation: isolate;
+  background: var(
+    --shell-bg,
+    linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--desktop-shell-top-tint) var(--desktop-shell-top-strength), transparent) 0px,
+      color-mix(
+          in oklch, var(--desktop-shell-top-tint)
+            calc(var(--desktop-shell-top-strength) * 0.62), transparent
+        )
+        52px,
+      transparent 118px
+    ),
+    radial-gradient(
+      120% 100% at 0% 0%,
+      color-mix(in oklch, var(--color-surface-1) var(--desktop-shell-left-bloom-strength), transparent),
+      transparent 46%
+    ),
+    radial-gradient(
+      100% 95% at 100% 0%,
+      color-mix(in oklch, var(--color-accent) var(--desktop-shell-right-bloom-strength), transparent),
+      transparent 42%
+    ),
+    var(--color-surface-0)
+  );
+  min-height: 100%;
+
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@utility desktop-card {
+  /*
+   * #3668 — token-driven structural shape. The structural-override
+   * themes (mica / mica_light / adwaita / adwaita_light / liquid /
+   * liquid_light) previously fought the base via a wall of
+   * `!important` declarations: Tailwind v4 emits @utility into the
+   * `utilities` cascade layer, which beats theme-scoped rules in the
+   * default layer regardless of selector specificity. That forced the
+   * theme overrides to chant `!important` 21 times to win.
+   *
+   * The five tokens consumed below default to the canonical look. The
+   * structural-override theme blocks (#3604) re-tune those tokens to
+   * the material-specific values: `border: none`, `border-radius: 0`,
+   * `box-shadow: none`, with a one-pixel `border-inline-end` stroke for the
+   * shell. No `!important` is needed because the values flow in
+   * through `var()` rather than through a higher-specificity rule.
+   */
+  position: relative;
+  border: var(--shell-card-border, 1px solid color-mix(in oklch, var(--color-surface-3) 40%, transparent));
+  border-inline-end: var(--shell-card-border-inline-end, var(--shell-card-border, 1px solid color-mix(in oklch, var(--color-surface-3) 40%, transparent)));
+  background: var(
+    --shell-card-bg,
+    linear-gradient(
+      to bottom,
+      var(--shell-card-stop-top) 0%,
+      var(--shell-card-stop-mid) 70%,
+      var(--shell-card-stop-bottom) 100%
+    )
+  );
+  border-radius: var(--shell-card-radius, 1.15rem);
+  overflow: hidden;
+  box-shadow: var(--shell-card-shadow, var(--shadow-desktop-card));
+  backdrop-filter: var(--shell-card-backdrop, blur(8px));
+}
+
+
+/*
+ * ─── @starting-style enter/exit animations ───────────────────────────────
+ * Uses CSS @starting-style + transition-behavior: allow-discrete to handle
+ * both enter AND exit animations without JavaScript state management.
+ *
+ * How it works:
+ *   1. @starting-style defines the initial state when an element first renders
+ *      or transitions from display:none -> visible (enter animation "from").
+ *   2. The normal (non-starting) styles are the "to" state.
+ *   3. The [hidden] selector defines the exit state -- the element transitions
+ *      to these values, then display becomes none at the end.
+ *   4. transition-behavior: allow-discrete lets display participate in the
+ *      transition, keeping the element visible during the exit animation.
+ *
+ * Browser support: Chrome 117+, Safari 17.5+, Firefox 129+ (~89% global).
+ * All Tauri 2 targets (WebView2/WKWebView/WebKitGTK) meet this baseline.
+ */
+/*
+ * --- content-visibility virtualization ----------------------------------------
+ * Tells the browser to skip rendering off-screen list items entirely.
+ * Dramatically reduces DOM layout/paint cost for long lists (800+ items).
+ * contain-intrinsic-size provides estimated height so scrollbar remains stable.
+ */
+/* cv-task-card: class hook for theme overrides (e.g., Liquid Glass border-radius).
+ * Previously an @utility with content-visibility: auto; removed because it caused
+ * first-click misses on just-scrolled-into-view cards. */
+
+@utility cv-changelog-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 56px;
+}
+
+@utility slide-panel {
+  transform: translateX(0);
+  opacity: 1;
+  transition:
+    transform 150ms ease-out,
+    opacity 150ms ease-out,
+    display 150ms ease-out allow-discrete;
+
+  @starting-style {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+
+  &[hidden] {
+    display: none;
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+@utility toast-enter-exit {
+  /* Entrance uses a brief overshoot curve (#4376) so each new toast
+     lands with a little life. Exit settles on a calmer 200ms slide-up
+     so dismissed toasts don't visually punch back. */
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  transition:
+    transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    display 220ms allow-discrete;
+
+  @starting-style {
+    transform: translateY(12px) scale(0.95);
+    opacity: 0;
+  }
+
+  &[hidden] {
+    display: none;
+    transform: translateY(-4px);
+    opacity: 0;
+    transition:
+      transform 200ms ease-out,
+      opacity 200ms ease-out,
+      display 200ms allow-discrete;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 120ms linear;
+    transform: none;
+    @starting-style {
+      transform: none;
+      opacity: 0;
+    }
+    &[hidden] {
+      transform: none;
+    }
+  }
+}
+
+/*
+ * #4374 — Minimum touch-target utility. Pairs the WCAG 2.5.5 / Apple HIG
+ * 44 px guideline (`--tap-target`) with a single class so callers don't
+ * thread inline `style={{ minWidth: 44, minHeight: 44 }}` literals.
+ * Use on small touch affordances (mobile calendar chevrons, week-grid
+ * day buttons) whose visual size would otherwise undershoot.
+ */
+@utility min-tap {
+  min-width: var(--tap-target);
+  min-height: var(--tap-target);
+}
+
+/*
+ * #4370 — Progress-bar fill utility. Pairs with inline
+ * `style={{ transform: 'scaleX(<0..1>)' }}` to drive determinate
+ * progress fills via a GPU-accelerated transform instead of an
+ * animated `width` (which forces layout on every frame). The
+ * fill must be paired with a fixed-width parent (typically
+ * `w-full`); the utility owns the transform-origin so the fill
+ * grows from the inline-start edge under LTR and inline-end edge
+ * under RTL.
+ */
+@utility progress-fill {
+  width: 100%;
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+[dir='rtl'] .progress-fill {
+  transform-origin: 100% 50%;
+}
+
+/*
+ * #4374 — Scrollbar-gutter contract for the main-window content
+ * area. `scrollbar-gutter: stable` reserves space for the
+ * scrollbar even when not painted so a view that toggles between
+ * "fits" and "overflows" content does not jump horizontally by
+ * 6-15 px. Inherited, so applying at `<main>` cascades to every
+ * `overflow-y-auto` descendant.
+ */
+main#main-content {
+  scrollbar-gutter: stable;
+}
+
+/*
+ * R2 polish (#4386) — FLIP-style settle on the just-dropped card.
+ * Applies the `--animate-drop-settle` keyframe once on mount + an
+ * inset accent halo so the eye finds the moved row. Pair with the
+ * `isRecentlyDropped` controller window so it auto-clears after the
+ * settle completes.
+ *
+ * Halo uses an inset `box-shadow` rather than `outline` (#4489):
+ * Eisenhower virtualized rows live inside `overflow-y-auto
+ * overscroll-contain` parents, and `outline` paints outside the
+ * layout box where it gets clipped on column inline edges. The
+ * inset shadow paints inside the card so it stays fully visible
+ * regardless of the surrounding scroll container — matching the
+ * today-cell glow pattern used elsewhere.
+ */
+@utility drop-settle {
+  animation: var(--animate-drop-settle);
+  box-shadow: inset 0 0 0 1px var(--accent-tint-md);
+  transition: box-shadow 600ms ease-out;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    box-shadow: none;
+  }
+}
+
+/*
+ * R2 polish (#4385) — completion strikethrough sweep. The element
+ * draws a 1px line via a `linear-gradient(currentColor)` background
+ * whose width animates 0% → 100% over 220ms. Once isDone flips to
+ * true the card swaps to the static `line-through` text decoration
+ * so the sweep is in-flight only. `currentColor` ties the line hue
+ * to the surrounding muted text so the sweep reads as the title
+ * draining, not as a new accent.
+ */
+/*
+ * R2 polish (#4388) — ambient radial-gradient drift behind the
+ * focus-mode break screen. Slow 30s background-position pan keeps
+ * the surface alive without competing with the breathing circle
+ * for attention. Caller paints the radial-gradient backgrounds +
+ * oversized `background-size` inline; this utility owns the
+ * keyframe wiring so the reduced-motion gate is centralized.
+ *
+ * The gate is intentionally only honored when the user has *no*
+ * preference set (the inverse `no-preference` query) so any
+ * accessibility-driven `reduce` choice fully suppresses the drift.
+ * The breathing circle uses the universal `accessibility.css` reset
+ * to collapse its keyframe — that reset cannot reach an inline
+ * `animation:` style, which is why this utility exists.
+ */
+@utility break-ambient-drift {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: var(--animate-ambient-drift);
+  }
+}
+
+@utility task-strike-sweep {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 60%;
+  background-size: 0% 1px;
+  animation: strikeSweep 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background-size: 100% 1px;
+  }
+}
+
+/*
+ * #4376 — Toast success-icon pop. Overshoot scale used when a
+ * success-flavored toast enters so the check icon "stamps" rather
+ * than fading in.
+ */
+@utility toast-success-pop {
+  animation: toastSuccessPop 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes toastSuccessPop {
+  0% { transform: scale(0.6); }
+  100% { transform: scale(1); }
+}
+
+/*
+ * #4402 — Settings autosave chip. A header chip that transitions through
+ * saving → saved states. The checkmark "sweeps" in via a stroke-dasharray
+ * reveal so the saved confirmation reads as a stamp rather than a flicker.
+ */
+@utility settings-autosave-check-sweep {
+  stroke-dasharray: 14;
+  stroke-dashoffset: 14;
+  animation: settingsCheckSweep 360ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes settingsCheckSweep {
+  0% { stroke-dashoffset: 14; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/*
+ * #4402 — ToastContainer stack offset (#4398). Each toast behind the
+ * frontmost layer shifts up by `--toast-stack-offset` × layer index
+ * so the visible stack reads as a card deck instead of a flat
+ * column. The translateY animates smoothly when toasts enter/exit
+ * the stack; reduced-motion users see the same final positions
+ * without the transition.
+ */
+@utility toast-stack-layer {
+  transform: translateY(calc(var(--toast-stack-depth, 0) * -4px))
+             scale(calc(1 - var(--toast-stack-depth, 0) * 0.02));
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* Named Tailwind 4 utilities for the canonical `--radius-r-*` token catalog.
+ * Every theme-tunable radius token gets a matching `rounded-r-<role>` utility
+ * so call sites read as `rounded-r-card` instead of the noisy
+ * `rounded-r-card` arbitrary-value form. See
+ * `docs/design/DESIGN_TOKENS.md` for the role catalog. */
+@utility rounded-r-control {
+  border-radius: var(--radius-r-control);
+}
+@utility rounded-r-card {
+  border-radius: var(--radius-r-card);
+}
+@utility rounded-r-panel {
+  border-radius: var(--radius-r-panel);
+}
+@utility rounded-r-window {
+  border-radius: var(--radius-r-window);
+}
+@utility rounded-r-modal {
+  border-radius: var(--radius-r-modal);
+}
+@utility rounded-r-chip {
+  border-radius: var(--radius-r-chip);
+}

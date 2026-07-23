@@ -1,0 +1,263 @@
+-- Lorvex CloudKit Schema
+-- Container: iCloud.com.lorvex.apple
+-- Zones (private database):
+--   LorvexData-e<epoch>-<generation> — one immutable-identity custom zone per
+--                   complete sync generation.
+--   _defaultZone    the private DB's default zone — holds the fixed-name
+--                   LorvexZoneEpoch generation authority and LorvexServerClock
+--                   time oracle. It cannot be deleted, so ready/rebuilding/deleted
+--                   authority survives every custom-zone loss path. CloudKit
+--                   record types are container-scoped, not zone-bound, so the
+--                   types are declared once here regardless of which zone each
+--                   record is written to.
+--
+-- Deploy to development:
+--   export CLOUDKIT_MANAGEMENT_TOKEN="..."
+--   xcrun cktool import-schema \
+--     --team-id VP5XSC3VN6 \
+--     --container-id iCloud.com.lorvex.apple \
+--     --environment development \
+--     --file cloudkit/schema.ckdb
+--
+-- Architecture: single-domain-record-type envelope pattern.
+-- All 20 syncable entity types share one domain record type (LorvexEntity).
+-- The Swift sync engine owns conflict resolution (LWW via HLC versions)
+-- and entity dispatch (via entity_type field). Generation root/seal, retention,
+-- wake, and default-zone control records are transport metadata and never flow
+-- through the entity apply pipeline.
+--
+-- Record name format: SHA-256 hex of `entity_type \0 entity_id` (no plaintext
+-- prefix). It is bounded and does not expose either input literally, while
+-- staying deterministic and unique per (entity_type, entity_id). It is not a
+-- secrecy boundary for enumerable, low-entropy inputs: an observer of record
+-- metadata can test plausible type/id pairs by hashing them.
+--
+-- End-to-end encryption: every wire field — `entity_type`, `entity_id`,
+-- `operation`, `payload`, `device_id`, `version`, and
+-- `payload_schema_version` — is an ENCRYPTED field, written client-side via
+-- CKRecord.encryptedValues, so CloudKit's servers store only ciphertext. The
+-- record type declares NO custom plaintext fields: encrypted fields cannot be
+-- QUERYABLE/SORTABLE, and none needs to be — inbound sync is driven by
+-- CKFetchRecordZoneChangesOperation change tokens (server commit order), never
+-- by CKQuery or a sort descriptor. This split MUST match
+-- CloudSyncEnvelopeRecord.Field.plaintext / .encrypted in the Swift client
+-- (cross-checked by script/verify_cloudkit_sync_readiness.py). A field's
+-- encryption status is fixed at creation: importing this schema into a
+-- container that already has these fields as non-encrypted requires a
+-- development-schema reset (`xcrun cktool reset-schema ...`); CloudKit will
+-- not flip a live field's encryption in place.
+
+DEFINE SCHEMA
+
+    -- Active record type used by the current sync engine.
+    --
+    -- Audit #2988-M6: READ is granted to `_creator` (the writing iCloud
+    -- account) instead of `_world`. Lorvex only ever uses the private
+    -- database, where `_world` is already empty in practice — but the
+    -- explicit `_creator` grant is defense-in-depth: if a future
+    -- container migration accidentally exposes private records to the
+    -- public DB, the schema-level ACL still prevents cross-account reads.
+    -- Every wire field — the identity + routing metadata (`entity_type`,
+    -- `entity_id`, `operation`), the user-content `payload`, the `device_id`,
+    -- the HLC `version`, and the receiver-compat `payload_schema_version` — is
+    -- end-to-end encrypted (ENCRYPTED fields, written via
+    -- CKRecord.encryptedValues), so CloudKit's servers store only ciphertext
+    -- for all of them. `entity_id` is routing metadata and may be a
+    -- user-controlled natural key for some kinds, so it must never sit in
+    -- plaintext. The only identity in the clear is the record name (a SHA-256
+    -- of `entity_type \0 entity_id`).
+    RECORD TYPE LorvexEntity (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        entity_type             ENCRYPTED STRING,
+        entity_id               ENCRYPTED STRING,
+        operation               ENCRYPTED STRING,
+        version                 ENCRYPTED STRING,
+        payload_schema_version  ENCRYPTED STRING,
+        payload                 ENCRYPTED STRING,
+        device_id               ENCRYPTED STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Fleet-visible generation authority and deletion barrier.
+    -- ONE fixed-name record (`lorvex-zone-epoch`) written to the private DB's
+    -- DEFAULT zone (`_defaultZone`), NOT a deletable custom generation zone. Its
+    -- strict protocol-v3 state machine points at exactly one ready generation, leases one
+    -- unique candidate while rebuilding, or persists `.deleted` after user wipe.
+    -- Because the default zone cannot be deleted, this authority outlives every
+    -- custom-zone loss path. This is runtime
+    -- CloudKit metadata, NOT a syncable Lorvex entity: its distinct record type
+    -- decodes as a `foreign` record on the inbound change stream (ignored by the
+    -- apply pipeline) and it is not part of the SQLite schema. `epoch` is a
+    -- non-sensitive control metadata (including the server-derived canonical
+    -- lease heartbeat), so — unlike every LorvexEntity wire field — it is stored
+    -- in the CLEAR, not ENCRYPTED. This record type MUST
+    -- be declared here (not left to development-only auto-creation): production
+    -- CloudKit rejects a save to an unknown record type, which would silently
+    -- break the resurrection guard. See CloudSyncZoneEpochRecord.swift.
+    RECORD TYPE LorvexZoneEpoch (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        protocol_version         INT64,
+        epoch                    INT64,
+        state                    STRING,
+        active_epoch             INT64,
+        generation_id            STRING,
+        active_zone              STRING,
+        ready_witness            STRING,
+        candidate_generation_id  STRING,
+        candidate_zone           STRING,
+        rebuild_id               STRING,
+        rebuild_owner            STRING,
+        rebuild_phase            STRING,
+        lease_activity_at        STRING,
+        retired_zones_json        STRING,
+        tombstone_compaction_cutoff STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Fixed-name server-time oracle (`lorvex-server-clock`) in the private
+    -- default zone. Every lease heartbeat/takeover probe upserts a fresh random
+    -- nonce with `.changedKeys` and trusts only the saved record's CloudKit-owned
+    -- modification date. The singleton is intentionally plaintext recovery
+    -- metadata, is never queried, and cannot grow without bound.
+    RECORD TYPE LorvexServerClock (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        nonce            STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Required identity marker in every generation-specific custom zone.
+    RECORD TYPE LorvexGenerationRoot (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        protocol_version  INT64,
+        epoch             INT64,
+        generation_id     STRING,
+        rebuild_id        STRING,
+        rebuild_owner     STRING,
+        database_instance_id STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Completion witness written after a candidate baseline has fully drained.
+    RECORD TYPE LorvexGenerationSeal (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        epoch          INT64,
+        generation_id  STRING,
+        rebuild_id     STRING,
+        rebuild_owner  STRING,
+        database_instance_id STRING,
+        ready_witness  STRING,
+        expected_entity_count INT64,
+        expected_encoded_bytes INT64,
+        canonical_digest STRING,
+        source_local_change_seq INT64,
+        expected_audit_count INT64,
+        audit_canonical_digest STRING,
+        retention_metadata_digest STRING,
+        tombstone_compaction_cutoff STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Ephemeral proof that a particular nil-token traversal saw changes written
+    -- after it started. One record is created per traversal and physically
+    -- deleted after its terminal page is durably committed locally.
+    RECORD TYPE LorvexTraversalWitness (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        generation_id STRING,
+        traversal_id STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Atomic per-generation audit-retention policy/frontier authority. No field
+    -- is queried server-side; encrypt the complete custom payload so policy,
+    -- activity cutoff, and HLC/device suffix are not visible to CloudKit.
+    RECORD TYPE LorvexAuditRetentionMetadata (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        protocol_version         ENCRYPTED INT64,
+        generation_epoch         ENCRYPTED INT64,
+        generation_id            ENCRYPTED STRING,
+        frontier_epoch           ENCRYPTED INT64,
+        cutoff_timestamp         ENCRYPTED STRING,
+        cutoff_entity_id         ENCRYPTED STRING,
+        policy                   ENCRYPTED STRING,
+        policy_version           ENCRYPTED STRING,
+        policy_authorized_epoch  ENCRYPTED INT64,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- Post-ready custom-zone write that wakes database-subscription clients.
+    RECORD TYPE LorvexGenerationWake (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        generation_id  STRING,
+        nonce          STRING,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_creator"
+    );
+
+    -- System record type. Retained for production compatibility.
+    -- Audit #2988-M6: READ narrowed from `_world` to `_creator`.
+    RECORD TYPE Users (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        roles           LIST<INT64>,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_creator"
+    );

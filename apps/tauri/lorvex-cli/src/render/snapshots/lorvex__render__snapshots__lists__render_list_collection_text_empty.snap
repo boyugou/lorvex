@@ -1,0 +1,7 @@
+---
+source: lorvex-cli/src/render/snapshots/lists.rs
+expression: out
+---
+Lorvex Lists
+DB: /tmp/lorvex.db
+  ↳ No lists yet — create one with `lorvex list create "<name>"`.

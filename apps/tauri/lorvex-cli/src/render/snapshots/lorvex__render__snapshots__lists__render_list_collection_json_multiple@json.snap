@@ -1,0 +1,26 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.lists.collection",
+  "db_path": "/tmp/lorvex.db",
+  "lists": [
+    {
+      "color": "#ff0000",
+      "icon": "briefcase",
+      "id": "list-work",
+      "name": "Work",
+      "open_count": 3,
+      "total_count": 5
+    },
+    {
+      "color": null,
+      "icon": null,
+      "id": "list-home",
+      "name": "Home",
+      "open_count": 0,
+      "total_count": 2
+    }
+  ]
+}

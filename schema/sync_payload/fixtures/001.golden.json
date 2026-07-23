@@ -1,0 +1,407 @@
+{
+  "envelopes": [
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000064-0000-7000-8000-000000000000",
+      "entity_type": "ai_changelog",
+      "operation": "upsert",
+      "payload": {
+        "after_json": "{\"golden\":true}",
+        "before_json": "{\"golden\":true}",
+        "entity_id": "00000002-0000-7000-8000-000000000000",
+        "entity_ids": "[\"00000002-0000-7000-8000-000000000000\"]",
+        "entity_type": "task",
+        "initiated_by": "Golden initiated_by",
+        "mcp_tool": "Golden mcp_tool",
+        "operation": "update",
+        "retention_epoch": 0,
+        "source_device_id": "golden-v1-device",
+        "summary": "Golden summary",
+        "timestamp": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000005-0000-7000-8000-000000000000",
+      "entity_type": "calendar_event",
+      "operation": "upsert",
+      "payload": {
+        "all_day": false,
+        "attendees": [
+          {
+            "name": "Golden attendee"
+          }
+        ],
+        "color": "#4287f5",
+        "content_version": "1760000000000_0001_0123456789abcdef",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "description": "Golden description",
+        "end_date": "2026-07-15",
+        "end_time": "10:30",
+        "event_type": "anniversary",
+        "id": "00000005-0000-7000-8000-000000000000",
+        "location": "Golden location",
+        "occurrence_state": null,
+        "person_name": "Golden person_name",
+        "recurrence": "{\"FREQ\":\"DAILY\"}",
+        "recurrence_generation": "1760000000000_0001_0123456789abcdef",
+        "recurrence_instance_date": null,
+        "recurrence_topology_version": "1760000000000_0001_0123456789abcdef",
+        "series_cutover_id": null,
+        "series_id": null,
+        "start_date": "2026-07-15",
+        "start_time": "09:30",
+        "timezone": "America/Los_Angeles",
+        "title": "Golden title",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "url": "https://lorvex.app/golden",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "bcb158b3-8e2b-835a-99db-6a66983d70e0",
+      "entity_type": "calendar_series_cutover",
+      "operation": "upsert",
+      "payload": {
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "cutover_date": "2026-07-16",
+        "id": "bcb158b3-8e2b-835a-99db-6a66983d70e0",
+        "lineage_root_id": "00000005-0000-7000-8000-000000000000",
+        "state": "active",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "2026-07-15",
+      "entity_type": "current_focus",
+      "operation": "upsert",
+      "payload": {
+        "briefing": "Golden briefing",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "date": "2026-07-15",
+        "task_ids": [
+          "00000002-0000-7000-8000-000000000000"
+        ],
+        "timezone": "America/Los_Angeles",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "2026-07-15",
+      "entity_type": "daily_review",
+      "operation": "upsert",
+      "payload": {
+        "blockers": "Golden blockers",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "date": "2026-07-15",
+        "energy_level": 3,
+        "learnings": "Golden learnings",
+        "linked_list_ids": [
+          "inbox"
+        ],
+        "linked_task_ids": [
+          "00000002-0000-7000-8000-000000000000"
+        ],
+        "mood": 4,
+        "summary": "Golden summary",
+        "timezone": "America/Los_Angeles",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef",
+        "wins": "Golden wins"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "fd79b99a1649a6fbbc09c9ca0a1ae6fa1684d3e22a3d1fa1ad48b65ff8e32530",
+      "entity_type": "entity_redirect",
+      "operation": "upsert",
+      "payload": {
+        "source_id": "000000f4-0000-7000-8000-000000000000",
+        "source_type": "tag",
+        "target_id": "00000004-0000-7000-8000-000000000000",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "2026-07-15",
+      "entity_type": "focus_schedule",
+      "operation": "upsert",
+      "payload": {
+        "blocks": [
+          {
+            "block_type": "task",
+            "calendar_event_id": null,
+            "end_minutes": 600,
+            "event_source": null,
+            "start_minutes": 540,
+            "task_id": "00000002-0000-7000-8000-000000000000",
+            "title": "Golden focus block"
+          }
+        ],
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "date": "2026-07-15",
+        "rationale": "Golden rationale",
+        "timezone": "America/Los_Angeles",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000006-0000-7000-8000-000000000000",
+      "entity_type": "habit",
+      "operation": "upsert",
+      "payload": {
+        "archived": false,
+        "color": "#4287f5",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "cue": "Golden cue",
+        "day_of_month": null,
+        "frequency_type": "weekly",
+        "icon": "star.fill",
+        "id": "00000006-0000-7000-8000-000000000000",
+        "milestone_target": 1,
+        "name": "Golden name",
+        "per_period_target": 1,
+        "position": 1,
+        "target_count": 1,
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef",
+        "weekdays": [
+          0,
+          2
+        ]
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000006-0000-7000-8000-000000000000:2026-07-15",
+      "entity_type": "habit_completion",
+      "operation": "upsert",
+      "payload": {
+        "completed_date": "2026-07-15",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "habit_id": "00000006-0000-7000-8000-000000000000",
+        "note": "Golden note",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "value": 2,
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000007-0000-7000-8000-000000000000",
+      "entity_type": "habit_reminder_policy",
+      "operation": "upsert",
+      "payload": {
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "enabled": false,
+        "habit_id": "00000006-0000-7000-8000-000000000000",
+        "id": "00000007-0000-7000-8000-000000000000",
+        "reminder_time": "09:30",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000001-0000-7000-8000-000000000000",
+      "entity_type": "list",
+      "operation": "upsert",
+      "payload": {
+        "ai_notes": "Golden ai_notes",
+        "archived_at": "2026-07-15T12:34:56.000Z",
+        "color": "#4287f5",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "description": "Golden description",
+        "icon": "star.fill",
+        "id": "00000001-0000-7000-8000-000000000000",
+        "name": "Golden name",
+        "position": 1,
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000008-0000-7000-8000-000000000000",
+      "entity_type": "memory",
+      "operation": "upsert",
+      "payload": {
+        "content": "Golden content",
+        "id": "00000008-0000-7000-8000-000000000000",
+        "key": "Golden key",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "working_hours",
+      "entity_type": "preference",
+      "operation": "upsert",
+      "payload": {
+        "key": "working_hours",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "value": {
+          "end": "17:00",
+          "start": "09:00"
+        },
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000004-0000-7000-8000-000000000000",
+      "entity_type": "tag",
+      "operation": "upsert",
+      "payload": {
+        "color": "#4287f5",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "display_name": "Golden display_name",
+        "id": "00000004-0000-7000-8000-000000000000",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000002-0000-7000-8000-000000000000",
+      "entity_type": "task",
+      "operation": "upsert",
+      "payload": {
+        "ai_notes": "Golden ai_notes",
+        "archive_version": "1760000000000_0001_0123456789abcdef",
+        "archived_at": "2026-07-15T12:34:56.000Z",
+        "available_from": "2026-07-15",
+        "body": "Golden body",
+        "canonical_occurrence_date": "2026-07-15",
+        "completed_at": null,
+        "content_version": "1760000000000_0001_0123456789abcdef",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "defer_count": 0,
+        "due_date": "2026-07-15",
+        "estimated_minutes": 45,
+        "id": "00000002-0000-7000-8000-000000000000",
+        "last_defer_reason": "blocked",
+        "last_deferred_at": "2026-07-15T12:34:56.000Z",
+        "lifecycle_version": "1760000000000_0001_0123456789abcdef",
+        "list_id": "inbox",
+        "planned_date": "2026-07-15",
+        "priority": 2,
+        "raw_input": "Golden raw_input",
+        "recurrence": "{\"FREQ\":\"DAILY\"}",
+        "recurrence_exceptions": "[\"2026-07-16\"]",
+        "recurrence_group_id": "000000c9-0000-7000-8000-000000000000",
+        "recurrence_instance_key": "000000c9-0000-7000-8000-000000000000:2026-07-15",
+        "recurrence_rollover_state": "ended",
+        "recurrence_successor_id": null,
+        "schedule_version": "1760000000000_0001_0123456789abcdef",
+        "spawned_from": null,
+        "spawned_from_version": null,
+        "status": "cancelled",
+        "title": "Golden title",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000002-0000-7000-8000-000000000000:00000005-0000-7000-8000-000000000000",
+      "entity_type": "task_calendar_event_link",
+      "operation": "upsert",
+      "payload": {
+        "calendar_event_id": "00000005-0000-7000-8000-000000000000",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "task_id": "00000002-0000-7000-8000-000000000000",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "0000000a-0000-7000-8000-000000000000",
+      "entity_type": "task_checklist_item",
+      "operation": "upsert",
+      "payload": {
+        "completed_at": "2026-07-15T12:34:56.000Z",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "id": "0000000a-0000-7000-8000-000000000000",
+        "position": 1,
+        "task_id": "00000002-0000-7000-8000-000000000000",
+        "text": "Golden text",
+        "updated_at": "2026-07-15T12:34:56.000Z",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "000000ca-0000-7000-8000-000000000000:000000cb-0000-7000-8000-000000000000",
+      "entity_type": "task_dependency",
+      "operation": "upsert",
+      "payload": {
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "depends_on_task_id": "000000cb-0000-7000-8000-000000000000",
+        "task_id": "000000ca-0000-7000-8000-000000000000",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000009-0000-7000-8000-000000000000",
+      "entity_type": "task_reminder",
+      "operation": "upsert",
+      "payload": {
+        "cancelled_at": "2026-07-15T12:34:56.000Z",
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "dismissed_at": "2026-07-15T12:34:56.000Z",
+        "id": "00000009-0000-7000-8000-000000000000",
+        "original_local_time": "09:30",
+        "original_tz": "America/Los_Angeles",
+        "reminder_at": "2026-07-15T12:34:56.000Z",
+        "task_id": "00000002-0000-7000-8000-000000000000",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    },
+    {
+      "device_id": "golden-v1-device",
+      "entity_id": "00000002-0000-7000-8000-000000000000:00000004-0000-7000-8000-000000000000",
+      "entity_type": "task_tag",
+      "operation": "upsert",
+      "payload": {
+        "created_at": "2026-07-15T12:34:56.000Z",
+        "tag_id": "00000004-0000-7000-8000-000000000000",
+        "task_id": "00000002-0000-7000-8000-000000000000",
+        "version": "1760000000000_0001_0123456789abcdef"
+      },
+      "version": "1760000000000_0001_0123456789abcdef"
+    }
+  ],
+  "payload_schema_version": 1
+}

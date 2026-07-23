@@ -1,0 +1,201 @@
+/* ── Accessibility: reduced motion ──────────────────────────────────────────
+ * #3563: this rule clamps EVERY transition-duration / animation-duration
+ * to 0.01ms via the universal selector, so per-site
+ * `motion-reduce:transition-none` Tailwind utilities are redundant — @verify-exempt: motion-reduce-transition-doc
+ * call sites should not add them. The Tailwind `motion-reduce:` variant
+ * remains useful only for non-`transition-*` properties (e.g.
+ * `motion-reduce:animate-none` on infinite ambient animations, handled @verify-exempt: motion-reduce-animate-doc
+ * explicitly below).
+ *
+ * #3706 — the three `!important` flags below are structurally
+ * necessary, not stylistic. The universal selector `*` has zero
+ * specificity, so any Tailwind duration utility (`.duration-150`,
+ * arbitrary `transition-[…]` values, the `.animate-*` keyframe
+ * shortcuts) authored at class-selector specificity (0,1,0) outranks
+ * this rule via the regular cascade. We need the override to win
+ * unconditionally across every author-stylesheet duration utility
+ * that ships in the build, and there is no realistic selector
+ * rewrite that lifts a universal-selector reset above 0,1,0 without
+ * `!important`. The flag stays. */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Infinite ambient animations (ring-glow on the focus-mode task,
+     animate-pulse on "now playing" / "saving" surfaces) do not
+     degrade gracefully under the blanket duration/iteration clamp
+     above — they would freeze mid-keyframe at whatever opacity /
+     drop-shadow the clamp lands on, producing a flickery steady
+     state. Explicitly suppress the animation for these classes so
+     the final visible state is the unanimated one.
+
+     The same applies to `animate-spin` (loading spinners) which
+     under the blanket clamp would finish a full rotation every
+     0.01ms — cosmetically still spinning, just flickering instead of
+     rotating smoothly — and to `animate-check-pop` (TaskCard
+     complete-button celebration) which would land mid-scale at
+     whatever transform the clamp catches. Tailwind's arbitrary-
+     animation escape hatch (`animate-[fade-in_0.15s_…]`,
+     `animate-[slide-in-up_0.2s_…]`) authors the `animation`
+     shorthand which technically respects the blanket duration clamp
+     but still leaves a visible 1-frame flash as the element pops
+     into existence; suppressing the animation entirely renders the
+     destination state (opacity 1, transform none) immediately so
+     reduced-motion users see no entry effect at all, matching macOS
+     / platform Reduce Motion behaviour. The attribute selector covers
+     every Tailwind arbitrary `animate-[…]` utility without having
+     to enumerate each keyframe name. */
+  .animate-ring-glow,
+  .animate-ring-glow-paused,
+  .animate-pulse,
+  .animate-spin,
+  .animate-check-pop,
+  .animate-modal-in,
+  [class*="animate-["] {
+    animation: none !important;
+  }
+}
+
+/* ── Accessibility: forced-colors / Windows High Contrast Mode (#2989 M7) ──
+   In Windows HCM (or any UA that surfaces `forced-colors: active`), the OS
+   overrides every author color with a small palette of system colors —
+   `Canvas`, `CanvasText`, `ButtonFace`, `ButtonText`, `LinkText`,
+   `Highlight`, `HighlightText`, `GrayText`. Tailwind's `outline-hidden`
+   compiles to `outline: 2px solid transparent`, which is invisible under
+   normal rendering but becomes a visible 2px transparent outline that the
+   forced-colors UA paints in CanvasText — that part works in our favor.
+   What does NOT carry through: focus rings expressed as `box-shadow` or
+   coloured `ring-*` utilities, since `box-shadow` is dropped in HCM.
+
+   This block restores the affordances that pure-color cues lose under
+   HCM: visible focus outlines on every interactive surface, a 1px border
+   on otherwise-borderless buttons so they are not invisible against
+   Canvas, and `forced-color-adjust: none` on a small set of decorative
+   elements (accent-tinted progress fills, theme swatches) where the OS
+   palette would erase the meaning entirely. Everything else is left to
+   the UA — that is the point of HCM. */
+@media (forced-colors: active) {
+  /* Make every focusable element show a clearly visible focus ring,
+     even if the author CSS suppressed UA outline (`outline-hidden`). */
+  *:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Buttons / interactive controls without a visible border become
+     indistinguishable from surrounding Canvas under HCM. Force a
+     1px ButtonText border so the hit-target is discoverable. */
+  button:not([disabled]),
+  [role='button']:not([aria-disabled='true']),
+  a[role='button'] {
+    border: 1px solid ButtonText;
+  }
+
+  /* `aria-disabled` and native `disabled` should both render as
+     GrayText so the SR + visual states agree. */
+  button[disabled],
+  [aria-disabled='true'] {
+    color: GrayText !important;
+    border-color: GrayText !important;
+  }
+
+  /* Selected / active list-options pick up Highlight + HighlightText
+     so the author's bg-accent recipe still reads as "selected". */
+  [role='option'][aria-selected='true'],
+  [role='tab'][aria-selected='true'],
+  [aria-current='page'],
+  [aria-current='true'] {
+    background-color: Highlight !important;
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+
+  /* Decorative gradient surfaces / progress bars: keep author colors so
+     "50% complete" still reads. SVG icons rendered via `currentColor`
+     pick up the surrounding text color naturally and need no override. */
+  .focus-progress-fill,
+  .opacity-slider ~ div > div {
+    forced-color-adjust: none;
+  }
+
+  /* `text-white` / `text-on-accent` paint pure white (or the per-theme
+     dark-ink override on light-accent themes). Under HCM the OS palette
+     overrides every author color, but the author-side `text-white`
+     fights the system `ButtonText` / `CanvasText` that the surrounding
+     button border picks up — readers see a white glyph on a white-ish
+     ButtonFace fill. Force these utilities to inherit the system
+     foreground so the contrast contract holds. */
+  .text-white,
+  .text-on-accent {
+    color: ButtonText !important;
+  }
+}
+
+/* ── Energy: pause decorative animations when window hidden (#2214) ──────────
+   `main.tsx` mirrors `document.visibilityState` onto this attribute on every
+   `visibilitychange`. Every `animate-pulse` / `animate-spin` / custom ring-
+   glow keeps the compositor awake at ~60fps even when the window is
+   backgrounded — wasted GPU / battery for pixels the user cannot see.
+   Transitions are left alone so a just-hidden element finishes animating
+   out cleanly if the user re-shows before its duration elapses. */
+:root[data-visibility='hidden'] *,
+:root[data-visibility='hidden'] *::before,
+:root[data-visibility='hidden'] *::after {
+  animation-play-state: paused !important;
+}
+
+/* ── Text selection color (#2497) ──────────────────────────────────────────
+   Without a theme-aware ::selection rule, every user text highlight fell
+   back to the WebKit default bright blue — conspicuously off against
+   Lorvex's carefully-tuned dark and light palettes. Use the accent color
+   at a readable-contrast alpha. color-mix keeps selected text legible
+   against any of the 25+ themes (the accent token varies per theme) and
+   `color: inherit` avoids forcing white-on-accent when the selection
+   contains emoji or colored glyphs. */
+::selection {
+  background-color: var(--accent-tint-selection);
+  color: inherit;
+}
+::-moz-selection {
+  background-color: var(--accent-tint-selection);
+  color: inherit;
+}
+
+/* Drive invalid visuals off `aria-invalid="true"` so screen-reader
+   state and sighted-user state can never drift. Any <input>,
+   <select>, or <textarea> wrapped by a `ValidatedField` (or any
+   other surface that sets `aria-invalid` manually) picks up the
+   danger-tinted border + focus ring automatically — callers should
+   not hand-roll their own red-border recipe. Only applied to
+   elements that opt into the styling via the `.validated-input`
+   class, so existing inputs with benign `aria-invalid` semantics
+   aren't restyled out from under their owners. */
+/* #3801 — `!important` removed. The original `!important` predated
+   the `<CompactNumberInput>` recipe, which historically baked
+   `border-surface-3` into the resting class string. Tailwind's
+   class-order resolution then made the danger-tint border lose to
+   the resting border — `!important` was a sledgehammer to break the
+   tie. Cycle 37 restructured the resting-border class through a
+   separate map so the invalid state can win on cascade order alone:
+   the only consumer that emits a resting `border-*` class on a
+   `.validated-input` is now `<CompactNumberInput>`, and that recipe
+   keeps the border class on the same element, declared earlier in
+   the file than this aria-invalid override. Plain cascade
+   precedence does the right thing without escalating specificity
+   (which would otherwise force every future override — themes,
+   focus-state debug overlays, etc. — to also reach for
+   `!important`). */
+.validated-input[aria-invalid='true'] {
+  border-color: var(--danger-tint-validated-border);
+  background-color: var(--danger-tint-xs);
+}
+.validated-input[aria-invalid='true']:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--danger-tint-validated-focus);
+}

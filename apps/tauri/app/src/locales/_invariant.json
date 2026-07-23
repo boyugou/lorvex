@@ -1,0 +1,13 @@
+{
+  "task.priorityP1": "P1",
+  "task.priorityP2": "P2",
+  "task.priorityP3": "P3",
+  "allTasks.groupP1": "P1",
+  "allTasks.groupP2": "P2",
+  "allTasks.groupP3": "P3",
+  "common.tabKey": "Tab",
+  "settings.themeAdwaita": "Adwaita",
+  "settings.themeAdwaitaLight": "Adwaita",
+  "settings.recentLogsSourceChangelog": "ai_changelog",
+  "settings.recentLogsSourceSync": "sync_outbox"
+}

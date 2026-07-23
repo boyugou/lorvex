@@ -1,0 +1,62 @@
+# Manual Gate Evidence Report: MCP E2E
+
+- Evidence target: {{EVIDENCE_TARGET}}
+- Date: {{DATE}}
+- Build commit: {{COMMIT}}
+- Runbook: `docs/execution/MCP_E2E_VALIDATION.md`
+- Clients: Claude Desktop, Claude Code, Codex (same local DB snapshot)
+
+## Evidence Metadata
+
+- Operator: <name/role>
+- Runtime: <macOS version + architecture>
+- App/MCP build notes: <build profile, local/CI artifact source>
+- Evidence bundle: <artifact path or issue attachment links>
+- Evidence permalink: <GitHub issue/PR comment URL>
+
+## Evidence Freshness
+
+- Captured at (UTC): {{CAPTURED_AT_UTC}}
+- Fresh until (UTC): {{FRESH_UNTIL_UTC}}
+- Evidence owner: <name/role>
+
+## Overall Outcome
+
+- Status: <PASS | PARTIAL | FAIL>
+- Blocking defects: <none OR issue links>
+- Summary: <2-4 sentences>
+
+## Workflow Matrix
+
+| Workflow | Claude Desktop | Claude Code | Codex | Evidence |
+|---|---|---|---|---|
+| WF-1 Capture | Pass / Fail | Pass / Fail | Pass / Fail | <transcript/screenshot links> |
+| WF-2 Triage | Pass / Fail | Pass / Fail | Pass / Fail | <transcript/screenshot links> |
+| WF-3 Plan | Pass / Fail | Pass / Fail | Pass / Fail | <transcript/screenshot links> |
+| WF-4 Execute + Corrections | Pass / Fail | Pass / Fail | Pass / Fail | <transcript/screenshot links> |
+| WF-5 Review + Learn | Pass / Fail | Pass / Fail | Pass / Fail | <transcript/screenshot links> |
+
+## Failure-Handling Coverage
+
+| Repro Class | Attempted | Result | Evidence |
+|---|---|---|---|
+| E-VAL (validation mismatch) | Yes / No | Recovered / Failed | <transcript/log> |
+| E-CONF (client config drift) | Yes / No | Recovered / Failed | <setup guidance screenshot/log> |
+
+## Artifacts
+
+- App screenshots:
+- Assistant transcript snippets:
+- Non-blocking defect links:
+
+## Issue Comment Draft
+
+```md
+Manual MCP E2E gate run on {{DATE}} (commit {{COMMIT}}): <PASS|PARTIAL|FAIL>.
+
+- WF matrix: <N pass> / <N fail> across Claude Desktop, Claude Code, Codex
+- Failure-handling coverage: E-VAL=<result>, E-CONF=<result>
+- Blocking defects: <none OR issue links>
+- Evidence target: {{EVIDENCE_TARGET}}
+- Evidence report: `artifacts/manual-gates/mcp-e2e/{{DATE}}/{{EVIDENCE_TARGET_SLUG}}.md`
+```

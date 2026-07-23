@@ -1,0 +1,7 @@
+---
+source: lorvex-cli/src/render/snapshots/tasks.rs
+expression: out
+---
+
+Focus tasks:
+  ↳ No focus tasks set — `lorvex focus set <task-id>` or let your assistant call `focus_set` to pin one.

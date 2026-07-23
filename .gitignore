@@ -1,0 +1,35 @@
+.build/
+dist/
+.DS_Store
+*.xcuserstate
+DerivedData/
+apps/apple/core/build/
+
+
+# Build artifacts
+script/__pycache__/
+*.pyc
+.claude/
+
+# Simulator/QA screenshot deliverables — captured for review, never tracked
+_shots/
+
+# Secrets & internal ops — Apple Developer credentials, signing material,
+# provisioning profiles, and the internal Apple Developer / signing runbook
+# (Team ID, certificate fingerprints, renewal dates). NEVER commit these; they
+# stay local only. Public signing/distribution guidance lives in DISTRIBUTION.md.
+secrets/
+docs/APPLE_DEVELOPER.md
+apps/apple/docs/APPLE_DEVELOPER.md
+*.provisionprofile
+*.mobileprovision
+*.p12
+*.cer
+*.certSigningRequest
+*.p8
+.env
+.env.build
+!.env.build.example
+
+# Superpowers brainstorm artifacts
+.superpowers/

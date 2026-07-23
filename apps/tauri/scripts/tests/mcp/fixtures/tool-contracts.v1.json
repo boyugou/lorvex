@@ -1,0 +1,593 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-06-26T19:29:35.701Z",
+  "server_entry": "target/debug/lorvex-mcp-server",
+  "tool_count": 117,
+  "tools": [
+    {
+      "name": "add_daily_review",
+      "description_sha256": "dcd9c850867dca5cd1e805c9d4c7efb9ce2b17fa79f5b604ea9bbc340c21bcde",
+      "schema_sha256": "5e694c2207764c44d5ca6cec6cdcaa1a85080a169e1ff1c4468e7d6a19605b80"
+    },
+    {
+      "name": "add_event_exception",
+      "description_sha256": "52848c3a6918a73c8cf29c11dfab810539a62f64affd7a9e7b22e55e3d1ccc82",
+      "schema_sha256": "1ecb140fc2712b9d15c708c6c7f00f1b8e9b384db04ab9224b56739695e39a39"
+    },
+    {
+      "name": "add_task_checklist_item",
+      "description_sha256": "a4982091bef1b6ff117a70e30b556ea1a68374466abfac9937454f7c59eb44c6",
+      "schema_sha256": "29de136cdf3348850f29bfa0dd6f5c12688ccf396fd31ef1f520178af1c9a295"
+    },
+    {
+      "name": "add_task_recurrence_exception",
+      "description_sha256": "1632e59ffdd46e82bc70584d8527ff6bf3aad5dfdb5d699a1664742af34dba29",
+      "schema_sha256": "b697700db31efb2d74ebd93e3e29670bdd5e7e9ba81ac8ccb9adb06098749544"
+    },
+    {
+      "name": "add_task_reminder",
+      "description_sha256": "210fafd58e3566d5b58f234af12eec89c7d88c80d04e89b8c273aa633de185e3",
+      "schema_sha256": "a76ee232226aa354c628289a6cf68af2132008d406a4931514939ab026303077"
+    },
+    {
+      "name": "add_to_current_focus",
+      "description_sha256": "77144b7f99d28b9731eca1526071d93b2680f11edab1a6a5cb0ae60093f7c123",
+      "schema_sha256": "86d7c1b95e17502615e3ee46b341f6a3749edbdd99cb8a527b70f7555bffda7d"
+    },
+    {
+      "name": "amend_daily_review",
+      "description_sha256": "ebd2de70c4bb2b71de1d326edc0cbfcaa9ef98b1b00a85b06a6c6e6b4afffe1c",
+      "schema_sha256": "ed93a3612a31822aff7edfbe65e65bdf7d11b7d820fab176cd5ff8b461a16cc7"
+    },
+    {
+      "name": "analyze_task_patterns",
+      "description_sha256": "2207f3abae083dba167e66f414b7a9847260c9d68fb4eb1a1a59e5a947c17be0",
+      "schema_sha256": "a88627c41186e2135b4acbd340036a72a8790bcd3eb36969e70104cc9d37ca60"
+    },
+    {
+      "name": "append_to_task_body",
+      "description_sha256": "60fff0be73bc673ec60a38623000828edd108c8a2bdde126acb84a5ca3c6b409",
+      "schema_sha256": "416c374f7bcc9602177257eaf5d4decc36a16b2c1dcf7e2560176e7ee3809c9f"
+    },
+    {
+      "name": "batch_cancel_tasks",
+      "description_sha256": "b20a05861bb646c157973f81527453fd7be897c80f2bcbab061247e6fc422b34",
+      "schema_sha256": "a7c0fde777e307ef5784adfb9e085f6d1177bc0388e965bd97c9a4bac761100d"
+    },
+    {
+      "name": "batch_cancel_tasks_in_list",
+      "description_sha256": "af5a055e1727503682b220898c865ef18996dd7a85ccb95dd721bf0f39d5717d",
+      "schema_sha256": "3ee2dda6b627cb142ee8ad9e25d345eed691f3a951e8841d3998b8ab9286bbf5"
+    },
+    {
+      "name": "batch_complete_habit",
+      "description_sha256": "369e4e759583d0b26f9c86ebe6a206528f2ae42049117ddb743b5a6ec2456575",
+      "schema_sha256": "d6da668b3bbb8ca27c80f787bd0066b2b7d6810fddd9adac4e5cf3547cbc7676"
+    },
+    {
+      "name": "batch_complete_tasks",
+      "description_sha256": "dcfa59a376be50aa9e3bddbc4c3d1e6d08759d5c0ceb22914fb75a673c82f7ee",
+      "schema_sha256": "23a23782e74e706acff8d9f8b4900a6978e61909df1316f1646aecc578fb326e"
+    },
+    {
+      "name": "batch_create_calendar_events",
+      "description_sha256": "51cdf5dc05b5738da941d874e8c5bfb159bb31d827ddfc7c86289a6c9bb491ca",
+      "schema_sha256": "a9baf93c5dcfac3f615e196d6f011d7ef36a6c85bdf3fb9980a0084ee7922c7a"
+    },
+    {
+      "name": "batch_create_tasks",
+      "description_sha256": "b1eab61c5105b726a737ef4ae197bfffc83b364924098237337e8e2ccd20c8b4",
+      "schema_sha256": "a790f9fda01c77279534542383669eda07cbd8b7bcf5f327b88c09c35388fdd8"
+    },
+    {
+      "name": "batch_defer_tasks",
+      "description_sha256": "7e2a71add9ca68baad0fcdaa1df7605af057970119feb09e77598b466f496c61",
+      "schema_sha256": "303963b4028789055a4d9f83f222d4d7246d12f9e880437c24ece51aac23c86b"
+    },
+    {
+      "name": "batch_link_tasks_to_event",
+      "description_sha256": "e9887f9536a0909084820292dc1f94ef596718c5cf4e41b1df955b8320100ac6",
+      "schema_sha256": "c0c91476e8936f405e35f2769cd842f5a7d616e022cbcf5f1fa7dffcc5e51370"
+    },
+    {
+      "name": "batch_move_tasks",
+      "description_sha256": "c33c5bb8243246bae58a131fc92dd56ea7ec80753c3b82706dbed77722cf658c",
+      "schema_sha256": "facfd13a0a470bf399c2dd814c2ff40ea1d733a6707c3bc70a3a716db4330bab"
+    },
+    {
+      "name": "batch_reopen_tasks",
+      "description_sha256": "24489b1e9af0b7f4f2741fd62b1459fa72127c2dfc928199ddebb71b98b80eab",
+      "schema_sha256": "f30a971f16a3625dc1504490eefadaeafd7fce6fa7782df0f53e017c76031524"
+    },
+    {
+      "name": "batch_update_tasks",
+      "description_sha256": "447f08ee056abe95c9a833c0b50be0f7e47d6b043a60a39b2873f98a9a486072",
+      "schema_sha256": "9b09cdf5af0ce6ff4ef9ea95e3dcd4b451a5fea9f10f5c2806853509051d1891"
+    },
+    {
+      "name": "cancel_task",
+      "description_sha256": "b55631afc1718f1b790bad3bb97493668a46d603368a9b52fbb0bbd5f1289e30",
+      "schema_sha256": "bd25290c8d535dd0848b1e9e4cf4d465aa16b7ab0a5bdde61cd4d770186aab9e"
+    },
+    {
+      "name": "clear_current_focus",
+      "description_sha256": "67b386ab1bb7f0318e4049f01064c035bc1328d707d6302bc523b281a8554383",
+      "schema_sha256": "79ab45492dfc19c198ecc545b9fcc7db338be003158fc154f73a2bf1e718fba8"
+    },
+    {
+      "name": "complete_habit",
+      "description_sha256": "98312ab5e33e181db5f9790a055382cc622bfe73f7301af213de0ea9bf153556",
+      "schema_sha256": "80fce0b0dc2d7a3849a6e77a26b24a64eb7bec80f03abb5875be21819b596901"
+    },
+    {
+      "name": "complete_setup",
+      "description_sha256": "d3fcb0b3a129b45de68528dd6ef9e551716baf890a0f8b028dbabf4aa6ee4ed1",
+      "schema_sha256": "636afb8a7606919c083575fb40d34ea93f7b7dfb59011cb575108132de9dfa3c"
+    },
+    {
+      "name": "complete_task",
+      "description_sha256": "d2a54f98ea041d8baded3db2b6c2dda71dcc0c041bdeb3741f389e4ced86d81b",
+      "schema_sha256": "2b76f1d37ea143aeec56768ed88dcafd0cb41b937c67617ebfdd32a0a92d7640"
+    },
+    {
+      "name": "control_app_ui",
+      "description_sha256": "c71f78fa81de02ee3cde5bbbf840533b99e488894dc836cf57e87ac90a02edd2",
+      "schema_sha256": "579b9002b8dc47cf4c54095b96ef10f091e7db67700a89342c8e2742f43534df"
+    },
+    {
+      "name": "create_calendar_event",
+      "description_sha256": "4d454833331cc4fc1ba2788436df9fa24ac966a0656d361ce590404c53352645",
+      "schema_sha256": "c99c9737e4d17cad302cbe591b120e3eb094325c8ab0f6b375c25bb19a5b05f6"
+    },
+    {
+      "name": "create_habit",
+      "description_sha256": "904a07e1bd19694450796d2d7803f93567317db65d8c5424acf9f46e671d6fe3",
+      "schema_sha256": "fe017ddf3937d336afdcf03480b506b30d56bdf973f127c5dc638dda64397153"
+    },
+    {
+      "name": "create_list",
+      "description_sha256": "e33dc96bceae1da01a8bbc0568441ec5c9693d309c767124f7704752f33da45f",
+      "schema_sha256": "8ad13424afe4f0ae4ffce90727fb4f70b96d60c0cd3e7514919e07e88207223e"
+    },
+    {
+      "name": "create_task",
+      "description_sha256": "5bf089b7246b7e2f6106f87f9c5c605fde8a56bf30b61f2f3313fafd84faaedf",
+      "schema_sha256": "045c42528a3d1ee37f828677a8bf055961f02407ca83838ef069f29c9f28f694"
+    },
+    {
+      "name": "defer_task",
+      "description_sha256": "3d65a0e1c2c57e580a298e51fa1143d174c745fe813dafe169c70203a178e7ca",
+      "schema_sha256": "9b3c531f217d8376a57acc7efb65ccaad3920bfafeaad8a22ef31399804ecc64"
+    },
+    {
+      "name": "delete_calendar_event",
+      "description_sha256": "16cccef41b8b079cd9e386f6404c478d45fda770d9d77eb65b6dc89215f67087",
+      "schema_sha256": "c64a45cad0ec6009d945e28ae94a41b3f61cf96983d30a9783b0652bb9aa198a"
+    },
+    {
+      "name": "delete_habit",
+      "description_sha256": "3df482194a8844c6bf77bdef937ca431138fcfc88ed1c9184cd8d1d282434264",
+      "schema_sha256": "66bea3bfb68b6ee709e8767237a2decd3a808f5c9f57e172e78697e12a263e21"
+    },
+    {
+      "name": "delete_habit_reminder_policy",
+      "description_sha256": "f681fcbc5dea2d5dc265e1387e2635a97cb52ba6815388cb9590ce2bee31489e",
+      "schema_sha256": "3fb51aea9a4950b6c1a76f03f4d05d94f5a543b28ea81793d7c5c4f80846cc03"
+    },
+    {
+      "name": "delete_list",
+      "description_sha256": "6eca34287ed4c2f8da15f4c1e2bd8500afa476d9a53a9ef1d236ea438413b12e",
+      "schema_sha256": "1701e5fbe6882a496c4da67b340a78388fabeca0de55e55fc18cfe1ec58d2dc9"
+    },
+    {
+      "name": "delete_memory",
+      "description_sha256": "6a33b9e1b1e2f715df0cae1075515105c1e1a6af1943cee044a9c1cfbedafac7",
+      "schema_sha256": "23de2d354f1c597e458db9f3d06e539bacfbcdfb1e9f3701bfcf42d17e707809"
+    },
+    {
+      "name": "delete_preference",
+      "description_sha256": "f7df9aaf50b381b7223eb1adcf8c7237c0318a9d37eadabc30cd2b6589cf2b05",
+      "schema_sha256": "0e405762d20cc5b2b5f95dc06b02f6c460414e10f131bb3802a29870fe70999c"
+    },
+    {
+      "name": "delete_scoped_calendar_event",
+      "description_sha256": "e82572095d9c09e794f38883d6e16d7aa027a6562df64fd013b139cfee0d64b9",
+      "schema_sha256": "6ab127f891f231ee5b10028f03ccf4238099027f8eedad8d2491b6ec763ccbce"
+    },
+    {
+      "name": "edit_scoped_calendar_event",
+      "description_sha256": "9d6532cc0235beb59a4b851894ea250bed7a8eae9cee5d179bf767395a98397f",
+      "schema_sha256": "0470de33769ad238c525073f918479822f022553a1dee72f0be48eb08f625e0c"
+    },
+    {
+      "name": "export_all_data",
+      "description_sha256": "97c24043f11fcf8999b1424f74179c8a2bdb28bb3fdaab7a6ae1455065bad921",
+      "schema_sha256": "b4ad8369c5e7532256d5909a2d126ba7cd880b2729c8b3156feb75e1fe740ec5"
+    },
+    {
+      "name": "export_calendar_ics",
+      "description_sha256": "9190b2da3a2cb5bb6c6cc422b8bebc96a8c3f35247c37c9da88fa61ae2f6875c",
+      "schema_sha256": "80521fa5486b5d942ccced686b4ea240c0b99577557a7ed8f42d7e65932de93a"
+    },
+    {
+      "name": "get_ai_changelog",
+      "description_sha256": "47f3f2ab7c45b577d24ad589da89202976c49aff66a4602bd7675b3e732a8083",
+      "schema_sha256": "3abcf1b0086f26e75eeabe9cbc4039e5a56285dfb062a74b4c87918d5020d91f"
+    },
+    {
+      "name": "get_all_preferences",
+      "description_sha256": "27f8352abe114ab72287aa5e055b07245b806961f746197e98bbb72357757369",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_calendar_event",
+      "description_sha256": "d42168599c286d9caa518b5c85ac9d5c21c5d7e327a077fe642a5d68914876b5",
+      "schema_sha256": "00358e7c695d8d49e119dcad2181de7ac390e2317a71c2f995d0fcc9e571c54a"
+    },
+    {
+      "name": "get_calendar_events",
+      "description_sha256": "1c37fa608bbb44c8384b318bb4edeb0b3ef841993117a6889011ec9abec23b28",
+      "schema_sha256": "67706f5450a2bd6036492c02656bb4daa295580d0c00e8f1ac79afc338e66691"
+    },
+    {
+      "name": "get_current_focus",
+      "description_sha256": "281b119c968fbd5fe263238b697f79931f1d73d5455207dff45eb6153f53a7a6",
+      "schema_sha256": "9427dfe915d3310aa916f10a38037bd3acc8bcdcce082653be5521d566e95ec0"
+    },
+    {
+      "name": "get_daily_review",
+      "description_sha256": "ff53f098d3293dd761a6643e68ab56c315500b5334f4cf9c221903449537567e",
+      "schema_sha256": "f1572b430a4651e79d5dc6349666668f929018880874d6ee7f5f183ebf15148c"
+    },
+    {
+      "name": "get_deferred_tasks",
+      "description_sha256": "1a189c1eed94017ae2fbcecd5342933c627c4f4252fb2dd5da234ea5e431fa35",
+      "schema_sha256": "48227d491449281e0d1ae07e5d0c929562df204d8bd7f7263065248d19f1eb11"
+    },
+    {
+      "name": "get_dependency_graph",
+      "description_sha256": "a9efbb9b57f172b663f48c429745936fa7d6fb82fa9a6fae27877bffda373cdb",
+      "schema_sha256": "ea41142fbfaf85cfcbddaa4f801533c7bde8a5c5e4b1088552172820717f39ae"
+    },
+    {
+      "name": "get_due_task_reminders",
+      "description_sha256": "01fe2f5183e3a83449dc49ad48889c3088e39b46cf1c34df0079798b1b193cb9",
+      "schema_sha256": "b2c7cc65b234a26646cce88be1796d21962d0960a8f959ce85f75e9770e1aa06"
+    },
+    {
+      "name": "get_guide",
+      "description_sha256": "d8d2364082204c3fc1feb08476e730c86e25f453be83f3ebb0f0826a3c294b65",
+      "schema_sha256": "1d13d6416213bbed5330443d99526f081dab09246c9cf689c0309b891498407d"
+    },
+    {
+      "name": "get_habit_completions",
+      "description_sha256": "11c067865badf2b2e2c990c606ad9fee1893eb50522a1a7d8335cef099dbb7e8",
+      "schema_sha256": "bbd6bee7e09a80571b138c68af17a546dfeda32b5c1bce659706abb3fe1ca964"
+    },
+    {
+      "name": "get_habit_reminder_policies",
+      "description_sha256": "260246a4da03f90676d565be8dc67b749a228cfb410394fddd985c7f6acb34e4",
+      "schema_sha256": "ff32a7ac13b789ab851c5ed4b46a2bd3b7043e22108630772cd1a5aaa53fbbf0"
+    },
+    {
+      "name": "get_habit_stats",
+      "description_sha256": "7306b2bdea1cd6affb53bc0ff1badcaa53e39aef28f24dd8881e768343536814",
+      "schema_sha256": "d7836842795bb1d577f351672339b6369c88300974f9d049635c8680dfaeb66c"
+    },
+    {
+      "name": "get_habits_summary",
+      "description_sha256": "5b6a35de0cfca218fbbd3b568f85c34b153f95e758cb95190672597819e4eadf",
+      "schema_sha256": "4ed4bebae1baef36cd3dba8c9fa22503610c7ebb060df2d828b57d1d964d5da4"
+    },
+    {
+      "name": "get_linked_events_for_task",
+      "description_sha256": "ec1d8413f37fed8cad744b9e9409060744cc69106ab60bc82dd664e1b9ba3769",
+      "schema_sha256": "7fa2514acb49cd51431b44591195ab2b199d88da91670137b4ee74c311e05769"
+    },
+    {
+      "name": "get_linked_tasks_for_event",
+      "description_sha256": "59970de487b25f8ca05dbbee5aaefd500742f32bf8c97046573e1d736312de2e",
+      "schema_sha256": "43d79c9c9b460ca5d027343a1f835dc8b74590be8a7bf24f73ed16ce5f3bc577"
+    },
+    {
+      "name": "get_list",
+      "description_sha256": "0f04c9f5181d44da5aaeacb1eb693cdcaec9d199ca08bd6b6018fcdc072f3df8",
+      "schema_sha256": "6a49f72d9fc3172868ce3aad46b1a6f63eb396003aaa5578abc09faa93922b2f"
+    },
+    {
+      "name": "get_list_health_snapshot",
+      "description_sha256": "70816b2718b883d6106b3bf573bbf96b5557c71b89d153815a10b21cfd95391a",
+      "schema_sha256": "7652c5182ae26171352a3d7e27e32a7707f66204f91650f7e2cb58606cf4b229"
+    },
+    {
+      "name": "get_memory_history",
+      "description_sha256": "e4ef2fe0a3322ce421343e6d47fa642017c93e2effaddbe99d8b3c610d47ae13",
+      "schema_sha256": "546462dae0290de1bf0cd7ff7ab892ddfd36e8f97e2edd537b093f69152945a9"
+    },
+    {
+      "name": "get_overview",
+      "description_sha256": "92eda0fd6965d6f3b3d5f68ded1d549a9eb47c04d8886947b987ff98b18902f3",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_overview_compact",
+      "description_sha256": "35801af831b02e04b5248b2b92e310a8c69825990fc3f15ac30ff3785e8cee13",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_preference",
+      "description_sha256": "d85b867a301b03dc1203b72d2491e0f89e403dd48bf1cf5d45a6bcd03dfca0d6",
+      "schema_sha256": "0b37390df3fe507f2c0de78e9fd30df7f145cad6b1bd4b76a95b926dd1f99583"
+    },
+    {
+      "name": "get_provider_event_links_for_task",
+      "description_sha256": "a8e88765964ee5481263ca60c11b4f546f0c19fbe623c69b2c980e55c659fb7c",
+      "schema_sha256": "c7f2633400a69c90c64263050fa1f43a321c9f21b8504a23d38392e68d5f618a"
+    },
+    {
+      "name": "get_recent_logs",
+      "description_sha256": "377ece1c4ad12ffc67023a76bdc63f785842f7831ac4e0f9a8415ebfa10e242b",
+      "schema_sha256": "d3408c83c4a906d20b2fcbfe84ea5738f0d9da55271e8f792bc4170ecc4481bb"
+    },
+    {
+      "name": "get_review_history",
+      "description_sha256": "fba09d8da476f9abc20c679729ff44766c0da16bc88adab6f3192a42327cfe87",
+      "schema_sha256": "ebeecc55ec716913b1029c34ccee36de5a4ab6e6fd310d6efd11f0568bdf10b2"
+    },
+    {
+      "name": "get_saved_focus_schedule",
+      "description_sha256": "c677740a638b1774ae4c58c6d06c034cea76109bf098ffdb87598ccaa8a028c4",
+      "schema_sha256": "06ed8d4e8abd66a1bc7b578d17a39f396436fc080a4f46816de78f229bfeca58"
+    },
+    {
+      "name": "get_session_context",
+      "description_sha256": "3eb805fab5c803146b572f2bed9d1b6ece2740c45d96a6d350ec1e99f275e9c2",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_setup_status",
+      "description_sha256": "f2d33477e226e5523461b556a4d3500fb2e1c97dc17c4d9bcfac4508a19e11aa",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_sync_status",
+      "description_sha256": "38f1295ba62b670b21389ccaeab701e8c150b6049e21ffaf904b33977f62bcf2",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_task",
+      "description_sha256": "75a61a2fb6f24247b4f4e57af43e362c4b45e9e52a328dc7b682ea935615f62e",
+      "schema_sha256": "0e8e70d07c5659501d69cb2462f802ddbd5db6baa0c270fb36d455ad9c32a07b"
+    },
+    {
+      "name": "get_tasks_by_tag",
+      "description_sha256": "f80017dabd5ae2fff2e02d8c795b1cc432f2b87aa37572a02bd9680cd0c47d47",
+      "schema_sha256": "e3f2aff70adc70ecc8ffc4fcb79ec9ff34efa0daa53fa18324cafa5587a30dcc"
+    },
+    {
+      "name": "get_todays_tasks",
+      "description_sha256": "37ef8d83a9f9793829396a50bad5ac2f7522b67efad785a7bb54ee8a1736124a",
+      "schema_sha256": "71782375b6d56e332917eafeba6ed5ec7bfdbec5537a60fe65b209eb9ecd4438"
+    },
+    {
+      "name": "get_ui_view_state",
+      "description_sha256": "accaede596223e8a17f50413ea551027639d4ddc5c3b08099a0a086adc8ea417",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "get_upcoming_task_reminders",
+      "description_sha256": "ecb19981a0c6f07d7dd887fc9707c09c9be61682ee21534c75b24d7d9fd4745e",
+      "schema_sha256": "bbccaa4b30340ad13f2099a84a483dbef0f3a753e07f220977990243604fe1d9"
+    },
+    {
+      "name": "get_upcoming_tasks",
+      "description_sha256": "8b9b18a1482f61f4458cdea18f703b5009ddc5ae6abb1e9696b380be8299dc67",
+      "schema_sha256": "9fd7a33e4df467332919bdb6751049f9c387c749ffc56865f5a59e9223ccd7de"
+    },
+    {
+      "name": "get_weekly_review_brief",
+      "description_sha256": "0742aca67808b83cbca289a0eba573d2353beb578585dacf9cb7c19bfd3bcae1",
+      "schema_sha256": "f1ee3c0f9c1ca5457a3c18937568cd79bb0fe6a0433e521abfdffb33960b8fd7"
+    },
+    {
+      "name": "get_weekly_review_snapshot",
+      "description_sha256": "1c3945e9a07b93c987460cada4112e8c76b0e5ae8284d2607dc66859ad86dd55",
+      "schema_sha256": "efddc7bd8bbcef73a14eb1ace1ffdaec81e518ef1e13c1e9271d0b8acb694a49"
+    },
+    {
+      "name": "import_data",
+      "description_sha256": "67ce617c997e63b12a70df21c5b1c250f9b57ae32729a560a45e09f14ee6e38b",
+      "schema_sha256": "24826b44e4c52739c474fcb9e00e9cb96d9efada366c0c3ccbc6a3501de2abb6"
+    },
+    {
+      "name": "link_task_to_event",
+      "description_sha256": "076e10ea3421a6a22a66ea6f3e2ffbe69a35647d8661da87e8978462b97f3285",
+      "schema_sha256": "f3d6c22f7dac18086cf060e6619af15234d536d466a34c7f12a8a12b665c7bed"
+    },
+    {
+      "name": "link_task_to_provider_event",
+      "description_sha256": "0bf3c6b6736936d3ac388e965821cd827d5bdf9d7fbfa87c6b654ed7725fd6e7",
+      "schema_sha256": "6864faed1e2d3022917b4699a63aa83c5da434d2b6233fa948a75b3713343b83"
+    },
+    {
+      "name": "list_all_tags",
+      "description_sha256": "a5e509d2ac94a8c0e6816b44afa67049a2759ed84cc6d6d6e5e71fe4d3c6d482",
+      "schema_sha256": "48fe53fdca8f136d2aa7af7712a54d2d30acb429c70339e68a02c08e4f9cf23c"
+    },
+    {
+      "name": "list_lists",
+      "description_sha256": "365a0083657263add7211494a7f6fd4c3c2b30443ff36afd5ea8f380ff2a76b2",
+      "schema_sha256": "baa1132e8c310590efc15c56c2a2a3b0c466dc60328787a338ad7503d94a101f"
+    },
+    {
+      "name": "list_pending_outbox_entries",
+      "description_sha256": "f67a76847c25913387641732172635a352d9d40296c45498ad518f0a2570ee20",
+      "schema_sha256": "fb4cef916b7ec0a58e23a7b6e39ca1ece8510618dea197a5ed33063812324c86"
+    },
+    {
+      "name": "list_tasks",
+      "description_sha256": "da86c7a00d1101400389c87c4cb4ec96fa33160d88fc433bc5027c452dbf81d0",
+      "schema_sha256": "a6062707137a2a4ef66c6effef1534b5f4466694267c1d0473806ec8c2c29f95"
+    },
+    {
+      "name": "permanent_delete_task",
+      "description_sha256": "c511245446fe8413ebe869cfd286c9bbaa8e90bb2af0c5ca443066e395769977",
+      "schema_sha256": "62b2beba49475c973ee98bf92f7b4037c32b7ad3065e6c823c34463bd869381c"
+    },
+    {
+      "name": "propose_daily_schedule",
+      "description_sha256": "c1df29340a117b77eb0540582cb725bb383d9bde5cdb408f283e4340dcb09819",
+      "schema_sha256": "367c0d74e416735f63457e5a27ee61a3ea61982481f535f412ad42d55909d444"
+    },
+    {
+      "name": "read_memory",
+      "description_sha256": "f39e330642d1f1713259653a2f6f11e939d679b68325a31d2fb6643eb388f98d",
+      "schema_sha256": "0523748ce34d8159fdd6f1c436f75c88c67a0792a67d5b7b7b6e751e11779420"
+    },
+    {
+      "name": "remove_event_exception",
+      "description_sha256": "adeb91dde91329281c0f8bea93edea6fa4dc74333bec7e4f778cd767d8de07fc",
+      "schema_sha256": "887d2131483169a3d6e83c63938497d1f9279d8b8a6482a1f7cf14621b50f0bd"
+    },
+    {
+      "name": "remove_from_current_focus",
+      "description_sha256": "bae4cdb53839869f0792abbd785a7d1a0621438517480ad764fe6a7883e2d70e",
+      "schema_sha256": "2fb4dde8b26af7744bef01ad7883a6a7d8388d433c6e5cb6da8f1b93667b332d"
+    },
+    {
+      "name": "remove_task_checklist_item",
+      "description_sha256": "0d20de44d1c7636fa74718b00713f56134a46f21a8689850fe657483a1ae5c88",
+      "schema_sha256": "628cbe46c3b0346438f66df2de5ee2189a21e4d6532f9148b67b1180c2fcfefe"
+    },
+    {
+      "name": "remove_task_recurrence_exception",
+      "description_sha256": "fa715f537a04df2e2b16918f5ea930d5f39fab0e2beb8d882b3eb07a849a1821",
+      "schema_sha256": "ef88e3d539c6c66ebdcf010fd9f800907d05536f917264670ab28b2f5f071415"
+    },
+    {
+      "name": "remove_task_reminder",
+      "description_sha256": "dafc89fa966ddb19fc246664000137ed4ffe22da382bb807af5745a791f8ce4d",
+      "schema_sha256": "99011b5bef6dffc7ef049f5794b76528c310e0d041eb6ecea999455a2bc08231"
+    },
+    {
+      "name": "rename_tag",
+      "description_sha256": "055121a68b38929f12475a26aee57fea0b33cf86b07ad115db7f683065843d56",
+      "schema_sha256": "bae6c9eb14b9a6c3fb34d4b2ce011aa66f35ba66dac37b4af837f196e6dcc4c2"
+    },
+    {
+      "name": "reopen_task",
+      "description_sha256": "087d4bcfe1f9dc8eed10f5de85734ff4895d74f480f527600ffc695d212189aa",
+      "schema_sha256": "531d4ce48b504ea28e1fd6bfd13606137a1a4c4465fc1f890cd0b2e6686be0cd"
+    },
+    {
+      "name": "reorder_task_checklist_items",
+      "description_sha256": "1a77227c2e0f7a87a64a226fb5683d50beb520742fd75efb5b6fff55221aebb5",
+      "schema_sha256": "7ab9d4723b7867b468910e955ad879dfe25b393d68cb5f7cedb6bb1f95fe22a3"
+    },
+    {
+      "name": "reorganize_list",
+      "description_sha256": "a7094025f0d6c082a4553fd42a71f2f2a4d89d32d54c6d049ede5dd3bbe2192d",
+      "schema_sha256": "7270ea01f057fd6ec5a0d53d1de031ffbd580d6eecb3ed4ddea9c3f07e4758bb"
+    },
+    {
+      "name": "restore_memory_revision",
+      "description_sha256": "d76c53caac6ecd297cedc45758b1c2b6d6a58ca63f692da8729daedace7e324d",
+      "schema_sha256": "f3968af3a146407a4f8ee093db08fba2f1be200c6ee34ffeda3e26c17c4ea96b"
+    },
+    {
+      "name": "save_focus_schedule",
+      "description_sha256": "f52ca996c92a9a161cd9fe1adc894321c9b42c53767b412f53c6999142bdab9e",
+      "schema_sha256": "04ec1fbd09269a88d815c61df0f1e2d93c00047e96904e1ab98bda4ec6b972dc"
+    },
+    {
+      "name": "search_calendar_events",
+      "description_sha256": "fba93e3eb7aa0c2c4e0d270b7f597c002a680954ad77284dacb6aafb26fb9361",
+      "schema_sha256": "2366238024c46b89153199c08ed13d5cf73582710bc301e50507d4a56133e3b7"
+    },
+    {
+      "name": "search_tasks",
+      "description_sha256": "a100d7cabc6c46e1145a57c8723f529ba642a410503d590c86bc39a84865b939",
+      "schema_sha256": "a73aa6c41654bd5f6731ed9ccc96c129d2da7cf36790c6ba37d2c3fd4431b680"
+    },
+    {
+      "name": "set_current_focus",
+      "description_sha256": "4b1cb72f5ac59b764c14b56037c461345667df44d2aea6093d84ca7593cbb461",
+      "schema_sha256": "55f895e2caad373218af176bec98736665b5466c6c5c8e80cf58d51ae4477099"
+    },
+    {
+      "name": "set_preference",
+      "description_sha256": "fb20f3223fd629dc5328e92f0c981513ff16bf0d6a7ee131d7dd55761da4a3c9",
+      "schema_sha256": "937b8ce740625f274fddb7232133937449fcbc95f1e84b89a9d00e841f3eb7ad"
+    },
+    {
+      "name": "set_recurrence",
+      "description_sha256": "644b40c3c566d4fc1c0b6e4acb6312e8cb08ab674712d135a3238be85e875fa1",
+      "schema_sha256": "5ec9453ca47e863be28ec8a65f7637dff72733d7dacefc6ee913e260d0a5d8f3"
+    },
+    {
+      "name": "set_task_ai_notes",
+      "description_sha256": "add2b70bf74becb0e2170577ac93602864016d96c31e2133bfdb9b8f76284c6e",
+      "schema_sha256": "98a1fb2468b3262692fd984ee874f42b54195f7aa247b4b7db60a6468c13a43c"
+    },
+    {
+      "name": "set_task_reminders",
+      "description_sha256": "fb7b3f492de62e0963f56df0099c801a8a807319bdbec43d43ffd3702d011f95",
+      "schema_sha256": "0c60e5eacd788adb8d570a3ac4d38a098502baaad5aaa17f677a0493caa99ea6"
+    },
+    {
+      "name": "toggle_task_checklist_item",
+      "description_sha256": "5f9f029878bc1861f183f34080eb6ff324550fb2f41c65a8072da64be5033344",
+      "schema_sha256": "00170596ae5c2b991b9670cc6df35bb924366549af5e747ee5d126025795c2f2"
+    },
+    {
+      "name": "uncomplete_habit",
+      "description_sha256": "45f6c49aa3246daa5399486ff7950405cb7bb9da9692a3c1dffbb9138bf87864",
+      "schema_sha256": "df6445faa754ef4a199268a65ed9a113f2d245bf5e0dde696d935c5ea57923a7"
+    },
+    {
+      "name": "unlink_task_from_event",
+      "description_sha256": "78901649d4a8197ac87a2297baf1edbd3a095fd5180321e588a7e0ff451025b7",
+      "schema_sha256": "cb852a1c4caf1bdddc157ba826f2e41ed2d1849ecb29766d22a93600a8cc434e"
+    },
+    {
+      "name": "unlink_task_from_provider_event",
+      "description_sha256": "beb2e35d093469d96a1ee23a00456509a9b4d53d76ddaab272a24c7e669d395c",
+      "schema_sha256": "daa1e7a589cd16d7436d0841512b012f9229deff6a3fc098ee1791a5aeac6f78"
+    },
+    {
+      "name": "update_calendar_event",
+      "description_sha256": "860ea8b08add3b96992405a30d851a00e97f3d819f5b82e56fce219dc94d0327",
+      "schema_sha256": "c7529beb3b9d1bb5a2d2655efb72633c12bb22af229118a1e3b2407e2b9cf852"
+    },
+    {
+      "name": "update_habit",
+      "description_sha256": "84883e3da801f4c06f3ac4c93f0847d25579fdd20e26ac1c561084fb8e1fda05",
+      "schema_sha256": "c3cd9f1c1fe625a2cb2f3afa54dbbe62ea4bf917bc9dba074cf0ed133c26bc05"
+    },
+    {
+      "name": "update_list",
+      "description_sha256": "6c4b5e52a7322c406c3a8b7911294398abfa74d55f72eab8e1bea7cf2efe92c1",
+      "schema_sha256": "d7082630716d8342d6a3e8cb045e48bb6e20118dcee721d211c3ecf6c8db56d3"
+    },
+    {
+      "name": "update_task",
+      "description_sha256": "eea57d3e80d81bdc99d974cdff49ff36775c2a3a97fad43f9e31917bc2170f1a",
+      "schema_sha256": "c332fcc9aad882caa9977853534e05e474ac2afb1518f92549f732a3fad3af8d"
+    },
+    {
+      "name": "update_task_checklist_item",
+      "description_sha256": "6e5c51eca1e36230a6cbc8a3ca713290d0c7de4b6df331e80bedf1af22a2cf6e",
+      "schema_sha256": "c07aebf9e1f61a3bf1873c90cd6f23075d02a81ab9954b395e4817b0f4424491"
+    },
+    {
+      "name": "upsert_habit_reminder_policy",
+      "description_sha256": "b45928dd5fb3ddb6400cda1ad5a7b8e1300101ef336b86cbd4a185a2525d997d",
+      "schema_sha256": "40c8f2bd2ccdad214142bc7ce8e117c45144fc1fdd73b816359816b6fc896843"
+    },
+    {
+      "name": "write_memory",
+      "description_sha256": "a3f1e3a52ba847c0379076db99410a77101ddcdb1ff247128799de669a67c656",
+      "schema_sha256": "8796da19da8a10886bfa486bc0d0bbd7a95ea6004fc4cb8b45bf0ff9da487c77"
+    }
+  ]
+}

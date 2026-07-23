@@ -1,0 +1,208 @@
+[package]
+name = "lorvex"
+version = "1.0.0"
+description = "AI-native task manager"
+authors = []
+edition = "2021"
+license = "Apache-2.0"
+# Audit #2172: prevent accidental `cargo publish` / crates.io name squat.
+publish = false
+
+# Declare this crate as its own standalone workspace so cargo's upward
+# manifest search stops here. Needed when the checkout lives inside a
+# nested git worktree (e.g. `.claude/worktrees/*`); without this, cargo
+# walks past the nearest parent workspace manifest and tries to attach
+# this crate to an ancestor root, which fails because the crate is
+# intentionally not a member. Parity with the top-level workspace's
+# `exclude = ["app/src-tauri"]` — both approaches should coexist.
+[workspace]
+
+# Audit #3008-L5: mirror the top-level `[workspace.lints]` block here so
+# the strictness gates (`unsafe_op_in_unsafe_fn = warn`,
+# `unused_must_use = deny`, `rust_2018_idioms = warn`,
+# `clippy::unwrap_used = warn`) apply to the Tauri backend too. Because
+# this manifest is its own standalone workspace it cannot inherit via
+# `workspace = true` — the lint set must be repeated verbatim. Keep this
+# block in sync with the root `Cargo.toml` whenever the workspace lint
+# selection changes.
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_must_use = "deny"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[lints.clippy]
+unwrap_used = "warn"
+# Issue #3382: mirror the tightened workspace lint set. Keep in sync
+# with the root `[workspace.lints.clippy]` block.
+needless_collect = "warn"
+redundant_clone = "warn"
+useless_conversion = "warn"
+manual_let_else = "warn"
+needless_borrow = "warn"
+cloned_instead_of_copied = "warn"
+option_as_ref_deref = "warn"
+unused_async = "warn"
+# These rules trigger almost exclusively on intentional code in
+# app/src-tauri (Windows-tzid mapping tables, Tauri command attribute
+# macros, etc.). Listed as `allow` rather than dropped so the next
+# pass can revisit them with focused per-site `#[allow]`s.
+match_same_arms = "allow"
+missing_const_for_fn = "allow"
+needless_pass_by_value = "warn"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+name = "lorvex_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+serde_json = "1"
+tauri-build = { version = "2", features = [] }
+
+[package.metadata.cargo-machete]
+# `build.rs` invokes `tauri_build::build()` directly, but
+# cargo-machete can report the build-dependency as unused.
+ignored = ["tauri-build"]
+
+[dependencies]
+lorvex-domain = { path = "../../lorvex-domain" }
+lorvex-runtime = { path = "../../lorvex-runtime" }
+lorvex-store = { path = "../../lorvex-store" }
+lorvex-sync = { path = "../../lorvex-sync" }
+lorvex-sync-payload = { path = "../../lorvex-sync-payload" }
+lorvex-workflow = { path = "../../lorvex-workflow" }
+# Audit #2299 + #2931-M1: every Tauri-family crate is pinned to an EXACT
+# version (`=x.y.z`). Combined with `--locked` in all build entry points
+# this guarantees a fresh checkout resolves the same Cargo.lock as the
+# committed one and that Dependabot (not a silent `cargo update`)
+# mediates every version bump. Workspace-path crates (lorvex-*) are
+# intentionally NOT pinned here — their versions come from this repo.
+#
+# Audit #2931-M1 closed the prior split: `tauri-plugin-opener`,
+# `-updater`, `-deep-link` were pinned but `-autostart`, `-notification`,
+# `-window-state`, `-dialog`, `-single-instance` were floating-major
+# `"2"`. Either pin the whole family or none — leaving half pinned only
+# protected the deep-link / updater paths and let the OS-IPC plugins
+# drift on patch releases. Pinned-all is the conservative choice for
+# distributed binaries.
+#
+# Audit #2931-M3: `default-features = false` on `tauri` so the WRY +
+# bundler defaults can be opted into deliberately. We re-enable
+# `wry` (the embedded webview) explicitly along with `tray-icon` and
+# `macos-private-api`; cutting the bundler/protocol defaults trims
+# binary size + audit surface for code we don't ship in the runtime.
+# Audit #2931-M3: explicit feature set rather than relying on the
+# crate's `default` bundle. Tauri's default features have shifted
+# patch-by-patch (e.g. `image-png` added in 2.6, `compression` toggled
+# in 2.8) and a silent change can land bundler/protocol surface we
+# don't ship. The explicit list below is what the runtime actually
+# uses — `wry` is the embedded webview, `compression` enables gzip
+# response compression for the asset protocol, the two `image-*`
+# features cover icon decoding for the tray + window, and we keep
+# the project-specific `tray-icon` + `macos-private-api`. When a Tauri
+# upgrade adds a feature we want, we opt in here deliberately.
+tauri = { version = "=2.11.1", default-features = false, features = ["compression", "image-png", "image-ico", "wry", "tray-icon", "macos-private-api"] }
+tauri-plugin-opener = "=2.5.4"
+tauri-plugin-autostart = "=2.5.1"
+tauri-plugin-notification = "=2.3.3"
+tauri-plugin-clipboard-manager = "=2.3.2"
+tauri-plugin-window-state = "=2.4.1"
+tauri-plugin-updater = "=2.10.1"
+tauri-plugin-deep-link = "=2.4.9"
+serde = { version = "1", features = ["derive"] }
+# Audit #2930-H2: relaxed from `=1.0.149` to `1` to align with the rest of
+# the workspace. serde_json is not on the TLS/auth/OS-IPC/deep-link
+# critical path covered by the exact-pin policy in #2299; floating the
+# patch level keeps `cargo update` mediated by Cargo.lock + Dependabot.
+serde_json = "1"
+rusqlite = { version = "0.39", features = ["bundled", "hooks", "backup"] }
+dirs = "6"
+chrono = "0.4"
+chrono-tz = "0.10"
+iana-time-zone = "0.1"
+percent-encoding = "2"
+thiserror = "2"
+uuid = { version = "1", features = ["v7"] }
+reqwest = { version = "=0.13.3", default-features = false, features = ["rustls", "blocking"] }
+url = "=2.5.8"
+sha2 = "0.11"
+tauri-plugin-dialog = "=2.7.1"
+# `rfd` is already a transitive dep via `tauri-plugin-dialog`. We pull it
+# in directly so `ensure_database_ready()` — which runs BEFORE the Tauri
+# builder spins up — can raise a native "Migrating database…" dialog
+# when pool init exceeds the 3s threshold (#2493). `tauri_plugin_dialog`
+# itself is unusable at that stage because it requires an `AppHandle`
+# that only exists after the builder is constructed.
+# Audit #3987: keep the pre-builder native dialog on the same 0.16 line
+# already used by tauri-plugin-dialog. Dependabot offered 0.17.2, but
+# that would pull a second rfd major into this app lockfile before the
+# Tauri dialog stack adopts it. The exact pin keeps startup migration
+# dialogs reproducible without broadening the native dialog surface.
+rfd = "=0.16.0"
+tauri-plugin-single-instance = "=2.4.2"
+# Diagnostic bundle ZIP export (#2183). Matches the feature set already
+# used by `lorvex-store` so cargo resolves a single version of the `zip`
+# crate for the whole build (see lorvex-store/Cargo.toml for rationale).
+zip = { version = "8", default-features = false, features = ["deflate"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-local-authentication = { version = "0.3.2", features = ["block2"] }
+objc2-foundation = { version = "0.3.2", features = ["NSDate", "NSString", "NSArray", "NSCalendar", "NSURL"] }
+objc2-uniform-type-identifiers = { version = "0.3.2", features = ["UTType"] }
+objc2-app-kit = { version = "0.3.2", features = ["NSWindow"] }
+objc2-core-spotlight = { version = "0.3.2", features = ["CSSearchableIndex", "CSSearchableItem", "CSSearchableItemAttributeSet", "CSSearchableItemAttributeSet_General", "block2", "objc2-uniform-type-identifiers"] }
+objc2-user-notifications = { version = "0.3.2", features = ["UNNotificationAction", "UNNotificationCategory", "UNNotificationContent", "UNNotificationRequest", "UNNotificationResponse", "UNNotification", "UNUserNotificationCenter", "UNNotificationSettings", "block2"] }
+objc2 = { version = "0.6", features = ["exception"] }
+block2 = "0.6"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+raw-window-handle = "0.6"
+windows = { version = "0.62", features = [
+    "ApplicationModel_Appointments",
+    "Data_Xml_Dom",
+    "Foundation",
+    "Foundation_Collections",
+    "Security_Credentials",
+    "Storage_Streams",
+    "UI_Notifications",
+    "Wdk_System_SystemServices",
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_Com",
+    "Win32_System_SystemInformation",
+    "Win32_UI_HiDpi",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Dwm",
+] }
+
+[features]
+default = []
+
+# Issue #3383: release-profile size optimizations for the Tauri backend.
+# `app/src-tauri` is a SEPARATE workspace (see `[workspace]` above and the
+# top-level `Cargo.toml` `exclude = ["app/src-tauri"]`), so the equivalent
+# block in the root workspace `Cargo.toml` does NOT propagate here. Mirror
+# the same three knobs the root sets — `lto = "thin"` for cross-crate
+# inlining, `codegen-units = 1` so the linker sees the whole crate when
+# applying LTO, `strip = "symbols"` to drop the rustc symbol table from the
+# distributed binary. Tauri's bundler invokes cargo with `--release`, so
+# the DMG / NSIS installer pick this up automatically.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+
+[dev-dependencies]
+tempfile = "3"
+# Enable the store crate's `test-support` feature in test builds only,
+# so `lorvex_store::test_support::diag` is available to the backend
+# tests (#2544). Production builds don't see this feature at all.
+lorvex-store = { path = "../../lorvex-store", features = ["test-support"] }
+# Issue #2873: enable runtime's `test-support` feature for backend
+# tests that wrap DB_PATH env mutation. Production binaries cannot
+# reach the unsafe `std::env::set_var` helper.
+lorvex-runtime = { path = "../../lorvex-runtime", features = ["test-support"] }

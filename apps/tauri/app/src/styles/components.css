@@ -1,0 +1,132 @@
+@layer components {
+  .cv-inline-slide-1 {
+    transform: translateX(0.25rem);
+  }
+
+  :root[dir='rtl'] .cv-inline-slide-1 {
+    transform: translateX(-0.25rem);
+  }
+
+  .group:hover .cv-inline-slide-1,
+  .group:focus-within .cv-inline-slide-1 {
+    transform: translateX(0);
+  }
+
+  .cv-inline-center {
+    transform: translateX(-50%);
+  }
+
+  :root[dir='rtl'] .cv-inline-center {
+    transform: translateX(50%);
+  }
+
+  .cv-inline-nudge-1 {
+    transform: translateX(1px);
+  }
+
+  .cv-inline-nudge-2 {
+    transform: translateX(2px);
+  }
+
+  :root[dir='rtl'] .cv-inline-nudge-1 {
+    transform: translateX(-1px);
+  }
+
+  :root[dir='rtl'] .cv-inline-nudge-2 {
+    transform: translateX(-2px);
+  }
+
+  /*
+   * #4394 — Skeleton shimmer gradient. Replaces the bare
+   * `animate-pulse` opacity throb with a left-to-right shimmer that
+   * sweeps a 200%-wide transparent → surface-3 → transparent
+   * gradient across the placeholder shape. Reads as content
+   * "loading" rather than "blinking." Reduced-motion users see a
+   * static surface-2 fill (the shimmer animation is gated behind
+   * `prefers-reduced-motion: no-preference`).
+   */
+  .skeleton-shimmer {
+    background-color: var(--color-surface-2);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--color-surface-3) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    background-position: -100% 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .skeleton-shimmer {
+      animation: skeleton-shimmer 1.4s linear infinite;
+    }
+  }
+  @keyframes skeleton-shimmer {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /*
+   * #4392 — Welcome timeline rail. A 1px vertical line behind the
+   * numbered nodes provides the rail; each `<TimelineStep>` rides
+   * the rail with its circular node punching through the surface-1
+   * card background to mask the rail.
+   */
+  .welcome-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0.5rem;
+    bottom: 1.5rem;
+    width: 1px;
+    background: var(--color-surface-3);
+    pointer-events: none;
+  }
+  :root[dir='rtl'] .welcome-timeline::before {
+    left: auto;
+    right: 1rem;
+  }
+
+  :root[data-theme='paper'][data-system-theme='dark'] {
+    --desktop-shell-top-tint: oklch(from var(--color-surface-1) l c h);
+    --desktop-shell-top-strength: 90%;
+    --desktop-shell-left-bloom-strength: 28%;
+    --desktop-shell-right-bloom-strength: 6%;
+  }
+
+  /*
+   * #4492 — Daily Review long-form typography. Reflections > 200 chars
+   * use `reflection-longform` for a relaxed 1.7 line-height and
+   * paragraph spacing so a 400-word entry doesn't collapse into a
+   * single dense block. Entries > 100 words add `reflection-dropcap`
+   * for a serif drop-cap on the first letter of the first paragraph —
+   * a quiet visual cue that this is a long-form reflection.
+   *
+   * Both utilities scope to `<p>` so MarkdownContent's paragraph
+   * wrappers pick up the spacing; the drop-cap targets only the very
+   * first paragraph so subsequent paragraphs keep ordinary leading.
+   */
+  .reflection-longform {
+    line-height: 1.7;
+  }
+  .reflection-longform p {
+    margin-block: 0.65rem;
+  }
+  .reflection-longform p:first-child {
+    margin-block-start: 0;
+  }
+  .reflection-longform p:last-child {
+    margin-block-end: 0;
+  }
+  .reflection-dropcap p:first-of-type::first-letter {
+    float: inline-start;
+    font-family: var(--font-serif, ui-serif, Georgia, serif);
+    font-size: 2.85em;
+    line-height: 0.92;
+    padding-inline-end: 0.3rem;
+    padding-block-start: 0.18rem;
+    color: var(--color-text-primary, currentColor);
+    font-weight: 500;
+  }
+ }

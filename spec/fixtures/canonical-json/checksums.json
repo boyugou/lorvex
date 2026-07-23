@@ -1,0 +1,47 @@
+{
+  "description": "End-to-end payload-to-checksum parity vectors: each `input` canonicalizes to `canonical` (byte-identical in both cores) and the SHA-256 of those UTF-8 bytes is `sha256` (64-char lowercase hex) — the composition used by MCP idempotency and sync payload checksums. Digests computed from the canonical strings with the standard SHA-256 algorithm.",
+  "vectors": [
+    {
+      "name": "sync_layer_simple_payload",
+      "input": {
+        "title": "Buy milk",
+        "status": "open",
+        "priority": 2
+      },
+      "canonical": "{\"priority\":2,\"status\":\"open\",\"title\":\"Buy milk\"}",
+      "sha256": "4c86a345d41c4caab6cb0d14bfcc7f5dbcf0e99628cc5c1f8070e6e98c6391c7"
+    },
+    {
+      "name": "escape_heavy_payload",
+      "input": {
+        "s": "q\" b\\ n\n r\r t\t bs\b ff\f soh\u0001"
+      },
+      "canonical": "{\"s\":\"q\\\" b\\\\ n\\n r\\r t\\t bs\\b ff\\f soh\\u0001\"}",
+      "sha256": "684535502df808f74efb073489e0698b778922cc9e2ade448258036073a2b538"
+    },
+    {
+      "name": "unicode_payload",
+      "input": {
+        "s": "héllo 🌍 中文"
+      },
+      "canonical": "{\"s\":\"héllo 🌍 中文\"}",
+      "sha256": "9a4193eae1c99181e6e86430bbb0f40b4a94d8b4d4e8b66471f6926d3a1c3e76"
+    },
+    {
+      "name": "nested_envelope_shape",
+      "input": {
+        "entity_id": "task-1",
+        "op": "upsert",
+        "payload": {
+          "tags": [
+            "a",
+            "b"
+          ],
+          "title": "T"
+        }
+      },
+      "canonical": "{\"entity_id\":\"task-1\",\"op\":\"upsert\",\"payload\":{\"tags\":[\"a\",\"b\"],\"title\":\"T\"}}",
+      "sha256": "5d131fb08df7929d36d3f2481bf233b2a9afebd0ae7d73e41552fdbae0435b8e"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+# Manual Gate Evidence Report (Template)
+
+- Evidence target: {{EVIDENCE_TARGET}}
+- Date: {{DATE}}
+- Build commit: {{COMMIT}}
+
+## Metadata
+
+- Operator: <name>
+- Runtime: <macOS version + architecture>
+- App/MCP build notes: <branch, clean/dirty tree, install source>
+- Evidence report: `artifacts/manual-gates/manual-gate-template/{{DATE}}/{{EVIDENCE_TARGET_SLUG}}.md`
+- Evidence permalink: <GitHub issue/PR comment URL>
+
+## Gate Outcome
+
+- Status: <PASS | PARTIAL | FAIL>
+- Blocking defects: <none OR issue links>
+- Non-blocking defects: <none OR issue links>
+
+## Checklist Coverage
+
+| Item | Status | Evidence |
+|---|---|---|
+| <check item> | Pass / Fail / N/A | <transcript, screenshot, log> |
+
+## Deviations
+
+- <none OR concise failure summary + expected vs actual>
+
+## Follow-up
+
+- Next action owner: <name/role>
+- Evidence target update: <issue/PR link, release note, or comment permalink>

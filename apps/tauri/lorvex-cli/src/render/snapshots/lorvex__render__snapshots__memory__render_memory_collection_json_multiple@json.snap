@@ -1,0 +1,22 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.memory.collection",
+  "db_path": "/tmp/lorvex.db",
+  "memories": [
+    {
+      "content": "friendly",
+      "key": "preferences.tone",
+      "updated_at": "2026-04-01T10:00:00.000Z",
+      "version": "v1"
+    },
+    {
+      "content": "This is a long memory entry that should be truncated at eighty bytes because we want to keep the collection view compact and readable across contexts.",
+      "key": "notes.long",
+      "updated_at": "2026-04-03T10:00:00.000Z",
+      "version": "v2"
+    }
+  ]
+}

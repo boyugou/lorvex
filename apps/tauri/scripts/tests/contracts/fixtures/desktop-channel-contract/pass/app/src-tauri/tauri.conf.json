@@ -1,0 +1,9 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run prepare:mcp",
+    "beforeBuildCommand": "npm run prepare:mcp"
+  },
+  "bundle": {
+    "resources": ["resources/mcp-server"]
+  }
+}

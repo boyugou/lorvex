@@ -1,0 +1,130 @@
+[workspace]
+resolver = "2"
+members = [
+    "lorvex-cli",
+    "lorvex-runtime",
+    "lorvex-domain",
+    "lorvex-sync-payload",
+    "lorvex-store",
+    "lorvex-workflow",
+    "lorvex-sync",
+    "lorvex-mcp-derive",
+    "mcp-server",
+]
+# app/src-tauri is managed by Tauri's build system — it consumes workspace crates
+# via path deps but is excluded to avoid build conflicts with Tauri CLI.
+exclude = [
+    "app/src-tauri",
+]
+
+# Audit #2295: pin MSRV so a dependency bump that silently raises its
+# own minimum Rust version can't produce a build-failure surprise for
+# contributors on older toolchains. 1.86 is the lowest stable required by
+# the current dependency graph; cargo refuses to upgrade
+# deps that require newer rustc.
+#
+# Audit #3008-L3: lift the workspace-wide crate version into
+# `[workspace.package].version` so member crates opt in via
+# `version.workspace = true` and a single edit bumps every member.
+# Previously each of the seven crates pinned `version = "1.0.0"`
+# individually, which was easy to miss on a release.
+[workspace.package]
+version = "1.0.0"
+rust-version = "1.86"
+
+# Audit #2930-H2 + #3008-H5: canonical versions for dependencies used by
+# 2+ workspace crates. Member crates opt in via
+# `<dep> = { workspace = true, features = […] }`. Single-crate
+# dependencies stay declared inline in their owning crate — the audit
+# round in #3008 moved `anyhow`, `hex`, `iana-time-zone`, `rmcp`, and
+# `unicode-normalization` back into their owning manifests after each
+# turned out to have only one consumer.
+#
+# `app/src-tauri` is a separate workspace (see top-level `exclude`) and
+# therefore cannot inherit these — it pins critical-path crates explicitly
+# in its own manifest. We still align the loose-pinned (non-exact) crates
+# here so a Cargo.lock unification is mechanical when desired.
+[workspace.dependencies]
+chrono = "0.4"
+chrono-tz = "0.10"
+dirs = "6"
+libc = "0.2"
+rusqlite = { version = "0.39", features = ["bundled", "backup"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+tempfile = "3"
+thiserror = "2"
+tokio = { version = "1" }
+uuid = { version = "1", features = ["v7"] }
+
+# Audit #2930-H2: workspace-level Rust + clippy lints. Each member crate
+# opts in with `[lints] workspace = true`. We avoid `pedantic` because it
+# would generate hundreds of false positives across this codebase; the
+# selection below is the smallest set that catches real correctness
+# regressions without flooding CI.
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_must_use = "deny"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+# Issue #3382: tightened lint set. Each rule below catches concrete
+# correctness or hygiene bugs the workspace had at the time of opt-in.
+# Pedantic/nursery wholesale is intentionally excluded — these named
+# lints are the smallest set that produced zero post-fix noise.
+#
+# `needless_pass_by_value` was previously workspace-allow as a safety
+# net during the lorvex-cli (#3394) and app/src-tauri (Phase 2) cleanup;
+# now that each crate sets the lint to "warn" explicitly, the workspace
+# allow is removed (#3422).
+needless_collect = "warn"
+redundant_clone = "warn"
+useless_conversion = "warn"
+manual_let_else = "warn"
+match_same_arms = "warn"
+needless_borrow = "warn"
+cloned_instead_of_copied = "warn"
+option_as_ref_deref = "warn"
+unused_async = "warn"
+missing_const_for_fn = "warn"
+
+# Audit #2931-L3: release-profile size optimizations for the workspace
+# binaries (mcp-server, lorvex-cli, and the shared-crate test binaries).
+# `app/src-tauri` is a separate workspace and ships its own profile via
+# Tauri's bundler — these settings do not apply to it.
+#
+# - `lto = "thin"` lets cross-crate inlining strip dead code without
+#   the >5x compile-time hit of `lto = "fat"`. The workspace ships a
+#   small set of binaries (mcp-server, lorvex CLI), so the linker has
+#   plenty of room to drop unreached code paths.
+# - `codegen-units = 1` collapses every codegen unit into one final
+#   object so the linker sees the whole crate when applying LTO. With
+#   `lto` turned off this would mostly hurt parallelism; with `thin`
+#   LTO it produces noticeably smaller binaries (5–10% on lorvex-cli
+#   in our measurements).
+# - `strip = "symbols"` removes the rustc-emitted symbol table from
+#   the final binary. Backtraces inside the binary still work because
+#   we keep panic = "unwind" (the default), but `nm` / `objdump` see
+#   nothing — useful both for size and for not leaking internal
+#   function names in distributed binaries.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+
+# Issue #3383: enable arithmetic overflow checks for `lorvex-domain` in
+# both dev and release builds. The crate hosts the HLC, recurrence math,
+# duration arithmetic, FTS rank scoring, and other numeric kernels where
+# a silent wraparound is a correctness bug, not a performance trade-off.
+# Cargo only honours `[profile.<name>]` at the workspace root and only
+# allows per-crate overrides via the `package.<crate>` sub-table — see
+# https://doc.rust-lang.org/cargo/reference/profiles.html#overrides.
+# The runtime cost is negligible because the rest of the workspace still
+# runs with the default release setting (overflow checks off).
+[profile.dev.package.lorvex-domain]
+overflow-checks = true
+
+[profile.release.package.lorvex-domain]
+overflow-checks = true

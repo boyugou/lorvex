@@ -1,0 +1,13 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "mutation.habits.complete",
+  "completed_date": "2026-04-10",
+  "db_path": "/tmp/lorvex.db",
+  "habit_id": "habit-alpha",
+  "habit_name": "Read",
+  "note": "Finished chapter 1",
+  "value": 1
+}

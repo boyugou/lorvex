@@ -1,0 +1,5 @@
+{
+  "maxUnusedExports": 0,
+  "maxUnusedExportedTypes": 0,
+  "$comment": "Ratchet for #3845, tightened to zero after #4485 swept the deliberate-surface exemptions (platform wrappers, god-view virtual-row interfaces, invalidation re-exports, duration constants). Any new dead export now fails the gate at the source rather than absorbing into a budget."
+}

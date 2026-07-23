@@ -1,0 +1,44 @@
+/*
+  The default border color changed to `currentcolor` in Tailwind CSS v4.
+  Without this override, all implicit borders (from `border` utility without
+  a color) inherit the text color, making them far too prominent.
+  We use our semantic surface-3 token for subtle, theme-aware borders.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-surface-3);
+  }
+
+  /* #3691 — Give <html> and <body> an explicit opaque fallback
+     background so switching away from a Mica theme on Windows can't
+     leave the page transparent. Without this rule non-Mica themes
+     would rely on the browser / WebView2 default, which in Tauri is
+     transparent — a theme flip from mica → dark would visually leak
+     the desktop wallpaper through.
+
+     Scope to non-overlay, non-transparent windows so the Mica /
+     overlay / popover surfaces (which intentionally opt
+     out via `data-window-kind` or `data-window-transparent`) don't
+     need a `!important` Mica override to fight an unconditional
+     surface-0 paint. The overlay/transparent-window scoping at line
+     ~1749 already keeps `bg-surface-0` off those windows; this guard
+     mirrors it for the raw `background:` declaration. */
+  html:not([data-window-kind='overlay']):not([data-window-transparent]),
+  html:not([data-window-kind='overlay']):not([data-window-transparent]) body {
+    background: var(--color-surface-0);
+  }
+
+  /* Hide native number input spinners globally */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}

@@ -1,0 +1,47 @@
+[package]
+name = "lorvex-workflow"
+# Inherit version from [workspace.package].
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Cross-surface workflow operations for Lorvex (lifecycle, focus, recurrence, dependency validation, …) shared by Tauri, MCP, CLI, and sync apply."
+publish = false
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# Issue #3285: opt into the `rusqlite` feature on `lorvex-domain` so the
+# typed entity-id newtypes (`TaskId`, `ListId`, …) bind transparently
+# into `params!` without going through `.as_str()`.
+lorvex-domain = { path = "../lorvex-domain", features = ["rusqlite"] }
+lorvex-store = { path = "../lorvex-store" }
+lorvex-sync-payload = { path = "../lorvex-sync-payload" }
+rusqlite = { workspace = true, features = ["bundled", "hooks"] }
+chrono = { workspace = true, features = ["serde"] }
+# `timezone::system_timezone()` calls `iana_time_zone::get_timezone()` to
+# resolve the OS timezone for date arithmetic on agent-supplied dates.
+# Single-consumer dep — pinned inline per the workspace dep policy.
+iana-time-zone = "0.1"
+# `calendar_subscription::tzid` resolves TZID parameters against IANA
+# zones; the Windows-display-name fallback path is a pure lookup so the
+# IANA recogniser is the only chrono-tz surface used here.
+chrono-tz.workspace = true
+# `calendar_subscription::validation` parses subscription URLs and
+# inspects their host (literal IP vs domain) without performing the
+# HTTP request itself. `reqwest::Url` re-exports the `url::Url` parser
+# already pinned by the Tauri crate, so workflow uses the same pin to
+# keep the parsed-URL type identical on both sides of the IPC boundary.
+reqwest = { version = "=0.13.3", default-features = false }
+url = "=2.5.8"
+serde = { workspace = true }
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# Issue #3330: workflow tests use `lorvex_store::open_db_in_memory` and
+# `lorvex_store::test_support::*`, both gated behind the store's
+# `test-support` feature so their panic-on-migration paths don't ship
+# in production binaries.
+lorvex-store = { path = "../lorvex-store", features = ["test-support"] }

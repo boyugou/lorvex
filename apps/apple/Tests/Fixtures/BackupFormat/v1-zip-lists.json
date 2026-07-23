@@ -1,0 +1,11 @@
+[
+  {
+    "id": "55555555-5555-4555-8555-555555555551",
+    "name": "Public v1 fixture",
+    "description": "Pins the first public ZIP decoder.",
+    "color": "#5E5CE6",
+    "icon": "archivebox",
+    "aiNotes": "Keep this list stable.",
+    "position": 7
+  }
+]

@@ -1,0 +1,9 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Habits (2026-04-10)
+DB: /tmp/lorvex.db
+  - book Read [done] (daily)
+  - Push-ups [1/3] (daily)
+  - lotus Meditate [pending] (weekly)

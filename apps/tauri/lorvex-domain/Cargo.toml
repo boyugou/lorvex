@@ -1,0 +1,66 @@
+[package]
+name = "lorvex-domain"
+# Audit #3008-L3: inherit version from [workspace.package].version.
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Pure domain logic for Lorvex — types, validation, merge policy, HLC. Zero IO dependencies."
+# Audit #2172: prevent accidental `cargo publish` / crates.io name squat.
+publish = false
+# Audit #2295: inherit MSRV from [workspace.package].
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# Issue #3285: optional `rusqlite::ToSql` / `FromSql` impls on the
+# typed identifier newtypes (`TaskId`, `ListId`, …). `lorvex-domain` is
+# normally an IO-free crate; the rusqlite trait impls only matter for
+# storage-layer crates (`lorvex-store`) that bind ids directly into
+# SQL `params!`. Behind a feature flag so test/CLI consumers that
+# never touch SQL keep building without the rusqlite dependency.
+rusqlite = ["dep:rusqlite"]
+# Issue #3314: optional `schemars::JsonSchema` impl for `Patch<T>`.
+# Only the MCP server crate emits JSON Schema for tool arg structs;
+# CLI / store / sync consumers don't need the schemars dependency.
+schemars = ["dep:schemars"]
+
+[dependencies]
+# Audit #2820: full Unicode default casefold (UTS #18 R3) for tag
+# `lookup_key` normalization. The Rust std `to_lowercase()` is locale-
+# independent ASCII + Unicode lowercase mapping, NOT case-fold —
+# Turkish dotless `ı` / dotted `İ` collide unpredictably, German `ß`
+# does not fold to `ss`, Greek final sigma `ς` does not unify with
+# `σ`, etc. `caseless` ships the full Unicode 14+ casefold tables so
+# two devices in different locales reach identical lookup keys for
+# names that should compare equal.
+caseless = "0.2"
+chrono = { workspace = true, features = ["serde"] }
+chrono-tz.workspace = true
+# Issue #3285: rusqlite is an OPTIONAL dependency, gated by the
+# `rusqlite` feature. The crate's core promise (zero IO/storage
+# dependencies) is preserved — only the `ids::*` newtypes' SQL
+# binding impls activate when downstream storage crates opt in.
+rusqlite = { workspace = true, optional = true }
+# Issue #3314: gated under the `schemars` feature so non-MCP consumers
+# (CLI, store, sync, app) don't pull schemars into their dep graph.
+schemars = { version = "1", optional = true }
+serde = { workspace = true }
+serde_json.workspace = true
+# Attendee identity (`AttendeeIdentity`) synthesizes a content-hash key
+# for fully-anonymous attendees via SHA-256, matching the Apple app's
+# `AttendeeIdentity` so both implementations converge on identical
+# device-local ids. Pure computation, no IO.
+sha2 = { workspace = true }
+uuid = { workspace = true, features = ["v7", "serde"] }
+# Audit #3008-H5: `unicode-normalization` is consumed only by
+# lorvex-domain (single consumer); declared inline per the workspace
+# dep policy.
+unicode-normalization = "0.1"
+
+[dev-dependencies]
+# Audit #2265: property-based panic-safety tests for HLC parse + receive.
+# Keeps case count modest (128) so `cargo test -p lorvex-domain --lib`
+# stays well under 10s on CI hardware.
+proptest = "1"

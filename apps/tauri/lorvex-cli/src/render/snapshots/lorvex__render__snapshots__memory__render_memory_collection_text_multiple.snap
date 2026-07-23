@@ -1,0 +1,8 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex AI Memories
+DB: /tmp/lorvex.db
+  - preferences.tone: friendly
+  - notes.long: This is a long memory entry that should be truncated at eighty bytes because we ...

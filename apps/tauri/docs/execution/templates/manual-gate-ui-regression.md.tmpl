@@ -1,0 +1,71 @@
+# Manual Gate Evidence Report: UI Regression (Menu Bar + Settings)
+
+- Evidence target: {{EVIDENCE_TARGET}}
+- Date: {{DATE}}
+- Build commit: {{COMMIT}}
+- Runbooks:
+  - `docs/execution/MENUBAR_REGRESSION_CHECKLIST.md`
+  - `docs/execution/SETTINGS_REGRESSION_CHECKLIST.md`
+
+## Evidence Metadata
+
+- Operator: <name/role>
+- Runtime: <macOS version + architecture + monitor setup>
+- App build notes: <build profile, local/CI artifact source>
+- Evidence bundle: <artifact path or issue attachment links>
+- Evidence permalink: <GitHub issue/PR comment URL>
+
+## Evidence Freshness
+
+- Captured at (UTC): {{CAPTURED_AT_UTC}}
+- Fresh until (UTC): {{FRESH_UNTIL_UTC}}
+- Evidence owner: <name/role>
+
+## Overall Outcome
+
+- Status: <PASS | PARTIAL | FAIL>
+- Blocking defects: <none OR issue links>
+- Summary: <2-4 sentences>
+
+## Menu Bar Checklist Summary
+
+- Passed checks: <n>/<total>
+- Failed checks: <n>/<total>
+
+| Area | Status | Evidence |
+|---|---|---|
+| Open/Close Behavior | Pass / Fail | <recording/screenshot/log> |
+| Window Lifecycle Edge Cases | Pass / Fail | <recording/screenshot/log> |
+| Icon Rendering | Pass / Fail | <screenshot/log> |
+
+## Settings Checklist Summary
+
+- Passed checks: <n>/<total>
+- Failed checks: <n>/<total>
+
+| Area | Status | Evidence |
+|---|---|---|
+| General UX | Pass / Fail | <screenshot/log> |
+| Auto-Save Reliability | Pass / Fail | <screen recording/log> |
+| Immediate Controls | Pass / Fail | <screenshot/log> |
+| Sync + Diagnostics | Pass / Fail | <screenshot/log> |
+| MCP Setup Surface | Pass / Fail | <screenshot/log> |
+| Sync Error Recovery | Pass / Fail | <screenshot/log> |
+
+## Defects and Follow-up
+
+- Blocking defects:
+- Non-blocking defects:
+- Suggested next action:
+
+## Issue Comment Draft
+
+```md
+Manual UI regression gate run on {{DATE}} (commit {{COMMIT}}): <PASS|PARTIAL|FAIL>.
+
+- Menu Bar checklist: <pass/fail summary>
+- Settings checklist: <pass/fail summary>
+- Blocking defects: <none OR issue links>
+- Evidence target: {{EVIDENCE_TARGET}}
+- Evidence report: `artifacts/manual-gates/ui-regression/{{DATE}}/{{EVIDENCE_TARGET_SLUG}}.md`
+```

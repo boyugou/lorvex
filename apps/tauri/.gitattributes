@@ -1,0 +1,15 @@
+# Treat provisioning profiles as binary to prevent Git from mangling them
+*.provisionprofile binary
+*.mobileprovision binary
+
+# Treat certificates and keys as binary
+*.p12 binary
+*.p8 binary
+*.cer binary
+*.der binary
+
+# Pin migration SQL to LF so Windows clones with `core.autocrlf=true`
+# don't re-hash as CRLF at checkout and trip migration ChecksumMismatch
+# on first launch (audit #2162). Defense-in-depth — checksum.rs also
+# normalizes CRLF→LF before hashing.
+*.sql text eol=lf

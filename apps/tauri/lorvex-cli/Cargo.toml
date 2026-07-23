@@ -1,0 +1,78 @@
+[package]
+name = "lorvex-cli"
+# Audit #3008-L3: inherit version from [workspace.package].version.
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Agent-first Lorvex CLI companion"
+publish = false
+# Audit #2295: inherit MSRV from [workspace.package] so cargo emits
+# the "dependency X requires rustc Y" resolver hint. Without explicit
+# inheritance the workspace-package rust-version has no effect.
+rust-version.workspace = true
+
+# Issue #3422: workspace-level `needless_pass_by_value = "allow"` was retired
+# once both lorvex-cli (#3394) and app/src-tauri Phase 2 finished their burn-
+# down, so this crate now inherits the workspace lint set directly.
+[lints]
+workspace = true
+
+[[bin]]
+name = "lorvex"
+path = "src/main.rs"
+
+[dependencies]
+chrono.workspace = true
+clap = { version = "4", features = ["derive"] }
+clap_complete = "4"
+# Terminal styling + TTY-aware coloring for human-format render paths.
+# `console::Style` auto-no-ops when stdout is not a TTY, NO_COLOR is set,
+# or `--no-color` is honored via `console::set_colors_enabled`, so the
+# snapshot test paths (which capture into a String, no TTY) stay plain.
+console = "0.16"
+# Terminal-size probe for human-format renderers that truncate long
+# rows to fit the user's actual terminal. `crossterm::terminal::size()`
+# returns Err on non-TTY stdout (CI, snapshot tests, piped output),
+# which is exactly the case where we want to disable truncation.
+crossterm = { version = "0.27", default-features = false }
+dirs.workspace = true
+lorvex-domain = { path = "../lorvex-domain" }
+lorvex-runtime = { path = "../lorvex-runtime" }
+lorvex-store = { path = "../lorvex-store" }
+# Audit #2931-L13 + #3052-M15: was previously gated behind the
+# default-on `mcp-serve` feature so a future "minimal CLI" SKU could
+# drop the heaviest dep in the CLI graph. In practice nothing built
+# `--no-default-features` and CI never asserted the no-default
+# variant compiled, so the cfg-gating was a maintenance liability for
+# zero behavioural value (the feature flag was a no-op with defaults).
+# Pull the dep in unconditionally; the `lorvex mcp serve` subcommand
+# is now always available.
+lorvex-mcp-server = { path = "../mcp-server" }
+lorvex-sync = { path = "../lorvex-sync" }
+lorvex-workflow = { path = "../lorvex-workflow" }
+# `lorvex subscription refresh` exercises the workflow's `FetchBackend`
+# trait against a `reqwest::blocking` HTTP client. Pinned to the same
+# version the workflow + Tauri surfaces use so the underlying TLS /
+# resolver stack stays uniform across surfaces.
+reqwest = { version = "=0.13.3", default-features = false, features = ["blocking", "rustls"] }
+rusqlite = { workspace = true, features = ["bundled"] }
+serde = { workspace = true }
+serde_json.workspace = true
+thiserror.workspace = true
+toml = "1.1"
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
+uuid = { workspace = true, features = ["v7"] }
+
+[dev-dependencies]
+insta = { version = "1", features = ["yaml"] }
+# Issue #2873: enable runtime's `test-support` feature so tests can
+# reach `with_db_path_env_for_test` while production binaries cannot.
+lorvex-runtime = { path = "../lorvex-runtime", features = ["test-support"] }
+# Audit #2991-M6 (ERR-M3): `lorvex_store::open_db_in_memory` is gated
+# behind the store's `test-support` feature so its panic-on-migration-
+# failure path doesn't ship in the production CLI binary. Every
+# `#[cfg(test)]` module that uses the helper opts back in here.
+lorvex-store = { path = "../lorvex-store", features = ["test-support"] }
+sha2 = { workspace = true }
+tempfile.workspace = true
+zip = { version = "8", default-features = false, features = ["deflate"] }

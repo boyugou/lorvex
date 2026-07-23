@@ -1,0 +1,39 @@
+[package]
+name = "lorvex-sync-payload"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+description = "Shared forward-compat sync payload types — payload_shadow + attendee_shadow."
+publish = false
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# Optional `schemars::JsonSchema` impls on the wire shapes
+# (`CalendarEventUpdateWire`, `AttendeeWire`). Only the MCP server
+# needs JSON schema for its tool args; app/CLI/store/sync don't pull
+# schemars in. Forwarded to `lorvex-domain/schemars` so `Patch<T>`'s
+# JsonSchema impl is enabled in lock-step.
+schemars = ["dep:schemars", "lorvex-domain/schemars"]
+
+[dependencies]
+# Issue #3285: typed entity-id rusqlite binding impls — payload_shadow
+# uses `EntityKind` and the merge helpers reach for HLC parsing.
+lorvex-domain = { path = "../lorvex-domain", features = ["rusqlite"] }
+rusqlite = { workspace = true, features = ["bundled"] }
+schemars = { version = "1", optional = true }
+serde = { workspace = true }
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# Tests in this crate need a fully-migrated SQLite DB (the shadow CRUD
+# operates on the `sync_payload_shadow` and
+# `calendar_event_attendee_shadows` tables). They reach into
+# `lorvex_store::open_db_in_memory` via the `test-support` feature.
+# This dev-only path doesn't form a build cycle: lorvex-store depends
+# on lorvex-sync-payload through normal deps, but dev-deps live on a
+# separate target graph.
+lorvex-store = { path = "../lorvex-store", features = ["test-support"] }

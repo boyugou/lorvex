@@ -1,0 +1,13 @@
+---
+source: lorvex-cli/src/render/snapshots/tasks.rs
+expression: out
+---
+Lorvex Dependency Graph
+DB: /tmp/lorvex.db
+Nodes: 0 / limit 50
+Edges: 0 / limit 50
+Graph:
+  ↳ No dependency edges yet — add one with `lorvex task depend <blocker-id> --blocks <task-id>`.
+Roots: 
+Blocked: 
+Leaf blockers:

@@ -1,0 +1,12 @@
+{
+  "settings.menuBarIcon": "Menu bar icon",
+  "settings.menuBarIconDesc": "Show icon in menu bar",
+  "settings.menuBarIconVisible": "Visible",
+  "settings.menuBarIconHidden": "Hidden",
+  "settings.menuBarToggleRollback": "Failed to update menu bar icon setting",
+  "settings.systemTrayIcon": "System tray icon",
+  "settings.systemTrayIconDesc": "Show icon in system tray",
+  "settings.systemTrayIconVisible": "Visible",
+  "settings.systemTrayIconHidden": "Hidden",
+  "settings.systemTrayToggleRollback": "Failed to update system tray icon setting"
+}

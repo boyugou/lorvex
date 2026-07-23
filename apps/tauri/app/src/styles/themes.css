@@ -1,0 +1,1013 @@
+@layer base {
+  /* ─── Dark theme (default) ─────────────────────────────────────────── */
+  :root {
+    color-scheme: dark;
+    --color-surface-0: oklch(0.16 0.0042 285.8);
+    --color-surface-1: oklch(0.21 0.0059 285.78);
+    --color-surface-2: oklch(0.254 0.0075 285.75);
+    --color-surface-3: oklch(0.303 0.009 285.75);
+    --color-hover-tint: oklch(0.303 0.009 285.75);
+    --color-accent: oklch(0.67 0.1616 260.05);
+    --color-accent-hover: oklch(0.732 0.1392 259.91);
+    --color-text-primary: oklch(0.962 0 0);
+    --color-text-secondary: oklch(0.822 0.0084 285.91);
+    --color-text-muted: oklch(0.669 0.0118 285.9);
+    --color-danger: oklch(0.683 0.1868 23.43);
+    --color-success: oklch(0.767 0.1475 157.75);
+    --color-warning: oklch(0.824 0.1398 77.86);
+    --desktop-shell-top-tint: oklch(0.21 0.0059 285.78);
+    --desktop-shell-top-strength: 74%;
+    --desktop-shell-left-bloom-strength: 34%;
+    --desktop-shell-right-bloom-strength: 8%;
+  }
+
+  :root[data-desktop-os='windows'] {
+    --app-font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Noto Sans CJK SC", "Noto Sans CJK TC", "Noto Sans CJK JP", "Noto Sans CJK KR", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Thai", sans-serif;
+  }
+
+  :root[data-desktop-os='linux'] {
+    --app-font-family: "Inter", "Noto Sans", "Noto Sans CJK SC", "Noto Sans CJK TC", "Noto Sans CJK JP", "Noto Sans CJK KR", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Thai", "Ubuntu", "Cantarell", system-ui, sans-serif;
+  }
+
+  :root[data-mobile-os='android'] {
+    --app-font-family: "Roboto", "Noto Sans CJK SC", "Noto Sans", "Noto Sans Arabic", "Noto Sans Hebrew", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Malayalam", "Noto Sans Thai", sans-serif;
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --color-surface-0: oklch(0.169 0 0);
+    --color-surface-1: oklch(0.23 0 0);
+    --color-surface-2: oklch(0.28 0 0);
+    --color-surface-3: oklch(0.33 0.0036 285.92);
+    --color-hover-tint: oklch(0.33 0.0036 285.92);
+    --color-accent: oklch(0.656 0.1698 260.03);
+    --color-accent-hover: oklch(0.717 0.1475 259.88);
+    --color-text-primary: oklch(0.955 0 0);
+    --color-text-secondary: oklch(0.816 0.0084 285.91);
+    --color-text-muted: oklch(0.7 0.0118 285.9);
+    --color-danger: oklch(0.683 0.1868 23.43);
+    --color-success: oklch(0.767 0.1475 157.75);
+    --color-warning: oklch(0.824 0.1398 77.86);
+    --desktop-shell-top-tint: oklch(0.218 0 0);
+    --desktop-shell-top-strength: 76%;
+    --desktop-shell-left-bloom-strength: 34%;
+    --desktop-shell-right-bloom-strength: 8%;
+  }
+
+  /* ─── Midnight (high-contrast dark) ───────────────────────────────── */
+  :root[data-theme='midnight'] {
+    color-scheme: dark;
+    --color-surface-0: oklch(0.133 0.0204 258.03);
+    --color-surface-1: oklch(0.169 0.0245 265.16);
+    --color-surface-2: oklch(0.21 0.0294 266.12);
+    --color-surface-3: oklch(0.27 0.0357 265.64);
+    --color-hover-tint: oklch(0.27 0.0357 265.64);
+    --color-accent: oklch(0.816 0.1225 225.79);
+    --color-accent-hover: oklch(0.856 0.1018 221.61);
+    /* accent lightness 0.816 → text-white drops below WCAG AA; paint
+       ink-on-light instead. */
+    --color-on-accent: oklch(0.15 0.02 258);
+    --color-on-accent-soft: oklch(0.15 0.02 258 / 0.86);
+    --color-text-primary: oklch(0.987 0.0063 255.57);
+    --color-text-secondary: oklch(0.883 0.0292 254.72);
+    --color-text-muted: oklch(0.703 0.0427 255.37);
+    --color-danger: oklch(0.722 0.1726 22.35);
+    --color-success: oklch(0.845 0.159 158.71);
+    --color-warning: oklch(0.865 0.1313 80.69);
+    --desktop-shell-top-tint: oklch(0.169 0.0245 265.16);
+    --desktop-shell-top-strength: 82%;
+    --desktop-shell-left-bloom-strength: 46%;
+    --desktop-shell-right-bloom-strength: 12%;
+  }
+
+  /* ─── Ember (warm cinematic dark) ─────────────────────────────────── */
+  :root[data-theme='ember'] {
+    color-scheme: dark;
+    --color-surface-0: oklch(0.162 0.0161 26.03);
+    --color-surface-1: oklch(0.204 0.0218 24.02);
+    --color-surface-2: oklch(0.256 0.0275 30.19);
+    --color-surface-3: oklch(0.323 0.0354 32.64);
+    --color-hover-tint: oklch(0.323 0.0354 32.64);
+    --color-accent: oklch(0.708 0.1436 38.88);
+    --color-accent-hover: oklch(0.764 0.128 40.3);
+    --color-text-primary: oklch(0.965 0.0136 45.96);
+    --color-text-secondary: oklch(0.807 0.0434 45.81);
+    --color-text-muted: oklch(0.651 0.0483 40.73);
+    --color-danger: oklch(0.717 0.17 27.57);
+    --color-success: oklch(0.791 0.1181 153.44);
+    --color-warning: oklch(0.819 0.1247 75.86);
+    --desktop-shell-top-tint: oklch(0.204 0.0218 24.02);
+    --desktop-shell-top-strength: 84%;
+    --desktop-shell-left-bloom-strength: 42%;
+    --desktop-shell-right-bloom-strength: 14%;
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Liquid Glass Dark — macOS 26 Liquid Glass
+   * Faithful to: WWDC 2025 design sessions, developer.apple.com/design/
+   * Key traits: Glass material (blur+saturate), capsule shapes, 12-16px
+   *   radii, vibrant text, translucent sidebar, deference to content.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  :root[data-theme='liquid'] {
+    color-scheme: dark;
+    /* macOS dark palette (SystemColors) */
+    --color-surface-0: #1C1C1E;
+    --color-surface-1: #2C2C2E;
+    --color-surface-2: #3A3A3C;
+    --color-surface-3: #48484A;
+    --color-hover-tint: #48484A;
+    --color-accent: #0A84FF;
+    --color-accent-hover: #409CFF;
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #98989D;
+    --color-text-muted: #757578;
+    --color-danger: #FF453A;
+    --color-success: #30D158;
+    --color-warning: #FFD60A;
+    --desktop-shell-top-tint: #2C2C2E;
+    --desktop-shell-top-strength: 0%;
+    --desktop-shell-left-bloom-strength: 0%;
+    --desktop-shell-right-bloom-strength: 0%;
+    /* Glass material tokens */
+    --glass-surface-tint: rgba(255, 255, 255, 0.06);
+    --glass-surface-alpha: 14%;
+    --glass-bg: rgba(30, 30, 32, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    /* #3667 — glass surface shadows now ride the canonical
+       --shadow-ink-* ladder so a future depth retune lands once. */
+    --glass-shadow-soft: 0 8px 32px var(--shadow-ink-lg);
+    --glass-shadow-inner: inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+    --glass-blur: blur(20px) saturate(180%);
+  }
+
+  /* ─── Light theme ──────────────────────────────────────────────────── */
+  :root.light,
+  :root[data-theme='light'] {
+    color-scheme: light;
+    --color-surface-0: oklch(0.991 0 0);
+    --color-surface-1: oklch(0.971 0 0);
+    --color-surface-2: oklch(0.926 0.0055 285.76);
+    --color-surface-3: oklch(0.853 0.0083 285.9);
+    --color-hover-tint: oklch(0.853 0.0083 285.9);
+    --color-accent: oklch(0.549 0.1549 259.84);
+    --color-accent-hover: oklch(0.489 0.1474 260.48);
+    --color-text-primary: oklch(0.227 0.0038 285.91);
+    --color-text-secondary: oklch(0.433 0.0098 285.85);
+    --color-text-muted: oklch(0.512 0.0079 285.92);
+    --color-danger: oklch(0.57 0.1881 25.47);
+    --color-success: oklch(0.532 0.1187 155.93);
+    --color-warning: oklch(0.55 0.1041 80.39);
+    --desktop-shell-top-tint: oklch(0.971 0 0);
+    --desktop-shell-top-strength: 86%;
+    --desktop-shell-left-bloom-strength: 26%;
+    --desktop-shell-right-bloom-strength: 6%;
+  }
+
+  /* ─── Light-theme shadow softening (#3613) ─────────────────────────────
+   * Light surfaces need lower-alpha drops so the same canonical shadow
+   * doesn't read as a heavy gray bruise against a near-white page.
+   * Applied uniformly across every light variant; per-theme retuning can
+   * still override if a specific theme needs more or less depth. */
+  :root.light,
+  :root[data-theme='light'],
+  :root[data-theme='paper'],
+  :root[data-theme='mica_light'],
+  :root[data-theme='adwaita_light'],
+  :root[data-theme='liquid_light'] {
+    /* #3652 — light themes retune the ladder values; the
+       `--shadow-tooltip` / `--shadow-popover` / `--shadow-modal` /
+       `--shadow-desktop-card` tokens above already reference the
+       ladder, so collapsing the per-token respelling to a single
+       per-step retune keeps light + dark in lockstep when a future
+       depth tweak lands. */
+    --shadow-ink-xxs: oklch(from black l c h / 0.04);
+    --shadow-ink-xs:  oklch(from black l c h / 0.05);
+    --shadow-ink-sm:  oklch(from black l c h / 0.06);
+    --shadow-ink-md:  oklch(from black l c h / 0.08);
+    --shadow-ink-lg:  oklch(from black l c h / 0.12);
+    --shadow-ink-xl:  oklch(from black l c h / 0.22);
+    /*
+     * #3662 — the side-rail edge shadow (`--shadow-rail-edge`) defaults
+     * to the `xxs` rung (0.06 alpha on dark surfaces), which on a
+     * light surface drops to 0.04 and disappears entirely on the
+     * Spotlight popover. Bump light themes to the `sm` rung so the
+     * hairline that delimits the rail from the panel body remains
+     * visible without adding raw rgba shadows.
+     */
+    --shadow-rail-edge: -1px 0 4px var(--shadow-ink-sm);
+    --glass-highlight-inset-strong: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.55);
+    --glass-highlight-inset-soft: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.45);
+  }
+
+  /* ─── Paper (warm light) ───────────────────────────────────────────── */
+  :root[data-theme='paper'] {
+    color-scheme: light;
+    --color-surface-0: oklch(0.98 0.0097 87.57);
+    --color-surface-1: oklch(0.959 0.0113 84.63);
+    --color-surface-2: oklch(0.929 0.0143 84.63);
+    --color-surface-3: oklch(0.882 0.0184 78.23);
+    --color-hover-tint: oklch(0.882 0.0184 78.23);
+    --color-accent: oklch(0.524 0.1101 51.2);
+    --color-accent-hover: oklch(0.472 0.0985 51.22);
+    --color-text-primary: oklch(0.255 0.0212 66.63);
+    --color-text-secondary: oklch(0.43 0.0382 68.03);
+    --color-text-muted: oklch(0.504 0.0327 73.9);
+    --color-danger: oklch(0.532 0.1688 29.8);
+    --color-success: oklch(0.508 0.0967 159.19);
+    --color-warning: oklch(0.541 0.1029 74.49);
+    --desktop-shell-top-tint: oklch(0.959 0.0113 84.63);
+    --desktop-shell-top-strength: 92%;
+    --desktop-shell-left-bloom-strength: 30%;
+    --desktop-shell-right-bloom-strength: 7%;
+  }
+
+
+
+
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Mica Dark — Windows 11 Fluent Design System (WinUI 3)
+   * Faithful to: microsoft.com/design/fluent
+   * Key traits: Mica material bg, 4-8px radii, bottom-edge borders on
+   *   controls, very subtle shadows, accent = #60CDFF, Segoe UI Variable.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  :root[data-theme='mica'] {
+    color-scheme: dark;
+    /* Mica base layer — pure neutral, very slight cool shift */
+    --color-surface-0: #202020;
+    --color-surface-1: #2D2D2D;
+    --color-surface-2: #333333;
+    --color-surface-3: #3D3D3D;
+    --color-hover-tint: #3D3D3D;
+    /* Windows 11 default dark accent: sky blue */
+    --color-accent: #60CDFF;
+    --color-accent-hover: #78D8FF;
+    /* Sky-blue accent is too light for white text per Fluent guidance —
+       Windows itself paints button labels with `TextOnAccent` ≈ #000. */
+    --color-on-accent: #000000;
+    --color-on-accent-soft: rgba(0, 0, 0, 0.86);
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: rgba(255, 255, 255, 0.786);
+    --color-text-muted: rgba(255, 255, 255, 0.5442);
+    --color-danger: #FF99A4;
+    --color-success: #6CCB5F;
+    --color-warning: #FCE100;
+    /* Shell: flat, no bloom — Mica is about subtle material, not gradient */
+    --desktop-shell-top-tint: #2D2D2D;
+    --desktop-shell-top-strength: 0%;
+    --desktop-shell-left-bloom-strength: 0%;
+    --desktop-shell-right-bloom-strength: 0%;
+    --app-font-family: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', system-ui, 'Microsoft YaHei UI', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', sans-serif;
+    /* WinUI structural tokens */
+    --win-control-stroke: rgba(255, 255, 255, 0.0698);
+    --win-control-stroke-bottom: rgba(255, 255, 255, 0.14);
+    --win-card-stroke: rgba(255, 255, 255, 0.0837);
+    --win-subtle-fill: rgba(255, 255, 255, 0.0605);
+    --win-secondary-fill: rgba(255, 255, 255, 0.0837);
+    --win-control-fill: rgba(255, 255, 255, 0.0605);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Mica Light — Windows 11 light mode
+   * ═══════════════════════════════════════════════════════════════════════ */
+  :root[data-theme='mica_light'] {
+    color-scheme: light;
+    --color-surface-0: #F3F3F3;
+    --color-surface-1: #FFFFFF;
+    --color-surface-2: #F9F9F9;
+    --color-surface-3: #E5E5E5;
+    --color-hover-tint: #E5E5E5;
+    --color-accent: #005FB8;
+    --color-accent-hover: #004C94;
+    --color-text-primary: rgba(0, 0, 0, 0.8956);
+    --color-text-secondary: rgba(0, 0, 0, 0.6063);
+    --color-text-muted: rgba(0, 0, 0, 0.4458);
+    --color-danger: #C42B1C;
+    --color-success: #0F7B0F;
+    --color-warning: #9D5D00;
+    --desktop-shell-top-tint: #FFFFFF;
+    --desktop-shell-top-strength: 0%;
+    --desktop-shell-left-bloom-strength: 0%;
+    --desktop-shell-right-bloom-strength: 0%;
+    --app-font-family: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', system-ui, 'Microsoft YaHei UI', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', sans-serif;
+    --win-control-stroke: rgba(0, 0, 0, 0.0578);
+    --win-control-stroke-bottom: rgba(0, 0, 0, 0.1622);
+    --win-card-stroke: rgba(0, 0, 0, 0.0578);
+    --win-subtle-fill: rgba(0, 0, 0, 0.0373);
+    --win-secondary-fill: rgba(0, 0, 0, 0.0578);
+    --win-control-fill: #FFFFFF;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Adwaita Dark — GNOME / libadwaita (GTK4)
+   * Faithful to: gnome.pages.gitlab.gnome.org/libadwaita/doc/main/
+   * Key traits: 12px card radii, 8px button radii, raised buttons with
+   *   gradient, inset entries, strong border language, Cantarell/Inter.
+   * ═══════════════════════════════════════════════════════════════════════ */
+  :root[data-theme='adwaita'] {
+    color-scheme: dark;
+    /* Exact libadwaita dark palette (from GNOME/libadwaita _colors.scss) */
+    --color-surface-0: #222226;
+    --color-surface-1: #2e2e32;
+    --color-surface-2: rgba(255, 255, 255, 0.08);
+    --color-surface-3: rgba(255, 255, 255, 0.12);
+    /* #3581: doubled alpha vs surface-3 so the `tone='subtle'` hover
+       affordance reads against the translucent Adwaita surface. */
+    --color-hover-tint: rgba(255, 255, 255, 0.24);
+    --color-accent: #78AEED;
+    --color-accent-hover: #99C1F1;
+    /* libadwaita pairs the light-blue accent with `@accent_fg_color: black`
+       on tinted buttons; mirror that contrast contract. */
+    --color-on-accent: #000000;
+    --color-on-accent-soft: rgba(0, 0, 0, 0.85);
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: rgba(255, 255, 255, 0.7);
+    --color-text-muted: rgba(255, 255, 255, 0.5);
+    --color-danger: #FF7B63;
+    --color-success: #8FF0A4;
+    --color-warning: #F8E45C;
+    /* Flat shell — Adwaita uses solid backgrounds, no blooms */
+    --desktop-shell-top-tint: #2e2e32;
+    --desktop-shell-top-strength: 0%;
+    --desktop-shell-left-bloom-strength: 0%;
+    --desktop-shell-right-bloom-strength: 0%;
+    --app-font-family: 'Cantarell', 'Inter', 'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', system-ui, sans-serif;
+    /* Adwaita structural tokens (from libadwaita SCSS) */
+    --adw-border: rgba(255, 255, 255, 0.12);
+    --adw-border-strong: rgba(255, 255, 255, 0.18);
+    --adw-view-bg: #1d1d20;
+    --adw-sidebar-bg: #2e2e32;
+    --adw-headerbar-bg: #2e2e32;
+    --adw-shade: rgba(0, 0, 6, 0.25);
+    --adw-card-shade: rgba(0, 0, 6, 0.36);
+    /* Modern Adwaita: buttons are tinted bg, NOT gradient */
+    --adw-btn-gradient: none;
+    --adw-btn-shadow: none;
+    --adw-entry-shadow: none;
+    --adw-inner-highlight: none;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Adwaita Light — GNOME light mode
+   * ═══════════════════════════════════════════════════════════════════════ */
+  :root[data-theme='adwaita_light'] {
+    color-scheme: light;
+    /* Exact libadwaita light palette */
+    --color-surface-0: #fafafb;
+    --color-surface-1: #ebebed;
+    --color-surface-2: #FFFFFF;
+    --color-surface-3: rgba(0, 0, 6, 0.15);
+    /* #3581: doubled alpha vs surface-3 so the `tone='subtle'` hover
+       affordance reads against the translucent Adwaita surface. */
+    --color-hover-tint: rgba(0, 0, 6, 0.30);
+    --color-accent: #1C71D8;
+    --color-accent-hover: #1560B4;
+    /* Adwaita light text: near-black with slight warm tint, NOT pure black */
+    --color-text-primary: rgba(0, 0, 6, 0.8);
+    --color-text-secondary: rgba(0, 0, 6, 0.55);
+    --color-text-muted: rgba(0, 0, 6, 0.45);
+    --color-danger: #C01C28;
+    --color-success: #26A269;
+    --color-warning: #AE7B03;
+    --desktop-shell-top-tint: #ebebed;
+    --desktop-shell-top-strength: 0%;
+    --desktop-shell-left-bloom-strength: 0%;
+    --desktop-shell-right-bloom-strength: 0%;
+    --app-font-family: 'Cantarell', 'Inter', 'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', system-ui, sans-serif;
+    --adw-border: rgba(0, 0, 6, 0.15);
+    --adw-border-strong: rgba(0, 0, 6, 0.22);
+    --adw-view-bg: #FFFFFF;
+    --adw-sidebar-bg: #ebebed;
+    --adw-headerbar-bg: #FFFFFF;
+    --adw-shade: rgba(0, 0, 6, 0.07);
+    --adw-card-shade: rgba(0, 0, 6, 0.07);
+    /* Modern Adwaita light: buttons are tinted bg, no gradient */
+    --adw-btn-gradient: none;
+    --adw-btn-shadow: none;
+    --adw-entry-shadow: none;
+    --adw-inner-highlight: none;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Liquid Glass Light — macOS 26 light mode
+   * ═══════════════════════════════════════════════════════════════════════ */
+  :root[data-theme='liquid_light'] {
+    color-scheme: light;
+    /* macOS light palette */
+    --color-surface-0: #F2F2F7;
+    --color-surface-1: #FFFFFF;
+    --color-surface-2: #E5E5EA;
+    --color-surface-3: #D1D1D6;
+    --color-hover-tint: #D1D1D6;
+    --color-accent: #007AFF;
+    --color-accent-hover: #005EC4;
+    --color-text-primary: #000000;
+    --color-text-secondary: #6C6C70;
+    --color-text-muted: #8A8A8E;
+    --color-danger: #FF3B30;
+    --color-success: #34C759;
+    --color-warning: #FF9500;
+    --desktop-shell-top-tint: #FFFFFF;
+    --desktop-shell-top-strength: 0%;
+    --desktop-shell-left-bloom-strength: 0%;
+    --desktop-shell-right-bloom-strength: 0%;
+    --glass-surface-tint: rgba(0, 0, 0, 0.03);
+    --glass-surface-alpha: 8%;
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    /* #3667 — glass shadows on the light theme ride the same ladder
+       (--shadow-ink-md is 0.08 on light per the override block). */
+    --glass-shadow-soft: 0 4px 20px var(--shadow-ink-md);
+    --glass-shadow-inner: inset 0 0.5px 0 rgba(0, 0, 0, 0.04);
+    --glass-blur: blur(20px) saturate(180%);
+  }
+
+  /* ─── Appearance profile overlays (theme-independent) ─────────────── */
+  :root[data-appearance-profile='clarity'] {
+    --profile-material-shell-alpha-top: 90%;
+    --profile-material-shell-alpha-bottom: 86%;
+    --profile-material-shell-blur: 0px;
+    --profile-material-panel-alpha-top: 90%;
+    --profile-material-panel-alpha-bottom: 86%;
+    --profile-material-panel-blur: 0px;
+    --profile-material-border-alpha: 68%;
+    --profile-material-highlight-alpha: 0%;
+    --profile-radius-scale: 1;
+    /* Solid profile — opaque overlay. */
+    --color-overlay: oklch(from black l c h / 0.5);
+  }
+
+  :root[data-appearance-profile='studio'] {
+    --profile-material-shell-alpha-top: 74%;
+    --profile-material-shell-alpha-bottom: 62%;
+    --profile-material-shell-blur: 10px;
+    --profile-material-panel-alpha-top: 64%;
+    --profile-material-panel-alpha-bottom: 50%;
+    --profile-material-panel-blur: 14px;
+    --profile-material-border-alpha: 48%;
+    --profile-material-highlight-alpha: 24%;
+    --profile-radius-scale: 1.06;
+    /* Material profile — translucent overlay so material panels
+       still read with depth against blurred desktop. */
+    --color-overlay: oklch(from black l c h / 0.42);
+  }
+
+  :root[data-appearance-profile='focus_compact'] {
+    --profile-material-shell-alpha-top: 92%;
+    --profile-material-shell-alpha-bottom: 88%;
+    --profile-material-shell-blur: 0px;
+    --profile-material-panel-alpha-top: 92%;
+    --profile-material-panel-alpha-bottom: 88%;
+    --profile-material-panel-blur: 0px;
+    --profile-material-border-alpha: 72%;
+    --profile-material-highlight-alpha: 0%;
+    --profile-radius-scale: 0.9;
+    /* Compact / opaque — strong contrast overlay. */
+    --color-overlay: oklch(from black l c h / 0.55);
+  }
+
+  :root[data-appearance-profile='liquid_glass'] {
+    --profile-material-shell-alpha-top: 62%;
+    --profile-material-shell-alpha-bottom: 45%;
+    --profile-material-shell-blur: 18px;
+    --profile-material-panel-alpha-top: 52%;
+    --profile-material-panel-alpha-bottom: 40%;
+    --profile-material-panel-blur: 20px;
+    --profile-material-border-alpha: 30%;
+    --profile-material-highlight-alpha: 10%;
+    --profile-radius-scale: 1.15;
+    /* #3696 — retune the canonical radius tokens for the liquid_glass
+       profile instead of overriding individual element selectors with
+       `!important`. Every `rounded-[var(--radius-r-*)]` site picks up
+       the new values automatically. The control bump (0.5 → 0.625) is
+       the prior `nav button` rule generalized; the card bump
+       (0.75 → 0.875) is the prior `.cv-task-card` value generalized;
+       button/input rules at 0.75 already match `--radius-r-card`. */
+    --radius-r-control: 0.625rem;
+    --radius-r-card: 0.875rem;
+    /* Liquid Glass — softer, lighter overlay so the underlying
+       blurred glass material remains legible. */
+    --color-overlay: oklch(from black l c h / 0.32);
+  }
+
+  /* ── Liquid Glass: Apple-inspired design language ──────────────────────── */
+  /* Applied when liquid_glass profile is active. Key principles from Apple's
+     WWDC 2025 Liquid Glass:
+     - Glass is a MATERIAL, not a filter — apply sparingly to key surfaces
+     - Don't over-layer: avoid glass on every element
+     - Generous but not extreme rounding (~12-16px, not 999px capsules)
+     - Translucent borders, minimal decoration
+     - Let content breathe through the glass, don't add heavy highlights */
+
+  /* --- Radii: liquid_glass retunes the canonical `--radius-r-*`
+         tokens so every `rounded-[var(--radius-r-*)]` site picks up
+         the moderate Apple-inspired rounding without a per-element
+         `!important` override (#3696). The token-migration sweep
+         (#3398/#3410/#3438/#3442/#3446) banned raw
+         `rounded-{sm,md,lg,xl,2xl,3xl}` everywhere under `app/src`,
+         so retuning the tokens reaches every surface. */
+
+  /* --- Borders: thin, translucent --- */
+  :root[data-appearance-profile='liquid_glass'] [class*='border-surface-3'] {
+    border-color: var(--border-surface-3-strong);
+  }
+
+  /* --- Task cards: subtle rounding only (no per-card blur) --- */
+  :root[data-appearance-profile='liquid_glass'] .cv-task-card {
+    border-radius: var(--radius-r-card);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Theme-specific structural CSS overrides
+   * Each platform theme gets a completely distinct visual language:
+   * border-radius, shadows, borders, surface treatment, button style,
+   * sidebar feel, card presentation, input treatment.
+   * ═══════════════════════════════════════════════════════════════════════ */
+
+  :root {
+    --theme-radius: 0.75rem;
+    --theme-radius-sm: 0.5rem;
+    --theme-radius-lg: 1rem;
+    /* `--theme-shadow-card` / `--theme-shadow-elevated` were defined
+       per-theme but had zero `var(--theme-shadow-*)` consumers anywhere
+       in the codebase — confirmed via repo-wide grep (#3613). Dropped.
+       Reintroduce only with a binding to a real surface (e.g. `.card`)
+       at the same time. */
+  }
+
+  /* ── Ember: sharper corners, warm shadow tints ─────────────────────── */
+  :root[data-theme='ember'] {
+    --theme-radius: 0.5rem;
+    --theme-radius-sm: 0.375rem;
+    --theme-radius-lg: 0.75rem;
+  }
+
+  /* ── Midnight: crisp 1px borders, sharp corners, high contrast ───── */
+  :root[data-theme='midnight'] {
+    --theme-radius: 0.375rem;
+    --theme-radius-sm: 0.25rem;
+    --theme-radius-lg: 0.5rem;
+  }
+
+  /*
+   * #3628 / #3666 — shared opt-in form-control radius rule for every
+   * theme that defines `--theme-radius` / `--theme-radius-sm`.
+   *
+   * The rule was originally written against bare `button`, `[role='button']`,
+   * `input`, `textarea`, `select` selectors. That swept in *every* button
+   * and input on the page — kanban cards, calendar event chips, focus
+   * timer controls, filter pills — and forced the theme radius onto
+   * shapes the designer never intended to be theme-tuned (#3666).
+   *
+   * The opt-in markers are:
+   *   - `data-theme-form-control='true'` — added by the canonical UI
+   *     primitives (Button, SearchInput, AppSelect trigger).
+   *   - `.validated-input` — already present on every form input that
+   *     opts into the shared a11y/error-border styling, which covers
+   *     settings, quick-capture, calendar event form, task metadata
+   *     editor, and inline-add inputs. Re-using this class as a second
+   *     marker keeps the opt-in surface coherent without per-input
+   *     attribute fan-out.
+   *
+   * The `:not([class*='rounded-full']):not([class*='rounded-none'])`
+   * guards remain so a component can opt in for the border treatment
+   * (midnight) while keeping a custom rounded-* class.
+   */
+  :root[data-theme='ember'] [data-theme-form-control='true']:not([class*='rounded-full']):not([class*='rounded-none']),
+  :root[data-theme='ember'] .validated-input:not([class*='rounded-full']):not([class*='rounded-none']),
+  :root[data-theme='midnight'] [data-theme-form-control='true']:not([class*='rounded-full']):not([class*='rounded-none']),
+  :root[data-theme='midnight'] .validated-input:not([class*='rounded-full']):not([class*='rounded-none']) {
+    border-radius: var(--theme-radius);
+  }
+  :root[data-theme='ember'] input[data-theme-form-control='true']:not([type='checkbox']):not([type='radio']),
+  :root[data-theme='ember'] textarea[data-theme-form-control='true'],
+  :root[data-theme='ember'] select[data-theme-form-control='true'],
+  :root[data-theme='ember'] input.validated-input:not([type='checkbox']):not([type='radio']),
+  :root[data-theme='ember'] textarea.validated-input,
+  :root[data-theme='ember'] select.validated-input,
+  :root[data-theme='midnight'] input[data-theme-form-control='true']:not([type='checkbox']):not([type='radio']),
+  :root[data-theme='midnight'] textarea[data-theme-form-control='true'],
+  :root[data-theme='midnight'] select[data-theme-form-control='true'],
+  :root[data-theme='midnight'] input.validated-input:not([type='checkbox']):not([type='radio']),
+  :root[data-theme='midnight'] textarea.validated-input,
+  :root[data-theme='midnight'] select.validated-input {
+    border-radius: var(--theme-radius-sm);
+  }
+  /* Midnight-only: 1px border treatment on opt-in form controls. */
+  :root[data-theme='midnight'] [data-theme-form-control='true']:not([class*='rounded-full']):not([class*='rounded-none']),
+  :root[data-theme='midnight'] .validated-input:not([class*='rounded-full']):not([class*='rounded-none']) {
+    border: 1px solid var(--color-surface-3);
+  }
+  /* Prior versions targeted `.rounded-{xl,2xl}` and
+     `.shadow-{lg,xl,2xl}` here to retune those Tailwind buckets for
+     midnight. Phases 1-5 (#3398/#3410/#3438/#3442/#3446) eliminated
+     raw `rounded-*` / `shadow-*` everywhere under `app/src` in favor of
+     `rounded-[var(--radius-r-*)]` / `shadow-[var(--shadow-*)]`, so
+     these class-selector overrides could never match. Theme-specific
+     radius/shadow is now expressed by retuning the canonical
+     `--radius-r-*` / `--shadow-*` tokens. */
+
+  /* ═══════════════════════════════════════════════════════════════════════
+   * Structural-override theme tokens (#3604)
+   *
+   * The mica / mica_light / adwaita / adwaita_light / liquid /
+   * liquid_light themes all share the same `.desktop-card`,
+   * `.desktop-shell`, and `.liquid-settings-panel/.profile-material-panel`
+   * structural rules — they only differ in the *values* used inside
+   * the shared declarations. We retune those values via theme-scoped
+   * tokens and write each rule once, eliminating the six near-
+   * identical override blocks the file used to carry.
+   *
+   * Tokens (defaults from `--color-surface-*` so themes that don't
+   * opt in render byte-identically to the pre-refactor output):
+   *   --shell-card-border-color  / --shell-card-bg / --shell-card-backdrop
+   *   --shell-panel-bg           / --shell-panel-backdrop
+   *
+   * Per-theme retuning lives in the per-theme blocks below; the
+   * shared rules consume the tokens.
+   * ═══════════════════════════════════════════════════════════════════════ */
+
+  /* Default token values — ensure themes that DON'T opt in still get
+     a sensible fallback, even though the shared rules are scoped to
+     themes that DO opt in. */
+  :root {
+    --shell-card-border-color: var(--color-surface-3);
+    --shell-card-bg: var(--color-surface-0);
+    --shell-card-backdrop: none;
+    --shell-panel-bg: var(--color-surface-1);
+    --shell-panel-backdrop: none;
+  }
+
+  /* ── Token retuning per structural-override theme ─────────────────── */
+
+  /*
+   * #3668 — every structural-override theme wants the same flat
+   * desktop-card geometry: no full border, no radius, no shadow, with
+   * a single inline-end stroke and the theme's bg/backdrop. Hoist
+   * those shared tokens to a multi-selector block; the per-theme
+   * blocks below only retune what differs (stroke color, bg, blur,
+   * panel radius/border/shadow).
+   */
+  :root[data-theme='mica'],
+  :root[data-theme='mica_light'],
+  :root[data-theme='adwaita'],
+  :root[data-theme='adwaita_light'],
+  :root[data-theme='liquid'],
+  :root[data-theme='liquid_light'] {
+    --shell-card-border: none;
+    --shell-card-radius: 0;
+    --shell-card-shadow: none;
+    --shell-card-border-inline-end: 1px solid var(--shell-card-border-color);
+    --shell-bg: var(--color-surface-0);
+  }
+
+  /* Mica dark + light — flush 8px panels, stroke from win-card-stroke. */
+  :root[data-theme='mica'],
+  :root[data-theme='mica_light'] {
+    --shell-card-border-color: var(--win-card-stroke);
+    --shell-card-bg: var(--color-surface-0);
+    --shell-panel-bg: var(--color-surface-1);
+    --structural-panel-radius: 8px;
+    --structural-panel-border: none;
+    --structural-panel-shadow: none;
+  }
+
+  /* Adwaita dark + light — 12px panels with adw-border. */
+  :root[data-theme='adwaita'],
+  :root[data-theme='adwaita_light'] {
+    --shell-card-border-color: var(--adw-border);
+    --shell-card-bg: var(--adw-sidebar-bg);
+    --shell-panel-bg: var(--color-surface-2);
+    --structural-panel-radius: 12px;
+    --structural-panel-border: 1px solid var(--adw-border);
+    --structural-panel-shadow: none;
+  }
+
+  /* Liquid glass dark + light — translucent glass with shadow. */
+  :root[data-theme='liquid'],
+  :root[data-theme='liquid_light'] {
+    --shell-card-border-color: var(--glass-border);
+    --shell-card-bg: var(--glass-bg);
+    --shell-card-backdrop: var(--glass-blur);
+    --shell-panel-bg: var(--glass-bg);
+    --shell-panel-backdrop: var(--glass-blur);
+    --structural-panel-radius: 12px;
+    --structural-panel-border: 1px solid var(--glass-border);
+    --structural-panel-shadow: var(--glass-shadow-soft), var(--glass-shadow-inner);
+  }
+
+  /* ── Native Mica needs a transparent page background so the
+     DWM-rendered material shows through (Tauri's set_effects() applies
+     Effect::Mica). The `!important` is load-bearing: the unconditional
+     html/body fallback at the top of the layer is more specific than
+     `:root[data-theme='mica']` (the `:not(...)` chain wins on
+     specificity), so the cascade alone can't override it. #3691 keeps
+     the !important here but tightened the html/body scoping so other
+     overlay/transparent windows no longer need the same workaround. */
+  :root[data-theme='mica'],
+  :root[data-theme='mica'] body,
+  :root[data-theme='mica_light'],
+  :root[data-theme='mica_light'] body {
+    background: transparent !important;
+  }
+
+  /* ── Shared structural rules (consume tokens) ─────────────────────── */
+
+  /*
+   * #3668 — `.desktop-card`, `.profile-material-panel`, and
+   * `.liquid-settings-panel` no longer need theme-keyed override rules:
+   * the @utility bases consume the same `--shell-card-*` /
+   * `--shell-panel-*` / `--structural-panel-*` tokens directly via
+   * `var(token, fallback)`, and the per-theme blocks above retune the
+   * tokens. That removed 18 `!important` declarations that were only
+   * there to win against Tailwind's utilities cascade layer.
+   *
+   * `.desktop-shell` keeps a single override rule below: `gap` and
+   * `padding` come from consumer Tailwind utilities (`gap-3 p-2.5` on
+   * the wrapping div) which sit in the same utilities layer as
+   * `@utility desktop-shell`, so token-routed defaults can't beat
+   * them. The override is the cheapest reliable way to force a flush
+   * structural shell on these themes. The `background` is reset to a
+   * flat color for symmetry with the card override; the `--shell-bg`
+   * token would do the job alone, but spelling it here keeps the
+   * override single-purpose and easy to read.
+   */
+  :root[data-theme='mica'] .desktop-shell,
+  :root[data-theme='mica_light'] .desktop-shell,
+  :root[data-theme='adwaita'] .desktop-shell,
+  :root[data-theme='adwaita_light'] .desktop-shell,
+  :root[data-theme='liquid'] .desktop-shell,
+  :root[data-theme='liquid_light'] .desktop-shell {
+    /* `gap` / `padding` fight with the consumer's `gap-3 p-2.5`
+       Tailwind utility classes — both sit in the utilities cascade
+       layer, so `!important` is the structurally-correct lever here. */
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  /*
+   * `.liquid-settings-panel.profile-material-panel` keeps a narrow
+   * override block: the consumer (`SettingsPrimitives.tsx`) adds
+   * `bg-surface-2/35 border border-surface-3
+   * rounded-r-card` Tailwind utility classes, which
+   * sit in the same utilities cascade layer as the `@utility
+   * profile-material-panel` token-driven base. Without `!important`
+   * those consumer utilities beat the var()-driven values in the
+   * structural-override themes that need a different panel geometry.
+   * Three `!important`s here — down from six in the prior cluster.
+   */
+  :root[data-theme='mica'] .liquid-settings-panel.profile-material-panel,
+  :root[data-theme='mica_light'] .liquid-settings-panel.profile-material-panel,
+  :root[data-theme='adwaita'] .liquid-settings-panel.profile-material-panel,
+  :root[data-theme='adwaita_light'] .liquid-settings-panel.profile-material-panel,
+  :root[data-theme='liquid'] .liquid-settings-panel.profile-material-panel,
+  :root[data-theme='liquid_light'] .liquid-settings-panel.profile-material-panel {
+    border-radius: var(--structural-panel-radius) !important;
+    border: var(--structural-panel-border) !important;
+    background: var(--shell-panel-bg) !important;
+  }
+
+  :root[data-theme='liquid_light'] ::-webkit-scrollbar { width: 6px; }
+  :root[data-theme='liquid_light'] ::-webkit-scrollbar-thumb {
+    /* #3668 — derive the thumb color from the active text-primary
+       token so a future palette retune carries through cleanly. The
+       0.25 alpha matches the original raw-rgba value. */
+    background: oklch(from var(--color-text-primary) l c h / 0.25);
+    border-radius: var(--radius-scrollbar);
+  }
+
+  /* #3687 — scope `bg-surface-0` to non-overlay, non-transparent
+     windows so the overlay/transparent rules below no longer need
+     `!important` to override an unscoped global. The font-family +
+     rendering properties stay on the unscoped selector since they
+     apply to every window kind. */
+  html, body, #root {
+    @apply h-full text-text-primary;
+    font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans Arabic', 'Noto Sans Hebrew', 'Noto Sans Devanagari', 'Noto Sans Bengali', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Malayalam', 'Noto Sans Thai', sans-serif);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  html:not([data-window-kind='overlay']):not([data-window-transparent]),
+  html:not([data-window-kind='overlay']):not([data-window-transparent]) body,
+  html:not([data-window-kind='overlay']):not([data-window-transparent]) #root {
+    @apply bg-surface-0;
+  }
+
+  body, #root {
+    overflow: hidden;
+  }
+
+  /* WebKit (WKWebView on macOS) requires -webkit-user-drag to initiate
+     HTML5 drag-and-drop when body has user-select: none. */
+  [draggable='true'] {
+    -webkit-user-drag: element;
+  }
+
+  /* Re-enable text selection for content areas that should be copyable.
+     The global user-select: none prevents accidental selection during drag,
+     but users need to copy task content, AI notes, changelog entries, etc. */
+  .select-text-content,
+  .select-text-content * {
+    user-select: text;
+  }
+
+  /* POL focus-indicator idiom (#3499 / #3505)
+   * ──────────────────────────────────────────
+   * The codebase ships TWO focus-visible styles. Neither is a free
+   * pick — the split below describes the actual pattern in code, so
+   * if you find yourself reaching for the other one, audit the call
+   * site rather than working around it.
+   *
+   *   - `outline` IS THE GLOBAL DEFAULT. The base-layer rule
+   *     immediately below this comment paints a 2px accent outline
+   *     with a 2px offset on every focusable `button`, `[role=button]`
+   *     and `a:focus-visible`. Inputs/textareas/selects share the same
+   *     stroke. Most components do nothing extra and inherit it.
+   *
+   *   - `ring` IS A PER-COMPONENT OPT-IN for elements where the
+   *     outline would overflow into adjacent content or composite
+   *     poorly against a translucent fill — chips, pills, list rows
+   *     packed into a vertical stack, and any `bg-{color}/n` tinted
+   *     surface where a 2px outline pushed past the rounded edge and
+   *     read as a fuzzy halo. These call sites set
+   *     `focus-visible:outline-hidden focus-visible:ring-1` so the
+   *     ring sits inside the box and respects the border-radius.
+   *
+   * If your call site needs to deviate, DOCUMENT THE CHOICE inline so
+   * the next reader doesn't normalize it away. The shape of the split
+   * is descriptive, not prescriptive — code changes first, this
+   * comment follows. */
+  button:focus-visible,
+  [role='button']:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--accent-tint-focus);
+    outline-offset: 2px;
+  }
+
+  /* Inputs need a visible focus ring for keyboard users — without it,
+     tab-users would have no indication of where focus landed in any
+     text/textarea/select across the app (Settings forms, QuickCapture,
+     search inputs, DatePicker). Match the button/link rule above so
+     every focusable element has the same accent-outline treatment.
+     Components that draw their own ring (e.g. the task-detail title)
+     can still opt out per-element. */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--accent-tint-focus);
+    outline-offset: 2px;
+  }
+
+  /* #3687 — `bg-surface-0` is now scoped above to non-overlay,
+     non-transparent windows; these overlay/transparent rules can
+     therefore set the background without `!important` since they no
+     longer have to fight an unscoped global default. */
+  :root[data-window-kind='overlay'],
+  :root[data-window-kind='overlay'] body,
+  :root[data-window-kind='overlay'] #root {
+    background: var(--color-surface-0);
+  }
+
+  :root[data-window-kind='overlay'] body {
+    overflow: hidden;
+  }
+
+  /* Focus windows use transparent backgrounds so that
+     rounded-corner content doesn't show rectangular corner artifacts. */
+  :root[data-window-transparent],
+  :root[data-window-transparent] body,
+  :root[data-window-transparent] #root {
+    background: transparent;
+  }
+
+  /* Tauri drag region for the custom title bar */
+  [data-tauri-drag-region] {
+    -webkit-app-region: drag;
+  }
+
+  /* Scrollbar styling — webkit (macOS Safari, Chromium) + standards (Firefox, future) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-3) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-3 rounded-full;
+  }
+  /* macOS scrollbars auto-hide until scrolling, so a 6 px thumb is
+     fine. On Windows and Linux the scrollbar is always visible and
+     users routinely click the track / drag the thumb — 6 px is hard
+     to grab at high-DPI and visually weightless next to native shell
+     scrollbars. Widen to 12 px on Windows and 10 px on Linux so the
+     track has enough target area for a confident mouse click. */
+  :root[data-desktop-os='windows'] * {
+    scrollbar-width: auto;
+  }
+  :root[data-desktop-os='windows'] ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  :root[data-desktop-os='linux'] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* On touch-only devices, hover-reveal patterns never trigger.
+     Force elements with `opacity-0 group-hover:opacity-100` to be
+     always visible so touch users can access quick actions. The
+     list covers the reveal-pattern group variants that still ship:
+     plain `group` (most rows), `group/btn` (TaskCardActionButton
+     inner-label cross-fade), and `group/tag` (chip-X reveal). The
+     dep/ev/pl named-group variants were retired during the
+     RevealButton migration (#3542+). */
+  @media (hover: none) {
+    .group-hover\:opacity-100,
+    .group-hover\/btn\:opacity-100,
+    .group-hover\/tag\:opacity-100 {
+      opacity: 1 !important;
+    }
+    /* Reveal-on-hover often pairs opacity-0 with a small translate.
+       Neutralize the translate too so the revealed element sits at
+       its intended resting position instead of looking nudged. */
+    .group-hover\:translate-x-0,
+    .group-hover\/btn\:translate-x-0,
+    .group-hover\/tag\:translate-x-0 {
+      transform: translateX(0) !important;
+    }
+  }
+
+  /* mobile Safari auto-zooms and never restores when a focused text
+     field has font-size < 16 px. Scope to coarse-pointer (touch)
+     runtimes so desktop mouse users still see the designed text-sm
+     / text-xs sizes. Skip checkboxes/radios — their font-size is
+     irrelevant. */
+  @media (pointer: coarse) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    textarea,
+    select {
+      font-size: 16px;
+    }
+
+    /* Older embedded webviews can drop momentum on
+       nested scroll containers (virtualized lists inside modal
+       side-panels, task-detail scroll inside mobile main-view)
+       without the explicit hint. Modern mobile Safari defaults to
+       touch-momentum so this is redundant there, but the
+       !important-free utility scope is cheap and harmless. Paired
+       with `overscroll-behavior: contain` (already present on key
+       containers) this prevents flicks from bleeding through into
+       the body's rubber-band scroll. */
+    .overflow-y-auto,
+    .overflow-x-auto,
+    .overflow-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Idle-state swipe affordance. Two thin colored gradients on
+       task-card edges hint at left/right swipe gestures for touch
+       users who'd otherwise have no way to discover them. Hidden on
+       desktop (fine-pointer) where a hover state reveals the
+       quick-action buttons instead. */
+    .cv-swipe-hint-right {
+      background: linear-gradient(
+        to left,
+        var(--swipe-hint-success),
+        transparent
+      );
+    }
+    .cv-swipe-hint-left {
+      background: linear-gradient(
+        to right,
+        var(--swipe-hint-warning),
+        transparent
+      );
+    }
+
+    /* Cooperate with vertical page scroll: the card owns horizontal-
+       axis gestures (left/right swipe → defer/complete) while the
+       browser owns vertical-axis gestures (scroll the list). Without
+       this hint the touch driver waits for the JS handler to call
+       preventDefault before settling the axis, producing a perceptible
+       horizontal "kick" on every scroll start, or a swipe that gets
+       eaten by the list's scroll. */
+    .cv-swipeable-task-card {
+      touch-action: pan-y;
+    }
+  }
+
+  /* #3697 — the previous narrow-viewport `px-8 → 1rem !important`
+     override has been replaced by the explicit `px-4 sm:px-8` pattern
+     at the call sites. The `!important` rule was load-bearing for
+     site-wide reach but defeated Tailwind's responsive ladder; the
+     mechanical sweep gives us per-site control instead. */
+
+}

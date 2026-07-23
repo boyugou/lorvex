@@ -1,0 +1,92 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+mcp-server/dist/
+app/dist/
+
+# Bundle visualizer output (opt-in via BUNDLE_REPORT=1)
+app/stats.html
+mcp-server/bin/lorvex-mcp-server
+mcp-server/bin/lorvex-mcp-server.exe
+app/src-tauri/resources/mcp-server/lorvex-mcp-server
+app/src-tauri/resources/mcp-server/lorvex-mcp-server.exe
+app/src-tauri/resources/mcp-server/runtime-metadata.json
+app/src-tauri/gen/apple/assets/resources/mcp-server/lorvex-mcp-server
+app/src-tauri/gen/apple/assets/resources/mcp-server/runtime-metadata.json
+
+# Rust
+app/src-tauri/target/
+mcp-server/target/
+
+# OS
+.DS_Store
+Thumbs.db
+._*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.build
+
+# SQLite database (user data — never commit)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Signing keys and certificates (never commit)
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+
+# Apple provisioning profiles (never commit)
+*.provisionprofile
+*.mobileprovision
+
+# Logs
+*.log
+npm-debug.log*
+
+# Downloaded installers/packages
+*.deb
+*.rpm
+*.dmg
+*.pkg
+
+# Local smoke artifacts
+artifacts/manual-gate-smoke/
+artifacts/manual-gates/
+
+# Auto-memory (agent-specific, not project code)
+.claude/
+.serena/
+.worktrees/
+/.serena/
+
+# Playwright
+app/e2e/test-results/
+
+# Agent session artifacts
+.superpowers/
+docs/superpowers/
+docs/archive/superpowers/
+target
+.gstack/
+
+# tsc -b incremental build artifact (Audit #2931-M6: app build script
+# now uses `tsc -b && vite build` so .tsbuildinfo lands locally
+# whenever a contributor runs the build).
+*.tsbuildinfo

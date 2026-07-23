@@ -1,0 +1,46 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.35" stop-color="#FBF8F4"/>
+      <stop offset="0.7" stop-color="#F7F2EC"/>
+      <stop offset="1" stop-color="#F0EBE3"/>
+    </linearGradient>
+    <radialGradient id="warmGlow" cx="0.35" cy="0.3" r="0.7" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="letterGrad" x1="340" y1="240" x2="680" y2="780" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5C3D1E"/>
+      <stop offset="0.5" stop-color="#4A2F14"/>
+      <stop offset="1" stop-color="#3A2210"/>
+    </linearGradient>
+    <filter id="letterShadow" x="-4%" y="-4%" width="108%" height="108%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#3A2210" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect x="96" y="96" width="832" height="832" rx="200" fill="url(#bg)"/>
+  <rect x="96" y="96" width="832" height="832" rx="200" fill="url(#warmGlow)"/>
+
+  <!-- Subtle border -->
+  <rect x="96" y="96" width="832" height="832" rx="200" stroke="#D4C4B0" stroke-opacity="0.4" stroke-width="4"/>
+
+  <!-- Capital L glyph — bold serif-inspired -->
+  <g filter="url(#letterShadow)">
+    <!-- Vertical stroke -->
+    <rect x="330" y="252" width="108" height="520" rx="12" fill="url(#letterGrad)"/>
+    <!-- Horizontal stroke -->
+    <rect x="330" y="668" width="364" height="104" rx="12" fill="url(#letterGrad)"/>
+    <!-- Serif on top of vertical stroke -->
+    <rect x="296" y="252" width="176" height="32" rx="8" fill="url(#letterGrad)"/>
+    <!-- Serif on right end of horizontal stroke -->
+    <rect x="662" y="668" width="32" height="138" rx="8" fill="url(#letterGrad)"/>
+    <!-- Serif on left bottom of horizontal -->
+    <rect x="296" y="740" width="68" height="32" rx="8" fill="url(#letterGrad)"/>
+  </g>
+
+  <!-- Subtle accent dot -->
+  <circle cx="728" cy="296" r="28" fill="#C49A6C" fill-opacity="0.35"/>
+</svg>

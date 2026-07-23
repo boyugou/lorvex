@@ -1,0 +1,22 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.tags.collection",
+  "db_path": "/tmp/lorvex.db",
+  "tags": [
+    {
+      "color": "#ff0000",
+      "display_name": "work",
+      "id": "tag-alpha",
+      "task_count": 5
+    },
+    {
+      "color": null,
+      "display_name": "personal",
+      "id": "tag-bravo",
+      "task_count": 1
+    }
+  ]
+}

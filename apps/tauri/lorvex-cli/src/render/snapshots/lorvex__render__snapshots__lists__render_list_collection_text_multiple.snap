@@ -1,0 +1,8 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Lists
+DB: /tmp/lorvex.db
+  - list-work: Work (open: 3, total: 5)
+  - list-home: Home (open: 0, total: 2)

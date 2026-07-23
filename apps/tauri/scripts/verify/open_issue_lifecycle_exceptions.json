@@ -1,0 +1,4 @@
+{
+  "$comment": "Read-only live issue lifecycle verifier exceptions. These are legacy open tracker issues that predate the live readiness-label gate; remove each entry when the issue receives needs-design or agent-ready. This file may only waive readiness labels, never priority or type labels.",
+  "missingReadinessIssueNumbers": []
+}

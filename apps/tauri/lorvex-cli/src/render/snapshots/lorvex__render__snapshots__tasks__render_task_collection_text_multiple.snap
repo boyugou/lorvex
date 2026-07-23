@@ -1,0 +1,9 @@
+---
+source: lorvex-cli/src/render.rs
+expression: out
+---
+Lorvex Today
+DB: /tmp/lorvex.db
+  - task-alpha: Ship feature (2026-04-10)
+  - task-bravo: Review PR (2026-04-11)
+  - task-charlie: Plain task

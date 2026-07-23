@@ -1,0 +1,38 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.tasks.collection",
+  "db_path": "/tmp/lorvex.db",
+  "label": "Today",
+  "tasks": [
+    {
+      "due_date": "2026-04-10",
+      "id": "task-alpha",
+      "list_id": "list-work",
+      "planned_date": null,
+      "priority": 1,
+      "status": "open",
+      "title": "Ship feature"
+    },
+    {
+      "due_date": "2026-04-12",
+      "id": "task-bravo",
+      "list_id": "list-work",
+      "planned_date": "2026-04-11",
+      "priority": 2,
+      "status": "in_progress",
+      "title": "Review PR"
+    },
+    {
+      "due_date": null,
+      "id": "task-charlie",
+      "list_id": "list-home",
+      "planned_date": null,
+      "priority": null,
+      "status": "completed",
+      "title": "Plain task"
+    }
+  ]
+}

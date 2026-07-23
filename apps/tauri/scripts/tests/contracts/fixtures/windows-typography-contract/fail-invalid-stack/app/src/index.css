@@ -1,0 +1,9 @@
+:root[data-desktop-os='windows'] {
+  --app-font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+html,
+body,
+#root {
+  font-family: var(--app-font-family, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif);
+}

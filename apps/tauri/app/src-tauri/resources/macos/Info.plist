@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Issue #2996 (LOW): CFBundleShortVersionString and CFBundleVersion are
+  intentionally NOT declared here. Tauri injects both keys at bundle
+  time from the single `version` field in `tauri.conf.json`, which
+  prevents the marketing-version vs build-version drift the audit
+  flagged. Declaring either key in this overlay would silently shadow
+  Tauri's injection and reintroduce drift the next release. Bump the
+  version in `tauri.conf.json` only.
+
+  NSHumanReadableCopyright: the year suffix is updated by the release
+  workflow when stamping a new build. See `scripts/release/` and the
+  `version` bump cadence in `docs/design/DISTRIBUTION.md`. A static
+  string is correct for an Info.plist overlay (Apple's templates do
+  the same); the alternative — a build-time substitution — would
+  require a Tauri build hook that doesn't currently exist.
+-->
+<plist version="1.0">
+<dict>
+  <key>LSMinimumSystemVersion</key>
+  <string>14.0</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.productivity</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2026 Boyu Gou. All rights reserved.</string>
+  <key>LSSupportsOpeningDocumentsInPlace</key>
+  <true/>
+  <key>NSCalendarsUsageDescription</key>
+  <string>Lorvex reads your calendar to display events alongside your tasks and schedule.</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>Lorvex needs full calendar access to read your events and display them alongside your tasks and schedule.</string>
+  <!--
+    Issue #2996 (LOW): NSAppleEventsUsageDescription is declared even
+    though Lorvex does not currently send AppleEvents. macOS shows the
+    matching consent prompt the first time any framework Lorvex links
+    against (Tauri runtime, EventKit, UserNotifications) issues a
+    cross-process AppleEvent on the app's behalf — a stale or absent
+    string causes the system to terminate the app with a generic
+    "Apple Events sandbox violation" error. The string explains the
+    benign use cases (system event notifications via Tauri, calendar
+    reload signaling) so the consent prompt is intelligible.
+  -->
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Lorvex uses Apple Events to coordinate calendar updates with the system Calendar app and to receive system notification events. Lorvex never controls or scripts other applications.</string>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>CFBundleURLName</key>
+      <string>com.lorvex.planner.deeplink</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>lorvex</string>
+      </array>
+    </dict>
+  </array>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>com.lorvex.planner.calendar-subscription</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>com.apple.ical.ics</string>
+        <string>public.calendar-event</string>
+      </array>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>ics</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

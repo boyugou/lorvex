@@ -1,0 +1,79 @@
+@layer components {
+  /* ── Milkdown WYSIWYG editor ──────────────────────────────────────── */
+  /* Prosemirror base styles + theme token integration */
+  .milkdown-editor-wrapper { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .milkdown-editor-wrapper .milkdown { outline: none; flex: 1; display: flex; flex-direction: column; }
+  .milkdown-editor-wrapper .ProseMirror { outline: none; min-height: 120px; flex: 1; cursor: text; }
+  .milkdown-editor-wrapper .ProseMirror > *:first-child { margin-top: 0; }
+
+  /* Apply markdown-content typography to the editor */
+  .milkdown-editor-wrapper .ProseMirror {
+    line-height: 1.65;
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+  }
+  /* Per-surface margin/padding overrides for the editor; font/color +
+     base task-list shape live in the shared block above (#3717). */
+  .milkdown-editor-wrapper .ProseMirror h1 {
+    margin-top: 1em; margin-bottom: 0.35em;
+    padding-bottom: 0.2em;
+  }
+  .milkdown-editor-wrapper .ProseMirror h2 {
+    margin-top: 0.8em; margin-bottom: 0.3em;
+  }
+  .milkdown-editor-wrapper .ProseMirror h3 {
+    margin-top: 0.6em; margin-bottom: 0.2em;
+  }
+  .milkdown-editor-wrapper .ProseMirror p {
+    margin-top: 0.35em; margin-bottom: 0.35em;
+  }
+  .milkdown-editor-wrapper .ProseMirror ul {
+    list-style: disc; padding-inline-start: 1.5em;
+    margin-top: 0.25em; margin-bottom: 0.25em;
+  }
+  .milkdown-editor-wrapper .ProseMirror ol {
+    list-style: decimal; padding-inline-start: 1.5em;
+    margin-top: 0.25em; margin-bottom: 0.25em;
+  }
+  .milkdown-editor-wrapper .ProseMirror li { margin: 0.1em 0; }
+
+  .milkdown-editor-wrapper .ProseMirror input[type='checkbox'] {
+    accent-color: var(--color-accent);
+    margin-top: 0.25em;
+  }
+
+  /* blockquote/code/pre/hr/strong/em rules live in the shared
+     prose-typography block above (#3702). Editor-specific surfaces
+     below: links + the empty-placeholder. */
+  .milkdown-editor-wrapper .ProseMirror a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .milkdown-editor-wrapper .ProseMirror a:hover { color: var(--accent-tint-xl); }
+
+  /* Placeholder when editor is empty */
+  .milkdown-editor-wrapper .ProseMirror p.is-editor-empty:first-child {
+    position: relative;
+  }
+  .milkdown-editor-wrapper .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-muted);
+    opacity: 0.5;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+  }
+
+  /* Compact milkdown for focus mode */
+  .focus-mode-milkdown .ProseMirror {
+    min-height: 40px;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+  }
+  .focus-mode-milkdown .ProseMirror:focus {
+    color: var(--color-text-primary);
+  }
+ }

@@ -1,0 +1,18 @@
+---
+source: lorvex-cli/src/render/snapshots/tasks.rs
+expression: out
+---
+Lorvex Dependency Graph
+DB: /tmp/lorvex.db
+Nodes: 4 / limit 50
+Edges: 3 / limit 50
+Graph:
+task-root-a: Design API (open, list: list-work) [blocks 1]
+└── task-child: Implement endpoint (open, list: list-work) [blocks 1]
+    └── task-grandchild: Ship release (open, list: list-work)
+task-root-b: Write spec (open, list: list-work) [blocks 1]
+└── task-child: Implement endpoint (open, list: list-work) [blocks 1]
+    └── task-grandchild: Ship release (open, list: list-work)
+Roots: task-root-a, task-root-b
+Blocked: task-child, task-grandchild
+Leaf blockers: task-root-a, task-root-b

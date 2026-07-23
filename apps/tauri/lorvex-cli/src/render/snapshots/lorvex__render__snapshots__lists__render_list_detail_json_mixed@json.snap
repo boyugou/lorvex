@@ -1,0 +1,48 @@
+---
+source: lorvex-cli/src/render/snapshots.rs
+expression: out
+---
+{
+  "action": "query.lists.detail",
+  "db_path": "/tmp/lorvex.db",
+  "list": {
+    "ai_notes": "Keep prioritised",
+    "color": "#ff0000",
+    "created_at": "2026-04-01T10:00:00.000Z",
+    "description": "Work-related tasks",
+    "icon": "briefcase",
+    "id": "list-work",
+    "name": "Work",
+    "updated_at": "2026-04-02T10:00:00.000Z",
+    "version": "v1"
+  },
+  "tasks": [
+    {
+      "due_date": "2026-04-10",
+      "id": "task-alpha",
+      "list_id": "list-work",
+      "planned_date": null,
+      "priority": 1,
+      "status": "open",
+      "title": "Ship feature"
+    },
+    {
+      "due_date": "2026-04-12",
+      "id": "task-bravo",
+      "list_id": "list-work",
+      "planned_date": "2026-04-11",
+      "priority": 2,
+      "status": "in_progress",
+      "title": "Review PR"
+    },
+    {
+      "due_date": null,
+      "id": "task-charlie",
+      "list_id": "list-home",
+      "planned_date": null,
+      "priority": null,
+      "status": "completed",
+      "title": "Plain task"
+    }
+  ]
+}

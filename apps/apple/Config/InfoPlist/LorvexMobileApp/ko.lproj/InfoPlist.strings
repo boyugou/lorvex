@@ -1,0 +1,6 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "LorvexMobileApp";
+"Quick Capture" = "빠른 캡처";
+"Open Today" = "오늘 열기";
+"Start Focus Session" = "집중 세션 시작";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex는 일정과 어시스턴트 컨텍스트를 만들기 위해 이벤트 세부 정보를 읽을 수 있습니다.";

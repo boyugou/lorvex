@@ -1,0 +1,11 @@
+{
+  "settings.menuBarIcon": "菜单栏图标",
+  "settings.menuBarIconDesc": "在菜单栏中显示图标",
+  "settings.menuBarIconVisible": "显示",
+  "settings.menuBarIconHidden": "隐藏",
+  "settings.menuBarToggleRollback": "更新菜单栏图标失败",
+  "settings.systemTrayIcon": "系统托盘图标",
+  "settings.systemTrayIconDesc": "在系统托盘中显示图标",
+  "settings.systemTrayIconVisible": "显示",
+  "settings.systemTrayIconHidden": "隐藏"
+}

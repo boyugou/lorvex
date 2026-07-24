@@ -145,9 +145,13 @@ enum LorvexAppleBootstrap {
   /// calendar refresh re-ingests at the now-stricter tier instead of silently
   /// re-mirroring verbatim full detail.
   ///
-  /// Fail-safe direction matters for a privacy control: missing, unreadable, or
-  /// corrupt state falls back to the domain default (`busy_only`), never to
-  /// maximum exposure. Full detail requires an explicit device-local choice.
+  /// An absent row means the device has never chosen a tier and resolves to
+  /// ``CalendarAiAccessMode/defaultMode`` (`full_details`): the tier is enforced
+  /// at ingest, so a stricter starting point would blind the device owner's own
+  /// calendar UI along with AI reads. An unreadable or malformed row instead
+  /// means the existing choice is unknown, so it resolves to
+  /// ``CalendarAiAccessMode/failSafeMode`` (`busy_only`) rather than widening
+  /// exposure past whatever the user may have selected.
   static func effectiveCalendarAiAccessMode(
     core: any LorvexCoreServicing
   ) async -> CalendarAiAccessMode {
@@ -155,11 +159,11 @@ enum LorvexAppleBootstrap {
     do {
       raw = try await core.getPreference(key: PreferenceKeys.devCalendarAiAccessMode)
     } catch {
-      return CalendarAiAccessMode.defaultMode
+      return CalendarAiAccessMode.failSafeMode
     }
     guard let raw else { return CalendarAiAccessMode.defaultMode }
     guard let mode = CalendarAiAccessMode.parseStrict(raw) else {
-      return CalendarAiAccessMode.defaultMode
+      return CalendarAiAccessMode.failSafeMode
     }
     return mode
   }

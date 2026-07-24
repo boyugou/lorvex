@@ -10826,13 +10826,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索任务、导航或捕获…"
+            "value": "搜索任务、导航或添加任务…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜尋任務、導覽或擷取…"
+            "value": "搜尋任務、導覽或新增任務…"
           }
         }
       }
@@ -62597,13 +62597,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "按 ⌘N 打开快速捕捉，开始记录任务。"
+            "value": "按 ⌘N 打开快速添加，开始记录任务。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "按 ⌘N 打開快速捕捉，開始記錄任務。"
+            "value": "按 ⌘N 打開快速新增，開始記錄任務。"
           }
         }
       }
@@ -76130,13 +76130,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕捉一个任务，开始构建你的计划。"
+            "value": "添加一个任务，开始构建你的计划。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕捉一個任務，開始建構你的計畫。"
+            "value": "新增一個任務，開始建構你的計畫。"
           }
         }
       }
@@ -80367,13 +80367,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕捉一个任务或载入 Lorvex 数据库即可开始规划。"
+            "value": "添加一个任务或载入 Lorvex 数据库即可开始规划。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取一個任務或載入 Lorvex 資料庫即可開始規劃。"
+            "value": "新增一個任務或載入 Lorvex 資料庫即可開始規劃。"
           }
         }
       }

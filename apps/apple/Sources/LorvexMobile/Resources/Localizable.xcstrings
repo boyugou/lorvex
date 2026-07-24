@@ -9372,13 +9372,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获"
+            "value": "添加"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取"
+            "value": "新增"
           }
         }
       }
@@ -9455,13 +9455,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获任务"
+            "value": "添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取任務"
+            "value": "新增任務"
           }
         }
       }
@@ -9538,13 +9538,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在捕获"
+            "value": "正在添加"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在擷取"
+            "value": "正在新增"
           }
         }
       }
@@ -9621,13 +9621,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在捕获任务"
+            "value": "正在添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在擷取任務"
+            "value": "正在新增任務"
           }
         }
       }
@@ -9953,13 +9953,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获"
+            "value": "添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取"
+            "value": "新增任務"
           }
         }
       }
@@ -30591,13 +30591,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获"
+            "value": "添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取"
+            "value": "新增任務"
           }
         }
       }
@@ -47601,13 +47601,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用“捕捉”快速保存任务，然后在“今天”或“清单”中整理它们。"
+            "value": "使用“添加”快速保存任务，然后在“今天”或“清单”中整理它们。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用「擷取」快速儲存任務，然後在「今天」或「列表」中整理它們。"
+            "value": "使用「新增」快速儲存任務，然後在「今天」或「列表」中整理它們。"
           }
         }
       }
@@ -53766,13 +53766,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕捉一个任务即可开始——或让你的 AI 助手为你规划这一天。"
+            "value": "添加一个任务即可开始——或让你的 AI 助手为你规划这一天。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取一個任務即可開始——或請你的 AI 助理為你規劃這一天。"
+            "value": "新增一個任務即可開始——或請你的 AI 助理為你規劃這一天。"
           }
         }
       }
@@ -53849,13 +53849,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕捉一个任务，或让助手规划下一件有价值的事。"
+            "value": "添加一个任务，或让助手规划下一件有价值的事。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取一個任務，或請助理規劃下一件有價值的工作。"
+            "value": "新增一個任務，或請助理規劃下一件有價值的工作。"
           }
         }
       }
@@ -55490,13 +55490,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获"
+            "value": "添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取"
+            "value": "新增任務"
           }
         }
       }

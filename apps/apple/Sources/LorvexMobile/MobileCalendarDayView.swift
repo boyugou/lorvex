@@ -182,6 +182,7 @@ public struct MobileCalendarDayView: View {
           column(forOffset: dayOffset, dayCount: 7, showsHeaders: false)
             .frame(width: geo.size.width, height: geo.size.height)
         }
+        .simultaneousGesture(weekPagingSwipe)
       } else {
         MobileCalendarWeekStrip(visibleDate: visibleDate, calendar: calendar) { day in
           jump(to: day)
@@ -197,7 +198,7 @@ public struct MobileCalendarDayView: View {
   var weekNavigationHeader: some View {
     HStack(spacing: 12) {
       Button {
-        withAnimation { dayOffset -= 1 }
+        stepPage(-1)
       } label: {
         Image(systemName: "chevron.left").font(.body.weight(.semibold))
           .frame(width: 44, height: 44)
@@ -216,7 +217,7 @@ public struct MobileCalendarDayView: View {
         .accessibilityAddTraits(.isHeader)
       Spacer(minLength: 0)
       Button {
-        withAnimation { dayOffset += 1 }
+        stepPage(1)
       } label: {
         Image(systemName: "chevron.right").font(.body.weight(.semibold))
           .frame(width: 44, height: 44)

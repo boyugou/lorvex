@@ -148,16 +148,19 @@ import Testing
     #expect(provider.notes == nil)
   }
 
-  /// Missing device state is the privacy-safe Busy Only default. Merely reading
-  /// the mode (the launch/ingest behavior) must not materialize a Full Details
-  /// row behind the user's back.
+  /// A device that has never chosen a tier resolves to Full Details, so the
+  /// owner's own calendar mirrors verbatim without an opt-in step. Merely
+  /// reading the mode (the launch/ingest behavior) must not materialize a
+  /// device-state row, leaving the selection genuinely unset until the user
+  /// picks one.
   @MainActor
   @Test
-  func macMissingTierDefaultsToBusyOnlyWithoutMaterializingFullDetails() async throws {
+  func macMissingTierDefaultsToFullDetailsWithoutMaterializingRow() async throws {
     let (core, cleanup) = makeOnDiskCore()
     defer { cleanup() }
     let mode = await LorvexAppleBootstrap.effectiveCalendarAiAccessMode(core: core)
-    #expect(mode == .busyOnly)
+    #expect(mode == CalendarAiAccessMode.defaultMode)
+    #expect(mode == .fullDetails)
     let stored = try core.read { db in
       try String.fetchOne(
         db,
@@ -195,10 +198,10 @@ import Testing
         == CalendarAiAccessMode.off.asString)
   }
 
-  /// FIX 3 (fail safe), macOS: a privacy control that can't be read must fail
-  /// DOWN, not to maximum exposure. When the persisted tier is unreadable
-  /// (corrupt), the macOS ingest helper falls back to the domain default
-  /// (`busy_only`), never `full_details`.
+  /// macOS: a persisted tier that cannot be read must fail DOWN, not to maximum
+  /// exposure. A corrupt row means the user's selection is unknown — distinct
+  /// from an absent row, which resolves to the `full_details` default — so the
+  /// ingest helper falls back to `busy_only`, never `full_details`.
   @MainActor
   @Test
   func macEffectiveTierFailsSafeDownWhenTierUnreadable() async throws {
@@ -216,13 +219,13 @@ import Testing
     #expect(readThrew)
 
     let mode = await LorvexAppleBootstrap.effectiveCalendarAiAccessMode(core: core)
-    #expect(mode == CalendarAiAccessMode.defaultMode)
+    #expect(mode == CalendarAiAccessMode.failSafeMode)
     #expect(mode == .busyOnly)
     #expect(mode != .fullDetails)
   }
 
-  /// FIX 3 (fail safe), iOS: the mobile ingest helper falls back to `busy_only`
-  /// — not `full_details` — when the persisted tier is unreadable.
+  /// iOS: the mobile ingest helper falls back to `busy_only` — not the
+  /// `full_details` default — when the persisted tier is unreadable.
   @MainActor
   @Test
   func mobileEffectiveTierFailsSafeDownWhenTierUnreadable() async throws {
@@ -232,7 +235,7 @@ import Testing
 
     let store = MobileStore(core: core)
     let mode = await store.effectiveCalendarAiAccessMode()
-    #expect(mode == CalendarAiAccessMode.defaultMode)
+    #expect(mode == CalendarAiAccessMode.failSafeMode)
     #expect(mode == .busyOnly)
     #expect(mode != .fullDetails)
   }

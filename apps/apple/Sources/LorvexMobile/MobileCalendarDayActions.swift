@@ -2,6 +2,31 @@ import LorvexCore
 import SwiftUI
 
 extension MobileCalendarDayView {
+  /// Step the visible page by `direction` (−1 back, +1 forward), clamped to
+  /// `pageRange`. One step is a week in week mode and a day otherwise, matching
+  /// what `date(forOffset:)` reads out of `dayOffset`.
+  func stepPage(_ direction: Int) {
+    let target = dayOffset + direction
+    guard pageRange.contains(target) else { return }
+    withAnimation { dayOffset = target }
+  }
+
+  /// Horizontal swipe paging for the week surfaces, which render a plain column
+  /// rather than the day mode's paged `TabView` and would otherwise only move
+  /// through the header's chevrons.
+  ///
+  /// Applied with `simultaneousGesture` so the agenda list and time grid keep
+  /// their vertical scrolling; the dominance check keeps a mostly-vertical drag
+  /// (or a diagonal flick while scrolling) from paging the week sideways.
+  var weekPagingSwipe: some Gesture {
+    DragGesture(minimumDistance: 24)
+      .onEnded { value in
+        let horizontal = value.translation.width
+        guard abs(horizontal) > abs(value.translation.height) * 1.5 else { return }
+        stepPage(horizontal < 0 ? 1 : -1)
+      }
+  }
+
   func jump(to day: Date) {
     let target =
       calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: day)).day ?? 0

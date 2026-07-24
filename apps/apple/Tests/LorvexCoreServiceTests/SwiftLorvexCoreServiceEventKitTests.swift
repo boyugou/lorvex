@@ -34,12 +34,12 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     ]
   }
 
-  /// Persist the owner-device `full_details` tier. The timeline read honors the
-  /// effective calendar AI-access tier (defense in depth behind ingest-time
-  /// redaction), whose domain default is `busy_only` — which redacts provider
-  /// detail on read. Round-trip tests that assert on real provider detail pin
-  /// `full_details` first, mirroring production where the owner device pins it
-  /// before any timeline read.
+  /// Persist the owner-device `full_details` tier explicitly. The timeline read
+  /// honors the effective calendar AI-access tier (defense in depth behind
+  /// ingest-time redaction), so round-trip tests that assert on real provider
+  /// detail pin the tier rather than inheriting whatever the domain default
+  /// happens to be — the assertions then describe the tier under test, not the
+  /// default's current value.
   private func optIntoFullDetailTier(_ service: SwiftLorvexCoreService) async throws {
     _ = try await service.setPreference(
       key: PreferenceKeys.devCalendarAiAccessMode,
@@ -586,7 +586,10 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     XCTAssertEqual(after.payload, before.payload)
   }
 
-  func testDeletingFullAccessPreferenceScrubsProviderFocusTitleAtDefaultBusyTier()
+  /// Deleting the key resolves the tier to the domain default (`full_details`),
+  /// which does not narrow exposure, so no scrub runs and the stored provider
+  /// title survives on both the human and AI projections.
+  func testDeletingAccessPreferenceKeepsProviderFocusTitleWhenDefaultDoesNotNarrow()
     async throws
   {
     let service = try makeService()
@@ -599,8 +602,8 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
 
     let human = try await service.loadFocusSchedule(date: date)
     let ai = try await service.loadFocusScheduleForAI(date: date)
-    XCTAssertEqual(human?.blocks.first?.title, "Event")
-    XCTAssertEqual(ai?.blocks.first?.title, "Event")
+    XCTAssertEqual(human?.blocks.first?.title, "Private appointment")
+    XCTAssertEqual(ai?.blocks.first?.title, "Private appointment")
     let after = try focusScheduleSyncState(service, date: date)
     XCTAssertEqual(after.version, before.version)
     XCTAssertEqual(after.payload, before.payload)
@@ -640,8 +643,8 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
   /// downgrade must purge the entire EventKit mirror, not just the live window.
   func testDetailDowngradePurgesStaleFullDetailRowsFromAllWindows() async throws {
     let service = try makeService()
-    // Owner default tier is busyOnly; opt into full detail first so the
-    // subsequent busyOnly write is a real detail-reducing downgrade.
+    // Pin full detail explicitly so the subsequent busyOnly write is a real
+    // detail-reducing downgrade whatever the domain default happens to be.
     _ = try await service.setPreference(
       key: PreferenceKeys.devCalendarAiAccessMode,
       value: CalendarAiAccessMode.fullDetails.asString)
@@ -688,13 +691,14 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     XCTAssertTrue(boardHits.isEmpty, "stale attendees must not survive downgrade in search")
   }
 
-  /// Deleting the `calendar_ai_access_mode` key is an effective downgrade:
-  /// `DeviceStateRepo` falls back to the domain default (`busy_only`) on a
-  /// missing row. So the delete must run the same atomic purge + scope-disable
-  /// as an explicit detail-reducing downgrade, not leave full-detail rows at
-  /// rest that the timeline / search reads (which pass `.fullDetails`) still
-  /// serve.
-  func testDeleteAccessModeKeyPurgesStaleFullDetailRows() async throws {
+  /// Deleting the `calendar_ai_access_mode` key clears the device-state row, so
+  /// readers fall back to the domain default (`full_details`). That fallback
+  /// widens rather than narrows exposure, so the delete is not a downgrade and
+  /// the mirrored provider detail must survive it — the timeline and search
+  /// keep serving what is already at rest. The purge is keyed off `defaultMode`
+  /// rather than a fixed direction, so it would still fire on this path if the
+  /// default were ever narrowed; the explicit-downgrade tests cover that branch.
+  func testDeleteAccessModeKeyKeepsMirrorWhenDefaultDoesNotNarrow() async throws {
     let service = try makeService()
     _ = try await service.setPreference(
       key: PreferenceKeys.devCalendarAiAccessMode,
@@ -705,16 +709,16 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     let before = try await service.loadCalendarTimeline(from: "2026-06-01", to: "2026-06-05")
     XCTAssertTrue(before.events.contains { $0.title == "Dentist" })
 
-    // Deleting the key falls back to busy_only — a detail-reducing downgrade.
+    // Deleting the key falls back to full_details — no reduction in exposure.
     try await service.deletePreference(key: PreferenceKeys.devCalendarAiAccessMode)
 
     let after = try await service.loadCalendarTimeline(from: "2026-06-01", to: "2026-06-05")
-    XCTAssertFalse(
-      after.events.contains { $0.source == "provider" },
-      "deleting the access-mode key must purge the full-detail mirror")
+    XCTAssertTrue(
+      after.events.contains { $0.title == "Dentist" },
+      "the default fallback does not narrow exposure, so the mirror must survive the delete")
     let hits = try await service.searchCalendarEvents(
       query: "Dentist", from: nil, to: nil, limit: nil)
-    XCTAssertTrue(hits.isEmpty, "stale full-detail title must not survive the delete downgrade")
+    XCTAssertFalse(hits.isEmpty, "provider detail must stay searchable after the delete")
   }
 
   /// FIX 2 (ingest TOCTOU): the coordinator reads the tier and fetches from

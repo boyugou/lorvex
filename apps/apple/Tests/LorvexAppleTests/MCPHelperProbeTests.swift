@@ -114,9 +114,21 @@ func mcpHelperProbeTimesOutAndKillsAHungHelperThatIgnoresSigterm() async throws 
   let pidText = try String(contentsOf: pidFile, encoding: .utf8)
     .trimmingCharacters(in: .whitespacesAndNewlines)
   let pid = try #require(pid_t(pidText))
-  // SIGTERM was ignored, so a live process here means SIGKILL escalation
-  // never ran. ESRCH (kill returns -1) confirms it is actually gone.
-  #expect(kill(pid, 0) == -1)
+  // SIGTERM was ignored, so a process that never disappears here means SIGKILL
+  // escalation never ran. Signal delivery and reaping are asynchronous — until
+  // the child is reaped it lingers as a zombie, for which `kill(pid, 0)` still
+  // returns 0 — so poll to a deadline instead of sampling once. ESRCH (kill
+  // returns -1) confirms it is actually gone; 10s stays far below the helper's
+  // 2-minute sleep, so a real regression still fails.
+  var helperIsGone = false
+  for _ in 0..<200 {
+    if kill(pid, 0) == -1 {
+      helperIsGone = true
+      break
+    }
+    try await Task.sleep(for: .milliseconds(50))
+  }
+  #expect(helperIsGone)
 }
 
 /// M13: the probe seeds the child helper's environment from the inherited

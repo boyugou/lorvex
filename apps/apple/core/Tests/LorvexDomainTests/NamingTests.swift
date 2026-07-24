@@ -102,8 +102,8 @@ final class NamingTests: XCTestCase {
     XCTAssertTrue(CalendarAiAccessMode.fullDetails.includesDetails)
   }
 
-  func testCalendarAccessModeDefaultIsBusyOnly() {
-    XCTAssertEqual(CalendarAiAccessMode.defaultMode, .busyOnly)
+  func testCalendarAccessModeDefaultIsFullDetails() {
+    XCTAssertEqual(CalendarAiAccessMode.defaultMode, .fullDetails)
   }
 
   func testCalendarAccessModeDetailRankOrders() {

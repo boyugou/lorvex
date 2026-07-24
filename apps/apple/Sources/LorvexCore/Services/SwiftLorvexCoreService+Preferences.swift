@@ -132,10 +132,11 @@ extension SwiftLorvexCoreService {
       }
       if key == PreferenceKeys.devCalendarAiAccessMode {
         // Deleting the key clears the device-state row, so readers fall back to
-        // the domain default (busy_only). When the stored tier was richer than
-        // that default, the delete is itself a detail-reducing downgrade, so it
-        // must purge the mirror exactly like `setPreference` — otherwise
-        // full-detail rows stay at rest under the now-stricter effective tier.
+        // the domain default. The guard is keyed off `defaultMode` rather than a
+        // fixed direction: whenever the stored tier is richer than the default,
+        // the delete is itself a detail-reducing downgrade and must purge the
+        // mirror exactly like `setPreference`, otherwise richer rows stay at
+        // rest under the now-stricter effective tier.
         let previous = try DeviceStateRepo.readCalendarAiAccessMode(db)
         if previous.reducesDetail(to: CalendarAiAccessMode.defaultMode) {
           try Self.purgeEventKitMirrorForDetailDowngrade(db)

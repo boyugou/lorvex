@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from generate_production_dmg_evidence import REQUIRED_EVIDENCE_FILES, sha256_file
+from metadata_env import load_metadata
 from notary_submit_with_evidence import run_notary_submission
 from prepare_profile_entitlements import merged_entitlements
 from reset_production_app_group import (
@@ -478,7 +479,13 @@ class ProductionDMGScriptContractTests(unittest.TestCase):
     def test_evidence_generator_writes_final_sha_and_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            dmg = root / "Lorvex-macOS-1.0.0+1-arm64.dmg"
+            # Built from the same app_metadata.sh the generator reads, so a
+            # marketing/build version bump cannot drift this fixture's name.
+            metadata = load_metadata()
+            dmg = root / (
+                f"{metadata['APP_NAME']}-macOS-{metadata['MARKETING_VERSION']}"
+                f"+{metadata['BUILD_VERSION']}-arm64.dmg"
+            )
             dmg.write_bytes(b"final-dmg-fixture")
             app = root / "Lorvex.app"
             app.mkdir()
@@ -642,7 +649,7 @@ class ProductionDMGScriptContractTests(unittest.TestCase):
             manifest = json.loads((evidence / "release-evidence.json").read_text())
             self.assertEqual(manifest["channel"], "developer-id-notarized-dmg")
             self.assertEqual(manifest["artifact"]["sha256"], sha256_file(dmg))
-            self.assertEqual(manifest["build"], "1")
+            self.assertEqual(manifest["build"], metadata["BUILD_VERSION"])
             self.assertEqual(manifest["app"]["installedPath"], str(app))
             self.assertEqual(manifest["app"]["contentTreeSha256"], "digest")
             self.assertEqual(manifest["app"]["coldLaunchStableSeconds"], 3)

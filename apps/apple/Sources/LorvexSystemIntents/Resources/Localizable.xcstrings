@@ -35246,13 +35246,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已在 Lorvex 中捕获“%@”。"
+            "value": "已在 Lorvex 中添加“%@”。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "已在 Lorvex 中擷取「%@」。"
+            "value": "已在 Lorvex 中新增「%@」。"
           }
         }
       }
@@ -35330,13 +35330,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获 Lorvex 任务"
+            "value": "添加 Lorvex 任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取 Lorvex 任務"
+            "value": "新增 Lorvex 任務"
           }
         }
       }

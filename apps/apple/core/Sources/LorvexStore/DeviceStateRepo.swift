@@ -49,7 +49,7 @@ public enum DeviceStateRepo {
   /// Read the local `calendar_ai_access_mode` row.
   ///
   /// Missing rows return ``CalendarAiAccessMode/defaultMode``
-  /// (`busy_only`). Malformed rows throw a ``StoreError/validation(_:)``.
+  /// (`full_details`). Malformed rows throw a ``StoreError/validation(_:)``.
   public static func readCalendarAiAccessMode(
     _ db: Database
   ) throws -> CalendarAiAccessMode {
@@ -61,7 +61,7 @@ public enum DeviceStateRepo {
   /// Returns `nil` when the row is genuinely absent (the device has never chosen
   /// a tier), so a caller can tell "never chosen" apart from an explicit
   /// selection — unlike ``readCalendarAiAccessMode(_:)``, which substitutes the
-  /// domain default (`busy_only`) for a missing row. Malformed rows throw a
+  /// domain default (`full_details`) for a missing row. Malformed rows throw a
   /// ``StoreError/validation(_:)``.
   public static func readCalendarAiAccessModeIfSet(
     _ db: Database

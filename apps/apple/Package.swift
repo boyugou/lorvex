@@ -173,6 +173,14 @@ let package = Package(
             name: "LorvexWidgetBundle",
             dependencies: [
                 "LorvexWidgetExtension"
+            ],
+            // The macOS widget appex ships this product's binary (see
+            // build_and_run.sh: it stages LorvexWidgetBundle as the appex
+            // executable). An app extension's entry point must be
+            // `_NSExtensionMain` (App Store reject ITMS-90898), which a plain
+            // executable target does not link; request it explicitly.
+            linkerSettings: [
+                .unsafeFlags(["-Xlinker", "-e", "-Xlinker", "_NSExtensionMain"])
             ]
         ),
         .executableTarget(

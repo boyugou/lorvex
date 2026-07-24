@@ -50,7 +50,11 @@ func appMetadataMatchesAppleDistributionIdentity() {
   #expect(AppMetadata.cloudKitContainerIdentifier == "iCloud.com.lorvex.apple")
   #expect(AppMetadata.marketingVersion == "1.0.0")
   #expect(AppMetadata.buildVersion == "2")
-  #expect(AppMetadata.displayVersion == "1.0.0 (1)")
+  // Derived, not a third literal: the marketing and build values are pinned
+  // above, so a build bump must not require editing a duplicate of them here.
+  #expect(
+    AppMetadata.displayVersion
+      == "\(AppMetadata.marketingVersion) (\(AppMetadata.buildVersion))")
   #expect(AppMetadata.minimumSystemVersion == "15.0")
   #expect(MobileAppMetadata.minimumSystemVersion == "18.0")
   #expect(VisionAppMetadata.minimumSystemVersion == "2.0")

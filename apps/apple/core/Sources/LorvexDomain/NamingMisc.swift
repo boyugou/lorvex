@@ -52,8 +52,24 @@ public enum CalendarAiAccessMode: String, Sendable, Hashable, Codable, CaseItera
     newMode.detailRank < detailRank
   }
 
-  /// The spec-defined default: `busyOnly`.
-  public static let defaultMode: CalendarAiAccessMode = .busyOnly
+  /// The tier a device gets until it explicitly chooses one: `fullDetails`.
+  ///
+  /// The tier is enforced at ingest, so it governs what Lorvex mirrors at all —
+  /// not merely what AI reads expose. A stricter default would mirror provider
+  /// events as bare occupancy and blind the device owner's own calendar UI
+  /// along with the assistant, so narrowing exposure is an explicit
+  /// device-local choice rather than the starting state.
+  public static let defaultMode: CalendarAiAccessMode = .fullDetails
+
+  /// The tier to fall back to when a persisted selection exists but cannot be
+  /// read or parsed: `busyOnly`.
+  ///
+  /// Deliberately distinct from ``defaultMode``. A missing row means the device
+  /// has never chosen, so it opens to full detail; an unreadable or malformed
+  /// row means the user's choice is *unknown*, and exposure must not widen past
+  /// what they may have picked. `busyOnly` withholds every detail field while
+  /// leaving occupancy available, so planning degrades rather than breaking.
+  public static let failSafeMode: CalendarAiAccessMode = .busyOnly
 }
 
 /// Resolution-type vocabulary written into `sync_conflict_log` rows. Every LWW

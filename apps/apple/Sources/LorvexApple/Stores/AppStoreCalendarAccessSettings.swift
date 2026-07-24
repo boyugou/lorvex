@@ -62,7 +62,7 @@ extension AppStore {
   }
 
   /// Read the effective device-local EventKit detail tier for Settings. Missing
-  /// or unreadable state fails down to the domain default (`busy_only`).
+  /// or unreadable state falls back to the domain default (`full_details`).
   func calendarAccessModeFromSettings() async -> CalendarAiAccessMode {
     await LorvexAppleBootstrap.effectiveCalendarAiAccessMode(core: core)
   }

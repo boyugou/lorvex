@@ -224,28 +224,29 @@ func mobileApplyEventKitSettingsPreservesExplicitBusyOnlyTier() async throws {
   #expect(await coordinator.lastIngestAccessMode == .busyOnly)
 }
 
-/// A device with no stored tier starts at the domain's privacy-safe Busy Only
-/// default. Applying settings must use that tier rather than silently pinning
-/// Full Details on first enable.
+/// A device with no stored tier resolves to the Full Details default, so the
+/// owner's own calendar mirrors verbatim without an opt-in step. Applying
+/// settings must ingest at that effective tier.
 @MainActor
 @Test
-func mobileMissingTierDefaultsToBusyOnlyOnSettingsApply() async throws {
+func mobileMissingTierDefaultsToFullDetailsOnSettingsApply() async throws {
   let core = try await makeSeededInMemoryCore()
   let coordinator = FakeMobileSettingsEventKitCoordinator()
   let store = MobileStore(core: core, eventKitCoordinator: coordinator, eventKitEnabled: true)
 
-  #expect(await store.calendarAccessModeFromSettings() == .busyOnly)
+  #expect(await store.calendarAccessModeFromSettings() == .fullDetails)
   await store.applyEventKitSettingsFromSettings(requestAccess: false)
 
   #expect(await coordinator.ingestCallCount == 1)
-  #expect(await coordinator.lastIngestAccessMode == .busyOnly)
+  #expect(await coordinator.lastIngestAccessMode == .fullDetails)
   #expect(
     try await core.getPreference(key: PreferenceKeys.devCalendarAiAccessMode)
-      == CalendarAiAccessMode.busyOnly.asString)
+      == CalendarAiAccessMode.fullDetails.asString)
 }
 
-/// Full Details is reachable only through an explicit Settings selection, which
-/// persists in device_state and drives the immediate reconciliation ingest.
+/// Selecting Full Details in Settings persists it in device_state — pinning the
+/// tier explicitly rather than leaving it on the default — and drives the
+/// immediate reconciliation ingest.
 @MainActor
 @Test
 func mobileSettingsCanExplicitlySelectFullDetails() async throws {

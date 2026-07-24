@@ -61,7 +61,7 @@ class IpaFixture:
         bundle_id: str,
         *,
         short: str = "1.0.0",
-        build: str = "1",
+        build: str = "2",
         privacy: bool = True,
         profile: bool = True,
         profile_app_id: str | None = None,

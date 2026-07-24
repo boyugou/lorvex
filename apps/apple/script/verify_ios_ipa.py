@@ -266,9 +266,14 @@ def discover_payload_bundles(
     ``Watch/*.app``, and each Watch app's ``PlugIns/*.appex`` complications."""
     bundles = [DiscoveredBundle(HOST_ROLE, payload_app)]
 
-    plugins = payload_app / "PlugIns"
-    if plugins.is_dir():
-        for appex in sorted(plugins.glob("*.appex")):
+    # App extensions embed under PlugIns/; iOS 16+ ExtensionKit extensions
+    # (App Intents / Focus filter) embed under Extensions/. Scan both so an
+    # ExtensionKit extension like the Focus filter is not reported missing.
+    for slot in ("PlugIns", "Extensions"):
+        parent = payload_app / slot
+        if not parent.is_dir():
+            continue
+        for appex in sorted(parent.glob("*.appex")):
             role = root_plugin_role
             if root_plugin_roles_by_bundle_id:
                 info = read_info_plist(appex) or {}

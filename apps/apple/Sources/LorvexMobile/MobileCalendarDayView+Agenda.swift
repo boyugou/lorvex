@@ -8,6 +8,8 @@ extension MobileCalendarDayView {
       Divider()
       agendaPanel(dayCount: 7)
     }
+    .contentShape(Rectangle())
+    .simultaneousGesture(weekPagingSwipe)
   }
 
   func regularBody(dayCount: Int) -> some View {

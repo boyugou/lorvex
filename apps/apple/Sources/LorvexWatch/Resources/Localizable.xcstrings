@@ -2006,13 +2006,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获中"
+            "value": "添加中"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在擷取"
+            "value": "正在新增"
           }
         }
       }
@@ -2174,13 +2174,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获"
+            "value": "添加"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取"
+            "value": "新增"
           }
         }
       }
@@ -2258,13 +2258,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获任务"
+            "value": "添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取任務"
+            "value": "新增任務"
           }
         }
       }
@@ -4362,13 +4362,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打开 Lorvex 以捕获新任务。"
+            "value": "在 iPhone 或 Mac 上打开 Lorvex 以添加新任务。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打開 Lorvex 以捕捉新任務。"
+            "value": "在 iPhone 或 Mac 上打開 Lorvex 以新增任務。"
           }
         }
       }
@@ -5202,13 +5202,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "捕获"
+            "value": "添加任务"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "擷取"
+            "value": "新增任務"
           }
         }
       }
@@ -6794,13 +6794,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打开 Lorvex 以捕获新任务。"
+            "value": "在 iPhone 或 Mac 上打开 Lorvex 以添加新任务。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iPhone 或 Mac 上打開 Lorvex 以捕捉新任務。"
+            "value": "在 iPhone 或 Mac 上打開 Lorvex 以新增任務。"
           }
         }
       }

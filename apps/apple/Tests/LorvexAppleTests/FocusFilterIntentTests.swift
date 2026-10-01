@@ -5,25 +5,16 @@ import Foundation
 import LorvexCore
 import Testing
 
-@available(iOS 16, macOS 13, *)
-@Test
-func lorvexFocusProfileEntityBuiltInIDIsStable() {
-  #expect(LorvexFocusProfileEntity.lorvexFocus.id == "Lorvex Focus")
-}
-
-@available(iOS 16, macOS 13, *)
-@Test("the system's nil profile transition turns the Focus filter off")
-func lorvexFocusFilterNilProfileMeansInactive() async throws {
+@Test("a Focus filter with no lists chosen narrows nothing")
+func lorvexFocusFilterWithoutListsMeansInactive() async throws {
   let root = focusFilterIntentTempDirectory()
   defer { try? FileManager.default.removeItem(at: root) }
   let store = FocusFilterStore(
     managedDatabasePath: root.appendingPathComponent("db.sqlite").path)
-  _ = try await store.save(
-    FocusFilterConfiguration(activeProfileID: "Lorvex Focus", showNonFocusTasks: false))
+  _ = try await store.save(FocusFilterConfiguration(listIDs: ["work"]))
 
   let intent = LorvexFocusFilterIntent()
-  intent.focusProfile = nil
-  intent.showNonFocusTasks = true
+  intent.lists = nil
   let observedAtRepublish = IntentLockedBox<FocusFilterConfiguration?>(nil)
 
   try await intent.apply(store: store) {
@@ -34,27 +25,28 @@ func lorvexFocusFilterNilProfileMeansInactive() async throws {
   #expect(observedAtRepublish.value == .inactive)
 }
 
-@available(iOS 16, macOS 13, *)
-@Test("an active Focus transition persists its exact configured profile before republishing")
-func lorvexFocusFilterActiveProfilePersistsBeforeRepublish() async throws {
+@Test("an active Focus transition persists its chosen lists before republishing")
+func lorvexFocusFilterListsPersistBeforeRepublish() async throws {
   let root = focusFilterIntentTempDirectory()
   defer { try? FileManager.default.removeItem(at: root) }
   let store = FocusFilterStore(
     managedDatabasePath: root.appendingPathComponent("db.sqlite").path)
 
   let intent = LorvexFocusFilterIntent()
-  intent.focusProfile = LorvexFocusProfileEntity(id: "Deep Work")
-  intent.showNonFocusTasks = true
+  intent.lists = [
+    LorvexFocusFilterListEntity(id: "work", name: "Work"),
+    LorvexFocusFilterListEntity(id: "deleted", name: ""),
+  ]
   let observedAtRepublish = IntentLockedBox<FocusFilterConfiguration?>(nil)
 
   try await intent.apply(store: store) {
     observedAtRepublish.set(try await store.load())
   }
 
-  let expected = FocusFilterConfiguration(
-    activeProfileID: "Deep Work", showNonFocusTasks: true)
+  let expected = FocusFilterConfiguration(listIDs: ["work", "deleted"])
   #expect(try await store.load() == expected)
   #expect(observedAtRepublish.value == expected)
+  #expect(expected.isActive)
 }
 
 @Test("the shipping iOS project hosts the Focus filter only in an App Intents extension")

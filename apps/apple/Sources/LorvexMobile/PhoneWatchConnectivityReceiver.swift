@@ -11,6 +11,27 @@ enum PhoneWatchReplicaRefreshPolicy {
   }
 }
 
+/// How the Watch receiver takes the database while the iPhone app is in the
+/// background. The managed store is suspended whenever the app leaves the
+/// foreground, and a WatchConnectivity callback usually arrives exactly then,
+/// so every command apply and replica rebuild runs between `begin` and `end`.
+/// The app passes its background-database counter; tests and hosts without
+/// suspension pass ``unmanaged``.
+public struct PhoneWatchDatabaseAccess: Sendable {
+  let begin: @MainActor @Sendable () -> Void
+  let end: @MainActor @Sendable () -> Void
+
+  public init(
+    begin: @escaping @MainActor @Sendable () -> Void,
+    end: @escaping @MainActor @Sendable () -> Void
+  ) {
+    self.begin = begin
+    self.end = end
+  }
+
+  public static let unmanaged = PhoneWatchDatabaseAccess(begin: {}, end: {})
+}
+
 #if canImport(WatchConnectivity)
   @preconcurrency import WatchConnectivity
 
@@ -25,6 +46,7 @@ enum PhoneWatchReplicaRefreshPolicy {
     private nonisolated let commandService: any LorvexWatchCommandServicing
     private let store: MobileStore
     private let complicationReloader: any WatchComplicationReloading
+    private let databaseAccess: PhoneWatchDatabaseAccess
     private let session: WCSession
 
     nonisolated private static let log = Logger(
@@ -33,6 +55,7 @@ enum PhoneWatchReplicaRefreshPolicy {
     public convenience init?(
       store: MobileStore,
       complicationReloader: any WatchComplicationReloading = WidgetCenterComplicationReloader(),
+      databaseAccess: PhoneWatchDatabaseAccess = .unmanaged,
       session: WCSession = .default
     ) {
       guard let commandService = store.core as? any LorvexWatchCommandServicing else {
@@ -45,6 +68,7 @@ enum PhoneWatchReplicaRefreshPolicy {
         store: store,
         commandService: commandService,
         complicationReloader: complicationReloader,
+        databaseAccess: databaseAccess,
         session: session)
     }
 
@@ -55,11 +79,13 @@ enum PhoneWatchReplicaRefreshPolicy {
       store: MobileStore,
       commandService: any LorvexWatchCommandServicing,
       complicationReloader: any WatchComplicationReloading,
+      databaseAccess: PhoneWatchDatabaseAccess = .unmanaged,
       session: WCSession = .default
     ) {
       self.commandService = commandService
       self.store = store
       self.complicationReloader = complicationReloader
+      self.databaseAccess = databaseAccess
       self.session = session
       super.init()
     }
@@ -129,21 +155,28 @@ enum PhoneWatchReplicaRefreshPolicy {
       ])
     }
 
-    /// Start best-effort derived-surface work after the application ACK boundary.
-    /// `MobileStore.refresh()` coalesces concurrent triggers and republishes the
-    /// workspace-fenced replica through its ordinary widget snapshot publisher.
-    private func scheduleReplicaBaselineRefresh() {
-      let store = store
-      let complicationReloader = complicationReloader
-      Task { @MainActor in
-        _ = await store.refresh()
-        complicationReloader.reloadTimelines()
-      }
+    /// Applies one command while holding the database (see
+    /// ``PhoneWatchDatabaseAccess``).
+    func applyHoldingDatabase(_ data: Data) async -> LorvexWatchCommandAck? {
+      databaseAccess.begin()
+      defer { databaseAccess.end() }
+      return await applyCommandData(data)
     }
 
-    private func schedulePostCommitFanOut(for ack: LorvexWatchCommandAck) {
+    /// Rebuilds the derived surfaces while holding the database.
+    /// `MobileStore.refresh()` coalesces concurrent triggers and republishes the
+    /// workspace-fenced replica through its ordinary widget snapshot publisher.
+    func refreshReplicaBaseline() async {
+      databaseAccess.begin()
+      defer { databaseAccess.end() }
+      _ = await store.refresh()
+      complicationReloader.reloadTimelines()
+    }
+
+    /// Best-effort derived-surface work after the application ACK boundary.
+    func postCommitFanOut(for ack: LorvexWatchCommandAck) async {
       guard PhoneWatchReplicaRefreshPolicy.shouldRefresh(after: ack.outcome) else { return }
-      scheduleReplicaBaselineRefresh()
+      await refreshReplicaBaseline()
     }
   }
 
@@ -170,7 +203,39 @@ enum PhoneWatchReplicaRefreshPolicy {
       // (including watch-switch reactivation) therefore creates a fresh
       // authoritative replica baseline.
       Task { @MainActor [weak self] in
-        self?.scheduleReplicaBaselineRefresh()
+        await self?.refreshReplicaBaseline()
+      }
+    }
+
+    /// The watch app was installed (or removed) after the phone last published.
+    /// A replica published before the install was dropped by the transfer gate,
+    /// so a fresh install gets its first replica here rather than on the next
+    /// phone refresh.
+    nonisolated public func sessionWatchStateDidChange(_ session: WCSession) {
+      guard session.activationState == .activated, session.isWatchAppInstalled else { return }
+      Task { @MainActor [weak self] in
+        await self?.refreshReplicaBaseline()
+      }
+    }
+
+    /// The watch asks for a fresh replica (its own copy is missing or from an
+    /// earlier day). The system wakes this app in the background to answer, so
+    /// the rebuild holds the database; the reply carries the replica the
+    /// rebuild just published.
+    nonisolated public func session(
+      _ session: WCSession,
+      didReceiveMessage message: [String: Any],
+      replyHandler: @escaping ([String: Any]) -> Void
+    ) {
+      nonisolated(unsafe) let reply = replyHandler
+      guard message[LorvexWatchConnectivityKey.replicaRequestV1] as? Bool == true else {
+        reply([:])
+        return
+      }
+      Task { @MainActor [weak self] in
+        await self?.refreshReplicaBaseline()
+        let replica = session.applicationContext[LorvexWatchConnectivityKey.replicaEnvelopeV1] as? Data
+        reply(replica.map { [LorvexWatchConnectivityKey.replicaEnvelopeV1: $0] } ?? [:])
       }
     }
 
@@ -190,7 +255,7 @@ enum PhoneWatchReplicaRefreshPolicy {
     ) {
       nonisolated(unsafe) let reply = replyHandler
       Task {
-        guard let ack = await self.applyCommandData(messageData),
+        guard let ack = await self.applyHoldingDatabase(messageData),
           let ackData = Self.wireData(for: ack)
         else {
           // Complete the system reply promptly, but deliberately send no valid
@@ -199,7 +264,7 @@ enum PhoneWatchReplicaRefreshPolicy {
           return
         }
         reply(ackData)
-        await self.schedulePostCommitFanOut(for: ack)
+        await self.postCommitFanOut(for: ack)
       }
     }
 
@@ -210,11 +275,11 @@ enum PhoneWatchReplicaRefreshPolicy {
       didReceiveMessageData messageData: Data
     ) {
       Task {
-        guard let ack = await self.applyCommandData(messageData),
+        guard let ack = await self.applyHoldingDatabase(messageData),
           let ackData = Self.wireData(for: ack)
         else { return }
         Self.queueBackgroundAck(ackData, on: session)
-        await self.schedulePostCommitFanOut(for: ack)
+        await self.postCommitFanOut(for: ack)
       }
     }
 
@@ -228,11 +293,11 @@ enum PhoneWatchReplicaRefreshPolicy {
         let commandData = userInfo[LorvexWatchConnectivityKey.commandEnvelopeV1] as? Data
       else { return }
       Task {
-        guard let ack = await self.applyCommandData(commandData),
+        guard let ack = await self.applyHoldingDatabase(commandData),
           let ackData = Self.wireData(for: ack)
         else { return }
         Self.queueBackgroundAck(ackData, on: session)
-        await self.schedulePostCommitFanOut(for: ack)
+        await self.postCommitFanOut(for: ack)
       }
     }
   }

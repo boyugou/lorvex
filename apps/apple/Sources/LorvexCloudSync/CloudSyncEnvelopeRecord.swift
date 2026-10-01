@@ -227,22 +227,6 @@ public enum CloudSyncEnvelopeRecord {
     for field in Field.encrypted { target.encryptedValues[field] = source.encryptedValues[field] }
   }
 
-  /// Whether two records carry the exact same complete Lorvex envelope wire
-  /// contract. Equal HLCs normally identify the same immutable mutation, but a
-  /// corrupt record (or a cloned writer that violated HLC uniqueness) can reuse
-  /// a version with different content. Push conflict resolution must not confirm
-  /// that row merely because the ordering key matches.
-  static func hasIdenticalWireFields(_ lhs: CKRecord, _ rhs: CKRecord) -> Bool {
-    guard lhs.recordType == rhs.recordType, lhs.recordID == rhs.recordID else { return false }
-    for field in Field.encrypted {
-      guard let left = encryptedString(lhs, field),
-        let right = encryptedString(rhs, field),
-        left == right
-      else { return false }
-    }
-    return true
-  }
-
   /// Prove that two records occupy the same Lorvex entity slot independently
   /// of their mutation fields. This narrow proof is what permits recovery of a
   /// missing/noncanonical server version: a different embedded type/id (or a

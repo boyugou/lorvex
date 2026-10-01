@@ -1,17 +1,16 @@
 import LorvexCore
 import SwiftUI
 
-/// The add / edit composer for AI-owned memory, pinned above the entry list.
+/// The add / edit composer for memory entries, pinned above the entry list.
 ///
-/// A key + content draft shared by the create and edit flows. The app writes
-/// memory as the AI actor, so this only ever creates or updates AI-owned
-/// entries; human-owned keys (e.g. `notes_for_ai`) are never edited here — the
-/// entry list gates editing to `.ai` and the core protects human keys. This is
-/// not a new write surface: it drives the same `LorvexMemoryServicing` upsert the
-/// workspace has always used.
+/// A key + content draft shared by the create and edit flows. Memory is the
+/// assistant's context about the user, so the app writes it as the AI actor,
+/// through the same `LorvexMemoryServicing` upsert as every other memory write.
 struct MemoryComposerCard: View {
   @Bindable var store: AppStore
   var cancelCreate: (() -> Void)?
+  /// Called after a draft is persisted, so the owner can dismiss the composer.
+  var onSaved: (() -> Void)? = nil
 
   var body: some View {
     MemoryCard {
@@ -20,7 +19,7 @@ struct MemoryComposerCard: View {
           editingBanner(editingKey)
         } else {
           Label(
-            String(localized: "memory.composer.title", defaultValue: "New memory", table: "Localizable", bundle: LorvexL10n.bundle),
+            String(localized: "memory.composer.title", defaultValue: "New Memory", table: "Localizable", bundle: LorvexL10n.bundle),
             systemImage: "sparkles"
           )
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
@@ -84,7 +83,9 @@ struct MemoryComposerCard: View {
             .accessibilityIdentifier("memory.create.cancel")
           }
           Button {
-            Task { await store.saveMemoryDraft() }
+            Task {
+              if await store.saveMemoryDraft() { onSaved?() }
+            }
           } label: {
             Label(
               store.memoryEditingKey == nil
@@ -92,7 +93,7 @@ struct MemoryComposerCard: View {
                 : String(localized: "memory.composer.update", defaultValue: "Update", table: "Localizable", bundle: LorvexL10n.bundle),
               systemImage: "brain")
           }
-          .buttonStyle(.lorvexPrimary)
+          .buttonStyle(.borderedProminent)
           .disabled(!store.canSaveMemoryDraft)
           .accessibilityIdentifier("memory.save")
         }
@@ -112,7 +113,7 @@ struct MemoryComposerCard: View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "pencil.circle")
         .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(.orange)
+        .foregroundStyle(LorvexDesign.Palette.warning)
       Text(
         String(
           format: String(
@@ -121,7 +122,7 @@ struct MemoryComposerCard: View {
             table: "Localizable",
             bundle: LorvexL10n.bundle
           ),
-          key
+          MemoryEntry.displayTitle(forKey: key)
         )
       )
       .font(LorvexDesign.Typography.secondaryText)
@@ -139,7 +140,7 @@ struct MemoryComposerCard: View {
     .padding(.horizontal, LorvexDesign.Spacing.s)
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+    .background(LorvexDesign.Palette.warning.opacity(0.10), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
     .accessibilityIdentifier("memory.edit.banner")
   }
 

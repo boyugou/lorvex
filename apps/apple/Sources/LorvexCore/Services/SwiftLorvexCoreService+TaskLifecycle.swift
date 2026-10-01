@@ -382,11 +382,32 @@ extension SwiftLorvexCoreService {
         ChangelogEntry(
           operation: operation,
           entityId: id,
-          summary: "Task \(operation): \(id)",
+          summary: Self.lifecycleSummary(operation: operation, after: after),
           before: before,
           after: deferDetail?.enriched(after) ?? after),
         deviceId: deviceId)
     }
     return after
+  }
+
+  /// The log's sentence for a lifecycle transition, naming the task and, for
+  /// a defer, the day it moved to.
+  static func lifecycleSummary(operation: String, after: JSONValue) -> String {
+    let title = TaskResponse.taskTitle(after)
+    switch operation {
+    case "complete": return "Completed task '\(title)'"
+    case "cancel": return "Cancelled task '\(title)'"
+    case "reopen": return "Reopened task '\(title)'"
+    case "start": return "Started task '\(title)'"
+    case "pause": return "Paused task '\(title)'"
+    case "someday": return "Moved task '\(title)' to Someday"
+    case "defer":
+      if case .object(let map) = after, case .string(let day)? = map["planned_date"] {
+        return "Deferred task '\(title)' to \(day)"
+      }
+      return "Deferred task '\(title)'"
+    default:
+      return "Task \(operation): '\(title)'"
+    }
   }
 }

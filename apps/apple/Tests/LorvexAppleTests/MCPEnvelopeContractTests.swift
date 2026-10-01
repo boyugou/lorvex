@@ -326,12 +326,5 @@ struct MCPEnvelopeContractTests {
     let batchUpdatePriority = try #require(
       itemProperties(of: "batch_update_tasks", arrayField: "updates")["priority"]?.objectValue)
     #expect(batchUpdatePriority["enum"]?.arrayValue == [.int(1), .int(2), .int(3)])
-
-    // block_type is a real JSON enum, not enum-by-prose.
-    let blockType = try #require(
-      itemProperties(of: "save_focus_schedule", arrayField: "blocks")["block_type"]?.objectValue)
-    #expect(blockType["enum"]?.arrayValue == [
-      .string("task"), .string("buffer"), .string("event"),
-    ])
   }
 }

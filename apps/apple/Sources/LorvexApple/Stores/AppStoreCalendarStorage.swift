@@ -5,6 +5,8 @@ import LorvexCore
 /// and all draft fields for creating a new calendar event.
 struct AppStoreCalendarStorage {
   var calendarTimeline: CalendarTimelineSnapshot?
+  /// The loaded window's tasks, planned (or, unplanned, due) in it; a task
+  /// with a time is drawn on the time axis of its planned day.
   var calendarScheduledTasks: [LorvexTask]?
   /// Monotonic generation stamp for in-flight timeline loads. A load captures it
   /// at entry and only commits its results if it is still the latest, so two

@@ -101,28 +101,4 @@ final class ChangelogRetentionPolicyTests: XCTestCase {
         "wireValue must round-trip through parse for \(policy)")
     }
   }
-
-  func testConservativeCollisionWinnerIsADataPreservingSemilattice() {
-    let policies: [ChangelogRetentionPolicy] = [
-      .off, .days(7), .days(30), .days(365), .maximum,
-    ]
-    for lhs in policies {
-      XCTAssertEqual(
-        ChangelogRetentionPolicy.conservativeCollisionWinner(lhs, lhs), lhs)
-      for rhs in policies {
-        XCTAssertEqual(
-          ChangelogRetentionPolicy.conservativeCollisionWinner(lhs, rhs),
-          ChangelogRetentionPolicy.conservativeCollisionWinner(rhs, lhs))
-      }
-    }
-    XCTAssertEqual(
-      ChangelogRetentionPolicy.conservativeCollisionWinner(.off, .days(30)),
-      .days(30))
-    XCTAssertEqual(
-      ChangelogRetentionPolicy.conservativeCollisionWinner(.days(30), .days(365)),
-      .days(365))
-    XCTAssertEqual(
-      ChangelogRetentionPolicy.conservativeCollisionWinner(.days(365), .maximum),
-      .maximum)
-  }
 }

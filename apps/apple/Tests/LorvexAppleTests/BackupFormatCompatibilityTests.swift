@@ -69,8 +69,9 @@ struct BackupFormatCompatibilityTests {
     #expect(decoded.calendarSeriesCutovers?.count == 1)
     #expect(decoded.calendarEvents?.first?.attendees?.count == 1)
     #expect(decoded.dailyReviews?.count == 1)
-    #expect(decoded.currentFocus?.count == 1)
-    #expect(decoded.focusSchedules?.first?.blocks.count == 2)
+    #expect(decoded.dailyBriefings?.count == 1)
+    #expect(decoded.tasks?.first?.plannedStartTime == "09:00")
+    #expect(decoded.nativeTaskGraph?.tasks.first?.plannedStartMinutes == 540)
     #expect(decoded.taskCalendarEventLinks?.count == 1)
     #expect(decoded.memory?.count == 1)
     #expect(decoded.preferences?.count == 1)
@@ -90,8 +91,7 @@ struct BackupFormatCompatibilityTests {
       ("calendarSeriesCutovers", "calendar_series_cutovers.json", 1),
       ("calendarEvents", "calendar_events.json", 1),
       ("dailyReviews", "daily_reviews.json", 1),
-      ("currentFocus", "current_focus.json", 1),
-      ("focusSchedules", "focus_schedules.json", 1),
+      ("dailyBriefings", "daily_briefings.json", 1),
       ("taskCalendarEventLinks", "task_calendar_event_links.json", 1),
       ("memory", "memory.json", 1),
       ("preferences", "preferences.json", 1),
@@ -322,6 +322,7 @@ struct BackupFormatCompatibilityTests {
     let task1 = ExportTask(
       id: MaxID.task1, title: "Maximal task", notes: "Body text",
       priority: "P1", status: "completed", dueDate: MaxID.ts, plannedDate: MaxID.ts,
+      plannedStartTime: "09:00", plannedEndTime: "10:00",
       availableFrom: MaxID.ts, estimatedMinutes: 45, tags: ["Deep"],
       rawInput: "raw capture", dependsOn: [MaxID.task2], listID: MaxID.list1,
       aiNotes: "assistant scratch",
@@ -368,6 +369,7 @@ struct BackupFormatCompatibilityTests {
             version: try maximalHlc(MaxID.hlc2), createdAt: MaxID.ts,
             updatedAt: MaxID.ts, completedAt: MaxID.ts, lastDeferredAt: MaxID.ts,
             lastDeferReason: "low_energy", plannedDate: "2026-07-17",
+            plannedStartMinutes: 540, plannedEndMinutes: 600,
             availableFrom: "2026-07-17", deferCount: 3, archivedAt: MaxID.ts),
           NativeTaskSnapshot(
             id: MaxID.task2, title: "Completion-anchored successor", body: nil,
@@ -436,8 +438,8 @@ struct BackupFormatCompatibilityTests {
           platform: "apple", appVersion: "1.2.3", deviceID: "device-fixture"),
         entityCounts: [
           "tasks": 2, "lists": 1, "tags": 1, "habits": 1,
-          "calendar_events": 3, "daily_reviews": 1, "current_focus": 1,
-          "focus_schedules": 1, "task_calendar_event_links": 1,
+          "calendar_events": 3, "daily_reviews": 1, "daily_briefings": 1,
+          "task_calendar_event_links": 1,
           "memory": 1, "preferences": 1,
         ]),
       tasks: [task1, task2],
@@ -512,24 +514,9 @@ struct BackupFormatCompatibilityTests {
           timezone: "America/Los_Angeles", updatedAt: MaxID.ts,
           linkedTaskIDs: [MaxID.task1], linkedListIDs: [MaxID.list1])
       ],
-      currentFocus: [
-        ExportCurrentFocus(
+      dailyBriefings: [
+        ExportDailyBriefing(
           date: "2026-07-17", briefing: "One thing", timezone: "UTC",
-          taskIDs: [MaxID.task2], createdAt: MaxID.ts, updatedAt: MaxID.ts)
-      ],
-      focusSchedules: [
-        ExportFocusSchedule(
-          date: "2026-07-17", rationale: "Deep-work morning", timezone: "UTC",
-          blocks: [
-            ExportFocusScheduleBlock(
-              position: 0, blockType: "task", startMinutes: 540,
-              endMinutes: 600, taskID: MaxID.task2,
-              title: "Completion-anchored successor"),
-            ExportFocusScheduleBlock(
-              position: 1, blockType: "event", startMinutes: 600,
-              endMinutes: 660, calendarEventID: MaxID.event1, eventSource: .canonical,
-              title: "Design review"),
-          ],
           createdAt: MaxID.ts, updatedAt: MaxID.ts)
       ],
       taskCalendarEventLinks: [
@@ -555,6 +542,8 @@ struct BackupFormatCompatibilityTests {
     #expect(task.notes == "Body text")
     #expect(task.dueDate == MaxID.ts)
     #expect(task.plannedDate == MaxID.ts)
+    #expect(task.plannedStartTime == "09:00")
+    #expect(task.plannedEndTime == "10:00")
     #expect(task.availableFrom == MaxID.ts)
     #expect(task.estimatedMinutes == 45)
     #expect(task.tags == ["Deep"])
@@ -619,6 +608,8 @@ struct BackupFormatCompatibilityTests {
     #expect(nativeTask.lastDeferredAt == MaxID.ts)
     #expect(nativeTask.lastDeferReason == "low_energy")
     #expect(nativeTask.plannedDate == "2026-07-17")
+    #expect(nativeTask.plannedStartMinutes == 540)
+    #expect(nativeTask.plannedEndMinutes == 600)
     #expect(nativeTask.availableFrom == "2026-07-17")
     #expect(nativeTask.archivedAt == MaxID.ts)
     #expect(native.recurrenceExceptions.first?.exceptionDate == "2026-07-20")
@@ -707,24 +698,12 @@ struct BackupFormatCompatibilityTests {
     #expect(review.linkedTaskIDs == [MaxID.task1])
     #expect(review.linkedListIDs == [MaxID.list1])
 
-    let focus = try #require(decoded.currentFocus?.first)
-    #expect(focus.briefing == "One thing")
-    #expect(focus.timezone == "UTC")
-    #expect(focus.taskIDs == [MaxID.task2])
-    #expect(focus.createdAt == MaxID.ts)
-    #expect(focus.updatedAt == MaxID.ts)
-
-    let schedule = try #require(decoded.focusSchedules?.first)
-    #expect(schedule.rationale == "Deep-work morning")
-    #expect(schedule.timezone == "UTC")
-    #expect(schedule.createdAt == MaxID.ts)
-    #expect(schedule.updatedAt == MaxID.ts)
-    let taskBlock = try #require(schedule.blocks.first)
-    #expect(taskBlock.taskID == MaxID.task2)
-    #expect(taskBlock.title == "Completion-anchored successor")
-    let eventBlock = try #require(schedule.blocks.dropFirst().first)
-    #expect(eventBlock.calendarEventID == MaxID.event1)
-    #expect(eventBlock.eventSource == .canonical)
+    let briefing = try #require(decoded.dailyBriefings?.first)
+    #expect(briefing.date == "2026-07-17")
+    #expect(briefing.briefing == "One thing")
+    #expect(briefing.timezone == "UTC")
+    #expect(briefing.createdAt == MaxID.ts)
+    #expect(briefing.updatedAt == MaxID.ts)
 
     let link = try #require(decoded.taskCalendarEventLinks?.first)
     #expect(link.createdAt == MaxID.ts)

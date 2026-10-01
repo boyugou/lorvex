@@ -27,14 +27,13 @@ final class RecordingMutationForwarder: LorvexWatchMutationForwarding, @unchecke
 @Suite("LorvexWatchStore forwards mutations on snapshot backend")
 @MainActor
 struct LorvexWatchStoreMutationForwardingTests {
-  @Test("completePrimaryTask forwards completeTask mutation")
-  func completePrimaryTaskForwards() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "Forward complete")
+  @Test("completeTask forwards completeTask mutation")
+  func completeTaskForwards() async throws {
+    let task = try await makeWatchTask(title: "Forward complete")
     let forwarder = RecordingMutationForwarder()
-    let store = makeSnapshotStore(task: task, forwarder: forwarder, date: "2026-05-25")
+    let store = makeSnapshotStore(tasks: [task], forwarder: forwarder, date: "2026-05-25")
 
-    await store.completePrimaryTask()
+    await store.completeTask(id: task.id)
 
     #expect(forwarder.forwarded == [.completeTask(id: task.id)])
     #expect(store.error == nil)
@@ -42,10 +41,9 @@ struct LorvexWatchStoreMutationForwardingTests {
 
   @Test("completeHabit forwards the mutation and bumps progress optimistically")
   func completeHabitForwards() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "Habit host")
+    let task = try await makeWatchTask(title: "Habit host")
     let forwarder = RecordingMutationForwarder()
-    let store = makeSnapshotStore(task: task, forwarder: forwarder, date: "2026-05-25")
+    let store = makeSnapshotStore(tasks: [task], forwarder: forwarder, date: "2026-05-25")
     store.habits = [
       WidgetSnapshot.HabitSummary(
         id: "h1", name: "Hydrate", icon: nil, completedToday: 0, target: 2)
@@ -65,31 +63,29 @@ struct LorvexWatchStoreMutationForwardingTests {
     #expect(forwarder.forwarded.count == 1)
   }
 
-  @Test("cancelPrimaryTask forwards cancelTask mutation")
-  func cancelPrimaryTaskForwards() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "Forward cancel")
+  @Test("cancelTask forwards cancelTask mutation")
+  func cancelTaskForwards() async throws {
+    let task = try await makeWatchTask(title: "Forward cancel")
     let forwarder = RecordingMutationForwarder()
-    let store = makeSnapshotStore(task: task, forwarder: forwarder, date: "2026-05-25")
+    let store = makeSnapshotStore(tasks: [task], forwarder: forwarder, date: "2026-05-25")
 
-    await store.cancelPrimaryTask()
+    await store.cancelTask(id: task.id)
 
     #expect(forwarder.forwarded == [.cancelTask(id: task.id)])
     #expect(store.error == nil)
   }
 
-  @Test("deferPrimaryTaskToTomorrow forwards deferTaskToTomorrow mutation")
-  func deferPrimaryTaskForwards() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "Forward defer")
+  @Test("deferTaskToTomorrow forwards deferTaskToTomorrow mutation")
+  func deferTaskForwards() async throws {
+    let task = try await makeWatchTask(title: "Forward defer")
     let forwarder = RecordingMutationForwarder()
     let store = makeSnapshotStore(
-      task: task,
+      tasks: [task],
       forwarder: forwarder,
       date: "2026-05-25",
       now: { Date(timeIntervalSince1970: 1_779_735_600) })
 
-    await store.deferPrimaryTaskToTomorrow()
+    await store.deferTaskToTomorrow(id: task.id)
 
     #expect(
       forwarder.forwarded
@@ -97,23 +93,31 @@ struct LorvexWatchStoreMutationForwardingTests {
     #expect(store.error == nil)
   }
 
-  @Test("removePrimaryTaskFromFocus forwards removeFromFocus mutation")
-  func removePrimaryTaskForwards() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "Forward remove")
+  @Test("startTask and pauseTask forward and move the task within the list")
+  func startAndPauseForward() async throws {
+    let first = try await makeWatchTask(title: "Already first")
+    let second = try await makeWatchTask(title: "Started from the wrist")
     let forwarder = RecordingMutationForwarder()
-    let store = makeSnapshotStore(task: task, forwarder: forwarder, date: "2026-05-25")
+    let store = makeSnapshotStore(
+      tasks: [first, second], forwarder: forwarder, date: "2026-05-25")
 
-    await store.removePrimaryTaskFromFocus()
+    await store.startTask(id: second.id)
 
-    #expect(forwarder.forwarded == [.removeFromFocus(id: task.id, date: "2026-05-25")])
+    #expect(forwarder.forwarded == [.startTask(id: second.id)])
+    // Optimistic update: started tasks lead the list until the phone's next
+    // snapshot settles the exact order.
+    #expect(store.tasks.map(\.id) == [second.id, first.id])
+    #expect(store.tasks.first?.status == .inProgress)
+
+    await store.pauseTask(id: second.id)
+
+    #expect(forwarder.forwarded == [.startTask(id: second.id), .pauseTask(id: second.id)])
+    #expect(store.tasks.allSatisfy { $0.status == .open })
     #expect(store.error == nil)
   }
 
   @Test("captureTask forwards captureTask mutation")
   func captureTaskForwards() async throws {
-    let service = try await makeSeededInMemoryCore()
-    _ = try await service.createTask(title: "Seed", notes: "")
     let forwarder = RecordingMutationForwarder()
     let url = URL(fileURLWithPath: "/tmp/test-snapshot-capture.json")
     let store = LorvexWatchStore(
@@ -176,13 +180,12 @@ struct LorvexWatchStoreMutationForwardingTests {
     #expect(store.pendingCaptureTitle == nil)
   }
 
-  @Test("completePrimaryTask sets error when no forwarder on snapshot backend")
-  func completePrimaryTaskErrorsWithoutForwarder() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "No forwarder")
-    let store = makeSnapshotStore(task: task, forwarder: nil, date: "2026-05-25")
+  @Test("completeTask sets error when no forwarder on snapshot backend")
+  func completeTaskErrorsWithoutForwarder() async throws {
+    let task = try await makeWatchTask(title: "No forwarder")
+    let store = makeSnapshotStore(tasks: [task], forwarder: nil, date: "2026-05-25")
 
-    await store.completePrimaryTask()
+    await store.completeTask(id: task.id)
 
     #expect(
       store.error?.localizedDescription
@@ -230,33 +233,30 @@ struct LorvexWatchStoreMutationForwardingTests {
 
   // MARK: - Optimistic update (item 1)
 
-  @Test("completePrimaryTask removes task from focusTasks immediately on snapshot backend")
-  func completePrimaryTaskAppliesOptimisticUpdate() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(
-      in: service, date: "2026-05-25", title: "Optimistic complete")
+  @Test("completeTask takes the task off the list immediately on snapshot backend")
+  func completeTaskAppliesOptimisticUpdate() async throws {
+    let task = try await makeWatchTask(title: "Optimistic complete")
     let forwarder = RecordingMutationForwarder()
-    let store = makeSnapshotStore(task: task, forwarder: forwarder, date: "2026-05-25")
+    let store = makeSnapshotStore(tasks: [task], forwarder: forwarder, date: "2026-05-25")
 
-    await store.completePrimaryTask()
+    await store.completeTask(id: task.id)
 
-    // Optimistic update: primaryTask is nil immediately, no refresh needed.
-    #expect(store.primaryTask == nil)
-    #expect(store.focusTasks.isEmpty)
+    // Optimistic update: the row leaves at once, no refresh needed.
+    #expect(store.tasks.isEmpty)
+    #expect(store.completedTodayCount == 1)
     #expect(store.error == nil)
   }
 
-  @Test("cancelPrimaryTask removes task from focusTasks immediately on snapshot backend")
-  func cancelPrimaryTaskAppliesOptimisticUpdate() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let task = try await seedWatchFocus(in: service, date: "2026-05-25", title: "Optimistic cancel")
+  @Test("cancelTask takes the task off the list immediately on snapshot backend")
+  func cancelTaskAppliesOptimisticUpdate() async throws {
+    let task = try await makeWatchTask(title: "Optimistic cancel")
     let forwarder = RecordingMutationForwarder()
-    let store = makeSnapshotStore(task: task, forwarder: forwarder, date: "2026-05-25")
+    let store = makeSnapshotStore(tasks: [task], forwarder: forwarder, date: "2026-05-25")
 
-    await store.cancelPrimaryTask()
+    await store.cancelTask(id: task.id)
 
-    #expect(store.primaryTask == nil)
-    #expect(store.focusTasks.isEmpty)
+    #expect(store.tasks.isEmpty)
+    #expect(store.completedTodayCount == 0)
     #expect(store.error == nil)
   }
 }
@@ -295,25 +295,30 @@ private actor BlockingMutationForwarder: LorvexWatchMutationForwarding {
 
 // MARK: - Helpers
 
-/// Creates a snapshot-backend watch store with `primaryTask` pre-seeded for forwarding tests.
+/// A real task row for the forwarding tests, created in a throwaway core so
+/// its fields have production shapes.
+private func makeWatchTask(title: String) async throws -> LorvexTask {
+  try await makeInMemoryCore().createTask(TaskCreateDraft(title: title))
+}
+
+/// Creates a snapshot-backend watch store listing `tasks` on the day `date`.
 ///
 /// Uses `@testable import LorvexWatch` to set `internal(set)` properties directly,
 /// bypassing the snapshot read path which requires a real file on disk.
 @MainActor
 private func makeSnapshotStore(
-  task: LorvexTask,
+  tasks: [LorvexTask],
   forwarder: (any LorvexWatchMutationForwarding)?,
   date: String,
   now: @escaping @Sendable () -> Date = Date.init
 ) -> LorvexWatchStore {
-  let url = URL(fileURLWithPath: "/tmp/test-snapshot-\(task.id).json")
+  let url = URL(fileURLWithPath: "/tmp/test-snapshot-\(UUID().uuidString).json")
   let store = LorvexWatchStore(
     snapshotURL: url,
     now: now,
     mutationForwarder: forwarder
   )
-  store.primaryTask = task
-  store.focusTasks = [task]
+  store.tasks = tasks
   store.logicalDay = date
   return store
 }

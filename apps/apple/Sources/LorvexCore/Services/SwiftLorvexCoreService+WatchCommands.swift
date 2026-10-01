@@ -93,8 +93,10 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
       }
       _ = try await deferTask(
         id: id, until: IsoDate.ymdToDate(ymd), reason: nil, note: nil)
-    case .removeFromFocus(let id, let date):
-      _ = try await removeFromCurrentFocus(date: date, taskID: id)
+    case .startTask(let id):
+      _ = try await startTask(id: id)
+    case .pauseTask(let id):
+      _ = try await pauseTask(id: id)
     case .captureTask(let title):
       _ = try await createTask(title: title, notes: "")
     case .completeHabit(let id, let date):

@@ -14,19 +14,8 @@
 	<string>en</string>
 	<key>CFBundleLocalizations</key>
 	<array>
-		<string>de</string>
 		<string>en</string>
-		<string>es</string>
-		<string>fr</string>
-		<string>it</string>
-		<string>ja</string>
-		<string>ko</string>
-		<string>pl</string>
-		<string>pt</string>
-		<string>ru</string>
-		<string>tr</string>
 		<string>zh-Hans</string>
-		<string>zh-Hant</string>
 	</array>
 	<key>CFBundleName</key>
 	<string>LorvexMobileApp</string>
@@ -35,7 +24,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>48</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -50,7 +39,7 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>MinimumOSVersion</key>
-	<string>18.0</string>
+	<string>26.0</string>
 	<!--
 	A launch screen is mandatory for the app to render at the device's native
 	resolution. Without UILaunchScreen, iOS runs the app in legacy compatibility

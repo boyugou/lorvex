@@ -2,9 +2,6 @@ import LorvexCore
 import SwiftUI
 
 enum MainWindowLayoutMetrics {
-  static let sidebarMinWidth: CGFloat = 148
-  static let sidebarIdealWidth: CGFloat = 164
-  static let sidebarMaxWidth: CGFloat = 184
   // The task detail's content (priority chips, action row, checklist rows with
   // trailing menus) needs ~300pt to render without its trailing controls
   // clipping, so the inspector must not be squeezed below that.
@@ -24,15 +21,15 @@ struct ContentView: View {
     NavigationSplitView(columnVisibility: $navigationColumnVisibility) {
       SidebarView(store: store)
         .navigationSplitViewColumnWidth(
-          min: MainWindowLayoutMetrics.sidebarMinWidth,
-          ideal: MainWindowLayoutMetrics.sidebarIdealWidth,
-          max: MainWindowLayoutMetrics.sidebarMaxWidth
+          min: SidebarMetrics.columnMinWidth,
+          ideal: SidebarMetrics.columnIdealWidth,
+          max: SidebarMetrics.columnMaxWidth
         )
     } detail: {
-      // The workspace owns the full main area — Calendar, Habits, the Eisenhower
-      // matrix, etc. render edge-to-edge instead of being squeezed into a middle
-      // column. The task detail rides in a trailing inspector that appears only
-      // once a task is actually selected, so nothing heavy is shown by default.
+      // The workspace owns the full main area, so the calendar grid, Habits, and
+      // every other workspace render edge-to-edge rather than in a middle
+      // column. A task's or habit's detail rides in a trailing inspector that
+      // appears only while one is selected, so nothing heavy shows by default.
       WorkspaceView(store: store)
         .environment(settings)
         .inspector(isPresented: inspectorPresented) {
@@ -105,9 +102,6 @@ struct ContentView: View {
         showSetupWizard = true
       }
     }
-    .task(id: store.focusSurfaceTaskSignature) {
-      await store.loadFocusSurfaceTasks()
-    }
     .lorvexErrorAlert(store)
     .alert(
       String(
@@ -158,7 +152,7 @@ struct ContentView: View {
     case .today:
       LorvexTaskCommandContext(
         store: store,
-        selectionSurface: .focus,
+        selectionSurface: .today,
         fallbackTaskID: store.selectedTaskID
       )
     case .tasks:

@@ -126,7 +126,7 @@ public enum SyncEntityId {
       return validateCanonicalUuid(entityId)
     case .preference:
       return validatePreference(entityId)
-    case .dailyReview, .currentFocus, .focusSchedule:
+    case .dailyReview, .dailyBriefing:
       return validateDate(entityId)
     case .taskTag:
       return validateUuidUuidEdge(entityId, "canonical task UUID:tag UUID")
@@ -138,7 +138,7 @@ public enum SyncEntityId {
       return validateHabitCompletion(entityId)
     case .entityRedirect:
       return validateRedirectIdentity(entityId)
-    case .deviceState, .importSession:
+    case .deviceState, .importSession, .dailySchedule:
       return .failure(invalid(syncableEntityKindExpected, entityId))
     }
   }

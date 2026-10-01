@@ -60,7 +60,7 @@ struct MCPOnDiskCoreBridgeTests {
     let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
     _ = try await mcpRegistryCall(
       fixture.registry, tool: "update_task",
-      arguments: ["id": .string(taskID), "tags_set": .array([.string("alpha")])])
+      arguments: ["id": .string(taskID), "tags": .array([.string("alpha")])])
 
     let fencedAlpha: String = SecurityFencing.fence("alpha")
     let before = try await mcpRegistryCall(fixture.registry, tool: "list_all_tags")
@@ -121,7 +121,7 @@ struct MCPOnDiskCoreBridgeTests {
         "estimated_minutes": .int(25),
         "due_date": .string("2026-07-05"),
         "planned_date": .string("2026-07-04"),
-        "tags_set": .array([.string("disk-single")]),
+        "tags": .array([.string("disk-single")]),
       ])
     #expect(single.isError != true)
     let singleTask = try #require(single.structuredContent?.objectValue)
@@ -167,41 +167,6 @@ struct MCPOnDiskCoreBridgeTests {
       updated.structuredContent?.objectValue?["results"]?.arrayValue?.first?.objectValue)
     #expect(updatedTask["estimated_minutes"]?.intValue == 50)
     #expect(updatedTask["tags"]?.arrayValue?.count == 1)
-  }
-
-  @Test("tags/tags_set alias resolves with the same precedence on create and update")
-  func tagsAliasPrecedenceIsUnified() async throws {
-    let fixture = mcpOnDiskRegistry()
-    defer { fixture.cleanup() }
-
-    // Both aliases supplied with different values: `tags` wins on create.
-    let created = try await mcpRegistryCall(
-      fixture.registry, tool: "create_task",
-      arguments: [
-        "title": .string("Alias precedence"),
-        "tags": .array([.string("win")]),
-        "tags_set": .array([.string("lose")]),
-      ])
-    #expect(created.isError != true)
-    let createdTask = try #require(created.structuredContent?.objectValue)
-    let taskID = try #require(createdTask["id"]?.stringValue)
-    let createdTags = (createdTask["tags"]?.arrayValue ?? []).compactMap(\.stringValue)
-    #expect(createdTags.count == 1)
-    #expect(createdTags.first?.contains("win") == true)
-
-    // The same precedence applies on update — `tags` wins over `tags_set`.
-    let updated = try await mcpRegistryCall(
-      fixture.registry, tool: "update_task",
-      arguments: [
-        "id": .string(taskID),
-        "tags": .array([.string("win2")]),
-        "tags_set": .array([.string("lose2")]),
-      ])
-    #expect(updated.isError != true)
-    let updatedTags =
-      (updated.structuredContent?.objectValue?["tags"]?.arrayValue ?? []).compactMap(\.stringValue)
-    #expect(updatedTags.count == 1)
-    #expect(updatedTags.first?.contains("win2") == true)
   }
 
   @Test("MCP get_task surfaces last_deferred_at after a defer")
@@ -635,7 +600,7 @@ struct MCPOnDiskCoreBridgeTests {
         "id": .string(taskID),
         "title": .string("On-disk tagged task"),
         "notes": .string("Created for tag bridge coverage"),
-        "tags_set": .array([.string("swift-core"), .string("mcp")]),
+        "tags": .array([.string("swift-core"), .string("mcp")]),
       ])
     #expect(tagged.isError != true)
     let fencedSwiftCoreTag: String = SecurityFencing.fence("swift-core")

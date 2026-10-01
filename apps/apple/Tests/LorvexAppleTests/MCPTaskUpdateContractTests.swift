@@ -19,12 +19,12 @@ struct MCPTaskUpdateContractTests {
     result.structuredContent?.objectValue?["tags"]?.arrayValue?.compactMap(\.stringValue)
   }
 
-  @Test("update_task accepts the `tags` alias for `tags_set`")
-  func updateAcceptsTagsAlias() async throws {
+  @Test("update_task replaces the tag set from `tags`")
+  func updateReplacesTags() async throws {
     let fixture = mcpOnDiskRegistry()
     defer { fixture.cleanup() }
 
-    // Create with the `tags` alias (create_task advertises both keys).
+    // Create with `tags`.
     let created = try await mcpRegistryCall(
       fixture.registry,
       tool: "create_task",
@@ -32,8 +32,8 @@ struct MCPTaskUpdateContractTests {
     let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
     #expect(tags(created) == [SecurityFencing.fence("old")])
 
-    // Update the tags using the `tags` alias — the change must be applied, not
-    // silently dropped in favor of the untouched existing set.
+    // Update the tags using `tags` — the change must be applied, not silently
+    // dropped in favor of the untouched existing set.
     let updated = try await mcpRegistryCall(
       fixture.registry,
       tool: "update_task",
@@ -44,31 +44,6 @@ struct MCPTaskUpdateContractTests {
     #expect(
       Set(tags(updated) ?? [])
         == [SecurityFencing.fence("new-a"), SecurityFencing.fence("new-b")])
-  }
-
-  @Test("update_task `tags` and `tags_set` are interchangeable")
-  func updateTagsAliasMatchesTagsSet() async throws {
-    let fixture = mcpOnDiskRegistry()
-    defer { fixture.cleanup() }
-
-    let first = try await mcpRegistryCall(
-      fixture.registry, tool: "create_task", arguments: ["title": .string("A")])
-    let firstID = try #require(first.structuredContent?.objectValue?["id"]?.stringValue)
-    let second = try await mcpRegistryCall(
-      fixture.registry, tool: "create_task", arguments: ["title": .string("B")])
-    let secondID = try #require(second.structuredContent?.objectValue?["id"]?.stringValue)
-
-    let viaAlias = try await mcpRegistryCall(
-      fixture.registry,
-      tool: "update_task",
-      arguments: ["id": .string(firstID), "tags": .array([.string("x"), .string("y")])])
-    let viaCanonical = try await mcpRegistryCall(
-      fixture.registry,
-      tool: "update_task",
-      arguments: ["id": .string(secondID), "tags_set": .array([.string("x"), .string("y")])])
-    // The two aliases must produce the same tag set; order is not contractual.
-    #expect(Set(tags(viaAlias) ?? []) == Set(tags(viaCanonical) ?? []))
-    #expect(tags(viaAlias)?.count == 2)
   }
 
   private func priority(_ result: CallTool.Result) -> Int? {

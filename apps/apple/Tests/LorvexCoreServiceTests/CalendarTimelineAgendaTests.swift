@@ -75,14 +75,4 @@ final class CalendarTimelineAgendaTests: XCTestCase {
     ])
     XCTAssertEqual(snap.eventsOccurring(on: "2026-06-15").map(\.id), ["timed", "untimed"])
   }
-
-  func testFocusScheduleBlockKindClassification() {
-    func kind(_ blockType: String) -> FocusScheduleBlock.Kind {
-      FocusScheduleBlock(blockType: blockType, startTime: "09:00", endTime: "10:00").kind
-    }
-    XCTAssertEqual(kind("task"), .task)
-    XCTAssertEqual(kind("event"), .calendarEvent)
-    XCTAssertEqual(kind("buffer"), .buffer)
-    XCTAssertEqual(kind("future_kind"), .unknown)
-  }
 }

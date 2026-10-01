@@ -7,26 +7,11 @@ import Testing
 
 @Suite("Today widget configuration")
 struct TodayWidgetConfigurationTests {
-  @Test("configuration intent defaults to the Today task view")
-  func configurationDefaultsToTodayView() {
+  @Test("configuration intent defaults to every list")
+  func configurationDefaultsToEveryList() {
     let intent = LorvexTodayWidgetConfigurationIntent()
 
-    #expect(intent.viewMode == .today)
     #expect(intent.list == nil)
-  }
-
-  @Test("snapshot entry carries configured Today widget view mode")
-  func snapshotEntryCarriesConfiguredViewMode() {
-    let entry = LorvexSnapshotEntry(
-      date: Date(timeIntervalSince1970: 0),
-      snapshot: nil,
-      statusText: "Open Lorvex to refresh",
-      todayWidgetViewMode: .focus,
-      todayWidgetListID: LorvexPreviewSeedID.appleNativeList
-    )
-
-    #expect(entry.todayWidgetViewMode == .focus)
-    #expect(entry.todayWidgetListID == LorvexPreviewSeedID.appleNativeList)
   }
 
   @Test("widget list entities default to identifier fallback")
@@ -38,40 +23,39 @@ struct TodayWidgetConfigurationTests {
     #expect(entities == [LorvexWidgetListEntity(id: LorvexPreviewSeedID.appleNativeList)])
   }
 
-  @Test("list filtering removes a global briefing that can describe hidden tasks")
-  func listFilteringClearsGlobalBriefing() {
-    let work = WidgetSnapshot.FocusTask(
-      id: "work-task", title: "Work", status: "open", dueDate: nil,
-      priority: 1, listID: "work", estimatedMinutes: nil)
-    let home = WidgetSnapshot.FocusTask(
-      id: "home-task", title: "Home", status: "open", dueDate: nil,
-      priority: 2, listID: "home", estimatedMinutes: nil)
-    let snapshot = WidgetSnapshot(
-      generatedAt: "2026-05-30T12:00:00Z",
-      timezone: "UTC",
-      stats: .init(focusCount: 2, overdueCount: 1, dueTodayCount: 1),
-      briefing: "Do Work, then Home.",
-      focusTasks: [work, home],
-      todayTasks: [
-        .init(
-          id: work.id, title: work.title, dueDate: nil, priority: work.priority,
-          estimatedMinutes: nil, listID: work.listID),
-        .init(
-          id: home.id, title: home.title, dueDate: nil, priority: home.priority,
-          estimatedMinutes: nil, listID: home.listID),
-      ],
-      listStats: [
-        .init(
-          id: "work",
-          stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1))
-      ])
+  private static let work = WidgetSnapshot.TodayTask(
+    id: "work-task", title: "Work", status: "open", dueDate: nil,
+    priority: 1, listID: "work", estimatedMinutes: nil)
+  private static let home = WidgetSnapshot.TodayTask(
+    id: "home-task", title: "Home", status: "open", dueDate: nil,
+    priority: 2, listID: "home", estimatedMinutes: nil)
+  private static let snapshot = WidgetSnapshot(
+    generatedAt: "2026-05-30T12:00:00Z",
+    timezone: "UTC",
+    stats: .init(todayCount: 2, overdueCount: 1, dueTodayCount: 1),
+    briefing: "Do Work, then Home.",
+    tasks: [work, home],
+    listStats: [
+      .init(id: "work", stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1))
+    ])
 
-    let filtered = TodayWidgetSnapshotFilter.applying(listID: "work", to: snapshot)
+  @Test("list scoping keeps the list's tasks and counts and drops the day's briefing")
+  func listScopingClearsGlobalBriefing() {
+    let scoped = Self.snapshot.scoped(toList: "work")
 
-    #expect(filtered.focusTasks.map(\.id) == ["work-task"])
-    #expect(filtered.todayTasks.map(\.id) == ["work-task"])
-    #expect(filtered.stats.focusCount == 1)
-    #expect(filtered.briefing == nil)
-    #expect(TodayWidgetSnapshotFilter.applying(listID: nil, to: snapshot) == snapshot)
+    #expect(scoped.tasks.map(\.id) == ["work-task"])
+    #expect(scoped.stats.todayCount == 1)
+    #expect(scoped.stats.dueTodayCount == 1)
+    #expect(scoped.briefing == nil, "the briefing speaks about the whole day, hidden tasks included")
+    #expect(Self.snapshot.scoped(toList: nil) == Self.snapshot)
+  }
+
+  @Test("a list without stored counts falls back to counting its tasks")
+  func listScopingCountsTasksWithoutStoredStats() {
+    let scoped = Self.snapshot.scoped(toList: "home")
+
+    #expect(scoped.tasks.map(\.id) == ["home-task"])
+    #expect(scoped.stats.todayCount == 1)
+    #expect(scoped.stats.overdueCount == 0)
   }
 }

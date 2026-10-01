@@ -7,7 +7,7 @@ struct OpenLorvexIntent: LorvexUnauthenticatedIntent {
 
   static let openAppWhenRun = true
 
-  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *)
+  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *)
   static var supportedModes: IntentModes { .foreground }
 
   @Parameter(

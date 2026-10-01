@@ -279,17 +279,6 @@ public enum ApplyRepair {
         } catch {
           throw ApplyRepairError.invalidContender("\(error)")
         }
-        if successor.entityType == .aiChangelog {
-          // Audit identity is append-only and therefore has no LWW version
-          // column. A same-id semantic collision is the exceptional repair
-          // boundary: replace the old immutable projection inside this
-          // savepoint, then let the ordinary retention-aware applier validate
-          // and insert the deterministic winner. Any failure rolls the old row
-          // and its entity-id children back together.
-          try db.execute(
-            sql: "DELETE FROM ai_changelog WHERE id = ?",
-            arguments: [successor.entityId])
-        }
         let outcome = try Apply.applyEnvelope(
           db,
           registry: EntityApplierRegistry(
@@ -341,10 +330,6 @@ public enum ApplyRepair {
         case .repairRequired(.resolveEqualVersionCollision):
           throw ApplyRepairError.successorDidNotResolveCollision(
             entityType: successor.entityType.asString, entityId: successor.entityId)
-        case .upsertRejectedByRetention:
-          // Account-scoped audit retention is the terminal authority. Its apply
-          // path has already queued the physical CloudKit deletion.
-          break
         case .skipped(let reason, _):
           throw ApplyRepairError.successorApplyRejected(reason)
         case .deferred(let reason):
@@ -397,13 +382,10 @@ public enum ApplyRepair {
   }
 
   /// An equal-HLC contender is obsolete when a later envelope in the same page
-  /// has already established a strictly newer live row or tombstone. Audit rows
-  /// are append-only and carry no materialized version, so their multi-contender
-  /// join must always run.
+  /// has already established a strictly newer live row or tombstone.
   private static func canonicalStateStrictlySupersedes(
     _ db: Database, contender: SyncEnvelope
   ) throws -> Bool {
-    guard contender.entityType != .aiChangelog else { return false }
     var frontier: Hlc?
     if let raw = try ApplyLww.getLocalVersion(
       db, entityType: contender.entityType.asString, entityId: contender.entityId)
@@ -477,22 +459,6 @@ public enum ApplyRepair {
     deviceId: String
   ) throws {
     let entityType = successor.entityType
-    if entityType == .aiChangelog {
-      guard
-        var object = try AuditRetentionFrontier.canonicalAuditPayloadObject(
-          db, entityId: entityId)
-      else {
-        throw ApplyRepairError.resolvedStateMissing(
-          entityType: entityType.asString, entityId: entityId)
-      }
-      object["version"] = .string(successor.version.description)
-      try OutboxEnqueue.enqueuePayloadUpsert(
-        db, entityType: entityType.asString, entityId: entityId,
-        payload: .object(object),
-        context: OutboxWriteContext(
-          version: successor.version.description, deviceId: deviceId))
-      return
-    }
     if entityType == .entityRedirect {
       let payload = try EntityRedirect.decodePayload(
         wireEntityId: successor.entityId, payload: successor.payload)

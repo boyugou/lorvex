@@ -71,7 +71,7 @@ struct WriteReadConsistencyTests {
         "estimated_minutes": .int(20),
         "due_date": .string("2026-07-04"),
         "planned_date": .string("2026-07-03"),
-        "tags_set": .array([.string("preview-rich")]),
+        "tags": .array([.string("preview-rich")]),
       ])
     #expect(result.isError != true)
     let task = try #require(result.structuredContent?.objectValue)

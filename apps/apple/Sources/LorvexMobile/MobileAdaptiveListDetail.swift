@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 /// Width-responsive list+detail container for the iPad regular-width workspaces.
@@ -8,13 +9,27 @@ import SwiftUI
 ///
 /// - **Wide** (`width >= widthThreshold`, landscape / full-screen iPad): the
 ///   side-by-side `HStack { list · Divider · detail-or-placeholder }`. The
-///   detail column is hosted in its own `NavigationStack` so the detail's
-///   toolbar and title render in the detail pane's bar instead of merging into
-///   the list's.
-/// - **Narrow** (portrait, Split View, Slide Over): a `NavigationStack` showing
-///   the `list` full-width; selecting a row pushes `detail` via
+///   detail is told it is a pane (`mobileDetailPresentation`), so the bar
+///   keeps the list's title and toolbar and the detail shows its actions in
+///   its own content.
+/// - **Narrow** (portrait, Split View, Slide Over): the `list` full-width;
+///   selecting a row pushes `detail` onto the enclosing navigation stack via
 ///   `navigationDestination(item:)`, and the system back button pops it (which
 ///   clears the selection).
+///
+/// The container always sits inside a navigation stack: a tab's own stack, or
+/// the Tasks stack that pushed the workspace from the Tasks home. It never
+/// opens a `NavigationStack` of its own, around the list or around the
+/// detail: a stack nested inside a pushed destination leaves the enclosing
+/// stack's push undone (the workspace never appears), whether the nested
+/// stack exists from the destination's first, zero-size evaluation or only
+/// once a selection arrives. The width is read from a `GeometryReader`, which
+/// reports what the container proposes and never what either layout wants;
+/// the token sizes it reports for a transition's zero-size pass and an
+/// ideal-size pass are ignored, and until a real width arrives the size class
+/// picks the layout, so a screen beneath a push, which only ever sees those
+/// passes, keeps the layout its window calls for instead of swapping in the
+/// narrow one, which would push its selection a second time.
 ///
 /// A single `selection` binding drives both modes, so rotating wide↔narrow keeps
 /// the selection and renders the detail in whichever shape the new width calls
@@ -25,13 +40,16 @@ import SwiftUI
 @MainActor
 struct MobileAdaptiveListDetail<ID: Hashable, List: View, Detail: View, Placeholder: View>: View {
   /// Width at or above which the side-by-side layout is used; below it, the
-  /// list is full-width and the detail is pushed onto a `NavigationStack`.
+  /// list is full-width and the detail is pushed onto the enclosing stack.
   static var widthThreshold: CGFloat { 700 }
 
   @Binding var selection: ID?
   private let list: List
   private let detail: (ID) -> Detail
   private let placeholder: Placeholder
+  /// The last real width measured, or nil before the first real layout.
+  @State private var measuredWidth: CGFloat?
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   /// Sensible list width for the wide (side-by-side) layout. Mirrors the
   /// constraints the hand-rolled Tasks split used so rows keep their density.
@@ -51,12 +69,34 @@ struct MobileAdaptiveListDetail<ID: Hashable, List: View, Detail: View, Placehol
     self.placeholder = placeholder()
   }
 
+  /// Widths below this are a token evaluation, not a layout: the zero a
+  /// navigation transition proposes to a screen beneath the top one, the
+  /// zero-size first pass of a pushed screen, or the ten points a
+  /// `GeometryReader` reports for an ideal-size pass. They are never stored.
+  private static var tokenWidth: CGFloat { 100 }
+
+  private var isWide: Bool {
+    guard let measuredWidth else { return horizontalSizeClass == .regular }
+    return measuredWidth >= Self.widthThreshold
+  }
+
   var body: some View {
-    GeometryReader { geo in
-      if geo.size.width >= Self.widthThreshold {
-        wideBody
-      } else {
-        narrowBody
+    // Measured on the reader's content, which is sized to the proposal, not
+    // on a layer in a stack beside the layouts: a stack proposes its union to
+    // that layer, so under an ideal-size pass it measured the wide layout's
+    // own ideal width, a real-looking value that swapped in the narrow layout.
+    GeometryReader { proxy in
+      Group {
+        if isWide {
+          wideBody
+        } else {
+          narrowBody
+        }
+      }
+      .frame(width: proxy.size.width, height: proxy.size.height)
+      .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+        guard width >= Self.tokenWidth else { return }
+        measuredWidth = width
       }
     }
   }
@@ -70,29 +110,31 @@ struct MobileAdaptiveListDetail<ID: Hashable, List: View, Detail: View, Placehol
 
       Group {
         if let selection {
-          // Host the detail column in its own navigation container so the
-          // detail's toolbar and title render in the detail pane's own bar,
-          // rather than merging into the list's nav bar (which would leave it
-          // ambiguous which pane a bar-level action targets). Mirrors
-          // `narrowBody`, where the pushed detail is likewise inside a
-          // `NavigationStack`.
-          NavigationStack {
-            detail(selection)
-          }
+          detail(selection)
         } else {
           placeholder
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .environment(\.mobileDetailPresentation, .pane)
+      // Both panes sit on the same grouped background so the divider is the
+      // only seam; a bare detail column would otherwise read as a white sheet
+      // beside the grouped list.
+      .background(LorvexDesign.Palette.groupedBackground)
     }
+    // The Tasks home caps its own content at a readable width through scroll
+    // content margins, and a workspace pushed from it inherits them. Each
+    // pane here is already narrower than that cap, so the panes go back to
+    // the system margins or the list's rows would be squeezed into a third
+    // of their column.
+    .contentMargins(.horizontal, nil, for: .scrollContent)
+    .environment(\.mobileReadableMargin, nil)
   }
 
   private var narrowBody: some View {
-    NavigationStack {
-      list
-        .navigationDestination(item: $selection) { id in
-          detail(id)
-        }
-    }
+    list
+      .navigationDestination(item: $selection) { id in
+        detail(id)
+      }
   }
 }

@@ -10,6 +10,8 @@ struct AppStoreListsStorage {
   var archivedLists: ListCatalogSnapshot?
   var selectedListID: LorvexList.ID?
   var selectedListDetail: ListDetailSnapshot?
+  /// True while the next page of the selected list's tasks is in flight.
+  var isLoadingMoreSelectedListTasks = false
   var selectedListTaskIDs = Set<LorvexTask.ID>()
   var draftListName = ""
   var draftListDescription = ""
@@ -23,6 +25,7 @@ struct AppStoreListsStorage {
     archivedLists = nil
     selectedListID = nil
     selectedListDetail = nil
+    isLoadingMoreSelectedListTasks = false
     selectedListTaskIDs.removeAll()
     draftListName = ""
     draftListDescription = ""

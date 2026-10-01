@@ -3,7 +3,7 @@ import Testing
 
 @testable import LorvexWidgetKitSupport
 
-/// Writes `data` to a fresh `widget_snapshot_v3.json` in a throwaway directory
+/// Writes `data` to a fresh `widget_snapshot.json` in a throwaway directory
 /// and returns the load result. The caller owns nothing to clean up beyond the
 /// process temp dir the OS reclaims.
 private func loadSnapshot(writing data: Data) throws -> WidgetSnapshotLoadResult {
@@ -31,11 +31,11 @@ func widgetSnapshotLoaderRejectsOversizedFileBeforeDecoding() throws {
 
 @Test
 func widgetSnapshotLoaderRejectsTooManyDecodedElements() throws {
-  // Small on disk (well under the byte cap) but carrying more focus rows than any
+  // Small on disk (well under the byte cap) but carrying more task rows than any
   // widget renders: the decoded-element bound must reject it after a clean decode.
   let overCount = WidgetSnapshotLoader.maxDecodedElements + 1
-  let focusTasks = (0..<overCount).map { index in
-    WidgetSnapshot.FocusTask(
+  let tasks = (0..<overCount).map { index in
+    WidgetSnapshot.TodayTask(
       id: "t\(index)",
       title: "t",
       status: "open",
@@ -48,9 +48,9 @@ func widgetSnapshotLoaderRejectsTooManyDecodedElements() throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: overCount, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: overCount, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: focusTasks
+    tasks: tasks
   )
   let encoded = try JSONEncoder().encode(snapshot)
   #expect(encoded.count <= WidgetSnapshotLoader.maxSnapshotBytes)
@@ -68,9 +68,9 @@ func widgetSnapshotLoaderAcceptsNormalSnapshot() throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
     briefing: "Start here.",
-    focusTasks: [
+    tasks: [
       .init(
         id: "task-1",
         title: "Render",
@@ -88,5 +88,5 @@ func widgetSnapshotLoaderAcceptsNormalSnapshot() throws {
     Issue.record("expected a valid snapshot to load, got \(result)")
     return
   }
-  #expect(loaded.focusTasks.count == 1)
+  #expect(loaded.tasks.count == 1)
 }

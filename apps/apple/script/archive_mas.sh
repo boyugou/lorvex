@@ -17,8 +17,8 @@
 # see .gitignore):
 #   MAS_APP_PROVISIONING_PROFILE          macOS app (Contents/embedded.provisionprofile) — required
 #   MAS_MCP_HOST_PROVISIONING_PROFILE     MCP helper .app bundle — required
-#   MAS_WIDGET_PROVISIONING_PROFILE       Focus widget .appex — required
-# The app, MCP helper, and Focus-widget profiles are all mandatory for
+#   MAS_WIDGET_PROVISIONING_PROFILE       widget .appex — required
+# The app, MCP helper, and widget profiles are all mandatory for
 # --package: a MAS package is never distributable without them, so --package
 # hard-fails immediately after packaging if any is missing (development
 # staging via package_local.sh/archive_local.sh keeps sign_app_bundle.sh's
@@ -119,7 +119,7 @@ package_mas() {
   }
   synth_entitlements "$MAS_ENTITLEMENTS_PATH" "$BUNDLE_ID" "$ent_dir/app.entitlements"
   synth_entitlements "$ROOT_DIR/Config/LorvexMCPHost.entitlements" "$MCP_HOST_BUNDLE_ID" "$ent_dir/helper.entitlements"
-  synth_entitlements "$ROOT_DIR/Config/LorvexWidgetExtension.entitlements" "$WIDGET_BUNDLE_ID" "$ent_dir/widget.entitlements"
+  synth_entitlements "$ROOT_DIR/Config/LorvexWidgetsMacOS.entitlements" "$WIDGET_BUNDLE_ID" "$ent_dir/widget.entitlements"
 
   (
     cd "$ROOT_DIR"
@@ -169,7 +169,7 @@ package_mas() {
     exit 1
   fi
   if [[ ! -f "$widget_profile" ]]; then
-    echo "MAS package is missing the required Focus-widget distribution provisioning profile: $widget_profile" >&2
+    echo "MAS package is missing the required widget distribution provisioning profile: $widget_profile" >&2
     echo "set MAS_WIDGET_PROVISIONING_PROFILE or place it at secrets/profiles/$WIDGET_EXECUTABLE.provisionprofile" >&2
     exit 1
   fi
@@ -205,6 +205,12 @@ validate_or_upload() {
     action=(--upload-app)
   fi
 
+  # Authenticate with the App Store Connect account, NOT the app record. For
+  # --validate-app/--upload-app, altool's `--apple-id` is the app's numeric
+  # Apple ID (a delivery target), while the account is `--username` +
+  # `--password`; passing the account email to `--apple-id` fails with
+  # "username and app password ... required".
+  #
   # Pass the app-specific password by env-var reference (`@env:`) rather than
   # its literal value, so it never appears in this process's argv (visible to
   # any `ps` on the host). altool reads APPLE_APP_PASSWORD from the environment,
@@ -212,7 +218,7 @@ validate_or_upload() {
   xcrun altool "${action[@]}" \
     -f "$PKG_PATH" \
     --type osx \
-    --apple-id "$APPLE_ID" \
+    --username "$APPLE_ID" \
     --password "@env:APPLE_APP_PASSWORD"
 }
 

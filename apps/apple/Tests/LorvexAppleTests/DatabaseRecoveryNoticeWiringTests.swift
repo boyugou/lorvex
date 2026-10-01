@@ -9,8 +9,8 @@ import Testing
 /// Before this the notice was dead code and a set-aside database was silent.
 @Suite("Database-recovery notice reaches the stores exactly once")
 struct DatabaseRecoveryNoticeWiringTests {
-  private func seededCore() async throws -> StubFocusCoreService {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  private func seededCore() async throws -> StubCoreService {
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
     core.databaseRecoveryNotice = DatabaseRecoveryNotice(
       backupPath: "/tmp/lorvex.incompatible-20260701.bak",
       reason: "schema checksum mismatch")

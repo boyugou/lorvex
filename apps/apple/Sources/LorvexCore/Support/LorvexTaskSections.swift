@@ -1,10 +1,10 @@
 import Foundation
 
 /// Canonical in-memory projection of an already-loaded task pool into the
-/// display sections every read surface shares (macOS Today, iOS/visionOS
-/// Today). Pure and synchronous: it never touches the store, so the paginated
-/// reads (`taskWorkspacePage`) stay the single source for large lists — this
-/// only classifies tasks already held in memory.
+/// display sections every read surface shares. Pure and synchronous: it never
+/// touches the store, so the paginated reads (`taskWorkspacePage`) stay the
+/// single source for large lists; this only classifies tasks already held in
+/// memory.
 ///
 /// The section rules live here, in one place, so no surface can drift:
 /// - **open**: an `open` task with no planned work day. A task that carries a
@@ -13,9 +13,8 @@ import Foundation
 ///   mutually exclusive.
 /// - **deferred**: an `open` task that carries a `plannedDate`.
 /// - **scheduled**: any task with a planned-or-due action date
-///   (`plannedDate ?? dueDate`), sorted by that date then title — the
+///   (`plannedDate ?? dueDate`), sorted by that date then title: the
 ///   calendar-lane projection mirroring the core's `getScheduledTasks`.
-/// - **focus**: see ``LorvexTaskSections/focus(order:resolve:)``.
 extension Collection where Element == LorvexTask {
   /// Open tasks with no planned work day; see the type-level rules.
   public var lorvexOpenSection: [LorvexTask] {
@@ -55,24 +54,15 @@ extension Collection where Element == LorvexTask {
 }
 
 public enum LorvexTaskSections {
-  /// Focus-plan tasks resolved from `taskIDs` in plan order (duplicate ids
-  /// dropped), passing each id through `resolve` and discarding ids that don't
-  /// resolve to a task. Order-preserving by construction: a surface must resolve
-  /// the plan's id order rather than filter a task pool by focus membership,
-  /// which would reorder the plan to the pool's order.
+  /// True when `task` is unresolved and carries a deadline `logicalDay` has
+  /// already passed; a completed or cancelled task is never overdue.
   ///
-  /// `resolve` is a closure so each surface can supply its own lookup pool —
-  /// macOS spans several loaded caches, the mobile snapshot resolves within the
-  /// Today pool — while the ordering and de-duplication stay identical.
-  public static func focus(
-    order taskIDs: [LorvexTask.ID],
-    resolve: (LorvexTask.ID) -> LorvexTask?
-  ) -> [LorvexTask] {
-    var seen = Set<LorvexTask.ID>()
-    var result: [LorvexTask] = []
-    for id in taskIDs where seen.insert(id).inserted {
-      if let task = resolve(id) { result.append(task) }
-    }
-    return result
+  /// Compares day strings in the storage frame: due dates are stored as UTC
+  /// calendar days and `logicalDay` is the configured-timezone day the surface is
+  /// showing, so a string compare is the same answer everywhere; no device
+  /// calendar gets to disagree at a day boundary.
+  public static func isOverdue(_ task: LorvexTask, logicalDay: String) -> Bool {
+    guard task.status.isActive, let dueDate = task.dueDate else { return false }
+    return LorvexDateFormatters.ymdUTC.string(from: dueDate) < logicalDay
   }
 }

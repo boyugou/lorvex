@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// One checklist row inside a task export, in display order.
 public struct ExportChecklistItem: Codable, Sendable {
@@ -143,6 +144,12 @@ public struct ExportTask: Codable, Sendable {
   public var status: String
   public var dueDate: String?
   public var plannedDate: String?
+  /// The start of the task's time on its planned day, `HH:MM`; present exactly
+  /// when ``plannedEndTime`` is.
+  public var plannedStartTime: String?
+  /// The end of the task's time on its planned day, `HH:MM`, with `24:00` for
+  /// the midnight that ends the day.
+  public var plannedEndTime: String?
   public var availableFrom: String?
   public var estimatedMinutes: Int?
   /// Tag display names as a first-class array. Omitted when the task has no tags.
@@ -178,6 +185,8 @@ public struct ExportTask: Codable, Sendable {
     status: String,
     dueDate: String?,
     plannedDate: String? = nil,
+    plannedStartTime: String? = nil,
+    plannedEndTime: String? = nil,
     availableFrom: String? = nil,
     estimatedMinutes: Int?,
     tags: [String]? = nil,
@@ -204,6 +213,8 @@ public struct ExportTask: Codable, Sendable {
     self.status = status
     self.dueDate = dueDate
     self.plannedDate = plannedDate
+    self.plannedStartTime = plannedStartTime
+    self.plannedEndTime = plannedEndTime
     self.availableFrom = availableFrom
     self.estimatedMinutes = estimatedMinutes
     self.tags = tags
@@ -234,6 +245,8 @@ public struct ExportTask: Codable, Sendable {
     // stores, so due/planned/availableFrom match every other exported timestamp.
     dueDate = task.dueDate.map { LorvexDateFormatters.iso8601Fractional.string(from: $0) }
     plannedDate = task.plannedDate.map { LorvexDateFormatters.iso8601Fractional.string(from: $0) }
+    plannedStartTime = task.plannedTime.map { TimeOfDay.rangeBoundString($0.lowerBound) }
+    plannedEndTime = task.plannedTime.map { TimeOfDay.rangeBoundString($0.upperBound) }
     availableFrom = task.availableFrom.map { LorvexDateFormatters.iso8601Fractional.string(from: $0) }
     estimatedMinutes = task.estimatedMinutes
     tags = task.tags.isEmpty ? nil : task.tags
@@ -260,7 +273,8 @@ public struct ExportTask: Codable, Sendable {
 
   static let columns = [
     "id", "title", "notes", "priority", "status", "dueDate", "estimatedMinutes", "tags",
-    "plannedDate", "availableFrom", "rawInput", "dependsOn", "listID", "aiNotes", "checklist",
+    "plannedDate", "plannedStartTime", "plannedEndTime", "availableFrom", "rawInput",
+    "dependsOn", "listID", "aiNotes", "checklist",
     "reminders", "recurrence", "recurrenceExceptions", "deferCount", "lastDeferReason",
     "lastDeferredAt", "completedAt", "createdAt", "updatedAt", "archivedAt",
   ]
@@ -269,7 +283,7 @@ public struct ExportTask: Codable, Sendable {
     [
       id, title, notes ?? "", priority, status, dueDate ?? "",
       estimatedMinutes.map(String.init) ?? "", (tags ?? []).joined(separator: "|"),
-      plannedDate ?? "", availableFrom ?? "",
+      plannedDate ?? "", plannedStartTime ?? "", plannedEndTime ?? "", availableFrom ?? "",
       rawInput ?? "", (dependsOn ?? []).joined(separator: "|"), listID ?? "", aiNotes ?? "",
       checklist.map { items in
         items.map { ($0.completed ? "[x] " : "[ ] ") + $0.text }.joined(separator: "|")
@@ -289,5 +303,31 @@ public struct ExportTask: Codable, Sendable {
       lastDeferReason ?? "", lastDeferredAt ?? "", completedAt ?? "", createdAt ?? "",
       updatedAt ?? "", archivedAt ?? "",
     ]
+  }
+}
+
+extension ExportTask {
+  /// ``plannedStartTime`` and ``plannedEndTime`` as minutes since midnight, or
+  /// nil when the task has no time. Half a pair, a malformed bound, or an end
+  /// not after the start throws a validation error for the record.
+  func plannedTimeRange() throws -> Range<Int>? {
+    switch (plannedStartTime, plannedEndTime) {
+    case (nil, nil):
+      return nil
+    case (let start?, let end?):
+      guard case .success(let startMinutes) = TimeOfDay.parseRangeEndMinutes(start),
+        case .success(let endMinutes) = TimeOfDay.parseRangeEndMinutes(end),
+        startMinutes < endMinutes
+      else {
+        throw LorvexCoreError.validation(
+          field: "plannedStartTime",
+          message: "A planned time must be a start before an end, each as HH:MM.")
+      }
+      return startMinutes..<endMinutes
+    default:
+      throw LorvexCoreError.validation(
+        field: "plannedStartTime",
+        message: "plannedStartTime and plannedEndTime go together: set both or neither.")
+    }
   }
 }

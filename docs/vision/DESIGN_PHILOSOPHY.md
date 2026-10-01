@@ -64,10 +64,10 @@ Cal Newport's core insight: protecting time for important, non-urgent work befor
 
 **AI implementation:** AI assistant knows your calendar, your task list, and your priorities. When you ask it to plan, it proposes a time-blocked schedule. You approve or adjust. Auto-scheduling, but with intelligence: AI picks which tasks belong today, not just packs them sequentially.
 
-### Ivy Lee Method → AI proposes the daily 6
-The Ivy Lee Method works because it eliminates morning decision fatigue. But identifying the right 6 tasks still requires judgment.
+### Ivy Lee Method → AI proposes the day's short list
+The Ivy Lee Method works because it eliminates morning decision fatigue. But choosing the right short list still requires judgment.
 
-**AI implementation:** When you ask it to plan your day, AI assistant proposes a list of 3-6 focus tasks, ranked by a combination of: deadline proximity, dependency chains, and stated priorities. Human confirms or adjusts.
+**AI implementation:** When you ask it to plan your day, AI assistant proposes as many tasks as the day's free time holds, measured by their estimates against the hours left after meetings, and ranked by a combination of: deadline proximity, dependency chains, and stated priorities. Human confirms or adjusts.
 
 ### Eisenhower Matrix → AI classifies on arrival
 Urgent/important classification is valuable but tedious to apply manually to every task.
@@ -122,7 +122,7 @@ The most important design principle, and the one most likely to be forgotten dur
 
 Current-product exception: AI-managed priority remains canonical, while human override and power-user controls are shipped correction affordances. Quick Capture, task detail, context menus, filters, and move-to-list controls are valid when they help the user correct AI output, inspect a full workspace, or make a deliberate power-user adjustment. They must not become the default task-row management model.
 
-What remains: a reading experience with occasional taps. Checkbox, title, duration. That's a task row. The daily view is a clean briefing, not a spreadsheet-style management grid.
+What remains: a reading experience with occasional taps. Checkbox, title, duration. That's a task row. The daily view is a clean briefing, not a spreadsheet-style management grid. A briefing still leaves nothing out: every task the user or the assistant put on today stays in view, in the plan's order. Simplicity removes controls, never the work; only records, such as what is already done, fold away.
 
 This is not minimalism for aesthetic reasons. It's minimalism because **the AI already processed the complexity and presented the conclusion.** The human doesn't need to see the inputs when they can see the output.
 
@@ -171,7 +171,7 @@ time-on-task — see the non-goals.
 
 ### 6. Views Are AI-Curated, Not Raw Data
 The human-facing interface is a curated presentation over persisted planning state, not a raw table browser. AI decides:
-- What 3-6 tasks to surface in Today's focus
+- Which tasks belong on today
 - How to order the backlog
 
 Humans can always see everything (search, full lists) but the default view is the AI's editorial curation.
@@ -188,7 +188,7 @@ No drag-to-reorder as primary organization: AI handles order. AI-managed priorit
 
 ### 8. You Tell the AI, Not the App — and the App Stays Calm
 Input is conversational: you tell the AI what you need instead of filling out forms. You then
-read the result in a calm, curated surface — today's focus, your plan, what changed — opening the
+read the result in a calm, curated surface — Today, your plan, what changed — opening the
 app when you want to see where things stand. The app does not push a stream of notifications or
 nudges at you, and it does not act as a proactive assistant that reaches out on its own; it is a
 read-and-correct surface, not a notification stream. (Reminders you deliberately set on a task or
@@ -226,7 +226,7 @@ This is a core differentiator. On capable desktop runtimes, the MCP server gives
 
 But the app is not just a passive persistence viewer. The human needs tools that the AI cannot provide:
 
-- **Today's Focus** — the AI-curated, human-adjustable day plan. The AI proposes what to work on (and optionally when), but the human decides the day and works the plan in their own order.
+- **Today** — the assistant-curated, human-adjustable day list. The assistant decides which tasks are on today (and optionally when) and writes a short briefing, but the human works the list in their own order.
 - **Eisenhower Matrix** — spatial reasoning about urgency vs. importance. Urgency is determined by deadline proximity (due within 3 days = urgent). The human benefits from seeing the quadrant layout.
 - **Calendar Grid** — temporal visualization that gives a sense of density and rhythm. The AI schedules, but the human needs to see the shape of their week.
 - **Daily Review** — reflective writing about mood, energy, wins, and blockers. The AI can analyze patterns, but the human does the reflecting.
@@ -260,7 +260,7 @@ No human does this analysis. No existing tool does either. This is the genuine c
 
 Traditional apps expose the same settings to everyone. An AI-native app has **two configuration surfaces with different scopes:**
 
-- **AI configuration** (via MCP): dashboard layout, task priorities, task sort order, memory sections, today's focus composition. These are things AI manages better than humans.
+- **AI configuration** (via MCP): dashboard layout, task priorities, task sort order, memory sections, which tasks are on today. These are things AI manages better than humans.
 - **Human settings** (via UI): working hours, notification preferences, privacy levels, theme, export. These are things that require human judgment or personal preference.
 
 The human settings page is an **executive override panel**, not a full control panel. It deliberately omits things that AI handles — not to hide them (they're visible in the changelog and memory view), but because surfacing them as toggles adds cognitive load without adding value.
@@ -286,7 +286,7 @@ This means: the more the AI earns trust, the simpler the human interface becomes
 8. **UI complexity as a proxy for power.** More features ≠ better product. Every element we add is complexity the user must process. In a tool used daily, cognitive overhead compounds. Ruthlessly cut anything that doesn't directly serve "what should I do next?"
 9. **Turning Lorvex into a full calendar suite.** We support lightweight calendar-event capture/editing to protect schedule realism, but we do not aim to compete with full-featured calendar products. The core remains tasks, plans, and execution decisions.
 10. **Task hierarchy (nested parent/child tasks).** No `parent_id` task tree. A parent task whose subtasks carry independent dates spanning many days has no non-awkward timeline or Today placement, and it duplicates primitives Lorvex already has. Decomposition collapses into two tiers instead: in-task steps with no independent scheduling are a **checklist** (`task_checklist_items`); a multi-day effort whose members each own a date is a **list-as-project** — a `list` of independent dated tasks ordered by `task_dependencies`, where only the dated member tasks land on the timeline (one clear position each) and the list container never does. This also fits the AI-first model: the assistant authors *a list + dated tasks + dependencies*, which is more natural to generate and cleaner to display than a nested tree.
-11. **Actual time-on-task tracking.** We store a duration *estimate* — which drives scheduling — but deliberately do not record how long a task actually took. Reliable time-on-task is impractical under real parallel work, the capture UI is intrusive for little payoff, and an earlier implementation was removed. Estimates are AI-proposed and human-adjustable; there is no estimate-vs-actual feedback loop. This also rules out a running "focus session" timer or a Focus Live Activity — a live countdown is tracked time-on-task by another name, and glanceable focus/habit visibility (including on the Lock Screen) is already a widget's job. A standalone opt-in Pomodoro could serve the niche who want one later, without turning the app into a time tracker.
+11. **Actual time-on-task tracking.** We store a duration *estimate* — which drives scheduling — but deliberately do not record how long a task actually took. Reliable time-on-task is impractical under real parallel work, the capture UI is intrusive for little payoff, and an earlier implementation was removed. Estimates are AI-proposed and human-adjustable; there is no estimate-vs-actual feedback loop. This also rules out a running session timer or a Live Activity for the task in progress — a live countdown is tracked time-on-task by another name, and glanceable task/habit visibility (including on the Lock Screen) is already a widget's job. A standalone opt-in Pomodoro could serve the niche who want one later, without turning the app into a time tracker.
 
 ---
 
@@ -301,7 +301,7 @@ Habits and recurring tasks are deliberately **separate concepts with different h
 If this works as designed:
 - Your todo list is never stale (AI maintains it)
 - You never miss a deadline because something slipped through (AI tracks dependencies and deadlines)
-- You never open your app not knowing what to do next (AI has already curated today's focus)
+- You never open your app not knowing what to do next (AI has already curated today)
 - Your weekly review is a 15-minute approval session, not a 90-minute clerical ordeal
 - Your day is time-blocked and scheduled by AI before you start work
 - AI assistant in an MCP client is a primary automation surface for managing your task system, alongside the app's own execution and review surfaces

@@ -76,8 +76,8 @@ extension SwiftLorvexCoreService {
   }
 
   /// Delete every locally-known decision row linked to `seriesId` matching
-  /// `scope`, using the canonical single-row delete (sync tombstone + focus
-  /// cleanup + changelog). This is bounded storage cleanup only. A peer may
+  /// `scope`, using the canonical single-row delete (sync tombstone +
+  /// changelog). This is bounded storage cleanup only. A peer may
   /// replay an old-generation decision after the sweep; it remains invisible.
   @discardableResult
   func sweepSeriesDecisions(
@@ -149,9 +149,8 @@ extension SwiftLorvexCoreService {
   }
 
   /// Delete one `calendar_events` row with the full bookkeeping: edge tombstones
-  /// (task↔event links) before the cascade, focus-schedule cleanup, the sync
-  /// delete envelope (built from the pre-delete aggregate snapshot), and the
-  /// changelog row. Returns whether a row was actually removed. Shared by the
+  /// (task↔event links) before the cascade, the sync delete envelope (built
+  /// from the pre-delete aggregate snapshot), and the changelog row. Returns whether a row was actually removed. Shared by the
   /// whole-event delete and every series sweep.
   @discardableResult
   func deleteCalendarEventRowInline(
@@ -171,10 +170,6 @@ extension SwiftLorvexCoreService {
       db, eventId: id, deviceId: deviceId, mintVersion: { hlc.nextVersionString() })
     try db.execute(sql: "DELETE FROM calendar_events WHERE id = ?", arguments: [id])
     let deleted = db.changesCount > 0
-    // Deterministic segment ids can be referenced by a focus schedule or link
-    // before their private event row arrives (event-first import/sync). Always
-    // clean dependent references, even when the event row itself is absent.
-    try removeCalendarEventFromFocusSchedules(db, hlc: hlc, deviceId: deviceId, calendarEventID: id)
     if deleted {
       if let eventSnapshot {
         try enqueueDelete(

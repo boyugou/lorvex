@@ -34,12 +34,11 @@ struct LorvexWatchMutationCodableTests {
         == .deferTaskToTomorrow(id: id, plannedDate: "2026-05-25"))
   }
 
-  @Test("removeFromFocus round-trips")
-  func removeFromFocus() throws {
+  @Test("startTask and pauseTask round-trip")
+  func startAndPauseTask() throws {
     let id = LorvexTask.ID("task-4")
-    #expect(
-      try roundTrip(.removeFromFocus(id: id, date: "2026-05-24"))
-        == .removeFromFocus(id: id, date: "2026-05-24"))
+    #expect(try roundTrip(.startTask(id: id)) == .startTask(id: id))
+    #expect(try roundTrip(.pauseTask(id: id)) == .pauseTask(id: id))
   }
 
   @Test("captureTask round-trips")

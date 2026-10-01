@@ -8,10 +8,12 @@ func widgetRenderModelOptimizesAccessoryInlineForOneLine() {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 0),
     briefing: "Hidden in inline family",
-    focusTasks: [
-      widgetFocusTask(id: "task-inline", title: "One-line focus", priority: 1, estimatedMinutes: 10)
+    tasks: [
+      widgetTodayTask(
+        id: "task-inline", title: "One-line task",
+        status: LorvexTask.Status.inProgress.rawValue, priority: 1, estimatedMinutes: 10)
     ]
   )
   let now = Date(timeIntervalSince1970: 1_779_465_600)
@@ -27,9 +29,9 @@ func widgetRenderModelOptimizesAccessoryInlineForOneLine() {
     statusText: "Updated now"
   )
 
-  #expect(model.headline == "One-line focus")
+  #expect(model.headline == "One-line task")
   #expect(model.taskRows.isEmpty)
-  #expect(model.focusCountText == "1 in focus")
+  #expect(model.lead?.id == "task-inline")
   #expect(model.urlString == "lorvex://task/task-inline")
 }
 
@@ -38,17 +40,19 @@ func widgetRenderModelAccessoryInlineLinksToFirstOpenTask() {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 2, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: [
-      widgetFocusTask(
+    tasks: [
+      widgetTodayTask(
         id: "done-inline",
         title: "Completed inline task",
         status: LorvexTask.Status.completed.rawValue,
         priority: 1,
         estimatedMinutes: 20
       ),
-      widgetFocusTask(id: "open-inline", title: "Open inline task", priority: 2, estimatedMinutes: 30),
+      widgetTodayTask(
+        id: "open-inline", title: "Open inline task",
+        status: LorvexTask.Status.inProgress.rawValue, priority: 2, estimatedMinutes: 30),
     ]
   )
   let entry = WidgetTimelineEntry(
@@ -65,4 +69,32 @@ func widgetRenderModelAccessoryInlineLinksToFirstOpenTask() {
 
   #expect(model.headline == "Open inline task")
   #expect(model.urlString == "lorvex://task/open-inline")
+}
+
+@Test
+func widgetRenderModelAccessoryInlineSaysWhatIsLeftWhenNoTaskLeads() {
+  let snapshot = WidgetSnapshot(
+    generatedAt: "2026-05-22T16:00:00Z",
+    timezone: "UTC",
+    stats: .init(todayCount: 2, overdueCount: 0, dueTodayCount: 0),
+    briefing: nil,
+    tasks: [
+      widgetTodayTask(id: "a", title: "Untimed A", priority: 1, estimatedMinutes: 30),
+      widgetTodayTask(id: "b", title: "Untimed B", priority: 2, estimatedMinutes: 90),
+    ]
+  )
+  let entry = WidgetTimelineEntry(
+    date: Date(timeIntervalSince1970: 1_779_465_600),
+    state: .snapshot(snapshot, freshness: .fresh(ageSeconds: 0)),
+    refreshAfter: Date(timeIntervalSince1970: 1_779_467_400)
+  )
+
+  let model = WidgetRenderModelBuilder().model(
+    entry: entry, family: .accessoryInline, statusText: "Updated now")
+
+  #expect(model.state == .content)
+  #expect(model.lead == nil)
+  #expect(model.dayLine == "2 left today · about 2 hr")
+  #expect(model.urlString == LorvexDeepLinkContract.destinationURLString(.today))
+  #expect(model.circularContent == .remaining(2))
 }

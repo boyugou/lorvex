@@ -5,59 +5,11 @@ import LorvexCore
 import Testing
 
 @testable import LorvexApple
+@testable import LorvexCloudSync
 
-/// Remote-change fetcher modelling an inbound CloudKit page that lands during a
-/// refresh's tail sync cycle. On its FIRST fetch it applies one record to the
-/// core — a task the pre-sync fan-out never loaded — and returns a page carrying
-/// a record so the cycle reports `fetchedRecordCount > 0`; every later fetch is
-/// empty so the drain converges after one iteration.
-///
-/// The apply is a direct `createTask` rather than an envelope decode: the
-/// AppStore refresh lifecycle only observes `fetchedRecordCount > 0` and the
-/// post-apply DB, so this drives that surface without hand-building a wire
-/// envelope. The returned record's type is irrelevant to the count — a
-/// non-Lorvex record is ignored by the engine's apply but still counted as
-/// fetched, which is exactly the signal the rerun trigger reads.
-private actor InboundApplyingFetcher: CloudSyncRemoteChangeFetching {
-  private let core: SwiftLorvexCoreService
-  private var didApply = false
-  private(set) var appliedTaskID: LorvexTask.ID?
-
-  init(core: SwiftLorvexCoreService) { self.core = core }
-
-  func fetchChanges(
-    after checkpoint: CloudSyncChangeCursor?,
-    context: CloudSyncGenerationContext,
-    traversalWitnessIdentifier: String?,
-    boundaryGuard _: (@Sendable () async -> Bool)?
-  ) async throws -> CloudSyncRemoteChangeBatch {
-    guard !didApply else {
-      return CloudSyncRemoteChangeBatch(
-        records: [], serverChangeTokenData: Data([0x02]),
-        moreComing: false,
-        observedGenerationRoot: true,
-        observedReadyWitness: context.readyWitness,
-        observedTraversalWitnessIdentifiers: traversalWitnessIdentifier.map { [$0] } ?? [])
-    }
-    didApply = true
-    let created = try await core.createTask(title: "Inbound-applied task", notes: "")
-    appliedTaskID = created.id
-    let marker = CKRecord(
-      recordType: "NotLorvex",
-      recordID: CKRecord.ID(
-        recordName: "inbound-marker",
-        zoneID: context.zoneID))
-    return CloudSyncRemoteChangeBatch(
-      records: [marker], serverChangeTokenData: Data([0x01]),
-      moreComing: false,
-      observedGenerationRoot: true,
-      observedReadyWitness: context.readyWitness,
-      observedTraversalWitnessIdentifiers: traversalWitnessIdentifier.map { [$0] } ?? [])
-  }
-}
-
-/// Suspends the first coordinator account probe so the test can issue another
-/// AppStore-level sync trigger while the first pass is definitely in flight.
+/// Suspends the first account probe (the controller's start) so the test can
+/// issue another AppStore-level sync trigger while the first pass is
+/// definitely in flight.
 private actor AppStoreCloudSyncAccountGate: CloudKitAccountStatusChecking {
   private var entered = false
   private var released = false
@@ -88,48 +40,48 @@ private actor AppStoreCloudSyncAccountGate: CloudKitAccountStatusChecking {
   }
 }
 
-// concurrency-M3: on macOS the tail sync cycle of `refresh()` can apply inbound
-// records AFTER the fan-out already read the UI surfaces and republished the
-// widget. Mobile reruns its local-surface load on `.newData`; macOS must mirror
-// that by reusing the single-flight `refresh()` loop — setting `refreshPending`
-// so the in-flight fan-out reruns once, re-reading the applied records into the
-// cached Today surface and republishing the widget in the same cycle instead of
-// stranding them until an unrelated later refresh.
+@MainActor
+private final class CompletionFlag {
+  var isSet = false
+}
+
+// On macOS the tail sync pass of `refresh()` can apply inbound records AFTER
+// the fan-out already read the UI surfaces and republished the widget. The
+// store reuses the single-flight `refresh()` loop — the in-flight fan-out
+// reruns once, re-reading the applied records into the cached Today surface
+// and republishing the widget in the same refresh.
 @MainActor
 @Test("an inbound sync applying records mid-refresh reruns the fan-out so they reach the UI and widget")
 func appStoreRerunsFanOutWhenInboundSyncAppliesRecordsMidRefresh() async throws {
   let core = try makeInMemoryCore()
-  let fetcher = InboundApplyingFetcher(core: core)
+  let logicalDay = try await core.loadToday().logicalDay
+  let (appliedID, records) = try await TestCloudSync.peerRecords { peer in
+    try await peer.createTask(
+      TaskCreateDraft(
+        title: "Inbound-applied task",
+        plannedDate: logicalDay.flatMap(LorvexDateFormatters.ymdUTC.date(from:)))
+    ).id
+  }
+  let sync = TestCloudSync(store: core)
+  try await sync.deliverOnFirstFetch(records)
   let widget = RecordingWidgetSnapshotPublisher()
-  let coordinator = CloudSyncEngineCoordinator(
-    accountChecker: StubAccountStatusChecker(availability: .available),
-    pusher: RecordingRecordPusher(),
-    fetcher: fetcher,
-    accountIdentifier: StubAccountIdentifier(identifier: "inbound-rerun-account"),
-    accountIdentityStore: RecordingAccountIdentityStore(),
-    accountPauseStore: RecordingCloudSyncPauseStore())
   let store = AppStore(
     core: core,
     widgetSnapshotPublisher: widget,
     cloudSyncMode: .live,
-    cloudSyncCoordinator: coordinator)
+    cloudSyncController: sync.controller)
 
   // Empty core: the first fan-out loads zero open tasks and publishes the widget
-  // once; the tail sync cycle then applies the inbound task. The applied task is
-  // committed before the cycle returns, so a rerun of the fan-out sees it.
+  // once; the tail sync pass then applies the inbound task.
   await store.refresh()
 
-  let appliedID = try #require(await fetcher.appliedTaskID)
+  let id = appliedID
   // Reaching the CACHED Today surface (not a live re-query) proves the fan-out
-  // reran after the inbound apply — the first fan-out loaded before the task
-  // existed, so its presence here means a second load committed it to state.
-  #expect(store.today.tasks.contains { $0.id == appliedID })
-  // The widget snapshot was republished from the reloaded state: two publishes
-  // total (one per fan-out). Exactly two also proves the coalescing settled
-  // without stampeding into further reruns — the drained backlog fetches nothing
-  // on the rerun's own cycle.
+  // reran after the inbound apply.
+  #expect(store.today.tasks.contains { $0.id == id })
+  // Two publishes total (one per fan-out): the coalescing settled without
+  // further reruns, since the rerun's own pass fetches nothing.
   #expect(widget.publishedSnapshots().count == 2)
-  // The single-flight loop left no dangling state.
   #expect(store.isRefreshing == false)
   #expect(store.refreshPending == false)
 }
@@ -137,18 +89,14 @@ func appStoreRerunsFanOutWhenInboundSyncAppliesRecordsMidRefresh() async throws 
 @MainActor
 @Test("a CloudSync trigger arriving mid-cycle runs one serialized trailing pass")
 func appStoreCloudSyncCycleCoalescesOverlappingTriggers() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
   let accountGate = AppStoreCloudSyncAccountGate()
-  let coordinator = CloudSyncEngineCoordinator(
-    accountChecker: accountGate,
-    pusher: RecordingRecordPusher(),
-    fetcher: StubRemoteChangeFetcher(records: []),
-    accountIdentifier: StubAccountIdentifier(identifier: "account-A"),
-    accountIdentityStore: RecordingAccountIdentityStore(initial: "account-A"))
+  let sync = TestCloudSync(store: preview, accountChecker: accountGate)
   let store = AppStore(
     core: core,
     cloudSyncMode: .live,
-    cloudSyncCoordinator: coordinator)
+    cloudSyncController: sync.controller)
 
   let first = Task { await store.runCloudSyncCycle() }
   await accountGate.waitUntilEntered()
@@ -165,7 +113,82 @@ func appStoreCloudSyncCycleCoalescesOverlappingTriggers() async throws {
   await first.value
   await overlapping.value
 
-  #expect(await accountGate.callCount == 2)
+  // The controller started once; the trailing pass reused it.
+  #expect(await accountGate.callCount == 1)
+  #expect(try sync.engine.fetchCount == 2)
   #expect(!store.cloudSyncCycleFlight.isRunning)
   #expect(!store.cloudSyncCycleFlight.isPendingRerun)
+}
+
+// A pass that runs outside a refresh (the post-mutation drain, or one the
+// engine ran on its own) and fetches records it cannot attribute — this
+// device's own uploads coming back, all skipped as already applied — falls
+// back to a full local reload. That reload must not wait on the pass running
+// it; if it did, the pass and the refresh would each wait for the other.
+@MainActor
+@Test("an unattributable inbound page outside a refresh reloads without wedging either flight")
+func appStoreUnattributableInboundOutsideRefreshDoesNotWedge() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let sync = TestCloudSync(store: preview)
+  _ = await sync.controller.start()
+  let echo = await sync.controller.nextBatch(scope: .all)
+  try #require(!echo.isEmpty)
+  try await sync.deliverOnFirstFetch(echo)
+  let store = AppStore(
+    core: core,
+    cloudSyncMode: .live,
+    cloudSyncController: sync.controller)
+  let loadsBefore = core.loadTodayCallCount
+
+  let finished = CompletionFlag()
+  Task { @MainActor in
+    await store.runCloudSyncCycle()
+    finished.isSet = true
+  }
+  for _ in 0..<500 where !finished.isSet {
+    try await Task.sleep(for: .milliseconds(10))
+  }
+
+  #expect(finished.isSet)
+  // The fallback reload re-read local surfaces from the post-apply state.
+  #expect(core.loadTodayCallCount > loadsBefore)
+  #expect(!store.isRefreshing)
+  #expect(!store.cloudSyncCycleFlight.isRunning)
+}
+
+// The local pass of a refresh must not wait on CloudKit. A helper-process
+// write (the MCP host, a widget) raises a change signal whose refresh has to
+// reach the UI even while a sync pass is stuck on a slow network; only the
+// refresh's sync tail may wait for that pass.
+@MainActor
+@Test("a refresh reloads local surfaces while a sync cycle is still waiting on the network")
+func appStoreLocalRefreshDoesNotWaitOnInFlightCycle() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let accountGate = AppStoreCloudSyncAccountGate()
+  let sync = TestCloudSync(store: preview, accountChecker: accountGate)
+  let store = AppStore(
+    core: core,
+    cloudSyncMode: .live,
+    cloudSyncController: sync.controller)
+
+  // A post-mutation drain is in flight and suspended on the network.
+  let cycle = Task { await store.runCloudSyncCycle() }
+  await accountGate.waitUntilEntered()
+  let loadsBefore = core.loadTodayCallCount
+
+  let refresh = Task { await store.refresh() }
+  for _ in 0..<500 where core.loadTodayCallCount == loadsBefore || store.isRefreshing {
+    try await Task.sleep(for: .milliseconds(10))
+  }
+
+  #expect(core.loadTodayCallCount > loadsBefore)
+  #expect(!store.isRefreshing)
+  #expect(store.isCloudSyncCycleRunning)
+
+  await accountGate.release()
+  await cycle.value
+  await refresh.value
+  #expect(!store.isCloudSyncCycleRunning)
 }

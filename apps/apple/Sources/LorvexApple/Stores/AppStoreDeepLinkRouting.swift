@@ -39,7 +39,7 @@ extension AppStore {
     case .task(let id):
       selectedTaskID = id
       selection = .tasks
-      if taskForFocusSurface(id: id) != nil {
+      if todayTask(id: id) != nil {
         syncSelectedTaskDraft()
         return nil
       }

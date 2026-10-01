@@ -3,12 +3,8 @@
 # Regenerate the Apple-native app icon (`Resources/AppIcon/LorvexAppIcon.icns`)
 # from the brand master PNG (`Resources/AppIcon/master_1024.png`).
 #
-# The master is the SHARED Lorvex brand mark — the same artwork the Tauri app
-# bundles (`apps/tauri/app/src-tauri/icons/icon-1024.png`). Both apps render one
-# identical icon. To refresh the brand: update the master here AND the Tauri
-# source together, then re-run this script. (The apps stay independent — each
-# keeps its own copy of the asset; this script only rebuilds the `.icns` from
-# the local master.)
+# The master is the Lorvex brand mark. To refresh the brand, replace the master
+# and re-run this script; it only rebuilds the `.icns` from the local master.
 #
 # Usage: script/generate_app_icon.sh
 set -euo pipefail

@@ -2,9 +2,9 @@ import LorvexCore
 import SwiftUI
 
 extension SidebarSelection {
-  /// Product-facing title for macOS navigation. The shared enum case remains
-  /// `.calendar` because the backing data is a calendar timeline, and the Mac
-  /// surface should describe that durable mental model directly.
+  /// The shared enum's English name ("Calendar", "Tasks", "Reviews"). The command
+  /// palette matches it alongside ``macOSLocalizedTitle``, so a search for the
+  /// data's plain name still finds the destination the sidebar calls Plan.
   var macOSDisplayTitle: String {
     title
   }
@@ -12,11 +12,11 @@ extension SidebarSelection {
   var macOSLocalizedTitle: LocalizedStringResource {
     switch self {
     case .today: LocalizedStringResource("sidebar.item.today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .tasks: LocalizedStringResource("sidebar.item.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .tasks: LocalizedStringResource("sidebar.item.tasks", defaultValue: "All Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
     case .lists: LocalizedStringResource("sidebar.item.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle)
     case .calendar: LocalizedStringResource("sidebar.item.calendar", defaultValue: "Calendar", table: "Localizable", bundle: LorvexL10n.bundle)
     case .habits: LocalizedStringResource("sidebar.item.habits", defaultValue: "Habits", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .reviews: LocalizedStringResource("sidebar.item.reviews", defaultValue: "Reviews", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .reviews: LocalizedStringResource("sidebar.item.reviews", defaultValue: "Review", table: "Localizable", bundle: LorvexL10n.bundle)
     case .memory: LocalizedStringResource("sidebar.item.memory", defaultValue: "Memory", table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
@@ -27,17 +27,18 @@ extension SidebarSelection {
   /// lists appear as sections that scope the Tasks surface rather than as more
   /// fixed abstract destinations.
   static let mainNavigationItems: [SidebarSelection] = [
-    // The macOS app's human surfaces, in sidebar order.
-    .today, .calendar, .tasks, .lists, .habits, .reviews, .memory,
+    // The sidebar's destinations top to bottom, Memory from its pinned footer
+    // included, so ⌘1–⌘6 walk them in order; then the Lists catalog, which has
+    // no row of its own.
+    .today, .calendar, .tasks, .reviews, .habits, .memory, .lists,
   ]
 
-  /// The fixed sidebar destinations: only the durable Plan and Reflect surfaces.
-  /// Real Lists are rendered by `SidebarView` from user data
-  /// between Plan and Reflect; AI-owned analytical/transparency surfaces stay in
-  /// the Navigate menu, command palette, or MCP layer.
+  /// The fixed sidebar destinations: the day, the week, every task, the review,
+  /// and habits. Real lists follow them as sections rendered by `SidebarView`.
+  /// Memory is the assistant's context rather than a place the user works, so it
+  /// sits in the sidebar's pinned footer beside Settings instead of among them.
   static let sidebarGroups: [SidebarGroup] = [
-    SidebarGroup(kind: .plan, items: [.today, .calendar, .tasks]),
-    SidebarGroup(kind: .reflect, items: [.habits, .reviews, .memory]),
+    SidebarGroup(kind: .plan, items: [.today, .calendar, .tasks, .reviews, .habits])
   ]
 
   /// The `⌘`-modified accelerator for jumping to this destination from the
@@ -49,8 +50,8 @@ extension SidebarSelection {
     case .today: "1"
     case .calendar: "2"
     case .tasks: "3"
-    case .habits: "4"
-    case .reviews: "5"
+    case .reviews: "4"
+    case .habits: "5"
     case .memory: "6"
     // `.lists` has no sidebar row (lists are managed inline; the catalog is
     // reached via ⌘K), so it gets no numeric accelerator.
@@ -69,12 +70,4 @@ struct SidebarGroup: Identifiable {
 
 enum SidebarGroupKind: Hashable {
   case plan
-  case reflect
-
-  var localizedTitle: LocalizedStringResource {
-    switch self {
-    case .plan: LocalizedStringResource("sidebar.section.plan", defaultValue: "Plan", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .reflect: LocalizedStringResource("sidebar.section.reflect", defaultValue: "Reflect", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-  }
 }

@@ -58,15 +58,12 @@ active reads use the existing `archived_at IS NULL` partial indexes.
 `INTEGER PRIMARY KEY AUTOINCREMENT` rowid (`ORDER BY id ASC LIMIT`) over a narrow
 unsynced partial index. A second partial index on `(next_retry_at, id)` covers
 only ordinary `retry_wait` rows, making due recovery bounded without taxing
-active/synced history; ordinarily empty partial indexes on
-`authoritative_session_token` and `created_at` give intentional adoption fences
-bounded session cleanup/FK cascade and defensive retention paths respectively.
-`disposition` separates automatically recoverable
-push/decode failures from intentional `authoritative_adoption` fences; retention
-GC prunes synced history and intentional fences but never deletes retry-wait
-work. Every adoption fence is FK-owned by its durable snapshot session and is
-deleted, never re-armed, on finalize/cancel; `ON DELETE CASCADE` prevents orphan
-fences from permanently occupying the per-entity unsynced slot.
+active/synced history, and an ordinarily empty partial index on
+`(entity_type, entity_id, future_record_version)` finds the future-record hold
+a newly understood record releases. `disposition` separates automatically
+recoverable push/decode failures (`retry_wait`) from local intents held behind
+a record this build cannot read (`future_record_hold`); retention GC prunes
+synced history but never deletes retry-wait work or a held intent.
 `consecutive_error_count <= retry_count` makes the poison-row acceleration
 an explicit per-record streak rather than an inference from unrelated failures.
 Tombstones, payload shadows, checkpoints, conflict log, pending inbox, and
@@ -122,11 +119,6 @@ match the family's meaning.
   - `calendar_events.recurrence_generation`: the occurrence-decision era of a
     recurring master. A topology change mints a new generation; only decisions
     carrying the current generation are active.
-  - CloudKit sync generation (`sync_cloudkit_generation_descriptor`,
-    `sync_generation_snapshot_*`): the rebuild epoch of the account's record
-    zone. The `sync_generation_snapshot_*` family is the outbound publish
-    pipeline; the `sync_authoritative_snapshot*` family is the inbound
-    adoption counterpart.
   - Storage generation (store cutover): the on-disk store-directory epoch the
     cutover lease switches between. Local-only, never synced.
 - **Reminder delivery vocabulary — "armed" then "delivered".** `last_armed_at`
@@ -134,9 +126,9 @@ match the family's meaning.
   `last_delivered_at` stamps the observed fire-time passing (the OS has
   presented it). Neither is synced.
 - **Outbox "disposition".** `sync_outbox.disposition` classifies a parked
-  row's resolution path (`retry_wait`, `authoritative_adoption`,
-  `future_record_hold`); `NULL` is the ordinary active/synced state. Only
-  `retry_wait` is a failure; the other two are deliberate fences.
+  row's resolution path (`retry_wait` or `future_record_hold`); `NULL` is the
+  ordinary active/synced state. Only `retry_wait` is a failure; a
+  future-record hold is a deliberate fence.
 
 ## Migration model: two regimes, split at first public release
 
@@ -149,8 +141,7 @@ from a byte-identical copy of that directory
 (`apps/apple/script/verify_schema_embed.sh` enforces the embed;
 `schema/migrations/README.md` is the full contract). This ladder and freeze
 govern the **Apple app's own** post-launch schema evolution for Apple↔Apple
-multi-device rolling upgrades; the Tauri app is only directionally aligned, not
-byte-locked. `apps/apple/script/verify_schema_freeze.py`,
+multi-device rolling upgrades. `apps/apple/script/verify_schema_freeze.py`,
 `apps/apple/script/verify_migration_ladder.py`, and
 `apps/apple/script/verify_sync_payload_contract.py` enforce the split on every
 gate: dormant (advisory) while `launched: false`, armed once `launched: true`.
@@ -162,7 +153,7 @@ public release, a wire-contract change requires an explicit payload-schema bump
 and the next contiguous `schema/sync_payload/NNN.json`, even when it needs no DDL
 migration.
 
-### Pre-launch (`launched: false`) — the current regime
+### Pre-launch (`launched: false`)
 
 No installed device carries a Lorvex database yet, so the baseline is free to
 change. There is one consolidated schema and no incremental migrations:
@@ -182,7 +173,11 @@ file) it renames the file aside to a timestamped `…incompatible-<stamp>.bak`
 (preserved, never deleted) and recreates a fresh database. So a pre-launch schema
 change never requires hand-written migration code — only a lock regen.
 
-### Post-launch (`launched: true`) — frozen baseline
+### Post-launch (`launched: true`) — frozen baseline, the current regime
+
+The guard is armed: `schema/migration_policy.json` carries `launched: true` and a
+populated `frozen_baseline`, so the rules below are the ones in force. Edit
+`schema/schema.sql` in place and the freeze gate rejects it.
 
 The first public install pins the version-1 baseline onto real user devices.
 Re-seeding a released checksum then makes shipped installs either fail

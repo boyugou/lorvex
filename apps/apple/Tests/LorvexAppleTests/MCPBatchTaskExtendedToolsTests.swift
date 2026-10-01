@@ -230,7 +230,7 @@ struct BatchTaskOpsExtendedTests {
 
   @Test("batch_complete_tasks captures results in-transaction, never re-reading after commit")
   func batchCompleteDoesNotReadBackAfterCommit() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
     let bridge = CoreBridgeClient(databasePath: "/tmp/lorvex-test.sqlite", service: core)
     let registry = ToolRegistry(coreBridge: bridge)
 
@@ -542,5 +542,28 @@ struct PatchInputStrictnessTests {
       arguments: ["id": .string(id), "estimated_minutes": .null])
     #expect(result.isError != true)
     #expect(result.structuredContent?.objectValue?["estimated_minutes"] == .null)
+  }
+
+  @Test("batch_create_tasks keeps each task's raw_input")
+  func batchCreateKeepsRawInput() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let result = try await xcall(
+      registry, tool: "batch_create_tasks",
+      arguments: [
+        "tasks": .array([
+          .object([
+            "title": .string("Call the hotel"),
+            "raw_input": .string("remind me to call the hotel before Friday"),
+          ]),
+          .object(["title": .string("Draft the agenda")]),
+        ])
+      ])
+    #expect(result.isError != true)
+    let results = try #require(result.structuredContent?.objectValue?["results"]?.arrayValue)
+    #expect(results.count == 2)
+    // `raw_input` is user-controlled text, so responses fence it (Rule 6).
+    let captured = results[0].objectValue?["raw_input"]?.stringValue
+    #expect(captured?.contains("remind me to call the hotel before Friday") == true)
+    #expect(results[1].objectValue?["raw_input"] == .null)
   }
 }

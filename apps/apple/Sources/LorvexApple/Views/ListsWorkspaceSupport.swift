@@ -41,6 +41,19 @@ enum ListsWorkspaceScope: String, CaseIterable, Identifiable {
     }
   }
 
+  /// What the rows are while this scope narrows the catalog, for the header;
+  /// nil for `.all`, which narrows nothing.
+  var headerCaption: String? {
+    switch self {
+    case .all:
+      nil
+    case .active:
+      String(localized: "lists.header.scope.active", defaultValue: "Lists with open tasks", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .complete:
+      String(localized: "lists.header.scope.complete", defaultValue: "Lists with every task done", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
+
   var emptyTitle: String {
     switch self {
     case .all:
@@ -57,7 +70,7 @@ enum ListsWorkspaceScope: String, CaseIterable, Identifiable {
     case .all:
       String(
         localized: "lists.empty.no_lists_description",
-        defaultValue: "Lists will appear here once they're created.",
+        defaultValue: "Click ＋ to group related tasks into a list — or ask your assistant to.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )

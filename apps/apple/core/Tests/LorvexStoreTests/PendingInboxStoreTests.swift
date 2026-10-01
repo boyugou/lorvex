@@ -195,7 +195,7 @@ final class PendingInboxStoreTests: XCTestCase {
         db, entityType: self.entityTaskReminder, entityID: "reminder-001",
         reason: self.fkUnresolved, missingType: self.entityTask, missingID: "x")
       let id = try PendingInbox.getAllPending(db)[0].id
-      try PendingInbox.recordReattemptBusy(db, id: id)
+      try PendingInbox.recordTransientReattempt(db, id: id)
       XCTAssertEqual(try PendingInbox.readAttemptCount(db, id: id), 1)
     }
   }

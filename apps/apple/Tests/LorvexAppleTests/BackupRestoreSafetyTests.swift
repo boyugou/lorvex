@@ -22,7 +22,12 @@ struct BackupRestoreSafetyTests {
       plan: plan, decoded: decoded, using: service)
 
     #expect(summary.errors.isEmpty, "Golden restore errors: \(summary.errors)")
-    #expect(try await service.loadTask(id: Self.taskID).title == "Decode every v1 shape")
+    let restored = try await service.loadTask(id: Self.taskID)
+    #expect(restored.title == "Decode every v1 shape")
+    #expect(restored.plannedTime == 540..<600)
+    #expect(
+      try await service.loadDailyBriefingsForDataExport().map(\.briefing)
+        == ["Protect the morning for the launch review."])
     #expect(try await service.loadLists().lists.contains { $0.id == Self.listID })
     #expect(
       try await service.loadHabits(date: "2026-07-17").habits.contains {
@@ -121,90 +126,44 @@ struct BackupRestoreSafetyTests {
     }
   }
 
-  @Test("public v1 JSON and ZIP reject schedule references outside an included full category")
-  func publicV1ContainersRejectDanglingScheduleReferences() throws {
-    let tasks = #"""
-      [{
-        "id":"33333333-3333-4333-8333-333333333333",
-        "title":"Included task","priority":"P2","status":"open"
-      }]
+  @Test("public v1 JSON and ZIP reject a repeated or blank daily briefing")
+  func publicV1ContainersRejectInvalidDailyBriefings() throws {
+    let repeated = #"""
+      [{"date":"2026-07-21","briefing":"Morning for the launch review."},
+       {"date":"2026-07-21","briefing":"Afternoon for errands."}]
       """#
-    let schedules = #"""
-      [{
-        "date":"2026-07-21",
-        "blocks":[{
-          "position":0,"blockType":"task","startMinutes":540,"endMinutes":600,
-          "taskID":"44444444-4444-4444-8444-444444444444"
-        }]
-      }]
+    let blank = #"""
+      [{"date":"2026-07-21","briefing":"   "}]
       """#
-    let expected = LorvexDataImporter.ImportError.inconsistentBackupContents(
-      "focus-schedule 2026-07-21 references omitted task \(Self.omittedTaskID)")
-
-    let json = #"""
-      {
-        "formatVersion":"1",
-        "manifest":{
-          "formatVersion":"1","schemaVersion":"1",
-          "source":{"platform":"apple"},
-          "entityCounts":{"tasks":1,"focus_schedules":1}
-        },
-        "tasks":\#(tasks),
-        "focusSchedules":\#(schedules)
+    let cases: [(briefings: String, count: Int, error: String)] = [
+      (repeated, 2, "duplicate daily briefing date '2026-07-21'"),
+      (blank, 1, "daily briefing 2026-07-21 is blank"),
+    ]
+    for testCase in cases {
+      let expected = LorvexDataImporter.ImportError.inconsistentBackupContents(testCase.error)
+      let json = #"""
+        {
+          "formatVersion":"1",
+          "manifest":{
+            "formatVersion":"1","schemaVersion":"1",
+            "source":{"platform":"apple"},
+            "entityCounts":{"daily_briefings":\#(testCase.count)}
+          },
+          "dailyBriefings":\#(testCase.briefings)
+        }
+        """#
+      #expect(throws: expected) {
+        _ = try LorvexDataImporter.decode(Data(json.utf8))
       }
-      """#
-    #expect(throws: expected) {
-      _ = try LorvexDataImporter.decode(Data(json.utf8))
-    }
 
-    let zip = try LorvexZipArchive.archive(entries: [
-      .init(
-        path: "manifest.json",
-        data: Data(
-          #"{"schemaVersion":"1","fileCounts":{"tasks":1,"focus_schedules":1}}"#.utf8)),
-      .init(path: "tasks.json", data: Data(tasks.utf8)),
-      .init(path: "focus_schedules.json", data: Data(schedules.utf8)),
-    ])
-    #expect(throws: expected) {
-      _ = try LorvexDataImporter.decode(zip)
-    }
-  }
-
-  @Test("public v1 rejects day-plan roots that reference an archived task")
-  func publicV1RejectsArchivedTaskDayPlanReferences() throws {
-    let archivedTask = ExportTask(
-      id: Self.taskID, title: "In Trash", priority: "P2", status: "open",
-      dueDate: nil, estimatedMinutes: nil,
-      archivedAt: "2026-07-20T12:00:00.000Z")
-
-    let currentFocusPayload = LorvexDataExportPayload(
-      tasks: [archivedTask],
-      currentFocus: [
-        ExportCurrentFocus(date: "2026-07-21", taskIDs: [Self.taskID])
+      let manifest = #"{"schemaVersion":"1","fileCounts":{"daily_briefings":\#(testCase.count)}}"#
+      let zip = try LorvexZipArchive.archive(entries: [
+        .init(path: "manifest.json", data: Data(manifest.utf8)),
+        .init(path: "daily_briefings.json", data: Data(testCase.briefings.utf8)),
       ])
-    #expect(
-      throws: LorvexDataImporter.ImportError.inconsistentBackupContents(
-        "current-focus 2026-07-21 references archived task \(Self.taskID)")
-    ) {
-      _ = try LorvexDataExporter.render(payload: currentFocusPayload, format: .json)
-    }
-
-    let schedulePayload = LorvexDataExportPayload(
-      tasks: [archivedTask],
-      focusSchedules: [
-        ExportFocusSchedule(
-          date: "2026-07-21",
-          blocks: [
-            ExportFocusScheduleBlock(
-              position: 0, blockType: "task", startMinutes: 540, endMinutes: 600,
-              taskID: Self.taskID)
-          ])
-      ])
-    #expect(
-      throws: LorvexDataImporter.ImportError.inconsistentBackupContents(
-        "focus-schedule 2026-07-21 references archived task \(Self.taskID)")
-    ) {
-      _ = try LorvexDataExporter.render(payload: schedulePayload, format: .json)
+      #expect(throws: expected) {
+        _ = try LorvexDataImporter.decode(zip)
+      }
     }
   }
 
@@ -642,6 +601,41 @@ struct BackupRestoreSafetyTests {
     }
   }
 
+  @Test("native graph v1 rejects a planned time without a planned day or its other end")
+  func nativePlannedTimeNeedsADayAndBothEnds() throws {
+    var dayless = try Self.goldenNativeGraph()
+    dayless.tasks[0].plannedDate = nil
+    #expect(
+      throws: NativeTaskGraphValidationError.invalidValue(
+        field: "task.plannedStartMinutes",
+        reason: "task \(Self.taskID) has a time but no planned date")
+    ) {
+      _ = try Self.prepareVersion1(dayless)
+    }
+
+    var halfTime = try Self.goldenNativeGraph()
+    halfTime.tasks[0].plannedEndMinutes = nil
+    #expect(
+      throws: NativeTaskGraphValidationError.invalidValue(
+        field: "task.plannedStartMinutes",
+        reason:
+          "task \(Self.taskID) must set plannedStartMinutes and plannedEndMinutes together")
+    ) {
+      _ = try Self.prepareVersion1(halfTime)
+    }
+
+    var inverted = try Self.goldenNativeGraph()
+    inverted.tasks[0].plannedStartMinutes = 600
+    inverted.tasks[0].plannedEndMinutes = 540
+    #expect(
+      throws: NativeTaskGraphValidationError.invalidValue(
+        field: "task.plannedStartMinutes",
+        reason: "task \(Self.taskID) must have a start before an end within 0...1440")
+    ) {
+      _ = try Self.prepareVersion1(inverted)
+    }
+  }
+
   private static func goldenNativeGraph() throws -> NativeTaskGraphSnapshot {
     let payload = try LorvexDataImporter.decode(
       Data(BackupV1GoldenFixture.singleFileJSON.utf8))
@@ -665,7 +659,8 @@ struct BackupRestoreSafetyTests {
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
     return SwiftLorvexCoreService(
-      store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+      store: try LorvexStore.openInMemory(
+        schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private static let unknownMemberDocument = #"""

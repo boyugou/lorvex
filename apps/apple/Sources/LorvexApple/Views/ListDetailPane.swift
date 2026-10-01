@@ -1,6 +1,15 @@
 import LorvexCore
 import SwiftUI
 
+/// One list's working set — its open and started tasks — as the detached list
+/// window shows it: the list's identity header, an inline quick-add that files
+/// into the list, and the rows, loaded a page at a time behind a Load More
+/// control. The header names the list and carries its description; it never
+/// counts the rows below it. With two or more rows selected, a Selection
+/// Actions menu joins the header's trailing edge. The window's title is the
+/// list's name, so the Window menu tells list windows apart, but the titlebar
+/// shows no text and the window has no toolbar: the name appears once, in the
+/// header, and the titlebar stays a thin strip.
 struct ListDetailPane: View {
   @Bindable var store: AppStore
 
@@ -8,141 +17,76 @@ struct ListDetailPane: View {
     Color(lorvexHex: store.selectedListDetail?.list.color) ?? .accentColor
   }
 
-  private var canMoveSelectedTaskHere: Bool {
-    guard
-      store.selectedTaskID != nil,
-      let selectedTask = store.selectedTask,
-      let selectedListID = store.selectedListID
-    else {
-      return false
-    }
-    return selectedTask.listID != selectedListID
-  }
-
-  private func listDetailEmptyState(for detail: ListDetailSnapshot?) -> LorvexEmptyStateModel? {
-    if detail == nil {
-      return LorvexEmptyStateModel(
-        title: String(localized: "list_detail.empty.select_list_title", defaultValue: "Select a List", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "list_detail.empty.select_list_description",
-          defaultValue: "Choose a list to inspect its tasks.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "folder",
-        tint: .accentColor,
-        action: nil
-      )
-    }
-
-    if store.hasActiveSearch && store.filteredSelectedListTasks.isEmpty {
-      return LorvexEmptyStateModel(
-        title: String(localized: "list_detail.empty.search_title", defaultValue: "No List Results", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "list_detail.empty.search_description",
-          defaultValue: "No task in this list matches the current search.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "text.magnifyingglass",
-        tint: .accentColor,
-        chips: [
-          LorvexEmptyStateChip(
-            title: store.searchText,
-            systemImage: "text.magnifyingglass",
-            tint: .accentColor
-          )
-        ],
-        action: LorvexEmptyStateAction(
-          title: String(localized: "common.clear_search", defaultValue: "Clear Search", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "xmark.circle"
-        ) {
-          store.searchText = ""
-        }
-      )
-    }
-
-    if let detail, detail.tasks.isEmpty {
-      return LorvexEmptyStateModel(
-        title: String(localized: "list_detail.empty.no_tasks_title", defaultValue: "No Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "list_detail.empty.no_tasks_description",
-          defaultValue: "Tasks assigned to this list will appear here.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: detail.list.icon ?? "checklist",
-        tint: selectedListTint,
-        chips: [
-          LorvexEmptyStateChip(
-            title: detail.list.name,
-            systemImage: detail.list.icon ?? "folder",
-            tint: selectedListTint
-          )
-        ],
-        action: nil
-      )
-    }
-
-    return nil
-  }
-
   var body: some View {
-    VStack(spacing: 0) {
+    Group {
       if let detail = store.selectedListDetail {
-        detailHeader(detail)
+        VStack(spacing: 0) {
+          detailHeader(detail)
 
-        Divider()
+          Divider()
 
-        WorkspaceReviewList(taskNavigation: store.arrowKeyTaskNavigation(on: .selectedList)) {
-          WorkspaceTaskSectionHeader(
-            title: String(localized: "list_detail.tasks_section", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
-            count: store.filteredSelectedListTasks.count,
-            systemImage: "checklist",
-            tint: selectedListTint
-          )
-          .padding(.horizontal, LorvexDesign.Spacing.l)
-
-          QuickAddRow(
-            placeholder: String(
-              format: String(
-                localized: "list_detail.quick_add.placeholder",
-                defaultValue: "Add a task to “%@”",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle
+          WorkspaceReviewList(taskNavigation: store.arrowKeyTaskNavigation(on: .selectedList)) {
+            QuickAddRow(
+              placeholder: String(
+                format: String(
+                  localized: "list_detail.quick_add.placeholder",
+                  defaultValue: "Add a task to “%@”",
+                  table: "Localizable",
+                  bundle: LorvexL10n.bundle
+                ),
+                detail.list.displayName
               ),
-              detail.list.name
-            ),
-            isCreating: store.isCreating,
-            focusToken: store.quickAddFocusToken
-          ) { title in
-            await store.createTaskInList(title: title, listID: detail.list.id)
-          }
-          .padding(.horizontal, LorvexDesign.Spacing.m)
+              focusToken: store.quickAddFocusToken,
+              preview: store.quickAddPreview
+            ) { text in
+              await store.createInlineTask(text, destination: .list(detail.list.id))
+            }
+            .padding(.horizontal, LorvexDesign.Spacing.m)
+            .padding(.top, LorvexDesign.Spacing.s)
 
-          ForEach(store.filteredSelectedListTasks) { task in
-            ListDetailTaskResultRow(task: task, store: store)
-              .padding(.horizontal, LorvexDesign.Spacing.m)
+            // Read from the list's own tasks, not the Today page: a detached
+            // list window never loads Today, and a task's time today is its
+            // planned time on that day either way.
+            let timeLabels = store.selectedListTasks.times(on: store.logicalTodayDateString)
+              .mapValues { TodayCalmCopy.timeRange(start: $0.lowerBound, end: $0.upperBound) }
+            ForEach(store.selectedListTasks) { task in
+              ListDetailTaskResultRow(task: task, store: store, timeLabel: timeLabels[task.id])
+                .padding(.horizontal, LorvexDesign.Spacing.m)
+            }
+
+            if store.selectedListHasMoreTasks {
+              WorkspaceTaskLoadMoreButton(isLoading: store.isLoadingMoreSelectedListTasks) {
+                Task { await store.loadMoreSelectedListTasks() }
+              }
+            }
           }
-        }
-        .cancelSelectedTaskOnDelete(store, on: .selectedList)
-        .overlay {
-          if let state = listDetailEmptyState(for: detail) {
-            LorvexEmptyStatePanel(model: state)
+          .cancelSelectedTaskOnDelete(store, on: .selectedList)
+          .overlay {
+            if let state = listDetailEmptyState(for: detail) {
+              LorvexEmptyStatePanel(model: state)
+            }
           }
         }
       } else {
-        if let state = listDetailEmptyState(for: nil) {
-          LorvexEmptyStatePanel(model: state)
-        }
+        DetachedWindowPlaceholder(
+          systemImage: "tray",
+          title: String(
+            localized: "detached_window.placeholder.no_list_title",
+            defaultValue: "No List Selected",
+            table: "Localizable",
+            bundle: LorvexL10n.bundle
+          )
+        )
       }
     }
+    .navigationTitle(store.selectedListDetail?.list.displayName ?? LorvexWindowID.detachedListTitle)
+    .toolbar(removing: .title)
     .userActivity(
       LorvexActivityType.openList,
       isActive: store.selectedListDetail != nil
     ) { activity in
       guard let listID = store.selectedListDetail?.list.id else { return }
-      let built = makeOpenListActivity(listID: listID, title: store.selectedListDetail?.list.name)
+      let built = makeOpenListActivity(listID: listID, title: store.selectedListDetail?.list.displayName)
       activity.title = built.title
       activity.isEligibleForHandoff = built.isEligibleForHandoff
       activity.isEligibleForSearch = built.isEligibleForSearch
@@ -151,176 +95,112 @@ struct ListDetailPane: View {
     }
   }
 
+  /// The list's icon in its color, its name, and its description when it has
+  /// one — the same identity the main window's list scope shows — plus the
+  /// batch menu while two or more rows are selected.
   private func detailHeader(_ detail: ListDetailSnapshot) -> some View {
     WorkspacePlanHeaderChrome {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-        HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-          LorvexListIconView(
-            icon: detail.list.icon,
-            tint: selectedListTint,
-            size: 34,
-            font: .system(size: 18, weight: .semibold),
-            background: .roundedSquare(size: 34, opacity: 0.14, cornerRadius: 8)
-          )
+      HStack(alignment: .center, spacing: LorvexDesign.Spacing.m) {
+        WorkspaceHeaderIdentity(
+          title: detail.list.displayName,
+          subtitle: detail.list.description?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+          icon: detail.list.icon ?? "folder",
+          accessibilityIdentifier: "listDetail.header.identity"
+        )
+        .tint(selectedListTint)
 
-          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-            Text(detail.list.name)
-              .font(LorvexDesign.Typography.sectionHeader)
-              .lineLimit(1)
+        Spacer(minLength: 0)
 
-            Text(headerSubtitle(detail))
-              .font(LorvexDesign.Typography.tertiaryText)
-              .foregroundStyle(.secondary)
-              .monospacedDigit()
-
-            if let description = detail.list.description, !description.isEmpty {
-              Text(description)
-                .font(LorvexDesign.Typography.secondaryText)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .padding(.top, 2)
-            }
-          }
-
-          Spacer(minLength: LorvexDesign.Spacing.l)
-
-          headerActions
+        if store.selectedListTaskSelectionCount > 1 {
+          ListDetailSelectionActionMenu(store: store)
         }
-
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-          Text(listDetailSummary(detail.list))
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-            .lineLimit(1)
-
-          if let fraction = detail.list.progressFraction {
-            LorvexProgressBar(value: fraction, tint: selectedListTint)
-              .frame(maxWidth: 180)
-              .accessibilityLabel(progressText(fraction))
-              .accessibilityIdentifier("listDetail.progress")
-          }
-        }
-        .accessibilityIdentifier("listDetail.header.stats")
       }
     }
   }
 
-  private func listDetailSummary(_ list: LorvexList) -> String {
-    String(
-      format: String(
-        localized: "list_detail.summary",
-        defaultValue: "%lld open · %lld complete · %lld total",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ),
-      list.openCount,
-      list.completedCount,
-      list.totalCount
-    )
-  }
-
-  @ViewBuilder
-  private var headerActions: some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      if canMoveSelectedTaskHere {
-        Button {
-          Task { await store.moveSelectedTaskToSelectedList() }
-        } label: {
-          Label(
-            String(localized: "list_detail.move_selected_here", defaultValue: "Move Here", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "arrow.right.doc.on.clipboard"
-          )
-        }
-        .buttonStyle(.lorvexSecondary)
-        .help(String(
-          localized: "list_detail.move_selected_here.help",
-          defaultValue: "Move Selected Task Here",
+  /// The calm panel over a list with no open or started task: finished when
+  /// the list has completed work, empty when it never had any.
+  private func listDetailEmptyState(for detail: ListDetailSnapshot) -> LorvexEmptyStateModel? {
+    guard detail.tasks.isEmpty else { return nil }
+    let isAllDone = detail.list.completedCount > 0
+    return LorvexEmptyStateModel(
+      title: isAllDone
+        ? String(localized: "list_detail.empty.all_done_title", defaultValue: "All Done", table: "Localizable", bundle: LorvexL10n.bundle)
+        : String(localized: "list_detail.empty.no_tasks_title", defaultValue: "No Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
+      message: isAllDone
+        ? String(
+          localized: "list_detail.empty.all_done_description",
+          defaultValue: "Every task in this list is done.",
           table: "Localizable",
           bundle: LorvexL10n.bundle
-        ))
-        .accessibilityIdentifier("listDetail.moveSelectedHere")
-      }
-
-      if store.selectedListTaskSelectionCount > 1 {
-        Menu {
-          TaskBatchActionMenuContent(
-            store: store,
-            selectionSurface: .selectedList,
-            canActOnSelection: store.selectedListTasksForBatch.contains {
-              $0.status.isActive
-            },
-            canReopenSelection: store.selectedListTasksForBatch.contains {
-              $0.status.isResolved
-            },
-            canMoveSelectionToSomeday: store.selectedListTasksForBatch.contains { $0.status == .open },
-            complete: { Task { await store.completeSelectedListTaskSelection() } },
-            deferToTomorrow: { Task { await store.deferSelectedListTaskSelection() } },
-            cancel: { Task { await store.cancelSelectedListTaskSelection() } },
-            reopen: { Task { await store.reopenSelectedListTaskSelection() } },
-            moveToSomeday: { Task { await store.markSelectedListTaskSelectionSomeday() } },
-            move: { listID in Task { await store.moveSelectedListTaskSelection(toListID: listID) } },
-            excludeListID: store.selectedListID
-          )
-        } label: {
-          Label("\(store.selectedListTaskSelectionCount)", systemImage: "checklist.checked")
-        }
-        .menuStyle(.button)
-        .buttonStyle(.lorvexNeutral)
-        .help(String(localized: "common.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle))
-        .accessibilityIdentifier("listDetail.batchTaskSelection")
-      }
-    }
-  }
-
-  private func headerSubtitle(_ detail: ListDetailSnapshot) -> String {
-    if store.hasActiveSearch {
-      return matchingCountText(detail.totalMatching)
-    }
-    if detail.truncated {
-      return shownCountWithNextPageText(
-        returned: detail.returned,
-        nextOffset: detail.nextOffset ?? detail.offset)
-    }
-    return totalCountText(detail.totalMatching)
-  }
-
-  private func progressText(_ fraction: Double) -> String {
-    fraction.formatted(.percent.precision(.fractionLength(0)))
-  }
-
-  private func matchingCountText(_ count: Int) -> String {
-    String(
-      format: String(localized: "list_detail.count.matching", defaultValue: "%lld matching", table: "Localizable", bundle: LorvexL10n.bundle),
-      count
+        )
+        : String(
+          localized: "list_detail.empty.no_tasks_description",
+          defaultValue: "Tasks assigned to this list will appear here.",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle
+        ),
+      systemImage: isAllDone
+        ? "checkmark.circle"
+        : LorvexListIconView.symbolName(for: detail.list.icon) ?? "checklist",
+      tint: selectedListTint,
+      action: nil
     )
   }
+}
 
-  private func totalCountText(_ count: Int) -> String {
-    String(
-      localized: "list_detail.tasks_count",
-      defaultValue: "\(count) tasks",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
+/// The batch actions for the detached list window's selected rows: complete,
+/// defer, cancel, reopen, Someday, and moving them to another list.
+private struct ListDetailSelectionActionMenu: View {
+  @Bindable var store: AppStore
+
+  var body: some View {
+    Menu {
+      TaskBatchActionMenuContent(
+        store: store,
+        selectionSurface: .selectedList,
+        canActOnSelection: store.selectedListTasksForBatch.contains {
+          $0.status.isActive
+        },
+        canReopenSelection: store.selectedListTasksForBatch.contains {
+          $0.status.isResolved
+        },
+        canMoveSelectionToSomeday: store.selectedListTasksForBatch.contains { $0.status == .open },
+        complete: { Task { await store.completeSelectedListTaskSelection() } },
+        deferToTomorrow: { Task { await store.deferSelectedListTaskSelection() } },
+        cancel: { Task { await store.cancelSelectedListTaskSelection() } },
+        reopen: { Task { await store.reopenSelectedListTaskSelection() } },
+        moveToSomeday: { Task { await store.markSelectedListTaskSelectionSomeday() } },
+        move: { listID in Task { await store.moveSelectedListTaskSelection(toListID: listID) } },
+        excludeListID: store.selectedListID
+      )
+    } label: {
+      Label(selectionActionsLabel, systemImage: "checklist.checked")
+        .labelStyle(.titleAndIcon)
+    }
+    .menuStyle(.button)
+    .buttonStyle(.bordered)
+    .fixedSize()
+    .help(selectionActionsLabel)
+    .accessibilityLabel(
+      String(
+        format: String(localized: "tasks.selection.count", defaultValue: "%lld selected", table: "Localizable", bundle: LorvexL10n.bundle),
+        store.selectedListTaskSelectionCount
+      )
+    )
+    .accessibilityIdentifier("listDetail.batchTaskSelection")
   }
 
-  private func shownCountWithNextPageText(returned: Int, nextOffset: Int) -> String {
-    String(
-      format: String(
-        localized: "list_detail.count.shown_next_page",
-        defaultValue: "%lld shown · next page %lld",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ),
-      returned,
-      nextOffset
-    )
+  private var selectionActionsLabel: String {
+    String(localized: "tasks.header.selection_actions", defaultValue: "Selection Actions", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 }
 
 private struct ListDetailTaskResultRow: View {
   let task: LorvexTask
   @Bindable var store: AppStore
+  /// When the task happens today, if it has a planned time today.
+  var timeLabel: String? = nil
 
   private var isBatchSelected: Bool {
     store.selectedListTaskIDs.contains(task.id)
@@ -334,7 +214,8 @@ private struct ListDetailTaskResultRow: View {
       isBatchSelected: isBatchSelected,
       batchAccessibilityIdentifier: "listDetail.row.batchSelect.\(task.id)",
       toggleBatchSelection: { store.toggleSelectedListTaskBatchSelection(task.id) },
-      openTask: { store.selectOnlySelectedListTask(task.id) }
+      openTask: { store.selectOnlySelectedListTask(task.id) },
+      timeLabel: timeLabel
     )
   }
 }

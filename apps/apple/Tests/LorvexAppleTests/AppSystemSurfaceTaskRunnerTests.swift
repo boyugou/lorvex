@@ -14,8 +14,10 @@ func taskIntentRunnerHandlesTaskReadWriteAndLifecycleActions() async throws {
     notes: "Created from App Intents.",
     core: core
   )
-  var today = try await core.loadToday()
-  let created = try #require(today.tasks.first { $0.title == "Shortcut captured task" })
+  let openAfterCapture = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(
+    openAfterCapture.tasks.first { $0.title == "Shortcut captured task" })
   #expect(createdTitle == "Shortcut captured task")
   #expect(created.notes == "Created from App Intents.")
 
@@ -129,20 +131,18 @@ func taskIntentRunnerHandlesTaskReadWriteAndLifecycleActions() async throws {
     core: core
   )
   #expect(cancelledTitle == "Shortcut lifecycle task")
-  today = try await core.loadToday()
-  // Cancelled tasks leave the open-only Today snapshot.
-  #expect(!today.tasks.contains { $0.id == lifecycleTask.id })
   #expect(try await core.loadTask(id: lifecycleTask.id).status == .cancelled)
   let reopenedTitle = try await LorvexTaskIntentRunner.reopenTask(
     id: " \(lifecycleTask.id) ",
     core: core
   )
   #expect(reopenedTitle == "Shortcut lifecycle task")
-  today = try await core.loadToday()
-  #expect(today.tasks.first { $0.id == lifecycleTask.id }?.status == .open)
+  // Read the row: undated work has no claim on today, so the day pool cannot
+  // witness a status round-trip.
+  #expect(try await core.loadTask(id: lifecycleTask.id).status == .open)
 
   let completedTitle = try await LorvexTaskIntentRunner.completeTask(id: created.id, core: core)
-  today = try await core.loadToday()
+  let today = try await core.loadToday()
   #expect(completedTitle == "Shortcut updated task")
   // The completed task leaves the open-only Today snapshot.
   #expect(!today.tasks.contains { $0.id == created.id })
@@ -152,8 +152,11 @@ func taskIntentRunnerHandlesTaskReadWriteAndLifecycleActions() async throws {
 @Test
 func systemIntentDeferUntilTomorrowUsesConfiguredProductDayAcrossTimezones() async throws {
   // These zones are 25 hours apart, so their civil days can never both equal
-  // one device-local fallback day. Compute the oracle independently from the
-  // core/session-context path under test.
+  // one device-local fallback day. The oracle reads the core's own pinned
+  // instant through Foundation in the configured zone, never through
+  // `getSessionContext()` or the intent runner; reading the real clock instead
+  // would disagree with the core for part of every night.
+  let clock = seedMorningWallClock()
   for zoneID in ["Pacific/Kiritimati", "Pacific/Pago_Pago"] {
     let timeZone = try #require(TimeZone(identifier: zoneID))
     let formatter = DateFormatter()
@@ -162,25 +165,17 @@ func systemIntentDeferUntilTomorrowUsesConfiguredProductDayAcrossTimezones() asy
     formatter.timeZone = timeZone
     formatter.dateFormat = "yyyy-MM-dd"
 
-    let core = try await makeSeededInMemoryCore()
+    let core = try await makeSeededInMemoryCore(wallClock: clock)
     let task = try await core.createTask(title: "Defer in \(zoneID)", notes: "")
     _ = try await core.setPreference(key: "timezone", value: zoneID)
 
-    let before = Date()
     _ = try await LorvexTaskIntentRunner.deferTaskUntilTomorrow(
       id: task.id, core: core)
-    let after = Date()
 
-    // Accept either side only if the call itself crossed this product zone's
-    // midnight. The expected days still come solely from Foundation + the
-    // configured zone, never from `getSessionContext()` or the intent runner.
-    let expectedStorageDays = Set(
-      [before, after].compactMap {
-        LorvexDateFormatters.ymdUTCAddingDays(formatter.string(from: $0), days: 1)
-      })
-
+    let expectedStorageDay = try #require(
+      LorvexDateFormatters.ymdUTCAddingDays(formatter.string(from: clock()), days: 1))
     let deferred = try #require(try await core.loadTask(id: task.id).plannedDate)
-    #expect(expectedStorageDays.contains(LorvexDateFormatters.ymdUTC.string(from: deferred)))
+    #expect(LorvexDateFormatters.ymdUTC.string(from: deferred) == expectedStorageDay, "\(zoneID)")
   }
 }
 

@@ -6,7 +6,7 @@ final class NamingTests: XCTestCase {
   // MARK: - Collection invariants
 
   func testAllEntityTypesHasCorrectCount() {
-    XCTAssertEqual(EntityName.allEntityTypes.count, 16)
+    XCTAssertEqual(EntityName.allEntityTypes.count, 15)
   }
 
   func testAllEdgeTypesHasCorrectCount() {
@@ -68,7 +68,7 @@ final class NamingTests: XCTestCase {
 
   func testEdgesAfterAllAggregateRoots() {
     let firstEdgePos = EntityKind.topologicalEntityOrder.firstIndex(of: EdgeName.taskTag)
-    let lastRootPos = EntityKind.topologicalEntityOrder.firstIndex(of: EntityName.focusSchedule)
+    let lastRootPos = EntityKind.topologicalEntityOrder.firstIndex(of: EntityName.dailyBriefing)
     XCTAssertNotNil(firstEdgePos)
     XCTAssertNotNil(lastRootPos)
     XCTAssertLessThan(
@@ -162,7 +162,7 @@ final class NamingTests: XCTestCase {
   }
 
   func testEntityKindRoundTripsLocalOnlyStrings() {
-    for raw in [EntityName.deviceState, EntityName.importSession] {
+    for raw in [EntityName.deviceState, EntityName.importSession, EntityName.dailySchedule] {
       let kind = EntityKind.parse(raw)
       XCTAssertNotNil(kind)
       XCTAssertEqual(kind?.asString, raw)
@@ -189,7 +189,7 @@ final class NamingTests: XCTestCase {
   func testEntityKindTablePkCoversSimplePkSyncableTypes() {
     let simplePk: [EntityKind] = [
       .task, .list, .habit, .tag, .calendarEvent, .preference, .memory,
-      .dailyReview, .currentFocus, .focusSchedule,
+      .dailyReview, .dailyBriefing,
       .taskReminder, .taskChecklistItem, .habitReminderPolicy,
     ]
     for kind in simplePk {
@@ -198,7 +198,7 @@ final class NamingTests: XCTestCase {
     let noSimplePk: [EntityKind] = [
       .aiChangelog, .entityRedirect, .taskTag, .taskDependency, .taskCalendarEventLink,
       .habitCompletion,
-      .deviceState, .importSession,
+      .deviceState, .importSession, .dailySchedule,
     ]
     for kind in noSimplePk {
       XCTAssertNil(kind.tablePk, "\(kind) must not resolve to a simple-PK table")
@@ -210,8 +210,7 @@ final class NamingTests: XCTestCase {
       (.task, "tasks"), (.list, "lists"), (.habit, "habits"), (.tag, "tags"),
       (.calendarEvent, "calendar_events"),
       (.preference, "preferences"), (.memory, "memories"),
-      (.dailyReview, "daily_reviews"), (.currentFocus, "current_focus"),
-      (.focusSchedule, "focus_schedule"),
+      (.dailyReview, "daily_reviews"), (.dailyBriefing, "daily_briefings"),
       (.taskReminder, "task_reminders"), (.taskChecklistItem, "task_checklist_items"),
       (.habitReminderPolicy, "habit_reminder_policies"),
       (.taskTag, "task_tags"), (.taskDependency, "task_dependencies"),
@@ -225,6 +224,7 @@ final class NamingTests: XCTestCase {
       XCTAssertEqual(kind.tableName, expected, "EntityKind.tableName mismatch for \(kind)")
     }
     XCTAssertNil(EntityKind.importSession.tableName)
+    XCTAssertNil(EntityKind.dailySchedule.tableName)
   }
 
   func testEntityKindSerdeUsesCanonicalString() throws {

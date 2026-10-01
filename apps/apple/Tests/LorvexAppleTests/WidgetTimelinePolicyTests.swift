@@ -9,9 +9,9 @@ func widgetFreshnessPolicyClassifiesAgeAndLabelsCompactly() {
   let snapshot = WidgetSnapshot(
     generatedAt: "2023-11-14T19:43:20Z",
     timezone: "America/Los_Angeles",
-    stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: []
+    tasks: []
   )
 
   #expect(policy.classify(snapshot: snapshot, now: now) == .warning(ageSeconds: 9_000))
@@ -34,19 +34,19 @@ func widgetFreshnessPolicyExpiresCurrentDayMaterialAtProductMidnight() throws {
     generatedAt: "2026-05-23T06:30:00Z",
     timezone: "America/Los_Angeles",
     logicalDay: "2026-05-22",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
     briefing: nil,
-    focusTasks: []
+    tasks: []
   )
-  let legacyPayload = WidgetSnapshot(
+  let payloadWithoutLogicalDay = WidgetSnapshot(
     generatedAt: "2026-05-23T06:30:00Z",
     timezone: "America/Los_Angeles",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
     briefing: nil,
-    focusTasks: []
+    tasks: []
   )
 
-  for snapshot in [currentPayload, legacyPayload] {
+  for snapshot in [currentPayload, payloadWithoutLogicalDay] {
     let result = policy.validatingCurrentDay(
       .snapshot(snapshot),
       now: now,

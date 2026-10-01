@@ -6,8 +6,8 @@ import Testing
 @testable import LorvexApple
 
 /// The canonical task-section projection is shared by every read surface so the
-/// "open" / "deferred" / "focus" / "scheduled" split can't drift between macOS
-/// and mobile.
+/// "open" / "deferred" / "scheduled" split can't drift between macOS and
+/// mobile.
 
 private func plannedTask(id: String, plannedDate: Date) -> LorvexTask {
   var task = makeMobileTask(id: id, title: id, priority: .p2)
@@ -32,18 +32,19 @@ func openSectionExcludesPlannedAndDeferredSectionCarriesIt() {
 }
 
 @Test
-func focusSectionResolvesInPlanOrderDroppingDuplicatesAndMisses() {
-  let a = makeMobileTask(id: "a", title: "a", priority: .p2)
-  let b = makeMobileTask(id: "b", title: "b", priority: .p2)
-  // Pool order intentionally differs from plan order to prove the result
-  // follows the plan, not the pool.
-  let pool = [b, a]
+func overdueComparesTheDueDayWithTheLogicalDay() throws {
+  var due = makeMobileTask(id: "due", title: "due", priority: .p2)
+  due.dueDate = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-05-24"))
+  let undated = makeMobileTask(id: "undated", title: "undated", priority: .p2)
 
-  let resolved = LorvexTaskSections.focus(order: ["a", "a", "missing", "b"]) { id in
-    pool.first { $0.id == id }
-  }
-
-  #expect(resolved.map(\.id) == ["a", "b"])
+  #expect(LorvexTaskSections.isOverdue(due, logicalDay: "2026-05-25"))
+  // Due today is not overdue yet.
+  #expect(!LorvexTaskSections.isOverdue(due, logicalDay: "2026-05-24"))
+  #expect(!LorvexTaskSections.isOverdue(undated, logicalDay: "2026-05-25"))
+  // A finished task is never overdue, whatever its deadline.
+  var done = due
+  done.status = .completed
+  #expect(!LorvexTaskSections.isOverdue(done, logicalDay: "2026-05-25"))
 }
 
 @Test
@@ -63,34 +64,4 @@ func scheduledSectionSortsByActionDateThenTitleAndDropsUndated() {
   // Sorted by planned-or-due ascending; equal dates tie-break on title; the
   // task with neither date is dropped.
   #expect(tasks.lorvexScheduledSection.map(\.id) == ["early", "same-a", "same-z", "late-due"])
-}
-
-@MainActor
-@Test
-func mobileOpenSectionMatchesMacOSAndPreservesTodaySurfacing() async throws {
-  let open = makeMobileTask(id: "open", title: "open", priority: .p2)
-  let planned = plannedTask(id: "planned", plannedDate: Date(timeIntervalSince1970: 1_780_000_000))
-  let snapshot = TodaySnapshot(
-    focusTitle: "Today",
-    summary: "",
-    tasks: [open, planned],
-    localChangeSequence: 0
-  )
-
-  // macOS surface.
-  let store = AppStore(core: try await makeSeededInMemoryCore())
-  store.today = snapshot
-
-  // Mobile surface.
-  let mobile = MobileHomeSnapshot(today: snapshot, currentFocus: nil, weeklyReview: nil)
-
-  // The live bug: mobile `openTasks` used to include the planned/deferred task.
-  // It now excludes it and matches the macOS split exactly.
-  #expect(mobile.openTasks.map(\.id) == ["open"])
-  #expect(mobile.openTasks.map(\.id) == store.openTasks.map(\.id))
-  #expect(store.deferredTasks.map(\.id) == ["planned"])
-
-  // The planned-for-today task still surfaces on the mobile Today list — the
-  // `openTasks` fix must not drop it from the day view.
-  #expect(mobile.todayTasks.map(\.id) == ["open", "planned"])
 }

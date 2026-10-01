@@ -32,7 +32,17 @@ enum MCPHelperProbe {
   }
 
   /// Verifies the bundled helper is present, executable, and can complete its
-  /// production self-check. `bundleURL` and `fileManager` are injectable so the
+  /// production self-check.
+  ///
+  /// The self-check runs only when this app is not sandboxed. A sandboxed app's
+  /// child process inherits the app's sandbox, and the helper carries its own
+  /// sandbox entitlements (an external assistant launches it as a standalone
+  /// process, which needs them), so a launch from inside the sandboxed app
+  /// cannot initialize and fails even though the assistants' own launches work.
+  /// A sandboxed app (every store and TestFlight build) therefore checks
+  /// presence and the executable bit only; whether an assistant reaches the
+  /// helper end to end shows in the assistants' last-used times beside this
+  /// status. `bundleURL` and `fileManager` are injectable so the
   /// check can be exercised against a synthetic bundle layout in tests.
   /// `environment` is the client-config env overlaid onto the inherited base;
   /// `inheritedEnvironment` is that base (the parent process env by default,
@@ -51,6 +61,7 @@ enum MCPHelperProbe {
     let path = helper.path
     guard fileManager.fileExists(atPath: path) else { return .helperMissing }
     guard fileManager.isExecutableFile(atPath: path) else { return .helperNotExecutable }
+    if inheritedEnvironment[Self.sandboxContainerKey] != nil { return .ready }
     guard
       await runRuntimeProbe(
         helperURL: helper,
@@ -64,6 +75,9 @@ enum MCPHelperProbe {
     }
     return .ready
   }
+
+  /// Set by macOS in every sandboxed process's environment.
+  static let sandboxContainerKey = "APP_SANDBOX_CONTAINER_ID"
 
   private static func runRuntimeProbe(
     helperURL: URL,

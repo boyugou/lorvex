@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The shared Complete / Defer / Move-to-list / Cancel / Reopen actions for a
 /// multi-task selection, rendered as the *contents* of a workspace's batch
-/// toolbar menu. Every workspace selection menu (Tasks, Calendar,
-/// Focus) ends in this identical block; the host supplies the per-surface store
+/// toolbar menu. Every workspace selection menu (Today, Tasks, a list's detail
+/// pane) ends in this identical block; the host supplies the per-surface store
 /// calls and the two enablement predicates, and wraps this in its own `Menu`
 /// (whose label, `disabled`, and accessibility identifier stay per-surface).
 ///
@@ -73,7 +73,7 @@ struct TaskBatchActionMenuContent: View {
         Button {
           move(list.id)
         } label: {
-          Label(list.name, systemImage: list.icon ?? "list.bullet")
+          Label(list.displayName, systemImage: list.icon ?? "list.bullet")
         }
       }
     } label: {

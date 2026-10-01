@@ -42,21 +42,31 @@ enum LorvexWatchReplicaFile {
       throw LorvexWatchReplicaStoreError.invalidSnapshot
     }
     let envelope = try LorvexWatchReplicaEnvelope.decodeWireData(wireData)
+    // Read the version before the body: a snapshot of another version has
+    // another shape, and must read as unsupported, not as damaged.
+    let version: Int
+    do {
+      version = try WidgetSnapshot.encodedVersion(of: envelope.snapshotData)
+    } catch {
+      throw LorvexWatchReplicaStoreError.invalidSnapshot
+    }
+    guard version == WidgetSnapshot.supportedVersion else {
+      throw LorvexWatchWireError.unsupportedProtocolVersion(version)
+    }
     let snapshot: WidgetSnapshot
     do {
       snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: envelope.snapshotData)
     } catch {
       throw LorvexWatchReplicaStoreError.invalidSnapshot
     }
-    guard snapshot.version == WidgetSnapshot.supportedVersion else {
-      throw LorvexWatchWireError.unsupportedProtocolVersion(snapshot.version)
-    }
-    guard snapshot.workspaceInstanceID == envelope.workspaceInstanceID else {
+    // A UUID's spelling is not its identity: compare canonical forms.
+    guard snapshot.workspaceInstanceID.lowercased() == envelope.workspaceInstanceID.lowercased()
+    else {
       throw LorvexWatchReplicaStoreError.invalidSnapshot
     }
     let elementCount =
-      snapshot.focusTasks.count + snapshot.habits.count
-      + snapshot.todayTasks.count + snapshot.lists.count + snapshot.listStats.count
+      snapshot.tasks.count + snapshot.habits.count
+      + snapshot.lists.count + snapshot.listStats.count
     guard elementCount <= maximumSnapshotElements else {
       throw LorvexWatchReplicaStoreError.invalidSnapshot
     }

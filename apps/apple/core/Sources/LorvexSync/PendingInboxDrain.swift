@@ -38,10 +38,6 @@ public enum PendingInboxDrain {
     public var errors: UInt64 = 0
     /// Entries the apply pipeline returned ``ApplyResult/skipped(reason:winnerVersion:)`` for.
     public var skipped: UInt64 = 0
-    /// Held audit upserts rejected by the authoritative retention frontier.
-    /// Consuming one removes canonical full content and persists physical-delete
-    /// work, so the driver must invalidate readers even though no row was replayed.
-    public var retentionRejected: UInt64 = 0
     /// Distinct entity kinds replayed during this pass (dedup at insertion time).
     public var replayedEntityTypes: [EntityKind] = []
     /// Task ids a replayed non-inbox list-delete re-homed to inbox (via the
@@ -61,11 +57,6 @@ public enum PendingInboxDrain {
     /// otherwise removing the pending row would acknowledge a remote mutation
     /// while leaving the shared record permanently inconsistent.
     public var repairObligations: [ApplyRepairObligation] = []
-    /// Post-authoritative user intents that could not be re-authored while the
-    /// occupying record was opaque. The host fulfills them with its transaction
-    /// HLC after the now-understood remote envelope is consumed.
-    public var futureLocalIntentReplays: [FutureRecordHold.LocalIntentReplay] = []
-
     public init() {}
   }
 
@@ -212,11 +203,8 @@ public enum PendingInboxDrain {
           db, entityType: envelope.entityType.asString,
           entityID: envelope.entityId, version: envelope.version.description)
         try PendingInbox.removePending(db, id: entry.id)
-        if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+        try FutureRecordHold.reconcileTerminalEnvelope(
           db, envelope: envelope, outcome: result)
-        {
-          summary.futureLocalIntentReplays.append(replay)
-        }
         summary.replayed += 1
         for kind in try SyncMutationImpact.affectedEntityTypes(for: envelope)
           .sorted(by: { $0.asString < $1.asString })
@@ -248,30 +236,13 @@ public enum PendingInboxDrain {
         {
           summary.absenceReemitTargets.append(target)
         }
-      case .upsertRejectedByRetention:
-        try clearQuarantineThroughResolvedEnvelope(
-          db, entityType: envelope.entityType.asString,
-          entityID: envelope.entityId, version: envelope.version.description)
-        try PendingInbox.removePending(db, id: entry.id)
-        if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
-          db, envelope: envelope, outcome: result)
-        {
-          summary.futureLocalIntentReplays.append(replay)
-        }
-        // The applier already persisted account-scoped physical-delete work in
-        // this transaction; consuming the pending full-content copy is now safe.
-        summary.skipped += 1
-        summary.retentionRejected += 1
       case .repairRequired(let obligation):
         try clearQuarantineThroughResolvedEnvelope(
           db, entityType: envelope.entityType.asString,
           entityID: envelope.entityId, version: envelope.version.description)
         try PendingInbox.removePending(db, id: entry.id)
-        if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+        try FutureRecordHold.reconcileTerminalEnvelope(
           db, envelope: envelope, outcome: result)
-        {
-          summary.futureLocalIntentReplays.append(replay)
-        }
         summary.skipped += 1
         summary.repairObligations.append(obligation)
       case .skipped:
@@ -283,11 +254,8 @@ public enum PendingInboxDrain {
         // includes an exact semantic replay, and an equal-version shadow can be
         // the only preserved copy of fields this runtime does not understand.
         try PendingInbox.removePending(db, id: entry.id)
-        if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+        try FutureRecordHold.reconcileTerminalEnvelope(
           db, envelope: envelope, outcome: result)
-        {
-          summary.futureLocalIntentReplays.append(replay)
-        }
         summary.skipped += 1
       case .deferred(let reason):
         let (missingType, missingID) = missingFromReason(reason)
@@ -347,21 +315,22 @@ public enum PendingInboxDrain {
     return summary
   }
 
-  /// Apply-pipeline `Err(_)` handling. Transient busy/locked errors re-record
-  /// `last_attempted_at` without bumping `attempt_count`; all other errors bump
-  /// the attempt + (deduped) log to error_logs, and discard at the cap.
+  /// Apply-pipeline `Err(_)` handling. Errors outside the envelope's control
+  /// (lock contention, a suspended database) re-record `last_attempted_at`
+  /// without bumping `attempt_count`; all other errors bump the attempt +
+  /// (deduped) log to error_logs, and discard at the cap.
   private static func handleApplyError(
     _ db: Database, entry: PendingInbox.Entry, envelope: SyncEnvelope, error: ApplyError,
     summary: inout DrainSummary
   ) throws {
-    if isTransientBusyOrLocked(error) {
+    if isTransientDatabaseFailure(error) {
       do {
-        try PendingInbox.recordReattemptBusy(db, id: entry.id)
+        try PendingInbox.recordTransientReattempt(db, id: entry.id)
       } catch {
         ErrorLog.appendBestEffort(
           db, source: "sync.pending_inbox",
           message:
-            "pending_inbox entry \(entry.id) busy-reattempt bookkeeping failed: \(error)",
+            "pending_inbox entry \(entry.id) transient-reattempt bookkeeping failed: \(error)",
           details: nil, level: "error")
       }
       summary.errors += 1
@@ -440,11 +409,12 @@ public enum PendingInboxDrain {
     }
   }
 
-  /// Classify an `ApplyError` as a recoverable SQLite lock-contention error
-  /// (`SQLITE_BUSY` / `SQLITE_LOCKED`). All other error classes are permanent
-  /// failures.
-  static func isTransientBusyOrLocked(_ error: ApplyError) -> Bool {
-    if case .dbBusyOrLocked = error { return true }
+  /// Whether an `ApplyError` is one the envelope did not cause — SQLite lock
+  /// contention, or a database suspended while the app is backgrounded. Those
+  /// are retried without charging the row's attempt budget. Every other error
+  /// class is treated as the envelope's own permanent failure.
+  static func isTransientDatabaseFailure(_ error: ApplyError) -> Bool {
+    if case .dbTransient = error { return true }
     return false
   }
 
@@ -617,7 +587,7 @@ public enum PendingInboxDrain {
       return (entityType.asString, entityId)
     case .aggregateInvariantBlocked(let entityType, let entityId, _):
       return (entityType.asString, entityId)
-    case .schemaTooNew, .operationallyUnusableHlc, .auditRetentionFrontierRefresh:
+    case .schemaTooNew, .operationallyUnusableHlc:
       return (nil, nil)
     }
   }
@@ -639,8 +609,7 @@ public enum PendingInboxDrain {
   /// that never arrives should exhaust and quarantine.
   private static func isBudgetExemptHold(_ reason: DeferralReason) -> Bool {
     switch reason {
-    case .schemaTooNew, .operationallyUnusableHlc,
-      .auditRetentionFrontierRefresh, .aggregateInvariantBlocked:
+    case .schemaTooNew, .operationallyUnusableHlc, .aggregateInvariantBlocked:
       return true
     case .missingDependency:
       return false
@@ -680,7 +649,6 @@ public enum PendingInboxDrain {
     \(column) = '\(entityTypeTooNewReason)'
     OR \(column) LIKE '\(DeferralReason.schemaTooNewReasonMarker)%'
     OR \(column) LIKE '\(DeferralReason.operationallyUnusableHlcReasonMarker)%'
-    OR \(column) LIKE '\(DeferralReason.auditRetentionFrontierReasonMarker)%'
     OR \(column) LIKE '%\(DeferralReason.aggregateInvariantBlockedReasonMarker)'
     """
   }

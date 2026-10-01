@@ -39,7 +39,6 @@ func taskAccessibilityLabelUsesProvidedVocabulary() {
     tags: []
   )
   let vocab = TaskAccessibilityVocabulary(
-    focusedTask: "Tarea en foco",
     priorityTaskFormat: "Tarea %@",
     minutesFormat: "%lld minutos",
     dueFormat: "vence %@",
@@ -132,20 +131,20 @@ func taskAccessibilityLabelIncludesTags() {
 }
 
 @Test
-func taskAccessibilityLabelMarkedFocusedWhenFocused() {
+func taskAccessibilityLabelSpeaksStartedStatus() {
   let task = LorvexTask(
     id: "t4",
     title: "Ship widget",
     notes: "",
     priority: .p1,
-    status: .open,
+    status: .inProgress,
     dueDate: nil,
     estimatedMinutes: nil,
     tags: []
   )
-  let label = taskAccessibilityLabel(task, isFocused: true)
-  #expect(label.contains("Focused task"))
-  #expect(!label.contains("P1 task"))
+  let label = taskAccessibilityLabel(
+    task, vocabulary: TaskAccessibilityVocabulary(statusName: { $0 == .inProgress ? "started" : "open" }))
+  #expect(label == "P1 task: Ship widget: started")
 }
 
 @Test
@@ -180,17 +179,46 @@ func taskAccessibilityLabelReflectsCompletedStatus() {
   #expect(label.contains("completed"))
 }
 
-// MARK: - focusTaskCountAccessibilityValue
-
+/// A row's time on the day and what it shows beyond the task's own fields
+/// are spoken right after the status, in the order the row gives them.
 @Test
-func focusTaskCountAccessibilityValueSingular() {
-  #expect(focusTaskCountAccessibilityValue(1) == "1 task in focus")
+func taskAccessibilityLabelSpeaksTheRowsTimeAndDetails() {
+  let task = LorvexTask(
+    id: "t7",
+    title: "Review the Q3 planning doc",
+    notes: "",
+    priority: .p1,
+    status: .open,
+    dueDate: nil,
+    estimatedMinutes: 45,
+    tags: ["work"]
+  )
+  let label = taskAccessibilityLabel(
+    task, timeLabel: "9:45 – 10:30 AM", details: ["Until 3:00 PM", "Blocked"])
+  #expect(
+    label
+      == "P1 task: Review the Q3 planning doc: open, 9:45 – 10:30 AM, Until 3:00 PM, Blocked, 45 minutes, #work"
+  )
 }
 
+/// A repeating task says so, in the vocabulary's word, as its row shows a
+/// repeat glyph.
 @Test
-func focusTaskCountAccessibilityValuePlural() {
-  #expect(focusTaskCountAccessibilityValue(0) == "0 tasks in focus")
-  #expect(focusTaskCountAccessibilityValue(5) == "5 tasks in focus")
+func taskAccessibilityLabelSpeaksARepeatingTask() {
+  let task = LorvexTask(
+    id: "t8",
+    title: "Submit the weekly timesheet",
+    notes: "",
+    priority: .p3,
+    status: .open,
+    dueDate: nil,
+    estimatedMinutes: nil,
+    tags: [],
+    recurrence: TaskRecurrenceRule(freq: .weekly)
+  )
+  #expect(taskAccessibilityLabel(task) == "P3 task: Submit the weekly timesheet: open, repeats")
+  let label = taskAccessibilityLabel(task, vocabulary: TaskAccessibilityVocabulary(repeatsWord: "se repite"))
+  #expect(label.hasSuffix("open, se repite"))
 }
 
 // MARK: - menuBarActionAccessibilityLabel
@@ -236,11 +264,10 @@ func habitActionAccessibilityLabelReturnsCorrectString() {
 // MARK: - memoryEntryAccessibilityLabel
 
 @Test
-func memoryEntryAccessibilityLabelCombinesKeyAndContent() {
+func memoryEntryAccessibilityLabelCombinesTitleAndContent() {
   let entry = MemoryEntry(key: "project_goal", content: "Ship v1 by Q3", updatedAt: "2026-05-01")
   let label = memoryEntryAccessibilityLabel(entry)
-  #expect(label.contains("project_goal"))
-  #expect(label.contains("Ship v1 by Q3"))
+  #expect(label == "Project goal: Ship v1 by Q3", "the row is read by its title, not its handle")
 }
 
 // MARK: - calendarEventAccessibilityLabel

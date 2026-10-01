@@ -54,6 +54,36 @@ func mobileStoreRenamesEditedMemoryInsteadOfDuplicatingKey() async throws {
   #expect(store.memoryContentDraft == "")
 }
 
+// #15: the modal editor sheet's dedicated save path must not touch the shared
+// inline-composer draft, so opening the editor for an existing entry never
+// clobbers the unsaved "new memory" text the user was typing inline.
+@MainActor
+@Test
+func mobileStoreEditorSaveLeavesInlineNewMemoryDraftUntouched() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core)
+  await store.loadMemorySnapshot()
+  let existing = try #require(store.memory?.entries.first { $0.key == "swift_migration" })
+
+  // The user is mid-way through typing a NEW entry in the inline composer.
+  store.memoryKeyDraft = "trip-ideas"
+  store.memoryContentDraft = "book flights"
+
+  let saved = await store.saveMemoryEntryEdit(
+    originalKey: existing.key, newKey: "swift_migration_renamed", content: "Edited via sheet.")
+  #expect(saved)
+
+  // The inline new-entry draft survives untouched.
+  #expect(store.memoryKeyDraft == "trip-ideas")
+  #expect(store.memoryContentDraft == "book flights")
+
+  // The edit (a rename) persisted and became the selection.
+  let entries = try await core.loadMemory().entries
+  #expect(entries.contains { $0.key == "swift_migration_renamed" && $0.content == "Edited via sheet." })
+  #expect(!entries.contains { $0.key == "swift_migration" })
+  #expect(store.selectedMemoryKey == "swift_migration_renamed")
+}
+
 @MainActor
 @Test
 func mobileStoreDeletesMemory() async throws {

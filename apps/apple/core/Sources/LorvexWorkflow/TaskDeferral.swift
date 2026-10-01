@@ -5,9 +5,10 @@ import LorvexStore
 
 /// Canonical task-deferral SQL mutations.
 ///
-/// `defer_task` increments `defer_count`, stamps `last_deferred_at`,
-/// optionally writes `planned_date`, `ai_notes`, and `last_defer_reason`
-/// in a single LWW-gated UPDATE. When the planned date changes, pending
+/// `defer_task` increments `defer_count`, stamps `last_deferred_at`, clears
+/// the task's planned time (a deferred task gives up the time it was planned
+/// for), and optionally writes `planned_date`, `ai_notes`, and
+/// `last_defer_reason` in a single LWW-gated UPDATE. When the planned date changes, pending
 /// reminders (not dismissed, not cancelled, not yet fired) for the task
 /// are shifted by the same calendar-day delta, so a deferred task carries
 /// its pending reminders with it. The reminder HLC stamps come from the caller via
@@ -47,17 +48,21 @@ public enum TaskDeferral {
   /// `restoreTaskDeferral` stamps back onto the row.
   public struct DeferralSnapshot: Sendable {
     public var plannedDate: String?
+    /// The time planned on `plannedDate`, in minutes since midnight.
+    public var plannedTime: Range<Int64>?
     public var deferCount: Int64
     public var lastDeferredAt: String?
     public var lastDeferReason: String?
 
     public init(
       plannedDate: String? = nil,
+      plannedTime: Range<Int64>? = nil,
       deferCount: Int64 = 0,
       lastDeferredAt: String? = nil,
       lastDeferReason: String? = nil
     ) {
       self.plannedDate = plannedDate
+      self.plannedTime = plannedTime
       self.deferCount = deferCount
       self.lastDeferredAt = lastDeferredAt
       self.lastDeferReason = lastDeferReason
@@ -117,7 +122,9 @@ public enum TaskDeferral {
     }
 
     var setClauses: [String] = [
-      "defer_count = MIN(defer_count + 1, 9223372036854775807)"
+      "defer_count = MIN(defer_count + 1, 9223372036854775807)",
+      "planned_start_minutes = NULL",
+      "planned_end_minutes = NULL",
     ]
     var args: [(any DatabaseValueConvertible)?] = []
 
@@ -172,9 +179,9 @@ public enum TaskDeferral {
     return DeferralResult(updated: true, shiftedReminderIds: shiftedIds)
   }
 
-  /// Reset task deferral state: clear `planned_date`, `last_deferred_at`,
-  /// `last_defer_reason`, and reset `defer_count` to 0. Returns `false`
-  /// when the LWW gate rejects or the row is terminal / missing.
+  /// Reset task deferral state: clear `planned_date` and its time,
+  /// `last_deferred_at`, `last_defer_reason`, and reset `defer_count` to 0.
+  /// Returns `false` when the LWW gate rejects or the row is terminal / missing.
   public static func resetTaskDeferral(
     _ db: Database,
     taskId: TaskId,
@@ -185,6 +192,8 @@ public enum TaskDeferral {
       sql:
         "UPDATE tasks SET "
         + "planned_date = NULL, "
+        + "planned_start_minutes = NULL, "
+        + "planned_end_minutes = NULL, "
         + "last_deferred_at = NULL, "
         + "last_defer_reason = NULL, "
         + "defer_count = 0, "
@@ -211,6 +220,8 @@ public enum TaskDeferral {
       sql:
         "UPDATE tasks SET "
         + "planned_date = ?, "
+        + "planned_start_minutes = ?, "
+        + "planned_end_minutes = ?, "
         + "defer_count = ?, "
         + "last_deferred_at = ?, "
         + "last_defer_reason = ?, "
@@ -220,7 +231,8 @@ public enum TaskDeferral {
         + "WHERE id = ? AND status NOT IN ('completed', 'cancelled') "
         + "AND ? > version",
       arguments: [
-        snapshot.plannedDate, snapshot.deferCount, snapshot.lastDeferredAt,
+        snapshot.plannedDate, snapshot.plannedTime?.lowerBound, snapshot.plannedTime?.upperBound,
+        snapshot.deferCount, snapshot.lastDeferredAt,
         snapshot.lastDeferReason, version, version, now, taskId.rawValue, version,
       ])
     return db.changesCount > 0

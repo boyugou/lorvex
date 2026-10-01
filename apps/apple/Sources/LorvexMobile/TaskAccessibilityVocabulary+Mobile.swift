@@ -1,15 +1,12 @@
 import LorvexCore
 
 extension TaskAccessibilityVocabulary {
-  /// The iOS/iPadOS/visionOS localized VoiceOver vocabulary, resolved from the
+  /// The iOS/iPadOS localized VoiceOver vocabulary, resolved from the
   /// LorvexMobile string catalog. Status words reuse the already-localized
   /// `MobileTaskDisplayText.status`. Placeholders (`%@` priority/due) and the
   /// native pluralized minutes interpolation are enforced by the verifier.
   static var mobileLocalized: TaskAccessibilityVocabulary {
     TaskAccessibilityVocabulary(
-      focusedTask: String(
-        localized: "a11y.task.focused", defaultValue: "Focused task", table: "Localizable",
-        bundle: MobileL10n.bundle),
       priorityTaskFormat: String(
         localized: "a11y.task.priority_format", defaultValue: "%@ task", table: "Localizable",
         bundle: MobileL10n.bundle),
@@ -23,6 +20,9 @@ extension TaskAccessibilityVocabulary {
         bundle: MobileL10n.bundle),
       overdueFormat: String(
         localized: "a11y.task.overdue_format", defaultValue: "overdue %@", table: "Localizable",
+        bundle: MobileL10n.bundle),
+      repeatsWord: String(
+        localized: "a11y.task.repeats", defaultValue: "repeats", table: "Localizable",
         bundle: MobileL10n.bundle),
       statusName: { MobileTaskDisplayText.status($0) }
     )

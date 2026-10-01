@@ -9,7 +9,6 @@ DIST_DIR="$ROOT_DIR/dist"
 APP_BUNDLE="$DIST_DIR/$APP_NAME.app"
 APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
-APP_FRAMEWORKS="$APP_CONTENTS/Frameworks"
 APP_HELPERS="$APP_CONTENTS/Helpers"
 APP_PLUGINS="$APP_CONTENTS/PlugIns"
 APP_BINARY="$APP_MACOS/$APP_NAME"
@@ -111,12 +110,18 @@ WIDGET_BUILD_BINARY="$SWIFT_BIN_PATH/LorvexWidgetBundle"
 MCP_BUILD_BINARY="$SWIFT_BIN_PATH/$MCP_HOST_PRODUCT"
 
 rm -rf "$APP_BUNDLE"
-mkdir -p "$APP_MACOS" "$APP_FRAMEWORKS" "$MCP_HELPER_MACOS" "$MCP_HELPER_RESOURCES" "$APP_CONTENTS/Resources" "$WIDGET_MACOS" "$WIDGET_RESOURCES"
+# No Contents/Frameworks: the macOS product statically links every SwiftPM
+# library into its executables and ships no embedded framework or dylib. Xcode
+# omits the directory entirely in that case, and an empty Frameworks/ is a
+# structural deviation. Every consumer (sign_app_bundle.sh, notarize_archive.sh,
+# verify_developer_id_provisioning.py) already treats it as optional, so a
+# future step that genuinely stages a framework creates it itself.
+mkdir -p "$APP_MACOS" "$MCP_HELPER_MACOS" "$MCP_HELPER_RESOURCES" "$APP_CONTENTS/Resources" "$WIDGET_MACOS" "$WIDGET_RESOURCES"
 cp "$BUILD_BINARY" "$APP_BINARY"
 chmod +x "$APP_BINARY"
 cp "$WIDGET_BUILD_BINARY" "$WIDGET_BINARY"
 chmod +x "$WIDGET_BINARY"
-cp "$ROOT_DIR/Config/LorvexWidgetExtension-Info.plist" "$WIDGET_INFO_PLIST"
+cp "$ROOT_DIR/Config/LorvexWidgets-Info.plist" "$WIDGET_INFO_PLIST"
 cp "$ROOT_DIR/Config/PrivacyInfo.xcprivacy" "$APP_CONTENTS/Resources/PrivacyInfo.xcprivacy"
 cp "$ROOT_DIR/Config/PrivacyInfo.xcprivacy" "$WIDGET_RESOURCES/PrivacyInfo.xcprivacy"
 cp "$ROOT_DIR/Resources/AppIcon/LorvexAppIcon.icns" "$APP_CONTENTS/Resources/LorvexAppIcon.icns"
@@ -210,11 +215,85 @@ done
 # the build (verify_all.sh runs the same script strictly, where tests depend on it).
 "$ROOT_DIR/script/compile_xcstrings.sh" --best-effort "$APP_CONTENTS/Resources" "$BUILD_BIN_DIR"
 
+# Toolchain provenance (DT*/BuildMachineOSBuild), which Xcode stamps into every
+# bundle it builds and this SwiftPM staging path must supply itself. App Store
+# ingestion reads these into the build's sdkBuild/platformBuild metadata; a
+# macOS TestFlight payload without them is the one observable difference from
+# an Xcode-produced bundle when its install-data asset fails to generate.
+DT_SDK_VERSION="$(xcrun --show-sdk-version --sdk macosx)"
+DT_SDK_BUILD="$(xcrun --show-sdk-build-version --sdk macosx)"
+DT_XCODE_BUILD="$(xcodebuild -version 2>/dev/null | awk '/Build version/ {print $3}')"
+# Xcode's numeric DTXcode form: "26.6" -> "2660" (major, minor, patch-0).
+DT_XCODE="$(xcodebuild -version 2>/dev/null | awk '/^Xcode/ {split($2, v, "."); printf "%02d%d%d", v[1], v[2], v[3] + 0}')"
+BUILD_MACHINE_OS_BUILD="$(sw_vers -buildVersion)"
+
+# Assert one string key, whether or not the plist already declares it.
+# PlistBuddy's `Add` fails on an existing key and `Set` fails on a missing one,
+# so neither alone survives both inputs this staging sees.
+set_plist_string() {
+  local plist="$1" key="$2" value="$3"
+  /usr/libexec/PlistBuddy -c "Set :$key $value" "$plist" >/dev/null 2>&1 ||
+    /usr/libexec/PlistBuddy -c "Add :$key string $value" "$plist"
+}
+
+# Staged copies only (never the tracked Config/ sources): stamp the toolchain
+# provenance into the widget, helper, and embedded resource bundle Info.plists.
+# The staged Config/ copies arrive without these keys; the resource bundle
+# plists SwiftPM generates already carry a full set. Each key is therefore
+# asserted rather than added, and an existing value is overwritten because
+# these keys must describe the toolchain that produced THIS bundle.
+stamp_toolchain_provenance() {
+  local plist="$1"
+  set_plist_string "$plist" DTSDKName "macosx$DT_SDK_VERSION"
+  set_plist_string "$plist" DTSDKBuild "$DT_SDK_BUILD"
+  set_plist_string "$plist" DTPlatformName macosx
+  set_plist_string "$plist" DTPlatformVersion "$DT_SDK_VERSION"
+  set_plist_string "$plist" DTPlatformBuild "$DT_SDK_BUILD"
+  set_plist_string "$plist" DTXcode "$DT_XCODE"
+  set_plist_string "$plist" DTXcodeBuild "$DT_XCODE_BUILD"
+  set_plist_string "$plist" DTCompiler com.apple.compilers.llvm.clang.1_0
+  set_plist_string "$plist" BuildMachineOSBuild "$BUILD_MACHINE_OS_BUILD"
+  set_plist_string "$plist" CFBundleInfoDictionaryVersion 6.0
+  # Dropped and rebuilt, not appended: `Add :CFBundleSupportedPlatforms:0` on a
+  # plist that already declares the array leaves a second MacOSX entry behind.
+  /usr/libexec/PlistBuddy -c "Delete :CFBundleSupportedPlatforms" "$plist" >/dev/null 2>&1 || true
+  /usr/libexec/PlistBuddy \
+    -c "Add :CFBundleSupportedPlatforms array" \
+    -c "Add :CFBundleSupportedPlatforms:0 string MacOSX" \
+    "$plist"
+}
+stamp_toolchain_provenance "$WIDGET_INFO_PLIST"
+stamp_toolchain_provenance "$MCP_HELPER_INFO_PLIST"
+
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+  <key>DTSDKName</key>
+  <string>macosx$DT_SDK_VERSION</string>
+  <key>DTSDKBuild</key>
+  <string>$DT_SDK_BUILD</string>
+  <key>DTPlatformName</key>
+  <string>macosx</string>
+  <key>DTPlatformVersion</key>
+  <string>$DT_SDK_VERSION</string>
+  <key>DTPlatformBuild</key>
+  <string>$DT_SDK_BUILD</string>
+  <key>DTXcode</key>
+  <string>$DT_XCODE</string>
+  <key>DTXcodeBuild</key>
+  <string>$DT_XCODE_BUILD</string>
+  <key>DTCompiler</key>
+  <string>com.apple.compilers.llvm.clang.1_0</string>
+  <key>BuildMachineOSBuild</key>
+  <string>$BUILD_MACHINE_OS_BUILD</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleSupportedPlatforms</key>
+  <array>
+    <string>MacOSX</string>
+  </array>
   <key>CFBundleExecutable</key>
   <string>$APP_NAME</string>
   <key>CFBundleDisplayName</key>
@@ -273,6 +352,112 @@ $LOCALIZATION_PLIST_ENTRIES
 </dict>
 </plist>
 PLIST
+
+add_plist_string_if_absent() {
+  local plist="$1" key="$2" value="$3"
+  if ! /usr/libexec/PlistBuddy -c "Print :$key" "$plist" >/dev/null 2>&1; then
+    /usr/libexec/PlistBuddy -c "Add :$key string $value" "$plist"
+  fi
+}
+
+# Convert a resource bundle from the flat layout `swift build` emits to the
+# wrapped layout Xcode produces for macOS: `Contents/Info.plist` beside
+# `Contents/Resources/<payload>`. Flat is the iOS bundle shape — every resource
+# bundle inside a shipping Xcode-built macOS app is wrapped — and this staging
+# is the macOS product's only packaging path (iOS/watchOS archive
+# through Xcode, which already gets this right for their platform).
+#
+# Runtime is unaffected: CFBundle detects the layout and reports `resourceURL`
+# as `Contents/Resources` for a wrapped bundle, so `Bundle(url:)` plus
+# `url(forResource:)` / `resourceURL` — the only ways this app reaches bundled
+# resources — resolve identically either way.
+wrap_embedded_bundle() {
+  local bundle_dir="$1"
+  if [[ -d "$bundle_dir/Contents" ]]; then
+    return 0
+  fi
+  local flat="$bundle_dir.flat"
+  rm -rf "$flat"
+  mv "$bundle_dir" "$flat"
+  mkdir -p "$bundle_dir/Contents/Resources"
+  if [[ -f "$flat/Info.plist" ]]; then
+    mv "$flat/Info.plist" "$bundle_dir/Contents/Info.plist"
+  fi
+  while IFS= read -r -d '' entry; do
+    mv "$entry" "$bundle_dir/Contents/Resources/"
+  done < <(find "$flat" -mindepth 1 -maxdepth 1 -print0)
+  rmdir "$flat"
+}
+
+# Give every embedded resource bundle the identity Xcode stamps into one: the
+# same toolchain provenance the app and its extensions carry, plus the bundle
+# identity keys. A SwiftPM package that does not declare `defaultLocalization`
+# emits no Info.plist for its resource bundles at all, so the `.bundle`
+# directory is not a valid bundle and App Store Connect rejects the payload
+# (error 90276 for the missing CFBundleIdentifier). The plist is CREATED when
+# absent — not merely patched — so a resource bundle from a package that forgets
+# the declaration cannot ship structurally broken. The identifier is derived
+# from the bundle name; script/verify_swiftpm_resource_bundles.py re-asserts the
+# layout and the whole key set on the staged app.
+normalize_embedded_bundle_identity() {
+  local bundle_dir="$1"
+  local plist="$bundle_dir/Contents/Info.plist"
+  local bundle_name slug
+  bundle_name="$(basename "$bundle_dir" .bundle)"
+  slug="$(printf '%s' "$bundle_name" | tr '[:upper:]_' '[:lower:]-')"
+  if [[ ! -f "$plist" ]]; then
+    cat >"$plist" <<'EMPTY_PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict/>
+</plist>
+EMPTY_PLIST
+  fi
+  stamp_toolchain_provenance "$plist"
+  add_plist_string_if_absent "$plist" CFBundleIdentifier "com.lorvex.apple.resource.$slug"
+  add_plist_string_if_absent "$plist" CFBundleName "$bundle_name"
+  add_plist_string_if_absent "$plist" CFBundlePackageType "BNDL"
+  add_plist_string_if_absent "$plist" CFBundleInfoDictionaryVersion "6.0"
+  add_plist_string_if_absent "$plist" CFBundleDevelopmentRegion "$LOCALIZATION_SOURCE_LANGUAGE"
+  add_plist_string_if_absent "$plist" LSMinimumSystemVersion "$MIN_SYSTEM_VERSION"
+  plutil -lint "$plist" >/dev/null
+}
+
+# `-depth` visits a nested bundle before its container, so wrapping a container
+# never invalidates a path still queued for its children.
+staged_bundles=()
+while IFS= read -r -d '' staged_bundle; do
+  staged_bundles+=("$staged_bundle")
+done < <(find "$APP_BUNDLE" -depth -type d -name "*.bundle" -print0)
+if [[ "${#staged_bundles[@]}" -eq 0 ]]; then
+  echo "no SwiftPM resource bundles staged into $APP_BUNDLE" >&2
+  exit 1
+fi
+for staged_bundle in "${staged_bundles[@]}"; do
+  wrap_embedded_bundle "$staged_bundle"
+  normalize_embedded_bundle_identity "$staged_bundle"
+done
+
+# PkgInfo: the four-byte package type plus the four-byte creator signature,
+# which Xcode writes for every app wrapper. "????" is the standard "no creator
+# code" value and matches the app Info.plists, which declare no
+# CFBundleSignature. App extensions do not get one — Xcode ships .appex
+# bundles without a PkgInfo.
+printf 'APPL????' >"$APP_CONTENTS/PkgInfo"
+printf 'APPL????' >"$MCP_HELPER_CONTENTS/PkgInfo"
+
+# Strip extended attributes before signing. Finder metadata, resource forks,
+# and provenance attributes picked up while staging otherwise ride into the
+# signature's sealed resources, where they are a needless difference from an
+# Xcode-produced bundle. sign_app_bundle.sh still hard-fails on a quarantine
+# xattr first, so this never masks a quarantined input.
+#
+# The chmod is a prerequisite, not cosmetics: `cp -R` preserves the mode of a
+# dependency's resource file, and SwiftPM's package checkouts are read-only, so
+# a staged copy can land at 0444 — which makes removexattr fail with EACCES.
+chmod -R u+w "$APP_BUNDLE"
+xattr -cr "$APP_BUNDLE"
 
 # Sign inside-out (helper → widget → app). An unsigned bundle traps at startup:
 # the executable target's `Bundle.module` resource lookup fails its assertion

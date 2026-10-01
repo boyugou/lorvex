@@ -2,7 +2,7 @@ import AppKit
 import LorvexCore
 import SwiftUI
 
-// MARK: - Diagnostics tab: setup, Apple surfaces, guide, activity, and about
+// MARK: - Diagnostics tab: setup, Apple surfaces, activity, and about
 
 extension SettingsView {
   @ViewBuilder
@@ -12,7 +12,7 @@ extension SettingsView {
     }
 
     if let diagnostics = store.runtimeDiagnostics {
-      Section(String(localized: "settings.diagnostics.setup_section", defaultValue: "Setup", table: "Localizable", bundle: LorvexL10n.bundle)) {
+      Section(String(localized: "settings.diagnostics.overview_section", defaultValue: "Overview", table: "Localizable", bundle: LorvexL10n.bundle)) {
         SettingsDiagnosticsPanel(
           rows: setupDiagnosticRows(diagnostics),
           accessibilityIdentifier: "settings.diagnostics.setupPanel"
@@ -24,10 +24,6 @@ extension SettingsView {
           rows: appleSurfaceDiagnosticRows,
           accessibilityIdentifier: "settings.diagnostics.appleSurfacesPanel"
         )
-      }
-
-      Section(String(localized: "settings.diagnostics.guide", defaultValue: "Guide", table: "Localizable", bundle: LorvexL10n.bundle)) {
-        SettingsDiagnosticsGuidePanel(guide: diagnostics.guide)
       }
     } else {
       Section(String(localized: "settings.tab.diagnostics", defaultValue: "Diagnostics", table: "Localizable", bundle: LorvexL10n.bundle)) {
@@ -43,7 +39,7 @@ extension SettingsView {
   private var reseedRequiredBanner: some View {
     Section {
       Label {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           Text(String(
             localized: "settings.diagnostics.reseed_required.title",
             defaultValue: "Full re-sync needed",
@@ -62,7 +58,7 @@ extension SettingsView {
       } icon: {
         Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
           .symbolRenderingMode(.hierarchical)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
       }
       .accessibilityElement(children: .combine)
       .accessibilityIdentifier("settings.diagnostics.reseedRequired")
@@ -103,7 +99,7 @@ extension SettingsView {
       rows.append(SettingsDiagnosticsRow(
         id: "default-list",
         title: String(localized: "settings.diagnostics.default_list", defaultValue: "Default List", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: store.lists?.lists.first { $0.id == defaultListID }?.name ?? defaultListID,
+        value: store.lists?.lists.first { $0.id == defaultListID }?.displayName ?? defaultListID,
         detail: nil,
         systemImage: "tray.full",
         level: .neutral
@@ -172,16 +168,16 @@ extension SettingsView {
         id: "widget",
         title: String(localized: "settings.diagnostics.widget_snapshot", defaultValue: "Widget Snapshot", table: "Localizable", bundle: LorvexL10n.bundle),
         value: surfaces.widgetStatus,
-        detail: surfaces.widgetGeneratedAt,
+        detail: surfaces.widgetGeneratedAt.map { LorvexDateFormatters.dayAndClockTime($0) },
         systemImage: "rectangle.inset.filled",
         level: .neutral
       ),
       SettingsDiagnosticsRow(
-        id: "widget-focus",
-        title: String(localized: "settings.diagnostics.widget_focus_tasks", defaultValue: "Widget Focus Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(surfaces.widgetFocusTaskCount)",
+        id: "widget-today",
+        title: String(localized: "settings.diagnostics.widget_today_tasks", defaultValue: "Widget Today Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
+        value: "\(surfaces.widgetTodayTaskCount)",
         detail: nil,
-        systemImage: "scope",
+        systemImage: "sun.max",
         level: .neutral
       ),
     ]
@@ -201,7 +197,7 @@ extension SettingsView {
       title: String(localized: "settings.diagnostics.no_diagnostics", defaultValue: "No Diagnostics", table: "Localizable", bundle: LorvexL10n.bundle),
       message: String(
         localized: "settings.diagnostics.no_diagnostics_description",
-        defaultValue: "Apply a runtime or refresh diagnostics.",
+        defaultValue: "Lorvex hasn’t read its diagnostics yet.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ),
@@ -226,8 +222,9 @@ extension SettingsView {
     }
   }
 
-  /// App version plus the diagnostics maintenance actions: refresh the snapshot
-  /// and copy a plaintext summary for bug reports.
+  /// App version, a plaintext diagnostics summary to copy into a bug report,
+  /// and the acknowledgments and privacy policy. There is no refresh action:
+  /// the diagnostics reload whenever this tab opens and on every app refresh.
   var aboutSection: some View {
     Section(String(localized: "settings.section.about", defaultValue: "About", table: "Localizable", bundle: LorvexL10n.bundle)) {
       LabeledContent(
@@ -236,16 +233,6 @@ extension SettingsView {
       )
       .textSelection(.enabled)
       .accessibilityIdentifier("settings.runtime.overview.version")
-
-      Button {
-        Task { await store.loadRuntimeDiagnostics() }
-      } label: {
-        Label(
-          String(localized: "settings.runtime.refresh_diagnostics", defaultValue: "Refresh Diagnostics", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "waveform.path.ecg"
-        )
-      }
-      .accessibilityIdentifier("settings.diagnostics.refresh")
 
       Button {
         let text = diagnosticsClipboardText()
@@ -282,14 +269,13 @@ extension SettingsView {
   }
 
   /// Cloud Sync backend derived from the effective ``AppStore/cloudSyncMode``:
-  /// `.off` reads "disabled"; `.recordPlan` and `.live` read "cloudkit"
-  /// (CloudKit is the transport whenever sync is engaged). The core's
+  /// `.off` reads "disabled" and `.live` reads "cloudkit". The core's
   /// `SyncStatusSnapshot.backend` is a static placeholder that cannot see the
   /// mode, so the bug-report text sources the label from the store instead.
   private var syncBackendLabel: String {
     switch store.cloudSyncMode {
     case .off: return "disabled"
-    case .recordPlan, .live: return "cloudkit"
+    case .live: return "cloudkit"
     }
   }
 
@@ -325,7 +311,7 @@ extension SettingsView {
     lines.append("Habit Reminders: \(surfaces.habitReminderStatus)")
     lines.append("Calendar Import: \(surfaces.calendarImportStatus)")
     lines.append("Widget Snapshot: \(surfaces.widgetStatus)")
-    lines.append("Widget Focus Tasks: \(surfaces.widgetFocusTaskCount)")
+    lines.append("Widget Today Tasks: \(surfaces.widgetTodayTaskCount)")
 
     return lines.joined(separator: "\n")
   }

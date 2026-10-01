@@ -88,9 +88,7 @@ private struct TaskDetailAINotesPanel: View {
             .font(LorvexDesign.Typography.secondaryText)
             .foregroundStyle(.secondary)
           }
-          .padding(LorvexDesign.Spacing.s)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .background(.quaternary.opacity(0.12), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+          .lorvexInsetPanel(padding: LorvexDesign.Spacing.s)
           .accessibilityIdentifier("task.detail.aiNotes.empty")
         }
       }
@@ -170,7 +168,7 @@ private struct TaskDetailOrganizationPanel: View {
             Button {
               Task { await store.moveSelectedTaskToList(list.id) }
             } label: {
-              Label(list.name, systemImage: list.icon ?? "list.bullet")
+              Label(list.displayName, systemImage: list.icon ?? "list.bullet")
             }
           }
         } label: {
@@ -182,7 +180,7 @@ private struct TaskDetailOrganizationPanel: View {
               font: .system(size: 10, weight: .medium),
               background: .none
             )
-            Text(currentList?.name ?? String(
+            Text(currentList?.displayName ?? String(
               localized: "task_detail.organization.no_list", defaultValue: "No List",
               table: "Localizable",
               bundle: LorvexL10n.bundle))
@@ -190,7 +188,7 @@ private struct TaskDetailOrganizationPanel: View {
               .foregroundStyle(.primary)
               .lineLimit(1)
             Image(systemName: "chevron.up.chevron.down")
-              .font(.system(size: 9, weight: .semibold))
+              .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
               .foregroundStyle(.tertiary)
           }
         }
@@ -198,10 +196,10 @@ private struct TaskDetailOrganizationPanel: View {
         .fixedSize()
         .accessibilityIdentifier("task.detail.organization.list")
         .accessibilityLabel(String(
-          localized: "task_detail.organization.list_a11y", defaultValue: "Task's list",
+          localized: "task_detail.organization.list_a11y", defaultValue: "Task’s list",
           table: "Localizable",
           bundle: LorvexL10n.bundle))
-        .accessibilityValue(currentList?.name ?? String(
+        .accessibilityValue(currentList?.displayName ?? String(
           localized: "task_detail.organization.no_list", defaultValue: "No List",
           table: "Localizable",
           bundle: LorvexL10n.bundle))
@@ -240,7 +238,7 @@ private struct TaskDetailOrganizationPanel: View {
         removeTag(tag)
       } label: {
         Image(systemName: "xmark")
-          .font(.system(size: 9, weight: .semibold))
+          .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
           .foregroundStyle(.secondary)
       }
       .buttonStyle(.plain)
@@ -356,7 +354,10 @@ private struct TaskDetailNotesPanel: View {
               )
             )
             .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(characterCount >= ValidationLimits.maxBodyLength ? AnyShapeStyle(.red) : AnyShapeStyle(.orange))
+            .foregroundStyle(
+              characterCount >= ValidationLimits.maxBodyLength
+                ? AnyShapeStyle(LorvexDesign.Palette.error)
+                : AnyShapeStyle(LorvexDesign.Palette.warning))
             .monospacedDigit()
             .padding(.horizontal, LorvexDesign.Spacing.s)
             .padding(.vertical, LorvexDesign.Spacing.xs)

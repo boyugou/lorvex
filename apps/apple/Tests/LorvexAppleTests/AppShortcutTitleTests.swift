@@ -15,7 +15,7 @@ func appShortcutsExposeStableShortTitles() {
       "Overview",
       "Complete Task",
       "Defer Task",
-      "Focus Task",
+      "Plan for Today",
       "List Tasks",
       "Search Tasks",
       "Create Habit",

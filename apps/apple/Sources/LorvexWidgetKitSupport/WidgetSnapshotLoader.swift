@@ -5,6 +5,8 @@ public enum WidgetSnapshotFallbackReason: String, Equatable, Sendable {
   case expiredDay
   case unreadableFile
   case invalidJSON
+  /// Written by a Lorvex whose snapshot version differs from the one this
+  /// reader decodes.
   case unsupportedVersion
 }
 
@@ -30,13 +32,13 @@ public enum WidgetSnapshotLoadResult: Equatable, Sendable {
 
 public struct WidgetSnapshotLoader {
   private static let defaultSnapshotDirectory = "Lorvex"
-  public static let defaultSnapshotFileName = "widget_snapshot_v3.json"
+  public static let defaultSnapshotFileName = "widget_snapshot.json"
 
   /// Upper bound on the snapshot file's byte length, enforced before the bytes
   /// are trusted (mirrors `LorvexImportLimits.readBoundedFile`'s
   /// size-before-materialize pattern). A widget/complication process runs under
   /// a tight jetsam budget, so a co-tenant or compromised host writing a huge
-  /// `widget_snapshot_v3.json` would OOM-kill every refresh on a retry loop. A
+  /// `widget_snapshot.json` would OOM-kill every refresh on a retry loop. A
   /// legitimate snapshot is a few KB; this bounds a hostile file far below the
   /// memory limit while never rejecting a real one.
   static let maxSnapshotBytes = 4 * 1024 * 1024
@@ -106,17 +108,20 @@ public struct WidgetSnapshotLoader {
           )
         )
       }
-      let snapshot = try decoder.decode(WidgetSnapshot.self, from: data)
-      guard snapshot.version == WidgetSnapshot.supportedVersion else {
+      // Read the version before the body: a file of another version has
+      // another shape, and must read as unsupported, not as damaged.
+      let version = try WidgetSnapshot.encodedVersion(of: data)
+      guard version == WidgetSnapshot.supportedVersion else {
         return .fallback(
           .init(
             reason: .unsupportedVersion,
-            detail: "Unsupported snapshot version \(snapshot.version)"
+            detail: "Snapshot version \(version), expected \(WidgetSnapshot.supportedVersion)"
           )
         )
       }
+      let snapshot = try decoder.decode(WidgetSnapshot.self, from: data)
       let elementCount =
-        snapshot.focusTasks.count + snapshot.habits.count + snapshot.todayTasks.count
+        snapshot.tasks.count + snapshot.habits.count
         + snapshot.lists.count + snapshot.listStats.count
       guard elementCount <= Self.maxDecodedElements else {
         return .fallback(

@@ -2,7 +2,7 @@ import XCTest
 
 @testable import LorvexWorkflow
 
-/// Parity port of `lorvex_workflow::lifecycle::sync_plan` tests.
+/// How each lifecycle transition result maps onto its sync plan's buckets.
 final class LifecycleSyncPlanTests: XCTestCase {
   private func edge() -> DeletedDependencyEdge {
     DeletedDependencyEdge(
@@ -16,16 +16,14 @@ final class LifecycleSyncPlanTests: XCTestCase {
       version: "0000000000001_0000_7a90000000000001", createdAt: "2026-05-08T00:00:00Z")
   }
 
-  func testCompletionPlanExposesSpawnAndRewireBuckets() {
+  func testCompletionPlanExposesSpawnBuckets() {
     let result = CompletionLifecycleTransitionResult(
       updated: true,
       cancelledReminderIds: ["cancelled-reminder"],
       spawnedSuccessorId: "successor",
       spawnedSuccessorTagEdges: [tagEdge()],
       spawnedSuccessorChecklistItemIds: ["check-1"],
-      spawnedSuccessorReminderIds: ["reminder-1"],
-      rewiredFocusScheduleDates: ["2026-05-09"],
-      rewiredCurrentFocusDates: ["2026-05-08"])
+      spawnedSuccessorReminderIds: ["reminder-1"])
 
     let plan = LifecycleSyncPlan.from(completion: result)
 
@@ -34,8 +32,6 @@ final class LifecycleSyncPlanTests: XCTestCase {
     XCTAssertEqual(plan.spawnedSuccessorTagEdges.count, 1)
     XCTAssertEqual(plan.spawnedSuccessorChecklistItemIds, ["check-1"])
     XCTAssertEqual(plan.spawnedSuccessorReminderIds, ["reminder-1"])
-    XCTAssertEqual(plan.rewiredFocusScheduleDates, ["2026-05-09"])
-    XCTAssertEqual(plan.rewiredCurrentFocusDates, ["2026-05-08"])
   }
 
   func testCancelPlanExposesDependencyAndSpawnBuckets() {
@@ -47,9 +43,7 @@ final class LifecycleSyncPlanTests: XCTestCase {
       spawnedSuccessorId: "successor",
       spawnedSuccessorTagEdges: [tagEdge()],
       spawnedSuccessorChecklistItemIds: ["check-1"],
-      spawnedSuccessorReminderIds: ["reminder-1"],
-      rewiredFocusScheduleDates: ["2026-05-09"],
-      rewiredCurrentFocusDates: ["2026-05-08"])
+      spawnedSuccessorReminderIds: ["reminder-1"])
 
     let plan = LifecycleSyncPlan.from(cancel: result)
 
@@ -74,9 +68,7 @@ final class LifecycleSyncPlanTests: XCTestCase {
       successorCancelSideEffects: SuccessorCancelSideEffects(
         cancelledReminderIds: ["successor-reminder"],
         deletedDependencyEdges: [edge()],
-        affectedDependentIds: ["successor-dependent"]),
-      rewiredFocusScheduleDates: ["2026-05-09"],
-      rewiredCurrentFocusDates: ["2026-05-08"])
+        affectedDependentIds: ["successor-dependent"]))
     let result = ReopenLifecycleTransitionResult(
       updated: true,
       reopenedReminderIds: ["reopened-reminder"],

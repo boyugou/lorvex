@@ -3,12 +3,10 @@ import LorvexCloudSync
 import LorvexCore
 import LorvexDomain
 import LorvexSystemIntents
-import TipKit
 import UserNotifications
 
 enum LorvexAppleBootstrap {
   static func configure() {
-    AppLayoutStateReset.removeStaleMainWindowAutosaveState()
     // In-process App Intents, Spotlight queries, and notification actions resolve
     // their core through LorvexCoreRuntimeFactory. No database-location provider is
     // installed: every surface opens the single Lorvex-managed App Group store the
@@ -20,7 +18,6 @@ enum LorvexAppleBootstrap {
     // host and interactive-widget writes. All paths converge on one throttled /
     // single-flight AppStore refresh route.
     DatabaseChangeSignal.configureApplicationProcess()
-    configureTips()
   }
 
   @MainActor
@@ -31,16 +28,11 @@ enum LorvexAppleBootstrap {
   @MainActor
   static func makeStore(settings: AppSettingsStore) -> AppStore {
     let core = AppCoreFactory.make()
-    let cloudSyncMode = AppCoreFactory.resolveCloudSyncMode(
+    let cloudSyncMode = CloudSyncFactory.resolveMode(
       persistedMode: settings.cloudSyncMode,
       environment: settings.environment
     )
-    // Construct exactly one coordinator actor graph for this CloudSyncState
-    // directory. Live sync and off-mode maintenance share the value (including
-    // its operation gate); creating separate values here would let delete,
-    // re-enable, reset, and ordinary cycles race the same durable safety files.
-    let cloudDataMaintenanceCoordinator = AppCoreFactory.makeCloudDataMaintenanceCoordinator()
-    return AppStore(
+    let store = AppStore(
       core: core,
       feedbackProvider: AppKitFeedbackProvider(),
       taskSearchIndexer: SpotlightTaskSearchIndexer(),
@@ -73,9 +65,7 @@ enum LorvexAppleBootstrap {
       widgetSnapshotPublisher: FileWidgetSnapshotPublisher.configuredFromEnvironment()
         ?? NoopWidgetSnapshotPublisher(),
       cloudSyncMode: cloudSyncMode,
-      cloudSyncSubscriber: AppCoreFactory.makeCloudSyncSubscriber(settings: settings),
-      cloudSyncCoordinator: cloudSyncMode == .live ? cloudDataMaintenanceCoordinator : nil,
-      cloudDataMaintenanceCoordinator: cloudDataMaintenanceCoordinator,
+      cloudSyncController: AppCoreFactory.makeCloudSyncController(core: core),
       eventKitCoordinator: makeEventKitCoordinator(core: core, settings: settings),
       eventKitIntegrationEnabled: settings.eventKitEnabled,
       badgeEnabled: settings.badgeEnabled,
@@ -88,6 +78,8 @@ enum LorvexAppleBootstrap {
       },
       setBadge: BadgeCoordinator.liveBadgeSetter
     )
+    store.restorePersistedLaunchState()
+    return store
   }
 
   /// Builds the EventKit two-way coordinator over a `LiveEventKitAccess`. The
@@ -166,13 +158,6 @@ enum LorvexAppleBootstrap {
       return CalendarAiAccessMode.failSafeMode
     }
     return mode
-  }
-
-  private static func configureTips() {
-    try? Tips.configure([
-      .displayFrequency(.immediate),
-      .datastoreLocation(.applicationDefault),
-    ])
   }
 
 }

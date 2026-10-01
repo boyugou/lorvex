@@ -18,7 +18,8 @@ final class SwiftLorvexCoreServiceHabitMilestoneTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -71,18 +72,18 @@ final class SwiftLorvexCoreServiceHabitMilestoneTests: XCTestCase {
 
     // `.set` writes the goal.
     let set = try await service.updateHabit(
-      id: created.id, name: nil, cue: nil, color: nil, icon: nil, targetCount: nil,
+      id: created.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
       archived: nil, cadence: nil, milestoneTarget: .set(14))
     XCTAssertEqual(set.milestoneTarget, 14)
 
     // `.unset` (via a name-only convenience update) leaves it untouched.
     let renamed = try await service.updateHabit(
-      id: created.id, name: "Read daily", cue: nil, color: nil, icon: nil, targetCount: nil)
+      id: created.id, name: "Read daily", cue: .unset, color: nil, icon: nil, targetCount: nil)
     XCTAssertEqual(renamed.milestoneTarget, 14)
 
     // `.clear` removes it.
     let cleared = try await service.updateHabit(
-      id: created.id, name: nil, cue: nil, color: nil, icon: nil, targetCount: nil,
+      id: created.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
       archived: nil, cadence: nil, milestoneTarget: .clear)
     XCTAssertNil(cleared.milestoneTarget)
   }
@@ -93,7 +94,7 @@ final class SwiftLorvexCoreServiceHabitMilestoneTests: XCTestCase {
     var threw = false
     do {
       _ = try await service.updateHabit(
-        id: created.id, name: nil, cue: nil, color: nil, icon: nil, targetCount: nil,
+        id: created.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
         archived: nil, cadence: nil, milestoneTarget: .set(-3))
     } catch {
       threw = true
@@ -137,7 +138,7 @@ final class SwiftLorvexCoreServiceHabitMilestoneTests: XCTestCase {
     var threw = false
     do {
       _ = try await service.updateHabit(
-        id: created.id, name: nil, cue: nil, color: nil, icon: nil, targetCount: nil,
+        id: created.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
         archived: nil,
         cadence: HabitCadenceInput(frequencyType: "weekly", weekdays: [-1]),
         milestoneTarget: .unset)

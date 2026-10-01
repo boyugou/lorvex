@@ -323,6 +323,7 @@ extension RecentLogEntry {
   }
 
   /// True when this row is one of the MetricKit crash / hang / CPU / disk-write
-  /// diagnostics — the rows a crash-scoped feed should keep.
+  /// diagnostics the system reported, rather than something Lorvex logged
+  /// itself. Distinguishes the two in a feed that carries both.
   public var isMetricKitDiagnostic: Bool { metricKitDiagnosticKind != nil }
 }

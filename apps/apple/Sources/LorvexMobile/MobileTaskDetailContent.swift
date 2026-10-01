@@ -2,7 +2,15 @@ import LorvexCore
 import LorvexMarkdownUI
 import SwiftUI
 
-struct MobileTaskDetailContent<Actions: View>: View {
+/// A task's detail: the title and notes, the task's fields as rows with an
+/// Add Detail menu for the rest, the tasks it depends on, assistant context,
+/// the checklist and reminders when it has any, and the secondary actions. As
+/// a
+/// screen of its own it carries the "Task" title and a Share toolbar item; in
+/// a split's detail pane (`mobileDetailPresentation`) the header ends with a
+/// row of the pane's actions instead: `paneActions` (the status transition
+/// and Edit) followed by Share.
+struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   let task: LorvexTask
   let timeZone: TimeZone
   let toggleChecklistItem: ((TaskChecklistItem) async -> Void)?
@@ -11,7 +19,21 @@ struct MobileTaskDetailContent<Actions: View>: View {
   let addReminder: ((Date) async -> Void)?
   let removeReminder: ((TaskReminder) async -> Void)?
   let resolveDependencyTasks: (([LorvexTask.ID]) async -> [LorvexTask])?
+  let completeDependency: ((LorvexTask) async -> Void)?
+  let isDependencyMutating: (LorvexTask.ID) -> Bool
+  /// The task's fields, whose rows and Add menu open one field each through
+  /// `editField`.
+  let properties: MobileTaskProperties
+  let editField: (MobileTaskField) -> Void
   @ViewBuilder let actions: () -> Actions
+  @ViewBuilder let paneActions: () -> PaneActions
+  @Environment(\.mobileDetailPresentation) private var presentation
+
+  // A task with no checklist or reminders shows neither section; the Add
+  // Detail menu unfolds the section with its composer open. A section that
+  // has items keeps an "Add …" row for the next one.
+  @State private var isComposingChecklistItem = false
+  @State private var isComposingReminder = false
 
   init(
     task: LorvexTask,
@@ -22,7 +44,12 @@ struct MobileTaskDetailContent<Actions: View>: View {
     addReminder: ((Date) async -> Void)? = nil,
     removeReminder: ((TaskReminder) async -> Void)? = nil,
     resolveDependencyTasks: (([LorvexTask.ID]) async -> [LorvexTask])? = nil,
-    @ViewBuilder actions: @escaping () -> Actions
+    completeDependency: ((LorvexTask) async -> Void)? = nil,
+    isDependencyMutating: @escaping (LorvexTask.ID) -> Bool = { _ in false },
+    properties: MobileTaskProperties,
+    editField: @escaping (MobileTaskField) -> Void,
+    @ViewBuilder actions: @escaping () -> Actions,
+    @ViewBuilder paneActions: @escaping () -> PaneActions
   ) {
     self.task = task
     self.timeZone = timeZone
@@ -32,7 +59,12 @@ struct MobileTaskDetailContent<Actions: View>: View {
     self.addReminder = addReminder
     self.removeReminder = removeReminder
     self.resolveDependencyTasks = resolveDependencyTasks
+    self.completeDependency = completeDependency
+    self.isDependencyMutating = isDependencyMutating
+    self.properties = properties
+    self.editField = editField
     self.actions = actions
+    self.paneActions = paneActions
   }
 
   var body: some View {
@@ -40,9 +72,11 @@ struct MobileTaskDetailContent<Actions: View>: View {
       Section {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
           Text(task.title)
-            .font(LorvexDesign.Typography.sectionHeader)
+            .font(LorvexDesign.Typography.detailTitle)
             .fixedSize(horizontal: false, vertical: true)
-          glanceChips
+          if let statusChip {
+            detailChip(statusChip.text, systemImage: statusChip.icon, tint: statusChip.tint)
+          }
           if !task.notes.isEmpty {
             Text(task.notes)
               .font(LorvexDesign.Typography.primaryText)
@@ -50,10 +84,29 @@ struct MobileTaskDetailContent<Actions: View>: View {
               .foregroundStyle(.secondary)
               .frame(maxWidth: .infinity, alignment: .leading)
           }
+          if presentation == .pane {
+            HStack(spacing: LorvexDesign.Spacing.s) {
+              paneActions()
+              shareButton
+                .buttonStyle(.bordered)
+            }
+            .padding(.top, LorvexDesign.Spacing.s)
+          }
         }
         .padding(.vertical, LorvexDesign.Spacing.xs)
       }
-      MobileTaskDetailMetadataSection(task: task, resolveDependencyTasks: resolveDependencyTasks)
+      MobileTaskPropertiesSection(
+        properties: properties,
+        edit: editField,
+        addChecklist: showsChecklist || addChecklistItem == nil
+          ? nil : { setComposingChecklistItem(true) },
+        addReminder: showsReminders || addReminder == nil
+          ? nil : { setComposingReminder(true) })
+      MobileTaskDependenciesSection(
+        task: task,
+        resolveDependencyTasks: resolveDependencyTasks,
+        completeDependency: completeDependency,
+        isDependencyMutating: isDependencyMutating)
       if let aiNotes = task.aiNotes, !aiNotes.isEmpty {
         Section(
           String(
@@ -72,7 +125,7 @@ struct MobileTaskDetailContent<Actions: View>: View {
           .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      if !task.checklistItems.isEmpty || addChecklistItem != nil {
+      if showsChecklist {
         Section(
           String(
             localized: "task_detail.section.checklist", defaultValue: "Checklist",
@@ -85,76 +138,134 @@ struct MobileTaskDetailContent<Actions: View>: View {
               removeChecklistItem: removeChecklistItem
             )
           }
-          if addChecklistItem != nil {
-            MobileChecklistComposerRow { text in await addChecklistItem?(text) }
+          if let addChecklistItem {
+            if isComposingChecklistItem {
+              MobileChecklistComposerRow(
+                addChecklistItem: addChecklistItem,
+                dismiss: { setComposingChecklistItem(false) })
+            } else {
+              addRow(
+                String(
+                  localized: "checklist.add", defaultValue: "Add Checklist Item",
+                  table: "Localizable", bundle: MobileL10n.bundle),
+                accessibilityIdentifier: "task.detail.checklist.add"
+              ) { setComposingChecklistItem(true) }
+            }
           }
         }
       }
-      if !task.reminders.isEmpty || addReminder != nil {
-        Section(
-          String(
-            localized: "task_detail.section.reminders", defaultValue: "Reminders",
-            table: "Localizable", bundle: MobileL10n.bundle)
-        ) {
+      if showsReminders {
+        Section {
           ForEach(task.reminders) { reminder in
             MobileReminderRow(
               reminder: reminder,
               timeZone: timeZone,
               removeReminder: removeReminder)
           }
-          if addReminder != nil {
-            MobileReminderComposerRow(timeZone: timeZone) { date in
-              await addReminder?(date)
+          if let addReminder {
+            if isComposingReminder {
+              MobileReminderComposerRow(
+                timeZone: timeZone,
+                dismiss: { setComposingReminder(false) }
+              ) { date in
+                await addReminder(date)
+              }
+            } else {
+              addRow(
+                String(
+                  localized: "reminder.add", defaultValue: "Add Reminder",
+                  table: "Localizable", bundle: MobileL10n.bundle),
+                accessibilityIdentifier: "task.detail.reminders.add"
+              ) { setComposingReminder(true) }
+            }
+          }
+        } header: {
+          // While the composer is open, its Cancel sits at the trailing end of
+          // the section's label line, as section actions do.
+          HStack(alignment: .firstTextBaseline) {
+            Text(
+              String(
+                localized: "task_detail.section.reminders", defaultValue: "Reminders",
+                table: "Localizable", bundle: MobileL10n.bundle))
+            Spacer()
+            if isComposingReminder {
+              Button(
+                String(
+                  localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",
+                  bundle: MobileL10n.bundle)
+              ) { setComposingReminder(false) }
+              .font(LorvexDesign.Typography.secondaryText)
+              .foregroundStyle(LorvexDesign.Palette.accent)
+              .textCase(nil)
+              .accessibilityIdentifier("task.detail.reminders.cancel")
             }
           }
         }
       }
       actions()
     }
-    .lorvexSpatialContainerPadding()
-    .navigationTitle(
-      String(
-        localized: "detail.task", defaultValue: "Task", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    )
-    .toolbar {
-      ToolbarItem(placement: .automatic) {
-        ShareLink(item: LorvexTaskMarkdownExport.render(task)) {
-          Label(
-            String(
-              localized: "common.share", defaultValue: "Share", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "square.and.arrow.up")
+    #if DEBUG
+      .onAppear {
+        // Dev/QA only: the `lorvex://firsttask/compose/…` screenshot hook unfolds
+        // one composer so its expanded state can be captured without a tap.
+        switch MobileTaskDetailDebugState.takeInitialComposer() {
+        case .checklist?: isComposingChecklistItem = true
+        case .reminder?: isComposingReminder = true
+        case nil: break
         }
       }
-    }
-  }
-
-  // MARK: Glance chips
-  //
-  // The most-scanned metadata (priority, due, estimate, a non-open status) reads
-  // at a glance as colored chips above the fold; the full "Details" section below
-  // carries only what the chips don't (tags, dependencies, lateness, recurrence).
-
-  @ViewBuilder
-  private var glanceChips: some View {
-    LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
-      detailChip(
-        MobileTaskDisplayText.priority(task.priority),
-        systemImage: task.priority.prioritySymbolName,
-        tint: task.priority.priorityTint)
-      if let due = task.dueDateDisplaySummary {
-        detailChip(due, systemImage: "calendar", tint: LorvexDesign.Palette.accent)
-      }
-      if let estimate = task.estimatedMinutes {
-        detailChip(
-          MobileTaskDisplayText.compactEstimateMinutes(estimate),
-          systemImage: "clock", tint: .secondary)
-      }
-      if let statusChip {
-        detailChip(statusChip.text, systemImage: statusChip.icon, tint: statusChip.tint)
+    #endif
+    // The task's own title is the headline of the content; the generic
+    // navigation title stays small so it does not compete with it.
+    .mobileDetailScreenChrome(
+      title: String(
+        localized: "detail.task", defaultValue: "Task", table: "Localizable",
+        bundle: MobileL10n.bundle),
+      titleDisplayMode: .inline
+    ) {
+      ToolbarItem(placement: .automatic) {
+        shareButton
       }
     }
   }
+
+  private var showsChecklist: Bool {
+    !task.checklistItems.isEmpty || isComposingChecklistItem
+  }
+
+  private var showsReminders: Bool {
+    !task.reminders.isEmpty || isComposingReminder
+  }
+
+  private var shareButton: some View {
+    ShareLink(item: LorvexTaskMarkdownExport.render(task)) {
+      Label(
+        String(
+          localized: "common.share", defaultValue: "Share", table: "Localizable",
+          bundle: MobileL10n.bundle), systemImage: "square.and.arrow.up")
+    }
+  }
+
+  // MARK: Composer rows
+
+  private func addRow(
+    _ title: String, accessibilityIdentifier: String, expand: @escaping () -> Void
+  ) -> some View {
+    Button(action: expand) {
+      Label(title, systemImage: "plus.circle.fill")
+    }
+    .accessibilityIdentifier(accessibilityIdentifier)
+  }
+
+  private func setComposingChecklistItem(_ isComposing: Bool) {
+    withAnimation(.snappy) { isComposingChecklistItem = isComposing }
+  }
+
+  private func setComposingReminder(_ isComposing: Bool) {
+    withAnimation(.snappy) { isComposingReminder = isComposing }
+  }
+
+  // MARK: Status chip
 
   private func detailChip(_ text: String, systemImage: String, tint: Color) -> some View {
     // An explicit HStack, not a `Label`: a bare `Label` placed by the custom
@@ -186,19 +297,5 @@ struct MobileTaskDetailContent<Actions: View>: View {
     case .someday:
       return (MobileTaskDisplayText.status(.someday), "moon.zzz.fill", LorvexDesign.Palette.someday)
     }
-  }
-}
-
-extension MobileTaskDetailContent where Actions == EmptyView {
-  init(task: LorvexTask) {
-    self.task = task
-    self.timeZone = .autoupdatingCurrent
-    self.toggleChecklistItem = nil
-    self.addChecklistItem = nil
-    self.removeChecklistItem = nil
-    self.addReminder = nil
-    self.removeReminder = nil
-    self.resolveDependencyTasks = nil
-    self.actions = { EmptyView() }
   }
 }

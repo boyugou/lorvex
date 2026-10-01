@@ -2,7 +2,7 @@ import LorvexCore
 import SwiftUI
 
 /// One page of the iPhone calendar: an all-day strip plus a vertical
-/// scrollable time axis rendering `dayCount` (1 or 3) day columns. Builds its
+/// scrollable time axis rendering `dayCount` (1, 2, 3, or 7) day columns. Builds its
 /// layout from the pure `CalendarGridModel` lane packer. A live red now-line
 /// sits on today's column; the gutter labels the hours.
 @MainActor
@@ -13,9 +13,17 @@ struct MobileCalendarDayColumn: View {
   /// them as a fixed header outside the pager instead, which keeps them pinned and
   /// avoids the `.page` TabView floating the column's content mid-screen).
   var showsHeaders: Bool = true
+  /// Whether the headers draw today's date in a filled circle; false under
+  /// the week strip, which circles the chosen day itself.
+  var circlesTodayInHeaders = true
   let events: [CalendarTimelineEvent]
+  /// The window's tasks: a task with a time on a visible day is drawn on that
+  /// day's time axis, any other in the all-day strip of its day.
   let tasks: [LorvexTask]
   let calendar: Calendar
+  /// When set, each day's header is a button that opens that day; week mode
+  /// uses it to open a day in Day mode.
+  var onOpenDay: ((Date) -> Void)? = nil
   let onTapEvent: (CalendarTimelineEvent) -> Void
   let onDeleteEvent: (CalendarTimelineEvent) async -> Bool
   let onTapTask: (LorvexTask) -> Void
@@ -26,9 +34,18 @@ struct MobileCalendarDayColumn: View {
   /// pure-vertical drags), and the new start-minute-of-day.
   /// `nil` to disable drag-to-move.
   let onReschedule: ((CalendarTimelineEvent, Date, Int) -> Void)?
+  /// Completes a task on the grid, a timed block or an all-day pill, or
+  /// reopens a done one. The block or pill itself opens the task through
+  /// `onTapTask`.
+  var onToggleTask: (LorvexTask) -> Void = { _ in }
+  /// Whether the clock sits inside the block on today's column — the time
+  /// Today shows as running — which draws it with a solid frame.
+  var isRunningNow: (CalendarGridTaskBlock, CalendarGridDay) -> Bool = { _, _ in false }
 
   let hourHeight: CGFloat = 56
-  private let gutterWidth: CGFloat = 52
+  /// Widens with the footnote style of the hour labels, so "10 AM" and the
+  /// all-day label stay on one line at every size the grid draws.
+  @ScaledMetric(relativeTo: .footnote) private var gutterWidth: CGFloat = 52
   static let snapMinutes: Int = 15
 
   /// Tracks an in-flight drag on a block: the event being moved + its
@@ -37,6 +54,15 @@ struct MobileCalendarDayColumn: View {
   /// `ScrollView`'s vertical pan or the day-pager's horizontal swipe.
   @State var dragState: DragState? = nil
   @State private var userHasScrolledTimeAxis = false
+  @State private var pageWidth: CGFloat = 0
+
+  /// Whether a day column is narrower than a full block layout needs — the
+  /// seven-day week on a phone — so the all-day strip goes compact as the
+  /// timed blocks do (``LorvexDesign/CalendarMetrics/compactLaneWidth``).
+  private var hasNarrowColumns: Bool {
+    pageWidth > 0
+      && (pageWidth - gutterWidth) / CGFloat(dayCount) < LorvexDesign.CalendarMetrics.compactLaneWidth
+  }
 
   struct DragState: Equatable {
     let eventID: String
@@ -59,7 +85,7 @@ struct MobileCalendarDayColumn: View {
 
   var body: some View {
     let columns = days
-    let now = Date()
+    let now = LorvexPreviewClock.now(in: calendar)
     let todayKey = Self.keyFormatter.string(from: now)
     let nowMinute = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
     let anchorHour = CalendarGridModel.initialScrollAnchorHour(
@@ -70,19 +96,25 @@ struct MobileCalendarDayColumn: View {
         MobileCalendarColumnHeaders(
           columns: columns,
           calendar: calendar,
-          gutterWidth: gutterWidth
+          gutterWidth: gutterWidth,
+          circlesToday: circlesTodayInHeaders,
+          onOpenDay: onOpenDay
         )
         Divider()
       }
       MobileCalendarAllDayStrip(
         columns: columns,
         gutterWidth: gutterWidth,
+        isCompact: hasNarrowColumns,
         eventColor: eventColor,
         onTapEvent: onTapEvent,
         onDeleteEvent: onDeleteEvent,
         onTapTask: onTapTask,
+        onToggleTask: onToggleTask,
         onDropTask: onDropTask
       )
+      // The strip spans the page, so its width is the page's.
+      .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
       Divider()
       ScrollViewReader { proxy in
         ScrollView {
@@ -141,6 +173,17 @@ struct MobileCalendarDayColumn: View {
         // content (event blocks, now-line) in noise; the toolbar ＋ ("New Event")
         // is the accessible create path.
         .accessibilityHidden(true)
+        if isToday(day.date) {
+          // Under the blocks (their zIndex lifts them above it), which are
+          // opaque, so the line runs through the free time and never across a
+          // block's title. Scoped to the now-line only: the per-minute tick
+          // rebuilds this thin overlay without re-running the lane-packer or
+          // re-laying-out the day.
+          TimelineView(.periodic(from: .now, by: 60)) { context in
+            nowLine(now: LorvexPreviewClock.now(in: calendar, tick: context.date))
+          }
+          .allowsHitTesting(false)
+        }
         ForEach(day.timedBlocks) { block in
           eventBlock(
             block,
@@ -149,27 +192,45 @@ struct MobileCalendarDayColumn: View {
             allDays: allDays,
             columnWidth: width)
         }
+        ForEach(day.taskBlocks) { block in
+          taskBlock(block, day: day, columnWidth: width)
+        }
         if isToday(day.date) {
-          // Scoped to the now-line only: the per-minute tick rebuilds this thin
-          // overlay without re-running the lane-packer or re-laying-out the day.
+          // The dot draws above the blocks, which sit at zIndex 1, so one that
+          // spans the current time never covers it; the line itself runs under
+          // them.
           TimelineView(.periodic(from: .now, by: 60)) { context in
-            nowLine(now: context.date)
+            nowDot(now: LorvexPreviewClock.now(in: calendar, tick: context.date))
           }
+          .allowsHitTesting(false)
+          .zIndex(2)
         }
       }
     }
     .frame(maxWidth: .infinity)
   }
 
+  /// The now line across the column, centered on `now`'s time of day. Drawn
+  /// under the blocks; its dot is ``nowDot(now:)``, drawn above them.
   private func nowLine(now: Date) -> some View {
+    Rectangle().fill(LorvexDesign.Palette.nowIndicator).frame(height: 1.5)
+      .offset(y: nowOffset(now) - 0.75)
+      .accessibilityHidden(true)
+  }
+
+  /// The now dot, centered on the column's leading edge at `now`'s time of day.
+  /// Drawn above the blocks, so a block that spans the current time never
+  /// covers it while the line itself runs beneath them.
+  private func nowDot(now: Date) -> some View {
+    Circle().fill(LorvexDesign.Palette.nowIndicator).frame(width: 7, height: 7)
+      .offset(x: -3.5, y: nowOffset(now) - 3.5)
+      .accessibilityHidden(true)
+  }
+
+  /// The distance from the column's midnight line to `now`'s time of day.
+  private func nowOffset(_ now: Date) -> CGFloat {
     let minutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
-    let y = CGFloat(minutes) / 60 * hourHeight
-    return ZStack(alignment: .leading) {
-      Circle().fill(Color.red).frame(width: 7, height: 7).offset(x: -3)
-      Rectangle().fill(Color.red).frame(height: 1.5)
-    }
-    .offset(y: y)
-    .accessibilityHidden(true)
+    return CGFloat(minutes) / 60 * hourHeight
   }
 
   // MARK: Helpers
@@ -179,6 +240,7 @@ struct MobileCalendarDayColumn: View {
   private func scrollAnchorSignature(columns: [CalendarGridDay], anchorHour: Int) -> String {
     let timedIDs = columns.flatMap { day in
       day.timedBlocks.map { "\($0.event.id):\($0.startMin):\($0.endMin)" }
+        + day.taskBlocks.map(\.id)
     }
     return ([Self.keyFormatter.string(from: startDate), "\(dayCount)", "\(anchorHour)"] + timedIDs)
       .joined(separator: "|")

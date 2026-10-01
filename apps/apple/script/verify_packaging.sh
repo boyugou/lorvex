@@ -215,7 +215,7 @@ fi
 # 4. Scheme names in archive_ios.sh match project.yml declarations
 # ---------------------------------------------------------------------------
 PROJECT_YML="$ROOT_DIR/Config/XcodeGen/project.yml"
-SCHEMES_IN_SCRIPT=(LorvexMobileApp LorvexVisionApp LorvexWatchApp)
+SCHEMES_IN_SCRIPT=(LorvexMobileApp LorvexWatchApp)
 
 for scheme in "${SCHEMES_IN_SCRIPT[@]}"; do
   if ! grep -q "^  $scheme:" "$PROJECT_YML"; then
@@ -238,7 +238,7 @@ for entitlements_file in \
   "$ROOT_DIR/Config/LorvexApple.entitlements" \
   "$ROOT_DIR/Config/LorvexWatchApp.entitlements" \
   "$ROOT_DIR/Config/LorvexWatchComplication.entitlements" \
-  "$ROOT_DIR/Config/LorvexWidgetExtension.entitlements"; do
+  "$ROOT_DIR/Config/LorvexWidgetsMacOS.entitlements"; do
   if [[ ! -f "$entitlements_file" ]]; then
     fail "expected entitlements file not found: $entitlements_file"
     continue

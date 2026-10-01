@@ -81,11 +81,13 @@ enum SwiftLorvexReviewDeserializers {
       estimateCoverageRatio: snapshot.estimateSummary.estimateCoverageRatio,
       topCompleted: snapshot.topCompleted.map(taskSummary),
       frequentlyDeferred: snapshot.frequentlyDeferred.map(taskSummary),
+      overdueTasks: snapshot.overdueTasks.map(taskSummary),
       topSomeday: snapshot.somedayItems.map(taskSummary))
   }
 
   static func taskSummary(_ item: WeeklyReview.TaskItem) -> ReviewTaskSummary {
     ReviewTaskSummary(
-      id: item.id, title: item.title, status: item.status, deferCount: Int(item.deferCount))
+      id: item.id, title: item.title, status: item.status, deferCount: Int(item.deferCount),
+      dueDate: item.dueDate?.asString)
   }
 }

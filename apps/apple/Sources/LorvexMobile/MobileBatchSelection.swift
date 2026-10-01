@@ -53,11 +53,14 @@ struct MobileBatchActionBar: View {
 struct MobileBatchSelectionIndicator: View {
   let isSelected: Bool
   let accessibilityLabel: String
+  /// Grows with the body style the glyph is set in, so the glyph stays in its
+  /// column at every text size.
+  @ScaledMetric(relativeTo: .body) private var width: CGFloat = 22
 
   var body: some View {
     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
       .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
-      .frame(width: 22)
+      .frame(width: width)
       .accessibilityLabel(accessibilityLabel)
   }
 }

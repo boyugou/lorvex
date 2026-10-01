@@ -24,8 +24,10 @@ struct LorvexAppleApp: App {
       // only does atoms). It never touches the user's real store or settings.
       if LorvexUIPreview.isActive {
         let settings = LorvexAppleBootstrap.makeUIPreviewSettings()
+        let previewStore = LorvexAppleBootstrap.makeUIPreviewStore()
         _settings = State(initialValue: settings)
-        _store = State(initialValue: LorvexAppleBootstrap.makeUIPreviewStore())
+        _store = State(initialValue: previewStore)
+        LorvexUIPreview.runTourIfRequested(store: previewStore, settings: settings)
       } else {
         let settings = LorvexAppleBootstrap.makeSettings()
         _settings = State(initialValue: settings)

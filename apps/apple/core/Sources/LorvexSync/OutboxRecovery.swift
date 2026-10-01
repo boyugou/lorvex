@@ -6,17 +6,12 @@ extension Outbox {
   /// Why an unsynced row is excluded from the active pending queue.
   ///
   /// `retryWait` is recoverable: after its persisted due time, the canonical
-  /// pending read resets its retry budget and tries it again. In contrast,
-  /// `authoritativeAdoption` fences pre-snapshot local state that must never be
-  /// re-emitted by generic recovery. A genuinely newer local mutation may
-  /// replace it through normal LWW coalescing while the session is active;
-  /// finalize/cancel otherwise permanently delete that session's owned fence.
+  /// pending read resets its retry budget and tries it again.
   public enum Disposition: String, Sendable, Equatable {
     case retryWait = "retry_wait"
-    case authoritativeAdoption = "authoritative_adoption"
     /// A local intent preserved behind an opaque future-authored CloudKit
-    /// record. It has no timer and no session owner; only typed reconciliation
-    /// may delete or rebuild it.
+    /// record. It has no timer; only typed reconciliation may delete or
+    /// rebuild it.
     case futureRecordHold = "future_record_hold"
   }
 
@@ -35,9 +30,8 @@ extension Outbox {
     7 * 24 * 60 * 60,
   ]
 
-  /// Earliest durable wake for a parked outbox row eligible under the active
-  /// audit-account binding. Inactive-account audit rows remain durable but do
-  /// not wake this account's coordinator. Fail loudly on a malformed timestamp:
+  /// Earliest durable wake for a parked retry-wait outbox row. Fail loudly on
+  /// a malformed timestamp:
   /// silently dropping the timer would strand an eligible row indefinitely in
   /// an otherwise idle app.
   public static func earliestRetryAt(_ db: Database) throws -> Date? {
@@ -49,11 +43,8 @@ extension Outbox {
           FROM sync_outbox outbox
           WHERE outbox.synced_at IS NULL
             AND outbox.disposition = ?
-            AND \(activeAccountAuditEligibilitySQL)
           """,
-        arguments: [
-          Disposition.retryWait.rawValue, EntityName.aiChangelog,
-        ])
+        arguments: [Disposition.retryWait.rawValue])
     else { return nil }
     guard let parsed = SyncTimestamp.parse(raw), parsed.asString == raw else {
       throw OutboxError.sql("outbox retry timestamp is not canonical RFC 3339 UTC: \(raw)")
@@ -62,7 +53,7 @@ extension Outbox {
   }
 
   /// Move a failed active row into persisted retry wait and return its due time.
-  /// A row already fenced by authoritative adoption is deliberately untouched.
+  /// A row already held for a future record is deliberately untouched.
   static func parkRetryableFailure(
     _ db: Database, outboxId: Int64, failedAt: String
   ) throws -> String? {
@@ -104,9 +95,9 @@ extension Outbox {
   /// parked with their durable deadline intact, so ``earliestRetryAt(_:)``
   /// immediately schedules a fresh drain instead of activating rows that this
   /// drain is no longer allowed to scan.
-  /// Authoritative-adoption fences have no due time and are excluded by the
-  /// typed predicate, so generic recovery cannot resurrect snapshot-discarded
-  /// writes. Returns the number of rows moved back to the active queue.
+  /// Future-record holds have no due time and are excluded by the typed
+  /// predicate; only a later understood envelope releases them. Returns the
+  /// number of rows moved back to the active queue.
   @discardableResult
   public static func rearmRetryableFailuresDue(
     _ db: Database, now: String, afterOutboxId: Int64? = nil
@@ -127,14 +118,13 @@ extension Outbox {
             AND outbox.disposition = ?
             AND outbox.next_retry_at <= ?
             AND outbox.id > ?
-            AND \(activeAccountAuditEligibilitySQL)
           ORDER BY outbox.next_retry_at ASC, outbox.id ASC
           LIMIT ?
         )
         """,
       arguments: [
         Disposition.retryWait.rawValue, canonicalNow,
-        afterOutboxId ?? 0, EntityName.aiChangelog, maxPendingFetch,
+        afterOutboxId ?? 0, maxPendingFetch,
       ])
     return db.changesCount
   }

@@ -4,59 +4,97 @@ import SwiftUI
 
 extension SettingsView {
   var changelogSection: some View {
-    Section(String(localized: "settings.activity.ai_changelog", defaultValue: "AI Changelog", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      if let entries = store.runtimeDiagnostics?.changelog.entries, !entries.isEmpty {
-        ForEach(entries) { entry in
-          RuntimeEntryRow(
-            title: entry.summary,
-            subtitle: "\(entry.entityType) · \(entry.operation)",
-            detail: entry.timestamp ?? entry.initiatedBy
-          )
-        }
-      } else {
-        LorvexEmptyStatePanel(
-          title: String(localized: "settings.activity.no_changelog_entries.title", defaultValue: "No changelog entries", table: "Localizable", bundle: LorvexL10n.bundle),
-          message: String(
-            localized: "settings.activity.no_changelog_entries",
-            defaultValue: "No changelog entries loaded.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ),
-          systemImage: "clock.arrow.circlepath",
-          tint: .secondary,
-          style: .inline
+    SettingsActivityLogSection(
+      title: String(localized: "settings.activity.ai_changelog", defaultValue: "AI Changelog", table: "Localizable", bundle: LorvexL10n.bundle),
+      count: store.runtimeDiagnostics?.changelog.entries.count ?? 0,
+      accessibilityIdentifier: "settings.activity.changelogToggle"
+    ) {
+      ForEach(store.runtimeDiagnostics?.changelog.entries ?? []) { entry in
+        RuntimeEntryRow(
+          title: entry.summary,
+          subtitle: "\(entry.entityType) · \(entry.operation)",
+          timestamp: entry.timestamp,
+          fallbackDetail: entry.initiatedBy
         )
       }
+    } empty: {
+      LorvexEmptyStatePanel(
+        title: String(localized: "settings.activity.no_changelog_entries.title", defaultValue: "No changelog entries", table: "Localizable", bundle: LorvexL10n.bundle),
+        message: String(
+          localized: "settings.activity.no_changelog_entries",
+          defaultValue: "No changelog entries loaded.",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle
+        ),
+        systemImage: "clock.arrow.circlepath",
+        tint: .secondary,
+        style: .inline
+      )
     }
   }
 
   var logsSection: some View {
-    Section(String(localized: "settings.activity.recent_logs", defaultValue: "Recent Logs", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      if let entries = store.runtimeDiagnostics?.recentLogs.entries, !entries.isEmpty {
-        ForEach(entries) { entry in
-          RuntimeEntryRow(
-            // `origin` carries per-row provenance (the `error_logs.source`
-            // column, e.g. `metrickit.crash`); the stream-level `source`
-            // collapses every error_log row to `error_log`, so prefer the
-            // finer origin when present to label crash/hang/sync rows apart.
-            title: entry.summary,
-            subtitle: "\(entry.origin ?? entry.source) · \(entry.level.rawValue)",
-            detail: entry.timestamp
-          )
-        }
-      } else {
-        LorvexEmptyStatePanel(
-          title: String(localized: "settings.activity.no_recent_logs.title", defaultValue: "No recent logs", table: "Localizable", bundle: LorvexL10n.bundle),
-          message: String(
-            localized: "settings.activity.no_recent_logs",
-            defaultValue: "No recent logs loaded.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ),
-          systemImage: "doc.text.magnifyingglass",
-          tint: .secondary,
-          style: .inline
+    SettingsActivityLogSection(
+      title: String(localized: "settings.activity.recent_logs", defaultValue: "Recent Logs", table: "Localizable", bundle: LorvexL10n.bundle),
+      count: store.runtimeDiagnostics?.recentLogs.entries.count ?? 0,
+      accessibilityIdentifier: "settings.activity.logsToggle"
+    ) {
+      ForEach(store.runtimeDiagnostics?.recentLogs.entries ?? []) { entry in
+        RuntimeEntryRow(
+          // `origin` carries per-row provenance (the `error_logs.source`
+          // column, e.g. `metrickit.crash`); the stream-level `source`
+          // collapses every error_log row to `error_log`, so prefer the
+          // finer origin when present to label crash/hang/sync rows apart.
+          title: entry.summary,
+          subtitle: "\(entry.origin ?? entry.source) · \(entry.level.rawValue)",
+          timestamp: entry.timestamp
         )
+      }
+    } empty: {
+      LorvexEmptyStatePanel(
+        title: String(localized: "settings.activity.no_recent_logs.title", defaultValue: "No recent logs", table: "Localizable", bundle: LorvexL10n.bundle),
+        message: String(
+          localized: "settings.activity.no_recent_logs",
+          defaultValue: "No recent logs loaded.",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle
+        ),
+        systemImage: "doc.text.magnifyingglass",
+        tint: .secondary,
+        style: .inline
+      )
+    }
+  }
+}
+
+/// A diagnostics feed in the Activity pane, folded by default: the section
+/// shows one disclosure row carrying the entry count, and the rows appear only
+/// once the user opens it. The feeds run to hundreds of rows a person reads
+/// only while troubleshooting, so unfolded they would bury the retention
+/// control and every section after them. An empty feed shows `empty` directly,
+/// with nothing to fold.
+private struct SettingsActivityLogSection<Rows: View, Empty: View>: View {
+  let title: String
+  let count: Int
+  let accessibilityIdentifier: String
+  @ViewBuilder let rows: () -> Rows
+  @ViewBuilder let empty: () -> Empty
+  @State private var isExpanded = false
+
+  var body: some View {
+    Section(title) {
+      if count == 0 {
+        empty()
+      } else {
+        SettingsAdvancedDisclosureButton(
+          isExpanded: $isExpanded,
+          title: LocalizedStringResource(
+            "settings.activity.entry_count", defaultValue: "Entries (\(count))",
+            table: "Localizable", bundle: LorvexL10n.bundle),
+          accessibilityIdentifier: accessibilityIdentifier)
+        if isExpanded {
+          rows()
+        }
       }
     }
   }
@@ -188,14 +226,20 @@ struct SettingsChangelogRetentionRow: View {
   }
 }
 
+/// One diagnostics row: the summary over its source line, with when it happened
+/// at the trailing edge in the viewer's own time zone. `timestamp` is the feed's
+/// ISO-8601 UTC string; an entry from today shows its time alone, an older one
+/// its date and time, and the hover tooltip carries the full date. A missing or
+/// unparsable timestamp falls back to `fallbackDetail`.
 struct RuntimeEntryRow: View {
   let title: String
   let subtitle: String
-  let detail: String?
+  let timestamp: String?
+  var fallbackDetail: String?
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: 12) {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(displayTitle)
           .lineLimit(2)
         Text(subtitle)
@@ -204,16 +248,34 @@ struct RuntimeEntryRow: View {
           .lineLimit(1)
       }
       Spacer()
-      if let detail {
+      if let date {
+        Text(Self.shortStamp(date))
+          .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .help(date.formatted(date: .complete, time: .standard))
+      } else if let detail = timestamp ?? fallbackDetail {
         Text(detail)
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .lineLimit(1)
       }
     }
-    .padding(.vertical, 2)
+    .padding(.vertical, LorvexDesign.Spacing.xxs)
     .accessibilityElement(children: .combine)
     .accessibilityLabel(String(format: accessibilityLabelFormat, displayTitle, subtitle))
+  }
+
+  private var date: Date? {
+    guard let timestamp else { return nil }
+    return LorvexDateFormatters.iso8601Fractional.date(from: timestamp)
+      ?? LorvexDateFormatters.iso8601.date(from: timestamp)
+  }
+
+  private static func shortStamp(_ date: Date) -> String {
+    Calendar.current.isDateInToday(date)
+      ? date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: LorvexClockFormat.displayLocale))
+      : date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: LorvexClockFormat.displayLocale))
   }
 
   private var displayTitle: String {

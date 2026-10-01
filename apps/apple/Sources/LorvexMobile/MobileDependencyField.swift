@@ -59,7 +59,6 @@ struct MobileDependencyField: View {
       ) { task in
         add(task)
       }
-      .lorvexSpatialBackground()
       .mobileCompactEditorSheetPresentation()
     }
   }

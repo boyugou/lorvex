@@ -48,7 +48,7 @@ private struct PermanentDeleteDialogModifier: ViewModifier {
     } message: { _ in
       Text(LocalizedStringResource(
         "task.permanent_delete.message",
-        defaultValue: "This task and all its checklist items, reminders, and links are removed for good. This can't be undone — use Cancel to keep the record instead.",
+        defaultValue: "This task and all its checklist items, reminders, and links are removed for good. This can’t be undone — use Cancel to keep the record instead.",
         table: "Localizable",
         bundle: LorvexL10n.bundle))
     }

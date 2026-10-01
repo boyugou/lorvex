@@ -31,8 +31,8 @@ Related sources:
 
 ## Lorvex Mapping
 
-The current package links `LorvexSystemIntents` into macOS, iPhone/iPad, and
-visionOS executables. Its own shortcut-provider comment explicitly says every
+The current package links `LorvexSystemIntents` into macOS and iPhone/iPad
+executables. Its own shortcut-provider comment explicitly says every
 intent remains invokable from Shortcuts or an automation, not just the ten
 curated App Shortcuts.
 

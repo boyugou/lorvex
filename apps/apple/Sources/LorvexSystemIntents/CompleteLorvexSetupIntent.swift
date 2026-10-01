@@ -5,7 +5,7 @@ struct CompleteLorvexSetupIntent: LorvexAuthenticatedIntent {
   static let description = IntentDescription(LocalizedStringResource("system.setup.complete.description", defaultValue: "Mark Lorvex setup complete with optional defaults.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.setup.parameter.working_hours", defaultValue: "Working Hours", table: "Localizable", bundle: SystemL10n.bundle))
+    title: LocalizedStringResource("system.setup.parameter.working_hours", defaultValue: "Day Hours", table: "Localizable", bundle: SystemL10n.bundle))
   var workingHours: String?
 
   @Parameter(

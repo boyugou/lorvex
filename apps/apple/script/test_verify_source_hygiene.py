@@ -67,8 +67,8 @@ class SourceHygieneVerifierTests(unittest.TestCase):
                 failures = vsh.token_scan_failures()
             finally:
                 vsh.REPO = original
-        # The other scan roots (schema, apps/tauri/*, core) are absent in this
-        # temp repo: they are skipped, not failures. Only the planted token flags.
+        # The other scan roots (schema, core) are absent in this temp repo: they
+        # are skipped, not failures. Only the planted token flags.
         self.assertEqual(len(failures), 1)
         self.assertIn("Bad.swift", failures[0])
 

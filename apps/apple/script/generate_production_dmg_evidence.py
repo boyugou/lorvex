@@ -295,7 +295,7 @@ def main() -> int:
             encoding="utf-8"
         )
     )
-    expected_snapshot = expected_database.parent / "widget_snapshot_v3.json"
+    expected_snapshot = expected_database.parent / "widget_snapshot.json"
     if (
         clean_derived.get("finalResetEvidence")
         != str(args.evidence_dir / "final-app-group-reset.json")

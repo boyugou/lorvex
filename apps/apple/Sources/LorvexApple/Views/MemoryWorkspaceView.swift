@@ -2,14 +2,17 @@ import LorvexCore
 import SwiftUI
 
 /// The macOS surface for AI memory: the key/content notes the assistant keeps
-/// about the user's preferences and context. The entries render as a native
-/// `List` with hover and per-row context menus; the composer above them adds or
-/// edits entries. Memory is AI-managed context that the app edits as the AI
-/// actor.
+/// about the user's preferences and context. The entries render as rows in a
+/// scroll view, like the other workspaces' catalogs, with hover and per-row
+/// context menus; the composer above them appears on demand (the toolbar's
+/// add button, or a row's Edit) to add or edit an entry. The window's toolbar
+/// search field (``WorkspaceView``) narrows the rows to the notes whose key or content match.
+/// Memory is AI-managed context that the app edits as the AI actor.
 struct MemoryWorkspaceView: View {
   @Bindable var store: AppStore
   @State private var isComposerPresented = false
   @State private var entryPendingDeletion: MemoryEntry?
+  /// The note drawn highlighted after another page asked to reveal it.
 
   var body: some View {
     VStack(spacing: 0) {
@@ -21,8 +24,24 @@ struct MemoryWorkspaceView: View {
       entriesArea
     }
     .navigationTitle(String(localized: "sidebar.item.memory", defaultValue: "Memory", table: "Localizable", bundle: LorvexL10n.bundle))
+    .toolbar {
+      // Leading edge: the window's search field holds the trailing one.
+      ToolbarItem(placement: .primaryAction) {
+        Button {
+          isComposerPresented = true
+        } label: {
+          Label(
+            String(localized: "memory.composer.title", defaultValue: "New Memory", table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "plus")
+        }
+        .help(String(localized: "memory.composer.title", defaultValue: "New Memory", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("memory.toolbar.add")
+      }
+    }
     .lorvexOpenDestinationActivity(selection: .memory, isActive: store.selection == .memory)
-    .task { await store.loadMemory() }
+    .task {
+      await store.loadMemory()
+    }
     .confirmationDialog(
       entryPendingDeletion.map(deleteMemoryDialogTitle) ?? "",
       isPresented: Binding(
@@ -39,7 +58,7 @@ struct MemoryWorkspaceView: View {
     } message: { _ in
       Text(LocalizedStringResource(
         "memory.delete.confirm.message",
-        defaultValue: "The memory entry is removed. This can't be undone.",
+        defaultValue: "The memory entry is removed. This can’t be undone.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))
@@ -54,7 +73,7 @@ struct MemoryWorkspaceView: View {
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ),
-      entry.key
+      entry.displayTitle
     )
   }
 
@@ -69,7 +88,7 @@ struct MemoryWorkspaceView: View {
           defaultValue: "What the assistant remembers about you. You can add or edit notes too.",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
-        systemImage: SidebarSelection.memory.systemImage,
+        icon: SidebarSelection.memory.systemImage,
         accessibilityIdentifier: "memory.header.identity",
         subtitleAccessibilityIdentifier: "memory.header.subtitle"
       )
@@ -78,18 +97,20 @@ struct MemoryWorkspaceView: View {
 
   // MARK: - Composer
 
-  /// The add/edit composer, pinned above the list so editing an entry always has
-  /// a visible target and consecutive adds flow without scrolling. On an empty
-  /// memory store it opens only after the empty-state action, so the first view
-  /// reads as a clean state rather than a disabled editor plus an empty panel.
+  /// The add/edit composer, shown above the list only while an entry is being
+  /// added or edited (or a draft still holds text), so the default view is the
+  /// list itself rather than a permanent empty editor. It sits above the list
+  /// so editing always has a visible target and consecutive adds flow without
+  /// scrolling.
   private var composerRegion: some View {
     WorkspaceDashboardLane {
       MemoryComposerCard(
         store: store,
-        cancelCreate: store.memoryEntries.isEmpty ? {
+        cancelCreate: {
           store.clearMemoryDraft()
           isComposerPresented = false
-        } : nil
+        },
+        onSaved: { isComposerPresented = false }
       )
     }
     .padding(.horizontal, LorvexDesign.Spacing.l)
@@ -110,54 +131,68 @@ struct MemoryWorkspaceView: View {
       .frame(maxHeight: .infinity, alignment: .top)
     } else if store.memoryEntries.isEmpty {
       LorvexEmptyStatePanel(
-        title: String(localized: "memory.empty.title", defaultValue: "No memory yet", table: "Localizable", bundle: LorvexL10n.bundle),
+        title: String(localized: "memory.empty.title", defaultValue: "No Notes", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
           localized: "memory.empty.description",
-          defaultValue: "Notes you or your assistant save about your preferences and context appear here.",
+          defaultValue: "Click ＋ to save something your assistant should remember.",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
         systemImage: "brain",
         tint: .accentColor
+      )
+    } else if store.filteredMemoryEntries.isEmpty {
+      LorvexEmptyStatePanel(
+        title: String(localized: "memory.empty.search_title", defaultValue: "No Matching Notes", table: "Localizable", bundle: LorvexL10n.bundle),
+        message: String(
+          localized: "memory.empty.search_description",
+          defaultValue: "No note matches your search.",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        systemImage: "magnifyingglass",
+        tint: .secondary
       ) {
         Button {
-          isComposerPresented = true
+          store.searchText = ""
         } label: {
           Label(
-            String(localized: "memory.composer.title", defaultValue: "New memory", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "plus")
+            String(localized: "common.clear_search", defaultValue: "Clear Search", table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "xmark.circle")
         }
-        .buttonStyle(.lorvexPrimary)
-        .accessibilityIdentifier("memory.empty.add")
+        .accessibilityIdentifier("memory.empty.clearSearch")
       }
     } else {
       entriesList
     }
   }
 
-  @ViewBuilder
   private var entriesList: some View {
-    WorkspaceDashboardLane {
-      List {
-        ForEach(store.memoryEntries) { entry in
-          MemoryEntryRow(
-            entry: entry,
-            edit: { store.beginEditingMemory(entry) },
-            delete: { entryPendingDeletion = entry }
-          )
-          .listRowInsets(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+    ScrollView {
+      WorkspaceDashboardLane {
+        LazyVStack(alignment: .leading, spacing: 0) {
+          ForEach(Array(store.filteredMemoryEntries.enumerated()), id: \.element.id) { index, entry in
+            if index > 0 {
+              Divider()
+            }
+            MemoryEntryRow(
+              entry: entry,
+              edit: { store.beginEditingMemory(entry) },
+              delete: { entryPendingDeletion = entry }
+            )
+            .padding(.vertical, LorvexDesign.Spacing.xs)
+          }
         }
       }
-      .listStyle(.inset)
-      .scrollContentBackground(.hidden)
-      .accessibilityIdentifier("memory.list")
+      // Padded outside the lane, like the header's chrome, so the rows start
+      // under the header's title at every window width.
+      .padding(.horizontal, LorvexDesign.Spacing.l)
+      .padding(.vertical, LorvexDesign.Spacing.s)
     }
-    .frame(maxHeight: .infinity)
+    .accessibilityIdentifier("memory.list")
   }
 
   private var showsComposer: Bool {
     store.memoryEditingKey != nil
       || isComposerPresented
-      || !store.memoryEntries.isEmpty
       || !store.memoryKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
       || !store.memoryContentDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }

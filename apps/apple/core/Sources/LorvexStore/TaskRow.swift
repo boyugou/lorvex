@@ -35,6 +35,10 @@ public struct TaskScheduling: Sendable, Equatable {
   public let deferCount: Int64
   public let lastDeferredAt: String?
   public let lastDeferReason: String?
+  /// The time of day the task is planned for on `plannedDate`, in minutes
+  /// since midnight (`planned_start_minutes ..< planned_end_minutes`). `nil`
+  /// when the task has no time; never set without a `plannedDate`.
+  public let plannedTime: Range<Int64>?
   public let scheduleVersion: String
 }
 
@@ -122,7 +126,7 @@ public enum TaskRepo {
   ///  24 archived_at  25 available_from  26 content_version
   ///  27 schedule_version  28 lifecycle_version  29 archive_version
   ///  30 recurrence_rollover_state  31 recurrence_successor_id
-  ///  32 spawned_from_version
+  ///  32 spawned_from_version  33 planned_start_minutes  34 planned_end_minutes
   public static let taskColumns: String =
     "id, title, body, raw_input, ai_notes, "
     + "status, list_id, priority, due_date, "
@@ -134,7 +138,8 @@ public enum TaskRepo {
     + "last_defer_reason, planned_date, defer_count, recurrence_instance_key, "
     + "archived_at, available_from, content_version, schedule_version, "
     + "lifecycle_version, archive_version, recurrence_rollover_state, "
-    + "recurrence_successor_id, spawned_from_version"
+    + "recurrence_successor_id, spawned_from_version, planned_start_minutes, "
+    + "planned_end_minutes"
 
   /// Build the same projection as ``taskColumns`` with every plain
   /// column prefixed with `<alias>.` and the `recurrence_exceptions`
@@ -143,7 +148,7 @@ public enum TaskRepo {
   /// that need the projection over an aliased table.
   public static func taskColumnsQualified(_ alias: String) -> String {
     let qualified = #"""
-      \#(alias).id, \#(alias).title, \#(alias).body, \#(alias).raw_input, \#(alias).ai_notes, \#(alias).status, \#(alias).list_id, \#(alias).priority, \#(alias).due_date, \#(alias).estimated_minutes, \#(alias).recurrence, (SELECT NULLIF(json_group_array(exception_date), '[]') FROM (SELECT exception_date FROM task_recurrence_exceptions WHERE task_id = \#(alias).id ORDER BY exception_date)) AS recurrence_exceptions, \#(alias).spawned_from, \#(alias).recurrence_group_id, \#(alias).canonical_occurrence_date, \#(alias).version, \#(alias).created_at, \#(alias).updated_at, \#(alias).completed_at, \#(alias).last_deferred_at, \#(alias).last_defer_reason, \#(alias).planned_date, \#(alias).defer_count, \#(alias).recurrence_instance_key, \#(alias).archived_at, \#(alias).available_from, \#(alias).content_version, \#(alias).schedule_version, \#(alias).lifecycle_version, \#(alias).archive_version, \#(alias).recurrence_rollover_state, \#(alias).recurrence_successor_id, \#(alias).spawned_from_version
+      \#(alias).id, \#(alias).title, \#(alias).body, \#(alias).raw_input, \#(alias).ai_notes, \#(alias).status, \#(alias).list_id, \#(alias).priority, \#(alias).due_date, \#(alias).estimated_minutes, \#(alias).recurrence, (SELECT NULLIF(json_group_array(exception_date), '[]') FROM (SELECT exception_date FROM task_recurrence_exceptions WHERE task_id = \#(alias).id ORDER BY exception_date)) AS recurrence_exceptions, \#(alias).spawned_from, \#(alias).recurrence_group_id, \#(alias).canonical_occurrence_date, \#(alias).version, \#(alias).created_at, \#(alias).updated_at, \#(alias).completed_at, \#(alias).last_deferred_at, \#(alias).last_defer_reason, \#(alias).planned_date, \#(alias).defer_count, \#(alias).recurrence_instance_key, \#(alias).archived_at, \#(alias).available_from, \#(alias).content_version, \#(alias).schedule_version, \#(alias).lifecycle_version, \#(alias).archive_version, \#(alias).recurrence_rollover_state, \#(alias).recurrence_successor_id, \#(alias).spawned_from_version, \#(alias).planned_start_minutes, \#(alias).planned_end_minutes
       """#
     return qualified
   }
@@ -187,6 +192,22 @@ public enum TaskRepo {
     let canonicalOccurrenceDate = try parseOptionalDate(
       canonicalOccurrenceRaw, column: "canonical_occurrence_date")
 
+    let plannedStart: Int64? = row[33]
+    let plannedEnd: Int64? = row[34]
+    let plannedTime: Range<Int64>?
+    switch (plannedStart, plannedEnd) {
+    case (nil, nil):
+      plannedTime = nil
+    case let (start?, end?) where start >= 0 && end > start && end <= 1440:
+      plannedTime = start..<end
+    default:
+      throw DatabaseError(
+        resultCode: .SQLITE_MISMATCH,
+        message:
+          "tasks planned time is malformed: \(plannedStart.map(String.init) ?? "NULL")..\(plannedEnd.map(String.init) ?? "NULL")"
+      )
+    }
+
     let rolloverRaw: String = row[30]
     guard let rolloverState = TaskRecurrenceRolloverState(rawValue: rolloverRaw) else {
       throw DatabaseError(
@@ -216,6 +237,7 @@ public enum TaskRepo {
         deferCount: row[22],
         lastDeferredAt: row[19],
         lastDeferReason: row[20],
+        plannedTime: plannedTime,
         scheduleVersion: row[27]),
       recurrence: TaskRecurrenceState(
         recurrence: row[10],

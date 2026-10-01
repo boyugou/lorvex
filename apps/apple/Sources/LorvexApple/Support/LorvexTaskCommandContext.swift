@@ -36,9 +36,8 @@ struct LorvexTaskCommandContext {
   }
 
   @MainActor
-  var singleTaskIsFocused: Bool {
-    guard let id = singleTask?.id else { return false }
-    return store.focusedTaskIDSet.contains(id)
+  var singleTaskIsStarted: Bool {
+    singleTask?.status == .inProgress
   }
 }
 

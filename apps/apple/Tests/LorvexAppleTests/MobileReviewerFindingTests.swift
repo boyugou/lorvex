@@ -18,20 +18,25 @@ func mobileReviewerFindingSourceGuards() throws {
   #expect(heatmap.contains("@State private var cachedGrid: HabitHeatmapModel.Grid"))
   #expect(!heatmap.contains("private var grid: HabitHeatmapModel.Grid"))
   #expect(heatmap.contains(".animation(.easeInOut(duration: 0.25), value: fraction)"))
-  #expect(heatmap.contains("cue(for: cell.intensity)"))
+  // Every heatmap cell, in the grid and in the legend, is the one cell view
+  // that draws the mark telling its state apart without color.
+  #expect(heatmap.contains("MobileHabitHeatmapCell(intensity: cell.intensity, tint: tint)"))
+  #expect(heatmap.contains(".overlay { cue }"))
 
-  let focusSection = try mobileSource("MobileStoreFocusScheduleSection.swift")
-  #expect(focusSection.contains("ProgressView()"))
-  #expect(focusSection.contains("store.discardProposedFocusSchedule()"))
-  #expect(focusSection.contains("mobileClockTimeLabel(block.startTime)"))
-  #expect(
-    focusSection.contains(
-      "ForEach(Array(displayedSchedule.blocks.enumerated()), id: \\.offset)"))
+  let suggestionRows = try mobileSource("MobileTodayScheduleSheet.swift")
+  #expect(suggestionRows.contains("struct MobileTodaySuggestedTimesRows: View"))
+  #expect(suggestionRows.contains("ProgressView()"))
+  #expect(suggestionRows.contains("store.dismissSuggestedDayTimes()"))
+  #expect(suggestionRows.contains("LorvexProposedScheduleRows("))
 
-  let todayRegular = try mobileSource("MobileStoreTodayRegularView.swift")
-  #expect(
-    todayRegular.contains(
-      "ForEach(Array(displayedSchedule.blocks.enumerated()), id: \\.offset)"))
+  // The rows the suggestion shares with the Mac write clock labels and key each
+  // event by its position, since two events can carry identical values.
+  let sharedProposalRows = try String(
+    contentsOf: root.appending(path: "Sources/LorvexCore/Support/LorvexProposedScheduleRows.swift"),
+    encoding: .utf8
+  )
+  #expect(sharedProposalRows.contains("lorvexClockTimeLabel(minutes: placement.time.lowerBound)"))
+  #expect(sharedProposalRows.contains("proposal.events.enumerated().map { Row.event($1, index: $0) }"))
 
   let skeleton = try mobileSource("MobileSkeletonLoading.swift")
   #expect(skeleton.contains(".mobileSkeletonShimmer()"))

@@ -74,7 +74,12 @@ struct MobileStoreSettingsChangelogRetentionSection: View {
   }
 
   private func persist(_ wire: String) {
-    guard isLoaded else { return }
+    // Skip a no-op write. The load assigns `selection` and flips `isLoaded` in
+    // one synchronous batch, so `.onChange` fires with `isLoaded` already true;
+    // without the value check every Settings appearance would re-persist the
+    // loaded policy — churning the retention version fleet-wide and writing a
+    // phantom `ai_changelog` row into the very log the user is trimming.
+    guard isLoaded, wire != current.wireValue else { return }
     let policy = ChangelogRetentionPolicy.parse(wire)
     current = policy
     Task { await store.saveChangelogRetentionPolicy(policy) }

@@ -19,7 +19,7 @@ extension AppStore {
       format: String(
         localized: "database.recovery.notice",
         defaultValue: """
-          Lorvex couldn't open your previous database (%1$@), so it was set aside \
+          Lorvex couldn’t open your previous database (%1$@), so it was set aside \
           at %2$@ and a fresh one was created. Your earlier data is preserved there.
           """,
         table: "Localizable",

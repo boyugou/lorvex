@@ -118,8 +118,9 @@ extension SwiftLorvexCoreService {
 
   public func batchCreateTasks(_ drafts: [TaskCreateDraft]) async throws -> [LorvexTask] {
     try withWrite { db, hlc, deviceId in
-      let inputs = drafts.map { draft -> TaskCreateInput in
-        TaskCreateInput(
+      let inputs = try drafts.map { draft -> TaskCreateInput in
+        let plannedTime = Self.plannedTimePatches(draft.plannedTime.map { .set($0) } ?? .unset)
+        return TaskCreateInput(
           title: draft.title,
           listId: draft.listID.map { .set($0) } ?? .unset,
           priority: .set(
@@ -128,8 +129,13 @@ extension SwiftLorvexCoreService {
           estimatedMinutes: draft.estimatedMinutes.map { .set(UInt32(clamping: max(0, $0))) } ?? .unset,
           tags: draft.tags,
           body: .set(draft.notes),
+          rawInput: draft.rawInput.map { .set($0) } ?? .unset,
           dependsOn: draft.dependsOn,
-          plannedDate: draft.plannedDate.map { .set(Self.formatTaskDate($0)) } ?? .unset)
+          recurrenceJson: try Self.recurrencePatch(draft.recurrence),
+          plannedDate: draft.plannedDate.map { .set(Self.formatTaskDate($0)) } ?? .unset,
+          plannedStartTime: plannedTime.start,
+          plannedEndTime: plannedTime.end,
+          availableFrom: draft.availableFrom.map { .set(Self.formatTaskDate($0)) } ?? .unset)
       }
       let result = try TaskBatchCreate.batchCreateTasks(
         db, hlc: hlc, input: BatchCreateTasksInput(ids: nil, tasks: inputs, includeAdvice: false))
@@ -207,6 +213,8 @@ extension SwiftLorvexCoreService {
         id: originalID, title: spec.title, notes: spec.notes,
         priority: spec.priority.rawValue,
         status: (spec.status ?? .open).rawValue, dueDate: nil, plannedDate: nil,
+        plannedStartTime: spec.plannedTime.map { TimeOfDay.rangeBoundString($0.lowerBound) },
+        plannedEndTime: spec.plannedTime.map { TimeOfDay.rangeBoundString($0.upperBound) },
         availableFrom: nil, estimatedMinutes: spec.estimatedMinutes, tags: spec.tags,
         rawInput: spec.rawInput, dependsOn: spec.dependsOn,
         listID: spec.listID,
@@ -260,6 +268,7 @@ extension SwiftLorvexCoreService {
         estimatedMinutes: spec.estimatedMinutes,
         dueDate: spec.dueDate,
         plannedDate: spec.plannedDate,
+        plannedTime: spec.plannedTime,
         availableFrom: spec.availableFrom,
         tags: spec.tags,
         dependsOn: spec.dependsOn,
@@ -335,19 +344,22 @@ extension SwiftLorvexCoreService {
         if let title = draft.title, title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
           throw LorvexCoreError.emptyTitle
         }
+        let plannedTime = Self.plannedTimePatches(draft.plannedTime)
         return TaskUpdateInput(
           id: draft.id,
           title: draft.title.map { .set($0) } ?? .unset,
           body: draft.notes.map { .set($0) } ?? .unset,
           listId: draft.listID.map { .set($0) } ?? .unset,
           tagsSet: draft.tags,
-          priority: draft.priority.map {
-            .set(UInt8($0.tier))
-          } ?? .unset,
+          priority: draft.clearsPriority
+            ? .clear
+            : draft.priority.map { .set(UInt8($0.tier)) } ?? .unset,
           dueDate: Self.formatTaskDatePatch(draft.dueDate),
           estimatedMinutes: Self.estimatedMinutesPatch(draft.estimatedMinutes),
           dependsOn: draft.dependsOn,
           plannedDate: Self.formatTaskDatePatch(draft.plannedDate),
+          plannedStartTime: plannedTime.start,
+          plannedEndTime: plannedTime.end,
           availableFrom: Self.formatTaskDatePatch(draft.availableFrom))
       }
       var beforeSyncPayloads: [String: JSONValue] = [:]
@@ -537,6 +549,25 @@ extension SwiftLorvexCoreService {
       return .clear
     case .set(let date):
       return .set(formatTaskDate(date))
+    }
+  }
+
+  /// The `planned_start_time` and `planned_end_time` patches for a planned
+  /// time: both `HH:MM` (the end may be `24:00`), both cleared, or both left
+  /// alone.
+  static func plannedTimePatches(_ patch: Patch<Range<Int>>)
+    -> (start: Patch<String>, end: Patch<String>)
+  {
+    switch patch {
+    case .unset:
+      return (.unset, .unset)
+    case .clear:
+      return (.clear, .clear)
+    case .set(let time):
+      return (
+        .set(TimeOfDay.rangeBoundString(time.lowerBound)),
+        .set(TimeOfDay.rangeBoundString(time.upperBound))
+      )
     }
   }
 

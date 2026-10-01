@@ -7,56 +7,15 @@ protocol WidgetSnapshotPublishing {
   /// environment paths are developer-owned and are never erased by the app.
   var factoryResetTarget: WidgetSnapshotFactoryResetTarget? { get }
 
-  /// Publishes one transactionally captured source. Shipping adapters override
-  /// this requirement so the managed-storage generation cannot be dropped by a
-  /// new adapter or test double.
+  /// Publishes one transactionally captured source, so the projection never
+  /// mixes Today, habit, list, and stats revisions and the managed-storage
+  /// generation orders the write.
   @MainActor
   func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot
-
-  @MainActor
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot
-
-  /// Publishes with the uncapped canonical `statsSource` threaded into the
-  /// projection so the widget's numeric stats reflect the whole workload. The
-  /// default implementation ignores `statsSource` and forwards to the four-arg
-  /// form; the file-backed publisher overrides it to pass the source through.
-  @MainActor
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot
 }
 
 extension WidgetSnapshotPublishing {
   var factoryResetTarget: WidgetSnapshotFactoryResetTarget? { nil }
-
-  /// Convenience overload that defaults `habitCatalog` and `lists` to `nil`.
-  @MainActor
-  func publish(
-    today: TodaySnapshot, currentFocus: CurrentFocusPlan?
-  ) async throws -> WidgetSnapshot {
-    try await publish(today: today, currentFocus: currentFocus, habitCatalog: nil, lists: nil)
-  }
-
-  @MainActor
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot {
-    try await publish(
-      today: today, currentFocus: currentFocus, habitCatalog: habitCatalog, lists: lists)
-  }
 }
 
 /// The no-op host publisher used on unsigned/unentitled local builds: an
@@ -68,35 +27,6 @@ struct NoopWidgetSnapshotPublisher: WidgetSnapshotPublishing {
     try await WidgetSnapshotPublisher(
       destination: WidgetSnapshotPublisher.Destination(snapshotURL: nil, reload: {})
     ).publish(source: source)
-  }
-
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot {
-    try await publish(
-      today: today, currentFocus: currentFocus, habitCatalog: habitCatalog, lists: lists,
-      statsSource: nil)
-  }
-
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot {
-    try await WidgetSnapshotPublisher(
-      destination: WidgetSnapshotPublisher.Destination(snapshotURL: nil, reload: {})
-    ).publish(
-      today: today,
-      currentFocus: currentFocus,
-      habitCatalog: habitCatalog,
-      lists: lists,
-      statsSource: statsSource
-    )
   }
 }
 
@@ -155,17 +85,6 @@ struct FileWidgetSnapshotPublisher: WidgetSnapshotPublishing {
     }
   }
 
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot {
-    try await publish(
-      today: today, currentFocus: currentFocus, habitCatalog: habitCatalog, lists: lists,
-      statsSource: nil)
-  }
-
   func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot {
     try await makePublisher().publish(source: source)
   }
@@ -181,33 +100,6 @@ struct FileWidgetSnapshotPublisher: WidgetSnapshotPublishing {
         mirror: nil
       ),
       projector: projector
-    )
-  }
-
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot {
-    let publisher = WidgetSnapshotPublisher(
-      destination: WidgetSnapshotPublisher.Destination(
-        snapshotURL: snapshotURL,
-        managedDatabasePath: managedDatabasePath,
-        focusFilterStore: focusFilterStore,
-        hideTitles: hideTitles,
-        reload: reloadTrigger.reload,
-        mirror: nil
-      ),
-      projector: projector
-    )
-    return try await publisher.publish(
-      today: today,
-      currentFocus: currentFocus,
-      habitCatalog: habitCatalog,
-      lists: lists,
-      statsSource: statsSource
     )
   }
 

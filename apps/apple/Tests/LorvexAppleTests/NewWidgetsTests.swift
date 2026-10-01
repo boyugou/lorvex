@@ -5,7 +5,7 @@ import LorvexWidgetKitSupport
 import LorvexWidgetViews
 import Testing
 
-// MARK: - WidgetSnapshot habit/todayTask codable round-trip
+// MARK: - WidgetSnapshot habit/task codable round-trip
 
 @Test
 func widgetSnapshotHabitSummaryRoundTripsViaJSON() throws {
@@ -19,11 +19,10 @@ func widgetSnapshotHabitSummaryRoundTripsViaJSON() throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-25T08:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: [],
-    habits: [habit],
-    todayTasks: []
+    tasks: [],
+    habits: [habit]
   )
   let data = try JSONEncoder().encode(snapshot)
   let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
@@ -40,24 +39,27 @@ func widgetSnapshotTodayTaskRoundTripsViaJSON() throws {
   let task = WidgetSnapshot.TodayTask(
     id: "t1",
     title: "Write tests",
+    status: LorvexTask.Status.inProgress.rawValue,
     dueDate: "2026-05-25",
     priority: 1,
-    estimatedMinutes: 30
+    listID: "work",
+    estimatedMinutes: 30,
+    scheduledStart: "09:00",
+    scheduledEnd: "09:30"
   )
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-25T08:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 1),
-    briefing: nil,
-    focusTasks: [],
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
+    briefing: "Ship the tests before lunch.",
+    tasks: [task],
     habits: [],
-    todayTasks: [task],
     lists: [.init(id: "work", name: "Work", icon: "briefcase")],
     listStats: [
       .init(
         id: "work",
         stats: .init(
-          focusCount: 1,
+          todayCount: 1,
           overdueCount: 0,
           dueTodayCount: 1,
           completedTodayCount: 1))
@@ -65,12 +67,18 @@ func widgetSnapshotTodayTaskRoundTripsViaJSON() throws {
   )
   let data = try JSONEncoder().encode(snapshot)
   let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
-  #expect(decoded.todayTasks.count == 1)
-  #expect(decoded.todayTasks[0].id == "t1")
-  #expect(decoded.todayTasks[0].title == "Write tests")
-  #expect(decoded.todayTasks[0].dueDate == "2026-05-25")
-  #expect(decoded.todayTasks[0].priority == 1)
-  #expect(decoded.todayTasks[0].estimatedMinutes == 30)
+  #expect(decoded == snapshot)
+  #expect(decoded.tasks.count == 1)
+  #expect(decoded.tasks[0].id == "t1")
+  #expect(decoded.tasks[0].title == "Write tests")
+  #expect(decoded.tasks[0].status == "in_progress")
+  #expect(decoded.tasks[0].dueDate == "2026-05-25")
+  #expect(decoded.tasks[0].priority == 1)
+  #expect(decoded.tasks[0].listID == "work")
+  #expect(decoded.tasks[0].estimatedMinutes == 30)
+  #expect(decoded.tasks[0].scheduledStart == "09:00")
+  #expect(decoded.tasks[0].scheduledEnd == "09:30")
+  #expect(decoded.briefing == "Ship the tests before lunch.")
   #expect(decoded.lists == [.init(id: "work", name: "Work", icon: "briefcase")])
   #expect(decoded.listStats.first?.id == "work")
   #expect(decoded.listStats.first?.stats.completedTodayCount == 1)
@@ -78,22 +86,24 @@ func widgetSnapshotTodayTaskRoundTripsViaJSON() throws {
 
 @Test
 func widgetSnapshotRejectsSnapshotMissingRequiredArray() {
-  // A v3 snapshot must carry every data array (empty, never omitted). The
+  // A snapshot must carry every data array (empty, never omitted). The
   // decoder is strict, so a missing array is a decode failure the loader turns
   // into a graceful fallback rather than a silent empty default. Here
   // `list_stats` is absent.
   let incompleteJSON = """
     {
-      "version": 3,
+      "version": 4,
       "generated_at": "2026-05-25T08:00:00Z",
       "storage_generation": 0,
       "focus_filter_revision": 0,
       "workspace_instance_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       "local_change_sequence": 1,
-      "stats": {"focus_count": 1, "overdue_count": 0, "due_today_count": 0},
-      "focus_tasks": [],
+      "stats": {
+        "today_count": 1, "overdue_count": 0, "due_today_count": 0,
+        "attention_count": 0, "completed_today_count": 0
+      },
+      "tasks": [],
       "habits": [],
-      "today_tasks": [],
       "lists": []
     }
     """
@@ -103,12 +113,12 @@ func widgetSnapshotRejectsSnapshotMissingRequiredArray() {
   }
 }
 
-// MARK: - WidgetSnapshotProjector: habits + todayTasks projection
+// MARK: - WidgetSnapshotProjector: habits + tasks projection
 
 @Test
 func widgetSnapshotProjectorPopulatesHabitsFromCatalog() {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
-  let today = TodaySnapshot(focusTitle: "Today", summary: "", tasks: [], localChangeSequence: 0)
+  let today = TodaySnapshot(summary: "", tasks: [], localChangeSequence: 0)
   let catalog = HabitCatalogSnapshot(habits: [
     LorvexHabit(
       id: "h1", name: "Meditate", icon: "🧘", color: nil, cue: nil,
@@ -129,7 +139,6 @@ func widgetSnapshotProjectorPopulatesHabitsFromCatalog() {
   let projector = WidgetSnapshotProjector(now: { now })
   let snapshot = projector.snapshot(
     today: today,
-    currentFocus: nil,
     timezone: "UTC",
     habitCatalog: catalog
   )
@@ -142,66 +151,51 @@ func widgetSnapshotProjectorPopulatesHabitsFromCatalog() {
 }
 
 @Test
-func widgetSnapshotProjectorPopulatesTodayTasksFromOpenTasks() {
+func widgetSnapshotProjectorListsTheActionableTasksInTodaysOrder() {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
+      makeProjectorTask(
+        id: "started-1", title: "Started task", priority: .p3, status: .inProgress, dueDate: nil,
+        estimatedMinutes: nil),
       makeProjectorTask(id: "open-1", title: "Open task", priority: .p1, status: .open, dueDate: nil, estimatedMinutes: 20),
       makeProjectorTask(id: "done-1", title: "Done task", priority: .p2, status: .completed, dueDate: nil, estimatedMinutes: nil),
     ],
     localChangeSequence: 1
   )
   let projector = WidgetSnapshotProjector(now: { now })
-  let snapshot = projector.snapshot(today: today, currentFocus: nil, timezone: "UTC")
-  #expect(snapshot.todayTasks.count == 1)
-  #expect(snapshot.todayTasks[0].id == "open-1")
-  #expect(snapshot.todayTasks[0].title == "Open task")
-  #expect(snapshot.todayTasks[0].estimatedMinutes == 20)
+  let snapshot = projector.snapshot(today: today, timezone: "UTC")
+  #expect(snapshot.tasks.map(\.id) == ["started-1", "open-1"])
+  #expect(snapshot.tasks[0].status == "in_progress")
+  #expect(snapshot.tasks[1].title == "Open task")
+  #expect(snapshot.tasks[1].estimatedMinutes == 20)
+  #expect(snapshot.stats.todayCount == 2)
 }
 
 @Test
-func widgetSnapshotProjectorFiltersTodayTasksForActiveFocusFilter() {
+func widgetSnapshotProjectorNarrowsTasksToTheFocusFilterLists() {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
       makeProjectorTask(
-        id: "focus-1",
-        title: "Focus task",
-        priority: .p1,
-        status: .open,
-        dueDate: nil,
-        estimatedMinutes: 20),
+        id: "work-1", title: "Work task", priority: .p1, status: .open, dueDate: nil,
+        estimatedMinutes: 20, listID: "work"),
       makeProjectorTask(
-        id: "other-1",
-        title: "Non-focus task",
-        priority: .p2,
-        status: .open,
-        dueDate: nil,
-        estimatedMinutes: 10),
+        id: "home-1", title: "Home task", priority: .p2, status: .open, dueDate: nil,
+        estimatedMinutes: 10, listID: "home"),
     ],
     localChangeSequence: 1
   )
-  let currentFocus = CurrentFocusPlan(
-    date: "2026-05-22",
-    taskIDs: ["focus-1"],
-    briefing: nil,
-    timezone: "UTC",
-    localChangeSequence: 1
-  )
-  let filter = FocusFilterConfiguration(activeProfileID: "Deep Work", showNonFocusTasks: false)
   let projector = WidgetSnapshotProjector(now: { now })
   let snapshot = projector.snapshot(
     today: today,
-    currentFocus: currentFocus,
     timezone: "UTC",
-    focusFilter: filter
+    focusFilter: FocusFilterConfiguration(listIDs: ["work"])
   )
 
-  #expect(snapshot.todayTasks.map(\.id) == ["focus-1"])
+  #expect(snapshot.tasks.map(\.id) == ["work-1"])
 }
 
 // MARK: - Progress math
@@ -253,16 +247,16 @@ func habitSummaryIsDoneTodayRequiresMeetingTarget() {
 
 @Test
 func widgetFamilyKindCoversAccessoryCircular() {
-  // Verify accessoryCircular has zero maxTaskRows (used by focus count display, not task rows).
+  // The circular accessory shows a count or a running time, never task rows.
   #expect(WidgetFamilyKind.accessoryCircular.maxTaskRows == 0)
 }
 
 @Test
 func widgetSnapshotProjectorOmitsNoHabitsWhenCatalogIsNil() {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
-  let today = TodaySnapshot(focusTitle: "Today", summary: "", tasks: [], localChangeSequence: 0)
+  let today = TodaySnapshot(summary: "", tasks: [], localChangeSequence: 0)
   let projector = WidgetSnapshotProjector(now: { now })
-  let snapshot = projector.snapshot(today: today, currentFocus: nil, timezone: nil, habitCatalog: nil)
+  let snapshot = projector.snapshot(today: today, timezone: nil, habitCatalog: nil)
   #expect(snapshot.habits.isEmpty)
 }
 
@@ -281,10 +275,11 @@ private func makeProjectorTask(
   priority: LorvexTask.Priority,
   status: LorvexTask.Status,
   dueDate: Date?,
-  estimatedMinutes: Int?
+  estimatedMinutes: Int?,
+  listID: String? = nil
 ) -> LorvexTask {
   LorvexTask(
     id: id, title: title, notes: "", priority: priority, status: status,
-    dueDate: dueDate, estimatedMinutes: estimatedMinutes, tags: []
+    dueDate: dueDate, estimatedMinutes: estimatedMinutes, tags: [], listID: listID
   )
 }

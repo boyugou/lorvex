@@ -30,7 +30,7 @@ import Security
 /// The entitlement read is gated to macOS — the only platform where the
 /// sandboxed-vs-unsandboxed distinction changes the storage decision (the
 /// `LORVEX_APPLE_DB_PATH` dev override is a macOS-only, unsandboxed-build
-/// feature). iOS/iPadOS/visionOS/watchOS/tvOS builds are always sandboxed and
+/// feature). iOS/iPadOS/watchOS builds are always sandboxed and
 /// always open the Lorvex-managed store, so those platforms fail closed without
 /// consulting a macOS-specific environment variable or the Security framework.
 ///
@@ -103,7 +103,7 @@ public enum AppSandboxEnvironment {
   }
 
   private static var platformRequiresSandbox: Bool {
-    #if os(iOS) || os(visionOS) || os(watchOS) || os(tvOS)
+    #if os(iOS) || os(watchOS) || os(tvOS)
     return true
     #else
     return false

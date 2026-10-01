@@ -17,16 +17,39 @@ func calendarDayCountAdaptsToActualAvailableWidth() {
   #expect(!MobileCalendarDayView.usesAgendaPanel(for: 1_100, isRegularWidth: false))
 }
 
-@MainActor
+/// The week header names a week in the current year without the year, gives
+/// the years of a week that reaches past it, and breaks only after its dash.
 @Test
-func mobileCalendarDefaultsToTheAdaptiveDayGrid() async throws {
-  let store = MobileStore(core: try await makeSeededInMemoryCore())
+func calendarWeekRangeLabelOmitsTheCurrentYear() {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = TimeZone(identifier: "UTC")!
+  func day(_ year: Int, _ month: Int, _ day: Int) -> Date {
+    calendar.date(from: DateComponents(year: year, month: month, day: day))!
+  }
+  func label(_ start: Date, _ locale: String) -> String {
+    MobileCalendarDayView.weekRangeLabel(
+      from: start, calendar: calendar, now: day(2026, 9, 30), locale: Locale(identifier: locale))
+  }
 
-  #expect(store.calendarPresentationMode == .grid)
+  #expect(label(day(2026, 9, 27), "en_US") == "Sep\u{00A0}27\u{202F}–\u{2009}Oct\u{00A0}3")
+  #expect(
+    label(day(2026, 12, 27), "en_US")
+      == "Dec\u{00A0}27,\u{00A0}2026\u{202F}–\u{2009}Jan\u{00A0}2,\u{00A0}2027")
+  #expect(!label(day(2026, 9, 27), "zh_Hans").contains("年"))
+  #expect(label(day(2026, 12, 27), "zh_Hans").contains("2027年"))
 }
 
 @MainActor
-@Test("Grouped calendar agenda uses the same search-filtered events as the grid")
+@Test
+func mobileCalendarDefaultsToTheDayGrid() async throws {
+  let store = MobileStore(core: try await makeSeededInMemoryCore())
+
+  #expect(store.calendarPresentationMode == .grid)
+  #expect(MobileCalendarPresentationMode.allCases == [.grid, .week])
+}
+
+@MainActor
+@Test("The agenda beside the grid uses the same search-filtered events as the grid")
 func mobileCalendarAgendaUsesSearchProjection() async throws {
   let store = MobileStore(
     core: try await makeSeededInMemoryCore(),
@@ -41,8 +64,8 @@ func mobileCalendarAgendaUsesSearchProjection() async throws {
     ],
     truncated: false, nextOffset: nil)
 
-  let view = MobileCalendarDayView(store: store, weekMode: true, searchQuery: "cedar")
-  let visibleEventIDs = view.visibleAgendaDays(dayCount: 7).flatMap(\.events).map(\.id)
+  let view = MobileCalendarDayView(store: store, searchQuery: "cedar")
+  let visibleEventIDs = view.agendaDays(dayCount: 7, from: view.visibleDate).flatMap(\.events).map(\.id)
 
   #expect(visibleEventIDs == ["matching"])
 }
@@ -54,7 +77,7 @@ func mobileCalendarAgendaUsesPlannedFirstTaskDays() async throws {
     core: try await makeSeededInMemoryCore(),
     todayString: { "2026-05-25" })
   let view = MobileCalendarDayView(store: store, weekMode: true)
-  let visibleDayKeys = view.visibleAgendaDays(dayCount: 3).map {
+  let visibleDayKeys = view.agendaDays(dayCount: 3, from: view.visibleDate).map {
     MobileCalendarDayView.keyFormatter.string(from: $0.date)
   }
   #expect(visibleDayKeys.count == 3)
@@ -71,7 +94,7 @@ func mobileCalendarAgendaUsesPlannedFirstTaskDays() async throws {
       plannedDate: LorvexDateFormatters.ymdUTC.date(from: visibleDayKeys[2])),
   ]
 
-  let days = view.visibleAgendaDays(dayCount: 3)
+  let days = view.agendaDays(dayCount: 3, from: view.visibleDate)
 
   #expect(days[0].tasks.map(\.id) == ["due-only"])
   #expect(days[1].tasks.map(\.id) == ["planned-only"])
@@ -212,4 +235,31 @@ func agendaOrdersTimedAfterUntimedThenByStartTimeAndTitle() {
   // Untimed first, then 08:00, then the two 09:00 events tie-broken by title
   // ("Alpha" < "Sync").
   #expect(ordered.map(\.id) == ["allday", "eight", "nine2", "nine"])
+}
+
+/// A task under an agenda day states its time that day, else its estimate,
+/// then "Due" on its due date, and breaks only after a span's dash or a dot.
+@Test
+func agendaTaskFactsBreakOnlyBetweenFacts() {
+  let day = "2026-09-30"
+  let midnight = LorvexDateFormatters.ymdUTC.date(from: day)!
+  func task(time: Range<Int>? = nil, estimate: Int? = nil, due: Date? = nil) -> LorvexTask {
+    LorvexTask(
+      id: "t", title: "Task", notes: "", priority: .p2, status: .open, dueDate: due,
+      plannedDate: time == nil ? nil : midnight, plannedTime: time, estimatedMinutes: estimate,
+      tags: [])
+  }
+  func facts(_ task: LorvexTask, on key: String = day) -> String? {
+    MobileCalendarAgendaTaskRow.subtitle(for: task, dayKey: key)
+  }
+  let span = lorvexUnbreakable(lorvexClockRangeLabel(startMinutes: 585, endMinutes: 630))
+  let estimate = lorvexUnbreakable(MobileTaskDisplayText.compactEstimateMinutes(45))
+
+  #expect(facts(task(time: 585..<630, estimate: 45, due: midnight)) == "\(span)\u{00A0}· Due")
+  #expect(facts(task(estimate: 45)) == estimate)
+  #expect(facts(task(due: midnight)) == "Due")
+  #expect(facts(task()) == nil)
+  // A time or a due date on another day says nothing about this one.
+  #expect(facts(task(time: 585..<630, estimate: 45), on: "2026-10-01") == estimate)
+  #expect(facts(task(due: midnight.addingTimeInterval(86_400))) == nil)
 }

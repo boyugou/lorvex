@@ -24,9 +24,29 @@ extension LorvexTask {
     return calendar.date(from: day) ?? dueDate
   }
 
-  /// Whether the task is past due — its due day falls before today
-  /// (day-granular). `false` when there is no due date.
+  /// Whether the task is overdue: it is unresolved (open, started, or parked
+  /// for someday) and its due day falls before today (day-granular). A
+  /// completed or cancelled task is never overdue, whatever its due date, so a
+  /// finished row never carries the missed-deadline warning. `false` when
+  /// there is no due date.
   public func isOverdue(now: Date = Date(), calendar: Calendar = .current) -> Bool {
+    status.isActive && isPastDue(now: now, calendar: calendar)
+  }
+
+  /// Whether the task is due soon: it is unresolved and its due day is today
+  /// or tomorrow (day-granular). Surfaces tint such a due date orange, the
+  /// same rule the task inspector's Due row follows; an overdue task is not
+  /// due soon. `false` when there is no due date.
+  public func isDueSoon(now: Date = Date(), calendar: Calendar = .current) -> Bool {
+    guard status.isActive, let dueDate else { return false }
+    let today = calendar.startOfDay(for: now)
+    let days = calendar.dateComponents([.day], from: today, to: dueDayStart(of: dueDate, in: calendar)).day ?? -1
+    return days == 0 || days == 1
+  }
+
+  /// Whether the due day falls before today (day-granular), whatever the
+  /// task's status. `false` when there is no due date.
+  func isPastDue(now: Date, calendar: Calendar) -> Bool {
     guard let dueDate else { return false }
     return dueDayStart(of: dueDate, in: calendar) < calendar.startOfDay(for: now)
   }
@@ -38,7 +58,7 @@ extension LorvexTask {
   /// the day-surface filter's residual conjunct, so this bool answers exactly
   /// "is this row currently suppressed from the day surfaces by `available_from`."
   public func isHiddenUntilFuture(now: Date = Date(), calendar: Calendar = .current) -> Bool {
-    guard let availableFrom, !isOverdue(now: now, calendar: calendar) else { return false }
+    guard let availableFrom, !isPastDue(now: now, calendar: calendar) else { return false }
     return dueDayStart(of: availableFrom, in: calendar) > calendar.startOfDay(for: now)
   }
 

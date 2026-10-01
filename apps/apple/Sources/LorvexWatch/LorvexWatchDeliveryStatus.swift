@@ -32,6 +32,8 @@ public struct LorvexWatchRejectedCommand: Identifiable, Equatable, Sendable {
 /// diagnostics, not user-facing localized content.
 enum LorvexWatchDeliveryRejectionText {
   static let workspaceReplacedCode = "workspace_replaced"
+  /// Watch-side code for a command the phone kept answering without an ACK.
+  static let unreadableCode = "unreadable_on_phone"
 
   static func localizedMessage(for code: String) -> String {
     switch code {
@@ -39,6 +41,11 @@ enum LorvexWatchDeliveryRejectionText {
       return String(
         localized: "watch.delivery.workspace_replaced",
         defaultValue: "The iPhone workspace was replaced before this action was applied.",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    case unreadableCode:
+      return String(
+        localized: "watch.delivery.rejection.unreadable",
+        defaultValue: "Your iPhone couldn’t read this action. Update Lorvex on both devices.",
         table: "Localizable", bundle: WatchL10n.bundle)
     case "not_found":
       return String(
@@ -68,7 +75,7 @@ enum LorvexWatchDeliveryRejectionText {
     default:
       return String(
         localized: "watch.delivery.rejection.generic",
-        defaultValue: "This action wasn't applied on iPhone.",
+        defaultValue: "This action wasn’t applied on iPhone.",
         table: "Localizable", bundle: WatchL10n.bundle)
     }
   }
@@ -119,6 +126,10 @@ public protocol LorvexWatchDeliveryManaging: LorvexWatchMutationForwarding {
   func dismissRejectedCommand(id: String) async
   func drain() async
   func handleBackgroundWake() async
+  /// Asks the paired iPhone to rebuild and resend its replica, and accepts the
+  /// reply. Returns once the phone answered or the request failed; does nothing
+  /// while the phone is unreachable.
+  func requestReplica() async
 }
 
 /// Connectivity state consumed by the pure delivery coordinator. An inactive

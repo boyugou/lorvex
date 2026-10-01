@@ -1,35 +1,104 @@
 import AppKit
 import LorvexCore
 import SwiftUI
-import TipKit
 
 extension SettingsView {
-  private var mcpAssistantTip: MCPAssistantTip { MCPAssistantTip() }
-
   var mcpSection: some View {
     Group {
-      mcpConnectSection
-      mcpDiagnosticsSection
+      SettingsAssistantConnectSection()
+      SettingsAssistantSessionsSection(core: store.core)
     }
   }
+}
 
-  /// The actionable part: how to point an external AI client at this app's MCP
-  /// host. The fastest path is the setup prompt the assistant applies to its own
-  /// config; the JSON snippet and raw command path cover manual and other clients.
-  private var mcpConnectSection: some View {
+/// How to point an external AI client at this app's MCP host. The fastest path
+/// is the setup prompt the assistant applies to its own config; the JSON snippet
+/// and raw command path cover manual and other clients.
+///
+/// The group leads with the bundled helper's problem when its self-check finds
+/// one, and says nothing about a working helper: the assistants listed below
+/// it, with when each last used Lorvex, show that a connection works end to
+/// end. The self-check hangs off the section, which always draws its controls,
+/// so it runs even while no problem shows.
+private struct SettingsAssistantConnectSection: View {
+  @State private var helperStatus: MCPHelperProbeStatus = .ready
+
+  var body: some View {
     Section(String(
       localized: "settings.mcp.connect_section", defaultValue: "Connect an Assistant",
       table: "Localizable",
       bundle: LorvexL10n.bundle)) {
+      if let problem = SettingsMCPHelperProblemRow(status: helperStatus) {
+        problem
+      }
       SettingsMCPConnectionPanel(setup: MCPClientSetup.current())
+    }
+    .task {
+      let status = await Self.currentStatus()
+      lorvexAnimated(.snappy(duration: 0.18)) { helperStatus = status }
     }
   }
 
-  private var mcpDiagnosticsSection: some View {
-    Section(String(localized: "settings.mcp.section", defaultValue: "Connection Status", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      SettingsMCPDiagnosticsPanel(setup: MCPClientSetup.current())
-        .popoverTip(mcpAssistantTip)
+  /// The bundled helper's status. A DEBUG `--ui-preview` run is a bare binary
+  /// with no app bundle to probe, so it shows an installed app's ready state.
+  private static func currentStatus() async -> MCPHelperProbeStatus {
+    #if DEBUG
+      if LorvexUIPreview.isActive { return .ready }
+    #endif
+    return await MCPHelperProbe.probe()
+  }
+}
+
+/// Which assistants have actually used Lorvex here, so the user can confirm a
+/// connection works end to end rather than only that the helper can run. One
+/// row per MCP client, most recently active first, with when it last used
+/// Lorvex. The helper records a client when it connects and again while it
+/// keeps calling tools; the list is device-local and never synced. The tooltip
+/// carries the raw client name and version for troubleshooting.
+private struct SettingsAssistantSessionsSection: View {
+  let core: any LorvexCoreServicing
+  @State private var sessions: [AssistantSessionRecord]?
+
+  var body: some View {
+    // The load hangs off the section, which always draws its header: rows only
+    // exist once the load has finished.
+    Section(String(
+      localized: "settings.mcp.sessions_section", defaultValue: "Assistants on This Mac",
+      table: "Localizable", bundle: LorvexL10n.bundle)) {
+      if let sessions, sessions.isEmpty {
+        Text(LocalizedStringResource(
+          "settings.mcp.sessions_empty",
+          defaultValue: "No assistant has used Lorvex on this Mac yet.",
+          table: "Localizable", bundle: LorvexL10n.bundle))
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(.secondary)
+          .accessibilityIdentifier("settings.mcp.sessionsEmpty")
+      } else if let sessions {
+        ForEach(sessions) { session in
+          LabeledContent(session.displayName) {
+            Text(lastUsed(session))
+              .foregroundStyle(.secondary)
+          }
+          .help(Text(verbatim: [session.clientName, session.clientVersion].compactMap { $0 }
+            .joined(separator: " ")))
+          .accessibilityIdentifier("settings.mcp.session")
+        }
+      }
     }
+    .task { sessions = (try? await core.loadAssistantSessions()) ?? [] }
+  }
+
+  private func lastUsed(_ session: AssistantSessionRecord) -> String {
+    // A preview run pins its clock, so the seeded sessions read the same in
+    // every capture.
+    let now = LorvexPreviewClock.now(in: Calendar.current)
+    let relative = LorvexDateFormatters.namedRelative.localizedString(
+      for: session.lastActiveAt, relativeTo: now)
+    return String(
+      format: String(
+        localized: "settings.mcp.session_last_used", defaultValue: "Last used %@",
+        table: "Localizable", bundle: LorvexL10n.bundle),
+      relative)
   }
 }
 
@@ -43,7 +112,7 @@ private struct SettingsMCPConnectionPanel: View {
       Text(LocalizedStringResource(
         "settings.mcp.connect_blurb",
         defaultValue:
-          "Your AI client launches Lorvex's built-in helper to read and update Lorvex data, including tasks, lists, habits, memory, reviews, and calendar entries. Copy the setup prompt below only into assistants you trust.",
+          "Lorvex is built for an assistant to do most of the work: your AI client launches Lorvex’s built-in helper to read and update tasks, lists, habits, memory, reviews, and calendar entries. Copy the setup prompt below only into assistants you trust.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))
@@ -83,7 +152,7 @@ private struct SettingsMCPConnectionPanel: View {
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal, LorvexDesign.Spacing.s)
           .padding(.vertical, LorvexDesign.Spacing.xs)
-          .background(.quaternary.opacity(0.18), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+          .background(LorvexDesign.Palette.insetFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
           .accessibilityIdentifier("settings.mcp.configSnippet")
 
         Button {
@@ -126,60 +195,20 @@ private struct SettingsMCPConnectionPanel: View {
   }
 }
 
-private struct SettingsMCPDiagnosticsPanel: View {
-  let setup: MCPClientSetup
-  @State private var status: MCPHelperProbeStatus = .ready
+/// What is wrong with the bundled MCP helper and how to recover, in a warning
+/// row. It exists only for a failed self-check: `init(status:)` returns nil for
+/// a ready helper, since a working connection needs no row of its own.
+private struct SettingsMCPHelperProblemRow: View {
+  let title: LocalizedStringResource
+  let detail: LocalizedStringResource
 
-  var body: some View {
-    Label {
-      VStack(alignment: .leading, spacing: 3) {
-        Text(title)
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .foregroundStyle(tint)
-        Text(detail)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-    } icon: {
-      Image(systemName: iconName)
-        .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(tint)
-    }
-    .task { status = await MCPHelperProbe.probe() }
-  }
-
-  private var tint: Color { status == .ready ? .green : .orange }
-
-  private var iconName: String {
-    status == .ready ? "checkmark.seal.fill" : "exclamationmark.triangle.fill"
-  }
-
-  private var title: LocalizedStringResource {
+  init?(status: MCPHelperProbeStatus) {
     switch status {
     case .ready:
-      LocalizedStringResource("settings.mcp.ready_title", defaultValue: "Assistant connection ready", table: "Localizable", bundle: LorvexL10n.bundle)
+      return nil
     case .helperMissing:
-      LocalizedStringResource("settings.mcp.helper_missing_title", defaultValue: "Assistant helper missing", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .helperNotExecutable:
-      LocalizedStringResource("settings.mcp.helper_blocked_title", defaultValue: "Assistant helper can’t run", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .runtimeFailed:
-      LocalizedStringResource("settings.mcp.helper_runtime_failed_title", defaultValue: "Assistant helper self-check failed", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-  }
-
-  private var detail: LocalizedStringResource {
-    switch status {
-    case .ready:
-      LocalizedStringResource(
-        "settings.mcp.ready_blurb",
-        defaultValue:
-          "Lorvex includes a built-in helper so your assistant can read and update your tasks. Add it using the connection details above.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .helperMissing:
-      LocalizedStringResource(
+      title = LocalizedStringResource("settings.mcp.helper_missing_title", defaultValue: "Assistant helper missing", table: "Localizable", bundle: LorvexL10n.bundle)
+      detail = LocalizedStringResource(
         "settings.mcp.helper_missing_detail",
         defaultValue:
           "Lorvex can’t find its built-in MCP helper. Reinstall Lorvex from the original download to restore it.",
@@ -187,7 +216,8 @@ private struct SettingsMCPDiagnosticsPanel: View {
         bundle: LorvexL10n.bundle
       )
     case .helperNotExecutable:
-      LocalizedStringResource(
+      title = LocalizedStringResource("settings.mcp.helper_blocked_title", defaultValue: "Assistant helper can’t run", table: "Localizable", bundle: LorvexL10n.bundle)
+      detail = LocalizedStringResource(
         "settings.mcp.helper_blocked_detail",
         defaultValue:
           "Lorvex’s built-in MCP helper isn’t executable. Reinstall Lorvex from the original download, or remove it from quarantine, to restore the connection.",
@@ -195,7 +225,8 @@ private struct SettingsMCPDiagnosticsPanel: View {
         bundle: LorvexL10n.bundle
       )
     case .runtimeFailed:
-      LocalizedStringResource(
+      title = LocalizedStringResource("settings.mcp.helper_runtime_failed_title", defaultValue: "Assistant helper self-check failed", table: "Localizable", bundle: LorvexL10n.bundle)
+      detail = LocalizedStringResource(
         "settings.mcp.helper_runtime_failed_detail",
         defaultValue:
           "Lorvex found the helper, but it could not start with the current storage settings. Reconnect Lorvex in Settings > Assistant or reinstall the app.",
@@ -203,5 +234,26 @@ private struct SettingsMCPDiagnosticsPanel: View {
         bundle: LorvexL10n.bundle
       )
     }
+  }
+
+  // The warning color marks the icon only, so the title reads as a statement
+  // rather than as a link.
+  var body: some View {
+    Label {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+        Text(title)
+          .font(LorvexDesign.Typography.primaryEmphasis)
+        Text(detail)
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+    } icon: {
+      Image(systemName: "exclamationmark.triangle.fill")
+        .symbolRenderingMode(.hierarchical)
+        .foregroundStyle(LorvexDesign.Palette.warning)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("settings.mcp.helperProblem")
   }
 }

@@ -20,9 +20,9 @@ public struct DatabaseRecoveryNotice: Sendable, Equatable {
   }
 }
 
-public protocol LorvexCoreServicing: LorvexAIFocusScheduleReading, LorvexCalendarServicing,
+public protocol LorvexCoreServicing: LorvexCalendarServicing,
   LorvexDataExportServicing,
-  LorvexFocusPlanningServicing,
+  LorvexDayPlanningServicing,
   LorvexHabitServicing, LorvexListTagServicing,
   LorvexMemoryServicing, LorvexReviewServicing, LorvexSystemServicing,
   LorvexTaskServicing, Sendable

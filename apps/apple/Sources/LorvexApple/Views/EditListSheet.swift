@@ -1,17 +1,17 @@
 import LorvexCore
 import SwiftUI
 
+/// Edit List: the list's icon, name, and description in the sheet's header,
+/// above Cancel / Save (``CreationSheetLayout``).
 struct EditListSheet: View {
   let list: LorvexList
   @Bindable var store: AppStore
   @Binding var isPresented: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      header
-
-      ListFormFields(store: store, idPrefix: "editList")
-
+    CreationSheetLayout(title: String(localized: "lists.sheet.edit.title", defaultValue: "Edit List", table: "Localizable", bundle: LorvexL10n.bundle)) {
+      ListSheetHeader(store: store, idPrefix: "editList")
+    } footer: {
       DraftSheetFooter(
         idPrefix: "editList",
         confirmTitle: String(localized: "common.save", defaultValue: "Save", table: "Localizable", bundle: LorvexL10n.bundle),
@@ -28,20 +28,5 @@ struct EditListSheet: View {
         }
       }
     }
-    .padding(20)
-    .frame(minWidth: 400, idealWidth: 440)
-  }
-
-  private var header: some View {
-    DraftSheetHeader(
-      title: String(localized: "lists.sheet.edit.title", defaultValue: "Edit List", table: "Localizable", bundle: LorvexL10n.bundle),
-      subtitle: String(
-        localized: "lists.sheet.edit.description",
-        defaultValue: "Tune the name and description shown in the sidebar.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ),
-      systemImage: "folder"
-    )
   }
 }

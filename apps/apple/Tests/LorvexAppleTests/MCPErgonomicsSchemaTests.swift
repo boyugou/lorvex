@@ -4,9 +4,9 @@ import Testing
 @testable import LorvexMCPHost
 
 /// Schema- and description-level contracts for the MCP ergonomics pass: the
-/// public input schemas advertise one name per concept (`tags`, not `tags_set`),
-/// reserve the word "defer" for the planned-date push, make the focus write
-/// `date` optional, and expose the `checklist` / `include_stats` additions.
+/// public input schemas advertise one name per concept (`tags`), reserve the
+/// word "defer" for the planned-date push, make the day-planning `date`
+/// optional, and expose the `checklist` / `include_stats` additions.
 ///
 /// These assert against the frozen catalog schemas via `ToolDefinitionRegistry`,
 /// which the manifest lock (`verify_mcp_tool_manifest.py`) mirrors.
@@ -56,32 +56,17 @@ struct MCPErgonomicsSchemaTests {
 
   // MARK: - R1: one public name for the tags param
 
-  @Test("R1: create_task / update_task expose tags, not tags_set")
-  func r1SingleTagsNameOnSingleTools() {
+  @Test("R1: create_task / update_task expose tags")
+  func r1TagsNameOnSingleTools() {
     for name in ["create_task", "update_task"] {
       #expect(properties(name)["tags"] != nil, "\(name) should expose tags")
-      #expect(properties(name)["tags_set"] == nil, "\(name) should not expose tags_set")
     }
   }
 
-  @Test("R1: batch create/update item schemas expose tags, not tags_set")
-  func r1SingleTagsNameOnBatchTools() {
-    let createItems = batchItemProperties("batch_create_tasks", arrayKey: "tasks")
-    #expect(createItems["tags"] != nil)
-    #expect(createItems["tags_set"] == nil)
-
-    let updateItems = batchItemProperties("batch_update_tasks", arrayKey: "updates")
-    #expect(updateItems["tags"] != nil)
-    #expect(updateItems["tags_set"] == nil)
-  }
-
-  @Test("R1: no tool description mentions tags_set")
-  func r1NoTagsSetInDescriptions() {
-    for definition in ToolDefinitionRegistry.all {
-      #expect(
-        !advertisedText(definition.tool).contains("tags_set"),
-        "\(definition.tool.name) still advertises tags_set")
-    }
+  @Test("R1: batch create/update item schemas expose tags")
+  func r1TagsNameOnBatchTools() {
+    #expect(batchItemProperties("batch_create_tasks", arrayKey: "tasks")["tags"] != nil)
+    #expect(batchItemProperties("batch_update_tasks", arrayKey: "updates")["tags"] != nil)
   }
 
   // MARK: - E1: the word "defer" is reserved for the planned-date push
@@ -117,14 +102,11 @@ struct MCPErgonomicsSchemaTests {
     }
   }
 
-  // MARK: - E5: focus write tools default date to today
+  // MARK: - E5: day-planning tools default date to today
 
-  @Test("E5: date is optional on the four focus write tools")
-  func e5FocusDateOptional() {
-    for name in [
-      "set_current_focus", "add_to_current_focus", "remove_from_current_focus",
-      "clear_current_focus",
-    ] {
+  @Test("E5: date is optional on the day-planning tools that default to today")
+  func e5DayPlanningDateOptional() {
+    for name in ["propose_daily_schedule", "get_daily_schedule", "set_daily_briefing"] {
       #expect(!required(name).contains("date"), "\(name) should not require date")
       #expect(properties(name)["date"] != nil, "\(name) should still document date")
       #expect(
@@ -133,9 +115,9 @@ struct MCPErgonomicsSchemaTests {
     }
   }
 
-  @Test("E5: save_focus_schedule keeps date required")
-  func e5ScheduleStillRequiresDate() {
-    #expect(required("save_focus_schedule").contains("date"))
+  @Test("E5: save_daily_schedule keeps date required")
+  func e5ScheduleSaveStillRequiresDate() {
+    #expect(required("save_daily_schedule").contains("date"))
   }
 
   // MARK: - G1: checklist at create

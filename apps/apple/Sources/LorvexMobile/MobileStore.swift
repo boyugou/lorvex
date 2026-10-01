@@ -5,32 +5,14 @@ import LorvexDomain
 import Observation
 import UserNotifications
 
-public struct MobileCloudSyncServices: Sendable {
-  let subscriber: any CloudSyncSubscribing
-  let coordinator: CloudSyncEngineCoordinator?
-
-  public init(
-    subscriber: any CloudSyncSubscribing,
-    coordinator: CloudSyncEngineCoordinator?
-  ) {
-    self.subscriber = subscriber
-    self.coordinator = coordinator
-  }
-}
-
 @MainActor
 @Observable
 public final class MobileStore {
-  public internal(set) var snapshot: MobileHomeSnapshot {
-    didSet { summary = MobileHomeProjector().summary(from: snapshot) }
-  }
-  /// Today-tab summary derived from ``snapshot``. Cached and recomputed only
-  /// when `snapshot` is assigned, so SwiftUI `body` reads don't re-run the
-  /// projection on every access.
-  public private(set) var summary: MobileHomeSummary
+  public internal(set) var snapshot: MobileHomeSnapshot
   public var captureDraft: MobileCaptureDraft
-  /// Drives the global quick-capture sheet. Quick capture is a sheet raised by the
-  /// ＋ on Today / Tasks (and ⌘N), not a tab — capture is an action, not a place.
+  /// Drives the global quick-capture sheet. Quick capture is a sheet raised by
+  /// the tab bar's round ＋ (and ⌘N), not a tab — capture is an action, not a
+  /// place.
   public var isPresentingCapture = false
   public internal(set) var isLoading = false
   public internal(set) var isCapturing = false
@@ -44,22 +26,21 @@ public final class MobileStore {
   public internal(set) var weeklyReviewAnchor: String?
   public var dailyReviewDraft: MobileDailyReviewDraft
   public internal(set) var isLoadingDailyReviewDraft = true
-  public internal(set) var focusSchedule: FocusSchedule?
-  public internal(set) var proposedFocusSchedule: FocusSchedule?
-  public internal(set) var isProposingFocusSchedule = false
-  public internal(set) var isSavingFocusSchedule = false
-  public internal(set) var isClearingFocusSchedule = false
+  /// Suggested times for today's tasks while the user decides on them in the
+  /// schedule; nothing is stored until they are used.
+  public internal(set) var proposedDayTimes: DayTimesProposal?
+  public internal(set) var isSuggestingDayTimes = false
+  public internal(set) var isSavingDayTimes = false
   public internal(set) var isSavingReview = false
   public internal(set) var memory: MemorySnapshot?
   public internal(set) var selectedMemoryKey: MemoryEntry.ID?
   public internal(set) var lists: ListCatalogSnapshot?
-  public internal(set) var selectedListID: LorvexList.ID?
-  public internal(set) var selectedListDetail: ListDetailSnapshot?
-  public internal(set) var isLoadingListDetail = false
-  public internal(set) var failedListDetailID: LorvexList.ID?
-  /// Monotonic guard for `loadListDetail`: a load whose token is no longer
-  /// current (the user switched lists mid-flight) must not commit its result.
-  var listDetailLoadToken = 0
+  /// Monotonic guard for `loadDailyReviewDraft`. Bumped only by the loader, so
+  /// the latest load owns both the commit and the loading flag even when
+  /// `selectedReviewDate` is moved by a background refresh (`loadLocalSurfaces`)
+  /// that spawns no load of its own — otherwise the flag could strand `true` and
+  /// wedge the Review tab on its skeleton.
+  var reviewDraftLoadToken = 0
   public var listDraft: MobileListDraft
   public internal(set) var isCreatingList = false
   public internal(set) var isUpdatingList = false
@@ -67,26 +48,57 @@ public final class MobileStore {
   public internal(set) var habits: HabitCatalogSnapshot?
   public internal(set) var selectedHabitID: LorvexHabit.ID?
   public internal(set) var habitDetailsByID: [LorvexHabit.ID: HabitDetail] = [:]
+  /// Archived habits for the Habits screen's restore section, loaded when that
+  /// screen appears and refreshed after an archive, restore, or delete.
+  public internal(set) var archivedHabits: [LorvexHabit] = []
   /// The milestone a completion just crossed, staged for the floating
   /// celebration overlay. Set by ``stageMilestoneCelebrationIfReached(habitID:)``
   /// on a crossing and cleared when the overlay dismisses (tap / auto-timeout).
   var milestoneCelebration: MobileHabitMilestoneCelebration?
   public internal(set) var calendarTimeline: CalendarTimelineSnapshot?
+  /// Tasks completed on the logical today, for Today's facts line.
+  var doneTodayCount = 0
+  /// The tasks completed on the logical today, newest completion first, for
+  /// Today's Done section.
+  var doneTodayTasks: [LorvexTask] = []
+  /// The working hours in minutes since midnight, for Today's overbooked
+  /// decision and the Plan week's load; `nil` until loaded.
+  var workdayStartMinutes: Int?
+  var workdayEndMinutes: Int?
+  /// The loaded calendar window's tasks, planned (or, unplanned, due) in it;
+  /// a task with a time is drawn on the time axis of its planned day.
   public internal(set) var calendarScheduledTasks: [LorvexTask] = []
   /// Monotonic guard for `refreshCalendarTimeline`: week navigation, the
   /// DatabaseChangeSignal observer, scene-active refresh, and pull-to-refresh can
   /// all request overlapping windows; a superseded load must not pair its events
   /// with a newer window's scheduled tasks (mirrors the macOS `timelineLoadToken`).
   var calendarTimelineLoadToken = 0
-  /// Mobile calendar presentation: the width-adaptive 1/2/3-day time-axis grid
-  /// (default) or a seven-day grouped agenda.
+  /// The window the calendar surface last asked `refreshCalendarTimeline` for,
+  /// recorded before that load awaits anything. A refresh that starts while
+  /// the load is in flight supersedes it, so the refresh reloads this window
+  /// rather than a today-anchored one; otherwise the week the surface is
+  /// about to show would open with its earlier days empty.
+  var calendarRequestedWindow: MobileCalendarWindow?
+  /// How many days the mobile calendar's grid shows: the width-adaptive
+  /// 1/2/3-day grid (default) or the seven days of a week.
   public var calendarPresentationMode: MobileCalendarPresentationMode = .grid
+  /// A `yyyy-MM-dd` day the day grid should open on the next time it appears,
+  /// set when a day's header in week mode is tapped.
+  var calendarPendingDayKey: String?
   public var calendarDraft: MobileCalendarDraft
   public internal(set) var isMutatingCalendarEvent = false
   public internal(set) var isExportingCalendarICS = false
   public internal(set) var isExportingData = false
   public internal(set) var runtimeDiagnostics: RuntimeDiagnosticsSnapshot?
   public internal(set) var isLoadingRuntimeDiagnostics = false
+  /// Outbox-derived Cloud Sync queue state, and the single source for every
+  /// queue depth the UI shows (the Settings → Cloud Sync activity line and the
+  /// Diagnostics row). ``refreshSyncStatus()`` re-reads it narrowly whenever the
+  /// queue can have moved — Settings appearing, a refresh, a sync cycle that did
+  /// work — and ``loadRuntimeDiagnostics()`` assigns it from the snapshot it
+  /// just read, so the cheap and the heavy read can never disagree. `nil` until
+  /// the first read lands.
+  public internal(set) var syncStatus: SyncStatusSnapshot?
   /// Newest-first `error_logs` feed for the Settings "Recent Diagnostics"
   /// section — MetricKit crash/hang/CPU/disk rows plus any other diagnostic
   /// breadcrumbs. Scoped to the `error_log` source so sync-outbox and changelog
@@ -125,7 +137,6 @@ public final class MobileStore {
   /// rather than by this store. A Cloud/MCP/full-refresh change bumps the
   /// relevant key so an already-visible page re-reads without navigation churn.
   public internal(set) var taskWorkspaceRevision: UInt64 = 0
-  public internal(set) var listDetailRevision: UInt64 = 0
   public internal(set) var habitDetailRevision: UInt64 = 0
   public var taskDetailRecurrenceDraft = TaskRecurrenceEditorDraft()
   public var selectedTab: MobileTab
@@ -134,24 +145,36 @@ public final class MobileStore {
   /// programmatic open (e.g. keyboard-driven) pushes detail without teleporting
   /// to the Today stack. The Tasks tab is its own first-class surface now.
   public var tasksRoutePath: [MobileRoute] = []
-  /// Navigation path for the Habits tab's compact (iPhone) `NavigationStack`,
-  /// so a deep link / Handoff / Spotlight route to a specific habit pushes its
-  /// detail instead of only selecting the tab. The iPad/visionOS regular
-  /// layout shows habit detail via `selectedHabitID` and never reads this path.
+  /// Routes queued for the Habits stack by a deep link / Handoff / Spotlight
+  /// route to a specific habit. The Habits tab is hidden from the bar, so
+  /// `redirectHiddenHabitsTab` moves them onto the Tasks stack after the
+  /// Habits workspace.
   public var habitsRoutePath: [MobileRoute] = []
-  /// Navigation path for the More tab's `NavigationStack` on iPhone.
-  /// Deep links and Handoff push `MobileDestination` values here to open specific workspaces.
-  public var moreNavigationPath: [MobileDestination]
-  /// Detail-column selection for the sidebar shell on iPad / visionOS.
-  public var iPadDestination: MobileDestination?
-  /// Pending list route queued by Handoff for `MobileStoreListsView` to push on appear.
-  public var pendingListRoute: MobileRoute?
+  /// Navigation path for the Calendar tab's `NavigationStack`, so tapping a
+  /// scheduled task/event pushes its detail onto the Calendar stack in place
+  /// instead of switching the user to the Today tab.
+  public var calendarRoutePath: [MobileRoute] = []
+  /// Navigation path for the Review tab's `NavigationStack`, mirroring the
+  /// other primary tabs so a deep link / Handoff route to Review can push a
+  /// detail onto its own stack in place.
+  public var reviewRoutePath: [MobileRoute] = []
   /// Set when the user asks to cancel a recurring task, driving the
   /// occurrence-vs-series confirmation dialog. `nil` when no choice is pending.
   /// A bare `cancelTask` on a recurring task spawns the next occurrence, so the
   /// user must choose whether to end just this one or the whole series.
   public var pendingRecurringCancelTaskID: LorvexTask.ID?
   public var errorMessage: String?
+
+  /// The message of the refresh failure already shown in the root alert. A
+  /// refresh runs on its own (foreground, sync, push), so the same failure is
+  /// shown once and then only logged until a refresh succeeds; see
+  /// ``presentRefreshFailure(_:)``.
+  @ObservationIgnored var surfacedRefreshFailureMessage: String?
+
+  /// Where a failure goes when `error_logs` cannot hold it (see
+  /// ``DiagnosticFallbackLog``). Disabled unless the app installs the live
+  /// file, so tests and previews never write outside their stores.
+  @ObservationIgnored public var diagnosticFallback = DiagnosticFallbackLog(fileURL: nil)
 
   /// Drives a one-time, dismissible alert in the mobile shell when the on-disk
   /// database had to be quarantined on open (schema mismatch / corruption) and a
@@ -194,30 +217,15 @@ public final class MobileStore {
   let notificationAuthorizationStatusProvider: @Sendable () async -> UNAuthorizationStatus
   let todayString: @Sendable () -> String
   let now: @Sendable () -> Date
-  let cloudSyncRetrySleep: @Sendable (TimeInterval) async throws -> Void
   let defaults: UserDefaults
-  let cloudSyncServiceFactory: @Sendable (CloudSyncMode) -> MobileCloudSyncServices
 
   // MARK: - CloudKit sync lifecycle
 
   /// The effective sync mode for this process (env override + persisted setting).
   public internal(set) var cloudSyncMode: CloudSyncMode
-  /// Installs the private-database push subscription. No-op when sync is off.
-  var cloudSyncSubscriber: any CloudSyncSubscribing
-  /// Drives one invisible sync cycle (outbox → CloudKit, CloudKit →
-  /// applyEnvelope). Nil unless sync is `.live` and the backend supports
-  /// envelope sync.
-  var cloudSyncCoordinator: CloudSyncEngineCoordinator?
-  /// The single coordinator actor graph retained for off-mode cloud deletion
-  /// maintenance and reused when live sync is enabled. Keeping it stable avoids
-  /// independent operation gates and safety-state actors over one CloudSyncState
-  /// directory during a maintenance/mode-transition interleaving.
-  @ObservationIgnored var cloudDataMaintenanceCoordinator: CloudSyncEngineCoordinator?
-  /// Set once the push subscription registers; reset on iCloud account change so
-  /// the next refresh re-subscribes under the new identity.
-  public internal(set) var hasRegisteredSubscription = false
-  /// Failure-aware pacing gating when the best-effort cycle runs.
-  @ObservationIgnored var cloudSyncPacing = CloudSyncPacing()
+  /// This device's one CloudKit sync owner. Built in every mode, so "Delete
+  /// iCloud Data" works with sync off; nil in previews and tests without one.
+  @ObservationIgnored let cloudSyncController: CloudSyncController?
   /// Coalesces overlapping lifecycle triggers into one serialized cycle loop.
   /// A trigger that arrives mid-cycle arms a trailing pass and awaits the
   /// combined result, so a foreground refresh can never mistake an in-flight
@@ -226,14 +234,6 @@ public final class MobileStore {
     RefreshSingleFlight<MobileCloudSyncCycleOutcome>(
       combineResults: MobileCloudSyncCycleOutcome.combine)
   var isCloudSyncCycleRunning: Bool { cloudSyncCycleFlight.isRunning }
-  /// Advances only after a Cloud sync pass returns a real, successful report.
-  /// Silent-push handoff tokens use it to distinguish a completed no-data drain
-  /// from a transport/account/pacing gate that never actually paid the debt.
-  @ObservationIgnored var cloudSyncSuccessfulCycleGeneration: UInt64 = 0
-  /// One main-app-owned wake for retry/deferred CloudSync work. Extensions and
-  /// MCP remain database/outbox writers and never create a CloudKit scheduler.
-  @ObservationIgnored var cloudSyncRetryWakeTask: Task<Void, Never>?
-  @ObservationIgnored var cloudSyncRetryWakeGeneration: UInt64 = 0
   /// App-lifetime CloudKit observers (remote-change push + account change),
   /// retained so they outlive any single view.
   @ObservationIgnored var lifetimeObserverTasks: [Task<Void, Never>] = []
@@ -241,40 +241,29 @@ public final class MobileStore {
   /// It is intentionally not part of any extension/helper runtime.
   @ObservationIgnored var logicalDayBoundaryWakeTask: Task<Void, Never>?
   public internal(set) var lastCloudSyncCycleReport: CloudSyncCycleReport?
-  public internal(set) var lastCloudSyncSubscriptionErrorMessage: String?
   public internal(set) var lastCloudSyncRemoteChangeErrorMessage: String?
   public internal(set) var lastCloudSyncRemoteChangeSucceededAt: Date?
   public internal(set) var cloudKitAccountAvailability: CloudKitAccountAvailability =
     .couldNotDetermine
+  /// True while turning sync on waits for the controller's first evaluation.
   public internal(set) var isSettingCloudSyncMode = false
-  /// Covers the confirmed restore plus its post-import surface refresh. Mode
-  /// changes and destructive cloud maintenance queue or reject while this is
-  /// true, so a non-live import cannot become live halfway through its sequence
-  /// of record-level decisions.
+  /// Covers the confirmed restore plus its post-import surface refresh.
+  /// Destructive data actions reject while this is true.
   public internal(set) var isDataImportRunning = false
-  /// True only for the user-initiated remote deletion transaction. Kept
-  /// separate from the broader mode-transition flag so a re-enable request can
-  /// be rejected while deletion is in flight without blocking the legitimate
-  /// Live-mode transition that performs an authorized re-enable afterward.
+  /// True only while the user-initiated iCloud-data deletion runs. A sync-on
+  /// request is rejected meanwhile.
   public internal(set) var isCloudDataDeletionRunning = false
-  /// A sync-mode request queued because it arrived while a mode transition,
-  /// sync cycle, or deletion cleanup was active. Latest request wins;
-  /// the active work applies it atomically on completion, so an explicit user
-  /// intent — especially turning sync OFF — is never silently dropped.
-  public internal(set) var pendingCloudSyncMode: CloudSyncMode?
-  /// Serializes launch/foreground deletion maintenance on the retained
-  /// coordinator and keeps mode transitions queued until cleanup finishes.
-  @ObservationIgnored var isCloudDeletionMaintenanceRunning = false
+  /// True only while this device's local store is being erased. Separate from
+  /// the cloud-deletion flag because the two are independent actions on
+  /// different data, and every destructive path guards on both so they can
+  /// never interleave over the same store.
+  public internal(set) var isLocalDataResetRunning = false
   /// Invalidates mode intents captured by the Settings binding before a later
   /// successful cloud deletion. Without this request-time fence, the binding's
   /// unstructured Task could wake after deletion and silently turn sync back on.
   @ObservationIgnored var cloudDataDeletionEpoch: UInt64 = 0
-  /// The mode the Settings picker shows and binds to: the queued target while
-  /// a request is pending, otherwise the effective mode — so the picker
-  /// reflects the user's latest choice instead of snapping back mid-cycle.
-  public var cloudSyncModeTarget: CloudSyncMode { pendingCloudSyncMode ?? cloudSyncMode }
-  /// Non-nil when CloudSync is durably paused (iCloud account switch, mandatory
-  /// backfill failure, or the user deleted the Lorvex zone). Surfaced so the UI
+  /// Non-nil when CloudSync is durably paused (an iCloud account switch, or
+  /// the user deleted Lorvex's iCloud data). Surfaced so the UI
   /// can show a "sync paused" notice and offer the adopt / re-opt-in action;
   /// resolved via
   /// `adoptCurrentCloudAccountAndResumeSync(request:)`.
@@ -314,30 +303,18 @@ public final class MobileStore {
     // read get "already resolved" (never withholds, never touches the real
     // `UNUserNotificationCenter` — unavailable in the SwiftPM test-runner
     // process, and `MobileStoreFactory`'s default is exercised directly by
-    // factory-level tests). `LorvexMobileApp`/`LorvexVisionApp` wire the real
+    // factory-level tests). `LorvexMobileApp` wires the real
     // system read via `MobileStoreFactory`.
     notificationAuthorizationStatusProvider: @escaping @Sendable () async -> UNAuthorizationStatus = {
       .authorized
     },
-    initialSnapshot: MobileHomeSnapshot = MobileHomeSnapshot(
-      today: .empty,
-      currentFocus: nil,
-      weeklyReview: nil
-    ),
+    initialSnapshot: MobileHomeSnapshot = MobileHomeSnapshot(today: .empty, weeklyReview: nil),
     selectedTab: MobileTab = .today,
     todayString: @escaping @Sendable () -> String = MobileStore.defaultTodayString,
     now: @escaping @Sendable () -> Date = { Date() },
-    cloudSyncRetrySleep: @escaping @Sendable (TimeInterval) async throws -> Void = { delay in
-      try await Task.sleep(for: .seconds(delay))
-    },
     defaults: UserDefaults = .standard,
     cloudSyncMode: CloudSyncMode = .off,
-    cloudSyncSubscriber: any CloudSyncSubscribing = NoOpCloudSyncSubscriber(),
-    cloudSyncCoordinator: CloudSyncEngineCoordinator? = nil,
-    cloudDataMaintenanceCoordinator: CloudSyncEngineCoordinator? = nil,
-    cloudSyncServiceFactory: @escaping @Sendable (CloudSyncMode) -> MobileCloudSyncServices = { _ in
-      MobileCloudSyncServices(subscriber: NoOpCloudSyncSubscriber(), coordinator: nil)
-    },
+    cloudSyncController: CloudSyncController? = nil,
     eventKitCoordinator: (any MobileEventKitCoordinating)? = nil,
     eventKitEnabled: Bool = false,
     eventKitCalendarFilterMode: EventKitCalendarFilterMode = .allExcept,
@@ -354,7 +331,6 @@ public final class MobileStore {
     self.isSetupCompleted = isSetupCompleted
     self.notificationAuthorizationStatusProvider = notificationAuthorizationStatusProvider
     self.snapshot = initialSnapshot
-    self.summary = MobileHomeProjector().summary(from: initialSnapshot)
     self.captureDraft = MobileCaptureDraft()
     self.listDraft = MobileListDraft()
     self.habitDraft = MobileHabitDraft()
@@ -366,17 +342,11 @@ public final class MobileStore {
     self.memoryEditingKey = nil
     self.selectedTab = selectedTab
     self.routePath = []
-    self.moreNavigationPath = []
-    self.iPadDestination = nil
     self.todayString = todayString
     self.now = now
-    self.cloudSyncRetrySleep = cloudSyncRetrySleep
     self.defaults = defaults
-    self.cloudSyncServiceFactory = cloudSyncServiceFactory
     self.cloudSyncMode = cloudSyncMode
-    self.cloudSyncSubscriber = cloudSyncSubscriber
-    self.cloudSyncCoordinator = cloudSyncCoordinator
-    self.cloudDataMaintenanceCoordinator = cloudDataMaintenanceCoordinator ?? cloudSyncCoordinator
+    self.cloudSyncController = cloudSyncController
     self.eventKitCoordinator = eventKitCoordinator
     self.eventKitEnabled = eventKitEnabled
     self.eventKitCalendarFilterMode = eventKitCalendarFilterMode

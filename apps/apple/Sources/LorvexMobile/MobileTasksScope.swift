@@ -86,7 +86,7 @@ public enum MobileTasksScope: Hashable, Sendable {
         localized: "tasks.scope.cancelled", defaultValue: "Cancelled", table: "Localizable",
         bundle: MobileL10n.bundle)
     case .list(let id):
-      store.lists?.lists.first(where: { $0.id == id })?.name
+      store.lists?.lists.first(where: { $0.id == id })?.displayName
         ?? String(
           localized: "destination.lists", defaultValue: "Lists", table: "Localizable",
           bundle: MobileL10n.bundle)
@@ -109,24 +109,24 @@ struct MobileTaskSmartCollection: Identifiable {
       title: String(
         localized: "tasks.scope.all", defaultValue: "All", table: "Localizable",
         bundle: MobileL10n.bundle),
-      systemImage: "tray.full.fill", tint: .blue),
+      systemImage: "rectangle.stack.fill", tint: LorvexDesign.Palette.Destination.all),
     .init(
       scope: .scheduled,
       title: String(
         localized: "tasks.scope.scheduled", defaultValue: "Scheduled", table: "Localizable",
         bundle: MobileL10n.bundle),
-      systemImage: "calendar", tint: .red),
+      systemImage: "calendar", tint: LorvexDesign.Palette.Destination.scheduled),
     .init(
       scope: .priority,
       title: String(
         localized: "tasks.scope.priority", defaultValue: "Priority", table: "Localizable",
         bundle: MobileL10n.bundle),
-      systemImage: "flag.fill", tint: .orange),
+      systemImage: "flag.fill", tint: LorvexDesign.Palette.Destination.priority),
     .init(
       scope: .someday,
       title: String(
         localized: "tasks.scope.someday", defaultValue: "Someday", table: "Localizable",
         bundle: MobileL10n.bundle),
-      systemImage: "moon.stars.fill", tint: .indigo),
+      systemImage: "moon.stars.fill", tint: LorvexDesign.Palette.Destination.someday),
   ]
 }

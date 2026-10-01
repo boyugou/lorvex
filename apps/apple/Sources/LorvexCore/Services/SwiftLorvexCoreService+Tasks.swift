@@ -33,6 +33,7 @@ extension SwiftLorvexCoreService {
   func createTaskInTx(
     _ db: Database, hlc: HlcSession, deviceId: String, draft: TaskCreateDraft
   ) throws -> LorvexTask {
+    let plannedTime = Self.plannedTimePatches(draft.plannedTime.map { .set($0) } ?? .unset)
     let input = CreateTaskInput(
       task: TaskCreateInput(
         title: draft.title,
@@ -48,9 +49,12 @@ extension SwiftLorvexCoreService {
         body: .set(draft.notes),
         rawInput: draft.rawInput.map { .set($0) } ?? .unset,
         dependsOn: draft.dependsOn,
+        recurrenceJson: try Self.recurrencePatch(draft.recurrence),
         plannedDate: draft.plannedDate.map {
           .set(SwiftLorvexTaskDeserializers.plannedDateFormatter.string(from: $0))
         } ?? .unset,
+        plannedStartTime: plannedTime.start,
+        plannedEndTime: plannedTime.end,
         availableFrom: draft.availableFrom.map {
           .set(SwiftLorvexTaskDeserializers.plannedDateFormatter.string(from: $0))
         } ?? .unset))
@@ -159,6 +163,7 @@ extension SwiftLorvexCoreService {
       throw LorvexCoreError.emptyTitle
     }
     return try withWrite { db, hlc, deviceId in
+      let plannedTime = Self.plannedTimePatches(draft.plannedTime)
       let input = TaskUpdateInput(
         id: draft.id,
         title: draft.title.map { .set($0) } ?? .unset,
@@ -166,13 +171,15 @@ extension SwiftLorvexCoreService {
         rawInput: draft.rawInput,
         listId: draft.listID.map { .set($0) } ?? .unset,
         tagsSet: draft.tags,
-        priority: draft.priority.map {
-          .set(UInt8($0.tier))
-        } ?? .unset,
+        priority: draft.clearsPriority
+          ? .clear
+          : draft.priority.map { .set(UInt8($0.tier)) } ?? .unset,
         dueDate: Self.formatTaskDatePatch(draft.dueDate),
         estimatedMinutes: Self.estimatedMinutesPatch(draft.estimatedMinutes),
         dependsOn: draft.dependsOn,
         plannedDate: Self.formatTaskDatePatch(draft.plannedDate),
+        plannedStartTime: plannedTime.start,
+        plannedEndTime: plannedTime.end,
         availableFrom: Self.formatTaskDatePatch(draft.availableFrom))
       return try self.performTaskUpdate(db, hlc: hlc, deviceId: deviceId, input: input)
     }
@@ -262,7 +269,6 @@ extension SwiftLorvexCoreService {
       try TaskArchive.archiveTaskOp(
         db, taskId: TaskId(trusted: id), version: version,
         now: SyncTimestampFormat.syncTimestampNow())
-      try self.removeTaskFromFocusReferences(db, hlc: hlc, deviceId: deviceId, taskID: id)
       // The row still exists with `archived_at` set; an upsert propagates the
       // new archived state to peers (no tombstone — the task is not deleted).
       try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id)
@@ -331,14 +337,6 @@ extension SwiftLorvexCoreService {
         try self.enqueueDelete(
           db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: id, payload: taskSnapshot)
       }
-      // The task was pulled out of any focus aggregates it belonged to; re-emit
-      // those date-scoped parent snapshots so peers drop it from their copy.
-      try self.enqueueUpserts(
-        db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-        entityIds: result.focusParentDates.currentFocus)
-      try self.enqueueUpserts(
-        db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-        entityIds: result.focusParentDates.focusSchedule)
       for rerootedTaskId in result.rerootedTaskIds {
         try self.enqueueUpsert(
           db, hlc: hlc, deviceId: deviceId, kind: .task,

@@ -1,7 +1,7 @@
 # App Store Listing Metadata (draft)
 
-Draft copy for the Lorvex App Store Connect listing (macOS, iOS/iPadOS, and,
-when submitted, visionOS). This is repo-side draft material the owner pastes
+Draft copy for the Lorvex App Store Connect listing (macOS and iOS/iPadOS).
+This is repo-side draft material the owner pastes
 into App Store Connect; it is not itself submitted by any script. Keep it
 factual — App Review reads the listing against the app's actual behavior, and
 the product deliberately avoids promotional superlatives.
@@ -16,8 +16,9 @@ See `../../PRIVACY.md`, `docs/vision/DESIGN_PHILOSOPHY.md`, and
 
 Companion release materials: `APP_STORE_PRIVACY_ANSWERS.md` (the exact App
 Privacy questionnaire answers) and `APP_STORE_SCREENSHOTS.md` (the screenshot
-sizes and shot list). Account-only submission steps live in
-`docs/finalization/RELEASE_ACCOUNT_CHECKLIST.md` at the repo root.
+sizes and shot list). The submission steps only the Apple Developer account
+holder can take are listed in `DISTRIBUTION.md` under "App Store listing
+metadata and account-only actions".
 
 ## Field length limits (App Store Connect)
 
@@ -96,8 +97,8 @@ Lorvex is also a complete planner on its own, without any assistant connected:
 - Tasks with priority, due date, duration estimate, tags, checklists,
   reminders, and recurrence.
 - Lists as lightweight projects, with task dependencies.
-- A Today view that surfaces a small, curated focus set instead of a raw
-  backlog.
+- A Today view that surfaces what's planned, due, or already started instead
+  of a raw backlog.
 - A calendar that reads your existing events (with permission) and writes
   planning blocks into a dedicated Lorvex calendar or one you pick.
 - Habits tracked by streaks and consistency, kept separate from recurring
@@ -124,7 +125,7 @@ source under Apache-2.0.
 Approximately 1,900 characters — well under the 4,000 limit; the owner can
 extend it. Keep the "no embedded AI model" and "no analytics/tracking/ads"
 statements accurate: they must match the privacy manifests, `PRIVACY.md`, and
-App Store Connect's App Privacy answers (see `RELEASE_ACCOUNT_CHECKLIST.md`).
+App Store Connect's App Privacy answers (`APP_STORE_PRIVACY_ANSWERS.md`).
 
 ## What's New (version 1.0.0, initial release)
 
@@ -155,8 +156,8 @@ For later versions, replace this with the actual change list for that build.
 - **Copyright:** e.g. `2026 Boyu Gou` (owner sets the legal string).
 - **Age rating:** answer the current age-rating questionnaire in App Store
   Connect. Lorvex has no mature content; the expected outcome is the lowest
-  rating, but the questionnaire is mandatory and must be completed per platform
-  (see `RELEASE_ACCOUNT_CHECKLIST.md`).
+  rating, but the questionnaire is mandatory and must be completed per
+  platform.
 
 ## App Review notes (paste into App Review Information)
 

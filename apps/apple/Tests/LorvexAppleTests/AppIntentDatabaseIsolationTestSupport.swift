@@ -1,8 +1,8 @@
 import Foundation
 import LorvexCore
 
-func withIsolatedAppIntentDatabase<T>(
-  _ body: () async throws -> T
+nonisolated(nonsending) func withIsolatedAppIntentDatabase<T>(
+  _ body: nonisolated(nonsending) () async throws -> T
 ) async rethrows -> T {
   let path = NSTemporaryDirectory() + "lorvex-app-intent-\(UUID().uuidString).db"
   defer {

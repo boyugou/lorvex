@@ -53,9 +53,10 @@ enum HabitReminderTime {
     return h * 60 + m
   }
 
-  /// Locale-formatted display for an "HH:mm" slot (e.g. "9:00 AM").
+  /// Locale-formatted display for an "HH:mm" slot ("9:00 AM", or "09:00" on a
+  /// 24-hour clock).
   static func display(_ clock: String) -> String {
-    date(fromClock: clock).formatted(date: .omitted, time: .shortened)
+    lorvexClockTimeLabel(clock)
   }
 
   /// `count` reminder times spread evenly across the window, each rounded to the
@@ -111,7 +112,7 @@ enum HabitReminderHint {
       return String(
         format: String(
           localized: "habits.reminders.hint.times_per_week",
-          defaultValue: "Nudges on days you're behind, until you've logged %lld this week.",
+          defaultValue: "Nudges on days you’re behind, until you’ve logged %lld this week.",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
         n)
@@ -120,7 +121,7 @@ enum HabitReminderHint {
       return String(
         format: String(
           localized: "habits.reminders.hint.monthly",
-          defaultValue: "Reminds on day %lld each month, and stops once it's done.",
+          defaultValue: "Reminds on day %lld each month, and stops once it’s done.",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
         day)
@@ -136,7 +137,7 @@ enum HabitReminderHint {
       }
       return String(
         localized: "habits.reminders.hint.daily",
-        defaultValue: "Only on the days this habit is scheduled, and stops once it's done.",
+        defaultValue: "Only on the days this habit is scheduled, and stops once it’s done.",
         table: "Localizable",
         bundle: LorvexL10n.bundle)
     default:
@@ -191,7 +192,7 @@ struct HabitReminderWindowSection: View {
           String(localized: "habits.reminders.window.apply", defaultValue: "Set these reminders", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "bell.badge")
       }
-      .buttonStyle(.lorvexSecondary)
+      .buttonStyle(.bordered)
       .disabled(endMinutes <= startMinutes)
       .accessibilityIdentifier("habit.reminders.window.apply")
     }
@@ -277,7 +278,7 @@ struct HabitReminderAddAffordance: View {
         } label: {
           Image(systemName: "checkmark")
         }
-        .buttonStyle(.lorvex(.primary))
+        .buttonStyle(.borderedProminent)
         .accessibilityLabel(String(
           localized: "habits.reminders.add", defaultValue: "Add Reminder",
           table: "Localizable",
@@ -286,7 +287,7 @@ struct HabitReminderAddAffordance: View {
         Button { isAddingTime = false } label: {
           Image(systemName: "xmark")
         }
-        .buttonStyle(.lorvexNeutral)
+        .buttonStyle(.bordered)
         .accessibilityLabel(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: LorvexL10n.bundle))
       }
     } else {
@@ -299,7 +300,7 @@ struct HabitReminderAddAffordance: View {
           systemImage: "plus"
         )
       }
-      .buttonStyle(.lorvexSecondary)
+      .buttonStyle(.bordered)
       .accessibilityIdentifier("\(idPrefix).add")
     }
   }

@@ -3,6 +3,10 @@ import SwiftUI
 
 /// A circular progress ring with the habit's icon (or a check when met) at its
 /// center. Clicking it toggles today's completion — the primary check-in target.
+/// The track is the neutral tertiary style, not a wash of `tint`: until
+/// something is logged the track outlines the whole control, and a hue at low
+/// alpha all but vanishes on the card for deep hues in dark mode and for every
+/// hue in light mode.
 struct HabitProgressRing: View {
   let completed: Int
   let target: Int
@@ -22,18 +26,18 @@ struct HabitProgressRing: View {
     Button(action: action) {
       ZStack {
         Circle()
-          .stroke(tint.opacity(0.16), lineWidth: 4)
+          .stroke(.tertiary, lineWidth: 4)
         Circle()
           .trim(from: 0, to: fraction)
           .stroke(tint.gradient, style: StrokeStyle(lineWidth: 4, lineCap: .round))
           .rotationEffect(.degrees(-90))
         if isComplete {
           Image(systemName: "checkmark")
-            .font(.system(size: 16, weight: .bold))
+            .font(.system(size: 16, weight: .bold))  // lorvex-design-token: allow
             .foregroundStyle(tint)
         } else {
           Image(systemName: icon)
-            .font(.system(size: 15, weight: .medium))
+            .font(.system(size: 15, weight: .medium))  // lorvex-design-token: allow
             .foregroundStyle(hovering ? AnyShapeStyle(tint) : AnyShapeStyle(.secondary))
         }
       }
@@ -86,7 +90,7 @@ struct HabitMomentumCard: View {
   /// A habit whose per-day target is more than one check-in (e.g. "8 glasses of
   /// water"); these accumulate per ring tap and clear only via the menu.
   private var isMultiTarget: Bool { habit.targetCount > 1 }
-  private var tint: Color { isComplete ? .green : LorvexHabitPalette.baseColor(for: habit) }
+  private var tint: Color { isComplete ? LorvexDesign.Palette.done : LorvexHabitPalette.baseColor(for: habit) }
   /// Real current streak from the core; 0 until stats load.
   private var streak: Int { stats?.currentStreak ?? 0 }
 
@@ -146,20 +150,20 @@ struct HabitMomentumCard: View {
       Text(LocalizedStringResource("habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: LorvexL10n.bundle))
     }
     .confirmationDialog(
-      String(localized: "habits.row.reset_confirm.title", defaultValue: "Reset today's progress?", table: "Localizable", bundle: LorvexL10n.bundle),
+      String(localized: "habits.row.reset_confirm.title", defaultValue: "Reset today’s progress?", table: "Localizable", bundle: LorvexL10n.bundle),
       isPresented: $isShowingResetConfirmation,
       titleVisibility: .visible
     ) {
       Button(String(localized: "habits.row.reset_today", defaultValue: "Reset today", table: "Localizable", bundle: LorvexL10n.bundle), role: .destructive, action: reset)
       Button(String(localized: "common.keep", defaultValue: "Keep", table: "Localizable", bundle: LorvexL10n.bundle), role: .cancel) {}
     } message: {
-      Text(LocalizedStringResource("habits.row.reset_confirm.message", defaultValue: "This clears today's check-ins for this habit.", table: "Localizable", bundle: LorvexL10n.bundle))
+      Text(LocalizedStringResource("habits.row.reset_confirm.message", defaultValue: "This clears today’s check-ins for this habit.", table: "Localizable", bundle: LorvexL10n.bundle))
     }
   }
 
   private var header: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(habit.name)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .foregroundStyle(.primary)
@@ -227,43 +231,85 @@ struct HabitMomentumCard: View {
     return isMultiTarget ? "habit.action.increment" : "habit.action.complete"
   }
 
+  /// The recent periods as capsules, the current one ringed. A daily habit's
+  /// seven days carry their narrow weekday underneath, today's in the
+  /// habit's color, so the strip reads as "this week" rather than seven
+  /// anonymous marks; a weekly or monthly strip stays unlabeled.
   private var rhythmRow: some View {
-    HStack(spacing: 5) {
-      ForEach(Array(rhythmCells.enumerated()), id: \.offset) { _, cell in
-        Capsule()
-          .fill(cell.filled ? AnyShapeStyle(tint) : AnyShapeStyle(Color.secondary.opacity(0.18)))
-          .frame(height: 6)
-          .overlay {
-            if cell.isCurrent {  // the current period gets a ring
-              Capsule().strokeBorder(tint.opacity(cell.filled ? 0 : 0.6), lineWidth: 1)
+    let labels = rhythmDayLabels
+    return HStack(alignment: .top, spacing: LorvexDesign.Spacing.xs) {
+      ForEach(Array(rhythmCells.enumerated()), id: \.offset) { index, cell in
+        VStack(spacing: LorvexDesign.Spacing.xs) {
+          Capsule()
+            .fill(cell.filled ? AnyShapeStyle(tint) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+            .frame(height: 6)
+            .overlay {
+              if cell.isCurrent {  // the current period gets a ring
+                Capsule().strokeBorder(tint.opacity(cell.filled ? 0 : 0.6), lineWidth: 1)
+              }
             }
+          if index < labels.count {
+            Text(labels[index])
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(cell.isCurrent ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+              .fixedSize()
           }
+        }
       }
     }
-    .frame(height: 6)
     .accessibilityHidden(true)
   }
 
+  /// Narrow weekdays for a daily habit's seven cells, oldest first; empty for
+  /// a weekly or monthly strip.
+  private var rhythmDayLabels: [String] {
+    guard HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType) == .day else { return [] }
+    let calendar = Calendar.current
+    let today = Date()
+    return (0..<rhythmCells.count).reversed().compactMap { daysAgo in
+      calendar.date(byAdding: .day, value: -daysAgo, to: today)?.formatted(.dateTime.weekday(.narrow))
+    }
+  }
+
+  /// The streak as a reading ("12-day streak", "No streak yet"), the stepper
+  /// for a multi-check-in habit, and the 30-day completion rate, which gives
+  /// way first when the card is too narrow for all three.
   private var footer: some View {
+    ViewThatFits(in: .horizontal) {
+      footerRow(showsRate: true)
+      footerRow(showsRate: false)
+    }
+  }
+
+  private func footerRow(showsRate: Bool) -> some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Label {
-        Text(lorvexHabitStreakLabel(streak, frequencyType: habit.frequencyType))
+        Text(HabitDisplayText.milestoneValueLabel(metric: "streak", value: streak, frequencyType: habit.frequencyType))
           .monospacedDigit()
       } icon: {
         Image(systemName: "flame.fill")
       }
       .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-      .foregroundStyle(streak > 0 ? .orange : .secondary)
+      .foregroundStyle(streak > 0 ? tint : LorvexDesign.Palette.neutral)
+      .fixedSize()
 
       if isMultiTarget {
         accumulativeStepper
+          .fixedSize()
       }
 
       Spacer(minLength: 0)
 
-      Text(habit.completionRate30d.formatted(.percent.precision(.fractionLength(0))))
+      if showsRate {
+        Text(
+          String(
+            format: String(localized: "habits.card.rate_30d", defaultValue: "%@ in 30 days", table: "Localizable", bundle: LorvexL10n.bundle),
+            habit.completionRate30d.formatted(.percent.precision(.fractionLength(0))))
+        )
         .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
         .foregroundStyle(.secondary)
+        .fixedSize()
+      }
     }
   }
 
@@ -271,10 +317,10 @@ struct HabitMomentumCard: View {
   /// way to correct the count down (the ring only adds), with the decrement
   /// disabled at zero and the increment disabled once the target is met.
   private var accumulativeStepper: some View {
-    HStack(spacing: 6) {
+    HStack(spacing: LorvexDesign.Spacing.sm) {
       Button { adjust(-1) } label: {
         Image(systemName: "minus")
-          .font(.system(size: 10, weight: .bold))
+          .font(.system(size: 10, weight: .bold))  // lorvex-design-token: allow
           .frame(width: 18, height: 18)
       }
       .buttonStyle(.plain)
@@ -294,7 +340,7 @@ struct HabitMomentumCard: View {
 
       Button { adjust(1) } label: {
         Image(systemName: "plus")
-          .font(.system(size: 10, weight: .bold))
+          .font(.system(size: 10, weight: .bold))  // lorvex-design-token: allow
           .frame(width: 18, height: 18)
       }
       .buttonStyle(.plain)
@@ -347,19 +393,5 @@ struct HabitMomentumCard: View {
       .strokeBorder(
         isSelected ? AnyShapeStyle(tint) : AnyShapeStyle(tint.opacity(0.18)),
         lineWidth: isSelected ? 1.5 : 0.5)
-  }
-}
-
-/// Resolves a habit's accent color independent of completion state: the user's
-/// chosen `color` (a `#RRGGBB` hex), else a deterministic per-id hue.
-enum LorvexHabitPalette {
-  private static let palette: [Color] = [.blue, .teal, .green, .orange, .pink, .purple, .indigo, .mint]
-
-  /// The habit's accent color independent of completion state: the chosen hex,
-  /// else a deterministic per-id hue so a habit keeps its color.
-  static func baseColor(for habit: LorvexHabit) -> Color {
-    if let custom = Color(lorvexHex: habit.color) { return custom }
-    let hash = habit.id.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7fff_ffff }
-    return palette[hash % palette.count]
   }
 }

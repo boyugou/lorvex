@@ -52,6 +52,12 @@ public struct TaskUpdateInput: Sendable {
   public var dependsOnAdd: [String]?
   public var dependsOnRemove: [String]?
   public var plannedDate: Patch<String>
+  /// The planned time of day on the planned date, as `HH:MM`. Set together
+  /// with ``plannedEndTime`` (both `.set` or both `.clear`); a time needs a
+  /// planned date on the task after the update.
+  public var plannedStartTime: Patch<String>
+  /// The end of the planned time, as `HH:MM` or `24:00`.
+  public var plannedEndTime: Patch<String>
   public var availableFrom: Patch<String>
 
   public init(
@@ -73,6 +79,8 @@ public struct TaskUpdateInput: Sendable {
     dependsOnAdd: [String]? = nil,
     dependsOnRemove: [String]? = nil,
     plannedDate: Patch<String> = .unset,
+    plannedStartTime: Patch<String> = .unset,
+    plannedEndTime: Patch<String> = .unset,
     availableFrom: Patch<String> = .unset
   ) {
     self.id = id
@@ -93,6 +101,8 @@ public struct TaskUpdateInput: Sendable {
     self.dependsOnAdd = dependsOnAdd
     self.dependsOnRemove = dependsOnRemove
     self.plannedDate = plannedDate
+    self.plannedStartTime = plannedStartTime
+    self.plannedEndTime = plannedEndTime
     self.availableFrom = availableFrom
   }
 
@@ -118,6 +128,8 @@ public struct TaskUpdateInput: Sendable {
     "depends_on_add",
     "depends_on_remove",
     "planned_date",
+    "planned_start_time",
+    "planned_end_time",
     "available_from",
   ]
 }

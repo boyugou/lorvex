@@ -347,13 +347,13 @@ final class ApplyListTests: XCTestCase {
       // The remaining per-entity appliers are now all landed — the apply
       // pipeline dispatches every syncable entity type to a real applier.
       XCTAssertNotNil(registry.lookup(EntityKind.calendarEvent.asString))
-      XCTAssertNotNil(registry.lookup(EntityKind.currentFocus.asString))
-      XCTAssertNotNil(registry.lookup(EntityKind.focusSchedule.asString))
+      XCTAssertNotNil(registry.lookup(EntityKind.dailyBriefing.asString))
       XCTAssertNotNil(registry.lookup(EntityKind.dailyReview.asString))
       XCTAssertNotNil(registry.lookup(EntityKind.memory.asString))
       XCTAssertNotNil(registry.lookup(EntityKind.preference.asString))
-      XCTAssertNotNil(registry.lookup(EntityKind.aiChangelog.asString))
-      // Local-only / non-synced types still resolve to nil → unknownEntityType.
+      // Local-only / non-applied types resolve to nil → unknownEntityType. The
+      // audit trail is device-local: `ai_changelog` has no applier.
+      XCTAssertNil(registry.lookup(EntityKind.aiChangelog.asString))
       XCTAssertNil(registry.lookup(EntityKind.deviceState.asString))
     }
   }

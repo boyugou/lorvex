@@ -10,7 +10,7 @@ import Testing
 struct LorvexWatchStoreFactoryTests {
   @Test("factory prefers App Group snapshot when available")
   func factoryPrefersSnapshotWhenAvailable() async throws {
-    let snapshotURL = try makeWatchFactorySnapshotURL(title: "Snapshot focus")
+    let snapshotURL = try makeWatchFactorySnapshotURL(title: "Snapshot task")
     let factory = LorvexWatchStoreFactory(
       snapshotURLProvider: { _ in snapshotURL },
       now: { Date(timeIntervalSince1970: 1_779_624_180) }
@@ -19,7 +19,7 @@ struct LorvexWatchStoreFactoryTests {
     let store = factory.makeStore()
     await store.refresh()
 
-    #expect(store.primaryTask?.title == "Snapshot focus")
+    #expect(store.tasks.first?.title == "Snapshot task")
     #expect(store.snapshotStatusText == "Synced 3m ago")
   }
 
@@ -32,8 +32,7 @@ struct LorvexWatchStoreFactoryTests {
     let store = factory.makeStore()
     await store.refresh()
 
-    #expect(store.primaryTask == nil)
-    #expect(store.focusTasks.isEmpty)
+    #expect(store.tasks.isEmpty)
     #expect(store.canWrite == false)
     #expect(store.snapshotStatusText == "Open Lorvex to sync")
     #expect(store.error != nil)
@@ -53,9 +52,9 @@ private func makeWatchFactorySnapshotURL(title: String) throws -> URL {
     workspaceInstanceID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     localChangeSequence: 1,
     timezone: "America/Los_Angeles",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
-    briefing: "Watch focus",
-    focusTasks: [
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
+    briefing: nil,
+    tasks: [
       .init(
         id: "watch-factory-task",
         title: title,

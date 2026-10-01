@@ -11,10 +11,28 @@ public struct MobileSetupPreferences {
   public static let eventKitIncludedCalendarIDsKey = "eventKitIncludedCalendarIDs"
   public static let eventKitExcludedCalendarIDsKey = "eventKitExcludedCalendarIDs"
 
+  /// Every key this type owns, so a reset clears the whole surface instead of
+  /// the subset a caller happened to remember.
+  static let allKeys = [
+    completedKey, badgeEnabledKey, cloudSyncModeKey, eventKitEnabledKey,
+    eventKitCalendarFilterModeKey, eventKitIncludedCalendarIDsKey,
+    eventKitExcludedCalendarIDsKey,
+  ]
+
   let defaults: UserDefaults
 
   public init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
+  }
+
+  /// Return this device to its pre-setup state: setup incomplete, sync off,
+  /// EventKit and badge preferences forgotten. Every getter above falls back to
+  /// its documented default once the key is absent, so removing the keys — not
+  /// writing "off" values — is what makes the next launch a genuine first launch.
+  public func resetToDefaults() {
+    for key in Self.allKeys {
+      defaults.removeObject(forKey: key)
+    }
   }
 
   public var setupCompleted: Bool {
@@ -22,7 +40,7 @@ public struct MobileSetupPreferences {
   }
 
   /// The persisted iCloud sync mode for this device. Defaults to `.off` until a
-  /// settings toggle writes it; the `LORVEX_CLOUDKIT_EXPORT` env var overrides it
+  /// settings toggle writes it; the `LORVEX_CLOUD_SYNC` env var overrides it
   /// at resolution time (see `CloudSyncFactory.resolveMode`).
   public var cloudSyncMode: CloudSyncMode {
     defaults.string(forKey: Self.cloudSyncModeKey)

@@ -3,13 +3,14 @@ import SwiftUI
   import WatchKit
 #endif
 
+/// Quick capture: a title field, submitted from the keyboard or dictation's
+/// Done or with the button under it. The section has no header, since the
+/// button already names the action.
 struct LorvexWatchCaptureSection: View {
   @Bindable var store: LorvexWatchStore
 
   var body: some View {
-    Section(String(
-      localized: "watch.section.capture", defaultValue: "Capture",
-      table: "Localizable", bundle: WatchL10n.bundle)) {
+    Section {
       TextField(String(
         localized: "watch.capture.placeholder", defaultValue: "New task",
         table: "Localizable", bundle: WatchL10n.bundle), text: $store.captureTitle)
@@ -17,19 +18,13 @@ struct LorvexWatchCaptureSection: View {
         .textInputAutocapitalization(.sentences)
         #endif
         .disabled(store.captureUnavailableReason != nil)
+        .onSubmit(capture)
         .accessibilityLabel(String(
           localized: "watch.capture.title.a11y", defaultValue: "New task title",
           table: "Localizable", bundle: WatchL10n.bundle))
         .accessibilityIdentifier("watch.capture.title")
 
-      Button {
-        Task {
-          await store.captureTask()
-          #if os(watchOS)
-          WKInterfaceDevice.current().play(store.error == nil ? .success : .failure)
-          #endif
-        }
-      } label: {
+      Button(action: capture) {
         Label(store.isLoading
                 ? String(
                   localized: "watch.capture.capturing", defaultValue: "Capturing",
@@ -58,6 +53,16 @@ struct LorvexWatchCaptureSection: View {
           .font(.caption2)
           .foregroundStyle(.secondary)
       }
+    }
+  }
+
+  private func capture() {
+    guard store.canCaptureTask else { return }
+    Task {
+      await store.captureTask()
+      #if os(watchOS)
+        WKInterfaceDevice.current().play(store.error == nil ? .success : .failure)
+      #endif
     }
   }
 }

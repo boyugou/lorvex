@@ -96,13 +96,6 @@ struct ViewSnapshotTests {
   }
 
   @Test
-  func taskDetailRecurrenceSummaryIncludesRuleAndSkippedDates() {
-    let summary = TaskRecurrenceRule(freq: .weekly, interval: 2, byDay: ["MO", "WE"])
-      .displaySummary(exceptions: ["2026-06-01"])
-    #expect(summary == "Every 2 weeks · MO, WE · 1 skipped")
-  }
-
-  @Test
   func taskDetailViewRendersEmptyStateWithNoSelection() async throws {
     let store = try await makeStore()
     store.selectedTaskID = nil
@@ -151,7 +144,7 @@ struct ViewSnapshotTests {
   }
 
   @Test
-  func reviewEvidencePanelRendersWeekMetrics() {
+  func weekReviewPageRendersTheWeek() {
     let review = WeeklyReviewSnapshot(
       windowTitle: "Last 7 days",
       completedThisWeek: 4,
@@ -167,64 +160,46 @@ struct ViewSnapshotTests {
       frequentlyDeferred: [
         ReviewTaskSummary(id: "defer-1", title: "Calendar recurrence", status: "open", deferCount: 3)
       ],
+      overdueTasks: [
+        ReviewTaskSummary(
+          id: "late-1", title: "Renew passport", status: "open", deferCount: 0,
+          dueDate: "2026-05-18")
+      ],
       topSomeday: [
         ReviewTaskSummary(id: "someday-1", title: "Learn a new framework", status: "someday", deferCount: 0)
       ]
     )
 
-    let data = renderSnapshot(
-      ReviewEvidencePanel(content: .week(review)),
-      size: CGSize(width: 300, height: 720)
-    )
-
-    #expect(data != nil)
-    #expect((data?.count ?? 0) > 1024)
-  }
-
-  @Test
-  func reviewEvidencePanelRendersDayEvidence() {
-    let summary = DayReviewSummary(
-      date: "2026-05-22",
-      completedCount: 3,
-      topCompleted: [
-        ReviewTaskSummary(id: "done-1", title: "Ship the strip", status: "completed", deferCount: 0)
-      ],
-      createdCount: 2,
-      dueOpenCount: 1,
-      habitsCompleted: 2,
-      habitsTotal: 3,
-      eventCount: 4
-    )
-
-    let data = renderSnapshot(
-      ReviewEvidencePanel(content: .day(summary)),
-      size: CGSize(width: 300, height: 560)
-    )
-
-    #expect(data != nil)
-    #expect((data?.count ?? 0) > 1024)
-  }
-
-  @Test
-  func weekReviewDigestRendersReviews() {
     let reviews = [
       DailyReviewEntry(
         date: "2026-05-21", summary: "Shipped the evidence panel.", mood: 4, energyLevel: 3,
         wins: nil, blockers: nil, learnings: nil,
-        timezone: nil, updatedAt: nil, linkedTaskIDs: [], linkedListIDs: []),
-      DailyReviewEntry(
-        date: "2026-05-20", summary: "Planned the redesign.", mood: nil, energyLevel: nil,
-        wins: nil, blockers: nil, learnings: nil,
-        timezone: nil, updatedAt: nil, linkedTaskIDs: [], linkedListIDs: []),
+        timezone: nil, updatedAt: nil, linkedTaskIDs: [], linkedListIDs: [])
     ]
+    let words = WeeklyReviewPage.words(review)
+    #expect(words.decision?.taskID == "defer-1")
+    #expect(words.sentence.hasPrefix("You finished 4 tasks."))
 
     let data = renderSnapshot(
-      WeekReviewDigest(reviews: reviews),
-      size: CGSize(width: 560, height: 560)
+      LorvexWeekReviewPage(
+        dateLine: review.windowTitle, review: review, days: reviews, words: words,
+        openDay: { _ in }, openTask: { _ in }, decide: { _ in }),
+      size: CGSize(width: 640, height: 720)
     )
 
     #expect(data != nil)
     #expect((data?.count ?? 0) > 1024)
   }
 
+  @Test
+  func readOnlyDailyReviewRendersSavedFields() {
+    let review = DailyReviewEntry(
+      date: "2026-09-18", summary: "A slow start, then the sync fix landed.", mood: 4, energyLevel: 2,
+      wins: "Closed the watchdog bug.", blockers: nil, learnings: "Pair the drain with the push.",
+      timezone: nil, updatedAt: nil, linkedTaskIDs: [], linkedListIDs: [])
+    let data = renderSnapshot(
+      DailyReviewReadOnlyView(review: review).padding(24), size: CGSize(width: 640, height: 520))
+    #expect(data != nil)
+    #expect((data?.count ?? 0) > 1024)
+  }
 }

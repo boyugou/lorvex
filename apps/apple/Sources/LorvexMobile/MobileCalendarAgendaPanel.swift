@@ -1,98 +1,60 @@
 import LorvexCore
 import SwiftUI
 
-struct MobileCalendarAgendaDay: Identifiable, Equatable {
-  let date: Date
-  let events: [CalendarTimelineEvent]
-  let tasks: [LorvexTask]
-
-  var id: Date { date }
-  var isEmpty: Bool { events.isEmpty && tasks.isEmpty }
-}
-
+/// The agenda list: each listed day's events and tasks under a header naming
+/// the day, in the day's reading order (``MobileCalendarAgendaDay/entries``;
+/// see ``MobileCalendarAgendaDay/listed(_:todayKey:)`` for which
+/// days are listed). An event the clock has passed steps back (its glyph
+/// fades and its title turns secondary), the way Today treats the schedule
+/// rows it has cleared; a task keeps full strength until it is done, since an
+/// unfinished one still needs doing. A task row completes, swipes, and
+/// long-presses as every task row does. A free today reads "Nothing planned";
+/// so does an agenda with no day to list, unless the week strips above it
+/// already say the week is open.
 struct MobileCalendarAgendaPanel: View {
+  /// Every visible day, in order; the panel picks the ones it lists.
   let days: [MobileCalendarAgendaDay]
+  /// The logical today as `yyyy-MM-dd`.
+  let todayKey: String
+  /// The current time in minutes since midnight, or `nil` when unknown.
+  let nowMinutes: Int?
   let calendar: Calendar
+  /// Whether an event edit or delete is in flight.
   let isMutating: Bool
-  let createEvent: () -> Void
   let editEvent: (CalendarTimelineEvent) -> Void
   let deleteEvent: (CalendarTimelineEvent) async -> Bool
   let deleteScopedEvent: (CalendarTimelineEvent, CalendarEventEditScope) async -> Bool
   let openTask: (LorvexTask) -> Void
+  /// The completion, start/pause, and defer actions of a task's row.
+  let taskActions: (LorvexTask) -> MobileTaskRowActions
+  /// Whether a change to the task is in flight.
+  let taskIsMutating: (LorvexTask.ID) -> Bool
   @State private var eventAwaitingDeleteScope: CalendarTimelineEvent?
 
   var body: some View {
     List {
-      Section {
-        Button {
-          createEvent()
-        } label: {
-          Label(
-            String(
-              localized: "calendar.new_event", defaultValue: "New Event", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "plus")
-        }
-        .lorvexRowHoverEffect()
-        .accessibilityIdentifier("mobileCalendar.agendaCreate")
-      }
-
-      ForEach(days) { day in
+      ForEach(listedDays) { day in
         Section {
           if day.isEmpty {
-            Text(
-              String(
-                localized: "calendar.empty.no_events", defaultValue: "No Events",
-                table: "Localizable", bundle: MobileL10n.bundle)
-            )
-            .font(LorvexDesign.Typography.secondaryText)
-            .foregroundStyle(.secondary)
-          } else {
-            ForEach(day.events) { event in
-              Button {
-                editEvent(event)
-              } label: {
-                MobileCalendarAgendaRow(event: event)
-              }
-              .buttonStyle(.plain)
-              .lorvexRowHoverEffect()
-              .disabled(!event.editable)
-              .contextMenu {
-                if event.editable {
-                  Button {
-                    editEvent(event)
-                  } label: {
-                    Label(
-                      String(
-                        localized: "common.edit", defaultValue: "Edit", table: "Localizable",
-                        bundle: MobileL10n.bundle), systemImage: "pencil")
-                  }
-                  .disabled(isMutating)
-
-                  Button(role: .destructive) {
-                    requestDelete(event)
-                  } label: {
-                    Label(
-                      String(
-                        localized: "common.delete", defaultValue: "Delete", table: "Localizable",
-                        bundle: MobileL10n.bundle), systemImage: "trash")
-                  }
-                  .disabled(isMutating)
-                }
-              }
-            }
-            ForEach(day.tasks) { task in
-              Button {
-                openTask(task)
-              } label: {
-                MobileCalendarAgendaTaskRow(task: task)
-              }
-              .buttonStyle(.plain)
-              .lorvexRowHoverEffect()
+            nothingPlannedRow
+          }
+          ForEach(day.entries) { entry in
+            switch entry {
+            case .event(let event):
+              eventRow(event, isPast: day.hasPassed(event, todayKey: todayKey, nowMinutes: nowMinutes))
+            case .task(let task):
+              MobileCalendarAgendaTaskRow(
+                task: task, dayKey: day.key, isMutating: taskIsMutating(task.id),
+                actions: taskActions(task), open: { openTask(task) })
             }
           }
         } header: {
-          header(for: day.date)
+          header(for: day)
         }
+      }
+
+      if listedDays.isEmpty {
+        Section { nothingPlannedRow }
       }
     }
     .listStyle(.sidebar)
@@ -107,6 +69,40 @@ struct MobileCalendarAgendaPanel: View {
       delete: deleteScopedEvent)
   }
 
+  private func eventRow(_ event: CalendarTimelineEvent, isPast: Bool) -> some View {
+    Button {
+      editEvent(event)
+    } label: {
+      MobileCalendarAgendaRow(event: event, isPast: isPast)
+    }
+    .buttonStyle(.plain)
+    .lorvexRowHoverEffect()
+    .disabled(!event.editable)
+    .contextMenu {
+      if event.editable {
+        Button {
+          editEvent(event)
+        } label: {
+          Label(
+            String(
+              localized: "common.edit", defaultValue: "Edit", table: "Localizable",
+              bundle: MobileL10n.bundle), systemImage: "pencil")
+        }
+        .disabled(isMutating)
+
+        Button(role: .destructive) {
+          requestDelete(event)
+        } label: {
+          Label(
+            String(
+              localized: "common.delete", defaultValue: "Delete", table: "Localizable",
+              bundle: MobileL10n.bundle), systemImage: "trash")
+        }
+        .disabled(isMutating)
+      }
+    }
+  }
+
   private func requestDelete(_ event: CalendarTimelineEvent) {
     if event.supportsScopedMutation {
       eventAwaitingDeleteScope = event
@@ -115,30 +111,66 @@ struct MobileCalendarAgendaPanel: View {
     }
   }
 
-  private func header(for date: Date) -> some View {
+  private var listedDays: [MobileCalendarAgendaDay] {
+    MobileCalendarAgendaDay.listed(days, todayKey: todayKey)
+  }
+
+  private var nothingPlannedRow: some View {
+    Text(
+      String(
+        localized: "calendar.agenda.empty", defaultValue: "Nothing planned", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    )
+    .font(LorvexDesign.Typography.secondaryText)
+    .foregroundStyle(.secondary)
+    .padding(.vertical, LorvexDesign.Spacing.s)
+    .accessibilityIdentifier("mobileCalendar.agenda.empty")
+  }
+
+  /// A day's name over its date. Both take the section header's own color:
+  /// a List header already draws in the secondary style, and a hierarchical
+  /// `.secondary` inside it would compound to about 2.3:1.
+  private func header(for day: MobileCalendarAgendaDay) -> some View {
     VStack(alignment: .leading, spacing: 2) {
-      Text(dayTitle(date))
+      Text(dayTitle(day))
         .font(LorvexDesign.Typography.primaryEmphasis)
-      Text(Self.fullDateFormatter.string(from: date))
+      Text(dateLine(day.date))
         .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
     }
     .textCase(nil)
   }
 
-  private func dayTitle(_ date: Date) -> String {
-    if calendar.isDateInToday(date) {
+  /// The day's date, without the year inside the current year: the week
+  /// header above already names it.
+  private func dateLine(_ date: Date) -> String {
+    let formatter =
+      calendar.isDate(date, equalTo: Date(), toGranularity: .year)
+      ? Self.monthDayFormatter : Self.fullDateFormatter
+    return formatter.string(from: date)
+  }
+
+  /// "Today" on the logical today, the day the week strips mark, else the
+  /// weekday.
+  private func dayTitle(_ day: MobileCalendarAgendaDay) -> String {
+    if day.key == todayKey {
       return String(
         localized: "calendar.today", defaultValue: "Today", table: "Localizable",
         bundle: MobileL10n.bundle)
     }
-    return Self.weekdayFormatter.string(from: date)
+    return Self.weekdayFormatter.string(from: day.date)
   }
 
   private static let weekdayFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.locale = MobileL10n.locale
     formatter.dateFormat = "EEEE"
+    return formatter
+  }()
+
+  private static let monthDayFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = MobileL10n.locale
+    formatter.setLocalizedDateFormatFromTemplate("MMMd")
     return formatter
   }()
 

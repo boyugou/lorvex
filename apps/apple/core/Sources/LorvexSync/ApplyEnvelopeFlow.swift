@@ -72,39 +72,18 @@ enum ApplyTombstoneGate {
         return nil
       } else {
         // Delete is newer or concurrent-equal: discard the upsert.
-        let requiresAuditRetentionCleanup = envelope.entityType == .aiChangelog
         do {
           try ConflictLog.logConflict(
             db,
             ConflictLog.Entry(
               entityType: envelope.entityType.asString, entityId: envelope.entityId,
               winnerVersion: ts.version, loserVersion: envelope.version.description,
-              loserDeviceId: envelope.deviceId,
-              // A rejected audit payload is exactly the private history the
-              // reset tombstone and physical-purge queue exist to remove. Copying it into the
-              // conflict log would silently retain that content under another
-              // table even for the `.off` policy.
-              loserPayload: requiresAuditRetentionCleanup ? nil : envelope.payload,
+              loserDeviceId: envelope.deviceId, loserPayload: envelope.payload,
               resolvedAt: applyTs, resolutionType: ResolutionName.tombstoneWins))
         } catch { throw ApplyError.lift(error) }
         try ApplyConflict.reapShadowForSkipped(
           db, entityType: envelope.entityType.asString, entityId: envelope.entityId,
           supersedingVersion: ts.version)
-        if requiresAuditRetentionCleanup {
-          guard case .object(let object)? = JSONValue.parse(envelope.payload) else {
-            throw ApplyError.invalidPayload("malformed ai_changelog payload JSON")
-          }
-          let epoch = try ApplyJSON.requiredInt64(
-            object, "retention_epoch", entity: EntityName.aiChangelog)
-          guard epoch >= 0 else {
-            throw ApplyError.invalidPayload(
-              "ai_changelog payload: retention_epoch must be nonnegative")
-          }
-          try AuditRetentionFrontier.rejectInboundAuditAndQueuePurge(
-            db, entityId: envelope.entityId, retentionEpoch: epoch,
-            reason: .resetTombstone)
-          return .upsertRejectedByRetention
-        }
         return .skipped(
           reason: "entity \(envelope.entityType.asString):\(envelope.entityId) is tombstoned "
             + "with version \(ts.version) >= envelope version \(envelope.version)",
@@ -217,11 +196,6 @@ enum ApplyLwwGate {
     }
     do {
       if try SyncMutationSemantics.isExactSemanticReplay(local, envelope) {
-        // Audit rows are immutable-by-id rather than LWW-versioned. Let their
-        // applier run even for an exact replay so account-scoped retention can
-        // record cloud presence or reject-and-purge the row. Every ordinary
-        // versioned kind can terminate here as a pure replay.
-        if envelope.entityType == .aiChangelog { return nil }
         return .skipped(
           reason: "exact semantic replay at version \(envelope.version) for "
             + "\(envelope.entityType.asString):\(envelope.entityId)",
@@ -270,31 +244,6 @@ enum ApplyLwwGate {
         operation: .delete, version: envelope.version,
         payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
         payload: "{}", deviceId: "local-equal-hlc")
-    }
-
-    // The append-only audit table deliberately has no version column. Its
-    // stable id is the mutation identity, so any different content under an
-    // existing id is a collision even when a generation snapshot re-authored
-    // the same immutable row under a different transport HLC. Project the
-    // canonical stored row and compare both contenders at the inbound HLC; the
-    // repair funnel will mint the one durable successor ordering key.
-    if envelope.entityType == .aiChangelog, envelope.operation == .upsert,
-      var object = try AuditRetentionFrontier.canonicalAuditPayloadObject(
-        db, entityId: envelope.entityId)
-    {
-      object["version"] = .string(envelope.version.description)
-      let canonical: String
-      do {
-        canonical = try SyncCanonicalize.canonicalizeJSON(.object(object))
-      } catch {
-        throw ApplyError.invalidPayload(
-          "local audit collision payload canonicalization failed: \(error)")
-      }
-      return SyncEnvelope(
-        entityType: envelope.entityType, entityId: envelope.entityId,
-        operation: .upsert, version: envelope.version,
-        payloadSchemaVersion: envelope.payloadSchemaVersion,
-        payload: canonical, deviceId: "local-equal-hlc")
     }
 
     guard
@@ -423,9 +372,6 @@ enum ApplyDeleteFlow {
     _ db: Database, envelope: SyncEnvelope, outcome: EntityApplyOutcome,
     applyTs: String
   ) throws -> ApplyResult {
-    if envelope.operation == .upsert, outcome == .upsertRejectedByRetention {
-      return .upsertRejectedByRetention
-    }
     if case .repairRequired(let obligation) = outcome {
       return .repairRequired(obligation)
     }
@@ -465,9 +411,6 @@ enum ApplyDeleteFlow {
             db, entityType: envelope.entityType.asString, entityId: envelope.entityId,
             version: envelope.version.description, deletedAt: applyTs)
         } catch { throw ApplyError.lift(error) }
-      case .upsertRejectedByRetention:
-        throw ApplyError.invalidOperation(
-          entityType: envelope.entityType.asString, operation: envelope.operation.asString)
       case .repairRequired(let obligation):
         return .repairRequired(obligation)
       }

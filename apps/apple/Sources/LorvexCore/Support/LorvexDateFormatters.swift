@@ -109,12 +109,118 @@ public enum LorvexDateFormatters {
     return f
   }()
 
+  /// Named relative dates with the unit spelled out ("4 minutes ago",
+  /// "yesterday") for status rows that have the room. Configured once, then
+  /// used read-only.
+  public nonisolated(unsafe) static let namedRelative: RelativeDateTimeFormatter = {
+    let f = RelativeDateTimeFormatter()
+    f.dateTimeStyle = .named
+    return f
+  }()
+
   /// Abbreviated relative intervals ("3m", "2h") used by status surfaces.
   public nonisolated(unsafe) static let abbreviatedRelative: RelativeDateTimeFormatter = {
     let f = RelativeDateTimeFormatter()
     f.unitsStyle = .abbreviated
     return f
   }()
+
+  /// `date`'s clock time in the locale's standard short time pattern: "9:45 AM"
+  /// where the clock is 12-hour, "09:45" where it is 24-hour. This is the
+  /// pattern the span format of ``lorvexClockRangeLabel(startMinutes:endMinutes:)``
+  /// pads its ends to, so a single time and a span on one screen agree.
+  /// `Date.FormatStyle`'s `.shortened` time is not used: it drops the leading
+  /// zero of a 24-hour hour ("9:45") while spans keep it.
+  ///
+  /// `locale` defaults to ``LorvexClockFormat/displayLocale``, read on every
+  /// call, so a change of region, of the system's 12/24-hour setting, or of
+  /// the app's clock choice applies to the next label.
+  public static func clockTime(
+    _ date: Date, timeZone: TimeZone = .autoupdatingCurrent,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    clockTimeFormatters.formatter(dateStyle: .none, timeZone: timeZone, locale: locale)
+      .string(from: date)
+  }
+
+  /// `date` as its day and clock time ("Sep 29, 2026 at 9:45 AM", "2026年9月29日
+  /// 09:45"): the locale's medium date on the Gregorian calendar, then the clock
+  /// time of ``clockTime(_:timeZone:locale:)``.
+  public static func dayAndClockTime(
+    _ date: Date, timeZone: TimeZone = .autoupdatingCurrent,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    clockTimeFormatters.formatter(dateStyle: .medium, timeZone: timeZone, locale: locale)
+      .string(from: date)
+  }
+
+  private static let clockTimeFormatters = ClockTimeFormatterCache()
+
+  /// `date`'s hour alone in the locale's hour pattern ("9 AM", "21", "上午9时"),
+  /// as a time grid labels its rows. `locale` defaults to
+  /// ``LorvexClockFormat/displayLocale``, read on every call, so the label
+  /// follows the clock the user chose.
+  public static func hourLabel(
+    _ date: Date, timeZone: TimeZone = .autoupdatingCurrent,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    hourFormatters.formatter(timeZone: timeZone, locale: locale).string(from: date)
+  }
+
+  private static let hourFormatters = HourFormatterCache()
+
+  /// Hour-only formatters by locale, hour cycle, and time zone, keyed and
+  /// locked like ``ClockTimeFormatterCache``.
+  private final class HourFormatterCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var formatters: [String: DateFormatter] = [:]
+
+    func formatter(timeZone: TimeZone, locale: Locale) -> DateFormatter {
+      let key = "\(locale.identifier)|\(locale.hourCycle)|\(timeZone.identifier)"
+      return lock.withLock {
+        if let formatter = formatters[key] { return formatter }
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = timeZone
+        formatter.setLocalizedDateFormatFromTemplate("j")
+        if formatters.count >= 32 { formatters.removeAll() }
+        formatters[key] = formatter
+        return formatter
+      }
+    }
+  }
+
+  /// Short-time formatters by locale, hour cycle, time zone, and date style.
+  /// The key reads the locale's identifier and hour cycle at call time, so a
+  /// formatter built for the autoupdating locale is replaced, rather than
+  /// reused, once the user's region or 12/24-hour setting changes. `DateFormatter`
+  /// is thread-safe for `string(from:)` once configured; the lock guards only
+  /// the dictionary.
+  private final class ClockTimeFormatterCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var formatters: [String: DateFormatter] = [:]
+
+    func formatter(dateStyle: DateFormatter.Style, timeZone: TimeZone, locale: Locale)
+      -> DateFormatter
+    {
+      let key = "\(locale.identifier)|\(locale.hourCycle)|\(timeZone.identifier)|\(dateStyle.rawValue)"
+      return lock.withLock {
+        if let formatter = formatters[key] { return formatter }
+        let formatter = DateFormatter()
+        // The locale first: assigning one resets the calendar to the locale's own.
+        formatter.locale = locale
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = timeZone
+        formatter.dateStyle = dateStyle
+        formatter.timeStyle = .short
+        // A process meets a handful of keys; a full cache means settings churned.
+        if formatters.count >= 32 { formatters.removeAll() }
+        formatters[key] = formatter
+        return formatter
+      }
+    }
+  }
 
   /// Proleptic Gregorian calendar pinned to UTC — the day-arithmetic companion
   /// to ``ymdUTC`` so offsets computed on `yyyy-MM-dd` day keys never drift with

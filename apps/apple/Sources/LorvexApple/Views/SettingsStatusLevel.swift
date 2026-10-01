@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 /// Status severity for a Settings status/overview row, shared across the
@@ -12,10 +13,10 @@ enum SettingsStatusLevel {
 
   var color: Color {
     switch self {
-    case .neutral: .secondary
-    case .success: .green
-    case .warning: .orange
-    case .error: .red
+    case .neutral: LorvexDesign.Palette.neutral
+    case .success: LorvexDesign.Palette.success
+    case .warning: LorvexDesign.Palette.warning
+    case .error: LorvexDesign.Palette.error
     }
   }
 }

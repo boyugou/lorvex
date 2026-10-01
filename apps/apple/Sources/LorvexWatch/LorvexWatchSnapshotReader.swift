@@ -5,10 +5,9 @@ import LorvexWidgetKitSupport
 /// Reads the atomic App Group replica envelope and maps its embedded widget
 /// snapshot to watch-ready types.
 ///
-/// Returns `nil` for `primaryTask` and an empty `taskIDs` list when the
-/// snapshot is missing, corrupt, or reports an unsupported version. Call sites
-/// should surface the unavailable snapshot state rather than opening a local
-/// writable database on watch.
+/// Returns a fallback and no tasks when the snapshot is missing, corrupt, or of
+/// another version. Call sites surface the unavailable snapshot state rather
+/// than opening a local writable database on the watch.
 public struct LorvexWatchSnapshotReader {
   private let url: URL
   private let calendar: Calendar
@@ -44,9 +43,11 @@ public struct LorvexWatchSnapshotReader {
     return LorvexWatchSnapshotReader(url: snapshotURL, calendar: calendar)
   }
 
-  /// Loads the snapshot and maps actionable focus tasks to watch tasks.
+  /// Loads the snapshot and maps Today's actionable tasks to watch tasks, in
+  /// Today's order as the phone sent them. The lead depends on the clock, so
+  /// the store resolves it when a view draws (``LorvexWatchStore/orderedTasks(at:)``).
   ///
-  /// - Returns: A tuple of the load result and the mapped actionable focus tasks.
+  /// - Returns: A tuple of the load result and the mapped actionable tasks.
   public func read(at date: Date = Date()) -> (result: WidgetSnapshotLoadResult, tasks: [LorvexTask]) {
     let result = WidgetSnapshotFreshnessPolicy().validatingCurrentDay(
       LorvexWatchReplicaFile.load(at: url),
@@ -55,8 +56,7 @@ public struct LorvexWatchSnapshotReader {
     )
     switch result {
     case .snapshot(let snapshot):
-      let tasks = snapshot.actionableFocusTasks.map(Self.task(from:))
-      return (result, tasks)
+      return (result, snapshot.actionableTasks.map(Self.task(from:)))
     case .fallback:
       return (result, [])
     }
@@ -64,7 +64,7 @@ public struct LorvexWatchSnapshotReader {
 
   // MARK: - Mapping helpers
 
-  static func task(from task: WidgetSnapshot.FocusTask) -> LorvexTask {
+  static func task(from task: WidgetSnapshot.TodayTask) -> LorvexTask {
     LorvexTask(
       id: task.id,
       title: task.title,

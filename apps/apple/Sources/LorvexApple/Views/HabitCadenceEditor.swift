@@ -169,7 +169,7 @@ struct HabitWeekdayPicker: View {
   var allowsEmpty: Bool = false
 
   var body: some View {
-    HStack(spacing: 6) {
+    HStack(spacing: LorvexDesign.Spacing.sm) {
       ForEach(0..<7, id: \.self) { raw in
         let isOn = selection.contains(raw)
         Button {

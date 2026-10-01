@@ -21,7 +21,8 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -46,39 +47,12 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
       value: CalendarAiAccessMode.fullDetails.asString)
   }
 
-  private func saveProviderFocusSchedule(
-    _ service: SwiftLorvexCoreService, date: String, includeFreeform: Bool = false
+  /// Plan `taskID` for `date`, so the day's suggestion has a task to place.
+  private func plan(
+    _ service: SwiftLorvexCoreService, taskID: LorvexTask.ID, date: String
   ) async throws {
-    var blocks = [
-      FocusScheduleBlock(
-        blockType: "event", startTime: "09:00", endTime: "10:00",
-        eventSource: .provider, title: "Private appointment")
-    ]
-    if includeFreeform {
-      blocks.append(
-        FocusScheduleBlock(
-          blockType: "event", startTime: "10:00", endTime: "10:30",
-          eventSource: .freeform, title: "Authored hold"))
-    }
-    _ = try await service.saveFocusSchedule(date: date, blocks: blocks, rationale: nil)
-  }
-
-  private func focusScheduleSyncState(
-    _ service: SwiftLorvexCoreService, date: String
-  ) throws -> (version: String, payload: String?) {
-    try service.read { db in
-      let version = try String.fetchOne(
-        db, sql: "SELECT version FROM focus_schedule WHERE date = ?", arguments: [date]) ?? ""
-      let payload = try String.fetchOne(
-        db,
-        sql: """
-          SELECT payload FROM sync_outbox
-          WHERE entity_type = 'focus_schedule' AND entity_id = ? AND synced_at IS NULL
-          ORDER BY id DESC LIMIT 1
-          """,
-        arguments: [date])
-      return (version, payload)
-    }
+    let day = try XCTUnwrap(SwiftLorvexTaskDeserializers.plannedDateFormatter.date(from: date))
+    _ = try await service.updateTask(TaskUpdateDraft(id: taskID, plannedDate: .set(day)))
   }
 
   /// Whether the EventKit scope is enabled AND has refreshed at least once —
@@ -537,104 +511,6 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
 
   // MARK: - Privacy: detail downgrade purges stale full-detail rows
 
-  func testFullToBusyDowngradeScrubsProviderFocusTitleWithoutSyncWrite() async throws {
-    let service = try makeService()
-    let date = "2026-06-20"
-    try await optIntoFullDetailTier(service)
-    try await saveProviderFocusSchedule(service, date: date)
-    let fullHuman = try await service.loadFocusSchedule(date: date)
-    let fullAI = try await service.loadFocusScheduleForAI(date: date)
-    XCTAssertEqual(fullHuman?.blocks.first?.title, "Private appointment")
-    XCTAssertEqual(fullAI?.blocks.first?.title, "Private appointment")
-    let before = try focusScheduleSyncState(service, date: date)
-
-    _ = try await service.setPreference(
-      key: PreferenceKeys.devCalendarAiAccessMode,
-      value: CalendarAiAccessMode.busyOnly.asString)
-
-    let human = try await service.loadFocusSchedule(date: date)
-    XCTAssertEqual(human?.blocks.count, 1)
-    XCTAssertEqual(human?.blocks.first?.title, "Event")
-    let ai = try await service.loadFocusScheduleForAI(date: date)
-    XCTAssertEqual(ai?.blocks.count, 1)
-    XCTAssertEqual(ai?.blocks.first?.title, "Event")
-    XCTAssertEqual(try focusScheduleSyncState(service, date: date).version, before.version)
-    XCTAssertEqual(try focusScheduleSyncState(service, date: date).payload, before.payload)
-  }
-
-  func testFullToOffDowngradeScrubsStoredTitleAndOmitsOnlyProviderBlockFromAIRead()
-    async throws
-  {
-    let service = try makeService()
-    let date = "2026-06-21"
-    try await optIntoFullDetailTier(service)
-    try await saveProviderFocusSchedule(service, date: date, includeFreeform: true)
-    let before = try focusScheduleSyncState(service, date: date)
-
-    _ = try await service.setPreference(
-      key: PreferenceKeys.devCalendarAiAccessMode,
-      value: CalendarAiAccessMode.off.asString)
-
-    let human = try await service.loadFocusSchedule(date: date)
-    XCTAssertEqual(human?.blocks.count, 2, "human UI reads must retain hidden provider blocks")
-    XCTAssertEqual(human?.blocks.first?.title, "Event")
-    let ai = try await service.loadFocusScheduleForAI(date: date)
-    XCTAssertEqual(ai?.blocks.map(\.title), ["Authored hold"])
-    XCTAssertEqual(ai?.blocks.first?.eventSource, .freeform)
-    let after = try focusScheduleSyncState(service, date: date)
-    XCTAssertEqual(after.version, before.version)
-    XCTAssertEqual(after.payload, before.payload)
-  }
-
-  /// Deleting the key resolves the tier to the domain default (`full_details`),
-  /// which does not narrow exposure, so no scrub runs and the stored provider
-  /// title survives on both the human and AI projections.
-  func testDeletingAccessPreferenceKeepsProviderFocusTitleWhenDefaultDoesNotNarrow()
-    async throws
-  {
-    let service = try makeService()
-    let date = "2026-06-22"
-    try await optIntoFullDetailTier(service)
-    try await saveProviderFocusSchedule(service, date: date)
-    let before = try focusScheduleSyncState(service, date: date)
-
-    try await service.deletePreference(key: PreferenceKeys.devCalendarAiAccessMode)
-
-    let human = try await service.loadFocusSchedule(date: date)
-    let ai = try await service.loadFocusScheduleForAI(date: date)
-    XCTAssertEqual(human?.blocks.first?.title, "Private appointment")
-    XCTAssertEqual(ai?.blocks.first?.title, "Private appointment")
-    let after = try focusScheduleSyncState(service, date: date)
-    XCTAssertEqual(after.version, before.version)
-    XCTAssertEqual(after.payload, before.payload)
-  }
-
-  func testSystemIntentFocusReadUsesAIProjectionWithoutMutatingHumanSchedule() async throws {
-    let service = try makeService()
-    let date = "2026-06-23"
-    try await optIntoFullDetailTier(service)
-    try await saveProviderFocusSchedule(service, date: date, includeFreeform: true)
-
-    // Bypass the downgrade scrub to exercise read-layer defense in depth.
-    try service.write { db in
-      try DeviceStateRepo.writeCalendarAiAccessMode(db, mode: .busyOnly)
-    }
-    let busy = try await LorvexSystemIntentRunner.readFocusSchedule(date: date, core: service)
-    let humanUnderBusy = try await service.loadFocusSchedule(date: date)
-    XCTAssertEqual(busy?.blocks.map(\.title), ["Event", "Authored hold"])
-    XCTAssertEqual(
-      humanUnderBusy?.blocks.first?.title,
-      "Private appointment", "AI projection must not mutate the human-facing stored schedule")
-
-    try service.write { db in
-      try DeviceStateRepo.writeCalendarAiAccessMode(db, mode: .off)
-    }
-    let off = try await LorvexSystemIntentRunner.readFocusSchedule(date: date, core: service)
-    let humanUnderOff = try await service.loadFocusSchedule(date: date)
-    XCTAssertEqual(off?.blocks.map(\.title), ["Authored hold"])
-    XCTAssertEqual(humanUnderOff?.blocks.count, 2)
-  }
-
   /// A tier downgrade that reduces detail (fullDetails → busyOnly) must not
   /// leave previously-mirrored full-detail rows (real titles, locations,
   /// attendees) at rest for any window. Ingest reconciliation only ever rewrote
@@ -811,35 +687,35 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     XCTAssertNil(afterEvent.notes)
   }
 
-  /// FIX 2 (read-layer redaction), focus path: `proposeFocusSchedule` reads the
+  /// FIX 2 (read-layer redaction), day-times path: `proposeDayTimes` reads the
   /// effective tier from `device_state` too, so a full-detail provider row at
-  /// rest under `busy_only` surfaces in the day's proposal as redacted occupancy
-  /// ("Busy"), never the real event title.
-  func testFocusProposalRedactsSurvivingFullDetailRowUnderBusyTier() async throws {
+  /// rest under `busy_only` surfaces in the day's suggestion as untitled busy
+  /// time, never the real event title.
+  func testDayTimesProposalRedactsSurvivingFullDetailRowUnderBusyTier() async throws {
     let service = try makeService()
     try await optIntoFullDetailTier(service)
     // Pin the anchor timezone so the event's minute-of-day is deterministic.
     _ = try await service.setPreference(key: PreferenceKeys.prefTimezone, value: "UTC")
 
     let task = try await service.createTask(title: "Write report", notes: "")
-    _ = try await service.setCurrentFocus(
-      date: "2026-06-02", taskIDs: [task.id], briefing: nil, timezone: "UTC")
+    try await plan(service, taskID: task.id, date: "2026-06-02")
 
-    // A full-detail event at 09:00–10:00 UTC (the working-hours start), so it
-    // packs into the proposal as an event block.
+    // A full-detail event at 09:00–10:00 UTC, the working-hours start, so the
+    // suggestion works around it.
     let event = EventKitFetchedEvent(
-      key: "ek-focus", title: "Board meeting", notes: "confidential",
+      key: "ek-board", title: "Board meeting", notes: "confidential",
       startDate: "2026-06-02", startTime: "09:00", endDate: "2026-06-02", endTime: "10:00",
       allDay: false, location: "HQ", timezone: "UTC")
     _ = try service.ingestEventKitEvents(
       EventKitIngest.providerRows(from: [event], scope: "device", accessMode: .fullDetails),
       builtAtMode: .fullDetails, windowStart: "2026-06-01", windowEnd: "2026-06-05")
 
-    // Full detail surfaces in the proposal under the pinned full tier.
-    let before = try await service.proposeFocusSchedule(date: "2026-06-02")
-    let fullDetailBlock = try XCTUnwrap(before.blocks.first { $0.title == "Board meeting" })
-    XCTAssertEqual(fullDetailBlock.eventSource, .provider)
-    XCTAssertNil(fullDetailBlock.calendarEventID)
+    // Full detail surfaces in the suggestion under the pinned full tier.
+    let before = try await service.proposeDayTimes(date: "2026-06-02")
+    let fullDetail = try XCTUnwrap(before.events.first { $0.title == "Board meeting" })
+    XCTAssertEqual(fullDetail.source, .provider)
+    XCTAssertNil(fullDetail.eventID)
+    XCTAssertEqual(fullDetail.time, 540..<600)
 
     // Flip to busy_only WITHOUT the downgrade purge, leaving the full-detail row
     // at rest.
@@ -847,16 +723,16 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
       try DeviceStateRepo.writeCalendarAiAccessMode(db, mode: .busyOnly)
     }
 
-    let after = try await service.proposeFocusSchedule(date: "2026-06-02")
+    let after = try await service.proposeDayTimes(date: "2026-06-02")
     XCTAssertFalse(
-      after.blocks.contains { $0.title == "Board meeting" },
-      "focus proposal must redact a full-detail provider row at rest under a busy tier")
-    let redactedBlock = try XCTUnwrap(after.blocks.first { $0.title == "Busy" })
-    XCTAssertEqual(redactedBlock.eventSource, .provider)
-    XCTAssertNil(redactedBlock.calendarEventID)
+      after.events.contains { $0.title == "Board meeting" },
+      "the suggestion must redact a full-detail provider row at rest under a busy tier")
+    let redacted = try XCTUnwrap(after.events.first { $0.source == .provider })
+    XCTAssertNil(redacted.title)
+    XCTAssertEqual(redacted.time, 540..<600, "the busy time still blocks the suggestion")
   }
 
-  func testOverlappingCanonicalAndProviderScheduleRoundTripRetainsProvenanceAtOff()
+  func testDayTimesProposalKeepsProvenanceOfOverlappingCanonicalAndProviderEvents()
     async throws
   {
     let service = try makeService()
@@ -864,8 +740,7 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
     _ = try await service.setPreference(key: PreferenceKeys.prefTimezone, value: "UTC")
     let date = "2026-06-02"
     let task = try await service.createTask(title: "Write report", notes: "")
-    _ = try await service.setCurrentFocus(
-      date: date, taskIDs: [task.id], briefing: nil, timezone: "UTC")
+    try await plan(service, taskID: task.id, date: date)
     let canonical = try await service.createCalendarEvent(
       title: "Canonical review", startDate: date, endDate: nil,
       startTime: "09:30", endTime: "10:30", allDay: false,
@@ -879,45 +754,27 @@ final class SwiftLorvexCoreServiceEventKitTests: XCTestCase {
         from: [provider], scope: "device", accessMode: .fullDetails),
       builtAtMode: .fullDetails, windowStart: date, windowEnd: date)
 
-    let proposed = try await service.proposeFocusSchedule(date: date)
-    let proposedEvents = proposed.blocks.filter { $0.blockType == "event" }
-    XCTAssertEqual(proposedEvents.count, 2)
+    // Overlapping events stay two events with their own provenance; only the
+    // packer merges their occupancy.
+    let proposed = try await service.proposeDayTimes(date: date)
+    XCTAssertEqual(proposed.events.count, 2)
     XCTAssertTrue(
-      proposedEvents.contains {
-        $0.eventSource == .canonical && $0.calendarEventID == canonical.id
-          && $0.title == "Canonical review"
+      proposed.events.contains {
+        $0.source == .canonical && $0.eventID == canonical.id
+          && $0.title == "Canonical review" && $0.time == 570..<630
       })
     XCTAssertTrue(
-      proposedEvents.contains {
-        $0.eventSource == .provider && $0.calendarEventID == nil
-          && $0.title == "Private appointment"
+      proposed.events.contains {
+        $0.source == .provider && $0.eventID == nil
+          && $0.title == "Private appointment" && $0.time == 600..<660
       })
 
-    _ = try await service.saveFocusSchedule(
-      date: date, blocks: proposed.blocks, rationale: nil)
+    // With calendar access off, device events leave the suggestion entirely.
     _ = try await service.setPreference(
       key: PreferenceKeys.devCalendarAiAccessMode,
       value: CalendarAiAccessMode.off.asString)
-
-    let human = try await service.loadFocusSchedule(date: date)
-    let humanEvents = try XCTUnwrap(human).blocks.filter { $0.blockType == "event" }
-    XCTAssertEqual(humanEvents.count, 2, "human schedule keeps both stored event blocks")
-    XCTAssertTrue(
-      humanEvents.contains {
-        $0.eventSource == .canonical && $0.calendarEventID == canonical.id
-          && $0.title == "Canonical review"
-      })
-    XCTAssertTrue(
-      humanEvents.contains {
-        $0.eventSource == .provider && $0.calendarEventID == nil && $0.title == "Event"
-      })
-
-    let ai = try await service.loadFocusScheduleForAI(date: date)
-    let aiEvents = try XCTUnwrap(ai).blocks.filter { $0.blockType == "event" }
-    XCTAssertEqual(aiEvents.count, 1)
-    XCTAssertEqual(aiEvents.first?.eventSource, .canonical)
-    XCTAssertEqual(aiEvents.first?.calendarEventID, canonical.id)
-    XCTAssertEqual(aiEvents.first?.title, "Canonical review")
+    let atOff = try await service.proposeDayTimes(date: date)
+    XCTAssertEqual(atOff.events.map(\.eventID), [canonical.id])
   }
 
   func testDisableScopeHidesMirroredRows() async throws {

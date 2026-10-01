@@ -4,67 +4,7 @@
     "Add a task to ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Add a task to ${applicationName}"
@@ -73,96 +13,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to ${applicationName}"
-          }
-        }
-      }
-    },
-    "Add a task to focus in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a task to focus in ${applicationName}"
+            "value": "用 ${applicationName} 记一个任务"
           }
         }
       }
@@ -170,67 +21,7 @@
     "Add habit in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Add habit in ${applicationName}"
@@ -239,13 +30,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add habit in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add habit in ${applicationName}"
+            "value": "在 ${applicationName} 中添加习惯"
           }
         }
       }
@@ -253,67 +38,7 @@
     "Capture a task in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Capture a task in ${applicationName}"
@@ -322,13 +47,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture a task in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture a task in ${applicationName}"
+            "value": "在 ${applicationName} 中添加任务"
           }
         }
       }
@@ -336,67 +55,7 @@
     "Complete a task in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Complete a task in ${applicationName}"
@@ -405,13 +64,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Complete a task in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Complete a task in ${applicationName}"
+            "value": "在 ${applicationName} 中完成任务"
           }
         }
       }
@@ -419,67 +72,7 @@
     "Create habit in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Create habit in ${applicationName}"
@@ -488,13 +81,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create habit in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Create habit in ${applicationName}"
+            "value": "在 ${applicationName} 中创建习惯"
           }
         }
       }
@@ -502,67 +89,7 @@
     "Defer a task in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Defer a task in ${applicationName}"
@@ -571,96 +98,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Defer a task in ${applicationName}"
-          }
-        }
-      }
-    },
-    "Focus a task in ${applicationName}": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Focus a task in ${applicationName}"
+            "value": "在 ${applicationName} 中推迟任务"
           }
         }
       }
@@ -668,67 +106,7 @@
     "List tasks in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "List tasks in ${applicationName}"
@@ -737,13 +115,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "List tasks in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "List tasks in ${applicationName}"
+            "value": "列出 ${applicationName} 中的任务"
           }
         }
       }
@@ -751,67 +123,7 @@
     "Mark a task done in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Mark a task done in ${applicationName}"
@@ -820,13 +132,24 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
+            "value": "在 ${applicationName} 中把任务标为已完成"
           }
-        },
-        "zh-Hant": {
+        }
+      }
+    },
+    "Move a task to today in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mark a task done in ${applicationName}"
+            "value": "Move a task to today in ${applicationName}"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 ${applicationName} 中把任务移到今天"
           }
         }
       }
@@ -834,67 +157,7 @@
     "Open ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Open ${applicationName}"
@@ -903,13 +166,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open ${applicationName}"
+            "value": "打开 ${applicationName}"
           }
         }
       }
@@ -917,67 +174,7 @@
     "Open today in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open today in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Open today in ${applicationName}"
@@ -986,13 +183,24 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open today in ${applicationName}"
+            "value": "在 ${applicationName} 中打开今天"
           }
-        },
-        "zh-Hant": {
+        }
+      }
+    },
+    "Plan a task for today in ${applicationName}": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open today in ${applicationName}"
+            "value": "Plan a task for today in ${applicationName}"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 ${applicationName} 中把任务安排到今天"
           }
         }
       }
@@ -1000,67 +208,7 @@
     "Read overview in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Read overview in ${applicationName}"
@@ -1069,13 +217,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read overview in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read overview in ${applicationName}"
+            "value": "读取 ${applicationName} 概览"
           }
         }
       }
@@ -1083,67 +225,7 @@
     "Read weekly review in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Read weekly review in ${applicationName}"
@@ -1152,13 +234,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read weekly review in ${applicationName}"
+            "value": "读取 ${applicationName} 每周回顾"
           }
         }
       }
@@ -1166,67 +242,7 @@
     "Schedule a task for tomorrow in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Schedule a task for tomorrow in ${applicationName}"
@@ -1235,13 +251,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Schedule a task for tomorrow in ${applicationName}"
+            "value": "在 ${applicationName} 中把任务改到明天"
           }
         }
       }
@@ -1249,67 +259,7 @@
     "Search tasks in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Search tasks in ${applicationName}"
@@ -1318,13 +268,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Search tasks in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search tasks in ${applicationName}"
+            "value": "在 ${applicationName} 中搜索任务"
           }
         }
       }
@@ -1332,67 +276,7 @@
     "Show Lorvex overview in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Show Lorvex overview in ${applicationName}"
@@ -1401,13 +285,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show Lorvex overview in ${applicationName}"
+            "value": "显示 ${applicationName} 概览"
           }
         }
       }
@@ -1415,67 +293,7 @@
     "Show weekly review in ${applicationName}": {
       "extractionState": "manual",
       "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Show weekly review in ${applicationName}"
@@ -1484,13 +302,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show weekly review in ${applicationName}"
+            "value": "显示 ${applicationName} 每周回顾"
           }
         }
       }

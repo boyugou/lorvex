@@ -21,7 +21,8 @@ final class CalendarSeriesCutoverServiceTests: XCTestCase {
 
   private func makeService() throws -> SwiftLorvexCoreService {
     let sql = try schemaSQL()
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: sql))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: sql, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func makeDailySeries(

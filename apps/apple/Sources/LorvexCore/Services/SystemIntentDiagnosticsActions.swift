@@ -8,7 +8,7 @@ extension LorvexSystemIntentRunner {
   public static func readSyncStatus(
     core: any LorvexCoreServicing
   ) async throws -> SyncStatusSnapshot {
-    try await core.loadRuntimeDiagnostics().sync
+    try await core.loadSyncStatus()
   }
 
   public static func readAIChangelog(
@@ -21,11 +21,5 @@ extension LorvexSystemIntentRunner {
     core: any LorvexCoreServicing
   ) async throws -> RecentLogsSnapshot {
     try await core.loadRuntimeDiagnostics().recentLogs
-  }
-
-  public static func readGuide(
-    core: any LorvexCoreServicing
-  ) async throws -> GuideSnapshot {
-    try await core.loadRuntimeDiagnostics().guide
   }
 }

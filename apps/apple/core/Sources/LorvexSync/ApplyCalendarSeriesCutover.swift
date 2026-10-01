@@ -106,11 +106,10 @@ enum CalendarSeriesCutoverCleanup {
     }
   }
 
-  /// Intercept child/aggregate upserts that reference an already-deleted
-  /// segment before generic tombstone, equal-HLC, FK, conflict-log, or payload-
-  /// shadow processing. A durable cutover is a permanent semantic fence: a late
-  /// edge must become a propagated Delete, while a late focus aggregate must be
-  /// sanitized and re-authored (or deleted when no blocks remain).
+  /// Intercept edge upserts that reference an already-deleted segment before
+  /// generic tombstone, equal-HLC, FK, conflict-log, or payload-shadow
+  /// processing. A durable cutover is a permanent semantic fence: a late edge
+  /// must become a propagated Delete.
   static func lateReferenceRepairIfResolved(
     _ db: Database, envelope: SyncEnvelope, applyTs: String
   ) throws -> ApplyRepairObligation? {
@@ -118,9 +117,6 @@ enum CalendarSeriesCutoverCleanup {
     switch envelope.entityType {
     case .taskCalendarEventLink:
       return try lateTaskEventLinkRepairIfResolved(
-        db, envelope: envelope, applyTs: applyTs)
-    case .focusSchedule:
-      return try lateFocusScheduleRepairIfResolved(
         db, envelope: envelope, applyTs: applyTs)
     default:
       return nil
@@ -172,147 +168,6 @@ enum CalendarSeriesCutoverCleanup {
           operation: .delete)
       ],
       additionalFloor: envelope.version)
-  }
-
-  private static func lateFocusScheduleRepairIfResolved(
-    _ db: Database, envelope: SyncEnvelope, applyTs: String
-  ) throws -> ApplyRepairObligation? {
-    guard case .object(var object)? = JSONValue.parse(envelope.payload),
-      case .array(let blocks)? = object["blocks"]
-    else {
-      throw ApplyError.invalidPayload("focus_schedule payload: blocks must be an array")
-    }
-
-    var invalidEventIds = Set<String>()
-    var retainedBlocks: [JSONValue] = []
-    retainedBlocks.reserveCapacity(blocks.count)
-    for block in blocks {
-      guard case .object(let fields) = block,
-        fields["block_type"] == .string("event"),
-        fields["event_source"] == .string("canonical"),
-        case .string(let eventId)? = fields["calendar_event_id"],
-        try CalendarSeriesCutoverRepo.fetch(db, id: eventId)?.state == .deleted
-      else {
-        retainedBlocks.append(block)
-        continue
-      }
-      invalidEventIds.insert(eventId)
-    }
-    guard !invalidEventIds.isEmpty else { return nil }
-    guard envelope.payloadSchemaVersion <= LorvexVersion.payloadSchemaVersion else {
-      throw ApplyError.deferForwardCompat(
-        .schemaTooNew(
-          remoteVersion: envelope.payloadSchemaVersion,
-          localVersion: LorvexVersion.payloadSchemaVersion))
-    }
-
-    // Sanitize every already-materialized reference to the same permanent
-    // barriers first. This also handles the stale/equal-incoming case: a newer
-    // local schedule keeps its content but loses the forbidden blocks and is
-    // selected for a full-snapshot reassertion.
-    var targets = try removeFocusScheduleReferences(
-      db, eventIds: Array(invalidEventIds),
-      barrierVersion: envelope.version.description, deletedAt: applyTs)
-
-    object["blocks"] = .array(retainedBlocks)
-    let sanitizedPayload = try SyncCanonicalize.canonicalizeJSON(.object(object))
-    let desired: SyncEnvelope
-    if retainedBlocks.isEmpty {
-      desired = SyncEnvelope(
-        entityType: .focusSchedule, entityId: envelope.entityId,
-        operation: .delete, version: envelope.version,
-        payloadSchemaVersion: envelope.payloadSchemaVersion,
-        payload: try SyncCanonicalize.canonicalizeJSON(
-          .object(["version": .string(envelope.version.description)])),
-        deviceId: envelope.deviceId)
-    } else {
-      desired = SyncEnvelope(
-        entityType: .focusSchedule, entityId: envelope.entityId,
-        operation: .upsert, version: envelope.version,
-        payloadSchemaVersion: envelope.payloadSchemaVersion,
-        payload: sanitizedPayload, deviceId: envelope.deviceId)
-    }
-
-    if try desiredWinsAgainstCurrentFocusSchedule(db, desired: desired) {
-      switch desired.operation {
-      case .upsert:
-        _ = try Tombstone.removeTombstone(
-          db, entityType: EntityName.focusSchedule, entityId: desired.entityId)
-        try ApplyLww.resetCorruptLocalVersion(
-          db, entityType: EntityName.focusSchedule, entityId: desired.entityId)
-        try ApplyDayScoped.applyFocusScheduleUpsert(
-          db, entityId: desired.entityId, payload: desired.payload,
-          version: desired.version.description, tieBreak: .allowEqual,
-          payloadSchemaVersion: desired.payloadSchemaVersion)
-      case .delete:
-        try ApplyDayScoped.applyFocusScheduleDelete(
-          db, entityId: desired.entityId, version: desired.version.description)
-        try Tombstone.createTombstone(
-          db, entityType: EntityName.focusSchedule, entityId: desired.entityId,
-          version: desired.version.description, deletedAt: applyTs)
-      }
-    }
-
-    if try ApplyLww.getLocalVersion(
-      db, entityType: EntityName.focusSchedule, entityId: envelope.entityId) != nil
-    {
-      targets.append(
-        CalendarCleanupRepairTarget(
-          entityType: .focusSchedule, entityId: envelope.entityId,
-          operation: .upsert))
-    } else {
-      var deathVersion = envelope.version.description
-      if let tombstone = try Tombstone.getTombstone(
-        db, entityType: EntityName.focusSchedule, entityId: envelope.entityId)
-      {
-        deathVersion = maximumVersion(deathVersion, tombstone.version)
-      }
-      try Tombstone.createTombstone(
-        db, entityType: EntityName.focusSchedule, entityId: envelope.entityId,
-        version: deathVersion, deletedAt: applyTs)
-      targets.append(
-        CalendarCleanupRepairTarget(
-          entityType: .focusSchedule, entityId: envelope.entityId,
-          operation: .delete))
-    }
-    return .propagateCalendarCleanup(
-      targets: normalized(targets), additionalFloor: envelope.version)
-  }
-
-  private static func desiredWinsAgainstCurrentFocusSchedule(
-    _ db: Database, desired: SyncEnvelope
-  ) throws -> Bool {
-    let liveRaw = try ApplyLww.getLocalVersion(
-      db, entityType: EntityName.focusSchedule, entityId: desired.entityId)
-    let tombstone = try Tombstone.getTombstone(
-      db, entityType: EntityName.focusSchedule, entityId: desired.entityId)
-    let live = liveRaw.flatMap { try? Hlc.parseCanonical($0) }
-    let death = tombstone.flatMap { try? Hlc.parseCanonical($0.version) }
-    let floor = [live, death].compactMap { $0 }.max()
-    guard let floor else { return true }
-    if desired.version != floor { return desired.version > floor }
-
-    let current: SyncEnvelope
-    if death == floor {
-      current = SyncEnvelope(
-        entityType: .focusSchedule, entityId: desired.entityId,
-        operation: .delete, version: floor,
-        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-        payload: try SyncCanonicalize.canonicalizeJSON(
-          .object(["version": .string(floor.description)])),
-        deviceId: "local-equal-hlc")
-    } else {
-      let payload = try SyncCanonicalize.canonicalizeJSON(
-        OutboxEnqueue.readEntityPayloadSnapshot(
-          db, entityType: EntityName.focusSchedule, entityId: desired.entityId))
-      current = SyncEnvelope(
-        entityType: .focusSchedule, entityId: desired.entityId,
-        operation: .upsert, version: floor,
-        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-        payload: payload, deviceId: "local-equal-hlc")
-    }
-    let winner = try SyncMutationSemantics.deterministicWinner(current, desired)
-    return try SyncMutationSemantics.isExactSemanticReplay(winner, desired)
   }
 
   /// The deterministic cutover id is reserved for its base segment. A corrupt
@@ -410,12 +265,9 @@ enum CalendarSeriesCutoverCleanup {
       arguments: [decisionId])
     let deathVersion = existingVersion.map { maximumVersion(barrierVersion, $0) }
       ?? barrierVersion
-    var targets = try removeEventData(
-      db, eventId: decisionId, deathVersion: deathVersion, deletedAt: deletedAt)
-    targets += try removeFocusScheduleReferences(
-      db, eventIds: [decisionId], barrierVersion: deathVersion,
-      deletedAt: deletedAt)
-    return normalized(targets)
+    return normalized(
+      try removeEventData(
+        db, eventId: decisionId, deathVersion: deathVersion, deletedAt: deletedAt))
   }
 
   /// Remove every locally materialized payload owned by a deleted segment. The
@@ -435,22 +287,13 @@ enum CalendarSeriesCutoverCleanup {
         """,
       arguments: [cutoverId, cutoverId])
     var targets: [CalendarCleanupRepairTarget] = []
-    // The aggregate child is a soft reference and can arrive before its
-    // calendar-event row. Always include the deterministic segment identity so
-    // a deleted boundary also removes a focus block that references a segment
-    // whose base payload has not materialized locally yet.
-    var eventIds: [String] = [cutoverId]
     for row in rows {
       let eventId: String = row["id"]
       let eventVersion: String = row["version"]
       let deathVersion = maximumVersion(barrierVersion, eventVersion)
-      eventIds.append(eventId)
       targets += try removeEventData(
         db, eventId: eventId, deathVersion: deathVersion, deletedAt: deletedAt)
     }
-    targets += try removeFocusScheduleReferences(
-      db, eventIds: eventIds, barrierVersion: barrierVersion,
-      deletedAt: deletedAt)
     return normalized(targets)
   }
 
@@ -491,57 +334,8 @@ enum CalendarSeriesCutoverCleanup {
     return targets
   }
 
-  /// Remove canonical-event blocks owned by cleaned events. `focus_schedule` is
-  /// a synced aggregate, not a set of independently-synced blocks: retain and
-  /// re-emit the parent when blocks remain; otherwise delete/tombstone the empty
-  /// parent and propagate that Delete.
-  static func removeFocusScheduleReferences(
-    _ db: Database, eventIds: [String], barrierVersion: String, deletedAt: String
-  ) throws -> [CalendarCleanupRepairTarget] {
-    guard !eventIds.isEmpty else { return [] }
-    var dates = Set<String>()
-    for eventId in Set(eventIds) {
-      dates.formUnion(
-        try String.fetchAll(
-          db,
-          sql: "SELECT DISTINCT date FROM focus_schedule_blocks WHERE calendar_event_id = ?",
-          arguments: [eventId]))
-    }
-    var targets: [CalendarCleanupRepairTarget] = []
-    for date in dates.sorted() {
-      let headerVersion = try String.fetchOne(
-        db, sql: "SELECT version FROM focus_schedule WHERE date = ?",
-        arguments: [date])
-      for eventId in Set(eventIds) {
-        try db.execute(
-          sql: "DELETE FROM focus_schedule_blocks WHERE date = ? AND calendar_event_id = ?",
-          arguments: [date, eventId])
-      }
-      let remaining = try Int.fetchOne(
-        db,
-        sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE date = ?",
-        arguments: [date]) ?? 0
-      if remaining == 0 {
-        try db.execute(sql: "DELETE FROM focus_schedule WHERE date = ?", arguments: [date])
-        let deathVersion = headerVersion.map { maximumVersion(barrierVersion, $0) }
-          ?? barrierVersion
-        try Tombstone.createTombstone(
-          db, entityType: EntityName.focusSchedule, entityId: date,
-          version: deathVersion, deletedAt: deletedAt)
-        targets.append(
-          CalendarCleanupRepairTarget(
-            entityType: .focusSchedule, entityId: date, operation: .delete))
-      } else {
-        targets.append(
-          CalendarCleanupRepairTarget(
-            entityType: .focusSchedule, entityId: date, operation: .upsert))
-      }
-    }
-    return targets
-  }
-
-  /// Canonicalize a cleanup fan-out. Multiple removed events can touch the same
-  /// schedule; a Delete dominates an Upsert for the same final identity.
+  /// Canonicalize a cleanup fan-out. Multiple removals can touch the same
+  /// record; a Delete dominates an Upsert for the same final identity.
   static func normalized(
     _ targets: [CalendarCleanupRepairTarget]
   ) -> [CalendarCleanupRepairTarget] {

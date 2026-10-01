@@ -15,18 +15,28 @@ func appStoreCreatesTaskThroughSharedCapturePath() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
 
   await store.refresh()
-  store.draftTitle = "Captured from native quick capture"
-  store.draftNotes = "Shared by window, toolbar, and menu bar."
-  await store.createDraftTask()
+  store.selection = .tasks
+  store.selectedTaskID = nil
+  await store.createTask(
+    title: "Captured from native quick capture", notes: "Shared by palette and menu bar.")
 
-  #expect(store.selectedTask?.title == "Captured from native quick capture")
-  #expect(store.selectedTask?.notes == "Shared by window, toolbar, and menu bar.")
-  // Today keeps the canonical sort (priority first), so the new P2 capture
-  // lands in the pool but not necessarily at the top.
-  #expect(store.today.tasks.contains { $0.id == store.selectedTaskID })
-  #expect(store.selection == .today)
-  #expect(store.draftTitle == "")
-  #expect(store.draftNotes == "")
+  // Global capture files the thought in the inbox, undated, and leaves the user
+  // exactly where they were: no navigation and no selection change, so the toast
+  // is the confirmation that something happened.
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let captured = try #require(
+    open.tasks.first { $0.title == "Captured from native quick capture" })
+  #expect(captured.notes == "Shared by palette and menu bar.")
+  #expect(captured.plannedDate == nil)
+  #expect(captured.dueDate == nil)
+  #expect(!store.today.tasks.contains { $0.id == captured.id })
+  #expect(store.selection == .tasks)
+  #expect(store.selectedTaskID == nil)
+  let landedIn = try #require(store.lists?.lists.first { $0.id == captured.listID })
+  #expect(
+    store.toastMessage
+      == AppStore.captureToastMessage(count: 1, listName: landedIn.displayName))
   #expect(store.errorMessage == nil)
 }
 
@@ -42,43 +52,25 @@ func captureTitleParserKeepsOnlyTrimmedNonEmptyLines() {
 
 @MainActor
 @Test
-func appStoreCreatesMultipleTasksFromMultilineQuickCapture() async throws {
-  let store = AppStore(core: try await makeSeededInMemoryCore())
-
-  await store.refresh()
-  store.draftTitle = " First native batch task \n\nSecond native batch task "
-  store.draftNotes = "Captured from one quick-capture brain dump."
-  await store.createDraftTask()
-
-  let first = try #require(store.today.tasks.first { $0.title == "First native batch task" })
-  let second = try #require(store.today.tasks.first { $0.title == "Second native batch task" })
-  #expect(first.notes == "Captured from one quick-capture brain dump.")
-  #expect(second.notes == "Captured from one quick-capture brain dump.")
-  #expect(store.selectedTaskID == first.id)
-  #expect(store.draftTitle == "")
-  #expect(store.draftNotes == "")
-  #expect(store.errorMessage == nil)
-}
-
-@MainActor
-@Test
-func createTaskInInboxStaysOnCurrentSurfaceForInlineAdd() async throws {
+func inlineInboxAddStaysOnCurrentSurface() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
   await store.refresh()
   store.selection = .tasks
   store.selectedTaskID = nil
   let selectionBefore = store.selectedTaskID
 
-  await store.createTaskInInbox(title: "  Inline all-tasks add  ")
+  await store.createInlineTask("  Inline all-tasks add  ", destination: .inbox)
 
-  let created = store.today.tasks.first { $0.title == "Inline all-tasks add" }
-  // The inline all-tasks quick-add lands the task but stays in place: unlike
-  // the global capture it must not navigate to Today or select the new task,
-  // so consecutive Returns keep adding without yanking the view.
-  #expect(created != nil)
+  // The inline all-tasks quick-add lands the task in the inbox and stays in
+  // place, so consecutive Returns keep adding without yanking the view. No toast
+  // either: the workspace the user is looking at gains the row.
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Inline all-tasks add" })
   #expect(store.selection == .tasks)
   #expect(store.selectedTaskID == selectionBefore)
-  #expect(store.selectedTaskID != created?.id)
+  #expect(store.selectedTaskID != created.id)
+  #expect(store.toastMessage == nil)
   #expect(store.errorMessage == nil)
 }
 
@@ -92,4 +84,167 @@ func requestQuickAddFocusBumpsTokenMonotonically() async throws {
   store.requestQuickAddFocus()
 
   #expect(store.quickAddFocusToken == start + 2)
+}
+
+@MainActor
+@Test
+func inlineAddReadsDetailsOutOfTheTypedLine() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let list = try #require(store.orderedLists.first)
+  let hashName = list.name.filter { $0.isLetter || $0.isNumber }
+  let line = "Call the caterer tomorrow 25 min by friday !! #\(hashName) #food"
+
+  let preview = store.quickAddPreview(line)
+  #expect(preview.title == "Call the caterer")
+  #expect(preview.words.map(\.id) == ["when", "length", "due", "list", "priority", "tag.food"])
+
+  // A day written in the line overrides the Today destination's default day.
+  await store.createInlineTask(line, destination: .today)
+
+  #expect(store.errorMessage == nil)
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Call the caterer" })
+  let parse = store.captureParse(line)
+  let dueOffset = try #require(parse.dueDayOffset)
+  #expect(created.plannedDate == (try store.storageDate(daysFromLogicalToday: 1)))
+  #expect(created.dueDate == (try store.storageDate(daysFromLogicalToday: dueOffset)))
+  #expect(created.estimatedMinutes == 25)
+  #expect(created.priority == .p1)
+  #expect(created.listID == list.id)
+  #expect(created.tags == ["food"])
+  #expect(created.rawInput == line)
+}
+
+@MainActor
+@Test
+func inlineAddWithoutDetailsKeepsTheDestinationDefaults() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+
+  #expect(store.quickAddPreview("Water the plants") == .empty)
+  await store.createInlineTask("Water the plants", destination: .today)
+
+  let created = try #require(store.today.tasks.first { $0.title == "Water the plants" })
+  #expect(created.plannedDate == (try store.storageDate(daysFromLogicalToday: 0)))
+  #expect(created.rawInput == nil)
+  #expect(created.priority == .p2)
+}
+
+/// Store state observed from inside the stub core's `listTasks` gate, i.e.
+/// during the bulk surface reads of the post-create fan-out (Spotlight,
+/// reminders, badge) and, when the task workspace is loaded, its reload.
+@MainActor
+private final class CaptureFanOutProbe {
+  var busyFlags: [Bool] = []
+  var feedbackSeen: [Bool] = []
+  var toastSeen: [Bool] = []
+}
+
+@MainActor
+@Test("quick capture releases the busy flag and confirms before the fan-out")
+func quickCaptureReleasesBusyFlagBeforeFanOut() async throws {
+  let feedback = RecordingFeedbackProvider()
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core, feedbackProvider: feedback)
+  await store.refresh()
+  let probe = CaptureFanOutProbe()
+  core.listTasksGate = {
+    await MainActor.run {
+      probe.busyFlags.append(store.isCreating)
+      probe.feedbackSeen.append(feedback.recorded.contains(.captureSubmitted))
+      probe.toastSeen.append(store.toastMessage != nil)
+    }
+  }
+
+  await store.createTask(title: "Gate probe capture", notes: "")
+
+  // The fan-out ends with a sync cycle that can run for as long as CloudKit
+  // takes, so the capture must already be released and confirmed by the time the
+  // fan-out's first bulk read runs (the workspace is not loaded here, so every
+  // `listTasks` call belongs to the fan-out).
+  #expect(!probe.busyFlags.isEmpty)
+  #expect(probe.busyFlags.allSatisfy { !$0 })
+  #expect(probe.feedbackSeen.allSatisfy { $0 })
+  #expect(probe.toastSeen.allSatisfy { $0 })
+  #expect(store.isCreating == false)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test("inline adds typed back to back all land, in order, and never raise the create flag")
+func inlineAddsTypedBackToBackAllLand() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  // A loaded workspace makes each commit's reconcile read through `listTasks`
+  // too, so the gate observes the flag during the commit as well as the fan-out.
+  await store.loadTaskWorkspace()
+  #expect(store.taskWorkspaceHasLoaded)
+  let probe = CaptureFanOutProbe()
+  core.listTasksGate = {
+    await MainActor.run { probe.busyFlags.append(store.isCreating) }
+  }
+
+  // Two Returns before the first line has finished committing: the row stays
+  // enabled (the flag never rises) and neither line is dropped. Main-actor
+  // tasks start in the order they are created, as two keystrokes arrive;
+  // `async let` children hop to the main actor in no guaranteed order.
+  let first = Task { await store.createInlineTask("Back-to-back one", destination: .inbox) }
+  let second = Task { await store.createInlineTask("Back-to-back two", destination: .inbox) }
+  _ = await (first.value, second.value)
+
+  let open = try await core.preview.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  #expect(open.tasks.contains { $0.title == "Back-to-back one" })
+  #expect(open.tasks.contains { $0.title == "Back-to-back two" })
+  #expect(core.createdTaskTitles == ["Back-to-back one", "Back-to-back two"])
+  #expect(store.taskWorkspaceAllTasks.contains { $0.title == "Back-to-back two" })
+  #expect(!probe.busyFlags.isEmpty)
+  #expect(probe.busyFlags.allSatisfy { !$0 })
+  #expect(store.isCreating == false)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
+func inlineAddWithOnlyAClockTimePlansTodayAtThatTime() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let line = "Dentist 4pm 45 min"
+
+  // The span replaces the separate length word.
+  #expect(store.quickAddPreview(line).words.map(\.id) == ["when", "time"])
+
+  // The inbox destination leaves a dayless line undated, but a time needs a day.
+  await store.createInlineTask(line, destination: .inbox)
+
+  #expect(store.errorMessage == nil)
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Dentist" })
+  #expect(created.plannedDate == (try store.storageDate(daysFromLogicalToday: 0)))
+  #expect(created.plannedTime == (16 * 60)..<(16 * 60 + 45))
+  #expect(created.estimatedMinutes == 45)
+}
+
+@MainActor
+@Test
+func inlineAddCreatesARepeatingTaskOnItsFirstOccurrence() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let line = "Water the plants every day"
+
+  #expect(store.quickAddPreview(line).words.map(\.id) == ["repeats", "due"])
+
+  await store.createInlineTask(line, destination: .inbox)
+
+  #expect(store.errorMessage == nil)
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Water the plants" })
+  #expect(created.recurrence?.freq == .daily)
+  #expect(created.dueDate == (try store.storageDate(daysFromLogicalToday: 0)))
+  #expect(created.plannedDate == nil)
 }

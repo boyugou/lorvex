@@ -16,8 +16,7 @@ extension LorvexDataExportServicing {
   ) async throws -> String {
     let exportFormat: LorvexDataExportFormat = format == "csv" ? .csv : .json
     let snapshot = try await loadSnapshotForDataExport(
-      entities: entities, forAI: false,
-      includeNativeTaskGraph: exportFormat == .json)
+      entities: entities, includeNativeTaskGraph: exportFormat == .json)
     var payload = snapshot.payload
     if exportFormat == .json {
       payload.manifest = makeExportManifest(
@@ -27,16 +26,14 @@ extension LorvexDataExportServicing {
     return try LorvexDataExporter.render(payload: payload, format: exportFormat)
   }
 
-  /// AI-facing counterpart to ``exportData(entities:format:)``. Only the focus
-  /// schedule loader differs: it applies the device's calendar AI-access tier,
-  /// so `off` cannot be bypassed by asking MCP for a data export. Human-initiated
-  /// Settings/App-Intent backups continue to use the complete export above.
+  /// AI-facing counterpart to ``exportData(entities:format:)``: the same
+  /// categories, never with the native task graph.
   public func exportDataForAI(
     entities: [String], format: String, appVersion: String?, generatedAt: String?
   ) async throws -> String {
     let exportFormat: LorvexDataExportFormat = format == "csv" ? .csv : .json
     let snapshot = try await loadSnapshotForDataExport(
-      entities: entities, forAI: true, includeNativeTaskGraph: false)
+      entities: entities, includeNativeTaskGraph: false)
     var payload = snapshot.payload
     if exportFormat == .json {
       payload.manifest = makeExportManifest(
@@ -66,8 +63,7 @@ extension LorvexDataExportServicing {
       count(.calendarEvents, payload.calendarEvents?.count ?? 0)
     }
     count(.dailyReviews, payload.dailyReviews?.count)
-    count(.currentFocus, payload.currentFocus?.count)
-    count(.focusSchedules, payload.focusSchedules?.count)
+    count(.dailyBriefings, payload.dailyBriefings?.count)
     count(.taskCalendarEventLinks, payload.taskCalendarEventLinks?.count)
     count(.memory, payload.memory?.count)
     count(.preferences, payload.preferences?.count)
@@ -95,7 +91,7 @@ extension LorvexDataExportServicing {
     appVersion: String?
   ) async throws -> Data {
     let snapshot = try await loadSnapshotForDataExport(
-      entities: entities, forAI: false, includeNativeTaskGraph: true)
+      entities: entities, includeNativeTaskGraph: true)
 
     return try LorvexDataExporter.renderZip(
       payload: snapshot.payload,
@@ -108,9 +104,9 @@ extension LorvexDataExportServicing {
   /// independent protocol reads is not a backup snapshot and can duplicate,
   /// omit, or cross-wire aggregates while another process writes the store.
   public func loadSnapshotForDataExport(
-    entities: [String], forAI: Bool, includeNativeTaskGraph: Bool
+    entities: [String], includeNativeTaskGraph: Bool
   ) async throws -> LorvexDataExportSnapshot {
-    _ = (entities, forAI, includeNativeTaskGraph)
+    _ = (entities, includeNativeTaskGraph)
     throw LorvexCoreError.unsupportedOperation(
       "This core backend does not provide transactionally consistent data export.")
   }

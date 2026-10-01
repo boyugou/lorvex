@@ -63,6 +63,39 @@ extension MobileStore {
     }
   }
 
+  /// Save an edit made in the modal editor sheet, which owns its own draft rather
+  /// than the shared new-entry draft (`memoryKeyDraft`/`memoryContentDraft`).
+  /// Keeping the two separate means opening the editor for an existing entry never
+  /// clobbers text the user left half-typed in the New Memory sheet. Editing under
+  /// a new key is an atomic rename (one in-place record edit), not an
+  /// upsert-new-then-delete-old pair.
+  @discardableResult
+  public func saveMemoryEntryEdit(originalKey: String, newKey: String, content: String) async -> Bool
+  {
+    let trimmedKey = newKey.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedKey.isEmpty, !trimmedContent.isEmpty, !isSavingMemory else { return false }
+    isSavingMemory = true
+    defer { isSavingMemory = false }
+    do {
+      let saved: MemoryEntry
+      if originalKey != trimmedKey {
+        saved = try await core.renameMemory(
+          oldKey: originalKey, newKey: trimmedKey, content: trimmedContent)
+      } else {
+        saved = try await core.upsertMemory(key: trimmedKey, content: trimmedContent)
+      }
+      memory = try await core.loadMemory()
+      selectedMemoryKey = saved.id
+      errorMessage = nil
+      feedbackProvider.playFeedback(.contentSaved)
+      return true
+    } catch {
+      await presentUserFacingError(error)
+      return false
+    }
+  }
+
   @discardableResult
   public func deleteMemoryEntry(_ entry: MemoryEntry) async -> Bool {
     guard !isSavingMemory else { return false }

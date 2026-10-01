@@ -31,6 +31,14 @@ extension MobileStore {
     return result
   }
 
+  /// Complete `task`, or reopen it when it is already done. The freshest
+  /// loaded copy decides which, since a calendar block may carry an older one.
+  @discardableResult
+  public func toggleTaskCompletion(_ task: LorvexTask) async -> Bool {
+    let isDone = (resolveTask(task.id) ?? task).status == .completed
+    return isDone ? await reopenTask(task.id) : await completeTask(task.id)
+  }
+
   /// Start a task (`open → in_progress`) — put the "In Progress" marker on.
   /// A dependency-blocked start surfaces the core's typed error.
   @discardableResult
@@ -42,10 +50,10 @@ extension MobileStore {
     return result
   }
 
-  /// Remove the "In Progress" marker (`in_progress → open`, "Mark as Not
-  /// Started"). Leaves planned_date / defer_count intact.
+  /// Pause a started task (`in_progress → open`). Its planned date, time, and
+  /// defer count stay as they are.
   @discardableResult
-  public func markTaskNotStarted(_ id: LorvexTask.ID) async -> Bool {
+  public func pauseTask(_ id: LorvexTask.ID) async -> Bool {
     let result = await mutateTaskReturningToday(id: id) {
       try await core.pauseTask(id: id)
     }
@@ -53,10 +61,11 @@ extension MobileStore {
     return result
   }
 
+  /// Move a task to the product day `days` days after today.
   @discardableResult
-  public func deferTaskToTomorrow(_ id: LorvexTask.ID) async -> Bool {
+  public func deferTask(_ id: LorvexTask.ID, byDays days: Int) async -> Bool {
     let didMutate = await mutateTaskReturningToday(id: id) {
-      try await core.deferTask(id: id, until: tomorrowDate())
+      try await core.deferTask(id: id, until: storageDate(daysFromToday: days))
     }
     if didMutate {
       feedbackProvider.playFeedback(.taskDeferred)
@@ -109,7 +118,7 @@ extension MobileStore {
     let uniqueIDs = stableUniqueTaskIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
     let didMutate = await mutateTaskReturningToday {
-      try await core.batchDeferTasks(ids: uniqueIDs, until: tomorrowDate())
+      try await core.batchDeferTasks(ids: uniqueIDs, until: storageDate(daysFromToday: 1))
     }
     if didMutate {
       feedbackProvider.playFeedback(.taskDeferred)
@@ -122,17 +131,38 @@ extension MobileStore {
     return ids.filter { seen.insert($0).inserted }
   }
 
-  /// The configured product day's tomorrow as a storage-frame date. This stays
-  /// stable when the iPhone's current zone differs from the synced product zone.
-  private func tomorrowDate() throws -> Date {
+  /// The product day `days` days after today as a storage-frame date. This
+  /// stays stable when the iPhone's current zone differs from the synced
+  /// product zone.
+  private func storageDate(daysFromToday days: Int) throws -> Date {
     guard
-      let tomorrow = PlannedDayBridge.storageDate(
-        forLogicalDay: logicalTodayString,
-        addingDays: 1)
+      let date = PlannedDayBridge.storageDate(forLogicalDay: logicalTodayString, addingDays: days)
     else {
-      throw LorvexCoreError.unsupportedOperation("Couldn't compute tomorrow's date.")
+      throw LorvexCoreError.unsupportedOperation("Couldn't compute the deferred day.")
     }
-    return tomorrow
+    return date
+  }
+
+  /// The row actions for task `id` (``MobileTaskRowActions``). `afterSuccess`
+  /// runs after an action that changed the task, for a host page that reloads
+  /// itself, such as a scoped Tasks workspace (a list's screen among them).
+  func rowActions(
+    for id: LorvexTask.ID, afterSuccess: (@MainActor () async -> Void)? = nil
+  ) -> MobileTaskRowActions {
+    func then(_ action: @escaping @MainActor () async -> Bool) -> () async -> Void {
+      {
+        guard await action(), let afterSuccess else { return }
+        await afterSuccess()
+      }
+    }
+    return MobileTaskRowActions(
+      complete: then { await self.completeTask(id) },
+      start: then { await self.startTask(id) },
+      pause: then { await self.pauseTask(id) },
+      deferByDays: { days in
+        guard await self.deferTask(id, byDays: days), let afterSuccess else { return }
+        await afterSuccess()
+      })
   }
 
   public func planTask(_ id: LorvexTask.ID, on day: Date) async {

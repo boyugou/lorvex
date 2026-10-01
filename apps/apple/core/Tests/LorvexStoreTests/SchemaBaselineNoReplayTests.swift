@@ -13,13 +13,13 @@ import XCTest
 /// baseline plus its stamped bookkeeping row.
 final class SchemaBaselineNoReplayTests: XCTestCase {
 
-  /// The core H6 guard. A shipped destructive migration drops the indexes over
-  /// `tasks.planned_date` and then the `planned_date` column.
+  /// The core H6 guard. A shipped destructive migration drops the index over
+  /// `tasks.available_from` and then the `available_from` column.
   /// Replaying the baseline on the next open would re-run
-  /// `CREATE INDEX IF NOT EXISTS idx_tasks_planned_date ON tasks(planned_date)`
-  /// and fail with `no such column: planned_date` → `SQLITE_ERROR` → the healthy
-  /// DB gets quarantined into an empty app. Proving the reopen is clean proves
-  /// the baseline replay is gone.
+  /// `CREATE INDEX IF NOT EXISTS idx_tasks_available_from ON tasks(available_from)`
+  /// and fail with `no such column: available_from` → `SQLITE_ERROR` → the
+  /// healthy DB gets quarantined into an empty app. Proving the reopen is clean
+  /// proves the baseline replay is gone.
   func testVersionedDatabaseWithDroppedColumnReopensWithoutBaselineReplayOrQuarantine() throws {
     let dir = Self.makeTempDir("lorvex-noreplay")
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -35,9 +35,8 @@ final class SchemaBaselineNoReplayTests: XCTestCase {
     // index, then the column it indexed. The bookkeeping row stays at v1 (the
     // ladder is empty here), so the reopen takes the verify-and-stop path.
     try first.writer.write { db in
-      try db.execute(sql: "DROP INDEX idx_tasks_action_date_actionable")
-      try db.execute(sql: "DROP INDEX idx_tasks_planned_date")
-      try db.execute(sql: "ALTER TABLE tasks DROP COLUMN planned_date")
+      try db.execute(sql: "DROP INDEX idx_tasks_available_from")
+      try db.execute(sql: "ALTER TABLE tasks DROP COLUMN available_from")
     }
     try first.writer.close()
 
@@ -52,14 +51,14 @@ final class SchemaBaselineNoReplayTests: XCTestCase {
       try Row.fetchAll(db, sql: "PRAGMA table_info(tasks)").map { $0["name"] as String }
     }
     XCTAssertFalse(
-      columns.contains("planned_date"),
-      "the baseline must not be replayed — a resurrected planned_date would prove it was")
+      columns.contains("available_from"),
+      "the baseline must not be replayed — a resurrected available_from would prove it was")
 
     let indexExists = try reopened.writer.read { db in
       try Bool.fetchOne(
         db,
         sql: "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='index' AND name=?)",
-        arguments: ["idx_tasks_planned_date"]) ?? false
+        arguments: ["idx_tasks_available_from"]) ?? false
     }
     XCTAssertFalse(
       indexExists, "the baseline's CREATE INDEX must not have re-run on the versioned reopen")

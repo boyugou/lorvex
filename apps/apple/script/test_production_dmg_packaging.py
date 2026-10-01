@@ -529,7 +529,7 @@ class ProductionDMGScriptContractTests(unittest.TestCase):
                                 app
                                 / "Contents"
                                 / "PlugIns"
-                                / "LorvexFocusWidget.appex"
+                                / "LorvexWidgets.appex"
                             ),
                             "procinfoSupported": False,
                             "verifiedAt": "2026-07-21T12:01:00Z",
@@ -542,7 +542,7 @@ class ProductionDMGScriptContractTests(unittest.TestCase):
                         / "Group Containers"
                         / "group.com.lorvex.apple"
                         / "Lorvex"
-                        / "widget_snapshot_v3.json"
+                        / "widget_snapshot.json"
                     )
                     content = json.dumps(
                         {
@@ -715,9 +715,8 @@ class ProductionInstalledAppRuntimeDecisionTests(unittest.TestCase):
         clean = {
             "generated_at": "2026-07-21T12:00:01Z",
             "storage_generation": 6,
-            "focus_tasks": [],
+            "tasks": [],
             "habits": [],
-            "today_tasks": [],
             "lists": [{"id": "inbox", "name": "Inbox"}],
         }
         self.assertIsNone(clean_widget_snapshot_failure(clean, 6, reset_at))
@@ -727,9 +726,9 @@ class ProductionInstalledAppRuntimeDecisionTests(unittest.TestCase):
             "does not match",
             clean_widget_snapshot_failure(stale, 6, reset_at) or "",
         )
-        smoke = dict(clean, today_tasks=[{"title": "Smoke-test Swift MCP host"}])
+        smoke = dict(clean, tasks=[{"title": "Smoke-test Swift MCP host"}])
         self.assertIn(
-            "today_tasks",
+            "tasks rows",
             clean_widget_snapshot_failure(smoke, 6, reset_at) or "",
         )
 
@@ -775,7 +774,7 @@ class ProductionInstalledAppRuntimeDecisionTests(unittest.TestCase):
 
     def test_plugin_registration_requires_the_exact_installed_appex_path(self) -> None:
         installed_widget = Path(
-            "/Applications/Lorvex.app/Contents/PlugIns/LorvexFocusWidget.appex"
+            "/Applications/Lorvex.app/Contents/PlugIns/LorvexWidgets.appex"
         )
         output = (
             "     com.example.other(1.0)\tUUID\t/date\t/Elsewhere/Other.appex\n"
@@ -792,7 +791,7 @@ class ProductionInstalledAppRuntimeDecisionTests(unittest.TestCase):
             matching_plugin_path(
                 output,
                 "com.lorvex.apple.focuswidget",
-                Path("/tmp/Lorvex.app/Contents/PlugIns/LorvexFocusWidget.appex"),
+                Path("/tmp/Lorvex.app/Contents/PlugIns/LorvexWidgets.appex"),
             )
         )
 

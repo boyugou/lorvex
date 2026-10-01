@@ -9,15 +9,15 @@ Last verified: 2026-07-10
 ## Recommended Release Baseline
 
 - Build and submit with the current Xcode 26 toolchain and version 26 SDKs.
-- Set the intended minimum generation to macOS 15, iOS/iPadOS 18, watchOS 11,
-  and visionOS 2.
+- Set the intended minimum generation to macOS 15, iOS/iPadOS 18, and
+  watchOS 11.
 - Treat arm64 as the primary/default Mac artifact. A universal artifact may
   remain an optional secondary deliverable, but it should not force product or
   test compatibility decisions for Intel hardware.
 - Keep OS 26 features behind a small, centralized availability layer until the
   version-15/18 generation is retired.
 
-The repository now declares macOS 15, iOS 18, watchOS 11, and visionOS 2 in its
+The repository now declares macOS 15, iOS 18, and watchOS 11 in its
 Swift packages, XcodeGen deployment settings, and relevant static Info plists.
 
 ## SDK Versus Minimum OS
@@ -77,7 +77,7 @@ The concrete one-binary/App-Store behavior is documented in
 ## Current Sources of Version Truth
 
 The present floor is duplicated across both `Package.swift` files, XcodeGen's
-`deploymentTarget`, static mobile/vision Info plists, the MCP helper Info plist,
+`deploymentTarget`, static mobile Info plists, the MCP helper Info plist,
 and `script/app_metadata.sh`. A release change must explicitly prove parity
 across all of these locations.
 

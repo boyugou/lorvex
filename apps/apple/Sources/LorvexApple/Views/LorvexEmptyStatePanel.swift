@@ -1,6 +1,17 @@
 import LorvexCore
 import SwiftUI
 
+/// The shared empty state: an icon tile, a title, a message, optional chips,
+/// and an optional action. The `.panel` style is a card sized to its content
+/// and centered in the space its host offers; the `.inline` style is a
+/// borderless block on the leading edge, for states inside a list or form.
+///
+/// Either style fills the height it is offered and never asks for more. A
+/// split view sizes its columns by probing their content at widths near zero,
+/// where the wrapped message reports a height of one character per line; a
+/// minimum height of zero keeps that probe from making the pane, and with it
+/// the window, taller than the screen. Hosts can therefore place the view
+/// directly in a stack under a header, or over a scroll view as an overlay.
 struct LorvexEmptyStatePanel<Action: View>: View {
   let title: String
   let message: String
@@ -30,66 +41,62 @@ struct LorvexEmptyStatePanel<Action: View>: View {
 
   var body: some View {
     VStack {
-      HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-        ZStack {
-          RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-            .fill(tint.opacity(0.12))
-          LorvexListIconView(
-            icon: systemImage,
-            tint: tint,
-            size: 24,
-            font: .system(size: 18, weight: .semibold)
-          )
-        }
-        .frame(width: iconSize, height: iconSize)
-
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-            Text(title)
-              .font(LorvexDesign.Typography.primaryEmphasis)
-            Text(message)
-              .font(LorvexDesign.Typography.secondaryText)
-              .foregroundStyle(.secondary)
-              .fixedSize(horizontal: false, vertical: true)
-          }
-
-          if !chips.isEmpty {
-            LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
-              ForEach(chips) { chip in
-                HStack(spacing: 5) {
-                  LorvexListIconView(
-                    icon: chip.systemImage,
-                    tint: chip.tint,
-                    size: 14,
-                    font: LorvexDesign.Typography.tertiaryText.weight(.medium)
-                  )
-                  Text(chip.title)
-                    .lineLimit(1)
-                }
-                  .font(LorvexDesign.Typography.tertiaryText)
-                  .foregroundStyle(.secondary)
-                  .padding(.horizontal, LorvexDesign.Spacing.s)
-                  .padding(.vertical, LorvexDesign.Spacing.xs)
-                  .background(chip.tint.opacity(0.12), in: Capsule())
-              }
-            }
-          }
-
-          action()
-            .controlSize(.small)
+      Group {
+        switch style {
+        case .panel:
+          content.lorvexInsetPanel(padding: contentPadding, hugsContent: true)
+        case .inline:
+          content.padding(contentPadding)
         }
       }
-      .padding(contentPadding)
-      .frame(maxWidth: maxContentWidth, alignment: .leading)
-      .background(panelBackground)
-      .overlay(panelBorder)
+      .frame(maxWidth: maxContentWidth, alignment: contentAlignment)
       .accessibilityIdentifier("lorvex.emptyState.panel")
     }
     // Padding belongs inside the fill frame. If it is applied after the
     // maxHeight frame, the view reports "parent height + padding" to stacks and
-    // can push sibling headers/editors out of clipped split-view panes.
+    // can push sibling headers/editors out of clipped split-view panes. With
+    // both a minimum and a maximum, the frame takes exactly the height it is
+    // offered instead of its content's height when that is larger.
     .padding(outerPadding)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .frame(maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+  }
+
+  private var content: some View {
+    HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
+      ZStack {
+        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
+          .fill(tint.opacity(0.12))
+        LorvexListIconView(
+          icon: systemImage,
+          tint: tint,
+          size: 24,
+          font: .system(size: 18, weight: .semibold)
+        )
+      }
+      .frame(width: iconSize, height: iconSize)
+
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+          Text(title)
+            .font(LorvexDesign.Typography.primaryEmphasis)
+          Text(message)
+            .font(LorvexDesign.Typography.secondaryText)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+
+        if !chips.isEmpty {
+          LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
+            ForEach(chips) { chip in
+              LorvexChip(chip.title, systemImage: chip.systemImage, tint: chip.tint)
+            }
+          }
+        }
+
+        action()
+          .controlSize(.small)
+      }
+    }
   }
 
   private var iconSize: CGFloat {
@@ -106,6 +113,16 @@ struct LorvexEmptyStatePanel<Action: View>: View {
     }
   }
 
+  /// A panel hugs its content and centers in the pane, so a short message
+  /// does not sit in a wide, mostly empty card; an inline state keeps the
+  /// leading edge of the rows around it.
+  private var contentAlignment: Alignment {
+    switch style {
+    case .panel: .center
+    case .inline: .leading
+    }
+  }
+
   private var maxContentWidth: CGFloat {
     switch style {
     case .panel: 640
@@ -117,28 +134,6 @@ struct LorvexEmptyStatePanel<Action: View>: View {
     switch style {
     case .panel: LorvexDesign.Spacing.xl
     case .inline: LorvexDesign.Spacing.l
-    }
-  }
-
-  @ViewBuilder
-  private var panelBackground: some View {
-    switch style {
-    case .panel:
-      RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-        .fill(.thinMaterial)
-    case .inline:
-      Color.clear
-    }
-  }
-
-  @ViewBuilder
-  private var panelBorder: some View {
-    switch style {
-    case .panel:
-      RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-        .stroke(.separator.opacity(0.55), lineWidth: 0.5)
-    case .inline:
-      EmptyView()
     }
   }
 }
@@ -170,12 +165,15 @@ struct LorvexEmptyStateActionSlot: View {
 
   var body: some View {
     if let action {
-      Button {
+      let button = Button {
         action.handler()
       } label: {
         Label(action.title, systemImage: action.systemImage)
       }
-      .buttonStyle(action.style == .primary ? .lorvexPrimary : .lorvexSecondary)
+      switch action.style {
+      case .primary: button.buttonStyle(.borderedProminent)
+      case .secondary: button.buttonStyle(.bordered)
+      }
     }
   }
 }

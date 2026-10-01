@@ -54,7 +54,9 @@ class McpStdioSmokeSafetyTests(unittest.TestCase):
             ):
                 mcp_stdio_smoke.signed_entitlements(binary)
 
-    def test_sandboxed_binary_without_cli_opt_in_never_reaches_reset(self) -> None:
+    def test_sandboxed_binary_without_destructive_opt_in_skips_without_side_effects(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             binary = Path(tmp) / "LorvexMCPHost"
             binary.touch(mode=0o755)
@@ -72,11 +74,11 @@ class McpStdioSmokeSafetyTests(unittest.TestCase):
                 ) as isolation,
                 mock.patch.object(mcp_stdio_smoke, "run_smoke") as run_smoke,
             ):
-                with self.assertRaisesRegex(
-                    mcp_stdio_smoke.McpSmokeFailure,
-                    "refusing to launch a sandboxed MCP helper",
-                ):
-                    mcp_stdio_smoke.main([])
+                # Skips rather than fails: the check is unrunnable without erasing
+                # real data, so a gate that cannot opt in must still be able to
+                # finish. The property that matters is that nothing destructive is
+                # reached.
+                self.assertEqual(mcp_stdio_smoke.main([]), 0)
             isolation.assert_not_called()
             run_smoke.assert_not_called()
 
@@ -190,7 +192,7 @@ class McpStdioSmokeSafetyTests(unittest.TestCase):
                 with mcp_stdio_smoke.real_app_group_smoke_isolation(
                     Path("/release/LorvexMCPHost"),
                     "group.com.lorvex.apple",
-                    ("Lorvex", "LorvexMCPHost", "LorvexFocusWidget"),
+                    ("Lorvex", "LorvexMCPHost", "LorvexWidgets"),
                 ) as (db_path, environment):
                     self.assertEqual(db_path, expected_db)
                     self.assertEqual(environment, {})
@@ -209,7 +211,7 @@ class McpStdioSmokeSafetyTests(unittest.TestCase):
             marker.write_text('{"generation":7,"updatedAt":"old"}', encoding="utf-8")
             for suffix in ("", "-wal", "-shm", ".install-identity"):
                 Path(str(db) + suffix).write_text("private", encoding="utf-8")
-            (directory / "widget_snapshot_v3.json").write_text(
+            (directory / "widget_snapshot.json").write_text(
                 "private", encoding="utf-8"
             )
             nested = directory / "future-private-sidecar"

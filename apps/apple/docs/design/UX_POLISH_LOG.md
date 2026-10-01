@@ -1,286 +1,241 @@
-# Apple UX Polish — Working Log
+# Apple UX Polish — Design Rationale
 
-Design-decision record for code-level product/visual/interaction polish across
-the Apple platforms. Complements [`SURFACE_DESIGN.md`](../SURFACE_DESIGN.md) (the
-per-platform *spec* — the intended end state) with the **analysis** and
-**decisions + rationale** behind non-obvious choices, recorded because
-pixel-level visual confirmation happens on-device, after the code lands. When a
-decision here is later visually confirmed or revised, note it.
+Why the non-obvious product, visual, and interaction choices on the Apple
+surfaces are what they are. It complements two neighbours:
+[`SURFACE_DESIGN.md`](../SURFACE_DESIGN.md) states the intended end state per
+platform, and [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) states the color, type, and
+component contract. This file holds the reasoning that neither of those records
+— the judgment calls a reader would otherwise have to reconstruct from a diff.
 
-This file holds **rationale**, not a changelog — shipped work lives in git
-history. The live, evidence-backed open backlog (with `file:line`) is
-[`POLISH_BACKLOG.md`](POLISH_BACKLOG.md); as-built layout wireframes are in
-[`wireframes/`](wireframes/INDEX.md).
+It is not a changelog. Shipped work lives in git history. The open, evidence
+backed, code-level findings live in [`POLISH_BACKLOG.md`](POLISH_BACKLOG.md),
+and as-built layout wireframes in [`wireframes/`](wireframes/INDEX.md).
 
 ## Priorities
 
-1. **macOS + iOS** — the two primary surfaces; polish these first.
-2. **iPadOS** — thoughtful, iPad-native design (see principles below). Do NOT
-   port the macOS layout verbatim.
-3. watchOS · visionOS · CarPlay · Widgets — after the above.
+1. **macOS and iOS** — the two primary surfaces; polish these first.
+2. **iPadOS** — iPad-native design (principles below), never the macOS layout
+   ported verbatim.
+3. watchOS, CarPlay, and widgets after the above.
 
-## iPad-native design principles (not "macOS on a touchscreen")
+## iPad-native design principles
 
-iPad differs from a Mac in ways the layout must honor — never blindly mirror the
-desktop Mac shell:
+iPad differs from a Mac in ways the layout has to honor:
 
-- **Orientation is first-class.** iPad rotates between **portrait** and
-  **landscape** at runtime. Portrait is much narrower: a Mac-style
-  sidebar + content-list + detail (3 columns) is cramped in portrait and should
-  collapse (e.g. sidebar as an overlay/`.automatic` column visibility, or a
-  2-column list+detail) while landscape can show more columns. Verify both
-  orientations; don't assume a single fixed column count.
-- **Size class ≠ device.** Multitasking (Split View / Slide Over / Stage
-  Manager) changes `horizontalSizeClass` to `.compact` at runtime even on a
-  large iPad. The shell already switches tab-bar (compact) ↔ sidebar (regular)
-  on `horizontalSizeClass` — good; keep every iPad layout driven by size class,
-  not device idiom, so a half-screen iPad window degrades gracefully.
-- **Dual input.** Touch targets stay ≥44pt AND pointer affordances (hover
-  highlights, `.pointerStyle`, context menus) and hardware-keyboard shortcuts
-  all coexist. Don't drop touch ergonomics to gain Mac-like density.
-- **Canvas, not stretch.** Use the width for genuinely useful secondary content
-  (list+detail, inspectors), not a stretched single column.
-- **Drag-and-drop + multi-select** are expected iPad idioms for a task app.
+- **Orientation is first-class.** iPad rotates between portrait and landscape at
+  runtime. Portrait is much narrower, so a Mac-style sidebar, content list, and
+  detail (three columns) is cramped there and should collapse — the sidebar as
+  an overlay through `.automatic` column visibility, or a two-column list and
+  detail — while landscape can afford more columns. Verify both orientations
+  rather than assuming a fixed column count.
+- **Size class is not device.** Split View, Slide Over, and Stage Manager set
+  `horizontalSizeClass` to `.compact` at runtime even on a large iPad. The shell
+  switches between the tab bar (compact) and the sidebar (regular) on the size
+  class, so a half-screen iPad window degrades gracefully. Keep every iPad
+  layout driven by size class, never by device idiom.
+- **Dual input.** Touch targets stay at least 44 points while pointer
+  affordances (hover highlights, `.pointerStyle`, context menus) and hardware
+  keyboard shortcuts coexist. Density gained by dropping touch ergonomics is not
+  worth having.
+- **Canvas, not stretch.** Spend the extra width on genuinely useful secondary
+  content — list and detail, inspectors — not on a stretched single column.
+- **Drag and drop plus multi-select** are expected iPad idioms for a task app,
+  which is why Tasks, Habits, Lists, and Memory each carry a selection mode with
+  a batch action bar rather than row-at-a-time actions alone.
 
-## Decisions log
+## Standing decisions
 
-### 2026-06-02 — localization expansion source resolution
-- **The Apple localization expansion pipeline cannot assume one checkout
-  layout.** `localization_expand.py` now resolves Tauri locale catalogs through
-  `LORVEX_TAURI_LOCALES`, the intended monorepo path, or the sibling
-  `lorvex_original` checkout used by this workspace. Seed still only reuses
-  exact, unambiguous English matches and excludes `%` placeholder strings.
-- **InfoPlist strings are part of the same batch contract.** The expansion
-  script now emits and applies missing `InfoPlist.strings` entries per shipping
-  target, so usage descriptions and quick-action titles travel with the same
-  translation artifact as `.xcstrings`.
-- **Translator handoff should be one artifact per language batch.**
-  `translation-pack` now emits catalog gaps, occurrence metadata, InfoPlist
-  gaps, and output-format instructions together. This makes each locale batch
-  reproducible: seed, generate pack, apply the translated response with
-  `apply-pack`, then run the localization verifier.
-- **Validate the whole translation response before writing either side.**
-  `apply-pack` catches unknown languages/targets, empty strings, missing
-  metadata-declared translations, and printf placeholder drift across both
-  `.xcstrings` and InfoPlist payloads before it mutates either surface.
+### Regular width mirrors the phone, laid out for the width
 
-### 2026-06-02 — iPad Lists batch deletion
-- **Lists can batch-delete only when the selected lists are truly empty.** The
-  core already rejects deleting any list with assigned tasks, so the iPad batch
-  bar exposes the destructive action only when every selected list has
-  `totalCount == 0`. The store still routes through `core.deleteList` for every
-  ID, then refreshes list catalog state and clears stale selection/detail routes.
+The sidebar shell shows the same Today sections as the tab-bar shell (the
+briefing, the schedule strip, the task list, Habits) as a capped column of
+cards, under the same title and date subtitle. Two different decompositions of the same day made the
+product feel like two apps. Where a destination is reachable from the sidebar,
+the detail column does not repeat it: the Tasks home drops its Memory row on
+iPad because Memory is a sidebar workspace there.
 
-### 2026-06-02 — iPad Habit batch reset/delete
-- **Habit multi-select now covers the full daily action set.** Batch complete
-  still targets incomplete selected habits; batch reset only targets selected
-  habits with completions today; batch delete removes the selected habits and
-  exits selection mode. Reset/delete use the existing single-habit core methods
-  in sequence so sync/changelog behavior remains identical to row actions.
+### Blocking spinners are for the first load only
 
-### 2026-06-02 — iPad Memory AI-only batch deletion
-- **Memory multi-select preserves the human-memory boundary.** The iPad Memory
-  catalog now supports selection mode, but the destructive batch action only
-  enables when every selected entry is AI-owned. The mobile store repeats that
-  guard before calling `core.deleteMemory`, so human-authored memory remains
-  protected even if UI state is stale or constructed manually.
+A full-view spinner on every refresh fights the list's own `.refreshable`
+indicator, so the blocking state is gated on the first load — the store is
+loading *and* the snapshot is still empty. Later refreshes keep content on
+screen and animate the native indicator. The first-load skeleton is shaped like
+the surface it stands in for, so the layout does not jump when real content
+arrives.
 
-### 2026-05-31 — mobile loading + empty-state polish (iOS/iPad)
-- **Root Today loading overlay gated to initial load.** A full-view blocking
-  spinner on *every* refresh conflicts with the Today view's own native
-  `.refreshable` pull indicator. Gated to
-  `store.isLoading && store.snapshot.today == .empty` so the blocking spinner
-  shows only on first load; refreshes animate the native indicator. Mirrors the
-  `MobileStoreTasksView` pattern (`isLoading && page.tasks.isEmpty`).
-- **Today "Today" section hidden when empty.** A bare `ForEach(openTasks)` with
-  no empty branch rendered a header with nothing under it (reads as a layout
-  glitch). The "Next" section's empty state already covers the no-tasks case, so
-  the redundant section is hidden when `openTasks` is empty.
+### A batch action is offered only when the core would accept it
 
-### 2026-06-01 — macOS token consistency (from a macOS design audit)
-- Sheet/pane titles and the Focus workspace title were hardcoded to fonts
-  byte-identical to `Typography.sectionHeader` / `Typography.screenTitle`; routed
-  through the tokens (zero visual change) so a scale retune reaches them.
+Lists can be batch-deleted only when every selected list is empty, because the
+core rejects deleting a list that still holds tasks. Memory's batch delete
+enables only when every selected entry is AI-owned, and the store repeats that
+guard before calling the core, so the human-memory boundary holds even if UI
+state is stale. An action that opens a destructive confirmation and then fails
+is worse than an action that is visibly unavailable.
 
-### 2026-06-01 — correctness invariants (from a latent-bug audit)
-These encode non-obvious invariants worth remembering, not just the fix:
-- **Permanent-delete tombstones must be atomic with the delete.** The pre-delete
-  payload snapshot reader *throws* (it is non-optional); a `try?` + `if let`
-  guard silently nil'd it on a transient read failure and deleted the row with NO
-  tombstone, resurrecting it on peers. The contract: read via
-  `do/catch EnqueueError.entityNotFound` → nil (benign-absent), let other errors
-  propagate so the `withWrite` tx rolls back delete + tombstone together.
-- **One-shot flags must be set only after the read they gate succeeds.**
-  `seedIfNeeded` flagged before its `MAX(version)` read, losing the HLC
-  monotonicity backstop across a transient failure; flag only after success.
-- **Don't swallow user-meaningful best-effort failures.** EventKit access-mode
-  `setPreference` failure (was `try?`) is surfaced through the calendar import
-  report.
+### Reversible removal is one tap; erasing history always asks
 
-### 2026-06-01 — MCP read-tool prompt-injection fencing scope (Rule 6)
-A read tool's catalog description must not advertise "fenced against prompt
-injection" unless the handler actually applies `SecurityFencing.fenceValue`.
-`search_tasks` / `read_memory` advertised it without applying it, and
-`get_deferred_tasks` returned the same task shape `list_tasks` fences; all three
-now fence. The remaining calendar / list / focus / habit /
-review reads are a deliberate per-tool follow-up (fencing changes the output
-every MCP client sees, so it is scoped per tool, not applied blanket).
+Archiving a habit takes it off the active list, Today, the widgets, and its
+reminders but keeps its completion history, and the archived section below the
+catalog restores it with one tap. Archive therefore asks for no confirmation
+and is drawn untinted (the system's neutral gray in a swipe action), not in a
+color that implies loss. Deleting erases the history, so Delete is red and
+always confirmed, including for a habit that is already archived. On a pushed
+habit detail page both actions pop the page before the mutation lands: the page
+slides away intact and the row then leaves the list beneath it, which shows the
+user where the habit went. The archived section is folded by default and counts
+its habits only while folded, because an open section's rows are their own
+count.
 
-### 2026-06-02 — macOS focus session in-flight gating
-macOS focus session starts and controls now share the mobile-style
-`isMutatingFocusSession` gate in `AppStore`. The guard lives in the store so
-menu shortcuts, Today quick-start, and the Focus workspace
-all reject duplicate submissions while one async mutation is active; buttons also
-disable off the same state so the rejected click has visible feedback.
+### In-flight mutations are gated in the store, not in the view
 
-### 2026-06-02 — mobile list-detail first-frame loading state
-Mobile list detail now resolves its content through an explicit state machine:
-a matching `selectedListDetail` renders the list, missing/stale detail renders a
-loading row while `.task(id:)` catches up, and the unavailable empty state is
-reserved for a failed load. This avoids flashing "List Not Loaded" on deep-link
-or sidebar navigation before the async detail load has started.
+Schedule mutations, habit reminders, calendar subscriptions, and task mutations all
+reject a duplicate submission while one async mutation is active, and the
+control disables off that same state so the rejected tap has visible feedback.
+The guard lives in the store because menu shortcuts, quick actions, and the
+workspace control all reach the same mutation. Task mutations track in-flight
+task IDs rather than one global flag, so a mutation on one row does not block a
+tap on another.
 
-### 2026-06-02 — mobile Today avoids duplicating the Next task
-The Today screen keeps `MobileHomeSnapshot.openTasks` unchanged for shared model
-semantics, but its Today section now filters out `snapshot.nextTask`. The top
-card remains the single action surface for the next task, while the lower Today
-section starts at the next remaining open task instead of repeating the same row.
+### The Today inspector closes when its task leaves today
 
-### 2026-06-02 — iPhone Today persistent capture affordance
-Today now exposes a compact-width toolbar Capture button that jumps to the
-Capture tab. The existing bottom ornament remains for visionOS, but iPhone no
-longer depends on that no-op modifier or an empty-state-only path for quick
-capture, preserving the AI-first input flow from the primary screen.
+A task the user completes, defers, or replans leaves today's pool, and
+`reconcileSelectedTaskAfterRefresh` drops the inspector selection with it rather
+than holding the pane open on a row the surface no longer lists. The `.tasks`
+surface keeps a loaded-but-off-pool selection (a deep link or Spotlight hit
+opens a task the workspace never listed) and the calendar keeps a tap-selection
+while the task is still scheduled in the window; Today deliberately makes
+neither exemption, and `appStoreRefreshClearsStaleTodayInspectorSelection` pins
+that by loading the task's record first and still expecting the selection to
+clear.
 
-### 2026-06-02 — Tauri sync cadence/controller logic coverage
-Tauri now has unit coverage for the renderer sync cadence policy and calendar
-subscription sync controller. The cadence tests lock quick retry/offline
-priority, desktop/mobile platform floors, deterministic error-backoff jitter,
-and Android resume resync boundaries; the controller tests cover offline skips,
-minimum-gap throttling, in-flight rejection, and error reporting.
+The cost is that the pane closes at the next refresh rather than at the moment
+of the action, so completing a task from the Today inspector leaves it open
+until a sync lands. The task's own actions are not lost with it: complete
+registers its reopen against the captured id, so ⌘Z still reopens the task after
+the pane has closed.
 
-### 2026-06-02 — Tauri settings mutation in-flight guards
-Calendar subscription toggle/color controls now expose and honor their mutation
-pending states, with hook-level duplicate-submit guards and disabled row
-controls while a write is in flight. Habit reminder add/toggle/delete follows
-the same pattern for upsert/delete mutations so reminder rows no longer accept
-stacked writes before the previous IPC call settles.
+### A tip must say something the surface does not
 
-### 2026-06-02 — Tauri diagnostic AI-changelog actor filtering
-Diagnostic bundle export and the diagnostics device dropdown now reuse the
-shared assistant-actor SQL predicate that already gates the in-app Activity
-Log. Human/user/system/manual changelog rows stay out of assistant-facing
-diagnostic exports and no longer contribute source-device IDs to the dropdown;
-diagnostics tests cover both read paths.
+A TipKit popover on a workspace the user opens every day is a recurring
+interruption, and TipKit only records a tip as dismissed when the close button
+itself is used — walking away re-shows it on the next visit. That is the
+default, not a defect, so a tip earns its place only by carrying information the
+surface cannot. The Reviews workspace tip did not: its title repeated the
+section header below it and its body was a general sentence about syncing, while
+the panel already asks "What changed today?" and answers the bar-lowering
+question with "One honest paragraph is enough." It also covered the evidence
+column. The Assistant settings page carries its one non-deducible sentence,
+"Lorvex is built for an assistant to do most of the work", in its own blurb
+rather than in a tip: a popover that repeats the paragraph beneath it while
+covering the rows beside it adds nothing. No tips remain, so neither app
+configures TipKit.
 
-### 2026-06-02 — iPad Tasks multi-select batch actions
-The mobile Tasks workspace now exposes an iPad-only selection mode that keeps
-the existing split-detail single selection intact while adding explicit row
-checks and a bottom batch action bar. Selected open tasks can be completed or
-deferred together; selected completed/cancelled tasks can be reopened together.
-MobileStore gained batch complete/defer/reopen wrappers using the existing
-unscoped task-mutation guard so duplicate batch submissions are rejected while
-the first IPC/core call is in flight.
+### A placeholder asks, a subtitle nudges
 
-### 2026-06-02 — iPad Habits batch complete selection
-The mobile Habits workspace now mirrors the iPad selection-mode affordance from
-Tasks for its highest-frequency batch action: completing selected incomplete
-habits for today. MobileStore gained a stable-order batch habit completion
-wrapper over the core batch API, and the selection bar disables itself while a
-habit mutation is in flight.
+A panel header already names its field, so an editor placeholder that repeats it
+spends the one line a writer reads before typing on something they just read.
+The question goes in the placeholder ("What moved forward?") and the subtitle
+carries the encouragement that lowers the bar to starting ("Small ones count.").
+The accessibility label keeps the header word, because VoiceOver announces a
+field by its name and not by its prompt.
 
-### 2026-07-10 — polish backlog pruning (fixed items)
-Consolidated `FIXED` findings from `POLISH_BACKLOG.md` after landing, per that
-file's own move-and-delete protocol:
-- **Security fencing rollout.** Extended `SecurityFencing.fenceValue` beyond the
-  tasks/memory scope above to calendar timeline/search/link, list/list-health,
-  tag, current-focus/saved-schedule, habit/habit-reminder, and daily/weekly
-  review reads, adding fenced fields (`cue`, `note`, `rationale`, `wins`,
-  `blockers`, `learnings`, `ai_synthesis`, `quote`, `comment`, `location`,
-  `person_name`, `habit_name`) and string arrays such as `tags`.
-- **macOS batch reopen now animates.** Batch "Reopen" wraps its snapshot
-  assignment in the same `withAnimation(.snappy(duration: 0.18))` the sibling
-  complete/defer/cancel batch actions already use, so reopened rows animate
-  between sections like their siblings instead of snapping.
-- **macOS shell dropped its always-present third column.** The shell is
-  sidebar + workspace with the task detail in a trailing `.inspector` shown
-  only while a task is selected; non-task workspaces no longer render an idle
-  "No Task Selected" pane.
-- **macOS batch cancel respects recurring scope.** Batch cancel captures
-  recurring tasks in a selection and shows the same occurrence-vs-series scope
-  dialog as single-task cancel before mutating; the chosen scope applies only
-  to the recurring IDs in the batch.
-- **Calendar off-screen-pill helpers renamed to match behavior.** The helpers
-  that scroll to the nearest hidden event were named
-  `earliestAboveMinute`/`latestBelowMinute` but implemented the opposite
-  (`.max`/`.min` for *nearest*); renamed to `nearestAbove/BelowMinute` with
-  corrected docstrings. No behavior change.
-- **Mobile task mutations no longer share one global lock.**
-  `MobileStore.isMutatingTask` tracks in-flight task IDs instead of one global
-  flag, so a mutation on one row no longer blocks a tap on a different row.
-- **iPad batch actions round out to reopen.** The iPad Tasks/Habits/Lists/
-  Memory selection-mode batch actions above now also cover reopen; iPad
-  drag-drop and compact-row context menus were verified not to be defects
-  (drop targets exist where expected; the bare `MobileTaskRow` is always
-  wrapped by the context-menu-carrying `MobileActionTaskRow`).
-- **Tauri/Apple recurrence interval caps converged.** Both now share
-  `RECURRENCE_INTERVAL_*` constants, covered by calendar/task tests.
+### Data-integrity invariants behind UI actions
 
-Also re-verified clean: an adversarial pass re-checked every functional
-`DONE:` claim previously logged in this file (macOS interaction/batch/table;
-iOS/iPad loading-gates/focus/adaptive-split/drag-drop; the `update_task`
-field-gating, HLC seed coverage, and tombstone-atomicity claims) against
-current code — no stale, partial, or regressed findings. A Tauri parity pass
-found no React Query key/scope omissions, en/zh i18n strict parity (2091
-keys), and no Tauri dead code, unused locale keys, or doc staleness.
+These are the non-obvious ones, worth stating because a plausible-looking
+simplification breaks each:
 
-## Wireframes & analysis method
+- **A permanent-delete tombstone must be atomic with the delete.** The
+  pre-delete payload snapshot reader throws; guarding it with `try?` silently
+  nils it on a transient read failure and deletes the row with no tombstone,
+  which resurrects it on peers. Catch `EnqueueError.entityNotFound` and map it
+  to nil for the benign-absent case, and let every other error propagate so the
+  write transaction rolls delete and tombstone back together.
+- **A one-shot flag is set only after the read it gates succeeds.** Flagging
+  `seedIfNeeded` before its `MAX(version)` read loses the HLC monotonicity
+  backstop across a transient failure.
+- **A best-effort failure the user would care about is surfaced.** An EventKit
+  access-mode preference that fails to save is reported through the calendar
+  import report rather than swallowed.
+- **A row whose creation instant drives a statistic carries it through the
+  archive.** A habit's 30-day adherence window opens on its creation day, so a
+  restore that stamped the row with the import instant would score every
+  restored habit over a single day and show 100% beside a long streak read from
+  the same archive. `ExportHabit.createdAt` is optional: an archive without it
+  still restores, at the import instant.
 
-For each surface, an ASCII wireframe of the **as-built** layout plus the data
-each region shows and notes on the **ideal** interaction — articulating the
-layout in text documents the current design and gives a spatial frame for
-reasoning about improvements without a running device. The wireframes live in
-[`wireframes/`](wireframes/INDEX.md), each region citing the `file:line` that
-renders it (a transcription of the hierarchy, not an invention). Three surfaces
-are captured (macOS shell, macOS calendar week grid, iPhone tab shell); the
-remaining surfaces are listed in the index. These are working analysis artifacts
-(my-app-only, no external references).
+### MCP read-tool fencing is per tool, and claimed only where applied
 
-## Tauri scope note (2026-06-01)
+A read tool's catalog description may not advertise prompt-injection fencing
+unless its handler actually applies `SecurityFencing.fenceValue`. Fencing
+changes the output every MCP client sees, so it is adopted tool by tool rather
+than blanket-enabled, and the catalog text follows the handler. Rule 6 in
+[`../../CLAUDE.md`](../../CLAUDE.md) is the binding contract; the per-tool
+policy lives in each domain's `*ToolDefinitions.swift`.
 
-The Tauri build targets **macOS only** for Apple, serving primarily as a
-functional parity reference for the Swift app. Other Apple devices are
-Swift-only. Tauri's iOS/iPad code may stay as-is for now (low-priority cleanup
-only if it causes problems). Swift is the priority for the Apple ecosystem.
+### A background failure the user cannot see is a failure nobody can diagnose
 
-## Open backlog
+Generic user-facing copy for a background failure is right — "Something went
+wrong. Please try again." is what a Cloud Sync error should say in Settings,
+because CloudKit's own wording is implementation detail and not validated user
+copy. What is not right is that being the *only* thing anyone can read. A
+release build routes the real detail to `error_logs` and logs it to OSLog as
+private, so a queue stuck behind a rejected push looked identical to one merely
+waiting for a cycle, and neither the user nor the developer could tell which.
 
-The evidence-backed, code-level open items (with `file:line`) are tracked in
-[`POLISH_BACKLOG.md`](POLISH_BACKLOG.md). Design-level items that need on-device
-visual judgment rather than a code pinpoint:
+Settings → Diagnostics is the surface that answers it, and it answers in the
+transport's own words: the failure feed carries every `error`-level row Lorvex
+logged, not only the crashes the system reported, each labeled with its origin
+and expandable to its full sanitized detail; and the summary reports how much of
+the outbox has already failed an attempt alongside the newest error still
+attached to an unsynced row. The split is deliberate — the user-facing line
+stays generic, the technical surface stays exact — and it is what makes a
+screenshot of Diagnostics a usable bug report.
 
-- **#103 density retune (macOS + iOS).** Whether dense secondary rows should
-  upsize from `tertiaryText` (.caption) toward `secondaryText` (.body) per the
-  "calmer/larger" philosophy — the token tier is already centralized; the call
+The feed keeps `error` rows by level rather than by an allowlist of sources: an
+allowlist stops covering each new subsystem that starts logging, and would go
+quiet exactly where the panel was needed.
+
+## Wireframes and the analysis method
+
+For each surface there is an ASCII wireframe of the as-built layout, the data
+each region shows, and notes on the ideal interaction. Writing the layout out in
+text documents the current design and gives a spatial frame for reasoning about
+changes without a running device. The wireframes live in
+[`wireframes/`](wireframes/INDEX.md), each region citing the file and type that
+renders it. Three surfaces are captured — the macOS shell, the macOS calendar
+week grid, and the iPhone tab shell — and the index lists the rest.
+
+Pixel-level judgment still happens on a screenshot, not in the head: capture the
+affected screens headlessly, review them critically, and note here anything the
+capture revised.
+
+## Open design questions
+
+Items that need on-device visual judgment rather than a code pinpoint. The
+code-level open findings are in [`POLISH_BACKLOG.md`](POLISH_BACKLOG.md).
+
+- **Density retune (macOS and iOS).** Whether dense secondary rows should move
+  up from `tertiaryText` toward `secondaryText`, per the calmer-and-larger
+  philosophy. The token tier is centralized, so the change is cheap; the call
   needs an on-device read.
-- **Dynamic Type for fixed-point fonts.** A few fixed-point sites remain (macOS
-  calendar block 9pt, macOS onboarding ~56pt hero glyph); give them semantic
-  treatment. A long tail of raw `.font(...)` sites still bypass `Typography`
-  tokens (low priority, screen-by-screen).
-- **Per-platform design audits not yet run:** watchOS, visionOS, CarPlay,
-  Widgets (need on-device).
-- **Calendar MCP metadata parity (cross-platform).** Create/update pass
-  recurrence/timezone/url/color/event_type/person_name/attendees; remaining
-  larger parity: scoped recurring edits/deletes, batch-create dry runs.
+- **Dynamic Type for the remaining fixed-point fonts.** A few sites are still
+  fixed — the macOS calendar block at 9 points, the macOS onboarding hero glyph
+  — and a long tail of raw `.font(...)` calls still bypasses the `Typography`
+  tokens.
+- **Per-platform audits not yet run:** watchOS, CarPlay, and widgets,
+  each of which needs the device.
+- **Calendar MCP metadata parity.** Create and update carry recurrence,
+  timezone, URL, color, event type, person name, and attendees; scoped recurring
+  edits and deletes plus batch-create dry runs remain.
 
 ## Handoff notes
 
-### Hotspot line-cap
-`script/verify_hotspots.py` enforces a 399-line cap; the gate passes clean.
+**Hotspot line cap.** `script/verify_hotspots.py` caps every app and core Swift
+source file at 800 lines, with three cohesive core files grandfathered at a
+bounded higher ceiling. It is a god-file guardrail, not a fragmentation nudge:
+never split a cohesive file or trim explanatory comments just to satisfy it.
 
-### Dead-code orphan scan
-A cross-target verification of the previously-listed orphan candidates found
-nothing safely removable: some named symbols no longer exist (stale list), and
-the rest are `public` exported parity ports in `core/` (mirrors of the Rust
-oracle, e.g. `FtsRepo` SQL, documented in `core/PORT_STATUS.md`) — zero static
-callers but intentionally retained, not dead.
+**Exported symbols without callers.** `core/` exports parity primitives that
+have no static caller inside this repo and are retained deliberately; see
+[`../../core/PORT_STATUS.md`](../../core/PORT_STATUS.md) before treating any of
+them as dead code.

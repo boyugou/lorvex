@@ -13,7 +13,7 @@ WIDGET_BUNDLE="$APP_PLUGINS/$WIDGET_APPEX_NAME"
 SIGNING_IDENTITY="${CODE_SIGN_IDENTITY:--}"
 ENTITLEMENTS_PATH="${ENTITLEMENTS_PATH-"$ROOT_DIR/Config/LorvexApple.entitlements"}"
 HELPER_ENTITLEMENTS_PATH="${HELPER_ENTITLEMENTS_PATH-"$ROOT_DIR/Config/LorvexMCPHost.entitlements"}"
-WIDGET_ENTITLEMENTS_PATH="${WIDGET_ENTITLEMENTS_PATH-"$ROOT_DIR/Config/LorvexWidgetExtension.entitlements"}"
+WIDGET_ENTITLEMENTS_PATH="${WIDGET_ENTITLEMENTS_PATH-"$ROOT_DIR/Config/LorvexWidgetsMacOS.entitlements"}"
 SIGN_TIMESTAMP="${SIGN_TIMESTAMP:-auto}"
 SIGN_TIMEOUT_SECONDS="${SIGN_TIMEOUT_SECONDS:-120}"
 
@@ -68,6 +68,14 @@ if xattr -rl "$APP_BUNDLE" | grep -q "com.apple.quarantine"; then
   echo "sign_app_bundle: FAIL: com.apple.quarantine xattr present in $APP_BUNDLE" >&2
   exit 1
 fi
+
+# With quarantine ruled out above, clear the remaining extended attributes so
+# no Finder metadata, resource fork, or provenance attribute is sealed into the
+# signature. Runs before the first codesign call below, since clearing xattrs
+# afterwards would invalidate the signature. removexattr needs write permission,
+# and a resource copied from a read-only SwiftPM checkout can be staged at 0444.
+chmod -R u+w "$APP_BUNDLE"
+xattr -cr "$APP_BUNDLE"
 
 codesign_with_timeout() {
   local status

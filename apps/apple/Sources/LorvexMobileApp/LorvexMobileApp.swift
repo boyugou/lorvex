@@ -3,7 +3,6 @@ import LorvexCore
 import LorvexMobile
 import LorvexSystemIntents
 import SwiftUI
-import TipKit
 import UserNotifications
 
 @main
@@ -28,15 +27,16 @@ struct LorvexMobileApp: App {
     // `MobileStore`. Route those committed writes through the same coalesced
     // invalidation observed by the open UI, and relay widget/MCP Darwin signals.
     DatabaseChangeSignal.configureApplicationProcess()
-    try? Tips.configure([
-      .displayFrequency(.immediate),
-      .datastoreLocation(.applicationDefault)
-    ])
     let builtStore = Self.makeStore()
+    builtStore.diagnosticFallback = .live
     _store = State(initialValue: builtStore)
 
     #if canImport(WatchConnectivity)
-      let receiver = PhoneWatchConnectivityReceiver(store: builtStore)
+      let receiver = PhoneWatchConnectivityReceiver(
+        store: builtStore,
+        databaseAccess: PhoneWatchDatabaseAccess(
+          begin: { BackgroundDatabaseWork.begin() },
+          end: { BackgroundDatabaseWork.end() }))
       receiver?.activate()
       watchReceiver = receiver
     #endif
@@ -69,16 +69,15 @@ struct LorvexMobileApp: App {
 
   @ViewBuilder
   private var rootContent: some View {
-    LorvexMobileStoreRootView(store: store, configuration: .mobile)
+    LorvexMobileStoreRootView(store: store)
       .lorvexMobileSystemEntrypoints(store: store)
       .task {
         #if canImport(UIKit)
           appDelegate.store = store
-          // A CloudKit push may have arrived before this attachment (the
-          // delegate persisted a handoff instead of dropping it); run the
-          // drain it asked for now rather than waiting for a future
-          // foreground trigger.
-          await store.consumePendingCloudSyncPushHandoffIfNeeded()
+          // A background notification action may have failed before this
+          // attachment (no observer was live); surface the recorded breadcrumb
+          // now instead of losing it.
+          await store.consumePendingNotificationActionError()
         #endif
         #if DEBUG
           await store.debugSeedSampleDataIfNeeded()
@@ -107,8 +106,11 @@ struct LorvexMobileApp: App {
     .lorvexReminderBackgroundRefresh(store: store)
     .onChange(of: scenePhase) { _, phase in
       if phase == .active {
+        // Everything below reaches the database, which refuses locks while the
+        // app is suspended. Take it back before the first read.
+        DatabaseSuspension.resume()
         Task {
-          await store.refreshResettingCloudSyncPacing()
+          await store.refresh()
           store.applyPendingIntentHandoff()
           if let typeID = LorvexShortcutHandoff.consume(),
             let action = LorvexQuickAction(typeIdentifier: typeID)
@@ -122,6 +124,9 @@ struct LorvexMobileApp: App {
           // Ask iOS for a periodic background wake to re-arm the rolling reminder
           // window while the app is suspended (see ``ReminderBackgroundRefresh``).
           ReminderBackgroundRefresh.schedule()
+          // Send what this device queued, then give up the App Group
+          // database's locks before the system suspends this process.
+          BackgroundSyncFlush.flushThenSuspend(store: store)
         }
       #endif
     }
@@ -151,7 +156,9 @@ private extension Scene {
         // future opportunity scheduled, then run the same reminder-window
         // replenishment the foreground refresh fan-out does.
         ReminderBackgroundRefresh.schedule()
-        await store.replenishReminderWindow()
+        await BackgroundDatabaseWork.run {
+          await store.replenishReminderWindow()
+        }
       }
     #else
       self
@@ -167,7 +174,7 @@ private extension Scene {
     var body: some Commands {
       CommandMenu(MobileCommandTitles.workspaceMenu) {
         Button(MobileCommandTitles.refresh) {
-          Task { await store.refreshResettingCloudSyncPacing() }
+          Task { await store.refresh() }
         }
         .keyboardShortcut("r", modifiers: .command)
 
@@ -177,7 +184,7 @@ private extension Scene {
         primaryTabButton(.tasks, key: "2")
         primaryTabButton(.calendar, key: "3")
         primaryTabButton(.habits, key: "4")
-        primaryTabButton(.more, key: "5")
+        primaryTabButton(.review, key: "5")
 
         Divider()
 
@@ -190,7 +197,11 @@ private extension Scene {
 
         destinationButton(.lists)
         destinationButton(.memory)
-        destinationButton(.review)
+      }
+
+      // The system inserts its own "Settings…" (⌘,) app command; replacing that
+      // group with ours keeps the platform shortcut without a duplicate.
+      CommandGroup(replacing: .appSettings) {
         destinationButton(.settings)
       }
     }

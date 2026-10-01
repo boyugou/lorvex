@@ -16,10 +16,10 @@ extension TasksView {
       tasks += visibleOpenBacklogTasks
     }
     if showLater {
-      tasks += visibleDeferredTasks + visibleSomedayTasks
+      tasks += visibleLaterTasks
     }
     if showHistory {
-      tasks += visibleCompletedTasks + visibleCancelledTasks
+      tasks += visibleHistoryTaskPool
     }
     return tasks.map(\.id)
   }

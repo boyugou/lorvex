@@ -42,6 +42,29 @@ public enum CalendarGridLayout {
     }
   }
 
+  /// The minute each interval is drawn to, keyed by id: its own end, extended
+  /// to at least `minimumMinutes` after its start so a short block keeps a
+  /// legible height, but never past the first start at or after its end (the
+  /// block below would be drawn over) nor past `dayEndMinute`. Lanes are
+  /// packed from the real ends, so a short event followed by a touching block
+  /// stacks above it at its real height instead of sitting beside it as if the
+  /// two overlapped.
+  public static func drawnEndMinutes(
+    _ intervals: [Interval], minimumMinutes: Int, dayEndMinute: Int = 1440
+  ) -> [String: Int] {
+    let starts = intervals.map(\.startMin).sorted()
+    var result: [String: Int] = [:]
+    result.reserveCapacity(intervals.count)
+    for interval in intervals {
+      var drawnEnd = min(max(interval.endMin, interval.startMin + minimumMinutes), dayEndMinute)
+      if let nextStart = starts.first(where: { $0 >= interval.endMin }) {
+        drawnEnd = min(drawnEnd, nextStart)
+      }
+      result[interval.id] = max(drawnEnd, interval.endMin)
+    }
+    return result
+  }
+
   /// Assigns each interval to a side-by-side lane so overlapping intervals
   /// never share a lane.
   ///

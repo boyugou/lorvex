@@ -292,6 +292,18 @@ actor LorvexWatchCommandJournal {
     }
   }
 
+  /// Marks the FIFO head terminal without a phone ACK: the phone keeps
+  /// answering it without one. It stays visible and dismissible like any
+  /// rejection.
+  func rejectPendingHead(commandID: String, code: String) throws {
+    try persistMutation { document in
+      let index = try Self.requirePendingHead(commandID: commandID, in: document)
+      document.entries[index].disposition = .rejected
+      document.entries[index].nextAttemptAt = nil
+      document.entries[index].rejectionCode = code
+    }
+  }
+
   @discardableResult
   func dismissRejected(commandID: String) throws -> Bool {
     try persistMutation { document in

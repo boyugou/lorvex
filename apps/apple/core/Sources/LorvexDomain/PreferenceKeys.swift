@@ -48,6 +48,9 @@ public enum PreferenceKeys {
   // ── device-local state ─────────────────────────────────────────────
 
   public static let devCalendarAiAccessMode = "calendar_ai_access_mode"
+  /// Which MCP clients have used this device's helper, and when. Device-local:
+  /// it describes the assistants installed on this machine.
+  public static let devMcpClientSessions = "mcp_client_sessions"
 
   // ── classification predicates ──────────────────────────────────────
 

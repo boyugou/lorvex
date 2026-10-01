@@ -7,6 +7,10 @@ struct HabitHeatmapStatsLine: View {
   /// The habit's `frequency_type`, so the streak values read in the cadence's
   /// own unit (weeks for weekly/custom, months for monthly) rather than days.
   var frequencyType: String = "daily"
+  /// The habit's own identity color (`LorvexHabitPalette.baseColor(for:)`),
+  /// shown on the current-streak flame while a streak is active so it reads as
+  /// this habit's own momentum rather than a generic status color.
+  let habitTint: Color
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.l) {
@@ -14,13 +18,13 @@ struct HabitHeatmapStatsLine: View {
         title: String(localized: "habit.streak.current", defaultValue: "Current", table: "Localizable", bundle: LorvexL10n.bundle),
         value: stats.map { lorvexHabitStreakLabel($0.currentStreak, frequencyType: frequencyType) } ?? "—",
         systemImage: "flame.fill",
-        tint: (stats?.currentStreak ?? 0) > 0 ? .orange : .secondary
+        tint: (stats?.currentStreak ?? 0) > 0 ? habitTint : LorvexDesign.Palette.neutral
       )
       HabitHeatmapStat(
         title: String(localized: "habit.streak.best", defaultValue: "Best", table: "Localizable", bundle: LorvexL10n.bundle),
         value: stats.map { lorvexHabitStreakLabel($0.bestStreak, frequencyType: frequencyType) } ?? "—",
         systemImage: "trophy.fill",
-        tint: .secondary
+        tint: LorvexDesign.Palette.neutral
       )
       HabitHeatmapStat(
         title: String(localized: "habits.stats.thirty_day_rate", defaultValue: "30-day rate", table: "Localizable", bundle: LorvexL10n.bundle),
@@ -28,7 +32,7 @@ struct HabitHeatmapStatsLine: View {
           $0.completionRate30d.formatted(.percent.precision(.fractionLength(0)))
         } ?? "—",
         systemImage: "chart.bar.fill",
-        tint: .secondary
+        tint: LorvexDesign.Palette.neutral
       )
     }
     .accessibilityElement(children: .ignore)

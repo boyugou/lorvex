@@ -1,15 +1,10 @@
 -- Lorvex CloudKit Schema
 -- Container: iCloud.com.lorvex.apple
--- Zones (private database):
---   LorvexData-e<epoch>-<generation> — one immutable-identity custom zone per
---                   complete sync generation.
---   _defaultZone    the private DB's default zone — holds the fixed-name
---                   LorvexZoneEpoch generation authority and LorvexServerClock
---                   time oracle. It cannot be deleted, so ready/rebuilding/deleted
---                   authority survives every custom-zone loss path. CloudKit
+-- Zone (private database):
+--   Lorvex          the one custom zone. CKSyncEngine creates it on first
+--                   sync and fetches and sends every record in it. CloudKit
 --                   record types are container-scoped, not zone-bound, so the
---                   types are declared once here regardless of which zone each
---                   record is written to.
+--                   types are declared once here.
 --
 -- Deploy to development:
 --   export CLOUDKIT_MANAGEMENT_TOKEN="..."
@@ -20,11 +15,13 @@
 --     --file cloudkit/schema.ckdb
 --
 -- Architecture: single-domain-record-type envelope pattern.
--- All 20 syncable entity types share one domain record type (LorvexEntity).
+-- All 19 syncable entity types share one domain record type (LorvexEntity).
 -- The Swift sync engine owns conflict resolution (LWW via HLC versions)
--- and entity dispatch (via entity_type field). Generation root/seal, retention,
--- wake, and default-zone control records are transport metadata and never flow
--- through the entity apply pipeline.
+-- and entity dispatch (via entity_type field).
+--
+-- Retired record types: the template also declares record types the app
+-- neither reads nor writes any more. Production CloudKit never removes a
+-- deployed record type, so they stay declared; each is marked "Retired".
 --
 -- Record name format: SHA-256 hex of `entity_type \0 entity_id` (no plaintext
 -- prefix). It is bounded and does not expose either input literally, while
@@ -49,7 +46,7 @@
 
 DEFINE SCHEMA
 
-    -- Active record type used by the current sync engine.
+    -- The only record type the app reads and writes.
     --
     -- Audit #2988-M6: READ is granted to `_creator` (the writing iCloud
     -- account) instead of `_world`. Lorvex only ever uses the private
@@ -85,22 +82,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Fleet-visible generation authority and deletion barrier.
-    -- ONE fixed-name record (`lorvex-zone-epoch`) written to the private DB's
-    -- DEFAULT zone (`_defaultZone`), NOT a deletable custom generation zone. Its
-    -- strict protocol-v3 state machine points at exactly one ready generation, leases one
-    -- unique candidate while rebuilding, or persists `.deleted` after user wipe.
-    -- Because the default zone cannot be deleted, this authority outlives every
-    -- custom-zone loss path. This is runtime
-    -- CloudKit metadata, NOT a syncable Lorvex entity: its distinct record type
-    -- decodes as a `foreign` record on the inbound change stream (ignored by the
-    -- apply pipeline) and it is not part of the SQLite schema. `epoch` is a
-    -- non-sensitive control metadata (including the server-derived canonical
-    -- lease heartbeat), so — unlike every LorvexEntity wire field — it is stored
-    -- in the CLEAR, not ENCRYPTED. This record type MUST
-    -- be declared here (not left to development-only auto-creation): production
-    -- CloudKit rejects a save to an unknown record type, which would silently
-    -- break the resurrection guard. See CloudSyncZoneEpochRecord.swift.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexZoneEpoch (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,
@@ -128,11 +110,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Fixed-name server-time oracle (`lorvex-server-clock`) in the private
-    -- default zone. Every lease heartbeat/takeover probe upserts a fresh random
-    -- nonce with `.changedKeys` and trusts only the saved record's CloudKit-owned
-    -- modification date. The singleton is intentionally plaintext recovery
-    -- metadata, is never queried, and cannot grow without bound.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexServerClock (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,
@@ -146,7 +124,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Required identity marker in every generation-specific custom zone.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexGenerationRoot (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,
@@ -165,7 +143,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Completion witness written after a candidate baseline has fully drained.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexGenerationSeal (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,
@@ -192,9 +170,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Ephemeral proof that a particular nil-token traversal saw changes written
-    -- after it started. One record is created per traversal and physically
-    -- deleted after its terminal page is durably committed locally.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexTraversalWitness (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,
@@ -209,9 +185,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Atomic per-generation audit-retention policy/frontier authority. No field
-    -- is queried server-side; encrypt the complete custom payload so policy,
-    -- activity cutoff, and HLC/device suffix are not visible to CloudKit.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexAuditRetentionMetadata (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,
@@ -233,7 +207,7 @@ DEFINE SCHEMA
         GRANT READ TO "_creator"
     );
 
-    -- Post-ready custom-zone write that wakes database-subscription clients.
+    -- Retired: kept only because Production cannot remove a deployed type.
     RECORD TYPE LorvexGenerationWake (
         "___createTime" TIMESTAMP,
         "___createdBy"  REFERENCE,

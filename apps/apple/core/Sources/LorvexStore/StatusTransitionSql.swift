@@ -5,7 +5,8 @@ import LorvexDomain
 ///
 /// The status-transition truth table in `LorvexDomain.statusTransitionColumns`
 /// enumerates a fixed set of metadata columns: `completed_at`,
-/// `last_deferred_at`, `last_defer_reason`, `planned_date`, `defer_count`.
+/// `last_deferred_at`, `last_defer_reason`, `planned_date`,
+/// `planned_start_minutes`, `planned_end_minutes`, `defer_count`.
 /// Callers fold those actions into an UPDATE statement's SET clause by
 /// pairing each ``ColumnAction`` with one of these fragments.
 ///
@@ -23,6 +24,8 @@ public enum StatusTransitionSql {
     case "last_deferred_at": return "last_deferred_at = ?"
     case "last_defer_reason": return "last_defer_reason = ?"
     case "planned_date": return "planned_date = ?"
+    case "planned_start_minutes": return "planned_start_minutes = ?"
+    case "planned_end_minutes": return "planned_end_minutes = ?"
     case "defer_count": return "defer_count = ?"
     default:
       assertionFailure(
@@ -41,6 +44,8 @@ public enum StatusTransitionSql {
     case "last_deferred_at": return "last_deferred_at = NULL"
     case "last_defer_reason": return "last_defer_reason = NULL"
     case "planned_date": return "planned_date = NULL"
+    case "planned_start_minutes": return "planned_start_minutes = NULL"
+    case "planned_end_minutes": return "planned_end_minutes = NULL"
     case "defer_count": return "defer_count = NULL"
     default:
       assertionFailure(

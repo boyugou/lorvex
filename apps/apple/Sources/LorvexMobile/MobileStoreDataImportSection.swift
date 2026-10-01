@@ -21,20 +21,7 @@ struct MobileStoreDataImportSection: View {
   @State private var summary: LorvexImportSummary?
 
   var body: some View {
-    Section(
-      String(
-        localized: "settings.section.data_import", defaultValue: "Data Import",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    ) {
-      Text(
-        String(
-          localized: "data_import.description",
-          defaultValue: "Restore from a Lorvex JSON or ZIP export. You'll see what the file contains before anything is written. Re-importing the same file never creates duplicates.",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      )
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-
+    Section {
       Button {
         errorMessage = nil
         summary = nil
@@ -61,12 +48,24 @@ struct MobileStoreDataImportSection: View {
       if let errorMessage {
         Label(errorMessage, systemImage: "exclamationmark.triangle")
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
       }
 
       if let summary {
         ImportSummaryView(summary, text: MobileImportSummaryText.provider)
       }
+    } header: {
+      Text(
+        String(
+          localized: "settings.section.data_import", defaultValue: "Data Import",
+          table: "Localizable", bundle: MobileL10n.bundle))
+    } footer: {
+      Text(
+        String(
+          localized: "data_import.description",
+          defaultValue:
+            "Restore from a Lorvex JSON or ZIP export. You’ll see what the file contains before anything is written. Re-importing the same file never creates duplicates.",
+          table: "Localizable", bundle: MobileL10n.bundle))
     }
     .fileImporter(
       isPresented: $isChoosingFile,
@@ -86,26 +85,34 @@ struct MobileStoreDataImportSection: View {
         MobileImportPreviewSheet(
           plan: plan,
           isApplying: dataImportInteractionBlocked,
+          isBackgroundable: store.isDataImportRunning,
           errorMessage: errorMessage,
           onCancel: { dismissPreview() },
-          onConfirm: { beginConfirmedImport() }
+          onConfirm: { beginConfirmedImport() },
+          onRunInBackground: { dismissPreview() }
         )
-        .lorvexSpatialBackground()
-        .interactiveDismissDisabled(dataImportInteractionBlocked)
+        // Block dismissal only during the brief pre-run claim; once the import is
+        // actually running in the store it continues detached, so allow closing
+        // to background rather than trapping the sheet on a slow CloudKit drain.
+        .interactiveDismissDisabled(dataImportInteractionBlocked && !store.isDataImportRunning)
       }
     }
   }
 
   private var dataImportInteractionBlocked: Bool {
     inProgress || store.isDataImportRunning || store.isSettingCloudSyncMode
-      || store.isCloudDataDeletionRunning || store.isCloudDeletionMaintenanceRunning
+      || store.isCloudDataDeletionRunning || store.isLocalDataResetRunning
   }
 
   private var previewBinding: Binding<Bool> {
     Binding(
       get: { plan != nil },
       set: { presented in
-        if !presented, !dataImportInteractionBlocked { dismissPreview() }
+        // Allow dismissal when not blocked, OR once the import is running (it
+        // continues in the background); otherwise a swipe would re-present.
+        if !presented, !dataImportInteractionBlocked || store.isDataImportRunning {
+          dismissPreview()
+        }
       }
     )
   }
@@ -159,59 +166,11 @@ struct MobileStoreDataImportSection: View {
   }
 
   private func dataImportErrorMessage(for error: any Error) -> String {
-    if let boundary = error as? CloudSyncDataImportBoundary.BoundaryError {
-      switch boundary {
-      case .importAlreadyRunning, .dataMaintenanceRunning:
-        return String(
-          localized: "data_import.error.busy",
-          defaultValue:
-            "Another import or data operation is still running. Wait for it to finish, then try again.",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      case .liveCoordinatorUnavailable, .cloudSyncRetryDeferred:
-        break
-      }
-    }
-    if let terminal = error as? CloudSyncTerminalInboundDrainError {
-      switch terminal {
-      case .accountUnavailable(.noAccount):
-        return String(
-          localized: "settings.sync.delete_cloud.error.no_account",
-          defaultValue: "No usable iCloud account. Sign in to iCloud and try again.",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      case .syncPaused(let reason):
-        return dataImportPausedMessage(reason)
-      case .unsupportedBackend, .accountUnavailable, .runtimeNotReady,
-        .terminalBoundaryNotReached, .inboundStateIncomplete:
-        break
-      }
-    }
-    return String(
-      localized: "data_import.error.cloud_sync_not_ready",
+    String(
+      localized: "data_import.error.busy",
       defaultValue:
-        "Lorvex couldn’t verify the latest iCloud data, so the backup wasn’t imported. Make sure iCloud is signed in and Cloud Sync is ready, then try again.",
+        "Another import or data operation is still running. Wait for it to finish, then try again.",
       table: "Localizable", bundle: MobileL10n.bundle)
-  }
-
-  private func dataImportPausedMessage(_ reason: CloudSyncPauseReason) -> String {
-    switch reason {
-    case .userDeletedZone:
-      return String(
-        localized: "settings.sync.paused.user_deleted_zone",
-        defaultValue:
-          "Lorvex data was deleted from iCloud. Sync stays paused so this device doesn’t re-upload it without your consent.",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case .accountChanged:
-      return String(
-        localized: "settings.sync.paused.account_changed",
-        defaultValue:
-          "The signed-in iCloud account changed. Sync is paused so this device’s data isn’t mixed into a different account.",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case .adoptionInProgress, .backfillFailed:
-      return String(
-        localized: "settings.sync.paused.backfill_failed",
-        defaultValue: "Preparing the re-upload failed. Resuming will retry it.",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    }
   }
 }
 
@@ -223,9 +182,14 @@ struct MobileStoreDataImportSection: View {
 private struct MobileImportPreviewSheet: View {
   let plan: LorvexImportPlan
   let isApplying: Bool
+  /// The import is running in the store (not just the brief local claim), so it
+  /// continues on its own detached task if this sheet closes — closing is safe
+  /// and merely stops the screen trapping the user while a CloudKit drain is slow.
+  let isBackgroundable: Bool
   let errorMessage: String?
   let onCancel: () -> Void
   let onConfirm: () -> Void
+  let onRunInBackground: () -> Void
 
   var body: some View {
     NavigationStack {
@@ -290,7 +254,7 @@ private struct MobileImportPreviewSheet: View {
         if let errorMessage {
           Section {
             Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-              .foregroundStyle(.orange)
+              .foregroundStyle(LorvexDesign.Palette.warning)
               .accessibilityIdentifier("mobileDataImport.preview.error")
           }
         }
@@ -302,6 +266,23 @@ private struct MobileImportPreviewSheet: View {
                 localized: "data_import.confirm", defaultValue: "Import",
                 table: "Localizable", bundle: MobileL10n.bundle) + "…")
               .accessibilityIdentifier("mobileDataImport.preview.progress")
+            if isBackgroundable {
+              Text(
+                String(
+                  localized: "data_import.background.note",
+                  defaultValue:
+                    "The import keeps running if you close this. If it doesn’t finish, check your internet connection.",
+                  table: "Localizable", bundle: MobileL10n.bundle)
+              )
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+              Button(
+                String(
+                  localized: "data_import.background.action", defaultValue: "Continue in Background",
+                  table: "Localizable", bundle: MobileL10n.bundle), action: onRunInBackground
+              )
+              .accessibilityIdentifier("mobileDataImport.continueInBackground")
+            }
           }
         }
       }
@@ -326,6 +307,7 @@ private struct MobileImportPreviewSheet: View {
               localized: "data_import.confirm", defaultValue: "Import", table: "Localizable",
               bundle: MobileL10n.bundle), action: onConfirm
           )
+          .mobileProminentToolbarButtonStyle()
           .disabled(!plan.hasSupportedRecords || isApplying)
           .accessibilityIdentifier("mobileDataImport.confirm")
         }

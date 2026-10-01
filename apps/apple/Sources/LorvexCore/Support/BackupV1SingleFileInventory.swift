@@ -63,9 +63,8 @@ enum BackupV1SingleFileInventory {
     try count(
       .calendarEvents, key: "calendarEvents", value: payload.calendarEvents?.count)
     try count(.dailyReviews, key: "dailyReviews", value: payload.dailyReviews?.count)
-    try count(.currentFocus, key: "currentFocus", value: payload.currentFocus?.count)
     try count(
-      .focusSchedules, key: "focusSchedules", value: payload.focusSchedules?.count)
+      .dailyBriefings, key: "dailyBriefings", value: payload.dailyBriefings?.count)
     try count(
       .taskCalendarEventLinks, key: "taskCalendarEventLinks",
       value: payload.taskCalendarEventLinks?.count)

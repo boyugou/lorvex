@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "lorvex",
+  "description": "Lorvex, the Apple-native task manager, for Claude Code.",
+  "owner": {
+    "name": "Lorvex"
+  },
+  "plugins": [
+    {
+      "name": "lorvex",
+      "description": "Plan your day, capture tasks, run weekly reviews, and keep the assistant's notes tidy in Lorvex, the Apple-native task manager. Connects Claude Code to the MCP helper inside the installed Lorvex app.",
+      "category": "productivity",
+      "source": "./plugins/lorvex",
+      "homepage": "https://lorvex.app"
+    }
+  ]
+}

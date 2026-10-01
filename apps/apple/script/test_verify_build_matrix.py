@@ -14,10 +14,8 @@ from verify_build_matrix import (
 TEST_METADATA = {
     "APP_NAME": "LorvexApple",
     "MOBILE_APP_NAME": "LorvexMobileApp",
-    "VISION_APP_NAME": "LorvexVisionApp",
     "WATCH_APP_NAME": "LorvexWatchApp",
     "MCP_HOST_PRODUCT": "LorvexMCPHost",
-    "WIDGET_EXECUTABLE": "LorvexFocusWidget",
 }
 
 # The safe cleanup pattern verify_all.sh actually uses: track $APP_NAME's
@@ -35,24 +33,24 @@ class VerifyBuildMatrixTests(unittest.TestCase):
         source = """
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .library(name: "LorvexCore", targets: ["LorvexCore"]),
-        .executable(name: "LorvexVisionApp", targets: ["LorvexVisionApp"]),
+        .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
         """
 
         self.assertEqual(
             swiftpm_executable_products(source),
-            {"LorvexApple", "LorvexVisionApp"},
+            {"LorvexApple", "LorvexMobileApp"},
         )
 
     def test_verify_all_build_products_expands_metadata_variables(self) -> None:
         script = """
         swift build --product "$APP_NAME"
-        swift build --product "$VISION_APP_NAME"
+        swift build --product "$MOBILE_APP_NAME"
         swift build --product LorvexWidgetBundle
         """
 
         self.assertEqual(
             verify_all_build_products(script, TEST_METADATA),
-            {"LorvexApple", "LorvexVisionApp", "LorvexWidgetBundle"},
+            {"LorvexApple", "LorvexMobileApp", "LorvexWidgetBundle"},
         )
 
     def test_launch_cleanup_accepts_the_safe_tracked_pid_pattern(self) -> None:
@@ -85,10 +83,8 @@ class VerifyBuildMatrixTests(unittest.TestCase):
         package_source = """
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
-        .executable(name: "LorvexVisionApp", targets: ["LorvexVisionApp"]),
         .executable(name: "LorvexWatchApp", targets: ["LorvexWatchApp"]),
         .executable(name: "LorvexMCPHost", targets: ["LorvexMCPHost"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
         .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"]),
         """
@@ -97,8 +93,6 @@ class VerifyBuildMatrixTests(unittest.TestCase):
             + """
         swift build --product "$APP_NAME"
         swift build --product "$MOBILE_APP_NAME"
-        swift build --product "$VISION_APP_NAME"
-        swift build --product "$WIDGET_EXECUTABLE"
         swift build --product "$WATCH_APP_NAME"
         swift build --product "$MCP_HOST_PRODUCT"
         swift build --product LorvexWidgetBundle
@@ -114,10 +108,8 @@ class VerifyBuildMatrixTests(unittest.TestCase):
     def test_build_matrix_rejects_missing_product_build(self) -> None:
         package_source = """
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
-        .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
         .executable(name: "LorvexWatchApp", targets: ["LorvexWatchApp"]),
         .executable(name: "LorvexMCPHost", targets: ["LorvexMCPHost"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
         .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"]),
         """
@@ -125,8 +117,6 @@ class VerifyBuildMatrixTests(unittest.TestCase):
             SAFE_CLEANUP_SNIPPET
             + """
         swift build --product "$APP_NAME"
-        swift build --product "$MOBILE_APP_NAME"
-        swift build --product "$WIDGET_EXECUTABLE"
         swift build --product "$WATCH_APP_NAME"
         swift build --product "$MCP_HOST_PRODUCT"
         swift build --product LorvexWidgetBundle
@@ -137,8 +127,8 @@ class VerifyBuildMatrixTests(unittest.TestCase):
         self.assertEqual(
             build_matrix_failures(package_source, script_source, TEST_METADATA),
             [
-                "Package.swift missing required executable product(s): ['LorvexVisionApp']",
-                "verify_all.sh does not build product(s): ['LorvexVisionApp']",
+                "Package.swift missing required executable product(s): ['LorvexMobileApp']",
+                "verify_all.sh does not build product(s): ['LorvexMobileApp']",
                 "verify_all.sh misses required gate command(s): ['./script/verify_packaging.sh', "
                 "'./script/xcodegen_dependency_check.py']",
             ],
@@ -148,10 +138,8 @@ class VerifyBuildMatrixTests(unittest.TestCase):
         package_source = """
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
-        .executable(name: "LorvexVisionApp", targets: ["LorvexVisionApp"]),
         .executable(name: "LorvexWatchApp", targets: ["LorvexWatchApp"]),
         .executable(name: "LorvexMCPHost", targets: ["LorvexMCPHost"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
         .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"]),
         .executable(name: "LorvexMenuBarHelper", targets: ["LorvexMenuBarHelper"]),
@@ -161,8 +149,6 @@ class VerifyBuildMatrixTests(unittest.TestCase):
             + """
         swift build --product "$APP_NAME"
         swift build --product "$MOBILE_APP_NAME"
-        swift build --product "$VISION_APP_NAME"
-        swift build --product "$WIDGET_EXECUTABLE"
         swift build --product "$WATCH_APP_NAME"
         swift build --product "$MCP_HOST_PRODUCT"
         swift build --product LorvexWidgetBundle
@@ -185,10 +171,8 @@ class VerifyBuildMatrixTests(unittest.TestCase):
         package_source = """
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
-        .executable(name: "LorvexVisionApp", targets: ["LorvexVisionApp"]),
         .executable(name: "LorvexWatchApp", targets: ["LorvexWatchApp"]),
         .executable(name: "LorvexMCPHost", targets: ["LorvexMCPHost"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
         .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"]),
         """
@@ -197,8 +181,6 @@ class VerifyBuildMatrixTests(unittest.TestCase):
             + """
         swift build --product "$APP_NAME"
         swift build --product "$MOBILE_APP_NAME"
-        swift build --product "$VISION_APP_NAME"
-        swift build --product "$WIDGET_EXECUTABLE"
         swift build --product "$WATCH_APP_NAME"
         swift build --product "$MCP_HOST_PRODUCT"
         swift build --product LorvexWidgetBundle
@@ -217,10 +199,8 @@ class VerifyBuildMatrixTests(unittest.TestCase):
         package_source = """
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
-        .executable(name: "LorvexVisionApp", targets: ["LorvexVisionApp"]),
         .executable(name: "LorvexWatchApp", targets: ["LorvexWatchApp"]),
         .executable(name: "LorvexMCPHost", targets: ["LorvexMCPHost"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
         .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"]),
         """
@@ -231,8 +211,6 @@ class VerifyBuildMatrixTests(unittest.TestCase):
             + """
         swift build --product "$APP_NAME"
         swift build --product "$MOBILE_APP_NAME"
-        swift build --product "$VISION_APP_NAME"
-        swift build --product "$WIDGET_EXECUTABLE"
         swift build --product "$WATCH_APP_NAME"
         swift build --product "$MCP_HOST_PRODUCT"
         swift build --product LorvexWidgetBundle

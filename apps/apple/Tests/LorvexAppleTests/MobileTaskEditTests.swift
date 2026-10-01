@@ -90,7 +90,7 @@ func mobileStoreSavesTaskEditDraftThroughCore() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   var draft = MobileTaskEditDraft(task: task)
   draft.title = " Updated from mobile "
   draft.notes = "Edited on iPhone."
@@ -127,7 +127,7 @@ func mobileTaskEditPatchesOnlyUserChangedFields() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let original = try #require(store.snapshot.openTasks.first)
+  let original = try #require(store.snapshot.today.tasks.first)
   var draft = MobileTaskEditDraft(task: original)
   draft.title = "User title"
 
@@ -145,14 +145,14 @@ func mobileTaskEditPatchesOnlyUserChangedFields() async throws {
 @MainActor
 @Test
 func mobileStoreTaskEditDoesNotReloadPlanningSnapshots() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
   let listLoads = core.loadListsCallCount
   let habitLoads = core.loadHabitsCallCount
   let calendarLoads = core.loadCalendarTimelineCallCount
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   var draft = MobileTaskEditDraft(task: task)
   draft.title = "Targeted mobile edit"
 
@@ -162,7 +162,7 @@ func mobileStoreTaskEditDoesNotReloadPlanningSnapshots() async throws {
   #expect(core.loadListsCallCount == listLoads)
   #expect(core.loadHabitsCallCount == habitLoads)
   #expect(core.loadCalendarTimelineCallCount == calendarLoads)
-  #expect(store.selectedTask?.title == "Targeted mobile edit")
+  #expect(store.resolveTask(task.id)?.title == "Targeted mobile edit")
   #expect(store.errorMessage == nil)
 }
 
@@ -173,7 +173,7 @@ func mobileStoreSavesDueDateAndAvailableFromThroughCore() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   var draft = MobileTaskEditDraft(task: task)
   // Pickers hold local-frame days; the save bridges to UTC-midnight storage.
   let storageDueDate = Date(timeIntervalSince1970: 1_779_494_400)
@@ -199,7 +199,7 @@ func mobileStoreClearsDueDateAndAvailableFromWhenTogglesOff() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   var seed = MobileTaskEditDraft(task: task)
   seed.hasDueDate = true
   seed.dueDate = PlannedDayBridge.displayDate(
@@ -260,7 +260,7 @@ func mobileStoreTaskEditPublishesWidgetSnapshot() async throws {
   )
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   var draft = MobileTaskEditDraft(task: task)
   draft.title = "Widget-visible mobile edit"
 
@@ -271,4 +271,60 @@ func mobileStoreTaskEditPublishesWidgetSnapshot() async throws {
   #expect(saved)
   #expect(publications.count == 2)
   #expect(latestTask.title == "Widget-visible mobile edit")
+}
+
+@MainActor
+@Test
+func mobileStoreSavesATaskTimeAndKeepsItWhenTheDayMoves() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  await store.refresh()
+  let task = try #require(store.snapshot.today.tasks.first)
+  // 2026-05-23 and 2026-05-24 at UTC midnight, the storage frame of planned days.
+  let storageDay = Date(timeIntervalSince1970: 1_779_494_400)
+  let storageNextDay = Date(timeIntervalSince1970: 1_779_580_800)
+  var draft = MobileTaskEditDraft(task: task)
+  draft.hasPlannedDate = true
+  draft.plannedDate = PlannedDayBridge.displayDate(forStorageDate: storageDay)
+  draft.plannedTime = 600..<660
+
+  #expect(await store.saveTaskEditDraft(draft))
+  let timed = try await core.loadTask(id: task.id)
+  #expect(timed.plannedDate == storageDay)
+  #expect(timed.plannedTime == 600..<660)
+
+  // Only the day changes; the draft still holds the time, so the save writes
+  // it again instead of letting the move clear it.
+  var moveDraft = MobileTaskEditDraft(task: timed)
+  moveDraft.plannedDate = PlannedDayBridge.displayDate(forStorageDate: storageNextDay)
+  #expect(await store.saveTaskEditDraft(moveDraft))
+  let moved = try await core.loadTask(id: task.id)
+  #expect(moved.plannedDate == storageNextDay)
+  #expect(moved.plannedTime == 600..<660)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
+func mobileTaskEditTurningTheDayOffDropsTheTime() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  await store.refresh()
+  let task = try #require(store.snapshot.today.tasks.first)
+  var seed = MobileTaskEditDraft(task: task)
+  seed.hasPlannedDate = true
+  seed.plannedDate = PlannedDayBridge.displayDate(
+    forStorageDate: Date(timeIntervalSince1970: 1_779_494_400))
+  seed.plannedTime = 600..<660
+  #expect(await store.saveTaskEditDraft(seed))
+
+  var draft = MobileTaskEditDraft(task: try await core.loadTask(id: task.id))
+  #expect(draft.plannedTime == 600..<660)
+  draft.hasPlannedDate = false
+  #expect(draft.plannedTime == nil)
+
+  #expect(await store.saveTaskEditDraft(draft))
+  let cleared = try await core.loadTask(id: task.id)
+  #expect(cleared.plannedDate == nil)
+  #expect(cleared.plannedTime == nil)
 }

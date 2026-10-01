@@ -248,7 +248,7 @@ func calendarRepeatFieldEditsTypedRuleThroughCommonCases() throws {
 }
 
 @Test
-func calendarAllDayPillsTintByListColorAndAreBounded() throws {
+func calendarAllDayTaskPillsWearTheTaskSurfaceAndAreBounded() throws {
   let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
@@ -260,11 +260,11 @@ func calendarAllDayPillsTintByListColorAndAreBounded() throws {
     contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridComponents.swift"),
     encoding: .utf8)
 
-  // Task pills resolve their owning list's color instead of flat gray.
-  #expect(chrome.contains("func taskColor(_ task: LorvexTask) -> Color"))
-  #expect(chrome.contains("store.lists?.lists.first(where: { $0.id == listID })"))
-  #expect(chrome.contains("color: taskColor(task)"))
-  #expect(!chrome.contains("allDayPill(title: task.title, color: .secondary)"))
+  // Task pills speak the timed blocks' task vocabulary, never an event pill's
+  // fill and rail: a completion circle on the calendar task surface.
+  #expect(chrome.contains("taskCompletionCircle(for: task)"))
+  #expect(chrome.contains(".lorvexCalendarTaskSurface(isDone: isDone"))
+  #expect(!chrome.contains("allDayPill(title: task.title"))
   // Event pills still reflect their event color.
   #expect(chrome.contains("color: eventColor(event)"))
 

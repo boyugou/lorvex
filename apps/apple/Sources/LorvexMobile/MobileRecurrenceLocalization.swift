@@ -1,14 +1,13 @@
 import Foundation
 import LorvexCore
 
-/// iOS/iPadOS/visionOS-localized presentation of recurrence rules, mirroring the
+/// iOS/iPadOS-localized presentation of recurrence rules, mirroring the
 /// macOS `TaskRecurrenceLocalization`.
 ///
-/// `LorvexCore` ships English-only `displayName` / `displaySummary` helpers so
-/// platform-neutral code stays presentation-free; each surface renders them
-/// through its own string catalog. Mobile routes through `MobileL10n` here so the
-/// recurrence picker, the interval stepper, and the "Currently …" summary read in
-/// the user's language. The interval unit is a CLDR plural ("day"/"days" and
+/// `LorvexCore` keeps the rule itself presentation-free; each surface renders
+/// it through its own string catalog. Mobile routes through `MobileL10n` here so
+/// the task sentence's repeat word, the recurrence picker, the interval stepper,
+/// and the "Currently …" summary read in the user's language. The interval unit is a CLDR plural ("day"/"days" and
 /// their per-language forms) rather than an English `+"s"`, so number agreement
 /// is correct in every locale.
 ///
@@ -92,10 +91,12 @@ extension TaskRecurrenceRule.Anchor {
 }
 
 extension TaskRecurrenceRule {
-  /// The localized one-line summary shown beneath the recurrence toggle, e.g.
-  /// "Every 2 weeks · MO, WE · 10 times". Mirrors the core `displaySummary`
-  /// structure but renders every literal through `MobileL10n`.
-  func mobileLocalizedDisplaySummary(exceptions: [String] = []) -> String {
+  /// The rule's cadence alone, as the task sentence's repeat word names it:
+  /// the frequency or interval, then the weekdays ("Weekly · Mon, Wed",
+  /// "Every 2 weeks"). How the rule ends, its anchor, and skipped dates stay
+  /// in ``mobileLocalizedDisplaySummary(exceptions:)``, which the recurrence
+  /// editor shows.
+  var mobileLocalizedCadence: String {
     var parts: [String] = []
     if let interval, interval > 1 {
       parts.append(freq.mobileLocalizedEveryInterval(interval))
@@ -105,6 +106,14 @@ extension TaskRecurrenceRule {
     if let byDay, !byDay.isEmpty {
       parts.append(Self.mobileLocalizedWeekdays(byDay))
     }
+    return parts.joined(separator: " · ")
+  }
+
+  /// The localized one-line summary shown beneath the recurrence toggle: the
+  /// cadence, then how the rule ends, its anchor, and skipped dates ("Every 2
+  /// weeks · Mon, Wed · 10 times · 1 skipped").
+  func mobileLocalizedDisplaySummary(exceptions: [String] = []) -> String {
+    var parts = [mobileLocalizedCadence]
     if let count {
       parts.append(
         String(

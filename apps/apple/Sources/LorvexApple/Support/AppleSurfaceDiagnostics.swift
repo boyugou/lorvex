@@ -92,21 +92,23 @@ struct AppleSurfaceDiagnostics: Equatable, Sendable {
         bundle: LorvexL10n.bundle)
     }
     return String(
-      format: String(
-        localized: "settings.diagnostics.status.widget_published",
-        defaultValue: "Published v%lld",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      widgetSnapshot.version
-    )
+      localized: "settings.diagnostics.status.widget_published",
+      defaultValue: "Published",
+      table: "Localizable",
+      bundle: LorvexL10n.bundle)
   }
 
-  var widgetFocusTaskCount: Int {
-    widgetSnapshot?.focusTasks.count ?? 0
+  /// How many of Today's tasks the published widget snapshot carries.
+  var widgetTodayTaskCount: Int {
+    widgetSnapshot?.tasks.count ?? 0
   }
 
-  var widgetGeneratedAt: String? {
-    widgetSnapshot?.generatedAt
+  /// When the widget snapshot was published, parsed from its ISO 8601 stamp;
+  /// nil when no snapshot has been published or the stamp cannot be read.
+  var widgetGeneratedAt: Date? {
+    guard let raw = widgetSnapshot?.generatedAt else { return nil }
+    return LorvexDateFormatters.iso8601Fractional.date(from: raw)
+      ?? LorvexDateFormatters.iso8601.date(from: raw)
   }
 
   var calendarImportStatus: String {

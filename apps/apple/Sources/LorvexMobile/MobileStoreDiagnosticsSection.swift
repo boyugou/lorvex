@@ -16,11 +16,7 @@ struct MobileStoreDiagnosticsSection: View {
   }
 
   private var summarySection: some View {
-    Section(
-      String(
-        localized: "diagnostics.section", defaultValue: "Diagnostics", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    ) {
+    Section {
       if let diagnostics = store.runtimeDiagnostics {
         LabeledContent(
           String(
@@ -45,40 +41,64 @@ struct MobileStoreDiagnosticsSection: View {
           String(
             localized: "diagnostics.sync", defaultValue: "Sync", table: "Localizable",
             bundle: MobileL10n.bundle), value: store.cloudSyncBackendLabel)
+        // Rows, not user edits — one edit stages the entity write plus its
+        // `ai_changelog` envelope. Named for what it counts so it is not read as
+        // a change count; Cloud Sync shows the state this depth implies instead.
         LabeledContent(
           String(
-            localized: "diagnostics.pending", defaultValue: "Pending", table: "Localizable",
-            bundle: MobileL10n.bundle), value: "\(diagnostics.sync.pendingCount)")
-        if let lastError = diagnostics.sync.lastError {
+            localized: "diagnostics.pending_rows", defaultValue: "Pending Sync Rows",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          value: "\(store.syncPendingRowCount)")
+        // Only meaningful while something is queued, and a constant zero next
+        // to an empty queue is noise.
+        if store.syncPendingRowCount > 0 {
           LabeledContent(
             String(
-              localized: "settings.sync.last_error", defaultValue: "Last Error",
-              table: "Localizable", bundle: MobileL10n.bundle), value: lastError)
+              localized: "diagnostics.retrying_rows", defaultValue: "Retrying Sync Rows",
+              table: "Localizable", bundle: MobileL10n.bundle),
+            value: "\(store.syncRetryingRowCount)")
         }
-        Text(diagnostics.guide.summary)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
+        if let lastError = store.syncStatus?.lastError {
+          // The transport's own words for why a row did not upload, so it wraps
+          // and stays selectable instead of being clipped to a `LabeledContent`
+          // trailing value — a truncated CloudKit message diagnoses nothing.
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+            Text(
+              String(
+                localized: "settings.sync.last_error", defaultValue: "Last Error",
+                table: "Localizable", bundle: MobileL10n.bundle)
+            )
+            .font(LorvexDesign.Typography.secondaryText)
+            Text(lastError)
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(LorvexDesign.Palette.error)
+              .fixedSize(horizontal: false, vertical: true)
+              .textSelection(.enabled)
+          }
+          .accessibilityElement(children: .combine)
+          .accessibilityIdentifier("mobileDiagnostics.syncLastError")
+        }
       } else {
-        ContentUnavailableView(
-          String(
+        // Bounded empty state — a raw `ContentUnavailableView` in a `List`
+        // `Section` inflates the row to a tall centered block (see
+        // `MobileEmptyState`).
+        MobileEmptyState(
+          icon: "waveform.path.ecg",
+          title: String(
             localized: "diagnostics.empty", defaultValue: "No Diagnostics", table: "Localizable",
-            bundle: MobileL10n.bundle), systemImage: "waveform.path.ecg")
+            bundle: MobileL10n.bundle))
       }
-      Button {
-        Task { await store.loadRuntimeDiagnostics() }
-      } label: {
-        Label(
-          String(
-            localized: "diagnostics.refresh", defaultValue: "Refresh Diagnostics",
-            table: "Localizable", bundle: MobileL10n.bundle), systemImage: "arrow.clockwise")
-      }
-      .disabled(store.isLoadingRuntimeDiagnostics)
-      .accessibilityIdentifier("mobileDiagnostics.refresh")
+    } header: {
+      Text(
+        String(
+          localized: "diagnostics.section", defaultValue: "Diagnostics", table: "Localizable",
+          bundle: MobileL10n.bundle))
     }
   }
 
-  /// Read-only feed of the most recent diagnostics, including MetricKit crash /
-  /// hang / CPU / disk rows recorded by the system. Newest-first over the
+  /// Read-only feed of the most recent failures: MetricKit crash / hang / CPU /
+  /// disk rows recorded by the system, and the app's own `error`-level rows
+  /// (Cloud Sync cycles, failed user actions). Newest-first over the
   /// `error_logs` diagnostics ring.
   @ViewBuilder
   private var recentDiagnosticsSection: some View {
@@ -88,7 +108,7 @@ struct MobileStoreDiagnosticsSection: View {
         Text(
           String(
             localized: "diagnostics.recent.empty",
-            defaultValue: "No crashes or hangs recorded. System-captured diagnostics appear here.",
+            defaultValue: "No failures recorded. Crashes and errors appear here.",
             table: "Localizable", bundle: MobileL10n.bundle)
         )
         .font(LorvexDesign.Typography.tertiaryText)
@@ -109,7 +129,7 @@ struct MobileStoreDiagnosticsSection: View {
         String(
           localized: "diagnostics.recent.footer",
           defaultValue:
-            "Crashes, hangs, and resource exceptions the system reports to Lorvex, newest first.",
+            "Crashes and resource exceptions the system reports to Lorvex, plus errors Lorvex recorded itself, newest first. Tap a row to see its full detail.",
           table: "Localizable", bundle: MobileL10n.bundle))
     }
     .accessibilityIdentifier("mobileDiagnostics.recent")

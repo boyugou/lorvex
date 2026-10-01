@@ -54,6 +54,7 @@ extension AppStore {
       taskDetailStorage.taskDetailPlannedDatePickerDate = pickerDate
     }
     taskDetailHasPlannedDate = task.plannedDate != nil
+    taskDetailPlannedTime = task.plannedTime
     // Due date is a day anchor too — re-anchor the same way as the planned date.
     let duePickerDate = task.dueDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) }
     taskDetailDueDate = duePickerDate
@@ -130,8 +131,8 @@ extension AppStore {
       selectedListDetail = detail
     }
     replaceTaskInWorkspace(task)
-    if focusStorage.focusSurfaceTaskCache[task.id] != nil {
-      focusStorage.focusSurfaceTaskCache[task.id] = task
+    if let index = todayStorage.doneTodayTasks.firstIndex(where: { $0.id == task.id }) {
+      todayStorage.doneTodayTasks[index] = task
     }
   }
 }

@@ -85,12 +85,14 @@ struct WorkspacePlanHeaderChrome<Content: View>: View {
 /// leading SF Symbol mirrors the sidebar icon.
 ///
 /// Plan surfaces should not each tune their own title font, subtitle styling, or
-/// reading width; route the common identity hierarchy through here. Keep
-/// page-specific scope chips and actions outside this primitive.
+/// reading width; route the common identity hierarchy through here. Workspace
+/// actions belong in the window toolbar, not beside the title.
 struct WorkspaceHeaderIdentity<Accessory: View>: View {
   let title: String
   let subtitle: String
-  let systemImage: String?
+  /// The glyph before the title: an SF Symbol name, drawn in the environment
+  /// tint, or a list's own icon, which may be an emoji and draws as text.
+  let icon: String?
   let accessibilityIdentifier: String
   let subtitleAccessibilityIdentifier: String?
   @ViewBuilder let accessory: () -> Accessory
@@ -98,27 +100,33 @@ struct WorkspaceHeaderIdentity<Accessory: View>: View {
   init(
     title: String,
     subtitle: String,
-    systemImage: String? = nil,
+    icon: String? = nil,
     accessibilityIdentifier: String,
     subtitleAccessibilityIdentifier: String? = nil,
     @ViewBuilder accessory: @escaping () -> Accessory
   ) {
     self.title = title
     self.subtitle = subtitle
-    self.systemImage = systemImage
+    self.icon = icon
     self.accessibilityIdentifier = accessibilityIdentifier
     self.subtitleAccessibilityIdentifier = subtitleAccessibilityIdentifier
     self.accessory = accessory
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 3) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
-        if let systemImage {
-          Image(systemName: systemImage)
-            .font(LorvexDesign.Typography.sectionHeader)
-            .foregroundStyle(.tint)
-            .accessibilityHidden(true)
+        if let icon {
+          Group {
+            if let symbol = LorvexListIconView.symbolName(for: icon) {
+              Image(systemName: symbol)
+                .foregroundStyle(.tint)
+            } else {
+              Text(icon)
+            }
+          }
+          .font(LorvexDesign.Typography.sectionHeader)
+          .accessibilityHidden(true)
         }
 
         Text(title)
@@ -150,95 +158,19 @@ extension WorkspaceHeaderIdentity where Accessory == EmptyView {
   init(
     title: String,
     subtitle: String,
-    systemImage: String? = nil,
+    icon: String? = nil,
     accessibilityIdentifier: String,
     subtitleAccessibilityIdentifier: String? = nil
   ) {
     self.init(
       title: title,
       subtitle: subtitle,
-      systemImage: systemImage,
+      icon: icon,
       accessibilityIdentifier: accessibilityIdentifier,
       subtitleAccessibilityIdentifier: subtitleAccessibilityIdentifier
     ) {
       EmptyView()
     }
-  }
-}
-
-enum WorkspaceHeaderSummaryTone {
-  case primary
-  case secondary
-
-  var foregroundStyle: AnyShapeStyle {
-    switch self {
-    case .primary:
-      AnyShapeStyle(.primary)
-    case .secondary:
-      AnyShapeStyle(.secondary)
-    }
-  }
-}
-
-/// Shared descriptive text for workspace headers.
-///
-/// Keep header summaries quiet and bounded. Use `.primary` for the short
-/// assistant/day explanation below a Plan identity, and `.secondary` for
-/// review-result subtitles that sit directly under a smaller section title.
-struct WorkspaceHeaderSummary: View {
-  let text: String
-  let accessibilityIdentifier: String
-  var tone: WorkspaceHeaderSummaryTone = .primary
-  var lineLimit: Int? = 2
-  var expandsVertically = true
-
-  var body: some View {
-    summaryText
-      .accessibilityIdentifier(accessibilityIdentifier)
-  }
-
-  private var summaryText: some View {
-    Text(text)
-      .font(LorvexDesign.Typography.secondaryText)
-      .foregroundStyle(tone.foregroundStyle)
-      .lineLimit(lineLimit)
-      .fixedSize(horizontal: false, vertical: expandsVertically)
-  }
-}
-
-/// Shared visual treatment for quiet header actions.
-///
-/// Use this for secondary actions in Plan/Review/Dashboard headers: view
-/// options, save/share/export, create, and batch-action menus. Primary CTAs
-/// such as Today's focus start can keep their stronger button style.
-struct WorkspaceHeaderActionStyle: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .buttonStyle(.lorvexNeutral)
-      .labelStyle(.iconOnly)
-  }
-}
-
-/// Header-action chrome with the title visible. For domain-specific actions
-/// (save a search, batch selection actions, view options) whose glyph alone
-/// does not communicate the verb — an unlabeled icon there reads as a mystery
-/// button. Universally-understood glyphs (+, share) keep
-/// ``WorkspaceHeaderActionStyle``'s icon-only form with a tooltip.
-struct WorkspaceHeaderLabeledActionStyle: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .buttonStyle(.lorvexNeutral)
-      .labelStyle(.titleAndIcon)
-  }
-}
-
-extension View {
-  func workspaceHeaderActionStyle() -> some View {
-    modifier(WorkspaceHeaderActionStyle())
-  }
-
-  func workspaceHeaderLabeledActionStyle() -> some View {
-    modifier(WorkspaceHeaderLabeledActionStyle())
   }
 }
 
@@ -270,10 +202,10 @@ struct WorkspaceTaskColumn<Content: View>: View {
 /// those surfaces cannot drift into slightly different geometry over time.
 ///
 /// Passing `taskNavigation` additionally layers arrow-key row traversal onto
-/// the list (see ``WorkspaceTaskArrowKeyNavigation``) — every real task-review
-/// call site builds one from its `AppStore`'s active-workspace selection API;
-/// `nil` (the default) leaves the list inert to arrow keys, e.g. the
-/// initial-loading placeholder, which has no rows to traverse.
+/// the list (see ``WorkspaceTaskArrowKeyNavigation``), built from the
+/// `AppStore`'s selection API for the surface. `nil` (the default) leaves the
+/// list inert to arrow keys, as the initial-loading placeholder, which has no
+/// rows to traverse, wants.
 struct WorkspaceReviewList<Content: View>: View {
   var bottomPadding: CGFloat = LorvexDesign.Spacing.l
   var taskNavigation: WorkspaceTaskArrowKeyNavigation? = nil
@@ -429,6 +361,18 @@ private struct WorkspaceTaskArrowKeyNavigationModifier: ViewModifier {
     lorvexAnimated(.snappy(duration: 0.16)) {
       proxy.scrollTo(target, anchor: nil)
     }
+  }
+}
+
+extension View {
+  /// Layers the same arrow-key row traversal onto a scroll view that lays out
+  /// its own rows instead of using ``WorkspaceReviewList`` (Today's main
+  /// column). Each row must carry its task id as its view identity, as a
+  /// `ForEach` over tasks does, so `proxy` can scroll to the row a press lands on.
+  func workspaceTaskArrowKeyNavigation(
+    _ navigation: WorkspaceTaskArrowKeyNavigation?, proxy: ScrollViewProxy
+  ) -> some View {
+    modifier(WorkspaceTaskArrowKeyNavigationModifier(navigation: navigation, proxy: proxy))
   }
 }
 

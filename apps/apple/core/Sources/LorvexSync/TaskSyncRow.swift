@@ -29,6 +29,8 @@ struct TaskSyncRow: Equatable {
   var lastDeferredAt: String?
   var lastDeferReason: String?
   var plannedDate: String?
+  var plannedStartMinutes: Int64?
+  var plannedEndMinutes: Int64?
   var availableFrom: String?
   var deferCount: Int64
   var recurrenceInstanceKey: String?
@@ -57,7 +59,8 @@ struct TaskSyncRow: Equatable {
                            ORDER BY exception_date)) AS recurrence_exceptions,
                  spawned_from, spawned_from_version, recurrence_group_id,
                  canonical_occurrence_date, completed_at, last_deferred_at,
-                 last_defer_reason, planned_date, available_from, defer_count,
+                 last_defer_reason, planned_date, planned_start_minutes,
+                 planned_end_minutes, available_from, defer_count,
                  recurrence_instance_key, archived_at, content_version,
                  schedule_version, lifecycle_version, archive_version,
                  recurrence_rollover_state, recurrence_successor_id,
@@ -77,6 +80,8 @@ struct TaskSyncRow: Equatable {
       canonicalOccurrenceDate: row["canonical_occurrence_date"],
       completedAt: row["completed_at"], lastDeferredAt: row["last_deferred_at"],
       lastDeferReason: row["last_defer_reason"], plannedDate: row["planned_date"],
+      plannedStartMinutes: row["planned_start_minutes"],
+      plannedEndMinutes: row["planned_end_minutes"],
       availableFrom: row["available_from"], deferCount: row["defer_count"],
       recurrenceInstanceKey: row["recurrence_instance_key"], archivedAt: row["archived_at"],
       contentVersion: row["content_version"], scheduleVersion: row["schedule_version"],
@@ -129,6 +134,10 @@ struct TaskSyncRow: Equatable {
       lastDeferReason: str(
         row.lastDeferReason, row.lastDeferReasonPresent, local?.lastDeferReason),
       plannedDate: str(row.plannedDate, row.plannedDatePresent, local?.plannedDate),
+      plannedStartMinutes: int(
+        row.plannedStartMinutes, row.plannedStartMinutesPresent, local?.plannedStartMinutes),
+      plannedEndMinutes: int(
+        row.plannedEndMinutes, row.plannedEndMinutesPresent, local?.plannedEndMinutes),
       availableFrom: str(row.availableFrom, row.availableFromPresent, local?.availableFrom),
       deferCount: int(row.deferCount, row.deferCountPresent, local?.deferCount) ?? 0,
       recurrenceInstanceKey: str(
@@ -241,6 +250,8 @@ struct TaskSyncRow: Equatable {
       completedAtPresent: 1, lastDeferredAt: lastDeferredAt, lastDeferredAtPresent: 1,
       lastDeferReason: lastDeferReason, lastDeferReasonPresent: 1,
       plannedDate: plannedDate, plannedDatePresent: 1,
+      plannedStartMinutes: plannedStartMinutes, plannedStartMinutesPresent: 1,
+      plannedEndMinutes: plannedEndMinutes, plannedEndMinutesPresent: 1,
       availableFrom: availableFrom, availableFromPresent: 1,
       deferCount: deferCount, deferCountPresent: 1,
       recurrenceInstanceKey: recurrenceInstanceKey, recurrenceInstanceKeyPresent: 1,
@@ -319,6 +330,16 @@ struct TaskSyncRow: Equatable {
     }
     guard (status == StatusName.completed) == (completedAt != nil) else {
       throw ApplyError.invalidPayload("task \(id) has incoherent completion lifecycle")
+    }
+    switch (plannedStartMinutes, plannedEndMinutes) {
+    case (nil, nil):
+      break
+    case let (start?, end?)
+    where plannedDate != nil && start >= 0 && end > start && end <= 1440:
+      break
+    default:
+      throw ApplyError.invalidPayload(
+        "task \(id) planned time must be a start before an end within one planned day")
     }
     let terminal = status == StatusName.completed || status == StatusName.cancelled
     let active =
@@ -468,16 +489,6 @@ struct TaskSyncRow: Equatable {
     try validate()
   }
 
-  func advancedBeyondAuthorization() throws -> Bool {
-    guard let raw = spawnedFromVersion else { return true }
-    let authorization = try Self.canonical(raw, field: "spawned_from_version")
-    let clocks = try [contentVersion, scheduleVersion, lifecycleVersion, archiveVersion].map {
-      try Self.canonical($0, field: "task register version")
-    }
-    return clocks.contains(where: { $0 > authorization })
-      || status != StatusName.open || archivedAt != nil || recurrenceSuccessorId != nil
-  }
-
   func changedRegisters(comparedTo other: TaskSyncRow) throws -> TaskRegisterIntent {
     var intent: TaskRegisterIntent = []
     if try contentBytes() != other.contentBytes() { intent.insert(.content) }
@@ -509,6 +520,8 @@ struct TaskSyncRow: Equatable {
     lastDeferredAt = other.lastDeferredAt
     lastDeferReason = other.lastDeferReason
     plannedDate = other.plannedDate
+    plannedStartMinutes = other.plannedStartMinutes
+    plannedEndMinutes = other.plannedEndMinutes
     availableFrom = other.availableFrom
     deferCount = other.deferCount
     recurrenceInstanceKey = other.recurrenceInstanceKey
@@ -548,6 +561,8 @@ struct TaskSyncRow: Equatable {
       "canonical_occurrence_date": nullable(canonicalOccurrenceDate),
       "last_deferred_at": nullable(lastDeferredAt),
       "last_defer_reason": nullable(lastDeferReason), "planned_date": nullable(plannedDate),
+      "planned_start_minutes": plannedStartMinutes.map(JSONValue.int) ?? .null,
+      "planned_end_minutes": plannedEndMinutes.map(JSONValue.int) ?? .null,
       "available_from": nullable(availableFrom), "defer_count": .int(deferCount),
       "recurrence_instance_key": nullable(recurrenceInstanceKey),
     ])

@@ -12,7 +12,8 @@ enum TaskRegisterDescriptor {
     "due_date", "estimated_minutes", "recurrence", "spawned_from",
     "spawned_from_version", "recurrence_group_id", "recurrence_instance_key",
     "canonical_occurrence_date", "last_deferred_at", "last_defer_reason",
-    "planned_date", "available_from", "defer_count", "recurrence_exceptions",
+    "planned_date", "planned_start_minutes", "planned_end_minutes", "available_from",
+    "defer_count", "recurrence_exceptions",
   ]
 
   static let lifecycleFields = [

@@ -67,13 +67,13 @@ func moveHabitsPermutesVisibleOrderViaSyncedCore() async throws {
   defaults.removePersistentDomain(forName: "test.moveHabits")
   let store = AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
   await store.refresh()
-  let original = store.filteredHabits.map(\.id)
+  let original = store.orderedHabits.map(\.id)
   guard original.count >= 2 else { return }
 
   // Drag the first habit two slots down. The new order is persisted through the
   // core `position` column (no UserDefaults) and reflected back on refresh.
   await store.moveHabits(fromOffsets: IndexSet([0]), toOffset: 2)
-  let reordered = store.filteredHabits.map(\.id)
+  let reordered = store.orderedHabits.map(\.id)
   #expect(reordered != original)
   #expect(Set(reordered) == Set(original))
   #expect(reordered.first == original[1])

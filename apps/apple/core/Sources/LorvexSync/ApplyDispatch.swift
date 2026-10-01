@@ -25,11 +25,6 @@ public enum EntityApplyOutcome: Sendable, Equatable {
   /// Upsert applied, delete that removed the row, idempotent late-replay delete,
   /// or an intentional in-handler skip — all need the tombstone written.
   case applied
-  /// An append-only audit upsert was intentionally not stored because its
-  /// timestamp falls outside the receiver's retention frontier. The applier has
-  /// already queued an exact-zone CloudKit physical delete; treating this as an
-  /// ordinary applied no-op would strand full content in CloudKit.
-  case upsertRejectedByRetention
   /// The in-handler LWW gate refused the SQL DELETE because the surviving local
   /// row's HLC dominates the envelope's. `localVersion` carries the row's
   /// pre-handler version so the caller renders the conflict-log row without a
@@ -112,11 +107,12 @@ extension EntityApplierRegistry {
   /// applier here as they land; the dispatcher resolves any `entity_type` not in
   /// this set to ``ApplyError/unknownEntityType(_:)``.
   ///
-  /// Every syncable entity type's applier is registered here: the aggregate
+  /// Every applied entity type's applier is registered here (`ai_changelog` is
+  /// device-local and skipped before dispatch): the aggregate
   /// roots (`task`, `list`, `habit`, `tag` with duplicate-tag
   /// merge, `calendar_event` with attendee reconciliation, `memory`,
-  /// `preference`, `ai_changelog`), the day-scoped aggregates (`current_focus`,
-  /// `focus_schedule`, `daily_review`), the four composite edges (`task_tag`,
+  /// `preference`), the day-scoped aggregates (`daily_briefing`,
+  /// `daily_review`), the four composite edges (`task_tag`,
   /// `task_calendar_event_link`, `habit_completion`, and
   /// `task_dependency` with its cycle-break upsert), and the independent
   /// children (`task_reminder`, `task_checklist_item`, `habit_reminder_policy`).
@@ -131,9 +127,8 @@ extension EntityApplierRegistry {
       HabitReminderPolicyApplier(),
       CalendarEventApplier(),
       CalendarSeriesCutoverApplier(),
-      CurrentFocusApplier(), FocusScheduleApplier(), DailyReviewApplier(),
+      DailyBriefingApplier(), DailyReviewApplier(),
       MemoryApplier(), PreferenceApplier(),
-      ChangelogApplier(),
     ]
   }
 }

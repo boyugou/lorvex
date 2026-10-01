@@ -1,5 +1,5 @@
 /// Canonical typed wrapper around a clock time rendered in the canonical
-/// 24-hour `HH:MM` form used across calendar / focus / reminder columns.
+/// 24-hour `HH:MM` form used across calendar, task-time, and reminder columns.
 ///
 /// Backed by hour/minute/second so two values compare by clock order, not by
 /// lexicographic byte order. The wire encoding is the canonical zero-padded
@@ -40,6 +40,21 @@ public struct TimeOfDay: Sendable, Equatable, Hashable, Comparable, Codable {
       return .success(t)
     }
     return .failure(.invalidFormat(field: "time", expected: "HH:MM", actual: raw))
+  }
+
+  /// Parse the end of a time range as minutes since midnight: an `HH:MM`
+  /// time, or `24:00` for the midnight that ends the day (1440).
+  public static func parseRangeEndMinutes(_ raw: String) -> Result<Int, ValidationError> {
+    if raw.trimmingCharacters(in: .whitespaces) == "24:00" { return .success(1440) }
+    return parse(raw).map(\.minutesOfDay)
+  }
+
+  /// Render a minute-of-day offset in 0...1440 as `HH:MM`, with 1440 as
+  /// `24:00` (the midnight that ends the day), the inverse of
+  /// ``parseRangeEndMinutes(_:)``.
+  public static func rangeBoundString(_ minutes: Int) -> String {
+    let clamped = min(max(minutes, 0), 1440)
+    return String(format: "%02d:%02d", clamped / 60, clamped % 60)
   }
 
   /// Render as the canonical 24-hour `HH:MM` string (seconds dropped).

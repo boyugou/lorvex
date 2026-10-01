@@ -3,7 +3,7 @@ import LorvexCore
 
 extension AppStore {
   func prepareListDraft(for list: LorvexList) {
-    draftListName = list.name
+    draftListName = list.displayName
     draftListDescription = list.description ?? ""
     draftListIcon = list.icon
     draftListColor = list.color
@@ -51,10 +51,15 @@ extension AppStore {
     defer { isCreating = false }
     await perform {
       let description = draftListDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+      // Three-state description patch: a non-empty field sets the value; an empty
+      // field clears it (blanking the description in the editor is an explicit
+      // "no value", never a silent leave-as-is).
       _ = try await core.updateList(
         id: list.id,
-        name: draftListName.trimmingCharacters(in: .whitespacesAndNewlines),
-        description: description,
+        name: LorvexListNaming.nameToStore(
+          id: list.id, storedName: list.name,
+          editedName: draftListName.trimmingCharacters(in: .whitespacesAndNewlines)),
+        description: description.isEmpty ? .clear : .set(description),
         color: draftListColor,
         icon: draftListIcon
       )
@@ -116,19 +121,6 @@ extension AppStore {
       _ = try await core.unarchiveList(id: list.id)
       lists = try await core.loadLists()
       archivedLists = try await core.loadArchivedLists()
-    }
-  }
-
-  func moveSelectedTaskToSelectedList() async {
-    guard let taskID = selectedTask?.id, let selectedListID else { return }
-    await perform {
-      _ = try await core.moveTask(id: taskID, toListID: selectedListID)
-      today = try await core.loadToday()
-      lists = try await core.loadLists()
-      try await loadSelectedListDetail()
-      selectedTaskID = taskID
-      selection = .lists
-      await republishSurfacesAfterLocalMutation()
     }
   }
 

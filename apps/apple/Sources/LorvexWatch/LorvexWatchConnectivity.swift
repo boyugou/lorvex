@@ -187,6 +187,34 @@ import OSLog
       await delivery?.drain()
     }
 
+    public func requestReplica() async {
+      guard WCSession.isSupported(), session.activationState == .activated else { return }
+      // The latest application context may have arrived while the receiver
+      // could not store it; offer it again before asking the phone.
+      if let pending = session.receivedApplicationContext[
+        LorvexWatchConnectivityKey.replicaEnvelopeV1] as? Data
+      {
+        receiveReplicaData(pending)
+      }
+      guard session.isReachable else { return }
+      let replica: Data? = await withCheckedContinuation { continuation in
+        session.sendMessage(
+          [LorvexWatchConnectivityKey.replicaRequestV1: true],
+          replyHandler: { reply in
+            continuation.resume(
+              returning: reply[LorvexWatchConnectivityKey.replicaEnvelopeV1] as? Data)
+          },
+          errorHandler: { error in
+            Self.log.notice(
+              "Replica request failed: \(error.localizedDescription, privacy: .public)")
+            continuation.resume(returning: nil)
+          })
+      }
+      if let replica {
+        await receiveReplicaDataAndWait(replica)
+      }
+    }
+
     public func handleBackgroundWake() async {
       // Give a just-delivered delegate callback one scheduling turn to register
       // its synchronous tracker token, then await both inbound processing and
@@ -292,25 +320,37 @@ import OSLog
     #endif
 
     private func receiveReplicaData(_ replicaData: Data) {
-      // Reserve order synchronously in the delegate callback. The unstructured
-      // Tasks below may begin in either order, so the replica-store actor uses
-      // this token to reject a late task for an older application context.
-      let ingressSequence = replicaIngressLock.withLock { () -> UInt64 in
+      let ingressSequence = reserveReplicaIngressSequence()
+      inboundWork.begin()
+      Task {
+        await storeReplica(replicaData, ingressSequence: ingressSequence)
+        inboundWork.end()
+      }
+    }
+
+    private func receiveReplicaDataAndWait(_ replicaData: Data) async {
+      await storeReplica(replicaData, ingressSequence: reserveReplicaIngressSequence())
+    }
+
+    /// Reserves replica order synchronously, before any Task starts. Tasks may
+    /// begin in either order, so the replica-store actor uses this token to
+    /// reject a late task for an older application context.
+    private func reserveReplicaIngressSequence() -> UInt64 {
+      replicaIngressLock.withLock { () -> UInt64 in
         let reserved = nextReplicaIngressSequence
         if nextReplicaIngressSequence < UInt64.max {
           nextReplicaIngressSequence += 1
         }
         return reserved
       }
-      inboundWork.begin()
-      Task {
-        _ = await snapshotReceiver?.handle(
-          applicationContext: [
-            LorvexWatchConnectivityKey.replicaEnvelopeV1: replicaData
-          ], ingressSequence: ingressSequence)
-        await delivery?.drain()
-        inboundWork.end()
-      }
+    }
+
+    private func storeReplica(_ replicaData: Data, ingressSequence: UInt64) async {
+      _ = await snapshotReceiver?.handle(
+        applicationContext: [
+          LorvexWatchConnectivityKey.replicaEnvelopeV1: replicaData
+        ], ingressSequence: ingressSequence)
+      await delivery?.drain()
     }
   }
 #endif

@@ -18,10 +18,4 @@ public enum StorageSchema {
   public static func isSqliteBoolColumn(table: String, column: String) -> Bool {
     sqliteBoolColumns.contains { $0.table == table && $0.column == column }
   }
-
-  /// Device-local routing columns excluded from generic sync/export payloads.
-  /// Audit account identity must never cross the wire.
-  public static func isDeviceLocalColumn(table: String, column: String) -> Bool {
-    table == "ai_changelog" && column == "retention_account_identifier"
-  }
 }

@@ -5,6 +5,15 @@ import Testing
 
 @testable import LorvexApple
 
+/// A captured source for `today` on 2026-05-22 in UTC.
+private func publisherSource(
+  _ today: TodaySnapshot, habits: HabitCatalogSnapshot? = nil
+) -> WidgetSnapshotSource {
+  WidgetSnapshotSource(
+    storageGeneration: 0, logicalDay: "2026-05-22", timezone: "UTC", today: today,
+    habits: habits, lists: nil, stats: nil)
+}
+
 @Test
 func fileWidgetSnapshotPublisherWritesReadableSnapshotAtomically() async throws {
   let tempDirectory = FileManager.default.temporaryDirectory
@@ -20,7 +29,6 @@ func fileWidgetSnapshotPublisherWritesReadableSnapshotAtomically() async throws 
     projector: WidgetSnapshotProjector(now: { Date(timeIntervalSince1970: 1_779_465_600) })
   )
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
       makePublisherWidgetTask(
@@ -34,7 +42,7 @@ func fileWidgetSnapshotPublisherWritesReadableSnapshotAtomically() async throws 
     localChangeSequence: 1
   )
 
-  let published = try await publisher.publish(today: today, currentFocus: nil)
+  let published = try await publisher.publish(source: publisherSource(today))
   let loaded = WidgetSnapshotLoader().loadSnapshot(at: snapshotURL)
 
   guard case .snapshot(let snapshot) = loaded else {
@@ -42,7 +50,7 @@ func fileWidgetSnapshotPublisherWritesReadableSnapshotAtomically() async throws 
     return
   }
   #expect(snapshot == published)
-  #expect(snapshot.focusTasks.map(\.id) == ["task-widget-file"])
+  #expect(snapshot.tasks.map(\.id) == ["task-widget-file"])
 }
 
 @Test
@@ -68,7 +76,6 @@ func fileWidgetSnapshotPublisherReloadsGlanceSurfacesOnlyAfterDurableWrite() asy
     reloadTrigger: reloadTrigger
   )
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
       makePublisherWidgetTask(
@@ -82,7 +89,7 @@ func fileWidgetSnapshotPublisherReloadsGlanceSurfacesOnlyAfterDurableWrite() asy
     localChangeSequence: 1
   )
 
-  _ = try await publisher.publish(today: today, currentFocus: nil)
+  _ = try await publisher.publish(source: publisherSource(today))
 
   #expect(reloadCount.value == 1)
   #expect(snapshotExistedAtReload.value)
@@ -149,7 +156,7 @@ func fileWidgetSnapshotPublisherIncludesHabits() async throws {
     snapshotURL: snapshotURL,
     projector: WidgetSnapshotProjector(now: { Date(timeIntervalSince1970: 1_779_465_600) })
   )
-  let today = TodaySnapshot(focusTitle: "Today", summary: "", tasks: [], localChangeSequence: 1)
+  let today = TodaySnapshot(summary: "", tasks: [], localChangeSequence: 1)
   let catalog = HabitCatalogSnapshot(habits: [
     LorvexHabit(
       id: "h1", name: "Meditate", icon: "🧘", color: nil, cue: nil,
@@ -158,7 +165,7 @@ func fileWidgetSnapshotPublisherIncludesHabits() async throws {
   ])
 
   let published = try await publisher.publish(
-    today: today, currentFocus: nil, habitCatalog: catalog, lists: nil)
+    source: publisherSource(today, habits: catalog))
 
   #expect(published.habits.contains { $0.id == "h1" })
 }

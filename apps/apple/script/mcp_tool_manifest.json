@@ -65,19 +65,6 @@
       "task_id"
     ]
   },
-  "add_to_current_focus": {
-    "advertises_idempotency_key": true,
-    "properties": {
-      "briefing": "string",
-      "date": "string",
-      "idempotency_key": "string",
-      "task_ids": "array<string>",
-      "timezone": "string"
-    },
-    "required": [
-      "task_ids"
-    ]
-  },
   "adjust_habit_completion": {
     "advertises_idempotency_key": true,
     "properties": {
@@ -201,7 +188,7 @@
     "properties": {
       "idempotency_key": "string",
       "include_advice": "boolean",
-      "tasks": "array<object{available_from:string,checklist:array<string>,completed_at:string,created_at:string,depends_on:array<string>,due_date:string,estimated_minutes:integer,list_id:string,notes:string,original_id:string,planned_date:string,priority:enum[1,2,3],status:enum[cancelled,completed,in_progress,open,someday],tags:array<string>,title:string}required[title]>"
+      "tasks": "array<object{available_from:string,checklist:array<string>,completed_at:string,created_at:string,depends_on:array<string>,due_date:string,estimated_minutes:integer,list_id:string,notes:string,original_id:string,planned_date:string,planned_end_time:string,planned_start_time:string,priority:enum[1,2,3],raw_input:string,status:enum[cancelled,completed,in_progress,open,someday],tags:array<string>,title:string}required[title]>"
     },
     "required": [
       "tasks"
@@ -247,7 +234,7 @@
     "advertises_idempotency_key": true,
     "properties": {
       "idempotency_key": "string",
-      "updates": "array<object{available_from:string,depends_on:array<string>,due_date:string,estimated_minutes:integer,id:string,notes:string,planned_date:string,priority:enum[1,2,3],tags:array<string>,title:string}required[id]>"
+      "updates": "array<object{available_from:string,depends_on:array<string>,due_date:string,estimated_minutes:integer,id:string,notes:string,planned_date:string,planned_end_time:string,planned_start_time:string,priority:enum[1,2,3],tags:array<string>,title:string}required[id]>"
     },
     "required": [
       "updates"
@@ -262,14 +249,6 @@
     "required": [
       "id"
     ]
-  },
-  "clear_current_focus": {
-    "advertises_idempotency_key": true,
-    "properties": {
-      "date": "string",
-      "idempotency_key": "string"
-    },
-    "required": []
   },
   "complete_habit": {
     "advertises_idempotency_key": true,
@@ -378,6 +357,8 @@
       "notes": "string",
       "original_id": "string",
       "planned_date": "string",
+      "planned_end_time": "string",
+      "planned_start_time": "string",
       "priority": "enum[1,2,3]",
       "raw_input": "string",
       "status": "enum[cancelled,completed,in_progress,open,someday]",
@@ -525,7 +506,7 @@
   "export_data": {
     "advertises_idempotency_key": false,
     "properties": {
-      "entities": "array<enum[all,calendar_events,current_focus,daily_reviews,focus_schedules,habits,lists,memory,preferences,tags,task_calendar_event_links,tasks]>",
+      "entities": "array<enum[all,calendar_events,daily_briefings,daily_reviews,habits,lists,memory,preferences,tags,task_calendar_event_links,tasks]>",
       "format": "enum[csv,json]"
     },
     "required": [
@@ -566,14 +547,14 @@
       "to"
     ]
   },
-  "get_current_focus": {
+  "get_daily_review": {
     "advertises_idempotency_key": false,
     "properties": {
       "date": "string"
     },
     "required": []
   },
-  "get_daily_review": {
+  "get_daily_schedule": {
     "advertises_idempotency_key": false,
     "properties": {
       "date": "string"
@@ -583,8 +564,8 @@
   "get_deferred_tasks": {
     "advertises_idempotency_key": false,
     "properties": {
-      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
-      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
       "include_nulls": "boolean",
       "limit": "integer",
       "list_id": "string",
@@ -737,13 +718,6 @@
     },
     "required": []
   },
-  "get_saved_focus_schedule": {
-    "advertises_idempotency_key": false,
-    "properties": {
-      "date": "string"
-    },
-    "required": []
-  },
   "get_session_context": {
     "advertises_idempotency_key": false,
     "properties": {},
@@ -781,8 +755,8 @@
     "advertises_idempotency_key": false,
     "properties": {
       "days": "integer",
-      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
-      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
       "include_nulls": "boolean",
       "limit": "integer",
       "offset": "integer",
@@ -846,8 +820,8 @@
       "due_from": "string",
       "due_presence": "enum[absent,any,present]",
       "due_to": "string",
-      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
-      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
       "include_nulls": "boolean",
       "limit": "integer",
       "list_id": "string",
@@ -943,17 +917,6 @@
     "required": [
       "event_id",
       "occurrence_date"
-    ]
-  },
-  "remove_from_current_focus": {
-    "advertises_idempotency_key": true,
-    "properties": {
-      "date": "string",
-      "idempotency_key": "string",
-      "task_id": "string"
-    },
-    "required": [
-      "task_id"
     ]
   },
   "remove_task_checklist_item": {
@@ -1068,17 +1031,16 @@
       "task_id"
     ]
   },
-  "save_focus_schedule": {
+  "save_daily_schedule": {
     "advertises_idempotency_key": true,
     "properties": {
-      "blocks": "array<object{block_type:enum[buffer,event,task],end_time:string,event_id:string,event_source:enum[canonical,freeform,provider],start_time:string,task_id:string,title:string}required[end_time,start_time]>",
       "date": "string",
       "idempotency_key": "string",
-      "rationale": "string"
+      "times": "array<object{end_time:string,start_time:string,task_id:string}required[end_time,start_time,task_id]>"
     },
     "required": [
-      "blocks",
-      "date"
+      "date",
+      "times"
     ]
   },
   "search_calendar_events": {
@@ -1101,8 +1063,8 @@
   "search_tasks": {
     "advertises_idempotency_key": false,
     "properties": {
-      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
-      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
+      "fields": "array<enum[ai_notes,available_from,checklist_items,completed_at,created_at,defer_count,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness_state,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,status,tags,title,updated_at]>",
+      "include": "array<enum[ai_notes,available_from,checklist,checklist_items,completed_at,created_at,defer,defer_count,dependencies,depends_on,due_date,estimated_minutes,id,last_defer_reason,last_deferred_at,lateness,lateness_state,lifecycle,list_id,notes,planned_date,planned_end_time,planned_start_time,priority,priority_label,raw_input,recurrence,recurrence_exceptions,reminders,scheduling,status,tags,title,updated_at]>",
       "include_nulls": "boolean",
       "limit": "integer",
       "offset": "integer",
@@ -1114,17 +1076,15 @@
       "query"
     ]
   },
-  "set_current_focus": {
+  "set_daily_briefing": {
     "advertises_idempotency_key": true,
     "properties": {
       "briefing": "string",
       "date": "string",
-      "idempotency_key": "string",
-      "task_ids": "array<string>",
-      "timezone": "string"
+      "idempotency_key": "string"
     },
     "required": [
-      "task_ids"
+      "briefing"
     ]
   },
   "set_list_ai_notes": {
@@ -1345,6 +1305,8 @@
       "idempotency_key": "string",
       "notes": "string",
       "planned_date": "string",
+      "planned_end_time": "string",
+      "planned_start_time": "string",
       "priority": "enum[1,2,3]",
       "raw_input": "string",
       "tags": "array<string>",

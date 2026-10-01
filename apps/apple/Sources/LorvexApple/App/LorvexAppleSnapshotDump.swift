@@ -48,21 +48,13 @@
 
         VStack(spacing: 0) {
           if let task = tasks.first {
-            LorvexTaskRow(task: task, isFocused: true)
+            LorvexTaskRow(task: task, isSelected: true)
             Divider()
           }
           if let task = tasks.dropFirst().first { LorvexTaskRow(task: task) }
         }
         .padding(12)
         .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: 12))
-
-        HStack(spacing: 16) {
-          ReviewMetricCard(
-            title: "Open", metricKey: "open", value: tasks.count, systemImage: "checklist",
-            tint: .blue)
-          ReviewMetricCard(
-            title: "In Focus", metricKey: "focus", value: 2, systemImage: "scope", tint: .indigo)
-        }
 
         HStack(spacing: 22) {
           HabitProgressRing(completed: 1, target: 1, tint: .green, icon: "figure.run") {}

@@ -70,7 +70,7 @@ enum ApplyCollision {
       details: details, level: "error")
   }
 
-  /// A generation snapshot legitimately republishes a stored HLC using the
+  /// A full-resync backfill legitimately republishes a stored HLC using the
   /// rebuilding device's transport `device_id`; that wrapper is not the HLC's
   /// original author and must not look like a collision. Report only when the
   /// suffix is self-consistent with both distinct full ids.

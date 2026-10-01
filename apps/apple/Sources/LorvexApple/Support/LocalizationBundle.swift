@@ -13,16 +13,11 @@ import LorvexCore
 enum LorvexL10n {
     /// The bundle containing `Localizable.xcstrings` for LorvexApple.
     ///
-    /// Exposed as `public` so the test target can load and verify the catalog.
+    /// Exposed as `public` so the test target can load it and verify the
+    /// compiled string tables it ships.
     public static let bundle: Bundle = LorvexResourceBundleResolver.bundle(
         named: "LorvexApple_LorvexApple.bundle",
         swiftPMBundle: Bundle.module)
-
-    /// The URL of the Localizable.xcstrings file, or `nil` if it cannot be
-    /// located (e.g., in a SwiftPM build where resources were not processed).
-    public static var catalogURL: URL? {
-        bundle.url(forResource: "Localizable", withExtension: "xcstrings")
-    }
 }
 
 /// Compose an already-localized title and its value/count into a single

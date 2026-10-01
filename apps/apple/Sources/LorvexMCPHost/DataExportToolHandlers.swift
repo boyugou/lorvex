@@ -16,11 +16,10 @@ extension ToolRegistry {
         message: "Pass entities explicitly, for example [\"tasks\"] or [\"all\"].",
         toolName: "export_data")
     }
-    // Uses the full-read exporter with its AI audience projection. All selected
-    // categories stay complete except provider focus blocks, which honor the
-    // device-local calendar AI-access tier (`off` omits them). Human-initiated
-    // Settings/App-Intent backups retain the ordinary complete-export path.
-    // Source identity is threaded through for the JSON provenance manifest.
+    // The AI-facing exporter writes the portable migration document, without
+    // the exact Apple task graph a user's JSON backup carries; Settings and App
+    // Intent backups use the complete export path. Source identity is threaded
+    // through for the JSON provenance manifest.
     let output = try await coreBridge.service.exportDataForAI(
       entities: request.entityList,
       format: request.format.rawValue,

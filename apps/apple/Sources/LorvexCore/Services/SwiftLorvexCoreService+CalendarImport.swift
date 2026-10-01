@@ -46,63 +46,6 @@ extension SwiftLorvexCoreService {
     }
   }
 
-  public func importCalendarEventIfAbsent(
-    id: CalendarTimelineEvent.ID,
-    title: String,
-    startDate: String,
-    startTime: String?,
-    endDate: String?,
-    endTime: String?,
-    allDay: Bool,
-    location: String?,
-    notes: String?,
-    url: String?,
-    color: String?,
-    eventType: String?,
-    personName: String?,
-    attendees: [CalendarEventAttendee]?,
-    timezone: String?,
-    recurrence: String?,
-    seriesId: String?,
-    recurrenceInstanceDate: String?,
-    occurrenceState: String?,
-    recurrenceGeneration: String?,
-    seriesCutoverId: String? = nil
-  ) async throws -> (CalendarTimelineEvent?, Bool) {
-    try withWrite { db, hlc, deviceId in
-      // Presence and tombstone checks share the write transaction with the
-      // insert, so a non-destructive restore cannot overwrite or resurrect.
-      if try Int.fetchOne(
-        db, sql: "SELECT 1 FROM calendar_events WHERE id = ?", arguments: [id]) != nil
-      {
-        return (nil, false)
-      }
-      if try Tombstone.isTombstoned(
-        db, entityType: EntityName.calendarEvent, entityId: id)
-      {
-        return (nil, false)
-      }
-      if let seriesCutoverId,
-        try CalendarSeriesCutoverRepo.fetch(db, id: seriesCutoverId)?.state == .deleted
-      {
-        return (nil, false)
-      }
-      let event = try self.writeImportedCalendarEventInTx(
-        db, hlc: hlc, deviceId: deviceId,
-        id: id, title: title,
-        startDate: startDate, startTime: startTime,
-        endDate: endDate, endTime: endTime, allDay: allDay,
-        location: location, notes: notes, url: url, color: color,
-        eventType: eventType, personName: personName, attendees: attendees,
-        timezone: timezone, recurrence: recurrence,
-        seriesId: seriesId, recurrenceInstanceDate: recurrenceInstanceDate,
-        occurrenceState: occurrenceState,
-        recurrenceGeneration: recurrenceGeneration,
-        seriesCutoverId: seriesCutoverId)
-      return (event, true)
-    }
-  }
-
   /// Restore one native calendar row. The backup preserves recurrence generation
   /// because it is part of deterministic decision identity, but carries no sync
   /// register provenance. Base content/topology registers are freshly minted;

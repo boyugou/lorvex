@@ -102,38 +102,28 @@ present or tombstoned locally are skipped, while an absent record is restored as
 a new local write. Preferences are the intentional exception: portable,
 non-device-local preference values restore with ordinary LWW semantics.
 
-### CloudKit operation boundary
+### Relationship to CloudKit sync
 
 Shipping Settings surfaces never call `LorvexDataImporter.apply` directly. They
-route the confirmed plan through `CloudSyncDataImportBoundary`:
+call `AppStore.applyDataImport` or `MobileStore.applyDataImport`, which run the
+import beside the sync engine rather than inside a sync boundary:
 
-- In `.live` mode, the retained `CloudSyncEngineCoordinator` operation gate is
-  held continuously while the engine drains every currently visible CloudKit
-  page, re-proves the available account and exact ready generation/root, verifies
-  a terminal traversal witness, drains dependency-deferred inbox work to a local
-  fixed point, and checks the durable pending/corrupt inbound-debt ledgers. Only
-  a complete state may enter the importer; a pause, account/generation change,
-  nonterminal traversal, unresolved future/dependency row, or corrupt-record
-  fence fails closed with no import writes.
-- The same non-reentrant gate remains held across the importer's presence,
-  tombstone, and write decisions. Cloud deletion, mode transitions, refresh, and
-  other coordinator work therefore cannot interleave with the multi-record
-  restore.
-- A terminal inbound traversal can commit before unrelated post-inbound work
-  such as outbound push, retention, or audit maintenance fails. That failure
-  does not invalidate the terminal proof or cause the already-authorized import
-  to be repeated; the host completes the import once while retaining the normal
-  sync error and retry-after/backoff warning.
-- `.off` and `.recordPlan` deliberately perform no CloudKit I/O. When a retained
-  maintenance coordinator exists they still use its gate to order the import
-  against local maintenance. Their collision decisions are local-only: an
-  import performed while sync is off cannot claim that unseen CloudKit state
-  participated in the decision.
-
-After the gate is released, the macOS and Mobile stores publish committed
-database-change signals and wait for their final coalesced refresh. Mobile also
-applies a mode request queued during the import before that refresh can start a
-new live cycle.
+- With sync live, the store runs one best-effort sync pass first, so the
+  importer's presence and tombstone decisions see the other devices' latest
+  rows. The import is local and proceeds when that pass fails.
+- The importer commits record by record, each unit in its own transaction.
+  SQLite transactions serialize those writes against the engine's inbound
+  applies, and last-writer-wins settles any overlap.
+- The store then publishes a committed database-change signal and waits for its
+  final coalesced refresh. Imported rows reach CloudKit through the outbox like
+  any other local mutation; the iOS store also runs one more sync pass after
+  the refresh to upload them.
+- With sync off, no CloudKit I/O happens, and the importer's collision
+  decisions are local-only: an import performed while sync is off cannot claim
+  that unseen CloudKit state participated in the decision.
+- Import rejects only with `LorvexDataImporter.BusyError`, thrown while another
+  import, reset, or iCloud-data deletion is running (on iOS, also while a
+  sync-mode change is in progress).
 
 The import path is defensive against hostile or malformed archives:
 
@@ -163,8 +153,9 @@ The import path is defensive against hostile or malformed archives:
   duplicate, or count-mismatched members are rejected before apply.
 - **Whole-payload semantic preflight.** Before preview, both JSON and ZIP reject
   duplicate aggregate/child identities, impossible natural-key collisions,
-  dangling references into another included complete category, malformed focus
-  block ownership/positions, contradictory calendar boundary/segment topology,
+  dangling references into another included complete category, a daily
+  briefing with a duplicate date, an invalid date, or blank text,
+  contradictory calendar boundary/segment topology,
   task-calendar control state that disagrees with the live edge category, and
   every importable preference's stored JSON plus typed value contract. A
   malformed preference therefore fails before any earlier category can write.
@@ -192,14 +183,14 @@ The import path is defensive against hostile or malformed archives:
 
 - Changing the on-disk SQLite schema. The archive format is independent of
   `schema.sql`.
-- A formal, lossless cross-runtime interchange format. Apple and Tauri are
-  directionally aligned through `spec/` concepts, not byte-locked; moving data
-  between them is AI-reconciled best-effort, not a structural contract.
+- A formal, lossless cross-runtime interchange format. Moving data to or from
+  another implementation is AI-reconciled best-effort, not a structural
+  contract.
 - Restoring account- or device-bound sync transport state. The native task graph
   preserves user-data deletion high-waters (tombstones) and opaque future-field
   shadows, but excludes CloudKit confirmation receipts, pending inbox/outbox and
-  quarantine rows, corrupt-record fences, cursors, delivery state, and generated
-  columns. A JSON provenance header may describe the producing device, but that
+  quarantine rows, the sync engine's state checkpoint, delivery state, and
+  generated columns. A JSON provenance header may describe the producing device, but that
   identifier is never installed as the destination's runtime identity.
   Delete/upsert outbox work is reconstructed under the current device identity;
   a backup never imports another account's confirmation state.

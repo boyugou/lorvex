@@ -18,7 +18,7 @@ struct SetupWizardTests {
   @Test("advance moves through all steps in order")
   func advancesThroughAllSteps() {
     let state = SetupWizardState()
-    let expected: [SetupWizardStep] = [.permissions, .done]
+    let expected: [SetupWizardStep] = [.cloudSync, .permissions, .done]
     for step in expected {
       state.advance()
       #expect(state.currentStep == step)
@@ -36,18 +36,7 @@ struct SetupWizardTests {
     #expect(state.currentStep == .done)
   }
 
-  // MARK: - Permission skipping
-
-  @Test("skipping a permission marks it as not granted")
-  func skippingPermissionAllowsCompletion() {
-    let state = SetupWizardState()
-
-    state.skipCalendar()
-    state.skipNotifications()
-
-    #expect(state.calendarPermissionState == .skipped)
-    #expect(state.notificationsPermissionState == .skipped)
-  }
+  // MARK: - Permissions
 
   @Test("permissions are idle before any decision")
   func permissionsStartIdle() {

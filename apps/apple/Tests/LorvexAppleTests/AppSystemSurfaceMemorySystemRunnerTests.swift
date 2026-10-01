@@ -85,6 +85,4 @@ func taskIntentRunnerHandlesMemoryExportAndSystemActions() async throws {
   #expect(!changelog.entries.contains { $0.summary.contains("shortcut_context") })
   let recentLogs = try await LorvexTaskIntentRunner.readRecentLogs(core: core)
   #expect(recentLogs.redactionApplied)
-  let guide = try await LorvexTaskIntentRunner.readGuide(core: core)
-  #expect(guide.topic == "overview")
 }

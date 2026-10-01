@@ -22,20 +22,11 @@ public struct LorvexWatchComplicationProvider: TimelineProvider {
     Self.placeholderEntry(at: Date())
   }
 
+  /// The sample day, redacted by the view, so the placeholder has the shape
+  /// of a real day without showing one.
   public static func placeholderEntry(at date: Date = Date()) -> LorvexWatchComplicationEntry {
-    LorvexWatchComplicationEntry(
-      date: date,
-      taskTitle: String(
-        localized: "watch.complication.placeholder.task_title", defaultValue: "Review pull request",
-        table: "Localizable", bundle: WatchL10n.bundle),
-      statusText: String(
-        localized: "watch.complication.placeholder.status", defaultValue: "1 focus task",
-        table: "Localizable", bundle: WatchL10n.bundle),
-      openFocusCount: 1,
-      availability: .content,
-      primaryPriorityTier: 1,
-      isPlaceholder: true
-    )
+    LorvexWatchComplicationEntryMapper.entry(
+      from: .snapshot(WidgetPreviewSnapshot.make(now: date)), at: date, isPlaceholder: true)
   }
 
   /// Representative, unredacted entry for the watch-face gallery. It must not
@@ -60,8 +51,8 @@ public struct LorvexWatchComplicationProvider: TimelineProvider {
     completion: @escaping (Timeline<LorvexWatchComplicationEntry>) -> Void
   ) {
     let now = Date()
-    let result = makeTimelineResult(from: loadResult(at: now), at: now)
-    completion(Timeline(entries: [result.entry], policy: .after(result.refreshAfter)))
+    let timeline = LorvexWatchComplicationEntryMapper.timeline(from: loadResult(at: now), at: now)
+    completion(Timeline(entries: timeline.entries, policy: .after(timeline.refreshAfter)))
   }
 
   func makeSnapshotEntry(
@@ -72,33 +63,6 @@ public struct LorvexWatchComplicationProvider: TimelineProvider {
       return Self.previewEntry(at: date)
     }
     return LorvexWatchComplicationEntryMapper.entry(from: loadResult(at: date), at: date)
-  }
-
-  func makeTimelineResult(
-    from unvalidatedResult: WidgetSnapshotLoadResult,
-    at date: Date,
-    calendar fallbackCalendar: Calendar = .autoupdatingCurrent
-  ) -> (entry: LorvexWatchComplicationEntry, refreshAfter: Date) {
-    let freshnessPolicy = WidgetSnapshotFreshnessPolicy()
-    let result = freshnessPolicy.validatingCurrentDay(
-      unvalidatedResult,
-      now: date,
-      calendar: fallbackCalendar
-    )
-    let freshness = result.snapshot.map {
-      freshnessPolicy.classify(snapshot: $0, now: date)
-    }
-
-    let refreshAfter = WidgetTimelineRefreshPolicy().nextRefreshDate(
-      after: date,
-      freshness: freshness,
-      freshnessPolicy: freshnessPolicy,
-      calendar: fallbackCalendar
-    )
-    return (
-      LorvexWatchComplicationEntryMapper.entry(from: result, at: date),
-      refreshAfter
-    )
   }
 
   private func loadResult(at date: Date) -> WidgetSnapshotLoadResult {

@@ -36,6 +36,10 @@ extension ApplyTask {
                      THEN :last_defer_reason ELSE tasks.last_defer_reason END,
                  planned_date = CASE WHEN :planned_date_present
                      THEN :planned_date ELSE tasks.planned_date END,
+                 planned_start_minutes = CASE WHEN :planned_start_minutes_present
+                     THEN :planned_start_minutes ELSE tasks.planned_start_minutes END,
+                 planned_end_minutes = CASE WHEN :planned_end_minutes_present
+                     THEN :planned_end_minutes ELSE tasks.planned_end_minutes END,
                  available_from = CASE WHEN :available_from_present
                      THEN :available_from ELSE tasks.available_from END,
                  defer_count = CASE WHEN :defer_count_present
@@ -66,7 +70,8 @@ extension ApplyTask {
                         canonical_occurrence_date,
                         created_at, updated_at, completed_at, last_deferred_at,
                         last_defer_reason,
-                        planned_date, available_from, defer_count, recurrence_instance_key,
+                        planned_date, planned_start_minutes, planned_end_minutes,
+                        available_from, defer_count, recurrence_instance_key,
                         content_version, schedule_version, lifecycle_version, archive_version,
                         recurrence_rollover_state, recurrence_successor_id, version, archived_at)
      VALUES (:id, :title, :body, :raw_input, :ai_notes,
@@ -77,7 +82,8 @@ extension ApplyTask {
              :canonical_occurrence_date,
              :created_at, :updated_at, :completed_at, :last_deferred_at,
              :last_defer_reason,
-             :planned_date, :available_from, :defer_count, :recurrence_instance_key,
+             :planned_date, :planned_start_minutes, :planned_end_minutes,
+             :available_from, :defer_count, :recurrence_instance_key,
              :content_version, :schedule_version, :lifecycle_version, :archive_version,
              :recurrence_rollover_state, :recurrence_successor_id, :version, :archived_at)
     """
@@ -110,6 +116,10 @@ extension ApplyTask {
       "last_defer_reason": row.lastDeferReason,
       "last_defer_reason_present": row.lastDeferReasonPresent,
       "planned_date": row.plannedDate, "planned_date_present": row.plannedDatePresent,
+      "planned_start_minutes": row.plannedStartMinutes,
+      "planned_start_minutes_present": row.plannedStartMinutesPresent,
+      "planned_end_minutes": row.plannedEndMinutes,
+      "planned_end_minutes_present": row.plannedEndMinutesPresent,
       "available_from": row.availableFrom, "available_from_present": row.availableFromPresent,
       "defer_count": row.deferCount, "defer_count_present": row.deferCountPresent,
       "recurrence_instance_key": row.recurrenceInstanceKey,
@@ -144,6 +154,8 @@ extension ApplyTask {
       "created_at": row.createdAt, "updated_at": row.updatedAt,
       "completed_at": row.completedAt, "last_deferred_at": row.lastDeferredAt,
       "last_defer_reason": row.lastDeferReason, "planned_date": row.plannedDate,
+      "planned_start_minutes": row.plannedStartMinutes,
+      "planned_end_minutes": row.plannedEndMinutes,
       "available_from": row.availableFrom, "defer_count": row.deferCount,
       "recurrence_instance_key": row.recurrenceInstanceKey,
       "content_version": row.contentVersion, "schedule_version": row.scheduleVersion,

@@ -247,10 +247,10 @@ final class ApplyCalendarEventTests: XCTestCase {
           """,
         arguments: [taskId, eventId, canonicalVersion])
 
-      let result = try ApplyCalendarEvent.applyCalendarEventDeleteWithRepairs(
+      let decision = try ApplyCalendarEvent.applyCalendarEventDelete(
         db, entityId: eventId, version: canonicalVersion, applyTs: "2026-04-01T00:00:00.000Z")
-      guard case .rejected = result.decision else {
-        return XCTFail("byte-compare fallback must surface as rejected, got \(result.decision)")
+      guard case .rejected = decision else {
+        return XCTFail("byte-compare fallback must surface as rejected, got \(decision)")
       }
       XCTAssertEqual(
         try Int64.fetchOne(

@@ -8,25 +8,11 @@ public enum MobileTaskDisplayText {
       table: "Localizable", bundle: MobileL10n.bundle)
   }
 
-  public static func compactPriority(_ priority: LorvexTask.Priority) -> String {
-    priority.rawValue
-  }
-
+  /// The priority as one word ("High", "Normal", "Low"), the way the task
+  /// detail's Priority row names it; the storage codes P1–P3 never reach the
+  /// screen.
   public static func priority(_ priority: LorvexTask.Priority) -> String {
-    switch priority {
-    case .p1:
-      String(
-        localized: "task.priority.p1", defaultValue: "Priority 1", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    case .p2:
-      String(
-        localized: "task.priority.p2", defaultValue: "Priority 2", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    case .p3:
-      String(
-        localized: "task.priority.p3", defaultValue: "Priority 3", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    }
+    MobileTaskPropertyCopy.priorityValue(priority)
   }
 
   public static func status(_ status: LorvexTask.Status) -> String {
@@ -54,16 +40,11 @@ public enum MobileTaskDisplayText {
     }
   }
 
-  public static func compactPriorityAndStatus(
-    priority: LorvexTask.Priority, status: LorvexTask.Status
-  ) -> String {
+  /// The word on the badge of a task whose dependencies are still open.
+  public static var blocked: String {
     String(
-      format: String(
-        localized: "task.metadata.priority_status", defaultValue: "%@ · %@", table: "Localizable",
-        bundle: MobileL10n.bundle),
-      compactPriority(priority),
-      Self.status(status)
-    )
+      localized: "task.status.blocked", defaultValue: "Blocked", table: "Localizable",
+      bundle: MobileL10n.bundle)
   }
 
   /// Localized display for a task reminder's `delivery_state` wire value
@@ -80,27 +61,6 @@ public enum MobileTaskDisplayText {
         bundle: MobileL10n.bundle)
     default:
       titleCased(rawStatus)
-    }
-  }
-
-  /// Localized display for a task's `lateness_state` wire value. Mirrors the
-  /// macOS detail header; unknown values fall back to a title-cased form.
-  public static func latenessState(_ rawValue: String) -> String {
-    switch rawValue {
-    case "past_planned":
-      String(
-        localized: "task_detail.lateness.past_planned", defaultValue: "Past planned date",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case "overdue_unhandled":
-      String(
-        localized: "task_detail.lateness.overdue_unhandled", defaultValue: "Overdue",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case "overdue_acknowledged":
-      String(
-        localized: "task_detail.lateness.overdue_acknowledged",
-        defaultValue: "Overdue acknowledged", table: "Localizable", bundle: MobileL10n.bundle)
-    default:
-      titleCased(rawValue)
     }
   }
 

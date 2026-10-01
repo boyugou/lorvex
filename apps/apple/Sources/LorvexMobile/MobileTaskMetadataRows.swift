@@ -18,6 +18,20 @@ struct MobileChecklistItemRow: View {
         rowLabel
       }
     }
+    // The icon (circle vs. filled check) carries completion state visually but
+    // is decorative to VoiceOver, and strikethrough has no accessibility
+    // semantics — so expose the state as an explicit value, matching the task
+    // completion circle and habit ring. A success haptic confirms a completing
+    // toggle (only when transitioning to done, like the circle).
+    .accessibilityValue(
+      item.completedAt == nil
+        ? String(
+          localized: "checklist.item.incomplete.a11y", defaultValue: "Not Completed",
+          table: "Localizable", bundle: MobileL10n.bundle)
+        : String(
+          localized: "task.row.completed.a11y", defaultValue: "Completed", table: "Localizable",
+          bundle: MobileL10n.bundle))
+    .lorvexSensoryFeedback(.success, trigger: item.completedAt != nil) { _, isDone in isDone }
     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
       if let removeChecklistItem {
         Button(role: .destructive) {
@@ -41,7 +55,7 @@ struct MobileChecklistItemRow: View {
     } icon: {
       Image(systemName: item.completedAt == nil ? "circle" : "checkmark.circle.fill")
         .font(LorvexDesign.Typography.primaryText)
-        .foregroundStyle(item.completedAt == nil ? Color.secondary : Color.green)
+        .foregroundStyle(item.completedAt == nil ? Color.secondary : LorvexDesign.Palette.done)
     }
     .padding(.vertical, LorvexDesign.Spacing.xs)
   }
@@ -66,7 +80,7 @@ struct MobileReminderRow: View {
     } icon: {
       Image(systemName: "bell")
         .font(LorvexDesign.Typography.primaryText)
-        .foregroundStyle(.orange)
+        .foregroundStyle(LorvexDesign.Palette.warning)
     }
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .swipeActions(edge: .trailing, allowsFullSwipe: true) {

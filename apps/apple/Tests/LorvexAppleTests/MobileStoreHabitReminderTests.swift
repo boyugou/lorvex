@@ -57,7 +57,7 @@ func mobileStoreKeepsLastGoodHabitRemindersAndRecordsHabitReadFailure() async th
     policy: HabitReminderPolicy(
       id: "", habitID: habit.id, habitName: habit.name,
       reminderTime: "08:00", enabled: true, createdAt: "", updatedAt: ""))
-  let core = StubFocusCoreService(preview: preview)
+  let core = StubCoreService(preview: preview)
   core.dueHabitReminderOccurrencesError = .unsupportedOperation("occurrence read boom")
 
   let scheduler = MobileRecordingHabitReminderScheduler()

@@ -7,9 +7,6 @@ import Foundation
 /// `schema/migrations/checksums.lock` and stamped into the
 /// `schema_migrations.checksum` rows the Apple app verifies on every open, so an
 /// Apple database's recorded ladder stays self-consistent across app versions.
-/// Tauri's Rust/Node implementations use the same normalization algorithm but are
-/// a separate, directionally-aligned realization: Apple owns its schema and never
-/// compares bytes against them.
 ///
 /// Normalization, in order:
 /// 1. strip a UTF-8 BOM if present;

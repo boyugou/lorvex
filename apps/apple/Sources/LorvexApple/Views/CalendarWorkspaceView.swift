@@ -162,29 +162,10 @@ struct CalendarWorkspaceView: View {
 
   private var calendarColumn: some View {
     VStack(spacing: 0) {
-      // No in-content "Calendar" title row: the window title bar already names
-      // the surface and the nav bar carries the date range. Dropping the
-      // WorkspaceHeader reclaims the vertical band for the timeline grid, the
-      // way Apple's own Calendar week view does.
-      CalendarWorkspaceNavigationBar(
-        anchorDate: $anchorDate,
-        mode: $mode,
-        weekRangeTitle: weekRangeTitle,
-        monthRangeTitle: monthRangeTitle,
-        isViewingCurrent: isViewingCurrent,
-        eventCount: store.filteredCalendarEvents.count,
-        plannedTaskCount: store.filteredScheduledTasks.count,
-        isFiltering: store.hasActiveSearch,
-        step: step,
-        jumpToCurrent: jumpToCurrent
-      ) {
-        CalendarWorkspaceHeaderActions(
-          createEvent: {
-            store.beginCreateCalendarDraft()
-            activeSheet = .create
-          }
-        )
-      }
+      // One title row only: the range, the view mode, and the create action
+      // ride in the window toolbar, so the header only names the surface,
+      // leaving the vertical band to the grid.
+      CalendarWorkspaceHeader()
 
       Divider()
 
@@ -236,6 +217,21 @@ struct CalendarWorkspaceView: View {
       CalendarEventSheet(store: store, mode: mode, dismiss: { activeSheet = nil })
     }
     .navigationTitle(String(localized: SidebarSelection.calendar.macOSLocalizedTitle))
+    .toolbar {
+      CalendarWorkspaceToolbar(
+        anchorDate: $anchorDate,
+        mode: $mode,
+        weekRangeTitle: weekRangeTitle,
+        monthRangeTitle: monthRangeTitle,
+        isViewingCurrent: isViewingCurrent,
+        step: step,
+        jumpToCurrent: jumpToCurrent,
+        createEvent: {
+          store.beginCreateCalendarDraft()
+          activeSheet = .create
+        }
+      )
+    }
     .lorvexOpenDestinationActivity(selection: .calendar, isActive: store.selection == .calendar)
     .onChange(of: anchorDate) { _, newDate in
       switch mode {
@@ -306,6 +302,11 @@ struct CalendarWorkspaceView: View {
         fetchVisibleMonth(monthAnchor)
       }
     }
+    .task {
+      // The day and week headers size each day's load against the working
+      // window; Today loads it too, but Plan can be the first workspace opened.
+      if store.workdayEndMinutes == nil { await store.loadWorkdayWindow() }
+    }
   }
 
   private var isViewingCurrent: Bool {
@@ -335,8 +336,7 @@ struct CalendarWorkspaceView: View {
 
   private var weekRangeTitle: String {
     let end = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-    let f = LorvexMonthDayFormatter.local
-    return "\(f.string(from: weekStart)) – \(f.string(from: end))"
+    return LorvexMonthDayFormatter.localRange(from: weekStart, to: end)
   }
 
   private var monthRangeTitle: String {

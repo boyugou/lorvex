@@ -21,9 +21,6 @@ A new sort deviation is allowed when:
 
 ## Catalog of Allowed Deviations
 
-> **Note:** Implementation-specific file references below are for the Apple app. The Tauri
-> app's equivalent surfaces follow the same deviation rationale; file paths differ.
-
 ### Scheduled-tasks timeline view
 
 **Sort:** `dueDate ASC, title ASC NULLS LAST`

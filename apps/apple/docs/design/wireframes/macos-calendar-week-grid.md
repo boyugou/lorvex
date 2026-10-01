@@ -1,106 +1,113 @@
 # macOS Calendar Week Grid — As-Built Wireframe
 
 > ASCII transcription of the macOS calendar week grid, derived from the SwiftUI source.
-> Each region cites the view file:line that renders it. Current-state reference, not a redesign.
+> Current-state reference, not a redesign. Line numbers are intentionally omitted
+> (they drift); cite files and types instead.
 
-**Entry view:** `Sources/LorvexApple/Views/CalendarWorkspaceView.swift:21` (body) → week branch
-mounts `CalendarWeekGridView` at `CalendarWorkspaceView.swift:64`; the grid body is
-`Sources/LorvexApple/Views/CalendarWeekGridView.swift:99`.
+**Entry view:** `CalendarWorkspaceView.calendarColumn`
+(`Sources/LorvexApple/Views/CalendarWorkspaceView.swift`) switches on
+`mode: CalendarPresentationMode` and, for `.week` (and for `.day`, reusing the identical
+view at `visibleDayCount: 1`), mounts `CalendarWeekGridView`
+(`Views/CalendarWeekGridView.swift`). `CalendarWorkspaceView.body` itself is an `HStack`
+of that calendar column plus, only while `store.selectedCalendarEvent` is set, a
+trailing `CalendarEventInspector` panel — a read-only, calendar-local inspector
+distinct from the main window's task/habit `.inspector` described in `macos-shell.md`.
 
 **Backing state:** `AppStore.calendarTimeline: CalendarTimelineSnapshot?`
-(`Stores/AppStoreCalendarState.swift:5`). The grid never reads it raw — it consumes the
-search-filtered derivations `filteredCalendarEvents`
-(`Stores/AppStoreContentSearchDerivedState.swift:5`) and `filteredScheduledTasks`
-(`Stores/AppStoreTaskSearchDerivedState.swift:33`), assembled into per-day columns by
-`CalendarGridModel.buildDays(...)` (`CalendarWeekGridView.swift:66`). A `nil`
-`calendarTimeline` shows the loading overlay (`CalendarWorkspaceView.swift:112`).
+(`Stores/AppStoreCalendarState.swift`, stored in `AppStoreCalendarStorage`) and `AppStore.scheduledTasks`
+(`Stores/AppStoreTaskDerivedState.swift`). The grid reads both directly — there is no
+separate search-filtered projection for the calendar — and assembles them into
+per-day columns with `CalendarGridModel.buildDays(...)`
+(`Sources/LorvexCore/Support/CalendarGridModel.swift`), a platform-neutral layout
+function shared with the iPhone day / 3-day view. A `nil` `calendarTimeline` shows the
+loading overlay (`CalendarWorkspaceView`).
 
-Scope note: this wireframe covers only the **week time-grid** (`mode == .week`). List mode
-(`mode == .list`, rendered by `CalendarWorkspaceContentList` / `CalendarEventRow`) and the
-mode-gated toolbar batch menu (`CalendarWorkspaceView.swift:115`, `.disabled(mode != .list)`)
-are a separate list idiom and out of scope. Tapping a block opens
-`EditCalendarEventSheet` (recurring-scope edit lives there, not in the grid).
+Scope note: this wireframe covers the **week time-grid** (`mode == .week`). Day mode
+reuses the identical `CalendarWeekGridView` at `visibleDayCount: 1`; Month mode
+(`CalendarMonthGridView`) is a different view and is not drawn here. Selecting a block
+opens the read-only inspector described above; editing goes through
+`EditCalendarEventSheet`, reached from the inspector's Edit button or from the
+block's right-click menu.
 
 ## Layout (as built)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
-│ Calendar                                              [⬆ Export ICS]   [ + ]       │  WorkspaceHeader
-│ "N events and M planned tasks from Lorvex."                                        │  (title/subtitle/actions)
+│ [‹] Jun 1 – Jun 7 [›]  [This Week]        Day | Week | Month              [ + ]  │  window toolbar
+├──────────────────────────────────────────────────────────────────────────────────┤  (navigation · principal · primary action)
+│ 📅 Plan                                                                           │  CalendarWorkspaceHeader (title only)
 ├──────────────────────────────────────────────────────────────────────────────────┤  Divider
-│ [‹]  Jun 1 – Jun 7  [›]   [This Week]                   ◷ Week | ☰ List            │  Nav bar (week mode)
-├──────────────────────────────────────────────────────────────────────────────────┤  (ICS status line, when present)
 │                                                                                    │
 │  ── grid (CalendarWeekGridView) ──────────────────────────────────────────────    │
-│           │ SUN │ MON │ TUE │ WED │ THU │ FRI │ SAT │                              │  day-name header band
-│           │  1  │  2  │ (3) │  4  │  5  │  6  │  7  │   (today = tinted circle)     │
+│           │ SUN │ MON │ TUE │ WED │ THU │ FRI │ SAT │                              │  day-name header band:
+│           │  1  │  2  │ (3) │  4  │  5  │  6  │  7  │   (today = tinted circle)     │   weekday, day number,
+│           │2 hr │     │1 hr │ 30  │     │     │     │   workload caption           │   workload caption
+│           │     │     │     │ over│     │     │     │   (blank when day is empty)  │
 │           ├─────┼─────┼─────┼─────┼─────┼─────┼─────┤                              │  Divider
-│  all-day  │ [▍task] [▍evt] │ ... per column ...     │                              │  all-day strip
+│  all-day  │▐Evt │┊Tsk┊│ +2  │     │     │     │     │   event pill (solid rail),   │  all-day strip
+│           │     │     │     │     │     │     │     │   task pill (dashed), each   │
+│           │     │     │     │     │     │     │     │   column's own "+N" pill     │
 │           ├─────┼─────┼─────┼─────┼─────┼─────┼─────┤                              │  Divider
-│  ┌ scroll region (24h, hourHeight=56) ───────────────────────────────┐  ( ⌃ Earlier )│  off-screen pill (top overlay)
-│  │ 6 AM│     │     │     │     │     │     │     │                     │            │
-│  │     │     │┌───┐│     │     │     │     │     │  hour gutter(56pt)  │            │
-│  │ 7 AM│     ││▍ev││     │     │     │     │     │   + 7 day columns   │            │
-│  │     │     ││ 7a││     │     │     │     │     │   (lanes 0..2)      │            │
-│  │ 8 AM│ ─ ─ │└───┘│ ─ ─ │ ─ ─ │ ─ ─ │ ─ ─ │ ─ ─ │  hour grid lines    │            │
-│  │     │     │     │═════│  ← red now-line + dot on today's column     │            │
-│  │ 9 AM│     │     │┌──┐ │     │     │     │     │            (+2)─┐   │            │  +N overflow badge
-│  │     │     │     ││▍ ││     │     │     │     │                 │   │            │
-│  └──────────────────────────────────────────────────────────────────┘  ( ⌄ Later )│  off-screen pill (bottom overlay)
+│  ┌ scroll region (24h, hourHeight=56) ─────────────────────────────────────────┐   │
+│  │ 6 AM│     │     │     │     │     │     │     │                              │   │
+│  │     │     │▐────┤     │     │     │     │     │  hour gutter (56pt) +        │   │
+│  │ 7 AM│     │▐ Evt│     │     │     │     │     │  7 day columns, each up to   │   │
+│  │     │     │▐ 7a │     │┊○Tsk┊     │     │     │  3 overlap lanes             │   │
+│  │ 8 AM│ ─ ─ │▐────┤ ─ ─ │┊    ┊ ─ ─ │ ─ ─ │ ─ ─ │  hour grid lines             │   │
+│  │     │     │     │═════│┊    ┊ ← red now-line + dot on today's column          │   │
+│  │ 9 AM│     │     │     │┊    ┊     │     │     │        (+2)                  │   │  +N overflow badge
+│  │     │     │     │     │     │     │     │     │       (events + tasks past   │   │  (lane 3 and beyond)
+│  │10 AM│     │     │     │     │     │     │     │        3 lanes, tap → popover)│   │
+│  └──────────────────────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+`▐` marks an event block's solid tint fill and colored left rail; `┊ ┊` marks a task
+block's or task pill's hollow dashed "calendar task surface" outline with a leading
+completion circle. When every visible day is empty, a banner sits over the top of
+the empty grid; see "Empty / unauthorized banner" below.
+
 ## Regions
 
-| Region | What it renders | Data source (model field / store prop) | View file:line |
+| Region | What it renders | Data source (model field / store prop) | View file |
 |---|---|---|---|
-| Workspace header | Title "Calendar" + subtitle summary + trailing actions | `summary` string from `filteredCalendarEvents.count` / `filteredScheduledTasks.count` (`CalendarWorkspaceModels.swift:5`) | `CalendarWorkspaceView.swift:23` |
-| Header actions (Export ICS / +) | ShareLink or export button, then `plus` create button | `icsExportItem` / `icsExportState` (`CalendarWorkspaceView.swift:8`) | `CalendarWorkspaceHeaderActions.swift:10` |
-| Nav prev/next arrows | `chevron.left` / `chevron.right`, step ±1 week | `step(_:)` (`CalendarWorkspaceView.swift:212`) | `CalendarWorkspaceNavigationBar.swift:15`, `:36` |
-| Week-range title | "MMM d – MMM d" for the visible week | `weekRangeTitle` from `weekStart` (`CalendarWorkspaceView.swift:206`) | `CalendarWorkspaceNavigationBar.swift:24` |
-| "This Week" jump button | Shown only when not viewing current week | `isViewingCurrent` (`CalendarWorkspaceView.swift:189`) | `CalendarWorkspaceNavigationBar.swift:45` |
-| View-mode picker | Segmented Week / List toggle | `mode: CalendarPresentationMode` (`CalendarWorkspaceView.swift:11`) | `CalendarWorkspaceNavigationBar.swift:54` |
-| ICS status line | Transient export status text | `icsExportState.statusMessage` | `CalendarWorkspaceView.swift:53` |
-| Day-name header band | Per-column weekday (`EEE`) + day number; today gets tinted circle | `columns: [CalendarGridDay].date`; `isToday` | `CalendarWeekGridChrome.swift:7` |
-| All-day strip | Per-column all-day event pills + scheduled-task pills | `day.allDayEvents` (events), `day.scheduledTasks` (tasks) | `CalendarWeekGridChrome.swift:35` |
-| All-day pill | Single title pill with color left-rail | `event.title` / `task.title`, `eventColor` | `CalendarWeekGridChrome.swift:78` |
-| Hour gutter | 24 right-aligned localized hour labels; carries the scroll anchor | `hourLabel(_:)`; `WeekGridAnchorModifier` (`CalendarWeekGridChrome.swift:102`) | `CalendarWeekGridChrome.swift:95` |
-| Day column | One column: grid lines + interaction + blocks + badge + now-line | one `CalendarGridDay` | `CalendarWeekGridView.swift:185` |
-| Hour grid lines | 24 stacked `hourHeight`-tall rows with top dividers | constant `0..<24` | `CalendarWeekGridView.swift:192` |
-| Empty-slot interaction layer | Transparent hit layer: tap → create-at-hour; drag → create-with-duration | `createAt(date,minutes,duration)` (`CalendarWorkspaceView.swift:74`) | `CalendarWeekGridView.swift:208` |
-| Drag-to-create ghost | Translucent dashed preview block w/ time-range label during drag | `createDraft: CreateDraft?` (`CalendarWeekGridView.swift:38`) | `CalendarWeekGridView.swift:221` |
-| Timed event block | Positioned colored block (title + start time), lane-offset | `CalendarGridTimedBlock` (`startMin`/`endMin`/`lane`/`laneCount`/`event`) | `CalendarWeekGridEventBlock.swift:8` |
-| Resize handles (top/bottom) | Drag grips on editable single-day timed blocks | `block.event.editable && !allDay && !isRecurring && !isMultiDay` | `CalendarWeekGridEventBlock.swift:89` |
-| +N overflow badge | Capsule "+N" at earliest hidden event's Y when >3 lanes | `day.timedBlocks.filter { lane >= maxDisplayedLanes }` (`maxDisplayedLanes = 3`, `:24`) | `CalendarWeekGridView.swift:272` |
-| Now guide | Red dot + 1.5pt line on today, faint 1pt guide on adjacent days at the same minute, ticks every 60s | `TimelineView(.periodic … by: 60)` (`CalendarWeekGridView.swift:262`) | `CalendarWeekGridChrome.swift:108` |
-| Off-screen pill (Earlier) | Top overlay capsule when a timed block sits above viewport | `nearestAboveMinute` (`CalendarWeekGridView.swift:84`) | mounted `CalendarWeekGridView.swift:151`; view `CalendarOffScreenPill.swift:14` |
-| Off-screen pill (Later) | Bottom overlay capsule when a timed block sits below viewport | `nearestBelowMinute` (`CalendarWeekGridView.swift:92`) | mounted `CalendarWeekGridView.swift:161`; view `CalendarOffScreenPill.swift:14` |
+| Workspace header | The title "Plan" with a calendar icon. The header only names the surface: the grid shows every event and planned task itself, so a count would restate it | — | `CalendarWorkspaceHeader` in `CalendarWorkspaceNavigationBar.swift` |
+| Toolbar navigation group | `chevron.left` · range chip · `chevron.right`, plus a "Today / This Week / This Month" jump shown only while not viewing the current period | `anchorDate`, `weekRangeTitle`, `monthRangeTitle`, `isViewingCurrent`, `step(_:)`, `jumpToCurrent()` (`CalendarWorkspaceView.swift`) | `CalendarWorkspaceToolbar` in `CalendarWorkspaceNavigationBar.swift` |
+| Range chip | Week/Month mode: the visible range; Day mode: the anchor date. Opens the month popover; picking a day re-anchors to its period | `LorvexDateChip(style: .toolbar)` | `LorvexDateChip.swift` |
+| Toolbar principal slot | Segmented Day / Week / Month toggle | `mode: CalendarPresentationMode` | `CalendarModePicker` in `CalendarWorkspaceNavigationBar.swift` |
+| Toolbar primary action | `plus` Create Event | `store.beginCreateCalendarDraft()` then the create sheet | `CalendarWorkspaceToolbar` |
+| Event inspector panel | A trailing, read-only panel beside the grid (part of `CalendarWorkspaceView`'s own `HStack`, not the main window's `.inspector`) showing the selected event's detail, with Edit, Delete, and a close button | `store.selectedCalendarEvent` | `CalendarEventInspector.swift` |
+| Day-name header band | Per-column weekday (`EEE`) and day number (today gets a tinted circle), with a workload caption underneath: the day's meeting + task time ("2 hr", "45 min"), or that length plus "over" once it exceeds the working window, in the overdue tint; the line is reserved but blank when the day has nothing planned, so day numbers stay level | `columns: [CalendarGridDay]`; `CalendarWeekDayLoadCaption` (built from `CalendarWeekGridView.weekLoad(_:)`) | `CalendarWeekGridChrome.swift` (header); `CalendarWeekGridDayLoad.swift` (caption + load math) |
+| All-day strip | Per-column event pills (solid tint fill + colored rail) then task pills (dashed "calendar task surface" outline with a leading completion circle). A column shows up to three; with more, it shows two and gives the third place to its "+N" pill | `day.allDayEvents`, `day.scheduledTasks` | `CalendarWeekGridChrome.swift` |
+| All-day overflow pill | A column's own "+N" pill once its all-day events and tasks number more than three; opens a popover listing the hidden events and tasks, each tappable to open | `CalendarWeekGridMetrics.allDayMaxItems` (3) | `CalendarWeekGridChrome.swift` |
+| Hour gutter | 24 right-aligned localized hour labels; also anchors the initial auto-scroll position | `hourLabel(_:)`; `WeekGridAnchorModifier` | `CalendarWeekGridChrome.swift` |
+| Day column | One column: hour grid lines, the now-line, the empty-slot interaction layer, event blocks, task blocks, and the overflow badge, layered in that z-order | one `CalendarGridDay` | `CalendarWeekGridView.dayColumn` |
+| Hour grid lines | 24 stacked `hourHeight`-tall rows, each with a top divider and a fainter half-hour divider | constant `0..<24` | `CalendarWeekGridHourCell` in `CalendarWeekGridComponents.swift` |
+| Empty-slot interaction layer | A transparent hit layer beneath the blocks: tap → create at the tapped hour; drag → create with a custom duration | `createAt(date, minutes, duration)` (from `CalendarWorkspaceView`) | `CalendarWeekGridView.dayColumn`; gestures in `CalendarWeekGridGestures.swift` |
+| Drag-to-create ghost | Translucent dashed preview block with a start–end time label, shown only in the column being dragged | `CalendarWeekGridView.CreateDraft` | `CalendarWeekGridView.dayColumn` |
+| Timed event block | A positioned, colored block (title, and the start time once tall enough) at its lane offset; a small hint icon marks an editable block that cannot be dragged (recurring or multi-day), whose times change only through the edit sheet | `CalendarGridTimedBlock` (`startMin`/`endMin`/`lane`/`laneCount`/`event`) | `CalendarWeekGridEventBlock.swift` |
+| Timed task block | A scheduled task at its time, in the accent tint on the dashed "calendar task surface" outline rather than an event's solid fill and rail, sharing the day's overlap lanes with event blocks; a leading circle completes or reopens it in place | `CalendarGridTaskBlock` (`startMin`/`endMin`/`lane`/`laneCount`/`task`) | `CalendarWeekGridTaskBlock.swift` |
+| Resize handles (top/bottom) | Drag grips on an editable, single-day, non-recurring timed event block; visible on hover or selection, with an always-live hit area and resize cursor | `event.editable && !allDay && !supportsScopedMutation && !isMultiDay` | `CalendarWeekGridEventBlock.swift` |
+| +N overflow badge | A capsule "+N" at the earliest hidden block's row once a day column holds more than 3 overlapping lanes of events and tasks combined; opens a popover ("Hidden events") listing that day's hidden tasks, then its hidden events, each group in time order | `day.timedBlocks` / `day.taskBlocks` filtered to `lane >= maxDisplayedLanes` (3) | `CalendarWeekGridView.overflowBadge` |
+| Now guide | A red dot and 1.5pt line on today's column, a faint 1pt guide at the same minute on every other day, ticking once a minute | `TimelineView(.periodic(from: .now, by: 60))` | `CalendarWeekGridChrome.swift` |
+| Empty / unauthorized banner | A banner over the top of the grid when every visible day is empty: "Calendar Access Off" with an Open Settings button while EventKit access needs recovery, otherwise an "Open Week" / "Open Day" prompt with a Create Event button | `EventKitAuthorizationHelper().needsSettingsRecovery`; `columns.allSatisfy(\.isEmpty)` | `CalendarWeekAuthorizeOverlay`, `CalendarWeekEmptyOverlay` in `CalendarWeekGridComponents.swift` |
 
 ## Interaction (as built)
-- Tap empty slot → `createAt(day.date, hourSnapped, 60)` opens create sheet pre-filled at the tapped hour, 60-min default (`CalendarWeekGridView.swift:210`).
-- Drag empty space → sketches dashed ghost; release commits create with the dragged duration snapped to 15 min (min 15); a sub-snap-row twitch falls back to the 60-min tap behavior (`CalendarWeekGridGestures.swift:40`).
-- Tap timed block → `editEvent(block.event)` → opens `EditCalendarEventSheet` (`CalendarWeekGridEventBlock.swift:84`).
-- Drag timed block (editable single-day only) → live `rescheduleDraft` preview; vertical = new start time, horizontal = day shift; release → `store.rescheduleCalendarEvent(...)` (`CalendarWeekGridGestures.swift:80`).
-- Drag bottom edge → resize end time, snap 15 min, min 15-min duration → `store.rescheduleCalendarEvent` (`CalendarWeekGridGestures.swift:124`).
-- Drag top edge → resize start time, keep end fixed → `store.rescheduleCalendarEvent` (`CalendarWeekGridGestures.swift:160`).
-- Tap all-day event pill → edit (if `event.editable`); tap scheduled-task pill → `openTask(task)` selects the task (`CalendarWeekGridChrome.swift:49`, `:59`).
-- Tap off-screen pill → `proxy.scrollTo(WeekGridScrollAnchor.hour(...))` scrolls to the nearest hidden event (`CalendarWeekGridView.swift:151`, `:161`).
-- Initial appear / week change → auto-scroll to `initialScrollAnchorHour` (anchors on today's earliest timed event or the now-hour) (`CalendarWeekGridView.swift:104`, `:171`).
-- Prev/Next/This-Week change `weekStart`, which triggers `fetchVisibleWeek` to reload only the visible range (`CalendarWorkspaceView.swift:171`).
-- ⌘← / ⌘→ on the calendar navigation buttons step to the previous/next week in week mode and previous/next day in list mode (`CalendarWorkspaceNavigationBar.swift:22`, `:44`).
+- Tap an empty slot → `createAt(day.date, hourSnapped, 60)` opens the create sheet, pre-filled at the tapped hour with a 60-minute default.
+- Drag empty space → sketches a dashed ghost; release commits a create whose duration is the dragged span, snapped to 15 minutes and floored at 15 minutes. A drag shorter than one snap row falls back to the same 60-minute tap-to-create instead of committing a sliver event.
+- Tap, or press Return/Space on, a timed event block, a resize handle, or an all-day event pill → `selectEvent`, which toggles `store.selectedCalendarEventID` and opens or closes the read-only event inspector panel. Right-click offers "Open Details" (the same action as a tap) and, when the event is editable, "Edit" (opens `EditCalendarEventSheet`) and "Delete". The inspector's Edit button opens the same sheet.
+- Tap a timed task block or an all-day task pill → `openTask(block.task)`, which opens the task; a leading circle on either completes or reopens the task in place without opening it.
+- Drag a timed event block (single-day, non-recurring, editable only) → a live `rescheduleDraft` preview; vertical movement changes the start time, horizontal movement shifts days; release commits through `store.rescheduleCalendarEvent(...)`. An editable recurring or multi-day block shows a small hint icon instead, and its times change only through the edit sheet; a read-only event does not move.
+- Drag the bottom or top edge of an editable event block → resizes the end or start time, snapped to 15 minutes and floored at 20 minutes (`CalendarGridModel.minBlockMinutes`), so a resize can never make a block shorter than the grid's own render floor.
+- Drag an all-day task pill onto another day column → `store.rescheduleScheduledTask(id:to:)` re-plans the task there; every day column is a drop target.
+- Tap a day's timed-grid "+N" overflow badge → opens a popover listing that day's hidden tasks, then its hidden events, each group in time order. Picking a task calls `openTask`; picking an event calls `selectEvent`. A read-only event's row is disabled and shows no pencil icon.
+- Tap a column's all-day "+N" overflow pill → opens a separate popover listing that column's hidden all-day events and tasks.
+- An all-day task pill's context menu adds "Plan a Day Later" and "Plan a Week Later" alongside Open Task and Complete/Reopen; a timed task block's context menu offers only Open Task and Complete/Reopen.
+- Initial appear and week change auto-scroll to `CalendarGridModel.initialScrollAnchorHour(...)`, which anchors on today's earliest timed item or the current hour.
+- Prev / Next / "Today or This Week" change the anchor date, which reloads only the visible range.
+- ⌘← / ⌘→ on the toolbar chevrons step the visible period: a day in Day mode, a week in Week mode, a month in Month mode.
+- An empty week or day shows the banner described in the Regions table above.
 
 ## Notes for improvement (analysis — NOT yet implemented)
-- **Off-screen-pill naming is now truthful.** `nearestAboveMinute` and `nearestBelowMinute`
-  describe the actual behavior: scroll to the closest hidden event above or below the viewport.
-- **Hard-coded `+N` lane cap (`maxDisplayedLanes = 3`, `:24`)** keeps only three overlapping
-  lanes visible, but the overflow badge is now interactive: tapping it opens a popover of hidden
-  events sorted by time, and editable entries jump to the event sheet. A fuller expanded-column
-  mode could still improve dense clusters.
-- **Keyboard navigation is partial.** ⌘← / ⌘→ now page the visible calendar period through the
-  nav buttons. Arrow-key slot focus and a focusable "now" target remain unimplemented.
-- **Cross-week now guide is implemented.** Today keeps the red live now-line; off-day columns show
-  a faint guide at the same minute so scanning across the week no longer relies only on the gutter.
-- **Multi-day and recurring blocks are sheet-editable, not grid-resizable.** `isEditable`
-  still excludes `isRecurring`/`isMultiDay` from drag/resize handles, but editable blocks now show
-  a small hint icon and continue to open the event sheet on tap.
-```
+- Overlap clusters beyond 3 lanes rely on the "+N" popover rather than an expanded-column view; a denser inline layout could still help very busy days.
+- Keyboard navigation covers period paging (⌘←/⌘→) but not the grid itself: there is no arrow-key way to move slot-by-slot through a day column, and no focusable "now" target.

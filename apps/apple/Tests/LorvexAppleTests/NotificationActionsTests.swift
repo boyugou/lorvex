@@ -178,41 +178,6 @@ func mobileNotificationTaskActionsLogFailuresInsteadOfSilentlyDroppingThem() thr
   #expect(source.contains("Defer notification action failed"))
 }
 
-@Test
-func visionAppInstallsNotificationDelegateThatHandlesActionsAndTaps() throws {
-  let app = try String(
-    contentsOf: packageRoot()
-      .appending(path: "Sources/LorvexVisionApp/LorvexVisionApp.swift"),
-    encoding: .utf8
-  )
-  let delegate = try String(
-    contentsOf: packageRoot()
-      .appending(path: "Sources/LorvexVisionApp/LorvexVisionAppDelegate.swift"),
-    encoding: .utf8
-  )
-
-  // The app installs the delegate so reminder actions and default taps are not
-  // silently dropped on visionOS.
-  #expect(app.contains("@UIApplicationDelegateAdaptor(LorvexVisionAppDelegate.self)"))
-
-  // The delegate registers categories, controls foreground presentation, routes
-  // the rich actions through the shared handler, and deep-links default taps —
-  // mirroring the iOS delegate (minus remote push, which visionOS doesn't use).
-  #expect(delegate.contains("UNUserNotificationCenterDelegate"))
-  #expect(delegate.contains("registerLorvexNotificationCategories(center, titles:"))
-  #expect(delegate.contains("center.delegate = self"))
-  #expect(delegate.contains("willPresent"))
-  #expect(delegate.contains("await handleLorvexNotificationAction("))
-  #expect(delegate.contains("LorvexTaskIntentRunner.completeTask"))
-  #expect(delegate.contains("LorvexTaskIntentRunner.deferTaskUntilTomorrow"))
-  #expect(delegate.contains("SnoozeNotificationScheduler.schedule"))
-  #expect(delegate.contains("UNNotificationDefaultActionIdentifier"))
-  #expect(delegate.contains("LorvexNotificationRoute("))
-  // visionOS registers no CloudKit push subscription, so the delegate must not
-  // register for remote notifications.
-  #expect(!delegate.contains("registerForRemoteNotifications"))
-}
-
 private func packageRoot() -> URL {
   var url = URL(fileURLWithPath: #filePath)
   while url.lastPathComponent != "apps" {

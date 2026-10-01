@@ -34,7 +34,7 @@ struct TasksView: View {
   ]
 
   private func quickAddPlaceholder(for listID: LorvexList.ID) -> String {
-    let name = store.lists?.lists.first { $0.id == listID }?.name ?? listID
+    let name = store.lists?.lists.first { $0.id == listID }?.displayName ?? listID
     return String(
       format: String(
         localized: "list_detail.quick_add.placeholder",
@@ -46,17 +46,46 @@ struct TasksView: View {
     )
   }
 
+  /// The inline quick-add both view modes lead with, so ⌘N always has a field
+  /// to focus. With an active list scope this surface IS the list (the sidebar
+  /// routes list clicks here), so typed tasks land in the scoped list; with no
+  /// scope they land in the inbox. Capture stays in place so consecutive adds
+  /// flow.
+  @ViewBuilder
+  private var quickAdd: some View {
+    Group {
+      if let scopedListID = store.taskWorkspaceListScopeID {
+        QuickAddRow(
+          placeholder: quickAddPlaceholder(for: scopedListID),
+          focusToken: store.quickAddFocusToken,
+          preview: store.quickAddPreview
+        ) { text in
+          await store.createInlineTask(text, destination: .list(scopedListID))
+        }
+      } else {
+        QuickAddRow(
+          placeholder: String(
+            localized: "tasks.quick_add.placeholder", defaultValue: "Add a task",
+            table: "Localizable",
+            bundle: LorvexL10n.bundle),
+          focusToken: store.quickAddFocusToken,
+          preview: store.quickAddPreview
+        ) { text in
+          await store.createInlineTask(text, destination: .inbox)
+        }
+      }
+    }
+    .padding(.horizontal, LorvexDesign.Spacing.m)
+    .padding(.top, LorvexDesign.Spacing.s)
+  }
+
   var body: some View {
     VStack(spacing: 0) {
       TasksWorkspaceHeader(
-        store: store,
         title: headerTitle,
         subtitle: headerSubtitle,
-        scope: headerScope,
-        summary: headerSummary,
-        metrics: headerMetrics,
-        isTableMode: $isTableMode,
-        priorityFilter: $priorityFilter
+        icon: headerIcon,
+        iconTint: headerIconTint
       )
 
       Divider()
@@ -67,73 +96,46 @@ struct TasksView: View {
             TasksInitialLoadingState()
           }
         } else if isTableMode {
-          TasksTableWorkspaceView(
-            store: store,
-            tasks: tableVisibleTaskPool,
-            sortOrder: $tableSortOrder,
-            selection: taskSelection
-          )
+          VStack(spacing: 0) {
+            quickAdd
+              .padding(.bottom, LorvexDesign.Spacing.s)
+            TasksTableWorkspaceView(
+              store: store,
+              tasks: tableVisibleTaskPool,
+              sortOrder: $tableSortOrder,
+              selection: taskSelection
+            )
+          }
         } else {
           WorkspaceReviewList(taskNavigation: store.arrowKeyTaskNavigation(on: .taskWorkspace)) {
-            // The Tasks surface always leads with an inline quick-add so ⌘N and
-            // the empty-state capture button always have a field to focus. With
-            // an active list scope this surface IS the list (the sidebar routes
-            // list clicks here), so typed tasks land in the scoped list; with no
-            // scope they land in the default/inbox list. Either way capture stays
-            // in place so consecutive adds flow.
-            if let scopedListID = store.taskWorkspaceListScopeID {
-              QuickAddRow(
-                placeholder: quickAddPlaceholder(for: scopedListID),
-                isCreating: store.isCreating,
-                focusToken: store.quickAddFocusToken
-              ) { title in
-                await store.createTaskInList(title: title, listID: scopedListID)
-              }
-              .padding(.horizontal, LorvexDesign.Spacing.m)
-              .padding(.top, LorvexDesign.Spacing.s)
-            } else {
-              QuickAddRow(
-                placeholder: String(
-                  localized: "tasks.quick_add.placeholder", defaultValue: "Add a task",
-                  table: "Localizable",
-                  bundle: LorvexL10n.bundle),
-                isCreating: store.isCreating,
-                focusToken: store.quickAddFocusToken
-              ) { title in
-                await store.createTaskInInbox(title: title)
-              }
-              .padding(.horizontal, LorvexDesign.Spacing.m)
-              .padding(.top, LorvexDesign.Spacing.s)
-            }
-            TaskStatusSection(
-              title: String(localized: "tasks.section.open", defaultValue: "Next Up", table: "Localizable", bundle: LorvexL10n.bundle),
-              status: .open,
+            quickAdd
+            TaskOpenRows(
               tasks: visibleReviewQueueTasks,
               store: store,
-              systemImage: "list.bullet",
-              tint: .secondary,
-              topSpacing: LorvexDesign.Spacing.s,
               showsLoadMore: !usesReviewQueuePreview)
             if usesReviewQueuePreview {
-              TaskOpenBacklogDisclosure(
+              TaskFoldSection(
                 isExpanded: $showOpenBacklog,
+                title: String(localized: "tasks.section.backlog", defaultValue: "Backlog", table: "Localizable", bundle: LorvexL10n.bundle),
                 tasks: visibleOpenBacklogTasks,
-                store: store
-              )
+                pagedSections: [.open],
+                store: store,
+                accessibilityIdentifier: "tasks.openBacklog.disclosure")
             }
-            TaskLaterDisclosure(
+            TaskFoldSection(
               isExpanded: $showLater,
-              deferredTasks: visibleDeferredTasks,
-              scheduledTasks: visibleScheduledTasks,
-              somedayTasks: visibleSomedayTasks,
-              store: store
-            )
-            TaskHistoryDisclosure(
+              title: String(localized: "tasks.section.later", defaultValue: "Later", table: "Localizable", bundle: LorvexL10n.bundle),
+              tasks: visibleLaterTasks,
+              pagedSections: [.deferred, .scheduled, .someday],
+              store: store,
+              accessibilityIdentifier: "tasks.later.disclosure")
+            TaskFoldSection(
               isExpanded: $showHistory,
-              completedTasks: visibleCompletedTasks,
-              cancelledTasks: visibleCancelledTasks,
-              store: store
-            )
+              title: String(localized: "tasks.section.history", defaultValue: "History", table: "Localizable", bundle: LorvexL10n.bundle),
+              tasks: visibleHistoryTaskPool,
+              pagedSections: [.completed, .cancelled],
+              store: store,
+              accessibilityIdentifier: "tasks.history.disclosure")
           }
           .cancelSelectedTaskOnDelete(store, on: .taskWorkspace)
         }
@@ -171,7 +173,16 @@ struct TasksView: View {
     .onChange(of: visibleOrderedTaskIDs) { _, ids in
       store.setTaskWorkspaceVisibleOrderedTaskIDs(ids)
     }
-    .navigationTitle(String(localized: "sidebar.item.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle))
+    .navigationTitle(String(localized: "sidebar.item.tasks", defaultValue: "All Tasks", table: "Localizable", bundle: LorvexL10n.bundle))
+    .toolbar {
+      // Leading edge: the window's search field holds the trailing one.
+      ToolbarItemGroup(placement: .primaryAction) {
+        if store.taskWorkspaceSelectionCount > 1 {
+          TasksSelectionActionMenu(store: store)
+        }
+        TasksReviewOptionsMenu(isTableMode: $isTableMode, priorityFilter: $priorityFilter)
+      }
+    }
     .lorvexOpenDestinationActivity(selection: .tasks, isActive: store.selection == .tasks)
   }
 

@@ -18,16 +18,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
-    NSApp.setActivationPolicy(.regular)
     #if DEBUG
-      // `UNUserNotificationCenter.current()` requires a real app bundle; skip it in
-      // the bare-executable `--ui-preview` run so the windows render headlessly.
-      if !LorvexUIPreview.isActive {
-        UNUserNotificationCenter.current().delegate = self
-        registerMetricKitDiagnostics()
-        registerForRemoteNotifications()
+      // The bare-executable `--ui-preview` run renders its windows without ever
+      // becoming the active app (no activation, no URL fallback), so a capture
+      // tour can run behind the user's work. The policy stays `.regular`
+      // because SwiftUI only opens the WindowGroup's window at launch for a
+      // regular app. `UNUserNotificationCenter.current()` also requires a real
+      // app bundle.
+      if LorvexUIPreview.isActive {
+        NSApp.setActivationPolicy(.regular)
+        Self.recoverWindowPlacementSoon()
+        return
       }
+      NSApp.setActivationPolicy(.regular)
+      UNUserNotificationCenter.current().delegate = self
+      registerMetricKitDiagnostics()
+      registerForRemoteNotifications()
     #else
+      NSApp.setActivationPolicy(.regular)
       UNUserNotificationCenter.current().delegate = self
       registerMetricKitDiagnostics()
       registerForRemoteNotifications()
@@ -209,12 +217,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
       return
     }
     NSApp.activate()
-    #if DEBUG
-      // The bare-executable `--ui-preview` isn't a registered bundle, so opening a
-      // `lorvex://` URL pops a "no application set to open" dialog. Its WindowGroup
-      // already shows the window, so skip the URL fallback.
-      if LorvexUIPreview.isActive { return }
-    #endif
     NSWorkspace.shared.open(LorvexDeepLinkRoute.destination(.today).url)
   }
 }
@@ -231,7 +233,7 @@ private func scheduleSnoozeNotification(taskID: String, title: String? = nil) as
       NotificationActionError(
         message: report.errorMessage
           ?? String(
-            localized: "notification.snooze.failed", defaultValue: "Couldn't snooze the reminder.",
+            localized: "notification.snooze.failed", defaultValue: "Couldn’t snooze the reminder.",
             table: "Localizable", bundle: LorvexL10n.bundle)))
   }
 }

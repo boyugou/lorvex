@@ -29,7 +29,8 @@ extension MobileStore {
         page = MobileTaskWorkspacePage(
           tasks: tasks,
           totalMatching: narrowsInMemory ? tasks.count : result.totalMatching,
-          nextOffset: result.nextOffset
+          nextOffset: result.nextOffset,
+          isNarrowed: narrowsInMemory
         )
       } else {
         // searchTasks has no list/smart filter — narrow in memory.
@@ -46,7 +47,8 @@ extension MobileStore {
         page = MobileTaskWorkspacePage(
           tasks: tasks,
           totalMatching: narrowsInMemory ? tasks.count : result.totalMatching,
-          nextOffset: result.nextOffset
+          nextOffset: result.nextOffset,
+          isNarrowed: narrowsInMemory
         )
       }
       cacheTasks(page.tasks)
@@ -54,6 +56,19 @@ extension MobileStore {
     } catch {
       await presentUserFacingError(error)
       return .empty
+    }
+  }
+
+  /// Whether the store holds a task in any status. A failed read answers
+  /// true: the Tasks home then keeps its collections rather than invite a
+  /// first task into a store that may have many.
+  func holdsAnyTask() async -> Bool {
+    do {
+      let result = try await core.listTasks(
+        status: "all", listID: nil, priority: nil, text: nil, limit: 1, offset: 0)
+      return !result.tasks.isEmpty
+    } catch {
+      return true
     }
   }
 }

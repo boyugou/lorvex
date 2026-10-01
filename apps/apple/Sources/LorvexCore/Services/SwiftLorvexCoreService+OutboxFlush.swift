@@ -33,8 +33,8 @@ extension SwiftLorvexCoreService {
   /// envelope, minting a fresh version from `hlc`. No-op for local-only kinds.
   ///
   /// The snapshot reader (`readEntityPayloadSnapshot`) handles aggregate roots
-  /// with embedded children (`current_focus`, `focus_schedule`, `daily_review`,
-  /// `calendar_event`), `preference`, and the generic
+  /// with embedded children (`daily_review`, `calendar_event`), `preference`,
+  /// and the generic
   /// column-copy path. The caller passes the entity AFTER its row mutation has
   /// landed so the snapshot reflects the new state.
   func enqueueUpsert(
@@ -80,32 +80,6 @@ extension SwiftLorvexCoreService {
     for id in entityIds {
       try enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: kind, entityId: id)
     }
-  }
-
-  // MARK: - Append-only audit stream (emit-once)
-
-  /// Enqueue the single emit-once `ai_changelog` upsert envelope for a row just
-  /// written, minting versions from the mutation's own `session` clock.
-  ///
-  /// The append-only audit stream has no simple `(table, pk)`, so the caller
-  /// passes a pre-built `payload`
-  /// (``ChangelogWrite/buildChangelogSyncPayload(_:)``) instead of routing through
-  /// `readEntityPayloadSnapshot`. Convergence is id-dedup on the peer
-  /// (`INSERT OR IGNORE`, no LWW), so the ordinary mutation path emits it once.
-  /// A candidate-zone baseline deliberately re-stages every still-retained row;
-  /// ordinary full-resync does not. Retention removes expired records through a
-  /// durable exact-zone CloudKit physical-delete queue, never sync tombstones.
-  /// No-op for a non-syncable kind (defensive — the caller always passes
-  /// `.aiChangelog`).
-  func enqueueChangelogUpsert(
-    _ db: Database, session: HlcSession, deviceId: String,
-    kind: EntityKind, entityId: String, payload: JSONValue
-  ) throws {
-    guard kind.isSyncableKind else { return }
-    try OutboxEnqueue.enqueuePayloadUpsert(
-      db, entityType: kind.asString, entityId: entityId, payload: payload,
-      context: OutboxWriteContext(
-        version: session.nextVersionString(), deviceId: deviceId))
   }
 
   // MARK: - Primary entity delete

@@ -1,64 +1,42 @@
 import LorvexCore
 import SwiftUI
 
-/// The calm field panel shared by the create and edit list sheets.
-struct ListFormFields: View {
+/// The top of the create and edit list sheets: the list's icon tile and name
+/// (``CreationSheetHeader``), with its description typed on the lines under
+/// the name. A list has no other fields, so this header is the whole form.
+struct ListSheetHeader: View {
   @Bindable var store: AppStore
   let idPrefix: String
-  /// Claimed when the sheet appears so the user can type immediately.
-  @FocusState private var nameFocused: Bool
 
   var body: some View {
-    DraftSheetPanel(accessibilityIdentifier: "\(idPrefix).fields") {
-      DraftSheetField(
-        title: String(localized: "lists.sheet.field.name", defaultValue: "Name", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "text.cursor"
-      ) {
-        TextField(
-          String(localized: "lists.sheet.field.name", defaultValue: "Name", table: "Localizable", bundle: LorvexL10n.bundle),
-          text: $store.draftListName
-        )
-        .font(LorvexDesign.Typography.primaryText)
-        .textFieldStyle(.plain)
-        .focused($nameFocused)
-        .accessibilityLabel(String(
-          localized: "lists.sheet.field.name_a11y",
-          defaultValue: "List name",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-        .accessibilityIdentifier("\(idPrefix).name")
-      }
-
-      DraftSheetField(
-        title: String(localized: "lists.sheet.field.description", defaultValue: "Description", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "note.text"
-      ) {
-        LorvexPlainTextEditor(
-          text: $store.draftListDescription,
-          placeholder: String(localized: "lists.sheet.field.description", defaultValue: "Description", table: "Localizable", bundle: LorvexL10n.bundle),
-          minHeight: 64,
-          fontSize: 14
-        )
-        .accessibilityLabel(String(
-          localized: "lists.sheet.field.description_a11y",
-          defaultValue: "List description",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-        .accessibilityIdentifier("\(idPrefix).description")
-      }
-
-      LorvexIconColorField(
-        icon: $store.draftListIcon,
-        color: $store.draftListColor,
-        idPrefix: idPrefix
+    CreationSheetHeader(
+      icon: $store.draftListIcon,
+      color: $store.draftListColor,
+      name: $store.draftListName,
+      defaultIcon: "list.bullet",
+      namePrompt: String(
+        localized: "lists.sheet.field.name_prompt", defaultValue: "List name", table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      nameAccessibilityLabel: String(
+        localized: "lists.sheet.field.name_a11y", defaultValue: "List name", table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      idPrefix: idPrefix
+    ) {
+      TextField(
+        String(
+          localized: "lists.sheet.field.description_prompt", defaultValue: "Add a description",
+          table: "Localizable", bundle: LorvexL10n.bundle),
+        text: $store.draftListDescription,
+        axis: .vertical
       )
-    }
-    .task {
-      nameFocused = false
-      await Task.yield()
-      nameFocused = true
+      .lineLimit(1...3)
+      .font(LorvexDesign.Typography.secondaryText)
+      .foregroundStyle(.secondary)
+      .textFieldStyle(.plain)
+      .accessibilityLabel(String(
+        localized: "lists.sheet.field.description_a11y", defaultValue: "List description",
+        table: "Localizable", bundle: LorvexL10n.bundle))
+      .accessibilityIdentifier("\(idPrefix).description")
     }
   }
 }

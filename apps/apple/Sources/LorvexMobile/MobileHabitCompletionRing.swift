@@ -5,11 +5,15 @@ import SwiftUI
 /// logs today's completion (or resets it once the target is met) with a spring
 /// pop and a success haptic, while the ring fills toward its target. Plain so it
 /// owns only its own hit area — the rest of the row still selects/opens the
-/// habit. Shared by the compact habit row and the regular/iPad catalog row so
-/// both give the same on-row completion moment.
+/// habit. Shared by the compact habit row, the regular/iPad catalog row, and
+/// Today's habit strip so all give the same completion moment.
 struct MobileHabitCompletionRing: View {
   let habit: LorvexHabit
   let isMutating: Bool
+  /// Draws the habit's symbol inside the ring until it is complete, where the
+  /// ring stands without the habit's icon tile beside it.
+  var showsSymbol: Bool = false
+  var size: CGFloat = 32
   let complete: () async -> Void
   let reset: () async -> Void
   /// Drives the tap feedback: the ring springs up and settles back as the
@@ -20,9 +24,10 @@ struct MobileHabitCompletionRing: View {
     Button(action: trigger) {
       MobileProgressRing(
         value: habit.todayProgressValue,
-        tint: habit.isCompleteToday ? .green : habit.tileTint,
-        size: 32,
-        isComplete: habit.isCompleteToday
+        tint: habit.isCompleteToday ? LorvexDesign.Palette.done : habit.tileTint,
+        size: size,
+        isComplete: habit.isCompleteToday,
+        symbol: showsSymbol ? habit.tileSymbol : nil
       )
       .scaleEffect(pulse ? 1.18 : 1)
       .contentShape(Circle())

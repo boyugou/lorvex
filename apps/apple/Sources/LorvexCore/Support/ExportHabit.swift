@@ -22,6 +22,11 @@ public struct ExportHabit: Codable, Sendable {
   public var color: String?
   public var archived: Bool
   public var position: Int64
+  /// The habit's creation instant, absent in archives written before the field
+  /// existed. Import stamps the row with the import instant when it is absent,
+  /// so a restored habit's 30-day adherence window starts on the restore day
+  /// instead of its real creation day.
+  public var createdAt: String?
   public var completions: [ExportHabitCompletion]
   public var reminderPolicies: [ExportHabitReminderPolicy]
 
@@ -39,6 +44,7 @@ public struct ExportHabit: Codable, Sendable {
     milestoneTarget: Int? = nil,
     archived: Bool = false,
     position: Int64 = 0,
+    createdAt: String? = nil,
     completions: [ExportHabitCompletion] = [],
     reminderPolicies: [ExportHabitReminderPolicy] = []
   ) {
@@ -55,12 +61,16 @@ public struct ExportHabit: Codable, Sendable {
     self.milestoneTarget = milestoneTarget
     self.archived = archived
     self.position = position
+    self.createdAt = createdAt
     self.completions = completions
     self.reminderPolicies = reminderPolicies
   }
 
+  /// `createdAt` is passed in rather than read from `habit`: ``LorvexHabit`` is
+  /// the display projection and does not carry the row's creation instant.
   public init(
     from habit: LorvexHabit,
+    createdAt: String? = nil,
     completions: [ExportHabitCompletion] = [],
     reminderPolicies: [ExportHabitReminderPolicy] = []
   ) {
@@ -77,13 +87,14 @@ public struct ExportHabit: Codable, Sendable {
     milestoneTarget = habit.milestoneTarget
     archived = habit.archived
     position = habit.position
+    self.createdAt = createdAt
     self.completions = completions
     self.reminderPolicies = reminderPolicies
   }
 
   enum CodingKeys: String, CodingKey {
     case id, name, cue, icon, color, frequencyType, weekdays, perPeriodTarget, dayOfMonth
-    case targetCount, milestoneTarget, archived, position, completions
+    case targetCount, milestoneTarget, archived, position, createdAt, completions
     case reminderPolicies
   }
 
@@ -102,6 +113,7 @@ public struct ExportHabit: Codable, Sendable {
     milestoneTarget = try container.decodeIfPresent(Int.self, forKey: .milestoneTarget)
     archived = try container.decode(Bool.self, forKey: .archived)
     position = try container.decode(Int64.self, forKey: .position)
+    createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
     completions = try container.decode([ExportHabitCompletion].self, forKey: .completions)
     reminderPolicies = try container.decode(
       [ExportHabitReminderPolicy].self, forKey: .reminderPolicies)
@@ -156,20 +168,20 @@ public struct ExportHabit: Codable, Sendable {
 
   static let columns = [
     "id", "name", "cue", "icon", "color", "frequencyType", "weekdays", "perPeriodTarget",
-    "dayOfMonth", "targetCount", "milestoneTarget", "archived", "position",
+    "dayOfMonth", "targetCount", "milestoneTarget", "archived", "position", "createdAt",
     "completions", "reminderPolicies",
   ]
 
   /// CSV row. `weekdays` is a hyphen-joined list of Monday-first ints (empty
   /// string when none); the optional counts (`perPeriodTarget`, `dayOfMonth`,
-  /// `milestoneTarget`) render as "" when absent.
+  /// `milestoneTarget`) and `createdAt` render as "" when absent.
   var csvRow: [String] {
     [
       id, name, cue, icon ?? "", color ?? "", frequencyType,
       weekdays.map(String.init).joined(separator: "-"),
       perPeriodTarget.map(String.init) ?? "", dayOfMonth.map(String.init) ?? "",
       String(targetCount), milestoneTarget.map(String.init) ?? "", archived ? "true" : "false",
-      String(position), Self.encode(completions),
+      String(position), createdAt ?? "", Self.encode(completions),
       Self.encode(reminderPolicies),
     ]
   }

@@ -23,10 +23,4 @@ enum WatchL10n {
             return Bundle(for: BundleAnchor.self)
         #endif
     }()
-
-    /// The URL of the Localizable.xcstrings file, exposed for catalog
-    /// completeness tests across every shipped language.
-    static var catalogURL: URL? {
-        bundle.url(forResource: "Localizable", withExtension: "xcstrings")
-    }
 }

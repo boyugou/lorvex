@@ -43,24 +43,23 @@ final class SwiftLorvexCoreServiceMaintenanceGcTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
   /// With no `applyInbound`, `runLocalRetentionMaintenance` age-caps
-  /// `error_logs`, removes an expired audit row and its pending full-content
-  /// upsert, and keeps an unrelated unsynced row within the backlog cap. An
-  /// unbound row has no possible CloudKit presence, so no physical purge is
-  /// queued and no audit delete envelope is created.
+  /// `error_logs`, removes an audit row older than the device's retention
+  /// policy while keeping a recent one, and keeps an unrelated unsynced outbox
+  /// row within the backlog cap.
   func testMaintenanceEnforcesRetentionCapsWithoutApply() throws {
     let service = try makeService()
     let outboxEntityId = "01966a3f-7c8b-7d4e-8f3a-00000000ab01"
     let auditId = "01966a3f-7c8b-7d4e-8f3a-00000000ab02"
+    let recentAuditId = "01966a3f-7c8b-7d4e-8f3a-00000000ab03"
 
     try service.write { db in
-      try AuditRetentionFrontier.adoptPolicyForCurrentScope(
-        db, policy: .days(30),
-        policyVersion: "0000000000000_0000_0000000000000000")
+      try AuditRetention.setPolicy(db, .days(30))
 
       // An aged error_logs row (reaped) and a recent one (kept).
       try db.execute(
@@ -89,16 +88,11 @@ final class SwiftLorvexCoreServiceMaintenanceGcTests: XCTestCase {
           INSERT INTO ai_changelog
             (id, timestamp, operation, entity_type, summary, initiated_by)
           VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-100 days'),
-                  'create', 'task', 'private audit payload', 'ai')
+                  'create', 'task', 'expired audit payload', 'ai'),
+                 (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+                  'create', 'task', 'recent audit payload', 'ai')
           """,
-        arguments: [auditId])
-      try Self.seedOutboxEnvelope(
-        db,
-        SyncEnvelope(
-          entityType: .aiChangelog, entityId: auditId, operation: .upsert,
-          version: try Hlc.parse("1711234567891_0000_a1b2c3d4a1b2c3d4"),
-          payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-          payload: #"{"summary":"private audit payload"}"#, deviceId: "device-A"))
+        arguments: [auditId, recentAuditId])
     }
 
     try service.runLocalRetentionMaintenance(includeActiveOutboxCap: true)
@@ -117,43 +111,23 @@ final class SwiftLorvexCoreServiceMaintenanceGcTests: XCTestCase {
       XCTAssertEqual(
         try Int.fetchOne(
           db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?", arguments: [auditId]),
-        0)
+        0, "an audit row older than the retention policy is pruned")
       XCTAssertEqual(
         try Int.fetchOne(
-          db,
-          sql: """
-            SELECT COUNT(*) FROM sync_outbox
-            WHERE entity_type = ? AND entity_id = ? AND operation = ? AND synced_at IS NULL
-            """,
-          arguments: [EntityName.aiChangelog, auditId, SyncNaming.opUpsert]),
-        0, "enabling sync later cannot upload audit content already removed by retention")
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: """
-            SELECT COUNT(*) FROM sync_outbox
-            WHERE entity_type = ? AND entity_id = ? AND operation = ? AND synced_at IS NULL
-            """,
-          arguments: [EntityName.aiChangelog, auditId, SyncNaming.opDelete]),
-        0, "audit privacy cleanup never creates a sync-delete envelope")
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM audit_retention_purge_queue WHERE entity_id = ?",
-          arguments: [auditId]),
-        0, "an unbound row has no possible CloudKit presence to purge")
+          db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?",
+          arguments: [recentAuditId]),
+        1, "an audit row inside the retention window is kept")
     }
   }
 
   /// Live configuration still needs the policy/age subset when CloudKit cannot
   /// enter an apply cycle. Passing `false` disables only the lossy active-outbox
-  /// cap; it must not disable audit/privacy retention itself.
+  /// cap; it must not disable audit retention itself.
   func testLiveSafeMaintenanceRunsWithoutActiveOutboxCap() throws {
     let service = try makeService()
     let auditId = "01966a3f-7c8b-7d4e-8f3a-00000000ac01"
     try service.write { db in
-      try AuditRetentionFrontier.adoptPolicyForCurrentScope(
-        db, policy: .days(30),
-        policyVersion: "0000000000000_0000_0000000000000000")
+      try AuditRetention.setPolicy(db, .days(30))
       try db.execute(
         sql: """
           INSERT INTO ai_changelog
@@ -170,15 +144,6 @@ final class SwiftLorvexCoreServiceMaintenanceGcTests: XCTestCase {
         try Int.fetchOne(
           db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?", arguments: [auditId]),
         0)
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: """
-            SELECT COUNT(*) FROM sync_outbox
-            WHERE entity_type = ? AND entity_id = ? AND operation = ?
-            """,
-          arguments: [EntityName.aiChangelog, auditId, SyncNaming.opDelete]),
-        0, "live-safe maintenance never authors audit delete envelopes")
     }
   }
 }

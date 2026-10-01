@@ -30,8 +30,8 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
     }
   }
 
-  private func withDeterministicHlcClock<T>(
-    _ body: () async throws -> T
+  private nonisolated(nonsending) func withDeterministicHlcClock<T>(
+    _ body: nonisolated(nonsending) () async throws -> T
   ) async rethrows -> T {
     let clock = MonotonicTestClock()
     return try await SwiftLorvexCoreService.$hlcPhysicalNowMsForTesting.withValue(
@@ -47,7 +47,8 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
       .deletingLastPathComponent()  // repo root
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -124,11 +125,13 @@ final class SwiftLorvexCoreServiceReorderTests: XCTestCase {
       let b = try await service.createList(name: "Beta", description: nil)
       let c = try await service.createList(name: "Gamma", description: nil)
 
-      // Densify to [inbox, a, b, c] (positions 0,1,2,3).
-      let densified = try await service.loadLists().lists.map(\.id)
-      _ = try await service.reorderLists(orderedIDs: densified)
+      // Densify to [inbox, a, b, c] (positions 0,1,2,3). The order is spelled
+      // out rather than read back from loadLists(), whose order for lists
+      // created in the same instant is not guaranteed.
+      let loaded = try await service.loadLists().lists.map(\.id)
+      let inboxID = try XCTUnwrap(loaded.first { ![a.id, b.id, c.id].contains($0) })
+      _ = try await service.reorderLists(orderedIDs: [inboxID, a.id, b.id, c.id])
 
-      let inboxID = densified[0]
       let inboxBefore = try self.version(service, table: "lists", id: inboxID)
       let aBefore = try self.version(service, table: "lists", id: a.id)
       let bBefore = try self.version(service, table: "lists", id: b.id)

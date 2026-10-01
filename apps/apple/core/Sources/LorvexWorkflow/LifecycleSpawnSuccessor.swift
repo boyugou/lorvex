@@ -7,8 +7,8 @@ import LorvexStore
 /// when a recurring task is completed (or skip-cancelled) and rewinds its
 /// recorded direct successor when a completed recurring parent is reopened.
 ///
-/// All side effects (successor row create/revive, focus-plan rewire,
-/// tag/checklist/reminder copy, recurrence rewind) stamp with the single
+/// All side effects (successor row create/revive, tag/checklist/reminder
+/// copy, recurrence rewind) stamp with the single
 /// ``reminderVersion`` HLC the orchestrator forwards, so the entire recurrence
 /// rollover ships as one HLC's worth of writes.
 public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
@@ -70,12 +70,6 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
       parentId: taskId.asString,
       successorId: successorId)
 
-    let rewire = try SpawnSuccessor.rewireFocusPlan(
-      db,
-      parentId: taskId.asString,
-      successorId: successorId,
-      todayYmd: decision.todayYmd)
-
     let copiedTagEdges = rowWrite.inserted
       ? try SpawnSuccessor.copyTaskTags(
         db, parentId: taskId.asString, successorId: successorId,
@@ -110,9 +104,7 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
       successorId: successorId,
       copiedTagEdges: copiedTagEdges,
       copiedChecklistItemIds: copiedChecklistItemIds,
-      copiedReminderIds: copiedReminderIds,
-      rewiredFocusScheduleDates: rewire.rewiredFocusScheduleDates,
-      rewiredCurrentFocusDates: rewire.rewiredCurrentFocusDates)
+      copiedReminderIds: copiedReminderIds)
   }
 
   public func cancelRecurringSuccessors(
@@ -194,24 +186,20 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
     let result = try LifecycleStatus.cancelRecurrenceSuccessorForReopen(
       db, taskId: TaskId(trusted: successorId), oldStatus: status,
       now: now, version: reminderVersion)
-    let focusRewire = try LifecycleSuccessorFocusRewind.rewire(
-      db, successorId: successorId, parentId: taskId.asString)
 
     return SuccessorCancelOutcome(
       ids: [successorId],
       sideEffects: SuccessorCancelSideEffects(
         cancelledReminderIds: result.cancelledReminderIds,
         deletedDependencyEdges: result.deletedDependencyEdges,
-        affectedDependentIds: result.affectedDependentIds,
-        rewiredFocusScheduleDates: focusRewire.focusScheduleDates,
-        rewiredCurrentFocusDates: focusRewire.currentFocusDates))
+        affectedDependentIds: result.affectedDependentIds))
   }
 }
 
 // MARK: - Internal helpers (file-private namespace)
 
 /// Spawn-successor implementation pieces, split by concern (next-due,
-/// insert, copy, rewire, timezone) — landed in one file because the
+/// insert, copy, timezone) — landed in one file because the
 /// surface is small and each helper is consumed only by the handler above.
 enum SpawnSuccessor {
 
@@ -226,9 +214,6 @@ enum SpawnSuccessor {
     /// `decrementRecurrenceCount`-modified if the original carried a finite
     /// COUNT.
     let spawnedRecurrence: String
-    /// Today in the user's configured timezone — reused by the focus-plan
-    /// rewire so the preference isn't re-read.
-    let todayYmd: String
   }
 
   /// Walk the EXDATE list past excluded dates, decrement COUNT, and surface the
@@ -315,8 +300,7 @@ enum SpawnSuccessor {
 
     return NextDueDecision(
       nextDueDate: resolvedNextDueDate,
-      spawnedRecurrence: spawnedRecurrence,
-      todayYmd: todayYmd)
+      spawnedRecurrence: spawnedRecurrence)
   }
 
   /// Resolves today's date in the configured timezone: missing preference
@@ -456,6 +440,7 @@ enum SpawnSuccessor {
           "UPDATE tasks SET "
           + "status = 'open', completed_at = NULL, "
           + "due_date = ?1, planned_date = ?2, available_from = ?3, "
+          + "planned_start_minutes = NULL, planned_end_minutes = NULL, "
           + "canonical_occurrence_date = ?1, recurrence = ?4, "
           + "recurrence_group_id = ?5, recurrence_instance_key = ?6, "
           + "spawned_from = ?7, spawned_from_version = ?8, "
@@ -531,48 +516,6 @@ enum SpawnSuccessor {
       throw StoreError.invariant(
         "could not authorize recurrence successor \(successorId) on parent \(parentId)")
     }
-  }
-
-  // MARK: - rewire focus plan
-
-  struct FocusRewireResult {
-    let rewiredFocusScheduleDates: [String]
-    let rewiredCurrentFocusDates: [String]
-  }
-
-  static func rewireFocusPlan(
-    _ db: Database,
-    parentId: String,
-    successorId: String,
-    todayYmd: String
-  ) throws -> FocusRewireResult {
-    let rewiredFocusScheduleDates = try String.fetchAll(
-      db,
-      sql:
-        "SELECT DISTINCT date FROM focus_schedule_blocks "
-        + "WHERE task_id = ?1 AND date >= ?2 "
-        + "ORDER BY date ASC",
-      arguments: [parentId, todayYmd])
-    let rewiredCurrentFocusDates = try String.fetchAll(
-      db,
-      sql:
-        "SELECT DISTINCT date FROM current_focus_items "
-        + "WHERE task_id = ?1 AND date >= ?2 "
-        + "ORDER BY date ASC",
-      arguments: [parentId, todayYmd])
-    try db.execute(
-      sql:
-        "UPDATE focus_schedule_blocks SET task_id = ?1 "
-        + "WHERE task_id = ?2 AND date >= ?3",
-      arguments: [successorId, parentId, todayYmd])
-    try db.execute(
-      sql:
-        "UPDATE current_focus_items SET task_id = ?1 "
-        + "WHERE task_id = ?2 AND date >= ?3",
-      arguments: [successorId, parentId, todayYmd])
-    return FocusRewireResult(
-      rewiredFocusScheduleDates: rewiredFocusScheduleDates,
-      rewiredCurrentFocusDates: rewiredCurrentFocusDates)
   }
 
   // MARK: - copy tags / checklist / reminders

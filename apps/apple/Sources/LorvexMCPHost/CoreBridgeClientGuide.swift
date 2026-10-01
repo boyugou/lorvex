@@ -4,28 +4,23 @@ import MCP
 
 extension CoreBridgeClient {
   func loadGuide(topic: String?) async throws -> Value {
-    let diagnostics = try await service.loadRuntimeDiagnostics()
-    let guide = diagnostics.guide
-    let setup = diagnostics.setup
-    // Compute the live state instead of hardcoding zeros: memory depth,
-    // configured preference keys, and whether today has a focus plan.
+    let setup = try await service.loadRuntimeDiagnostics().setup
+    // Live state the guidance folds in: memory depth, configured preference
+    // keys, and whether today has a briefing.
     let memory = try await service.loadMemory()
     let preferences = try await service.getAllPreferences()
-    let logicalDay = try await service.getSessionContext().date
-    let focus = try await service.loadCurrentFocus(date: logicalDay)
+    let hasBriefing = try await service.getOverviewCompact().hasBriefing
     let configuredPreferences = preferences.values.keys.sorted().map(Value.string)
-    let hasCurrentFocus = focus.map { !$0.taskIDs.isEmpty } ?? false
 
-    // Tailor the guidance to the requested topic, folding in live state, rather
-    // than echoing the topic but returning the generic runtime summary.
+    // Unrecognized topics resolve to the overview, so the copy always matches
+    // the topic the response names.
     let resolvedTopic = Self.canonicalGuideTopic(topic)
     let copy = Self.guideCopy(
       topic: resolvedTopic,
-      runtimeSummary: guide.summary,
       setupCompleted: setup.setupCompleted,
       taskCount: setup.taskCount,
       listCount: setup.listCount,
-      hasCurrentFocus: hasCurrentFocus,
+      hasBriefing: hasBriefing,
       memoryCount: memory.entries.count,
       configuredPreferenceCount: configuredPreferences.count)
     return .object([
@@ -34,7 +29,7 @@ extension CoreBridgeClient {
         "setup_completed": .bool(setup.setupCompleted),
         "task_count": .int(setup.taskCount),
         "list_count": .int(setup.listCount),
-        "has_current_focus": .bool(hasCurrentFocus),
+        "has_briefing": .bool(hasBriefing),
         "memory_count": .int(memory.entries.count),
         "configured_preferences": .array(configuredPreferences),
       ]),
@@ -52,8 +47,8 @@ extension CoreBridgeClient {
   /// `overview` so the response always carries a known topic.
   static func canonicalGuideTopic(_ topic: String?) -> String {
     let known: Set<String> = [
-      "overview", "getting_started", "task_management", "current_focus",
-      "lists", "focus_mode", "weekly_review", "preferences", "data_and_export",
+      "overview", "getting_started", "task_management", "planning",
+      "lists", "weekly_review", "preferences", "data_and_export",
     ]
     guard let topic = topic?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
       known.contains(topic)
@@ -66,11 +61,10 @@ extension CoreBridgeClient {
   /// situation-aware guidance instead of a generic blurb.
   static func guideCopy(
     topic: String,
-    runtimeSummary: String,
     setupCompleted: Bool,
     taskCount: Int,
     listCount: Int,
-    hasCurrentFocus: Bool,
+    hasBriefing: Bool,
     memoryCount: Int,
     configuredPreferenceCount: Int
   ) -> (summary: String, actions: [String]) {
@@ -82,7 +76,7 @@ extension CoreBridgeClient {
           [
             "Capture tasks with create_task or batch_create_tasks.",
             "Organize with create_list and move_task_to_list.",
-            "Plan the day with set_current_focus and propose_daily_schedule.",
+            "Plan the day with update_task (planned_date), then write a set_daily_briefing.",
           ])
       }
       return (
@@ -94,29 +88,41 @@ extension CoreBridgeClient {
         ])
     case "task_management":
       return (
-        "Tasks carry priority, planned_date, tags, dependencies, a checklist, reminders, and recurrence. Status transitions go through complete/cancel/reopen/defer and start/pause — never update_task. start_task marks work in_progress (an actionable state that surfaces wherever open does); pause_task clears it.",
+        "Tasks carry priority, planned_date with an optional time on that day (planned_start_time, planned_end_time), tags, dependencies, a checklist, reminders, and recurrence. Status transitions go through complete/cancel/reopen/defer and start/pause — never update_task. start_task marks work in_progress (an actionable state that surfaces wherever open does); pause_task clears it.",
         [
           "Capture with create_task / batch_create_tasks; enrich fields with update_task.",
           "Break work down with add_task_checklist_item; set deadlines with add_task_reminder.",
           "Change status with complete_task / cancel_task / reopen_task / defer_task; mark active work with start_task and clear it with pause_task.",
           "Surface load with get_upcoming_tasks, get_deferred_tasks, and search_tasks.",
         ])
-    case "current_focus":
-      if hasCurrentFocus {
+    case "planning":
+      let day =
+        "Today lists every task that is overdue, on the day, or started, started tasks first; "
+        + "planned_date, when set, decides a task's day, otherwise due_date does."
+      let arrange =
+        "Put work on a day with update_task or batch_update_tasks (planned_date); move what no "
+        + "longer fits with defer_task or batch_defer_tasks, which count the deferral."
+      let times =
+        "Offer times only when the user wants a timetable: propose_daily_schedule, then "
+        + "save_daily_schedule; read the day's times with get_daily_schedule, and time one task "
+        + "with update_task (planned_start_time, planned_end_time)."
+      if hasBriefing {
         return (
-          "Today already has a focus plan. Refine it or turn it into a time-blocked schedule.",
+          "\(day) Today already has a briefing; keep it current when the day changes.",
           [
-            "Read the plan with get_current_focus.",
-            "Adjust membership with add_to_current_focus / remove_from_current_focus.",
-            "Time-block with propose_daily_schedule, then persist with save_focus_schedule.",
+            "Read the day with get_overview shape=full: today is the list, briefing the text.",
+            arrange,
+            "Rewrite the briefing with set_daily_briefing after changing the day.",
+            times,
           ])
       }
       return (
-        "No focus plan exists for today yet. Pick a few high-priority tasks and set one.",
+        "\(day) Today has no briefing yet.",
         [
-          "Review candidates with get_overview and get_upcoming_tasks.",
-          "Set the plan with set_current_focus (pass a briefing for context).",
-          "Time-block with propose_daily_schedule, then save_focus_schedule.",
+          "Read the day with get_overview shape=full and the free time with get_calendar_timeline.",
+          arrange,
+          "Write two or three sentences with set_daily_briefing: what matters and why, and what you moved.",
+          times,
         ])
     case "lists":
       return (
@@ -125,13 +131,6 @@ extension CoreBridgeClient {
           "See all lists with get_lists; check load with get_list_health_snapshot.",
           "Create or restyle with create_list / update_list.",
           "Reorganize with move_task_to_list / batch_move_tasks; tidy tags with rename_tag.",
-        ])
-    case "focus_mode":
-      return (
-        "Focus mode runs a time-blocked schedule for the day.",
-        [
-          "Propose blocks with propose_daily_schedule (set include_calendar_events to honour meetings).",
-          "Persist with save_focus_schedule; read it back with get_saved_focus_schedule.",
         ])
     case "weekly_review":
       return (
@@ -158,8 +157,9 @@ extension CoreBridgeClient {
           "Check sync health with get_sync_status.",
         ])
     default:  // overview
+      let setupNote = setupCompleted ? "" : " Setup isn't complete yet."
       return (
-        runtimeSummary,
+        "Lorvex holds \(taskCount) task(s) in \(listCount) list(s).\(setupNote)",
         [
           "Use the MCP host as the primary write surface.",
           "Call get_overview for a situational snapshot; use shape=full only when task objects are needed.",

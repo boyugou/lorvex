@@ -19,19 +19,19 @@ func appStoreLoadsPreviewToday() async throws {
 
   await store.refresh()
 
-  #expect(store.today.focusTitle == "Today")
   #expect(!store.today.tasks.isEmpty)
   #expect(store.weeklyReview != nil)
   #expect(store.lists?.lists.isEmpty == false)
   #expect(store.habits?.habits.isEmpty == false)
   #expect(store.runtimeDiagnostics?.setup.setupCompleted == true)
-  // Spotlight indexes the full task corpus (4 seeded tasks, someday included);
-  // the Today snapshot carries only the open top-by-priority pool (3).
-  #expect(store.lastSpotlightIndexedTaskCount == 4)
+  // Spotlight indexes the task corpus minus abandoned work: 6 seeded tasks,
+  // someday and completed included, the cancelled one dropped. The Today
+  // snapshot carries only the open top-by-priority pool (3).
+  #expect(store.lastSpotlightIndexedTaskCount == 5)
   #expect(store.today.tasks.count == 3)
   #expect(store.lastSpotlightIndexedCalendarEventCount > 0)
   #expect(store.lastPublishedWidgetSnapshot?.version == WidgetSnapshot.supportedVersion)
-  #expect(store.lastPublishedWidgetSnapshot?.focusTasks.isEmpty == false)
+  #expect(store.lastPublishedWidgetSnapshot?.tasks.isEmpty == false)
   #expect(store.lastPublishedWidgetSnapshot?.lists.map(\.id) == store.lists?.lists.map(\.id))
   // Sync runs invisibly through the engine coordinator; with the preview core
   // (no envelope-sync support) and no CK container, no cycle report is produced.
@@ -40,15 +40,15 @@ func appStoreLoadsPreviewToday() async throws {
   let diagnostics = store.appleSurfaceDiagnostics
   #expect(
     diagnostics.spotlightStatus
-    == "4 tasks, \(indexedCalendarEvents) calendar event\(indexedCalendarEvents == 1 ? "" : "s")"
+    == "5 tasks, \(indexedCalendarEvents) calendar event\(indexedCalendarEvents == 1 ? "" : "s")"
   )
   #expect(diagnostics.reminderStatus == "Disabled")
   // No EventKit coordinator is wired in this preview store, so no ingest runs
   // and the import status stays at its initial "Not started".
   #expect(diagnostics.calendarImportStatus == "Not started")
-  #expect(diagnostics.widgetStatus == "Published v\(WidgetSnapshot.supportedVersion)")
-  #expect(diagnostics.widgetFocusTaskCount == 3)
-  #expect(diagnostics.widgetGeneratedAt == "2026-05-22T16:00:00Z")
+  #expect(diagnostics.widgetStatus == "Published")
+  #expect(diagnostics.widgetTodayTaskCount == 3)
+  #expect(diagnostics.widgetGeneratedAt == LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
   #expect(await indexer.lastIndexedIDs().count == store.lastSpotlightIndexedTaskCount)
   #expect(publisher.publishedSnapshots().count == 1)
 }
@@ -70,7 +70,7 @@ func appStoreCreateTaskInListLandsInListWithoutNavigating() async throws {
   store.selectedListID = targetList.id
   try await store.loadSelectedListDetail()
 
-  await store.createTaskInList(title: "  Inline quick add  ", listID: targetList.id)
+  await store.createInlineTask("  Inline quick add  ", destination: .list(targetList.id))
 
   #expect(store.errorMessage == nil)
   #expect(store.selection == .lists, "inline add must not navigate away")
@@ -79,7 +79,7 @@ func appStoreCreateTaskInListLandsInListWithoutNavigating() async throws {
 
   // Whitespace-only input is a silent no-op.
   let countBefore = store.selectedListDetail?.tasks.count
-  await store.createTaskInList(title: "   ", listID: targetList.id)
+  await store.createInlineTask("   ", destination: .list(targetList.id))
   #expect(store.selectedListDetail?.tasks.count == countBefore)
 }
 
@@ -115,11 +115,11 @@ func appStoreCreateTaskPlannedTodayLandsInTodayWithoutNavigating() async throws 
   await store.refresh()
   store.selection = .today
 
-  await store.createTaskPlannedToday(title: "  Plan me for today  ")
+  await store.createInlineTask("  Plan my morning  ", destination: .today)
 
   #expect(store.errorMessage == nil)
   #expect(store.selection == .today, "inline add must not navigate away")
-  let created = try #require(store.today.tasks.first { $0.title == "Plan me for today" })
+  let created = try #require(store.today.tasks.first { $0.title == "Plan my morning" })
   #expect(created.plannedDate != nil, "the quick-added task is planned for today")
 }
 
@@ -133,8 +133,8 @@ func appStoreReschedulesScheduledTaskToAnotherDay() async throws {
   defer { defaults.removePersistentDomain(forName: suiteName) }
   let store = AppStore(core: core, defaults: defaults)
   await store.refresh()
-  await store.createTaskPlannedToday(title: "Drag me to tomorrow")
-  let task = try #require(store.calendarScheduledTasks?.first { $0.title == "Drag me to tomorrow" })
+  await store.createInlineTask("Drag me elsewhere", destination: .today)
+  let task = try #require(store.calendarScheduledTasks?.first { $0.title == "Drag me elsewhere" })
 
   let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
   await store.rescheduleScheduledTask(id: task.id, to: tomorrow)
@@ -228,13 +228,9 @@ func appStoreWorkingHoursPreferenceRoundTripsAndValidates() async throws {
   #expect(loaded.start == "08:30")
   #expect(loaded.end == "16:15")
 
-  // The schedule proposal sees the saved window.
-  let task = try await core.createTask(title: "Working hours probe", notes: "")
-  _ = try await core.setCurrentFocus(
-    date: "2026-03-06", taskIDs: [task.id], briefing: nil,
-    timezone: TimeZone.current.identifier)
-  let proposal = try await core.proposeFocusSchedule(date: "2026-03-06")
-  #expect(proposal.workingHours?.start == "08:30")
+  // Suggested times fill the saved window.
+  let proposal = try await core.proposeDayTimes(date: "2026-03-06")
+  #expect(proposal.workingHours.lowerBound == 8 * 60 + 30)
 
   // An inverted window is rejected and never persisted.
   #expect(await store.saveWorkingHoursPreference(start: "18:00", end: "09:00") == false)
@@ -309,7 +305,7 @@ func appStoreRefreshReplansHabitReminders() async throws {
 @MainActor
 @Test
 func appStoreRefreshFailureClearsStaleLoadedState() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let publisher = RecordingWidgetSnapshotPublisher()
   let suiteName = "AppStoreRefreshFailureClearsStaleLoadedState.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
@@ -339,8 +335,7 @@ func appStoreRefreshFailureClearsStaleLoadedState() async throws {
   await store.refresh()
 
   #expect(store.today == .empty)
-  #expect(store.currentFocus == nil)
-  #expect(store.focusSchedule == nil)
+  #expect(store.proposedDayTimes == nil)
   #expect(store.dailyReview == nil)
   #expect(store.weeklyReview == nil)
   #expect(store.lists == nil)
@@ -354,10 +349,45 @@ func appStoreRefreshFailureClearsStaleLoadedState() async throws {
   #expect(store.errorMessage == "macOS refresh unavailable.")
 }
 
+/// A refresh runs on its own, so a failure that persists raises the alert once
+/// rather than on every refresh; a success clears the latch and dismisses only
+/// the refresh's own failure, never an action's error.
+@MainActor
+@Test
+func appStoreRepeatedRefreshFailureAlertsOnce() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let suiteName = "AppStoreRepeatedRefreshFailureAlertsOnce.\(UUID().uuidString)"
+  let defaults = try #require(UserDefaults(suiteName: suiteName))
+  defaults.removePersistentDomain(forName: suiteName)
+  defer { defaults.removePersistentDomain(forName: suiteName) }
+  let store = AppStore(core: core, defaults: defaults)
+
+  core.loadTodayError = .unsupportedOperation("macOS refresh unavailable.")
+  await store.refresh()
+  #expect(store.errorMessage == "macOS refresh unavailable.")
+
+  store.errorMessage = nil
+  await store.refresh()
+  #expect(store.errorMessage == nil)
+
+  core.loadTodayError = nil
+  await store.refresh()
+  #expect(store.errorMessage == nil)
+
+  store.errorMessage = "Couldn't save the task."
+  await store.refresh()
+  #expect(store.errorMessage == "Couldn't save the task.")
+
+  store.errorMessage = nil
+  core.loadTodayError = .unsupportedOperation("macOS refresh unavailable.")
+  await store.refresh()
+  #expect(store.errorMessage == "macOS refresh unavailable.")
+}
+
 @MainActor
 @Test
 func appStoreRefreshClearsStaleTodayInspectorSelection() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let suiteName = "AppStoreRefreshClearsStaleTodayInspectorSelection.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
   defaults.removePersistentDomain(forName: suiteName)
@@ -370,7 +400,6 @@ func appStoreRefreshClearsStaleTodayInspectorSelection() async throws {
   store.selectedTaskID = staleTask.id
 
   core.todayOverride = TodaySnapshot(
-    focusTitle: "Today",
     summary: "All clear for today",
     tasks: [],
     localChangeSequence: 42
@@ -379,7 +408,7 @@ func appStoreRefreshClearsStaleTodayInspectorSelection() async throws {
   await store.refresh()
 
   #expect(store.selection == .today)
-  #expect(!store.hasVisibleTodayTasks)
+  #expect(store.today.tasks.isEmpty)
   #expect(store.selectedTaskID == nil)
 }
 
@@ -431,7 +460,7 @@ func appStoreLoadsRuntimeDiagnostics() async throws {
 @MainActor
 @Test
 func appStoreDiagnosticsReloadFailureSurfacesError() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = AppStore(core: core)
 
   core.loadRuntimeDiagnosticsError = .unsupportedOperation("Diagnostics unavailable.")

@@ -223,11 +223,7 @@ final class SyncPayloadEvolutionRuntimeContractTests: XCTestCase {
       let store = try SyncTestSupport.freshStore()
 
       try store.writer.write { db in
-        try activateAccount(db)
-        if entityType != EntityName.aiChangelog {
-          try applyGoldenState(
-            db, contract: historicalContract, envelopes: historical, accountAlreadyActive: true)
-        }
+        try applyGoldenState(db, contract: historicalContract, envelopes: historical)
 
         let currentEnvelope = try rewrite(
           target, payloadSchemaVersion: current.payloadSchemaVersion,
@@ -291,16 +287,13 @@ final class SyncPayloadEvolutionRuntimeContractTests: XCTestCase {
     }
   }
 
-  private func activateAccount(_ db: Database) throws {
-    _ = try AuditRetentionFrontier.activateAccount(
-      db, accountIdentifier: "payload-evolution-account", zoneName: "LorvexZone-evolution")
-  }
-
+  /// Apply every syncable golden envelope of `contract` in dependency order.
+  /// The manifests still describe `ai_changelog`, but the audit trail is
+  /// device-local and never applied, so it has no place in the state.
   private func applyGoldenState(
     _ db: Database, contract: SyncPayloadContractFixture.Contract,
-    envelopes: [String: SyncEnvelope], accountAlreadyActive: Bool = false
+    envelopes: [String: SyncEnvelope]
   ) throws {
-    if !accountAlreadyActive { try activateAccount(db) }
     let registry = EntityApplierRegistry(appliers: EntityApplierRegistry.defaultEntityAppliers())
     let orderedTypes = EntityKind.topologicalEntityOrder.filter {
       contract.entities[$0] != nil
@@ -320,11 +313,6 @@ final class SyncPayloadEvolutionRuntimeContractTests: XCTestCase {
           "historical payload contract v\(contract.payloadSchemaVersion) \(entityType) "
             + "did not apply while preparing an evolution probe: \(result)")
       }
-    }
-    let audit = try requireEnvelope(envelopes, entityType: EntityName.aiChangelog)
-    let auditResult = try Apply.applyEnvelope(db, registry: registry, envelope: audit)
-    guard auditResult == .applied else {
-      throw ProbeError.failure("historical audit envelope did not apply: \(auditResult)")
     }
   }
 
@@ -402,8 +390,6 @@ final class SyncPayloadEvolutionRuntimeContractTests: XCTestCase {
 
   private func snapshot(_ db: Database, reference: SyncEnvelope) throws -> JSONValue {
     switch reference.entityType {
-    case .aiChangelog:
-      return try auditSnapshot(db, entityID: reference.entityId)
     case .entityRedirect:
       guard case .object(let payload)? = JSONValue.parse(reference.payload),
         case .string(let sourceType)? = payload["source_type"],
@@ -421,31 +407,6 @@ final class SyncPayloadEvolutionRuntimeContractTests: XCTestCase {
       return try OutboxEnqueue.readEntityPayloadSnapshot(
         db, entityType: reference.entityType.asString, entityId: reference.entityId)
     }
-  }
-
-  private func auditSnapshot(_ db: Database, entityID: String) throws -> JSONValue {
-    guard
-      let row = try Row.fetchOne(
-        db,
-        sql: """
-          SELECT id, timestamp, operation, entity_type, entity_id, summary,
-                 initiated_by, mcp_tool, source_device_id, before_json, after_json,
-                 retention_epoch, retention_account_identifier
-          FROM ai_changelog WHERE id = ?
-          """, arguments: [entityID])
-    else { throw ProbeError.failure("ai_changelog snapshot source is absent") }
-    let entityIDs = try String.fetchAll(
-      db,
-      sql: "SELECT entity_id FROM ai_changelog_entities WHERE changelog_id = ? ORDER BY entity_id",
-      arguments: [entityID])
-    return try ChangelogWrite.buildChangelogSyncPayload(
-      ChangelogWrite.ChangelogRow(
-        id: row["id"], timestamp: row["timestamp"], operation: row["operation"],
-        entityType: row["entity_type"], entityId: row["entity_id"], entityIds: entityIDs,
-        summary: row["summary"], initiatedBy: row["initiated_by"], mcpTool: row["mcp_tool"],
-        sourceDeviceId: row["source_device_id"] ?? "", beforeJson: row["before_json"],
-        afterJson: row["after_json"], retentionEpoch: row["retention_epoch"],
-        retentionAccountIdentifier: row["retention_account_identifier"]))
   }
 
   // MARK: - Deterministic typed probe values

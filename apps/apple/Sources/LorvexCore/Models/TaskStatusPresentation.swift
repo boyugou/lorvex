@@ -1,9 +1,11 @@
 import SwiftUI
 
-/// Shared SF Symbol + tint mapping for a task's status, used by every task-row
-/// surface across macOS, iOS, iPadOS, and visionOS. Centralised so the
-/// icon/color contract lives in one place and the platforms can't drift when a
-/// status is added or a color is tweaked.
+/// Shared SF Symbol + tint mapping for a task's status, so the icon/color
+/// contract lives in one place and macOS, iOS, and iPadOS can't drift when a
+/// status is added or a color is tweaked. A status shown on its own (a section
+/// header, the table's status column) draws `statusSymbolName` in `statusTint`;
+/// a task row's leading circle draws ``LorvexTask/statusCircleGlyph`` in
+/// ``LorvexTask/statusCircleStyle``, which also carry the task's priority.
 extension LorvexTask.Status {
   /// SF Symbol name for the status indicator.
   ///
@@ -24,11 +26,41 @@ extension LorvexTask.Status {
   /// Tint for the status indicator.
   public var statusTint: Color {
     switch self {
-    case .open: .secondary
-    case .inProgress: .secondary
-    case .completed: .green
-    case .cancelled: .red
-    case .someday: .secondary
+    case .open: LorvexDesign.Palette.neutral
+    case .inProgress: LorvexDesign.Palette.neutral
+    case .completed: LorvexDesign.Palette.done
+    case .cancelled: LorvexDesign.Palette.cancelled
+    case .someday: LorvexDesign.Palette.someday
+    }
+  }
+}
+
+/// A task row's leading status circle, derived from the task's status and
+/// priority. Every task row on macOS, iOS, and iPadOS draws it, as do the
+/// tappable completion circles and the rows listing the tasks a task waits on,
+/// so each shows the same symbol and tint for every state.
+extension LorvexTask {
+  /// SF Symbol for the leading status circle: a filled check when completed, an
+  /// × for cancelled, a moon for someday, a hollow circle for anything still
+  /// open. Every state is circle-shaped, so a column of mixed states stays even.
+  public var statusCircleGlyph: String {
+    switch status {
+    case .completed: "checkmark.circle.fill"
+    case .cancelled: "xmark.circle"
+    case .someday: "moon.circle"
+    case .open, .inProgress: "circle"
+    }
+  }
+
+  /// Foreground style for the leading status circle: the done color when
+  /// completed, quiet tertiary / secondary for cancelled / someday, otherwise
+  /// the priority tint.
+  public var statusCircleStyle: AnyShapeStyle {
+    switch status {
+    case .completed: AnyShapeStyle(LorvexDesign.Palette.done)
+    case .cancelled: AnyShapeStyle(.tertiary)
+    case .someday: AnyShapeStyle(.secondary)
+    case .open, .inProgress: AnyShapeStyle(priority.priorityTint)
     }
   }
 }

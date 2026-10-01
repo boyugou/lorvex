@@ -39,7 +39,8 @@ final class SwiftLorvexCoreServiceImportAtomicityTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func uuid() -> String { UUID().uuidString.lowercased() }
@@ -105,35 +106,6 @@ final class SwiftLorvexCoreServiceImportAtomicityTests: XCTestCase {
     try assertNoOutbound(service)
   }
 
-  func testImportCalendarEventIfAbsentSkipsLiveRow() async throws {
-    let service = try makeService()
-    let id = uuid()
-    try seed(
-      service,
-      "INSERT INTO calendar_events (id, title, start_date, all_day, event_type, content_version, "
-        + "recurrence_topology_version, version, created_at, updated_at) "
-        + "VALUES (?, ?, '2026-05-01', 1, 'event', ?, ?, ?, ?, ?)",
-      [
-        id, "Original", Self.seedVersion, Self.seedVersion, Self.seedVersion,
-        Self.seedTime, Self.seedTime,
-      ])
-
-    let (event, imported) = try await service.importCalendarEventIfAbsent(
-      id: id, title: "Changed", startDate: "2026-05-01", startTime: nil, endDate: nil, endTime: nil,
-      allDay: true, location: nil, notes: nil, url: nil, color: nil, eventType: nil,
-      personName: nil, attendees: nil, timezone: nil, recurrence: nil,
-      seriesId: nil, recurrenceInstanceDate: nil, occurrenceState: nil,
-      recurrenceGeneration: nil)
-
-    XCTAssertFalse(imported)
-    XCTAssertNil(event)
-    let title = try service.read {
-      try String.fetchOne($0, sql: "SELECT title FROM calendar_events WHERE id = ?", arguments: [id])
-    }
-    XCTAssertEqual(title, "Original")
-    try assertNoOutbound(service)
-  }
-
   func testImportDailyReviewIfAbsentSkipsLiveRow() async throws {
     let service = try makeService()
     let date = "2026-06-01"
@@ -157,45 +129,24 @@ final class SwiftLorvexCoreServiceImportAtomicityTests: XCTestCase {
     try assertNoOutbound(service)
   }
 
-  func testImportCurrentFocusIfAbsentSkipsLiveRow() async throws {
+  func testImportDailyBriefingIfAbsentSkipsLiveRow() async throws {
     let service = try makeService()
     let date = "2026-06-02"
     try seed(
       service,
-      "INSERT INTO current_focus (date, briefing, version, created_at, updated_at) "
+      "INSERT INTO daily_briefings (date, briefing, version, created_at, updated_at) "
         + "VALUES (?, ?, ?, ?, ?)",
       [date, "Original", Self.seedVersion, Self.seedTime, Self.seedTime])
 
-    let imported = try await service.importCurrentFocusIfAbsent(
-      ExportCurrentFocus(date: date, briefing: "Changed"))
+    let imported = try await service.importDailyBriefingIfAbsent(
+      ExportDailyBriefing(date: date, briefing: "Changed"))
 
     XCTAssertFalse(imported)
     let briefing = try service.read {
       try String.fetchOne(
-        $0, sql: "SELECT briefing FROM current_focus WHERE date = ?", arguments: [date])
+        $0, sql: "SELECT briefing FROM daily_briefings WHERE date = ?", arguments: [date])
     }
     XCTAssertEqual(briefing, "Original")
-    try assertNoOutbound(service)
-  }
-
-  func testImportFocusScheduleIfAbsentSkipsLiveRow() async throws {
-    let service = try makeService()
-    let date = "2026-06-03"
-    try seed(
-      service,
-      "INSERT INTO focus_schedule (date, rationale, version, created_at, updated_at) "
-        + "VALUES (?, ?, ?, ?, ?)",
-      [date, "Original", Self.seedVersion, Self.seedTime, Self.seedTime])
-
-    let imported = try await service.importFocusScheduleIfAbsent(
-      ExportFocusSchedule(date: date, rationale: "Changed"))
-
-    XCTAssertFalse(imported)
-    let rationale = try service.read {
-      try String.fetchOne(
-        $0, sql: "SELECT rationale FROM focus_schedule WHERE date = ?", arguments: [date])
-    }
-    XCTAssertEqual(rationale, "Original")
     try assertNoOutbound(service)
   }
 
@@ -436,33 +387,6 @@ final class SwiftLorvexCoreServiceImportAtomicityTests: XCTestCase {
     }
   }
 
-  func testImportCalendarEventIfAbsentSkipsTombstonedId() async throws {
-    let service = try makeService()
-    let id = uuid()
-    _ = try await service.importCalendarEvent(
-      id: id, title: "Doomed", startDate: "2026-05-01", startTime: nil, endDate: nil, endTime: nil,
-      allDay: true, location: nil, notes: nil, url: nil, color: nil, eventType: nil,
-      personName: nil, attendees: nil, timezone: nil, recurrence: nil,
-      seriesId: nil, recurrenceInstanceDate: nil)
-    _ = try await service.deleteCalendarEvent(id: id)
-
-    let (event, imported) = try await service.importCalendarEventIfAbsent(
-      id: id, title: "Resurrected", startDate: "2026-05-01", startTime: nil, endDate: nil,
-      endTime: nil, allDay: true, location: nil, notes: nil, url: nil, color: nil, eventType: nil,
-      personName: nil, attendees: nil, timezone: nil, recurrence: nil,
-      seriesId: nil, recurrenceInstanceDate: nil, occurrenceState: nil,
-      recurrenceGeneration: nil)
-
-    XCTAssertFalse(imported)
-    XCTAssertNil(event)
-    try service.read { db in
-      XCTAssertNil(
-        try Int.fetchOne(db, sql: "SELECT 1 FROM calendar_events WHERE id = ?", arguments: [id]))
-      XCTAssertTrue(
-        try Tombstone.isTombstoned(db, entityType: EntityName.calendarEvent, entityId: id))
-    }
-  }
-
   func testImportHabitRecordTransactionallySkipsTombstonedId() async throws {
     let service = try makeService()
     let id = uuid()
@@ -502,21 +426,21 @@ final class SwiftLorvexCoreServiceImportAtomicityTests: XCTestCase {
     }
   }
 
-  func testImportCurrentFocusIfAbsentSkipsTombstonedDate() async throws {
+  func testImportDailyBriefingIfAbsentSkipsTombstonedDate() async throws {
     let service = try makeService()
     let date = "2026-07-01"
-    try await service.importCurrentFocus(ExportCurrentFocus(date: date, briefing: "Doomed"))
-    _ = try await service.clearCurrentFocus(date: date)
+    try await service.importDailyBriefing(ExportDailyBriefing(date: date, briefing: "Doomed"))
+    _ = try await service.setDailyBriefingForMcp(date: date, briefing: nil)
 
-    let imported = try await service.importCurrentFocusIfAbsent(
-      ExportCurrentFocus(date: date, briefing: "Resurrected"))
+    let imported = try await service.importDailyBriefingIfAbsent(
+      ExportDailyBriefing(date: date, briefing: "Resurrected"))
 
     XCTAssertFalse(imported)
     try service.read { db in
       XCTAssertNil(
-        try Int.fetchOne(db, sql: "SELECT 1 FROM current_focus WHERE date = ?", arguments: [date]))
+        try Int.fetchOne(db, sql: "SELECT 1 FROM daily_briefings WHERE date = ?", arguments: [date]))
       XCTAssertTrue(
-        try Tombstone.isTombstoned(db, entityType: EntityName.currentFocus, entityId: date))
+        try Tombstone.isTombstoned(db, entityType: EntityName.dailyBriefing, entityId: date))
     }
   }
 

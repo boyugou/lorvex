@@ -2,12 +2,12 @@
 
 The exact answers to enter in the App Store Connect **App Privacy** questionnaire
 (the public "nutrition label") for Lorvex 1.0. This is the operational form of
-the privacy posture; the narrative policy is `../../PRIVACY.md` and the release
-process/rationale lives in `docs/finalization/RELEASE_ACCOUNT_CHECKLIST.md`
-(repo root) §7. Keep all three consistent.
+the privacy posture; the narrative policy is `../../PRIVACY.md`, and the
+account-only submission steps are listed in `DISTRIBUTION.md`. Keep this sheet
+and the policy consistent.
 
 App Privacy answers are **app-level** and must describe the most inclusive
-behavior across every platform (macOS, iOS, iPadOS, visionOS, watchOS).
+behavior across every platform (macOS, iOS, iPadOS, watchOS).
 
 ## What the answers are grounded in
 
@@ -92,5 +92,5 @@ manifests):
 Do not infer the questionnaire answers from `PrivacyInfo.xcprivacy` alone.
 Generate Xcode's privacy report from the exact signed archive, diff it against
 these answers and against `../../PRIVACY.md`, and save it with the release
-evidence (see `docs/finalization/RELEASE_ACCOUNT_CHECKLIST.md` §7). Final
-submission of these answers is an owner account action in App Store Connect.
+evidence. Final submission of these answers is an owner account action in App
+Store Connect.

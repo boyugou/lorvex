@@ -31,7 +31,7 @@ public struct LorvexHabitsWidget: Widget {
     .description(
       LocalizedStringResource(
         "widget.habits.desc",
-        defaultValue: "See today's habit progress at a glance.",
+        defaultValue: "See today’s habit progress at a glance.",
         table: "Localizable",
         bundle: WidgetSupportL10n.bundle))
     .supportedFamilies(supportedFamilies)

@@ -4,16 +4,14 @@ import LorvexCloudSync
 
 // MARK: - Last Sync Cycle panel
 
+/// The Last Cycle group: the last sync pass's record counters behind
+/// Advanced, or "Sync has not run yet."
 struct SettingsCloudSyncCyclePanel: View {
-  let subscriptionError: String?
   let report: CloudSyncCycleReport?
   @State private var advancedExpanded = false
 
   var body: some View {
     Group {
-      SettingsCloudSyncCycleSubscriptionRow(error: subscriptionError)
-        .accessibilityIdentifier("settings.cloudSync.cycle")
-
       if let report {
         // The per-cycle CloudKit record counters are troubleshooting detail —
         // keep them available but collapsed behind Advanced.
@@ -53,65 +51,56 @@ struct SettingsCloudSyncCyclePanel: View {
         title: String(localized: "settings.cloud_sync.pushed_records", defaultValue: "Pushed Records", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.pushedRecordCount)",
         systemImage: "arrow.up.doc",
-        tint: .blue
+        tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "failed",
         title: String(localized: "settings.cloud_sync.failed_pushes", defaultValue: "Failed Pushes", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.failedPushCount)",
         systemImage: "exclamationmark.triangle.fill",
-        tint: report.failedPushCount > 0 ? .orange : .secondary
+        tint: report.failedPushCount > 0 ? LorvexDesign.Palette.warning : LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "fetched",
         title: String(localized: "settings.cloud_sync.fetched_records", defaultValue: "Fetched Records", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.fetchedRecordCount)",
         systemImage: "arrow.down.doc",
-        tint: .blue
+        tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "applied",
         title: String(localized: "settings.cloud_sync.applied", defaultValue: "Applied", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.inbound.applied)",
         systemImage: "checkmark.circle.fill",
-        tint: .green
+        tint: LorvexDesign.Palette.success
       ),
       SettingsCloudSyncMetricRow(
         id: "skipped",
         title: String(localized: "settings.cloud_sync.skipped", defaultValue: "Skipped", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.inbound.skipped)",
         systemImage: "forward.end.fill",
-        tint: .secondary
+        tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "deferred",
         title: String(localized: "settings.cloud_sync.deferred", defaultValue: "Deferred", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.inbound.deferred)",
         systemImage: "clock.fill",
-        tint: .orange
+        tint: LorvexDesign.Palette.warning
       ),
       SettingsCloudSyncMetricRow(
         id: "remapped",
         title: String(localized: "settings.cloud_sync.remapped", defaultValue: "Remapped", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.inbound.remapped)",
         systemImage: "arrow.triangle.branch",
-        tint: .purple
+        tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "replayed",
         title: String(localized: "settings.cloud_sync.replayed", defaultValue: "Replayed", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.inbound.drainReplayed)",
         systemImage: "arrow.counterclockwise",
-        tint: .teal
-      ),
-      SettingsCloudSyncMetricRow(
-        id: "fetch-state",
-        title: String(localized: "settings.cloud_sync.fetch_state", defaultValue: "Fetch State", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: report.moreInboundComing
-          ? String(localized: "settings.cloud_sync.more_available", defaultValue: "More Available", table: "Localizable", bundle: LorvexL10n.bundle)
-          : String(localized: "settings.cloud_sync.complete", defaultValue: "Complete", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "tray.full",
-        tint: report.moreInboundComing ? .orange : .green
+        tint: LorvexDesign.Palette.neutral
       ),
     ]
 
@@ -122,50 +111,12 @@ struct SettingsCloudSyncCyclePanel: View {
           title: String(localized: "settings.cloud_sync.undecodable", defaultValue: "Undecodable", table: "Localizable", bundle: LorvexL10n.bundle),
           value: "\(report.inbound.undecodable)",
           systemImage: "xmark.octagon.fill",
-          tint: .red
+          tint: LorvexDesign.Palette.error
         )
       )
     }
 
     return rows
-  }
-}
-
-private struct SettingsCloudSyncCycleSubscriptionRow: View {
-  let error: String?
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      HStack(spacing: LorvexDesign.Spacing.s) {
-        Label(
-          String(localized: "settings.cloud_sync.subscription", defaultValue: "Subscription", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: error == nil ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-        )
-        .font(LorvexDesign.Typography.primaryEmphasis)
-        .foregroundStyle(error == nil ? Color.green : Color.orange)
-
-        Spacer()
-
-        Text(error == nil
-          ? String(localized: "settings.cloud_sync.ready", defaultValue: "Ready", table: "Localizable", bundle: LorvexL10n.bundle)
-          : String(localized: "settings.cloud_sync.failed", defaultValue: "Failed", table: "Localizable", bundle: LorvexL10n.bundle))
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(error == nil ? .green : .orange)
-      }
-
-      if let error {
-        Text(error)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-          .accessibilityLabel(String(
-            localized: "settings.cloud_sync.subscription_error",
-            defaultValue: "Subscription Error",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ))
-      }
-    }
   }
 }
 
@@ -181,7 +132,7 @@ private struct SettingsCloudSyncMetricTile: View {
   let row: SettingsCloudSyncMetricRow
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 3) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       Label(row.title, systemImage: row.systemImage)
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(row.tint)

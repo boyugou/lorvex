@@ -41,7 +41,7 @@ struct HabitMilestoneCelebrationCard: View {
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.m) {
       badge
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(LocalizedStringResource(
           "habits.milestone.celebration.title", defaultValue: "Milestone reached!",
           table: "Localizable",
@@ -76,7 +76,7 @@ struct HabitMilestoneCelebrationCard: View {
     .foregroundStyle(celebration.tint)
     .overlay(alignment: .topTrailing) {
       Image(systemName: "sparkles")
-        .font(.system(size: 11, weight: .semibold))
+        .font(.system(size: 11, weight: .semibold))  // lorvex-design-token: allow
         .foregroundStyle(celebration.tint)
         .offset(x: 7, y: -5)
         .opacity(reduceMotion ? 0 : 1)

@@ -21,10 +21,52 @@ enum SyncTestSupport {
     return try String(contentsOfFile: schemaPath, encoding: .utf8)
   }
 
-  /// Fresh in-memory store with the authoritative schema applied.
+  /// The versioned migrations (version 2 and later) pinned by
+  /// `schema/migrations/checksums.lock`, in ascending version order. Each
+  /// entry's `name` is the bare snake_case name (the file name without its
+  /// `NNN_` prefix and `.sql` suffix) and `sql` is the file contents, matching
+  /// how the app layer loads the ladder at open time.
+  static func loadSchemaMigrations(
+    file: StaticString = #filePath
+  ) throws -> [LorvexStore.SchemaMigration] {
+    var path = (String(describing: file) as NSString).deletingLastPathComponent
+    for _ in 0..<5 {
+      path = (path as NSString).deletingLastPathComponent
+    }
+    let directory = (path as NSString).appendingPathComponent("schema/migrations")
+    let lockData = try Data(
+      contentsOf: URL(
+        fileURLWithPath: (directory as NSString).appendingPathComponent("checksums.lock")))
+    guard let lock = try JSONSerialization.jsonObject(with: lockData) as? [String: [String: Any]]
+    else {
+      throw NSError(
+        domain: "SchemaMigrations", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "checksums.lock is not a JSON object of objects"])
+    }
+    var migrations: [LorvexStore.SchemaMigration] = []
+    for (key, entry) in lock {
+      guard let version = Int(key), version >= 2, let fileName = entry["name"] as? String else {
+        continue
+      }
+      guard fileName.hasSuffix(".sql"), let underscore = fileName.firstIndex(of: "_") else {
+        throw NSError(
+          domain: "SchemaMigrations", code: 2,
+          userInfo: [NSLocalizedDescriptionKey: "unexpected migration file name \(fileName)"])
+      }
+      let name = String(fileName[fileName.index(after: underscore)...].dropLast(".sql".count))
+      let sql = try String(
+        contentsOfFile: (directory as NSString).appendingPathComponent(fileName), encoding: .utf8)
+      migrations.append(LorvexStore.SchemaMigration(version: version, name: name, sql: sql))
+    }
+    return migrations.sorted { $0.version < $1.version }
+  }
+
+  /// Fresh in-memory store with the authoritative schema applied and the
+  /// numbered migration ladder run on top of it.
   static func freshStore(file: StaticString = #filePath) throws -> LorvexStore {
     let sql = try loadSchemaSQL(file: file)
-    return try LorvexStore.openInMemory(schemaSQL: sql)
+    return try LorvexStore.openInMemory(
+      schemaSQL: sql, migrations: try loadSchemaMigrations(file: file))
   }
 
   /// Seed one deliberately corrupt persisted row for repair-path coverage.
@@ -74,17 +116,6 @@ enum SyncTestSupport {
         envelope.deviceId,
         SyncTimestampFormat.syncTimestampNow(),
       ])
-  }
-
-  static func cloudTraversalBoundary(
-    accountIdentifier: String, zoneIdentifier: String, generation: Int = 1,
-    generationIdentifier: String = "test-generation",
-    readyWitness: String = "test-ready-witness"
-  ) throws -> CloudTraversalBoundary {
-    try CloudTraversalBoundary(
-      accountIdentifier: accountIdentifier, zoneIdentifier: zoneIdentifier,
-      generation: generation, generationIdentifier: generationIdentifier,
-      readyWitness: readyWitness)
   }
 
   /// Seed the two independent records produced by an identity merge. Tests use
@@ -215,7 +246,7 @@ enum SyncTestSupport {
       object["id"] = .string(entityId)
     case .preference:
       object["key"] = .string(entityId)
-    case .dailyReview, .currentFocus, .focusSchedule:
+    case .dailyReview, .dailyBriefing:
       object["date"] = .string(entityId)
     case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion:
       guard case .success(let pair) = CompositeEdge.splitCompositeEdgeId(entityId) else { return }
@@ -235,7 +266,7 @@ enum SyncTestSupport {
       default:
         break
       }
-    case .aiChangelog, .entityRedirect, .deviceState, .importSession:
+    case .aiChangelog, .entityRedirect, .deviceState, .importSession, .dailySchedule:
       break
     }
   }
@@ -261,6 +292,8 @@ enum SyncTestSupport {
       object["last_defer_reason"] = .null
       object["last_deferred_at"] = .null
       object["planned_date"] = .null
+      object["planned_start_minutes"] = .null
+      object["planned_end_minutes"] = .null
       object["priority"] = .int(1)
       object["raw_input"] = .null
       object["recurrence"] = .null
@@ -289,8 +322,6 @@ enum SyncTestSupport {
       object["url"] = .null
     case .taskChecklistItem:
       object["completed_at"] = .null
-    case .currentFocus:
-      object["task_ids"] = .array([])
     case .dailyReview:
       object["linked_list_ids"] = .array([])
       object["linked_task_ids"] = .array([])

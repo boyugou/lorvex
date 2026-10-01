@@ -40,6 +40,29 @@ struct LorvexWatchCommandDeliveryTests {
     #expect(try await harness.channel.directCommandIDs() == [command.id])
   }
 
+  @Test("a command the phone keeps answering without an ACK stops blocking the queue")
+  func unreadableCommandIsRejectedLocally() async throws {
+    let harness = try await makeDeliveryHarness(
+      state: .reachable,
+      directReplies: [.empty, .empty, .empty, .acknowledgement(.applied)],
+      retryPolicy: .init(initialDelay: 0, maximumDelay: 0, acknowledgementTimeout: 30))
+    defer { harness.removeFiles() }
+
+    let first = try await harness.delivery.enqueue(.completeTask(id: deliveryTask1))
+    let second = try await harness.delivery.enqueue(.cancelTask(id: deliveryTask2))
+    for _ in 0..<LorvexWatchCommandDelivery.maximumUnreadableReplies {
+      await harness.delivery.drain()
+    }
+
+    #expect(
+      try await harness.channel.directCommandIDs()
+        == [first.id, first.id, first.id, second.id])
+    let entries = await harness.journal.allEntries()
+    #expect(entries.map(\.command.id) == [first.id])
+    #expect(entries.first?.disposition == .rejected)
+    #expect(entries.first?.rejectionCode == LorvexWatchDeliveryRejectionText.unreadableCode)
+  }
+
   @Test("background transfer keeps the row until a strict application ACK")
   func backgroundTransferWaitsForApplicationAck() async throws {
     let harness = try await makeDeliveryHarness(state: .background)
@@ -145,9 +168,9 @@ private func makeDeliveryHarness(
     generatedAt: "2026-07-16T12:00:00Z",
     workspaceInstanceID: deliveryWorkspace,
     timezone: "UTC",
-    stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: [])
+    tasks: [])
   let replica = try LorvexWatchReplicaEnvelope(
     workspaceInstanceID: deliveryWorkspace,
     snapshotData: JSONEncoder().encode(snapshot))
@@ -177,6 +200,8 @@ private func makeDeliveryHarness(
 
 private enum FakeWatchDirectReply: Sendable {
   case acknowledgement(LorvexWatchCommandAck.Outcome)
+  /// The phone's answer to a command it cannot read: a reply with no ACK.
+  case empty
   case failure
 }
 
@@ -213,6 +238,8 @@ private actor FakeWatchCommandChannel: LorvexWatchCommandChannel {
         outcome: outcome,
         code: code
       ).wireData()
+    case .empty:
+      return Data()
     case .failure:
       throw FakeWatchDeliveryError.transportFailed
     }

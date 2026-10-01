@@ -6,20 +6,37 @@ extension MobileStore {
     let endDate = Self.calendarEndDateString(from: date)
     // Refresh the EventKit mirror for the window before reading the timeline, so
     // today's external system-calendar events are present both in the Today
-    // schedule and for the focus scheduler — which reads the same
+    // schedule and for Suggest Times, which reads the same
     // `provider_calendar_events` mirror and would otherwise only see what the
     // Calendar surface or the change observer last ingested. A no-op when
     // calendar integration is off, and it never prompts for access.
     await ingestEventKitWindow(fromDay: date, throughDay: endDate)
+
+    // Load the calendar for the window the user is viewing, not a fixed today
+    // window: a refresh (foreground, CloudKit push, day-change) must not snap a
+    // far week back to today and silently empty the viewed days. The window is
+    // the one the calendar surface asked for even while its own load is still
+    // in flight: this refresh takes the next `calendarTimelineLoadToken`, which
+    // discards that load, so it has to load the same window or the days the
+    // surface lists would come up empty. A window other than today's is
+    // ingested too so its external events are current before the read.
+    let calendarFrom = calendarWindowToReload?.from ?? date
+    let calendarTo = calendarWindowToReload?.to ?? endDate
+    if calendarFrom != date || calendarTo != endDate {
+      await ingestEventKitWindow(fromDay: calendarFrom, throughDay: calendarTo)
+    }
+    calendarTimelineLoadToken &+= 1
+    let calendarToken = calendarTimelineLoadToken
+
     async let loadedLists = capturePlanningLoad { try await core.loadLists() }
     async let loadedHabits = capturePlanningLoad { try await core.loadHabits(date: date) }
     async let loadedCalendar = capturePlanningLoad {
-      try await core.loadCalendarTimeline(from: date, to: endDate)
+      try await core.loadCalendarTimeline(from: calendarFrom, to: calendarTo)
     }
     async let loadedScheduledTasks = capturePlanningLoad {
       try await core.getScheduledTasks(
-        from: date,
-        to: endDate,
+        from: calendarFrom,
+        to: calendarTo,
         limit: 500)
     }
 
@@ -40,16 +57,19 @@ extension MobileStore {
       firstError = firstError ?? error
     }
 
+    // A newer window load (a page turn mid-refresh) superseded this one; skip the
+    // stale commit so its window isn't clobbered — but still surface any error.
+    let calendarCurrent = calendarToken == calendarTimelineLoadToken
     switch results.2 {
     case .success(let loadedCalendar):
-      calendarTimeline = loadedCalendar
+      if calendarCurrent { calendarTimeline = loadedCalendar }
     case .failure(let error):
       firstError = firstError ?? error
     }
 
     switch results.3 {
     case .success(let loadedScheduledTasks):
-      calendarScheduledTasks = loadedScheduledTasks
+      if calendarCurrent { calendarScheduledTasks = loadedScheduledTasks }
     case .failure(let error):
       firstError = firstError ?? error
     }

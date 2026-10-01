@@ -282,7 +282,6 @@ def apple_platform_manifest_failures(section: object) -> list[str]:
     else:
         expected_targets = {
             "ios",
-            "visionos",
             "watchos",
             "watch_complication",
             "widget",

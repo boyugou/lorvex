@@ -317,7 +317,7 @@ func mobileEventKitSettingsApplyPreservesVisibleWindow() async throws {
 @MainActor
 @Test
 func mobileEventKitSettingsApplyRefreshesDiagnostics() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(
     core: core,
     eventKitCoordinator: FakeMobileSettingsEventKitCoordinator(),

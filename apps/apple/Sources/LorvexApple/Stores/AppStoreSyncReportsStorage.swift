@@ -15,23 +15,17 @@ struct AppStoreSyncReportsStorage {
   var lastTaskReminderScheduleReport: TaskReminderScheduleReport = .disabled
   var lastHabitReminderScheduleReport: TaskReminderScheduleReport = .disabled
   var lastPublishedWidgetSnapshot: WidgetSnapshot?
-  var lastCloudSyncSubscriptionErrorMessage: String?
   /// The most recent sync cycle's outcome (outbound push counts + inbound apply
   /// report), or nil before the first cycle runs.
   var lastCloudSyncCycleReport: CloudSyncCycleReport?
   var lastCloudSyncRemoteChangeErrorMessage: String?
-  /// Timestamp of the last successful sync cycle. Set when
-  /// `refreshCloudSyncRemoteChanges` completes without throwing.
+  /// When the last sync pass (explicit or started by the engine) completed.
   var lastCloudSyncRemoteChangeSucceededAt: Date?
-  /// Failure-aware pacing for the invisible sync cycle: consecutive-failure
-  /// count, last attempt time, and circuit-breaker state. Gates whether a
-  /// trigger actually runs a cycle (see `AppStore.runCloudSyncCycle`).
-  var cloudSyncPacing = CloudSyncPacing()
   /// Most recent iCloud account availability, refreshed when the Cloud Sync
   /// settings tab appears (see `AppStore.refreshCloudKitAccountAvailability`).
   var cloudKitAccountAvailability: CloudKitAccountAvailability = .couldNotDetermine
-  /// Non-nil when CloudSync is durably paused (iCloud account switch, mandatory
-  /// backfill failure, or a Lorvex iCloud-data deletion). Surfaced so the
+  /// Non-nil when CloudSync is durably paused (a different iCloud account, or
+  /// Lorvex's iCloud data was deleted). Surfaced so the
   /// Cloud Sync settings tab can show a "sync paused" notice and offer the
   /// re-upload/resume action; refreshed alongside the account availability and
   /// after each sync cycle.
@@ -49,11 +43,9 @@ struct AppStoreSyncReportsStorage {
     lastTaskReminderScheduleReport = .disabled
     lastHabitReminderScheduleReport = .disabled
     lastPublishedWidgetSnapshot = nil
-    lastCloudSyncSubscriptionErrorMessage = nil
     lastCloudSyncCycleReport = nil
     lastCloudSyncRemoteChangeErrorMessage = nil
     lastCloudSyncRemoteChangeSucceededAt = nil
-    cloudSyncPacing = CloudSyncPacing()
     cloudKitAccountAvailability = .couldNotDetermine
     cloudSyncPauseReason = nil
     lastImportedCalendarEventCount = 0

@@ -46,8 +46,10 @@ func contentReadAndExportIntentsRequireLocalDeviceAuthentication() {
     ReadLorvexAIChangelogIntent.self,
     SearchLorvexTasksIntent.self,
     SearchLorvexCalendarEventsIntent.self,
+    // Speaks the first timed task's title.
+    ReadLorvexDayTimesIntent.self,
   ]
-  #expect(localAuth.count == 17)
+  #expect(localAuth.count == 18)
   for type in localAuth {
     #expect(type.authenticationPolicy == .requiresLocalDeviceAuthentication, "\(type)")
   }
@@ -65,12 +67,10 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
     DeleteLorvexPreferenceIntent.self,
     CancelLorvexTaskIntent.self,
     ResetLorvexHabitIntent.self,
-    ClearLorvexCurrentFocusIntent.self,
     RemoveLorvexChecklistItemIntent.self,
     RemoveLorvexTaskReminderIntent.self,
     RemoveLorvexTaskRecurrenceIntent.self,
     RemoveLorvexTaskRecurrenceExceptionIntent.self,
-    RemoveLorvexTaskFromFocusIntent.self,
     // Batch / broad writes
     BatchCompleteLorvexTasksIntent.self,
     BatchCreateLorvexTasksIntent.self,
@@ -84,18 +84,23 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
     SetLorvexTaskRecurrenceIntent.self,
     SetLorvexTaskRemindersIntent.self,
     SetLorvexPreferenceIntent.self,
+    // Replaces the day's times for every unfinished task.
+    SaveLorvexDayTimesIntent.self,
     // Non-destructive writes
     CreateLorvexListIntent.self,
     CreateLorvexHabitIntent.self,
     CompleteLorvexTaskIntent.self,
+    StartLorvexTaskIntent.self,
+    PauseLorvexTaskIntent.self,
     DeferLorvexTaskIntent.self,
     SaveLorvexMemoryIntent.self,
+    PlanLorvexTaskForTodayIntent.self,
     // Metadata / non-content reads
     ReadLorvexListsIntent.self,
     ListLorvexTasksIntent.self,
     ReadLorvexSyncStatusIntent.self,
-    ReadLorvexGuideIntent.self,
-    ReadLorvexCurrentFocusIntent.self,
+    // Speaks only a count; nothing is saved.
+    ProposeLorvexDayTimesIntent.self,
   ]
   for type in authenticated {
     #expect(type.authenticationPolicy == .requiresAuthentication, "\(type)")
@@ -160,7 +165,7 @@ func executionModesSplitNavigationForegroundFromBackground() {
   #expect(ReadLorvexOverviewIntent.openAppWhenRun == false)
   #expect(CaptureLorvexTaskIntent.openAppWhenRun == false)
 
-  if #available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
+  if #available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *) {
     #expect(OpenLorvexIntent.supportedModes == .foreground)
     #expect(OpenLorvexTaskIntent.supportedModes == .foreground)
     #expect(DeleteLorvexMemoryIntent.supportedModes == .background)
@@ -181,17 +186,19 @@ func widgetActionIntentsAreUndiscoverableAndAlwaysAllowed() {
   for type in widgetActions {
     #expect(type.isDiscoverable == false, "\(type)")
     #expect(type.authenticationPolicy == .alwaysAllowed, "\(type)")
-    #expect(type.openAppWhenRun == false, "\(type)")
+    if #available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+      #expect(type.supportedModes == .background, "\(type)")
+    }
   }
 }
 
 @Test
-func focusControlIntentOpensForegroundWithoutAuthentication() {
+func todayControlIntentOpensForegroundWithoutAuthentication() {
   if #available(iOS 18.0, macOS 26.0, *) {
-    #expect(OpenLorvexFocusIntent.authenticationPolicy == .alwaysAllowed)
-    #expect(OpenLorvexFocusIntent.openAppWhenRun == true)
+    #expect(OpenLorvexTodayIntent.authenticationPolicy == .alwaysAllowed)
+    #expect(OpenLorvexTodayIntent.openAppWhenRun == true)
   }
-  if #available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
-    #expect(OpenLorvexFocusIntent.supportedModes == .foreground)
+  if #available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+    #expect(OpenLorvexTodayIntent.supportedModes == .foreground)
   }
 }

@@ -111,10 +111,8 @@ def required_apple_products(metadata: dict[str, str]) -> set[str]:
     return {
         metadata.get("APP_PRODUCT_NAME", metadata["APP_NAME"]),
         metadata["MOBILE_APP_NAME"],
-        metadata["VISION_APP_NAME"],
         metadata["WATCH_APP_NAME"],
         metadata["MCP_HOST_PRODUCT"],
-        metadata["WIDGET_EXECUTABLE"],
         "LorvexWidgetBundle",
         "LorvexWatchComplication",
     }

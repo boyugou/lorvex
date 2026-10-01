@@ -108,7 +108,7 @@ extension PendingInboxDrain {
     case .transactionRequired:
       return
         "pending inbox entry \(entryID) (\(et)/\(eid)) attempted apply without an outer transaction"
-    case .db(let msg), .dbBusyOrLocked(let msg), .dbConstraint(let msg):
+    case .db(let msg), .dbTransient(let msg), .dbConstraint(let msg):
       return msg
     case .invalidVersion(let msg):
       return "pending inbox entry \(entryID) (\(et)/\(eid)) has invalid version: \(msg)"

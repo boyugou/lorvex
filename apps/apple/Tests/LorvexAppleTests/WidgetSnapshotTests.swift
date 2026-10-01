@@ -6,7 +6,7 @@ import Testing
 func widgetSnapshotStatsDecodeMissingDueTodayAndAttentionCounts() throws {
   let payload = """
     {
-      "version": 3,
+      "version": 4,
       "generated_at": "2026-03-02T10:00:00Z",
       "storage_generation": 0,
       "focus_filter_revision": 0,
@@ -14,13 +14,12 @@ func widgetSnapshotStatsDecodeMissingDueTodayAndAttentionCounts() throws {
       "local_change_sequence": 7,
       "timezone": null,
       "stats": {
-        "focus_count": 1,
+        "today_count": 1,
         "overdue_count": 2
       },
       "briefing": null,
-      "focus_tasks": [],
+      "tasks": [],
       "habits": [],
-      "today_tasks": [],
       "lists": [],
       "list_stats": []
     }
@@ -28,7 +27,7 @@ func widgetSnapshotStatsDecodeMissingDueTodayAndAttentionCounts() throws {
 
   let snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: payload)
 
-  #expect(snapshot.stats.focusCount == 1)
+  #expect(snapshot.stats.todayCount == 1)
   #expect(snapshot.stats.overdueCount == 2)
   #expect(snapshot.stats.dueTodayCount == 0)
   #expect(snapshot.stats.attentionCount == 2)
@@ -50,7 +49,7 @@ func widgetSnapshotLoaderReturnsFallbacksForMissingAndUnsupportedSnapshots() thr
   }
   #expect(missingFallback.reason == .missingFile)
 
-  let unsupportedURL = tempDirectory.appendingPathComponent("widget_snapshot_v3.json")
+  let unsupportedURL = tempDirectory.appendingPathComponent("widget_snapshot.json")
   try """
   {
     "version": 999,
@@ -61,14 +60,13 @@ func widgetSnapshotLoaderReturnsFallbacksForMissingAndUnsupportedSnapshots() thr
     "local_change_sequence": 7,
     "timezone": null,
     "stats": {
-      "focus_count": 0,
+      "today_count": 0,
       "overdue_count": 0,
       "due_today_count": 0
     },
     "briefing": null,
-    "focus_tasks": [],
+    "tasks": [],
     "habits": [],
-    "today_tasks": [],
     "lists": [],
     "list_stats": []
   }
@@ -89,5 +87,5 @@ func widgetSnapshotLoaderBuildsAppGroupRelativeURL() {
 
   let snapshotURL = loader.snapshotURL(inAppGroupContainer: containerURL)
 
-  #expect(snapshotURL.path == "/tmp/group.com.lorvex.apple/Lorvex/widget_snapshot_v3.json")
+  #expect(snapshotURL.path == "/tmp/group.com.lorvex.apple/Lorvex/widget_snapshot.json")
 }

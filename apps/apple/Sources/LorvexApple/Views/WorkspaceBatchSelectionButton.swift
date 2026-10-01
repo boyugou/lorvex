@@ -3,10 +3,12 @@ import SwiftUI
 
 private enum WorkspaceBatchSelectionButtonMetrics {
   static let size: CGFloat = 17
-  static let selectedOpacity: Double = 0.82
-  static let visibleOpacity: Double = 0.50
 }
 
+/// A task row's trailing batch-selection control. An unselected row shows it
+/// only while `isVisible` (the row decides when) or keyboard-focused, as a
+/// circle in the secondary style; a selected row keeps its filled check in
+/// the tint so the batch stays visible without a pointer.
 struct WorkspaceBatchSelectionButton: View {
   let isSelected: Bool
   let isVisible: Bool
@@ -27,7 +29,7 @@ struct WorkspaceBatchSelectionButton: View {
     Button(action: action) {
       Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
         .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
         .frame(
           width: WorkspaceBatchSelectionButtonMetrics.size,
           height: WorkspaceBatchSelectionButtonMetrics.size
@@ -40,11 +42,7 @@ struct WorkspaceBatchSelectionButton: View {
       width: WorkspaceBatchSelectionButtonMetrics.size,
       height: WorkspaceBatchSelectionButtonMetrics.size
     )
-    .opacity(
-      isSelected
-        ? WorkspaceBatchSelectionButtonMetrics.selectedOpacity
-        : ((isVisible || isButtonFocused) ? WorkspaceBatchSelectionButtonMetrics.visibleOpacity : 0)
-    )
+    .opacity((isSelected || isVisible || isButtonFocused) ? 1 : 0)
     .help(String(localized: "tasks.row.batch_select", defaultValue: "Select for batch actions", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityLabel(String(localized: "tasks.row.batch_select", defaultValue: "Select for batch actions", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityValue(accessibilityValue)

@@ -116,18 +116,6 @@ extension SwiftLorvexCoreService {
         return false
       }
     }
-    // An immutable generation capture or authoritative adoption can already
-    // contain opaque task envelopes. Do not materialize exact local history in
-    // the middle of either state machine.
-    let hasGenerationStaging =
-      try Int.fetchOne(
-        db, sql: "SELECT 1 FROM sync_generation_snapshot_staging LIMIT 1") != nil
-    let hasAuthoritativeSnapshot =
-      try Int.fetchOne(
-        db, sql: "SELECT 1 FROM sync_authoritative_snapshot LIMIT 1") != nil
-    if hasGenerationStaging || hasAuthoritativeSnapshot {
-      return false
-    }
     return true
   }
 
@@ -183,13 +171,11 @@ extension SwiftLorvexCoreService {
         version: version)
 
       // Enqueue owns tombstone creation, but its wall-clock timestamp describes
-      // the restore transaction. Put back the backup's original deletion time;
-      // CloudKit confirmation remains NULL because that receipt belongs to the
-      // exporting account/zone and cannot be transferred safely.
+      // the restore transaction. Put back the backup's original deletion time.
       try db.execute(
         sql: """
           UPDATE sync_tombstones
-          SET deleted_at = ?, cloud_confirmed_at = NULL
+          SET deleted_at = ?
           WHERE entity_type = ? AND entity_id = ? AND version = ?
           """,
         arguments: [

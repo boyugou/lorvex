@@ -51,10 +51,8 @@ import XCTest
 ///
 /// The seed/enumeration column set is `pragma_table_info(table)` at runtime.
 /// `pragma_table_info` omits generated columns (`tasks.priority_effective`,
-/// `calendar_events.recurrence_end_date` surface as hidden), and device-local
-/// columns are filtered exactly as `StorageSchema.isDeviceLocalColumn` classifies
-/// them (currently none). Every unconstrained column gets an auto-generated
-/// sentinel.
+/// `calendar_events.recurrence_end_date` surface as hidden). Every
+/// unconstrained column gets an auto-generated sentinel.
 ///
 /// This is NO LONGER the same source the outbound reader uses: a migrated entity's
 /// generic reader sources its column list from the entity's ``SyncEntityDescriptor``
@@ -79,14 +77,11 @@ import XCTest
 /// Their probes seed the canonical derivation, assert the final wire manifest
 /// excludes the key, and still compare the reconstructed peer value.
 ///
-/// `ai_changelog` is intentionally NOT probed here: it is an append-only audit
-/// stream with a bounded, id-dedup (`INSERT OR IGNORE`, no LWW) outbound
-/// contract rather than the bidirectional upsert lane this asymmetry class lives
-/// in; its final builder→outbox key shape is covered by
-/// `SyncPayloadContractTests`. The
-/// `testEverySyncableKindHasARoundTripProbe` guard enforces that every OTHER
-/// syncable kind is covered, so a future kind added to `allSyncableTypes` fails
-/// until a probe is added.
+/// `ai_changelog` is intentionally NOT probed here: the audit trail is
+/// device-local and has no outbound or inbound lane, so there is no asymmetry to
+/// guard. The `testEverySyncableKindHasARoundTripProbe` guard enforces that
+/// every OTHER syncable kind is covered, so a future kind added to
+/// `allSyncableTypes` fails until a probe is added.
 final class SyncFieldRoundTripProbeTests: XCTestCase {
 
   // MARK: - Sentinel model
@@ -269,7 +264,6 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
 
   private func pragmaCols(_ db: Database, _ table: String) throws -> [(name: String, type: String)] {
     try Row.fetchAll(db, sql: "SELECT name, type FROM pragma_table_info('\(table)') ORDER BY cid")
-      .filter { !StorageSchema.isDeviceLocalColumn(table: table, column: $0["name"] as String) }
       .map { (name: $0["name"] as String, type: ($0["type"] as String?) ?? "") }
   }
 
@@ -462,6 +456,9 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
           "id": .text(pRecurringSuccessor), "list_id": .text(pList),
           "status": .text("completed"),
           "priority": .int(2), "estimated_minutes": .int(90), "last_defer_reason": .text("blocked"),
+          // A planned time is minutes since midnight on the planned day, so
+          // the integer heuristic's sentinel would fail the range CHECK.
+          "planned_start_minutes": .int(540), "planned_end_minutes": .int(600),
           "recurrence_group_id": .text(pRecurrenceGroup),
           "recurrence_instance_key": .text(instanceKey),
           "spawned_from": .text(pTask),
@@ -637,23 +634,13 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
         ]))
   }
 
-  func testRoundTripCurrentFocus() throws {
+  func testRoundTripDailyBriefing() throws {
     try runProbe(
       ProbeSpec(
-        kind: .currentFocus, entityId: "2029-03-02", table: "current_focus", pkColumns: ["date"],
-        pkValues: ["2029-03-02"], isEdge: false,
+        kind: .dailyBriefing, entityId: "2029-03-02", table: "daily_briefings",
+        pkColumns: ["date"], pkValues: ["2029-03-02"], isEdge: false,
         overrides: [
           "date": .text("2029-03-02"), "timezone": .text("America/Los_Angeles"),
-        ]))
-  }
-
-  func testRoundTripFocusSchedule() throws {
-    try runProbe(
-      ProbeSpec(
-        kind: .focusSchedule, entityId: "2029-03-03", table: "focus_schedule", pkColumns: ["date"],
-        pkValues: ["2029-03-03"], isEdge: false,
-        overrides: [
-          "date": .text("2029-03-03"), "timezone": .text("America/Los_Angeles"),
         ]))
   }
 
@@ -730,7 +717,7 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
 
   // MARK: - Coverage guard
 
-  /// Every syncable kind (except the append-only `ai_changelog` audit stream,
+  /// Every syncable kind (except the device-local `ai_changelog` audit trail,
   /// documented above) must have a field round-trip probe, so a future kind
   /// added to `allSyncableTypes` fails here until it is covered.
   func testEverySyncableKindHasARoundTripProbe() {
@@ -738,8 +725,8 @@ final class SyncFieldRoundTripProbeTests: XCTestCase {
       EntityName.task, EntityName.list, EntityName.habit, EntityName.tag,
       EntityName.calendarEvent, EntityName.calendarSeriesCutover,
       EntityName.preference, EntityName.memory,
-      EntityName.dailyReview, EntityName.currentFocus,
-      EntityName.focusSchedule, EntityName.taskReminder, EntityName.taskChecklistItem,
+      EntityName.dailyReview, EntityName.dailyBriefing,
+      EntityName.taskReminder, EntityName.taskChecklistItem,
       EntityName.habitReminderPolicy, EdgeName.taskTag, EdgeName.taskDependency,
       EdgeName.taskCalendarEventLink, EdgeName.habitCompletion,
     ]

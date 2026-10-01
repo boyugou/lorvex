@@ -10,8 +10,8 @@ import Testing
 // P2 (dirty-domain reload gating): on macOS the inbound sync runs at the tail of a
 // refresh fan-out; when it applies records attributable to a bounded set of
 // domains it reloads ONLY those inline instead of requesting a full trailing
-// rerun. These drive `AppStore.refresh()` end to end through a real coordinator +
-// a counting `StubFocusCoreService`, asserting that a habits-only push re-reads
+// rerun. These drive `AppStore.refresh()` end to end through a real controller +
+// a counting `StubCoreService`, asserting that a habits-only push re-reads
 // habits without re-reading the calendar / list / diagnostics surfaces, while a
 // task push re-reads the task-bearing surfaces but never habits.
 //
@@ -22,30 +22,25 @@ import Testing
 
 @MainActor
 private func makeSelectiveAppStore(
-  core: any LorvexCoreServicing,
+  core: StubCoreService,
   records: [CKRecord],
   widget: RecordingWidgetSnapshotPublisher
-) -> AppStore {
-  let coordinator = CloudSyncEngineCoordinator(
-    accountChecker: StubAccountStatusChecker(availability: .available),
-    pusher: RecordingRecordPusher(),
-    fetcher: StubRemoteChangeFetcher(records: records, serverChangeTokenData: Data([0x02])),
-    accountIdentifier: StubAccountIdentifier(identifier: "sel-account"),
-    accountIdentityStore: RecordingAccountIdentityStore(),
-    accountPauseStore: RecordingCloudSyncPauseStore())
+) async throws -> AppStore {
+  let sync = TestCloudSync(store: core.preview)
+  try await sync.deliverOnFirstFetch(records)
   return AppStore(
     core: core,
     widgetSnapshotPublisher: widget,
     cloudSyncMode: .live,
-    cloudSyncCoordinator: coordinator)
+    cloudSyncController: sync.controller)
 }
 
 @MainActor
 @Test("an inbound habits-only sync reloads habits inline, not the calendar/list/diagnostics surfaces")
 func appStoreInboundHabitsOnlyReloadsHabitsOnly() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let widget = RecordingWidgetSnapshotPublisher()
-  let store = makeSelectiveAppStore(
+  let store = try await makeSelectiveAppStore(
     core: core,
     records: [inboundSelectiveRecord(.habit, "01966a3f-7c8b-7d4e-8f3a-0000000000a1", 1)],
     widget: widget)
@@ -75,9 +70,9 @@ func appStoreInboundHabitsOnlyReloadsHabitsOnly() async throws {
 @MainActor
 @Test("an inbound task sync reloads the task-bearing surfaces inline but never habits")
 func appStoreInboundTaskReloadsTaskSurfacesNotHabits() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let widget = RecordingWidgetSnapshotPublisher()
-  let store = makeSelectiveAppStore(
+  let store = try await makeSelectiveAppStore(
     core: core,
     records: [inboundSelectiveRecord(.task, "01966a3f-7c8b-7d4e-8f3a-0000000000b2", 2)],
     widget: widget)
@@ -98,9 +93,9 @@ func appStoreInboundTaskReloadsTaskSurfacesNotHabits() async throws {
 @MainActor
 @Test("an inbound sync spanning multiple domains reloads all of them inline")
 func appStoreInboundMultiDomainReloadsAll() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let widget = RecordingWidgetSnapshotPublisher()
-  let store = makeSelectiveAppStore(
+  let store = try await makeSelectiveAppStore(
     core: core,
     records: [
       inboundSelectiveRecord(.habit, "01966a3f-7c8b-7d4e-8f3a-0000000000c1", 3),
@@ -125,7 +120,7 @@ func appStoreInboundMultiDomainReloadsAll() async throws {
 func appStoreInboundMemoryReloadPreservesDraft() async throws {
   let preview = try await makeSeededInMemoryCore()
   _ = try await preview.upsertMemory(key: "remote-memory", content: "before")
-  let core = StubFocusCoreService(preview: preview)
+  let core = StubCoreService(preview: preview)
   let store = AppStore(core: core, cloudSyncMode: .off)
 
   await store.loadMemory()

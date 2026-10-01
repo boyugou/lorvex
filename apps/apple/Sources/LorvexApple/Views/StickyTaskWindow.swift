@@ -163,14 +163,14 @@ private struct StickyTaskView: View {
     .padding(LorvexDesign.Spacing.m)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     .background(
-      RoundedRectangle(cornerRadius: 14, style: .continuous)
+      RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous)
         .fill(Color(nsColor: .textBackgroundColor))
     )
     .overlay(
-      RoundedRectangle(cornerRadius: 14, style: .continuous)
+      RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous)
         .strokeBorder(.separator.opacity(0.5), lineWidth: 0.5)
     )
-    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    .clipShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
   }
 
   private var notes: some View {
@@ -185,7 +185,7 @@ private struct StickyTaskView: View {
   }
 
   private var checklist: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       ForEach(checklistItems) { item in
         Button {
           Task { await store.toggleChecklistItem(item) }
@@ -248,7 +248,7 @@ private struct StickyTaskView: View {
   ) -> some View {
     Button(action: action) {
       Image(systemName: systemImage)
-        .font(.system(size: 10, weight: .bold))
+        .font(LorvexDesign.Typography.tertiaryText.weight(.bold))
         .foregroundStyle(.secondary)
         .frame(width: 18, height: 18)
         .background(.quaternary.opacity(0.6), in: Circle())

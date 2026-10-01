@@ -7,14 +7,9 @@ triggers, FTS5) and the **Apple app's schema authority**:
   at `apps/apple/Sources/LorvexCore/Resources/schema.sql`. Development and tests
   may pass an explicit DDL string to `LorvexStore.open(at:schemaSQL:)`, but
   packaged app builds use the bundled resource.
-- **Tauri** (`apps/tauri`) keeps its own in-tree copy at
-  `apps/tauri/lorvex-store/src/schema/001_schema.sql`. It is only directionally
-  aligned via `spec/`, not byte-locked, and may diverge freely.
-
 `apps/apple/script/verify_schema_embed.sh` asserts the Apple bundled resource is
 byte-identical to this authoritative `schema/schema.sql`. Drift there is a red
-Apple build, not silent rot. The Tauri copy is not compared — cross-platform data
-transfer is AI-reconciled best-effort, not a byte-locked interchange.
+Apple build, not silent rot.
 
 The schema is authoritative, not frozen: real defects (missing index, wrong
 constraint) may be fixed here — conservatively, then mirrored into the Apple

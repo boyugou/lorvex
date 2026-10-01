@@ -61,9 +61,9 @@ struct AppStoreFactoryResetTests {
       localChangeSequence: 99,
       timezone: "UTC",
       logicalDay: "2026-05-23",
-      stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 0),
+      stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 0),
       briefing: "private briefing",
-      focusTasks: [
+      tasks: [
         .init(
           id: "private", title: "private title", status: "open",
           dueDate: nil, priority: 1, listID: nil, estimatedMinutes: nil)
@@ -83,8 +83,7 @@ struct AppStoreFactoryResetTests {
     #expect(outcome.publicationSucceeded)
     #expect(barrier.storageGeneration == 1)
     #expect(barrier.logicalDay == "2026-05-24")
-    #expect(barrier.focusTasks.isEmpty)
-    #expect(barrier.todayTasks.isEmpty)
+    #expect(barrier.tasks.isEmpty)
     #expect(barrier.habits.isEmpty)
     #expect(barrier.lists.isEmpty)
     #expect(barrier.briefing == nil)
@@ -97,7 +96,7 @@ struct AppStoreFactoryResetTests {
       return
     }
     #expect(loaded == barrier)
-    #expect(!loaded.focusTasks.contains { $0.title == "private title" })
+    #expect(!loaded.tasks.contains { $0.title == "private title" })
   }
 
   @Test("a widget barrier failure is post-reset and cannot roll back the canonical wipe")
@@ -309,63 +308,50 @@ struct AppStoreFactoryResetTests {
     #expect(fm.fileExists(atPath: db.path))
   }
 
-  /// H7: `performFactoryReset` wipes the DB and then rebuilds the core, whose
-  /// `replaceCore → refresh → publishAppleSyncSurfaces → runCloudSyncCycle` runs
-  /// against the freshly-empty database. `runCloudSyncCycle` guards on the
-  /// RUNTIME `cloudSyncMode`; `settings.resetToDefaults()` flips only the
-  /// PERSISTED mode. Without turning the runtime mode off, the fresh database has
-  /// no SQLite traversal state, so the cycle starts a nil-token baseline against
-  /// the still-existing CloudKit generation and repopulates the data the user
-  /// just erased. The fix sets the runtime
-  /// mode to `.off` before the cutover, so the post-reset refresh's cycle no-ops.
+  /// `performFactoryReset` wipes the database and rebuilds the core, and the
+  /// post-reset refresh ends with a sync tail that runs against the fresh,
+  /// empty database. That tail is gated on the RUNTIME `cloudSyncMode`;
+  /// `settings.resetToDefaults()` flips only the PERSISTED mode. With the
+  /// runtime mode left live, the fresh database has no engine state, so a pass
+  /// would fetch the whole iCloud zone and repopulate the data the user just
+  /// erased. The reset therefore turns the runtime mode off (and stops the
+  /// controller) before the wipe.
   ///
-  /// This drives that runtime-mode guard directly: with sync off a refresh must
-  /// not start a cycle (nothing can repopulate), and the same refresh with the
-  /// runtime mode left live DOES start one — proving the runtime mode, not the
-  /// persisted one, is the gate the fix flips. The end-to-end managed-storage
-  /// cutover is covered by the `resetManagedStorage` cases above and cannot be
-  /// driven hermetically against the real managed store.
+  /// This drives that runtime-mode gate directly: with sync off a refresh
+  /// starts no pass, and with the runtime mode live one does. The end-to-end
+  /// managed-storage cutover is covered by the `resetManagedStorage` cases
+  /// above and cannot be driven hermetically against the real managed store.
   @MainActor
   @Test("runtime cloudSyncMode .off makes the post-reset refresh a no-op that cannot repopulate")
   func factoryResetRuntimeSyncOffPreventsPostResetRepopulatingCycle() async throws {
-    func makeCoordinator() -> CloudSyncEngineCoordinator {
-      CloudSyncEngineCoordinator(
-        accountChecker: StubAccountStatusChecker(availability: .available),
-        pusher: RecordingRecordPusher(),
-        fetcher: StubRemoteChangeFetcher(records: []),
-        accountIdentifier: StubAccountIdentifier(identifier: "account-A"),
-        accountIdentityStore: RecordingAccountIdentityStore(initial: "account-A"))
-    }
-
-    // Post-reset runtime state the fix installs: sync OFF. A refresh (the
-    // post-reset trigger) must not start a cloud sync cycle.
+    let offCore = try makeInMemoryCore()
+    let offSync = TestCloudSync(store: offCore)
     let offStore = AppStore(
-      core: try makeInMemoryCore(),
+      core: offCore,
       widgetSnapshotPublisher: RecordingWidgetSnapshotPublisher(),
       cloudSyncMode: .off,
-      cloudSyncCoordinator: makeCoordinator())
+      cloudSyncController: offSync.controller)
 
     await offStore.refresh()
 
     #expect(
-      offStore.cloudSyncPacing.lastAttemptAt == nil,
-      "with runtime sync off, the post-reset refresh must not start a cloud sync cycle")
+      offSync.engines.engines.isEmpty,
+      "with runtime sync off, the post-reset refresh must not start a pass")
     #expect(offStore.lastCloudSyncCycleReport == nil)
 
-    // Discriminator: with the runtime mode left `.live` (the pre-fix state), the
-    // guarded cycle DOES run — so it is the runtime mode, not the persisted one,
-    // that gates repopulation.
+    let liveCore = try makeInMemoryCore()
+    let liveSync = TestCloudSync(store: liveCore)
     let liveStore = AppStore(
-      core: try makeInMemoryCore(),
+      core: liveCore,
       widgetSnapshotPublisher: RecordingWidgetSnapshotPublisher(),
       cloudSyncMode: .live,
-      cloudSyncCoordinator: makeCoordinator())
+      cloudSyncController: liveSync.controller)
 
     await liveStore.runCloudSyncCycle()
 
     #expect(
-      liveStore.cloudSyncPacing.lastAttemptAt != nil,
-      "with runtime sync live the cycle starts — exactly the state the fix turns off before the wipe")
+      try liveSync.engine.fetchCount == 1,
+      "with runtime sync live a pass runs — exactly the state the reset turns off before the wipe")
   }
 }
 
@@ -394,15 +380,6 @@ private struct FactoryResetFailingWidgetPublisher: WidgetSnapshotPublishing {
   var factoryResetTarget: WidgetSnapshotFactoryResetTarget? { target }
 
   func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot {
-    throw FactoryResetInjectedWidgetFailure()
-  }
-
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot {
     throw FactoryResetInjectedWidgetFailure()
   }
 }

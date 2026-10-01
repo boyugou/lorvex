@@ -33,40 +33,6 @@ public struct PendingOutboundPage: Sendable, Equatable {
   }
 }
 
-/// CloudKit server evidence attached to one decoded inbound record. Every
-/// timestamp originates from `CKRecord.modificationDate`; delete records also
-/// carry the exact tombstone identity/version eligible for confirmation.
-public struct InboundCloudRecordReceipt: Sendable, Equatable {
-  public var serverModifiedAt: String
-  public var tombstoneConfirmation: Tombstone.CloudConfirmation?
-
-  public init(
-    serverModifiedAt: String,
-    tombstoneConfirmation: Tombstone.CloudConfirmation? = nil
-  ) {
-    self.serverModifiedAt = serverModifiedAt
-    self.tombstoneConfirmation = tombstoneConfirmation
-  }
-}
-
-/// CloudKit server evidence for an exact outbox capability. Core re-reads the
-/// outbox id and matches the delete identity/version before confirming a
-/// tombstone, so a late callback cannot bless a coalesced successor.
-public struct OutboundCloudRecordReceipt: Sendable, Equatable {
-  public var outboxId: Int64
-  public var serverModifiedAt: String
-  public var tombstoneConfirmation: Tombstone.CloudConfirmation?
-
-  public init(
-    outboxId: Int64, serverModifiedAt: String,
-    tombstoneConfirmation: Tombstone.CloudConfirmation? = nil
-  ) {
-    self.outboxId = outboxId
-    self.serverModifiedAt = serverModifiedAt
-    self.tombstoneConfirmation = tombstoneConfirmation
-  }
-}
-
 /// Counts produced by applying a batch of inbound envelopes through the engine.
 /// Conflict resolution (LWW / redirect / tombstone) lives in the engine; these
 /// counts only summarize per-envelope ``LorvexSync/ApplyResult`` outcomes plus
@@ -83,7 +49,7 @@ public struct InboundApplyReport: Sendable, Equatable {
   public var undecodable: Int
   /// Well-formed records carrying a future/unknown `entity_type` that this build
   /// cannot model. Durably parked (not dropped) in the same transaction as the
-  /// owning traversal page or outbound reconciliation, so a later build that
+  /// owning inbound apply or outbound reconciliation, so a later build that
   /// understands the type recovers them — distinct from ``undecodable``, which
   /// is genuine corruption.
   public var deferredUnknownType: Int
@@ -92,7 +58,7 @@ public struct InboundApplyReport: Sendable, Equatable {
   /// replays. Skipped and deferred envelopes contribute nothing.
   public var appliedEntityTypes: Set<EntityKind>
   /// Internal transport capability receipts produced only by outbound
-  /// reconciliation. Ordinary inbound/traversal reports leave this empty.
+  /// reconciliation. Ordinary inbound reports leave this empty.
   public var reconciledCollisionOutboxIds: Set<Int64>
 
   public init(
@@ -157,10 +123,6 @@ public enum OutboundCollisionKind: Sendable, Equatable {
   /// Reassert the local alias above this remote floor instead of acknowledging
   /// a value no conforming writer is allowed to author.
   case entityRedirectDelete(serverEnvelope: SyncEnvelope)
-  /// A valid competing value for an append-only identity (currently the audit
-  /// stream). Its materialized row has no version column, so the exact pending
-  /// outbox entry supplies local ordering evidence for transactional repair.
-  case immutableIdentity(serverEnvelope: SyncEnvelope)
   /// The opaque record slot belongs to this exact entity but its server
   /// `version` is absent or noncanonical. No remote contender can safely enter
   /// ordering, so core re-authors the exact local intent at a fresh successor.
@@ -183,36 +145,27 @@ public struct OutboundCollisionRecord: Sendable, Equatable {
 /// be atomic locally. In particular, a server-authoritative conflict winner must
 /// never commit without the matching outbox confirmation, and a future record
 /// must never be parked while its failure bookkeeping rolls back (or vice
-/// versa). The production facade applies all four collections in one SQLite
-/// transaction after the transport's final account/generation validation.
+/// versa). The production facade applies every collection in one SQLite
+/// transaction.
 public struct OutboundReconciliationRequest: Sendable, Equatable {
-  public var accountIdentifier: String?
   public var serverWinnerEnvelopes: [SyncEnvelope]
   public var deferredUnknownTypeRecords: [RawEnvelopeFields]
   public var collisions: [OutboundCollisionRecord]
   public var failures: [OutboundFailureRecord]
   public var confirmedOutboxIds: [Int64]
-  public var cloudReceipts: [OutboundCloudRecordReceipt]
-  public var serverWinnerCloudReceipts: [InboundCloudRecordReceipt]
 
   public init(
-    accountIdentifier: String? = nil,
     serverWinnerEnvelopes: [SyncEnvelope] = [],
     deferredUnknownTypeRecords: [RawEnvelopeFields] = [],
     collisions: [OutboundCollisionRecord] = [],
     failures: [OutboundFailureRecord] = [],
-    confirmedOutboxIds: [Int64] = [],
-    cloudReceipts: [OutboundCloudRecordReceipt] = [],
-    serverWinnerCloudReceipts: [InboundCloudRecordReceipt] = []
+    confirmedOutboxIds: [Int64] = []
   ) {
-    self.accountIdentifier = accountIdentifier
     self.serverWinnerEnvelopes = serverWinnerEnvelopes
     self.deferredUnknownTypeRecords = deferredUnknownTypeRecords
     self.collisions = collisions
     self.failures = failures
     self.confirmedOutboxIds = confirmedOutboxIds
-    self.cloudReceipts = cloudReceipts
-    self.serverWinnerCloudReceipts = serverWinnerCloudReceipts
   }
 }
 
@@ -236,8 +189,3 @@ public struct OutboundReconciliationReport: Sendable, Equatable {
   }
 }
 
-/// Corruption in local-only zone-epoch checkpoint state. Callers fail closed.
-public enum ZoneEpochCheckpointStateError: Error, Sendable, Equatable {
-  case invalidEnrollment
-  case invalidEpoch
-}

@@ -1,10 +1,9 @@
+import LorvexCloudSync
 import LorvexCore
 import SwiftUI
 
 public struct LorvexMobileStoreRootView: View {
   @Bindable var store: MobileStore
-  private let configuration: MobileShellConfiguration
-  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
   /// Persisted app appearance (System/Light/Dark), shared with the Settings
   /// picker via `AppAppearance.preferenceKey`. Drives `preferredColorScheme`.
   @AppStorage(AppAppearance.preferenceKey) private var appearanceRaw = AppAppearance.system.rawValue
@@ -13,25 +12,17 @@ public struct LorvexMobileStoreRootView: View {
 
   public init(
     store: MobileStore,
-    configuration: MobileShellConfiguration = .mobile,
     setupPreferences: MobileSetupPreferences = MobileSetupPreferences()
   ) {
     self.store = store
-    self.configuration = configuration
     self.setupPreferences = setupPreferences
   }
 
   public var body: some View {
-    Group {
-      switch configuration.preferredChromeStyle(horizontalSizeClass: horizontalSizeClass) {
-      case .tabBar:
-        tabBarBody
-      case .sidebar:
-        sidebarBody
-      }
-    }
-    .lorvexSpatialBackground()
-    .background(keyboardShortcuts)
+    tabBarBody
+    .onAppear { store.redirectHiddenHabitsTab() }
+    .onChange(of: store.selectedTab) { _, _ in store.redirectHiddenHabitsTab() }
+    .onChange(of: store.habitsRoutePath) { _, _ in store.redirectHiddenHabitsTab() }
     .tint(.accentColor)
     // A crossing staged by a habit completion floats a celebratory badge above
     // the whole shell, wherever the completion was logged (Today / Habits tab).
@@ -39,6 +30,7 @@ public struct LorvexMobileStoreRootView: View {
       withAnimation(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
     }
     .preferredColorScheme(AppAppearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
+    .lorvexClockLocale()
     // Surface mutation failures (capture/complete/calendar/etc.) — the store
     // sets `errorMessage` but without this the failure was invisible.
     .alert(
@@ -99,37 +91,67 @@ public struct LorvexMobileStoreRootView: View {
       }
     }
     .sheet(isPresented: $showSetupWizard) {
-      MobileSetupWizard(defaults: setupPreferences.defaults) {
-        // `store.isSetupCompleted` gates the background reminder re-plan's
-        // authorization request (see `MobileStore.rescheduleReminders`); flip
-        // it and re-plan immediately so any reminder withheld during
-        // onboarding arms right away instead of waiting for the next
-        // unrelated refresh.
-        store.isSetupCompleted = true
-        Task { await store.rescheduleReminders() }
-      }
+      MobileSetupWizard(
+        defaults: setupPreferences.defaults,
+        turnOnCloudSync: {
+          // The request is made before the task starts, as the Settings
+          // toggle makes it, so a cloud-data deletion that lands first
+          // supersedes it.
+          let request = store.makeCloudSyncModeRequest(.live)
+          Task { await store.setCloudSyncModeFromSettings(request) }
+        },
+        onComplete: {
+          // `store.isSetupCompleted` gates the background reminder re-plan's
+          // authorization request (see `MobileStore.rescheduleReminders`);
+          // flip it and re-plan immediately so any reminder withheld during
+          // onboarding arms right away instead of waiting for the next
+          // unrelated refresh.
+          store.isSetupCompleted = true
+          Task { await store.rescheduleReminders() }
+        })
       .interactiveDismissDisabled(true)
       // Force the full-height detent: a first-run wizard must own the screen.
       // Without this the sheet adopted a shorter height and clipped the pinned
       // call-to-action once the welcome copy wrapped to multiple lines.
       .presentationDetents([.large])
-      .lorvexSpatialBackground()
     }
     .sheet(isPresented: $store.isPresentingCapture) {
       MobileStoreCaptureSheet(store: store)
-        .lorvexSpatialBackground()
     }
   }
 
+  /// The tab bar's selection: one of the store's tabs, or the round + that
+  /// opens capture. Choosing + raises the capture sheet and leaves the current
+  /// tab selected, because capture is an action, not a place.
+  private var tabBarSelection: Binding<MobileTabBarItem> {
+    Binding(
+      get: { .tab(store.selectedTab) },
+      set: { item in
+        switch item {
+        case .tab(let tab): store.selectedTab = tab
+        case .capture: store.isPresentingCapture = true
+        }
+      })
+  }
+
+  /// iPhone navigation: Today, Plan, Tasks, and Review in the bar, and the
+  /// round + beside it on every tab. Habits stays a selectable tab so deep
+  /// links, Handoff, and shortcuts still reach it, but it is hidden from the
+  /// bar; Today's habit rings and the Tasks home lead there.
   private var tabBarBody: some View {
-    TabView(selection: $store.selectedTab) {
+    TabView(selection: tabBarSelection) {
       tab(.today) {
         NavigationStack(path: $store.routePath) {
           MobileStoreTodayView(store: store)
-            // The date IS the title (informative, unlike a redundant "Today" that
-            // just echoes the tab). A standard large title — no custom header band,
-            // no empty collapse gap.
-            .navigationTitle(MobileTodayHeader.dateText())
+            // The page opens with its own date and sentence, so the bar keeps
+            // "Today" only as the back-button name and draws no title.
+            .navigationTitle(MobileTab.today.title)
+            #if os(iOS)
+              .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+              ToolbarItem(placement: .principal) { Text(verbatim: "").accessibilityHidden(true) }
+            }
             // Block with skeletons only on the first load. Refreshes keep
             // existing content visible and use the native `.refreshable` affordance.
             .overlay {
@@ -143,16 +165,14 @@ public struct LorvexMobileStoreRootView: View {
         }
       }
 
-      tab(.tasks) {
-        // The Tasks home owns the stack's MobileRoute + MobileTasksScope
-        // destinations; the scoped task list it pushes does not re-declare them.
-        NavigationStack(path: $store.tasksRoutePath) {
-          MobileStoreTasksHomeView(store: store)
-        }
-      }
-
       tab(.calendar) {
-        NavigationStack {
+        // Bound (like Tasks/Habits) so tapping a scheduled task pushes its
+        // detail onto the Calendar stack in place — see
+        // `MobileStore.calendarRoutePath`.
+        // No readable-width cap here: the day grid and its agenda pane use the
+        // whole window, and the calendar already draws an inline title. The
+        // week agenda caps itself.
+        NavigationStack(path: $store.calendarRoutePath) {
           MobileStoreCalendarView(store: store)
             .navigationDestination(for: MobileRoute.self) { route in
               MobileStoreRouteView(route: route, store: store)
@@ -160,56 +180,62 @@ public struct LorvexMobileStoreRootView: View {
         }
       }
 
-      tab(.habits) {
+      tab(.tasks) {
+        // The Tasks home owns the stack's MobileRoute + MobileTasksScope
+        // destinations; the scoped task list it pushes does not re-declare them.
+        NavigationStack(path: $store.tasksRoutePath) {
+          MobileStoreTasksHomeView(store: store)
+            .mobileReadableWidth(inlineTitleAtRegularWidth: true)
+        }
+      }
+
+      tab(.review) {
+        NavigationStack(path: $store.reviewRoutePath) {
+          MobileStoreReviewView(store: store)
+            .mobileReadableWidth(inlineTitleAtRegularWidth: true)
+            .navigationDestination(for: MobileRoute.self) { route in
+              MobileStoreRouteView(route: route, store: store)
+            }
+        }
+      }
+      tab(.habits, hidden: true) {
         // Bound (unlike Calendar's) so a deep link / Handoff / Spotlight route to
         // a specific habit can push its detail — see `MobileStore.habitsRoutePath`.
         NavigationStack(path: $store.habitsRoutePath) {
           MobileStoreHabitsView(store: store)
+            .mobileReadableWidth(inlineTitleAtRegularWidth: true)
             .navigationDestination(for: MobileRoute.self) { route in
               MobileStoreRouteView(route: route, store: store)
             }
         }
       }
 
-      tab(.more) {
-        MobileStoreMoreView(store: store)
+      Tab(value: MobileTabBarItem.capture, role: .search) {
+        Color.clear
+      } label: {
+        Label(
+          String(
+            localized: "today.capture", defaultValue: "Capture", table: "Localizable",
+            bundle: MobileL10n.bundle), systemImage: "plus")
       }
+      .accessibilityIdentifier("tabBar.capture")
     }
-  }
-
-  private var sidebarBody: some View {
-    NavigationSplitView {
-      MobileStoreSidebarList(
-        store: store,
-        appDisplayName: configuration.appDisplayName
-      )
-    } detail: {
-      MobileStoreDetailView(store: store, iPadDestination: effectiveIPadDestination)
-        .lorvexSpatialBackground()
-    }
-    .onChange(of: store.iPadDestination) { _, destination in
-      guard let destination else { return }
-      store.selectedTab = .more
-      store.moreNavigationPath = [destination]
-    }
-    .onChange(of: store.moreNavigationPath) { _, path in
-      guard store.selectedTab == .more else { return }
-      store.iPadDestination = path.first
-    }
-  }
-
-  private var effectiveIPadDestination: MobileDestination? {
-    store.selectedTab == .more ? (store.iPadDestination ?? store.moreNavigationPath.first) : nil
   }
 
   private func tab<Content: View>(
     _ tab: MobileTab,
-    @ViewBuilder content: () -> Content
-  ) -> some View {
-    content()
-      .tabItem {
-        Label(tab.title, systemImage: tab.systemImage)
-      }
-      .tag(tab)
+    hidden: Bool = false,
+    @ViewBuilder content: @escaping () -> Content
+  ) -> some TabContent<MobileTabBarItem> {
+    Tab(tab.title, systemImage: tab.systemImage, value: MobileTabBarItem.tab(tab)) {
+      content()
+    }
+    .hidden(hidden)
   }
+}
+
+/// A tab bar item on iPhone: a store tab, or the round + that opens capture.
+enum MobileTabBarItem: Hashable {
+  case tab(MobileTab)
+  case capture
 }

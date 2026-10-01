@@ -33,11 +33,14 @@ struct InboundReloadScopeTests {
     #expect(InboundReloadScope.domains(for: [.habitReminderPolicy]) == [.habits])
   }
 
-  @Test("a calendar event refreshes linked-task and focus surfaces")
+  @Test("a calendar event refreshes linked-task surfaces and Today's schedule")
   func calendarEventReloadsRelationshipSurfaces() {
     #expect(
       InboundReloadScope.domains(for: [.calendarEvent])
-        == [.calendar, .today, .tasks, .focus, .reviews])
+        == [.calendar, .today, .tasks, .reviews])
+    #expect(
+      InboundReloadScope.domains(for: [.calendarSeriesCutover])
+        == [.calendar, .today, .tasks, .reviews])
   }
 
   @Test("a daily review isolates to the reviews domain")
@@ -45,10 +48,9 @@ struct InboundReloadScopeTests {
     #expect(InboundReloadScope.domains(for: [.dailyReview]) == [.reviews])
   }
 
-  @Test("focus kinds isolate to the focus domain")
-  func focusKindsIsolateToFocus() {
-    #expect(InboundReloadScope.domains(for: [.currentFocus]) == [.focus])
-    #expect(InboundReloadScope.domains(for: [.focusSchedule]) == [.focus])
+  @Test("a daily briefing isolates to Today")
+  func dailyBriefingIsolatesToToday() {
+    #expect(InboundReloadScope.domains(for: [.dailyBriefing]) == [.today])
   }
 
   @Test("memory and changelog reload their distinct primary surfaces")
@@ -60,7 +62,7 @@ struct InboundReloadScopeTests {
   @Test("a task fans out across every task-bearing surface but not habits")
   func taskFansOutBroadlyButNotHabits() throws {
     let domains = try #require(InboundReloadScope.domains(for: [.task]))
-    #expect(domains.isSuperset(of: [.today, .tasks, .lists, .calendar, .focus, .reviews]))
+    #expect(domains == [.today, .tasks, .lists, .calendar, .reviews])
     // Tasks and habits are independent surfaces — a task change never reloads habits.
     #expect(domains.contains(.habits) == false)
   }
@@ -99,12 +101,13 @@ struct InboundReloadScopeTests {
   func localOnlyKindFallsBackToFull() {
     #expect(InboundReloadScope.domains(for: [.deviceState]) == nil)
     #expect(InboundReloadScope.domains(for: [.importSession]) == nil)
+    #expect(InboundReloadScope.domains(for: [.dailySchedule]) == nil)
   }
 
   @Test("a multi-domain batch unions the affected domains")
   func multiDomainUnions() throws {
     let domains = try #require(InboundReloadScope.domains(for: [.habit, .calendarEvent, .dailyReview]))
-    #expect(domains == [.habits, .calendar, .reviews, .today, .tasks, .focus])
+    #expect(domains == [.habits, .calendar, .reviews, .today, .tasks])
   }
 
   @Test("reminders recompute only for task/habit domains")
@@ -129,11 +132,11 @@ struct InboundReloadScopeTests {
     #expect(InboundReloadScope.recomputesBadge([.reviews]) == false)
   }
 
-  @Test("widget republishes for today/focus/habits/lists, not calendar/reviews")
+  @Test("widget republishes for today/tasks/habits/lists, not calendar/reviews")
   func widgetRepublishPredicate() {
     #expect(InboundReloadScope.republishesWidget([.today]))
+    #expect(InboundReloadScope.republishesWidget([.tasks]))
     #expect(InboundReloadScope.republishesWidget([.habits]))
-    #expect(InboundReloadScope.republishesWidget([.focus]))
     #expect(InboundReloadScope.republishesWidget([.lists]))
     #expect(InboundReloadScope.republishesWidget([.calendar]) == false)
     #expect(InboundReloadScope.republishesWidget([.reviews]) == false)

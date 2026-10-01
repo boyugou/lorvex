@@ -57,18 +57,18 @@ func terminationFlushDoesNotDropOtherFieldsForMalformedEstimate() async throws {
 }
 
 @MainActor
-@Test("termination flush persists a started task available only in the uncapped Today pool")
-func terminationFlushPersistsStartedOnlyTaskDraft() async throws {
+@Test("termination flush persists a draft for a task outside the day pool")
+func terminationFlushPersistsOutsideDayPoolTaskDraft() async throws {
   let core = try await makeSeededInMemoryCore()
-  let future = try #require(LorvexDateFormatters.ymdUTC.date(from: "2099-01-01"))
+  // Undated backlog work: editable, and legitimately absent from every day
+  // surface, so its draft lives only in the detail cache the flush must reach.
   let created = try await core.createTask(
-    TaskCreateDraft(title: "Started outside the day pool", availableFrom: future))
-  _ = try await core.startTask(id: created.id)
+    TaskCreateDraft(title: "Backlog task outside the day pool"))
 
   let store = AppStore(core: core)
   await store.refresh()
-  #expect(store.today.inProgressTasks.contains { $0.id == created.id })
   #expect(!store.today.tasks.contains { $0.id == created.id })
+  #expect(!store.today.inProgressTasks.contains { $0.id == created.id })
 
   store.selectTaskFromList(created.id)
   store.taskDetailTitle = "Started draft saved at Quit"

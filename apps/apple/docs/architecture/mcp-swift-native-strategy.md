@@ -18,8 +18,8 @@ affordances are owned in the Swift MCP modules.
 
 - `LorvexMCPHost` stays a thin executable entry point.
 - Tool catalogs are grouped by domain, matching the original MCP server's
-  domain split: tasks, focus, lists, habits, calendar, reviews, memory, and
-  system diagnostics.
+  domain split: tasks, day planning, lists, habits, calendar, reviews, memory,
+  and system diagnostics.
 - Tool handlers are grouped by domain and call the `LorvexCoreServicing`
   boundary rather than reaching directly into a giant registry.
 - The boundary has one implementation — `SwiftLorvexCoreService` over the

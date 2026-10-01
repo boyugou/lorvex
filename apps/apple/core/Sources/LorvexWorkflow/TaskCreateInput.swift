@@ -24,6 +24,11 @@ public struct TaskCreateInput: Sendable {
   public var reminders: [String]?
   public var recurrenceJson: Patch<String>
   public var plannedDate: Patch<String>
+  /// The planned time of day on `plannedDate`, as `HH:MM`, given together
+  /// with ``plannedEndTime``.
+  public var plannedStartTime: Patch<String>
+  /// The end of the planned time, as `HH:MM` or `24:00`.
+  public var plannedEndTime: Patch<String>
   public var availableFrom: Patch<String>
   public var completed: Bool?
   /// Optional initial status. ``Patch/unset`` / ``Patch/clear`` → ``open``.
@@ -45,6 +50,8 @@ public struct TaskCreateInput: Sendable {
     reminders: [String]? = nil,
     recurrenceJson: Patch<String> = .unset,
     plannedDate: Patch<String> = .unset,
+    plannedStartTime: Patch<String> = .unset,
+    plannedEndTime: Patch<String> = .unset,
     availableFrom: Patch<String> = .unset,
     completed: Bool? = nil,
     status: Patch<String> = .unset
@@ -62,6 +69,8 @@ public struct TaskCreateInput: Sendable {
     self.reminders = reminders
     self.recurrenceJson = recurrenceJson
     self.plannedDate = plannedDate
+    self.plannedStartTime = plannedStartTime
+    self.plannedEndTime = plannedEndTime
     self.availableFrom = availableFrom
     self.completed = completed
     self.status = status
@@ -74,7 +83,7 @@ public struct TaskCreateInput: Sendable {
     "title", "list_id", "priority", "due_date",
     "estimated_minutes", "tags", "body", "raw_input", "ai_notes",
     "depends_on", "reminders", "recurrence_json", "planned_date",
-    "available_from", "completed", "status",
+    "planned_start_time", "planned_end_time", "available_from", "completed", "status",
   ]
 }
 
@@ -97,13 +106,6 @@ public struct CreateTaskSpawnedSuccessor: Sendable {
   public let afterTask: JSONValue
 }
 
-public struct CreateTaskFocusRewireAudit: Sendable {
-  public let parentTaskId: TaskId
-  public let successorId: TaskId
-  public let focusScheduleDates: [String]
-  public let currentFocusDates: [String]
-}
-
 /// Sync-effect accumulator for the task-create flow. Every consumer surface
 /// drives this envelope into its outbox enqueue path.
 public struct CreateTaskSyncEffects: Sendable {
@@ -117,9 +119,6 @@ public struct CreateTaskSyncEffects: Sendable {
   public var spawnedSuccessorTagEdges: [CopiedTagEdge] = []
   public var spawnedSuccessorChecklistItemIds: [String] = []
   public var spawnedSuccessorReminderIds: [String] = []
-  public var focusRewireAudits: [CreateTaskFocusRewireAudit] = []
-  public var rewiredFocusScheduleDates: [String] = []
-  public var rewiredCurrentFocusDates: [String] = []
 
   public init() {}
 }

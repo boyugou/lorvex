@@ -25,7 +25,11 @@ struct LorvexPlainTextEditor: View {
         .frame(minHeight: minHeight, maxHeight: maxHeight)
       if text.isEmpty && !placeholder.isEmpty {
         Text(placeholder)
-          .font(.system(size: fontSize))
+          // Must track the caller-supplied `fontSize` exactly: this overlay only
+          // stands in for the AppKit `NSTextView` below, whose real font is set
+          // to the same `fontSize`, so a fixed typography token here would
+          // desync the placeholder's size from the actual typed text.
+          .font(.system(size: fontSize))  // lorvex-design-token: allow
           .foregroundStyle(.tertiary)
           .padding(.top, 1)
           .allowsHitTesting(false)

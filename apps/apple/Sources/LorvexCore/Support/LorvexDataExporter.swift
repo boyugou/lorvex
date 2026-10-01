@@ -97,16 +97,11 @@ public enum LorvexDataExporter: Sendable {
         csvSection(
           header: "daily_reviews", columns: ExportDailyReview.columns, rows: reviews.map(\.csvRow)))
     }
-    if let focus = payload.currentFocus {
+    if let briefings = payload.dailyBriefings {
       sections.append(
         csvSection(
-          header: "current_focus", columns: ExportCurrentFocus.columns, rows: focus.map(\.csvRow)))
-    }
-    if let schedules = payload.focusSchedules {
-      sections.append(
-        csvSection(
-          header: "focus_schedules", columns: ExportFocusSchedule.columns,
-          rows: schedules.map(\.csvRow)))
+          header: "daily_briefings", columns: ExportDailyBriefing.columns,
+          rows: briefings.map(\.csvRow)))
     }
     if let links = payload.taskCalendarEventLinks {
       sections.append(

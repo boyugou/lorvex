@@ -32,29 +32,37 @@ cd "$ROOT_DIR"
 ./script/build_and_run.sh --stage-only
 
 # App Store submission compliance the SwiftPM staging does not produce (Xcode
-# would, but the macOS app is a pure-SwiftPM build):
+# would, but the macOS app is a pure-SwiftPM build).
 #
-#  1. Every embedded bundle needs a CFBundleIdentifier. SwiftPM resource
-#     bundles ship an Info.plist with only CFBundleDevelopmentRegion, which
-#     App Store Connect rejects (error 90276). Inject a stable reverse-DNS id
-#     derived from the bundle name into any bundle Info.plist that lacks one.
-#  2. The widget app-extension needs LSMinimumSystemVersion (error 90360);
-#     SwiftPM does not stamp it. Mirror the app's floor.
-#
-# Both run before verification and signing so the values are covered by the
-# signature. Idempotent: skipped when the key is already present.
-while IFS= read -r -d '' bundle_plist; do
+# Every embedded bundle needs a CFBundleIdentifier or App Store Connect rejects
+# the payload (error 90276), and on macOS it must be wrapped in `Contents/`
+# rather than left in the flat iOS shape `swift build` emits. build_and_run.sh
+# produces both; enumerate bundle DIRECTORIES here rather than Info.plist paths,
+# so a bundle carrying no Info.plist at all is reported instead of being
+# invisible to the walk. Runs before verification and signing, so the check sees
+# exactly what gets signed.
+while IFS= read -r -d '' bundle_dir; do
+  bundle_plist="$bundle_dir/Contents/Info.plist"
+  if [[ ! -d "$bundle_dir/Contents" ]]; then
+    echo "staged bundle uses the flat iOS layout: $bundle_dir" >&2
+    echo "build_and_run.sh must wrap it into Contents/Info.plist + Contents/Resources" >&2
+    exit 1
+  fi
+  if [[ ! -f "$bundle_plist" ]]; then
+    echo "staged bundle has no Info.plist: $bundle_dir" >&2
+    echo "its SwiftPM package likely omits defaultLocalization; build_and_run.sh must stamp one" >&2
+    exit 1
+  fi
   if ! /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$bundle_plist" \
     >/dev/null 2>&1; then
-    bundle_dir="$(dirname "$bundle_plist")"
-    case "$bundle_dir" in */Contents) bundle_dir="$(dirname "$bundle_dir")" ;; esac
-    slug="$(basename "$bundle_dir" .bundle | tr '[:upper:]_' '[:lower:]-')"
-    /usr/libexec/PlistBuddy \
-      -c "Add :CFBundleIdentifier string com.lorvex.apple.resource.$slug" \
-      "$bundle_plist"
+    echo "staged bundle Info.plist has no CFBundleIdentifier: $bundle_plist" >&2
+    exit 1
   fi
-done < <(find "$APP_BUNDLE" \( -path "*.bundle/Info.plist" -o -path "*.bundle/Contents/Info.plist" \) -print0)
+done < <(find "$APP_BUNDLE" -type d -name "*.bundle" -print0)
 
+# The widget app-extension needs LSMinimumSystemVersion (error 90360); SwiftPM
+# does not stamp it. Mirror the app's floor, before signing so the value is
+# covered by the signature. Idempotent: skipped when the key is already present.
 if ! /usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" \
   "$APP_BUNDLE/Contents/PlugIns/$WIDGET_APPEX_NAME/Contents/Info.plist" >/dev/null 2>&1; then
   /usr/libexec/PlistBuddy \
@@ -69,6 +77,18 @@ test -f "$MCP_HELPER_INFO_PLIST"
 test -x "$MCP_HELPER"
 test -d "$WIDGET_APPEX"
 test -x "$WIDGET_BINARY"
+# Every app wrapper carries a PkgInfo; app extensions deliberately do not.
+grep -qxF "APPL????" "$APP_BUNDLE/Contents/PkgInfo"
+grep -qxF "APPL????" "$MCP_HELPER_APP/Contents/PkgInfo"
+test ! -e "$WIDGET_APPEX/Contents/PkgInfo"
+# Xcode omits Contents/Frameworks when a product embeds no framework or dylib.
+# An empty one would ship as a structural deviation, so reject it while still
+# allowing a build that genuinely stages something there.
+if [[ -d "$APP_BUNDLE/Contents/Frameworks" ]] &&
+  [[ -z "$(ls -A "$APP_BUNDLE/Contents/Frameworks")" ]]; then
+  echo "staged app carries an empty Contents/Frameworks directory" >&2
+  exit 1
+fi
 for required_bundle in \
   "LorvexApple_LorvexCore.bundle" \
   "LorvexAppleCore_LorvexSync.bundle"

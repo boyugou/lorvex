@@ -56,6 +56,7 @@ struct MobileHabitBatchActionBar: View {
           .frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
+        .mobileDestructiveBorderedStyle()
         .disabled(!canDelete || isMutating)
       }
     }

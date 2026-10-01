@@ -11,59 +11,67 @@
 /// / `overdueFormat` take a `%@` (the priority code or relative due label) and
 /// `minutesFormat` takes a `%lld` (the estimate). A surface that uses native
 /// String Catalog pluralization can instead provide `minutesText`; the format
-/// remains as a compatibility fallback for callers and tests. `statusName`
-/// maps a status to its localized display word.
+/// remains as a compatibility fallback for callers and tests. `repeatsWord` is
+/// spoken for a repeating task, and `statusName` maps a status to its
+/// localized display word.
 public struct TaskAccessibilityVocabulary: Sendable {
-  public var focusedTask: String
   public var priorityTaskFormat: String
   public var minutesFormat: String
   public var minutesText: (@Sendable (Int) -> String)?
   public var dueFormat: String
   public var overdueFormat: String
+  public var repeatsWord: String
   public var statusName: @Sendable (LorvexTask.Status) -> String
 
   public init(
-    focusedTask: String = "Focused task",
     priorityTaskFormat: String = "%@ task",
     minutesFormat: String = "%lld minutes",
     minutesText: (@Sendable (Int) -> String)? = nil,
     dueFormat: String = "due %@",
     overdueFormat: String = "overdue %@",
+    repeatsWord: String = "repeats",
     statusName: @escaping @Sendable (LorvexTask.Status) -> String = { $0.rawValue }
   ) {
-    self.focusedTask = focusedTask
     self.priorityTaskFormat = priorityTaskFormat
     self.minutesFormat = minutesFormat
     self.minutesText = minutesText
     self.dueFormat = dueFormat
     self.overdueFormat = overdueFormat
+    self.repeatsWord = repeatsWord
     self.statusName = statusName
   }
 }
 
-/// Returns a VoiceOver-ready label for a task row, combining priority, title, status,
-/// estimated duration, due date, and tags into a single spoken description.
+/// Returns a VoiceOver-ready label for a task row: its priority, title, and
+/// status, then the facts the row shows — its time on the day, what the row
+/// adds beyond the task's own fields, the estimate, the due date, whether it
+/// repeats, and its tags.
 ///
-/// Example (English): "P1 task: Write release notes: open, 30 minutes, due tomorrow, #writing"
+/// Example (English): "P1 task: Write release notes: open, 9:45 – 10:30 AM,
+/// 30 minutes, due tomorrow, repeats, #writing"
 ///
-/// Pass a localized `vocabulary` to have the connective words spoken in the
-/// user's language; the default reproduces English.
+/// `timeLabel` is the task's time on the surface's day, which leads the row's
+/// metadata on Today. `details` are what the row shows beyond the task's own
+/// fields — its status chips, a blocked badge, its list on a cross-list
+/// surface — already localized and in the row's order. Pass a localized
+/// `vocabulary` to have the connective words spoken in the user's language;
+/// the default reproduces English.
 public func taskAccessibilityLabel(
   _ task: LorvexTask,
-  isFocused: Bool = false,
-  vocabulary: TaskAccessibilityVocabulary = TaskAccessibilityVocabulary()
+  vocabulary: TaskAccessibilityVocabulary = TaskAccessibilityVocabulary(),
+  timeLabel: String? = nil,
+  details: [String] = []
 ) -> String {
   var parts: [String] = []
-
-  if isFocused {
-    parts.append(vocabulary.focusedTask)
-  } else {
-    parts.append(String(format: vocabulary.priorityTaskFormat, task.priority.rawValue))
-  }
+  parts.append(String(format: vocabulary.priorityTaskFormat, task.priority.rawValue))
 
   parts.append(task.title)
 
   var attributes: [String] = [vocabulary.statusName(task.status)]
+  if let timeLabel {
+    attributes.append(timeLabel)
+  }
+  attributes.append(contentsOf: details)
   if let minutes = task.estimatedMinutes {
     attributes.append(
       vocabulary.minutesText?(minutes) ?? String(format: vocabulary.minutesFormat, minutes))
@@ -72,22 +80,15 @@ public func taskAccessibilityLabel(
     attributes.append(
       String(format: task.isOverdue() ? vocabulary.overdueFormat : vocabulary.dueFormat, dueLabel))
   }
+  if task.recurrence != nil {
+    attributes.append(vocabulary.repeatsWord)
+  }
   for tag in task.tags {
     attributes.append("#\(tag)")
   }
   parts.append(attributes.joined(separator: ", "))
 
   return parts.joined(separator: ": ")
-}
-
-/// Returns a VoiceOver-ready value string for a task count badge.
-///
-/// Example: "3 tasks in focus" or "1 task in focus"
-/// VoiceOver value for the focus-count badge. `format` is a localized template
-/// taking `%lld` (the count); nil reproduces the English "N task(s) in focus".
-public func focusTaskCountAccessibilityValue(_ count: Int, format: String? = nil) -> String {
-  if let format { return String(format: format, count) }
-  return count == 1 ? "1 task in focus" : "\(count) tasks in focus"
 }
 
 /// Returns a VoiceOver-ready accessibility label for a menu-bar icon-only action button.
@@ -125,12 +126,12 @@ public func habitActionAccessibilityLabel(isComplete: Bool) -> String {
 
 // MARK: - Memory entry accessibility helpers
 
-/// Returns a VoiceOver-ready label for a memory entry row combining key and
-/// content.
+/// Returns a VoiceOver-ready label for a memory entry row combining the
+/// entry's title (``MemoryEntry/displayTitle``) and content.
 ///
-/// Example: "project_goal: Ship v1 by Q3"
+/// Example: "Project goal: Ship v1 by Q3"
 public func memoryEntryAccessibilityLabel(_ entry: MemoryEntry) -> String {
-  "\(entry.key): \(entry.content)"
+  "\(entry.displayTitle): \(entry.content)"
 }
 
 // MARK: - Calendar event accessibility helpers
@@ -152,18 +153,16 @@ public func calendarEventAccessibilityLabel(
 
 // MARK: - List accessibility helpers
 
-/// Returns a VoiceOver-ready label for a list catalog row combining name and task counts.
-///
-/// Example: "Work: 4 open tasks, 10 total"
-/// VoiceOver label for a list catalog row. `format` is a localized positional
-/// template taking `%1$@` (name), `%2$lld` (open count), `%3$lld` (total); nil
-/// reproduces the English "Name: N open task(s), M total" (with the English
-/// singular/plural of "task").
+/// A VoiceOver label for a list catalog row: the list's shown name
+/// (``LorvexList/displayName``) and its task counts, e.g. "Work: 4 open tasks,
+/// 10 total". `format` is a localized positional template taking `%1$@`
+/// (name), `%2$lld` (open count), and `%3$lld` (total); nil reproduces the
+/// English label with the English singular/plural of "task".
 public func listAccessibilityLabel(_ list: LorvexList, format: String? = nil) -> String {
   if let format {
-    return String(format: format, list.name, list.openCount, list.totalCount)
+    return String(format: format, list.displayName, list.openCount, list.totalCount)
   }
-  return "\(list.name): \(list.openCount) open task\(list.openCount == 1 ? "" : "s"), \(list.totalCount) total"
+  return "\(list.displayName): \(list.openCount) open task\(list.openCount == 1 ? "" : "s"), \(list.totalCount) total"
 }
 
 // MARK: - Review accessibility helpers

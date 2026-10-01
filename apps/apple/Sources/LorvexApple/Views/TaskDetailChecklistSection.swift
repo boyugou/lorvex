@@ -72,10 +72,7 @@ extension TaskDetailView {
               .isEmpty
           )
         }
-        .padding(.horizontal, LorvexDesign.Spacing.s)
-        .padding(.vertical, LorvexDesign.Spacing.xs)
-        .frame(maxWidth: .infinity)
-        .background(.quaternary.opacity(totalCount == 0 ? 0.05 : 0.08), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+        .lorvexInsetPanel(padding: LorvexDesign.Spacing.s)
         .accessibilityIdentifier(totalCount == 0 ? "task.detail.checklist.emptyInput" : "task.detail.checklist.newRow")
 
         if task.checklistItems.isEmpty {
@@ -86,7 +83,7 @@ extension TaskDetailView {
             bundle: LorvexL10n.bundle
           ))
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.tertiary)
+          .foregroundStyle(.secondary)
           .padding(.horizontal, LorvexDesign.Spacing.s)
           .accessibilityIdentifier("task.detail.checklist.empty")
         }
@@ -113,6 +110,16 @@ extension TaskDetailView {
 /// fallback. Edits save automatically on Return or when the field loses focus —
 /// there is no explicit save control. Delete lives in the right-click menu, not
 /// a persistent trailing button, to keep the row uncluttered.
+///
+/// A completed item reads from the filled green check and dimmed text. It is
+/// not struck through: `.strikethrough` does not reach an editable field's
+/// content, and rendering the text as a `Text` until it is clicked would cost
+/// inline click-to-edit and Tab traversal between items.
+///
+/// The text colours are explicit `Color` values, not the hierarchical
+/// `.primary` / `.secondary` shape styles: inside a macOS `TextField` those two
+/// resolve to the same mid-grey, which both flattened the completed state and
+/// left open items below full text contrast.
 private struct ChecklistItemRow: View {
   @Bindable var store: AppStore
   let item: TaskChecklistItem
@@ -124,14 +131,11 @@ private struct ChecklistItemRow: View {
   @State private var isHovering = false
   @State private var isDropTargeted = false
 
-  private var isDirty: Bool {
-    let draft = store.taskDetailChecklistDrafts[item.id] ?? item.text
-    return draft != item.text
-  }
-
-  private var rowBackgroundOpacity: Double {
-    if item.completedAt != nil { return 0.16 }
-    return isDirty ? 0.34 : 0.22
+  /// Every item row carries the same nested-group fill, so the checklist reads
+  /// as a list of rows rather than loose text under the new-item field.
+  /// Completion is stated by the check and the text colour, not by the fill.
+  private var rowFill: Color {
+    isHovering ? LorvexDesign.Palette.hoverFill : LorvexDesign.Palette.insetFill
   }
 
   var body: some View {
@@ -142,7 +146,7 @@ private struct ChecklistItemRow: View {
       } label: {
         Image(systemName: item.completedAt == nil ? "circle" : "checkmark.circle.fill")
           .contentTransition(.symbolEffect(.replace))
-          .foregroundStyle(item.completedAt == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.green))
+          .foregroundStyle(item.completedAt == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(LorvexDesign.Palette.done))
       }
       .buttonStyle(.plain)
       .help(item.completedAt == nil
@@ -157,15 +161,22 @@ private struct ChecklistItemRow: View {
         : LocalizedStringResource("task_detail.checklist.completed_a11y", defaultValue: "Completed", table: "Localizable", bundle: LorvexL10n.bundle)))
       .accessibilityAddTraits(item.completedAt == nil ? [] : .isSelected)
 
+      // Wrapping, not scrolling: a plain single-line field clips its overflow at
+      // the frame edge with no ellipsis, so in the inspector's narrow column an
+      // ordinary item such as "Confirm session topics with the facilitators"
+      // was readable only by clicking into it and scrolling. The same
+      // `axis: .vertical` shape carries the task title in this inspector.
       TextField(
         String(localized: "task_detail.checklist.item_placeholder", defaultValue: "Checklist item", table: "Localizable", bundle: LorvexL10n.bundle),
-        text: store.checklistDraftBinding(for: item)
+        text: store.checklistDraftBinding(for: item),
+        axis: .vertical
       )
         .font(LorvexDesign.Typography.primaryText)
         .textFieldStyle(.plain)
-        .foregroundStyle(item.completedAt == nil ? .primary : .secondary)
-        .strikethrough(item.completedAt != nil)
-        .frame(minWidth: 0, maxWidth: .infinity)
+        .foregroundStyle(item.completedAt == nil ? Color.primary : Color.secondary)
+        .lineLimit(1...3)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
         .layoutPriority(1)
         .accessibilityLabel(String(localized: "task_detail.checklist.item_a11y", defaultValue: "Checklist item", table: "Localizable", bundle: LorvexL10n.bundle))
         .focused($isFieldFocused)
@@ -182,7 +193,7 @@ private struct ChecklistItemRow: View {
     .padding(.horizontal, LorvexDesign.Spacing.s)
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .frame(maxWidth: .infinity)
-    .background(.quaternary.opacity(rowBackgroundOpacity), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+    .background(rowFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
     .overlay {
       if isDropTargeted {
         RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)

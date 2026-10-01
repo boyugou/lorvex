@@ -97,6 +97,9 @@ struct InstallIdentityReconcileTests {
     let retired = try checkpoint("retired_device_ids", at: dbPath)
     let reseed = try checkpoint("reseed_required", at: dbPath)
     let markerId = ManagedInstallIdentity.read(forDatabase: dbPath)
+    #expect(
+      try checkpoint("db_instance_id", at: dbPath) != nil,
+      "rotation stamps a fresh database instance id")
     #expect(rotatedId != originalId, "a restored DB with an absent marker rotates to a fresh id")
     #expect(
       retired == originalId, "the pre-rotation id is retired so the HLC clock stays self-monotonic")
@@ -107,37 +110,30 @@ struct InstallIdentityReconcileTests {
   }
 
   @Test
-  func restoredDbRotatesBeforeItsFirstCloudTraversalIdentityRead() async throws {
+  func restoredDbRotatesBeforeTheTransportsFirstCheckpointRead() async throws {
     let (env, dbPath, root) = try makeManagedEnv()
     defer { try? FileManager.default.removeItem(at: root) }
 
-    let originalDatabaseId = try await SwiftLorvexCoreService.$dbLocatorEnvironmentOverride
-      .withValue(env) {
-        let first = SwiftLorvexCoreService(databasePath: nil)
-        _ = try await first.setPreference(key: "theme", value: "system")
-        return try #require(try first.databaseInstanceIdentifier())
-      }
+    try await SwiftLorvexCoreService.$dbLocatorEnvironmentOverride.withValue(env) {
+      let first = SwiftLorvexCoreService(databasePath: nil)
+      _ = try await first.setPreference(key: "theme", value: "system")
+    }
     let originalDeviceId = try #require(try checkpoint("device_id", at: dbPath))
 
     // A restore carries the database identities but not this backup-excluded
-    // marker. Cloud sync asks for databaseInstanceIdentifier() before any user
-    // mutation, so that call itself must perform reconciliation.
+    // marker. The transport reads a checkpoint before any user mutation, so
+    // that read itself must perform reconciliation.
     try FileManager.default.removeItem(
       atPath: ManagedInstallIdentity.markerPath(forDatabase: dbPath))
-    #expect(ManagedInstallIdentity.readMarkerState(forDatabase: dbPath) == .absent)
 
-    let returnedDatabaseId = try SwiftLorvexCoreService.$dbLocatorEnvironmentOverride
-      .withValue(env) {
-        let restored = SwiftLorvexCoreService(databasePath: nil)
-        // Deliberately the restored service's first and only operation.
-        return try #require(try restored.databaseInstanceIdentifier())
-      }
+    try SwiftLorvexCoreService.$dbLocatorEnvironmentOverride.withValue(env) {
+      let restored = SwiftLorvexCoreService(databasePath: nil)
+      // Deliberately the restored service's first and only operation.
+      _ = try restored.cloudSyncEngineCheckpoint(.zoneEstablished)
+    }
 
     let rotatedDeviceId = try #require(try checkpoint("device_id", at: dbPath))
-    let rotatedDatabaseId = try #require(try checkpoint("db_instance_id", at: dbPath))
     #expect(rotatedDeviceId != originalDeviceId)
-    #expect(rotatedDatabaseId != originalDatabaseId)
-    #expect(returnedDatabaseId == rotatedDatabaseId)
     #expect(try checkpoint("retired_device_ids", at: dbPath) == originalDeviceId)
     #expect(try checkpoint("reseed_required", at: dbPath) == "true")
     #expect(ManagedInstallIdentity.read(forDatabase: dbPath) == rotatedDeviceId)
@@ -316,7 +312,8 @@ struct InstallIdentityReconcileTests {
       .deletingLastPathComponent()  // repo root
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
 
     let oldId = "old-device-aaaaaaaa"
     let newId = "new-device-bbbbbbbb"

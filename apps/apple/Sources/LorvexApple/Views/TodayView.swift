@@ -3,274 +3,102 @@ import SwiftUI
 
 struct TodayView: View {
   @Bindable var store: AppStore
-  /// "HH:MM–HH:MM" window for the propose tooltip; loaded once per appearance.
-  @State private var workingHoursText: String?
-  @State private var isShowingClearConfirmation = false
-
-  private var todayEmptyState: LorvexEmptyStateModel {
-    if store.hasActiveSearch {
-      return LorvexEmptyStateModel(
-        title: String(
-          localized: "today.empty.search_title", defaultValue: "No Results Today",
-          table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "today.empty.search_description",
-          defaultValue: "No focus or today tasks match the current search.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "magnifyingglass",
-        tint: .secondary,
-        chips: [
-          LorvexEmptyStateChip(
-            title: store.searchText,
-            systemImage: "text.magnifyingglass",
-            tint: .accentColor
-          )
-        ],
-        action: LorvexEmptyStateAction(
-          title: String(
-            localized: "common.clear_search", defaultValue: "Clear Search", table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          systemImage: "xmark.circle"
-        ) {
-          store.searchText = ""
-        }
-      )
-    }
-
-    return LorvexEmptyStateModel(
-      title: String(
-        localized: "today.empty.no_tasks_title", defaultValue: "No Tasks Today",
-        table: "Localizable", bundle: LorvexL10n.bundle),
-      message: String(
-        localized: "today.empty.no_tasks_description",
-        defaultValue: "Capture a task or load a Lorvex database to start planning.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ),
-      systemImage: "checklist",
-      tint: .accentColor,
-      chips: [],
-      action: LorvexEmptyStateAction(
-        title: AppCommand.newTask.title,
-        systemImage: AppCommand.newTask.systemImage,
-        style: .primary
-      ) {
-        store.requestQuickAddFocus()
-      }
-    )
-  }
+  @Environment(\.undoManager) private var undoManager
 
   var body: some View {
     VStack(spacing: 0) {
-      TodayHeaderView(store: store) {
-        if focusStats.hasHeaderActions {
-          TodayScheduleControls(
-            stats: focusStats,
-            proposeSchedule: { Task { await store.proposeFocusSchedule() } },
-            workingHoursText: workingHoursText,
-            saveSchedule: { Task { await store.saveProposedFocusSchedule() } },
-            clear: { isShowingClearConfirmation = true }
-          )
-        }
-      }
-      Divider()
-      if store.focusWorkspaceSelectionCount > 1 {
+      if store.todaySelectionCount > 1 {
         todaySelectionBar
         Divider()
       }
-      WorkspaceReviewList(taskNavigation: store.arrowKeyTaskNavigation(on: .focus)) {
-        QuickAddRow(
-          placeholder: String(
-            localized: "today.quick_add.placeholder", defaultValue: "Add a task for today",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          isCreating: store.isCreating,
-          focusToken: store.quickAddFocusToken
-        ) { title in
-          await store.createTaskPlannedToday(title: title)
-        }
-        .padding(.horizontal, LorvexDesign.Spacing.m)
-        .padding(.top, LorvexDesign.Spacing.s)
-
-        // Today opens with the day's fixed commitments — the schedule frames the
-        // free time the rest of Today fills in. Shown only while no focus
-        // timeline exists; once a schedule is proposed/saved these events are
-        // folded into it (see `showsStandaloneTodaySchedule`).
-        if store.showsStandaloneTodaySchedule {
-          TodayScheduleSection(events: store.todayScheduleEvents)
-        }
-
-        if let proposed = store.proposedFocusSchedule {
-          FocusScheduleSection(
-            title: String(
-              localized: "focus.workspace.proposed_schedule", defaultValue: "Proposed Schedule",
-              table: "Localizable", bundle: LorvexL10n.bundle),
-            schedule: proposed
-          )
-        } else if let schedule = store.focusSchedule {
-          FocusScheduleSection(
-            title: String(
-              localized: "focus.workspace.saved_schedule", defaultValue: "Saved Schedule",
-              table: "Localizable", bundle: LorvexL10n.bundle),
-            schedule: schedule
-          )
-        }
-
-        if !store.filteredInProgressTodayTasks.isEmpty {
-          VStack(alignment: .leading, spacing: 0) {
-            WorkspaceTaskSectionHeader(
-              title: String(
-                localized: "today.section.in_progress", defaultValue: "In Progress",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle),
-              count: store.filteredInProgressTodayTasks.count,
-              systemImage: "play.fill",
-              tint: .accentColor,
-              topSpacing: LorvexDesign.Spacing.s
-            )
-            .padding(.horizontal, LorvexDesign.Spacing.l)
-
-            ForEach(store.filteredInProgressTodayTasks) { task in
-              TodayTaskRow(task: task, store: store)
-                .padding(.horizontal, LorvexDesign.Spacing.m)
-            }
+      TimelineView(.everyMinute) { _ in
+        let nowMinutes = store.nowMinutesInProductDay
+        ScrollViewReader { scroll in
+          ScrollView {
+            mainColumn(page: store.calmToday, nowMinutes: nowMinutes)
           }
+          .workspaceTaskArrowKeyNavigation(
+            store.arrowKeyTaskNavigation(on: .today), proxy: scroll)
         }
-
-        if !store.filteredFocusedTasks.isEmpty {
-          VStack(alignment: .leading, spacing: 0) {
-            WorkspaceTaskSectionHeader(
-              title: String(
-                localized: "today.section.focus_plan", defaultValue: "Focus Plan",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle),
-              count: store.filteredFocusedTasks.count,
-              systemImage: "scope",
-              tint: .accentColor,
-              topSpacing: store.filteredInProgressTodayTasks.isEmpty
-                ? LorvexDesign.Spacing.s : LorvexDesign.Spacing.m
-            )
-            .padding(.horizontal, LorvexDesign.Spacing.l)
-
-            ForEach(store.filteredFocusedTasks) { task in
-              TodayTaskRow(task: task, store: store, isFocused: true)
-                .padding(.horizontal, LorvexDesign.Spacing.m)
-            }
-          }
-        }
-
-        if !store.filteredRemainingTodayTasks.isEmpty {
-          VStack(alignment: .leading, spacing: 0) {
-            WorkspaceTaskSectionHeader(
-              title: String(
-                localized: "today.section.next_up", defaultValue: "Next Up",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle),
-              count: store.filteredRemainingTodayTasks.count,
-              systemImage: "list.bullet",
-              tint: .secondary,
-              topSpacing: store.filteredFocusedTasks.isEmpty
-                && store.filteredInProgressTodayTasks.isEmpty
-                ? LorvexDesign.Spacing.s : LorvexDesign.Spacing.m
-            )
-            .padding(.horizontal, LorvexDesign.Spacing.l)
-
-            ForEach(store.filteredRemainingTodayTasks) { task in
-              TodayTaskRow(task: task, store: store)
-                .padding(.horizontal, LorvexDesign.Spacing.m)
-            }
-          }
-        }
+        .background(alignment: .top) { sky(nowMinutes) }
       }
-      .cancelSelectedTaskOnDelete(store, on: .focus)
+      .cancelSelectedTaskOnDelete(store, on: .today)
       .dropDestination(for: LorvexTaskRef.self) { refs, _ in
         let ids = refs.map(\.id)
         guard !ids.isEmpty else { return false }
-        // Batch all dropped IDs into one core call so concurrent single-item
-        // addToCurrentFocus Tasks can't overwrite each other's currentFocus result.
-        Task { await store.addTasksToCurrentFocus(ids: ids) }
+        // One batch write for the whole drop, so the dropped tasks land on
+        // today together.
+        Task { await store.planTasksForToday(ids: ids) }
         return true
       }
-      .overlay {
-        // Show an empty state only when nothing actually renders in the list.
-        // `hasVisibleTodayTasks` (not `today.tasks`) is the correct signal: a
-        // focused task that isn't due today still renders in the Focus section
-        // while `today.tasks` is empty, and a today task that resolves into
-        // neither partition leaves both sections empty while `today.tasks` is not.
-        if !store.hasVisibleTodayTasks
-          && !store.showsStandaloneTodaySchedule
-          && store.proposedFocusSchedule == nil
-          && store.focusSchedule == nil
-        {
-          LorvexEmptyStatePanel(model: todayEmptyState)
-        }
-      }
-    }
-    .confirmationDialog(
-      String(
-        localized: "focus.workspace.clear_confirm.title", defaultValue: "Clear current focus plan?",
-        table: "Localizable", bundle: LorvexL10n.bundle),
-      isPresented: $isShowingClearConfirmation,
-      titleVisibility: .visible
-    ) {
-      Button(
-        String(
-          localized: "focus.workspace.clear_confirm.clear", defaultValue: "Clear Focus Plan",
-          table: "Localizable", bundle: LorvexL10n.bundle), role: .destructive
-      ) {
-        Task { await store.clearCurrentFocus() }
-      }
-      Button(
-        String(
-          localized: "common.keep", defaultValue: "Keep", table: "Localizable",
-          bundle: LorvexL10n.bundle), role: .cancel
-      ) {}
-    } message: {
-      Text(
-        String(
-          localized: "focus.workspace.clear_confirm.message",
-          defaultValue:
-            "Removes all \(store.currentFocusTaskCount) tasks from the current focus plan and clears its time-block schedule. The tasks themselves are not deleted.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle))
     }
     .navigationTitle(String(localized: store.selection.macOSLocalizedTitle))
+    .toolbar {
+      if hasOpenTasks {
+        TodayScheduleToolbar(
+          canClear: hasTimedTasks,
+          workingHours: store.workdayWindow,
+          suggest: { Task { await store.suggestDayTimes() } },
+          clear: { Task { await store.clearDayTimes(undoManager: undoManager) } }
+        )
+      }
+    }
     .lorvexOpenDestinationActivity(selection: .today, isActive: store.selection == .today)
     .task {
-      async let schedule: Void = store.loadFocusSchedule()
       async let todaySchedule: Void = store.loadTodaySchedule()
-      let hours = await store.loadWorkingHoursPreference()
-      workingHoursText = "\(hours.start)–\(hours.end)"
-      _ = await schedule
+      async let doneCount: Void = store.loadDoneTodayCount()
+      await store.loadWorkdayWindow()
       _ = await todaySchedule
+      _ = await doneCount
+    }
+    .onChange(of: store.today) {
+      Task { await store.loadDoneTodayCount() }
     }
   }
 
-  private var focusStats: FocusWorkspaceStats {
-    FocusWorkspaceStats(
-      canProposeSchedule: store.currentFocusTaskCount > 0,
-      canSaveSchedule: store.proposedFocusSchedule != nil
-    )
+  private func mainColumn(page: LorvexCalmToday, nowMinutes: Int?) -> some View {
+    TodayColumn(store: store, page: page, nowMinutes: nowMinutes)
+      .padding(.horizontal, LorvexDesign.Spacing.xl + 16)
+      .padding(.top, LorvexDesign.Spacing.xl)
+      .padding(.bottom, LorvexDesign.Spacing.xl)
+      .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  /// Batch-action bar shown when one or more Today tasks are multi-selected.
-  /// Reuses the same selection set and menu as the Focus workspace (Today's rows
-  /// toggle into `focusWorkspaceSelectedTaskIDs`), so a selection started here
-  /// gets the full complete / defer / move / cancel / reopen / focus actions.
+  /// The wash behind the main column. It runs up under the toolbar to the
+  /// window's top edge, so the column reads as part of the window rather than
+  /// a panel set below a blank band; the toolbar's controls float over it.
+  private func sky(_ nowMinutes: Int?) -> some View {
+    LorvexSkyWash(nowMinutes: nowMinutes)
+      .frame(height: 320)
+      .ignoresSafeArea(edges: .top)
+  }
+
+  /// Today holds unfinished tasks, so there is something to suggest times for.
+  private var hasOpenTasks: Bool {
+    today.tasks.contains { $0.status.isActionable }
+  }
+
+  /// Some unfinished task on today has a time, so there are times to clear.
+  private var hasTimedTasks: Bool {
+    today.tasks.contains { $0.status.isActionable && $0.time(on: store.logicalTodayDateString) != nil }
+  }
+
+  private var today: TodaySnapshot { store.today }
+
+  /// Batch-action bar shown when more than one Today task is selected: the
+  /// complete, defer, move, cancel, and reopen actions over the selection.
   private var todaySelectionBar: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
-      FocusSelectionActionMenu(store: store)
+      TodaySelectionActionMenu(store: store)
       Button {
-        store.setFocusWorkspaceSelection([])
+        store.setTodaySelection([])
       } label: {
         Label(
           String(
             localized: "common.clear", defaultValue: "Clear", table: "Localizable",
             bundle: LorvexL10n.bundle), systemImage: "xmark.circle")
       }
-      .buttonStyle(.lorvexNeutral)
+      .buttonStyle(.bordered)
       .accessibilityIdentifier("today.selection.clear")
       Spacer(minLength: 0)
     }
@@ -282,29 +110,43 @@ struct TodayView: View {
 
 }
 
-private struct TodayTaskRow: View {
+/// A Today task row: the shared selectable row wired to Today's selection
+/// surface, with the hover Start and Defer controls.
+struct TodayTaskRow: View {
   let task: LorvexTask
   @Bindable var store: AppStore
-  var isFocused = false
+  /// Marks a row whose dependencies are still open. The row stays interactive —
+  /// the user may still want to open it or push it to another day — so this is a
+  /// warning, not a disabled state.
+  var isBlocked = false
+  /// See ``LorvexTaskRow/timeLabel``.
+  var timeLabel: String? = nil
+  /// See ``LorvexTaskRow/timeIsRunning``.
+  var timeIsRunning = false
+  /// See ``LorvexTaskRow/chips``.
+  var chips: [LorvexTaskRowChip] = []
 
   private var isBatchSelected: Bool {
-    store.focusWorkspaceSelectedTaskIDs.contains(task.id)
+    store.todaySelectedTaskIDs.contains(task.id)
   }
 
   var body: some View {
     WorkspaceSelectableTaskRow(
       task: task,
       store: store,
-      selectionSurface: .focus,
+      selectionSurface: .today,
       isBatchSelected: isBatchSelected,
       batchAccessibilityIdentifier: "today.row.batchSelect.\(task.id)",
-      toggleBatchSelection: { store.toggleFocusWorkspaceTaskBatchSelection(task.id) },
-      openTask: { store.selectOnlyFocusWorkspaceTask(task.id) },
-      isFocused: isFocused,
+      toggleBatchSelection: { store.toggleTodayTaskBatchSelection(task.id) },
+      openTask: { store.selectOnlyTodayTask(task.id) },
+      isBlocked: isBlocked,
       // Today mixes tasks from every list, so each row shows its owning list.
       showsOwningList: true,
-      // Pushing a task to another day is the dominant inline action on Today.
-      showsDeferButton: true
+      // Starting and deferring are the day's own verbs, one hover away.
+      showsTodayActions: true,
+      timeLabel: timeLabel,
+      timeIsRunning: timeIsRunning,
+      chips: chips
     )
   }
 }

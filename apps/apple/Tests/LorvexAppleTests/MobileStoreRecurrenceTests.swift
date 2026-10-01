@@ -8,7 +8,11 @@ func mobileStoreBuildsAndSavesTaskRecurrence() async throws {
   let store = MobileStore(core: try await makeSeededInMemoryCore())
 
   await store.refresh()
-  let taskID = try #require(store.selectedTaskID)
+  // Pin the subject: the seeded status-update task already carries a weekly rule,
+  // and starting from it would make the day toggles below clear its day instead
+  // of building a fresh rule. The agenda task is rule-free by construction.
+  let taskID = LorvexPreviewSeedID.agendaTask
+  store.selectTask(taskID)
   store.beginRecurrenceEditing()
   #expect(!store.taskDetailRecurrenceCanSave)
 
@@ -111,7 +115,7 @@ func mobileStorePreservesCompletionAnchor() async throws {
 @MainActor
 @Test
 func mobileStoreNoOpRecurrenceSaveDoesNotWrite() async throws {
-  let stub = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let stub = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: stub)
   await store.refresh()
   store.beginRecurrenceEditing()
@@ -155,10 +159,12 @@ func mobileStoreSeedsAndRemovesExistingRecurrence() async throws {
 @MainActor
 @Test
 func mobileStoreRecurrenceSaveDoesNotReloadPlanningSnapshots() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core)
 
   await store.refresh()
+  // Rule-free subject, so the saved rule is exactly what this test set.
+  store.selectTask(LorvexPreviewSeedID.agendaTask)
   let listLoads = core.loadListsCallCount
   let habitLoads = core.loadHabitsCallCount
   let calendarLoads = core.loadCalendarTimelineCallCount
@@ -173,6 +179,8 @@ func mobileStoreRecurrenceSaveDoesNotReloadPlanningSnapshots() async throws {
   #expect(core.loadListsCallCount == listLoads)
   #expect(core.loadHabitsCallCount == habitLoads)
   #expect(core.loadCalendarTimelineCallCount == calendarLoads)
-  #expect(store.selectedTask?.recurrence == TaskRecurrenceRule(freq: .weekly, interval: 2))
+  #expect(
+    store.resolveTask(LorvexPreviewSeedID.agendaTask)?.recurrence
+      == TaskRecurrenceRule(freq: .weekly, interval: 2))
   #expect(store.errorMessage == nil)
 }

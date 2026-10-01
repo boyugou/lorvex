@@ -1,6 +1,12 @@
+import EventKit
 import LorvexCore
 import SwiftUI
 
+/// The "Calendars to Mirror" disclosure: which of the user's calendars Lorvex
+/// reads. The calendar list reloads each time the disclosure opens and whenever
+/// the calendar database changes, so a calendar added in another app appears
+/// without a refresh action; a reload keeps the current rows on screen, and
+/// only the first load shows progress.
 struct EventKitCalendarFilterPicker: View {
   @Bindable var settings: AppSettingsStore
   @Bindable var store: AppStore
@@ -22,7 +28,7 @@ struct EventKitCalendarFilterPicker: View {
       withAnimation(.snappy(duration: 0.2)) { expanded.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.s) {
-        Label(String(localized: "settings.calendar.filter.title", defaultValue: "Calendars to Mirror", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "calendar.badge.checkmark")
+        Text(String(localized: "settings.calendar.filter.title", defaultValue: "Calendars to Mirror", table: "Localizable", bundle: LorvexL10n.bundle))
         Spacer(minLength: 0)
         Image(systemName: "chevron.right")
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
@@ -34,7 +40,13 @@ struct EventKitCalendarFilterPicker: View {
     .buttonStyle(.plain)
     .accessibilityIdentifier("settings.calendar.filterToggle")
     .accessibilityAddTraits(.isHeader)
-    .task { await loadCalendarsIfNeeded() }
+    .task {
+      await loadCalendarsIfNeeded()
+      // The loop ends when the task is cancelled, as the picker leaves the page.
+      for await _ in NotificationCenter.default.notifications(named: .EKEventStoreChanged) {
+        await loadCalendars()
+      }
+    }
     .onChange(of: settings.eventKitEnabled) { _, enabled in
       guard enabled else {
         calendars = []
@@ -44,7 +56,11 @@ struct EventKitCalendarFilterPicker: View {
       Task { await loadCalendars() }
     }
     .onChange(of: expanded) { _, isExpanded in
-      if !isExpanded { flushPendingFilterRefresh() }
+      if isExpanded {
+        Task { await loadCalendars() }
+      } else {
+        flushPendingFilterRefresh()
+      }
     }
     .onDisappear { flushPendingFilterRefresh() }
 
@@ -54,11 +70,11 @@ struct EventKitCalendarFilterPicker: View {
         Text(LocalizedStringResource("settings.calendar.filter.only_selected", defaultValue: "Only Selected", table: "Localizable", bundle: LorvexL10n.bundle)).tag(EventKitCalendarFilterMode.onlySelected)
       }
       .pickerStyle(.segmented)
-      // Disabled while calendars load: switching to "Only Selected" seeds the
-      // include set from the loaded calendars (below), so switching before they
-      // load would seed an empty set — which now means "mirror nothing", not
-      // "mirror all" — and silently stop mirroring.
-      .disabled(isLoading)
+      // Disabled until the first load finishes: switching to "Only Selected"
+      // seeds the include set from the loaded calendars (below), so switching
+      // before they load would seed an empty set — which means "mirror
+      // nothing", not "mirror all" — and silently stop mirroring.
+      .disabled(isLoading && calendars.isEmpty)
       .accessibilityIdentifier("settings.eventkit.calendarFilterMode")
 
       calendarRows
@@ -66,19 +82,14 @@ struct EventKitCalendarFilterPicker: View {
       if let errorMessage {
         Text(errorMessage)
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.red)
+          .foregroundStyle(LorvexDesign.Palette.error)
       }
-
-      Button(String(localized: "settings.calendar.filter.refresh", defaultValue: "Refresh Calendars", table: "Localizable", bundle: LorvexL10n.bundle)) {
-        Task { await loadCalendars() }
-      }
-      .disabled(isLoading)
     }
   }
 
   @ViewBuilder
   private var calendarRows: some View {
-    if isLoading {
+    if isLoading && calendars.isEmpty {
       ProgressView()
         .controlSize(.small)
     } else if calendars.isEmpty {
@@ -88,7 +99,7 @@ struct EventKitCalendarFilterPicker: View {
     } else {
       ForEach(calendars) { calendar in
         Toggle(isOn: mirrorBinding(for: calendar.id)) {
-          VStack(alignment: .leading, spacing: 2) {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
             Text(calendar.title)
             if let source = calendar.sourceTitle {
               Text(source)

@@ -43,3 +43,71 @@ extension AppStore {
     }
   }
 }
+
+/// The common repeats the task detail's Repeat menu offers in one click; any
+/// other rule is made in the menu's Custom editor. Each is a fixed schedule:
+/// weekly repeats on the task's own weekday, and weekdays on Monday to Friday.
+enum TaskDetailRecurrencePreset: CaseIterable, Identifiable {
+  case daily, weekdays, weekly, biweekly, monthly, yearly
+
+  var id: Self { self }
+
+  fileprivate var frequency: TaskRecurrenceRule.Frequency {
+    switch self {
+    case .daily: .daily
+    case .weekdays, .weekly, .biweekly: .weekly
+    case .monthly: .monthly
+    case .yearly: .yearly
+    }
+  }
+
+  fileprivate var interval: Int { self == .biweekly ? 2 : 1 }
+
+  fileprivate var weekdays: Set<String> {
+    self == .weekdays ? ["MO", "TU", "WE", "TH", "FR"] : []
+  }
+
+  var title: String {
+    switch self {
+    case .daily:
+      String(localized: "recurrence.every_day", defaultValue: "Every day", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .weekdays:
+      String(localized: "recurrence.preset.weekdays", defaultValue: "Weekdays", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .weekly:
+      String(localized: "recurrence.every_week", defaultValue: "Every week", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .biweekly:
+      String(localized: "recurrence.every_n_weeks", defaultValue: "Every \(2) weeks", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .monthly:
+      String(localized: "recurrence.every_month", defaultValue: "Every month", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .yearly:
+      String(localized: "recurrence.every_year", defaultValue: "Every year", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
+}
+
+extension AppStore {
+  /// The preset the selected task's repeat draft matches, if any.
+  var taskDetailRecurrencePreset: TaskDetailRecurrencePreset? {
+    guard taskDetailHasRecurrence, taskDetailRecurrenceAnchor == .schedule else { return nil }
+    let interval = Int(taskDetailRecurrenceIntervalText.trimmingCharacters(in: .whitespaces)) ?? 1
+    return TaskDetailRecurrencePreset.allCases.first {
+      $0.frequency == taskDetailRecurrenceFrequency && $0.interval == interval
+        && $0.weekdays == taskDetailRecurrenceByDay
+    }
+  }
+
+  /// Sets the selected task's repeat to `preset` (nil stops it repeating) and
+  /// saves it, as one click in the Repeat menu.
+  func applyTaskDetailRecurrencePreset(_ preset: TaskDetailRecurrencePreset?) async {
+    if let preset {
+      taskDetailHasRecurrence = true
+      taskDetailRecurrenceAnchor = .schedule
+      taskDetailRecurrenceFrequency = preset.frequency
+      taskDetailRecurrenceIntervalText = String(preset.interval)
+      taskDetailRecurrenceByDay = preset.weekdays
+    } else {
+      taskDetailHasRecurrence = false
+    }
+    await saveSelectedTaskRecurrence()
+  }
+}

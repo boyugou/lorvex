@@ -28,17 +28,13 @@ struct TasksTableWorkspaceView: View {
     // Compute the list-name lookup once per render and thread it into the table,
     // rather than rebuilding the dictionary on every `body`/cell access.
     let listNames = Dictionary(
-      uniqueKeysWithValues: (store.lists?.lists ?? []).map { ($0.id, $0.name) })
+      uniqueKeysWithValues: (store.lists?.lists ?? []).map { ($0.id, $0.displayName) })
     return WorkspaceAuditLane {
       table(sortedTasks: tasks, listNames: listNames)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .frame(minHeight: TasksTableMetrics.minSurfaceHeight)
-        .background(.quaternary.opacity(0.05), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
-        .overlay {
-          RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-            .stroke(.separator.opacity(0.18), lineWidth: 0.5)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+        .lorvexInsetPanel(padding: 0)
+        .clipShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
         .accessibilityIdentifier("tasks.table.auditSurface")
     }
     .padding(.horizontal, LorvexDesign.Spacing.l)
@@ -161,8 +157,8 @@ private struct TaskTablePriorityCell: View {
     Text(TaskDisplayText.compactPriority(priority))
       .font(LorvexDesign.Typography.tertiaryText.monospaced().weight(.semibold))
       .foregroundStyle(priority.priorityTint)
-      .padding(.horizontal, 6)
-      .padding(.vertical, 2)
+      .padding(.horizontal, LorvexDesign.Spacing.sm)
+      .padding(.vertical, LorvexDesign.Spacing.xxs)
       .background(priority.priorityTint.opacity(0.10), in: Capsule())
       .accessibilityLabel(TaskDisplayText.priority(priority))
   }
@@ -183,7 +179,7 @@ private struct TaskTableTitleCell: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       Text(task.title)
         .font(LorvexDesign.Typography.primaryText)
         .foregroundStyle(isInactive ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
@@ -217,13 +213,13 @@ private struct TaskTableDueCell: View {
           .monospacedDigit()
       }
       .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(isOverdue ? AnyShapeStyle(.orange) : AnyShapeStyle(.secondary))
-      .padding(.horizontal, isOverdue ? 6 : 0)
-      .padding(.vertical, isOverdue ? 3 : 0)
+      .foregroundStyle(isOverdue ? AnyShapeStyle(LorvexDesign.Palette.overdue) : AnyShapeStyle(.secondary))
+      .padding(.horizontal, isOverdue ? LorvexDesign.Spacing.sm : 0)
+      .padding(.vertical, isOverdue ? LorvexDesign.Spacing.xxs : 0)
       .background {
         if isOverdue {
           Capsule()
-            .fill(.orange.opacity(0.10))
+            .fill(LorvexDesign.Palette.overdue.opacity(0.10))
         }
       }
       .accessibilityLabel(label)

@@ -125,8 +125,8 @@ base will remain materially broader than the model-eligible subset.
 
 The repository already has unusually strong prerequisites:
 
-- current platform declarations are macOS 15, iOS 18, watchOS 11, and visionOS
-  2, so OS 27 can be an availability-gated enhancement;
+- current platform declarations are macOS 15, iOS 18, and watchOS 11, so OS 27
+  can be an availability-gated enhancement;
 - tasks, lists, habits, calendar events, and memory already have stable App
   Entity identities;
 - the system-intent package exposes a broad set of reads and mutations;

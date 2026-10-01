@@ -346,6 +346,59 @@ final class ApplyTaskTests: XCTestCase {
     }
   }
 
+  /// A planned time is pre-validated against the task's planned date and the
+  /// minute-of-day range, so an incoherent pair drops as InvalidPayload
+  /// instead of tripping the schema CHECK.
+  func testIncoherentPlannedTimeRejectedAtApplyBoundary() throws {
+    let cases: [[String: JSONValue]] = [
+      // A time without a planned date.
+      ["planned_start_minutes": .int(540), "planned_end_minutes": .int(600)],
+      // A start without an end.
+      ["planned_date": .string("2026-04-01"), "planned_start_minutes": .int(540)],
+      // An empty range.
+      [
+        "planned_date": .string("2026-04-01"), "planned_start_minutes": .int(600),
+        "planned_end_minutes": .int(600),
+      ],
+      // An end past midnight.
+      [
+        "planned_date": .string("2026-04-01"), "planned_start_minutes": .int(600),
+        "planned_end_minutes": .int(1441),
+      ],
+    ]
+    for fields in cases {
+      try withDB { db in
+        XCTAssertThrowsError(try self.applyUpsert(db, self.minimalPayload(fields))) { err in
+          guard case let ApplyError.invalidPayload(msg) = err else {
+            return XCTFail("expected invalidPayload for \(fields), got \(err)")
+          }
+          XCTAssertTrue(msg.contains("planned time"), "got: \(msg)")
+        }
+        XCTAssertEqual(
+          try Int.fetchOne(
+            db, sql: "SELECT COUNT(*) FROM tasks WHERE id = ?", arguments: [Self.taskId]),
+          0)
+      }
+    }
+  }
+
+  func testPlannedTimeEndingAtMidnightApplies() throws {
+    try withDB { db in
+      try self.applyUpsert(
+        db,
+        self.minimalPayload([
+          "planned_date": .string("2026-04-01"), "planned_start_minutes": .int(1380),
+          "planned_end_minutes": .int(1440),
+        ]))
+      let row = try XCTUnwrap(
+        Row.fetchOne(
+          db, sql: "SELECT planned_start_minutes, planned_end_minutes FROM tasks WHERE id = ?",
+          arguments: [Self.taskId]))
+      XCTAssertEqual(row[0] as Int64?, 1380)
+      XCTAssertEqual(row[1] as Int64?, 1440)
+    }
+  }
+
   func testFutureRecurrenceWithoutCompanionsDefersWithoutPersistence() throws {
     try withDB { db in
       let remoteSchema = LorvexVersion.payloadSchemaVersion + 1
@@ -735,15 +788,6 @@ final class ApplyTaskTests: XCTestCase {
     try withDB { db in
       let taskId = "00000000-0000-7000-8000-000000000020"
       try self.seedTask(db, id: taskId, version: "1711234599000_0000_dec0000200000002")
-      try db.execute(
-        sql: """
-          INSERT INTO current_focus (date, version, created_at, updated_at)
-          VALUES ('2026-04-02', '1711234599000_0000_dec0000200000002',
-                  '2026-04-02T00:00:00.000Z', '2026-04-02T00:00:00.000Z')
-          """)
-      try db.execute(
-        sql: "INSERT INTO current_focus_items (date, position, task_id) VALUES ('2026-04-02', 0, ?)",
-        arguments: [taskId])
 
       let staleVersion = "1711234567000_0000_dec0000100000001"
       _ = try ApplyTask.applyTaskDelete(db, entityId: taskId, version: staleVersion, applyTs: "")
@@ -751,75 +795,6 @@ final class ApplyTaskTests: XCTestCase {
       let count = try Int64.fetchOne(
         db, sql: "SELECT COUNT(*) FROM tasks WHERE id = ?", arguments: [taskId])
       XCTAssertEqual(count, 1, "stale-version delete must NOT remove a newer local task row")
-      let focusCount = try Int64.fetchOne(
-        db, sql: "SELECT COUNT(*) FROM current_focus_items WHERE task_id = ?", arguments: [taskId])
-      XCTAssertEqual(focusCount, 1, "stale-version delete must NOT clean focus projections")
-    }
-  }
-
-  func testApplyTaskDeleteCleansFocusProjectionRowsAfterGatePasses() throws {
-    try withDB { db in
-      let taskId = "00000000-0000-7000-8000-000000000021"
-      let version = "1711234567000_0000_dec0000100000001"
-      try self.seedTask(db, id: taskId, version: version)
-      try db.execute(
-        sql: """
-          INSERT INTO current_focus (date, version, created_at, updated_at)
-          VALUES ('2026-04-02', ?, '2026-04-02T00:00:00.000Z',
-                  '2026-04-02T00:00:00.000Z')
-          """,
-        arguments: [version])
-      try db.execute(
-        sql: "INSERT INTO current_focus_items (date, position, task_id) VALUES ('2026-04-02', 0, ?)",
-        arguments: [taskId])
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule (date, version, created_at, updated_at)
-          VALUES ('2026-04-02', ?, '2026-04-02T00:00:00.000Z',
-                  '2026-04-02T00:00:00.000Z')
-          """,
-        arguments: [version])
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule_blocks
-              (date, position, block_type, start_minutes, end_minutes, task_id)
-          VALUES ('2026-04-02', 0, 'task', 540, 600, ?)
-          """,
-        arguments: [taskId])
-
-      let result = try ApplyTask.applyTaskDeleteWithRepairs(
-        db, entityId: taskId, version: "1711234568000_0000_dec0000200000002", applyTs: "")
-
-      XCTAssertEqual(result.decision, .applied)
-      let rootFloor = try Hlc.parseCanonical(version)
-      XCTAssertEqual(result.repairTargets.count, 2)
-      XCTAssertTrue(
-        result.repairTargets.contains(
-          .relatedEntity(
-            entityType: .currentFocus, entityId: "2026-04-02",
-            operation: .delete, knownVersionFloor: rootFloor)))
-      XCTAssertTrue(
-        result.repairTargets.contains(
-          .relatedEntity(
-            entityType: .focusSchedule, entityId: "2026-04-02",
-            operation: .delete, knownVersionFloor: rootFloor)))
-
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM current_focus_items WHERE task_id = ?",
-          arguments: [taskId]),
-        0)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE task_id = ?",
-          arguments: [taskId]),
-        0)
-      XCTAssertEqual(
-        try Int64.fetchOne(db, sql: "SELECT COUNT(*) FROM current_focus WHERE date = '2026-04-02'"),
-        0)
-      XCTAssertEqual(
-        try Int64.fetchOne(db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = '2026-04-02'"),
-        0)
     }
   }
 

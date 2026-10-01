@@ -1,39 +1,14 @@
 extension LorvexWatchStore {
-  public var canCompletePrimaryTask: Bool {
-    canMutatePrimaryTask
-  }
-
-  public var canCancelPrimaryTask: Bool {
-    canMutatePrimaryTask
-  }
-
-  public var canDeferPrimaryTask: Bool {
-    canMutatePrimaryTask
-  }
-
-  public var canRemovePrimaryTaskFromFocus: Bool {
-    canMutatePrimaryTask
+  /// True when a task action can run now: nothing is in flight and there is a
+  /// write path.
+  public var canMutateTasks: Bool {
+    !isLoading && canWrite
   }
 
   public var canCaptureTask: Bool {
     guard !captureTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
       return false
     }
-    guard !isLoading else { return false }
-    return canWrite
-  }
-
-  public var canMutatePrimaryTask: Bool {
-    guard primaryTask != nil, !isLoading else { return false }
-    return canWrite
-  }
-
-  /// True when a queued focus task (a "Next" row, not the primary) can be mutated.
-  ///
-  /// Unlike `canMutatePrimaryTask`, this does not require `primaryTask`; the queue
-  /// rows act on their own id. Still gated on no in-flight mutation and a writable
-  /// path, matching how the primary-task buttons gate themselves.
-  public var canMutateQueuedTask: Bool {
     guard !isLoading else { return false }
     return canWrite
   }
@@ -47,18 +22,18 @@ extension LorvexWatchStore {
     }
   }
 
-  public var completionUnavailableReason: String? {
-    mutationUnavailableReason(
-      snapshotMessage: String(
-        localized: "watch.unavailable.complete", defaultValue: "Open Lorvex on iPhone or Mac to complete this task.",
-        table: "Localizable", bundle: WatchL10n.bundle))
-  }
-
-  public var focusMutationUnavailableReason: String? {
-    mutationUnavailableReason(
-      snapshotMessage: String(
-        localized: "watch.unavailable.focus_mutation", defaultValue: "Open Lorvex on iPhone or Mac to change focus.",
-        table: "Localizable", bundle: WatchL10n.bundle))
+  /// Why the task actions cannot run, or nil when they can.
+  public var taskActionUnavailableReason: String? {
+    guard !isLoading else { return Self.refreshingUnavailableReason }
+    if case .core = backend {
+      return nil
+    }
+    if mutationForwarder == nil {
+      return String(
+        localized: "watch.unavailable.task_action", defaultValue: "Open Lorvex on iPhone to change tasks.",
+        table: "Localizable", bundle: WatchL10n.bundle)
+    }
+    return nil
   }
 
   public var captureUnavailableReason: String? {
@@ -70,18 +45,6 @@ extension LorvexWatchStore {
       return String(
         localized: "watch.unavailable.capture", defaultValue: "Open Lorvex on iPhone or Mac to capture new tasks.",
         table: "Localizable", bundle: WatchL10n.bundle)
-    }
-    return nil
-  }
-
-  private func mutationUnavailableReason(snapshotMessage: String) -> String? {
-    guard primaryTask != nil else { return nil }
-    guard !isLoading else { return Self.refreshingUnavailableReason }
-    if case .core = backend {
-      return nil
-    }
-    if mutationForwarder == nil {
-      return snapshotMessage
     }
     return nil
   }

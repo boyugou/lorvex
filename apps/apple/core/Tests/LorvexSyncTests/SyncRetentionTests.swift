@@ -76,7 +76,7 @@ final class SyncRetentionTests: XCTestCase {
         db, entityType: EntityName.task, entityId: "task-plain",
         version: lowVersion, deletedAt: recentDelete)
 
-      XCTAssertEqual(try Tombstone.gcTombstonesWatermark(db), 0)
+      SyncRetention.runPostApplyGC(db, syncedAt: "2026-04-01T00:00:00.000Z")
       XCTAssertTrue(
         try Tombstone.isTombstoned(db, entityType: EntityName.task, entityId: "task-plain"),
         "ordinary maintenance cannot reclaim a plain tombstone")
@@ -157,8 +157,8 @@ final class SyncRetentionTests: XCTestCase {
     }
   }
 
-  /// The post-apply retention sweep leaves generation-managed tombstones intact
-  /// while still pruning the other bookkeeping tables. An ancient tombstone survives
+  /// The post-apply retention sweep leaves tombstones intact while still
+  /// pruning the other bookkeeping tables. An ancient tombstone survives
   /// ``SyncRetention/runPostApplyGC(_:syncedAt:)``, while the synced outbox
   /// row, the stale conflict-log row, and the expired pending-inbox orphan are all
   /// reaped as before.
@@ -221,10 +221,10 @@ final class SyncRetentionTests: XCTestCase {
 
       SyncRetention.runPostApplyGC(db, syncedAt: "2026-04-01T00:00:00.000Z")
 
-      // Generation publication, not ordinary maintenance, owns reclamation.
+      // Tombstones are kept indefinitely.
       XCTAssertTrue(
         try Tombstone.isTombstoned(db, entityType: EntityName.task, entityId: "task-permanent"),
-        "the post-apply sweep must not reap a tombstone without generation authority")
+        "the post-apply sweep must never reap a tombstone")
       // The other retention steps still prune.
       XCTAssertEqual(
         try Int.fetchOne(
@@ -251,14 +251,12 @@ final class SyncRetentionTests: XCTestCase {
   // MARK: - Sync-off maintenance sweep (apply-independent)
 
   /// The apply-independent maintenance sweep enforces the retention caps with NO
-  /// `applyInbound`: under a days-retention policy it prunes expired audit rows
-  /// and their full-content outbox copies, age-caps `error_logs`, and keeps an
-  /// unrelated unsynced row that is within the generous backlog cap.
+  /// `applyInbound`: under a days-retention policy it prunes expired audit rows,
+  /// age-caps `error_logs`, and keeps an unrelated unsynced row that is within
+  /// the generous backlog cap.
   func testLocalMaintenanceGcEnforcesCapsWithoutApply() throws {
     try withDB { db in
-      try AuditRetentionFrontier.adoptPolicyForCurrentScope(
-        db, policy: .days(30),
-        policyVersion: "0000000000000_0000_0000000000000000")
+      try AuditRetention.setPolicy(db, .days(30))
 
       // An old error_logs row (reaped) and a recent one (kept).
       try db.execute(
@@ -274,35 +272,19 @@ final class SyncRetentionTests: XCTestCase {
           """,
         arguments: [recent])
 
-      // Two expired audit rows: one still pending and one already acknowledged.
-      // Neither full-content upsert may survive the local prune. In particular,
-      // the pending one must not upload if the user enables sync later.
-      let pendingAuditId = "01966a3f-7c8b-7d4e-8f3a-0000000044ab"
-      let syncedAuditId = "01966a3f-7c8b-7d4e-8f3a-0000000044ac"
-      for id in [pendingAuditId, syncedAuditId] {
+      // One expired and one recent audit row: only the expired one is pruned.
+      let expiredAuditId = "01966a3f-7c8b-7d4e-8f3a-0000000044ab"
+      let recentAuditId = "01966a3f-7c8b-7d4e-8f3a-0000000044ac"
+      for (id, age) in [(expiredAuditId, "-100 days"), (recentAuditId, "-1 days")] {
         try db.execute(
           sql: """
             INSERT INTO ai_changelog
               (id, timestamp, operation, entity_type, summary, initiated_by)
-            VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-100 days'),
-                    'create', 'task', 'private audit payload', 'ai')
+            VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now', ?),
+                    'create', 'task', 'audit payload', 'ai')
             """,
-          arguments: [id])
-        try SyncTestSupport.insertOutboxEnvelopeUnchecked(
-          db,
-          SyncEnvelope(
-            entityType: .aiChangelog, entityId: id, operation: .upsert,
-            version: try Hlc.parse(
-              id == pendingAuditId
-                ? "1711234567891_0000_a1b2c3d4a1b2c3d4"
-                : "1711234567892_0000_a1b2c3d4a1b2c3d4"),
-            payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-            payload: #"{"summary":"private audit payload"}"#, deviceId: "device-A"))
+          arguments: [id, age])
       }
-      let syncedAuditOutboxId = try XCTUnwrap(
-        Outbox.getPending(db).first { $0.envelope.entityId == syncedAuditId }?.id)
-      try Outbox.markManySynced(
-        db, outboxIds: [syncedAuditOutboxId], syncedAt: recent)
 
       // One unsynced outbox row — well within the generous cap.
       let outboxEntityId = "01966a3f-7c8b-7d4e-8f3a-0000000044aa"
@@ -312,9 +294,6 @@ final class SyncRetentionTests: XCTestCase {
           entityId: outboxEntityId, version: "1711234567890_0000_a1b2c3d4a1b2c3d4",
           deviceId: "device-A"))
 
-      try AuditRetentionFrontier.adoptPolicyForCurrentScope(
-        db, policy: .days(30),
-        policyVersion: "6000000000000_0000_a1b2c3d4a1b2c3d4")
       SyncRetention.runLocalMaintenanceGC(
         db, syncedAt: "2026-04-01T00:00:00.000Z",
         includeActiveOutboxCap: true)
@@ -330,32 +309,8 @@ final class SyncRetentionTests: XCTestCase {
           arguments: [outboxEntityId]),
         1, "a within-cap unsynced outbox row is retained for a later sign-in")
       XCTAssertEqual(
-        try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id IN (?, ?)",
-          arguments: [pendingAuditId, syncedAuditId]),
-        0)
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: """
-            SELECT COUNT(*) FROM sync_outbox
-            WHERE entity_type = ? AND entity_id IN (?, ?) AND operation = ?
-            """,
-          arguments: [
-            EntityName.aiChangelog, pendingAuditId, syncedAuditId, SyncNaming.opUpsert,
-          ]),
-        0, "expired audit content is removed from both pending and synced outbox states")
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: """
-            SELECT COUNT(*) FROM sync_outbox
-            WHERE entity_type = ? AND entity_id IN (?, ?) AND operation = ?
-            """,
-          arguments: [
-            EntityName.aiChangelog, pendingAuditId, syncedAuditId, SyncNaming.opDelete,
-          ]),
-        0, "retention never creates audit tombstone envelopes")
+        try String.fetchAll(db, sql: "SELECT id FROM ai_changelog"), [recentAuditId],
+        "the sweep prunes audit rows older than the stored retention window")
     }
   }
 

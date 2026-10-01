@@ -3,27 +3,20 @@ import SwiftUI
 
 struct MobileTaskWorkspaceSelectableRow: View {
   let task: LorvexTask
-  let isFocused: Bool
   let isMutating: Bool
   let select: () -> Void
   let isBatchSelecting: Bool
   let isBatchSelected: Bool
-  let toggleFocus: () async -> Void
-  let complete: () async -> Void
-  let deferTask: () async -> Void
+  let actions: MobileTaskRowActions
+  /// See ``MobileTaskRowContent/timeLabel``.
+  var timeLabel: String? = nil
 
   var body: some View {
     rowBody
     .draggable(LorvexTaskRef(id: task.id, title: task.title))
     .lorvexRowHoverEffect()
     .taskRowActions(
-      task: task,
-      isFocused: isFocused,
-      isMutating: isMutating,
-      isBatchSelecting: isBatchSelecting,
-      toggleFocus: toggleFocus,
-      complete: complete,
-      deferTask: deferTask)
+      task: task, actions: actions, isMutating: isMutating, isBatchSelecting: isBatchSelecting)
     .accessibilityAddTraits(isBatchSelected ? [.isSelected] : [])
     .accessibilityIdentifier("mobile.tasks.selectable.\(task.id)")
   }
@@ -40,7 +33,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
       Button(action: select) {
         HStack(spacing: LorvexDesign.Spacing.s) {
           batchSelectionCheckbox
-          MobileTaskRowContent(task: task, isFocused: isFocused, showsLeadingCircle: false)
+          MobileTaskRowContent(task: task, showsLeadingCircle: false, timeLabel: timeLabel)
             .equatable()
         }
         .contentShape(Rectangle())
@@ -48,9 +41,9 @@ struct MobileTaskWorkspaceSelectableRow: View {
       .buttonStyle(.plain)
     } else {
       HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-        MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: complete)
+        MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: actions.complete)
         Button(action: select) {
-          MobileTaskRowContent(task: task, isFocused: isFocused, showsLeadingCircle: false)
+          MobileTaskRowContent(task: task, showsLeadingCircle: false, timeLabel: timeLabel)
             .equatable()
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
@@ -64,7 +57,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
     Image(systemName: isBatchSelected ? "checkmark.circle.fill" : "circle")
       .font(.title3)
       .foregroundStyle(isBatchSelected ? Color.accentColor : .secondary)
-      .frame(width: 26)
+      .mobileTaskCircleFrame(isSquare: false)
       .accessibilityLabel(
         isBatchSelected
           ? String(

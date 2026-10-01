@@ -243,7 +243,7 @@ func taskEntityQuerySearchesNotesAndExcludesInactiveTasks() async throws {
 
 @Test
 func taskEntityQuerySuggestionsUseFullCorpusInsteadOfTodaySnapshot() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   core.loadTodayError = .unsupportedOperation("loadToday must not feed App Intent task suggestions")
   let offscreen = try await core.createTask(title: "Offscreen shortcut suggestion", notes: "")
 

@@ -46,21 +46,12 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// `truncated` once the window holds more rows than fit in one fetch.
   func getUpcomingTaskPage(daysAhead: Int, limit: Int, offset: Int) async throws -> TaskPageResult
 
-  /// Returns open tasks in the canonical Today pool, preserving core pagination
-  /// and task ordering without the dashboard snapshot cap.
-  func getTodayTasks(limit: Int, offset: Int) async throws -> TaskPageResult
-
-  /// Date-anchored sibling used when one logical operation also reads focus or
-  /// other day-scoped state. The caller captures the product day once, then all
-  /// reads use that same day even if product midnight passes between awaits.
-  func getTodayTasks(date: String, limit: Int, offset: Int) async throws -> TaskPageResult
-
   /// Uncapped canonical task data for the widget snapshot's numeric stats: the
   /// full actionable (open + in_progress) set and the recently-completed set,
-  /// read in one transaction. Decouples the widget's counts from the top-N
-  /// dashboard pool (``TodaySnapshot/tasks``) so overdue / due-today / focus /
-  /// per-list / completed-today counts reflect the whole workload rather than a
-  /// priority-capped slice. See ``WidgetStatsSource``.
+  /// read in one transaction. Decouples the widget's counts from the day pool
+  /// (``TodaySnapshot/tasks``) so overdue / due-today / per-list /
+  /// completed-today counts reflect the whole workload rather than the tasks
+  /// that claim today. See ``WidgetStatsSource``.
   func loadWidgetStatsSource() async throws -> WidgetStatsSource
 
   /// Returns tasks with a scheduled due date inside the inclusive calendar
@@ -386,13 +377,5 @@ extension LorvexTaskServicing {
       text: query.text,
       limit: query.limit,
       offset: query.offset)
-  }
-
-  public func getTodayTasks(date: String, limit: Int, offset: Int) async throws
-    -> TaskPageResult
-  {
-    // Compatibility for lightweight preview/test conformers. The production
-    // SQLite service overrides this with a truly date-scoped query.
-    try await getTodayTasks(limit: limit, offset: offset)
   }
 }

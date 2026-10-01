@@ -144,7 +144,8 @@ extension LorvexDataImporter {
       targetCount: habit.targetCount,
       milestoneTarget: habit.milestoneTarget,
       archived: habit.archived,
-      position: habit.position)
+      position: habit.position,
+      createdAt: habit.createdAt)
     if !habit.completions.isEmpty {
       guard let completionImporter = core as? any LorvexNativeImportServicing else {
         throw LorvexCoreError.unsupportedOperation(
@@ -167,128 +168,42 @@ extension LorvexDataImporter {
   }
 
   /// Restore Calendar Events and their internal durable boundaries as one
-  /// semantic unit. The SQLite backend owns the atomic bundle transaction. A
-  /// backend without that native seam can retain the legacy plain-event path
-  /// only when the payload carries no boundaries; it must not partially apply a
-  /// segmented lineage it cannot validate.
+  /// semantic unit. The backend owns the atomic bundle transaction through
+  /// ``LorvexNativeImportServicing``; a backend without that seam restores no
+  /// calendar data and reports one error when the payload carries any.
   static func applyCalendarBundle(
     cutovers: [ExportCalendarSeriesCutover], events: [ExportCalendarEvent],
     using core: any LorvexCoreServicing
   ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
-    if let importer = core as? any LorvexNativeImportServicing {
-      do {
-        let result = try await importer.importCalendarBundle(
-          cutovers: cutovers, events: events)
-        return (
-          LorvexImportCategoryResult(
-            category: .calendarEvents,
-            imported: result.importedEvents,
-            skipped: result.skippedEvents),
-          [])
-      } catch {
-        return (
-          LorvexImportCategoryResult(
-            category: .calendarEvents, imported: 0, skipped: events.count),
-          [
+    guard let importer = core as? any LorvexNativeImportServicing else {
+      return (
+        LorvexImportCategoryResult(
+          category: .calendarEvents, imported: 0, skipped: events.count),
+        cutovers.isEmpty && events.isEmpty
+          ? []
+          : [
             LorvexImportError(
               category: .calendarEvents, recordRef: "calendar_bundle",
-              message: error.localizedDescription)
+              message: "Calendar event restore is not supported by this backend.")
           ])
-      }
     }
-    guard cutovers.isEmpty else {
+    do {
+      let result = try await importer.importCalendarBundle(cutovers: cutovers, events: events)
+      return (
+        LorvexImportCategoryResult(
+          category: .calendarEvents,
+          imported: result.importedEvents,
+          skipped: result.skippedEvents),
+        [])
+    } catch {
       return (
         LorvexImportCategoryResult(
           category: .calendarEvents, imported: 0, skipped: events.count),
         [
           LorvexImportError(
             category: .calendarEvents, recordRef: "calendar_bundle",
-            message: "Atomic calendar-series restore is unsupported by this backend.")
+            message: error.localizedDescription)
         ])
     }
-    return await applyCalendarEvents(events, using: core)
   }
-
-  private static func applyCalendarEvents(
-    _ events: [ExportCalendarEvent], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
-    var imported = 0
-    var skipped = 0
-    var errors: [LorvexImportError] = []
-    let importer = core as? any LorvexNativeImportServicing
-    for event in events {
-      do {
-        // Atomic non-destructive restore: a stale backup must not overwrite an id a
-        // concurrent create already landed, nor resurrect one the user deleted after
-        // the backup (either would mint a dominating HLC and re-propagate the event
-        // fleet-wide). The presence + tombstone check and the insert share one
-        // transaction. A brand-new id still inserts. A backend without the native
-        // seam falls back to a plain LWW import.
-        let startTime = event.startTime.isEmpty ? nil : event.startTime
-        let endDate = event.endDate.isEmpty ? nil : event.endDate
-        let endTime = event.endTime.isEmpty ? nil : event.endTime
-        let location = event.location.flatMap { $0.isEmpty ? nil : $0 }
-        let recurrence = event.recurrence?.canonicalRecurrenceJSON()
-        if let importer {
-          let (_, didImport) = try await importer.importCalendarEventIfAbsent(
-            id: event.id,
-            title: event.title,
-            startDate: event.startDate,
-            startTime: startTime,
-            endDate: endDate,
-            endTime: endTime,
-            allDay: event.allDay,
-            location: location,
-            notes: event.notes,
-            url: event.url,
-            color: event.color,
-            eventType: event.eventType,
-            personName: event.personName,
-            attendees: event.attendees,
-            timezone: event.timezone,
-            recurrence: recurrence,
-            seriesId: event.seriesId,
-            recurrenceInstanceDate: event.recurrenceInstanceDate,
-            occurrenceState: event.occurrenceState,
-            recurrenceGeneration: event.recurrenceGeneration,
-            seriesCutoverId: event.seriesCutoverId)
-          if didImport { imported += 1 } else { skipped += 1 }
-        } else {
-          _ = try await core.importCalendarEvent(
-            id: event.id,
-            title: event.title,
-            startDate: event.startDate,
-            startTime: startTime,
-            endDate: endDate,
-            endTime: endTime,
-            allDay: event.allDay,
-            location: location,
-            notes: event.notes,
-            url: event.url,
-            color: event.color,
-            eventType: event.eventType,
-            personName: event.personName,
-            attendees: event.attendees,
-            timezone: event.timezone,
-            recurrence: recurrence,
-            seriesId: event.seriesId,
-            recurrenceInstanceDate: event.recurrenceInstanceDate,
-            occurrenceState: event.occurrenceState,
-            recurrenceGeneration: event.recurrenceGeneration,
-            seriesCutoverId: event.seriesCutoverId)
-          imported += 1
-        }
-      } catch {
-        errors.append(
-          LorvexImportError(
-            category: .calendarEvents, recordRef: event.id,
-            message: error.localizedDescription))
-      }
-    }
-    return (
-      LorvexImportCategoryResult(
-        category: .calendarEvents, imported: imported, skipped: skipped), errors
-    )
-  }
-
 }

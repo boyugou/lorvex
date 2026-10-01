@@ -10,10 +10,9 @@ struct LorvexWidgetBundle: WidgetBundle {
     // inside lorvexWidgets(): the #available branch instantiates
     // WidgetBundleBuilder.buildOptional, whose opaque type descriptor is a
     // hidden @_alwaysEmitIntoClient symbol that must not cross a framework
-    // boundary (see the lorvexWidgets() docstring). Keep this block identical
-    // to LorvexFocusWidgetBundle's so both hosts vend the same widget set.
+    // boundary (see the lorvexWidgets() docstring).
     if #available(iOS 18.0, macOS 26.0, *) {
-      LorvexFocusControlWidget()
+      LorvexTodayControlWidget()
     }
   }
 }

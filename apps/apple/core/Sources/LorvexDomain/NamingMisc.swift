@@ -125,16 +125,8 @@ public enum SyncNaming {
   public static let localAuditCoalescedDeleteDropped =
     "sync.outbox.coalesced_delete_dropped"
 
-  /// Contractual maximum delete-recovery window. Once a CloudKit-owned server
-  /// timestamp proves a confirmed tombstone is older than this, a new immutable
-  /// generation may omit that exact death marker. A database can union with that
-  /// generation only when its completed baseline witness is strictly later than
-  /// the published cutoff; otherwise it adopts the generation authoritatively.
-  /// Device wall time never authorizes compaction. See `SYNC_APPLY_SEMANTICS.md`.
-  public static let tombstoneMaxRetentionDays: UInt32 = 365
-
-  /// Pending inbox envelopes older than this trigger reseed_required. Separate
-  /// from tombstone GC (which uses version-domain watermark).
+  /// Pending inbox envelopes older than this are reaped, which sets
+  /// reseed_required and refetch_required.
   public static let fullResyncHorizonDays: UInt32 = 90
 
   /// `sync_checkpoints` key set to `"true"` when the horizon GC has hard-deleted
@@ -144,6 +136,14 @@ public enum SyncNaming {
   /// and the host surfaces it while set; the value carries no user content and
   /// is device-local like every other checkpoint.
   public static let reseedRequiredCheckpointKey = "reseed_required"
+
+  /// `sync_checkpoints` key set to `"true"` when the horizon GC is about to
+  /// hard-delete expired inbound rows (pending-inbox orphans or quarantined
+  /// records). Those records still exist in CloudKit, but an incremental fetch
+  /// never delivers an unchanged record again, so the sync transport discards
+  /// its engine state once, which makes the next fetch cover the whole zone,
+  /// and then clears the key.
+  public static let refetchRequiredCheckpointKey = "refetch_required"
 
   /// Hard safeguard: maximum ai_changelog entries before forced cleanup. NOT a
   /// primary retention rule — the time window is primary.

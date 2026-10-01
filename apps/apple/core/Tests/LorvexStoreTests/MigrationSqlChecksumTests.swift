@@ -27,6 +27,26 @@ final class MigrationSqlChecksumTests: XCTestCase {
     XCTAssertEqual(MigrationSqlChecksum.hexDigest(sql), expected)
   }
 
+  /// Every numbered migration file on disk hashes to the digest pinned in
+  /// `checksums.lock`, and the lock names no file that is missing.
+  func testEveryLockedMigrationMatchesItsLockEntry() throws {
+    let root = repoRoot() as NSString
+    let directory = root.appendingPathComponent("schema/migrations") as NSString
+    let lockData = try Data(
+      contentsOf: URL(fileURLWithPath: directory.appendingPathComponent("checksums.lock")))
+    let lock = try XCTUnwrap(
+      JSONSerialization.jsonObject(with: lockData) as? [String: [String: String]])
+    XCTAssertFalse(lock.isEmpty)
+    for (version, entry) in lock where Int(version).map({ $0 >= 2 }) == true {
+      let fileName = try XCTUnwrap(entry["name"], "lock entry \(version) has no name")
+      let sql = try String(
+        contentsOfFile: directory.appendingPathComponent(fileName), encoding: .utf8)
+      XCTAssertEqual(
+        MigrationSqlChecksum.hexDigest(sql), entry["sha256"],
+        "\(fileName) does not match its checksums.lock digest")
+    }
+  }
+
   func testCommentOnlyEditsDoNotChangeTheDigest() {
     let base = "CREATE TABLE t (id TEXT PRIMARY KEY);\nCREATE INDEX i ON t(id);"
     let reflowed = """

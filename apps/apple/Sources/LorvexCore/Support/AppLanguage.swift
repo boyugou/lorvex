@@ -2,8 +2,8 @@ import Foundation
 
 /// User-selectable in-app UI language, shared by every Apple surface.
 ///
-/// `.system` follows the OS language; every other case forces one of the
-/// shipped localizations. The choice is applied by writing the standard
+/// `.system` follows the OS language; every other case forces one of the two
+/// shipped localizations, English and Simplified Chinese. The choice is applied by writing the standard
 /// `AppleLanguages` `UserDefaults` override, which the bundle reads when it
 /// loads its localizations — so a change only takes effect after the app is
 /// relaunched (macOS can relaunch itself; iOS asks the user to reopen). The raw
@@ -11,18 +11,7 @@ import Foundation
 public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case system
   case en
-  case de
-  case es
-  case fr
-  case it
-  case ja
-  case ko
-  case pl
-  case pt
-  case ru
-  case tr
   case zhHans = "zh-Hans"
-  case zhHant = "zh-Hant"
 
   public var id: String { rawValue }
 
@@ -39,18 +28,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     switch self {
     case .system: ""
     case .en: "English"
-    case .de: "Deutsch"
-    case .es: "Español"
-    case .fr: "Français"
-    case .it: "Italiano"
-    case .ja: "日本語"
-    case .ko: "한국어"
-    case .pl: "Polski"
-    case .pt: "Português"
-    case .ru: "Русский"
-    case .tr: "Türkçe"
     case .zhHans: "简体中文"
-    case .zhHant: "繁體中文"
     }
   }
 

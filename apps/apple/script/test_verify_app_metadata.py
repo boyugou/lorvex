@@ -18,7 +18,7 @@ from verify_app_metadata import (
 class VerifyAppMetadataTests(unittest.TestCase):
     def test_entitlements_forbid_aps_environment_rejects_push_capability(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "LorvexVisionAppCloudKitAppStore.entitlements"
+            path = Path(directory) / "LorvexNoPushCapability.entitlements"
             with path.open("wb") as file:
                 plistlib.dump(
                     {
@@ -55,7 +55,7 @@ class VerifyAppMetadataTests(unittest.TestCase):
 
     def test_entitlements_forbid_aps_environment_accepts_no_push_capability(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "LorvexVisionAppCloudKitAppStore.entitlements"
+            path = Path(directory) / "LorvexNoPushCapability.entitlements"
             with path.open("wb") as file:
                 plistlib.dump(
                     {

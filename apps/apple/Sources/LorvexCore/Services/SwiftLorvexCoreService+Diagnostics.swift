@@ -13,29 +13,26 @@ extension SwiftLorvexCoreService {
   ///
   /// Real today: `setup` (task/list counts + preference-derived working hours
   /// and default list), `changelog` (AI changelog rows), and `sync` — its
-  /// queue depths (`pendingCount` / `retryingCount` / `failedCount`) and
-  /// oldest/newest pending timestamps are computed live from `sync_outbox`,
+  /// queue depths (`pendingCount` / `retryingCount` / `failedCount`),
+  /// oldest/newest pending timestamps, and newest unsynced-row push error are
+  /// computed live from `sync_outbox`,
   /// and the device id + `reseed_required` checkpoint are surfaced. `backend`
   /// is a fixed `"unknown"` placeholder: the effective Cloud Sync transport is
   /// app-runtime state — the persisted `CloudSyncMode`, its
-  /// `LORVEX_CLOUDKIT_EXPORT` override, and CloudKit account status — that this
+  /// `LORVEX_CLOUD_SYNC` override, and CloudKit account status — that this
   /// DB-only call (which also runs inside the separate MCP-host process) cannot
   /// observe, so it reports `"unknown"` rather than asserting a specific mode.
   /// The app layer, which knows the mode, derives the user-facing backend label
-  /// from it. `recentLogs` is the
+  /// from it; ``loadSyncStatus()`` returns that same `sync` member on its own.
+  /// `recentLogs` is the
   /// merged newest-first stream over `error_logs` + `ai_changelog` +
   /// `sync_outbox` (bounded slice here; the `get_recent_logs` tool exposes the
-  /// filtered/paginated form). `guide` is static copy, matching the Preview
-  /// service.
+  /// filtered/paginated form).
   public func loadRuntimeDiagnostics() async throws -> RuntimeDiagnosticsSnapshot {
     try read { db in
-      let overview = try Overview.loadOverviewSnapshot(db, limits: Overview.Limits.app())
       let preferences = try Self.readPreferences(db)
       let taskCount = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tasks WHERE archived_at IS NULL") ?? 0
       let listCount = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM lists") ?? 0
-      let deviceID = try SyncCheckpoints.get(db, key: SyncCheckpoints.keyDeviceId)
-      let reseedRequired =
-        try SyncCheckpoints.get(db, key: SyncCheckpoints.keyReseedRequired) == "true"
 
       let setup = SetupStatusSnapshot(
         setupCompleted: Self.preferenceBool(preferences["setup_completed"]) ?? false,
@@ -58,51 +55,17 @@ extension SwiftLorvexCoreService {
             entityId: row.entityId,
             summary: row.summary,
             initiatedBy: row.initiatedBy,
-            mcpTool: row.mcpTool
+            mcpTool: row.mcpTool,
+            hasBefore: row.hasBefore,
+            hasAfter: row.hasAfter,
+            entityTitle: row.entityTitle
           )
         },
         truncated: changelogRows.count >= 8,
         nextOffset: nil
       )
 
-      // Real outbox-derived queue depths. The "ready" predicate matches
-      // `Outbox.getPending` (unsynced and under the retry cap), so
-      // `pendingCount` agrees with `list_pending_outbox_entries`. `retryingCount`
-      // is the ready subset that has already failed at least once; `failedCount`
-      // is the ordinary retry-wait tail. Intentional authoritative-adoption
-      // fences are not reported as push failures.
-      let readyPredicate =
-        "synced_at IS NULL AND disposition IS NULL "
-        + "AND retry_count < \(Outbox.maxRetries)"
-      let pendingCount =
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox WHERE \(readyPredicate)") ?? 0
-      let retryingCount = try Int.fetchOne(
-        db,
-        sql: "SELECT COUNT(*) FROM sync_outbox WHERE synced_at IS NULL "
-          + "AND disposition IS NULL "
-          + "AND retry_count > 0 AND retry_count < \(Outbox.maxRetries)") ?? 0
-      let failedCount = try Int.fetchOne(
-        db,
-        sql: "SELECT COUNT(*) FROM sync_outbox WHERE synced_at IS NULL "
-          + "AND disposition = ?",
-        arguments: [Outbox.Disposition.retryWait.rawValue]) ?? 0
-      let oldestPendingAt = try String.fetchOne(
-        db, sql: "SELECT MIN(created_at) FROM sync_outbox WHERE \(readyPredicate)")
-      let newestPendingAt = try String.fetchOne(
-        db, sql: "SELECT MAX(created_at) FROM sync_outbox WHERE \(readyPredicate)")
-
-      let sync = SyncStatusSnapshot(
-        backend: "unknown",
-        pendingCount: pendingCount,
-        retryingCount: retryingCount,
-        failedCount: failedCount,
-        oldestPendingAt: oldestPendingAt,
-        newestPendingAt: newestPendingAt,
-        lastSyncedAt: nil,
-        lastError: nil,
-        deviceID: deviceID,
-        reseedRequired: reseedRequired
-      )
+      let sync = try Self.readSyncStatus(db)
 
       // The diagnostics panel shows a bounded, unfiltered, newest-first slice
       // of the merged log stream; the MCP `get_recent_logs` tool uses the same
@@ -115,18 +78,94 @@ extension SwiftLorvexCoreService {
         sourceCounts: recentPage.sourceCounts
       )
 
-      let guide = GuideSnapshot(
-        topic: "overview",
-        summary: "Lorvex is running on the pure-Swift core (\(overview.stats.openCount) open task\(overview.stats.openCount == 1 ? "" : "s")).",
-        suggestedActions: [
-          "Use the MCP host as the primary write surface.",
-          "Open the diagnostics panel before packaging or syncing changes.",
-        ]
-      )
-
       return RuntimeDiagnosticsSnapshot(
-        setup: setup, sync: sync, changelog: changelog, recentLogs: recentLogs, guide: guide)
+        setup: setup, sync: sync, changelog: changelog, recentLogs: recentLogs)
     }
+  }
+
+  /// Reads the Cloud Sync queue state on its own, without the rest of the
+  /// diagnostics surface.
+  ///
+  /// Touches only `sync_outbox` and the two sync checkpoints — no Overview
+  /// snapshot, preferences, task/list counts, changelog page, or merged log
+  /// stream — so a status surface can re-read it whenever it repaints. The
+  /// result is field-for-field the `sync` member ``loadRuntimeDiagnostics()``
+  /// reports (both build it through ``readSyncStatus(_:)``), including the fixed
+  /// `"unknown"` `backend` placeholder, which stands for a transport this
+  /// DB-only call cannot observe.
+  public func loadSyncStatus() async throws -> SyncStatusSnapshot {
+    try read { db in try Self.readSyncStatus(db) }
+  }
+
+  /// The `sync_outbox` "ready to push" predicate: unsynced, no terminal
+  /// disposition, still under the retry cap. Matches `Outbox.getPending`, so
+  /// every depth and timestamp derived from it describes exactly the rows the
+  /// next cycle would drain (and agrees with `list_pending_outbox_entries`).
+  static let outboxReadyPredicate =
+    "synced_at IS NULL AND disposition IS NULL AND retry_count < \(Outbox.maxRetries)"
+
+  /// Builds the outbox-derived sync status inside an open read.
+  ///
+  /// The single definition behind both ``loadSyncStatus()`` and the `sync`
+  /// member of ``loadRuntimeDiagnostics()``, so a narrow status refresh and a
+  /// full diagnostics load can never report different queue depths.
+  ///
+  /// `pendingCount` counts the ready rows (``outboxReadyPredicate``);
+  /// `retryingCount` is the ready subset that has already failed at least once;
+  /// `failedCount` is the ordinary retry-wait tail. Future-record holds carry
+  /// their own disposition and so are not reported as push failures.
+  ///
+  /// `lastError` is the newest `sync_outbox.last_error` still attached to an
+  /// unsynced row — the transport's own words for why that row did not upload,
+  /// which the push path persists per row precisely so one failure cannot
+  /// overwrite another's. Quarantined rows are included: a row the retry ladder
+  /// gave up on is the most diagnostic thing the queue holds. It is nil only
+  /// when no unsynced row has ever failed, which distinguishes a queue that is
+  /// merely waiting for a cycle from one that is failing.
+  ///
+  /// `backend` is a fixed `"unknown"` placeholder: the effective Cloud Sync
+  /// transport is app-runtime state — the persisted `CloudSyncMode`, its
+  /// `LORVEX_CLOUD_SYNC` override, and the CloudKit account status — that a
+  /// database read (which also runs inside the separate MCP-host process) cannot
+  /// observe. `lastSyncedAt` is likewise runtime state the app layer owns, so it
+  /// is nil here.
+  static func readSyncStatus(_ db: Database) throws -> SyncStatusSnapshot {
+    let pendingCount =
+      try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox WHERE \(outboxReadyPredicate)")
+      ?? 0
+    let retryingCount = try Int.fetchOne(
+      db,
+      sql: "SELECT COUNT(*) FROM sync_outbox WHERE \(outboxReadyPredicate) "
+        + "AND retry_count > 0") ?? 0
+    let failedCount = try Int.fetchOne(
+      db,
+      sql: "SELECT COUNT(*) FROM sync_outbox WHERE synced_at IS NULL "
+        + "AND disposition = ?",
+      arguments: [Outbox.Disposition.retryWait.rawValue]) ?? 0
+    let oldestPendingAt = try String.fetchOne(
+      db, sql: "SELECT MIN(created_at) FROM sync_outbox WHERE \(outboxReadyPredicate)")
+    let newestPendingAt = try String.fetchOne(
+      db, sql: "SELECT MAX(created_at) FROM sync_outbox WHERE \(outboxReadyPredicate)")
+    // SQLite orders NULL below every value, so a `DESC` sort puts a row that
+    // carries an error but no retry stamp last rather than first.
+    let lastError = try String.fetchOne(
+      db,
+      sql: "SELECT last_error FROM sync_outbox "
+        + "WHERE synced_at IS NULL AND last_error IS NOT NULL AND last_error <> '' "
+        + "ORDER BY last_retry_at DESC, id DESC LIMIT 1")
+
+    return SyncStatusSnapshot(
+      backend: "unknown",
+      pendingCount: pendingCount,
+      retryingCount: retryingCount,
+      failedCount: failedCount,
+      oldestPendingAt: oldestPendingAt,
+      newestPendingAt: newestPendingAt,
+      lastSyncedAt: nil,
+      lastError: lastError,
+      deviceID: try SyncCheckpoints.get(db, key: SyncCheckpoints.keyDeviceId),
+      reseedRequired: try SyncCheckpoints.get(db, key: SyncCheckpoints.keyReseedRequired) == "true"
+    )
   }
 
   public func loadAIChangelog(
@@ -162,7 +201,10 @@ extension SwiftLorvexCoreService {
           entityId: row.entityId,
           summary: row.summary,
           initiatedBy: row.initiatedBy,
-          mcpTool: row.mcpTool)
+          mcpTool: row.mcpTool,
+          hasBefore: row.hasBefore,
+          hasAfter: row.hasAfter,
+          entityTitle: row.entityTitle)
       }
       let truncated = rows.count > clampedOffset + clampedLimit
       return AIChangelogSnapshot(
@@ -291,8 +333,7 @@ extension SwiftLorvexCoreService {
             ? "retry_count=\(retry), consecutive_error_count=\(consecutiveErrorCount)" : nil)
         merged.append(RecentLogEntry(
           id: "sync:\(id)", timestamp: row["created_at"], source: "sync_outbox",
-          level: disposition == Outbox.Disposition.authoritativeAdoption.rawValue
-            ? .info : (retry > 0 ? .warn : .info),
+          level: retry > 0 ? .warn : .info,
           summary: "\(operation) \(entityType):\(entityId)", details: details))
       }
     }
@@ -321,13 +362,13 @@ extension SwiftLorvexCoreService {
   /// Map a changelog operation onto a log level: destructive ops and feedback
   /// warn.
   ///
-  /// Focus plan/schedule clears are recorded as `delete` operations but are
-  /// routine planning actions, not destructive data loss, so they stay at
-  /// `info` regardless of operation — only genuine entity deletes
-  /// (task/list/habit/calendar_event/memory) and feedback warn.
+  /// Clearing a day's briefing is recorded as a `delete` operation, but it and
+  /// saving a day's times are routine planning actions, not destructive data
+  /// loss, so they stay at `info` regardless of operation — only genuine
+  /// entity deletes (task/list/habit/calendar_event/memory) and feedback warn.
   static func recentLogChangelogLevel(operation: String, entityType: EntityKind) -> DiagnosticLogLevel {
     switch entityType {
-    case .currentFocus, .focusSchedule: return .info
+    case .dailyBriefing, .dailySchedule: return .info
     default: break
     }
     switch operation {

@@ -39,15 +39,15 @@ TEST_METADATA = {
     "MCP_HOST_PRODUCT": "LorvexMCPHost",
     "APP_GROUP_ID": "group.com.lorvex.apple",
     "CLOUDKIT_CONTAINER_ID": "iCloud.com.lorvex.apple",
-    "WIDGET_BUNDLE_ID": "com.lorvex.apple.mobile.widget.focus",
-    "WIDGET_EXECUTABLE": "LorvexFocusWidget",
-    "WIDGET_APPEX_NAME": "LorvexFocusWidget.appex",
-    "WIDGET_KIND": "com.lorvex.apple.widget.focus",
-    "WIDGET_DISPLAY_NAME": "Lorvex Focus",
+    "WIDGET_BUNDLE_ID": "com.lorvex.apple.focuswidget",
+    "WIDGET_EXECUTABLE": "LorvexWidgets",
+    "WIDGET_APPEX_NAME": "LorvexWidgets.appex",
+    "WIDGET_KIND": "com.lorvex.apple.widget.today",
+    "WIDGET_DISPLAY_NAME": "Lorvex Today",
     "WIDGET_EXTENSION_POINT_IDENTIFIER": "com.apple.widgetkit-extension",
-    "CONTROL_WIDGET_KIND": "com.lorvex.control.focus",
-    "CONTROL_WIDGET_DISPLAY_NAME": "Lorvex Focus",
-    "CONTROL_WIDGET_DESCRIPTION": "Shows the current focus task.",
+    "CONTROL_WIDGET_KIND": "com.lorvex.control.today",
+    "CONTROL_WIDGET_DISPLAY_NAME": "Lorvex Today",
+    "CONTROL_WIDGET_DESCRIPTION": "Shows the task at the top of Today.",
     "APP_CATEGORY": "public.app-category.productivity",
     "CALENDAR_WRITE_USAGE_DESCRIPTION": "Lorvex can add planning blocks you create to Apple Calendar.",
     "CALENDAR_FULL_ACCESS_USAGE_DESCRIPTION": (
@@ -216,11 +216,11 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                     "archive missing required entry: "
                     "LorvexApple.app/Contents/Helpers/LorvexMCPHost.app/Contents/Info.plist",
                     "archive missing required entry: "
-                    "LorvexApple.app/Contents/PlugIns/LorvexFocusWidget.appex/Contents/MacOS/LorvexFocusWidget",
+                    "LorvexApple.app/Contents/PlugIns/LorvexWidgets.appex/Contents/MacOS/LorvexWidgets",
                     "archive missing required entry: "
-                    "LorvexApple.app/Contents/PlugIns/LorvexFocusWidget.appex/Contents/Info.plist",
+                    "LorvexApple.app/Contents/PlugIns/LorvexWidgets.appex/Contents/Info.plist",
                     "archive missing required entry: "
-                    "LorvexApple.app/Contents/PlugIns/LorvexFocusWidget.appex/Contents/Resources/PrivacyInfo.xcprivacy",
+                    "LorvexApple.app/Contents/PlugIns/LorvexWidgets.appex/Contents/Resources/PrivacyInfo.xcprivacy",
                 ],
             )
 
@@ -272,11 +272,11 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                     "system_intents_product": "LorvexSystemIntents",
                     "system_intents_actions": SYSTEM_INTENTS_ACTIONS,
                     "system_intents_capabilities": SYSTEM_INTENTS_CAPABILITIES,
-                    "widget_bundle_id": "com.lorvex.apple.mobile.widget.focus",
-                    "widget_kind": "com.lorvex.apple.widget.focus",
-                    "control_widget_kind": "com.lorvex.control.focus",
-                    "control_widget_display_name": "Lorvex Focus",
-                    "control_widget_description": "Shows the current focus task.",
+                    "widget_bundle_id": "com.lorvex.apple.focuswidget",
+                    "widget_kind": "com.lorvex.apple.widget.today",
+                    "control_widget_kind": "com.lorvex.control.today",
+                    "control_widget_display_name": "Lorvex Today",
+                    "control_widget_description": "Shows the task at the top of Today.",
                 },
                 TEST_METADATA,
             ),
@@ -312,8 +312,8 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                 "system_intents_product": "LorvexSystemIntents",
                 "system_intents_actions": SYSTEM_INTENTS_ACTIONS,
                 "system_intents_capabilities": SYSTEM_INTENTS_CAPABILITIES,
-                "widget_bundle_id": "com.lorvex.apple.mobile.widget.focus",
-                "widget_kind": "com.lorvex.apple.widget.focus",
+                "widget_bundle_id": "com.lorvex.apple.focuswidget",
+                "widget_kind": "com.lorvex.apple.widget.today",
             },
             TEST_METADATA,
         )
@@ -348,7 +348,6 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                         },
                         "targets": {
                             "ios": {"live_activities_supported": True},
-                            "visionos": {},
                             "watchos": {},
                             "watch_complication": {},
                             "widget": {},
@@ -414,7 +413,7 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                 ),
                 [
                     "Apple platform manifest missing target(s): "
-                    "['focus_filter', 'visionos', 'watch_complication', 'watchos', 'widget']",
+                    "['focus_filter', 'watch_complication', 'watchos', 'widget']",
                     "Apple platform manifest system intents actions mismatch: ['capture_task']",
                     "Apple platform manifest XcodeGen verifier does not match release manifest",
                     "Apple simulator aggregate verifier is not a file: .",
@@ -448,7 +447,6 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                         },
                         "targets": {
                             "ios": {},
-                            "visionos": {},
                             "watchos": {},
                             "watch_complication": {},
                             "widget": {},
@@ -547,8 +545,8 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                 path.mkdir(parents=True, exist_ok=True)
             app_executable = macos / "LorvexApple"
             helper = helpers / "LorvexMCPHost"
-            widget = plugins / "LorvexFocusWidget.appex"
-            widget_executable = widget / "Contents" / "MacOS" / "LorvexFocusWidget"
+            widget = plugins / "LorvexWidgets.appex"
+            widget_executable = widget / "Contents" / "MacOS" / "LorvexWidgets"
             widget_resources = widget / "Contents" / "Resources"
             for path in [app_executable, helper, widget_executable]:
                 path.parent.mkdir(parents=True, exist_ok=True)
@@ -638,8 +636,8 @@ class VerifyReleaseManifestTests(unittest.TestCase):
             app_executable = macos / "LorvexApple"
             app_executable.symlink_to(app_target)
             helper = helpers / "LorvexMCPHost"
-            widget = plugins / "LorvexFocusWidget.appex"
-            widget_executable = widget / "Contents" / "MacOS" / "LorvexFocusWidget"
+            widget = plugins / "LorvexWidgets.appex"
+            widget_executable = widget / "Contents" / "MacOS" / "LorvexWidgets"
             for path in [helper, widget_executable]:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -726,8 +724,8 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                 path.mkdir(parents=True, exist_ok=True)
             app_executable = macos / "LorvexApple"
             helper = helpers / "LorvexMCPHost"
-            widget = plugins / "LorvexFocusWidget.appex"
-            widget_executable = widget / "Contents" / "MacOS" / "LorvexFocusWidget"
+            widget = plugins / "LorvexWidgets.appex"
+            widget_executable = widget / "Contents" / "MacOS" / "LorvexWidgets"
             widget_resources = widget / "Contents" / "Resources"
             resources = app / "Contents" / "Resources"
             resources.mkdir(parents=True)
@@ -771,7 +769,7 @@ class VerifyReleaseManifestTests(unittest.TestCase):
             for path in [app_executable, helper]:
                 path.write_text("#!/bin/sh\n", encoding="utf-8")
                 path.chmod(0o755)
-            widget = plugins / "LorvexFocusWidget.appex"
+            widget = plugins / "LorvexWidgets.appex"
             widget_resources = widget / "Contents" / "Resources"
             widget_resources.mkdir(parents=True)
             privacy_manifest = resources / "PrivacyInfo.xcprivacy"
@@ -790,7 +788,7 @@ class VerifyReleaseManifestTests(unittest.TestCase):
                 TEST_METADATA,
             )
 
-            widget_executable = widget / "Contents" / "MacOS" / "LorvexFocusWidget"
+            widget_executable = widget / "Contents" / "MacOS" / "LorvexWidgets"
             self.assertIn(f"widget executable missing: {widget_executable}", failures)
 
     def test_bundle_info_plist_failures_accepts_matching_metadata_and_url_scheme(self) -> None:
@@ -883,7 +881,7 @@ class VerifyReleaseManifestTests(unittest.TestCase):
     def test_widget_info_plist_failures_accepts_matching_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            contents = root / "LorvexFocusWidget.appex" / "Contents"
+            contents = root / "LorvexWidgets.appex" / "Contents"
             contents.mkdir(parents=True)
             (contents / "Info.plist").write_bytes(
                 b"""<?xml version="1.0" encoding="UTF-8"?>
@@ -891,10 +889,10 @@ class VerifyReleaseManifestTests(unittest.TestCase):
 "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>LorvexFocusWidget</string>
-  <key>CFBundleDisplayName</key><string>Lorvex Focus</string>
-  <key>CFBundleIdentifier</key><string>com.lorvex.apple.mobile.widget.focus</string>
-  <key>CFBundleExecutable</key><string>LorvexFocusWidget</string>
+  <key>CFBundleName</key><string>LorvexWidgets</string>
+  <key>CFBundleDisplayName</key><string>Lorvex Today</string>
+  <key>CFBundleIdentifier</key><string>com.lorvex.apple.focuswidget</string>
+  <key>CFBundleExecutable</key><string>LorvexWidgets</string>
   <key>CFBundleShortVersionString</key><string>1.0.0</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>CFBundlePackageType</key><string>XPC!</string>
@@ -908,14 +906,14 @@ class VerifyReleaseManifestTests(unittest.TestCase):
             )
 
             self.assertEqual(
-                widget_info_plist_failures(root / "LorvexFocusWidget.appex", TEST_METADATA),
+                widget_info_plist_failures(root / "LorvexWidgets.appex", TEST_METADATA),
                 [],
             )
 
     def test_widget_info_plist_failures_rejects_mismatched_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            contents = root / "LorvexFocusWidget.appex" / "Contents"
+            contents = root / "LorvexWidgets.appex" / "Contents"
             contents.mkdir(parents=True)
             (contents / "Info.plist").write_bytes(
                 b"""<?xml version="1.0" encoding="UTF-8"?>
@@ -924,9 +922,9 @@ class VerifyReleaseManifestTests(unittest.TestCase):
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key><string>WrongWidget</string>
-  <key>CFBundleDisplayName</key><string>Lorvex Focus</string>
+  <key>CFBundleDisplayName</key><string>Lorvex Today</string>
   <key>CFBundleIdentifier</key><string>wrong.bundle</string>
-  <key>CFBundleExecutable</key><string>LorvexFocusWidget</string>
+  <key>CFBundleExecutable</key><string>LorvexWidgets</string>
   <key>CFBundleShortVersionString</key><string>1.0.0</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>CFBundlePackageType</key><string>APPL</string>
@@ -940,12 +938,12 @@ class VerifyReleaseManifestTests(unittest.TestCase):
             )
 
             self.assertEqual(
-                widget_info_plist_failures(root / "LorvexFocusWidget.appex", TEST_METADATA),
+                widget_info_plist_failures(root / "LorvexWidgets.appex", TEST_METADATA),
                 [
                     "widget Info.plist CFBundleName mismatch: expected "
-                    "'LorvexFocusWidget', got 'WrongWidget'",
+                    "'LorvexWidgets', got 'WrongWidget'",
                     "widget Info.plist CFBundleIdentifier mismatch: expected "
-                    "'com.lorvex.apple.mobile.widget.focus', got 'wrong.bundle'",
+                    "'com.lorvex.apple.focuswidget', got 'wrong.bundle'",
                     "widget Info.plist CFBundlePackageType mismatch: expected 'XPC!', got 'APPL'",
                     "widget Info.plist NSExtensionPointIdentifier mismatch: expected "
                     "'com.apple.widgetkit-extension', got 'wrong.extension'",

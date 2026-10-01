@@ -11,8 +11,7 @@ enum BackupV1ZipMember: String, CaseIterable, Sendable {
   case calendarSeriesCutovers = "calendar_series_cutovers.json"
   case calendarEvents = "calendar_events.json"
   case dailyReviews = "daily_reviews.json"
-  case currentFocus = "current_focus.json"
-  case focusSchedules = "focus_schedules.json"
+  case dailyBriefings = "daily_briefings.json"
   case taskCalendarEventLinks = "task_calendar_event_links.json"
   case memory = "memory.json"
   case preferences = "preferences.json"
@@ -31,8 +30,7 @@ enum BackupV1ZipMember: String, CaseIterable, Sendable {
     case .calendarSeriesCutovers: return "calendarSeriesCutovers"
     case .calendarEvents: return "calendarEvents"
     case .dailyReviews: return "dailyReviews"
-    case .currentFocus: return "currentFocus"
-    case .focusSchedules: return "focusSchedules"
+    case .dailyBriefings: return "dailyBriefings"
     case .taskCalendarEventLinks: return "taskCalendarEventLinks"
     case .memory: return "memory"
     case .preferences: return "preferences"
@@ -75,14 +73,10 @@ enum BackupV1ZipMember: String, CaseIterable, Sendable {
       return try Self.encode(
         payload.dailyReviews, member: self,
         count: payload.dailyReviews?.count ?? 0, encoder)
-    case .currentFocus:
+    case .dailyBriefings:
       return try Self.encode(
-        payload.currentFocus, member: self,
-        count: payload.currentFocus?.count ?? 0, encoder)
-    case .focusSchedules:
-      return try Self.encode(
-        payload.focusSchedules, member: self,
-        count: payload.focusSchedules?.count ?? 0, encoder)
+        payload.dailyBriefings, member: self,
+        count: payload.dailyBriefings?.count ?? 0, encoder)
     case .taskCalendarEventLinks:
       return try Self.encode(
         payload.taskCalendarEventLinks, member: self,
@@ -178,15 +172,10 @@ enum BackupV1Archive {
             [BackupV1DailyReview].self, entry.data, path: entry.path)
           payload.dailyReviews = rows.map(\.current)
           observedCounts[member.baseName] = rows.count
-        case .currentFocus:
+        case .dailyBriefings:
           let rows = try decodeZipValue(
-            [BackupV1CurrentFocus].self, entry.data, path: entry.path)
-          payload.currentFocus = rows.map(\.current)
-          observedCounts[member.baseName] = rows.count
-        case .focusSchedules:
-          let rows = try decodeZipValue(
-            [BackupV1FocusSchedule].self, entry.data, path: entry.path)
-          payload.focusSchedules = try rows.map { try $0.current() }
+            [BackupV1DailyBriefing].self, entry.data, path: entry.path)
+          payload.dailyBriefings = rows.map(\.current)
           observedCounts[member.baseName] = rows.count
         case .taskCalendarEventLinks:
           let rows = try decodeZipValue(

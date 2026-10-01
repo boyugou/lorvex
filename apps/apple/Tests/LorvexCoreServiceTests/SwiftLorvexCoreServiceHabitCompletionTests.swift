@@ -19,7 +19,8 @@ final class SwiftLorvexCoreServiceHabitCompletionTests: XCTestCase {
       .deletingLastPathComponent()  // repo root
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -82,7 +83,7 @@ final class SwiftLorvexCoreServiceHabitCompletionTests: XCTestCase {
     _ = try await service.completeHabit(id: habit.id, date: today)
 
     let updated = try await service.updateHabit(
-      id: habit.id, name: "Stretch (edited)", cue: nil, color: nil, icon: nil,
+      id: habit.id, name: "Stretch (edited)", cue: .unset, color: nil, icon: nil,
       targetCount: nil, archived: nil, cadence: nil)
     XCTAssertEqual(updated.name, "Stretch (edited)")
     XCTAssertEqual(
@@ -598,6 +599,33 @@ final class SwiftLorvexCoreServiceHabitCompletionTests: XCTestCase {
     XCTAssertEqual(
       stats.completionRate30d, 1.0 / 30.0, accuracy: 0.0005,
       "an old daily habit is scored over the full 30-day window: one of 30 due days")
+  }
+
+  /// A restored habit keeps the creation day its archive recorded, and the
+  /// exporter reads that day back out. Without it the restored row would carry
+  /// the import instant, collapsing a long-standing habit's adherence window to
+  /// the single day of the restore and reporting 100% beside a streak read from
+  /// the restored completion log.
+  func testImportedHabitRestoresItsCreationDayAndAdherenceWindow() async throws {
+    let service = try makeService()
+    let id = UUID().uuidString.lowercased()
+    let createdAt = utcTimestamp(daysAgo: 40)
+
+    let restored = try await service.importHabitRecordTransactionally(
+      ExportHabit(
+        id: id, name: "Restored daily", cue: "", frequencyType: "daily", targetCount: 1,
+        createdAt: createdAt))
+    XCTAssertTrue(restored)
+    _ = try await service.completeHabit(id: id, date: todayYmd())
+
+    let stats = try await service.getHabitStats(id: id)
+    XCTAssertEqual(
+      stats.completionRate30d, 1.0 / 30.0, accuracy: 0.0005,
+      "the restored creation day opens the full 30-day window: one of 30 due days")
+
+    let snapshot = try await service.loadSnapshotForDataExport(
+      entities: ["habits"], includeNativeTaskGraph: false)
+    XCTAssertEqual(snapshot.payload.habits?.first(where: { $0.id == id })?.createdAt, createdAt)
   }
 
   /// A `times_per_week` habit older than 30 days computes a real adherence over

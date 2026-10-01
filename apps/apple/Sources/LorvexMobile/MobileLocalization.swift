@@ -43,9 +43,4 @@ enum MobileL10n {
         }
         return Locale(identifier: identifier)
     }
-
-    /// The source catalog URL used by structural completeness tests.
-    static var catalogURL: URL? {
-        bundle.url(forResource: "Localizable", withExtension: "xcstrings")
-    }
 }

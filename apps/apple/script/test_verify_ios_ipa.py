@@ -16,7 +16,6 @@ from verify_ios_ipa import (
     FOCUS_FILTER_ROLE,
     HOST_ROLE,
     IPHONE_PLATFORM,
-    VISIONOS_PLATFORM,
     WATCHOS_PLATFORM,
     WATCH_ROLE,
     WIDGET_ROLE,
@@ -39,6 +38,12 @@ from verify_ios_ipa import (
 
 
 TEAM = "ABCDE12345"
+# The verifier checks payload bundles against the release metadata, so fixtures
+# that are meant to pass must carry those versions rather than literals that a
+# version bump would silently strand.
+_RELEASE_METADATA = load_metadata()
+RELEASE_SHORT_VERSION = _RELEASE_METADATA["MARKETING_VERSION"]
+RELEASE_BUILD_VERSION = _RELEASE_METADATA["BUILD_VERSION"]
 
 
 class IpaFixture:
@@ -60,8 +65,8 @@ class IpaFixture:
         path: Path,
         bundle_id: str,
         *,
-        short: str = "1.0.0",
-        build: str = "2",
+        short: str = RELEASE_SHORT_VERSION,
+        build: str = RELEASE_BUILD_VERSION,
         privacy: bool = True,
         profile: bool = True,
         profile_app_id: str | None = None,
@@ -131,7 +136,7 @@ class IpaFixture:
         m = self.metadata
         self.add_bundle(self.payload_app, m["MOBILE_BUNDLE_ID"])
         self.add_bundle(
-            self.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
         )
         self.add_focus_filter()
@@ -141,12 +146,6 @@ class IpaFixture:
             watch_app / "PlugIns" / "LorvexWatchComplication.appex",
             m["WATCH_COMPLICATION_BUNDLE_ID"],
         )
-
-    def build_vision(self) -> None:
-        """A well-formed visionOS release payload: the host app alone (visionOS
-        embeds no widget or Watch payload)."""
-        self.payload_app = self.root / "Payload" / "LorvexVisionApp.app"
-        self.add_bundle(self.payload_app, self.metadata["VISION_BUNDLE_ID"])
 
     def build_watch_standalone(self) -> None:
         """A well-formed standalone (development-export) watchOS payload: the
@@ -219,7 +218,7 @@ class PureHelperTests(unittest.TestCase):
 
     def test_embedded_profile_failures(self) -> None:
         self.assertEqual(
-            len(embedded_profile_failures("widget", False, None, "com.lorvex.apple.mobile.widget.focus")),
+            len(embedded_profile_failures("widget", False, None, "com.lorvex.apple.focuswidget")),
             1,
         )
         good = {
@@ -280,7 +279,7 @@ class DiscoveryAndShapeTests(unittest.TestCase):
             [
                 (HOST_ROLE, "LorvexMobileApp.app"),
                 (FOCUS_FILTER_ROLE, "LorvexFocusFilterExtension.appex"),
-                (WIDGET_ROLE, "LorvexFocusWidget.appex"),
+                (WIDGET_ROLE, "LorvexWidgets.appex"),
                 (WATCH_ROLE, "LorvexWatchApp.app"),
                 (COMPLICATION_ROLE, "LorvexWatchComplication.appex"),
             ],
@@ -335,7 +334,7 @@ class VerifyPayloadAppTests(unittest.TestCase):
         m = self.metadata
         self.fixture.add_bundle(self.fixture.payload_app, m["MOBILE_BUNDLE_ID"])
         self.fixture.add_bundle(
-            self.fixture.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.fixture.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
             privacy=False,
         )
@@ -363,7 +362,7 @@ class VerifyPayloadAppTests(unittest.TestCase):
         m = self.metadata
         self.fixture.add_bundle(self.fixture.payload_app, m["MOBILE_BUNDLE_ID"])
         self.fixture.add_bundle(
-            self.fixture.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.fixture.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
         )
         self.fixture.add_focus_filter()
@@ -391,7 +390,7 @@ class VerifyPayloadAppTests(unittest.TestCase):
         m = self.metadata
         self.fixture.add_bundle(self.fixture.payload_app, m["MOBILE_BUNDLE_ID"], build="99")
         self.fixture.add_bundle(
-            self.fixture.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.fixture.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
         )
         self.fixture.add_focus_filter()
@@ -409,7 +408,7 @@ class VerifyPayloadAppTests(unittest.TestCase):
         m = self.metadata
         self.fixture.add_bundle(self.fixture.payload_app, m["MOBILE_BUNDLE_ID"])
         self.fixture.add_bundle(
-            self.fixture.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.fixture.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
             profile_app_id=f"{TEAM}.com.lorvex.apple.widget.WRONG",
         )
@@ -429,7 +428,7 @@ class VerifyPayloadAppTests(unittest.TestCase):
         m = self.metadata
         self.fixture.add_bundle(self.fixture.payload_app, m["MOBILE_BUNDLE_ID"])
         self.fixture.add_bundle(
-            self.fixture.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.fixture.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
         )
         self.fixture.add_focus_filter()
@@ -452,7 +451,7 @@ class VerifyPayloadAppTests(unittest.TestCase):
         # per-bundle failure fires — the release-set check must catch it.
         self.fixture.add_bundle(self.fixture.payload_app, m["MOBILE_BUNDLE_ID"])
         self.fixture.add_bundle(
-            self.fixture.payload_app / "PlugIns" / "LorvexFocusWidget.appex",
+            self.fixture.payload_app / "PlugIns" / "LorvexWidgets.appex",
             m["WIDGET_BUNDLE_ID"],
         )
         self.fixture.add_focus_filter()
@@ -518,13 +517,12 @@ class VerifyPayloadAppTests(unittest.TestCase):
 class PlatformDetectionTests(unittest.TestCase):
     def test_override_wins_over_info_plist(self) -> None:
         self.assertIs(
-            platform_for_payload({"DTPlatformName": "iphoneos"}, "visionos"),
-            VISIONOS_PLATFORM,
+            platform_for_payload({"DTPlatformName": "iphoneos"}, "watchos"),
+            WATCHOS_PLATFORM,
         )
 
     def test_dt_platform_name_selects_platform(self) -> None:
         self.assertIs(platform_for_payload({"DTPlatformName": "iphoneos"}), IPHONE_PLATFORM)
-        self.assertIs(platform_for_payload({"DTPlatformName": "xros"}), VISIONOS_PLATFORM)
         self.assertIs(platform_for_payload({"DTPlatformName": "watchos"}), WATCHOS_PLATFORM)
 
     def test_absent_or_unknown_platform_falls_back_to_iphone(self) -> None:
@@ -539,9 +537,10 @@ class PlatformDetectionTests(unittest.TestCase):
 
 class PlatformBundleShapeTests(unittest.TestCase):
     """The expected bundle set is the target platform's own shape (#11): a
-    visionOS export (host app alone) passes under the visionOS expectation and
-    is rejected by the iPhone one, and vice-versa, so a produced artifact is
-    never rejected by a verifier that assumed a different platform."""
+    standalone watchOS export (Watch app + complication) passes under the
+    watchOS expectation and is rejected by the iPhone one, and vice-versa, so
+    a produced artifact is never rejected by a verifier that assumed a
+    different platform."""
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -549,21 +548,16 @@ class PlatformBundleShapeTests(unittest.TestCase):
         self.metadata = load_metadata()
         self.fixture = IpaFixture(Path(self._tmp.name), self.metadata)
 
-    def test_visionos_payload_passes_under_visionos_platform(self) -> None:
-        self.fixture.build_vision()
-        self.assertEqual(self.fixture.run(platform=VISIONOS_PLATFORM), [])
-        self.assertEqual(self.fixture.run(platform=VISIONOS_PLATFORM, expected_team=TEAM), [])
-
-    def test_visionos_payload_rejected_by_iphone_platform(self) -> None:
-        self.fixture.build_vision()
+    def test_watchos_standalone_payload_rejected_by_iphone_platform(self) -> None:
+        self.fixture.build_watch_standalone()
         failures = self.fixture.run(platform=IPHONE_PLATFORM)
         self.assertTrue(
             any("bundle set does not match release metadata" in f for f in failures)
         )
 
-    def test_iphone_payload_rejected_by_visionos_platform(self) -> None:
+    def test_iphone_payload_rejected_by_watchos_platform(self) -> None:
         self.fixture.build_full()
-        failures = self.fixture.run(platform=VISIONOS_PLATFORM)
+        failures = self.fixture.run(platform=WATCHOS_PLATFORM)
         self.assertTrue(
             any("bundle set does not match release metadata" in f for f in failures)
         )

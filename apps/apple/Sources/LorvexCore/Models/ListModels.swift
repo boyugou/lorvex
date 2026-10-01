@@ -133,6 +133,10 @@ public struct LorvexList: Identifiable, Equatable, Sendable {
   /// Whether this list is archived (set aside), `archivedAt != nil`.
   public var isArchived: Bool { archivedAt != nil }
 
+  /// Whether this is the Inbox, the list every task falls back to. The core
+  /// never deletes it, so no surface offers to.
+  public var isInbox: Bool { id == LorvexListNaming.inboxID }
+
   /// Tasks counted in the list-as-project progress denominator
   /// (`totalCount - cancelledCount`). A cancelled task isn't "remaining work",
   /// so it doesn't drag the bar — only open + completed tasks count.

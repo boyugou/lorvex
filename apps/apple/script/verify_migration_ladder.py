@@ -27,9 +27,7 @@ on the canonical artifacts:
 The normalization here is Apple-owned. It matches the Swift
 ``MigrationSqlChecksum`` (the runtime authority) — both are pinned against the
 same lock entries by their test suites, and this gate's baseline check re-pins
-Python against the real ``schema.sql`` on every run. The Tauri Rust/Node digest
-uses the same normalization convention but is a separate, directionally-aligned
-implementation the Apple gate neither runs nor compares against.
+Python against the real ``schema.sql`` on every run.
 """
 from __future__ import annotations
 
@@ -918,8 +916,7 @@ def build_lock() -> dict:
     (version ``001``) plus every numbered migration in ``schema/migrations/``.
 
     Apple-owned: reuses this module's ``sha256_migration_hex`` normalization, so
-    regenerating the lock needs no Tauri/Node tooling. The Tauri copy is a
-    separate, directionally-aligned implementation and is not written here.
+    regenerating the lock needs no external tooling.
     """
     lock: dict = {
         "001": {

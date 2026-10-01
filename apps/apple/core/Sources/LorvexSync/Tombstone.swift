@@ -10,6 +10,9 @@ import LorvexStore
 /// unless the upsert is strictly newer. Permanent identity aliases live in
 /// `sync_entity_redirects`; delete state and redirect state never share a row.
 ///
+/// Tombstones are kept indefinitely. Nothing proves that every device has seen
+/// a delete, and a device that has not could otherwise re-upload the entity.
+///
 /// Static methods take a GRDB `Database`; HLC versions and timestamps are
 /// supplied by the caller. Best-effort `error_logs` breadcrumbs are not written
 /// here.
@@ -25,29 +28,6 @@ public enum Tombstone {
     public var version: String
     /// RFC 3339 timestamp of the delete.
     public var deletedAt: String
-    /// Earliest CloudKit server-assigned modification time that confirmed this
-    /// exact delete version. `nil` is deliberately conservative and never
-    /// authorizes compaction.
-    public var cloudConfirmedAt: String?
-  }
-
-  /// Server-authenticated receipt for one exact tombstone identity/version.
-  /// The timestamp must be CloudKit's `CKRecord.modificationDate`, canonicalized
-  /// at the transport boundary; caller wall clocks are never accepted here.
-  public struct CloudConfirmation: Sendable, Equatable, Hashable {
-    public var entityType: String
-    public var entityId: String
-    public var version: String
-    public var confirmedAt: String
-
-    public init(
-      entityType: String, entityId: String, version: String, confirmedAt: String
-    ) {
-      self.entityType = entityType
-      self.entityId = entityId
-      self.version = version
-      self.confirmedAt = confirmedAt
-    }
   }
 
   // MARK: - Read
@@ -59,7 +39,7 @@ public enum Tombstone {
     try Row.fetchOne(
       db,
       sql: """
-        SELECT entity_type, entity_id, version, deleted_at, cloud_confirmed_at
+        SELECT entity_type, entity_id, version, deleted_at
         FROM sync_tombstones
         WHERE entity_type = ? AND entity_id = ?
         """,
@@ -69,8 +49,7 @@ public enum Tombstone {
         entityType: $0["entity_type"],
         entityId: $0["entity_id"],
         version: $0["version"],
-        deletedAt: $0["deleted_at"],
-        cloudConfirmedAt: $0["cloud_confirmed_at"])
+        deletedAt: $0["deleted_at"])
     }
   }
 
@@ -119,8 +98,7 @@ public enum Tombstone {
         sql: """
           UPDATE sync_tombstones SET
               version = ?,
-              deleted_at = ?,
-              cloud_confirmed_at = NULL
+              deleted_at = ?
            WHERE entity_type = ? AND entity_id = ?
           """,
         arguments: [version, deletedAt, entityType, entityId])
@@ -128,8 +106,8 @@ public enum Tombstone {
       try db.execute(
         sql: """
           INSERT INTO sync_tombstones
-              (entity_type, entity_id, version, deleted_at, cloud_confirmed_at)
-           VALUES (?, ?, ?, ?, NULL)
+              (entity_type, entity_id, version, deleted_at)
+           VALUES (?, ?, ?, ?)
           """,
         arguments: [entityType, entityId, version, deletedAt])
     }
@@ -150,175 +128,4 @@ public enum Tombstone {
       arguments: [entityType, entityId])
     return db.changesCount > 0
   }
-
-  /// Record CloudKit confirmation for an exact tombstone. A stale receipt for a
-  /// coalesced/newer delete updates nothing. Repeated receipts keep the earliest
-  /// server time, which is the strongest evidence for the recovery horizon.
-  @discardableResult
-  public static func confirmCloudPresence(
-    _ db: Database, confirmation: CloudConfirmation
-  ) throws -> Bool {
-    guard let timestamp = SyncTimestamp.parse(confirmation.confirmedAt),
-      timestamp.asString == confirmation.confirmedAt,
-      let version = try? Hlc.parseCanonical(confirmation.version),
-      version.description == confirmation.version
-    else { throw TombstoneConfirmationError.invalidReceipt }
-    try db.execute(
-      sql: """
-        UPDATE sync_tombstones
-        SET cloud_confirmed_at = CASE
-          WHEN cloud_confirmed_at IS NULL OR ? < cloud_confirmed_at THEN ?
-          ELSE cloud_confirmed_at
-        END
-        WHERE entity_type = ? AND entity_id = ? AND version = ?
-        """,
-      arguments: [
-        confirmation.confirmedAt, confirmation.confirmedAt,
-        confirmation.entityType, confirmation.entityId, confirmation.version,
-      ])
-    return db.changesCount == 1
-  }
-
-  /// Exact trusted compaction used only after a ready-generation baseline has
-  /// completed. `cutoff` must derive from a server-assigned control-record time.
-  /// Unconfirmed, within-window, and permanent-redirect-target tombstones are
-  /// always retained.
-  @discardableResult
-  public static func compactCloudConfirmed(
-    _ db: Database, through cutoff: String
-  ) throws -> UInt64 {
-    guard let timestamp = SyncTimestamp.parse(cutoff), timestamp.asString == cutoff else {
-      throw TombstoneConfirmationError.invalidCutoff
-    }
-    // Remove the exact stale delete intent first. Otherwise local compaction
-    // followed by the ordinary ready-zone drain would immediately re-create the
-    // remote tombstone this generation intentionally omitted.
-    try db.execute(
-      sql: """
-        DELETE FROM sync_outbox
-        WHERE operation = 'delete'
-          AND EXISTS (
-            SELECT 1 FROM sync_tombstones AS tombstone
-            WHERE tombstone.entity_type = sync_outbox.entity_type
-              AND tombstone.entity_id = sync_outbox.entity_id
-              AND tombstone.version = sync_outbox.version
-              AND tombstone.cloud_confirmed_at IS NOT NULL
-              AND tombstone.cloud_confirmed_at <= ?
-              AND NOT (\(TombstoneCompactionPolicy.isPermanentRedirectTargetSQL))
-          )
-        """,
-      arguments: [cutoff])
-    try db.execute(
-      sql: """
-        DELETE FROM sync_tombstones AS tombstone
-        WHERE tombstone.cloud_confirmed_at IS NOT NULL
-          AND tombstone.cloud_confirmed_at <= ?
-          AND NOT (\(TombstoneCompactionPolicy.isPermanentRedirectTargetSQL))
-        """,
-      arguments: [cutoff])
-    return UInt64(db.changesCount)
-  }
-
-  /// Advance the account's trusted CloudKit clock from a server receipt. The
-  /// account/database binding is part of the update predicate so a stale
-  /// callback after account adoption cannot seed a different account's clock.
-  public static func observeTrustedServerTime(
-    _ db: Database, accountIdentifier: String, serverTime: String
-  ) throws {
-    guard let timestamp = SyncTimestamp.parse(serverTime), timestamp.asString == serverTime else {
-      throw TombstoneConfirmationError.invalidReceipt
-    }
-    try db.execute(
-      sql: """
-        UPDATE sync_cloudkit_account_binding
-        SET trusted_server_time = CASE
-          WHEN trusted_server_time IS NULL OR trusted_server_time < ? THEN ?
-          ELSE trusted_server_time
-        END
-        WHERE singleton = 1 AND account_identifier = ?
-        """,
-      arguments: [serverTime, serverTime, accountIdentifier])
-    guard db.changesCount == 1 else {
-      throw TombstoneConfirmationError.accountBoundaryMismatch
-    }
-  }
-
-  /// Return a server-clock-derived cutoff only when at least one exact
-  /// CloudKit-confirmed tombstone is eligible and is not permanent-alias
-  /// closure state. This is the active ready-zone rotation trigger; no
-  /// collectable activity means the ledger does not need a rotation.
-  public static func trustedCompactionCutoff(
-    _ db: Database, accountIdentifier: String, recoveryDays: UInt32
-  ) throws -> String? {
-    guard let raw = try String.fetchOne(
-      db,
-      sql: """
-        SELECT trusted_server_time FROM sync_cloudkit_account_binding
-        WHERE singleton = 1 AND account_identifier = ?
-        """,
-      arguments: [accountIdentifier]),
-      let serverTime = SyncTimestamp.parse(raw), serverTime.asString == raw
-    else { return nil }
-    let cutoff = SyncTimestampFormat.formatSyncTimestamp(
-      serverTime.date.addingTimeInterval(-Double(recoveryDays) * 24 * 60 * 60))
-    let eligible = try Int.fetchOne(
-      db,
-      sql: """
-        SELECT 1 FROM sync_tombstones AS tombstone
-        WHERE tombstone.cloud_confirmed_at IS NOT NULL
-          AND tombstone.cloud_confirmed_at <= ?
-          AND NOT (\(TombstoneCompactionPolicy.isPermanentRedirectTargetSQL))
-        LIMIT 1
-        """,
-      arguments: [cutoff]) == 1
-    return eligible ? cutoff : nil
-  }
-
-  /// Whether this physical database completed a traversal whose exact
-  /// CloudKit-owned witness time is strictly later than a generation's
-  /// published compaction cutoff. Equality cannot prove ordering between two
-  /// events represented in the same millisecond. Merely observing a server
-  /// receipt is insufficient: the terminal
-  /// watermark advances only in `CloudTraversalWitness.commitPage` after every
-  /// page effect and cursor transition commit atomically.
-  public static func trustedTerminalServerTimeCovers(
-    _ db: Database, accountIdentifier: String, cutoff: String
-  ) throws -> Bool {
-    guard let timestamp = SyncTimestamp.parse(cutoff), timestamp.asString == cutoff else {
-      throw TombstoneConfirmationError.invalidCutoff
-    }
-    guard let raw = try String.fetchOne(
-      db,
-      sql: """
-        SELECT trusted_terminal_server_time FROM sync_cloudkit_account_binding
-        WHERE singleton = 1 AND account_identifier = ?
-        """,
-      arguments: [accountIdentifier]),
-      let terminal = SyncTimestamp.parse(raw), terminal.asString == raw
-    else { return false }
-    return terminal.date > timestamp.date
-  }
-
-  // MARK: - GC
-
-  /// Ordinary time-based maintenance remains a no-op. Tombstones are reclaimed
-  /// only by trusted CloudKit confirmation through a published generation or a
-  /// completed ready-generation baseline; local wall clock is never authority.
-  ///
-  /// The explicit 365-day recovery contract retains every unconfirmed or recent
-  /// delete. A peer older than that contract adopts the current generation as
-  /// authoritative before any compacted death marker can matter.
-  ///
-  /// Returns 0 and deletes nothing; kept as a call site so the retention-sweep
-  /// order in ``SyncRetention/runPostApplyGC(_:syncedAt:emit:)`` is unchanged.
-  @discardableResult
-  public static func gcTombstonesWatermark(_ db: Database) throws -> UInt64 {
-    0
-  }
-}
-
-public enum TombstoneConfirmationError: Error, Sendable, Equatable {
-  case invalidReceipt
-  case invalidCutoff
-  case accountBoundaryMismatch
 }

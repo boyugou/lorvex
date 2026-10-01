@@ -8,13 +8,12 @@
 # across framework boundaries (see e.g. SwiftUI's `WidgetBundleBuilder`, whose
 # `@_alwaysEmitIntoClient` opaque-type instantiation only fails to link in the
 # Xcode Release device graph). Release also enforces the app's real
-# deployment-target floor per platform, which is how e.g. a visionOS-2.0-floor
-# build catches a `visionOS 26.0`-gated API call that Debug/simulator builds
-# and SwiftPM's single-unit link never surface.
+# deployment-target floor per platform, which is how e.g. an iOS-26.0-floor
+# build catches an API call gated behind a newer OS version than Debug/
+# simulator builds and SwiftPM's single-unit link ever surface.
 #
 # Usage: verify_release_link.sh <scheme> <generic-platform> <label>
-#   e.g.  verify_release_link.sh LorvexMobileApp iOS      "iOS Release link"
-#         verify_release_link.sh LorvexVisionApp visionOS "visionOS Release link"
+#   e.g.  verify_release_link.sh LorvexMobileApp iOS "iOS Release link"
 #
 # A successful link is not a launchable artifact: Xcode builds SwiftPM
 # library products as dynamic `…PackageProduct` frameworks when two targets
@@ -103,10 +102,9 @@ fi
 # The link can succeed while the artifact is dyld-broken; prove the dynamic
 # closure of the built app (and its nested extensions / watch app) before
 # declaring the gate green. On failure the build products are kept for
-# inspection. Products land in Release-<platform-dir> (iphoneos, xros, ...).
+# inspection. Products land in Release-<platform-dir> (iphoneos, ...).
 case "$GENERIC_PLATFORM" in
   iOS)      PRODUCTS_DIR="Release-iphoneos" ;;
-  visionOS) PRODUCTS_DIR="Release-xros" ;;
   macOS)    PRODUCTS_DIR="Release" ;;
   watchOS)  PRODUCTS_DIR="Release-watchos" ;;
   *)        PRODUCTS_DIR="Release-$GENERIC_PLATFORM" ;;
@@ -115,12 +113,12 @@ APP_BUNDLE="$DERIVED_DATA/Build/Products/$PRODUCTS_DIR/$SCHEME.app"
 "$ROOT_DIR/script/verify_macho_closure.py" "$APP_BUNDLE"
 
 # Every scheme embeds the LorvexCore-family framework (PRODUCT_NAME LorvexCore
-# in every one of LorvexCore/LorvexCoreVision/LorvexCoreWatch) at
+# in every one of LorvexCore/LorvexCoreWatch) at
 # Frameworks/LorvexCore.framework, and SwiftLorvexCoreService+Migrations.swift
 # resolves the bundled migration ladder by looking for a real `Migrations`
 # subdirectory at that framework's resource root. XcodeGen's `folder`-type
 # source preserves that directory (see project.yml's LorvexCore/
-# LorvexCoreVision/LorvexCoreWatch targets); a `group`-type source would
+# LorvexCoreWatch targets); a `group`-type source would
 # flatten it into loose files instead, silently breaking the loader at the
 # first real migration. Assert the layout the loader expects survived this
 # build.

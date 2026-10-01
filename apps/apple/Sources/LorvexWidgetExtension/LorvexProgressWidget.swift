@@ -32,7 +32,7 @@ public struct LorvexProgressWidget: Widget {
     .description(
       LocalizedStringResource(
         "widget.progress.desc",
-        defaultValue: "Track today's task completion at a glance.",
+        defaultValue: "Track today’s task completion at a glance.",
         table: "Localizable",
         bundle: WidgetSupportL10n.bundle))
     .supportedFamilies(supportedFamilies)

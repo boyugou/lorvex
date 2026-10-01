@@ -2,7 +2,7 @@ import AppIntents
 
 struct SetLorvexTaskRemindersIntent: LorvexAuthenticatedIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.reminders.set.title", defaultValue: "Set Lorvex Task Reminders", table: "Localizable", bundle: SystemL10n.bundle)
-  static let description = IntentDescription(LocalizedStringResource("system.task.reminders.set.description", defaultValue: "Replace a Lorvex task's reminder timestamps from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
+  static let description = IntentDescription(LocalizedStringResource("system.task.reminders.set.description", defaultValue: "Replace a Lorvex task’s reminder timestamps from Shortcuts or Siri.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.task", defaultValue: "Task", table: "Localizable", bundle: SystemL10n.bundle))

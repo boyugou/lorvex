@@ -27,6 +27,24 @@ extension AppStore {
     set { listsStorage.selectedListDetail = newValue }
   }
 
+  /// The selected list's loaded tasks, in the order the core returned them.
+  var selectedListTasks: [LorvexTask] {
+    selectedListDetail?.tasks ?? []
+  }
+
+  /// Every list in synced `position` order: the sidebar's Lists section, the
+  /// Lists catalog, and the list-reorder drag all read this one collection, so
+  /// the displayed order and the drag math agree. The core returns lists
+  /// already ordered by `position`.
+  var orderedLists: [LorvexList] {
+    lists?.lists ?? []
+  }
+
+  var isLoadingMoreSelectedListTasks: Bool {
+    get { listsStorage.isLoadingMoreSelectedListTasks }
+    set { listsStorage.isLoadingMoreSelectedListTasks = newValue }
+  }
+
   var selectedListTaskIDs: Set<LorvexTask.ID> {
     get { listsStorage.selectedListTaskIDs }
     set { listsStorage.selectedListTaskIDs = newValue }

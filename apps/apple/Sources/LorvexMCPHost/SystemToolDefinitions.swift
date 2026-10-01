@@ -26,19 +26,19 @@ enum SystemToolDefinitions {
     .read(57, DataExportToolCatalog.exportDataTool) {
       try await $0.exportDataResult(arguments: $1)
     },
-    .read(107, SystemPreferencesToolCatalog.getAllPreferencesTool) { registry, _ in
+    .read(103, SystemPreferencesToolCatalog.getAllPreferencesTool) { registry, _ in
       try await registry.getAllPreferencesResult()
     },
-    .read(108, SystemPreferencesToolCatalog.getPreferenceTool) {
+    .read(104, SystemPreferencesToolCatalog.getPreferenceTool) {
       try await $0.getPreferenceResult(arguments: $1)
     },
-    .write(109, SystemPreferencesToolCatalog.setPreferenceTool) {
+    .write(105, SystemPreferencesToolCatalog.setPreferenceTool) {
       try await $0.setPreferenceResult(arguments: $1)
     },
-    .write(110, SystemPreferencesToolCatalog.deletePreferenceTool) {
+    .write(106, SystemPreferencesToolCatalog.deletePreferenceTool) {
       try await $0.deletePreferenceResult(arguments: $1)
     },
-    .write(111, SystemPreferencesToolCatalog.completeSetupTool) {
+    .write(107, SystemPreferencesToolCatalog.completeSetupTool) {
       try await $0.completeSetupResult(arguments: $1)
     },
   ]

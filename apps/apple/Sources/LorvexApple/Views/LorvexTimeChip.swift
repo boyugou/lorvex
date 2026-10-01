@@ -6,8 +6,8 @@ import SwiftUI
 /// hour + minute grid (accent-disc selection, in the spirit of
 /// ``LorvexMiniMonth``), replacing the stock compact hour/minute `DatePicker` —
 /// a crude stepper field. The bound `Date`'s day component is ignored; only the
-/// hour and minute are read and written. Hours follow the locale's 12-/24-hour
-/// convention (a 12-hour locale gets an AM/PM segment using the locale symbols).
+/// hour and minute are read and written. Hours follow the chosen clock
+/// (``LorvexClockFormat``, by default the locale's 12-/24-hour convention) (a 12-hour locale gets an AM/PM segment using the locale symbols).
 struct LorvexTimeChip: View {
   @Environment(\.timeZone) private var timeZone
 
@@ -62,9 +62,12 @@ private struct LorvexTimeChipPopover: View {
   private var currentMinute: Int { calendar.component(.minute, from: date) }
   private var isPM: Bool { currentHour >= 12 }
 
-  /// Whether the locale formats hours without an AM/PM marker.
+  /// Whether the clock the user chose (``LorvexClockFormat``, by default the
+  /// locale's) formats hours without an AM/PM marker.
   private var uses24Hour: Bool {
-    let template = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) ?? "HH"
+    let template =
+      DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: LorvexClockFormat.displayLocale)
+      ?? "HH"
     return !template.contains("a")
   }
 

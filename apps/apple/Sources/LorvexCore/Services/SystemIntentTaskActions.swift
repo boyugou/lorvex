@@ -49,6 +49,22 @@ extension LorvexSystemIntentRunner {
     return try await core.reopenTaskReturningTask(id: taskID).title
   }
 
+  public static func startTask(
+    id: LorvexTask.ID,
+    core: any LorvexCoreServicing
+  ) async throws -> String {
+    let taskID = try validatedTaskID(id)
+    return try await core.startTaskReturningTask(id: taskID).title
+  }
+
+  public static func pauseTask(
+    id: LorvexTask.ID,
+    core: any LorvexCoreServicing
+  ) async throws -> String {
+    let taskID = try validatedTaskID(id)
+    return try await core.pauseTaskReturningTask(id: taskID).title
+  }
+
   public static func deferTaskUntilTomorrow(
     id: LorvexTask.ID,
     core: any LorvexCoreServicing
@@ -81,19 +97,19 @@ extension LorvexSystemIntentRunner {
     return try await core.setTaskReminders(taskID: taskID, reminderAts: reminders)
   }
 
-  public static func addTaskToFocus(
+  /// Plans the task for the configured product day, which puts it on Today.
+  public static func planTaskForToday(
     id: LorvexTask.ID,
     core: any LorvexCoreServicing
-  ) async throws -> Int {
+  ) async throws -> LorvexTask {
     let taskID = try validatedTaskID(id)
     let context = try await core.getSessionContext()
-    let focus = try await core.addToCurrentFocus(
-      date: context.date,
-      taskIDs: [taskID],
-      briefing: nil,
-      timezone: context.timezone
-    )
-    return focus.taskIDs.count
+    guard let today = LorvexDateFormatters.ymdUTC.date(from: context.date) else {
+      throw LorvexCoreError.validation(field: "date", message: "Today's date is unavailable.")
+    }
+    var draft = TaskUpdateDraft(id: taskID)
+    draft.plannedDate = .set(today)
+    return try await core.updateTask(draft)
   }
 
   public static func validatedTaskID(_ id: LorvexTask.ID) throws -> LorvexTask.ID {

@@ -27,7 +27,6 @@ run_verifier() {
 }
 
 run_verifier "iOS simulator" "$ROOT_DIR/script/verify_mobile_simulator.sh"
-run_verifier "visionOS simulator" "$ROOT_DIR/script/verify_vision_simulator.sh"
 run_verifier "watchOS simulator" "$ROOT_DIR/script/verify_watch_simulator.sh"
 # Not a simulator build: the unsigned device Release graph. Release
 # optimization resolves opaque types across framework boundaries, and enforces
@@ -35,7 +34,6 @@ run_verifier "watchOS simulator" "$ROOT_DIR/script/verify_watch_simulator.sh"
 # exist that Debug/simulator builds (and SwiftPM's single-unit link) never
 # surface — see verify_release_link.sh's header.
 run_verifier "iOS Release link" "$ROOT_DIR/script/verify_mobile_release_link.sh"
-run_verifier "visionOS Release link" "$ROOT_DIR/script/verify_vision_release_link.sh"
 
 printf '\nApple platform build verification summary:\n'
 printf ' - %s\n' "${RESULTS[@]}"

@@ -156,19 +156,24 @@ extension SwiftLorvexCoreService {
   public func updateList(
     id: LorvexList.ID,
     name: String?,
-    description: String?,
+    description: Patch<String>,
     color: String?,
     icon: String?,
     aiNotes: String?
   ) async throws -> LorvexList {
-    guard name != nil || description != nil || color != nil || icon != nil || aiNotes != nil else {
+    guard
+      name != nil || description.isSetOrClear || color != nil || icon != nil || aiNotes != nil
+    else {
       return try await getList(id: id)
     }
-    // Sanitize + validate each provided field before opening the write. A field
-    // left `nil` stays "leave unchanged"; a field that is blank after sanitizing
-    // collapses to `nil` (no-op) rather than writing an empty value.
+    // Sanitize + validate each provided field before opening the write. `name` /
+    // `color` / `icon` / `ai_notes` left `nil` stay "leave unchanged"; a blank
+    // value collapses to `nil` (no-op) rather than writing an empty value.
+    // `description` is a three-state patch: `.unset` leaves it, `.clear` (or a
+    // `.set` that is blank after sanitizing) nulls it, and a `.set` with content
+    // is length / byte-budget validated.
     let normName = try name.map(ListValidation.normalizeName)
-    let normDescription = try ListValidation.normalizeOptionalText(
+    let descriptionPatch = try ListValidation.normalizeOptionalPatchText(
       description, field: "description", max: ValidationLimits.maxBodyLength,
       escapedBudget: PayloadByteBudget.longTextEscapedBytes)
     let normAiNotes = try ListValidation.normalizeOptionalText(
@@ -181,15 +186,20 @@ extension SwiftLorvexCoreService {
         throw LorvexCoreError.notFound(entity: .list, id: id)
       }
       // A patch whose values equal the current row (rename to the same name,
-      // re-set the same color/icon/description/ai_notes) is a value-level no-op:
-      // skip the sync enqueue AND the changelog row. `updateList` writes each
-      // non-nil field verbatim, so compare only the participating fields; an
-      // unchanged write would still bump the version and could LWW-win over a
-      // concurrent legitimate remote edit.
+      // re-set the same color/icon/description/ai_notes, or clear an already-empty
+      // description) is a value-level no-op: skip the sync enqueue AND the
+      // changelog row. Compare only the participating fields; an unchanged write
+      // would still bump the version and could LWW-win over a concurrent
+      // legitimate remote edit.
       let nameUnchanged = normName == nil || normName == current.name
       let colorUnchanged = normColor == nil || normColor == current.color
       let iconUnchanged = normIcon == nil || normIcon == current.icon
-      let descriptionUnchanged = normDescription == nil || normDescription == current.description
+      let descriptionUnchanged: Bool
+      switch descriptionPatch {
+      case .unset: descriptionUnchanged = true
+      case .clear: descriptionUnchanged = current.description == nil
+      case let .set(value): descriptionUnchanged = value == current.description
+      }
       let aiNotesUnchanged = normAiNotes == nil || normAiNotes == current.aiNotes
       let unchanged =
         nameUnchanged && colorUnchanged && iconUnchanged && descriptionUnchanged && aiNotesUnchanged
@@ -200,11 +210,17 @@ extension SwiftLorvexCoreService {
       }
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()
-      try ListRepo.updateList(
+      try ListRepo.updateListPatched(
         db,
-        params: ListUpdateParams(
-          id: ListId(trusted: id), name: normName, color: normColor, icon: normIcon,
-          description: normDescription, aiNotes: normAiNotes, now: now, version: version))
+        id: ListId(trusted: id),
+        patch: ListUpdatePatch(
+          name: normName,
+          color: normColor.map(Patch.set) ?? .unset,
+          icon: normIcon.map(Patch.set) ?? .unset,
+          description: descriptionPatch,
+          aiNotes: normAiNotes.map(Patch.set) ?? .unset),
+        version: version,
+        now: now)
       guard let row = try ListRepo.getList(db, id: ListId(trusted: id)) else {
         throw LorvexCoreError.notFound(entity: .list, id: id)
       }

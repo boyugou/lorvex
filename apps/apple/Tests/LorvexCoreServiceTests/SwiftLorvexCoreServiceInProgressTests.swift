@@ -18,7 +18,8 @@ struct SwiftLorvexCoreServiceInProgressTests {
       .deletingLastPathComponent().deletingLastPathComponent()
       .deletingLastPathComponent().appendingPathComponent("schema/schema.sql")
     let schema = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schema))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schema, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   @Test("startTask marks an open task in_progress")

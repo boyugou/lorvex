@@ -13,14 +13,11 @@ enum DataExportToolCatalog {
     name: "export_data",
     title: "Export Data",
     description:
-      "Exports Lorvex data (tasks, lists, habits, calendar events, daily reviews, memory, "
-      + "preferences, current focus, saved focus schedules) as an embedded JSON or CSV resource. "
-      + "Pass `entities` explicitly; use [\"all\"] only when a full export is intended. "
-      + "Provider/EventKit blocks inside saved focus schedules honor this device's calendar AI-access "
-      + "tier: off omits them, while other tiers retain privacy-neutral occupancy. App-initiated exports "
-      + "outside MCP retain every saved block, with provider labels privacy-neutralized. Calendar events "
-      + "and daily reviews cover full stored "
-      + "history; habits are evaluated for today.",
+      "Exports Lorvex data (tasks, lists, tags, habits, calendar events, task-event links, "
+      + "daily reviews, daily briefings, memory, preferences) as an embedded JSON or CSV "
+      + "resource. Pass `entities` explicitly; use [\"all\"] only when a full export is intended. "
+      + "Tasks carry their planned day and time. Calendar events and daily reviews cover full "
+      + "stored history; habits are evaluated for today.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

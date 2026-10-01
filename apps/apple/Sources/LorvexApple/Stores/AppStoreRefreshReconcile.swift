@@ -18,7 +18,7 @@ extension AppStore {
     }
     switch selection {
     case .today:
-      let visibleTasks = focusSurfaceOrderedTasks
+      let visibleTasks = todayOrderedTasks
       if let selectedTaskID, visibleTasks.contains(where: { $0.id == selectedTaskID }) {
         return
       }
@@ -37,7 +37,7 @@ extension AppStore {
       if let selectedTaskID, taskDetailStorage.loadedTasksByID[selectedTaskID] != nil { return }
       selectedTaskID = nil
     case .lists:
-      let visibleListTasks = filteredSelectedListTasks
+      let visibleListTasks = selectedListTasks
       if let selectedTaskID, visibleListTasks.contains(where: { $0.id == selectedTaskID }) {
         return
       }
@@ -74,9 +74,7 @@ extension AppStore {
   /// UI shows a clean empty/error state rather than a half-stale mix.
   func clearLoadedStateAfterRefreshFailure() {
     today = .empty
-    currentFocus = nil
-    focusSchedule = nil
-    proposedFocusSchedule = nil
+    proposedDayTimes = nil
     dailyReview = nil
     weeklyReview = nil
     dayReviewEvidence = nil

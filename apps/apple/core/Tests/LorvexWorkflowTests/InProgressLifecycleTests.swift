@@ -78,8 +78,8 @@ final class InProgressLifecycleTests: XCTestCase {
   }
 
   /// in_progress → open ("pause" / un-start): the mis-click recovery leaves no
-  /// residue — unlike a reopen from terminal, it must NOT wipe planned_date or
-  /// reset defer_count. Start then pause is a metadata round-trip no-op.
+  /// residue — unlike reviving a cancelled task, it must NOT wipe planned_date
+  /// or reset defer_count. Start then pause is a metadata round-trip no-op.
   func testPauseLeavesNoResidue() throws {
     let store = try WorkflowTestSupport.freshStore()
     try insertTask(store.writer, id: "t1", status: "in_progress")

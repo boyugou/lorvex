@@ -42,7 +42,6 @@ python3 ./script/verify_core_service_coverage.py
 GOOD_WORKFLOW = """\
 run: ./script/verify_all.sh
 run: ./script/verify_mobile_release_link.sh
-run: ./script/verify_vision_release_link.sh
 """
 
 
@@ -235,8 +234,7 @@ class RepoHygieneTests(unittest.TestCase):
             root = Path(directory)
             workflow = root / "apple-ci.yml"
             workflow.write_text(
-                "run: ./script/verify_mobile_release_link.sh\n"
-                "run: ./script/verify_vision_release_link.sh\n",
+                "run: ./script/verify_mobile_release_link.sh\n",
                 encoding="utf-8",
             )
             verify_all = root / "verify_all.sh"
@@ -253,8 +251,7 @@ class RepoHygieneTests(unittest.TestCase):
             workflow = root / "apple-ci.yml"
             workflow.write_text(
                 "# run: ./script/verify_all.sh\n"
-                "run: ./script/verify_mobile_release_link.sh\n"
-                "run: ./script/verify_vision_release_link.sh\n",
+                "run: ./script/verify_mobile_release_link.sh\n",
                 encoding="utf-8",
             )
             verify_all = root / "verify_all.sh"
@@ -271,8 +268,7 @@ class RepoHygieneTests(unittest.TestCase):
             workflow = root / "apple-ci.yml"
             workflow.write_text(
                 "run: ./script/verify_all.sh || true\n"
-                "run: ./script/verify_mobile_release_link.sh\n"
-                "run: ./script/verify_vision_release_link.sh\n",
+                "run: ./script/verify_mobile_release_link.sh\n",
                 encoding="utf-8",
             )
             verify_all = root / "verify_all.sh"

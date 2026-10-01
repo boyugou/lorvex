@@ -1,7 +1,7 @@
 enum TaskCommandAction: Equatable {
   case openTaskDetail
   case saveSelectedTaskDraft
-  case toggleSelectedTaskFocus
+  case toggleSelectedTaskStarted
   case deferSelectedTask
   case completeSelectedTask
   case reopenSelectedTask

@@ -19,6 +19,7 @@ public enum TaskUpdateRow {
       || prepared.priority.isSetOrClear
       || prepared.estimatedMinutes.isSetOrClear
       || prepared.plannedDate.isSetOrClear
+      || prepared.plannedTime.isSetOrClear
       || prepared.availableFrom.isSetOrClear
   }
 
@@ -44,6 +45,7 @@ public enum TaskUpdateRow {
       priority: prepared.priority,
       estimatedMinutes: prepared.estimatedMinutes,
       plannedDate: prepared.plannedDate,
+      plannedTime: prepared.plannedTime,
       availableFrom: prepared.availableFrom,
       archivedAt: .unset,
       beforeStatus: prepared.beforeStatus)

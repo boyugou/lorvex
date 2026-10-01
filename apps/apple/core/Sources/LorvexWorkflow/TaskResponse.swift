@@ -163,6 +163,10 @@ public enum TaskResponse {
     obj["due_date"] = stringOrNull(row.scheduling.dueDate?.asString)
     obj["estimated_minutes"] = intOrNull(row.scheduling.estimatedMinutes)
     obj["planned_date"] = stringOrNull(row.scheduling.plannedDate?.asString)
+    obj["planned_start_time"] = stringOrNull(
+      row.scheduling.plannedTime.map { TimeOfDay.rangeBoundString(Int($0.lowerBound)) })
+    obj["planned_end_time"] = stringOrNull(
+      row.scheduling.plannedTime.map { TimeOfDay.rangeBoundString(Int($0.upperBound)) })
     obj["available_from"] = stringOrNull(row.scheduling.availableFrom?.asString)
     obj["defer_count"] = .int(row.scheduling.deferCount)
     obj["last_deferred_at"] = stringOrNull(row.scheduling.lastDeferredAt)

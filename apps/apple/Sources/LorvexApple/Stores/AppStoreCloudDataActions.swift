@@ -7,35 +7,17 @@ struct CloudDeletionReenableRequest: Sendable {
 }
 
 struct CloudSyncResumeRequest: Sendable {
-  fileprivate let adoptionRequest: CloudSyncAccountAdoptionRequest
+  fileprivate let pauseReason: CloudSyncPauseReason
   fileprivate let deletionEpoch: UInt64
 }
 
 extension AppStore {
-  /// Refresh `cloudSyncPauseReason` from the coordinator's durable pause state
-  /// so Settings can show a "sync paused" notice. A no-op when no coordinator
-  /// is wired (sync off / previews / tests): the stored value is left as-is so
-  /// a reason recorded by `deleteCloudDataEverywhere` — which turns sync off —
-  /// is not blanked by an unrelated refresh.
+  /// Refresh `cloudSyncPauseReason` from the controller's durable pause state
+  /// so Settings can show a "sync paused" notice. A no-op without a controller
+  /// (previews and tests).
   func refreshCloudSyncPauseReason() async {
-    guard let cloudSyncCoordinator else { return }
-    cloudSyncPauseReason = await cloudSyncCoordinator.currentPauseReason()
-  }
-
-  /// Best-effort continuation of a previously published CloudKit deletion
-  /// barrier. It is intentionally available while sync is off: the coordinator
-  /// performs only namespace cleanup authorized by the remote `.deleted` state.
-  func retryPendingCloudDataDeletionCleanup() async {
-    guard !isDataImportRunning, !isLocalFactoryResetRunning,
-      !isCloudDataDeletionRunning, !isCloudDeletionMaintenanceRunning,
-      let sync = core as? any EnvelopeSyncServicing,
-      let coordinator = cloudDataMaintenanceCoordinator
-    else { return }
-    isCloudDeletionMaintenanceRunning = true
-    defer { isCloudDeletionMaintenanceRunning = false }
-    _ = try? await Task.detached(priority: .utility) {
-      try await coordinator.retryPendingCloudDataDeletionCleanup(sync: sync)
-    }.value
+    guard let cloudSyncController else { return }
+    cloudSyncPauseReason = await cloudSyncController.currentPauseReason()
   }
 
   /// Delete every Lorvex record from the signed-in iCloud account — for all
@@ -45,12 +27,9 @@ extension AppStore {
   /// it, which re-uploads this Mac's data.
   ///
   /// Returns `nil` on success, or a localized user-facing error message when
-  /// the operation could not finish. A failure before the fleet-visible delete
-  /// barrier leaves sync unchanged. Once that barrier is durable it cannot be
-  /// rolled back: if physical cleanup then fails, sync still turns off and the
-  /// returned message asks the user to retry the remaining cleanup. Works with
-  /// sync off — the common case is a user who disabled sync and now wants the
-  /// cloud copy gone too.
+  /// the deletion could not finish, in which case sync is left unchanged.
+  /// Works with sync off — the common case is a user who disabled sync and
+  /// now wants the cloud copy gone too.
   func deleteCloudDataEverywhere(settings: AppSettingsStore) async -> String? {
     guard !isDataImportRunning, !isLocalFactoryResetRunning else {
       let busyDetail = String(
@@ -68,7 +47,7 @@ extension AppStore {
         ),
         busyDetail)
     }
-    guard let sync = core as? any EnvelopeSyncServicing else {
+    guard let controller = cloudSyncController else {
       return String(
         format: String(
           localized: "settings.cloud_delete.error.failed",
@@ -77,18 +56,7 @@ extension AppStore {
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
-        "Cloud sync storage is unavailable.")
-    }
-    guard let coordinator = cloudDataMaintenanceCoordinator else {
-      return String(
-        format: String(
-          localized: "settings.cloud_delete.error.failed",
-          defaultValue:
-            "Couldn’t finish deleting iCloud data (%@). Check your connection and try again.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        "Cloud sync coordinator is unavailable.")
+        "Cloud sync is unavailable.")
     }
     guard !isCloudDataDeletionRunning else {
       return String(
@@ -104,31 +72,16 @@ extension AppStore {
     cloudDataDeletionEpoch &+= 1
     isCloudDataDeletionRunning = true
     defer { isCloudDataDeletionRunning = false }
-    var cleanupFailureMessage: String?
+    guard await controller.accountAvailability() == .available else {
+      return String(
+        localized: "settings.cloud_delete.error.no_account",
+        defaultValue: "No usable iCloud account. Sign in to iCloud and try again.",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle
+      )
+    }
     do {
-      try await Task.detached(priority: .userInitiated) {
-        try await coordinator.deleteAllCloudData(sync: sync)
-      }.value
-    } catch let deletionError as CloudSyncCloudDataDeletionError {
-      switch deletionError {
-      case .accountUnavailable:
-        return String(
-          localized: "settings.cloud_delete.error.no_account",
-          defaultValue: "No usable iCloud account. Sign in to iCloud and try again.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        )
-      case .cleanupIncomplete(let detail):
-        cleanupFailureMessage = String(
-          format: String(
-            localized: "settings.cloud_delete.error.failed",
-            defaultValue:
-              "Couldn’t finish deleting iCloud data (%@). Check your connection and try again.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ),
-          detail)
-      }
+      try await controller.deleteAllCloudData()
     } catch {
       return String(
         format: String(
@@ -140,115 +93,70 @@ extension AppStore {
         ),
         error.localizedDescription)
     }
-    // The cloud copy is gone; honor "sync stays off until re-enabled" at the
-    // app level too. The persisted mode flips to `.off` and the runtime mode
-    // halts cycles immediately; the engine-side pause is belt-and-suspenders
-    // against any path that re-enables live mode without the explicit
-    // re-opt-in below.
+    // The cloud copy is gone; sync stays off until the user turns it back on,
+    // which re-uploads this Mac's data into a new zone.
     settings.cloudSyncMode = .off
     cloudSyncMode = .off
-    cloudSyncPacing.reset()
     cloudSyncPauseReason = .userDeletedZone
-    return cleanupFailureMessage
+    return nil
   }
 
-  /// The explicit re-opt-in that follows an iCloud-data deletion: the user
-  /// turned the sync mode back to Live in Settings, which is the consent to
-  /// re-create the zone and re-upload this Mac's data. Lifts ONLY a
-  /// `userDeletedZone` pause — an `accountChanged` pause keeps its own
-  /// adopt-account consent flow (`adoptCurrentCloudAccountAndResumeSync`).
-  ///
-  /// Runs against the on-demand maintenance coordinator when sync is not live
-  /// yet (on macOS the Live mode takes effect after relaunch): it clears the
-  /// durable pause and enqueues the re-upload backfill now, so the first cycle
-  /// after relaunch re-creates the zone and pushes rather than wedging at the
-  /// pause gate.
+  /// The explicit re-opt-in that follows an iCloud-data deletion: turning sync
+  /// back on is the consent to create a new zone and upload this Mac's data.
+  /// The request is captured when the choice is made; a deletion accepted
+  /// after it supersedes it.
   func makeCloudDeletionReenableRequest() -> CloudDeletionReenableRequest? {
     guard !isCloudDataDeletionRunning else { return nil }
     return CloudDeletionReenableRequest(deletionEpoch: cloudDataDeletionEpoch)
   }
 
-  func liftCloudDeletionPauseForExplicitReenable() async {
-    guard let request = makeCloudDeletionReenableRequest() else { return }
-    await liftCloudDeletionPauseForExplicitReenable(request: request)
+  /// Whether `request` still stands: no cloud-data deletion is running, and
+  /// none was accepted after the request was made.
+  func isCurrent(_ request: CloudDeletionReenableRequest) -> Bool {
+    !isCloudDataDeletionRunning && cloudDataDeletionEpoch == request.deletionEpoch
   }
 
+  /// Lifts a `userDeletedZone` pause for an explicit re-enable. An
+  /// `accountChanged` pause keeps its own consent flow
+  /// (``adoptCurrentCloudAccountAndResumeSync(request:)``).
   func liftCloudDeletionPauseForExplicitReenable(
     request: CloudDeletionReenableRequest
   ) async {
-    guard let coordinator = cloudDataMaintenanceCoordinator,
-      let sync = core as? any EnvelopeSyncServicing
+    guard let controller = cloudSyncController, isCurrent(request),
+      await controller.currentPauseReason() == .userDeletedZone
     else { return }
-    guard let adoptionRequest = await coordinator
-      .makeSameAccountDeletedZoneReenableRequest(sync: sync)
-    else {
-      cloudSyncPauseReason = await coordinator.currentPauseReason()
-      return
-    }
-    let authorization: @Sendable () async -> Bool = { [weak self] in
-      await MainActor.run {
-        guard let self else { return false }
-        return !self.isCloudDataDeletionRunning
-          && self.cloudDataDeletionEpoch == request.deletionEpoch
-      }
-    }
-    _ = await Task.detached(priority: .userInitiated) {
-      await coordinator.confirmDeletedZoneReenable(
-        sync: sync, request: adoptionRequest, authorization: authorization)
-    }.value
-    cloudSyncPauseReason = await coordinator.currentPauseReason()
+    await applyCloudSyncControllerState(
+      (try? await controller.reenableAfterCloudDeletion()) ?? .failed("reenable failed"))
   }
 
   /// Adopt the currently signed-in iCloud account and resume sync — the action
-  /// the "Sync Paused" notice offers. Re-uploads this Mac's data into the
-  /// current account's zone (re-creating the Lorvex zone when it was deleted),
-  /// records that account as the one this Mac syncs with, and lifts the
-  /// durable pause. Mirrors the mobile store's action of the same name. A
-  /// no-op when no live coordinator / envelope backend is wired.
-  /// Capture consent synchronously before the UI creates an unstructured Task.
-  /// A later cloud deletion advances the epoch, making that queued request
-  /// incapable of re-enabling the newly-deleted namespace.
+  /// the "Sync Paused" notice offers. After an account change this uploads
+  /// this Mac's data into the current account and merges it with what is
+  /// there; after a cloud-data deletion it uploads into a new zone. Consent is
+  /// captured synchronously before the UI creates an unstructured Task, so a
+  /// cloud deletion accepted afterwards makes the request void.
   func makeCloudSyncResumeRequest() async -> CloudSyncResumeRequest? {
-    guard !isCloudDataDeletionRunning, let pauseReason = cloudSyncPauseReason else {
-      return nil
-    }
-    guard let coordinator = cloudSyncCoordinator ?? cloudDataMaintenanceCoordinator,
-      let sync = core as? any EnvelopeSyncServicing,
-      let adoptionRequest = await coordinator.makeAccountAdoptionRequest(
-        sync: sync, expectedPauseReason: pauseReason),
-      !isCloudDataDeletionRunning,
-      cloudSyncPauseReason == pauseReason
+    guard !isCloudDataDeletionRunning, let pauseReason = cloudSyncPauseReason,
+      cloudSyncController != nil
     else { return nil }
-    return CloudSyncResumeRequest(
-      adoptionRequest: adoptionRequest, deletionEpoch: cloudDataDeletionEpoch)
+    return CloudSyncResumeRequest(pauseReason: pauseReason, deletionEpoch: cloudDataDeletionEpoch)
   }
 
   func adoptCurrentCloudAccountAndResumeSync(
     request: CloudSyncResumeRequest
   ) async {
-    guard let sync = core as? any EnvelopeSyncServicing else { return }
-    if request.adoptionRequest.pauseReason == .userDeletedZone {
-      guard let coordinator = cloudDataMaintenanceCoordinator else { return }
-      let authorization: @Sendable () async -> Bool = { [weak self] in
-        await MainActor.run {
-          guard let self else { return false }
-          return !self.isCloudDataDeletionRunning
-            && self.cloudDataDeletionEpoch == request.deletionEpoch
-        }
-      }
-      _ = await Task.detached(priority: .userInitiated) {
-        await coordinator.confirmDeletedZoneReenable(
-          sync: sync, request: request.adoptionRequest,
-          authorization: authorization)
-      }.value
-    } else if let coordinator = cloudSyncCoordinator {
-      _ = await Task.detached(priority: .userInitiated) {
-        await coordinator.confirmBackfillIntoCurrentAccount(
-          sync: sync, request: request.adoptionRequest)
-      }.value
+    guard let controller = cloudSyncController, !isCloudDataDeletionRunning,
+      cloudDataDeletionEpoch == request.deletionEpoch,
+      await controller.currentPauseReason() == request.pauseReason
+    else { return }
+    let state: CloudSyncControllerState
+    switch request.pauseReason {
+    case .userDeletedZone:
+      state = (try? await controller.reenableAfterCloudDeletion()) ?? .failed("reenable failed")
+    case .accountChanged:
+      state = (try? await controller.adoptCurrentAccount()) ?? .failed("adoption failed")
     }
-    await refreshCloudSyncPauseReason()
-    cloudSyncPacing.reset()
+    await applyCloudSyncControllerState(state)
     await refresh()
   }
 }

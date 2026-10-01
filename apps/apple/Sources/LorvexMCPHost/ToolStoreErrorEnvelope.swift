@@ -12,9 +12,8 @@ protocol ToolStoreError: Error {
 
 extension ToolRegistry {
   /// The `not_found` error envelope for a domain-store lookup miss, over any
-  /// ``ToolStoreError``. The generic sibling of ``focusStoreErrorResult(_:toolName:)``;
-  /// both wrap ``errorResult(code:message:toolName:)`` with `code: "not_found"`
-  /// and the error's own `message`.
+  /// ``ToolStoreError``: ``errorResult(code:message:toolName:)`` with
+  /// `code: "not_found"` and the error's own `message`.
   func notFoundResult(_ error: some ToolStoreError, toolName: String) -> CallTool.Result {
     Self.errorResult(code: "not_found", message: error.message, toolName: toolName)
   }

@@ -3,18 +3,10 @@ import XCTest
 
 @testable import LorvexWorkflow
 
-/// Tests for `TaskUpdateInput` shape + the Unicode hygiene
-/// sanitizer. The Rust `task_update/tests.rs` end-to-end suite is
-/// deferred alongside the orchestrator (see
-/// `TaskUpdateSyncEffects.swift` → `TaskUpdate` doc for the list of
-/// outstanding effects-subtree dependencies).
+/// Tests for the `TaskUpdateInput` shape and the Unicode hygiene sanitizer.
 final class TaskUpdateInputTests: XCTestCase {
-  // Mirrors Rust `TaskUpdateInput::FIELDS` byte-for-byte. The
-  // cross-surface contract verifier on the Rust side pins every
-  // consumer's `update_task` wire shape against this list; the Swift
-  // port must declare the same order so the eventual Apple
-  // surface-adapter contract test can lean on it.
-  func testFieldsListMatchesRust() {
+  // Pins the `update_task` field names and their order.
+  func testFieldsListIsTheUpdateTaskWireShape() {
     XCTAssertEqual(
       TaskUpdateInput.fields,
       [
@@ -36,6 +28,8 @@ final class TaskUpdateInputTests: XCTestCase {
         "depends_on_add",
         "depends_on_remove",
         "planned_date",
+        "planned_start_time",
+        "planned_end_time",
         "available_from",
       ])
   }

@@ -13,7 +13,7 @@ import LorvexDomain
 /// affect the emitted bytes).
 ///
 /// Aggregate roots whose envelope embeds materialized child rows
-/// (`current_focus`, `focus_schedule`, `daily_review`, `calendar_event`) are
+/// (`daily_review`, `calendar_event`) are
 /// NOT covered here — they flow through the aggregate payload builder.
 public enum PayloadLoaders {
 
@@ -390,8 +390,6 @@ public enum PayloadLoaders {
     ])
   }
 
-  // `ai_changelog` has no generic loader here. Its emit-on-write projection is
-  // built by `ChangelogWrite.buildChangelogSyncPayload`, while inbound apply
-  // parses the wire payload directly; neither path needs a table-wide payload
-  // loader in this catalog.
+  // `ai_changelog` has no loader here: the audit trail is device-local and
+  // never enters the outbox.
 }

@@ -40,8 +40,10 @@ public struct MobileListDraft: Equatable, Sendable {
     self.icon = icon
   }
 
+  /// A draft of `list` as its editor shows it, starting from the list's shown
+  /// name (``LorvexList/displayName``).
   public init(list: LorvexList) {
-    self.name = list.name
+    self.name = list.displayName
     self.description = list.description ?? ""
     self.color = list.color
     self.icon = list.icon

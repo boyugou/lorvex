@@ -389,14 +389,13 @@ private func recordWithVersion(_ versionString: String) -> CKRecord {
 func decodeAcceptsCanonicalFutureVersion() {
   // A peer with a badly advanced clock can legitimately emit any canonical HLC
   // inside the format's fixed-width range. Classifying it as corrupt would make
-  // every nil-token and incremental traversal retry the same page forever. The
-  // apply clock observes peers with bounded drift, while an explicit edit uses
-  // the detached dominance lane, so decode must remain independent of local wall
-  // time.
+  // every fetch retry the same change forever. The apply clock observes peers
+  // with bounded drift, while an explicit edit uses the detached dominance lane,
+  // so decode must remain independent of local wall time.
   let ceiling = "9999999999999_0000_a1b2c3d4a1b2c3d4"  // ~year 2286
   guard case .decoded(let envelope) = CloudSyncEnvelopeRecord.decode(recordWithVersion(ceiling))
   else {
-    Issue.record("a canonical future HLC must not poison the traversal cursor")
+    Issue.record("a canonical future HLC must not be classified as corrupt")
     return
   }
   #expect(envelope.version.description == ceiling)
@@ -744,19 +743,4 @@ func decodeStillParksAFutureCanonicalSchemaVersion() {
     Issue.record("a future canonical schema version must still park a forward-compat record")
     return
   }
-}
-
-// MARK: - Generation-control INT64 decoding
-
-@Test
-func generationControlReadsNonnegativeInt64AndRejectsInvalidValues() {
-  #expect(CloudSyncRecordValueCodec.nonnegativeInt(7 as NSNumber) == 7)
-  // A negative generation would break the monotonic counter contract.
-  #expect(CloudSyncRecordValueCodec.nonnegativeInt(-1 as NSNumber) == nil)
-  #expect(CloudSyncRecordValueCodec.nonnegativeInt(1.5 as NSNumber) == nil)
-  #expect(CloudSyncRecordValueCodec.nonnegativeInt(true as NSNumber) == nil)
-  // The schema declares `epoch` INT64; a legacy string representation is rejected.
-  #expect(CloudSyncRecordValueCodec.nonnegativeInt("9" as NSString) == nil)
-  // Absent → nil.
-  #expect(CloudSyncRecordValueCodec.nonnegativeInt(nil) == nil)
 }

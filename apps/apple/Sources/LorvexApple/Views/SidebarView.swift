@@ -49,7 +49,6 @@ struct SidebarView: View {
                 planSection
                 listScopeSection
                 archivedListScopeSection
-                reflectSection
             }
             .listStyle(.sidebar)
         )
@@ -94,9 +93,7 @@ struct SidebarView: View {
         case .destination(let destination):
             store.navigateToWorkspace(destination)
         case .listScope(let id):
-            store.selectedTaskID = nil
-            store.setTaskWorkspaceListScope(id)
-            store.selection = .tasks
+            store.openTaskListScope(id)
         }
     }
 
@@ -105,14 +102,6 @@ struct SidebarView: View {
     private var planSection: some View {
         Section {
             destinationRows(.plan)
-        }
-    }
-
-    private var reflectSection: some View {
-        Section {
-            destinationRows(.reflect)
-        } header: {
-            SidebarSectionHeader(title: SidebarGroupKind.reflect.localizedTitle)
         }
     }
 
@@ -132,57 +121,31 @@ struct SidebarView: View {
         }
     }
 
-    // MARK: - Detail lines
-
-    func listScopeDetail(for list: LorvexList) -> String {
-        if list.totalCount == 0 {
-            return String(
-                localized: "sidebar.list_scope.empty",
-                defaultValue: "Empty list",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle
-            )
-        }
-
-        if list.openCount == 0 {
-            return String(
-                localized: "sidebar.list_scope.all_done",
-                defaultValue: "All done",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle
-            )
-        }
-
-        // The trailing badge already carries the open count, so the detail line
-        // only adds what the badge can't: how much is already done. The long
-        // "open · done" pair always truncated at sidebar width.
-        if list.completedCount > 0 {
-            return String(
-                format: String(
-                    localized: "sidebar.list_scope.done_count",
-                    defaultValue: "%lld done",
-                    table: "Localizable",
-                    bundle: LorvexL10n.bundle
-                ),
-                list.completedCount
-            )
-        }
-
-        return String(
-            localized: "sidebar.list_scope.open_count",
-            defaultValue: "\(list.openCount) open tasks",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle)
-    }
-
     // MARK: - Footer
 
-    /// Settings — the destination that doesn't belong to a scrolling group. The
-    /// command palette is intentionally absent here: it is an action, not a place,
-    /// and stays reachable through ⌘K and the File menu rather than occupying a
-    /// sidebar row (which no native Mac app does).
+    /// The two places that don't belong to a scrolling group, pinned so they
+    /// never scroll away behind a long list of lists: Memory, what the assistant
+    /// remembers, which is not a daily workspace but must always be findable and
+    /// shows its selection here while open; and Settings, which opens its own
+    /// window. The command palette is intentionally absent: it is an action, not
+    /// a place, and stays reachable through ⌘K and the File menu rather than
+    /// occupying a sidebar row (which no native Mac app does).
     private var utilitiesFooter: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+            Button {
+                store.navigateToWorkspace(.memory)
+            } label: {
+                SidebarFooterRow(isSelected: store.selection == .memory) {
+                    Image(systemName: SidebarSelection.memory.systemImage)
+                } title: {
+                    Text(SidebarSelection.memory.macOSLocalizedTitle)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: SidebarSelection.memory.macOSLocalizedTitle))
+            .accessibilityAddTraits(store.selection == .memory ? .isSelected : [])
+            .accessibilityIdentifier("sidebar.memory")
+
             SettingsLink {
                 SidebarFooterRow {
                     Image(systemName: "gearshape")
@@ -195,7 +158,7 @@ struct SidebarView: View {
             .accessibilityIdentifier("sidebar.settings")
         }
         .padding(.horizontal, SidebarMetrics.horizontalInset)
-        .padding(.top, 6)
+        .padding(.top, LorvexDesign.Spacing.sm)
         .padding(.bottom, 8)
         .overlay(alignment: .top) {
             Divider()

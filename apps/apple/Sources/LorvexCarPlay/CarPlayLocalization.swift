@@ -20,9 +20,4 @@ public enum CarPlayL10n {
       return Bundle(for: BundleAnchor.self)
     #endif
   }()
-
-  /// Exposed for catalog completeness tests across every shipped language.
-  public static var catalogURL: URL? {
-    bundle.url(forResource: "Localizable", withExtension: "xcstrings")
-  }
 }

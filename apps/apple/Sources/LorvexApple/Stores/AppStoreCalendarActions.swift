@@ -108,6 +108,25 @@ extension AppStore {
     selection = .calendar
   }
 
+  /// The stored end date shifted to preserve an event's day-span when the
+  /// single-day edit form moves the start day. The draft carries one date and no
+  /// end-day field, so the whole event moves and the end must move by the same
+  /// offset. A single-day event (nil end) stays nil; passing the core's nil
+  /// (preserve) would strand the original end and either fail "end before start"
+  /// moving forward or silently rewrite the event multi-day moving back. Mirrors
+  /// the iOS `MobileStore.shiftedCalendarEndDate`.
+  func shiftedCalendarEndDate(for event: CalendarTimelineEvent, newStartDate: Date) -> String? {
+    guard let originalEnd = event.endDate else { return nil }
+    let newStartYmd = Self.ymdFormatter.string(from: newStartDate)
+    guard
+      let start = Self.ymdFormatter.date(from: event.startDate),
+      let end = Self.ymdFormatter.date(from: originalEnd)
+    else { return originalEnd }
+    // Rounding absorbs any ±1h DST offset in the raw seconds difference.
+    let spanDays = Int((end.timeIntervalSince(start) / 86_400).rounded())
+    return LorvexDateFormatters.ymdUTCAddingDays(newStartYmd, days: spanDays) ?? originalEnd
+  }
+
   func updateCalendarEvent(_ event: CalendarTimelineEvent) async {
     guard event.editable, !event.supportsScopedMutation else { return }
     await perform {
@@ -116,7 +135,7 @@ extension AppStore {
         id: event.eventID,
         title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
         startDate: Self.ymdFormatter.string(from: draftCalendarDate),
-        endDate: nil,
+        endDate: shiftedCalendarEndDate(for: event, newStartDate: draftCalendarDate),
         startTime: draftCalendarAllDay
           ? nil : Self.hmFormatter.string(from: draftCalendarStartTime),
         endTime: draftCalendarAllDay ? nil : Self.hmFormatter.string(from: draftCalendarEndTime),
@@ -307,10 +326,11 @@ extension AppStore {
 
   /// Ensure today's schedule is loaded and freshly ingested for the Today
   /// surface. Today reads `provider_calendar_events` (the EventKit mirror) both
-  /// to display the day's events and — through the focus scheduler — to plan
-  /// around them, but the mirror is otherwise refreshed only by the Calendar
+  /// to display the day's events and — through suggested times — to place
+  /// tasks around them, but the mirror is otherwise refreshed only by the Calendar
   /// surface and the EventKit change observer. Without this, opening straight to
-  /// Today and auto-scheduling would plan against a stale or empty mirror.
+  /// Today and suggesting times would place them against a stale or empty
+  /// mirror.
   ///
   /// When the loaded window already spans today (the common case — both Today
   /// and Calendar default to a today-anchored window) the current window is

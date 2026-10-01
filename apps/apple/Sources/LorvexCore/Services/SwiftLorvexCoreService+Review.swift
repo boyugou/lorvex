@@ -13,8 +13,8 @@ import LorvexWorkflow
 /// the parent row plus its link materializers). The write date is resolved and
 /// staleness-gated via `DailyReviewDate.resolveDailyReviewWriteDate`, and the
 /// non-optional repo `timezone` is taken from the active timezone preference.
-/// Weekly review composes `WeeklyReview.loadWeeklyReviewSnapshot` with the MCP
-/// snapshot limits (5/3/5/5). Mapping reuses `SwiftLorvexReviewDeserializers`.
+/// Weekly review composes `WeeklyReview.loadWeeklyReviewSnapshot` with
+/// ``snapshotLimits``. Mapping reuses `SwiftLorvexReviewDeserializers`.
 extension SwiftLorvexCoreService {
 
   // MARK: - Daily review reads
@@ -272,20 +272,28 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  /// How many of the day's still-open due tasks the day review lists; its
+  /// sentence counts them all.
+  static let dayDueOpenLimit: UInt32 = 5
+
   public func loadDaySummary(date: String, completedLimit: Int) async throws -> DayReviewSummary {
     let anchor = try Self.canonicalReviewDate(date)
     let limit = UInt32(min(max(completedLimit, 1), 50))
     return try read { db in
-      let summary = try DayReview.loadDaySummary(db, date: anchor, completedLimit: limit)
+      let summary = try DayReview.loadDaySummary(
+        db, date: anchor, completedLimit: limit, dueOpenLimit: Self.dayDueOpenLimit)
+      func item(_ task: DayReview.TaskItem) -> ReviewTaskSummary {
+        ReviewTaskSummary(
+          id: task.id, title: task.title, status: task.status, deferCount: Int(task.deferCount),
+          plannedDate: task.plannedDate)
+      }
       return DayReviewSummary(
         date: summary.date,
         completedCount: Int(summary.completedCount),
-        topCompleted: summary.topCompleted.map {
-          ReviewTaskSummary(
-            id: $0.id, title: $0.title, status: $0.status, deferCount: Int($0.deferCount))
-        },
+        topCompleted: summary.topCompleted.map(item),
         createdCount: Int(summary.createdCount),
         dueOpenCount: Int(summary.dueOpenCount),
+        dueOpenTasks: summary.dueOpenTasks.map(item),
         habitsCompleted: Int(summary.habitsCompleted),
         habitsTotal: Int(summary.habitsTotal),
         eventCount: Int(summary.eventCount))
@@ -319,11 +327,10 @@ extension SwiftLorvexCoreService {
 
   // MARK: - Helpers
 
-  /// The MCP snapshot section caps (top_completed / stalled_lists /
-  /// frequently_deferred / someday_items) used by the public weekly-review
-  /// contract.
+  /// Section caps for the week review snapshot behind the app's week page and
+  /// the Weekly Review intent.
   private static let snapshotLimits = WeeklyReview.SnapshotLimits(
-    topCompleted: 5, stalledLists: 3, frequentlyDeferred: 5, somedayItems: 5)
+    topCompleted: 5, stalledLists: 3, frequentlyDeferred: 5, overdueTasks: 5, somedayItems: 5)
 
   /// Format-only date validation for the import path: any valid calendar date
   /// is accepted, with no staleness/future window.

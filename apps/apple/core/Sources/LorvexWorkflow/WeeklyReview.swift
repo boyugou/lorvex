@@ -7,10 +7,12 @@ import LorvexStore
 ///
 /// Three entry points compose the same window math, count queries, and row
 /// mappers into different consumer shapes:
-/// - `loadWeeklyReview` — the desktop app's full read model.
-/// - `loadWeeklyReviewSnapshot` — a compact MCP "current snapshot" response.
-/// - `loadWeeklyReviewBrief` — the conversational "what changed this week?"
-///   briefing carrying per-section `total_matching` coverage.
+/// - `loadWeeklyReview` — the full read model, every section at caller-chosen
+///   limits.
+/// - `loadWeeklyReviewSnapshot` — the compact snapshot behind the app's week
+///   review page and the Weekly Review intent.
+/// - `loadWeeklyReviewBrief` — the MCP "what changed this week?" briefing
+///   carrying per-section `total_matching` coverage.
 ///
 /// The caller owns the read transaction.
 public enum WeeklyReview {
@@ -88,14 +90,17 @@ public enum WeeklyReview {
     public let topCompleted: UInt32
     public let stalledLists: UInt32
     public let frequentlyDeferred: UInt32
+    public let overdueTasks: UInt32
     public let somedayItems: UInt32
 
     public init(
-      topCompleted: UInt32, stalledLists: UInt32, frequentlyDeferred: UInt32, somedayItems: UInt32
+      topCompleted: UInt32, stalledLists: UInt32, frequentlyDeferred: UInt32,
+      overdueTasks: UInt32, somedayItems: UInt32
     ) {
       self.topCompleted = topCompleted
       self.stalledLists = stalledLists
       self.frequentlyDeferred = frequentlyDeferred
+      self.overdueTasks = overdueTasks
       self.somedayItems = somedayItems
     }
   }
@@ -150,6 +155,8 @@ public enum WeeklyReview {
     public let topCompleted: [TaskItem]
     public let stalledLists: [StalledList]
     public let frequentlyDeferred: [TaskItem]
+    /// Open tasks due before the window's last day, earliest due first.
+    public let overdueTasks: [TaskItem]
     public let somedayItems: [TaskItem]
     public let limits: SnapshotLimits
   }
@@ -364,7 +371,8 @@ public enum WeeklyReview {
       overdueTasks: overdue, somedayItems: someday, limits: limits)
   }
 
-  /// Compact MCP snapshot.
+  /// Compact snapshot. `endingOn` anchors the window's final day, `nil` =
+  /// today.
   public static func loadWeeklyReviewSnapshot(
     _ db: Database, limits: SnapshotLimits, endingOn anchorDay: String? = nil
   ) throws
@@ -373,6 +381,7 @@ public enum WeeklyReview {
     try validateLimit("top_completed", limits.topCompleted)
     try validateLimit("stalled_lists", limits.stalledLists)
     try validateLimit("frequently_deferred", limits.frequentlyDeferred)
+    try validateLimit("overdue_tasks", limits.overdueTasks)
     try validateLimit("someday_items", limits.somedayItems)
 
     let window = try loadWeeklyReviewWindow(db, endingOn: anchorDay)
@@ -382,13 +391,14 @@ public enum WeeklyReview {
     let stalled = try loadStalledLists(db, startUtc: window.startUtc, limit: limits.stalledLists)
     let deferred = try loadTaskItems(
       db, deferredItemsSQL(), [frequentlyDeferredMinCount, limits.frequentlyDeferred])
+    let overdue = try loadTaskItems(db, overdueItemsSQL, [window.toDay, limits.overdueTasks])
     let someday = try loadTaskItems(db, somedayItemsSQL, [limits.somedayItems])
     let estimate = try loadEstimateSummary(db, startUtc: window.startUtc, endUtc: window.endUtc)
 
     return Snapshot(
       window: window.model, counts: counts, estimateSummary: estimate,
       topCompleted: topCompleted, stalledLists: stalled, frequentlyDeferred: deferred,
-      somedayItems: someday, limits: limits)
+      overdueTasks: overdue, somedayItems: someday, limits: limits)
   }
 
   static func sectionEntry(limit: UInt32, totalMatching: Int64, returned: Int) -> BriefSectionEntry

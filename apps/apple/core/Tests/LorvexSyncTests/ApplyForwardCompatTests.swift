@@ -116,31 +116,24 @@ final class ApplyForwardCompatTests: XCTestCase {
     return .object(obj)
   }
 
-  private func focusSchedulePayload(
-    blockType: String, date: String = "2026-04-01", version: String? = nil,
-    start: Int64 = 540, end: Int64 = 570,
-    blockExtras: [String: JSONValue] = [:], topLevelExtras: [String: JSONValue] = [:]
+  private func dailyBriefingPayload(
+    date: String, briefing: String = "Two meetings, then the report.",
+    version: String? = nil, extras: [String: JSONValue] = [:]
   ) -> JSONValue {
-    var block: [String: JSONValue] = [
-      "block_type": .string(blockType), "start_minutes": .int(start), "end_minutes": .int(end),
-      "calendar_event_id": .null, "event_source": .null, "task_id": .null, "title": .null,
-    ]
-    block.merge(blockExtras) { _, extra in extra }
     var payload: [String: JSONValue] = [
       "date": .string(date),
-      "rationale": .null,
+      "briefing": .string(briefing),
       "timezone": .null,
       "created_at": .string("2026-04-01T00:00:00.000Z"),
       "updated_at": .string("2026-04-01T00:00:00.000Z"),
       "version": .string(version ?? vMid),
-      "blocks": .array([.object(block)]),
     ]
-    payload.merge(topLevelExtras) { _, extra in extra }
+    payload.merge(extras) { _, extra in extra }
     return .object(payload)
   }
 
   private func productionCalendarPayload(
-    id: String, recurrence: String, version: String? = nil
+    id: String, recurrence: String, eventType: String = "event", version: String? = nil
   ) -> JSONValue {
     .object([
       "all_day": .bool(false),
@@ -151,7 +144,7 @@ final class ApplyForwardCompatTests: XCTestCase {
       "description": .null,
       "end_date": .string("2026-04-01"),
       "end_time": .string("10:00"),
-      "event_type": .string("event"),
+      "event_type": .string(eventType),
       "id": .string(id),
       "location": .null,
       "occurrence_state": .null,
@@ -254,36 +247,28 @@ final class ApplyForwardCompatTests: XCTestCase {
     }
   }
 
-  func testBlockTypeForwardCompat() throws {
-    // `block_type` parses AFTER the LWW-gated parent focus_schedule upsert, so
-    // each schema is exercised in its own fresh store (a second same-version
-    // upsert of the same date would be LWW-rejected and never reach block parse).
-    let payload = try canon(focusSchedulePayload(blockType: "meeting"))
-    try withDB { db in
-      self.assertForwardCompatDefer {
-        try ApplyDayScoped.applyFocusScheduleUpsert(
-          db, entityId: "2026-04-01", payload: payload, version: self.vMid, tieBreak: .rejectEqual,
-          payloadSchemaVersion: self.newer)
-      }
-    }
-    try withDB { db in
-      self.assertInvalidPayloadDrop {
-        try ApplyDayScoped.applyFocusScheduleUpsert(
-          db, entityId: "2026-04-01", payload: payload, version: self.vMid, tieBreak: .rejectEqual,
-          payloadSchemaVersion: self.localMax)
-      }
-    }
+  // MARK: - end-to-end applyEnvelope: atomic defer (savepoint rollback)
+
+  private func calendarEventCount(_ db: Database, _ id: String) throws -> Int64? {
+    try Int64.fetchOne(
+      db, sql: "SELECT COUNT(*) FROM calendar_events WHERE id = ?", arguments: [id])
   }
 
-  // MARK: - end-to-end applyEnvelope: atomic defer (savepoint rollback)
+  private func briefingCount(_ db: Database, _ date: String) throws -> Int64? {
+    try Int64.fetchOne(
+      db, sql: "SELECT COUNT(*) FROM daily_briefings WHERE date = ?", arguments: [date])
+  }
 
   /// A known typed field cannot acquire an unrecognized value merely because
   /// the envelope declares a future schema. Production preflight rejects it
   /// before dispatch, leaving no partial aggregate state.
-  func testApplyEnvelopeFutureBlockTypeRejectsAtomically() throws {
+  func testApplyEnvelopeFutureEventTypeRejectsAtomically() throws {
     try withDB { db in
+      let eventID = "00000005-0000-7000-8000-000000000003"
       let env = try self.envelope(
-        .focusSchedule, "2026-04-01", self.focusSchedulePayload(blockType: "meeting"),
+        .calendarEvent, eventID,
+        self.productionCalendarPayload(
+          id: eventID, recurrence: #"{"FREQ":"DAILY"}"#, eventType: "meeting"),
         schema: self.newer)
       XCTAssertThrowsError(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: env)
@@ -291,134 +276,57 @@ final class ApplyForwardCompatTests: XCTestCase {
         guard case ApplyError.invalidPayload(let message) = error else {
           return XCTFail("expected .invalidPayload, got \(error)")
         }
-        XCTAssertTrue(message.contains("block_type"))
+        XCTAssertTrue(message.contains("event_type"), message)
       }
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?", arguments: ["2026-04-01"]),
-        0, "parent focus_schedule row must be rolled back on a forward-compat defer")
+      XCTAssertEqual(try self.calendarEventCount(db, eventID), 0)
     }
   }
 
   /// Same-version unknown enum through the full pipeline still DROPS: applyEnvelope
   /// throws `.invalidPayload` (not `.deferred`), and the savepoint leaves nothing.
-  func testApplyEnvelopeSameVersionUnknownBlockTypeStillThrowsInvalidPayload() throws {
+  func testApplyEnvelopeSameVersionUnknownEventTypeStillThrowsInvalidPayload() throws {
     try withDB { db in
+      let eventID = "00000005-0000-7000-8000-000000000004"
       let env = try self.envelope(
-        .focusSchedule, "2026-04-01", self.focusSchedulePayload(blockType: "meeting"),
+        .calendarEvent, eventID,
+        self.productionCalendarPayload(
+          id: eventID, recurrence: #"{"FREQ":"DAILY"}"#, eventType: "meeting"),
         schema: self.localMax)
       XCTAssertThrowsError(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: env)
       ) { error in
         guard case ApplyError.invalidPayload = error else {
-          return XCTFail("same-version unknown block_type must throw .invalidPayload, got \(error)")
+          return XCTFail("same-version unknown event_type must throw .invalidPayload, got \(error)")
         }
       }
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?", arguments: ["2026-04-01"]),
-        0)
-    }
-  }
-
-  /// Future schemas may add unknown top-level fields only. A nested key inside a
-  /// known closed object is not shadow-preservable and rejects atomically.
-  func testApplyEnvelopeFutureNestedBlockKeyRejectsAtomically() throws {
-    try withDB { db in
-      let env = try self.envelope(
-        .focusSchedule, "2026-04-01",
-        self.focusSchedulePayload(
-          blockType: "buffer", blockExtras: ["future_context": .string("preserve intact")]),
-        schema: self.newer)
-
-      XCTAssertThrowsError(
-        try Apply.applyEnvelope(db, registry: self.registry(), envelope: env)
-      ) { error in
-        guard case ApplyError.invalidPayload(let message) = error else {
-          return XCTFail("expected .invalidPayload, got \(error)")
-        }
-        XCTAssertTrue(message.contains("future_context"))
-      }
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?",
-          arguments: ["2026-04-01"]), 0)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE date = ?",
-          arguments: ["2026-04-01"]), 0)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_payload_shadow WHERE entity_type = ? AND entity_id = ?",
-          arguments: [EntityName.focusSchedule, "2026-04-01"]), 0)
-    }
-  }
-
-  /// Without a newer schema declaration, an unknown nested key is corruption,
-  /// not forward-compatible data. It must reject as invalid and leave no state.
-  func testApplyEnvelopeSameVersionUnknownNestedBlockKeyRejectsAtomically() throws {
-    try withDB { db in
-      let env = try self.envelope(
-        .focusSchedule, "2026-04-01",
-        self.focusSchedulePayload(
-          blockType: "buffer", blockExtras: ["future_context": .string("undeclared")]),
-        schema: self.localMax)
-
-      XCTAssertThrowsError(
-        try Apply.applyEnvelope(db, registry: self.registry(), envelope: env)
-      ) { error in
-        guard case ApplyError.invalidPayload(let message) = error else {
-          return XCTFail("expected .invalidPayload, got \(error)")
-        }
-        XCTAssertTrue(message.contains("future_context"))
-      }
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?",
-          arguments: ["2026-04-01"]), 0)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE date = ?",
-          arguments: ["2026-04-01"]), 0)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_payload_shadow WHERE entity_type = ? AND entity_id = ?",
-          arguments: [EntityName.focusSchedule, "2026-04-01"]), 0)
+      XCTAssertEqual(try self.calendarEventCount(db, eventID), 0)
     }
   }
 
   /// Top-level additions remain the safe additive path: a next-schema key is
-  /// shadowed while all locally-known aggregate and block fields still apply.
+  /// shadowed while all locally-known fields still apply.
   func testApplyEnvelopeFutureTopLevelKeyAppliesAndRemainsInShadow() throws {
     try withDB { db in
       let env = try self.envelope(
-        .focusSchedule, "2026-04-01",
-        self.focusSchedulePayload(
-          blockType: "buffer",
-          topLevelExtras: ["future_context": .string("preserved through old peer")]),
+        .dailyBriefing, "2026-04-01",
+        self.dailyBriefingPayload(
+          date: "2026-04-01",
+          extras: ["future_context": .string("preserved through old peer")]),
         schema: self.newer)
 
       XCTAssertEqual(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: env), .applied)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?",
-          arguments: ["2026-04-01"]), 1)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE date = ?",
-          arguments: ["2026-04-01"]), 1)
+      XCTAssertEqual(try self.briefingCount(db, "2026-04-01"), 1)
 
       let shadow = try XCTUnwrap(
         PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: "2026-04-01"))
+          db, entityType: EntityName.dailyBriefing, entityID: "2026-04-01"))
       guard case .object(let shadowObject)? = JSONValue.parse(shadow.rawPayloadJSON) else {
         return XCTFail("expected object payload shadow")
       }
       XCTAssertEqual(shadowObject["future_context"], .string("preserved through old peer"))
-      XCTAssertNil(shadowObject["blocks"], "known aggregate keys must not be duplicated in shadow")
+      XCTAssertNil(
+        shadowObject["briefing"], "known aggregate keys must not be duplicated in shadow")
     }
   }
 
@@ -427,25 +335,23 @@ final class ApplyForwardCompatTests: XCTestCase {
       let entityID = "2026-04-03"
       let later = "1711234568001_0000_dec0000100000002"
       let future = try self.envelope(
-        .focusSchedule, entityID,
-        self.focusSchedulePayload(
-          blockType: "buffer", date: entityID,
-          topLevelExtras: ["future_context": .string("survives legacy update")]),
+        .dailyBriefing, entityID,
+        self.dailyBriefingPayload(
+          date: entityID, extras: ["future_context": .string("survives legacy update")]),
         schema: self.newer)
       XCTAssertEqual(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: future), .applied)
 
       let legacy = try self.envelope(
-        .focusSchedule, entityID,
-        self.focusSchedulePayload(
-          blockType: "buffer", date: entityID, version: later, start: 600, end: 660),
+        .dailyBriefing, entityID,
+        self.dailyBriefingPayload(date: entityID, briefing: "Rewritten", version: later),
         schema: self.localMax, version: later)
       XCTAssertEqual(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: legacy), .applied)
 
       let shadow = try XCTUnwrap(
         PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: entityID))
+          db, entityType: EntityName.dailyBriefing, entityID: entityID))
       XCTAssertEqual(shadow.baseVersion, later)
       XCTAssertEqual(shadow.payloadSchemaVersion, Int(self.newer))
       guard case .object(let object)? = JSONValue.parse(shadow.rawPayloadJSON) else {
@@ -454,7 +360,7 @@ final class ApplyForwardCompatTests: XCTestCase {
       XCTAssertEqual(object["future_context"], .string("survives legacy update"))
       XCTAssertEqual(
         try String.fetchOne(
-          db, sql: "SELECT version FROM focus_schedule WHERE date = ?", arguments: [entityID]),
+          db, sql: "SELECT version FROM daily_briefings WHERE date = ?", arguments: [entityID]),
         later)
     }
   }
@@ -464,18 +370,18 @@ final class ApplyForwardCompatTests: XCTestCase {
       let entityID = "2026-04-04"
       let rejectedVersion = "1711234568001_0000_dec0000100000002"
       let future = try self.envelope(
-        .focusSchedule, entityID,
-        self.focusSchedulePayload(
-          blockType: "buffer", date: entityID,
-          topLevelExtras: ["future_context": .string("must remain aligned")]),
+        .dailyBriefing, entityID,
+        self.dailyBriefingPayload(
+          date: entityID, extras: ["future_context": .string("must remain aligned")]),
         schema: self.newer)
       XCTAssertEqual(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: future), .applied)
 
+      // A blank briefing passes the manifest's type check and is rejected by
+      // the applier, after the shadow base would have advanced.
       let invalidLegacy = try self.envelope(
-        .focusSchedule, entityID,
-        self.focusSchedulePayload(
-          blockType: "meeting", date: entityID, version: rejectedVersion),
+        .dailyBriefing, entityID,
+        self.dailyBriefingPayload(date: entityID, briefing: "  ", version: rejectedVersion),
         schema: self.localMax, version: rejectedVersion)
       XCTAssertThrowsError(
         try Apply.applyEnvelope(db, registry: self.registry(), envelope: invalidLegacy)
@@ -487,11 +393,11 @@ final class ApplyForwardCompatTests: XCTestCase {
 
       let shadow = try XCTUnwrap(
         PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: entityID))
+          db, entityType: EntityName.dailyBriefing, entityID: entityID))
       XCTAssertEqual(shadow.baseVersion, self.vMid)
       XCTAssertEqual(
         try String.fetchOne(
-          db, sql: "SELECT version FROM focus_schedule WHERE date = ?", arguments: [entityID]),
+          db, sql: "SELECT version FROM daily_briefings WHERE date = ?", arguments: [entityID]),
         self.vMid)
     }
   }
@@ -551,19 +457,14 @@ final class ApplyForwardCompatTests: XCTestCase {
       }
 
       let healthy = try self.envelope(
-        .focusSchedule, "2026-04-02",
-        self.focusSchedulePayload(
-          blockType: "buffer", date: "2026-04-02", start: 600, end: 630),
+        .dailyBriefing, "2026-04-02", self.dailyBriefingPayload(date: "2026-04-02"),
         schema: self.localMax)
       let applied = try Apply.applyEnvelope(db, registry: reg, envelope: healthy)
       guard case .applied = applied else {
         return XCTFail(
           "unrelated envelope after a forward-compat defer must still apply, got \(applied)")
       }
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?", arguments: ["2026-04-02"]),
-        1)
+      XCTAssertEqual(try self.briefingCount(db, "2026-04-02"), 1)
       XCTAssertEqual(
         try Int64.fetchOne(
           db, sql: "SELECT COUNT(*) FROM calendar_events WHERE id = ?", arguments: [eventID]),

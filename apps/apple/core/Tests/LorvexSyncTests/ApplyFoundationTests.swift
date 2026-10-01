@@ -9,15 +9,13 @@ import XCTest
 /// error/result vocabulary, the LWW gate + SQL builder, the conflict log
 /// (dedup + PII scrub), device-identity collision, FK preflight, the redirect
 /// chain walker, the `apply_envelope` entry-point flow against an injected stub
-/// applier, and the ai_changelog applier. Per-entity applier bodies land with
-/// their own slices.
+/// applier, and the device-local audit-envelope skip. Per-entity applier bodies
+/// land with their own slices.
 final class ApplyFoundationTests: XCTestCase {
 
   private func withDB(_ body: (Database) throws -> Void) throws {
     let store = try SyncTestSupport.freshStore()
     try store.writer.write { db in
-      _ = try AuditRetentionFrontier.activateAccount(
-        db, accountIdentifier: "account-a", zoneName: "LorvexZone-g1")
       try body(db)
     }
   }
@@ -416,7 +414,7 @@ final class ApplyFoundationTests: XCTestCase {
         object["id"] = .string(id)
       case .preference:
         object["key"] = .string(id)
-      case .dailyReview, .currentFocus, .focusSchedule:
+      case .dailyReview, .dailyBriefing:
         object["date"] = .string(id)
       default:
         break
@@ -445,17 +443,59 @@ final class ApplyFoundationTests: XCTestCase {
     }
   }
 
-  func testApplyEnvelopeDefersForwardCompatChangelog() throws {
+  /// The audit trail is device-local: an `ai_changelog` envelope of any
+  /// operation or payload schema version is skipped before it is validated,
+  /// deferred, or shadowed, and never reaches the audit table.
+  func testApplyEnvelopeSkipsDeviceLocalAuditEnvelopes() throws {
     try withDB { db in
-      let env = try self.envelope(
-        .aiChangelog, "11111111-1111-7111-8111-111111111111", .upsert, 100,
-        schema: LorvexVersion.payloadSchemaVersion + 1)
-      let result = try Apply.applyEnvelope(db, registry: EntityApplierRegistry(), envelope: env)
-      guard case .deferred = result else { return XCTFail("expected deferral, got \(result)") }
-      let rows = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog") ?? -1
-      XCTAssertEqual(rows, 0)
-      let shadows = try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_payload_shadow") ?? -1
-      XCTAssertEqual(shadows, 0)
+      let id = "11111111-1111-7111-8111-111111111111"
+      let payload = """
+        {"id":"\(id)","timestamp":"2026-03-23T12:00:00.000Z","operation":"create",\
+        "entity_type":"task","entity_id":"task-1","summary":"Created a task",\
+        "initiated_by":"ai","retention_epoch":0}
+        """
+      let envelopes = [
+        try self.envelope(.aiChangelog, id, .upsert, 100, payload: payload),
+        try self.envelope(
+          .aiChangelog, id, .upsert, 101, payload: payload,
+          schema: LorvexVersion.payloadSchemaVersion + 1),
+        try self.envelope(.aiChangelog, id, .delete, 102, payload: #"{"reset_all_data":true}"#),
+      ]
+      for envelope in envelopes {
+        let result = try Apply.applyEnvelope(
+          db, registry: EntityApplierRegistry(), envelope: envelope)
+        guard case .skipped(let reason, let winner) = result else {
+          return XCTFail("expected skipped, got \(result)")
+        }
+        XCTAssertEqual(reason, "ai_changelog is device-local; audit envelopes are not applied")
+        XCTAssertNil(winner)
+      }
+      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog"), 0)
+      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_payload_shadow"), 0)
+      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_pending_inbox"), 0)
+    }
+  }
+
+  /// A skipped audit envelope leaves an existing local audit row untouched,
+  /// including a delete envelope naming it.
+  func testApplyEnvelopeSkippedAuditDeleteLeavesLocalAuditRow() throws {
+    try withDB { db in
+      let id = "11111111-1111-7111-8111-111111111111"
+      try db.execute(
+        sql: """
+          INSERT INTO ai_changelog (id, timestamp, operation, entity_type, summary, initiated_by)
+          VALUES (?, '2026-03-23T12:00:00.000Z', 'create', 'task', 'Created a task', 'ai')
+          """,
+        arguments: [id])
+      let envelope = try self.envelope(
+        .aiChangelog, id, .delete, 100, payload: #"{"reset_all_data":true}"#)
+      let result = try Apply.applyEnvelope(
+        db, registry: EntityApplierRegistry(), envelope: envelope)
+      guard case .skipped = result else { return XCTFail("expected skipped, got \(result)") }
+      XCTAssertEqual(
+        try Int.fetchOne(
+          db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?", arguments: [id]),
+        1)
     }
   }
 
@@ -601,58 +641,6 @@ final class ApplyFoundationTests: XCTestCase {
       XCTAssertFalse(
         try Tombstone.isTombstoned(
           db, entityType: EntityName.task, entityId: "33333333-3333-7333-8333-333333333333"))
-    }
-  }
-
-  // MARK: - ChangelogApplier
-
-  private func changelogPayload(id: String) -> String {
-    return """
-      {"id":"\(id)","timestamp":"2026-03-23T12:00:00.000Z","operation":"create",\
-      "entity_type":"task","entity_id":"task-1","summary":"Created a task",\
-      "initiated_by":"ai","retention_epoch":0}
-      """
-  }
-
-  func testChangelogDedupesById() throws {
-    try withDB { db in
-      let id = "11111111-1111-7111-8111-111111111111"
-      let payload = self.changelogPayload(id: id)
-      for _ in 0..<2 {
-        try ChangelogApplier.applyChangelogEntry(
-          db, entityId: id, payload: payload,
-          payloadSchemaVersion: LorvexVersion.payloadSchemaVersion)
-      }
-      let n =
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?", arguments: [id])
-        ?? 0
-      XCTAssertEqual(n, 1)
-    }
-  }
-
-  func testChangelogDeleteIsAlwaysRejectedAndPreservesTheAuditRow() throws {
-    try withDB { db in
-      let id = "11111111-1111-7111-8111-111111111111"
-      try ChangelogApplier.applyChangelogEntry(
-        db, entityId: id, payload: self.changelogPayload(id: id),
-        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion)
-      let envelope = try self.envelope(
-        .aiChangelog, id, .delete, 100,
-        payload: #"{"reset_all_data":true}"#)
-      XCTAssertThrowsError(
-        try ChangelogApplier().applyDelete(
-          db, envelope: envelope, applyTs: "2026-03-23T12:00:00.000Z")
-      ) { error in
-        guard case .invalidOperation(let entityType, let operation) = error as? ApplyError else {
-          return XCTFail("expected invalidOperation, got \(error)")
-        }
-        XCTAssertEqual(entityType, EntityName.aiChangelog)
-        XCTAssertEqual(operation, "delete")
-      }
-      let n =
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?", arguments: [id])
-        ?? -1
-      XCTAssertEqual(n, 1)
     }
   }
 

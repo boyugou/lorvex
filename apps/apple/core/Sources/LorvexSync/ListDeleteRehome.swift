@@ -80,8 +80,8 @@ public enum ListDeleteRehome {
   /// task still present, mint a fresh dominating HLC via `mintVersion`, stamp
   /// `content_version` plus the transport high-water, and enqueue an Upsert of
   /// its current snapshot (now `list_id='inbox'`). The task payload owns
-  /// `list_id`; a transport-only re-emit would carry no authored task register
-  /// and authoritative-snapshot replay could silently lose the re-home.
+  /// `list_id`; a transport-only re-emit would carry no authored task register,
+  /// so a peer's register-wise merge could silently lose the re-home.
   ///
   /// The existence recheck is the guard against resurrecting a concurrently
   /// deleted task: an id captured before the apply whose row has since gone

@@ -62,10 +62,6 @@ extension TasksView {
     visibleCompletedTasks + visibleCancelledTasks
   }
 
-  var visibleOverdueOpenTaskCount: Int {
-    visibleOpenTasks.filter { $0.isOverdue() }.count
-  }
-
   var allSectionsEmpty: Bool {
     if isInitialTaskWorkspaceLoad { return false }
     if isTableMode { return visibleTaskPool.isEmpty }
@@ -86,13 +82,6 @@ extension TasksView {
         ),
         systemImage: "magnifyingglass",
         tint: .secondary,
-        chips: [
-          LorvexEmptyStateChip(
-            title: store.searchText,
-            systemImage: "text.magnifyingglass",
-            tint: .accentColor
-          )
-        ],
         action: LorvexEmptyStateAction(
           title: String(localized: "common.clear_search", defaultValue: "Clear Search", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "xmark.circle"
@@ -102,6 +91,9 @@ extension TasksView {
       )
     }
 
+    // The list's name is the page title and the sidebar leaves the list in
+    // one click, so the empty panel names neither: it points at the
+    // quick-add row above it, where a task for this list is typed.
     if let selectedListScope {
       let tint = Color(lorvexHex: selectedListScope.color) ?? .accentColor
       let icon = selectedListScope.icon ?? "folder"
@@ -109,25 +101,12 @@ extension TasksView {
         title: String(localized: "tasks.empty.list_title", defaultValue: "No Tasks in This List", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
           localized: "tasks.empty.list_description",
-          defaultValue: "This list is empty. Tasks you add to it appear here.",
+          defaultValue: "Type a task in the field above to add it to this list.",
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
         systemImage: icon,
-        tint: tint,
-        chips: [
-          LorvexEmptyStateChip(
-            title: selectedListScope.name,
-            systemImage: icon,
-            tint: tint
-          )
-        ],
-        action: LorvexEmptyStateAction(
-          title: String(localized: "tasks.empty.show_all_tasks", defaultValue: "Show All Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "checklist"
-        ) {
-          store.setTaskWorkspaceListScope(nil)
-        }
+        tint: tint
       )
     }
 
@@ -141,7 +120,7 @@ extension TasksView {
           bundle: LorvexL10n.bundle
         ),
         systemImage: "line.3.horizontal.decrease.circle",
-        tint: .orange,
+        tint: LorvexDesign.Palette.neutral,
         chips: [
           LorvexEmptyStateChip(
             title: TaskDisplayText.priority(priorityFilter),
@@ -164,24 +143,18 @@ extension TasksView {
     }
 
     guard !store.taskWorkspaceIsLoading else { return nil }
+    // No capture action: the quick-add row above the empty panel is where a
+    // task is typed, and ⌘N focuses it.
     return LorvexEmptyStateModel(
       title: String(localized: "tasks.empty.no_tasks_title", defaultValue: "No Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
       message: String(
         localized: "tasks.empty.no_tasks_description",
-        defaultValue: "Capture a task to start shaping your plan.",
+        defaultValue: "Type a task in the field above — or ask your assistant to add some.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ),
       systemImage: "checklist",
-      tint: .accentColor,
-      chips: [],
-      action: LorvexEmptyStateAction(
-        title: AppCommand.newTask.title,
-        systemImage: AppCommand.newTask.systemImage,
-        style: .primary
-      ) {
-        store.requestQuickAddFocus()
-      }
+      tint: .accentColor
     )
   }
 
@@ -199,32 +172,20 @@ extension TasksView {
       && selectedListScope == nil
   }
 
+  /// One line under the title saying what narrows the rows: the active search
+  /// and priority filter; otherwise the scoped list's description. All Tasks
+  /// itself, and a list without a description, show no line, since the title
+  /// already names the rows. The Queue/Audit mode is not named either (the
+  /// rows show it), and the first load shows its progress where the rows will
+  /// be (`TasksInitialLoadingState`).
   var headerSubtitle: String {
-    if isInitialTaskWorkspaceLoad {
-      return String(
-        localized: "tasks.header.loading_queue",
-        defaultValue: "Loading review queue",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-
-    if isDefaultTaskReviewHeader {
-      return String(
-        localized: "tasks.header.review_queue",
-        defaultValue: "Every task across all lists — review, triage, batch-edit",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-
     var parts: [String] = []
     if store.hasActiveSearch {
       parts.append(
         String(
           format: String(
             localized: "tasks.header.searching",
-            defaultValue: "Searching \"%@\"",
+            defaultValue: "Searching “%@”",
             table: "Localizable",
             bundle: LorvexL10n.bundle
           ),
@@ -235,171 +196,26 @@ extension TasksView {
     if let priorityFilter {
       parts.append(TaskDisplayText.priority(priorityFilter))
     }
-    if selectedListScope != nil, parts.isEmpty {
-      parts.append(String(
-        localized: "tasks.header.list_scope",
-        defaultValue: "List scope",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ))
+    if !parts.isEmpty {
+      return parts.joined(separator: " · ")
     }
-    if parts.isEmpty {
-      if isTableMode {
-        parts.append(String(
-          localized: "tasks.header.table_audit",
-          defaultValue: "Audit table",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-      } else {
-        parts.append(String(
-          localized: "tasks.header.review_queue",
-          defaultValue: "Every task across all lists — review, triage, batch-edit",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-      }
-    }
-    return parts.joined(separator: " · ")
+    return selectedListScope?.description.trimmedNilIfEmpty ?? ""
   }
 
   var headerTitle: String {
-    selectedListScope?.name
-      ?? String(localized: "sidebar.item.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
+    selectedListScope?.displayName
+      ?? String(localized: "sidebar.item.tasks", defaultValue: "All Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
-  var headerScope: TasksHeaderScope? {
-    guard let selectedListScope else { return nil }
-    return TasksHeaderScope(
-      name: selectedListScope.name,
-      icon: selectedListScope.icon,
-      tint: Color(lorvexHex: selectedListScope.color) ?? .accentColor
-    )
+  /// The scoped list's own icon — an SF Symbol name or an emoji, "folder" when
+  /// it has none — else the Tasks symbol.
+  var headerIcon: String {
+    guard let selectedListScope else { return SidebarSelection.tasks.systemImage }
+    return selectedListScope.icon.trimmedNilIfEmpty ?? "folder"
   }
 
-  var headerSummary: String? {
-    if isInitialTaskWorkspaceLoad { return nil }
-
-    if isDefaultTaskReviewHeader { return nil }
-
-    if isTableMode {
-      return String(
-        localized: "tasks.header.summary.table",
-        defaultValue: "Audit every loaded task status",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-
-    if store.hasActiveSearch || priorityFilter != nil {
-      return String(
-        localized: "tasks.header.summary.filtered",
-        defaultValue: "Filtered review",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-
-    if selectedListScope != nil {
-      return String(
-        localized: "tasks.header.summary.scoped",
-        defaultValue: "Scoped review",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-
-    return headerCountSummary
+  /// The scoped list's color, which tints its symbol icon; nil for All Tasks.
+  var headerIconTint: Color? {
+    selectedListScope.map { Color(lorvexHex: $0.color) ?? .accentColor }
   }
-
-  var headerMetrics: [TasksHeaderMetric] {
-    guard !isInitialTaskWorkspaceLoad else { return [] }
-
-    if isTableMode {
-      return [
-        TasksHeaderMetric(
-          title: String(localized: "tasks.header.stat.loaded", defaultValue: "Loaded", table: "Localizable", bundle: LorvexL10n.bundle),
-          count: visibleTaskPool.count,
-          tint: .accentColor
-        ),
-        TasksHeaderMetric(
-          title: String(localized: "tasks.header.stat.open", defaultValue: "Open", table: "Localizable", bundle: LorvexL10n.bundle),
-          count: visibleOpenTasks.count,
-          tint: .blue
-        ),
-        TasksHeaderMetric(
-          title: String(localized: "tasks.header.stat.history", defaultValue: "History", table: "Localizable", bundle: LorvexL10n.bundle),
-          count: visibleHistoryTaskPool.count,
-          tint: .secondary
-        ),
-      ].filter { $0.count > 0 }
-    }
-
-    var metrics: [TasksHeaderMetric] = []
-    metrics.append(TasksHeaderMetric(
-      title: String(localized: "tasks.header.stat.next", defaultValue: "Next", table: "Localizable", bundle: LorvexL10n.bundle),
-      count: headerNextCount,
-      tint: .accentColor
-    ))
-
-    if visibleOverdueOpenTaskCount > 0 {
-      metrics.append(TasksHeaderMetric(
-        title: String(localized: "tasks.header.stat.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle),
-        count: visibleOverdueOpenTaskCount,
-        tint: .orange,
-        isAttention: true
-      ))
-    }
-
-    if showLater && visibleLaterTaskCount > 0 {
-      metrics.append(TasksHeaderMetric(
-        title: String(localized: "tasks.header.stat.later", defaultValue: "Later", table: "Localizable", bundle: LorvexL10n.bundle),
-        count: visibleLaterTaskCount,
-        tint: .secondary
-      ))
-    }
-
-    if showHistory && !visibleHistoryTaskPool.isEmpty {
-      metrics.append(TasksHeaderMetric(
-        title: String(localized: "tasks.header.stat.history", defaultValue: "History", table: "Localizable", bundle: LorvexL10n.bundle),
-        count: visibleHistoryTaskPool.count,
-        tint: .secondary
-      ))
-    }
-
-    return metrics.filter { $0.count > 0 }
-  }
-
-  var headerNextCount: Int {
-    usesReviewQueuePreview ? visibleReviewQueueTasks.count : visibleCurrentTaskPool.count
-  }
-
-  var headerCountSummary: String {
-    var parts: [String] = []
-    if headerNextCount > 0 {
-      parts.append(String(
-        format: String(localized: "tasks.header.summary.next_count", defaultValue: "%lld next", table: "Localizable", bundle: LorvexL10n.bundle),
-        headerNextCount))
-    }
-    if showLater && visibleLaterTaskCount > 0 {
-      parts.append(String(
-        format: String(localized: "tasks.header.summary.later_count", defaultValue: "%lld later", table: "Localizable", bundle: LorvexL10n.bundle),
-        visibleLaterTaskCount))
-    }
-    if showHistory && !visibleHistoryTaskPool.isEmpty {
-      parts.append(String(
-        format: String(localized: "tasks.header.summary.history_count", defaultValue: "%lld history", table: "Localizable", bundle: LorvexL10n.bundle),
-        visibleHistoryTaskPool.count))
-    }
-    guard !parts.isEmpty else {
-      return String(
-        localized: "tasks.header.summary.no_matches",
-        defaultValue: "No matching tasks",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-    return parts.joined(separator: " · ")
-  }
-
 }

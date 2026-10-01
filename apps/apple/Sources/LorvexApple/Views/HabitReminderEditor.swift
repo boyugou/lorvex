@@ -32,16 +32,19 @@ struct HabitReminderEditor: View {
       header
 
       if isMultiCount {
-        LorvexSegmentedControl(
-          options: HabitReminderMode.allCases,
-          selection: $mode,
-          title: \.title,
-          accessibilityIdentifier: "habit.reminders.mode",
-          accessibilityLabel: String(
+        Picker(selection: $mode) {
+          ForEach(HabitReminderMode.allCases, id: \.self) { value in
+            Text(value.title).tag(value)
+          }
+        } label: {
+          Text(String(
             localized: "habits.detail.reminders", defaultValue: "Reminders",
             table: "Localizable",
-            bundle: LorvexL10n.bundle)
-        )
+            bundle: LorvexL10n.bundle))
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .accessibilityIdentifier("habit.reminders.mode")
       }
 
       if isMultiCount && mode == .window {
@@ -145,7 +148,7 @@ private struct HabitReminderChip: View {
             .font(LorvexDesign.Typography.primaryText)
             .monospacedDigit()
             .strikethrough()
-            .foregroundStyle(.tertiary)
+            .foregroundStyle(.secondary)
             .padding(.horizontal, LorvexDesign.Spacing.s)
             .padding(.vertical, LorvexDesign.Spacing.xs)
             .background(.quaternary.opacity(0.35), in: Capsule())

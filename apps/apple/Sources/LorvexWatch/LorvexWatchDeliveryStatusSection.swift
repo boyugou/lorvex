@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 struct LorvexWatchDeliveryStatusSection: View {
@@ -27,13 +28,13 @@ struct LorvexWatchDeliveryStatusSection: View {
             Label(
               String(
                 format: String(
-                  localized: "watch.delivery.rejected", defaultValue: "Action %lld wasn't applied",
+                  localized: "watch.delivery.rejected", defaultValue: "Action %lld wasn’t applied",
                   table: "Localizable", bundle: WatchL10n.bundle),
                 Int64(command.sequence)),
               systemImage: "exclamationmark.circle"
             )
             .font(.caption.weight(.medium))
-            .foregroundStyle(.orange)
+            .foregroundStyle(LorvexDesign.Palette.warning)
 
             if case .captureTask(let title) = command.mutation {
               Text(title)
@@ -66,7 +67,7 @@ struct LorvexWatchDeliveryStatusSection: View {
             systemImage: "externaldrive.badge.exclamationmark"
           )
           .font(.caption)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
           .accessibilityHint(String(
             localized: "watch.delivery.journal_failure.hint",
             defaultValue: "Open Lorvex on iPhone, then reopen the watch app",

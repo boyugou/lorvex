@@ -1,7 +1,7 @@
 import Foundation
 import LorvexCarPlay
-import LorvexCore
 import Testing
+@testable import LorvexCore
 @testable import LorvexApple
 @testable import LorvexMobile
 @testable import LorvexSystemIntents
@@ -15,22 +15,37 @@ import LorvexWidgetViews
 /// non-empty source values, complete shipped-language values, and correct JSON
 /// structure.
 ///
-/// These tests load the catalog file at the URL exposed by `LorvexL10n.catalogURL`
-/// rather than exercising runtime string resolution, so they run in both SwiftPM
-/// and Xcode test environments without requiring a specific locale.
+/// A `.xcstrings` catalog is a build input, not a build output: SwiftPM compiles
+/// it into `<language>.lproj/Localizable.strings` inside the module's resource
+/// bundle and does not copy the catalog itself. So the tests that check what was
+/// authored read the catalog from `Sources/`, and the tests that check what a
+/// module actually ships read the compiled `.lproj` payload out of its bundle.
+/// Neither path needs a particular locale, so both run under SwiftPM and Xcode.
 struct LocalizationTests {
 
     // MARK: - Catalog structure
 
-    @Test("Catalog file exists in LorvexApple bundle")
-    func catalogFileExists() throws {
-        let url = LorvexL10n.catalogURL
-        #expect(url != nil, "LorvexL10n.catalogURL returned nil — Localizable.xcstrings was not bundled")
+    @Test("Every module bundle ships a compiled string table per shipped language")
+    func moduleBundlesShipCompiledStringTables() throws {
+        let languages = try shippedCatalogLanguageIDs()
+        for module in Self.shippedBundles() {
+            for language in languages {
+                let lproj = try #require(
+                    module.bundle.url(forResource: language, withExtension: "lproj"),
+                    "\(module.name) bundle has no \(language).lproj"
+                )
+                let strings = try loadInfoPlistStrings(lproj.appending(path: "Localizable.strings"))
+                #expect(
+                    !strings.isEmpty,
+                    "\(module.name)/\(language).lproj/Localizable.strings is empty"
+                )
+            }
+        }
     }
 
     @Test("Catalog parses as valid JSON")
     func catalogParsesAsJSON() throws {
-        let json = try loadCatalog(LorvexL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexApple"))
         let sourceLanguage = try #require(json["sourceLanguage"] as? String)
         #expect(!sourceLanguage.isEmpty)
         #expect(json["version"] as? String == "1.0")
@@ -45,7 +60,6 @@ struct LocalizationTests {
     // MARK: - Required key presence
 
     private static let requiredKeys: [String] = [
-        "sidebar.section.plan",
         "sidebar.item.today",
         "sidebar.item.tasks",
         "sidebar.item.lists",
@@ -54,14 +68,12 @@ struct LocalizationTests {
         "sidebar.item.reviews",
         "sidebar.item.memory",
         "sidebar.settings",
-        "habits.header.stat.best_streak",
-        "today.empty.no_tasks_title",
-        "today.empty.no_tasks_description",
+        "habits.header.done.today",
         "window.title.task_detail",
         "task_command.show_detail",
         "task_command.save",
-        "task_command.add_to_focus",
-        "task_command.remove_from_focus",
+        "task_command.start",
+        "task_command.pause",
         "task_command.defer_to_tomorrow",
         "task_command.complete",
         "task_command.reopen",
@@ -72,7 +84,7 @@ struct LocalizationTests {
 
     @Test("All required catalog keys are present")
     func allRequiredKeysPresent() throws {
-        let json = try loadCatalog(LorvexL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexApple"))
         let strings = try #require(json["strings"] as? [String: Any])
 
         for key in Self.requiredKeys {
@@ -84,7 +96,7 @@ struct LocalizationTests {
 
     @Test("All required keys have non-empty source-language values")
     func allRequiredKeysHaveNonEmptySourceValues() throws {
-        let json = try loadCatalog(LorvexL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexApple"))
         let strings = try #require(json["strings"] as? [String: Any])
         let sourceLanguage = try #require(json["sourceLanguage"] as? String)
 
@@ -105,7 +117,7 @@ struct LocalizationTests {
 
     @Test("All catalog entries use extractionState 'manual'")
     func allEntriesAreManuallyExtracted() throws {
-        let json = try loadCatalog(LorvexL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexApple"))
         let strings = try #require(json["strings"] as? [String: Any])
 
         for (key, value) in strings {
@@ -125,7 +137,7 @@ struct LocalizationTests {
     }
 
     private func loadCatalog(_ url: URL?) throws -> [String: Any] {
-        let url = try #require(url, "catalog URL is nil — Localizable.xcstrings was not bundled")
+        let url = try #require(url, "catalog URL is nil — no Localizable.xcstrings in the source tree")
         let data = try Data(contentsOf: url)
         return try #require(
             try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -151,7 +163,7 @@ struct LocalizationTests {
     /// Records an issue for every entry in `strings` whose `localizations` lack
     /// a non-empty `stringUnit.value` for a shipped language. New languages are
     /// discovered from the catalogs, so this test does not need edits when
-    /// Lorvex adds French, Arabic, Japanese, or any other locale.
+    /// Lorvex adds another shipped language.
     private func assertEveryKeyHasLanguages(
         _ strings: [String: Any],
         catalog: String,
@@ -227,7 +239,7 @@ struct LocalizationTests {
             "system.task.reminders.set.dialog",
         ]
         for key in systemDialogKeys {
-            let forms = try englishPluralForms(SystemL10n.catalogURL, key)
+            let forms = try englishPluralForms(Self.sourceCatalogURL("LorvexSystemIntents"), key)
             #expect(
                 forms.one != forms.other,
                 "\(key) English one/other must differ so Siri never says '1 … tasks'")
@@ -236,14 +248,14 @@ struct LocalizationTests {
 
     @Test("Every LorvexApple key is translated into every shipped language")
     func lorvexAppleCatalogIsFullyTranslatedToShippedLanguages() throws {
-        let strings = try loadStrings(LorvexL10n.catalogURL)
+        let strings = try loadStrings(Self.sourceCatalogURL("LorvexApple"))
         let languages = try shippedCatalogLanguageIDs()
         assertEveryKeyHasLanguages(strings, catalog: "LorvexApple", languages: languages)
     }
 
     @Test("LorvexMobile catalog exists and parses as JSON")
     func mobileCatalogExistsAndParses() throws {
-        let json = try loadCatalog(MobileL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexMobile"))
         let sourceLanguage = try #require(json["sourceLanguage"] as? String)
         #expect(try shippedCatalogSourceLanguages().contains(sourceLanguage))
     }
@@ -260,8 +272,8 @@ struct LocalizationTests {
             ).identifier == fallback.identifier)
         #expect(
             MobileL10n.resolvedLocale(
-                preferredLocalizations: ["de"], fallback: fallback
-            ).identifier == "de")
+                preferredLocalizations: ["zh-Hans"], fallback: fallback
+            ).identifier == "zh-Hans")
         #expect(
             MobileDateFormatting.weekdayAbbrev.locale?.identifier
                 == MobileL10n.locale.identifier)
@@ -275,7 +287,7 @@ struct LocalizationTests {
 
     @Test("Every LorvexMobile key is translated into every shipped language")
     func mobileCatalogIsFullyTranslatedToShippedLanguages() throws {
-        let strings = try loadStrings(MobileL10n.catalogURL)
+        let strings = try loadStrings(Self.sourceCatalogURL("LorvexMobile"))
         let languages = try shippedCatalogLanguageIDs()
         assertEveryKeyHasLanguages(strings, catalog: "LorvexMobile", languages: languages)
     }
@@ -335,10 +347,9 @@ struct LocalizationTests {
         let localizedInfoRoot = configURL.appending(path: "InfoPlist")
         let bundleResourceTargets: [String: String] = [
             "LorvexMobileApp-Info.plist": "LorvexMobileApp",
-            "LorvexVisionApp-Info.plist": "LorvexVisionApp",
             "LorvexWatchApp-Info.plist": "LorvexWatchApp",
             "LorvexWatchComplication-Info.plist": "LorvexWatchComplication",
-            "LorvexWidgetExtension-Info.plist": "LorvexFocusWidgetExtension",
+            "LorvexWidgets-Info.plist": "LorvexWidgets",
         ]
 
         for (plistName, resourceTarget) in bundleResourceTargets.sorted(by: { $0.key < $1.key }) {
@@ -370,30 +381,29 @@ struct LocalizationTests {
 
     @Test("Native Mobile lookups resolve the selected language and typed arguments")
     func nativeMobileLookupsResolveNonEnglishValues() throws {
-        let deBundle = try #require(
-            MobileL10n.bundle.url(forResource: "de", withExtension: "lproj")
+        let zhHansBundle = try #require(
+            MobileL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj")
                 .flatMap { Bundle(url: $0) })
 
         #expect(
             String(
                 localized: "tab.today", defaultValue: "Today",
-                table: "Localizable", bundle: deBundle
-            ) == "Heute"
+                table: "Localizable", bundle: zhHansBundle
+            ) == "今天"
         )
         #expect(
             String(
                 localized: "notification.snooze.body", defaultValue: "Snoozed reminder",
-                table: "Localizable", bundle: deBundle
-            ) == "Verschobene Erinnerung"
+                table: "Localizable", bundle: zhHansBundle
+            ) == "已延后的提醒"
         )
-        let completed = 2
-        let total = 5
+        let remaining = 3
         #expect(
             String(
-                localized: "habits.detail.period_progress.value",
-                defaultValue: "\(completed) of \(total) done",
-                table: "Localizable", bundle: deBundle
-            ) == "2 von 5 erledigt"
+                localized: "habits.detail.period_remaining",
+                defaultValue: "\(remaining) to go",
+                table: "Localizable", bundle: zhHansBundle
+            ) == "还差 3\u{00A0}次"
         )
     }
 
@@ -454,44 +464,14 @@ struct LocalizationTests {
                 == "Completion heatmap covering 1 week. Target met on 1 day. 2 partial days."
         )
 
-        let german = try languageBundle("de")
+        let simplifiedChinese = try languageBundle("zh-Hans")
         let estimate = 25
         #expect(
             String(
                 localized: "task.estimate.compact_minutes",
                 defaultValue: "\(estimate) min",
-                table: "Localizable", bundle: german
-            ) == "25 Min."
-        )
-        let focusCount = 3
-        #expect(
-            String(
-                localized: "today.metric.focus",
-                defaultValue: "\(focusCount) in focus",
-                table: "Localizable", bundle: german
-            ) == "3 im Fokus"
-        )
-
-        let russian = try languageBundle("ru")
-        func deferred(_ count: Int) -> String {
-            let status = "Открыта"
-            return String(
-                localized: "review.task.deferred_count",
-                defaultValue: "\(status) · deferred \(count) times",
-                table: "Localizable", bundle: russian,
-                locale: Locale(identifier: "ru"))
-        }
-        #expect(deferred(1) == "Открыта · отложено 1 раз")
-        #expect(deferred(2) == "Открыта · отложено 2 раза")
-        #expect(deferred(5) == "Открыта · отложено 5 раз")
-
-        let japanese = try languageBundle("ja")
-        let headerFormat = String(
-            localized: "today.header.a11y", defaultValue: "%1$@. %2$@",
-            table: "Localizable", bundle: japanese)
-        #expect(
-            String(format: headerFormat, "7月15日", "未完了2件")
-                == "7月15日。未完了2件"
+                table: "Localizable", bundle: simplifiedChinese
+            ) == "25\u{00A0}分钟"
         )
     }
 
@@ -507,7 +487,7 @@ struct LocalizationTests {
     /// edits.
     @Test("Native resolution returns the per-language catalog value")
     func nativeResolutionReturnsPerLanguageValue() throws {
-        let json = try loadCatalog(LorvexL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexApple"))
         let strings = try #require(json["strings"] as? [String: Any])
         func catalogValue(_ language: String) throws -> String {
             let entry = try #require(strings["sidebar.item.today"] as? [String: Any])
@@ -517,24 +497,25 @@ struct LocalizationTests {
             return try #require(unit["value"] as? String)
         }
         let enValue = try catalogValue("en")
-        let deValue = try catalogValue("de")
-        #expect(enValue != deValue, "fixture key must differ across en/de to prove language switching")
+        let zhHansValue = try catalogValue("zh-Hans")
+        #expect(enValue != zhHansValue, "fixture key must differ across en/zh-Hans to prove language switching")
 
         let bundle = LorvexL10n.bundle
         let enBundle = try #require(bundle.url(forResource: "en", withExtension: "lproj").flatMap { Bundle(url: $0) })
-        let deBundle = try #require(bundle.url(forResource: "de", withExtension: "lproj").flatMap { Bundle(url: $0) })
+        let zhHansBundle = try #require(bundle.url(forResource: "zh-Hans", withExtension: "lproj").flatMap { Bundle(url: $0) })
         #expect(String(localized: "sidebar.item.today", table: "Localizable", bundle: enBundle) == enValue)
-        #expect(String(localized: "sidebar.item.today", table: "Localizable", bundle: deBundle) == deValue)
+        #expect(String(localized: "sidebar.item.today", table: "Localizable", bundle: zhHansBundle) == zhHansValue)
     }
 
     /// Proves native plural resolution selects the correct CLDR category from the
     /// compiled `.stringsdict` using an explicit key plus an interpolated `Int`
     /// in `defaultValue` — the form that replaces the custom `LorvexPluralRules`
-    /// engine. The native platform resolves categories for every locale (not just
-    /// the 13 the hand-written switch models), so Russian one/many differ here.
+    /// engine. English's `one` and `other` categories select distinct forms,
+    /// proving the native platform performs the category lookup rather than a
+    /// hand-rolled switch.
     @Test("Native plural resolution selects the CLDR category from the stringsdict")
     func nativePluralResolutionSelectsCldrCategory() throws {
-        let json = try loadCatalog(LorvexL10n.catalogURL)
+        let json = try loadCatalog(Self.sourceCatalogURL("LorvexApple"))
         let strings = try #require(json["strings"] as? [String: Any])
         func pluralForm(_ language: String, _ category: String) throws -> String {
             let entry = try #require(strings["habits.milestone.value.count"] as? [String: Any])
@@ -546,7 +527,6 @@ struct LocalizationTests {
         }
         let bundle = LorvexL10n.bundle
         let enBundle = try #require(bundle.url(forResource: "en", withExtension: "lproj").flatMap { Bundle(url: $0) })
-        let ruBundle = try #require(bundle.url(forResource: "ru", withExtension: "lproj").flatMap { Bundle(url: $0) })
         func native(_ b: Bundle, _ n: Int, locale: Locale) -> String {
             String(
                 localized: "habits.milestone.value.count", defaultValue: "\(n) completions",
@@ -557,12 +537,6 @@ struct LocalizationTests {
         #expect(native(enBundle, 1, locale: english) == String(format: try pluralForm("en", "one"), 1))
         #expect(native(enBundle, 5, locale: english) == String(format: try pluralForm("en", "other"), 5))
         #expect(native(enBundle, 1, locale: english) != native(enBundle, 5, locale: english))
-        // Russian CLDR: the one form (1) differs from the many form (5), proving
-        // per-locale category selection the hand-written engine can only fake.
-        let russian = Locale(identifier: "ru")
-        #expect(
-            native(ruBundle, 1, locale: russian) != native(ruBundle, 5, locale: russian),
-            "Russian one and many forms must differ")
     }
 
     @Test("Native plural interpolation preserves multi-placeholder argument order")
@@ -573,13 +547,13 @@ struct LocalizationTests {
         func archiveMessage(count: Int, name: String) -> String {
             String(
                 localized: "list_row.archive.nonempty_count_message",
-                defaultValue: "\(count) tasks remain in \"\(name)\".",
+                defaultValue: "\(count) tasks remain in “\(name)”.",
                 table: "Localizable",
                 bundle: appleEnglish)
         }
         #expect(archiveMessage(count: 1, name: "Work").contains("1 task"))
         #expect(!archiveMessage(count: 1, name: "Work").contains("1 tasks"))
-        #expect(archiveMessage(count: 2, name: "Work").contains("\"Work\""))
+        #expect(archiveMessage(count: 2, name: "Work").contains("“Work”"))
         #expect(archiveMessage(count: 2, name: "Work").contains("2 tasks"))
 
         let widgetEnglish = try #require(
@@ -873,14 +847,17 @@ struct LocalizationTests {
         }
         #expect(nativeReferenceCount > 0, "Expected native System Intents catalog references")
 
-        let focusEntitySource = try String(
+        let focusFilterSource = try String(
             contentsOf: sourceRoot.appending(path: "LorvexFocusFilterIntent.swift"),
             encoding: .utf8)
-        #expect(
-            focusEntitySource.contains("if id == Self.builtInID")
-                && focusEntitySource.contains("title: Self.builtInDisplayName"),
-            "The built-in Focus profile must map its stable ID to a deferred display resource"
-        )
+        for key in [
+            "system.focus_filter.entity.list", "system.focus_filter.all_lists",
+            "system.focus_filter.parameter.lists",
+        ] {
+            #expect(
+                focusFilterSource.contains("\"\(key)\""),
+                "The Focus filter must read \(key) from the System Intents catalog")
+        }
     }
 
     @Test("Widget gallery metadata stays deferred and bundle-qualified")
@@ -888,11 +865,6 @@ struct LocalizationTests {
         let root = try #require(Self.packageRootURL())
         let sourceRoot = root.appending(path: "Sources/LorvexWidgetExtension")
         let widgets = [
-            (
-                file: "LorvexFocusWidget.swift",
-                nameKey: "widget.focus.name",
-                descriptionKey: "widget.focus.desc"
-            ),
             (
                 file: "LorvexTodayWidget.swift",
                 nameKey: "widget.today.name",
@@ -929,26 +901,26 @@ struct LocalizationTests {
         }
     }
 
-    @Test("Native Widget Focus metadata resolves a non-English catalog value")
-    func nativeWidgetFocusMetadataResolvesNonEnglishValue() throws {
-        let german = try #require(
-            WidgetSupportL10n.bundle.url(forResource: "de", withExtension: "lproj")
+    @Test("Native Today widget metadata resolves a non-English catalog value")
+    func nativeTodayWidgetMetadataResolvesNonEnglishValue() throws {
+        let simplifiedChinese = try #require(
+            WidgetSupportL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj")
                 .flatMap { Bundle(url: $0) })
 
         #expect(
             String(
-                localized: "widget.focus.name",
-                defaultValue: "Lorvex Focus",
+                localized: "widget.today.name",
+                defaultValue: "Today",
                 table: "Localizable",
-                bundle: german
-            ) == "Lorvex Fokus")
+                bundle: simplifiedChinese
+            ) == "今天")
         #expect(
             String(
-                localized: "widget.focus.desc",
-                defaultValue: "Shows today's focus plan from Lorvex.",
+                localized: "widget.today.desc",
+                defaultValue: "See today's tasks at a glance.",
                 table: "Localizable",
-                bundle: german
-            ) == "Zeigt den heutigen Fokusplan aus Lorvex.")
+                bundle: simplifiedChinese
+            ) == "一眼查看今天的任务。")
     }
 
     @Test("Watch complication metadata stays deferred and bundle-qualified")
@@ -974,17 +946,17 @@ struct LocalizationTests {
 
     @Test("Native Watch metadata resolves a non-English catalog value")
     func nativeWatchMetadataResolvesNonEnglishValue() throws {
-        let german = try #require(
-            WatchL10n.bundle.url(forResource: "de", withExtension: "lproj")
+        let simplifiedChinese = try #require(
+            WatchL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj")
                 .flatMap { Bundle(url: $0) })
 
         #expect(
             String(
                 localized: "watch.complication.description",
-                defaultValue: "Shows your current focus task.",
+                defaultValue: "Shows how many tasks are left today and the one at the top.",
                 table: "Localizable",
-                bundle: german
-            ) == "Zeigt deine aktuelle Fokusaufgabe an.")
+                bundle: simplifiedChinese
+            ) == "显示今天还剩几项任务，以及排在最前面的一项。")
     }
 
     @Test("Native WidgetViews interpolation preserves plural categories and argument order")
@@ -1016,46 +988,22 @@ struct LocalizationTests {
         #expect(inlineProgress(completed: 1, total: 1) == "1/1 task")
         #expect(inlineProgress(completed: 1, total: 2) == "1/2 tasks")
 
-        let spanish = try languageBundle("es")
-        func footer(completed: Int, open: Int) -> String {
-            String(
-                localized: "widget.today.footer",
-                defaultValue: "\(completed) completed · \(open) open",
-                table: "Localizable",
-                bundle: spanish)
-        }
-        #expect(footer(completed: 1, open: 1) == "1 completada · 1 abierta")
-        #expect(footer(completed: 2, open: 1) == "2 completadas · 1 abierta")
-        #expect(footer(completed: 1, open: 2) == "1 completada · 2 abiertas")
-
-        let completed = 2
-        let open = 6
-        let hidden = 3
-        let footer = String(
-            localized: "widget.today.footer.more",
-            defaultValue: "\(completed) completed · \(open) open · \(hidden) more",
-            table: "Localizable",
-            bundle: spanish)
-        #expect(footer == "2 completadas · 6 abiertas · 3 más")
-
-        let russian = try languageBundle("ru")
-        let russianFooter = String(
-            localized: "widget.today.footer.more",
-            defaultValue: "\(1) completed · \(1) open · \(3) more",
-            table: "Localizable",
-            bundle: russian)
-        #expect(russianFooter == "Выполнено: 1 · Открыто: 1 · Ещё: 3")
-
-        let korean = try languageBundle("ko")
-        let habitName = "Meditate"
-        let habitRow = String(
-            localized: "widget.habits.row.progress.a11y",
-            defaultValue: "\(habitName), \(1) of \(3)",
-            table: "Localizable",
-            bundle: korean)
-        #expect(habitRow == "Meditate, 3개 중 1개")
-
         let simplifiedChinese = try languageBundle("zh-Hans")
+        let hidden = 3
+        let done = 2
+        #expect(
+            String(
+                localized: "widget.foot.more_today",
+                defaultValue: "\(hidden) more today",
+                table: "Localizable",
+                bundle: simplifiedChinese) == "另有 3\u{00A0}项")
+        #expect(
+            String(
+                localized: "widget.foot.done_today",
+                defaultValue: "\(done) done today",
+                table: "Localizable",
+                bundle: simplifiedChinese) == "今天已完成 2\u{00A0}项")
+
         let title = "Write"
         let action = String(
             localized: "widget.action.complete.a11y",
@@ -1063,23 +1011,6 @@ struct LocalizationTests {
             table: "Localizable",
             bundle: simplifiedChinese)
         #expect(action == "完成“Write”")
-    }
-
-    @Test("Today footer plural substitutions keep distinct argument positions")
-    func todayFooterPluralSubstitutionsKeepDistinctArguments() throws {
-        let json = try loadCatalog(WidgetL10n.catalogURL)
-        let strings = try #require(json["strings"] as? [String: Any])
-        for key in ["widget.today.footer", "widget.today.footer.more"] {
-            let entry = try #require(strings[key] as? [String: Any])
-            let localizations = try #require(entry["localizations"] as? [String: Any])
-            let spanish = try #require(localizations["es"] as? [String: Any])
-            let substitutions = try #require(spanish["substitutions"] as? [String: Any])
-            let completed = try #require(substitutions["completed"] as? [String: Any])
-            let open = try #require(substitutions["open"] as? [String: Any])
-            #expect(completed["argNum"] as? Int == 1)
-            #expect(open["argNum"] as? Int == 2)
-            #expect(Set([completed["argNum"] as? Int, open["argNum"] as? Int]).count == 2)
-        }
     }
 
     /// Guards the App-Intent request-locale seam. A composed process-locale
@@ -1216,24 +1147,20 @@ struct LocalizationTests {
         #expect(totalCalls > 0, "Expected at least one LocalizedStringResource( construction across these directories")
     }
 
-    /// Reads the `strings` map of the `.xcstrings` catalog inside `bundle`
-    /// and returns the German `stringUnit.value` for `key`, or `nil` if the
-    /// bundle has no catalog at all, or the catalog, key, or German
-    /// localization is missing.
-    private func germanCatalogValue(in bundle: Bundle, key: String) throws -> String? {
-        guard let catalogURL = bundle.url(forResource: "Localizable", withExtension: "xcstrings") else {
+    /// Returns the Simplified Chinese translation `bundle` ships for `key`, read
+    /// from its compiled `zh-Hans.lproj/Localizable.strings`, or `nil` when the
+    /// bundle ships no Simplified Chinese table or the table omits the key.
+    ///
+    /// Reading the compiled table is what makes a negative result meaningful: it
+    /// says the module genuinely cannot resolve the key at runtime, not merely
+    /// that some authored file is missing.
+    private func simplifiedChineseCatalogValue(in bundle: Bundle, key: String) throws -> String? {
+        guard let lproj = bundle.url(forResource: "zh-Hans", withExtension: "lproj") else {
             return nil
         }
-        let strings = try loadStrings(catalogURL)
-        guard let entry = strings[key] as? [String: Any],
-            let localizations = entry["localizations"] as? [String: Any],
-            let german = localizations["de"] as? [String: Any],
-            let stringUnit = german["stringUnit"] as? [String: Any],
-            let value = stringUnit["value"] as? String
-        else {
-            return nil
-        }
-        return value
+        let table = lproj.appending(path: "Localizable.strings")
+        guard FileManager.default.fileExists(atPath: table.path) else { return nil }
+        return try loadInfoPlistStrings(table)[key]
     }
 
     @Test("Representative intent / widget-config resources resolve their own module bundle, not the main bundle")
@@ -1241,7 +1168,7 @@ struct LocalizationTests {
         // Mirrors the audit's own probe (L10n-H1): a lookup against the main
         // app bundle finds only the English default because LorvexApple's own
         // catalog never defines these module-owned keys, while a lookup
-        // against the correct module bundle finds the German translation.
+        // against the correct module bundle finds the zh-Hans translation.
         // One representative per fixed module: an intent title
         // (LorvexSystemIntents), a widget intent title (LorvexWidgetIntents),
         // and a widget-config title (LorvexWidgetExtension).
@@ -1251,7 +1178,7 @@ struct LocalizationTests {
             let moduleBundle: Bundle
             let key: String
             let defaultValue: String
-            let expectedGerman: String
+            let expectedSimplifiedChinese: String
         }
 
         let representatives = [
@@ -1261,21 +1188,21 @@ struct LocalizationTests {
                 moduleBundle: SystemL10n.bundle,
                 key: "system.task.complete.title",
                 defaultValue: "Complete Lorvex Task",
-                expectedGerman: "Lorvex-Aufgabe abschließen"),
+                expectedSimplifiedChinese: "完成 Lorvex 任务"),
             Representative(
                 name: "LorvexWidgetIntents widget intent title",
                 resource: WidgetCompleteTaskIntent.title,
                 moduleBundle: WidgetSupportL10n.bundle,
                 key: "widget.intent.complete.title",
                 defaultValue: "Complete Task",
-                expectedGerman: "Aufgabe abschließen"),
+                expectedSimplifiedChinese: "完成任务"),
             Representative(
                 name: "LorvexWidgetExtension widget-config title",
                 resource: LorvexTodayWidgetConfigurationIntent.title,
                 moduleBundle: WidgetL10n.bundle,
                 key: "widget.config.today.title",
-                defaultValue: "Lorvex Today Widget",
-                expectedGerman: "Lorvex Heute-Widget"),
+                defaultValue: "Today",
+                expectedSimplifiedChinese: "今天"),
         ]
 
         for representative in representatives {
@@ -1288,19 +1215,19 @@ struct LocalizationTests {
                 "\(representative.name) should carry its own module bundle instead of defaulting to .main"
             )
 
-            let moduleGerman = try germanCatalogValue(in: representative.moduleBundle, key: representative.key)
+            let moduleSimplifiedChinese = try simplifiedChineseCatalogValue(in: representative.moduleBundle, key: representative.key)
             #expect(
-                moduleGerman == representative.expectedGerman,
-                "\(representative.name): expected the German catalog translation for '\(representative.key)' from its module bundle"
+                moduleSimplifiedChinese == representative.expectedSimplifiedChinese,
+                "\(representative.name): expected the zh-Hans catalog translation for '\(representative.key)' from its module bundle"
             )
-            #expect(moduleGerman != representative.defaultValue)
+            #expect(moduleSimplifiedChinese != representative.defaultValue)
 
             // Contrast: the main app bundle's own catalog never defines this
             // module-owned key, so a lookup there would have fallen through
             // to the English default before this fix.
-            let mainGerman = try germanCatalogValue(in: Bundle.main, key: representative.key)
+            let mainSimplifiedChinese = try simplifiedChineseCatalogValue(in: Bundle.main, key: representative.key)
             #expect(
-                mainGerman == nil,
+                mainSimplifiedChinese == nil,
                 "\(representative.name): the main bundle catalog should not own '\(representative.key)'"
             )
         }
@@ -1311,16 +1238,16 @@ struct LocalizationTests {
         // Proves the resolved bundle carries real translations rather than only
         // the English source default — the exact failure when bundle resolution
         // misses the LorvexWidgetViews catalog.
-        let german = try germanCatalogValue(
+        let simplifiedChinese = try simplifiedChineseCatalogValue(
             in: WidgetL10n.bundle, key: "widget.config.today.title")
-        #expect(german == "Lorvex Heute-Widget")
-        #expect(german != "Lorvex Today Widget")
+        #expect(simplifiedChinese == "今天")
+        #expect(simplifiedChinese != "Today")
     }
 
     @Test("Native System Intents lookup resolves a non-English compiled catalog")
     func nativeSystemIntentLookupResolvesNonEnglishValue() throws {
-        let german = try #require(
-            SystemL10n.bundle.url(forResource: "de", withExtension: "lproj")
+        let simplifiedChinese = try #require(
+            SystemL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj")
                 .flatMap { Bundle(url: $0) })
         let completed = 1
         let target = 2
@@ -1328,9 +1255,9 @@ struct LocalizationTests {
             localized: "system.entity.habit.progress.today",
             defaultValue: "\(completed)/\(target) today",
             table: "Localizable",
-            bundle: german)
+            bundle: simplifiedChinese)
 
-        #expect(progress == "1/2 heute")
+        #expect(progress == "今日 1/2")
     }
 
     @Test("macOS import summary copy routes through LorvexApple localization")
@@ -1338,9 +1265,8 @@ struct LocalizationTests {
         let text = LorvexImportSummaryText.provider
 
         #expect(text.categoryName(.tags) == "Tags")
-        #expect(text.categoryName(.currentFocus) == "Current Focus")
-        #expect(text.categoryName(.focusSchedules) == "Focus Schedules")
-        #expect(text.categoryName(.taskCalendarEventLinks) == "Task Calendar Links")
+        #expect(text.categoryName(.dailyBriefings) == "Daily Briefings")
+        #expect(text.categoryName(.taskCalendarEventLinks) == "Task–Event Links")
         #expect(text.categoryName(.dailyReviews) == "Daily Reviews")
         #expect(text.importedRecordSummary(1, 0) == "1 imported record")
         #expect(text.importedRecordSummary(2, 1) == "2 imported records, 1 record already present")
@@ -1354,9 +1280,8 @@ struct LocalizationTests {
         let text = MobileImportSummaryText.provider
 
         #expect(text.categoryName(.tags) == "Tags")
-        #expect(text.categoryName(.currentFocus) == "Current Focus")
-        #expect(text.categoryName(.focusSchedules) == "Focus Schedules")
-        #expect(text.categoryName(.taskCalendarEventLinks) == "Task Calendar Links")
+        #expect(text.categoryName(.dailyBriefings) == "Daily Briefings")
+        #expect(text.categoryName(.taskCalendarEventLinks) == "Task–Event Links")
         #expect(text.categoryName(.dailyReviews) == "Daily Reviews")
         #expect(text.importedRecordSummary(1, 0) == "1 imported record")
         #expect(text.importedRecordSummary(2, 1) == "2 imported records, 1 record already present")
@@ -1367,18 +1292,18 @@ struct LocalizationTests {
 
     private struct ShippedCatalog {
         let name: String
-        let url: URL?
+        var url: URL? { LocalizationTests.sourceCatalogURL(name) }
     }
 
     private func shippedCatalogs() throws -> [ShippedCatalog] {
         [
-            ShippedCatalog(name: "LorvexApple", url: LorvexL10n.catalogURL),
-            ShippedCatalog(name: "LorvexMobile", url: MobileL10n.catalogURL),
-            ShippedCatalog(name: "LorvexSystemIntents", url: SystemL10n.catalogURL),
-            ShippedCatalog(name: "LorvexWatch", url: WatchL10n.catalogURL),
-            ShippedCatalog(name: "LorvexWidgetKitSupport", url: WidgetSupportL10n.catalogURL),
-            ShippedCatalog(name: "LorvexWidgetViews", url: WidgetL10n.catalogURL),
-            ShippedCatalog(name: "LorvexCarPlay", url: CarPlayL10n.catalogURL),
+            ShippedCatalog(name: "LorvexApple"),
+            ShippedCatalog(name: "LorvexMobile"),
+            ShippedCatalog(name: "LorvexSystemIntents"),
+            ShippedCatalog(name: "LorvexWatch"),
+            ShippedCatalog(name: "LorvexWidgetKitSupport"),
+            ShippedCatalog(name: "LorvexWidgetViews"),
+            ShippedCatalog(name: "LorvexCarPlay"),
         ]
     }
 
@@ -1405,6 +1330,36 @@ struct LocalizationTests {
             languages.insert(sourceLanguage)
         }
         return languages.sorted()
+    }
+
+    /// The authored catalog for a module, located in the source tree by the
+    /// module's `Sources/` directory name. The build product carries only the
+    /// compiled `.lproj` tables, so an assertion about catalog structure —
+    /// source language, key coverage, extraction state — reads the file here.
+    private static func sourceCatalogURL(_ module: String) -> URL? {
+        packageRootURL()?
+            .appendingPathComponent("Sources/\(module)/Resources/Localizable.xcstrings")
+    }
+
+    private struct ShippedBundle {
+        let name: String
+        let bundle: Bundle
+    }
+
+    /// The resource bundle each localized module ships. A module's authored
+    /// catalog is compiled into `<language>.lproj/Localizable.strings` here, so
+    /// this is what an assertion about a delivered build reads.
+    private static func shippedBundles() -> [ShippedBundle] {
+        [
+            ShippedBundle(name: "LorvexApple", bundle: LorvexL10n.bundle),
+            ShippedBundle(name: "LorvexMobile", bundle: MobileL10n.bundle),
+            ShippedBundle(name: "LorvexSystemIntents", bundle: SystemL10n.bundle),
+            ShippedBundle(name: "LorvexWatch", bundle: WatchL10n.bundle),
+            ShippedBundle(name: "LorvexWidgetKitSupport", bundle: WidgetSupportL10n.bundle),
+            ShippedBundle(name: "LorvexWidgetViews", bundle: WidgetL10n.bundle),
+            ShippedBundle(name: "LorvexCarPlay", bundle: CarPlayL10n.bundle),
+            ShippedBundle(name: "LorvexCore", bundle: CoreL10n.bundle),
+        ]
     }
 
     private static func packageRootURL() -> URL? {

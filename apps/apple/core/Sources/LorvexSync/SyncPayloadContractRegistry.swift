@@ -326,7 +326,7 @@ enum SyncPayloadContractRegistry {
       return mismatch("id", envelope.entityId)
     case .preference:
       return mismatch("key", envelope.entityId)
-    case .dailyReview, .currentFocus, .focusSchedule:
+    case .dailyReview, .dailyBriefing:
       return mismatch("date", envelope.entityId)
     case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion:
       guard case .success(let pair) = CompositeEdge.splitCompositeEdgeId(envelope.entityId) else {
@@ -352,7 +352,7 @@ enum SyncPayloadContractRegistry {
       return []
     case .aiChangelog:
       return []
-    case .deviceState, .importSession:
+    case .deviceState, .importSession, .dailySchedule:
       return ["\(envelope.entityType.asString) has no sync payload contract"]
     }
   }

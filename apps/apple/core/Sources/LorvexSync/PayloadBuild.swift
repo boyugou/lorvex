@@ -7,22 +7,21 @@ import LorvexStore
 ///
 /// - ``buildAggregatePayload(_:entityType:entityId:)`` — aggregate roots whose
 ///   canonical sync payload needs dedicated composition
-///   (`current_focus.task_ids`, `focus_schedule.blocks`,
-///   `daily_review.linked_task_ids`/`linked_list_ids`,
+///   (`daily_review.linked_task_ids`/`linked_list_ids`,
 ///   `calendar_event.attendees`). Calendar attendees are a JSON-in-TEXT
 ///   base-table column that this builder parses into a real JSON array.
 public enum PayloadBuild {
   /// Entity kinds whose canonical sync payload requires dedicated composition
   /// for an embedded child collection and/or a non-verbatim JSON projection.
   public static let aggregateRootKindsWithDedicatedComposition: [EntityKind] = [
-    .currentFocus, .focusSchedule, .dailyReview, .calendarEvent,
+    .dailyReview, .calendarEvent,
   ]
 
   /// True when `kind` is an aggregate root whose payload needs dedicated
   /// composition.
   public static func kindNeedsDedicatedComposition(_ kind: EntityKind) -> Bool {
     switch kind {
-    case .currentFocus, .focusSchedule, .dailyReview, .calendarEvent:
+    case .dailyReview, .calendarEvent:
       return true
     default:
       return false
@@ -38,8 +37,8 @@ public enum PayloadBuild {
   ///   row is missing. The two are distinguished by
   ///   ``kindNeedsDedicatedComposition(_:)``.
   ///
-  /// `entityId` is the natural key: the date for current_focus / focus_schedule
-  /// / daily_review, the event UUID for calendar_event. No top-level `version`
+  /// `entityId` is the natural key: the date for daily_review, the event UUID
+  /// for calendar_event. No top-level `version`
   /// is included — the outbox inserts the canonical envelope version at write
   /// time, so emitting the local `version` here would risk shipping a stale one.
   public static func buildAggregatePayload(
@@ -48,80 +47,18 @@ public enum PayloadBuild {
     guard let kind = EntityKind.parse(entityType) else { return nil }
     guard kindNeedsDedicatedComposition(kind) else { return nil }
     switch kind {
-    case .currentFocus:
-      return try buildCurrentFocusPayload(db, date: entityId)
-    case .focusSchedule:
-      return try buildFocusSchedulePayload(db, date: entityId)
     case .dailyReview:
       return try buildDailyReviewPayload(db, date: entityId)
     case .calendarEvent:
       return try buildCalendarEventPayload(db, eventId: entityId)
     default:
-      // Statically unreachable: the gate above narrows to the four arms.
+      // Statically unreachable: the gate above narrows to the two arms.
       throw StoreError.invariant(
         "entity_type \(kind.asString) is registered in "
           + "aggregateRootKindsWithDedicatedComposition but has no builder arm in "
           + "buildAggregatePayload — add the dispatch arm before registering a new "
           + "aggregate root")
     }
-  }
-
-  private static func buildCurrentFocusPayload(
-    _ db: Database, date: String
-  ) throws -> JSONValue? {
-    guard
-      let header = try Row.fetchOne(
-        db,
-        sql: "SELECT date, briefing, timezone, created_at, updated_at "
-          + "FROM current_focus WHERE date = ?",
-        arguments: [date])
-    else { return nil }
-
-    let resolvedDate: String = header["date"]
-    let briefing: String? = header["briefing"]
-    let timezone: String? = header["timezone"]
-    let createdAt: String = header["created_at"]
-    let updatedAt: String = header["updated_at"]
-
-    let taskIds = try CurrentFocusItemsRepo.queryFocusTaskIds(db, date: resolvedDate)
-
-    return .object([
-      "date": .string(resolvedDate),
-      "task_ids": .array(taskIds.map(JSONValue.string)),
-      "briefing": briefing.map(JSONValue.string) ?? .null,
-      "timezone": timezone.map(JSONValue.string) ?? .null,
-      "created_at": .string(createdAt),
-      "updated_at": .string(updatedAt),
-    ])
-  }
-
-  private static func buildFocusSchedulePayload(
-    _ db: Database, date: String
-  ) throws -> JSONValue? {
-    guard
-      let header = try Row.fetchOne(
-        db,
-        sql: "SELECT date, rationale, timezone, created_at, updated_at "
-          + "FROM focus_schedule WHERE date = ?",
-        arguments: [date])
-    else { return nil }
-
-    let resolvedDate: String = header["date"]
-    let rationale: String? = header["rationale"]
-    let timezone: String? = header["timezone"]
-    let createdAt: String = header["created_at"]
-    let updatedAt: String = header["updated_at"]
-
-    let blocks = try FocusScheduleSnapshot.serializeBlocksForSync(db, date: resolvedDate)
-
-    return .object([
-      "date": .string(resolvedDate),
-      "blocks": .array(blocks),
-      "rationale": rationale.map(JSONValue.string) ?? .null,
-      "timezone": timezone.map(JSONValue.string) ?? .null,
-      "created_at": .string(createdAt),
-      "updated_at": .string(updatedAt),
-    ])
   }
 
   private static func buildDailyReviewPayload(

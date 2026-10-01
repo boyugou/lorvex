@@ -6,6 +6,11 @@ extension AppStore {
     set { habitsStorage.habits = newValue }
   }
 
+  /// The active habits in synced `position` order, as the core returns them.
+  var orderedHabits: [LorvexHabit] {
+    habits?.habits ?? []
+  }
+
   var draftHabitName: String {
     get { habitsStorage.draftHabitName }
     set { habitsStorage.draftHabitName = newValue }

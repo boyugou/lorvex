@@ -1,4 +1,5 @@
 import Foundation
+import GRDB
 import LorvexStore
 import Testing
 
@@ -28,11 +29,101 @@ import Testing
   }
 
   /// The production resolver against the real repo artifacts: the canonical
-  /// ladder is empty pre-launch, and resolving it (lock + migrations
-  /// directory + validation) succeeds.
-  @Test func productionLadderResolvesEmptyPreLaunch() throws {
+  /// ladder holds exactly `002_retire_custom_sync_transport`, and resolving it
+  /// (lock + migrations directory + validation) succeeds.
+  @Test func productionLadderResolvesTheRetireCustomSyncTransportMigration() throws {
     let migrations = try SwiftLorvexCoreService.resolveSchemaMigrations()
-    #expect(migrations.isEmpty)
+    #expect(migrations.map(\.version) == [2])
+    #expect(migrations.map(\.name) == ["retire_custom_sync_transport"])
+  }
+
+  /// The ladder applied to the baseline schema yields the production shape:
+  /// the retired transport tables are gone and `sync_outbox` carries neither
+  /// the authoritative-session owner nor the future-record resolution policy.
+  @Test func productionLadderRetiresTheCustomSyncTransportSchema() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let schemaSQL = try String(
+      contentsOf: root.appendingPathComponent("schema/schema.sql"), encoding: .utf8)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
+
+    let (tables, outboxColumns, changelogColumns, tombstoneColumns) = try store.writer.read {
+      db -> (Set<String>, Set<String>, Set<String>, Set<String>) in
+      func columns(_ table: String) throws -> Set<String> {
+        Set(try Row.fetchAll(db, sql: "PRAGMA table_info(\(table))").map { $0["name"] as String })
+      }
+      return (
+        Set(
+          try String.fetchAll(
+            db, sql: "SELECT name FROM sqlite_master WHERE type = 'table'")),
+        try columns("sync_outbox"), try columns("ai_changelog"),
+        try columns("sync_tombstones")
+      )
+    }
+    let retiredPrefixes = [
+      "sync_cloudkit_", "sync_generation_snapshot_", "sync_authoritative_snapshot",
+      "audit_retention_", "audit_changelog_cloud_presence",
+    ]
+    #expect(tables.filter { name in retiredPrefixes.contains { name.hasPrefix($0) } }.isEmpty)
+    #expect(tables.isSuperset(of: ["sync_outbox", "ai_changelog", "sync_tombstones"]))
+    #expect(
+      outboxColumns.isDisjoint(with: ["authoritative_session_token", "future_record_resolution"]))
+    #expect(changelogColumns.isDisjoint(with: ["retention_epoch", "retention_account_identifier"]))
+    #expect(!tombstoneColumns.contains("cloud_confirmed_at"))
+  }
+
+  /// A managed on-disk database created before the ladder existed (baseline
+  /// only) upgrades through the production ladder without being set aside, and
+  /// every later open is an ordinary reopen. A quarantine on either open would
+  /// surface the "previous data set aside" notice again after an update.
+  @Test func baselineOnlyManagedDatabaseUpgradesWithoutQuarantine() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let schemaSQL = try String(
+      contentsOf: root.appendingPathComponent("schema/schema.sql"), encoding: .utf8)
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("ladder-upgrade-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let url = directory.appendingPathComponent("db.sqlite")
+    let checksum = "baseline-checksum"
+
+    let created = try LorvexStore.open(
+      at: url, schemaSQL: schemaSQL, schemaChecksum: checksum, managed: true)
+    #expect(created.recovery == nil)
+    try created.writer.write { db in
+      try db.execute(
+        sql: """
+          INSERT INTO tasks (id, title, list_id, version, created_at, updated_at)
+          VALUES ('t1', 'Kept', 'inbox', '0000000000001_0000_0000000000000001',
+                  '2026-09-01T00:00:00.000Z', '2026-09-01T00:00:00.000Z')
+          """)
+    }
+    try created.writer.close()
+
+    let ladder = try SwiftLorvexCoreService.resolveSchemaMigrations()
+    for _ in 0..<2 {
+      let reopened = try LorvexStore.open(
+        at: url, schemaSQL: schemaSQL, schemaChecksum: checksum, migrations: ladder,
+        managed: true)
+      #expect(reopened.recovery == nil)
+      let title = try reopened.writer.read { db in
+        try String.fetchOne(db, sql: "SELECT title FROM tasks WHERE id = 't1'")
+      }
+      #expect(title == "Kept")
+      try reopened.writer.close()
+    }
+    let leftovers = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+    #expect(leftovers.filter { $0.contains("incompatible") }.isEmpty)
   }
 
   @Test func validLadderLoadsWithBareNamesInVersionOrder() throws {

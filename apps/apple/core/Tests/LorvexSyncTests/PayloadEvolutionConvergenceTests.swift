@@ -19,19 +19,13 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
     version: String, schema: UInt32, futureContext: String? = nil
   ) throws -> SyncEnvelope {
     var object: [String: JSONValue] = [
-      "blocks": .array([
-        .object([
-          "block_type": .string("buffer"), "start_minutes": .int(540), "end_minutes": .int(570),
-          "calendar_event_id": .null, "event_source": .null, "task_id": .null,
-          "title": .string("Buffer"),
-        ])
-      ]),
+      "briefing": .string("Two meetings, then the report."),
       "created_at": .string("2026-04-05T00:00:00Z"),
       "updated_at": .string("2026-04-05T00:00:00Z"),
     ]
     if let futureContext { object["future_context"] = .string(futureContext) }
     return try SyncTestSupport.completeEnvelope(
-      entityType: .focusSchedule, entityId: entityID, operation: .upsert,
+      entityType: .dailyBriefing, entityId: entityID, operation: .upsert,
       version: try Hlc.parseCanonical(version), payloadSchemaVersion: schema,
       payload: try SyncCanonicalize.canonicalizeJSON(.object(object)),
       deviceId: "remote-device")
@@ -77,7 +71,7 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
             WHERE entity_type = ? AND entity_id = ? AND operation = 'upsert'
             ORDER BY id DESC LIMIT 1
             """,
-          arguments: [EntityName.focusSchedule, entityID]))
+          arguments: [EntityName.dailyBriefing, entityID]))
       let rowVersion: String = row["version"]
       let rowSchema: Int = row["payload_schema_version"]
       let rowPayload: String = row["payload"]
@@ -88,9 +82,9 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
         return XCTFail("successor payload must be an object")
       }
       XCTAssertEqual(object["future_context"], .string("fleet-preserved"))
-      XCTAssertNotNil(object["blocks"], "successor must carry the complete known aggregate")
+      XCTAssertNotNil(object["briefing"], "successor must carry the complete known aggregate")
       successorEnvelope = SyncEnvelope(
-        entityType: .focusSchedule, entityId: entityID, operation: .upsert,
+        entityType: .dailyBriefing, entityId: entityID, operation: .upsert,
         version: try Hlc.parseCanonical(rowVersion), payloadSchemaVersion: UInt32(rowSchema),
         payload: rowPayload, deviceId: rowDevice)
     }
@@ -102,11 +96,11 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
         try Apply.applyEnvelope(db, registry: registry, envelope: successorEnvelope), .applied)
       let shadow = try XCTUnwrap(
         PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: entityID))
+          db, entityType: EntityName.dailyBriefing, entityID: entityID))
       let known = try OutboxEnqueue.readEntityPayloadSnapshot(
-        db, entityType: EntityName.focusSchedule, entityId: entityID)
+        db, entityType: EntityName.dailyBriefing, entityId: entityID)
       let reconstructed = try PayloadShadow.mergePayloadWithShadowAfterLookup(
-        db, entityType: EntityName.focusSchedule, entityID: entityID,
+        db, entityType: EntityName.dailyBriefing, entityID: entityID,
         knownPayload: known, shadow: shadow)
       guard case .object(let object) = reconstructed else {
         return XCTFail("fresh peer reconstruction must be an object")
@@ -133,10 +127,10 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
       XCTAssertEqual(summary.replayed, 1)
       XCTAssertEqual(
         summary.absenceReemitTargets,
-        [AbsenceReemitTarget(entityType: EntityName.focusSchedule, entityId: entityID)])
+        [AbsenceReemitTarget(entityType: EntityName.dailyBriefing, entityId: entityID)])
       XCTAssertEqual(
         try PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: entityID)?.baseVersion,
+          db, entityType: EntityName.dailyBriefing, entityID: entityID)?.baseVersion,
         legacy)
     }
   }
@@ -147,14 +141,14 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
       _ = try seedPreservedLegacyUpdate(db)
       let shadow = try XCTUnwrap(
         PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: entityID))
+          db, entityType: EntityName.dailyBriefing, entityID: entityID))
       let known = try OutboxEnqueue.readEntityPayloadSnapshot(
-        db, entityType: EntityName.focusSchedule, entityId: entityID)
+        db, entityType: EntityName.dailyBriefing, entityId: entityID)
       let complete = try PayloadShadow.mergePayloadWithShadowAfterLookup(
-        db, entityType: EntityName.focusSchedule, entityID: entityID,
+        db, entityType: EntityName.dailyBriefing, entityID: entityID,
         knownPayload: known, shadow: shadow)
       let replay = SyncEnvelope(
-        entityType: .focusSchedule, entityId: entityID, operation: .upsert,
+        entityType: .dailyBriefing, entityId: entityID, operation: .upsert,
         version: try Hlc.parseCanonical(legacy),
         payloadSchemaVersion: try PayloadShadow.requireWirePayloadSchemaVersion(
           shadow, context: "pending exact-replay test"),
@@ -170,7 +164,7 @@ final class PayloadEvolutionConvergenceTests: XCTestCase {
       XCTAssertEqual(try PendingInbox.countPending(db), 0)
       let retained = try XCTUnwrap(
         PayloadShadow.getShadow(
-          db, entityType: EntityName.focusSchedule, entityID: entityID))
+          db, entityType: EntityName.dailyBriefing, entityID: entityID))
       XCTAssertEqual(retained.baseVersion, legacy)
       guard case .object(let object)? = JSONValue.parse(retained.rawPayloadJSON) else {
         return XCTFail("retained payload shadow must remain an object")

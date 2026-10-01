@@ -1,28 +1,37 @@
 import Foundation
 
-/// Persisted focus-filter settings that control which tasks surface in widgets and
-/// notification extensions while a system Focus mode is active.
+/// The lists a system Focus mode narrows Lorvex's glances to.
 ///
-/// `isActive` is true when `activeProfileID` is non-nil. When `isActive` is true and
-/// `showNonFocusTasks` is false, only tasks whose IDs appear in the current focus plan
-/// should be projected.
+/// While the Focus mode this configuration belongs to is on, the widgets and the
+/// Apple Watch show only Today's tasks in ``listIDs`` and leave out the day's
+/// briefing, which speaks about the whole day. An empty set means no Focus mode
+/// narrows them. ``FocusFilterStore`` persists it beside the managed database so
+/// the app and the App Intents extension read one value.
 public struct FocusFilterConfiguration: Codable, Equatable, Sendable {
-  /// ID of the active focus profile, or `nil` when no system Focus mode is active.
-  public var activeProfileID: String?
+  /// The lists whose tasks stay visible; empty when no Focus mode narrows the
+  /// glances.
+  public var listIDs: [String]
 
-  /// Whether non-focus tasks should appear in widget and shortcuts surfaces.
-  public var showNonFocusTasks: Bool
+  /// True when a Focus mode narrows the glances to ``listIDs``.
+  public var isActive: Bool { !listIDs.isEmpty }
 
-  /// True when a system Focus mode is active (i.e. `activeProfileID` is set).
-  public var isActive: Bool { activeProfileID != nil }
-
-  public init(activeProfileID: String? = nil, showNonFocusTasks: Bool = false) {
-    self.activeProfileID = activeProfileID
-    self.showNonFocusTasks = showNonFocusTasks
+  public init(listIDs: [String] = []) {
+    self.listIDs = listIDs
   }
 
-  /// The default inert configuration used when no Focus mode is active.
+  /// The configuration that narrows nothing.
   public static let inactive = FocusFilterConfiguration()
+
+  enum CodingKeys: String, CodingKey {
+    case listIDs
+  }
+
+  /// A stored configuration that names no lists decodes as ``inactive``, so a
+  /// state file of another shape never blocks the store's next revision.
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    listIDs = try container.decodeIfPresent([String].self, forKey: .listIDs) ?? []
+  }
 }
 
 /// One atomically persisted Focus-filter value and its monotonic local revision.

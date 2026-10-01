@@ -6,37 +6,72 @@ import SwiftUI
 ///
 /// - a leading completion circle tinted by priority (P1 red, P2 orange, P3 quiet),
 ///   its glyph carrying status (open / done / cancelled / someday);
-/// - the title at body size, struck through and dimmed once resolved;
-/// - one compact metadata line — due date leading (orange when overdue), then
-///   estimate and tags — rendered only when there's something to say;
-/// - a trailing focus marker for tasks pulled into the day's focus.
+/// - the title at body size, struck through and dimmed once resolved, on up
+///   to two lines, or as many as it needs at accessibility text sizes;
+/// - chips for state that explains the row: Started, Blocked, and whatever the
+///   host adds ("Until 3:00 PM", "Pushed 4 times");
+/// - the metadata (``MobileTaskMetadataLine``) — the task's time today when
+///   the host supplies it, the due date (red when overdue), a repeat glyph,
+///   then estimate and tags — on one line whose last tags drop whole when it
+///   runs out of room, wrapping instead at accessibility text sizes; rendered
+///   only when there's something to say.
 ///
 /// Priority is carried by the circle's tint and status by its glyph, so the row
-/// needs no redundant "p1" / "Open" text.
+/// needs no redundant "p1" / "Open" text. The row opens the task without a
+/// trailing disclosure chevron: a task row is plainly tappable, and the
+/// chevron would only crowd the title.
 struct MobileTaskRow: View, Equatable {
   let task: LorvexTask
-  var isFocused: Bool = false
+  /// See ``MobileTaskRowContent/isBlocked``.
+  var isBlocked: Bool = false
   /// Hidden when the parent renders its own tappable completion circle alongside.
   var showsLeadingCircle: Bool = true
+  /// See ``MobileTaskRowContent/timeLabel``.
+  var timeLabel: String? = nil
+  /// See ``MobileTaskRowContent/timeIsRunning``.
+  var timeIsRunning: Bool = false
+  /// See ``MobileTaskRowContent/chips``.
+  var chips: [LorvexTaskRowChip] = []
 
   var body: some View {
     NavigationLink(value: MobileRoute.task(task.id)) {
-      MobileTaskRowContent(task: task, isFocused: isFocused, showsLeadingCircle: showsLeadingCircle)
-        .equatable()
+      MobileTaskRowContent(
+        task: task, isBlocked: isBlocked, showsLeadingCircle: showsLeadingCircle,
+        timeLabel: timeLabel, timeIsRunning: timeIsRunning, chips: chips
+      )
+      .equatable()
     }
+    .navigationLinkIndicatorVisibility(.hidden)
     .draggable(LorvexTaskRef(id: task.id, title: task.title))
     .lorvexRowHoverEffect()
     .accessibilityElement(children: .combine)
-    .accessibilityLabel(taskAccessibilityLabel(task, isFocused: isFocused, vocabulary: .mobileLocalized))
+    .accessibilityLabel(
+      taskAccessibilityLabel(
+        task, vocabulary: .mobileLocalized, timeLabel: timeLabel,
+        details: chips.map(\.title) + (isBlocked ? [MobileTaskDisplayText.blocked] : [])))
     .accessibilityIdentifier("mobile.task.row.\(task.id)")
   }
 }
 
 struct MobileTaskRowContent: View, Equatable {
   let task: LorvexTask
-  var isFocused: Bool = false
+  /// Mark the task as waiting on a dependency. Supplied by the host rather than
+  /// derived here: whether a task is blocked depends on the *other* rows'
+  /// statuses, which a single row cannot see. The row stays fully interactive —
+  /// the answer to a blocked task is usually to open it or push it out.
+  var isBlocked: Bool = false
   /// Hidden when a leading batch-selection checkbox takes the slot instead.
   var showsLeadingCircle: Bool = true
+  /// The task's time today ("10:55 AM – 11:55 AM"), leading the metadata line.
+  /// Supplied by Today and by the task lists for today's timed tasks; `nil`
+  /// for a task with no time today.
+  var timeLabel: String? = nil
+  /// The time is running now, so `timeLabel` reads "Until 12:30 PM" and is
+  /// drawn in the accent color.
+  var timeIsRunning: Bool = false
+  /// Status chips the host supplies ("Until 3:00 PM", "Pushed 4 times"), drawn
+  /// beside the Started and Blocked badges. Display only.
+  var chips: [LorvexTaskRowChip] = []
 
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }
@@ -51,7 +86,7 @@ struct MobileTaskRowContent: View, Equatable {
         Image(systemName: task.statusCircleGlyph)
           .font(.title3)
           .foregroundStyle(task.statusCircleStyle)
-          .frame(width: 26, height: 26)
+          .mobileTaskCircleFrame()
           .accessibilityHidden(true)
       }
 
@@ -60,32 +95,49 @@ struct MobileTaskRowContent: View, Equatable {
           .font(.body)
           .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .strikethrough(isInactive, color: .secondary)
-          .lineLimit(2)
-        if isInProgress { inProgressBadge }
+          .lineLimitUnlessAccessibilitySize(2)
+        if isInProgress || isBlocked || !chips.isEmpty {
+          HStack(spacing: LorvexDesign.Spacing.xs) {
+            ForEach(chips) { chip in
+              chipBadge(chip)
+            }
+            if isInProgress { inProgressBadge }
+            if isBlocked { blockedBadge }
+          }
+        }
         metadataLine
       }
 
       Spacer(minLength: LorvexDesign.Spacing.s)
-
-      if isFocused {
-        Image(systemName: "scope")
-          .font(.footnote)
-          .foregroundStyle(LorvexDesign.Palette.focus)
-          .accessibilityHidden(true)
-          .padding(.top, 3)
-      }
     }
     .padding(.vertical, LorvexDesign.Spacing.xs)
   }
 
-  /// A small accent capsule marking a started task — the primary in_progress
-  /// signal on the mobile row (watch / widgets deliberately omit it in v1).
+  /// A host's status chip, in the same capsule as the status badges.
+  private func chipBadge(_ chip: LorvexTaskRowChip) -> some View {
+    HStack(spacing: 3) {
+      if let systemImage = chip.systemImage {
+        Image(systemName: systemImage).imageScale(.small).accessibilityHidden(true)
+      }
+      Text(chip.title)
+    }
+    .font(.caption2.weight(.medium))
+    .foregroundStyle(chip.tint)
+    .padding(.horizontal, 6)
+    .padding(.vertical, 2)
+    .background(chip.tint.opacity(0.14), in: Capsule())
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("mobile.task.row.chip.\(chip.id)")
+  }
+
+  /// A small accent capsule marking a started task, the "Started" the macOS
+  /// row, the widgets, and the watch show.
   private var inProgressBadge: some View {
     HStack(spacing: 3) {
       Image(systemName: "play.fill").imageScale(.small).accessibilityHidden(true)
       Text(
         String(
-          localized: "task.status.in_progress", defaultValue: "In Progress", table: "Localizable",
+          localized: "task.row.started", defaultValue: "Started", table: "Localizable",
           bundle: MobileL10n.bundle))
     }
     .font(.caption2)
@@ -96,84 +148,85 @@ struct MobileTaskRowContent: View, Equatable {
     .accessibilityElement(children: .combine)
   }
 
-  /// Estimate and tags, joined — the calm part of the metadata; the due date is
-  /// rendered separately so it can carry its own overdue tint.
-  private var estimateAndTags: String? {
+  /// A muted capsule marking a task whose dependencies are still open. Quieter
+  /// than ``inProgressBadge`` and not tinted like an error: being blocked is a
+  /// fact about the day's shape, not something the user did wrong.
+  private var blockedBadge: some View {
+    HStack(spacing: 3) {
+      Image(systemName: "lock.fill").imageScale(.small).accessibilityHidden(true)
+      Text(MobileTaskDisplayText.blocked)
+    }
+    .font(.caption2)
+    .foregroundStyle(.secondary)
+    .padding(.horizontal, 6)
+    .padding(.vertical, 2)
+    .background(Color.secondary.opacity(0.12), in: Capsule())
+    .accessibilityElement(children: .combine)
+  }
+
+  /// The estimate, then up to two tags: the calm part of the metadata. The due
+  /// date is rendered separately so it can carry its own overdue tint. A row
+  /// showing Today's time drops the estimate, since the time already says how
+  /// long the work takes.
+  private var calmMetadata: [String] {
     var parts: [String] = []
-    if let minutes = task.estimatedMinutes {
+    if timeLabel == nil, let minutes = task.estimatedMinutes {
       parts.append(MobileTaskDisplayText.compactEstimateMinutes(minutes))
     }
     parts.append(contentsOf: task.tags.prefix(2))
-    return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    return parts
   }
 
   @ViewBuilder
   private var metadataLine: some View {
     let dueLabel = task.cachedDueRelativeLabel()
-    let isDueOverdue = task.isOverdue()
-    let rest = estimateAndTags
-    if dueLabel != nil || rest != nil || task.recurrence != nil {
-      HStack(spacing: 5) {
-        if let due = dueLabel {
-          HStack(spacing: 3) {
-            Image(systemName: isDueOverdue ? "clock.badge.exclamationmark" : "calendar")
-              .accessibilityHidden(true)
-            Text(due).monospacedDigit()
-          }
-          .foregroundStyle(isDueOverdue ? AnyShapeStyle(LorvexDesign.Palette.dueSoon) : AnyShapeStyle(.secondary))
-        }
-        if task.recurrence != nil {
-          if dueLabel != nil { Text("·").foregroundStyle(.tertiary) }
-          Image(systemName: "repeat").foregroundStyle(.secondary).accessibilityHidden(true)
-        }
-        if let rest {
-          if dueLabel != nil || task.recurrence != nil {
-            Text("·").foregroundStyle(.tertiary)
-          }
-          Text(rest).foregroundStyle(.secondary).lineLimit(1)
-        }
-      }
-      .font(.footnote)
-      .lineLimit(1)
+    let calm = calmMetadata
+    if timeLabel != nil || dueLabel != nil || task.recurrence != nil || !calm.isEmpty {
+      MobileTaskMetadataLine(
+        timeLabel: timeLabel, timeIsRunning: timeIsRunning, dueLabel: dueLabel,
+        isOverdue: task.isOverdue(), isDueSoon: task.isDueSoon(),
+        repeats: task.recurrence != nil, calmLabels: calm)
     }
   }
 }
 
+/// A task row with its actions: the completion circle, the row that opens
+/// the task, and the shared swipe actions and context menu
+/// (``MobileTaskRowActions``).
 struct MobileActionTaskRow: View {
   let task: LorvexTask
-  let isFocused: Bool
+  /// See ``MobileTaskRowContent/isBlocked``.
+  var isBlocked: Bool = false
   let isMutating: Bool
-  let select: () -> Void
-  let toggleFocus: () async -> Void
-  let complete: () async -> Void
-  let deferTask: () async -> Void
-  /// Start / Mark-as-Not-Started, threaded on surfaces (Today) that own the
-  /// in_progress toggle. `nil` elsewhere, where the swipe/menu simply omits it.
-  var start: (() async -> Void)? = nil
-  var markNotStarted: (() async -> Void)? = nil
+  let actions: MobileTaskRowActions
+  /// See ``MobileTaskRowContent/timeLabel``.
+  var timeLabel: String? = nil
+  /// See ``MobileTaskRowContent/timeIsRunning``.
+  var timeIsRunning: Bool = false
+  /// See ``MobileTaskRowContent/chips``.
+  var chips: [LorvexTaskRowChip] = []
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-      MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: complete)
-      MobileTaskRow(task: task, isFocused: isFocused, showsLeadingCircle: false)
-        .equatable()
-        .simultaneousGesture(TapGesture().onEnded(select))
+      MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: actions.complete)
+      // `MobileTaskRow` is itself a `NavigationLink(value: .task(id))`; it pushes
+      // the detail onto the active stack (`routePath` / `tasksRoutePath`). It
+      // must NOT carry a competing tap gesture — a `simultaneousGesture`
+      // `TapGesture` races the link's own recognizer and intermittently
+      // swallows the activation, so taps only sometimes open the detail. The
+      // regular/iPad split view syncs `selectedTaskID` through its own
+      // `List(selection:)` row instead.
+      MobileTaskRow(
+        task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
+        timeIsRunning: timeIsRunning, chips: chips
+      )
+      .equatable()
     }
     // Long-press (iPhone) / right-click (iPad pointer) context menu mirrors the
     // swipe actions — the standard iOS/iPadOS row idiom, which swipe alone
     // doesn't satisfy for pointer users.
-    .taskRowActions(
-      task: task,
-      isFocused: isFocused,
-      isMutating: isMutating,
-      isBatchSelecting: false,
-      toggleFocus: toggleFocus,
-      complete: complete,
-      deferTask: deferTask,
-      start: start,
-      markNotStarted: markNotStarted)
+    .taskRowActions(task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false)
   }
-
 }
 
 /// The leading priority/status circle rendered as a real checkbox: tapping it
@@ -199,23 +252,30 @@ struct MobileTaskCompletionCircle: View {
         .contentTransition(.symbolEffect(.replace))
         .symbolEffect(.bounce, value: isCompleting)
         .scaleEffect(isCompleting ? 1.18 : 1)
-        .frame(width: 26, height: 26)
+        .mobileTaskCircleFrame()
         .contentShape(Circle())
         .padding(.top, LorvexDesign.Spacing.xs)
     }
     .buttonStyle(.borderless)
     .disabled(isMutating || task.status.isResolved)
     .lorvexSensoryFeedback(.success, trigger: isCompleting) { _, now in now }
-    .accessibilityLabel(
-      task.status.isResolved
-        ? String(
-          localized: "task.row.completed.a11y", defaultValue: "Completed", table: "Localizable",
-          bundle: MobileL10n.bundle)
-        : String(
-          localized: "action.complete", defaultValue: "Complete", table: "Localizable",
-          bundle: MobileL10n.bundle)
-    )
+    .accessibilityLabel(spokenLabel)
     .accessibilityIdentifier("mobile.task.complete.\(task.id)")
+  }
+
+  /// The circle to VoiceOver: the Complete action while the task can still be
+  /// completed, else the state its glyph shows.
+  private var spokenLabel: String {
+    switch task.status {
+    case .completed:
+      String(
+        localized: "task.row.completed.a11y", defaultValue: "Completed", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    case .cancelled:
+      MobileTaskDisplayText.status(.cancelled)
+    case .open, .inProgress, .someday:
+      MobileTaskActionCopy.complete
+    }
   }
 
   /// The circle reads as checked while the completion animation plays and once

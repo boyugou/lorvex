@@ -1,5 +1,6 @@
 import Foundation
 import LorvexCore
+import LorvexDomain
 import MCP
 
 extension CoreBridgeClient {
@@ -11,9 +12,14 @@ extension CoreBridgeClient {
     icon: String?,
     aiNotes: String?
   ) async throws -> Value {
+    // Behavior-preserving: absent/null description leaves the stored value; a
+    // present string sets it (a blank string clears, matching the habit-cue
+    // domain normalization). `update_list` has no distinct JSON-null "clear"
+    // affordance at this layer.
     Self.listValue(
       from: try await service.updateList(
-        id: id, name: name, description: description, color: color, icon: icon, aiNotes: aiNotes))
+        id: id, name: name, description: description.map { Patch.set($0) } ?? .unset,
+        color: color, icon: icon, aiNotes: aiNotes))
   }
 
   func setListAINotes(id: String, notes: String) async throws -> Value {

@@ -21,8 +21,7 @@ struct LorvexMCPHost {
       name: LorvexProductMetadata.mcpServerName,
       version: LorvexProductMetadata.marketingVersion,
       title: LorvexProductMetadata.appDisplayName,
-      instructions:
-        "Apple-native Lorvex MCP host. Uses the app's pure-Swift core and opens the single Lorvex-managed App Group database (cross-device sync is CloudKit-only).",
+      instructions: MCPHostInstructions.text,
       capabilities: .init(tools: .init(listChanged: false))
     )
 
@@ -30,8 +29,10 @@ struct LorvexMCPHost {
       ListTools.Result(tools: ToolRegistry.listTools())
     }
 
+    let activity = AssistantActivityRecorder(service: registry.coreBridge.service)
     await server.withMethodHandler(CallTool.self) { params in
-      try await registry.call(params)
+      Task { await activity.toolWasCalled() }
+      return try await registry.call(params)
     }
 
     // Sweep expired idempotency rows on boot. Runs once per MCP child process.
@@ -40,7 +41,12 @@ struct LorvexMCPHost {
     }
 
     let transport = StdioTransport()
-    try await server.start(transport: transport)
+    try await server.start(transport: transport) { client, _ in
+      Task {
+        await activity.clientDidInitialize(
+          name: client.name, title: client.title, version: client.version)
+      }
+    }
 
     // Await the server's receive loop instead of sleeping forever: the loop ends
     // when the stdio transport reaches end-of-stream (the client closes stdin),

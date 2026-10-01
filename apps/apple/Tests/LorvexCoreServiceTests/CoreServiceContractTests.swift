@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 import LorvexStore
 import Testing
 
@@ -21,7 +22,8 @@ struct CoreServiceContractTests {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schema = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schema))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schema, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func tasks(
@@ -396,56 +398,57 @@ struct CoreServiceContractTests {
     #expect(defaulted.completedThisWeek.count >= 3)
   }
 
+  /// Plan `taskID` for `date` with `minutes` of estimated work, so the day's
+  /// suggestion has one task to place.
+  private func planForDay(
+    _ service: any LorvexCoreServicing, taskID: LorvexTask.ID, date: String, minutes: Int
+  ) async throws {
+    let day = try #require(SwiftLorvexTaskDeserializers.plannedDateFormatter.date(from: date))
+    _ = try await service.updateTask(
+      TaskUpdateDraft(id: taskID, estimatedMinutes: .set(minutes), plannedDate: .set(day)))
+  }
+
   @Test(
-    "proposeFocusSchedule honors working-hours overrides")
-  func scheduleProposalHonorsWorkingHours() async throws {
+    "proposeDayTimes honors working-hours overrides")
+  func dayTimesProposalHonorsWorkingHours() async throws {
     let service = try makeService()
     let marker = "contract-sched-hours-\(UUID().uuidString.prefix(8))"
     let date = "2026-03-04"
     let created = try await service.createTask(title: "Task \(marker)", notes: "")
-    _ = try await service.updateTask(
-      id: created.id, title: created.title, notes: "", priority: created.priority,
-      estimatedMinutes: 60, plannedDate: nil, tags: [], dependsOn: [])
-    _ = try await service.setCurrentFocus(
-      date: date, taskIDs: [created.id], briefing: nil, timezone: TimeZone.current.identifier)
+    try await planForDay(service, taskID: created.id, date: date, minutes: 60)
 
-    // The override moves the whole proposal window: blocks start at the
-    // requested opening and the response reports the applied hours.
-    let custom = try await service.proposeFocusSchedule(
+    // The override moves the whole suggestion window: the first task starts at
+    // the requested opening and the response reports the applied hours.
+    let custom = try await service.proposeDayTimes(
       date: date, workingHoursStart: "10:00", workingHoursEnd: "12:00",
       includeCalendarEvents: false)
-    #expect(custom.workingHours?.start == "10:00")
-    #expect(custom.workingHours?.end == "12:00")
-    #expect(custom.blocks.first?.startTime == "10:00")
+    #expect(custom.workingHours == 600..<720)
+    #expect(custom.placements.first?.task.id == created.id)
+    #expect(custom.placements.first?.time == 600..<660)
 
     // An invalid override is rejected, not silently ignored.
     await #expect(throws: (any Error).self) {
-      _ = try await service.proposeFocusSchedule(
+      _ = try await service.proposeDayTimes(
         date: date, workingHoursStart: "25:99", workingHoursEnd: nil,
         includeCalendarEvents: nil)
     }
   }
 
   @Test(
-    "the stored working_hours preference drives the schedule proposal")
-  func scheduleProposalReadsWorkingHoursPreference() async throws {
+    "the stored working_hours preference drives the day's suggestion")
+  func dayTimesProposalReadsWorkingHoursPreference() async throws {
     let service = try makeService()
     let marker = "contract-pref-hours-\(UUID().uuidString.prefix(8))"
     let date = "2026-03-05"
     let created = try await service.createTask(title: "Task \(marker)", notes: "")
-    _ = try await service.updateTask(
-      id: created.id, title: created.title, notes: "", priority: created.priority,
-      estimatedMinutes: 30, plannedDate: nil, tags: [], dependsOn: [])
-    _ = try await service.setCurrentFocus(
-      date: date, taskIDs: [created.id], briefing: nil, timezone: TimeZone.current.identifier)
+    try await planForDay(service, taskID: created.id, date: date, minutes: 30)
 
     _ = try await service.setPreference(
       key: "working_hours", value: #"{"start":"08:30","end":"16:00"}"#)
 
-    let proposal = try await service.proposeFocusSchedule(date: date)
-    #expect(proposal.workingHours?.start == "08:30")
-    #expect(proposal.workingHours?.end == "16:00")
-    #expect(proposal.blocks.first?.startTime == "08:30")
+    let proposal = try await service.proposeDayTimes(date: date)
+    #expect(proposal.workingHours == 510..<960)
+    #expect(proposal.placements.first?.time == 510..<540)
   }
 
   @Test(

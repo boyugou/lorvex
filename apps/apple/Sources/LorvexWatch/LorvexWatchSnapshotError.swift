@@ -9,7 +9,7 @@ public enum LorvexWatchSnapshotError: LocalizedError, Equatable, Sendable {
     case .unavailable(let fallback):
       String(
         format: String(
-          localized: "watch.error.snapshot_unavailable", defaultValue: "Focus snapshot unavailable: %@",
+          localized: "watch.error.snapshot_unavailable", defaultValue: "Watch data unavailable: %@",
           table: "Localizable", bundle: WatchL10n.bundle),
         LorvexWatchStore.snapshotUnavailableStatusText(fallback))
     }

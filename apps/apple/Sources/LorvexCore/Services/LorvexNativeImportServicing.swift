@@ -19,9 +19,10 @@ import Foundation
 ///   `…IfAbsent` methods report whether they wrote (`imported`) or skipped; the
 ///   multi-part `…Transactionally` methods additionally roll the whole record —
 ///   and every sync-outbox envelope it enqueued — back on any failure.
-/// - **Item / child replays** — tag, focus, habit completion, task child, habit
-///   reminder policy, task↔calendar-event link, and the revision-replay memory
-///   overload. Each restores one exported item preserving its exported identity.
+/// - **Item / child replays** — tag, daily briefing, habit completion, task
+///   child, habit reminder policy, task↔calendar-event link, and the
+///   revision-replay memory overload. Each restores one exported item
+///   preserving its exported identity.
 ///   Categories with a single write per record are already atomic through their
 ///   own transaction and are imported through these directly.
 /// - **Unlink** — remove the canonical task↔calendar-event link.
@@ -43,6 +44,8 @@ public struct TaskRecordCreateSpec: Sendable {
   public var estimatedMinutes: Int?
   public var dueDate: Date?
   public var plannedDate: Date?
+  /// The task's time on ``plannedDate`` in minutes since midnight.
+  public var plannedTime: Range<Int>?
   public var availableFrom: Date?
   public var tags: [String]?
   public var dependsOn: [String]?
@@ -55,6 +58,7 @@ public struct TaskRecordCreateSpec: Sendable {
     reference: String, originalID: String? = nil, title: String, notes: String = "",
     rawInput: String? = nil, listID: String? = nil, priority: LorvexTask.Priority = .p2,
     estimatedMinutes: Int? = nil, dueDate: Date? = nil, plannedDate: Date? = nil,
+    plannedTime: Range<Int>? = nil,
     availableFrom: Date? = nil, tags: [String]? = nil, dependsOn: [String]? = nil,
     status: LorvexTask.Status? = nil, createdAt: String? = nil, completedAt: String? = nil,
     checklistTexts: [String] = []
@@ -69,6 +73,7 @@ public struct TaskRecordCreateSpec: Sendable {
     self.estimatedMinutes = estimatedMinutes
     self.dueDate = dueDate
     self.plannedDate = plannedDate
+    self.plannedTime = plannedTime
     self.availableFrom = availableFrom
     self.tags = tags
     self.dependsOn = dependsOn
@@ -156,33 +161,6 @@ public protocol LorvexNativeImportServicing: Sendable {
   /// a skip. Presence and insert share one transaction.
   func importTagIfAbsent(_ tag: ExportTag) async throws -> Bool
 
-  /// Restore one exported calendar event, id-preserving, only when no live row
-  /// and no tombstone claim its id. Returns the imported event and `true` on a
-  /// write; `(nil, false)` on a skip. Presence and insert share one transaction.
-  func importCalendarEventIfAbsent(
-    id: String,
-    title: String,
-    startDate: String,
-    startTime: String?,
-    endDate: String?,
-    endTime: String?,
-    allDay: Bool,
-    location: String?,
-    notes: String?,
-    url: String?,
-    color: String?,
-    eventType: String?,
-    personName: String?,
-    attendees: [CalendarEventAttendee]?,
-    timezone: String?,
-    recurrence: String?,
-    seriesId: String?,
-    recurrenceInstanceDate: String?,
-    occurrenceState: String?,
-    recurrenceGeneration: String?,
-    seriesCutoverId: String?
-  ) async throws -> (CalendarTimelineEvent?, Bool)
-
   /// Restore the canonical calendar bundle in one transaction. Durable series
   /// boundaries are validated against their segment events before either side
   /// is written; a failure in any event rolls the boundaries and all previously
@@ -209,15 +187,10 @@ public protocol LorvexNativeImportServicing: Sendable {
     linkedListIDs: [String]?
   ) async throws -> Bool
 
-  /// Restore one exported current-focus plan (a singleton per `date`) only when
-  /// no live row for that date and no tombstone claim it. Returns `true` on a
+  /// Restore one exported daily briefing (a singleton per `date`) only when no
+  /// live row for that date and no tombstone claim it. Returns `true` on a
   /// write, `false` on a skip. Presence and write share one transaction.
-  func importCurrentFocusIfAbsent(_ focus: ExportCurrentFocus) async throws -> Bool
-
-  /// Restore one exported focus schedule (a singleton per `date`) only when no
-  /// live row for that date and no tombstone claim it. Returns `true` on a write,
-  /// `false` on a skip. Presence and write share one transaction.
-  func importFocusScheduleIfAbsent(_ schedule: ExportFocusSchedule) async throws -> Bool
+  func importDailyBriefingIfAbsent(_ briefing: ExportDailyBriefing) async throws -> Bool
 
   /// Restore one exported memory entry (keyed by its human `key`, a UNIQUE
   /// column) only when no live row holds that key and the resolved opaque memory
@@ -287,8 +260,9 @@ public protocol LorvexNativeImportServicing: Sendable {
 
   func importTag(_ tag: ExportTag) async throws
 
-  func importCurrentFocus(_ focus: ExportCurrentFocus) async throws
-  func importFocusSchedule(_ schedule: ExportFocusSchedule) async throws
+  /// Restore one exported daily briefing, replacing the stored briefing for
+  /// its date.
+  func importDailyBriefing(_ briefing: ExportDailyBriefing) async throws
 
   func importHabitCompletion(
     habitID: String,

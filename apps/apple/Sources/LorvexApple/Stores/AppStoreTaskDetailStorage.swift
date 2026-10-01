@@ -12,6 +12,8 @@ struct AppStoreTaskDetailStorage {
   var taskDetailPlannedDate: Date?
   var taskDetailPlannedDatePickerDate = Date()
   var taskDetailHasPlannedDate = false
+  /// The task's time on its planned day, in minutes since midnight.
+  var taskDetailPlannedTime: Range<Int>?
   var taskDetailDueDate: Date?
   var taskDetailDueDatePickerDate = Date()
   var taskDetailHasDueDate = false
@@ -40,6 +42,7 @@ struct AppStoreTaskDetailStorage {
     taskDetailPlannedDate = nil
     taskDetailPlannedDatePickerDate = Date()
     taskDetailHasPlannedDate = false
+    taskDetailPlannedTime = nil
     taskDetailDueDate = nil
     taskDetailDueDatePickerDate = Date()
     taskDetailHasDueDate = false

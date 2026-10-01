@@ -40,7 +40,7 @@ struct UpdateLorvexListIntent: LorvexAuthenticatedIntent {
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(
-          "system.list.update.dialog", defaultValue: "Updated list \(updated.name) in Lorvex.",
+          "system.list.update.dialog", defaultValue: "Updated list \(updated.displayName) in Lorvex.",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

@@ -3,67 +3,37 @@ import SwiftUI
 
 private enum WorkspaceTaskSectionMetrics {
   static let iconWidth: CGFloat = 16
-  static let countHorizontalPadding: CGFloat = 6
-  static let countVerticalPadding: CGFloat = 1
+}
+
+/// The two columns every row of a task lane lines up on, measured from the
+/// lane's edge: the marker column, where a task row's completion circle and a
+/// fold row's chevron sit, and the text column, where both titles start.
+enum WorkspaceTaskColumns {
+  /// From the lane's edge to the marker column: the row's outer inset plus its
+  /// own inner padding.
+  static let markerLeading = LorvexDesign.Spacing.l
+  /// The marker column's width: a task row's completion circle.
+  static let markerWidth: CGFloat = 20
+  /// From the marker column to the text column.
+  static let markerSpacing = LorvexDesign.Spacing.m
 }
 
 private enum WorkspaceTaskSectionTypography {
-  /// Top-level group titles (Next Up, Later, History) — deliberately larger than
-  /// the sub-section titles so the two tiers read as a hierarchy.
   static let title = LorvexDesign.Typography.primaryText.weight(.semibold)
-  /// Sub-section titles nested under a top-level group (Completed / Cancelled
-  /// under History, Someday under Later) — smaller and muted.
-  static let subtitle = LorvexDesign.Typography.tertiaryText.weight(.semibold)
+  static let foldTitle = LorvexDesign.Typography.secondaryText.weight(.semibold)
   static let icon = LorvexDesign.Typography.tertiaryText.weight(.semibold)
-  static let count = LorvexDesign.Typography.tertiaryText.monospacedDigit().weight(.medium)
 }
 
+/// A section's title row: a tinted glyph and the title. It carries no count,
+/// because an open section's rows are their own count; a folding section uses
+/// ``WorkspaceTaskDisclosureHeader``, which counts its rows while they are
+/// folded away.
 struct WorkspaceTaskSectionHeader: View {
   let title: String
-  let countText: String
   let systemImage: String
   let tint: Color
   var topSpacing: CGFloat = LorvexDesign.Spacing.m
   var bottomSpacing: CGFloat = LorvexDesign.Spacing.xs
-  /// A header for a section nested under a top-level group (e.g. Completed under
-  /// History) — rendered smaller and muted so it reads as subordinate.
-  var isSubsection: Bool = false
-
-  init(
-    title: String,
-    count: Int,
-    systemImage: String,
-    tint: Color,
-    topSpacing: CGFloat = LorvexDesign.Spacing.m,
-    bottomSpacing: CGFloat = LorvexDesign.Spacing.xs,
-    isSubsection: Bool = false
-  ) {
-    self.title = title
-    self.countText = "\(count)"
-    self.systemImage = systemImage
-    self.tint = tint
-    self.topSpacing = topSpacing
-    self.bottomSpacing = bottomSpacing
-    self.isSubsection = isSubsection
-  }
-
-  init(
-    title: String,
-    countText: String,
-    systemImage: String,
-    tint: Color,
-    topSpacing: CGFloat = LorvexDesign.Spacing.m,
-    bottomSpacing: CGFloat = LorvexDesign.Spacing.xs,
-    isSubsection: Bool = false
-  ) {
-    self.title = title
-    self.countText = countText
-    self.systemImage = systemImage
-    self.tint = tint
-    self.topSpacing = topSpacing
-    self.bottomSpacing = bottomSpacing
-    self.isSubsection = isSubsection
-  }
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
@@ -73,12 +43,8 @@ struct WorkspaceTaskSectionHeader: View {
         .frame(width: WorkspaceTaskSectionMetrics.iconWidth)
 
       Text(title)
-        .font(isSubsection
-          ? WorkspaceTaskSectionTypography.subtitle
-          : WorkspaceTaskSectionTypography.title)
-        .foregroundStyle(isSubsection ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-
-      WorkspaceTaskSectionCountBadge(countText: countText)
+        .font(WorkspaceTaskSectionTypography.title)
+        .foregroundStyle(.primary)
 
       Spacer(minLength: 0)
     }
@@ -86,17 +52,21 @@ struct WorkspaceTaskSectionHeader: View {
     .padding(.top, topSpacing)
     .padding(.bottom, bottomSpacing)
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(lorvexPairLabel(title, countText))
+    .accessibilityLabel(title)
     .accessibilityAddTraits(.isHeader)
   }
 }
 
+/// A folding section's quiet title row in a task lane: the disclosure chevron
+/// in the marker column, where the rows below carry their completion circles,
+/// and the title in the text column, so folding adds no indent of its own. The
+/// row count shows while the section is folded (an open section's rows are
+/// their own count); VoiceOver hears it either way. Place it at
+/// ``WorkspaceTaskColumns/markerLeading`` from the lane's edge.
 struct WorkspaceTaskDisclosureHeader: View {
   @Binding var isExpanded: Bool
   let title: String
   let countText: String
-  let systemImage: String
-  let tint: Color
 
   var body: some View {
     Button {
@@ -104,25 +74,25 @@ struct WorkspaceTaskDisclosureHeader: View {
         isExpanded.toggle()
       }
     } label: {
-      HStack(spacing: LorvexDesign.Spacing.s) {
-        Image(systemName: systemImage)
-          .font(WorkspaceTaskSectionTypography.icon)
-          .foregroundStyle(tint)
-          .frame(width: WorkspaceTaskSectionMetrics.iconWidth)
-
-        Text(title)
-          .font(WorkspaceTaskSectionTypography.title)
-          .foregroundStyle(.secondary)
-
-        WorkspaceTaskSectionCountBadge(countText: countText)
-
-        Spacer(minLength: 0)
-
+      HStack(spacing: WorkspaceTaskColumns.markerSpacing) {
         Image(systemName: "chevron.right")
           .font(WorkspaceTaskSectionTypography.icon)
           .foregroundStyle(.tertiary)
           .rotationEffect(.degrees(isExpanded ? 90 : 0))
-          .frame(width: WorkspaceTaskSectionMetrics.iconWidth)
+          .frame(width: WorkspaceTaskColumns.markerWidth)
+
+        HStack(spacing: LorvexDesign.Spacing.s) {
+          Text(title)
+            .font(WorkspaceTaskSectionTypography.foldTitle)
+            .foregroundStyle(.secondary)
+
+          if !isExpanded {
+            WorkspaceTaskSectionCountBadge(countText: countText)
+              .transition(.opacity)
+          }
+        }
+
+        Spacer(minLength: 0)
       }
       .contentShape(Rectangle())
     }
@@ -139,53 +109,72 @@ struct WorkspaceTaskDisclosureHeader: View {
   }
 }
 
+/// The control at the end of a paged task list that appends the next page
+/// below the rows already shown. It is disabled while that page is in flight,
+/// so a second click cannot ask for the same rows again.
+struct WorkspaceTaskLoadMoreButton: View {
+  let isLoading: Bool
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      Label(
+        String(localized: "tasks.results.load_more", defaultValue: "Load More", table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "arrow.down.circle"
+      )
+    }
+    .buttonStyle(.borderless)
+    .disabled(isLoading)
+    .padding(.horizontal, LorvexDesign.Spacing.l)
+    .padding(.vertical, LorvexDesign.Spacing.s)
+  }
+}
+
 private struct WorkspaceTaskSectionCountBadge: View {
   let countText: String
 
   var body: some View {
-    Text(countText)
-      .font(WorkspaceTaskSectionTypography.count)
-      .foregroundStyle(.secondary)
-      .padding(.horizontal, WorkspaceTaskSectionMetrics.countHorizontalPadding)
-      .padding(.vertical, WorkspaceTaskSectionMetrics.countVerticalPadding)
-      .background(.quaternary.opacity(0.42), in: Capsule())
-      .overlay {
-        Capsule()
-          .stroke(.quaternary.opacity(0.55), lineWidth: 0.5)
-      }
+    LorvexChip(countText, tint: LorvexDesign.Palette.neutral)
   }
+}
+
+/// A batch-selection entry for a task's context menu: its title (Select or
+/// Deselect) and the toggle it runs.
+struct WorkspaceTaskBatchMenuItem {
+  let title: String
+  let toggle: () -> Void
 }
 
 struct WorkspaceTaskContextMenu: View {
   @Bindable var store: AppStore
   let task: LorvexTask
+  /// Offered on rows that take part in batch selection; `nil` elsewhere.
+  var batchItem: WorkspaceTaskBatchMenuItem? = nil
   @Environment(\.undoManager) private var undoManager
   @Environment(\.openWindow) private var openWindow
 
   var body: some View {
-    let isFocused = store.focusedTaskIDSet.contains(task.id)
-    Button {
-      store.selectedTaskID = task.id
-      Task { await store.toggleSelectedTaskFocus() }
-    } label: {
-      Label(
-        isFocused
-          ? String(
-            localized:
-              "workspace.task.remove_from_focus",
-              defaultValue: "Remove from Focus",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            )
-          : String(
-            localized:
-              "workspace.task.add_to_focus",
-              defaultValue: "Add to Focus",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ),
-        systemImage: isFocused ? "minus.circle" : "scope"
-      )
+    if task.status == .inProgress {
+      Button {
+        Task { await store.pauseTaskFromRow(task) }
+      } label: {
+        Label(
+          String(
+            localized: "task.action.pause", defaultValue: "Pause", table: "Localizable",
+            bundle: LorvexL10n.bundle),
+          systemImage: "pause.circle"
+        )
+      }
+    } else {
+      Button {
+        Task { await store.startTaskFromRow(task) }
+      } label: {
+        Label(
+          String(localized: "task.action.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
+          systemImage: "play.circle"
+        )
+      }
+      .disabled(task.status != .open)
     }
 
     TaskDeferMenu(store: store, onDefer: { date in
@@ -219,32 +208,6 @@ struct WorkspaceTaskContextMenu: View {
       )
     }
     .disabled(task.status.isResolved)
-
-    if task.status == .inProgress {
-      Button {
-        store.selectedTaskID = task.id
-        Task { await store.markSelectedTaskNotStarted() }
-      } label: {
-        Label(
-          String(
-            localized: "task.action.mark_not_started", defaultValue: "Mark as Not Started",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          systemImage: "pause.circle"
-        )
-      }
-    } else {
-      Button {
-        store.selectedTaskID = task.id
-        Task { await store.startSelectedTask() }
-      } label: {
-        Label(
-          String(localized: "task.action.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "play.circle"
-        )
-      }
-      .disabled(task.status != .open)
-    }
 
     Button {
       store.selectedTaskID = task.id
@@ -281,6 +244,12 @@ struct WorkspaceTaskContextMenu: View {
     }
 
     Divider()
+
+    if let batchItem {
+      Button(action: batchItem.toggle) {
+        Label(batchItem.title, systemImage: "checkmark.circle")
+      }
+    }
 
     Button {
       openWindow(id: LorvexWindowID.stickyTaskGroupID, value: StickyTaskRef(taskID: task.id))

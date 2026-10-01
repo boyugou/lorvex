@@ -152,16 +152,13 @@ extension SwiftLorvexCoreService {
     /// loser-only diagnostics must not seed a writer clock. Schema-wide HLC
     /// guard coverage lives in `SyncControlSchemaIntegrityTests`.
     static let hlcBearingTables: [(table: String, column: String)] = [
-      ("audit_retention_account_state", "policy_version"),
-      ("audit_retention_binding", "unbound_policy_version"),
       ("calendar_events", "content_version"),
       ("calendar_events", "recurrence_generation"),
       ("calendar_events", "recurrence_topology_version"),
       ("calendar_events", "version"),
       ("calendar_series_cutovers", "version"),
-      ("current_focus", "version"),
+      ("daily_briefings", "version"),
       ("daily_reviews", "version"),
-      ("focus_schedule", "version"),
       ("habit_completions", "version"),
       ("habit_reminder_policies", "version"),
       ("habits", "version"),
@@ -170,8 +167,6 @@ extension SwiftLorvexCoreService {
       ("preferences", "version"),
       ("sync_conflict_log", "winner_version"),
       ("sync_entity_redirects", "version"),
-      ("sync_generation_snapshot_compacted_tombstones", "version"),
-      ("sync_generation_snapshot_tombstone_receipts", "version"),
       ("sync_outbox", "version"),
       ("sync_payload_shadow", "base_version"),
       ("sync_quarantine_blocklist", "version"),

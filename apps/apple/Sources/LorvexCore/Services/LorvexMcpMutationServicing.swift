@@ -13,45 +13,37 @@ public struct McpDeletionReceipt<Entity: Sendable>: Sendable {
   public var deleted: Bool { previous != nil }
 }
 
-/// Current-focus header plus the exact task candidates read before its write
-/// transaction commits.
-public struct McpCurrentFocusProjection: Sendable {
-  public var plan: CurrentFocusPlan?
-  public var tasks: [LorvexTask]
+/// The day's briefing after `set_daily_briefing`, with the text it replaced.
+public struct McpDailyBriefingReceipt: Sendable, Equatable {
+  public var date: String
+  public var briefing: String?
+  public var previous: String?
 
-  public init(plan: CurrentFocusPlan?, tasks: [LorvexTask]) {
-    self.plan = plan
-    self.tasks = tasks
-  }
-}
-
-public struct McpCurrentFocusRemovalReceipt: Sendable {
-  public var current: McpCurrentFocusProjection
-  public var removed: Bool
-
-  public init(current: McpCurrentFocusProjection, removed: Bool) {
-    self.current = current
-    self.removed = removed
-  }
-}
-
-public struct McpCurrentFocusClearReceipt: Sendable {
-  public var previous: McpCurrentFocusProjection
-  public var cleared: Bool
-
-  public init(previous: McpCurrentFocusProjection, cleared: Bool) {
+  public init(date: String, briefing: String?, previous: String?) {
+    self.date = date
+    self.briefing = briefing
     self.previous = previous
-    self.cleared = cleared
   }
+
+  public var changed: Bool { briefing != previous }
 }
 
-public struct McpFocusScheduleSaveReceipt: Sendable {
-  public var schedule: FocusSchedule
-  public var currentFocus: McpCurrentFocusProjection
+/// A day's times after `save_daily_schedule`, read in the save's own write
+/// transaction.
+public struct McpDayTimesSaveReceipt: Sendable {
+  /// The day, `yyyy-MM-dd`.
+  public var date: String
+  /// Every task with a time on the day, finished ones included, in start
+  /// order.
+  public var timedTasks: [LorvexTask]
+  /// The unfinished tasks the save took a time from; they keep their planned
+  /// date.
+  public var clearedTasks: [LorvexTask]
 
-  public init(schedule: FocusSchedule, currentFocus: McpCurrentFocusProjection) {
-    self.schedule = schedule
-    self.currentFocus = currentFocus
+  public init(date: String, timedTasks: [LorvexTask], clearedTasks: [LorvexTask]) {
+    self.date = date
+    self.timedTasks = timedTasks
+    self.clearedTasks = clearedTasks
   }
 }
 
@@ -131,19 +123,14 @@ public protocol LorvexMcpMutationServicing: Sendable {
   func deleteMemoryForMcp(key: String) async throws -> McpDeletionReceipt<MemoryEntry>
   func deletePreferenceForMcp(key: String) async throws -> McpDeletionReceipt<String>
 
-  func setCurrentFocusForMcp(
-    date: String, taskIDs: [LorvexTask.ID], briefing: String?, timezone: String
-  ) async throws -> McpCurrentFocusProjection
-  func addToCurrentFocusForMcp(
-    date: String, taskIDs: [LorvexTask.ID], briefing: String?, timezone: String
-  ) async throws -> McpCurrentFocusProjection
-  func removeFromCurrentFocusForMcp(
-    date: String, taskID: LorvexTask.ID
-  ) async throws -> McpCurrentFocusRemovalReceipt
-  func clearCurrentFocusForMcp(date: String) async throws -> McpCurrentFocusClearReceipt
-  func saveFocusScheduleForMcp(
-    date: String, blocks: [FocusScheduleBlock], rationale: String?
-  ) async throws -> McpFocusScheduleSaveReceipt
+  /// Set or clear the briefing for `date`: the assistant's short note on what
+  /// matters that day. A `nil` or blank briefing clears it.
+  func setDailyBriefingForMcp(date: String, briefing: String?) async throws
+    -> McpDailyBriefingReceipt
+  /// ``LorvexDayPlanningServicing/saveDayTimes(date:times:)`` with the tasks
+  /// whose times the save cleared.
+  func saveDayTimesForMcp(date: String, times: [LorvexTaskTime]) async throws
+    -> McpDayTimesSaveReceipt
 
   func batchCompleteHabitsForMcp(
     ids: [LorvexHabit.ID], date: String

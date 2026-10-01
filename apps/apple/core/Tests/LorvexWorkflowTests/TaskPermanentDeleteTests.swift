@@ -5,17 +5,14 @@ import XCTest
 @testable import LorvexStore
 @testable import LorvexWorkflow
 
-/// Tests for `permanent_delete_task`. The Rust source carries no
-/// `#[test]` cases; the parity surface is the typed contract:
+/// Tests for `permanent_delete_task`:
 ///
 /// - `NotFound` when the task id has no row.
-/// - `Validation` (#2363 message) when the task is not yet archived.
+/// - `Validation` when the task is not yet archived.
 /// - On success: the row is gone (FK cascades plus the explicit
-///   `current_focus_items` / `focus_schedule_blocks` /
-///   `task_dependencies` deletes), child / edge tombstone payloads
-///   land on `deleteSyncs`, focus parent dates surface on
-///   `focusParentDates`, and the synthetic task tombstone is appended
-///   to `deleteSyncs` with the pre-delete payload.
+///   `task_dependencies` deletes), child / edge tombstone payloads land on
+///   `deleteSyncs`, and the synthetic task tombstone is appended to
+///   `deleteSyncs` with the pre-delete payload.
 final class TaskPermanentDeleteTests: XCTestCase {
   /// HLC handle that emits monotonically advancing stamps anchored at
   /// a far-future physical-ms so the produced versions sort STRICTLY
@@ -194,42 +191,6 @@ final class TaskPermanentDeleteTests: XCTestCase {
     XCTAssertEqual(map["id"], .string(id.rawValue))
     XCTAssertEqual(map["deleted"], .bool(true))
     XCTAssertNotNil(map["previous"])
-  }
-
-  func testCollectsFocusParentDates() throws {
-    let store = try freshStore()
-    let session = makeSession()
-    let id = try seedArchivedTask(store, session: session)
-    // Seed a current_focus parent + current_focus_items row.
-    try store.writer.write { db in
-      try db.execute(
-        sql:
-          "INSERT INTO current_focus (date, version, created_at, updated_at) "
-          + "VALUES (?, ?, ?, ?)",
-        arguments: [
-          "2026-05-01",
-          "0000000000000_0000_0000000000000bbb",
-          "2026-04-29T00:00:00Z", "2026-04-29T00:00:00Z",
-        ])
-      try db.execute(
-        sql:
-          "INSERT INTO current_focus_items (date, position, task_id) "
-          + "VALUES (?, 0, ?)",
-        arguments: ["2026-05-01", id.rawValue])
-    }
-    let result = try store.writer.write { db in
-      try TaskPermanentDelete.permanentDeleteTask(
-        db, hlc: session,
-        input: TaskPermanentDelete.PermanentDeleteTaskInput(taskId: id))
-    }
-    XCTAssertEqual(result.focusParentDates.currentFocus, ["2026-05-01"])
-    // current_focus_items row is gone (explicit DELETE).
-    let count: Int64? = try store.writer.read { db in
-      try Int64.fetchOne(
-        db, sql: "SELECT COUNT(*) FROM current_focus_items WHERE task_id = ?",
-        arguments: [id.rawValue])
-    }
-    XCTAssertEqual(count, 0)
   }
 
   func testDeletingHistoricalParentPromotesSurvivingSuccessorToRoot() throws {

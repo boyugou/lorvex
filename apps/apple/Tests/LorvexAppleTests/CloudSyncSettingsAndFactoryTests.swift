@@ -6,70 +6,37 @@ import LorvexCloudSync
 
 @testable import LorvexApple
 
-// MARK: - Factory wiring resolves correct services
+// MARK: - Factory wiring
 
 @Test
-func factoryResolvesOffModeToNoopServices() {
-  let subscriber = AppCoreFactory.makeCloudSyncSubscriber(persistedMode: .off, environment: [:])
-  let coordinator = AppCoreFactory.makeCloudSyncCoordinator(
-    persistedMode: .off,
-    environment: [:]
-  )
-  #expect(subscriber is NoOpCloudSyncSubscriber)
-  #expect(coordinator == nil)
-}
-
-@Test
-func factoryResolvesRecordPlanModeToSubscriberButNoCoordinator() {
-  let subscriber = AppCoreFactory.makeCloudSyncSubscriber(
-    persistedMode: .recordPlan,
-    environment: [:]
-  )
-  let coordinator = AppCoreFactory.makeCloudSyncCoordinator(
-    persistedMode: .recordPlan,
-    environment: [:]
-  )
-  #expect(subscriber is CloudKitCloudSyncSubscriber)
-  // The engine sync coordinator is built only for .live; record-plan registers
-  // the push subscription but runs no sync cycle.
-  #expect(coordinator == nil)
-}
-
-@Test
-func factoryResolvesLiveModeToCoordinator() {
-  let coordinator = AppCoreFactory.makeCloudSyncCoordinator(
-    persistedMode: .live,
-    environment: [:]
-  )
-  #expect(coordinator != nil)
+func factoryBuildsAControllerForAnEnvelopeCoreInEveryMode() throws {
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("lorvex-factory-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let controller = AppCoreFactory.makeCloudSyncController(
+    core: try SwiftLorvexCoreService.inMemory(), stateDirectoryOverride: directory)
+  #expect(controller != nil)
 }
 
 @Test
 func envVarOverridesBeatsPersistentSetting() {
   // env "live" beats stored .off
-  let mode1 = AppCoreFactory.resolveCloudSyncMode(
+  let mode1 = CloudSyncFactory.resolveMode(
     persistedMode: .off,
-    environment: ["LORVEX_CLOUDKIT_EXPORT": "live"]
+    environment: ["LORVEX_CLOUD_SYNC": "live"]
   )
   #expect(mode1 == .live)
 
-  // env "record-plan" beats stored .live
-  let mode2 = AppCoreFactory.resolveCloudSyncMode(
-    persistedMode: .live,
-    environment: ["LORVEX_CLOUDKIT_EXPORT": "record-plan"]
-  )
-  #expect(mode2 == .recordPlan)
-
   // absent env key falls back to stored mode
-  let mode3 = AppCoreFactory.resolveCloudSyncMode(persistedMode: .live, environment: [:])
-  #expect(mode3 == .live)
+  let mode2 = CloudSyncFactory.resolveMode(persistedMode: .live, environment: [:])
+  #expect(mode2 == .live)
 
-  // unknown env value → .off
-  let mode4 = AppCoreFactory.resolveCloudSyncMode(
+  // any other env value → .off
+  let mode3 = CloudSyncFactory.resolveMode(
     persistedMode: .live,
-    environment: ["LORVEX_CLOUDKIT_EXPORT": "unknown-value"]
+    environment: ["LORVEX_CLOUD_SYNC": "bogus"]
   )
-  #expect(mode4 == .off)
+  #expect(mode3 == .off)
 }
 
 // MARK: - AppSettingsStore persists cloud sync mode

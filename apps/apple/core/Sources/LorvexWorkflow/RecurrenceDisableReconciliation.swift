@@ -12,8 +12,6 @@ public struct RecurrenceDisableEffects: Sendable, Equatable {
   public var reminderUpsertIds: [String] = []
   public var affectedDependentIds: [String] = []
   public var deletedDependencyEdges: [DeletedDependencyEdge] = []
-  public var currentFocusDates: [String] = []
-  public var focusScheduleDates: [String] = []
 
   public init() {}
 
@@ -23,8 +21,6 @@ public struct RecurrenceDisableEffects: Sendable, Equatable {
     rerootedSuccessorIds = Array(Set(rerootedSuccessorIds)).sorted()
     reminderUpsertIds = Array(Set(reminderUpsertIds)).sorted()
     affectedDependentIds = Array(Set(affectedDependentIds)).sorted()
-    currentFocusDates = Array(Set(currentFocusDates)).sorted()
-    focusScheduleDates = Array(Set(focusScheduleDates)).sorted()
   }
 }
 
@@ -185,7 +181,6 @@ enum RecurrenceDisableReconciliation {
         db, taskId: TaskId(trusted: successorId))
       effects.affectedDependentIds.append(contentsOf: dependencies.affected)
       effects.deletedDependencyEdges.append(contentsOf: dependencies.deleted)
-      try removeFocusReferences(db, taskId: successorId, effects: &effects)
 
       var descendants = Set(
         try String.fetchAll(
@@ -201,27 +196,5 @@ enum RecurrenceDisableReconciliation {
           visited: &visited, effects: &effects)
       }
     }
-  }
-
-  private static func removeFocusReferences(
-    _ db: Database,
-    taskId: String,
-    effects: inout RecurrenceDisableEffects
-  ) throws {
-    effects.currentFocusDates.append(contentsOf:
-      try String.fetchAll(
-        db,
-        sql: "SELECT DISTINCT date FROM current_focus_items WHERE task_id = ?1",
-        arguments: [taskId]))
-    effects.focusScheduleDates.append(contentsOf:
-      try String.fetchAll(
-        db,
-        sql:
-          "SELECT DISTINCT date FROM focus_schedule_blocks WHERE task_id = ?1",
-        arguments: [taskId]))
-    try db.execute(
-      sql: "DELETE FROM current_focus_items WHERE task_id = ?1", arguments: [taskId])
-    try db.execute(
-      sql: "DELETE FROM focus_schedule_blocks WHERE task_id = ?1", arguments: [taskId])
   }
 }

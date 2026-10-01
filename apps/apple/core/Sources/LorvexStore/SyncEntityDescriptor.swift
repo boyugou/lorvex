@@ -252,8 +252,7 @@ extension SyncEntityDescriptor {
     habit,
     calendarEvent,
     dailyReview,
-    currentFocus,
-    focusSchedule,
+    dailyBriefing,
   ]
 
   // BLOCKER — `task` and `ai_changelog` are deliberately NOT registered here; they
@@ -437,21 +436,10 @@ extension SyncEntityDescriptor {
     synthetic: ["linked_task_ids", "linked_list_ids"],
     outbound: .customBuilder, inbound: .customApplier)
 
-  /// `current_focus` — aggregate root with an embedded `task_ids` collection
-  /// (synthetic). Outbound via ``PayloadBuild``, inbound via ``ApplyDayScoped``;
-  /// only the owned keys derive here.
-  static let currentFocus = columnsWithSynthetics(
-    .currentFocus,
-    ["date", "briefing", "timezone", "created_at", "updated_at", "task_ids", "version"],
-    synthetic: ["task_ids"],
-    outbound: .customBuilder, inbound: .customApplier)
-
-  /// `focus_schedule` — aggregate root with an embedded `blocks` collection
-  /// (synthetic). Outbound via ``PayloadBuild``, inbound via ``ApplyDayScoped``;
-  /// only the owned keys derive here.
-  static let focusSchedule = columnsWithSynthetics(
-    .focusSchedule,
-    ["date", "rationale", "timezone", "created_at", "updated_at", "blocks", "version"],
-    synthetic: ["blocks"],
-    outbound: .customBuilder, inbound: .customApplier)
+  /// `daily_briefing` — a single row per day (PK = `date`). Outbound uses the
+  /// generic reader; inbound goes through ``ApplyDayScoped``, which scrubs the
+  /// text and rejects a blank briefing before the upsert.
+  static let dailyBriefing = allColumns(
+    .dailyBriefing, ["date", "briefing", "timezone", "created_at", "updated_at", "version"],
+    outbound: .genericReader, inbound: .customApplier)
 }

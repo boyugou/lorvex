@@ -5,31 +5,41 @@ extension CalendarWeekGridView {
   // MARK: Header
 
   func header(_ columns: [CalendarGridDay]) -> some View {
-    HStack(spacing: 0) {
+    let load = weekLoad(columns)
+    return HStack(spacing: 0) {
       // Fixed-width *and* fixed-height spacer: a bare `Color.clear.frame(width:)`
       // stays vertically greedy, so the header HStack would compete with the
       // scrollable time grid for slack height and balloon into a tall band with
       // the day numbers floating in its centre. Pinning the gutter height (and
       // the whole row via `fixedSize` below) keeps the header content-sized.
       Color.clear.frame(width: gutterWidth, height: CalendarWeekGridMetrics.headerGutterHeight)
-      ForEach(columns) { day in
-        VStack(spacing: 2) {
+      ForEach(Array(columns.enumerated()), id: \.element.id) { index, day in
+        let loadDay = load.days.indices.contains(index) ? load.days[index] : nil
+        let caption = loadDay.flatMap(CalendarWeekDayLoadCaption.init)
+        // A day the week has left behind steps back: its number takes the
+        // secondary style its weekday and caption already have. The column
+        // never fades as a whole, which would put its words under 2.5:1.
+        let isPast = loadDay?.isPast == true
+        VStack(spacing: LorvexDesign.Spacing.xxs) {
           Text(Self.weekdayFormatter.string(from: day.date).uppercased())
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(.secondary)
           Text(Self.dayNumberFormatter.string(from: day.date))
             .font(LorvexDesign.Typography.primaryEmphasis)
-            .foregroundStyle(isToday(day.date) ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
+            .foregroundStyle(
+              isToday(day.date) ? AnyShapeStyle(.tint) : isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
             .frame(width: CalendarWeekGridMetrics.dayNumberSize, height: CalendarWeekGridMetrics.dayNumberSize)
             .background {
               if isToday(day.date) {
                 Circle().fill(.tint.opacity(0.15))
               }
             }
+          CalendarWeekDayLoadLine(caption: caption, isPast: isPast)
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(headerAccessibilityLabel(day.date))
+        .accessibilityLabel(
+          "\(headerAccessibilityLabel(day.date)), \(caption?.sentence ?? CalendarWeekDayLoadCaption.nothingPlanned)")
       }
     }
     .padding(.vertical, CalendarWeekGridMetrics.headerVerticalPadding)
@@ -47,7 +57,7 @@ extension CalendarWeekGridView {
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(.secondary)
         .frame(width: gutterWidth, alignment: .trailing)
-        .padding(.trailing, 6)
+        .padding(.trailing, LorvexDesign.Spacing.sm)
       ForEach(columns) { day in
         allDayColumn(day)
       }
@@ -59,15 +69,15 @@ extension CalendarWeekGridView {
     .fixedSize(horizontal: false, vertical: true)
   }
 
-  /// One day's stack in the all-day strip: event pills, then scheduled-task
-  /// pills. Task pills are draggable by id and every column is a drop target,
-  /// so a task can be re-planned onto another day without opening it. The stack
+  /// One day's stack in the all-day strip: event pills, then task pills. Task
+  /// pills are draggable by id and every column is a drop target, so a task
+  /// can be re-planned onto another day without opening it. The stack
   /// is capped at ``CalendarWeekGridMetrics/allDayMaxItems``; anything past the
   /// cap collapses into a "+N more" overflow pill so a busy day can't grow the
   /// strip without bound.
   func allDayColumn(_ day: CalendarGridDay) -> some View {
     let layout = allDayLayout(for: day)
-    return VStack(spacing: 3) {
+    return VStack(spacing: LorvexDesign.Spacing.xxs) {
       ForEach(layout.events) { event in
         allDayEventPill(event)
       }
@@ -79,7 +89,7 @@ extension CalendarWeekGridView {
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 3)
+    .padding(.horizontal, LorvexDesign.Spacing.xxs)
     .frame(minHeight: CalendarWeekGridMetrics.allDayStripMinHeight, alignment: .top)
     .contentShape(Rectangle())
     .background {
@@ -134,47 +144,84 @@ extension CalendarWeekGridView {
           event.title))
   }
 
+  /// A task in the all-day strip speaks the timed blocks' task vocabulary,
+  /// never an event pill's fill and rail: a leading circle that completes it,
+  /// on the calendar task surface. A finished task stays, struck through and
+  /// faded, as the day's record. A task past its due day ends with the
+  /// overdue clock Today's rows use, since the circle's tint already speaks
+  /// for priority. The pill opens the task.
   private func allDayTaskPill(_ task: LorvexTask, on day: CalendarGridDay) -> some View {
-    allDayPill(title: task.title, color: taskColor(task))
-      .onTapGesture { openTask(task) }
-      .calendarPointingHandCursor()
-      .draggable(LorvexTaskRef(id: task.id, title: task.title))
-      // Pointer-free counterpart to drag-to-reschedule: the same moves,
-      // reachable through the context menu / VoiceOver actions rotor.
-      .contextMenu {
-        Button(
-          String(localized: "calendar.task.open", defaultValue: "Open Task", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "arrow.up.forward.square"
-        ) { openTask(task) }
-        Divider()
-        Button(
-          String(
-            localized: "calendar.task.plan_day_later", defaultValue: "Plan a Day Later",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          systemImage: "arrow.right"
-        ) {
-          reschedule(task, byDays: 1, from: day.date)
-        }
-        Button(
-          String(
-            localized: "calendar.task.plan_week_later", defaultValue: "Plan a Week Later",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          systemImage: "arrow.right.to.line"
-        ) {
-          reschedule(task, byDays: 7, from: day.date)
-        }
+    let isDone = task.status == .completed
+    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), calendar: calendar)
+    return HStack(spacing: 3) {
+      taskCompletionCircle(for: task)
+        .accessibilityIdentifier("calendar.allDay.task.complete")
+      Text(task.title)
+        .font(LorvexDesign.Typography.tertiaryText)
+        .strikethrough(isDone)
+        .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      if isOverdue {
+        Image(systemName: "clock.badge.exclamationmark")
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(LorvexDesign.Palette.overdue)
+          .accessibilityHidden(true)
       }
-      .accessibilityAddTraits(.isButton)
-      .accessibilityLabel(
+    }
+    .padding(.leading, 3)
+    .padding(.trailing, LorvexDesign.Spacing.sm)
+    .padding(.vertical, LorvexDesign.Spacing.xxs)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .lorvexCalendarTaskSurface(isDone: isDone, cornerRadius: LorvexDesign.Radius.s)
+    .contentShape(Rectangle())
+    .onTapGesture { openTask(task) }
+    .calendarPointingHandCursor()
+    .draggable(LorvexTaskRef(id: task.id, title: task.title))
+    // Pointer-free counterpart to drag-to-reschedule: the same moves,
+    // reachable through the context menu / VoiceOver actions rotor.
+    .contextMenu {
+      Button(
+        String(localized: "calendar.task.open", defaultValue: "Open Task", table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "arrow.up.forward.square"
+      ) { openTask(task) }
+      Button(
+        taskCompletionLabel(isDone: isDone),
+        systemImage: isDone ? "arrow.uturn.backward.circle" : "checkmark.circle"
+      ) { toggleCompletion(of: task) }
+      Divider()
+      Button(
         String(
-          format: String(
-            localized: "calendar.scheduled_task.a11y",
-            defaultValue: "Scheduled task %@",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          task.title))
+          localized: "calendar.task.plan_day_later", defaultValue: "Plan a Day Later",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        systemImage: "arrow.right"
+      ) {
+        reschedule(task, byDays: 1, from: day.date)
+      }
+      Button(
+        String(
+          localized: "calendar.task.plan_week_later", defaultValue: "Plan a Week Later",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        systemImage: "arrow.right.to.line"
+      ) {
+        reschedule(task, byDays: 7, from: day.date)
+      }
+    }
+    .accessibilityAddTraits(.isButton)
+    .accessibilityLabel(
+      String(
+        format: String(
+          localized: "calendar.scheduled_task.a11y",
+          defaultValue: "Scheduled task %@",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        task.title))
+    .accessibilityValue(
+      isOverdue
+        ? String(localized: "task_detail.pill.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle)
+        : "")
   }
 
   /// The "+N more" pill capping a busy all-day column. Opens a popover listing
@@ -189,8 +236,8 @@ extension CalendarWeekGridView {
       Text("+\(count)")
         .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
+        .padding(.horizontal, LorvexDesign.Spacing.sm)
+        .padding(.vertical, LorvexDesign.Spacing.xxs)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
     }
@@ -225,7 +272,7 @@ extension CalendarWeekGridView {
         }
       }
       ForEach(tasks) { task in
-        overflowRow(title: task.title, color: taskColor(task)) {
+        overflowRow(title: task.title, color: LorvexDesign.Palette.accent) {
           allDayOverflowDayID = nil
           openTask(task)
         }
@@ -258,13 +305,13 @@ extension CalendarWeekGridView {
     Text(title)
       .font(LorvexDesign.Typography.tertiaryText)
       .lineLimit(1)
-      .padding(.horizontal, 6)
-      .padding(.vertical, 2)
+      .padding(.horizontal, LorvexDesign.Spacing.sm)
+      .padding(.vertical, LorvexDesign.Spacing.xxs)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(color.opacity(0.18), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
       .overlay(alignment: .leading) {
         Rectangle().fill(color).frame(width: 2)
-          .clipShape(RoundedRectangle(cornerRadius: 1))
+          .clipShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
       }
       .contentShape(Rectangle())
   }
@@ -284,18 +331,30 @@ extension CalendarWeekGridView {
     .frame(width: gutterWidth)
   }
 
+  /// The now line across one day column, centered on `now`'s time of day: red
+  /// on today, a faint guide on the other days so the time reads across the
+  /// week. The grid draws it under the blocks; today's dot is ``nowDot(now:)``.
   func nowLine(now: Date, isToday: Bool) -> some View {
+    let lineColor = isToday ? LorvexDesign.Palette.nowIndicator : Color.secondary.opacity(0.22)
+    let thickness: CGFloat = isToday ? 1.5 : 1
+    return Rectangle().fill(lineColor).frame(height: thickness)
+      .offset(y: nowOffset(now) - thickness / 2)
+      .accessibilityHidden(true)
+  }
+
+  /// Today's now dot, centered on the column's leading edge at `now`'s time of
+  /// day. The grid draws it above the blocks, so a block that spans the current
+  /// time never covers it while the line itself runs beneath them.
+  func nowDot(now: Date) -> some View {
+    Circle().fill(LorvexDesign.Palette.nowIndicator).frame(width: 7, height: 7)
+      .offset(x: -3.5, y: nowOffset(now) - 3.5)
+      .accessibilityHidden(true)
+  }
+
+  /// The distance from the grid's midnight line to `now`'s time of day.
+  private func nowOffset(_ now: Date) -> CGFloat {
     let minutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
-    let y = CGFloat(minutes) / 60 * hourHeight
-    let lineColor = isToday ? Color.red : Color.secondary.opacity(0.22)
-    return ZStack(alignment: .leading) {
-      if isToday {
-        Circle().fill(lineColor).frame(width: 7, height: 7).offset(x: -3)
-      }
-      Rectangle().fill(lineColor).frame(height: isToday ? 1.5 : 1)
-    }
-    .offset(y: y)
-    .accessibilityHidden(true)
+    return CGFloat(minutes) / 60 * hourHeight
   }
 
   func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
@@ -309,23 +368,11 @@ extension CalendarWeekGridView {
     guard let date = calendar.date(from: components) else {
       return "\(hour)"
     }
-    return Self.hourFormatter.string(from: date)
+    return LorvexDateFormatters.hourLabel(date, timeZone: calendar.timeZone)
   }
 
   func eventColor(_ event: CalendarTimelineEvent) -> Color {
     Color(lorvexHex: event.color) ?? .accentColor
-  }
-
-  /// A scheduled-task pill's tint: its owning list's color, resolved live from
-  /// the loaded list catalog (the same recipe the task rows use), so a task
-  /// reads as belonging to its list rather than an anonymous gray. Falls back to
-  /// secondary for a task with no list or an unloaded catalog.
-  func taskColor(_ task: LorvexTask) -> Color {
-    guard let listID = task.listID,
-      let list = store.lists?.lists.first(where: { $0.id == listID }),
-      let color = Color(lorvexHex: list.color)
-    else { return .secondary }
-    return color
   }
 
   func headerAccessibilityLabel(_ date: Date) -> String {
@@ -357,11 +404,6 @@ extension CalendarWeekGridView {
   static let fullDateFormatter: DateFormatter = {
     let f = DateFormatter()
     f.dateStyle = .full
-    return f
-  }()
-  static let hourFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.setLocalizedDateFormatFromTemplate("j")
     return f
   }()
 }

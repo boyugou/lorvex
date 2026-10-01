@@ -450,11 +450,10 @@
       },
       "synthetic_keys": []
     },
-    "current_focus": {
+    "daily_briefing": {
       "fields": {
         "briefing": {
           "types": [
-            "null",
             "string"
           ]
         },
@@ -468,17 +467,6 @@
           "format": "civil-date",
           "types": [
             "string"
-          ]
-        },
-        "task_ids": {
-          "items": {
-            "format": "uuid",
-            "types": [
-              "string"
-            ]
-          },
-          "types": [
-            "array"
           ]
         },
         "timezone": {
@@ -510,7 +498,6 @@
                 "briefing",
                 "created_at",
                 "date",
-                "task_ids",
                 "timezone",
                 "updated_at"
               ],
@@ -526,16 +513,13 @@
             "briefing",
             "created_at",
             "date",
-            "task_ids",
             "timezone",
             "updated_at",
             "version"
           ]
         }
       },
-      "synthetic_keys": [
-        "task_ids"
-      ]
+      "synthetic_keys": []
     },
     "daily_review": {
       "fields": {
@@ -728,161 +712,6 @@
         }
       },
       "synthetic_keys": []
-    },
-    "focus_schedule": {
-      "fields": {
-        "blocks": {
-          "items": {
-            "additional_properties": false,
-            "properties": {
-              "block_type": {
-                "enum": [
-                  "buffer",
-                  "event",
-                  "task"
-                ],
-                "types": [
-                  "string"
-                ]
-              },
-              "calendar_event_id": {
-                "format": "uuid",
-                "types": [
-                  "null",
-                  "string"
-                ]
-              },
-              "end_minutes": {
-                "maximum": 1440,
-                "minimum": 0,
-                "types": [
-                  "integer"
-                ],
-                "unit": "minute-of-day"
-              },
-              "event_source": {
-                "enum": [
-                  "canonical",
-                  "freeform",
-                  "provider"
-                ],
-                "types": [
-                  "null",
-                  "string"
-                ]
-              },
-              "start_minutes": {
-                "maximum": 1440,
-                "minimum": 0,
-                "types": [
-                  "integer"
-                ],
-                "unit": "minute-of-day"
-              },
-              "task_id": {
-                "format": "uuid",
-                "types": [
-                  "null",
-                  "string"
-                ]
-              },
-              "title": {
-                "types": [
-                  "null",
-                  "string"
-                ]
-              }
-            },
-            "required_properties": [
-              "block_type",
-              "calendar_event_id",
-              "end_minutes",
-              "event_source",
-              "start_minutes",
-              "task_id",
-              "title"
-            ],
-            "types": [
-              "object"
-            ]
-          },
-          "types": [
-            "array"
-          ]
-        },
-        "created_at": {
-          "format": "rfc3339-utc",
-          "types": [
-            "string"
-          ]
-        },
-        "date": {
-          "format": "civil-date",
-          "types": [
-            "string"
-          ]
-        },
-        "rationale": {
-          "types": [
-            "null",
-            "string"
-          ]
-        },
-        "timezone": {
-          "format": "iana-time-zone",
-          "types": [
-            "null",
-            "string"
-          ]
-        },
-        "updated_at": {
-          "format": "rfc3339-utc",
-          "types": [
-            "string"
-          ]
-        },
-        "version": {
-          "format": "hlc",
-          "types": [
-            "string"
-          ]
-        }
-      },
-      "operations": {
-        "delete": {
-          "shapes": [
-            {
-              "name": "tombstone",
-              "optional_keys": [
-                "blocks",
-                "created_at",
-                "date",
-                "rationale",
-                "timezone",
-                "updated_at"
-              ],
-              "required_keys": [
-                "version"
-              ]
-            }
-          ]
-        },
-        "upsert": {
-          "optional_keys": [],
-          "required_keys": [
-            "blocks",
-            "created_at",
-            "date",
-            "rationale",
-            "timezone",
-            "updated_at",
-            "version"
-          ]
-        }
-      },
-      "synthetic_keys": [
-        "blocks"
-      ]
     },
     "habit": {
       "fields": {
@@ -1648,6 +1477,24 @@
             "string"
           ]
         },
+        "planned_end_minutes": {
+          "maximum": 1440,
+          "minimum": 0,
+          "types": [
+            "integer",
+            "null"
+          ],
+          "unit": "minute-of-day"
+        },
+        "planned_start_minutes": {
+          "maximum": 1440,
+          "minimum": 0,
+          "types": [
+            "integer",
+            "null"
+          ],
+          "unit": "minute-of-day"
+        },
         "priority": {
           "maximum": 3,
           "minimum": 1,
@@ -1781,6 +1628,8 @@
                 "lifecycle_version",
                 "list_id",
                 "planned_date",
+                "planned_end_minutes",
+                "planned_start_minutes",
                 "priority",
                 "raw_input",
                 "recurrence",
@@ -1823,6 +1672,8 @@
             "lifecycle_version",
             "list_id",
             "planned_date",
+            "planned_end_minutes",
+            "planned_start_minutes",
             "priority",
             "raw_input",
             "recurrence",
@@ -2207,7 +2058,7 @@
   },
   "field_evolution": {},
   "golden_fixture": "fixtures/001.golden.json",
-  "golden_fixture_sha256": "39d581f4a140edf8fd4593fd294d019389bdc6a147b2d42bd8468e03949b94aa",
+  "golden_fixture_sha256": "806f4ff15145796b9cc68fbf9895a57aa970ab9ceb74eff4019c42ca20e968c2",
   "payload_schema_version": 1,
   "shadow_reserved_keys": {
     "ai_changelog": [

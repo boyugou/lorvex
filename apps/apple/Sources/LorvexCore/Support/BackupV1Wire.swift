@@ -8,7 +8,6 @@ enum BackupV1WireError: LocalizedError, Equatable {
   case invalidIdentity(field: String, value: String?)
   case invalidHLC(field: String, value: String)
   case invalidEntityKind(String)
-  case invalidFocusEventSource(String)
 
   var errorDescription: String? {
     switch self {
@@ -20,8 +19,6 @@ enum BackupV1WireError: LocalizedError, Equatable {
       return "\(field) is not a canonical HLC: \(value)"
     case .invalidEntityKind(let value):
       return "unknown native task entity type: \(value)"
-    case .invalidFocusEventSource(let value):
-      return "unknown focus schedule event source: \(value)"
     }
   }
 }
@@ -95,8 +92,7 @@ struct BackupV1Payload: Codable, Sendable {
   var calendarSeriesCutovers: [BackupV1CalendarSeriesCutover]?
   var calendarEvents: [BackupV1CalendarEvent]?
   var dailyReviews: [BackupV1DailyReview]?
-  var currentFocus: [BackupV1CurrentFocus]?
-  var focusSchedules: [BackupV1FocusSchedule]?
+  var dailyBriefings: [BackupV1DailyBriefing]?
   var taskCalendarEventLinks: [BackupV1TaskCalendarEventLink]?
   var memory: [BackupV1MemoryEntry]?
   var preferences: [BackupV1Preference]?
@@ -116,8 +112,7 @@ struct BackupV1Payload: Codable, Sendable {
       BackupV1CalendarSeriesCutover.init(current:))
     calendarEvents = current.calendarEvents?.map(BackupV1CalendarEvent.init(current:))
     dailyReviews = current.dailyReviews?.map(BackupV1DailyReview.init(current:))
-    currentFocus = current.currentFocus?.map(BackupV1CurrentFocus.init(current:))
-    focusSchedules = current.focusSchedules?.map(BackupV1FocusSchedule.init(current:))
+    dailyBriefings = current.dailyBriefings?.map(BackupV1DailyBriefing.init(current:))
     taskCalendarEventLinks = current.taskCalendarEventLinks?.map(
       BackupV1TaskCalendarEventLink.init(current:))
     memory = try current.memory?.map(BackupV1MemoryEntry.init(current:))
@@ -134,8 +129,7 @@ struct BackupV1Payload: Codable, Sendable {
       calendarSeriesCutovers: calendarSeriesCutovers?.map(\.current),
       calendarEvents: calendarEvents?.map(\.current),
       dailyReviews: dailyReviews?.map(\.current),
-      currentFocus: currentFocus?.map(\.current),
-      focusSchedules: try focusSchedules?.map { try $0.current() },
+      dailyBriefings: dailyBriefings?.map(\.current),
       taskCalendarEventLinks: taskCalendarEventLinks?.map(\.current),
       memory: try memory?.map { try $0.current() },
       preferences: preferences?.map(\.current))

@@ -84,7 +84,8 @@ final class WeeklyReviewTests: XCTestCase {
       let snapshot = try WeeklyReview.loadWeeklyReviewSnapshot(
         db,
         limits: .init(
-          topCompleted: 10, stalledLists: 10, frequentlyDeferred: 10, somedayItems: 10))
+          topCompleted: 10, stalledLists: 10, frequentlyDeferred: 10, overdueTasks: 10,
+          somedayItems: 10))
       let brief = try WeeklyReview.loadWeeklyReviewBrief(
         db,
         limits: .init(
@@ -106,6 +107,10 @@ final class WeeklyReviewTests: XCTestCase {
     XCTAssertEqual(read.frequentlyDeferred.map { $0.id }, ["deferred-high", "deferred-low"])
     XCTAssertEqual(snapshot.frequentlyDeferred, read.frequentlyDeferred)
     XCTAssertEqual(brief.frequentlyDeferred, read.frequentlyDeferred)
+
+    // A task due today is not overdue yet.
+    XCTAssertEqual(read.overdueTasks.map { $0.id }, ["overdue"])
+    XCTAssertEqual(snapshot.overdueTasks, read.overdueTasks)
 
     XCTAssertEqual(read.stalledLists.map { $0.id }, ["list-a", "list-b"])
     XCTAssertEqual(snapshot.stalledLists, read.stalledLists)

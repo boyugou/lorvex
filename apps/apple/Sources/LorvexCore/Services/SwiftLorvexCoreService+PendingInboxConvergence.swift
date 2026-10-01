@@ -36,11 +36,5 @@ extension SwiftLorvexCoreService {
         mintVersion: { floor in hlc.nextVersionString(dominating: floor) },
         deviceId: deviceId)
     }
-
-    try FutureRecordHold.fulfillLocalIntentReplays(
-      db, replays: summary.futureLocalIntentReplays,
-      registry: Self.inboundRegistry,
-      mintVersion: { floor in hlc.nextVersionString(dominating: floor) },
-      deviceId: deviceId)
   }
 }

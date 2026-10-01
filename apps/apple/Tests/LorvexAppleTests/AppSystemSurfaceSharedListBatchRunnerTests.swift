@@ -47,7 +47,9 @@ func sharedSystemIntentRunnerMutatesListsAndBatchTasks() async throws {
   result = try await LorvexSystemIntentRunner.batchReopenTasks(taskIDs: batchIDs, core: core)
   #expect(result.changedIDs.sorted() == batchIDs.sorted())
   #expect(result.skipped.isEmpty)
-  #expect(result.snapshot.tasks.first { $0.id == batchTwo.id }?.status == .open)
+  // Read the task, not the Today snapshot: that snapshot is the day's pool, so an
+  // undated reopened task is legitimately absent from it.
+  #expect(try await core.loadTask(id: batchTwo.id).status == .open)
   result = try await LorvexSystemIntentRunner.batchDeferTasks(
     taskIDs: batchIDs, until: " 2026-05-31 ", core: core)
   #expect(result.changedIDs.sorted() == batchIDs.sorted())

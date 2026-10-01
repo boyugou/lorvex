@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 public protocol LorvexListTagServicing: Sendable {
   func loadLists() async throws -> ListCatalogSnapshot
@@ -30,10 +31,14 @@ public protocol LorvexListTagServicing: Sendable {
 
   func moveTask(id: LorvexTask.ID, toListID listID: LorvexList.ID) async throws -> LorvexTask
 
+  /// Update a list. `description` is a three-state patch: `.unset` leaves it
+  /// untouched, `.clear` (or a `.set` that is blank after sanitizing) removes it
+  /// (SQL NULL), and `.set(value)` sets it. The remaining optional fields leave
+  /// their column untouched when `nil`.
   func updateList(
     id: LorvexList.ID,
     name: String?,
-    description: String?,
+    description: Patch<String>,
     color: String?,
     icon: String?,
     aiNotes: String?
@@ -102,7 +107,7 @@ extension LorvexListTagServicing {
 
   /// Convenience for callers that don't touch AI notes.
   public func updateList(
-    id: LorvexList.ID, name: String?, description: String?, color: String?, icon: String?
+    id: LorvexList.ID, name: String?, description: Patch<String>, color: String?, icon: String?
   ) async throws -> LorvexList {
     try await updateList(
       id: id, name: name, description: description, color: color, icon: icon, aiNotes: nil)

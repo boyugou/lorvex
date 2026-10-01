@@ -13,26 +13,20 @@ struct TaskDetailView: View {
   @Environment(\.undoManager) var undoManager
   @Environment(\.openWindow) var openWindow
 
-  @State var showScheduling = false
-  @State var showOrganization = false
-  @State var showDependencies = false
-  @State var showReminders = false
-  @State var showRecurrence = false
-  @State var showAINotes = false
   @FocusState var titleFieldFocused: Bool
 
   var body: some View {
     Group {
       if let task = store.selectedTask {
-        let draftHasChanges = store.selectedTaskDraftHasChanges
-        let canSave = store.selectedTaskCanSave(draftHasChanges: draftHasChanges)
         ScrollView {
           TaskDetailInspectorColumn {
             VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-              headerSection(task: task, draftHasChanges: draftHasChanges, canSave: canSave)
-              notesSection(task: task)
+              headerSection(task: task)
+              headerActions(task: task)
+              properties(task: task)
               checklistSection(task: task)
-              advancedSection(task: task)
+              notesSection(task: task)
+              assistantContextSection(task: task)
             }
           }
         }
@@ -124,76 +118,188 @@ struct TaskDetailView: View {
     )
   }
 
-  /// Secondary fields, collapsed by default to keep the default view calm.
-  /// Essentials (title, status, priority, notes, primary actions, checklist)
-  /// stay visible above this; everything advanced lives here.
-  func advancedSection(task: LorvexTask) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      TaskDetailPanel(accessibilityIdentifier: "task.detail.advancedDisclosures", padding: 0) {
-        VStack(alignment: .leading, spacing: 0) {
-          LorvexDisclosure(
-            String(localized: "task_detail.section.scheduling", defaultValue: "Scheduling", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "calendar.badge.clock",
-            showsDivider: true,
-            accessibilityID: "task.detail.disclosure.scheduling",
-            isExpanded: $showScheduling
-          ) {
-            schedulingContent
-          }
-          LorvexDisclosure(
-            String(localized: "task_detail.section.organization", defaultValue: "Organization", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "tag",
-            showsDivider: true,
-            accessibilityID: "task.detail.disclosure.organization",
-            isExpanded: $showOrganization
-          ) {
-            organizationContent(task: task)
-          }
-          LorvexDisclosure(
-            String(
-              localized: "task_detail.section.dependencies", defaultValue: "Dependencies",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            systemImage: "arrow.triangle.branch",
-            showsDivider: true,
-            accessibilityID: "task.detail.disclosure.dependencies",
-            isExpanded: $showDependencies
-          ) {
-            dependenciesContent(task: task)
-          }
-          LorvexDisclosure(
-            String(localized: "task_detail.section.recurrence", defaultValue: "Recurrence", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "repeat",
-            showsDivider: true,
-            accessibilityID: "task.detail.disclosure.recurrence",
-            isExpanded: $showRecurrence
-          ) {
-            recurrenceContent
-          }
-          LorvexDisclosure(
-            String(localized: "task_detail.section.reminders", defaultValue: "Reminders", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "bell",
-            showsDivider: true,
-            accessibilityID: "task.detail.disclosure.reminders",
-            isExpanded: $showReminders
-          ) {
-            remindersContent(task: task)
-          }
-          LorvexDisclosure(
-            String(
-              localized: "task_detail.section.assistant_context",
-              defaultValue: "Assistant Context",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            systemImage: "sparkles",
-            showsDivider: false,
-            accessibilityID: "task.detail.disclosure.aiNotes",
-            isExpanded: $showAINotes
-          ) {
-            aiNotesContent(task: task)
-          }
+  /// The assistant's own note about why this task exists. Read-only by contract:
+  /// `ai_notes` is written through MCP, and an editable field here would let a
+  /// human silently overwrite the assistant's reasoning.
+  @ViewBuilder
+  func assistantContextSection(task: LorvexTask) -> some View {
+    if let notes = task.aiNotes, !notes.isEmpty {
+      aiNotesContent(task: task)
+    }
+  }
+
+  // MARK: - Properties
+
+  /// The task's set fields as rows, with the fields it does not carry yet as
+  /// dashed additions beneath. Priority and repeat open native menus; every
+  /// other field opens its editor in a popover.
+  func properties(task: LorvexTask) -> some View {
+    let content = propertyContent(task: task)
+    return TaskDetailProperties(
+      rows: content.rows, additions: content.additions, menuFieldIDs: ["priority", "repeat"]
+    ) { id in
+      wordEditor(id, task: task)
+    } menuItems: { id, openEditor in
+      if id == "priority" {
+        priorityMenuItems(task: task)
+      } else {
+        repeatMenuItems(openEditor: openEditor)
+      }
+    }
+  }
+
+  /// One row per set field, in the order a person plans a task: when and for
+  /// how long, the deadline, where it belongs and how urgent it is, then how
+  /// it repeats, reminds, is tagged, waits, and hides. An unset field becomes
+  /// an addition instead, in the same order.
+  func propertyContent(task: LorvexTask) -> (rows: [TaskDetailPropertyRow], additions: [TaskDetailPropertyAddition]) {
+    typealias Copy = TaskDetailSentenceCopy
+    var rows: [TaskDetailPropertyRow] = []
+    var additions: [TaskDetailPropertyAddition] = []
+    func field(_ id: String, _ systemImage: String, _ label: String, _ value: String?, tint: Color? = nil) {
+      if let value {
+        rows.append(.init(id: id, systemImage: systemImage, label: label, value: value, tint: tint))
+      } else {
+        additions.append(.init(id: id, label: label))
+      }
+    }
+    let priority = displayPriority(for: task)
+    field("doOn", "calendar", Copy.addWhen, store.taskDetailDoOnSummary)
+    field("estimate", "hourglass", Copy.addLength, store.taskDetailEstimateSummary)
+    field("due", "flag", Copy.addDue, store.taskDetailDueSummary.map(Self.sentenceCased), tint: dueTint)
+    field("list", "list.bullet", Copy.addList, store.taskDetailListSummary(task: task))
+    field(
+      "priority", "exclamationmark.circle", Copy.addPriority,
+      priority == .p2 ? nil : Copy.priorityValue(priority), tint: priorityTint(priority))
+    field("repeat", "repeat", Copy.addRepeat, store.taskDetailRepeatSummary)
+    field("reminders", "bell", Copy.addReminder, store.taskDetailRemindersSummary(task: task))
+    field("tags", "tag", Copy.addTag, store.taskDetailTagsSummary)
+    field("dependencies", "arrow.triangle.branch", Copy.addWaitsOn, store.taskDetailDependencySummary)
+    field("hideUntil", "eye.slash", Copy.addHideUntil, store.taskDetailHideUntilSummary.map(Self.sentenceCased))
+    return (rows, additions)
+  }
+
+  /// A value phrase written to follow other words ("the same day") as it
+  /// reads standing alone in a row ("The same day"). Scripts without case are
+  /// unchanged.
+  static func sentenceCased(_ phrase: String) -> String {
+    guard let first = phrase.first else { return phrase }
+    return first.uppercased() + phrase.dropFirst()
+  }
+
+  /// Red once the deadline has passed, orange when it is today or tomorrow.
+  private var dueTint: Color? {
+    guard store.taskDetailHasDueDate,
+      let offset = lorvexDayOffset(from: store.logicalTodayDateString, to: store.taskDetailDueDatePickerDate)
+    else { return nil }
+    if offset < 0 { return LorvexDesign.Palette.overdue }
+    if offset <= 1 { return LorvexDesign.Palette.dueSoon }
+    return nil
+  }
+
+  private func priorityTint(_ priority: LorvexTask.Priority) -> Color? {
+    priority == .p1 ? LorvexDesign.Palette.priorityHigh : nil
+  }
+
+  // MARK: - Word pickers
+
+  /// The popover behind one word: only that field's control.
+  @ViewBuilder
+  func wordEditor(_ id: String, task: LorvexTask) -> some View {
+    switch id {
+    case "doOn":
+      TaskDetailDayPicker(
+        title: TaskDetailSentenceCopy.addWhen,
+        hint: String(
+          localized: "task_detail.metadata.planned_hint", defaultValue: "The day you plan to work on it.",
+          table: "Localizable", bundle: LorvexL10n.bundle),
+        presets: [.today, .tomorrow, .thisWeekend, .nextMonday],
+        selection: store.taskDetailHasPlannedDate ? store.taskDetailPlannedDatePickerDate : nil,
+        onSet: { date in
+          store.setTaskDetailHasPlannedDate(true)
+          store.taskDetailPlannedDatePickerDate = date
+        },
+        onClear: { store.setTaskDetailHasPlannedDate(false) },
+        time: TaskDetailDayPicker.TimeField(
+          value: store.taskDetailPlannedTime,
+          defaultLength: Int(store.taskDetailEstimatedMinutesText.trimmingCharacters(in: .whitespaces)),
+          nowMinutes: store.nowMinutesInProductDay,
+          isToday: lorvexDayOffset(
+            from: store.logicalTodayDateString, to: store.taskDetailPlannedDatePickerDate) == 0,
+          onChange: { store.taskDetailPlannedTime = $0 }))
+    case "due":
+      TaskDetailDayPicker(
+        title: TaskDetailSentenceCopy.addDue,
+        hint: String(
+          localized: "task_detail.metadata.due_hint", defaultValue: "The deadline to finish by.",
+          table: "Localizable", bundle: LorvexL10n.bundle),
+        presets: [.today, .tomorrow, .thisWeekend, .nextMonday],
+        selection: store.taskDetailHasDueDate ? store.taskDetailDueDatePickerDate : nil,
+        onSet: { date in
+          store.setTaskDetailHasDueDate(true)
+          store.taskDetailDueDatePickerDate = date
+        },
+        onClear: { store.setTaskDetailHasDueDate(false) })
+    case "hideUntil":
+      TaskDetailDayPicker(
+        title: TaskDetailSentenceCopy.addHideUntil,
+        hint: String(
+          localized: "task_detail.metadata.available_from_hint",
+          defaultValue: "Hidden from your lists until this day.", table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        presets: [.tomorrow, .nextMonday, .nextMonth],
+        selection: store.taskDetailHasAvailableFrom ? store.taskDetailAvailableFromPickerDate : nil,
+        onSet: { date in
+          store.setTaskDetailHasAvailableFrom(true)
+          store.taskDetailAvailableFromPickerDate = date
+        },
+        onClear: { store.setTaskDetailHasAvailableFrom(false) })
+    case "estimate":
+      TaskDetailLengthPicker(minutesText: $store.taskDetailEstimatedMinutesText)
+    case "repeat": recurrenceContent
+    case "reminders": remindersContent(task: task)
+    case "dependencies": dependenciesContent(task: task)
+    default: organizationContent(task: task)
+    }
+  }
+
+  /// The priority choices, the current one checked.
+  @ViewBuilder
+  private func priorityMenuItems(task: LorvexTask) -> some View {
+    Picker(selection: taskPriorityBinding(for: task)) {
+      ForEach(LorvexTask.Priority.allCases, id: \.self) { priority in
+        Text(TaskDetailSentenceCopy.priorityValue(priority)).tag(priority)
+      }
+    } label: {
+      Text(TaskDetailSentenceCopy.addPriority)
+    }
+    .pickerStyle(.inline)
+    .accessibilityIdentifier("task.detail.priorityControl")
+  }
+
+  /// Never, the common repeats with the current one checked, and Custom…,
+  /// which opens the full repeat editor on the row.
+  @ViewBuilder
+  private func repeatMenuItems(openEditor: @escaping () -> Void) -> some View {
+    let current = store.taskDetailRecurrencePreset
+    Button(String(localized: "recurrence.preset.never", defaultValue: "Never", table: "Localizable", bundle: LorvexL10n.bundle)) {
+      Task { await store.applyTaskDetailRecurrencePreset(nil) }
+    }
+    Divider()
+    ForEach(TaskDetailRecurrencePreset.allCases) { preset in
+      Button {
+        Task { await store.applyTaskDetailRecurrencePreset(preset) }
+      } label: {
+        if preset == current {
+          Label(preset.title, systemImage: "checkmark")
+        } else {
+          Text(preset.title)
         }
       }
+    }
+    Divider()
+    Button(String(localized: "recurrence.preset.custom", defaultValue: "Custom…", table: "Localizable", bundle: LorvexL10n.bundle)) {
+      openEditor()
     }
   }
 }
@@ -208,111 +314,5 @@ private struct TaskDetailInspectorColumn<Content: View>: View {
       .padding(.horizontal, TaskDetailInspectorMetrics.horizontalPadding)
       .padding(.top, TaskDetailInspectorMetrics.topPadding)
       .padding(.bottom, TaskDetailInspectorMetrics.bottomPadding)
-  }
-}
-
-private enum TaskDetailDisclosureMetrics {
-  static let iconWidth: CGFloat = 15
-  static let accentRailWidth: CGFloat = 2
-  static let horizontalPadding: CGFloat = 12
-  static let verticalPadding: CGFloat = 8
-}
-
-private enum TaskDetailDisclosureTypography {
-  static let icon = LorvexDesign.Typography.tertiaryText.weight(.semibold)
-  static let title = LorvexDesign.Typography.secondaryText.weight(.semibold)
-  static let chevron = LorvexDesign.Typography.tertiaryText.weight(.semibold)
-}
-
-/// A compact inspector disclosure row for advanced task metadata. These rows
-/// are secondary navigation under the selected-task summary, not another stack
-/// of page titles.
-private struct LorvexDisclosure<Content: View>: View {
-  let title: String
-  let systemImage: String
-  let showsDivider: Bool
-  let accessibilityID: String
-  @Binding var isExpanded: Bool
-  @ViewBuilder let content: () -> Content
-
-  init(
-    _ title: String,
-    systemImage: String,
-    showsDivider: Bool,
-    accessibilityID: String,
-    isExpanded: Binding<Bool>,
-    @ViewBuilder content: @escaping () -> Content
-  ) {
-    self.title = title
-    self.systemImage = systemImage
-    self.showsDivider = showsDivider
-    self.accessibilityID = accessibilityID
-    _isExpanded = isExpanded
-    self.content = content
-  }
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Button {
-        lorvexAnimated(.snappy(duration: 0.22)) { isExpanded.toggle() }
-      } label: {
-        HStack(spacing: LorvexDesign.Spacing.s) {
-          Image(systemName: systemImage)
-            .font(TaskDetailDisclosureTypography.icon)
-            .foregroundStyle(isExpanded ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-            .frame(width: TaskDetailDisclosureMetrics.iconWidth)
-          Text(title)
-            .font(TaskDetailDisclosureTypography.title)
-            .foregroundStyle(.primary)
-          Spacer(minLength: LorvexDesign.Spacing.s)
-          Image(systemName: "chevron.right")
-            .font(TaskDetailDisclosureTypography.chevron)
-            .foregroundStyle(.tertiary)
-            .rotationEffect(.degrees(isExpanded ? 90 : 0))
-        }
-        // The whole header row is the hit target, not just the chevron.
-        .contentShape(Rectangle())
-        .padding(.horizontal, TaskDetailDisclosureMetrics.horizontalPadding)
-        .padding(.vertical, TaskDetailDisclosureMetrics.verticalPadding)
-        .background {
-          if isExpanded {
-            RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-              .fill(.quaternary.opacity(0.08))
-              .padding(.horizontal, LorvexDesign.Spacing.xs)
-              .padding(.vertical, 2)
-          }
-        }
-        .overlay(alignment: .leading) {
-          if isExpanded {
-            Capsule()
-              .fill(.tint)
-              .frame(width: TaskDetailDisclosureMetrics.accentRailWidth)
-              .padding(.vertical, LorvexDesign.Spacing.s)
-          }
-        }
-      }
-      .buttonStyle(.plain)
-      .accessibilityIdentifier(accessibilityID)
-
-      if isExpanded {
-        content()
-          .padding(.top, LorvexDesign.Spacing.s)
-          .padding(.horizontal, LorvexDesign.Spacing.s)
-          .padding(.bottom, LorvexDesign.Spacing.s)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .transition(.opacity.combined(with: .move(edge: .top)))
-      }
-
-      if showsDivider {
-        Divider()
-          .padding(.leading, dividerLeadingPadding)
-      }
-    }
-  }
-
-  private var dividerLeadingPadding: CGFloat {
-    TaskDetailDisclosureMetrics.horizontalPadding
-      + TaskDetailDisclosureMetrics.iconWidth
-      + LorvexDesign.Spacing.s
   }
 }

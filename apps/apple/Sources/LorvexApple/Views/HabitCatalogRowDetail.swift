@@ -2,8 +2,10 @@ import LorvexCore
 import SwiftUI
 
 /// The quantitative detail for a habit, shown in the habit inspector: today's
-/// progress meter plus the frequency / total / 30-day-rate pills. Paired with
-/// the completion heatmap in `HabitDetailInspector`.
+/// progress meter, the requirement and lifetime-count pills, and the next
+/// milestone. The current and best streaks and the 30-day rate belong to the
+/// stats line above the completion heatmap in `HabitDetailInspector`, so no
+/// pill repeats them.
 struct HabitCatalogRowDetail: View {
   let habit: LorvexHabit
   /// Recent completion day strings (from the habit's stats), so the meter can
@@ -20,30 +22,23 @@ struct HabitCatalogRowDetail: View {
       HabitRowProgressMeter(
         completed: min(progress.completed, progress.required),
         target: progress.required,
+        caption: progressCaption,
         tint: progressColor
       )
 
       LorvexFlowLayout(spacing: LorvexDesign.Spacing.s, lineSpacing: LorvexDesign.Spacing.s) {
-        HabitMetricPill(
-          title: HabitDisplayText.requirementSummary(habit),
+        LorvexChip(
+          HabitDisplayText.requirementSummary(habit),
           systemImage: "calendar",
-          tint: .secondary
+          tint: LorvexDesign.Palette.neutral
         )
-        HabitMetricPill(
-          title: String(
+        LorvexChip(
+          String(
             format: String(localized: "habits.row.total_metric", defaultValue: "%lld logged", table: "Localizable", bundle: LorvexL10n.bundle),
             habit.totalCompletions
           ),
           systemImage: "checkmark.seal",
-          tint: .secondary
-        )
-        HabitMetricPill(
-          title: String(
-            format: String(localized: "habits.row.rate_metric", defaultValue: "30d %@", table: "Localizable", bundle: LorvexL10n.bundle),
-            habit.completionRate30d.formatted(.percent.precision(.fractionLength(0)))
-          ),
-          systemImage: "chart.line.uptrend.xyaxis",
-          tint: .secondary
+          tint: LorvexDesign.Palette.neutral
         )
       }
 
@@ -57,20 +52,40 @@ struct HabitCatalogRowDetail: View {
     }
   }
 
+  /// What the period still asks for, beside the bar: how many completions
+  /// remain ("2 to go"), or that the period is done ("Done today", "Done this
+  /// week"). The bar already shows the share, so the words say the state.
+  private var progressCaption: String {
+    guard progress.isComplete else {
+      return String(
+        format: String(localized: "habits.meter.remaining", defaultValue: "%lld to go", table: "Localizable", bundle: LorvexL10n.bundle),
+        max(progress.required - progress.completed, 1))
+    }
+    switch HabitPeriodProgress.period(for: habit) {
+    case .day:
+      return String(localized: "habits.meter.done.day", defaultValue: "Done today", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      return String(localized: "habits.meter.done.week", defaultValue: "Done this week", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .month:
+      return String(localized: "habits.meter.done.month", defaultValue: "Done this month", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
+
   private var progressColor: Color {
-    progress.isComplete ? .green : .accentColor
+    progress.isComplete ? LorvexDesign.Palette.done : LorvexHabitPalette.baseColor(for: habit)
   }
 }
 
 private struct HabitRowProgressMeter: View {
   let completed: Int
   let target: Int
+  let caption: String
   let tint: Color
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       LorvexProgressBar(value: Double(completed) / Double(max(target, 1)), tint: tint)
-      Text("\(completed)/\(target)")
+      Text(caption)
         .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
         .foregroundStyle(.secondary)
         .fixedSize()
@@ -89,20 +104,5 @@ private struct HabitRowProgressMeter: View {
       )
     )
     .accessibilityIdentifier("habit.progress.meter")
-  }
-}
-
-private struct HabitMetricPill: View {
-  let title: String
-  let systemImage: String
-  let tint: Color
-
-  var body: some View {
-    Label(title, systemImage: systemImage)
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(tint)
-      .padding(.horizontal, LorvexDesign.Spacing.s)
-      .padding(.vertical, LorvexDesign.Spacing.xs)
-      .background(.quaternary.opacity(0.55), in: Capsule())
   }
 }

@@ -26,26 +26,6 @@ final class CalendarSeriesCutoverSyncTests: XCTestCase {
     EntityApplierRegistry(appliers: EntityApplierRegistry.defaultEntityAppliers())
   }
 
-  private final class LockedHlcHandle: HlcDominatingStateHandle, @unchecked Sendable {
-    private let lock = NSLock()
-    private let state: HlcState
-
-    init() throws {
-      state = try HlcState(deviceSuffix: "cccccccccccccccc")
-    }
-
-    func generate() -> Hlc { generate(dominating: nil) }
-
-    func generate(dominating floor: Hlc?) -> Hlc {
-      lock.lock()
-      defer { lock.unlock() }
-      if let floor {
-        state.updateOnReceive(remote: floor, physicalMs: 2_000_000_000_000)
-      }
-      return state.generate(withPhysicalMs: 2_000_000_000_000)
-    }
-  }
-
   private func parsed(_ raw: String) throws -> Hlc {
     try Hlc.parseCanonical(raw)
   }
@@ -507,11 +487,9 @@ final class CalendarSeriesCutoverSyncTests: XCTestCase {
     }
   }
 
-  func testDeletedSegmentCleanupPropagatesEventEdgeAndFocusAggregateMutations() throws {
+  func testDeletedSegmentCleanupPropagatesEventAndEdgeMutations() throws {
     let date = "2026-08-16"
     let segmentID = cutoverID(date)
-    let keepDate = "2026-08-17"
-    let emptyDate = "2026-08-18"
     let store = try SyncTestSupport.freshStore()
     try store.writer.write { db in
       XCTAssertEqual(
@@ -536,29 +514,6 @@ final class CalendarSeriesCutoverSyncTests: XCTestCase {
           VALUES (?, ?, ?, ?, ?)
           """,
         arguments: [taskID, segmentID, v2, timestamp, timestamp])
-      for planDate in [keepDate, emptyDate] {
-        try db.execute(
-          sql: """
-            INSERT INTO focus_schedule (date, rationale, timezone, version, created_at, updated_at)
-            VALUES (?, 'Plan', 'UTC', ?, ?, ?)
-            """,
-          arguments: [planDate, v2, timestamp, timestamp])
-        try db.execute(
-          sql: """
-            INSERT INTO focus_schedule_blocks
-              (date, position, block_type, start_minutes, end_minutes,
-               calendar_event_id, event_source, title)
-            VALUES (?, 0, 'event', 540, 600, ?, 'canonical', 'Segment')
-            """,
-          arguments: [planDate, segmentID])
-      }
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule_blocks
-            (date, position, block_type, start_minutes, end_minutes, title)
-          VALUES (?, 1, 'buffer', 600, 630, 'Keep')
-          """,
-        arguments: [keepDate])
 
       let result = try apply(
         db, cutoverEnvelope(date: date, state: .deleted, version: v3))
@@ -568,17 +523,7 @@ final class CalendarSeriesCutoverSyncTests: XCTestCase {
         Set([
           "calendar_event|\(segmentID)|delete",
           "task_calendar_event_link|\(taskID):\(segmentID)|delete",
-          "focus_schedule|\(keepDate)|upsert",
-          "focus_schedule|\(emptyDate)|delete",
         ]))
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE date = ?",
-          arguments: [keepDate]), 1)
-      XCTAssertNil(
-        try String.fetchOne(
-          db, sql: "SELECT date FROM focus_schedule WHERE date = ?",
-          arguments: [emptyDate]))
 
       try fulfill(db, result: result, successor: v5)
       let pending = try Outbox.getPending(db).map(\.envelope)
@@ -588,50 +533,10 @@ final class CalendarSeriesCutoverSyncTests: XCTestCase {
       XCTAssertEqual(envelope(.calendarEvent, segmentID)?.operation, .delete)
       XCTAssertEqual(
         envelope(.taskCalendarEventLink, "\(taskID):\(segmentID)")?.operation, .delete)
-      XCTAssertEqual(envelope(.focusSchedule, keepDate)?.operation, .upsert)
-      XCTAssertEqual(envelope(.focusSchedule, emptyDate)?.operation, .delete)
       for repaired in pending {
         XCTAssertEqual(repaired.version.description, v5)
         XCTAssertGreaterThan(repaired.version, try parsed(v3))
       }
-      XCTAssertFalse(
-        try XCTUnwrap(envelope(.focusSchedule, keepDate)).payload.contains(segmentID))
-    }
-  }
-
-  func testDeletedBoundaryCleansSoftFocusReferenceEvenWhenSegmentNeverArrived() throws {
-    let date = "2026-08-19"
-    let segmentID = cutoverID(date)
-    let planDate = "2026-08-20"
-    let store = try SyncTestSupport.freshStore()
-    try store.writer.write { db in
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule (date, timezone, version, created_at, updated_at)
-          VALUES (?, 'UTC', ?, ?, ?)
-          """,
-        arguments: [planDate, v1, timestamp, timestamp])
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule_blocks
-            (date, position, block_type, start_minutes, end_minutes,
-             calendar_event_id, event_source, title)
-          VALUES (?, 0, 'event', 540, 600, ?, 'canonical', 'Not arrived')
-          """,
-        arguments: [planDate, segmentID])
-
-      let result = try apply(
-        db, cutoverEnvelope(date: date, state: .deleted, version: v2))
-      let repair = try cleanupObligation(result)
-      XCTAssertTrue(
-        repair.targets.contains(
-          CalendarCleanupRepairTarget(
-            entityType: .focusSchedule, entityId: planDate,
-            operation: .delete)))
-      XCTAssertNil(
-        try String.fetchOne(
-          db, sql: "SELECT date FROM focus_schedule WHERE date = ?",
-          arguments: [planDate]))
     }
   }
 
@@ -668,37 +573,6 @@ final class CalendarSeriesCutoverSyncTests: XCTestCase {
         try String.fetchOne(
           db, sql: "SELECT id FROM calendar_events WHERE id = ?",
           arguments: [segmentID]))
-    }
-  }
-
-  func testAuthoritativeAbsencePromotesAndReemitsPermanentCutover() throws {
-    let date = "2026-08-22"
-    let id = cutoverID(date)
-    let store = try SyncTestSupport.freshStore()
-    try store.writer.write { db in
-      XCTAssertEqual(
-        try apply(db, cutoverEnvelope(date: date, state: .deleted, version: v2)),
-        .applied)
-      let intents = try AuthoritativeSnapshot.includingAbsentAuthoritativeDependencies(
-        db, intents: [], authoritativeLiveRecordNames: [], deviceId: deviceID)
-      XCTAssertEqual(intents.count, 1)
-      XCTAssertNil(intents[0].outboxID)
-      XCTAssertEqual(intents[0].envelope.entityType, .calendarSeriesCutover)
-      XCTAssertEqual(intents[0].envelope.entityId, id)
-      XCTAssertEqual(intents[0].envelope.operation, .upsert)
-      XCTAssertTrue(intents[0].envelope.payload.contains(#""state":"deleted""#))
-
-      var report = AuthoritativeSnapshotReport()
-      try AuthoritativeSnapshot.replayPostSessionLocalIntents(
-        db, intents: intents, registry: registry,
-        hlc: HlcSession(handle: try LockedHlcHandle()),
-        deviceId: deviceID, report: &report)
-      let reemit = try XCTUnwrap(
-        pendingEnvelope(db, entityType: .calendarSeriesCutover, entityID: id))
-      XCTAssertEqual(reemit.operation, .upsert)
-      XCTAssertGreaterThan(reemit.version, try parsed(v2))
-      XCTAssertEqual(try localCutover(db, date: date).state, .deleted)
-      XCTAssertTrue(report.changedEntityTypes.contains(.calendarSeriesCutover))
     }
   }
 

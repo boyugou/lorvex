@@ -32,9 +32,7 @@
 ///                    + attendees 15×2×1,536 = 46,080 + misc 8,000 = 216,080
 ///   daily_reviews    4 text fields ×40,000 + links 200×39 = 7,800
 ///                    + misc 2,000                              = 169,800
-///   current_focus    briefing 20,000 + task_ids 100×39 + misc 2,000 = 25,900
-///   focus_schedule   rationale 20,000 + blocks 50×(2,048 title + 300)
-///                    + misc 2,000                              = 139,400
+///   daily_briefings  briefing 20,000 + misc 2,000             = 22,000
 ///   memories         content ≤100,000 sanitized bytes → ≤200,000 escaped
 ///                    + key ≤1,200 + misc 1,000                 = 202,200
 ///   preferences      value ≤32,768 raw bytes → ≤196,608 escaped (all-C0
@@ -53,18 +51,13 @@ public enum PayloadByteBudget {
   /// four of them ride one payload.
   public static let reviewTextEscapedBytes = 40_000
 
-  /// Day-plan prose (`current_focus.briefing`, `focus_schedule.rationale`).
+  /// Day-plan prose (`daily_briefings.briefing`).
   public static let dayPlanTextEscapedBytes = 20_000
-
-  /// Freeform focus-schedule block title.
-  public static let scheduleBlockTitleEscapedBytes = 2_048
 
   /// Collection count caps for the unbounded payload collections.
   public static let maxCalendarAttendees = 15
   public static let maxReviewLinkedTasks = 100
   public static let maxReviewLinkedLists = 100
-  public static let maxFocusTasks = 100
-  public static let maxScheduleBlocks = 50
   public static let maxRecurrenceExceptions = 400
 
   /// Attendee `email` / `name` codepoint cap. Tighter than

@@ -2,76 +2,92 @@ import Foundation
 import LorvexWidgetKitSupport
 import WidgetKit
 
+/// Timelines for the Today widget: one entry now and one at each instant the
+/// lead, its ring, or its line changes before the reload point, narrowed to the
+/// configured list.
 public struct LorvexTodayWidgetTimelineProvider: AppIntentTimelineProvider {
-  public typealias Entry = LorvexSnapshotEntry
+  public typealias Entry = LorvexWidgetEntry
   public typealias Intent = LorvexTodayWidgetConfigurationIntent
 
   private let configuration: LorvexWidgetConfiguration
+  private let refreshPolicy = WidgetTimelineRefreshPolicy()
 
   public init(configuration: LorvexWidgetConfiguration = LorvexWidgetConfiguration()) {
     self.configuration = configuration
   }
 
-  public func placeholder(in context: Context) -> LorvexSnapshotEntry {
-    LorvexSnapshotTimelineAdapter.staticPlaceholder(viewMode: .today)
+  public func placeholder(in context: Context) -> LorvexWidgetEntry {
+    LorvexWidgetTimelineAdapter.staticPlaceholder(
+      family: Self.familyKind(for: context.family),
+      refreshPolicy: refreshPolicy
+    )
   }
 
   public func snapshot(
     for configuration: LorvexTodayWidgetConfigurationIntent,
     in context: Context
-  ) async -> LorvexSnapshotEntry {
+  ) async -> LorvexWidgetEntry {
     makeSnapshotEntry(
-      viewMode: configuration.viewMode ?? .today,
+      family: Self.familyKind(for: context.family),
       listID: configuration.list?.id,
-      isPreview: context.isPreview
-    )
+      isPreview: context.isPreview)
   }
 
   func makeSnapshotEntry(
-    viewMode: LorvexTodayWidgetViewMode,
+    family: WidgetFamilyKind,
     listID: String? = nil,
     isPreview: Bool
-  ) -> LorvexSnapshotEntry {
+  ) -> LorvexWidgetEntry {
     if isPreview {
-      return LorvexSnapshotTimelineAdapter.staticPreview(
-        viewMode: viewMode,
-        listID: listID
-      )
+      return LorvexWidgetTimelineAdapter.staticPreview(family: family, listID: listID)
     }
-    return makeTimelineEntry(
-      viewMode: viewMode,
-      listID: listID
-    ).entry
+    if let adapter = adapter(snapshotURL: self.configuration.resolvedSnapshotURL()) {
+      return adapter.snapshot(family: family, listID: listID)
+    }
+    return LorvexWidgetTimelineAdapter.staticPlaceholder(
+      family: family,
+      refreshPolicy: refreshPolicy
+    )
   }
 
   public func timeline(
     for configuration: LorvexTodayWidgetConfigurationIntent,
     in context: Context
-  ) async -> Timeline<LorvexSnapshotEntry> {
-    let result = makeTimelineEntry(
-      viewMode: configuration.viewMode ?? .today,
-      listID: configuration.list?.id
-    )
-    return Timeline(entries: [result.entry], policy: .after(result.refreshAfter))
-  }
-
-  func makeTimelineEntry(
-    viewMode: LorvexTodayWidgetViewMode,
-    listID: String? = nil
-  ) -> (entry: LorvexSnapshotEntry, refreshAfter: Date) {
-    guard let adapter = adapter(snapshotURL: configuration.resolvedSnapshotURL()) else {
-      return LorvexSnapshotTimelineAdapter.staticMissingSnapshotURLResult(
-        viewMode: viewMode,
-        listID: listID
-      )
+  ) async -> Timeline<LorvexWidgetEntry> {
+    let family = Self.familyKind(for: context.family)
+    if let adapter = adapter(snapshotURL: self.configuration.resolvedSnapshotURL()) {
+      return adapter.timeline(family: family, listID: configuration.list?.id)
     }
-    return adapter.timelineResult(viewMode: viewMode, listID: listID)
+    let entry = placeholder(in: context)
+    return Timeline(
+      entries: [entry],
+      policy: .after(
+        entry.date.addingTimeInterval(
+          TimeInterval(refreshPolicy.refreshIntervalSeconds(freshness: nil)))))
   }
 
-  private func adapter(snapshotURL: URL?) -> LorvexSnapshotTimelineAdapter? {
+  public static func familyKind(for family: WidgetFamily) -> WidgetFamilyKind {
+    switch family {
+    case .systemSmall:
+      .systemSmall
+    case .systemMedium:
+      .systemMedium
+    case .systemLarge, .systemExtraLarge, .systemExtraLargePortrait:
+      .systemLarge
+    case .accessoryInline:
+      .accessoryInline
+    case .accessoryRectangular:
+      .accessoryRectangular
+    case .accessoryCircular:
+      .accessoryCircular
+    @unknown default:
+      .systemSmall
+    }
+  }
+
+  private func adapter(snapshotURL: URL?) -> LorvexWidgetTimelineAdapter? {
     guard let url = snapshotURL else { return nil }
     let support = WidgetTimelineProviderSupport(configuration: .init(snapshotURL: url))
-    return LorvexSnapshotTimelineAdapter(support: support)
+    return LorvexWidgetTimelineAdapter(support: support)
   }
-
 }

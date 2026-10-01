@@ -34,8 +34,8 @@ extension SyncCheckpoints {
   /// lost records it can only recover by reseeding from a full resync. Written by
   /// the retention sweep (`SyncRetention`) alongside a `reseed_required`
   /// conflict-log row. The sync transport observes it at cycle start and runs
-  /// the recovery (atomic SQLite traversal reset + full-resync backfill +
-  /// nil-token baseline); a COMPLETE backfill pass clears it. The host surfaces
+  /// the recovery (a full-resync backfill that re-queues every local row); a
+  /// COMPLETE backfill pass clears it. The host surfaces
   /// it while set.
   public static var keyReseedRequired: String { SyncNaming.reseedRequiredCheckpointKey }
 

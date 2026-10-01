@@ -4,17 +4,21 @@ import SwiftUI
 /// Token-style tag entry: existing tags render as removable chips, a text field
 /// adds new tags on return, and matching `suggestions` surface below the field.
 /// Binds to an ordered, de-duplicated tag list (case-insensitive uniqueness).
+///
+/// The text typed but not yet added lives in `entry`, which the caller owns, so
+/// a Save or Done that arrives before Return keeps it: the caller folds it into
+/// the tags with ``merging(_:into:)`` before saving.
 struct MobileTagTokenField: View {
   @Binding var tags: [String]
   let suggestions: [String]
+  @Binding var entry: String
 
-  @State private var entry: String = ""
   @FocusState private var fieldFocused: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       if !tags.isEmpty {
-        MobileWrapLayout {
+        LorvexFlowLayout(spacing: LorvexDesign.Spacing.sm, lineSpacing: LorvexDesign.Spacing.sm, fillsWidth: true) {
           ForEach(tags, id: \.self) { tag in
             tagChip(tag)
           }
@@ -28,7 +32,7 @@ struct MobileTagTokenField: View {
       )
       .focused($fieldFocused)
       .autocorrectionDisabled()
-      #if os(iOS) || os(visionOS)
+      #if os(iOS)
         .textInputAutocapitalization(.never)
         .submitLabel(.done)
       #endif
@@ -40,17 +44,21 @@ struct MobileTagTokenField: View {
       }
 
       if !filteredSuggestions.isEmpty {
-        MobileWrapLayout {
+        LorvexFlowLayout(spacing: LorvexDesign.Spacing.sm, lineSpacing: LorvexDesign.Spacing.sm, fillsWidth: true) {
           ForEach(filteredSuggestions, id: \.self) { suggestion in
             Button {
               add(suggestion)
             } label: {
-              Label(suggestion, systemImage: "plus")
-                .font(LorvexDesign.Typography.tertiaryText)
-                .labelStyle(.titleAndIcon)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.quaternary, in: Capsule())
+              // An explicit HStack, not a `Label`: inside a form row a `Label`
+              // sets its glyph in a wide icon column, far from the tag name.
+              HStack(spacing: LorvexDesign.Spacing.xs) {
+                Image(systemName: "plus").imageScale(.small)
+                Text(suggestion)
+              }
+              .font(LorvexDesign.Typography.tertiaryText)
+              .padding(.horizontal, 8)
+              .padding(.vertical, 4)
+              .background(.quaternary, in: Capsule())
             }
             .buttonStyle(.plain)
             .foregroundStyle(.tint)
@@ -94,22 +102,28 @@ struct MobileTagTokenField: View {
     }
   }
 
-  private func commitEntry() {
-    let parts = entry.split(separator: ",").map {
-      $0.trimmingCharacters(in: .whitespacesAndNewlines)
+  /// `tags` with each comma-separated tag of `entry` appended, trimmed, and
+  /// skipped when blank or already present in any letter case.
+  nonisolated static func merging(_ entry: String, into tags: [String]) -> [String] {
+    var merged = tags
+    for part in entry.split(separator: ",") {
+      let value = part.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !value.isEmpty,
+        !merged.contains(where: { $0.caseInsensitiveCompare(value) == .orderedSame })
+      else { continue }
+      merged.append(value)
     }
-    for part in parts { add(part) }
+    return merged
+  }
+
+  private func commitEntry() {
+    tags = Self.merging(entry, into: tags)
     entry = ""
     fieldFocused = true
   }
 
-  private func add(_ raw: String) {
-    let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !value.isEmpty else { return }
-    guard !tags.contains(where: { $0.caseInsensitiveCompare(value) == .orderedSame }) else {
-      return
-    }
-    tags.append(value)
+  private func add(_ suggestion: String) {
+    tags = Self.merging(suggestion, into: tags)
   }
 
   private func remove(_ tag: String) {

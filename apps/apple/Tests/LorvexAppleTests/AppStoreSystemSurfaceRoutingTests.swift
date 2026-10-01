@@ -243,7 +243,7 @@ func appStoreDeepLinkReusesLoadedTaskPoolBeforeLazyLoading() async throws {
 @MainActor
 @Test
 func appStoreKeepsDeepLinkedOffPoolTaskSelectedAcrossRefreshReconcile() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let suiteName = "appStoreKeepsDeepLinkedOffPoolTaskSelected.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
   defaults.removePersistentDomain(forName: suiteName)
@@ -262,7 +262,6 @@ func appStoreKeepsDeepLinkedOffPoolTaskSelectedAcrossRefreshReconcile() async th
   store.selectedTaskID = task.id
   store.selection = .tasks
   core.todayOverride = TodaySnapshot(
-    focusTitle: "Today",
     summary: "All clear for today",
     tasks: [],
     localChangeSequence: 7

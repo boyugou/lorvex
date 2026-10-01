@@ -488,11 +488,26 @@ def main(argv: list[str] | None = None) -> int:
     app_group_id = metadata.get("APP_GROUP_ID", "group.com.lorvex.apple")
     sandboxed = is_sandboxed_binary(bin_path)
     if sandboxed:
+        # A sandboxed helper can only open its own App Group container, so there is
+        # no temp-directory form of this check: exercising it means running against
+        # whatever real Lorvex data is on this machine, and the smoke erases the
+        # container before and after. Skip by default and say so loudly. A routine
+        # local gate must never be one exported signing identity away from wiping
+        # the operator's own workspace; opting in is a deliberate, stated act.
+        if os.environ.get(DESTRUCTIVE_RESET_ENV) != "1":
+            print(
+                "SKIP: sandboxed MCP stdio smoke not run. A sandboxed helper can only "
+                "reach the real App Group, and the smoke erases it — pass "
+                f"--reset-real-app-group with {DESTRUCTIVE_RESET_ENV}=1 to run it and "
+                "irreversibly erase local Lorvex data. Unsandboxed builds are covered "
+                "against a temporary database on every gate.",
+                file=sys.stderr,
+            )
+            return 0
         require(
             args.reset_real_app_group,
             "refusing to launch a sandboxed MCP helper against real local data; "
-            "release verification must pass --reset-real-app-group and explicitly "
-            f"set {DESTRUCTIVE_RESET_ENV}=1",
+            f"{DESTRUCTIVE_RESET_ENV}=1 must be paired with --reset-real-app-group",
         )
         isolation = real_app_group_smoke_isolation(
             bin_path,
@@ -500,7 +515,7 @@ def main(argv: list[str] | None = None) -> int:
             (
                 metadata.get("APP_NAME", "Lorvex"),
                 mcp_host_product,
-                metadata.get("WIDGET_EXECUTABLE", "LorvexFocusWidget"),
+                metadata.get("WIDGET_EXECUTABLE", "LorvexWidgets"),
             ),
         )
     else:

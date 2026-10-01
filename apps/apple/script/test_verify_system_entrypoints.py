@@ -188,7 +188,6 @@ class VerifySystemEntrypointsTests(unittest.TestCase):
                 plist_values_by_label={
                     "macos staged template": activity_types,
                     "mobile": activity_types,
-                    "vision": activity_types,
                 },
             ),
             [],
@@ -201,10 +200,10 @@ class VerifySystemEntrypointsTests(unittest.TestCase):
             user_activity_contract_failures(
                 desktop_types=activity_types,
                 mobile_types=activity_types,
-                plist_values_by_label={"vision": activity_types[:1]},
+                plist_values_by_label={"mobile": activity_types[:1]},
             ),
             [
-                "vision NSUserActivityTypes do not match MobileActivityType order/metadata: "
+                "mobile NSUserActivityTypes do not match MobileActivityType order/metadata: "
                 "['com.lorvex.apple.openTask'] != "
                 "['com.lorvex.apple.openTask', 'com.lorvex.apple.openDestination', "
                 "'com.lorvex.apple.openList']"

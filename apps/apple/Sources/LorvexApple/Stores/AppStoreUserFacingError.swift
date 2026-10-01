@@ -21,7 +21,7 @@ extension AppStore {
         localized:
           "error.storage_unavailable",
           defaultValue:
-            "Lorvex can't access its data storage, so this couldn't be completed. Please restart Lorvex.",
+            "Lorvex can’t access its data storage, so this couldn’t be completed. Please restart Lorvex.",
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
@@ -53,6 +53,38 @@ extension AppStore {
       level: "error",
       message: "A user action failed.",
       details: classification.technicalDetail)
+  }
+
+  /// Present a failure of the local refresh, which runs without the user
+  /// asking (on activation, after a sync, on a database change), in the
+  /// blocking alert. The first occurrence of a message is shown; the same
+  /// message again is only logged until a refresh succeeds and clears the
+  /// latch, so a persistent failure does not raise the alert on every refresh.
+  /// A different message is shown, since it is a new fact. Every occurrence
+  /// reaches `error_logs`.
+  func presentRefreshFailure(_ error: Error) async {
+    let classification = UserFacingError.classify(error)
+    let message = UserFacingError.message(for: classification, copy: userFacingErrorCopy)
+    if message != surfacedRefreshFailureMessage {
+      surfacedRefreshFailureMessage = message
+      errorMessage = message
+    }
+    guard classification.category != .validation else { return }
+    try? await core.appendDiagnosticLog(
+      source: "macos.refresh_failed",
+      level: "error",
+      message: "A refresh failed.",
+      details: classification.technicalDetail)
+  }
+
+  /// Clear the refresh-failure latch after a successful refresh, dismissing
+  /// the alert only when it still shows that refresh failure, so an action's
+  /// own error stays up until the user acknowledges it.
+  func clearRefreshFailure() {
+    if surfacedRefreshFailureMessage != nil, errorMessage == surfacedRefreshFailureMessage {
+      errorMessage = nil
+    }
+    surfacedRefreshFailureMessage = nil
   }
 
   private func localizedRecurrenceEditorMessage(_ error: TaskRecurrenceEditorError) -> String {
@@ -116,7 +148,16 @@ extension AppStore {
     if case .unrecoverable = classification.category {
       return UserFacingError.message(for: classification, copy: userFacingErrorCopy)
     }
-    return userFacingErrorCopy.somethingWentWrong
+    // Append the compact NSError identity so a tester reading the sync status
+    // row can report an actionable code ("CKErrorDomain 12") instead of only
+    // the generic copy; the full detail is already in the diagnostics log.
+    // Swift errors bridge to a "Module.Type" domain that carries no user value,
+    // so only genuine framework domains (dot-free) are surfaced.
+    let nsError = error as NSError
+    guard !nsError.domain.contains(".") else {
+      return userFacingErrorCopy.somethingWentWrong
+    }
+    return "\(userFacingErrorCopy.somethingWentWrong) (\(nsError.domain) \(nsError.code))"
   }
 
   func cloudSyncUserFacingErrorMessage(forMessage message: String, source: String) async -> String {

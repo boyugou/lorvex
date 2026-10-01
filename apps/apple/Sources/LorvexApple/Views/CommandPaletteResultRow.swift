@@ -9,16 +9,14 @@ struct CommandPaletteResultRow: View {
   let hover: () -> Void
 
   private var subtitle: String? {
-    if case .openTask(_, _, let subtitle) = result { return subtitle }
+    if case .openTask(_, _, let subtitle, _) = result { return subtitle }
     return nil
   }
 
   var body: some View {
     Button(action: activate) {
       HStack(spacing: LorvexDesign.Spacing.s) {
-        Image(systemName: result.systemImage)
-          .frame(width: 20)
-          .foregroundStyle(isHighlighted ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+        icon
         VStack(alignment: .leading, spacing: 1) {
           highlightedTitle(result.localizedTitle)
             .font(LorvexDesign.Typography.secondaryText)
@@ -43,7 +41,7 @@ struct CommandPaletteResultRow: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(
         RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-          .fill(isHighlighted ? AnyShapeStyle(.tint.opacity(0.18)) : AnyShapeStyle(.clear))
+          .fill(isHighlighted ? AnyShapeStyle(LorvexDesign.Palette.selectionFill) : AnyShapeStyle(.clear))
       )
       .contentShape(Rectangle())
     }
@@ -53,6 +51,23 @@ struct CommandPaletteResultRow: View {
       if hovering { hover() }
     }
     .accessibilityIdentifier("commandPalette.result.\(result.id)")
+  }
+
+  /// A list wears its own icon and color, as in the sidebar; every other row
+  /// shows its symbol, tinted while highlighted.
+  @ViewBuilder
+  private var icon: some View {
+    if case .openList(_, _, let listIcon, let colorHex) = result {
+      LorvexListIconView(
+        icon: listIcon,
+        tint: Color(lorvexHex: colorHex) ?? .accentColor,
+        size: 20,
+        font: LorvexDesign.Typography.secondaryText)
+    } else {
+      Image(systemName: result.systemImage)
+        .frame(width: 20)
+        .foregroundStyle(isHighlighted ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+    }
   }
 
   /// Builds a single `AttributedString`-backed `Text` with the query-match

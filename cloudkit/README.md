@@ -1,25 +1,26 @@
 # cloudkit/ - Apple Swift CloudKit schema template
 
-`schema.ckdb` is the authoritative CloudKit record-type template. Domain data
-uses the end-to-end-encrypted `LorvexEntity` envelope. Transport metadata uses
-separate record types for generation control, immutable generation root/seal
-witnesses, nil-token traversal proof, audit-retention authority, and wakeups.
-The fixed-name `LorvexAuditRetentionMetadata` record is identity-fetched and
-stores all of its custom fields as CloudKit encrypted values; no policy or
-activity-cutoff metadata is intentionally exposed as plaintext.
+`schema.ckdb` is the CloudKit record-type template. The app syncs through
+`CKSyncEngine` into one custom zone named `Lorvex` in the private database of
+`iCloud.com.lorvex.apple`. The engine saves the zone itself, so the template
+declares record types only.
 
-The fixed-name `LorvexZoneEpoch` record lives in the private database's default
-zone and implements the protocol-v3 `rebuilding` / `ready` / `deleted` state
-machine. It CAS-serializes a unique custom zone for every generation, records
-the active descriptor, server-derived tombstone-compaction cutoff, and bounded
-retirement ledger, and carries a canonical server-derived lease activity
-timestamp while rebuilding. Foreign takeover uses only that timestamp, never a
-device wall clock. A separate fixed-name `LorvexServerClock` singleton in the
-private default zone supplies server time by upserting a fresh random nonce and
-validating the saved record's CloudKit modification date. Both singletons are
-bounded plaintext recovery-control metadata and contain no user content. The
-epoch record preserves a fleet-visible deletion barrier across custom-zone
-loss; user domain data remains in encrypted `LorvexEntity` fields.
+Every record in that zone has the record type `LorvexEntity`, an
+end-to-end-encrypted envelope. All seven wire fields (`entity_type`,
+`entity_id`, `operation`, `version`, `payload_schema_version`, `payload`, and
+`device_id`) are encrypted fields written client-side through
+`CKRecord.encryptedValues`, and the type declares no custom plaintext fields.
+The record name is the SHA-256 hex of the entity type and id, so the only
+identity CloudKit sees in the clear is that hash. A delete is a `LorvexEntity`
+record with `operation = delete`, never a CloudKit record deletion.
+
+The template also declares record types that the app neither reads nor writes:
+`LorvexZoneEpoch`, `LorvexServerClock`, `LorvexGenerationRoot`,
+`LorvexGenerationSeal`, `LorvexTraversalWitness`,
+`LorvexAuditRetentionMetadata`, and `LorvexGenerationWake`. CloudKit never
+removes record types that have been deployed to Production, so the template
+keeps declaring them to stay compatible with the deployed Production schema.
+
 `deploy-schema.sh` deploys the template to the Development environment of
 `iCloud.com.lorvex.apple` by default. Run it with no arguments for a normal
 validate-and-import pass, or with `--reset` to reset Development to Production's
@@ -28,11 +29,9 @@ script rejects every other argument and every non-Development environment;
 Production promotion remains a manual CloudKit Console operation.
 
 The checked-in schema is necessary but not sufficient release evidence. Before
-submission, deploy the exact Development schema, exercise the multi-device
-protocol there, promote it to Production in CloudKit Console, and preserve the
-exported Production schema plus the signed archive's container entitlement as
-release evidence.
+submission, deploy the exact Development schema, exercise multi-device sync
+there, promote it to Production in CloudKit Console, and preserve the exported
+Production schema plus the signed archive's container entitlement as release
+evidence.
 
-The Apple Swift app is the only Apple-ecosystem product path. Tauri no longer
-owns an iCloud container or App Store sync path; future Windows/Linux/Android
-sync should use a non-iCloud backend.
+The Apple Swift app is the only product path that uses this container.

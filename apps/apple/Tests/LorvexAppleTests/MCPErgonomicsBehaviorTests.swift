@@ -9,9 +9,8 @@ import Testing
 /// Swift core bridge so each assertion exercises the full MCP tool →
 /// `CoreBridgeClient` → `SwiftLorvexCoreService` write path:
 ///
-/// - R1: `tags_set` stays accepted by the handlers though it left the schema.
-/// - E3: task-scoped tools accept `id` as a silent fallback for `task_id`.
-/// - E5: the focus write tools default an omitted `date` to today.
+/// - E3: task-scoped tools resolve the target task from `task_id`.
+/// - E5: the day-planning tools default an omitted `date` to today.
 /// - G1: `create_task` / `batch_create_tasks` build an ordered checklist in one
 ///   call, changelogged and idempotent-replay-safe.
 /// - G2: `get_habits(include_stats: true)` enriches every row with stats fields.
@@ -37,85 +36,51 @@ struct MCPErgonomicsBehaviorTests {
       .compactMap { $0.objectValue?["text"]?.stringValue }
   }
 
-  // MARK: - R1: tags_set still accepted after leaving the schema
+  // MARK: - E3: task-scoped tools resolve task_id
 
-  @Test("R1: create_task, update_task, and batch_create_tasks still accept tags_set")
-  func r1TagsSetStillAccepted() async throws {
+  @Test("E3: task-scoped tools resolve the target from task_id in every family")
+  func e3TaskIDPerFamily() async throws {
     let fixture = mcpOnDiskRegistry()
     defer { fixture.cleanup() }
-
-    // create_task with only the undocumented alias applies the tags.
-    let created = try await mcpRegistryCall(
-      fixture.registry, tool: "create_task",
-      arguments: ["title": .string("Aliased"), "tags_set": .array([.string("alpha")])])
-    #expect(tags(created) == [SecurityFencing.fence("alpha")])
-    let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
-
-    // update_task via the alias replaces the tag set.
-    let updated = try await mcpRegistryCall(
-      fixture.registry, tool: "update_task",
-      arguments: ["id": .string(taskID), "tags_set": .array([.string("beta"), .string("gamma")])])
-    #expect(
-      Set(tags(updated)) == [SecurityFencing.fence("beta"), SecurityFencing.fence("gamma")])
-
-    // batch_create_tasks rows accept the alias too.
-    let batch = try await mcpRegistryCall(
-      fixture.registry, tool: "batch_create_tasks",
-      arguments: [
-        "tasks": .array([
-          .object(["title": .string("Batch aliased"), "tags_set": .array([.string("delta")])])
-        ])
-      ])
-    let firstRow = try #require(batch.structuredContent?.objectValue?["results"]?.arrayValue?.first)
-    let rowTags = firstRow.objectValue?["tags"]?.arrayValue?.compactMap(\.stringValue) ?? []
-    #expect(rowTags == [SecurityFencing.fence("delta")])
-  }
-
-  // MARK: - E3: id is a fallback for task_id on task-scoped tools
-
-  @Test("E3: task-scoped tools accept id as a fallback for task_id")
-  func e3IdFallbackPerFamily() async throws {
-    let fixture = mcpOnDiskRegistry()
-    defer { fixture.cleanup() }
-    let taskID = try await createTask(fixture, title: "Fallback target")
+    let taskID = try await createTask(fixture, title: "Task-scoped target")
 
     // checklist family
     let checklist = try await mcpRegistryCall(
       fixture.registry, tool: "add_task_checklist_item",
-      arguments: ["id": .string(taskID), "text": .string("step one")])
+      arguments: ["task_id": .string(taskID), "text": .string("step one")])
     #expect(checklist.isError != true)
     #expect(checklistTexts(checklist) == [SecurityFencing.fence("step one")])
 
     // reminder family
     let reminder = try await mcpRegistryCall(
       fixture.registry, tool: "add_task_reminder",
-      arguments: ["id": .string(taskID), "reminder_at": .string("2027-01-15T09:00:00Z")])
+      arguments: ["task_id": .string(taskID), "reminder_at": .string("2027-01-15T09:00:00Z")])
     #expect(reminder.isError != true)
 
     // ai_notes family
     let aiNotes = try await mcpRegistryCall(
       fixture.registry, tool: "set_task_ai_notes",
-      arguments: ["id": .string(taskID), "notes": .string("assistant context")])
+      arguments: ["task_id": .string(taskID), "notes": .string("assistant context")])
     #expect(aiNotes.isError != true)
 
     // content family
     let appended = try await mcpRegistryCall(
       fixture.registry, tool: "append_to_task_body",
-      arguments: ["id": .string(taskID), "text": .string("more detail")])
+      arguments: ["task_id": .string(taskID), "text": .string("more detail")])
     #expect(appended.isError != true)
 
     // recurrence family
     let recurrence = try await mcpRegistryCall(
       fixture.registry, tool: "set_task_recurrence",
       arguments: [
-        "id": .string(taskID),
+        "task_id": .string(taskID),
         "recurrence": .object(["freq": .string("weekly"), "interval": .int(1)]),
       ])
     #expect(recurrence.isError != true)
   }
 
-  @Test("E3: the documented task_id name still resolves, and neither name is a validation error")
-  func e3TaskIdStillWorksAndMissingErrors() async throws {
+  @Test("E3: a task-scoped tool resolves task_id and rejects a call without it")
+  func e3TaskIDResolvesAndMissingErrors() async throws {
     let fixture = mcpOnDiskRegistry()
     defer { fixture.cleanup() }
     let taskID = try await createTask(fixture, title: "Canonical")
@@ -129,47 +94,35 @@ struct MCPErgonomicsBehaviorTests {
       fixture.registry, tool: "add_task_checklist_item",
       arguments: ["text": .string("orphan")])
     expectMCPStructuredError(missing, code: "validation", tool: "add_task_checklist_item")
+
+    // `id` is the task's own field name, not a task-scoped tool argument.
+    let wrongName = try await mcpRegistryCall(
+      fixture.registry, tool: "add_task_checklist_item",
+      arguments: ["id": .string(taskID), "text": .string("wrong name")])
+    expectMCPStructuredError(wrongName, code: "validation", tool: "add_task_checklist_item")
   }
 
-  // MARK: - E5: focus write tools default date to today
+  // MARK: - E5: day-planning tools default date to today
 
-  @Test("E5: focus write tools default an omitted date to today")
-  func e5FocusDefaultsToToday() async throws {
+  @Test("E5: day-planning tools default an omitted date to today")
+  func e5DayPlanningDefaultsToToday() async throws {
     let fixture = mcpOnDiskRegistry()
     defer { fixture.cleanup() }
     let today = try await fixture.registry.logicalDay(nil)
-    let first = try await createTask(fixture, title: "Focus A")
-    let second = try await createTask(fixture, title: "Focus B")
 
-    // set_current_focus without date lands on today.
-    let set = try await mcpRegistryCall(
-      fixture.registry, tool: "set_current_focus",
-      arguments: ["task_ids": .array([.string(first)])])
-    #expect(set.structuredContent?.objectValue?["date"]?.stringValue == today)
+    let proposal = try await mcpRegistryCall(
+      fixture.registry, tool: "propose_daily_schedule",
+      arguments: ["include_calendar_events": .bool(false)])
+    #expect(proposal.isError != true)
+    #expect(proposal.structuredContent?.objectValue?["date"]?.stringValue == today)
 
-    // add_to_current_focus without date targets the same (today) plan.
-    let added = try await mcpRegistryCall(
-      fixture.registry, tool: "add_to_current_focus",
-      arguments: ["task_ids": .array([.string(second)])])
-    #expect(added.structuredContent?.objectValue?["date"]?.stringValue == today)
+    let read = try await mcpRegistryCall(fixture.registry, tool: "get_daily_schedule")
+    #expect(read.structuredContent?.objectValue?["date"]?.stringValue == today)
 
-    // get_current_focus (also date-defaulted) sees both tasks on today.
-    let read = try await mcpRegistryCall(fixture.registry, tool: "get_current_focus")
-    let ids = read.structuredContent?.objectValue?["task_ids"]?.arrayValue?.compactMap(\.stringValue)
-    #expect(Set(ids ?? []) == [first, second])
-
-    // remove_from_current_focus without date removes from the today plan.
-    let removed = try await mcpRegistryCall(
-      fixture.registry, tool: "remove_from_current_focus",
-      arguments: ["task_id": .string(first)])
-    #expect(removed.structuredContent?.objectValue?["date"]?.stringValue == today)
-
-    // clear_current_focus without date clears the today plan.
-    let cleared = try await mcpRegistryCall(fixture.registry, tool: "clear_current_focus")
-    #expect(cleared.structuredContent?.objectValue?["date"]?.stringValue == today)
-    let afterClear = try await mcpRegistryCall(fixture.registry, tool: "get_current_focus")
-    let remaining = afterClear.structuredContent?.objectValue?["task_ids"]?.arrayValue ?? []
-    #expect(remaining.isEmpty)
+    let briefing = try await mcpRegistryCall(
+      fixture.registry, tool: "set_daily_briefing",
+      arguments: ["briefing": .string("Start with the draft.")])
+    #expect(briefing.structuredContent?.objectValue?["date"]?.stringValue == today)
   }
 
   // MARK: - G1: checklist at create

@@ -71,10 +71,20 @@ func mobileCalendarAgendaPanelIncludesScheduledTasks() throws {
     contentsOf: root.appending(path: "Sources/LorvexMobile/MobileCalendarDayView+Agenda.swift"),
     encoding: .utf8
   )
+  let agendaDay = try String(
+    contentsOf: root.appending(path: "Sources/LorvexMobile/MobileCalendarAgendaDay.swift"),
+    encoding: .utf8
+  )
 
-  #expect(agenda.contains("let tasks: [LorvexTask]"))
-  #expect(agenda.contains("ForEach(day.tasks)"))
-  #expect(agenda.contains("MobileCalendarAgendaTaskRow(task: task)"))
+  #expect(agendaDay.contains("let tasks: [LorvexTask]"))
+  #expect(agenda.contains("ForEach(day.entries)"))
+  #expect(agendaDay.contains("case task(LorvexTask)"))
+  #expect(agenda.contains("MobileCalendarAgendaTaskRow("))
+  // A row reads its time on the day it was grouped under, never a key formatted
+  // in another time zone.
+  #expect(agenda.contains("task: task, dayKey: day.key,"))
+  #expect(dayViewAgenda.contains("CalendarGridModel.scheduledTaskDayKey(task) == key"))
+  #expect(dayViewAgenda.contains("MobileCalendarAgendaDay(date: date, key: key,"))
   #expect(dayViewAgenda.contains("tasks: tasks"))
   #expect(dayViewAgenda.contains("store.calendarScheduledTasks"))
 }

@@ -16,16 +16,11 @@ extension MobileStore {
   }
 
   /// Applies the navigation state described by an `openList` activity.
-  /// Navigates to the Lists workspace in the More tab and pushes the specific list detail.
+  /// Navigates to the Tasks tab and pushes the list's screen.
   public func continueOpenListActivity(_ activity: NSUserActivity) {
     guard let listID = parseOpenListActivity(activity) else { return }
     openNavigationTarget(
-      MobileNavigationTarget(
-        selectedTab: .more,
-        route: nil,
-        moreDestination: .lists,
-        moreListRoute: .list(listID)
-      )
+      MobileNavigationTarget(selectedTab: .tasks, route: nil, tasksRoute: .tasksScope(.list(listID)))
     )
   }
 
@@ -35,10 +30,10 @@ extension MobileStore {
   /// The single mapping from the shared `LorvexDeepLinkRoute` to mobile
   /// navigation — used by ``navigate(to:)``, so URL (`openDeepLink`) and
   /// Handoff/Siri all land on the identical entity, not just its workspace:
-  /// lists push the specific list detail on the More-tab Lists workspace, habits
-  /// select the habit and push its detail on the Habits tab, reviews select the
-  /// More-tab Reviews workspace and switch to the requested day, and tasks push
-  /// the today-tab detail. Mirrors `AppStore.applyRouteNavigation` on macOS.
+  /// lists push the list's screen on the Tasks tab, habits select the
+  /// habit and push its detail on the Habits tab, reviews select the Review tab
+  /// and switch to the requested day, and tasks push the today-tab detail.
+  /// Mirrors `AppStore.applyRouteNavigation` on macOS.
   @discardableResult
   func applyRouteNavigation(_ route: LorvexDeepLinkRoute) -> (() async -> Void)? {
     switch route {
@@ -47,12 +42,7 @@ extension MobileStore {
       return nil
     case .list(let id):
       openNavigationTarget(
-        MobileNavigationTarget(
-          selectedTab: .more,
-          route: nil,
-          moreDestination: .lists,
-          moreListRoute: .list(id)
-        )
+        MobileNavigationTarget(selectedTab: .tasks, route: nil, tasksRoute: .tasksScope(.list(id)))
       )
       return nil
     case .habit(let id):
@@ -61,21 +51,18 @@ extension MobileStore {
       )
       return nil
     case .review(let date):
-      openNavigationTarget(
-        MobileNavigationTarget(selectedTab: .more, route: nil, moreDestination: .review)
-      )
+      openNavigationTarget(MobileNavigationTarget(selectedTab: .review, route: nil))
       return { [weak self] in await self?.selectReviewDay(date) }
     case .destination(let destination):
-      guard let (tab, moreDestination) = MobileDeepLinkRoute.tabAndDestination(
-        forDestination: destination.rawValue)
+      // Memory is a secondary workspace: open it the way the current layout
+      // reaches it rather than landing on the Tasks home that hosts it.
+      if destination == .memory {
+        openWorkspaceDestination(.memory)
+        return nil
+      }
+      guard let tab = MobileDeepLinkRoute.tabAndDestination(forDestination: destination.rawValue)
       else { return nil }
-      openNavigationTarget(
-        MobileNavigationTarget(
-          selectedTab: tab,
-          route: nil,
-          moreDestination: moreDestination
-        )
-      )
+      openNavigationTarget(MobileNavigationTarget(selectedTab: tab, route: nil))
       return nil
     }
   }

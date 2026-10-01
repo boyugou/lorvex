@@ -5,9 +5,8 @@ each Apple platform target. It covers the current working state, what is gated
 by `verify_all.sh`, and what requires active Apple Developer provisioning.
 
 Apple Swift is the intended shipping line for every Apple ecosystem target:
-macOS App Store, direct macOS builds, iOS, iPadOS, watchOS, visionOS,
-WidgetKit, App Intents, EventKit, and CloudKit/iCloud. The Tauri app is not the
-future Mac App Store or iCloud distribution path.
+macOS App Store, direct macOS builds, iOS, iPadOS, watchOS,
+WidgetKit, App Intents, EventKit, and CloudKit/iCloud.
 
 ---
 
@@ -19,10 +18,9 @@ future Mac App Store or iCloud distribution path.
 4. [macOS - Mac App Store](#4-macos---mac-app-store)
 5. [iOS/iPadOS — App Store Connect](#5-iosipados--app-store-connect)
 6. [watchOS — embedded in iOS app](#6-watchos--embedded-in-ios-app)
-7. [visionOS — App Store Connect](#7-visionos--app-store-connect)
-8. [Entitlements reference](#8-entitlements-reference)
-9. [Required Apple Developer portal provisioning](#9-required-apple-developer-portal-provisioning)
-10. [Distribution gaps and follow-up work](#10-distribution-gaps-and-follow-up-work)
+7. [Entitlements reference](#7-entitlements-reference)
+8. [Required Apple Developer portal provisioning](#8-required-apple-developer-portal-provisioning)
+9. [Distribution gaps and follow-up work](#9-distribution-gaps-and-follow-up-work)
 
 ---
 
@@ -30,12 +28,11 @@ future Mac App Store or iCloud distribution path.
 
 | Platform | App target | Extensions embedded | Build system | Archive script |
 |---|---|---|---|---|
-| macOS 15+ direct distribution | `LorvexApple` | `LorvexFocusWidget.appex` | SwiftPM → Developer ID + notarized DMG | `package_dmg.sh` |
-| macOS 15+ local/CI | `LorvexApple` | `LorvexFocusWidget.appex` | SwiftPM → ad-hoc app/ZIP | `package_local.sh` / `archive_local.sh` |
-| macOS 15+ Mac App Store | `LorvexApple` | `LorvexFocusWidget.appex` | SwiftPM → App Store signed package | `archive_mas.sh` |
-| iOS/iPadOS 18+ | `LorvexMobileApp` | `LorvexFocusWidget.appex`, `LorvexFocusFilterExtension.appex` | XcodeGen → xcodebuild | `archive_ios.sh` |
+| macOS 26+ direct distribution | `LorvexApple` | `LorvexWidgets.appex` | SwiftPM → Developer ID + notarized DMG | `package_dmg.sh` |
+| macOS 26+ local/CI | `LorvexApple` | `LorvexWidgets.appex` | SwiftPM → ad-hoc app/ZIP | `package_local.sh` / `archive_local.sh` |
+| macOS 26+ Mac App Store | `LorvexApple` | `LorvexWidgets.appex` | SwiftPM → App Store signed package | `archive_mas.sh` |
+| iOS/iPadOS 18+ | `LorvexMobileApp` | `LorvexWidgets.appex`, `LorvexFocusFilterExtension.appex` | XcodeGen → xcodebuild | `archive_ios.sh` |
 | watchOS 11+ | `LorvexWatchApp` | `LorvexWatchComplication.appex` | XcodeGen → xcodebuild | `archive_ios.sh --scheme LorvexWatchApp` |
-| visionOS 2+ | `LorvexVisionApp` | — | XcodeGen → xcodebuild | `archive_ios.sh --scheme LorvexVisionApp` |
 
 ---
 
@@ -63,9 +60,9 @@ xcrun notarytool store-credentials LorvexNotary \
 export APPLE_TEAM_ID="ABCDE12345"
 export CODE_SIGN_IDENTITY="Developer ID Application: Team Name (ABCDE12345)"
 export NOTARY_KEYCHAIN_PROFILE="LorvexNotary"
-export DEVELOPER_ID_APP_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexApple-DeveloperID.provisionprofile"
-export DEVELOPER_ID_MCP_HOST_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexMCPHost-DeveloperID.provisionprofile"
-export DEVELOPER_ID_WIDGET_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexFocusWidget-DeveloperID.provisionprofile"
+export DEVELOPER_ID_APP_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexApple.devid.provisionprofile"
+export DEVELOPER_ID_MCP_HOST_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexMCPHost.devid.provisionprofile"
+export DEVELOPER_ID_WIDGET_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexWidgets.devid.provisionprofile"
 export LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET=1
 ./script/package_dmg.sh
 ```
@@ -263,7 +260,7 @@ signing identities are — environment variables pointing at a local
 ```bash
 export MAS_APP_PROVISIONING_PROFILE="secrets/profiles/LorvexApple.provisionprofile"
 export MAS_MCP_HOST_PROVISIONING_PROFILE="secrets/profiles/LorvexMCPHost.provisionprofile"
-export MAS_WIDGET_PROVISIONING_PROFILE="secrets/profiles/LorvexFocusWidget.provisionprofile"
+export MAS_WIDGET_PROVISIONING_PROFILE="secrets/profiles/LorvexWidgets.provisionprofile"
 ```
 
 If unset, `sign_app_bundle.sh` falls back to that same `secrets/profiles/`
@@ -271,11 +268,11 @@ location by default (see `.gitignore`'s "Secrets & internal ops" block — the
 directory is never committed). An explicitly-set path that does not exist is
 treated as a misconfiguration and fails the build.
 
-**The app, MCP helper, and Focus-widget profiles are all mandatory for
+**The app, MCP helper, and widget profiles are all mandatory for
 `--package`.** A MAS package with no distribution provisioning profile is never
 accepted by App Store Connect, so `archive_mas.sh --package` hard-fails
 immediately after packaging if `Contents/embedded.provisionprofile` is missing
-from any of the top-level `.app`, the MCP helper bundle, or the Focus widget
+from any of the top-level `.app`, the MCP helper bundle, or the widget
 extension — set the corresponding `MAS_*_PROVISIONING_PROFILE` env var or place
 each profile at its `secrets/profiles/` default path first. This mandatory check is specific to `--package`;
 `sign_app_bundle.sh` itself keeps its soft-skip (silently omit embedding when
@@ -286,8 +283,8 @@ Developer ID profile gate above the generic signer.
 When present, each profile is copied to `Contents/embedded.provisionprofile`
 before its bundle is signed (embedding after signing would invalidate the
 signature) — the top-level `.app`, the MCP helper bundled app
-(`Contents/Helpers/LorvexMCPHost.app`), and the Focus widget extension
-(`Contents/PlugIns/LorvexFocusWidget.appex`) each carry their own.
+(`Contents/Helpers/LorvexMCPHost.app`), and the widget extension
+(`Contents/PlugIns/LorvexWidgets.appex`) each carry their own.
 
 `verify_mas_provisioning.py` runs after packaging and, for every embedded
 profile it finds, decodes it (`security cms -D -i`, a purely local operation —
@@ -312,7 +309,7 @@ entitlements plan, and none of them lack the app-sandbox entitlement.
 
 ### Export compliance
 
-Every shipped Info.plist (macOS, iOS/iPadOS, visionOS, watchOS, the watch
+Every shipped Info.plist (macOS, iOS/iPadOS, watchOS, the watch
 complication, the WidgetKit extension, and the MCP helper) declares
 `ITSAppUsesNonExemptEncryption=false`: Lorvex only uses SHA-256 hashing
 (idempotency keys, content checksums), which App Store Connect classifies as
@@ -406,7 +403,7 @@ watch app cannot be submitted on its own). The watch app is therefore a
 
 ### Extensions and companion apps embedded in LorvexMobileApp
 
-- `LorvexFocusWidgetExtension` (WidgetKit) — declared as a dependency with
+- `LorvexWidgets` (WidgetKit) — declared as a dependency with
   `embed: true` in `project.yml`.
 - `LorvexWatchApp` (watchOS companion) — declared with `embed: true`; the built
   watch app is copied into the IPA's `Watch/` directory.
@@ -445,22 +442,7 @@ complication `.appex` inside the watch app's `PlugIns/` directory.
 
 ---
 
-## 7. visionOS — App Store Connect
-
-The visionOS target (`LorvexVisionApp`) follows the same flow as iOS:
-
-```bash
-export APPLE_TEAM_ID="ABCDE12345"
-./script/archive_ios.sh --scheme LorvexVisionApp --export
-```
-
-`xcodebuild` destination is `generic/platform=iOS` (visionOS shares the same
-destination flag in Xcode 15+). The scheme is declared in `project.yml` with
-`platform: visionOS`.
-
----
-
-## 8. Entitlements reference
+## 7. Entitlements reference
 
 The table below shows the entitlements declared in each checked-in `.entitlements`
 file and the corresponding Apple Developer capability that must be enabled in the
@@ -471,8 +453,8 @@ Developer ID DMG derives its final app entitlements from
 `LorvexAppleCloudKitAppStore.entitlements` plus the identifiers in its explicit
 Developer ID profile; MAS uses the same production CloudKit values with Apple
 Distribution profiles; `package_local.sh` retains the caller-selectable
-development behavior (see §2–§4). `LorvexMobileApp` and
-`LorvexVisionApp` instead get their Release (App Store archive) entitlements from
+development behavior (see §2–§4). `LorvexMobileApp` instead gets its Release
+(App Store archive) entitlements from
 a **per-target** `configs: Release:` block in `Config/XcodeGen/project.yml` — each
 target names its own `CODE_SIGN_ENTITLEMENTS` override for that configuration
 only. This is deliberately not a project-wide `xcodebuild
@@ -489,13 +471,10 @@ entitlements onto all of them.
 | iOS app, Debug (local run) | `LorvexMobileApp.entitlements` | ✓ | — | — | — | — | basic; `project.yml`'s `base` setting, used for every configuration except Release |
 | iOS app + iCloud, App Store (Release archive) | `LorvexMobileAppCloudKitAppStore.entitlements` | ✓ | — | — | — | ✓ | production APS + `com.apple.developer.icloud-container-environment=['Production']`; `project.yml`'s per-target `configs: Release:` override for `LorvexMobileApp` |
 | iOS app + iCloud, manual dev template | `LorvexMobileAppCloudKit.entitlements` | ✓ | — | — | — | ✓ | development APS; swap in by hand for on-device Debug iCloud testing — not wired into `project.yml` |
-| visionOS app, Debug (local run) | `LorvexVisionApp.entitlements` | ✓ | — | — | — | — | basic; matches mobile; `project.yml`'s `base` setting, used for every configuration except Release |
-| visionOS app + iCloud, App Store (Release archive) | `LorvexVisionAppCloudKitAppStore.entitlements` | ✓ | — | — | — | ✓ | `com.apple.developer.icloud-container-environment=['Production']`; **no `aps-environment` key** — visionOS holds a synced on-disk DB like iOS but registers no CloudKit push subscription; it detects remote iCloud changes by foreground/scene-active polling instead. `project.yml`'s per-target `configs: Release:` override for `LorvexVisionApp` |
-| visionOS app + iCloud, manual dev template | `LorvexVisionAppCloudKit.entitlements` | ✓ | — | — | — | ✓ | same as the App Store variant — no `aps-environment` key in any visionOS entitlements file, dev or Release |
 | watchOS app | `LorvexWatchApp.entitlements` | ✓ | — | — | — | — | one file for every configuration including the App Store archive — watch is a read-only snapshot client (no CloudKit), so it needs no Release override |
 | Watch complication | `LorvexWatchComplication.entitlements` | ✓ | — | — | — | — | |
-| Widget extension (macOS) | `LorvexWidgetExtension.entitlements` | ✓ | ✓ | — | — | — | sandbox required for macOS extensions |
-| Focus widget (iOS) | `LorvexFocusWidgetExtension.entitlements` | ✓ | — | — | — | — | no `app-sandbox` key (invalid on iOS) |
+| Widget extension (macOS) | `LorvexWidgetsMacOS.entitlements` | ✓ | ✓ | — | — | — | sandbox required for macOS extensions |
+| Today widget (iOS) | `LorvexWidgets.entitlements` | ✓ | — | — | — | — | no `app-sandbox` key (invalid on iOS) |
 | Focus Filter extension (iOS) | `LorvexFocusFilterExtension.entitlements` | ✓ | — | — | — | — | independent App ID/profile; App Group lets the filter update shared focus state |
 | iOS CarPlay approval template | `LorvexCarPlay.entitlements` | — | — | — | — | — | CarPlay communication entitlement template; merge into the iOS app entitlements only after Apple approval |
 
@@ -522,9 +501,7 @@ file **and** enabled in the Apple Developer portal if/when the feature is added:
 - `aps-environment` (push notifications) — present only in the macOS and iOS
   CloudKit entitlement variants, under each platform's own native key:
   `com.apple.developer.aps-environment` on macOS, bare `aps-environment` on
-  iOS. Every visionOS entitlements file (dev and App Store) omits it
-  entirely: visionOS detects remote iCloud changes by foreground/scene-active
-  polling and registers no CloudKit push subscription. Use the production APS
+  iOS. Use the production APS
   variant for Developer ID DMG, MAS, and iOS App Store builds that expose Live
   iCloud Sync.
 - `com.apple.developer.healthkit` — required if HealthKit integration is added.
@@ -534,7 +511,7 @@ portal capability causes codesign validation failures at App Store review.
 
 ---
 
-## 9. Required Apple Developer portal provisioning
+## 8. Required Apple Developer portal provisioning
 
 The following must be configured in the Apple Developer portal before a
 distribution build can be submitted:
@@ -552,7 +529,6 @@ need no separate App ID):
 ```
 com.lorvex.apple                                   macOS app (BUNDLE_ID)
 com.lorvex.apple                            iOS/iPadOS app (MOBILE_BUNDLE_ID)
-com.lorvex.apple.vision                            visionOS app (VISION_BUNDLE_ID)
 com.lorvex.apple.watchkitapp                watchOS app (WATCH_BUNDLE_ID)
 com.lorvex.apple.watchkitapp.widgets   watchOS complication (WATCH_COMPLICATION_BUNDLE_ID)
 com.lorvex.apple.focuswidget               WidgetKit extension — macOS + iOS/iPadOS + watchOS embed, one shared bundle id (WIDGET_BUNDLE_ID)
@@ -563,8 +539,8 @@ com.lorvex.apple.mcp-host                          macOS MCP helper, Contents/He
 The watch identifiers are nested under the iOS host (`com.lorvex.apple`): Apple's embedded-companion rule (TN3157)
 requires an embedded watchOS app's bundle ID to be prefixed by its iOS companion's, and the complication's by the watch app's.
 
-`com.lorvex.apple.widget.focus` (`WIDGET_KIND`) and
-`com.lorvex.control.focus` (`CONTROL_WIDGET_KIND`) are WidgetKit *kind*
+`com.lorvex.apple.widget.today` (`WIDGET_KIND`) and
+`com.lorvex.control.today` (`CONTROL_WIDGET_KIND`) are WidgetKit *kind*
 identifiers used in code to select a widget configuration, not bundle IDs —
 they have no Developer Portal entry of their own.
 
@@ -589,7 +565,7 @@ reference in §8).
 
 ---
 
-## 10. Distribution gaps and follow-up work
+## 9. Distribution gaps and follow-up work
 
 The following items are known gaps between the current repository state and
 a full App Store distribution flow:
@@ -636,14 +612,22 @@ Evidence" section.
 
 ### App Store listing metadata and account-only actions
 
-Packaging produces the artifact; the App Store submission also needs listing
-copy and a set of Apple-account/human actions this repo cannot perform. Those
-live outside the packaging scripts:
+Packaging produces the artifact; an App Store submission also needs listing
+copy and several actions that only the Apple Developer account holder can take,
+in the developer portal, the CloudKit Console, and App Store Connect:
 
-- `APP_STORE_METADATA.md` (this directory) — draft App Store listing copy
-  (name, subtitle, keywords, description, what's-new, URLs, App Review notes).
-- `../../docs/finalization/RELEASE_ACCOUNT_CHECKLIST.md` — the consolidated
-  owner runbook for account-only steps (identifiers/certs/profiles, CloudKit
-  production promotion, App Privacy answers, age rating, EU DSA trader status,
-  the F15 Support-URL policy decision, screenshots, signed-RC validation, and
-  TestFlight). This file is dev-process state and is deleted at the public cut.
+- Register every App ID, capability, App Group, and iCloud container in §8, and
+  create the distribution certificates and provisioning profiles the archive
+  scripts read.
+- Promote the CloudKit development schema to Production
+  (`../../../cloudkit/README.md`) before a build with Live iCloud Sync ships.
+- Create the app record and paste the listing copy from
+  `APP_STORE_METADATA.md` (this directory), with the Privacy Policy URL
+  `https://lorvex.app/privacy/` and the Support URL
+  `https://lorvex.app/support/`.
+- Answer the App Privacy questionnaire from `APP_STORE_PRIVACY_ANSWERS.md`,
+  checked against Xcode's privacy report for the exact signed archive.
+- Complete the age-rating questionnaire and declare the EU Digital Services Act
+  trader status.
+- Upload the screenshots listed in `APP_STORE_SCREENSHOTS.md`.
+- Upload the signed build, run a TestFlight round, and submit it for review.

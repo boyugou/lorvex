@@ -9,9 +9,15 @@ extension MobileCalendarDayColumn {
     allDays: [CalendarGridDay],
     columnWidth: CGFloat
   ) -> some View {
-    let laneWidth = columnWidth / CGFloat(block.laneCount)
+    let laneBand = max(
+      columnWidth - LorvexDesign.CalendarMetrics.laneTrailingInset(columnWidth: columnWidth), 1)
+    let laneWidth = laneBand / CGFloat(block.laneCount)
     let y = CGFloat(block.startMin) / 60 * hourHeight
-    let height = max(CGFloat(block.endMin - block.startMin) / 60 * hourHeight, 18)
+    // The drawn end carries the model's minimum height; a floor here would
+    // only run a short block under the one that starts right after it.
+    let height = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
+    let isTight = height < LorvexDesign.CalendarMetrics.tightBlockHeight
+    let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
     let color = eventColor(block.event)
     let activeDrag = dragState?.eventID == block.event.id ? dragState : nil
     let active = activeDrag != nil
@@ -22,20 +28,34 @@ extension MobileCalendarDayColumn {
     let isReschedulable =
       onReschedule != nil && block.event.editable && !block.event.allDay
       && !block.event.supportsScopedMutation && !isMultiDay
-    return VStack(alignment: .leading, spacing: 1) {
-      Text(block.event.title)
-        .font(LorvexDesign.Typography.tertiaryText.weight(.medium)).lineLimit(2)
-      if height > 34, let time = block.event.startTime {
-        Text(time).font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
-      }
-    }
-    .padding(.horizontal, 5).padding(.vertical, 3)
+    let title = Text(block.event.title)
+      .font(LorvexDesign.Typography.tertiaryText.weight(.medium)).lineLimit(2)
+    let start = block.event.startTime.map(lorvexClockTimeLabel)
+    // A multi-day event's piece of one day is not its time, so it keeps its
+    // start alone.
+    let range =
+      isMultiDay
+      ? nil : lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin)
+    // The text clears the 3pt color rail on the leading edge. A compact
+    // block takes the trailing side down to 1pt instead, so its title keeps
+    // every point of the narrow lane.
+    let leadingPadding: CGFloat = 5
+    let trailingPadding: CGFloat = isCompact ? 1 : 5
+    let verticalPadding: CGFloat = isTight ? 0 : 3
+    return blockContent(
+      isCompact: isCompact, eventTitle: block.event.title, title: title, start: start, range: range
+    )
+    .padding(.leading, leadingPadding).padding(.trailing, trailingPadding)
+    .padding(.vertical, verticalPadding)
     .frame(width: max(laneWidth - 2, 10), height: height, alignment: .topLeading)
-    .background(color.opacity(0.22), in: RoundedRectangle(cornerRadius: 6))
+    .clipped()
+    .lorvexOpaqueTintBackground(
+      color.opacity(0.22), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
     .overlay(alignment: .leading) {
-      Rectangle().fill(color).frame(width: 3).clipShape(RoundedRectangle(cornerRadius: 1.5))
+      Rectangle().fill(color).frame(width: 3).clipShape(
+        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
     }
-    .overlay(RoundedRectangle(cornerRadius: 6).stroke(color.opacity(0.35), lineWidth: 0.5))
+    .overlay(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s).stroke(color.opacity(0.35), lineWidth: 0.5))
     .contentShape(Rectangle())
     .zIndex(1)
     .offset(x: CGFloat(block.lane) * laneWidth + dragOffsetX, y: y + dragOffsetY)
@@ -74,9 +94,48 @@ extension MobileCalendarDayColumn {
     .accessibilityLabel(blockAccessibilityLabel(block))
     // Haptic pickup when the long-press latches this block for reschedule, via
     // SwiftUI's native feedback (the same idiom the mobile task/habit rows use)
-    // rather than a hand-rolled generator; no-ops on visionOS (see
-    // MobileSensoryFeedback.swift).
+    // rather than a hand-rolled generator.
     .lorvexSensoryFeedback(.impact(weight: .medium), trigger: active) { _, isActive in isActive }
+  }
+
+
+  /// A compact block's title alone, or the title with its time.
+  @ViewBuilder
+  private func blockContent(
+    isCompact: Bool, eventTitle: String, title: some View, start: String?, range: String?
+  ) -> some View {
+    if isCompact {
+      MobileCalendarCompactBlockTitle(eventTitle)
+    } else {
+      fullContent(title: title, start: start, range: range)
+    }
+  }
+
+  /// A block's title with its time: under the title where both fit (the
+  /// range, or the start when the range is too wide); in a block too short for
+  /// that, after the title on one line when both fit whole, and otherwise the
+  /// title alone rather than half a line of time.
+  @ViewBuilder
+  private func fullContent(title: some View, start: String?, range: String?) -> some View {
+    ViewThatFits(in: .vertical) {
+      if let start {
+        VStack(alignment: .leading, spacing: 1) {
+          title
+          ViewThatFits(in: .horizontal) {
+            if let range { MobileCalendarBlockTime(range) }
+            MobileCalendarBlockTime(start)
+          }
+        }
+        ViewThatFits(in: .horizontal) {
+          HStack(alignment: .firstTextBaseline, spacing: 4) {
+            title.lineLimit(1)
+            MobileCalendarBlockTime(range ?? start)
+          }
+          title
+        }
+      }
+      title
+    }
   }
 
   /// Long-press-then-drag gesture: vertical translation shifts start time;
@@ -133,13 +192,13 @@ extension MobileCalendarDayColumn {
         String(
           format: String(
             localized: "calendar.block.from.a11y", defaultValue: "from %@", table: "Localizable",
-            bundle: MobileL10n.bundle), start))
+            bundle: MobileL10n.bundle), lorvexClockTimeLabel(start)))
       if let end = block.event.endTime {
         parts.append(
           String(
             format: String(
               localized: "calendar.block.to.a11y", defaultValue: "to %@", table: "Localizable",
-              bundle: MobileL10n.bundle), end))
+              bundle: MobileL10n.bundle), lorvexClockTimeLabel(end)))
       }
     }
     if let location = block.event.location, !location.isEmpty {

@@ -12,21 +12,19 @@ extension ToolRegistry {
     }
 
     let snapshot = try await coreBridge.loadOverview()
-    var structuredObject: [String: Value] = [
-      "focus_title": .string("Today"),
+    // Rule 6 fencing (task titles/notes, the briefing) is applied centrally by
+    // the dispatch layer for every tool result.
+    let structured = Value.object([
+      "date": .string(snapshot.date),
       "local_change_seq": .int(snapshot.localChangeSequence),
+      "briefing": snapshot.briefing.map(Value.string) ?? .null,
+      "today": .array(snapshot.today),
       "tasks": .array(snapshot.tasks),
-    ]
-    if let currentFocus = snapshot.currentFocus {
-      structuredObject["current_focus"] = currentFocus
-    }
-    // Rule 6 fencing (task titles/notes inside `tasks`) is applied centrally
-    // by the dispatch layer for every tool result.
-    let structured = Value.object(structuredObject)
+    ])
     return CallTool.Result(
       content: [
         .text(
-          text: "Lorvex has \(snapshot.tasks.count) open task(s).", annotations: nil, _meta: nil)
+          text: "Today holds \(snapshot.today.count) task(s).", annotations: nil, _meta: nil)
       ],
       structuredContent: Optional.some(structured),
       isError: false

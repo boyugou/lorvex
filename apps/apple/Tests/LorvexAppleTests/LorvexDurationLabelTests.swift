@@ -1,4 +1,5 @@
 import Foundation
+import LorvexCore
 import Testing
 
 @testable import LorvexApple
@@ -20,5 +21,21 @@ struct LorvexDurationLabelTests {
 
     #expect(timesPerWeek == weekly)
     #expect(timesPerWeek != daily)
+  }
+
+  /// The label spells the unit out rather than abbreviating it.
+  @Test
+  func spellsTheUnitOut() {
+    #expect(lorvexHabitStreakLabel(12, frequencyType: "daily").contains("12"))
+    #expect(lorvexHabitStreakLabel(12, frequencyType: "daily") != "12d")
+  }
+
+  /// One period reads in the singular, any other count in the plural.
+  @Test
+  func pluralizesByCount() {
+    #expect(lorvexHabitStreakLabel(1, frequencyType: "daily") == "1 day")
+    #expect(lorvexHabitStreakLabel(12, frequencyType: "daily") == "12 days")
+    #expect(lorvexHabitStreakLabel(3, frequencyType: "weekly") == "3 weeks")
+    #expect(lorvexHabitStreakLabel(1, frequencyType: "monthly") == "1 month")
   }
 }

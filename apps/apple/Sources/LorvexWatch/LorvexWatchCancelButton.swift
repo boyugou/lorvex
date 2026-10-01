@@ -1,70 +1,74 @@
+import LorvexCore
 import SwiftUI
 #if os(watchOS)
   import WatchKit
 #endif
 
-/// A button that cancels the primary focus task, with a confirmation dialog.
-public struct LorvexWatchCancelButton: View {
-  @State private var store: LorvexWatchStore
+/// Cancels a task occurrence after a confirmation. A repeating task continues
+/// with its next occurrence.
+struct LorvexWatchCancelButton: View {
+  @Bindable var store: LorvexWatchStore
+  let task: LorvexTask
+  /// Runs after the action, to close the sheet the button sits in.
+  let onDone: () -> Void
   @State private var showingConfirmation = false
 
-  public init(store: LorvexWatchStore) {
-    self.store = store
-  }
-
-  public var body: some View {
+  var body: some View {
     Button(role: .destructive) {
       showingConfirmation = true
     } label: {
-      Label(String(
-        localized: "watch.action.cancel", defaultValue: "Cancel",
-        table: "Localizable", bundle: WatchL10n.bundle), systemImage: "xmark.circle")
-        .font(.headline)
-        .foregroundStyle(store.canCancelPrimaryTask ? Color.red : Color.secondary)
+      Label(
+        String(localized: "watch.action.cancel", defaultValue: "Cancel Task", table: "Localizable", bundle: WatchL10n.bundle),
+        systemImage: "xmark.circle"
+      )
+      .font(.headline)
+      .foregroundStyle(store.canMutateTasks ? LorvexDesign.Palette.destructive : Color.secondary)
     }
-    .disabled(!store.canCancelPrimaryTask)
+    .disabled(!store.canMutateTasks)
     .buttonStyle(.bordered)
-    .tint(.red)
-    .accessibilityLabel(String(
-      localized: "watch.action.cancel.a11y", defaultValue: "Cancel occurrence",
-      table: "Localizable", bundle: WatchL10n.bundle))
+    .tint(LorvexDesign.Palette.destructive)
+    .accessibilityLabel(
+      String(
+        localized: "watch.action.cancel.a11y", defaultValue: "Cancel occurrence",
+        table: "Localizable", bundle: WatchL10n.bundle))
     .accessibilityHint(
-      store.completionUnavailableReason
-        ?? store.primaryTask.map {
-          String(format: String(
-            localized: "watch.action.cancel.hint", defaultValue: "Cancels this occurrence of %@",
-            table: "Localizable", bundle: WatchL10n.bundle), $0.title)
-        }
-        ?? String(
-          localized: "watch.action.cancel.none", defaultValue: "No task to cancel",
-          table: "Localizable", bundle: WatchL10n.bundle)
-    )
+      String(
+        format: String(
+          localized: "watch.action.cancel.hint", defaultValue: "Cancels this occurrence of %@",
+          table: "Localizable", bundle: WatchL10n.bundle), task.title))
+    .accessibilityIdentifier("watch.task.actions.cancel")
     .confirmationDialog(
-      String(format: String(
-        localized: "watch.action.cancel.confirm", defaultValue: "Cancel this occurrence of %@?",
-        table: "Localizable", bundle: WatchL10n.bundle), store.primaryTask?.title ?? String(
-        localized: "watch.task.fallback", defaultValue: "task",
-        table: "Localizable", bundle: WatchL10n.bundle)),
+      String(
+        format: String(
+          localized: "watch.action.cancel.confirm", defaultValue: "Cancel this occurrence of %@?",
+          table: "Localizable", bundle: WatchL10n.bundle), task.title),
       isPresented: $showingConfirmation,
       titleVisibility: .visible
     ) {
-      Button(String(
-        localized: "watch.action.cancel_task", defaultValue: "Cancel Occurrence",
-        table: "Localizable", bundle: WatchL10n.bundle), role: .destructive) {
+      Button(
+        String(
+          localized: "watch.action.cancel_task", defaultValue: "Cancel Occurrence",
+          table: "Localizable", bundle: WatchL10n.bundle), role: .destructive
+      ) {
         Task {
-          await store.cancelPrimaryTask()
+          await store.cancelTask(id: task.id)
           #if os(watchOS)
-          WKInterfaceDevice.current().play(store.error == nil ? .success : .failure)
+            WKInterfaceDevice.current().play(store.error == nil ? .success : .failure)
           #endif
+          onDone()
         }
       }
-      Button(String(
-        localized: "watch.action.keep_task", defaultValue: "Keep Task",
-        table: "Localizable", bundle: WatchL10n.bundle), role: .cancel) {}
+      Button(
+        String(
+          localized: "watch.action.keep_task", defaultValue: "Keep Task",
+          table: "Localizable", bundle: WatchL10n.bundle), role: .cancel
+      ) {}
     } message: {
-      Text(String(
-        localized: "watch.action.cancel.message", defaultValue: "For repeating tasks, only this occurrence is cancelled and future occurrences continue.",
-        table: "Localizable", bundle: WatchL10n.bundle))
+      Text(
+        String(
+          localized: "watch.action.cancel.message",
+          defaultValue: "For repeating tasks, only this occurrence is cancelled and future occurrences continue.",
+          table: "Localizable", bundle: WatchL10n.bundle))
     }
   }
 }

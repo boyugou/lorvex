@@ -18,6 +18,10 @@ public enum LorvexWatchConnectivityKey {
   public static let commandAckV1 = "lorvex.watchCommandAck.v1"
   /// Strict V1 ``LorvexWatchReplicaEnvelope`` Data sent phone→Watch.
   public static let replicaEnvelopeV1 = "lorvex.watchReplicaEnvelope.v1"
+  /// Watch→phone message (`true`) asking the phone to rebuild and resend its
+  /// replica. The reply carries the phone's current ``replicaEnvelopeV1`` Data,
+  /// or no entry when the phone has none to send.
+  public static let replicaRequestV1 = "lorvex.watchReplicaRequest.v1"
 }
 
 // MARK: - Errors
@@ -44,7 +48,10 @@ public enum LorvexWatchMutation: Codable, Sendable, Equatable {
   case completeTask(id: LorvexTask.ID)
   case cancelTask(id: LorvexTask.ID)
   case deferTaskToTomorrow(id: LorvexTask.ID, plannedDate: String)
-  case removeFromFocus(id: LorvexTask.ID, date: String)
+  /// Mark the task started (`in_progress`).
+  case startTask(id: LorvexTask.ID)
+  /// Take the task out of the started state, back to open.
+  case pauseTask(id: LorvexTask.ID)
   case captureTask(title: String)
   case completeHabit(id: LorvexHabit.ID, date: String)
 }

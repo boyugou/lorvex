@@ -1,14 +1,6 @@
 import GRDB
 
 extension PendingInboxDrain {
-  /// Number of exhausted inbound envelope identities still awaiting a valid
-  /// same-slot replacement or an authoritative snapshot. These rows are
-  /// durable unmaterialized inbound debt even after the retrying inbox row has
-  /// been removed.
-  public static func quarantinedRecordCount(_ db: Database) throws -> Int {
-    try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_quarantine_blocklist") ?? 0
-  }
-
   /// Whether `(entity_type, entity_id, version)` is on the poison-envelope
   /// blocklist.
   static func isQuarantined(

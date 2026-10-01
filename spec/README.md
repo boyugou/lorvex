@@ -32,8 +32,7 @@ These are different contracts and must not be conflated:
   moving data across implementations reconciles semantics, it does not replay a
   change log or reproduce byte-identical rows.
 
-Apple Swift is the canonical product surface for both. The Tauri implementation
-is directionally aligned to these concepts, not byte-locked to them.
+Apple Swift is the canonical product surface.
 
 ## Current contract mechanism
 
@@ -42,8 +41,6 @@ cross-implementation contract is maintained two ways:
 
 - **Schema** — `schema/schema.sql` is the Apple app's schema authority, kept
   byte-identical to the Apple embed by `apps/apple/script/verify_schema_embed.sh`.
-  Tauri is only directionally aligned to the concepts here, not byte-locked to the
-  schema; cross-platform data transfer is AI-reconciled best-effort.
 - **Behavior** — shared specs in this directory define cross-implementation
   contracts; Apple locks canonical product behavior in its test suites, and
   companion implementations should converge to those contracts.
@@ -53,5 +50,6 @@ sync checksums depend on, so Apple's producer can't drift across releases. Add a
 `fixtures/` entry and a loader when a specific behavior contract needs a concrete
 vector to assert against.
 
-Historical parity plans remain under `docs/superpowers/specs/`; treat them as
-context, not as the current authority model.
+The pure-Swift port's decision record, `docs/decisions/pure-swift-core-port.md`,
+explains how these fixtures came to exist; treat it as context, not as the
+current authority model.

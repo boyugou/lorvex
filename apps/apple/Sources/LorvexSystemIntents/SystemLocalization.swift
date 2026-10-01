@@ -20,8 +20,4 @@ public enum SystemL10n {
       return Bundle(for: BundleAnchor.self)
     #endif
   }()
-
-  public static var catalogURL: URL? {
-    bundle.url(forResource: "Localizable", withExtension: "xcstrings")
-  }
 }

@@ -1,8 +1,4 @@
-// UIFeedbackGenerator is iOS/iPadOS only; visionOS imports UIKit but does NOT
-// vend haptic generators (Vision Pro has no Taptic Engine). Gate the entire
-// provider on `!os(visionOS)` so the vision build skips it; visionOS surfaces
-// fall back to the no-op feedback provider in LorvexCore.
-#if canImport(UIKit) && !os(visionOS)
+#if canImport(UIKit)
 import UIKit
 import LorvexCore
 

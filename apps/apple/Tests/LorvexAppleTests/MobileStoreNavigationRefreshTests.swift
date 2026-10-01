@@ -75,13 +75,12 @@ func mobileStoreRefreshLoadsCoreSnapshots() async throws {
 
   await store.refresh()
 
-  #expect(store.snapshot.today.focusTitle == "Today")
   #expect(!store.snapshot.today.tasks.isEmpty)
   #expect(store.snapshot.weeklyReview != nil)
   #expect(store.lists?.lists.map(\.name).contains("Apple Native") == true)
   #expect(store.habits?.habits.map(\.name).contains("Daily Review") == true)
   #expect(store.calendarTimeline?.events.map(\.title).contains("Window review") == true)
-  #expect(store.selectedTaskID == store.snapshot.nextTask?.id)
+  #expect(store.selectedTaskID == store.snapshot.today.tasks.first?.id)
   #expect(store.errorMessage == nil)
   #expect(!store.isLoading)
 }
@@ -89,11 +88,11 @@ func mobileStoreRefreshLoadsCoreSnapshots() async throws {
 @MainActor
 @Test
 func mobileStoreRefreshFailureClearsStaleDashboardState() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let staleTaskID = try #require(store.snapshot.nextTask?.id)
+  let staleTaskID = try #require(store.snapshot.today.tasks.first?.id)
   store.openNavigationTarget(MobileNavigationTarget(selectedTab: .today, route: .task(staleTaskID)))
 
   #expect(store.selectedTaskID == staleTaskID)
@@ -106,10 +105,8 @@ func mobileStoreRefreshFailureClearsStaleDashboardState() async throws {
   await store.refresh()
 
   #expect(store.snapshot.today == .empty)
-  #expect(store.snapshot.currentFocus == nil)
   #expect(store.snapshot.weeklyReview == nil)
   #expect(store.lists == nil)
-  #expect(store.selectedListDetail == nil)
   #expect(store.habits == nil)
   #expect(store.calendarTimeline == nil)
   #expect(store.selectedTaskID == nil)
@@ -117,10 +114,49 @@ func mobileStoreRefreshFailureClearsStaleDashboardState() async throws {
   #expect(!store.isLoading)
 }
 
+/// A refresh runs on its own, so a failure that persists raises the alert once
+/// rather than on every refresh; a success clears the latch, and the same
+/// failure after it is new again.
+@MainActor
+@Test
+func mobileStoreRepeatedRefreshFailureAlertsOnce() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+
+  core.loadListsError = .unsupportedOperation("Mobile lists unavailable.")
+  await store.refresh()
+  #expect(store.errorMessage == "Mobile lists unavailable.")
+
+  store.errorMessage = nil
+  await store.refresh()
+  #expect(store.errorMessage == nil)
+
+  core.loadListsError = nil
+  await store.refresh()
+  #expect(store.errorMessage == nil)
+
+  core.loadListsError = .unsupportedOperation("Mobile lists unavailable.")
+  await store.refresh()
+  #expect(store.errorMessage == "Mobile lists unavailable.")
+}
+
+/// A successful refresh dismisses only its own failure, never an action's
+/// error the user has not acknowledged yet.
+@MainActor
+@Test
+func mobileStoreSuccessfulRefreshKeepsAnActionError() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+
+  store.errorMessage = "Couldn't save the task."
+  await store.refresh()
+  #expect(store.errorMessage == "Couldn't save the task.")
+}
+
 @MainActor
 @Test
 func mobileStorePlanningSnapshotFailureIsNotSilentlyIgnored() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
@@ -143,7 +179,7 @@ func mobileStorePlanningSnapshotFailureIsNotSilentlyIgnored() async throws {
 @MainActor
 @Test
 func mobileStoreWeeklyReviewFailureIsNotSilentlyIgnored() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
@@ -186,7 +222,7 @@ func mobileStoreRoutesDeepLinksIntoTabAndPathState() async throws {
 
 @MainActor
 @Test
-func mobileStoreRoutesDestinationHandoffToTheExactMoreWorkspace() async throws {
+func mobileStoreRoutesDestinationHandoffToTheTasksTab() async throws {
   let store = MobileStore(
     core: try await makeSeededInMemoryCore(),
     selectedTab: .today,
@@ -195,14 +231,15 @@ func mobileStoreRoutesDestinationHandoffToTheExactMoreWorkspace() async throws {
 
   store.continueOpenDestinationActivity(makeOpenDestinationActivity(selection: .memory))
 
-  #expect(store.selectedTab == .more)
-  #expect(store.moreNavigationPath == [.memory])
-  #expect(store.iPadDestination == .memory)
+  // Memory is a secondary workspace hosted by the Tasks tab: opening it selects
+  // that tab and pushes the workspace onto its stack.
+  #expect(store.selectedTab == .tasks)
+  #expect(store.tasksRoutePath == [.workspace(.memory)])
 }
 
 @MainActor
 @Test
-func mobileStoreRoutesRepeatedDestinationHandoffsWithoutLosingTheirMoreWorkspace() async throws {
+func mobileStoreRoutesRepeatedDestinationHandoffsToTheirOwnTabs() async throws {
   let store = MobileStore(
     core: try await makeSeededInMemoryCore(),
     selectedTab: .today,
@@ -211,15 +248,11 @@ func mobileStoreRoutesRepeatedDestinationHandoffsWithoutLosingTheirMoreWorkspace
 
   store.continueOpenDestinationActivity(makeOpenDestinationActivity(selection: .reviews))
 
-  #expect(store.selectedTab == .more)
-  #expect(store.moreNavigationPath == [.review])
-  #expect(store.iPadDestination == .review)
+  #expect(store.selectedTab == .review)
 
   store.continueOpenDestinationActivity(makeOpenDestinationActivity(selection: .lists))
 
-  #expect(store.selectedTab == .more)
-  #expect(store.moreNavigationPath == [.lists])
-  #expect(store.iPadDestination == .lists)
+  #expect(store.selectedTab == .tasks)
 }
 
 // MARK: - Deep link routing to a specific habit / list / review entity
@@ -258,9 +291,8 @@ func mobileStoreDeepLinkOpensSpecificListEntity() async throws {
 
   store.openDeepLink(URL(string: "lorvex://list/\(LorvexPreviewSeedID.appleNativeList)")!)
 
-  #expect(store.selectedTab == .more)
-  #expect(store.moreNavigationPath == [.lists])
-  #expect(store.pendingListRoute == .list(LorvexPreviewSeedID.appleNativeList))
+  #expect(store.selectedTab == .tasks)
+  #expect(store.tasksRoutePath == [.tasksScope(.list(LorvexPreviewSeedID.appleNativeList))])
 }
 
 @MainActor
@@ -274,8 +306,7 @@ func mobileStoreDeepLinkOpensSpecificReviewDay() async throws {
 
   store.openDeepLink(URL(string: "lorvex://review/2026-05-20")!)
 
-  #expect(store.selectedTab == .more)
-  #expect(store.moreNavigationPath == [.review])
+  #expect(store.selectedTab == .review)
   // The tab switch is synchronous; the day switch awaits a daily-review read
   // on a detached Task, so poll instead of assuming it lands within one tick.
   for _ in 0..<50 where store.selectedReviewDate != "2026-05-20" {
@@ -385,16 +416,17 @@ func mobileStoreOpensTaskRouteOnTodayStack() async throws {
 
 @MainActor
 @Test
-func mobileStoreOpensTaskRouteOnMoreStackWithoutTabTeleport() async throws {
+func mobileStoreOpensTaskRouteOnReviewStack() async throws {
+  // The week review's overdue and pushed rows open their task in place.
   let store = MobileStore(
     core: try await makeSeededInMemoryCore(),
-    selectedTab: .more,
+    selectedTab: .review,
     todayString: { "2026-05-23" }
   )
 
   store.openTaskRouteOnCurrentStack("child")
 
-  #expect(store.selectedTab == .more)
-  #expect(store.pendingListRoute == .task("child"))
+  #expect(store.selectedTab == .review)
+  #expect(store.reviewRoutePath == [.task("child")])
   #expect(store.selectedTaskID == "child")
 }

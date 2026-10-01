@@ -71,7 +71,7 @@ final class LorvexStoreOnDiskTests: XCTestCase {
         + "index (the tasks_fts_trigram_* triggers keep it fresh)")
   }
 
-  // MARK: - schema_migrations bookkeeping parity (with the Tauri runner)
+  // MARK: - schema_migrations bookkeeping
 
   func testFreshOnDiskStoreStampsSchemaMigrationsRow() throws {
     let dir = Self.makeTempDir("lorvex-stamp")
@@ -162,8 +162,8 @@ final class LorvexStoreOnDiskTests: XCTestCase {
 
     // Simulate a pre-bookkeeping database: full schema applied, but no
     // schema_migrations row was ever stamped.
-    // schema.sql creates the data tables but not schema_migrations (the Tauri
-    // runner / our open path own that), so a raw apply leaves no bookkeeping.
+    // schema.sql creates the data tables but not schema_migrations (the open
+    // path owns that), so a raw apply leaves no bookkeeping.
     let queue = try DatabaseQueue(path: dbURL.path)
     try queue.writeWithoutTransaction { db in
       try db.execute(sql: sql)

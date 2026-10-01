@@ -36,7 +36,10 @@ struct LorvexAIMemoryEntityQuery: EntityQuery, EntityStringQuery {
     let query = string.trimmingCharacters(in: .whitespacesAndNewlines)
     let entities = try await suggestedEntities(core: core)
     guard !query.isEmpty else { return entities }
-    return entities.filter { $0.key.localizedCaseInsensitiveContains(query) }
+    return entities.filter {
+      $0.key.localizedCaseInsensitiveContains(query)
+        || MemoryEntry.displayTitle(forKey: $0.key).localizedCaseInsensitiveContains(query)
+    }
   }
 
   private static func aiEntries(core: any LorvexCoreServicing) async throws -> [MemoryEntry] {

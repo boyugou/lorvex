@@ -12,7 +12,7 @@ import Testing
 struct AppStoreDatabaseChangeSignalTests {
   @Test("only a successful canonical inbound report broadcasts and reloads its domain")
   func inboundApplyBroadcastIsMutationGated() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
     let store = AppStore(core: core)
     let deliveries = Mutex(0)
     let token = NotificationCenter.default.addObserver(
@@ -28,7 +28,6 @@ struct AppStoreDatabaseChangeSignalTests {
     // page, but is still a canonical inbound mutation that must reload/broadcast.
     let applied = CloudSyncCycleReport(
       pushedRecordCount: 1, failedPushCount: 0, fetchedRecordCount: 0,
-      moreInboundComing: false,
       inbound: InboundApplyReport(applied: 1, appliedEntityTypes: [.habit]))
     await store.reconcileSurfacesAfterCompletedCloudSyncCycle(applied)
 
@@ -42,11 +41,11 @@ struct AppStoreDatabaseChangeSignalTests {
     // create another notification/sync loop.
     let skipped = CloudSyncCycleReport(
       pushedRecordCount: 0, failedPushCount: 0, fetchedRecordCount: 1,
-      moreInboundComing: false, inbound: InboundApplyReport(skipped: 1))
+      inbound: InboundApplyReport(skipped: 1))
     await store.reconcileSurfacesAfterCompletedCloudSyncCycle(skipped)
     let outbound = CloudSyncCycleReport(
       pushedRecordCount: 1, failedPushCount: 0, fetchedRecordCount: 0,
-      moreInboundComing: false, inbound: InboundApplyReport())
+      inbound: InboundApplyReport())
     await store.reconcileSurfacesAfterCompletedCloudSyncCycle(outbound)
 
     #expect(deliveries.withLock { $0 } == 1)

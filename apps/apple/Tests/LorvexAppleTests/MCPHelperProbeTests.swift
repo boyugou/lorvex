@@ -39,6 +39,24 @@ func mcpHelperProbeReportsRuntimeFailureWhenSelfCheckFails() async throws {
   #expect(await MCPHelperProbe.probe(bundleURL: bundle) == .runtimeFailed)
 }
 
+/// A sandboxed app's child inherits its sandbox, which the helper's own
+/// sandbox entitlements cannot run under, so a sandboxed app skips the launch
+/// and judges the helper by presence and the executable bit.
+@Test
+func mcpHelperProbeSkipsTheSelfCheckInsideTheSandbox() async throws {
+  let bundle = try makeSyntheticBundle()
+  defer { try? FileManager.default.removeItem(at: bundle) }
+
+  let helper = MCPHelperProbe.helperURL(bundleURL: bundle)
+  try Data("#!/bin/sh\nexit 42\n".utf8).write(to: helper)
+  try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: helper.path)
+
+  let sandboxed = [MCPHelperProbe.sandboxContainerKey: "com.lorvex.apple"]
+  #expect(
+    await MCPHelperProbe.probe(bundleURL: bundle, inheritedEnvironment: sandboxed) == .ready)
+  #expect(await MCPHelperProbe.probe(bundleURL: bundle, inheritedEnvironment: [:]) == .runtimeFailed)
+}
+
 @Test
 func mcpHelperProbeReportsMissingWhenHelperAbsent() async throws {
   let bundle = try makeSyntheticBundle()

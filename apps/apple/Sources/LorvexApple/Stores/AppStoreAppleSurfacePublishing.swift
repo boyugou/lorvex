@@ -245,34 +245,12 @@ extension AppStore {
     lastPublishedWidgetSnapshot = try await widgetSnapshotPublisher.publish(source: source)
   }
 
-  func publishAppleSyncSurfaces() async {
-    // Widget publication is a derived, best-effort surface. A missing/corrupt
-    // App-Group sidecar or a transient file-lock failure must not prevent the
-    // independent CloudKit owner from draining the canonical SQLite outbox.
-    // Each subsystem records/reconciles its own state; neither is a commit
-    // prerequisite for the other.
-    try? await publishWidgetSnapshot()
-    // A refresh follows every local mutation, so this is the debounced
-    // post-write sync trigger: drain the outbox and pull remote changes. Errors
-    // are recorded in the cycle's status fields, not propagated — sync is
-    // invisible and best-effort.
-    await runCloudSyncCycle()
-  }
-
-  /// Run local retention under the App's retained CloudSync operation gate,
-  /// best-effort. A no-op for a non-envelope backend (previews) and swallowed
-  /// on failure — retention GC must never surface an error or block the refresh.
-  /// A coordinator-less test/preview shell keeps the direct off-actor fallback.
+  /// Run local retention off the main actor, best-effort. A no-op for a
+  /// non-envelope backend (previews) and swallowed on failure — retention GC
+  /// must never surface an error or block the refresh. Retention commits in
+  /// its own transactions, which SQLite serializes with sync applies.
   func runLocalRetentionMaintenance() async {
     guard let sync = core as? any EnvelopeSyncServicing else { return }
-    if let coordinator = cloudDataMaintenanceCoordinator ?? cloudSyncCoordinator {
-      try? await coordinator.runLocalRetentionMaintenance(
-        sync: sync,
-        activeOutboxCapPolicy: { @MainActor [weak self] in
-          self?.shouldIncludeActiveOutboxCap ?? false
-        })
-      return
-    }
     let includeActiveOutboxCap = shouldIncludeActiveOutboxCap
     try? await Task.detached(priority: .utility) {
       try sync.runLocalRetentionMaintenance(

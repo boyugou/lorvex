@@ -33,11 +33,22 @@ extension AppStore {
     }
   }
 
+  /// Editing binding for one checklist item's inline field.
+  ///
+  /// The setter folds any newline into a space: the field wraps long text over
+  /// several lines, and on a wrapping field Return types a line break rather
+  /// than submitting, which would otherwise split one item's text across lines
+  /// with no way to see the break. An item is a single line of text.
   func checklistDraftBinding(for item: TaskChecklistItem) -> Binding<String> {
     Binding(
       get: { self.taskDetailChecklistDrafts[item.id] ?? item.text },
-      set: { self.taskDetailChecklistDrafts[item.id] = $0 }
+      set: { self.taskDetailChecklistDrafts[item.id] = Self.singleLine($0) }
     )
+  }
+
+  private static func singleLine(_ text: String) -> String {
+    guard text.contains(where: \.isNewline) else { return text }
+    return text.split(whereSeparator: \.isNewline).joined(separator: " ")
   }
 
   func updateChecklistItem(_ item: TaskChecklistItem) async {

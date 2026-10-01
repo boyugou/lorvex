@@ -187,6 +187,18 @@ func weekdayInitialsRotateWithFirstWeekday() {
 }
 
 @Test
+func weekdayInitialsFollowTheLocaleLanguage() {
+  var sundayFirst = calendar()
+  sundayFirst.firstWeekday = 1
+  let chinese = HabitHeatmapModel.weekdayInitials(
+    calendar: sundayFirst, locale: Locale(identifier: "zh_Hans_CN"))
+  let english = HabitHeatmapModel.weekdayInitials(
+    calendar: sundayFirst, locale: Locale(identifier: "en_US"))
+  #expect(chinese == ["日", "一", "二", "三", "四", "五", "六"])
+  #expect(english == ["S", "M", "T", "W", "T", "F", "S"])
+}
+
+@Test
 func heatmapViewCachesGridOutsideBody() throws {
   let source = try appleSourceFile("Sources/LorvexApple/Views/HabitHeatmapView.swift")
 

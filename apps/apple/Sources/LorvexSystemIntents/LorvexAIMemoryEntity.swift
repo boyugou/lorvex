@@ -11,7 +11,7 @@ struct LorvexAIMemoryEntity: AppEntity, Identifiable {
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(
-      title: "\(key)",
+      title: "\(MemoryEntry.displayTitle(forKey: key))",
       subtitle: LocalizedStringResource("system.entity.ai_memory.subtitle", defaultValue: "AI-writable", table: "Localizable", bundle: SystemL10n.bundle),
       image: .init(systemName: "brain.head.profile")
     )

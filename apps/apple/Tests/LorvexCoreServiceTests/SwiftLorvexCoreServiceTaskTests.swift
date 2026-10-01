@@ -25,7 +25,8 @@ final class SwiftLorvexCoreServiceTaskTests: XCTestCase {
     // schema inside one transaction, which rejects `schema.sql`'s leading
     // `PRAGMA journal_mode = WAL` (WAL can't be set mid-transaction), so these
     // tests open the schema in memory instead.
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -458,9 +459,16 @@ final class SwiftLorvexCoreServiceTaskTests: XCTestCase {
 
   func testCreateReadComplete() async throws {
     let service = try makeService()
+    // Plan the fixture on the store's own logical day, read back from the store
+    // rather than wall-clock, so the Today assertion below is a statement about
+    // the day pool and not about which day the suite happens to run on.
+    let emptyToday = try await service.loadToday()
+    let logicalDay = try XCTUnwrap(emptyToday.logicalDay)
+    let today = try XCTUnwrap(LorvexDateFormatters.ymdUTC.date(from: logicalDay))
 
     // Create → rich return is the full task, defaulting to P2 / open.
-    let created = try await service.createTask(title: "Write the cutover", notes: "Body text")
+    let created = try await service.createTask(
+      TaskCreateDraft(title: "Write the cutover", notes: "Body text", plannedDate: today))
     XCTAssertFalse(created.id.isEmpty)
     XCTAssertEqual(created.title, "Write the cutover")
     XCTAssertEqual(created.notes, "Body text")
@@ -473,7 +481,7 @@ final class SwiftLorvexCoreServiceTaskTests: XCTestCase {
     XCTAssertEqual(loaded.title, "Write the cutover")
     XCTAssertEqual(loaded.status, .open)
 
-    // Today reflects the open task.
+    // Today's pool reflects the open task planned for today.
     let todayBefore = try await service.loadToday()
     XCTAssertTrue(todayBefore.tasks.contains { $0.id == created.id })
     XCTAssertGreaterThan(todayBefore.localChangeSequence, 0)

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "lorvex": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/lorvex-mcp"
+    }
+  }
+}

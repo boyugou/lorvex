@@ -4,16 +4,18 @@ import SwiftUI
 struct MobileStoreTaskDetailView: View {
   @State private var editDraft: MobileTaskEditDraft?
   @State private var isEditingRecurrence = false
+  /// The field being edited from its property row or the Add menu, with a
+  /// draft opened from the task for that one field.
+  @State private var editingField: MobileTaskField?
+  @State private var fieldDraft: MobileTaskEditDraft?
+  @Environment(\.mobileDetailPresentation) private var presentation
 
   @Bindable var store: MobileStore
   let task: LorvexTask
-  let isFocused: Bool
   let isMutating: Bool
   let saveEditDraft: (MobileTaskEditDraft) async -> Bool
-  let toggleFocus: () async -> Void
-  let complete: () async -> Void
+  let actions: MobileTaskRowActions
   let reopen: () async -> Void
-  let deferTask: () async -> Void
   let markSomeday: () async -> Void
   let toggleChecklistItem: (TaskChecklistItem) async -> Void
   let addChecklistItem: (String) async -> Bool
@@ -34,37 +36,37 @@ struct MobileStoreTaskDetailView: View {
       removeChecklistItem: { item in _ = await removeChecklistItem(item) },
       addReminder: { date in _ = await addReminder(date) },
       removeReminder: { reminder in _ = await removeReminder(reminder) },
-      resolveDependencyTasks: resolveDependencyTasks
+      resolveDependencyTasks: resolveDependencyTasks,
+      completeDependency: { dependency in _ = await store.completeTask(dependency.id) },
+      isDependencyMutating: { store.taskIsMutating($0) },
+      properties: MobileTaskProperties(task: task, listName: listName, logicalDay: store.logicalTodayString),
+      editField: edit
     ) {
       MobileTaskActionSection(
         task: task,
-        isFocused: isFocused,
         isMutating: isMutating,
-        toggleFocus: toggleFocus,
-        complete: complete,
-        reopen: reopen,
-        deferTask: deferTask,
+        actions: actions,
         markSomeday: markSomeday,
-        editRecurrence: {
-          store.beginRecurrenceEditing()
-          isEditingRecurrence = true
-        },
-        cancel: cancel,
-        start: { await store.startTask(task.id) },
-        markNotStarted: { await store.markTaskNotStarted(task.id) }
+        cancel: cancel
       )
+    } paneActions: {
+      paneStatusButton
+      editButton
+        .buttonStyle(.bordered)
     }
-    .lorvexSpatialContainerPadding()
-    .lorvexSpatialBackground()
     .toolbar {
-      ToolbarItem(placement: .primaryAction) {
-        Button {
-          editDraft = MobileTaskEditDraft(task: task)
-        } label: {
-          Label(
-            String(
-              localized: "common.edit", defaultValue: "Edit", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "pencil")
+      // A screen of its own carries the actions in its bar; a split's pane
+      // shows them in its header row instead (`paneActions` above).
+      if presentation == .screen {
+        ToolbarItem(placement: .primaryAction) {
+          editButton
+        }
+        // The status transition is the detail's one prominent control: a tinted
+        // filled capsule at the trailing edge, split from the share/edit group
+        // so it reads as the primary action rather than one more icon.
+        ToolbarSpacer(.fixed, placement: .primaryAction)
+        ToolbarItem(placement: .primaryAction) {
+          primaryStatusButton
         }
       }
     }
@@ -86,18 +88,118 @@ struct MobileStoreTaskDetailView: View {
           },
           cancel: { editDraft = nil }
         )
-        .lorvexSpatialBackground()
       }
     }
+    .sheet(item: $editingField, onDismiss: { fieldDraft = nil }) { field in
+      if let draft = Binding($fieldDraft) {
+        MobileTaskFieldEditor(
+          field: field,
+          draft: draft,
+          lists: store.lists?.lists ?? [],
+          currentListID: task.listID,
+          tagSuggestions: tagSuggestions,
+          searchDependencyCandidates: searchDependencyCandidates,
+          resolveDependencyTasks: resolveDependencyTasks,
+          isSaving: isMutating,
+          save: {
+            guard let fieldDraft else { return }
+            if await saveEditDraft(fieldDraft) { editingField = nil }
+          },
+          moveToList: { listID in
+            await store.moveTask(task.id, toListID: listID)
+            editingField = nil
+          },
+          cancel: { editingField = nil }
+        )
+      }
+    }
+    #if DEBUG
+      .onAppear {
+        // Dev/QA only: the `lorvex://firsttask/field/…` screenshot hook raises
+        // one word's editor so it can be captured without a tap.
+        if let field = MobileTaskDetailDebugState.takeInitialField() { edit(field) }
+      }
+    #endif
     .sheet(isPresented: $isEditingRecurrence) {
       MobileStoreRecurrenceEditor(
         store: store,
         isSaving: isMutating,
         dismiss: { isEditingRecurrence = false }
       )
-      .lorvexSpatialBackground()
       // Recurrence editor detents: medium + large for rule tweaks without losing context.
       .mobileCompactEditorSheetPresentation()
+    }
+  }
+
+  /// Opens the editor behind one field: the recurrence editor for Repeat,
+  /// otherwise the single-field sheet over a draft of the task.
+  private func edit(_ field: MobileTaskField) {
+    if field == .recurrence {
+      store.beginRecurrenceEditing()
+      isEditingRecurrence = true
+    } else {
+      fieldDraft = MobileTaskEditDraft(task: task)
+      editingField = field
+    }
+  }
+
+  private var listName: String? {
+    guard let listID = task.listID else { return nil }
+    return store.lists?.lists.first { $0.id == listID }?.displayName
+  }
+
+  private var editButton: some View {
+    Button {
+      editDraft = MobileTaskEditDraft(task: task)
+    } label: {
+      Label(
+        String(
+          localized: "common.edit", defaultValue: "Edit", table: "Localizable",
+          bundle: MobileL10n.bundle), systemImage: "pencil")
+    }
+  }
+
+  // Which transition the button performs follows the task's status
+  // (`MobileTaskPrimaryStatusAction`): Complete for an active task, Reopen for
+  // a resolved one, Move to Open for a parked one. Title only — the tinted fill
+  // already marks it as the primary action, and the text stays short in both
+  // shipped languages.
+  private var primaryStatusButton: some View {
+    let action = MobileTaskPrimaryStatusAction(status: task.status)
+    return Button {
+      perform(action)
+    } label: {
+      Text(action.title)
+    }
+    .mobileProminentToolbarButtonStyle()
+    .tint(action.tint)
+    .disabled(isMutating)
+    .accessibilityIdentifier(action.accessibilityIdentifier)
+  }
+
+  /// The same transition as `primaryStatusButton`, as the prominent button of
+  /// a split pane's header row, where an icon beside the title matches the
+  /// Edit and Share buttons next to it.
+  private var paneStatusButton: some View {
+    let action = MobileTaskPrimaryStatusAction(status: task.status)
+    return Button {
+      perform(action)
+    } label: {
+      Label(action.title, systemImage: action.systemImage)
+    }
+    .buttonStyle(.borderedProminent)
+    .tint(action.tint)
+    .disabled(isMutating)
+    .accessibilityIdentifier(action.accessibilityIdentifier)
+  }
+
+  private func perform(_ action: MobileTaskPrimaryStatusAction) {
+    Task {
+      if action.performsReopen {
+        await reopen()
+      } else {
+        await actions.complete()
+      }
     }
   }
 

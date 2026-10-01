@@ -178,49 +178,6 @@ enum ApplyTask {
     return try TaskSyncRow.staleIncomingRegisterWins(local: local, incoming: incoming)
   }
 
-  /// Validate the recurrence-companion cross-field schema CHECK on `tasks`
-  /// against the EFFECTIVE post-write row — for each column the envelope value
-  /// when the field is present, otherwise the preserved local value (`nil` for a
-  /// fresh insert):
-  ///
-  ///   * `CHECK (recurrence IS NULL OR (due_date IS NOT NULL AND
-  ///     recurrence_group_id IS NOT NULL AND canonical_occurrence_date IS NOT
-  ///     NULL))`
-  ///
-  /// Surfacing a violation as ``ApplyError/invalidPayload(_:)`` keeps a
-  /// deterministic SQLITE_CONSTRAINT from escaping the applier and wedging the
-  /// inbound batch. Evaluating the MERGED row (not the payload alone) is required
-  /// because the partial-update UPDATE preserves local columns for absent fields,
-  /// so a payload that sets `recurrence` while omitting `due_date` is valid
-  /// exactly when the local `due_date` is non-null.
-  private static func validateTaskCrossFieldInvariants(
-    row: TaskRow, local: Row?, entityId: String
-  ) throws {
-    func effective(present: Int64, bound: String?, column: String) -> String? {
-      if present != 0 { return bound }
-      guard let local else { return nil }
-      let value: String? = local[column]
-      return value
-    }
-    let dueDate = effective(present: row.dueDatePresent, bound: row.dueDate, column: "due_date")
-    let recurrence = effective(
-      present: row.recurrencePresent, bound: row.recurrence, column: "recurrence")
-    let recurrenceGroupId = effective(
-      present: row.recurrenceGroupIdPresent, bound: row.recurrenceGroupId,
-      column: "recurrence_group_id")
-    let canonicalOccurrenceDate = effective(
-      present: row.canonicalOccurrenceDatePresent, bound: row.canonicalOccurrenceDate,
-      column: "canonical_occurrence_date")
-
-    if recurrence != nil,
-      dueDate == nil || recurrenceGroupId == nil || canonicalOccurrenceDate == nil
-    {
-      throw ApplyError.invalidPayload(
-        "task \(entityId) violates schema CHECK: recurrence requires non-null due_date, "
-          + "recurrence_group_id, and canonical_occurrence_date")
-    }
-  }
-
   // MARK: - Row build
 
   /// Fully-typed row state ready to bind into the partial-update UPDATE or the
@@ -266,6 +223,10 @@ enum ApplyTask {
     var lastDeferReasonPresent: Int64
     var plannedDate: String?
     var plannedDatePresent: Int64
+    var plannedStartMinutes: Int64?
+    var plannedStartMinutesPresent: Int64
+    var plannedEndMinutes: Int64?
+    var plannedEndMinutesPresent: Int64
     var availableFrom: String?
     var availableFromPresent: Int64
     var deferCount: Int64
@@ -441,6 +402,12 @@ enum ApplyTask {
       try throwOnValidationFailure(
         ValidationFormat.validateDateFormat(d), entityId, "planned_date")
     }
+    // The pair's coherence with each other and with planned_date is checked on
+    // the materialized row, where omitted fields fall back to the local row.
+    let plannedStartMinutesTri =
+      try ApplyAggregate.optionalInt64PreservingNull(val, "planned_start_minutes", "task")
+    let plannedEndMinutesTri =
+      try ApplyAggregate.optionalInt64PreservingNull(val, "planned_end_minutes", "task")
     let availableFromTri = try ApplyAggregate.optionalStrPreservingEmpty(
       val, "available_from", "task")
     if case .set(let d) = availableFromTri {
@@ -518,6 +485,10 @@ enum ApplyTask {
       ApplyAggregate.splitPartialStrValue(lastDeferredAtTri)
     let (_, lastDeferReasonPresent) = ApplyAggregate.splitPartialStrValue(lastDeferReasonTri)
     let (plannedDateBind, plannedDatePresent) = ApplyAggregate.splitPartialStrValue(plannedDateTri)
+    let (plannedStartMinutesBind, plannedStartMinutesPresent) =
+      ApplyAggregate.splitPartialInt64Value(plannedStartMinutesTri)
+    let (plannedEndMinutesBind, plannedEndMinutesPresent) =
+      ApplyAggregate.splitPartialInt64Value(plannedEndMinutesTri)
     let (availableFromBind, availableFromPresent) =
       ApplyAggregate.splitPartialStrValue(availableFromTri)
     let (deferCountValue, deferCountPresent) = ApplyAggregate.splitPartialInt64Value(deferCountTri)
@@ -569,6 +540,10 @@ enum ApplyTask {
       lastDeferReasonPresent: lastDeferReasonPresent,
       plannedDate: plannedDateBind,
       plannedDatePresent: plannedDatePresent,
+      plannedStartMinutes: plannedStartMinutesBind,
+      plannedStartMinutesPresent: plannedStartMinutesPresent,
+      plannedEndMinutes: plannedEndMinutesBind,
+      plannedEndMinutesPresent: plannedEndMinutesPresent,
       availableFrom: availableFromBind,
       availableFromPresent: availableFromPresent,
       deferCount: deferCount,

@@ -1,0 +1,110 @@
+import LorvexCore
+import Testing
+
+private let lists = [
+  LorvexCaptureParser.ListOption(id: "list-offsite", name: "Offsite 2026"),
+  LorvexCaptureParser.ListOption(id: "list-home", name: "Home"),
+]
+
+// 2026-09-22 is a Tuesday: weekday 3 in the Gregorian convention.
+private func parse(_ text: String) -> LorvexCaptureParse {
+  LorvexCaptureParser.parse(text, lists: lists, todayWeekday: 3)
+}
+
+@Test
+func captureParserReadsDayLengthAndList() {
+  let result = parse("Call the caterer tomorrow 20 min #offsite2026")
+  #expect(result.title == "Call the caterer")
+  #expect(result.plannedDayOffset == 1)
+  #expect(result.estimatedMinutes == 20)
+  #expect(result.listID == "list-offsite")
+  #expect(result.listName == "Offsite 2026")
+  #expect(result.phrases.map(\.kind) == [.when, .length, .list])
+  #expect(result.phrases.map(\.text) == ["tomorrow", "20 min", "#offsite2026"])
+}
+
+@Test
+func captureParserReadsDueDayBeforePlannedDay() {
+  let result = parse("Send the deck by friday")
+  #expect(result.title == "Send the deck")
+  #expect(result.dueDayOffset == 3)
+  #expect(result.plannedDayOffset == nil)
+}
+
+@Test
+func captureParserResolvesWeekdays() {
+  // A weekday naming today means a week ahead; "next" adds a week.
+  #expect(parse("Standup notes tuesday").plannedDayOffset == 7)
+  #expect(parse("Standup notes on wed").plannedDayOffset == 1)
+  #expect(parse("Standup notes next wed").plannedDayOffset == 8)
+  #expect(parse("Plan the trip next week").plannedDayOffset == 7)
+  #expect(parse("Plan the trip next week").title == "Plan the trip")
+  #expect(parse("Book a table for tomorrow").title == "Book a table")
+  #expect(parse("Book a table for tomorrow").plannedDayOffset == 1)
+}
+
+@Test
+func captureParserReadsHoursAndChineseWords() {
+  let hours = parse("Write the review for 1.5h")
+  #expect(hours.title == "Write the review")
+  #expect(hours.estimatedMinutes == 90)
+  let chinese = parse("整理报销 明天 30分钟")
+  #expect(chinese.title == "整理报销")
+  #expect(chinese.plannedDayOffset == 1)
+  #expect(chinese.estimatedMinutes == 30)
+}
+
+@Test
+func captureParserReadsPriority() {
+  #expect(parse("Renew passport !!").priority == .p1)
+  #expect(parse("Renew passport !!").title == "Renew passport")
+  #expect(parse("Renew passport urgent").priority == .p1)
+  #expect(parse("Sort photos low priority").priority == .p3)
+  #expect(parse("Sort photos").priority == nil)
+}
+
+@Test
+func captureParserKeepsUnknownHashWordsAsTags() {
+  let result = parse("Buy paint #home #weekend")
+  #expect(result.title == "Buy paint")
+  #expect(result.listID == "list-home")
+  #expect(result.tags == ["weekend"])
+}
+
+@Test
+func captureParserLeavesOrdinaryWordsInTheTitle() {
+  // Words that only look like details inside a title stay put.
+  let memo = parse("Read Monday Morning Memo draft")
+  #expect(memo.title == "Read Monday Morning Memo draft")
+  #expect(memo.plannedDayOffset == nil)
+  #expect(parse("Prep the Monday Memo on Monday").plannedDayOffset == 6)
+  #expect(parse("Prep the Monday Memo on Monday").title == "Prep the Monday Memo")
+  #expect(parse("Call the bank Friday").plannedDayOffset == 3)
+  let ladder = parse("Buy a 3 m ladder")
+  #expect(ladder.title == "Buy a 3 m ladder")
+  #expect(ladder.estimatedMinutes == nil)
+  #expect(parse("Stretch 20m").estimatedMinutes == 20)
+  let noDetails = parse("Water the plants")
+  #expect(noDetails.title == "Water the plants")
+  #expect(!noDetails.hasDetails)
+}
+
+@Test
+func captureParserKeepsADetailsOnlyLineAsTheTitle() {
+  let result = parse("tomorrow 20 min")
+  #expect(result.title == "tomorrow 20 min")
+  #expect(!result.hasDetails)
+  #expect(result.plannedDayOffset == nil)
+}
+
+@Test
+func captureListMatchesAnAliasAndReportsTheShownName() {
+  let inbox = LorvexCaptureParser.ListOption(id: "inbox", name: "收件箱", aliases: ["Inbox"])
+  let byShownName = LorvexCaptureParser.parse("Call the caterer #收件箱", lists: [inbox], todayWeekday: 3)
+  #expect(byShownName.listID == "inbox")
+  #expect(byShownName.listName == "收件箱")
+  #expect(byShownName.title == "Call the caterer")
+  let byStoredName = LorvexCaptureParser.parse("Call the caterer #inbox", lists: [inbox], todayWeekday: 3)
+  #expect(byStoredName.listID == "inbox")
+  #expect(byStoredName.listName == "收件箱")
+}

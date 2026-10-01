@@ -33,6 +33,36 @@ extension MobileStore {
     return succeeded
   }
 
+  /// Check `habit` in on `date` (`YYYY-MM-DD`) by the shared rule
+  /// (``LorvexHabitCheckIn``), the way the day review checks in on the day it
+  /// reviews. Today's habits reload after it, since any day's check-in moves
+  /// streaks, and so does an open review's evidence, whose sentence counts
+  /// habits kept. A milestone crossed today celebrates as an ordinary
+  /// check-in would.
+  @discardableResult
+  public func checkInHabit(_ habit: LorvexHabit, on date: String) async -> Bool {
+    let action = LorvexHabitCheckIn.action(for: habit)
+    guard action != .none else { return false }
+    let succeeded = await mutateHabit {
+      switch action {
+      case .complete: _ = try await core.completeHabit(id: habit.id, date: date)
+      case .uncomplete: _ = try await core.uncompleteHabit(id: habit.id, date: date)
+      case .addOne: _ = try await core.adjustHabitCompletion(id: habit.id, date: date, delta: 1)
+      case .none: break
+      }
+      habits = try await core.loadHabits(date: logicalTodayString)
+    }
+    guard succeeded else { return false }
+    await refreshHabitDetailIfLoaded(id: habit.id)
+    if action == .uncomplete {
+      feedbackProvider.playFeedback(.habitReset)
+    } else if date != logicalTodayString || !stageMilestoneCelebrationIfReached(habitID: habit.id) {
+      feedbackProvider.playFeedback(.habitCompleted)
+    }
+    await reloadReviewEvidenceAfterTaskMutation()
+    return true
+  }
+
   @discardableResult
   public func completeHabits(_ ids: [LorvexHabit.ID]) async -> Bool {
     let uniqueIDs = stableUniqueHabitIDs(ids)
@@ -119,6 +149,12 @@ extension MobileStore {
     await reconcileAfterCommittedMutation(source: "ios.habit.create.reconcile") {
       habits = try await core.loadHabits(date: logicalTodayString)
     }
+    // Republish so the new habit appears in the iOS Habits widget promptly; a
+    // local write's in-process signal is self-suppressed, so nothing else does.
+    // Off the sheet's critical path: the fan-out ends with a sync cycle and the
+    // sheet closes on this return, so awaiting it here would pin the sheet on
+    // "Creating" for the cycle's duration.
+    Task { await publishMobileSyncSurfaces() }
     return true
   }
 
@@ -146,14 +182,14 @@ extension MobileStore {
     isUpdatingHabit = true
     defer { isUpdatingHabit = false }
     do {
-      // Three-state milestone patch: a positive field sets the goal; an empty or
-      // invalid field clears any existing goal (an optional personal target, so
-      // blanking it is an explicit "no goal", never a silent leave-as-is). The
-      // cadence is replaced atomically from the editor selections.
+      // Three-state cue and milestone patches: a non-empty field sets the value;
+      // an empty field clears it (blanking a cue or goal in the editor is an
+      // explicit "no value", never a silent leave-as-is). The cadence is replaced
+      // atomically from the editor selections.
       _ = try await core.updateHabit(
         id: habit.id,
         name: habitDraft.trimmedName,
-        cue: habitDraft.trimmedCue.isEmpty ? nil : habitDraft.trimmedCue,
+        cue: habitDraft.trimmedCue.isEmpty ? .clear : .set(habitDraft.trimmedCue),
         color: habitDraft.color,
         icon: habitDraft.icon,
         targetCount: targetCount,
@@ -165,6 +201,12 @@ extension MobileStore {
       await refreshHabitDetailIfLoaded(id: habit.id)
       habitDraft = MobileHabitDraft()
       errorMessage = nil
+      // A cadence change re-arms a different set of days and a name/icon/color
+      // change alters the widget; mirror `mutateHabit`'s tail so the reminder
+      // plan and the App-Group snapshot reflect the edit immediately instead of
+      // waiting for an unrelated reschedule/refresh.
+      await publishMobileSyncSurfaces()
+      await rescheduleReminders()
       return true
     } catch {
       await presentUserFacingError(error)
@@ -180,10 +222,16 @@ extension MobileStore {
     do {
       habits = try await core.deleteHabit(id: habit.id)
       habitDetailsByID[habit.id] = nil
+      archivedHabits.removeAll { $0.id == habit.id }
       if selectedHabitID == habit.id {
         selectedHabitID = nil
       }
       errorMessage = nil
+      // The deleted habit is gone from the widget snapshot and its armed
+      // reminders must be reaped. A local write's in-process signal is
+      // self-suppressed, so do both here — matching every other habit mutation.
+      await publishMobileSyncSurfaces()
+      await rescheduleReminders()
       return true
     } catch {
       await presentUserFacingError(error)
@@ -219,11 +267,63 @@ extension MobileStore {
       self.selectedHabitID = nil
     }
 
+    // Committed deletions (even on a partial batch) removed habits from the
+    // widget and left armed reminders behind; republish and reap here.
+    await publishMobileSyncSurfaces()
+    await rescheduleReminders()
+
     if let caught {
       await presentUserFacingError(caught)
       return false
     }
     errorMessage = nil
+    return true
+  }
+
+  /// Loads the archived habits for the Habits screen's restore section. A
+  /// failed read keeps the last list rather than raising an error: the section
+  /// is secondary to the active catalog above it.
+  public func loadArchivedHabits() async {
+    guard let loaded = try? await core.loadArchivedHabits(date: logicalTodayString) else {
+      return
+    }
+    archivedHabits = loaded.habits
+  }
+
+  /// Archives a habit, or restores an archived one. Archiving keeps the habit's
+  /// completion history but takes it out of the active catalog, Today, the
+  /// widget, and reminder planning; restoring brings all of that back.
+  @discardableResult
+  public func setHabitArchived(_ habit: LorvexHabit, archived: Bool) async -> Bool {
+    let succeeded = await mutateHabit {
+      _ = try await core.updateHabit(
+        id: habit.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
+        archived: archived)
+      habits = try await core.loadHabits(date: logicalTodayString)
+    }
+    guard succeeded else { return false }
+    if archived {
+      habitDetailsByID[habit.id] = nil
+      if selectedHabitID == habit.id {
+        selectedHabitID = nil
+      }
+    }
+    await loadArchivedHabits()
+    return true
+  }
+
+  /// Authoritatively re-read the habits list for a `.habit` route whose target
+  /// isn't in the currently-loaded list — the list hasn't loaded yet (a deep link
+  /// or Handoff before the Habits tab appeared) or the habit was added
+  /// out-of-band (an in-process intent / MCP write) since the last load. Returns
+  /// whether the read succeeded; on a transient failure it keeps the last-good
+  /// list so the route can stay on its skeleton and recover on the next refresh
+  /// rather than showing a false "Habit Not Found". Later peer/MCP additions also
+  /// arrive through the observed `habits` state, which the route reads directly.
+  @discardableResult
+  public func reloadHabitsForRoute() async -> Bool {
+    guard let loaded = try? await core.loadHabits(date: logicalTodayString) else { return false }
+    habits = loaded
     return true
   }
 
@@ -276,6 +376,12 @@ extension MobileStore {
       // completion immediately, mirroring the task mutation path. Without this
       // the widget stayed stale until the next full refresh.
       await publishMobileSyncSurfaces()
+      // Re-plan reminders so a just-completed habit stops nudging and a cadence
+      // change re-arms the right days. `rescheduleReminders` reaps delivered
+      // reminders for completed occurrences; without it a done habit kept firing
+      // its "time to do X" until the next foreground refresh. Matches the task
+      // mutation path and the macOS habit path.
+      await rescheduleReminders()
       errorMessage = nil
       return true
     } catch {

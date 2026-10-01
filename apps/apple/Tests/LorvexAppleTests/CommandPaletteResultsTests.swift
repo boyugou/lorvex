@@ -19,6 +19,12 @@ private func makeTask(id: String, title: String, notes: String = "", tags: [Stri
   )
 }
 
+private func makeList(id: String, name: String) -> LorvexList {
+  LorvexList(
+    id: id, name: name, color: "#0A84FF", icon: "folder", description: nil,
+    openCount: 0, totalCount: 0, updatedAt: "2026-09-29T00:00:00Z")
+}
+
 @Test
 func emptyQueryListsAllNavigationAndActionsWithoutTasksOrCapture() {
   let groups = CommandPaletteResults.groups(
@@ -51,8 +57,8 @@ func nonEmptyQueryLeadsWithNewTaskAndMatchesTasks() {
   let taskGroup = groups.first { $0.title == "Tasks" }?.results ?? []
   #expect(
     taskGroup == [
-      .openTask(id: "1", title: "Write report", subtitle: "P2 · Open"),
-      .openTask(id: "3", title: "Report to manager", subtitle: "P2 · Open"),
+      .openTask(id: "1", title: "Write report", subtitle: nil),
+      .openTask(id: "3", title: "Report to manager", subtitle: nil),
     ])
 }
 
@@ -81,19 +87,49 @@ func flatResultsConcatenatesEveryGroupInOrder() {
   )
   let flat = CommandPaletteResults.flatResults(groups)
   #expect(flat.first == .createTask(title: "report"))
-  #expect(flat.contains(.openTask(id: "1", title: "Write report", subtitle: "P2 · Open")))
+  #expect(flat.contains(.openTask(id: "1", title: "Write report", subtitle: nil)))
   #expect(flat.count == groups.reduce(0) { $0 + $1.results.count })
 }
 
 @Test
-func taskSubtitleSummarizesPriorityStatusAndDue() {
-  let undated = makeTask(id: "1", title: "Write report")
-  #expect(CommandPaletteResults.taskSubtitle(undated) == "P2 · Open")
+func taskSubtitleNamesTheListDueDayAndAnUnusualStatus() {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+  let now = Date(timeIntervalSince1970: 1_790_000_000)
+  let names = ["l1": "Apple Native"]
 
-  var dated = makeTask(id: "2", title: "Ship")
-  dated.dueDate = Date(timeIntervalSince1970: 1_700_000_000)
-  let subtitle = CommandPaletteResults.taskSubtitle(dated)
-  #expect(subtitle.hasPrefix("P2 · Open · "))
+  let plain = makeTask(id: "1", title: "Write report")
+  #expect(CommandPaletteResults.taskSubtitle(plain, listNames: names, now: now, calendar: calendar) == nil)
+
+  var filed = makeTask(id: "2", title: "Ship")
+  filed.listID = "l1"
+  filed.dueDate = now
+  #expect(
+    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, calendar: calendar)
+      == "Apple Native · Due today")
+
+  filed.status = .inProgress
+  #expect(
+    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, calendar: calendar)
+      == "Apple Native · Due today · In Progress")
+
+  // A finished task says so instead of when it was due.
+  filed.status = .completed
+  #expect(
+    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, calendar: calendar)
+      == "Apple Native · Completed")
+}
+
+@Test
+func archivedListsNameTheirTasksButAreNotOfferedAsPlaces() {
+  var archived = makeList(id: "old", name: "Old Projects")
+  archived.archivedAt = "2026-09-01T00:00:00Z"
+  var task = makeTask(id: "1", title: "Old report")
+  task.listID = "old"
+  let groups = CommandPaletteResults.groups(query: "old", tasks: [task], lists: [archived])
+  #expect(!groups.contains { $0.title == "Lists" })
+  let taskGroup = groups.first { $0.title == "Tasks" }?.results ?? []
+  #expect(taskGroup == [.openTask(id: "1", title: "Old report", subtitle: "Old Projects")])
 }
 
 @Test
@@ -109,4 +145,59 @@ func matchRangesFindAllCaseInsensitiveOccurrences() {
 func matchRangesEmptyForBlankQueryOrNoMatch() {
   #expect(CommandPaletteResults.matchRanges(of: "   ", in: "Write report").isEmpty)
   #expect(CommandPaletteResults.matchRanges(of: "xyz", in: "Write report").isEmpty)
+}
+
+/// Return runs the first row, so a query that starts a destination's name is a
+/// jump there rather than a task titled with it.
+@Test
+func queryThatBeginsADestinationLeadsWithTheJump() {
+  let groups = CommandPaletteResults.groups(
+    query: "hab", tasks: [makeTask(id: "1", title: "Habit tracker idea")])
+  #expect(Array(groups.map(\.title).prefix(2)) == ["Navigation", "New Task"])
+  #expect(CommandPaletteResults.flatResults(groups).first == .navigate(.habits))
+}
+
+@Test
+func listsMatchByNameAndLeadWhenTheQueryBeginsOneOfItsWords() {
+  let lists = [makeList(id: "l1", name: "Groceries"), makeList(id: "l2", name: "Apple Native")]
+  let groups = CommandPaletteResults.groups(query: "nat", tasks: [], lists: lists)
+  #expect(groups.first?.title == "Lists")
+  #expect(
+    groups.first?.results == [
+      .openList(id: "l2", name: "Apple Native", icon: "folder", colorHex: "#0A84FF")
+    ])
+  #expect(groups.dropFirst().first?.title == "New Task")
+}
+
+@Test
+func queryInsideANameLeadsWithCapture() {
+  let groups = CommandPaletteResults.groups(
+    query: "ple", tasks: [], lists: [makeList(id: "l1", name: "Apple Native")])
+  #expect(groups.first?.title == "New Task")
+  #expect(groups.contains { $0.title == "Lists" })
+}
+
+@Test
+func listsAppearOnlyForATypedQuery() {
+  let groups = CommandPaletteResults.groups(
+    query: "  ", tasks: [], lists: [makeList(id: "l1", name: "Apple Native")])
+  #expect(!groups.contains { $0.title == "Lists" })
+}
+
+@Test
+func beginsNameOrWordIgnoresCaseAndDiacritics() {
+  #expect(CommandPaletteResults.beginsNameOrWord("Habits", query: "HAB"))
+  #expect(CommandPaletteResults.beginsNameOrWord("Apple Native", query: "nat"))
+  #expect(CommandPaletteResults.beginsNameOrWord("Café Notes", query: "cafe"))
+  #expect(!CommandPaletteResults.beginsNameOrWord("Apple Native", query: "tive"))
+}
+
+@Test
+func finishedTaskRowsLeadWithACheck() {
+  var done = makeTask(id: "1", title: "Report draft")
+  done.status = .completed
+  let open = makeTask(id: "2", title: "Report review")
+  let groups = CommandPaletteResults.groups(query: "report", tasks: [done, open])
+  let tasks = groups.first { $0.title == "Tasks" }?.results ?? []
+  #expect(tasks.map(\.systemImage) == ["checkmark.circle", "circle"])
 }

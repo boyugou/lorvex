@@ -2,7 +2,7 @@ import SwiftUI
 
 /// User-selectable app appearance. `system` follows the OS light/dark setting;
 /// `light` and `dark` force a fixed scheme regardless of the OS. Shared by the
-/// macOS settings store and the mobile/visionOS root so all surfaces expose the
+/// macOS settings store and the mobile root so all surfaces expose the
 /// same three choices and persist under the same key.
 public enum AppAppearance: String, CaseIterable, Sendable, Identifiable {
   case system

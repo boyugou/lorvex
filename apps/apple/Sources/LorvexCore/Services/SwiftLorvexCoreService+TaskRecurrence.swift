@@ -13,21 +13,10 @@ extension SwiftLorvexCoreService {
     -> LorvexTask
   {
     try withWrite { db, hlc, deviceId in
-      let ruleInput = TaskRecurrence.RuleInput(
-        freq: rule.freq.rawValue,
-        interval: rule.interval.map { UInt32(clamping: max(0, $0)) },
-        byday: rule.byDay,
-        bymonth: rule.byMonth?.map { Int64($0) },
-        bymonthday: rule.byMonthDay?.map { Int64($0) } ?? [],
-        bysetpos: rule.bySetPos?.map { Int64($0) },
-        wkst: rule.wkst,
-        until: rule.until,
-        count: rule.count.map { UInt32(clamping: max(0, $0)) },
-        anchor: rule.anchor == .completion ? rule.anchor.rawValue : nil)
       let result = try TaskRecurrence.setTaskRecurrence(
         db, hlc: hlc,
         input: TaskRecurrence.SetTaskRecurrenceInput(
-          taskId: TaskId(trusted: taskID), rule: ruleInput))
+          taskId: TaskId(trusted: taskID), rule: Self.recurrenceRuleInput(rule)))
       try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .task, entityId: result.taskId)
       try self.writeChangelogRow(
         db,
@@ -37,6 +26,28 @@ extension SwiftLorvexCoreService {
         deviceId: deviceId)
       return try SwiftLorvexTaskDeserializers.task(result.afterTask)
     }
+  }
+
+  /// The workflow's input shape for `rule`; the default schedule anchor is
+  /// left out so a fixed-cadence rule stores no anchor key.
+  static func recurrenceRuleInput(_ rule: TaskRecurrenceRule) -> TaskRecurrence.RuleInput {
+    TaskRecurrence.RuleInput(
+      freq: rule.freq.rawValue,
+      interval: rule.interval.map { UInt32(clamping: max(0, $0)) },
+      byday: rule.byDay,
+      bymonth: rule.byMonth?.map { Int64($0) },
+      bymonthday: rule.byMonthDay?.map { Int64($0) } ?? [],
+      bysetpos: rule.bySetPos?.map { Int64($0) },
+      wkst: rule.wkst,
+      until: rule.until,
+      count: rule.count.map { UInt32(clamping: max(0, $0)) },
+      anchor: rule.anchor == .completion ? rule.anchor.rawValue : nil)
+  }
+
+  /// A create's recurrence field for a draft's rule: unset without one.
+  static func recurrencePatch(_ rule: TaskRecurrenceRule?) throws -> Patch<String> {
+    guard let rule else { return .unset }
+    return .set(try TaskRecurrence.ruleJSONString(recurrenceRuleInput(rule)))
   }
 
   public func removeTaskRecurrence(taskID: LorvexTask.ID) async throws -> LorvexTask {

@@ -16,7 +16,7 @@ struct SpotlightListDocument: Equatable, Sendable {
 
   init(list: LorvexList) {
     identifier = Self.identifierPrefix + list.id
-    title = list.name
+    title = list.displayName
   }
 
   var searchableItem: CSSearchableItem {

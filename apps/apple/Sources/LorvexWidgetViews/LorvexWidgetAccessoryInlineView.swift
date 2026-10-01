@@ -1,10 +1,12 @@
 import LorvexWidgetKitSupport
 import SwiftUI
 
-/// The `accessoryInline` Lock Screen family: a single short line with an optional
-/// leading SF Symbol in the system's tinted slot. It renders as one text unit, so
-/// its content redacts together on a locked device — there is no way to show a
-/// count next to a private title while redacting only the title.
+/// The `accessoryInline` Lock Screen family: one line with a leading SF Symbol
+/// in the system's tinted slot — a few words about the lead task, then its
+/// title ("Until 3:00 PM · Review the spec"), the fact first the way the
+/// Calendar inline leads with its time, so a long title truncates before the
+/// fact does. It renders as one text unit, so its content redacts together on
+/// a locked device.
 struct AccessoryInlineWidgetView: View {
   let model: WidgetRenderModel
 
@@ -19,10 +21,15 @@ struct AccessoryInlineWidgetView: View {
         systemImage: "exclamationmark.circle"
       )
       .lineLimit(1)
-    } else if model.focusCount == 0 {
-      // No focus tasks: a non-sensitive glance that stays legible on a locked
-      // Lock Screen (nothing to redact). "All clear" mirrors the small family's
-      // empty treatment so the two Focus surfaces speak the same way.
+    } else if model.lead == nil, model.remainingCount > 0, let dayLine = model.dayLine {
+      // Tasks left, none leading: how much is left, which names no task, so
+      // it stays legible on a locked Lock Screen.
+      Label(dayLine, systemImage: "list.bullet")
+        .lineLimit(1)
+    } else if model.lead == nil {
+      // Nothing left today: a non-sensitive glance that stays legible on a
+      // locked Lock Screen (nothing to redact). "All clear" mirrors the small
+      // family's empty treatment so the two surfaces speak the same way.
       Label(
         String(
           localized: "widget.small.all_clear",
@@ -31,14 +38,15 @@ struct AccessoryInlineWidgetView: View {
           bundle: WidgetL10n.bundle),
         systemImage: "checkmark.seal")
         .lineLimit(1)
-    } else {
-      // The headline is the top focus task's title — the user's private content —
-      // so mark the line sensitive to redact it when the device locks. Only the
-      // title is shown (not the count): inline's one-line budget is tight, and the
-      // count is already carried by the rectangular and circular families.
-      Label(model.headline, systemImage: "scope")
-        .lineLimit(1)
-        .privacySensitive()
+    } else if let lead = model.lead {
+      // The title is the user's private content, so the line is sensitive and
+      // redacts when the device locks.
+      Label(
+        [lead.shortLine, lead.title].compactMap { $0 }.joined(separator: " · "),
+        systemImage: lead.isOverdue ? "exclamationmark.circle" : "circle"
+      )
+      .lineLimit(1)
+      .privacySensitive()
     }
   }
 }

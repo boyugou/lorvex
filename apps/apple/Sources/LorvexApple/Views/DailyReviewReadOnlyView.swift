@@ -1,55 +1,32 @@
 import LorvexCore
 import SwiftUI
 
-/// The Day-scope reflection for a past day outside the interactive write
-/// window: the saved review rendered statically (no editors, no save footer),
-/// or an empty-state note when no review was written that day. The date strip
-/// names the day; this view only shows what was recorded.
+/// The saved review of a past day outside the write window, in the calm page
+/// grammar: the two ratings on disabled dot scales and each written field under
+/// its name, or an empty-state note when nothing was written that day. The
+/// page header above it names the day and reads the day's sentence.
 struct DailyReviewReadOnlyView: View {
   let review: DailyReviewEntry?
 
+  private typealias Copy = ReviewCalmCopy
+
   var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
       if let review, !isEmptyReview(review) {
-        readOnlyField(
-          title: String(localized: "reviews.daily.title", defaultValue: "Daily Review", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "square.and.pencil",
-          tint: .blue,
-          body: review.summary
-        )
-
-        HStack(spacing: LorvexDesign.Spacing.l) {
-          readOnlyRating(
-            title: String(localized: "reviews.daily.mood", defaultValue: "Mood", table: "Localizable", bundle: LorvexL10n.bundle),
-            filledSymbol: "heart.fill",
-            emptySymbol: "heart",
-            tint: .pink,
-            value: review.mood
-          )
-          readOnlyRating(
-            title: String(localized: "reviews.daily.energy", defaultValue: "Energy", table: "Localizable", bundle: LorvexL10n.bundle),
-            filledSymbol: "bolt.fill",
-            emptySymbol: "bolt",
-            tint: .orange,
-            value: review.energyLevel
-          )
+        if review.mood != nil || review.energyLevel != nil {
+          HStack(alignment: .top, spacing: LorvexDesign.Spacing.xl) {
+            scale(
+              Copy.feelLabel, value: review.mood, low: Copy.feelLow, high: Copy.feelHigh, dotLabel: Copy.feelDot,
+              identifier: "reviews.readonly.mood")
+            scale(
+              Copy.energyLabel, value: review.energyLevel, low: Copy.energyLow, high: Copy.energyHigh,
+              dotLabel: Copy.energyDot, identifier: "reviews.readonly.energy")
+          }
         }
-
-        if let wins = review.wins, !wins.isEmpty {
-          readOnlyField(
-            title: String(localized: "reviews.daily.wins", defaultValue: "Wins", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "trophy.fill", tint: .yellow, body: wins)
-        }
-        if let blockers = review.blockers, !blockers.isEmpty {
-          readOnlyField(
-            title: String(localized: "reviews.daily.blockers", defaultValue: "Blockers", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "exclamationmark.triangle.fill", tint: .red, body: blockers)
-        }
-        if let learnings = review.learnings, !learnings.isEmpty {
-          readOnlyField(
-            title: String(localized: "reviews.daily.learnings", defaultValue: "Learnings", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "lightbulb.fill", tint: .teal, body: learnings)
-        }
+        written(Copy.noteLabel, review.summary)
+        written(Copy.winsLabel, review.wins)
+        written(Copy.blockersLabel, review.blockers)
+        written(Copy.learningsLabel, review.learnings)
 
         Label(
           String(localized: "reviews.daily.readonly_note", defaultValue: "Older reviews are read-only.", table: "Localizable", bundle: LorvexL10n.bundle),
@@ -69,7 +46,6 @@ struct DailyReviewReadOnlyView: View {
         .accessibilityIdentifier("reviews.daily.readonlyEmpty")
       }
     }
-    .padding(LorvexDesign.Spacing.l)
     .frame(maxWidth: .infinity, alignment: .leading)
   }
 
@@ -79,57 +55,32 @@ struct DailyReviewReadOnlyView: View {
       && (review.learnings ?? "").isEmpty
   }
 
-  /// A static, accent-railed read-only section mirroring the editable prompt
-  /// panel's look without any editor.
-  private func readOnlyField(title: String, systemImage: String, tint: Color, body: String)
-    -> some View
-  {
-    HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-      Capsule().fill(tint.opacity(0.7)).frame(width: 3)
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-        Label(title, systemImage: systemImage)
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .foregroundStyle(tint)
-        Text(body)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.primary)
+  /// A saved rating on the same dot scale the editable review uses, disabled,
+  /// so a rating reads the same in and past the write window.
+  private func scale(
+    _ label: String, value: Int?, low: String, high: String, dotLabel: @escaping (Int) -> String,
+    identifier: String
+  ) -> some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+      LorvexPageLabel(label)
+      LorvexDotScale(
+        value: .constant(value), lowLabel: low, highLabel: high, dotLabel: dotLabel,
+        identifierPrefix: identifier, isEnabled: false)
+    }
+    .frame(maxWidth: .infinity)
+  }
+
+  /// A written field under its name; nothing when the field was left empty.
+  @ViewBuilder
+  private func written(_ label: String, _ text: String?) -> some View {
+    if let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+        LorvexPageLabel(label)
+        Text(text)
+          .font(LorvexDesign.Typography.primaryText)
           .frame(maxWidth: .infinity, alignment: .leading)
           .textSelection(.enabled)
       }
     }
-    .padding(LorvexDesign.Spacing.m)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.quaternary.opacity(0.06), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
-    .overlay {
-      RoundedRectangle(cornerRadius: LorvexDesign.Radius.m)
-        .stroke(.separator.opacity(0.10), lineWidth: 0.5)
-    }
-  }
-
-  /// A static row of filled / hollow rating glyphs for a saved mood / energy
-  /// score; renders "—" when the human left it unrated. Uses the same
-  /// filled/outline glyph pair as the editable ``ReviewRatingPicker`` so a saved
-  /// rating reads identically whether the day is in or past the write window.
-  private func readOnlyRating(
-    title: String, filledSymbol: String, emptySymbol: String, tint: Color, value: Int?
-  ) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      Text(title)
-        .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-        .foregroundStyle(.secondary)
-        .textCase(.uppercase)
-      if let value {
-        HStack(spacing: 4) {
-          ForEach(1...5, id: \.self) { level in
-            Image(systemName: level <= value ? filledSymbol : emptySymbol)
-              .foregroundStyle(level <= value ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
-          }
-        }
-      } else {
-        Text(verbatim: "—").foregroundStyle(.tertiary)
-      }
-    }
-    .accessibilityElement(children: .combine)
-    .accessibilityLabel(title)
   }
 }

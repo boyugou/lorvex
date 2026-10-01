@@ -54,9 +54,7 @@ class NormalizationTests(unittest.TestCase):
     The repo-pin test is the load-bearing one: hashing the real schema.sql must
     reproduce the canonical lock's 001 entry — the value the Swift
     ``MigrationSqlChecksum`` verifies at boot — so this seeder/verifier and the
-    runtime agree on the only production input. The Tauri Rust/Node digest uses
-    the same normalization convention but is a separate, directionally-aligned
-    implementation, not a byte-locked contract this test pins against.
+    runtime agree on the only production input.
     """
 
     def test_real_schema_sql_matches_canonical_lock(self) -> None:
@@ -114,8 +112,7 @@ class NormalizationTests(unittest.TestCase):
 class SeedTests(unittest.TestCase):
     def test_build_lock_reproduces_the_committed_canonical_lock(self) -> None:
         # The Apple-native `--seed` (build_lock) must produce byte-identical output
-        # to the committed lock — proving it is a drop-in replacement for the former
-        # Tauri Node seeder, so Apple regenerates the lock on its own with no drift.
+        # to the committed lock, so the lock regenerates on its own with no drift.
         self.assertEqual(build_lock(), load_lock())
 
 

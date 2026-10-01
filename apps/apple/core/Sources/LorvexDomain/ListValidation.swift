@@ -50,6 +50,28 @@ public enum ListValidation {
     return trimmed
   }
 
+  /// Three-state variant of ``normalizeOptionalText(_:field:max:escapedBudget:)``
+  /// for a partial-update patch. ``Patch/unset`` and ``Patch/clear`` pass through
+  /// unchanged; a ``Patch/set(_:)`` value is sanitized and length / byte-budget
+  /// validated, collapsing to ``Patch/clear`` when it is blank after stripping
+  /// invisibles (an explicit "no value"). Mirrors the habit-cue patch
+  /// normalization so `set("")` clears rather than writing an empty string.
+  public static func normalizeOptionalPatchText(
+    _ patch: Patch<String>, field: String, max: Int, escapedBudget: Int
+  ) throws -> Patch<String> {
+    switch patch {
+    case .unset: return .unset
+    case .clear: return .clear
+    case let .set(raw):
+      if let normalized = try normalizeOptionalText(
+        raw, field: field, max: max, escapedBudget: escapedBudget)
+      {
+        return .set(normalized)
+      }
+      return .clear
+    }
+  }
+
   /// Trim, drop-if-blank, and hex-validate an optional `color`. Returns the
   /// trimmed hex string or `nil`.
   public static func normalizeColor(_ raw: String?) throws -> String? {

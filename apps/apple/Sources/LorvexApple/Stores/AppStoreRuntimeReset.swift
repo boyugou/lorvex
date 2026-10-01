@@ -3,7 +3,7 @@ import LorvexCore
 
 extension AppStore {
   func resetRuntimeState() {
-    focusStorage.reset()
+    todayStorage.reset()
     dailyReviewStorage.reset()
     listsStorage.reset()
     calendarStorage.reset()

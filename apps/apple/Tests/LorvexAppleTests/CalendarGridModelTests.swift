@@ -52,6 +52,41 @@ func calendarGridModelKeepsInvalidTimedEventsOutOfTheTimeAxis() throws {
 }
 
 @Test
+func calendarGridModelDoesNotRenderMidnightEndSliverOnTheNextDay() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 19)))
+
+  // A timed event 22:00 Jun 19 → 00:00 Jun 20 (ends exactly at midnight).
+  let days = CalendarGridModel.buildDays(
+    rangeStart: start,
+    dayCount: 2,
+    calendar: calendar,
+    events: [
+      calendarGridEvent(
+        id: "late-night",
+        title: "Late night",
+        startDate: "2026-06-19",
+        startTime: "22:00",
+        endTime: "00:00",
+        endDate: "2026-06-20"
+      )
+    ],
+    tasks: [],
+    dayKeyFor: { calendarGridYMD.string(from: $0) }
+  )
+
+  // Jun 19 shows the 22:00→24:00 block; Jun 20 shows NOTHING (no 00:00–00:20
+  // sliver), matching Apple Calendar's single-day presence for a midnight end.
+  let day19 = try #require(days.first { $0.dayKey == "2026-06-19" })
+  let day20 = try #require(days.first { $0.dayKey == "2026-06-20" })
+  #expect(day19.timedBlocks.map(\.event.id) == ["late-night"])
+  #expect(day19.timedBlocks.first?.startMin == 22 * 60)
+  #expect(day19.timedBlocks.first?.endMin == 1440)
+  #expect(day20.timedBlocks.isEmpty)
+}
+
+@Test
 func calendarGridModelAnchorsToTodaysEarlyEventInsteadOfHidingItAboveTheFold() throws {
   var calendar = Calendar(identifier: .gregorian)
   calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
@@ -140,7 +175,8 @@ private func calendarGridEvent(
   title: String,
   startDate: String,
   startTime: String?,
-  endTime: String?
+  endTime: String?,
+  endDate: String? = nil
 ) -> CalendarTimelineEvent {
   CalendarTimelineEvent(
     id: id,
@@ -149,7 +185,7 @@ private func calendarGridEvent(
     editable: true,
     startDate: startDate,
     startTime: startTime,
-    endDate: nil,
+    endDate: endDate,
     endTime: endTime,
     allDay: false,
     location: nil,
@@ -163,17 +199,117 @@ private func calendarGridEvent(
 private func calendarGridTask(
   id: String,
   dueDate: Date?,
-  plannedDate: Date? = nil
+  plannedDate: Date? = nil,
+  plannedTime: Range<Int>? = nil,
+  status: LorvexTask.Status = .open
 ) -> LorvexTask {
   LorvexTask(
     id: id,
     title: id,
     notes: "",
     priority: .p3,
-    status: .open,
+    status: status,
     dueDate: dueDate,
     plannedDate: plannedDate,
+    plannedTime: plannedTime,
     estimatedMinutes: nil,
     tags: []
   )
+}
+
+@Test
+func calendarGridModelPlacesTimedTasksOnTheTimeAxisAndOutOfTheAllDayStrip() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 19)))
+  let planned = try #require(calendarGridYMD.date(from: "2026-06-19"))
+  let brief = calendarGridTask(
+    id: "brief", dueDate: nil, plannedDate: planned, plannedTime: 7 * 60..<8 * 60)
+
+  let days = CalendarGridModel.buildDays(
+    rangeStart: start,
+    dayCount: 1,
+    calendar: calendar,
+    events: [
+      calendarGridEvent(
+        id: "standup", title: "Standup", startDate: "2026-06-19", startTime: "09:00", endTime: "10:00")
+    ],
+    tasks: [
+      brief,
+      calendarGridTask(id: "untimed", dueDate: nil, plannedDate: planned),
+      calendarGridTask(
+        id: "shipped", dueDate: nil, plannedDate: planned, plannedTime: 11 * 60..<12 * 60,
+        status: .completed),
+      calendarGridTask(
+        id: "dropped", dueDate: nil, plannedDate: planned, plannedTime: 13 * 60..<14 * 60,
+        status: .cancelled),
+      brief,
+    ],
+    dayKeyFor: { calendarGridYMD.string(from: $0) }
+  )
+
+  let day = try #require(days.first)
+  // Open and completed timed tasks become blocks (the completed one marked
+  // done); a cancelled task is not drawn, and a task passed twice is drawn once.
+  #expect(day.taskBlocks.map(\.task.id) == ["brief", "shipped"])
+  #expect(day.taskBlocks.map(\.isDone) == [false, true])
+  #expect(day.taskBlocks.first?.startMin == 7 * 60)
+  #expect(day.taskBlocks.first?.endMin == 8 * 60)
+  #expect(day.taskBlocks.first?.id == "task:brief#2026-06-19")
+  // A task drawn on the clock leaves the all-day strip; an untimed one stays.
+  #expect(day.scheduledTasks.map(\.id) == ["untimed"])
+  #expect(day.timedBlocks.map(\.event.id) == ["standup"])
+  // The task block is the earliest thing on the axis and moves the anchor.
+  #expect(day.earliestBlockStart == 7 * 60)
+  #expect(CalendarGridModel.initialScrollAnchorHour(for: days) == 0)
+  #expect(
+    CalendarGridModel.initialScrollAnchorHour(
+      for: days, todayKey: "2026-06-19", nowMinute: 14 * 60) == 7)
+}
+
+@Test
+func calendarGridModelPacksTimedTasksIntoTheSameLanesAsEvents() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 19)))
+  let friday = try #require(calendarGridYMD.date(from: "2026-06-19"))
+  let saturday = try #require(calendarGridYMD.date(from: "2026-06-20"))
+  let outside = try #require(calendarGridYMD.date(from: "2026-07-01"))
+
+  let days = CalendarGridModel.buildDays(
+    rangeStart: start,
+    dayCount: 2,
+    calendar: calendar,
+    events: [
+      calendarGridEvent(
+        id: "standup", title: "Standup", startDate: "2026-06-19", startTime: "09:00", endTime: "10:00")
+    ],
+    tasks: [
+      calendarGridTask(
+        id: "brief", dueDate: nil, plannedDate: friday, plannedTime: 9 * 60 + 30..<10 * 60 + 30,
+        status: .inProgress),
+      calendarGridTask(
+        id: "quick", dueDate: nil, plannedDate: saturday, plannedTime: 9 * 60 + 30..<9 * 60 + 35),
+      calendarGridTask(
+        id: "later", dueDate: nil, plannedDate: outside, plannedTime: 9 * 60..<10 * 60),
+    ],
+    dayKeyFor: { calendarGridYMD.string(from: $0) }
+  )
+
+  let fridayColumn = try #require(days.first)
+  let event = try #require(fridayColumn.timedBlocks.first)
+  let block = try #require(fridayColumn.taskBlocks.first)
+  #expect(event.laneCount == 2 && block.laneCount == 2)
+  #expect(event.lane == 0 && block.lane == 1)
+
+  // A block shorter than the render minimum reports its real end and is drawn
+  // to the minimum, like an event.
+  let saturdayColumn = try #require(days.last)
+  #expect(saturdayColumn.taskBlocks.map(\.task.id) == ["quick"])
+  #expect(saturdayColumn.taskBlocks.first?.endMin == 9 * 60 + 35)
+  #expect(
+    saturdayColumn.taskBlocks.first?.drawnEndMin
+      == 9 * 60 + 30 + CalendarGridModel.minBlockMinutes)
+  #expect(saturdayColumn.isEmpty == false)
+  #expect(days.flatMap(\.taskBlocks).map(\.task.id).contains("later") == false)
 }

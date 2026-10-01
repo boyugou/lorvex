@@ -19,21 +19,10 @@ public enum SyncCheckpoints {
   /// ``getOrCreateDatabaseInstanceId(_:)`` when a database is first used for
   /// sync and stable across ordinary reopens. A freshly created replacement
   /// database mints a distinct value; install-identity reconciliation also
-  /// rotates it when a restored/cloned managed database is detected, so the
-  /// clone can never resume the source install's CloudKit generation lease.
-  /// Cloud traversal progress and its change token live in this same SQLite
-  /// file and are bound to this identity. A new database therefore starts with
-  /// no inherited cursor, while a restored/cloned database rotates its identity
-  /// before it can claim generation or traversal authority.
+  /// rotates it when a restored/cloned managed database is detected, so a clone
+  /// never presents itself as the source database. Workspace snapshots and the
+  /// watch command ledger key on it to detect a replaced database.
   public static let keyDatabaseInstanceId = "db_instance_id"
-
-  /// Account-scoped generation enrollment belongs at the storage layer because
-  /// generation publication records it in the same SQLite savepoint as staging
-  /// finalization. Keeping the key factory here lets that atomic transition use
-  /// the canonical key without making LorvexSync depend on LorvexRuntime.
-  public static func keyEnrolledZoneEpoch(accountIdentifier: String) -> String {
-    "enrolled_zone_epoch.\(accountIdentifier)"
-  }
 
   /// Read a checkpoint value. Returns `nil` for missing keys.
   public static func get(_ db: Database, key: String) throws -> String? {

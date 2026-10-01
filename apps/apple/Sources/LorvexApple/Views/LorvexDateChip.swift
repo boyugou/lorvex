@@ -19,6 +19,10 @@ struct LorvexDateChip: View {
   /// week navigator to display a range (e.g. "Jun 14 – Jun 20") on the same chip
   /// that picks a single day — picking any day jumps to the week containing it.
   var displayTextOverride: String? = nil
+  /// How the control draws itself: `.chip` is the quiet capsule used inside
+  /// content (detail fields, sheets); `.toolbar` drops the capsule so a window
+  /// toolbar styles it like its neighbouring items.
+  var style: Style = .chip
   /// Include the time-of-day field in the popover's picker (reminders).
   var includesTime = false
   /// Earliest selectable instant (reminders refuse the past).
@@ -29,25 +33,20 @@ struct LorvexDateChip: View {
 
   @State private var isPresented = false
 
+  enum Style {
+    case chip
+    case toolbar
+  }
+
   var body: some View {
-    Button {
-      isPresented = true
-    } label: {
-      HStack(spacing: LorvexDesign.Spacing.xs) {
-        Image(systemName: includesTime ? "bell" : "calendar")
-          .symbolRenderingMode(.hierarchical)
-          .foregroundStyle(date == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
-        Text(chipTitle)
-          .font(LorvexDesign.Typography.primaryText)
-          .lineLimit(1)
-          .foregroundStyle(date == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+    Group {
+      switch style {
+      case .chip:
+        chipButton.buttonStyle(.plain)
+      case .toolbar:
+        chipButton
       }
-      .padding(.horizontal, LorvexDesign.Spacing.s)
-      .padding(.vertical, LorvexDesign.Spacing.xs)
-      .background(.quaternary.opacity(date == nil ? 0.35 : 0.55), in: Capsule())
-      .contentShape(Capsule())
     }
-    .buttonStyle(.plain)
     .accessibilityLabel(chipTitle)
     .accessibilityAddTraits(.isButton)
     .accessibilityIdentifier("lorvex.dateChip")
@@ -70,6 +69,33 @@ struct LorvexDateChip: View {
         }
       )
       .environment(\.timeZone, timeZone)
+    }
+  }
+
+  private var chipButton: some View {
+    Button {
+      isPresented = true
+    } label: {
+      HStack(spacing: LorvexDesign.Spacing.xs) {
+        Image(systemName: includesTime ? "bell" : "calendar")
+          .symbolRenderingMode(.hierarchical)
+          .foregroundStyle(date == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
+        Text(chipTitle)
+          .font(LorvexDesign.Typography.primaryText)
+          .lineLimit(1)
+          .foregroundStyle(date == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+      }
+      .padding(.horizontal, style == .chip ? LorvexDesign.Spacing.s : 0)
+      .padding(.vertical, style == .chip ? LorvexDesign.Spacing.xs : 0)
+      .background(chipFill, in: Capsule())
+      .contentShape(Capsule())
+    }
+  }
+
+  private var chipFill: AnyShapeStyle {
+    switch style {
+    case .chip: AnyShapeStyle(.quaternary.opacity(date == nil ? 0.35 : 0.55))
+    case .toolbar: AnyShapeStyle(.clear)
     }
   }
 
@@ -243,7 +269,7 @@ private struct LorvexMiniMonth: View {
         localized: "mini_month.this_month", defaultValue: "Current month",
         table: "Localizable",
         bundle: LorvexL10n.bundle))
-        .font(.system(size: 7))
+        .font(LorvexDesign.Typography.tertiaryText)
       monthButton(systemImage: "chevron.right", delta: 1, label: String(
         localized: "mini_month.next", defaultValue: "Next month",
         table: "Localizable",

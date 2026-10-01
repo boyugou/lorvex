@@ -64,45 +64,6 @@ public enum SyncMutationSemantics {
     try key(for: lhs) == key(for: rhs)
   }
 
-  /// Compare the immutable business content of two mutations while ignoring
-  /// only their transport HLC and device attribution. Append-only audit rows
-  /// can be regenerated into a new CloudKit generation under a deterministic
-  /// snapshot HLC even though their stable id and content are unchanged; their
-  /// local table intentionally has no version column. Payload `version` values
-  /// are normalized to one shared key before comparison, while identity,
-  /// operation, payload schema, and every other payload field remain exact.
-  public static func isExactContentReplayIgnoringVersion(
-    _ lhs: SyncEnvelope, _ rhs: SyncEnvelope
-  ) throws -> Bool {
-    guard lhs.entityType == rhs.entityType, lhs.entityId == rhs.entityId,
-      lhs.operation == rhs.operation,
-      lhs.payloadSchemaVersion == rhs.payloadSchemaVersion
-    else { return false }
-    let sharedVersion = lhs.version.description
-    return try normalizedPayload(
-      lhs.payload, operation: lhs.operation, version: sharedVersion,
-      entityType: lhs.entityType.asString, entityId: lhs.entityId)
-      == normalizedPayload(
-        rhs.payload, operation: rhs.operation, version: sharedVersion,
-        entityType: rhs.entityType.asString, entityId: rhs.entityId)
-  }
-
-  /// Deterministically join two immutable-id contenders without letting their
-  /// transport HLC decide business content. Both are first restamped at the
-  /// shared maximum floor, then the ordinary byte-stable join is applied. This
-  /// is required for append-only rows whose materialized table cannot remember
-  /// the original HLC: a later peer must make the same content choice using only
-  /// the stable id and payload, rather than oscillating when generations assign
-  /// different transport versions to that immutable row.
-  public static func deterministicWinnerIgnoringVersion(
-    _ lhs: SyncEnvelope, _ rhs: SyncEnvelope
-  ) throws -> SyncEnvelope {
-    let floor = max(lhs.version, rhs.version)
-    let left = try restamp(lhs, version: floor, deviceId: lhs.deviceId)
-    let right = try restamp(rhs, version: floor, deviceId: rhs.deviceId)
-    return try deterministicWinner(left, right)
-  }
-
   /// Deterministic max join for two equal-HLC mutations. Every clone presented
   /// with the same pair chooses the same contender even if arrival order is
   /// reversed or both clones still share an HLC device suffix.

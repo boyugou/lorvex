@@ -5,18 +5,19 @@ import Testing
 
 @Test
 func widgetViewMetricsMatchRenderFamilyRowBudgets() {
+  // The rows are the tasks after the lead; small and the glance families only
+  // say how many follow.
   #expect(LorvexWidgetViewMetrics.metrics(for: .accessoryInline).maxVisibleRows == 0)
-  #expect(LorvexWidgetViewMetrics.metrics(for: .systemSmall).maxVisibleRows == 2)
-  #expect(LorvexWidgetViewMetrics.metrics(for: .systemMedium).maxVisibleRows == 3)
-  #expect(LorvexWidgetViewMetrics.metrics(for: .systemLarge).maxVisibleRows == 6)
-  #expect(LorvexWidgetViewMetrics.metrics(for: .accessoryRectangular).maxVisibleRows == 2)
+  #expect(LorvexWidgetViewMetrics.metrics(for: .systemSmall).maxVisibleRows == 0)
+  #expect(LorvexWidgetViewMetrics.metrics(for: .systemMedium).maxVisibleRows == 2)
+  #expect(LorvexWidgetViewMetrics.metrics(for: .systemLarge).maxVisibleRows == 5)
+  #expect(LorvexWidgetViewMetrics.metrics(for: .accessoryRectangular).maxVisibleRows == 1)
 }
 
 @Test
 func widgetViewMetricsShowBriefingOnlyOnLarge() {
-  // Only large has the vertical room for the briefing line above its rows. Medium
-  // dropped it — with three rows + header + footer it overflowed the 158pt canvas,
-  // and it merely restated the footer counts.
+  // Only large has the vertical room for the briefing line above its rows; on
+  // medium the lead block, two rows, and the foot line fill the 158pt canvas.
   #expect(!LorvexWidgetViewMetrics.metrics(for: .systemSmall).showsBriefing)
   #expect(!LorvexWidgetViewMetrics.metrics(for: .systemMedium).showsBriefing)
   #expect(LorvexWidgetViewMetrics.metrics(for: .systemLarge).showsBriefing)
@@ -25,71 +26,72 @@ func widgetViewMetricsShowBriefingOnlyOnLarge() {
 }
 
 @Test
-func todayWidgetLayoutReportsHiddenTaskOverflow() {
-  #expect(TodayWidgetLayout.rowLimit(for: .systemSmall) == 3)
-  #expect(TodayWidgetLayout.rowLimit(for: .systemMedium) == 4)
-  #expect(TodayWidgetLayout.rowLimit(for: .systemLarge) == 8)
-  #expect(TodayWidgetLayout.hiddenTaskCount(total: 6, family: .systemSmall) == 3)
-  #expect(TodayWidgetLayout.hiddenTaskCount(total: 6, family: .systemMedium) == 2)
-  #expect(TodayWidgetLayout.hiddenTaskCount(total: 6, family: .systemLarge) == 0)
-}
-
-@Test
-func todayWidgetLayoutFormatsFooterWithOverflow() {
-  #expect(
-    TodayWidgetLayout.footerText(completed: 2, totalOpen: 6, family: .systemSmall)
-      == "2 completed · 6 open · 3 more"
-  )
-  #expect(
-    TodayWidgetLayout.footerText(completed: 2, totalOpen: 4, family: .systemMedium)
-      == "2 completed · 4 open"
-  )
-}
-
-@Test
 func habitsWidgetLayoutReportsHiddenHabitOverflow() {
-  #expect(HabitsWidgetLayout.rowLimit(for: .systemSmall) == 3)
-  #expect(HabitsWidgetLayout.rowLimit(for: .systemMedium) == 5)
+  // Three rows per column at the default text size: small shows 3, medium 6.
+  #expect(HabitsWidgetLayout.shownCount(total: 8, family: .systemSmall) == 3)
+  #expect(HabitsWidgetLayout.shownCount(total: 8, family: .systemMedium) == 6)
   #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemSmall) == 5)
-  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemMedium) == 3)
+  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemMedium) == 2)
   #expect(HabitsWidgetLayout.hiddenHabitCount(total: 3, family: .systemSmall) == 0)
+  // A larger text size fits fewer rows, and the footer counts the rest.
+  #expect(HabitsWidgetLayout.shownCount(total: 8, family: .systemMedium, rows: 2) == 4)
+  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemMedium, rows: 1) == 6)
+  #expect(HabitsWidgetLayout.shownCount(total: 2, family: .systemMedium, rows: 1) == 2)
 }
 
 @Test
-func todayWidgetRowsDeepLinkToIndividualTasks() throws {
-  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexTodayWidgetView.swift")
+func habitsWidgetMediumSplitsIntoBalancedColumns() {
+  // Habits that overflow one column go into two, the left one taking an odd
+  // extra; fewer keep a single full-width column.
+  #expect(HabitsWidgetLayout.columns([1, 2, 3], family: .systemMedium) == [[1, 2, 3]])
+  #expect(HabitsWidgetLayout.columns([1, 2, 3, 4], family: .systemMedium) == [[1, 2], [3, 4]])
+  #expect(HabitsWidgetLayout.columns([1, 2, 3, 4, 5], family: .systemMedium) == [[1, 2, 3], [4, 5]])
+  #expect(HabitsWidgetLayout.columns([1, 2, 3, 4, 5, 6], family: .systemMedium) == [[1, 2, 3], [4, 5, 6]])
+  #expect(HabitsWidgetLayout.columns([1, 2, 3], family: .systemMedium, rows: 2) == [[1, 2], [3]])
+  #expect(HabitsWidgetLayout.columns([1, 2, 3], family: .systemSmall) == [[1, 2, 3]])
+  #expect(HabitsWidgetLayout.columns([Int](), family: .systemMedium) == [[]])
+}
 
-  #expect(source.contains("Link(destination: task.taskURL)"))
-  #expect(source.contains("TodayTaskRowView(task: task, interactive: isInteractive)"))
+@Test
+func todayWidgetLeadAndRowsDeepLinkToIndividualTasks() throws {
+  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetTaskRowView.swift")
+
+  #expect(source.contains("link(lead.urlString)"))
+  #expect(source.contains("Link(destination: url) { label }"))
 }
 
 @Test
 func interactiveWidgetTaskActionsUseSharedHitTargetButton() throws {
   let taskRowSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetTaskRowView.swift")
-  let todaySource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexTodayWidgetView.swift")
 
   #expect(taskRowSource.contains("struct WidgetActionButton<Intent: AppIntent>: View"))
   #expect(taskRowSource.contains(".frame(minWidth: 32, minHeight: 32)"))
   #expect(taskRowSource.contains(".contentShape(Rectangle())"))
-  // Defer + complete both flow through the shared `WidgetActionButton` hit target,
-  // never a raw `Button(intent:)`. (Defer is large-only, so its indentation
-  // varies — assert the wrapper + intent rather than exact whitespace.)
-  #expect(taskRowSource.contains("intent: WidgetDeferTaskIntent"))
-  #expect(taskRowSource.contains("intent: WidgetCompleteTaskIntent"))
-  #expect(todaySource.contains("WidgetActionButton(\n          intent: WidgetCompleteTaskIntent"))
-  #expect(!taskRowSource.contains("Button(intent: Widget"))
-  #expect(!todaySource.contains("Button(intent: Widget"))
+  // A row's complete circle flows through the shared `WidgetActionButton` hit
+  // target; the lead ring is its own full-diameter target (`Button(intent:)`
+  // around `LorvexTaskRing` with a circular content shape), the only raw
+  // intent button in the file.
+  #expect(taskRowSource.contains("WidgetActionButton(\n          intent: WidgetCompleteTaskIntent"))
+  #expect(
+    taskRowSource.contains(
+      "Button(intent: WidgetCompleteTaskIntent(taskID: lead.id, title: lead.title))"))
+  #expect(taskRowSource.contains(".contentShape(Circle())"))
+  #expect(taskRowSource.components(separatedBy: "Button(intent: Widget").count == 2)
 }
 
 @Test
 func widgetStaleAgeLabelParticipatesInLayout() throws {
+  // The Today widget's Home Screen families share one foot line
+  // (`WidgetFootLine`), which is where their stale capsule lives.
+  let footSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetTaskRowView.swift")
   let systemSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetSystemView.swift")
-  let todaySource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexTodayWidgetView.swift")
+  let smallSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetSmallView.swift")
   let progressSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexProgressWidgetView.swift")
   let habitsSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexHabitsWidgetView.swift")
 
-  #expect(systemSource.contains("WidgetStaleAgeLabel(staleAgeLabel)"))
-  #expect(todaySource.contains("WidgetStaleAgeLabel(staleAgeLabel)"))
+  #expect(footSource.contains("WidgetStaleAgeLabel(staleAgeLabel)"))
+  #expect(systemSource.contains("WidgetFootLine(model: model"))
+  #expect(smallSource.contains("WidgetFootLine(model: model"))
   #expect(progressSource.contains("WidgetStaleAgeLabel(staleAgeLabel)"))
   #expect(habitsSource.contains("WidgetStaleAgeLabel(staleAgeLabel)"))
 }
@@ -103,6 +105,7 @@ func lorvexWidgetViewCanBeInstantiatedForAllFamilies() {
     .systemLarge,
     .accessoryInline,
     .accessoryRectangular,
+    .accessoryCircular,
   ]
 
   for family in families {
@@ -110,13 +113,15 @@ func lorvexWidgetViewCanBeInstantiatedForAllFamilies() {
       family: family,
       state: .content,
       headline: "Today",
-      subheadline: "Start with focus.",
+      subheadline: "",
       statusText: "Updated now",
-      focusCountText: "1 Focus",
-      attentionCountText: nil,
-      taskRows: [
-        WidgetTaskRenderRow(id: "task-1", title: "Write widget view", metadata: "25m", priorityLabel: "P1")
-      ]
+      completedCount: 1,
+      lead: WidgetLeadRender(
+        id: "task-1", title: "Write widget view", line: "Until 10:45 AM",
+        shortLine: "Until 10:45 AM", progress: 0.6, isRunning: true, minutesLeft: 12,
+        isOverdue: false, urlString: "lorvex://task/task-1"),
+      taskRows: [WidgetTaskRenderRow(id: "task-2", title: "Next one", metadata: "11:00 AM")],
+      upcomingCount: 1
     )
     _ = LorvexWidgetView(model: model)
   }

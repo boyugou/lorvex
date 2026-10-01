@@ -54,6 +54,9 @@ final class PendingInboxReseedSignalTests: XCTestCase {
       let marker = try String.fetchOne(
         db, sql: "SELECT value FROM sync_checkpoints WHERE key = 'reseed_required'")
       XCTAssertEqual(marker, "true", "the reseed_required checkpoint marker is set")
+      let refetch = try String.fetchOne(
+        db, sql: "SELECT value FROM sync_checkpoints WHERE key = 'refetch_required'")
+      XCTAssertEqual(refetch, "true", "the dropped record must be fetched from the zone again")
     }
   }
 
@@ -113,6 +116,9 @@ final class PendingInboxReseedSignalTests: XCTestCase {
         let marker = try String.fetchOne(
           db, sql: "SELECT value FROM sync_checkpoints WHERE key = 'reseed_required'")
         XCTAssertNil(marker, "no reseed checkpoint for a by-design hold (reason: \(reason))")
+        let refetch = try String.fetchOne(
+          db, sql: "SELECT value FROM sync_checkpoints WHERE key = 'refetch_required'")
+        XCTAssertNil(refetch, "no refetch for a by-design hold (reason: \(reason))")
       }
     }
   }

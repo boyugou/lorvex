@@ -15,8 +15,7 @@ import LorvexWorkflow
 /// and mutate rows, but do NOT open transactions, write `ai_changelog`, or bump
 /// `local_change_seq`. Those side effects are the calling surface's
 /// responsibility. This adapter is shared by the Apple app, App Intents,
-/// widgets, notifications, mobile/watch surfaces, and later write slices
-/// (Calendar, Habit, Focus, …).
+/// widgets, notifications, and mobile/watch surfaces.
 ///
 /// Responsibilities:
 ///   - **Device identity / HLC suffix.** Resolves the stable device id from
@@ -316,23 +315,6 @@ extension SwiftLorvexCoreService {
 
   // MARK: - Changelog
 
-  /// Raised when ``writeChangelogRow`` runs with no ambient
-  /// ``SwiftLorvexCoreService/currentTransactionClock`` bound — i.e. a changelog
-  /// write reached the funnel outside a `runWriteAttempt` transaction. A
-  /// programming error (every changelog write must run inside the write funnel),
-  /// surfaced fail-closed rather than silently re-resolving the clock through
-  /// ``store()`` from inside the transaction (which could re-enter the writer).
-  enum ChangelogWriteFunnelError: Error, CustomStringConvertible {
-    case transactionClockUnbound
-    var description: String {
-      switch self {
-      case .transactionClockUnbound:
-        return "writeChangelogRow ran with no bound currentTransactionClock: a "
-          + "changelog write reached the funnel outside a runWriteAttempt transaction."
-      }
-    }
-  }
-
   /// A pending `ai_changelog` row described by a write method, materialized into
   /// the store-layer `ChangelogWrite.ChangelogRow` by ``writeChangelogRow``.
   struct ChangelogEntry {
@@ -452,33 +434,22 @@ extension SwiftLorvexCoreService {
     return resolved
   }
 
-  /// Write one `ai_changelog` row inside the current transaction, then emit it
-  /// once to the sync outbox. Every mutation is recorded (Core Design Rule 2);
-  /// the row's `initiated_by` provenance is resolved by ``resolveInitiator(_:)``
-  /// (fail-closed — a write with no declared provenance never records as a human
-  /// `user`). The before/after payloads are size-capped by the store layer.
+  /// Write one `ai_changelog` row inside the current transaction. Every
+  /// mutation is recorded (Core Design Rule 2); the row's `initiated_by`
+  /// provenance is resolved by ``resolveInitiator(_:)`` (fail-closed — a write
+  /// with no declared provenance never records as a human `user`). The
+  /// before/after payloads are size-capped by the store layer.
   ///
-  /// The audit row syncs across a user's devices (ACF-14) under the append-only,
-  /// emit-once mutation contract: it is enqueued exactly once here and converges
-  /// on peers by id-dedup. Ordinary full-resync excludes it; a candidate-zone
-  /// baseline is the deliberate exception and stages every retained row before
-  /// the old generation retires. Retention pruning propagates through durable
-  /// account/zone-scoped CloudKit physical deletes, never sync tombstones.
+  /// The audit trail is device-local: the row never enters the sync outbox.
+  /// Under the `off` retention policy (``AuditRetention``) nothing is recorded
+  /// and the mutation itself still commits.
   func writeChangelogRow(
     _ db: Database, _ entry: ChangelogEntry, deviceId: String
   ) throws {
-    let id = EntityID.newEntityIDString()
-    let timestamp = SyncTimestampFormat.syncTimestampNow()
-    let retention = try AuditRetentionFrontier.currentWriteContext(db)
-    // The mutation itself still commits when audit recording is disabled or a
-    // clock anomaly puts this row below the account's minimum-retained key.
-    guard
-      try AuditRetentionFrontier.shouldRecordLocalAudit(
-        db, context: retention, timestamp: timestamp, entityId: id)
-    else { return }
+    guard AuditRetention.recordsAudit(db) else { return }
     let row = ChangelogWrite.ChangelogRow(
-      id: id,
-      timestamp: timestamp,
+      id: EntityID.newEntityIDString(),
+      timestamp: SyncTimestampFormat.syncTimestampNow(),
       operation: entry.operation,
       entityType: entry.entityType,
       entityId: entry.entityId,
@@ -488,31 +459,7 @@ extension SwiftLorvexCoreService {
       mcpTool: Self.currentMCPTool,
       sourceDeviceId: deviceId,
       beforeJson: try ChangelogWrite.encodeStateJson(entry.before),
-      afterJson: try ChangelogWrite.encodeStateJson(entry.after),
-      retentionEpoch: retention.retentionEpoch,
-      retentionAccountIdentifier: retention.accountIdentifier)
+      afterJson: try ChangelogWrite.encodeStateJson(entry.after))
     try ChangelogWrite.writeChangelogRow(db, row)
-
-    // Emit-once outbound sync. The audit envelope reuses the transaction's
-    // already-resolved clock — bound by `runWriteAttempt` in
-    // `currentTransactionClock` — rather than re-resolving it through
-    // `writeState()`. This code runs inside the transaction, on the thread holding
-    // GRDB's serial writer queue; a `writeState()` → `store()` call there would
-    // close the writer re-entrantly (an uncatchable GRDB reentrancy trap, plus a
-    // lock-order inversion against `openLock`) if a cross-process factory reset
-    // bumped the storage generation mid-transaction. The bound clock is the SAME
-    // process-wide clock the mutation stamps with, so the envelope's version stays
-    // strictly monotonic with — and never collides with — the mutation's. Fail
-    // closed if the ambient is unset: a changelog write must always run inside a
-    // bound `runWriteAttempt` transaction.
-    let payload = try ChangelogWrite.buildChangelogSyncPayload(row)
-    guard let transactionClock = Self.currentTransactionClock else {
-      throw ChangelogWriteFunnelError.transactionClockUnbound
-    }
-    let session = HlcSession(handle: transactionClock)
-    try enqueueChangelogUpsert(
-      db, session: session, deviceId: deviceId, kind: .aiChangelog,
-      entityId: row.id, payload: payload)
   }
-
 }

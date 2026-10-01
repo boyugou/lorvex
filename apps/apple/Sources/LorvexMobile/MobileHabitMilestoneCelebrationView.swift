@@ -45,7 +45,7 @@ struct MobileHabitMilestoneCelebrationCard: View {
         Text(subtitle)
           .font(LorvexDesign.Typography.secondaryText)
           .foregroundStyle(.secondary)
-          .lineLimit(1)
+          .lineLimitUnlessAccessibilitySize(1)
       }
     }
     .padding(.horizontal, LorvexDesign.Spacing.l)
@@ -72,7 +72,7 @@ struct MobileHabitMilestoneCelebrationCard: View {
     .foregroundStyle(celebration.tint)
     .overlay(alignment: .topTrailing) {
       Image(systemName: "sparkles")
-        .font(.system(size: 11, weight: .semibold))
+        .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
         .foregroundStyle(celebration.tint)
         .offset(x: 7, y: -5)
         .opacity(reduceMotion ? 0 : 1)

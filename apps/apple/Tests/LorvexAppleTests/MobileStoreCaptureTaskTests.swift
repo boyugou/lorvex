@@ -1,18 +1,20 @@
 import Foundation
 import LorvexCore
-import LorvexMobile
+@testable import LorvexMobile
 import Testing
 
 @MainActor
 @Test
-func mobileStoreCaptureWritesThroughCoreAndRefreshesToday() async throws {
+func mobileStoreCaptureWritesThroughCoreIntoTheInbox() async throws {
+  let core = try await makeSeededInMemoryCore()
   let store = MobileStore(
-    core: try await makeSeededInMemoryCore(),
+    core: core,
     todayString: { "2026-05-23" },
     now: { Date(timeIntervalSince1970: 1_779_562_800) }
   )
 
   await store.refresh()
+  let selectionBefore = store.selectedTaskID
   store.captureDraft = MobileCaptureDraft(
     title: "  Captured from iPhone  ",
     notes: "Use native mobile capture."
@@ -21,15 +23,19 @@ func mobileStoreCaptureWritesThroughCoreAndRefreshesToday() async throws {
 
   await store.submitCaptureDraft()
 
-  // Today keeps the canonical sort (priority first), so the new capture is
-  // selected but not necessarily the pool's first row.
-  let selectedID = try #require(store.selectedTaskID)
-  let created = try #require(store.snapshot.today.tasks.first { $0.id == selectedID })
-  #expect(created.title == "Captured from iPhone")
+  // Captured work is undated, so it belongs to the inbox and not to the day pool.
+  let open = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Captured from iPhone" })
   #expect(created.notes == "Use native mobile capture.")
-  #expect(store.selectedTab == .today)
-  // Quick capture is a global action: it creates and selects the task but does NOT
-  // push a detail route — it leaves the user on whatever surface they captured from.
+  #expect(created.plannedDate == nil)
+  #expect(created.dueDate == nil)
+  #expect(!store.snapshot.today.tasks.contains { $0.id == created.id })
+  // The sheet closing is the confirmation: capture pushes no detail route, moves
+  // no tab, and leaves the selection alone rather than pointing it at a task the
+  // surfaces left on screen could not resolve.
+  #expect(!store.isPresentingCapture)
+  #expect(store.selectedTaskID == selectionBefore)
   #expect(store.routePath == [])
   #expect(store.captureDraft == MobileCaptureDraft())
   #expect(store.errorMessage == nil)
@@ -39,12 +45,14 @@ func mobileStoreCaptureWritesThroughCoreAndRefreshesToday() async throws {
 @MainActor
 @Test
 func mobileStoreCaptureCreatesMultipleTasksFromMultilineTitle() async throws {
+  let core = try await makeSeededInMemoryCore()
   let store = MobileStore(
-    core: try await makeSeededInMemoryCore(),
+    core: core,
     todayString: { "2026-05-23" }
   )
 
   await store.refresh()
+  let selectionBefore = store.selectedTaskID
   store.captureDraft = MobileCaptureDraft(
     title: " First mobile batch task \n\nSecond mobile batch task ",
     notes: "Captured together on mobile."
@@ -52,17 +60,14 @@ func mobileStoreCaptureCreatesMultipleTasksFromMultilineTitle() async throws {
 
   await store.submitCaptureDraft()
 
-  let first = try #require(
-    store.snapshot.today.tasks.first { $0.title == "First mobile batch task" }
-  )
-  let second = try #require(
-    store.snapshot.today.tasks.first { $0.title == "Second mobile batch task" }
-  )
+  let open = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let first = try #require(open.tasks.first { $0.title == "First mobile batch task" })
+  let second = try #require(open.tasks.first { $0.title == "Second mobile batch task" })
   #expect(first.notes == "Captured together on mobile.")
   #expect(second.notes == "Captured together on mobile.")
-  #expect(store.selectedTaskID == first.id)
-  #expect(store.selectedTab == .today)
-  // Global capture selects the first task but does not push a detail route.
+  // Same inbox contract as the single capture: selection untouched, no route pushed.
+  #expect(store.selectedTaskID == selectionBefore)
   #expect(store.routePath == [])
   #expect(store.captureDraft == MobileCaptureDraft())
   #expect(store.errorMessage == nil)
@@ -84,25 +89,27 @@ func mobileStoreMutatesTasksThroughNativeMobileActions() async throws {
     PlannedDayBridge.storageDate(
       forLogicalDay: store.logicalTodayString,
       addingDays: 1))
-  let firstTask = try #require(store.snapshot.today.tasks.first)
+  let lastTask = try #require(store.snapshot.today.tasks.last)
 
-  await store.toggleTaskFocus(firstTask.id)
-  #expect(store.taskIsFocused(firstTask.id))
-  #expect(store.snapshot.focusTasks.map(\.id).contains(firstTask.id))
+  #expect(await store.startTask(lastTask.id))
+  #expect(store.snapshot.today.tasks.first?.id == lastTask.id, "started work leads Today")
+  #expect(store.snapshot.inProgressTasks.map(\.id).contains(lastTask.id))
 
-  await store.toggleTaskFocus(firstTask.id)
-  #expect(!store.taskIsFocused(firstTask.id))
+  #expect(await store.pauseTask(lastTask.id))
+  #expect(!store.snapshot.inProgressTasks.map(\.id).contains(lastTask.id))
+  #expect(store.snapshot.today.tasks.contains { $0.id == lastTask.id }, "a paused task stays on Today")
 
-  await store.deferTaskToTomorrow(controlledTask.id)
-  let deferred = try #require(store.snapshot.today.tasks.first { $0.id == controlledTask.id })
-  // Deferral pushes planned_date forward and keeps status open (there is no
-  // `deferred` status).
+  #expect(await store.deferTask(controlledTask.id, byDays: 1))
+  // Deferral pushes planned_date to tomorrow, so the task leaves today's pool;
+  // the stored row is what carries the result.
+  let deferred = try await core.loadTask(id: controlledTask.id)
+  #expect(!store.snapshot.today.tasks.contains { $0.id == controlledTask.id })
   #expect(deferred.status == .open)
   // The loaded Today snapshot owns the synced product day; the constructor's
   // device-day closure is only a cold-start fallback before that snapshot.
   #expect(deferred.plannedDate == expectedTomorrow)
 
-  let nextOpenTask = try #require(store.snapshot.openTasks.first)
+  let nextOpenTask = try #require(store.snapshot.today.tasks.first)
   await store.completeTask(nextOpenTask.id)
   // Completed tasks leave the open-only Today snapshot.
   #expect(!store.snapshot.today.tasks.contains { $0.id == nextOpenTask.id })
@@ -113,7 +120,7 @@ func mobileStoreMutatesTasksThroughNativeMobileActions() async throws {
 @MainActor
 @Test
 func mobileStoreTracksMutatingTaskIDsDuringTaskActions() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   core.completeTaskDelayNanoseconds = 150_000_000
   let store = MobileStore(
     core: core,
@@ -121,8 +128,8 @@ func mobileStoreTracksMutatingTaskIDsDuringTaskActions() async throws {
   )
 
   await store.refresh()
-  let mutatingTask = try #require(store.snapshot.openTasks.first)
-  let unaffectedTask = try #require(store.snapshot.openTasks.first { $0.id != mutatingTask.id })
+  let mutatingTask = try #require(store.snapshot.today.tasks.first)
+  let unaffectedTask = try #require(store.snapshot.today.tasks.first { $0.id != mutatingTask.id })
 
   let mutation = Task { await store.completeTask(mutatingTask.id) }
   for _ in 0..<30 where !store.taskIsMutating(mutatingTask.id) {
@@ -142,7 +149,7 @@ func mobileStoreTracksMutatingTaskIDsDuringTaskActions() async throws {
 @MainActor
 @Test
 func mobileStoreAllowsDifferentTaskMutationsWhileRejectingSameTaskReentry() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   core.completeTaskDelayNanoseconds = 150_000_000
   let store = MobileStore(
     core: core,
@@ -150,8 +157,8 @@ func mobileStoreAllowsDifferentTaskMutationsWhileRejectingSameTaskReentry() asyn
   )
 
   await store.refresh()
-  let first = try #require(store.snapshot.openTasks.first)
-  let second = try #require(store.snapshot.openTasks.first { $0.id != first.id })
+  let first = try #require(store.snapshot.today.tasks.first)
+  let second = try #require(store.snapshot.today.tasks.first { $0.id != first.id })
 
   let firstMutation = Task { await store.completeTask(first.id) }
   for _ in 0..<30 where !store.taskIsMutating(first.id) {
@@ -182,7 +189,7 @@ func mobileStoreAllowsDifferentTaskMutationsWhileRejectingSameTaskReentry() asyn
 @MainActor
 @Test
 func mobileStoreBatchTaskActionsUseUnscopedMutationGuard() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   core.batchTaskDelayNanoseconds = 150_000_000
   let store = MobileStore(
     core: core,
@@ -190,8 +197,8 @@ func mobileStoreBatchTaskActionsUseUnscopedMutationGuard() async throws {
   )
 
   await store.refresh()
-  let first = try #require(store.snapshot.openTasks.first)
-  let second = try #require(store.snapshot.openTasks.first { $0.id != first.id })
+  let first = try #require(store.snapshot.today.tasks.first)
+  let second = try #require(store.snapshot.today.tasks.first { $0.id != first.id })
 
   let batch = Task { await store.completeTasks([first.id, second.id]) }
   for _ in 0..<30 where !store.isMutatingTask {
@@ -227,7 +234,7 @@ func mobileStoreTogglesChecklistItemFromDetailRoute() async throws {
   )
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   _ = try await core.addTaskChecklistItem(taskID: task.id, text: "Confirm mobile checklist")
   await store.refresh()
   store.openNavigationTarget(MobileNavigationTarget(selectedTab: .today, route: .task(task.id)))
@@ -257,4 +264,81 @@ func mobileStoreKeepsInvalidCaptureLocal() async throws {
   #expect(store.captureDraft.notes == "No title.")
   #expect(store.snapshot.today == .empty)
   #expect(!store.isCapturing)
+}
+
+@MainActor
+@Test
+func mobileCaptureReadsDetailsOutOfEachLine() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  await store.refresh()
+  let list = try #require(store.lists?.lists.first)
+  let hashName = list.name.filter { $0.isLetter || $0.isNumber }
+
+  let preview = store.capturePreview("Call the caterer tomorrow 20 min #\(hashName)")
+  #expect(preview.title == "Call the caterer")
+  #expect(preview.words.map(\.id) == ["when", "length", "list"])
+  #expect(store.capturePreview("Water the plants") == .empty)
+
+  store.captureDraft = MobileCaptureDraft(
+    title: "Call the caterer tomorrow 20 min #\(hashName)\nSort photos low priority")
+  await store.submitCaptureDraft()
+
+  #expect(store.errorMessage == nil)
+  let open = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let caterer = try #require(open.tasks.first { $0.title == "Call the caterer" })
+  #expect(caterer.plannedDate == (try store.captureStorageDate(daysFromLogicalToday: 1)))
+  #expect(caterer.estimatedMinutes == 20)
+  #expect(caterer.listID == list.id)
+  #expect(caterer.rawInput == "Call the caterer tomorrow 20 min #\(hashName)")
+  let photos = try #require(open.tasks.first { $0.title == "Sort photos" })
+  #expect(photos.priority == .p3)
+  #expect(photos.plannedDate == nil)
+}
+
+@Test
+func batchCreateKeepsEveryDraftField() async throws {
+  // The batch path writes the same fields as the single create, raw input and
+  // hide-until included.
+  let core = try await makeSeededInMemoryCore()
+  let day = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-06-01"))
+  var draft = TaskCreateDraft(title: "Batch with details")
+  draft.rawInput = "Batch with details tomorrow"
+  draft.availableFrom = day
+  let created = try await core.batchCreateTasks([draft, TaskCreateDraft(title: "Second")])
+  let task = try #require(created.first { $0.title == "Batch with details" })
+  #expect(task.rawInput == "Batch with details tomorrow")
+  #expect(task.availableFrom == day)
+}
+
+@MainActor
+@Test
+func mobileCaptureOfSeveralLinesKeepsTimesAndRepeats() async throws {
+  let core = try await makeSeededInMemoryCore()
+  // The core's own logical today: a repeating task's first occurrence is
+  // never earlier than it.
+  let store = MobileStore(core: core)
+  await store.refresh()
+  let firstOccurrence = try #require(store.captureParse("Standup every mon and thu 9:30am").resolvedDueDayOffset)
+
+  #expect(
+    store.capturePreview("Standup every mon and thu 9:30am").words.map(\.id) == ["when", "time", "repeats", "due"])
+
+  store.captureDraft = MobileCaptureDraft(title: "Standup every mon and thu 9:30am\nDentist 4pm")
+  await store.submitCaptureDraft()
+
+  #expect(store.errorMessage == nil)
+  let open = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let standup = try #require(open.tasks.first { $0.title == "Standup" })
+  #expect(standup.recurrence?.byDay == ["MO", "TH"])
+  let monday = try store.captureStorageDate(daysFromLogicalToday: firstOccurrence)
+  #expect(standup.dueDate == monday)
+  #expect(standup.plannedDate == monday)
+  #expect(standup.plannedTime == (9 * 60 + 30)..<(10 * 60))
+  let dentist = try #require(open.tasks.first { $0.title == "Dentist" })
+  #expect(dentist.plannedDate == (try store.captureStorageDate(daysFromLogicalToday: 0)))
+  #expect(dentist.plannedTime == (16 * 60)..<(16 * 60 + 30))
+  #expect(dentist.recurrence == nil)
 }

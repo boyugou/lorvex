@@ -22,12 +22,22 @@ extension TaskRecurrenceRule.Frequency {
     }
   }
 
-  var localizedIntervalUnitPlural: String {
+  /// The interval's unit for "Every [N] [unit]": singular for an interval
+  /// of 1 ("week"), plural otherwise ("weeks"). Chinese uses one form.
+  func localizedIntervalUnit(count: Int) -> String {
+    if count == 1 {
+      switch self {
+      case .daily: return String(localized: "recurrence.unit.day", defaultValue: "day", table: "Localizable", bundle: LorvexL10n.bundle)
+      case .weekly: return String(localized: "recurrence.unit.week", defaultValue: "week", table: "Localizable", bundle: LorvexL10n.bundle)
+      case .monthly: return String(localized: "recurrence.unit.month", defaultValue: "month", table: "Localizable", bundle: LorvexL10n.bundle)
+      case .yearly: return String(localized: "recurrence.unit.year", defaultValue: "year", table: "Localizable", bundle: LorvexL10n.bundle)
+      }
+    }
     switch self {
-    case .daily: String(localized: "recurrence.unit.days", defaultValue: "days", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .weekly: String(localized: "recurrence.unit.weeks", defaultValue: "weeks", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .monthly: String(localized: "recurrence.unit.months", defaultValue: "months", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .yearly: String(localized: "recurrence.unit.years", defaultValue: "years", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .daily: return String(localized: "recurrence.unit.days", defaultValue: "days", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .weekly: return String(localized: "recurrence.unit.weeks", defaultValue: "weeks", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .monthly: return String(localized: "recurrence.unit.months", defaultValue: "months", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .yearly: return String(localized: "recurrence.unit.years", defaultValue: "years", table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 }
@@ -72,7 +82,7 @@ extension TaskRecurrenceRule {
       parts.append(String(
         format: String(localized: "recurrence.summary.interval", defaultValue: "Every %1$lld %2$@", table: "Localizable", bundle: LorvexL10n.bundle),
         interval,
-        freq.localizedIntervalUnitPlural
+        freq.localizedIntervalUnit(count: interval)
       ))
     } else {
       parts.append(freq.localizedDisplayName)

@@ -20,7 +20,7 @@ extension MobileStore {
         eventID: event.eventID,
         occurrenceDate: occurrenceDate,
         scope: scope.rawValue,
-        updates: scopedUpdatesFromDraft()
+        updates: scopedUpdatesFromDraft(for: event)
       )
       calendarDraft = MobileCalendarDraft(now: now)
       errorMessage = nil
@@ -59,14 +59,24 @@ extension MobileStore {
     }
   }
 
-  /// The draft's editable fields as a scoped-edit patch. Omitted fields (endDate)
-  /// preserve the original; empty location / notes strings clear those fields,
-  /// matching the whole-object `updateCalendarEvent` contract.
-  private func scopedUpdatesFromDraft() -> ScopedCalendarEventUpdates {
-    ScopedCalendarEventUpdates(
+  /// The draft's editable fields as a scoped-edit patch. `startDate`/`endDate`
+  /// are sent only when the user actually changed the day: the draft is seeded
+  /// with THIS occurrence's date, and for `.allEvents`/segment scopes sending it
+  /// unchanged would re-anchor the whole series to this occurrence's day on a
+  /// metadata-only edit (dropping earlier occurrences). When the day did change,
+  /// the end shifts with it (``shiftedCalendarEndDate(for:newStartDate:)``) so it
+  /// never strands. Empty location / notes strings clear those fields, matching
+  /// the whole-object `updateCalendarEvent` contract.
+  private func scopedUpdatesFromDraft(for event: CalendarTimelineEvent)
+    -> ScopedCalendarEventUpdates
+  {
+    let newStartYmd = Self.ymdFormatter.string(from: calendarDraft.date)
+    let dateChanged = newStartYmd != event.startDate
+    return ScopedCalendarEventUpdates(
       title: calendarDraft.trimmedTitle,
-      startDate: Self.ymdFormatter.string(from: calendarDraft.date),
-      endDate: nil,
+      startDate: dateChanged ? newStartYmd : nil,
+      endDate: dateChanged
+        ? shiftedCalendarEndDate(for: event, newStartDate: calendarDraft.date) : nil,
       startTime: calendarDraft.allDay
         ? nil : Self.hmFormatter.string(from: calendarDraft.startTime),
       endTime: calendarDraft.allDay
@@ -81,9 +91,9 @@ extension MobileStore {
   /// can split a series or create a one-off replacement — changes an in-place
   /// single-event update cannot capture.
   private func reloadCalendarWindowAfterScopedMutation() async {
-    guard let from = calendarTimeline?.from, let to = calendarTimeline?.to else { return }
+    guard let window = calendarWindowToReload else { return }
     do {
-      calendarTimeline = try await core.loadCalendarTimeline(from: from, to: to)
+      calendarTimeline = try await core.loadCalendarTimeline(from: window.from, to: window.to)
     } catch {
       await presentUserFacingError(error)
     }

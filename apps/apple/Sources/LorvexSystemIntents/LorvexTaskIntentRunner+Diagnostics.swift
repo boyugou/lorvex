@@ -24,10 +24,4 @@ extension LorvexTaskIntentRunner {
   ) async throws -> RecentLogsSnapshot {
     try await LorvexSystemIntentRunner.readRecentLogs(core: core)
   }
-
-  public static func readGuide(
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> GuideSnapshot {
-    try await LorvexSystemIntentRunner.readGuide(core: core)
-  }
 }

@@ -115,10 +115,10 @@ public final class LorvexStore: @unchecked Sendable {
   /// verified against that checksum and then left to the numbered-migration
   /// ladder — the frozen baseline is NEVER replayed, so a post-launch
   /// destructive migration (DROP/RENAME) is not undone on the next open. A
-  /// checksum mismatch, or a data-bearing database with no bookkeeping row to
-  /// verify, raises ``SchemaMismatch``. With `schemaChecksum == nil` (tests /
-  /// in-memory) the baseline is applied idempotently on every open with no
-  /// verification.
+  /// checksum mismatch or a data-bearing database with no bookkeeping row to
+  /// verify raises ``SchemaMismatch``. With
+  /// `schemaChecksum == nil` (tests / in-memory) the baseline is applied
+  /// idempotently on every open with no verification.
   ///
   /// Resilience: if the file at `url` cannot be opened because it is not a
   /// database, is corrupt, or is a data-bearing file with no bookkeeping row to
@@ -209,8 +209,20 @@ public final class LorvexStore: @unchecked Sendable {
     // snapshot. Acquiring the write lock up front lets the busy timeout absorb
     // the contention, the product's primary write pattern (app + assistant).
     config.defaultTransactionKind = .immediate
+    // This file lives in the shared App Group container, and iOS terminates a
+    // process (`0xdead10cc`) that is suspended while holding a lock on such a
+    // file. With BEGIN IMMEDIATE taking the write lock up front and a 5-second
+    // busy timeout to wait it out, an ordinary write caught by backgrounding is
+    // exactly that case. Observing the suspension notifications lets a host post
+    // `Database.suspendNotification` before the process suspends; the connection
+    // then refuses new locks and raises `SQLITE_ABORT` / `SQLITE_INTERRUPT`,
+    // which the sync pipeline classifies as transient and retries. Hosts that
+    // never post the notification are unaffected.
+    config.observesSuspensionNotifications = true
     let queue = try DatabaseQueue(path: url.path, configuration: config)
-    try applySchema(queue, sql: schemaSQL, schemaChecksum: schemaChecksum, migrations: migrations)
+    try applySchema(
+      queue, sql: schemaSQL, schemaChecksum: schemaChecksum, migrations: migrations,
+      managed: managed)
     if managed {
       try verifyManagedCompleteness(queue)
       try ensureInboxListRow(queue)
@@ -236,7 +248,8 @@ public final class LorvexStore: @unchecked Sendable {
     config.busyMode = .timeout(5)
     config.defaultTransactionKind = .immediate
     let queue = try DatabaseQueue(configuration: config)
-    try applySchema(queue, sql: schemaSQL, schemaChecksum: nil, migrations: migrations)
+    try applySchema(
+      queue, sql: schemaSQL, schemaChecksum: nil, migrations: migrations, managed: false)
     return LorvexStore(writer: queue)
   }
 
@@ -268,9 +281,14 @@ public final class LorvexStore: @unchecked Sendable {
   /// and the subsequent DDL each execute at autocommit, matching how a `.sql`
   /// dump is applied by the sqlite CLI; each version-2+ migration wraps its own
   /// `BEGIN IMMEDIATE`.
+  ///
+  /// For a managed store the load-bearing tables are checked before the ladder
+  /// runs, so a stamped-but-tableless file surfaces as the recoverable
+  /// ``SchemaIncomplete`` (and is quarantined) rather than as a migration
+  /// failure on a table it lacks.
   private static func applySchema(
     _ writer: any DatabaseWriter, sql: String, schemaChecksum: String?,
-    migrations: [SchemaMigration]
+    migrations: [SchemaMigration], managed: Bool
   ) throws {
     try writer.writeWithoutTransaction { db in
       try ensureSchemaMigrationsTable(db)
@@ -279,6 +297,13 @@ public final class LorvexStore: @unchecked Sendable {
       // re-stamped by an older binary.
       try SchemaMigrationRunner.checkDowngrade(
         db, migrations: migrations, baselineVersion: schemaMigrationVersion)
+      // The lenient replay below re-runs the idempotent baseline DDL. Once a
+      // numbered migration has run, the baseline no longer describes the
+      // database (a dropped table would be recreated, an index on a dropped
+      // column would fail), so the ladder alone owns the schema from then on.
+      let ladderApplied =
+        (try Int.fetchOne(db, sql: "SELECT MAX(version) FROM schema_migrations") ?? 0)
+        > schemaMigrationVersion
       if let recorded = try recordedSchemaMigration(db) {
         if let expected = schemaChecksum {
           // Production: verify the recorded baseline checksum, then STOP —
@@ -294,7 +319,7 @@ public final class LorvexStore: @unchecked Sendable {
         } else {
           // Tests / in-memory: no checksum to verify against, so replay the
           // idempotent baseline DDL to reconcile any drift.
-          try db.execute(sql: sql)
+          if !ladderApplied { try db.execute(sql: sql) }
         }
       } else if try tableExists(db, "tasks") {
         // A data-bearing database with no bookkeeping row cannot be verified
@@ -305,7 +330,7 @@ public final class LorvexStore: @unchecked Sendable {
           throw SchemaMismatch(
             kind: .missingBookkeeping, recorded: "(no schema_migrations row)", expected: expected)
         }
-        try db.execute(sql: sql)
+        if !ladderApplied { try db.execute(sql: sql) }
       } else {
         // Fresh database: apply the schema and stamp the bookkeeping row.
         try db.execute(sql: sql)
@@ -313,6 +338,7 @@ public final class LorvexStore: @unchecked Sendable {
           try stampSchemaMigration(db, checksum: expected)
         }
       }
+      if managed { try requireLoadBearingTables(db) }
       try SchemaMigrationRunner.run(db, migrations: migrations)
     }
   }
@@ -399,18 +425,11 @@ public final class LorvexStore: @unchecked Sendable {
   ///   would silently swallow the very errors that diagnose the incomplete open.
   /// - `sync_checkpoints`: holds the device identity every write stamps and every
   ///   sync cycle reads.
-  /// - `sync_cloudkit_account_binding` / authority witness / generation ledger /
-  ///   traversal progress / witness / corruption fences: durable proof that
-  ///   gates CloudKit outbound and terminal restore against restored,
-  ///   generation-rolled-back, partially-traversed, or dropped remote state.
+  /// - `sync_outbox`: every canonical mutation enqueues its upload here in the
+  ///   same transaction, so its absence fails every write.
   /// - `preferences`: backs `default_list_id` and the app's persisted settings.
   private static let requiredLoadBearingTables = [
-    "lists", "tasks", "error_logs", "sync_checkpoints",
-    "sync_cloudkit_account_binding", "sync_cloudkit_authority_witness",
-    "sync_cloudkit_generation_descriptor",
-    "sync_cloudkit_traversal_progress",
-    "sync_cloudkit_traversal_witness", "sync_cloudkit_incremental_cursor",
-    "sync_cloudkit_corrupt_record_fences", "preferences",
+    "lists", "tasks", "error_logs", "sync_checkpoints", "sync_outbox", "preferences",
   ]
 
   /// Managed-open completeness probe: assert the load-bearing tables are present
@@ -428,17 +447,22 @@ public final class LorvexStore: @unchecked Sendable {
   /// same quarantine-and-recreate path a `SQLITE_CORRUPT` open-throw already uses.
   static func verifyManagedCompleteness(_ writer: any DatabaseWriter) throws {
     try writer.read { db in
-      var missing: [String] = []
-      for table in requiredLoadBearingTables where try !tableExists(db, table) {
-        missing.append(table)
-      }
-      guard missing.isEmpty else {
-        throw SchemaIncomplete(missingTables: missing)
-      }
+      try requireLoadBearingTables(db)
       let result = try String.fetchOne(db, sql: "PRAGMA quick_check(1)")
       if let result, result != "ok" {
         throw SchemaIncomplete(missingTables: [], integrityFailure: result)
       }
+    }
+  }
+
+  /// Throw ``SchemaIncomplete`` naming every missing load-bearing table.
+  private static func requireLoadBearingTables(_ db: Database) throws {
+    var missing: [String] = []
+    for table in requiredLoadBearingTables where try !tableExists(db, table) {
+      missing.append(table)
+    }
+    guard missing.isEmpty else {
+      throw SchemaIncomplete(missingTables: missing)
     }
   }
 
@@ -480,9 +504,9 @@ public final class LorvexStore: @unchecked Sendable {
     shouldQuarantineAndRecreate(error)
   }
 
-  /// Whether `open` should set the existing file aside and start fresh: either
-  /// a genuinely-unreadable database (corruption / not-a-database / structural
-  /// conflict) or a data-bearing file with no bookkeeping row to verify
+  /// Whether `open` should set the existing file aside and start fresh: a
+  /// genuinely-unreadable database (corruption / not-a-database / structural
+  /// conflict), a data-bearing file with no bookkeeping row to verify
   /// (``SchemaMismatch`` of kind ``SchemaMismatch/Kind/missingBookkeeping``).
   ///
   /// A ``SchemaIncomplete`` (the managed completeness probe found a stamped file

@@ -193,19 +193,19 @@ final class SwiftLorvexCoreServiceWatchCommandTests: XCTestCase {
     XCTAssertEqual(try taskCount(service, title: "Following command"), 1)
   }
 
-  func testFocusNoOpCheckAndAppliedReceiptShareTheWriteTransaction() async throws {
+  func testPauseNoOpCheckAndAppliedReceiptShareTheWriteTransaction() async throws {
     let fixture = try Fixture()
     defer { fixture.remove() }
     let service = fixture.open()
     let peer = fixture.open()
-    let task = try await service.createTask(title: "Concurrent focus add", notes: "")
+    let task = try await service.createTask(title: "Concurrent start", notes: "")
     let workspace = try await service.currentWatchWorkspaceInstanceID()
-    let remove = try command(
+    let pause = try command(
       workspace: workspace, sequence: 1,
       id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-      mutation: .removeFromFocus(id: task.id, date: "2026-07-16"))
+      mutation: .pauseTask(id: task.id))
     let enteredPreTransactionWindow = expectation(
-      description: "Watch removal reached the pre-transaction window")
+      description: "Watch pause reached the pre-transaction window")
     let releaseCommand = DispatchSemaphore(value: 0)
 
     let commandTask = Task {
@@ -213,29 +213,28 @@ final class SwiftLorvexCoreServiceWatchCommandTests: XCTestCase {
         enteredPreTransactionWindow.fulfill()
         releaseCommand.wait()
       }) {
-        await service.applyWatchCommand(remove)
+        await service.applyWatchCommand(pause)
       }
     }
 
     await fulfillment(of: [enteredPreTransactionWindow], timeout: 5)
 
-    // The peer lands the task after the Watch call starts but before the Watch
-    // transaction begins. The locked recheck must observe and remove it before
-    // committing the applied receipt.
-    _ = try await peer.addToCurrentFocus(
-      date: "2026-07-16", taskIDs: [task.id], briefing: nil, timezone: "UTC")
+    // The peer starts the task after the Watch call begins but before the Watch
+    // transaction does. The locked recheck must observe the start and pause the
+    // task before committing the applied receipt.
+    _ = try await peer.startTask(id: task.id)
     releaseCommand.signal()
 
     let acknowledgement = await commandTask.value
     XCTAssertEqual(acknowledgement.outcome, .applied)
-    let focusAfterApplication = try await service.loadCurrentFocus(date: "2026-07-16")
-    XCTAssertNil(focusAfterApplication)
+    let statusAfterApplication = try await service.loadTask(id: task.id).status
+    XCTAssertEqual(statusAfterApplication, .open)
     XCTAssertEqual(try receiptCount(service), 1)
 
-    let replay = await service.applyWatchCommand(remove)
+    let replay = await service.applyWatchCommand(pause)
     XCTAssertEqual(replay, acknowledgement)
-    let focusAfterReplay = try await service.loadCurrentFocus(date: "2026-07-16")
-    XCTAssertNil(focusAfterReplay)
+    let statusAfterReplay = try await service.loadTask(id: task.id).status
+    XCTAssertEqual(statusAfterReplay, .open)
   }
 
   private func command(

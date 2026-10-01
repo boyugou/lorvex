@@ -106,8 +106,8 @@ public enum PayloadShadow {
 
   /// Convert the SQLite-backed schema version to the wire's exact UInt32
   /// domain. The table CHECK prevents invalid new writes; this read boundary
-  /// keeps legacy/manual corruption from being silently clamped into a different
-  /// protocol version by an outbound or generation snapshot.
+  /// keeps manual corruption from being silently clamped into a different
+  /// protocol version by an outbound re-emit.
   public static func requireWirePayloadSchemaVersion(
     _ row: Row, context: String
   ) throws -> UInt32 {

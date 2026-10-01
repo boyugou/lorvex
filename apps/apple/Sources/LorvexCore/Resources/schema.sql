@@ -134,9 +134,17 @@ CREATE TABLE IF NOT EXISTS tasks (
                                 'needs_breakdown', 'needs_info'
                             )),
     planned_date            TEXT,
+    -- The task's time on its planned day: minutes since midnight in the
+    -- configured timezone, an appointment with oneself. Both or neither, only
+    -- with a planned date, running forward within the day (an end of 1440 is
+    -- midnight at the day's end); the CHECKs below lock that shape. They belong
+    -- to the schedule register with `planned_date`, so a time travels with its
+    -- day, and a write that moves the planned date clears them.
+    planned_start_minutes   INTEGER,
+    planned_end_minutes     INTEGER,
     -- civil date (YYYY-MM-DD) before which the task is hidden from
     -- day surfaces (Today pool, day buckets, Upcoming, default open
-    -- list lane, focus auto-proposal) and therefore from widgets /
+    -- list lane, suggested times) and therefore from widgets /
     -- watch / CarPlay. UTC-midnight anchored like `planned_date`, so
     -- it is stable across timezone change. A task is "hidden" while
     -- `available_from > today` AND it is not overdue — an overdue
@@ -166,6 +174,15 @@ CREATE TABLE IF NOT EXISTS tasks (
     priority_effective      INTEGER GENERATED ALWAYS AS (COALESCE(priority, 4)) VIRTUAL,
     CHECK (priority IS NULL OR (priority >= 1 AND priority <= 3)),
     CHECK (status IN ('open', 'in_progress', 'completed', 'cancelled', 'someday')),
+    CHECK ((planned_start_minutes IS NULL) = (planned_end_minutes IS NULL)),
+    CHECK (planned_start_minutes IS NULL OR planned_date IS NOT NULL),
+    CHECK (
+        planned_start_minutes IS NULL OR (
+            planned_start_minutes >= 0
+            AND planned_end_minutes > planned_start_minutes
+            AND planned_end_minutes <= 1440
+        )
+    ),
     CHECK (content_version <= version),
     CHECK (schedule_version <= version),
     CHECK (lifecycle_version <= version),
@@ -773,31 +790,12 @@ CREATE TABLE IF NOT EXISTS daily_reviews (
     CHECK (energy_level IS NULL OR (energy_level >= 1 AND energy_level <= 5))
 ) STRICT;
 
--- Per-date curated focus list: which tasks matter today, hand-picked and
--- ordered, plus an optional briefing. One aggregate per date;
--- `current_focus_items` holds the ordered task references.
-CREATE TABLE IF NOT EXISTS current_focus (
+-- The assistant's briefing for one day: a short note on what matters and
+-- why, what is at risk, and what it moved. One row per day; clearing the
+-- briefing deletes the row. The app shows it and never edits it.
+CREATE TABLE IF NOT EXISTS daily_briefings (
     date       TEXT PRIMARY KEY,
-    briefing   TEXT,
-    timezone   TEXT,
-    version    TEXT NOT NULL CHECK (
-        length(version) = 35 AND substr(version, 14, 1) = '_' AND substr(version, 19, 1) = '_'
-        AND substr(version, 1, 13) <= '9999913599999'
-        AND substr(version, 1, 13) NOT GLOB '*[^0-9]*'
-        AND substr(version, 15, 4) NOT GLOB '*[^0-9]*'
-        AND substr(version, 20, 16) NOT GLOB '*[^0-9a-f]*'
-    ),
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-) STRICT;
-
--- Per-date time-blocked day plan: ordered minute-of-day blocks
--- (`focus_schedule_blocks`) with an optional rationale. Complements
--- `current_focus`: that aggregate curates *which* tasks matter today;
--- this one plans *when* the day's time goes.
-CREATE TABLE IF NOT EXISTS focus_schedule (
-    date       TEXT PRIMARY KEY,
-    rationale  TEXT,
+    briefing   TEXT NOT NULL CHECK (length(trim(briefing)) > 0),
     timezone   TEXT,
     version    TEXT NOT NULL CHECK (
         length(version) = 35 AND substr(version, 14, 1) = '_' AND substr(version, 19, 1) = '_'
@@ -928,90 +926,6 @@ CREATE TABLE IF NOT EXISTS habit_completions (
 -- Child refs (task_id, list_id) are soft references — no FK constraint.
 -- The parent aggregate owns canonical truth; referenced entities may not
 -- exist locally yet during sync apply. Parent FK (date) is kept for CASCADE.
-
-CREATE TABLE IF NOT EXISTS current_focus_items (
-    date     TEXT NOT NULL REFERENCES current_focus(date) ON DELETE CASCADE,
-    position INTEGER NOT NULL CHECK (position >= 0),
-    task_id  TEXT NOT NULL,
-    PRIMARY KEY (date, position)
-) STRICT;
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_focus_items_date_task ON current_focus_items(date, task_id);
-CREATE INDEX IF NOT EXISTS idx_focus_items_task ON current_focus_items(task_id);
-
-CREATE TABLE IF NOT EXISTS focus_schedule_blocks (
-    date              TEXT NOT NULL REFERENCES focus_schedule(date) ON DELETE CASCADE,
-    position          INTEGER NOT NULL CHECK (position >= 0),
-    block_type        TEXT NOT NULL CHECK (block_type IN ('task', 'buffer', 'event')),
-    start_minutes     INTEGER NOT NULL,
-    end_minutes       INTEGER NOT NULL,
-    task_id           TEXT,
-    calendar_event_id TEXT,
-    event_source      TEXT CHECK (event_source IN ('canonical', 'provider', 'freeform')),
-    title             TEXT,
-    -- Lock the minute-of-day contract: start/end are minutes from midnight in
-    -- [0,1440] with end > start. Both live writers already enforce this; the
-    -- CHECK is the last-line defense so a malformed peer envelope or hand-rolled
-    -- fixture cannot land a row the timeline projector would then dereference.
-    CHECK (start_minutes >= 0 AND end_minutes > start_minutes AND end_minutes <= 1440),
-    -- `task_id` is a soft reference because aggregate sync order is arbitrary,
-    -- but its identity shape is still canonical: a hyphenated lowercase UUID.
-    -- Keep this symmetric with canonical `calendar_event_id` so direct-SQL writers cannot
-    -- create a task block that no service/import/sync reader can address.
-    CHECK (
-      task_id IS NULL OR (
-        length(task_id) = 36
-        AND substr(task_id, 9, 1) = '-'
-        AND substr(task_id, 14, 1) = '-'
-        AND substr(task_id, 19, 1) = '-'
-        AND substr(task_id, 24, 1) = '-'
-        AND length(replace(task_id, '-', '')) = 32
-        AND replace(task_id, '-', '') NOT GLOB '*[^0-9a-f]*'
-        AND task_id NOT GLOB '*[^0-9a-f-]*'
-      )
-    ),
-    -- Event provenance belongs to the schedule block itself. It must not be
-    -- inferred from whether the referenced calendar row has arrived locally:
-    -- aggregate sync order is arbitrary, while provider/freeform blocks have no
-    -- canonical calendar row at all.
-    --
-    -- `calendar_event_id` has one meaning only: a canonical Lorvex calendar-event UUID.
-    -- Provider identity stays device-local and freeform blocks have no identity.
-    CHECK (
-      calendar_event_id IS NULL OR (
-        length(calendar_event_id) = 36
-        AND substr(calendar_event_id, 9, 1) = '-'
-        AND substr(calendar_event_id, 14, 1) = '-'
-        AND substr(calendar_event_id, 19, 1) = '-'
-        AND substr(calendar_event_id, 24, 1) = '-'
-        AND length(replace(calendar_event_id, '-', '')) = 32
-        AND replace(calendar_event_id, '-', '') NOT GLOB '*[^0-9a-f]*'
-        AND calendar_event_id NOT GLOB '*[^0-9a-f-]*'
-      )
-    ),
-    -- enforce the (block_type, task_id, calendar_event_id, event_source)
-    -- consistency at the schema level so a malformed peer envelope or
-    -- hand-rolled fixture can't land a row that the timeline projector
-    -- would then dereference. The application-level write helpers
-    -- already obey this contract; the CHECK is the last-line defense
-    -- for future writers that don't go through those helpers.
-    --   - block_type='task'   → task_id NOT NULL; event fields NULL
-    --   - canonical event     → canonical calendar_event_id + source='canonical'
-    --   - provider event      → no calendar_event_id + source='provider'
-    --   - freeform event      → no calendar_event_id + source='freeform'
-    --   - block_type='buffer' → all references/source NULL
-    CHECK (
-      (block_type = 'task' AND task_id IS NOT NULL
-        AND calendar_event_id IS NULL AND event_source IS NULL)
-      OR (block_type = 'event' AND task_id IS NULL AND (
-        (event_source = 'canonical' AND calendar_event_id IS NOT NULL)
-        OR (event_source IN ('provider', 'freeform') AND calendar_event_id IS NULL)
-      ))
-      OR (block_type = 'buffer' AND task_id IS NULL
-        AND calendar_event_id IS NULL AND event_source IS NULL)
-    ),
-    PRIMARY KEY (date, position)
-) STRICT;
 
 -- Weekday set for a 'weekly' habit, materialized from the weekday array carried
 -- inside the habit's own sync payload. Parent-owned: the applier rebuilds these
@@ -1501,7 +1415,7 @@ CREATE TABLE IF NOT EXISTS sync_tombstones (
     entity_type TEXT NOT NULL CHECK (
         entity_type IN (
             'task', 'list', 'habit', 'tag', 'calendar_event', 'preference',
-            'memory', 'daily_review', 'current_focus', 'focus_schedule',
+            'memory', 'daily_review', 'daily_briefing',
             'task_reminder', 'task_checklist_item', 'habit_reminder_policy',
             'task_tag', 'task_dependency', 'task_calendar_event_link',
             'habit_completion'
@@ -2888,8 +2802,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_changelog_presence_entity
 -- idx_daily_reviews_date removed: PK on (date) already serves as the index.
 -- The daily_review_task_links / daily_review_list_links child tables are read
 -- only by review_date (PK-served), so neither carries a reverse-lookup
--- secondary index on task_id / list_id (unlike current_focus_items, whose
--- task_id IS reverse-looked-up on task delete via idx_focus_items_task).
+-- secondary index on task_id / list_id.
 
 -- Partial index on the active pending subset. The canonical
 -- get_pending query is `WHERE synced_at IS NULL AND disposition
@@ -2938,11 +2851,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_sync_outbox_unsynced_per_entity
 -- synced_at index the GC full-scans the retained synced history every
 -- cycle. The partial WHERE keeps this index to just the synced subset.
 CREATE INDEX IF NOT EXISTS idx_sync_outbox_synced_at ON sync_outbox(synced_at) WHERE synced_at IS NOT NULL;
--- Indexes for focus-schedule and sync-tombstone hot paths.
-CREATE INDEX IF NOT EXISTS idx_focus_schedule_blocks_task
-    ON focus_schedule_blocks(task_id) WHERE task_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_focus_schedule_blocks_calendar_event
-    ON focus_schedule_blocks(calendar_event_id) WHERE calendar_event_id IS NOT NULL;
+-- Indexes for sync-tombstone hot paths.
 CREATE INDEX IF NOT EXISTS idx_sync_tombstones_version
     ON sync_tombstones(version);
 CREATE INDEX IF NOT EXISTS idx_sync_entity_redirects_target

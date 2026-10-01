@@ -37,13 +37,12 @@ TEST_METADATA = {
     "CLOUDKIT_CONTAINER_ID": "iCloud.com.lorvex.apple",
     "MARKETING_VERSION": "0.1.0",
     "MOBILE_APP_NAME": "LorvexMobileApp",
-    "VISION_APP_NAME": "LorvexVisionApp",
     "WATCH_APP_NAME": "LorvexWatchApp",
     "WATCH_COMPLICATION_PRODUCT": "LorvexWatchComplication",
     "WATCH_COMPLICATION_BUNDLE_ID": "com.lorvex.apple.mobile.watchkitapp.widgets",
-    "WATCH_COMPLICATION_KIND": "com.lorvex.apple.mobile.watchkitapp.widgets.focus",
-    "WATCH_COMPLICATION_DISPLAY_NAME": "Lorvex Focus",
-    "WIDGET_EXECUTABLE": "LorvexFocusWidget",
+    "WATCH_COMPLICATION_KIND": "com.lorvex.apple.mobile.watchkitapp.widgets.today",
+    "WATCH_COMPLICATION_DISPLAY_NAME": "Lorvex Today",
+    "WIDGET_EXECUTABLE": "LorvexWidgets",
     "FOCUS_FILTER_EXECUTABLE": "LorvexFocusFilterExtension",
     "URL_SCHEME": "lorvex",
     "CALENDAR_WRITE_USAGE_DESCRIPTION": "Lorvex can add planning blocks you create to Apple Calendar.",
@@ -59,10 +58,6 @@ class VerifyApplePlatformManifestTests(unittest.TestCase):
                 "xcodegen_target": "LorvexMobileApp",
                 "live_activities_supported": True,
             },
-            "visionos": {
-                "swiftpm_product": "LorvexVisionApp",
-                "xcodegen_target": "LorvexVisionApp",
-            },
             "watchos": {
                 "swiftpm_product": "LorvexWatchApp",
                 "xcodegen_target": "LorvexWatchApp",
@@ -72,10 +67,9 @@ class VerifyApplePlatformManifestTests(unittest.TestCase):
                 "xcodegen_target": "LorvexWatchComplication",
             },
             "widget": {
-                "target": "LorvexFocusWidgetExtension",
+                "target": "LorvexWidgets",
                 "swiftpm_product": "LorvexWidgetBundle",
-                "standalone_swiftpm_product": "LorvexFocusWidget",
-                "xcodegen_target": "LorvexFocusWidgetExtension",
+                "xcodegen_target": "LorvexWidgets",
             },
             "focus_filter": {
                 "target": "LorvexFocusFilterExtension",
@@ -91,10 +85,6 @@ class VerifyApplePlatformManifestTests(unittest.TestCase):
                 "swiftpm_product": "WrongMobile",
                 "xcodegen_target": "LorvexMobileApp",
             },
-            "visionos": {
-                "swiftpm_product": "WrongVisionProduct",
-                "xcodegen_target": "WrongVision",
-            },
             "watchos": {
                 "swiftpm_product": "LorvexWatchApp",
                 "xcodegen_target": "LorvexWatchApp",
@@ -104,10 +94,9 @@ class VerifyApplePlatformManifestTests(unittest.TestCase):
                 "xcodegen_target": "WrongComplicationTarget",
             },
             "widget": {
-                "target": "LorvexFocusWidgetExtension",
-                "swiftpm_product": "LorvexWidgetBundle",
-                "standalone_swiftpm_product": "WrongWidget",
-                "xcodegen_target": "LorvexFocusWidgetExtension",
+                "target": "LorvexWidgets",
+                "swiftpm_product": "WrongWidget",
+                "xcodegen_target": "LorvexWidgets",
             },
             "focus_filter": {
                 "target": "LorvexFocusFilterExtension",
@@ -119,13 +108,11 @@ class VerifyApplePlatformManifestTests(unittest.TestCase):
             apple_target_manifest_failures(targets, TEST_METADATA),
             [
                 "ios.swiftpm_product mismatch: 'WrongMobile' != 'LorvexMobileApp'",
-                "visionos.swiftpm_product mismatch: 'WrongVisionProduct' != 'LorvexVisionApp'",
-                "visionos.xcodegen_target mismatch: 'WrongVision' != 'LorvexVisionApp'",
                 "watch_complication.swiftpm_product mismatch: "
                 "'WrongComplication' != 'LorvexWatchComplication'",
                 "watch_complication.xcodegen_target mismatch: "
                 "'WrongComplicationTarget' != 'LorvexWatchComplication'",
-                "widget.standalone_swiftpm_product mismatch: 'WrongWidget' != 'LorvexFocusWidget'",
+                "widget.swiftpm_product mismatch: 'WrongWidget' != 'LorvexWidgetBundle'",
             ],
         )
 
@@ -169,36 +156,36 @@ name: LorvexAppleNative
 targets:
   LorvexMobileApp:
     type: application
-  LorvexVisionApp:
+  LorvexWatchApp:
     type: application
 schemes:
   LorvexMobileApp:
     build:
 """
 
-        self.assertEqual(xcodegen_targets(source), {"LorvexMobileApp", "LorvexVisionApp"})
+        self.assertEqual(xcodegen_targets(source), {"LorvexMobileApp", "LorvexWatchApp"})
 
     def test_xcodegen_target_settings_extracts_base_settings(self) -> None:
         source = """
 targets:
-  LorvexVisionApp:
+  LorvexWatchApp:
     type: application
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision
-        PRODUCT_NAME: LorvexVisionApp
-        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexVisionApp.entitlements
-        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexVisionApp-Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watchkitapp
+        PRODUCT_NAME: LorvexWatchApp
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexWatchApp.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexWatchApp-Info.plist
 schemes:
 """
 
         self.assertEqual(
-            xcodegen_target_settings(source, "LorvexVisionApp"),
+            xcodegen_target_settings(source, "LorvexWatchApp"),
             {
-                "PRODUCT_BUNDLE_IDENTIFIER": "com.lorvex.apple.vision",
-                "PRODUCT_NAME": "LorvexVisionApp",
-                "CODE_SIGN_ENTITLEMENTS": "$(SRCROOT)/../../Config/LorvexVisionApp.entitlements",
-                "INFOPLIST_FILE": "$(SRCROOT)/../../Config/LorvexVisionApp-Info.plist",
+                "PRODUCT_BUNDLE_IDENTIFIER": "com.lorvex.apple.watchkitapp",
+                "PRODUCT_NAME": "LorvexWatchApp",
+                "CODE_SIGN_ENTITLEMENTS": "$(SRCROOT)/../../Config/LorvexWatchApp.entitlements",
+                "INFOPLIST_FILE": "$(SRCROOT)/../../Config/LorvexWatchApp-Info.plist",
             },
         )
 
@@ -211,7 +198,7 @@ targets:
       - path: Config/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: Sources/LorvexCore
-  LorvexVisionApp:
+  LorvexWatchApp:
     sources:
       - path: Config/Other.xcprivacy
         buildPhase: resources
@@ -225,29 +212,29 @@ targets:
     def test_xcodegen_target_dependencies_extracts_target_dependencies(self) -> None:
         source = """
 targets:
-  LorvexFocusWidgetExtension:
+  LorvexWidgets:
     dependencies:
       - target: LorvexWidgetIntents
       - target: LorvexCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.widget.focus
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.focuswidget
 """
 
         self.assertEqual(
-            xcodegen_target_dependencies(source, "LorvexFocusWidgetExtension"),
+            xcodegen_target_dependencies(source, "LorvexWidgets"),
             {"LorvexWidgetIntents", "LorvexCore"},
         )
 
     def test_xcodegen_dependency_contract_failures_requires_widget_intents(self) -> None:
         targets = {
             "widget": {
-                "xcodegen_target": "LorvexFocusWidgetExtension",
+                "xcodegen_target": "LorvexWidgets",
             }
         }
         source = """
 targets:
-  LorvexFocusWidgetExtension:
+  LorvexWidgets:
     dependencies:
       - target: LorvexCore
 """
@@ -286,8 +273,8 @@ targets:
                 "xcodegen_target": "LorvexMobileApp",
                 "privacy_manifest": str(root / "Config" / "PrivacyInfo.xcprivacy"),
             },
-            "visionos": {
-                "xcodegen_target": "LorvexVisionApp",
+            "watchos": {
+                "xcodegen_target": "LorvexWatchApp",
                 "privacy_manifest": str(root / "Config" / "PrivacyInfo.xcprivacy"),
             },
         }
@@ -297,7 +284,7 @@ targets:
     sources:
       - path: Sources/LorvexMobileApp
       - path: Config/PrivacyInfo.xcprivacy
-  LorvexVisionApp:
+  LorvexWatchApp:
     sources:
       - path: Config/WrongPrivacyInfo.xcprivacy
         buildPhase: resources
@@ -308,7 +295,7 @@ targets:
             [
                 "ios XcodeGen resources missing privacy manifest: "
                 "'Config/PrivacyInfo.xcprivacy'",
-                "visionos XcodeGen resources missing privacy manifest: "
+                "watchos XcodeGen resources missing privacy manifest: "
                 "'Config/PrivacyInfo.xcprivacy'",
             ],
         )
@@ -322,12 +309,12 @@ targets:
                 "info_plist": str(root / "Config" / "LorvexMobileApp-Info.plist"),
                 "entitlements": str(root / "Config" / "LorvexMobileApp.entitlements"),
             },
-            "visionos": {
-                "xcodegen_target": "LorvexVisionApp",
-                "bundle_id": "com.lorvex.apple.vision",
-                "scheme": "LorvexVisionApp",
-                "info_plist": str(root / "Config" / "LorvexVisionApp-Info.plist"),
-                "entitlements": str(root / "Config" / "LorvexVisionApp.entitlements"),
+            "watchos": {
+                "xcodegen_target": "LorvexWatchApp",
+                "bundle_id": "com.lorvex.apple.watchkitapp",
+                "scheme": "LorvexWatchApp",
+                "info_plist": str(root / "Config" / "LorvexWatchApp-Info.plist"),
+                "entitlements": str(root / "Config" / "LorvexWatchApp.entitlements"),
             },
             "watch_complication": {
                 "xcodegen_target": "LorvexWatchComplication",
@@ -343,13 +330,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.mobile
         CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexMobileApp.entitlements
         INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexMobileApp-Info.plist
-  LorvexVisionApp:
+  LorvexWatchApp:
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.vision
-        PRODUCT_NAME: LorvexVisionApp
-        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexVisionApp.entitlements
-        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexVisionApp-Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.watchkitapp
+        PRODUCT_NAME: LorvexWatchApp
+        CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexWatchApp.entitlements
+        INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexWatchApp-Info.plist
   LorvexWatchComplication:
     settings:
       base:
@@ -366,17 +353,17 @@ schemes:
     def test_xcodegen_setting_contract_failures_rejects_drifted_settings(self) -> None:
         root = Path(__file__).resolve().parents[1]
         targets = {
-            "visionos": {
-                "xcodegen_target": "LorvexVisionApp",
-                "bundle_id": "com.lorvex.apple.vision",
-                "scheme": "LorvexVisionApp",
-                "info_plist": str(root / "Config" / "LorvexVisionApp-Info.plist"),
-                "entitlements": str(root / "Config" / "LorvexVisionApp.entitlements"),
+            "watchos": {
+                "xcodegen_target": "LorvexWatchApp",
+                "bundle_id": "com.lorvex.apple.watchkitapp",
+                "scheme": "LorvexWatchApp",
+                "info_plist": str(root / "Config" / "LorvexWatchApp-Info.plist"),
+                "entitlements": str(root / "Config" / "LorvexWatchApp.entitlements"),
             }
         }
         source = """
 targets:
-  LorvexVisionApp:
+  LorvexWatchApp:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: wrong.bundle
@@ -389,15 +376,15 @@ schemes:
         self.assertEqual(
             xcodegen_setting_contract_failures(targets, xcodegen_source=source),
             [
-                "visionos XcodeGen PRODUCT_BUNDLE_IDENTIFIER mismatch: "
-                "'wrong.bundle' != 'com.lorvex.apple.vision'",
-                "visionos XcodeGen INFOPLIST_FILE mismatch: "
+                "watchos XcodeGen PRODUCT_BUNDLE_IDENTIFIER mismatch: "
+                "'wrong.bundle' != 'com.lorvex.apple.watchkitapp'",
+                "watchos XcodeGen INFOPLIST_FILE mismatch: "
                 "'$(SRCROOT)/../../Config/Wrong-Info.plist' != "
-                "'$(SRCROOT)/../../Config/LorvexVisionApp-Info.plist'",
-                "visionos XcodeGen CODE_SIGN_ENTITLEMENTS mismatch: "
+                "'$(SRCROOT)/../../Config/LorvexWatchApp-Info.plist'",
+                "watchos XcodeGen CODE_SIGN_ENTITLEMENTS mismatch: "
                 "'$(SRCROOT)/../../Config/Wrong.entitlements' != "
-                "'$(SRCROOT)/../../Config/LorvexVisionApp.entitlements'",
-                "visionos XcodeGen PRODUCT_NAME mismatch: 'WrongName' != 'LorvexVisionApp'",
+                "'$(SRCROOT)/../../Config/LorvexWatchApp.entitlements'",
+                "watchos XcodeGen PRODUCT_NAME mismatch: 'WrongName' != 'LorvexWatchApp'",
             ],
         )
 
@@ -408,21 +395,20 @@ schemes:
                 "xcodegen_target": "MissingMobileTarget",
             },
             "widget": {
-                "target": "LorvexFocusWidgetExtension",
+                "target": "LorvexWidgets",
                 "swiftpm_product": "MissingWidgetProduct",
-                "standalone_swiftpm_product": "LorvexFocusWidget",
-                "xcodegen_target": "LorvexFocusWidgetExtension",
+                "xcodegen_target": "LorvexWidgets",
             },
         }
         package_source = """
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
+        .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
         """
         xcodegen_source = """
 targets:
   LorvexMobileApp:
     type: application
-  LorvexFocusWidgetExtension:
+  LorvexWidgets:
     type: app-extension
 """
 
@@ -450,7 +436,6 @@ targets:
                 "system_intents": {
                     "swiftpm_product": "LorvexSystemIntents",
                     "ios_target": "LorvexSystemIntents",
-                    "visionos_target": "LorvexSystemIntentsVision",
                     "source_path": str(source_path),
                     "actions": ["capture_task"],
                     "capabilities": {
@@ -463,8 +448,6 @@ targets:
             xcodegen_source = """
 targets:
   LorvexSystemIntents:
-    type: framework
-  LorvexSystemIntentsVision:
     type: framework
 """
 
@@ -482,7 +465,6 @@ targets:
             "system_intents": {
                 "swiftpm_product": "MissingIntentsProduct",
                 "ios_target": "LorvexSystemIntents",
-                "visionos_target": "MissingVisionIntents",
                 "source_path": "/tmp/lorvex-missing-system-intents-source",
                 "actions": ["capture_task"],
                 "capabilities": {
@@ -507,8 +489,6 @@ targets:
             [
                 "system_intents.swiftpm_product is not a Package.swift product: "
                 "'MissingIntentsProduct'",
-                "system_intents.visionos_target is not an XcodeGen target: "
-                "'MissingVisionIntents'",
                 "system_intents.source_path is not a directory: "
                 "'/tmp/lorvex-missing-system-intents-source'",
                 "system_intents.capabilities.shortcuts does not match actions: "
@@ -526,7 +506,6 @@ targets:
                 "system_intents": {
                     "swiftpm_product": "LorvexSystemIntents",
                     "ios_target": "LorvexSystemIntents",
-                    "visionos_target": "LorvexSystemIntentsVision",
                     "source_path": str(source_path),
                     "actions": ["capture_task"],
                     "capabilities": {
@@ -539,8 +518,6 @@ targets:
             xcodegen_source = """
 targets:
   LorvexSystemIntents:
-    type: framework
-  LorvexSystemIntentsVision:
     type: framework
 """
 
@@ -565,7 +542,6 @@ targets:
                 "system_intents": {
                     "swiftpm_product": "LorvexSystemIntents",
                     "ios_target": "LorvexSystemIntents",
-                    "visionos_target": "LorvexSystemIntentsVision",
                     "source_path": str(source_path),
                     "actions": ["capture_task"],
                     "capabilities": {
@@ -578,8 +554,6 @@ targets:
             xcodegen_source = """
 targets:
   LorvexSystemIntents:
-    type: framework
-  LorvexSystemIntentsVision:
     type: framework
 """
 
@@ -818,10 +792,10 @@ targets:
 "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>LorvexFocusWidget</string>
-  <key>CFBundleDisplayName</key><string>Lorvex Focus</string>
-  <key>CFBundleExecutable</key><string>LorvexFocusWidget</string>
-  <key>CFBundleIdentifier</key><string>com.lorvex.apple.widget.focus</string>
+  <key>CFBundleName</key><string>LorvexWidgets</string>
+  <key>CFBundleDisplayName</key><string>Lorvex Today</string>
+  <key>CFBundleExecutable</key><string>LorvexWidgets</string>
+  <key>CFBundleIdentifier</key><string>com.lorvex.apple.focuswidget</string>
   <key>CFBundlePackageType</key><string>XPC!</string>
   <key>CFBundleShortVersionString</key><string>0.1.0</string>
   <key>CFBundleVersion</key><string>1</string>
@@ -838,9 +812,9 @@ targets:
                 widget_info_plist_failures(
                     str(path),
                     {
-                        "executable": "LorvexFocusWidget",
-                        "display_name": "Lorvex Focus",
-                        "bundle_id": "com.lorvex.apple.widget.focus",
+                        "executable": "LorvexWidgets",
+                        "display_name": "Lorvex Today",
+                        "bundle_id": "com.lorvex.apple.focuswidget",
                         "extension_point": "com.apple.widgetkit-extension",
                     },
                     TEST_METADATA,
@@ -928,21 +902,18 @@ class DeploymentFloorTests(unittest.TestCase):
     FLOOR_METADATA = {
         "MIN_SYSTEM_VERSION": "15.0",
         "MIN_MOBILE_SYSTEM_VERSION": "18.0",
-        "MIN_VISION_SYSTEM_VERSION": "2.0",
         "MIN_WATCH_SYSTEM_VERSION": "11.0",
     }
     PACKAGE_SOURCE = (
         "    platforms: [\n"
         "        .macOS(.v15),\n"
         "        .iOS(.v18),\n"
-        "        .visionOS(.v2),\n"
         "        .watchOS(.v11)\n"
         "    ],\n"
     )
     XCODEGEN_SOURCE = (
         "  deploymentTarget:\n"
         '    iOS: "18.0"\n'
-        '    visionOS: "2.0"\n'
         '    watchOS: "11.0"\n'
         "settings:\n"
     )
@@ -953,6 +924,24 @@ class DeploymentFloorTests(unittest.TestCase):
                 self.FLOOR_METADATA,
                 package_source=self.PACKAGE_SOURCE,
                 core_package_source=self.PACKAGE_SOURCE,
+                xcodegen_source=self.XCODEGEN_SOURCE,
+            ),
+            [],
+        )
+
+    def test_deployment_floor_failures_accepts_string_literal_floors(self) -> None:
+        literal_source = (
+            "    platforms: [\n"
+            '        .macOS("15.0"),\n'
+            '        .iOS("18.0"),\n'
+            '        .watchOS("11")\n'
+            "    ],\n"
+        )
+        self.assertEqual(
+            deployment_floor_failures(
+                self.FLOOR_METADATA,
+                package_source=literal_source,
+                core_package_source=literal_source,
                 xcodegen_source=self.XCODEGEN_SOURCE,
             ),
             [],

@@ -44,11 +44,6 @@ extension AppStore {
     set { syncReportsStorage.lastPublishedWidgetSnapshot = newValue }
   }
 
-  var lastCloudSyncSubscriptionErrorMessage: String? {
-    get { syncReportsStorage.lastCloudSyncSubscriptionErrorMessage }
-    set { syncReportsStorage.lastCloudSyncSubscriptionErrorMessage = newValue }
-  }
-
   var lastCloudSyncCycleReport: CloudSyncCycleReport? {
     get { syncReportsStorage.lastCloudSyncCycleReport }
     set { syncReportsStorage.lastCloudSyncCycleReport = newValue }
@@ -62,11 +57,6 @@ extension AppStore {
   var lastCloudSyncRemoteChangeSucceededAt: Date? {
     get { syncReportsStorage.lastCloudSyncRemoteChangeSucceededAt }
     set { syncReportsStorage.lastCloudSyncRemoteChangeSucceededAt = newValue }
-  }
-
-  var cloudSyncPacing: CloudSyncPacing {
-    get { syncReportsStorage.cloudSyncPacing }
-    set { syncReportsStorage.cloudSyncPacing = newValue }
   }
 
   var cloudKitAccountAvailability: CloudKitAccountAvailability {

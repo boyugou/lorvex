@@ -28,7 +28,7 @@ final class VersionStampTests: XCTestCase {
     let simpleTypes = [
       "task", "list", "habit", "tag", "calendar_event", "task_reminder",
       "habit_reminder_policy", "preference", "memory",
-      "daily_review", "current_focus", "focus_schedule",
+      "daily_review", "daily_briefing",
     ]
     for et in simpleTypes {
       XCTAssertTrue(VersionStamp.simplePkSupported(et), "simplePkSql should return Some for \(et)")

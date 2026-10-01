@@ -20,7 +20,7 @@ extension MobileStore {
     let format = String(
       localized: "database.recovery.notice",
       defaultValue: """
-        Lorvex couldn't open your previous database (%1$@), so it was set aside \
+        Lorvex couldn’t open your previous database (%1$@), so it was set aside \
         and a fresh one was created. Your earlier data is preserved.
         """, table: "Localizable", bundle: MobileL10n.bundle)
     databaseRecoveryMessage = String(format: format, notice.reason)

@@ -25,6 +25,7 @@ enum BackupV1TaskProjectionConsistency {
     let priority: String
     let dueDate: String?
     let plannedDate: String?
+    let plannedTime: Range<Int>?
     let availableFrom: String?
     let estimatedMinutes: Int?
     let recurrence: String?
@@ -192,6 +193,7 @@ enum BackupV1TaskProjectionConsistency {
       dueDate: try normalizedPortableDate(task.dueDate, taskID: task.id, field: "dueDate"),
       plannedDate: try normalizedPortableDate(
         task.plannedDate, taskID: task.id, field: "plannedDate"),
+      plannedTime: try portablePlannedTime(task),
       availableFrom: try normalizedPortableDate(
         task.availableFrom, taskID: task.id, field: "availableFrom"),
       estimatedMinutes: task.estimatedMinutes,
@@ -242,7 +244,8 @@ enum BackupV1TaskProjectionConsistency {
       id: task.id, title: task.title, body: normalizedBody(task.body),
       rawInput: task.rawInput, aiNotes: task.aiNotes, status: task.status,
       listID: task.listID, priority: priority, dueDate: task.dueDate,
-      plannedDate: task.plannedDate, availableFrom: task.availableFrom,
+      plannedDate: task.plannedDate, plannedTime: try nativePlannedTime(task),
+      availableFrom: task.availableFrom,
       estimatedMinutes: task.estimatedMinutes,
       recurrence: try normalizedNativeRecurrence(task.recurrence, taskID: task.id),
       recurrenceExceptions: recurrenceExceptions, dependencies: dependencies,
@@ -252,6 +255,36 @@ enum BackupV1TaskProjectionConsistency {
       lastDeferReason: task.lastDeferReason, lastDeferredAt: task.lastDeferredAt,
       completedAt: task.completedAt, createdAt: task.createdAt,
       updatedAt: task.updatedAt, archivedAt: task.archivedAt)
+  }
+
+  /// The portable `plannedStartTime`/`plannedEndTime` pair as minutes since
+  /// midnight; both absent is no time.
+  private static func portablePlannedTime(_ task: ExportTask) throws -> Range<Int>? {
+    switch (task.plannedStartTime, task.plannedEndTime) {
+    case (nil, nil):
+      return nil
+    case (let start?, let end?):
+      guard case .success(let startMinutes) = TimeOfDay.parseRangeEndMinutes(start),
+        case .success(let endMinutes) = TimeOfDay.parseRangeEndMinutes(end),
+        startMinutes < endMinutes
+      else {
+        throw Mismatch(detail: "task \(task.id) has an invalid portable planned time")
+      }
+      return startMinutes..<endMinutes
+    default:
+      throw Mismatch(detail: "task \(task.id) has half of a portable planned time")
+    }
+  }
+
+  private static func nativePlannedTime(_ task: NativeTaskSnapshot) throws -> Range<Int>? {
+    switch (task.plannedStartMinutes, task.plannedEndMinutes) {
+    case (nil, nil):
+      return nil
+    case (let start?, let end?) where start < end:
+      return start..<end
+    default:
+      throw Mismatch(detail: "task \(task.id) has an invalid native planned time")
+    }
   }
 
   private static func uniquePortableTasks(_ tasks: [ExportTask]) throws -> [String: ExportTask] {

@@ -1,6 +1,12 @@
 import LorvexCore
 import SwiftUI
 
+/// A memory entry's pushed detail screen: the `MobileRoute.memoryEntry`
+/// destination a compact Memory list row opens. Resolves the entry live from
+/// the store so a peer's edit shows through, keeps following the entry when an
+/// edit renames its key (the store's selection tracks the new key), and pops
+/// itself once the entry it was showing is deleted. Loads the memory snapshot
+/// itself when it is the first Memory screen on the stack.
 @MainActor
 struct MobileStoreMemoryDetailDestination: View {
   @Bindable var store: MobileStore
@@ -13,7 +19,11 @@ struct MobileStoreMemoryDetailDestination: View {
 
   var body: some View {
     Group {
-      if let entry = currentEntry {
+      if store.memory == nil {
+        List {
+          MobileDetailSkeleton()
+        }
+      } else if let entry = currentEntry {
         MobileMemoryDetailPanel(
           entry: entry,
           isSaving: store.isSavingMemory,
@@ -32,17 +42,22 @@ struct MobileStoreMemoryDetailDestination: View {
         )
       }
     }
-    .navigationTitle(currentEntry?.key ?? MobileDestination.memory.title)
-    #if os(iOS)
-      .navigationBarTitleDisplayMode(.inline)
-    #endif
-    .onAppear {
-      if currentEntry?.id == initialEntryID {
-        store.selectMemoryEntry(initialEntryID)
+    // The entry's own title is the headline of the content; the generic
+    // navigation title stays small so it does not compete with it.
+    .navigationTitle(MobileDestination.memory.title)
+    .toolbarTitleDisplayMode(.inline)
+    .task {
+      if store.memory == nil {
+        await store.loadMemorySnapshot()
       }
     }
-    .onChange(of: currentEntry?.id) { _, id in
-      if id == nil { dismiss() }
+    .onChange(of: currentEntry?.id, initial: true) { previous, id in
+      if let id, id == initialEntryID {
+        store.selectMemoryEntry(id)
+      }
+      if previous != nil, id == nil {
+        dismiss()
+      }
     }
     .mobileMemoryDeleteDialogs(
       entryPendingDeletion: $entryPendingDeletion,

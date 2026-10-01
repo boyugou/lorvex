@@ -255,6 +255,98 @@ func calendarMonthGridChipsHandlesAZeroCapAsAllOverflow() {
 
 // MARK: - Fixtures
 
+// MARK: - buildDays: timed tasks
+
+@Test
+func calendarMonthGridPlacesATimedTaskOnItsPlannedDayOnly() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 1
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 10)))
+  let dueDate = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 13)))
+  let plannedDate = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 14)))
+  // Due on the 13th, planned for 10:55 on the 14th: the planned day is where
+  // the task is drawn, the way the week grid draws it.
+  let task = calendarMonthGridTask(
+    id: "t1", title: "Send the status update", dueDate: dueDate, plannedDate: plannedDate,
+    plannedTime: 10 * 60 + 55..<11 * 60 + 35)
+
+  let days = CalendarMonthGridModel.buildDays(
+    monthAnchor: monthAnchor,
+    calendar: calendar,
+    events: [],
+    tasks: [task],
+    dayKeyFor: { calendarMonthGridYMD.string(from: $0) }
+  )
+
+  let dueDay = try #require(days.first { $0.dayKey == "2024-02-13" })
+  let planDay = try #require(days.first { $0.dayKey == "2024-02-14" })
+  #expect(dueDay.entries.isEmpty)
+  #expect(planDay.scheduledTasks.isEmpty)
+  #expect(planDay.timedTasks.map(\.id) == ["t1"])
+  #expect(planDay.entries.map(\.id) == ["timed#t1"])
+}
+
+@Test
+func calendarMonthGridDrawsATimedTaskOnceAndSkipsCancelledTasks() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 1
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 10)))
+  let plannedDate = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 14)))
+  let planned = calendarMonthGridTask(
+    id: "t1", title: "Draft the agenda", dueDate: nil, plannedDate: plannedDate,
+    plannedTime: 9 * 60 + 45..<10 * 60 + 45)
+  let cancelled = calendarMonthGridTask(
+    id: "t2", title: "Dropped", dueDate: nil, plannedDate: plannedDate,
+    plannedTime: 13 * 60..<13 * 60 + 30, status: .cancelled)
+
+  let days = CalendarMonthGridModel.buildDays(
+    monthAnchor: monthAnchor,
+    calendar: calendar,
+    events: [],
+    tasks: [planned, planned, cancelled],
+    dayKeyFor: { calendarMonthGridYMD.string(from: $0) }
+  )
+
+  let planDay = try #require(days.first { $0.dayKey == "2024-02-14" })
+  #expect(planDay.scheduledTasks.isEmpty)
+  #expect(planDay.timedTasks.map(\.id) == ["t1"])
+  #expect(days.allSatisfy { $0.entries.allSatisfy { !$0.id.hasSuffix("#t2") } })
+}
+
+@Test
+func calendarMonthGridOrdersTimedTasksWithTimedEventsByStart() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 1
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 10)))
+  let day14 = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 14)))
+  let offsite = calendarMonthGridEvent(id: "offsite", title: "Offsite", startDate: "2024-02-14", allDay: true)
+  let standup = calendarMonthGridEvent(
+    id: "standup", title: "Standup", startDate: "2024-02-14", startTime: "09:30")
+  let lunch = calendarMonthGridEvent(id: "lunch", title: "Lunch", startDate: "2024-02-14", startTime: "12:00")
+  let venue = calendarMonthGridTask(id: "t3", title: "Book the venue", dueDate: day14)
+  let agenda = calendarMonthGridTask(
+    id: "t2", title: "Draft the agenda", dueDate: nil, plannedDate: day14,
+    plannedTime: 9 * 60 + 45..<10 * 60 + 45)
+
+  let days = CalendarMonthGridModel.buildDays(
+    monthAnchor: monthAnchor,
+    calendar: calendar,
+    events: [lunch, standup, offsite],
+    tasks: [venue, agenda],
+    dayKeyFor: { calendarMonthGridYMD.string(from: $0) }
+  )
+
+  let day = try #require(days.first { $0.dayKey == "2024-02-14" })
+  #expect(
+    day.entries.map(\.id) == ["event#offsite", "event#standup", "timed#t2", "event#lunch", "task#t3"])
+  let chips = CalendarMonthGridModel.chips(for: day, maxVisible: 3)
+  #expect(chips.visible.map(\.id) == ["event#offsite", "event#standup"])
+  #expect(chips.overflowCount == 3)
+}
+
 private let calendarMonthGridYMD: DateFormatter = {
   let formatter = DateFormatter()
   formatter.calendar = Calendar(identifier: .gregorian)
@@ -294,16 +386,19 @@ private func calendarMonthGridTask(
   id: String,
   title: String,
   dueDate: Date?,
-  plannedDate: Date? = nil
+  plannedDate: Date? = nil,
+  plannedTime: Range<Int>? = nil,
+  status: LorvexTask.Status = .open
 ) -> LorvexTask {
   LorvexTask(
     id: id,
     title: title,
     notes: "",
     priority: .p3,
-    status: .open,
+    status: status,
     dueDate: dueDate,
     plannedDate: plannedDate,
+    plannedTime: plannedTime,
     estimatedMinutes: nil,
     tags: []
   )

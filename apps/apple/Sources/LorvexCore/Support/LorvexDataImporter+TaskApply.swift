@@ -179,6 +179,17 @@ extension LorvexDataImporter {
           availableFrom: parsed.availableFrom,
           tags: parsed.tags,
           dependsOn: [])
+        if let plannedTime = parsed.plannedTime {
+          do {
+            _ = try await core.updateTask(
+              TaskUpdateDraft(id: task.id, plannedTime: .set(plannedTime)))
+          } catch {
+            errors.append(
+              LorvexImportError(
+                category: .tasks, recordRef: task.id,
+                message: "Restored without its planned time: \(error.localizedDescription)"))
+          }
+        }
         if let listID = task.listID {
           do {
             _ = try await core.moveTask(id: task.id, toListID: listID)
@@ -331,15 +342,16 @@ extension LorvexDataImporter {
   }
 
   /// Parse the create-time fields shared by both restore paths (priority, the
-  /// three optional dates, tags, status). On any parse failure — unknown
-  /// priority, unparseable date, or unrecognized status — appends a per-record
-  /// error and returns nil so the caller skips the task. Status parsing is strict:
-  /// every accepted value must be a current ``LorvexTask/Status`` wire value.
+  /// three optional dates, the planned time, tags, status). On any parse
+  /// failure — unknown priority, unparseable date or time, or unrecognized
+  /// status — appends a per-record error and returns nil so the caller skips
+  /// the task. Status parsing is strict: every accepted value must be a current
+  /// ``LorvexTask/Status`` wire value.
   private static func parseTaskCreateFields(
     _ task: ExportTask, into errors: inout [LorvexImportError]
   ) -> (
     priority: LorvexTask.Priority, status: LorvexTask.Status, dueDate: Date?, plannedDate: Date?,
-    availableFrom: Date?, tags: [String]
+    plannedTime: Range<Int>?, availableFrom: Date?, tags: [String]
   )? {
     guard let priority = LorvexTask.Priority(rawValue: task.priority) else {
       errors.append(
@@ -365,6 +377,15 @@ extension LorvexDataImporter {
       errors.append(error)
       return nil
     }
+    let plannedTime: Range<Int>?
+    do {
+      plannedTime = try task.plannedTimeRange()
+    } catch {
+      errors.append(
+        LorvexImportError(
+          category: .tasks, recordRef: task.id, message: error.localizedDescription))
+      return nil
+    }
     guard let status = LorvexTask.Status(rawValue: task.status) else {
       errors.append(
         LorvexImportError(
@@ -374,7 +395,8 @@ extension LorvexDataImporter {
     }
     let tags = task.tags ?? []
     return (
-      priority, status, parsedDueDate.date, parsedPlannedDate.date, parsedAvailableFrom.date, tags
+      priority, status, parsedDueDate.date, parsedPlannedDate.date, plannedTime,
+      parsedAvailableFrom.date, tags
     )
   }
 

@@ -11,7 +11,21 @@ struct SetupWizardSheet: View {
   let settings: AppSettingsStore
   let onDismiss: () -> Void
 
-  @State private var wizardState = SetupWizardState()
+  @State private var wizardState: SetupWizardState
+
+  /// `wizardState` is the wizard's model, a fresh one by default; a caller
+  /// that turns the pages itself (the DEBUG preview tour) passes its own.
+  init(
+    store: AppStore,
+    settings: AppSettingsStore,
+    wizardState: SetupWizardState = SetupWizardState(),
+    onDismiss: @escaping () -> Void
+  ) {
+    self.store = store
+    self.settings = settings
+    self.onDismiss = onDismiss
+    _wizardState = State(initialValue: wizardState)
+  }
 
   var body: some View {
     VStack(spacing: 0) {
@@ -31,10 +45,12 @@ struct SetupWizardSheet: View {
     switch wizardState.currentStep {
     case .welcome:
       WelcomeStep(onNext: advance)
+    case .cloudSync:
+      CloudSyncStep(store: store, settings: settings, onNext: advance)
     case .permissions:
       PermissionsStep(store: store, settings: settings, wizardState: wizardState, onNext: advance)
     case .done:
-      DoneStep(settings: settings, wizardState: wizardState, onDone: onDismiss)
+      DoneStep(store: store, settings: settings, wizardState: wizardState, onDone: onDismiss)
     }
   }
 

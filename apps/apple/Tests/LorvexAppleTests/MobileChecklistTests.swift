@@ -9,7 +9,7 @@ func mobileStoreAddsAndRemovesChecklistItemsThroughCore() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
 
   let blankSaved = await store.addChecklistItem(taskID: task.id, text: "   ")
   #expect(!blankSaved)
@@ -34,14 +34,14 @@ func mobileStoreAddsAndRemovesChecklistItemsThroughCore() async throws {
 @MainActor
 @Test
 func mobileStoreChecklistMutationsDoNotReloadPlanningSnapshots() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
   let listLoads = core.loadListsCallCount
   let habitLoads = core.loadHabitsCallCount
   let calendarLoads = core.loadCalendarTimelineCallCount
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
 
   let added = await store.addChecklistItem(taskID: task.id, text: "Targeted checklist")
 
@@ -49,6 +49,7 @@ func mobileStoreChecklistMutationsDoNotReloadPlanningSnapshots() async throws {
   #expect(core.loadListsCallCount == listLoads)
   #expect(core.loadHabitsCallCount == habitLoads)
   #expect(core.loadCalendarTimelineCallCount == calendarLoads)
-  #expect(store.selectedTask?.checklistItems.contains { $0.text == "Targeted checklist" } == true)
+  #expect(
+    store.resolveTask(task.id)?.checklistItems.contains { $0.text == "Targeted checklist" } == true)
   #expect(store.errorMessage == nil)
 }

@@ -1,0 +1,13 @@
+{
+  "name": "lorvex",
+  "displayName": "Lorvex",
+  "description": "Plan your day, capture tasks, run weekly reviews, and keep the assistant's notes tidy in Lorvex, the Apple-native task manager. Connects Claude Code to the MCP helper inside the installed Lorvex app.",
+  "author": {
+    "name": "Lorvex",
+    "url": "https://lorvex.app"
+  },
+  "homepage": "https://lorvex.app",
+  "repository": "https://github.com/boyugou/lorvex",
+  "license": "Apache-2.0",
+  "keywords": ["tasks", "productivity", "planning", "apple", "mcp"]
+}

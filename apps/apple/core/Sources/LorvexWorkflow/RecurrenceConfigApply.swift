@@ -80,24 +80,6 @@ extension RecurrenceConfig {
     }
   }
 
-  /// Detailed writer boundary for surfaces that must enqueue the successor,
-  /// reminder, dependency, and focus rows touched by a recurrence disable.
-  public static func applyRecurrenceChangeWithEffects(
-    _ writer: any DatabaseWriter,
-    taskId: TaskId,
-    recurrencePatch: Patch<String>,
-    dueDatePatch: Patch<String>,
-    today: String,
-    version: String,
-    now: String
-  ) throws -> ApplyResult {
-    try StoreTransactions.withImmediateTransaction(writer) { db in
-      try applyRecurrenceChangeWithEffectsInTx(
-        db, taskId: taskId, recurrencePatch: recurrencePatch,
-        dueDatePatch: dueDatePatch, today: today, version: version, now: now)
-    }
-  }
-
   /// In-transaction variant of ``applyRecurrenceChange``. Use when the
   /// caller already holds an immediate transaction (e.g. an
   /// orchestrator that batches several mutations under one savepoint).

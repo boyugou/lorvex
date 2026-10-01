@@ -14,14 +14,14 @@ extension TaskWorkspaceSection {
     }
   }
 
-  /// Tint for the section header. The `deferred` lane keeps the orange the old
-  /// deferred status used; the `scheduled` lane reads teal to sit apart from the
-  /// deferred orange while staying calm.
+  /// Tint for the section header. Both lanes are neutral: the lane glyphs
+  /// (`sectionSymbolName`) already distinguish deferred from scheduled, so the
+  /// tint does not need to carry a second signal.
   var sectionTint: Color {
     switch self {
-    case .deferred: .orange
-    case .scheduled: .teal
-    default: taskStatus?.statusTint ?? .secondary
+    case .deferred: LorvexDesign.Palette.neutral
+    case .scheduled: LorvexDesign.Palette.neutral
+    default: taskStatus?.statusTint ?? LorvexDesign.Palette.neutral
     }
   }
 }

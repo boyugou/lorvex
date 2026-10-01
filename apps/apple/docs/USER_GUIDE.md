@@ -4,8 +4,8 @@
 
 Lorvex is an AI-first task manager built for the Apple platform. Rather than
 replacing your thinking, it serves as a structured memory that AI clients can
-read and write through the Model Context Protocol (MCP). Your tasks, focus
-plans, calendar events, habits, and reviews live in Lorvex-managed local
+read and write through the Model Context Protocol (MCP). Your tasks,
+calendar events, habits, and reviews live in Lorvex-managed local
 storage; an external AI client such as Claude connects to the Lorvex MCP
 host and acts as your intelligent co-pilot — capturing, organizing, and
 reviewing work on your behalf. The native SwiftUI app surfaces the same data
@@ -20,6 +20,13 @@ for glancing, confirming, and acting when you want to stay hands-on.
 1. Build or install `Lorvex.app` and open it.
 2. On first launch the app creates managed local storage so you can start
    working immediately.
+3. A short setup follows. It asks whether to sync through iCloud: sync stays
+   off until you turn it on, there or later in **Settings → Cloud Sync**, and
+   starts as soon as you do. Setup then offers the optional permissions
+   (Notifications for reminders, and Calendar on the Mac) and ends by naming
+   the two ways work gets in: capture it yourself, or connect an assistant. On
+   the Mac, **Connect an Assistant…** on that last page opens **Settings →
+   Assistant**.
 
 ### Storage
 
@@ -35,8 +42,23 @@ SQLite files must not be shared through a sync folder.
 
 ### MCP Client Configuration
 
-After building or packaging the app, run the following script to generate an
-MCP client config for Claude or any other MCP-capable client:
+With Lorvex installed, open **Settings → Assistant** and use **Copy Setup
+Prompt**, or expand **Advanced** to copy a config for your client. In Claude
+Code, install the Lorvex plugin instead; it connects the helper and adds skills
+for planning a day, capturing tasks, weekly reviews, and tidying the
+assistant's memory:
+
+```
+/plugin marketplace add boyugou/lorvex
+/plugin install lorvex@lorvex
+```
+
+Once an assistant has connected, Settings → Assistant lists it under
+**Assistants on This Mac** with when it last used Lorvex, so you can tell the
+connection works.
+
+After building or packaging the app from source, run the following script to
+generate an MCP client config for Claude or any other MCP-capable client:
 
 ```bash
 python3 script/generate_mcp_client_config.py \
@@ -74,8 +96,29 @@ Lorvex may request the following permissions on first use:
 Grant each permission in **System Settings → Privacy & Security** if the
 system dialog does not appear. Denying Calendar access does not
 block core Lorvex data; it only affects the corresponding EventKit overlay.
+On iPhone and iPad, the Notifications row in Lorvex's Settings shows whether
+notifications are allowed: **Allow** asks for access when iOS has not asked
+yet, and **Open Settings** goes to Lorvex's page in the Settings app after
+access was declined.
 
 ---
+
+### Language, Clock, and Time Zone
+
+Settings (General on Mac) sets the app's language, its clock, and its time
+zone. **Clock**
+follows your system's 12- or 24-hour setting unless you choose **12-Hour** or
+**24-Hour**; each choice shows a sample time. The clock applies at once to
+every time Lorvex shows, including widgets and time pickers. Times you give
+the assistant, and times it reports, stay in 24-hour `HH:MM` form.
+
+**Time Zone** is the zone Lorvex counts days in on all your devices, so
+"today" and "tomorrow" mean the same days on your Mac and your iPhone. Setup
+starts it at your device's zone. Choose another from the searchable list when
+you move; reminders keep their clock time in the new zone, so a 9 AM reminder
+still rings at 9 AM there. When a device is in a different zone from Lorvex's,
+the setting offers a one-tap switch to the device's zone; on a short trip you
+can keep your home zone instead.
 
 ## Quick Capture
 
@@ -85,9 +128,41 @@ your current activity.
 ### Keyboard Shortcut
 
 With Lorvex active, press **⌘N** (or **File → New Task**) to focus the inline
-quick-add field at the top of the Today or Tasks list — Lorvex switches to Tasks
-first if you are on another workspace. Type a task title and press **Return** to
+quick-add field — under today's tasks on Today, at the top of the Tasks list.
+Lorvex switches to Tasks first if you are on another workspace. Type a task title and press **Return** to
 save it; the field clears and keeps focus so you can add several in a row.
+
+### Words Quick Capture Understands
+
+Every capture field reads a few details out of what you type and shows them
+under the field before you save; the rest becomes the title. English and
+Chinese both work, and Chinese needs no spaces ("明天开会30分钟").
+
+| Detail | English | Chinese |
+|---|---|---|
+| Day | today, tonight, tomorrow, Friday, this Friday, next Friday, next week, weekend, in 3 days | 今天, 明天, 后天, 大后天, 周三 / 星期三 / 礼拜三, 这周三, 下周三, 下周, 周末, 3天后 |
+| Date | Oct 5, October 5th, 5 Oct, 2026-10-05 | 10月5日, 10月5号, 5号 |
+| Due day | by Friday, due tomorrow, by Oct 5 | 周五前, 明天之前, 10月5日前 |
+| Time | 3pm, 3:30 pm, at 15:30, noon | 下午3点, 晚上8点半, 三点一刻, 9点20分, 15:30 |
+| Repeat | every day, every weekday, every other week, every 3 days, every Monday, every Mon and Thu, every month, every year; daily, weekly, monthly, yearly at the end | 每天, 每隔一天, 每3天, 每周, 每两周, 每周一, 每周一三五, 每个工作日, 每月, 每月5号, 每年 |
+| Length | 20 min, 1.5h, 20m, 1h30m, half an hour | 30分钟, 2小时, 半小时, 一个半小时 |
+| Priority | !, !!, !!!, p1–p3, high priority, low priority, urgent (at the end, or "Urgent:" at the start) | 紧急 |
+| List or tag | #listname (a list when the name matches one, a tag otherwise) | #清单名 |
+
+A weekday's short form ("sat", "wed") counts only when it is capitalized or
+follows on, for, this, next, or by, and a capitalized weekday in the middle of
+a title ("Monday Morning Memo") stays part of the title.
+
+A date without a year that has already passed means next year's, and "5号"
+means the coming 5th. A time plans the task at that time for its length, or
+for half an hour, on the day you wrote or today when you wrote none. A time
+from 1 to 6 o'clock with no AM, PM, or part of the day (下午, 晚上) is in the
+afternoon, and a time after "tonight" or 今晚 is in the evening.
+
+A repeating task is due on its first occurrence: the next of the weekdays or
+the day of the month it names (today counts), else the day you wrote, else
+today. "Weekly review" and other titles that open with a cadence word keep it;
+daily, weekly, monthly, and yearly repeat only at the end of the line.
 
 ### From the Menu Bar Icon
 
@@ -105,17 +180,16 @@ The Shortcuts app also exposes **Create List**, **Update List**, **Delete List**
 **Create Habit**, **Update Habit**, **Delete Habit**, **Create Event**,
 **Update Event**, **Delete Event**, **Complete Task**, **Cancel Task**,
 **Reopen Task**, **Defer Task**, **Complete Habit**, **Reset Habit**,
-**Daily Review**, **Current Focus**, **Add to Focus**,
-**Clear Focus**, **Remove Focus**, **Focus Schedule**, **Propose Schedule**,
-**Save Schedule**, **Save Memory**, **Read Memory**, and **Delete Memory**. Use
-them from
+**Daily Review**, **Start Task**, **Pause Task**, **Plan Task for Today**,
+**Read Schedule**, **Suggest Times**, **Save Suggested Times**, **Save Memory**,
+**Read Memory**, and **Delete Memory**. Use them from
 iPhone, iPad, Mac, or Siri to create, rename, update, or delete empty lists,
 create/update/delete habits, create/update/delete Lorvex-owned calendar events,
 complete, cancel, reopen, or defer tasks, complete or reset today's habit progress, save a review summary,
-read, add to, clear, or remove a task from today's focus plan, inspect or propose a focus schedule, save
-the proposed schedule back to Lorvex, write, read, or delete a memory key, or
-clear the working context through the same Lorvex-managed storage used by the
-native app and MCP tools.
+start or pause a task, plan a task for today, read the day's times, suggest
+times for today's tasks, save the times you accept back to Lorvex, write, read,
+or delete a memory key, or clear the working context through the same
+Lorvex-managed storage used by the native app and MCP tools.
 
 The **Open Lorvex** shortcut can jump directly to Today, Tasks, Lists, Calendar,
 Habits, Reviews, or Memory. On iPhone and iPad, destinations
@@ -128,54 +202,65 @@ no forwarder is wired, as in SwiftUI previews.
 
 ---
 
-## Today & Focus
+## Today
 
 ### Daily Routine
 
-The **Today** workspace is your daily dashboard. It shows:
+The **Today** workspace is your day in one list, read top to bottom:
 
-- Tasks due or scheduled for today
-- Today's Focus — the AI-curated, reorderable day plan
-- An optional time-blocked schedule interleaved with your calendar events
-- A summary of completed tasks
+- The date, one line of facts (tasks left, meetings, planned time, and what is
+  done), and the assistant's briefing when it wrote one
+- When today holds more estimated work than the free working time you have
+  left, one line says so and offers to move the least urgent tasks that do not
+  fit to tomorrow
+- The list: started tasks first, then the rest by priority and due date, with
+  no section headers — an overdue task shows its due date in red and a started
+  task carries a **Started** chip, so every row already says what a heading
+  would
+- **Done** — what you finished today; click or tap its header to fold it
+
+On Mac a quick-add field sits under the tasks; on iPhone and iPad the day's
+habits follow as rings. Nothing you or the assistant put on today is hidden.
+Beside the list on Mac and iPad stands the day's schedule: your calendar events
+and the day's timed tasks. On iPhone, tap the day strip under the briefing to
+open it.
 
 Open Today from the sidebar, by pressing **⌘1**, or by tapping the Today tab
 on iPhone/iPad.
 
 On iPad, Lorvex supports hardware-keyboard navigation: **⌘R** refreshes,
-**⌘N** opens Capture, and **⌘1**-**⌘5** switch the primary tabs (Today, Tasks,
-Calendar, Habits, More). **⌘8** opens Lists, **⌘M** Memory, **⌘E** Review, and
-**⌘,** Settings. On visionOS the same shortcuts apply, plus **⌘6**, **⌘7**, and
-**⌘9** for Tasks, Calendar, and Habits.
+**⌘N** opens Capture, and **⌘1**-**⌘5** switch the tabs (Today, Tasks, Calendar,
+Habits, Review). **⌘8** opens Lists, **⌘M** Memory, and **⌘,** Settings.
 
-### Setting Current Focus
+### Suggested Times
 
-To set a task as your current focus:
-
-- In any task list, right-click a task and choose **Add to Focus**.
-- In the Task Detail view, click **Focus**.
-- Ask your AI client: "Focus on task X."
-
-Several tasks can share the current focus plan. The plan is an ordered list you
-work in any order; reorder it by drag, and mark tasks complete or "in progress"
-as you go — there is no timer.
-
-### Focus Schedule
-
-Lorvex can lay your Today's Focus tasks into a time-blocked schedule, interleaved
-with your real calendar events. Ask your AI client to "propose a schedule for
-today" (or use the **Propose Schedule** shortcut), review the blocks, and save
-it. The saved schedule appears in Today, collapsed by default.
+Lorvex can lay today's tasks into a time-blocked schedule, interleaved with
+your real calendar events. Ask your AI client to "suggest times for today" (or
+use **Suggest Times** on Today or in Shortcuts), review the suggestion, and
+accept or dismiss it. A suggestion for today starts from the current time:
+meetings that already ended are left out, a task you are in the middle of
+keeps its place, and tasks that no longer fit before your day hours end
+are listed as not scheduled, with **Move to Tomorrow** beside them. Day hours
+(Settings, 08:00–23:00 unless you change them) are the part of the day Lorvex
+plans into. Tasks are placed in Today's order, each at the
+earliest free time long enough for it, so a short task can fill the gap before
+a meeting that a longer one did not fit, and a ten-minute break follows each
+task when there is room. The suggestion stands at the top of Today's
+schedule on Mac and beside Today on iPad, headed "Suggested Times" above the
+saved "Current Schedule", until you
+accept it with **Use These Times** or dismiss it. On iPhone the schedule opens
+as a sheet from the day strip. **Clear Times** removes the day's times without
+taking any task off Today; on iPhone it asks you to confirm first.
 
 ### Focus Filter for iOS Focus Modes
 
-Lorvex provides an iOS Focus Filter. In **Settings → Focus**, you can add the
-Lorvex filter to any Focus mode (Work, Personal, Do Not Disturb, etc.). The
-filter has two controls: a Lorvex focus profile (the built-in **Lorvex Focus**)
-and a **Show Non-Focus Tasks** toggle. When that Focus mode is active and the
-toggle is off, Lorvex hides tasks that are not in your current focus plan from
-its widgets and Apple Watch, narrowing those glanceable surfaces to what you are
-focused on. The filter does not change the in-app Today view.
+Lorvex provides an iOS Focus Filter. In **Settings → Focus**, add the Lorvex
+filter to any Focus mode (Work, Personal, Do Not Disturb, etc.) and choose
+which lists it should keep visible. While that Focus mode is active, Lorvex's
+widgets and Apple Watch show only Today's tasks from the lists you chose and
+leave out the assistant's briefing; choosing no list narrows nothing. The app
+itself, notifications, and Shortcuts are unaffected and keep showing every
+list.
 
 ---
 
@@ -188,49 +273,61 @@ edit, delete, complete, and reset habits against the shared Lorvex core. Use
 the row buttons or context menu to change an existing habit without leaving the
 native workspace.
 
+Each habit is a card. A daily habit's card shows the last seven days as
+marks over their weekdays, today's in the habit's color, then the current
+streak ("12-day streak"), the share of the last 30 days you kept it, and, when
+the habit has milestones, how close it is to the next one ("Next at 14 days").
+Click the ring to check it in; click the card to open its history.
+
 ### Lists
 
 Open the **Lists** catalog from the **Navigate** menu or the Command Palette
 (⌘K) — it has no sidebar row of its own; the sidebar's list rows scope the Tasks
-workspace instead. The macOS workspace can create, edit, and delete empty lists
+workspace instead. Each list shows its open and total counts and its first
+three open tasks, each with its due day; click a task to open it in that list,
+or the card to open the whole list. The macOS workspace can create, edit, and delete empty lists
 through the same core list catalog used by MCP and mobile. Drag task rows onto a
 list to move them; lists with assigned tasks must be emptied before deletion.
 
 ### Creating Tasks
 
 - **Quick Capture:** ⌘N, type, **Return**.
-- **Inline quick-add:** Type in the quick-add field at the top of the Today or
-  Tasks list and press **Return**. Tasks land in the scoped list (when a list is
+- **Inline quick-add:** Type in the quick-add field (under today's tasks on
+  Today, at the top of the Tasks list) and press **Return**. Tasks land in the scoped list (when a list is
   selected), the inbox (all-tasks Tasks), or today's plan (Today).
 - **Full details:** ⌘N, **File → New Task**, and the toolbar **+** all focus the
   same inline quick-add — there is no separate new-task sheet. To set notes, due
   date, tags, recurrence, and checklist items, open the task and edit it in Task
   Detail (**⌘⇧I**).
-- **Mobile Task Detail:** On iPhone and iPad, open a task to review its
-  planned date, tags, dependencies, AI notes, checklist, and reminders. Tap
-  **Edit** to update title, notes, priority, estimate, planned
-  date, tags, and dependencies; add checklist items inline, swipe checklist
-  items to delete them, add reminders with the native date picker, swipe
-  reminders to delete them, or tap a checklist item status circle to mark it
+- **Mobile Task Detail:** On iPhone and iPad, a task's set fields are rows —
+  When, How long, Due, List, Priority, Repeat, Tag, Hide until — each with its
+  value; tap a row to change only that field. **Add Detail** lists the fields
+  the task does not have yet, plus a checklist and a reminder when it has
+  none. Tap **Edit** to change the title and notes. Swipe a checklist item or
+  a reminder to delete it, or tap a checklist item's circle to mark it
   complete.
-- **Mobile Task Rows:** Today and Focus rows show compact native metadata for
-  priority, estimate, planned date, recurrence, checklist progress, reminders,
-  dependencies, and the first tag.
-- **Mobile Today summaries:** The iPhone and iPad Today tab shows the day's
-  schedule (today's calendar events) and, when you have any, a habits summary —
-  it does not list your lists. Tap a habit's progress ring to complete it for
-  today or tap a completed one to reset it; swipe a habit row to edit or delete
-  it. Creating habits, events, and lists lives on their own tabs, not in Today.
+- **Mobile Task Rows:** A task row's circle is tinted by priority and
+  completes the task. Under the title, capsules mark a task that is started or
+  waiting on another task, and Today adds its own ("Until 3:00 PM",
+  "Pushed 4 times"). One line of metadata follows: the task's saved time, the
+  due date, a repeat glyph, the estimate, and up to two tags, which drop whole
+  when the line runs short.
+- **Mobile Today habits:** When you have habits, the iPhone and iPad Today tab
+  shows them as rings. Tap a ring to complete the habit for today or tap a
+  completed one to reset it; touch and hold one to open its details. Creating
+  habits, events, and lists lives on their own tabs, not in Today.
 - **Mobile Lists:** On iPhone and iPad, lists live in the **Tasks** tab. The
   Tasks home lists them as rows below the smart collections; tap one to open its
-  task list, and swipe a list row to edit its name and description or delete it
-  (empty lists only). Tap **New List** (the **+** in the Lists section header) to
-  create one. Handoff and system `openList` activities open the same list route.
+  task list, which shows the list's description under its name. Edit or delete
+  a list from the **⋯** menu on its screen, or swipe its row on the Tasks home.
+  Only an empty list can be deleted, and the Inbox never can. Tap **New List**
+  (the row after your lists) to create one; its screen opens right away. On
+  the Mac, **New List** is the last row of the sidebar's Lists section. Links, Handoff, and system `openList` activities open the same screen.
 - **Mobile Habit Creation:** Tap the **+** in the **Habits** tab toolbar to
   create a core-backed daily habit with a cue and target count.
 - **Mobile Calendar Creation:** Tap **New Event** in the **Calendar** tab to
   create a canonical Lorvex event; swipe an editable event row to edit or delete
-  it. The Today schedule summary is read-only and has no New Event footer.
+  it. Today's schedule has no New Event footer.
 - **Via AI:** Ask your connected AI client to create a task. The AI calls the
   `create_task` MCP tool and returns the full created task object.
 
@@ -315,19 +412,20 @@ Enable this in **Settings → Calendar → Two-Way Calendar Sync**.
 If the write fails (permission denied, calendar not available), Settings
 diagnostics show the export report so you can retry after granting permission.
 
-On iPhone, iPad, and Apple Vision Pro, Lorvex reads the system calendar for
-display and planning but does not write to Apple Calendar; calendar events you
-create there stay Lorvex-native. Those events still sync across your devices
+On iPhone and iPad, Lorvex reads the system calendar for display and planning
+but does not write to Apple Calendar; calendar events you create there stay
+Lorvex-native. Those events still sync across your devices
 through iCloud (Lorvex's own CloudKit sync).
 
 ### ICS Export
 
 To export Lorvex calendar events as an ICS file:
 
-1. Open **File → Export Calendar…** (macOS) or use the **Export** action in the
-   Calendar workspace sheet (iOS).
-2. Choose a date range.
-3. Save or share the resulting `.ics` file.
+- **macOS:** open **File → Export Calendar…** and save the `.ics` file. It
+  holds the dates the Calendar workspace has loaded.
+- **iPhone and iPad:** open **Settings → Data Export**, tap **Export Calendar**,
+  then **Share Calendar**. The file holds your events from today through the
+  next 30 days.
 
 The AI client can also trigger ICS export via the `export_calendar_ics` MCP tool.
 
@@ -337,39 +435,68 @@ The AI client can also trigger ICS export via the `export_calendar_ics` MCP tool
 
 ### Daily Review
 
-The **Reviews** workspace opens your daily review. Lorvex presents:
+The **Reviews** workspace opens on today's review, one page per day:
 
-- Tasks completed today
-- Tasks that were due but not completed
-- A prompt to write a brief reflection
+- One sentence reading the day: how many tasks you finished, how many due
+  tasks are still open, and how many habits you kept.
+- **What moved forward**: the tasks you finished that day.
+- **Still open**: the tasks due that day that are not done yet. Tap a task's
+  circle to complete it, or its title to open it. **Move All to Tomorrow**
+  beside the heading plans every listed task for tomorrow; to move one task,
+  use its context menu (or, on macOS, the **Move to Tomorrow** button that
+  appears when you point at the row). A moved task stays listed, since it is
+  still due that day, and says when it is planned.
+- **Habits**: every habit as it stood that day. Tap a habit to check it in on
+  that day, so a check-in you forgot can be made up from the review.
+- Two one-tap scales, **How did it feel?** and **Energy**. The level you pick
+  is named under its dot, from **Rough** to **Great** and from **Drained** to
+  **Full**.
+- **Tomorrow**, while you review today: tomorrow's events and the tasks
+  planned for it, or a line saying nothing is planned yet.
+- A **Note** field. The rarer **Wins**, **Blockers**, and **Learnings** fields
+  fold behind one line under it.
 
-Complete the review by submitting the reflection text. Daily reviews are stored
-in the database and visible in the review history.
-
-On iPhone and iPad, the **Review** tab also provides a native daily review form
-for summary, wins, blockers, learnings, mood, and energy. Save the form to update
-the same daily review record used by macOS and MCP tools.
+Everything saves as you change it; there is no Save button. On macOS, step to
+an earlier day with the arrows or the date chip in the toolbar. On iPhone and
+iPad, the **Review** tab shows the same page; open an earlier day from the
+week page's day list, and use **Return to today** to come back. Each day has
+one review record, shared by every device and by MCP tools.
 
 ### Weekly Review
 
-The weekly review summarizes:
+Switch the review to **Weekly** (macOS toolbar) or **Week** (iPhone and iPad)
+to read the week on one page:
 
-- Completed tasks for the week
-- Unfinished tasks carried over
-- A space for a weekly reflection
+- One sentence: how many tasks you finished, how many new ones came in, and
+  how many are overdue.
+- Under it, a bar for each of the week's seven days, as tall as the number
+  of tasks you finished that day. It appears once you finished anything that
+  week.
+- **What moved forward**: the week's top finished tasks.
+- **The days**: each day's review, which opens that day.
+- A question about the task pushed off most often, once it has been pushed
+  three or more times: **Move to Someday** parks it until it matters.
+- **Overdue**: open tasks past their due date, earliest first, each with how
+  long ago it was due. The list shows up to five and counts the rest.
+- **Kept getting pushed**: other tasks you deferred again and again.
+- **The Week Ahead**, while you review the current week: each of the next
+  seven days that has something on it, with its events and scheduled tasks
+  and their start times. A day lists four items and counts the rest.
+- How many ideas wait in Someday.
 
-Open the weekly review from the **Reviews** workspace or ask your AI client for
-the `get_weekly_brief` tool call.
+Each task appears once on the page, and an overdue or pushed task opens when
+you tap it. Your AI client can read a summary of the week through the
+`get_weekly_brief` tool.
 
 ### Memory
 
 Lorvex keeps a memory store — AI-managed notes, observations, and context
 snapshots the assistant remembers about you as a key→value store with last-write
-semantics. On macOS, open the **Memory** workspace from the sidebar's Reflect
-group or press **⌘6**. You can browse, search, write, and delete entries; edits
+semantics. On macOS, open **Memory** from the sidebar's footer, beside
+Settings, or press **⌘6**. You can browse, search, write, and delete entries; edits
 are synced across your devices.
 
-On iPhone, Memory is its own row in the **More** tab, separate from Review. On
+On iPhone, Memory is its own row on the **Tasks** tab, below the lists. On
 iPad, it is its own row in the sidebar's Workspaces section. Use it to review
 recent context entries or write a compact key/content memory update through the
 same core path used by macOS and MCP tools.
@@ -396,8 +523,7 @@ The MCP host exposes tools across these domains:
 | **System / Overview** | `get_overview`, `get_setup_status`, `get_session_context`, `get_sync_status` |
 | **Tasks** | `create_task`, `update_task`, `get_task`, `list_tasks`, `search_tasks`, `complete_task`, `cancel_task`, `reopen_task`, `defer_task`, `move_task_to_list`, `append_to_task_body`, `get_deferred_tasks` |
 | **Batch tasks** | `batch_create_tasks`, `batch_update_tasks`, `batch_defer_tasks`, `batch_complete_tasks`, `batch_reopen_tasks`, `batch_move_tasks` |
-| **Focus** | `set_current_focus`, `add_to_current_focus`, `get_current_focus`, `remove_from_current_focus`, `clear_current_focus` |
-| **Focus schedule** | `propose_daily_schedule`, `save_focus_schedule`, `get_saved_focus_schedule` |
+| **Day planning** | `start_task`, `pause_task`, `propose_daily_schedule`, `save_daily_schedule`, `get_daily_schedule`, `set_daily_briefing` |
 | **Lists & tags** | `create_list`, `update_list`, `delete_list`, `archive_list`, `unarchive_list`, `get_lists`, `get_list`, `get_list_health_snapshot`, `list_all_tags`, `rename_tag` |
 | **Calendar** | `create_calendar_event`, `update_calendar_event`, `delete_calendar_event`, `get_calendar_timeline`, `search_calendar_events`, `batch_create_calendar_events`, `edit_scoped_calendar_event`, `delete_scoped_calendar_event`, `export_calendar_ics`, `add_calendar_event_exception`, `remove_calendar_event_exception`, `link_task_to_event`, `unlink_task_from_event`, `link_task_to_provider_event`, `unlink_task_from_provider_event`, `get_linked_events_for_task`, `get_linked_tasks_for_event` |
 | **ICS export** | `export_calendar_ics` |
@@ -435,10 +561,9 @@ retrying the mutation under a new key.
 
 1. Long-press the Home Screen and tap **+**.
 2. Search for **Lorvex**.
-3. Choose a widget: **Lorvex Focus** (the focus widget — Small, Medium, Large,
-   plus Lock Screen accessory families), **Today Tasks** (Small, Medium, Large),
-   **Habits** (Small, Medium, and Lock Screen circular), or **Daily Progress**
-   (Small, and Lock Screen circular and inline).
+3. Choose a widget: **Today** (Small, Medium, Large, plus Lock Screen accessory
+   families), **Habits** (Small, Medium, and Lock Screen circular), or
+   **Daily Progress** (Small, and Lock Screen circular and inline).
 4. Tap **Add Widget**.
 
 Widgets refresh from a shared App Group snapshot the main app publishes. If the
@@ -446,30 +571,31 @@ App Group entitlement is not configured for your build, widgets show preview
 data.
 
 Widget rows and the whole-widget tap area carry `lorvex://` deep links that
-open Today or the tapped task detail in the app. On the focus widget, Medium
+open Today or the tapped task detail in the app. On the Today widget, Medium
 task rows add a one-tap **Complete** button and Large rows add both **Complete**
 and **Defer**. Those are the only interactive controls — a glanceable widget
-deliberately omits destructive and focus-membership actions.
+deliberately omits destructive actions.
 
 ### ControlWidget (iOS 18+)
 
-Lorvex provides a Control Widget for the iOS Control Center. It shows the
-current focus task and opens Lorvex directly to Today when tapped. Add it from
-Control Center itself: swipe down to open it, long-press to enter edit mode, tap
-**＋ Add a Control**, and search for **Lorvex Focus**.
+Lorvex provides a Control Widget for the iOS Control Center. It shows the task
+at the top of Today and opens Lorvex directly to Today when tapped. Add it
+from Control Center itself: swipe down to open it, long-press to enter edit
+mode, tap **＋ Add a Control**, and search for **Lorvex Today**.
 
 ### Watch App
 
-The `LorvexWatchApp` companion shows your current focus task and the next queued
-focus tasks on Apple Watch. The iPhone projects the bounded focus, habit,
-briefing, and aggregate subset the Watch actually consumes into a versioned,
-workspace-fenced replica. WatchConnectivity carries that latest-state replica,
+The `LorvexWatchApp` companion shows Today's list on Apple Watch, led by the
+task at its top with a ring while its saved time runs. The iPhone projects the
+bounded task, habit, briefing, and aggregate subset the Watch actually consumes
+into a versioned, workspace-fenced replica. WatchConnectivity carries that
+latest-state replica,
 and the Watch atomically stores it as `watch_replica_v1.json` in its own App
-Group container. The iPhone's fuller `widget_snapshot_v3.json` remains local to
+Group container. The iPhone's fuller `widget_snapshot.json` remains local to
 the WidgetKit surfaces; it is not the Watch transport contract.
 
-**Completing, canceling, or deferring a task** from the Watch is forwarded to
-iPhone over WatchConnectivity. The Watch persists every command before updating
+**Completing, starting, pausing, canceling, or deferring a task** from the
+Watch is forwarded to iPhone over WatchConnectivity. The Watch persists every command before updating
 its UI, keeps it until a checksum- and identity-bound application ACK arrives,
 and retries temporary transport or phone failures in FIFO order. The phone
 records the terminal receipt in SQLite in the same transaction as the canonical
@@ -479,8 +605,9 @@ on the Watch until dismissed; previews without a forwarder stay read-only.
 
 ### Watch Complications
 
-Lorvex ships a focus complication backed by the Watch's atomically stored replica
-(shared with the Watch app, not with the iPhone Widget extension). It supports
+Lorvex ships the "Lorvex Today" complication, backed by the Watch's atomically
+stored replica (shared with the Watch app, not with the iPhone Widget
+extension). It supports
 circular, rectangular, inline, and watchOS corner accessory families. Add it
 from the Watch app or directly from a watch-face customization flow.
 
@@ -490,44 +617,46 @@ from the Watch app or directly from a watch-face customization flow.
 
 ### CloudKit (Status)
 
-The local CloudKit export path can project the app snapshot for diagnostics,
-and live mode drains the Swift sync outbox into the private CloudKit database.
+With **Sync with iCloud** turned on, Lorvex syncs through Apple's `CKSyncEngine`: the Swift sync
+outbox is sent to the private CloudKit database, and changes from your other
+devices are fetched into the local store.
 Core planning entities such as tasks, lists, habits, calendar events, memory,
-and focus plans route through the same native inbound sync
+and daily briefings route through the same native inbound sync
 engine used by the Swift core tests. Real iCloud writes require a provisioned
 CloudKit container and a logged-in iCloud account.
 
 For local testing:
 
 ```bash
-# Encode CKRecords without network access
-LORVEX_CLOUDKIT_EXPORT=record-plan ./script/build_and_run.sh
-
-# Write to the private CloudKit database (provisioned build only)
-LORVEX_CLOUDKIT_EXPORT=live ./script/build_and_run.sh
+# Turn sync on and write to the private CloudKit database (provisioned build
+# only); any other value of LORVEX_CLOUD_SYNC forces sync off
+LORVEX_CLOUD_SYNC=live ./script/build_and_run.sh
 ```
 
-Settings diagnostics show the latest export report: mode, record count, source
-sequence, and any failure text.
+**Settings → Cloud Sync** holds the **Sync with iCloud** switch and shows the account and pause status,
+and a Last Cycle panel with the latest pass's counts and any failure text.
 
-In live mode, recognized CloudKit remote-change pushes trigger a private
-record-zone change fetch using the cursor stored with the SQLite traversal. The
-native inbound processor commits fetched records and the successor token in one
-SQLite transaction.
+While sync is on, `CKSyncEngine` fetches changes when a Lorvex remote-change push
+arrives and on its own schedule, and it keeps its change tokens as a checkpoint
+in the local SQLite database. The native inbound processor commits fetched
+records in one SQLite transaction before the checkpoint that covers them is
+saved.
 
-The Cloud Sync Settings tab also shows readiness for the full sync stack:
-outbound record export, private database subscription, remote-change refresh,
-inbound record application, and atomic SQLite change-token checkpointing are
-ready. The inbound boundary applies decoded CloudKit records through the native
+The inbound boundary applies decoded CloudKit records through the native
 `Apply.applyEnvelope` registry with typed HLC LWW gates, tombstones,
 redirect-aware pending inbox draining, and conflict logging. Settings shows the
 applied, skipped, deferred, remapped, replayed, and undecodable counts from the
-latest remote-change report.
+latest sync pass.
 
 ### JSON / CSV / ZIP Export
 
-From **Settings → Data → Export**: choose the categories you want, then pick
-**JSON**, **CSV**, or **ZIP** (one JSON file per category).
+From **Settings → Data → Export** on the Mac, or **Settings › Data Export ›
+Categories** on iPhone and iPad, choose the categories you want. They are
+grouped as **Planning** (tasks, lists, tags, habits), **Calendar** (events and
+the links between tasks and events), **Reviews & Assistant** (daily reviews,
+daily briefings, memory), and **Settings** (preferences); one button selects
+every category, or clears them once all are selected. Then pick **JSON**,
+**CSV**, or **ZIP** (one JSON file per category).
 
 Human JSON/ZIP task exports include an Apple-native task-state graph for the most
 faithful same-app import, alongside portable task JSON. The native graph includes
@@ -538,13 +667,11 @@ JSON provenance header may still describe which Apple device produced it. If the
 target already contains tasks or the native graph's list/tag roots were not
 selected, import safely uses the portable merge instead. CSV is portable only.
 
-Import is non-destructive, not an authoritative iCloud rollback. With Live
-iCloud Sync enabled, Lorvex first downloads every visible CloudKit page, proves
-the exact current account/generation, resolves deferred inbound work to a fixed
-point, and refuses to import while any pending or corrupt remote record remains.
-The same sync gate stays held until the import decisions finish. If that proof
-cannot be made, nothing is imported and Settings asks you to retry after Cloud
-Sync is ready. When sync is off, import deliberately compares only with local
+Import is non-destructive, not an authoritative iCloud rollback. With iCloud
+sync turned on, Lorvex first runs one sync pass so the import compares
+against the latest records from your other devices; if that pass fails, the
+import still proceeds against local data. Imported records then upload to
+iCloud like any other change. When sync is off, import compares only with local
 data; enable sync first when current iCloud state must participate in collision
 decisions.
 
@@ -570,26 +697,34 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 
 | Shortcut | Action |
 |---|---|
-| ⌘N | Quick Capture |
-| ⌘K | Command Palette |
-| ⌘1 | Today workspace |
-| ⌘2 | Calendar workspace |
-| ⌘3 | Tasks workspace |
-| ⌘4 | Habits workspace |
-| ⌘5 | Reviews workspace |
-| ⌘6 | Memory workspace |
+| ⌘N | New task (focuses the quick-add field) |
+| ⌘K | Command Palette: find a task, go somewhere, or capture |
+| ⌘1 | Today |
+| ⌘2 | Calendar |
+| ⌘3 | All Tasks |
+| ⌘4 | Review |
+| ⌘5 | Habits |
+| ⌘6 | Memory |
+| ⇧⌘1–⇧⌘5 | Open Today, Calendar, All Tasks, Review, or Habits in its own window |
+| ⌘← / ⌘→ | Previous / next day or week in Calendar and Review |
+| ⌃⌘S | Show or hide the sidebar |
 | ⌘R | Refresh data |
-| ⌘F | Search tasks |
 | ⌘, | Settings |
 
-The numeric accelerators map to the visible sidebar workspaces (⌘1–⌘6). The day
-plan lives inside Today, so there is no separate Focus workspace. The
-Eisenhower matrix and the dependency graph are MCP-data-only — the AI can
+The numeric accelerators follow the sidebar from top to bottom, then Memory in
+its footer (⌘1–⌘6). Adding ⇧ opens the same destination in its own window
+(Workspace menu); Memory has no separate window. In the Command Palette (⌘K),
+type the start of a destination's or a list's name and press Return to go
+there; any other text becomes a new task on Return, with matching tasks listed
+below it to open instead. In Review, ⌘← and ⌘→ move the cursor instead while
+you type a note. The Eisenhower matrix and the dependency graph are MCP-data-only
+— the AI can
 read and write them, but there is no macOS human view, so they have no
 numeric shortcut and are absent from the sidebar, Navigate menu, and Command
 Palette (⌘K). Lists has no numeric shortcut either, and no sidebar row of its
 own — the sidebar's list rows scope the Tasks workspace. The Lists catalog is
-reached from the Navigate menu or the Command Palette (⌘K).
+reached from the Navigate menu or the Command Palette (⌘K), and the Workspace
+menu opens it in its own window.
 
 ### Task Operations (macOS)
 
@@ -599,7 +734,7 @@ These act on the selected task.
 |---|---|
 | ⌘⇧I | Show task detail |
 | ⌘S | Save task edits |
-| ⌥⌘F | Add to / remove from Focus |
+| ⌘⇧S | Start or pause task |
 | ⌘⇧D | Defer to tomorrow |
 | ⌘⇧Return | Complete task |
 | ⌘⇧O | Reopen task |
@@ -607,8 +742,8 @@ These act on the selected task.
 
 ### Quick-Add Field (macOS)
 
-The inline quick-add sits at the top of the Today and Tasks lists; ⌘N (or
-File → New Task) focuses it.
+The inline quick-add sits under today's tasks on Today and at the top of the
+Tasks list; ⌘N (or File → New Task) focuses it.
 
 | Shortcut | Action |
 |---|---|
@@ -701,8 +836,8 @@ Lorvex requires an iCloud account signed in on the device to use CloudKit sync.
 3. If the app shows "No Account" even with an active iCloud session, the build
    may be using the basic entitlements file (without iCloud keys). Check
    **Settings → Diagnostics** for the CloudKit error detail.
-4. For local development, set `LORVEX_CLOUDKIT_EXPORT=record-plan` to test the
-   export code path without a network connection.
+4. For local development, `LORVEX_CLOUD_SYNC` overrides the Settings
+   choice: `live` turns sync on and any other value turns it off.
 
 ### EventKit permission denied
 

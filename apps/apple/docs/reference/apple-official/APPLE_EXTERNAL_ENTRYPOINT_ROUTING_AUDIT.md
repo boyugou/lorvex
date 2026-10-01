@@ -55,7 +55,7 @@ scheme ownership problems.
 
 ## Entrypoint Matrix
 
-| Logical target | Shared URL | macOS URL | iOS/vision URL | Typed activity | Spotlight continuation | Actual detail restoration |
+| Logical target | Shared URL | macOS URL | iOS URL | Typed activity | Spotlight continuation | Actual detail restoration |
 | --- | --- | --- | --- | --- | --- | --- |
 | Workspace | `lorvex://open/<destination>`; the bare-host form `lorvex://<destination>` is also accepted | Yes | Yes | Yes | Calendar events map to Calendar | Workspace only, as intended |
 | Task | `lorvex://task/<id>` | Yes | Yes | Yes | Yes | macOS and mobile load detail; stale ID handling differs |
@@ -69,11 +69,11 @@ platform navigation layer consumes it correctly.
 
 ## Findings
 
-### E1 — HIGH: habit notification default taps are unroutable on iOS and visionOS
+### E1 — HIGH: habit notification default taps are unroutable on iOS
 
 Habit notification content stores
 `LorvexDeepLinkRoute.habit(habitID).url`, producing
-`lorvex://habit/<id>`. The mobile/vision app delegate validates that URL through
+`lorvex://habit/<id>`. The mobile app delegate validates that URL through
 `LorvexNotificationRoute` and asks the system to open it. SwiftUI then delivers
 it to `MobileStore.openDeepLink`.
 
@@ -174,12 +174,11 @@ Apple says custom URL scheme ownership is not exclusive. Lorvex relies on
 content URLs, macOS Dock fallbacks, and external links. If another app claims the
 scheme, the system target is undefined.
 
-There is also a Lorvex-specific distribution question: native macOS, iOS/iPadOS,
-and visionOS apps all declare the same scheme. Normally they live on different
-device families, but “Designed for iPad” availability on Apple-silicon Macs and
-iPad-app compatibility on visionOS can create two Lorvex bundles capable of
-claiming the same scheme unless App Store availability is deliberately
-controlled.
+There is also a Lorvex-specific distribution question: native macOS and
+iOS/iPadOS apps declare the same scheme. Normally they live on different
+device families, but “Designed for iPad” availability on Apple-silicon Macs
+can create two Lorvex bundles capable of claiming the same scheme unless App
+Store availability is deliberately controlled.
 
 This does not require universal links immediately, especially if Lorvex has no
 stable web domain yet. It does require a recorded choice:
@@ -237,7 +236,7 @@ Missing composition tests include:
   unexpected queries/fragments, and unencoded extra slashes;
 - cold launch versus already-running app;
 - multiple windows/scenes and which one receives `onOpenURL`;
-- two installed Lorvex-capable bundles on an Apple-silicon Mac or Vision Pro.
+- two installed Lorvex-capable bundles on an Apple-silicon Mac.
 
 An exhaustive route-producer/consumer table should be data-driven so adding a
 new enum case fails every platform test until it has a mapping.

@@ -14,114 +14,59 @@ extension AppStore {
       ?? taskDetailStorage.loadedTasksByID[selectedTaskID]
   }
 
-  func taskForFocusSurface(id: LorvexTask.ID) -> LorvexTask? {
-    today.inProgressTasks.first { $0.id == id }
-      ?? today.tasks.first { $0.id == id }
+  /// The task with `id` among the rows Today can show: the day's list, what
+  /// is done today, then the other loaded pools.
+  func todayTask(id: LorvexTask.ID) -> LorvexTask? {
+    today.tasks.first { $0.id == id }
+      ?? today.inProgressTasks.first { $0.id == id }
+      ?? doneTodayTasks.first { $0.id == id }
       ?? selectedListDetail?.tasks.first { $0.id == id }
       ?? taskWorkspaceTask(id: id)
       ?? taskDetailStorage.loadedTasksByID[id]
-      ?? focusStorage.focusSurfaceTaskCache[id]
   }
 
-  var focusSurfaceTaskIDs: [LorvexTask.ID] {
-    var seen: Set<LorvexTask.ID> = []
-    var ids: [LorvexTask.ID] = []
-
-    for id in currentFocus?.taskIDs ?? [] where seen.insert(id).inserted {
-      ids.append(id)
-    }
-    return ids
+  var todaySelectedTaskIDs: Set<LorvexTask.ID> {
+    todayStorage.selectedTaskIDs
   }
 
-  var focusSurfaceTaskSignature: String {
-    [
-      currentFocus?.date ?? "",
-      String(currentFocus?.localChangeSequence ?? 0),
-      focusSurfaceTaskIDs.joined(separator: ","),
-    ].joined(separator: "|")
-  }
-
-  func loadFocusSurfaceTasks() async {
-    let ids = focusSurfaceTaskIDs
-    guard !ids.isEmpty else {
-      focusStorage.focusSurfaceTaskCache = [:]
-      return
-    }
-
-    for id in ids where taskForFocusSurface(id: id) == nil {
-      do {
-        focusStorage.focusSurfaceTaskCache[id] = try await core.loadTask(id: id)
-      } catch LorvexCoreError.taskNotFound {
-        // The task was deleted out from under the focus surface; skip it.
-      } catch {
-        // A transient load failure shouldn't silently leave a gap in the focus
-        // surface — surface it without a blocking alert on a best-effort fill.
-        // Route through the classifier so a raw GRDB (SQL / path) detail can't
-        // reach the toast; the raw detail is logged to `error_logs`.
-        toastMessage = await userFacingBannerMessage(
-          for: error, source: "macos.ui.focus_surface_load_failed")
-      }
-    }
-
-    let needed = Set(ids)
-    focusStorage.focusSurfaceTaskCache = focusStorage.focusSurfaceTaskCache.filter {
-      needed.contains($0.key)
-    }
-  }
-
-  var currentFocusTaskCount: Int {
-    currentFocus?.taskIDs.count ?? 0
-  }
-
-  /// Focus-plan task IDs as a `Set` for O(1) membership tests. Several SwiftUI
-  /// rows test focus membership once or twice per `body`; over N rows that was
-  /// O(N·F) against the `[String]`. The backing `Set` is rebuilt only when
-  /// `currentFocus` is assigned (see ``AppStoreFocusStorage``), so each read
-  /// here is a cheap cache lookup.
-  var focusedTaskIDSet: Set<String> {
-    focusStorage.focusedTaskIDSet
-  }
-
-  var selectedTaskIsFocused: Bool {
-    guard let id = selectedTask?.id else { return false }
-    return focusedTaskIDSet.contains(id)
-  }
-
-  var focusWorkspaceSelectedTaskIDs: Set<LorvexTask.ID> {
-    focusStorage.selectedTaskIDs
-  }
-
-  var focusWorkspaceSelectedTasks: [LorvexTask] {
-    let selected = focusStorage.selectedTaskIDs
+  var todaySelectedTasks: [LorvexTask] {
+    let selected = todayStorage.selectedTaskIDs
     guard !selected.isEmpty else { return [] }
-    return focusSurfaceOrderedTasks.filter { selected.contains($0.id) }
+    return todayOrderedTasks.filter { selected.contains($0.id) }
   }
 
-  var focusWorkspaceSelectionCount: Int {
-    focusStorage.selectedTaskIDs.count
+  var todaySelectionCount: Int {
+    todayStorage.selectedTaskIDs.count
   }
 
-  func setFocusWorkspaceSelection(_ ids: Set<LorvexTask.ID>) {
-    focusStorage.selectedTaskIDs = ids
+  func setTodaySelection(_ ids: Set<LorvexTask.ID>) {
+    todayStorage.selectedTaskIDs = ids
     if let selectedTaskID, ids.contains(selectedTaskID) {
       return
     }
     selectedTaskID = ids.sorted().first
   }
 
-  func selectOnlyFocusWorkspaceTask(_ id: LorvexTask.ID) {
-    focusStorage.selectedTaskIDs = [id]
+  func selectOnlyTodayTask(_ id: LorvexTask.ID) {
+    todayStorage.selectedTaskIDs = [id]
     selectTaskFromList(id)
   }
 
-  func toggleFocusWorkspaceTaskBatchSelection(_ id: LorvexTask.ID) {
-    if focusStorage.selectedTaskIDs.contains(id) {
-      focusStorage.selectedTaskIDs.remove(id)
+  /// Drop selected ids that Today no longer shows, after a change took tasks
+  /// off the list.
+  func pruneTodaySelection() {
+    let visibleIDs = Set(todayOrderedTasks.map(\.id))
+    todayStorage.selectedTaskIDs.formIntersection(visibleIDs)
+  }
+
+  func toggleTodayTaskBatchSelection(_ id: LorvexTask.ID) {
+    if todayStorage.selectedTaskIDs.contains(id) {
+      todayStorage.selectedTaskIDs.remove(id)
       if selectedTaskID == id {
-        selectTaskFromList(focusStorage.selectedTaskIDs.sorted().first)
+        selectTaskFromList(todayStorage.selectedTaskIDs.sorted().first)
       }
     } else {
-      focusStorage.selectedTaskIDs.insert(id)
+      todayStorage.selectedTaskIDs.insert(id)
       selectTaskFromList(id)
     }
   }
@@ -151,9 +96,8 @@ extension AppStore {
     selectedTask?.status == .open
   }
 
-  /// "Mark as Not Started" (`in_progress → open`) is offered only for a started
-  /// task.
-  var selectedTaskCanMarkNotStarted: Bool {
+  /// Pause (`in_progress → open`) is offered only for a started task.
+  var selectedTaskCanPause: Bool {
     selectedTask?.status == .inProgress
   }
 
@@ -185,43 +129,24 @@ extension AppStore {
       && taskDetailEstimateIsValid
   }
 
-  /// Started tasks pinned into Today's "In Progress" section, read from the
-  /// snapshot's uncapped `inProgressTasks` query so every started task shows —
-  /// not just those inside the priority-capped `today.tasks` overview pool. They
-  /// are pulled out of the focus and remaining lanes below (which filter
-  /// `today.tasks` to non-started work) so a started task shows in exactly one
-  /// place.
-  var inProgressTodayTasks: [LorvexTask] {
-    today.inProgressTasks
+  /// True when `task` carries a deadline the logical day has already passed.
+  func isOverdue(_ task: LorvexTask) -> Bool {
+    LorvexTaskSections.isOverdue(task, logicalDay: logicalTodayDateString)
   }
 
-  var focusedTasks: [LorvexTask] {
-    LorvexTaskSections.focus(order: currentFocus?.taskIDs ?? []) { taskForFocusSurface(id: $0) }
-      .filter { $0.status != .inProgress }
-  }
-
-  var remainingTodayTasks: [LorvexTask] {
-    let focusedIDs = focusedTaskIDSet
-    return today.tasks.filter { !focusedIDs.contains($0.id) && $0.status != .inProgress }
-  }
-
-  /// Open Today tasks with no planned work day. Tasks that carry a
-  /// `planned_date` (the surface stand-in for "deferred") fall into
-  /// ``deferredTasks`` instead, so the two groups stay mutually exclusive.
-  var openTasks: [LorvexTask] {
-    today.tasks.lorvexOpenSection
-  }
-
-  /// Open Today tasks that carry a planned work day — the surface stand-in for
-  /// "deferred" now that deferral pushes `planned_date` forward and leaves the
-  /// status `open` (there is no `deferred` status).
-  var deferredTasks: [LorvexTask] {
-    today.tasks.lorvexDeferredSection
+  /// True when a task the day claims cannot be started, because something it
+  /// depends on is still active.
+  func isBlocked(_ task: LorvexTask) -> Bool {
+    today.blockedTaskIDs.contains(task.id)
   }
 
   /// Calendar lane: planned-first action date (`planned_date ?? due_date`),
   /// mirroring the core's `getScheduledTasks`. A task surfaces on its planned
   /// work day, falling back to its deadline when unplanned.
+  ///
+  /// The `today.tasks` fallback only covers the window before
+  /// `calendarScheduledTasks` has loaded, and is bounded by the day pool: the
+  /// calendar's own read is what surfaces other days' work.
   var scheduledTasks: [LorvexTask] {
     (calendarScheduledTasks ?? today.tasks).lorvexScheduledSection
   }

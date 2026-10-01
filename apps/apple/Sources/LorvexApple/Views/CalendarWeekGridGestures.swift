@@ -167,9 +167,9 @@ extension CalendarWeekGridView {
 
   /// Top-edge resize: vertical-only drag at the block's top edge. Adjusts
   /// `startTime` (earlier when dragging up, later when dragging down) and
-  /// keeps `endTime` fixed. Snap + minimum 15-min duration are applied on
-  /// commit; a drag that would invert start/end clamps at 15 min before the
-  /// existing end.
+  /// keeps `endTime` fixed. The snap and the minimum duration
+  /// (`minimumBlockMinutes`) are applied on commit, so a drag past the end
+  /// stops that many minutes before it.
   func resizeTopGesture(for block: CalendarGridTimedBlock) -> some Gesture {
     DragGesture(minimumDistance: Self.dragMinimumDistance)
       .onChanged { value in

@@ -16,7 +16,7 @@ extension SwiftLorvexCoreService {
   /// Flush the cross-row work produced by a direct recurrence disable. These
   /// are independent rows changed by the workflow in the same transaction as
   /// the primary task: surviving recurrence neighbors, cancelled reminders,
-  /// dependency tombstones, and focus aggregates.
+  /// and dependency tombstones.
   func flushRecurrenceDisableEffects(
     _ db: Database, hlc: HlcSession, deviceId: String,
     effects: RecurrenceDisableEffects
@@ -54,12 +54,6 @@ extension SwiftLorvexCoreService {
     }
     // `affectedDependentIds` are reload hints only: deleting a dependency edge
     // does not mutate either surviving task row.
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-      entityIds: effects.currentFocusDates)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-      entityIds: effects.focusScheduleDates)
   }
 
   // MARK: - Task-update sync-effects fan-out
@@ -67,7 +61,7 @@ extension SwiftLorvexCoreService {
   /// Translate a `TaskUpdateSyncEffects` bundle (produced by `update_task` and
   /// the batch variants) into outbox enqueues, in a fixed order: tag edges →
   /// dependency edges → reminders → primary tasks → spawned successors →
-  /// cancelled successors → focus-rewire aggregates.
+  /// cancelled successors.
   ///
   /// Edge UPSERTS read their live snapshot; edge DELETES carry the pre-delete
   /// snapshot the effects bundle captured. Reminder and successor rows were
@@ -167,21 +161,13 @@ extension SwiftLorvexCoreService {
         entityId: successor.successorId,
         registerIntent: .task(.lifecycle))
     }
-
-    // 7. Focus-rewire aggregates last — they reference both parent + successor.
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-      entityIds: effects.rewiredFocusScheduleDates)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-      entityIds: effects.rewiredCurrentFocusDates)
   }
 
   /// Translate a `CreateTaskSyncEffects` bundle (produced by `create_task` and
   /// the batch-create variant) into outbox enqueues. `taskUpsertIds` already
   /// carries the primary created task, so no separate primary enqueue is needed.
   /// Ordering matches the task-update flush: tags → dependency edges → reminders
-  /// → tasks → spawned successors → focus aggregates.
+  /// → tasks → spawned successors.
   func flushCreateTaskEffects(
     _ db: Database, hlc: HlcSession, deviceId: String, effects: CreateTaskSyncEffects
   ) throws {
@@ -212,12 +198,6 @@ extension SwiftLorvexCoreService {
     try enqueueUpserts(
       db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
       entityIds: effects.spawnedSuccessorReminderIds)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-      entityIds: effects.rewiredFocusScheduleDates)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-      entityIds: effects.rewiredCurrentFocusDates)
   }
 
   /// Translate a `BatchCreateSyncEffects` bundle (produced by
@@ -264,12 +244,6 @@ extension SwiftLorvexCoreService {
     try enqueueUpserts(
       db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
       entityIds: effects.spawnedSuccessorReminderIds)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-      entityIds: effects.rewiredFocusScheduleDates)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-      entityIds: effects.rewiredCurrentFocusDates)
   }
 
 }

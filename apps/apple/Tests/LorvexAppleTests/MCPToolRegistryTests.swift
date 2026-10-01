@@ -14,7 +14,7 @@ struct ToolListingTests {
     let definitionNames = definitions.map { $0.tool.name }
     let listedNames = ToolRegistry.listTools().map(\.name)
 
-    #expect(definitions.count == 118)
+    #expect(definitions.count == 114)
     #expect(definitionNames == listedNames)
     #expect(Set(definitionNames).count == definitions.count)
     #expect(ToolDefinitionRegistry.byName.count == definitions.count)
@@ -360,7 +360,7 @@ struct ConflictEnvelopeTests {
     let seed = try await mcpRegistryCall(
       registry, tool: "create_task",
       arguments: [
-        "title": .string("Tagged"), "tags_set": .array([.string("alpha"), .string("beta")]),
+        "title": .string("Tagged"), "tags": .array([.string("alpha"), .string("beta")]),
       ])
     #expect(seed.isError != true)
 

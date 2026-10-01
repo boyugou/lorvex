@@ -66,14 +66,22 @@ private func memorySource(_ relativePath: String) throws -> String {
 @Test
 func memoryWorkspaceUsesNativeListAndContextualComposer() throws {
   let source = try memorySource("Sources/LorvexApple/Views/MemoryWorkspaceView.swift")
-  #expect(source.contains("List {"))
-  #expect(source.contains(".listStyle(.inset)"))
+  // Rows in a scroll view like the other workspaces: a `List` under the
+  // window toolbar lifts the header above the window's top edge.
+  #expect(source.contains("ScrollView {"))
+  #expect(source.contains("LazyVStack(alignment: .leading, spacing: 0)"))
+  #expect(!source.contains("List {"))
   #expect(source.contains(#".accessibilityIdentifier("memory.list")"#))
-  #expect(!source.contains(".lorvexWorkspaceSearchable(store: store)"))
-  #expect(!source.contains("store.filteredMemoryEntries"))
+  // The search field belongs to the window (WorkspaceView), not the workspace,
+  // so switching workspaces never stacks two toolbar search items.
+  #expect(!source.contains(".lorvexWorkspaceSearchField("))
+  #expect(source.contains("store.filteredMemoryEntries"))
   #expect(source.contains("@State private var isComposerPresented = false"))
   #expect(source.contains("if showsComposer {"))
-  #expect(source.contains(#".accessibilityIdentifier("memory.empty.add")"#))
+  // The toolbar's add button is the one way to start a note; the empty state
+  // does not repeat it.
+  #expect(source.contains(#".accessibilityIdentifier("memory.toolbar.add")"#))
+  #expect(!source.contains(#".accessibilityIdentifier("memory.empty.add")"#))
   #expect(source.contains("private var showsComposer: Bool"))
   #expect(source.contains("MemoryEntryRow("))
   // First-paint stays a skeleton, not a spinner.

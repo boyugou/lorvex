@@ -45,7 +45,8 @@ calendar tools may:
 These operations write Lorvex-owned rows and sync envelopes. Meetings
 are ordinary canonical events with attendee, URL, description, and task
 link context; they are not a separate `event_type`. Task blocks live in
-focus schedules and task-event context, not in `calendar_events.event_type`.
+the task's own planned time and task-event context, not in
+`calendar_events.event_type`.
 
 A recurring series separates mutable state into two independently ordered
 registers. Content owns title, description, location, URL, color, event type,
@@ -97,6 +98,10 @@ This applies to every calendar surface:
 ## Drag And Edit Affordances
 
 Task pills support drag-reschedule through the task workflow contract.
+Plan blocks (a task's saved planned time, drawn on the time axis of
+the macOS day and week grids and the iPhone day grid) open their task and
+carry no drag or resize handlers:
+the schedule owns the time, and it is proposed, saved, and cleared on Today.
 Canonical calendar events support Lorvex event edit/delete flows. Provider
 event mirrors remain visual/planning context and task-link targets only.
 

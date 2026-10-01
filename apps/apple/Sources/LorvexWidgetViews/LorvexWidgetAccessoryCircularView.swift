@@ -2,44 +2,26 @@ import LorvexWidgetKitSupport
 import SwiftUI
 import WidgetKit
 
-/// The `accessoryCircular` Lock Screen family for the Focus widget. It shows the
-/// remaining focus count without inventing a completion ratio from unrelated
-/// global completed-task statistics. A genuinely empty plan shows the Focus
-/// glyph; a failed snapshot shows an unavailable glyph.
+/// The `accessoryCircular` Lock Screen family for the Today widget: while the
+/// lead task's time runs, its ring fills and holds the minutes left; otherwise
+/// the empty ring holds how many tasks are left today. A day with nothing left
+/// shows a checkmark; a failed snapshot shows an unavailable glyph.
 struct AccessoryCircularWidgetView: View {
   let model: WidgetRenderModel
 
-  /// Whether the circular renders the unavailable glyph, a remaining count, or
-  /// the empty-state glyph. Split out as a pure classifier so the boundaries are
-  /// unit-testable without rendering the view.
-  enum Content: Equatable {
-    case unavailable
-    case empty
-    case remaining(Int)
-  }
-
-  nonisolated static func content(
-    state: WidgetRenderState = .content, focusCount: Int
-  ) -> Content {
-    if state == .fallback { return .unavailable }
-    let remaining = max(0, focusCount)
-    return remaining == 0 ? .empty : .remaining(remaining)
-  }
-
   var body: some View {
-    switch Self.content(state: model.state, focusCount: model.focusCount) {
+    switch model.circularContent {
     case .unavailable:
-      // Broken/missing snapshot: an attention glyph (not the Focus `scope`, which
-      // reads "no focus set") with the builder's localized "unavailable" status as
+      // Broken/missing snapshot: an attention glyph (not the checkmark, which
+      // reads "all clear") with the builder's localized "unavailable" status as
       // the accessibility label. `widgetAccentable` keeps it legible when tinted.
       Image(systemName: "exclamationmark.circle")
         .widgetAccentable()
         .accessibilityLabel(model.statusText.isEmpty ? model.subheadline : model.statusText)
     case .empty:
-      // No focus tasks and nothing completed today: the Focus glyph reads as "no
-      // focus set" rather than an empty ring that a glance could mistake for
-      // "0% done". `widgetAccentable` keeps it legible in the tinted render mode.
-      Image(systemName: "scope")
+      // Nothing left today: a checkmark, rather than an empty ring that a
+      // glance could mistake for "0% done".
+      Image(systemName: "checkmark")
         .widgetAccentable()
         .accessibilityLabel(
           String(
@@ -47,15 +29,53 @@ struct AccessoryCircularWidgetView: View {
             defaultValue: "All clear",
             table: "Localizable",
             bundle: WidgetL10n.bundle))
+    case .running(let minutesLeft):
+      ring {
+        VStack(spacing: -2) {
+          Text("\(minutesLeft)")
+            .font(.system(.title3, design: .rounded).weight(.bold))
+            .monospacedDigit()
+          Text("widget.circular.min", bundle: WidgetL10n.bundle)
+            .font(.caption2)
+        }
+      }
+      .accessibilityLabel(
+        String(
+          localized: "widget.circular.running.a11y",
+          defaultValue: "\(minutesLeft) min left",
+          table: "Localizable", bundle: WidgetL10n.bundle))
     case .remaining(let remaining):
-      Text("\(remaining)")
-        .font(.system(.title2, design: .rounded).weight(.bold))
-        .widgetAccentable()
-        .accessibilityLabel(
-          String(
-            localized: "widget.circular.a11y",
-            defaultValue: "\(remaining) focus tasks remaining",
-            table: "Localizable", bundle: WidgetL10n.bundle))
+      ring {
+        VStack(spacing: -2) {
+          Text("\(remaining)")
+            .font(.system(.title3, design: .rounded).weight(.bold))
+            .monospacedDigit()
+          Text("widget.circular.left", bundle: WidgetL10n.bundle)
+            .font(.caption2)
+        }
+      }
+      .accessibilityLabel(
+        String(
+          localized: "widget.circular.a11y",
+          defaultValue: "\(remaining) tasks left today",
+          table: "Localizable", bundle: WidgetL10n.bundle))
     }
+  }
+
+  /// The ring drawn in the Lock Screen's vibrant material: a faint track and
+  /// an accentable arc that starts at the top, like the app's task ring.
+  private func ring(@ViewBuilder _ center: () -> some View) -> some View {
+    ZStack {
+      Circle()
+        .stroke(.tertiary, lineWidth: 3)
+      Circle()
+        .trim(from: 0, to: model.lead?.progress ?? 0)
+        .stroke(.primary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+        .rotationEffect(.degrees(-90))
+        .widgetAccentable()
+      center()
+        .widgetAccentable()
+    }
+    .padding(2)
   }
 }

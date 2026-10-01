@@ -44,7 +44,7 @@ func carPlayControllerEmptySnapshotProducesNoRows() async throws {
   let ctrl = CarPlayTaskListController(core: svc)
   try await ctrl.refresh()
   #expect(ctrl.todayRows.isEmpty)
-  #expect(ctrl.focusRows.isEmpty)
+  #expect(ctrl.rows.isEmpty)
 }
 
 @MainActor
@@ -69,86 +69,6 @@ func carPlayControllerExcludesCompletedTasksFromTodayRows() async throws {
   try await ctrl.refresh()
   #expect(ctrl.todayRows.count == 1)
   #expect(ctrl.todayRows[0].title == "Open")
-}
-
-@MainActor
-@Test
-func carPlayControllerFocusSectionReflectsFocusPlan() async throws {
-  let svc = try makeInMemoryCore()
-  let focusTask = try await seedTask(svc, title: "Focus Task")
-  try await seedTask(svc, title: "Other")
-  _ = try await svc.setCurrentFocus(
-    date: try await logicalDay(svc),
-    taskIDs: [focusTask.id],
-    briefing: nil,
-    timezone: TimeZone.current.identifier
-  )
-  let ctrl = CarPlayTaskListController(core: svc)
-  try await ctrl.refresh()
-  #expect(ctrl.focusRows.count == 1)
-  #expect(ctrl.focusRows[0].id == focusTask.id)
-  #expect(ctrl.focusRows[0].isFocus == true)
-}
-
-@MainActor
-@Test
-func carPlayControllerLoadsFocusTasksOutsideFirstOpenTaskPage() async throws {
-  let svc = try makeInMemoryCore()
-  for index in 0..<100 {
-    try await seedTask(svc, title: "Filler \(index)")
-  }
-  let offscreenFocusTask = try await seedTask(svc, title: "Offscreen Focus")
-
-  // The premise needs the focus task outside the first open page. The
-  // canonical sort breaks priority/due ties by id (a fresh UUID may land
-  // anywhere), so demote it to P3 — every P2 filler then pages ahead of it.
-  _ = try await svc.updateTask(
-    TaskUpdateDraft(id: offscreenFocusTask.id, priority: .p3))
-  let firstPage = try await svc.listTasks(
-    status: LorvexTask.Status.open.rawValue,
-    listID: nil,
-    priority: nil,
-    text: nil,
-    limit: 100,
-    offset: 0
-  )
-  #expect(!firstPage.tasks.contains { $0.id == offscreenFocusTask.id })
-
-  _ = try await svc.setCurrentFocus(
-    date: try await logicalDay(svc),
-    taskIDs: [offscreenFocusTask.id],
-    briefing: nil,
-    timezone: TimeZone.current.identifier
-  )
-
-  let ctrl = CarPlayTaskListController(core: svc)
-  try await ctrl.refresh()
-
-  #expect(ctrl.focusRows == [
-    CarPlayTaskListController.Row(
-      id: offscreenFocusTask.id,
-      title: offscreenFocusTask.title,
-      isFocus: true
-    )
-  ])
-  #expect(!ctrl.todayRows.contains { $0.id == offscreenFocusTask.id })
-}
-
-@MainActor
-@Test
-func carPlayControllerFocusTasksNotDoubleCountedInToday() async throws {
-  let svc = try makeInMemoryCore()
-  let shared = try await seedTask(svc, title: "Shared Task")
-  _ = try await svc.setCurrentFocus(
-    date: try await logicalDay(svc),
-    taskIDs: [shared.id],
-    briefing: nil,
-    timezone: TimeZone.current.identifier
-  )
-  let ctrl = CarPlayTaskListController(core: svc)
-  try await ctrl.refresh()
-  #expect(ctrl.focusRows.count == 1)
-  #expect(ctrl.todayRows.isEmpty)
 }
 
 @MainActor
@@ -194,9 +114,8 @@ func carPlayControllerOrderPreservedFromSnapshot() async throws {
 
 @MainActor
 @Test
-func carPlayControllerReadsUncappedTodayPoolWithoutLoadTodayOrBroadOpenQuery() async throws {
-  let svc = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-  svc.loadTodayError = .unsupportedOperation("loadToday must not feed CarPlay task rows")
+func carPlayControllerReadsTodaysListWithoutABroadOpenQuery() async throws {
+  let svc = StubCoreService(preview: try await makeSeededInMemoryCore())
   let todayTask = try await seedTask(svc.preview, title: "CarPlay today task")
   let inboxTask = try await seedTask(svc.preview, title: "CarPlay inbox task", dueToday: false)
   let completed = try await seedTask(svc.preview, title: "CarPlay completed task", status: .completed)
@@ -212,24 +131,12 @@ func carPlayControllerReadsUncappedTodayPoolWithoutLoadTodayOrBroadOpenQuery() a
 
 @MainActor
 @Test
-func carPlayControllerNoFocusPlanProducesEmptyFocusRows() async throws {
-  let svc = try makeInMemoryCore()
-  try await seedTask(svc, title: "Task")
-  // No focus plan set — loadCurrentFocus returns nil
-  let ctrl = CarPlayTaskListController(core: svc)
-  try await ctrl.refresh()
-  #expect(ctrl.focusRows.isEmpty)
-  #expect(ctrl.todayRows.count == 1)
-}
-
-@MainActor
-@Test
 func carPlayControllerDriverSafeErrorMessageDoesNotExposeRawError() {
   let message = CarPlayTaskListController.driverSafeErrorMessage(
     for: LorvexCoreError.unsupportedOperation("SQLite database is locked at /private/tmp/lorvex.db")
   )
 
-  #expect(message == "Couldn't load tasks — tap to retry.")
+  #expect(message == "Couldn’t load tasks — tap to retry.")
   #expect(!message.localizedCaseInsensitiveContains("sqlite"))
   #expect(!message.localizedCaseInsensitiveContains("/private/tmp"))
 }
@@ -251,26 +158,109 @@ func carPlayControllerDeferToTomorrowDropsTaskFromToday() async throws {
   #expect(ids.contains(keep.id))
 }
 
+// MARK: - Times, clock, and row copy
+
+/// Pins the controller's clock to `hour:minute` in the day's timezone. The
+/// controller must have refreshed once so the timezone is resolved.
+@MainActor
+private func pinClock(_ ctrl: CarPlayTaskListController, hour: Int, minute: Int) throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(ctrl.dayTimezone)
+  let date = try #require(
+    calendar.date(bySettingHour: hour, minute: minute, second: 0, of: Date()))
+  ctrl.now = { date }
+}
+
 @MainActor
 @Test
-func carPlayControllerRemoveFromFocusMovesTaskBackToToday() async throws {
+func carPlayControllerLeadsWithATaskOnlyWhileItsTimeRuns() async throws {
   let svc = try makeInMemoryCore()
-  let focusX = try await seedTask(svc, title: "Focus X")
-  _ = try await svc.setCurrentFocus(
-    date: try await logicalDay(svc),
-    taskIDs: [focusX.id],
-    briefing: nil,
-    timezone: TimeZone.current.identifier
-  )
+  let first = try await seedTask(svc, title: "First")
+  _ = try await svc.updateTask(TaskUpdateDraft(id: first.id, priority: .p1))
+  let timed = try await seedTask(svc, title: "Timed")
+  try await planTask(svc, timed.id, on: try await logicalDay(svc), time: 10 * 60..<11 * 60)
   let ctrl = CarPlayTaskListController(core: svc)
   try await ctrl.refresh()
-  #expect(ctrl.focusRows.map(\.id) == [focusX.id])
-  #expect(ctrl.todayRows.isEmpty)
 
-  try await ctrl.removeFromFocus(id: focusX.id)
+  // Today's order is untouched by the time; the row carries it.
+  #expect(ctrl.todayRows.map(\.id) == [first.id, timed.id])
+  #expect(ctrl.todayRows[1].startMinutes == 10 * 60)
+  #expect(ctrl.todayRows[1].endMinutes == 11 * 60)
 
-  // Un-focusing only drops the Focus membership; the still-open, still-due
-  // task reappears under Today rather than being completed or cancelled.
-  #expect(ctrl.focusRows.isEmpty)
-  #expect(ctrl.todayRows.map(\.id) == [focusX.id])
+  try pinClock(ctrl, hour: 10, minute: 30)
+  #expect(ctrl.nowMinutes == 10 * 60 + 30)
+  #expect(ctrl.rows.map(\.id) == [timed.id, first.id])
+  #expect(
+    CarPlayRowCopy.detail(for: ctrl.rows[0], nowMinutes: ctrl.nowMinutes)
+      == "Until \(lorvexClockTimeLabel(minutes: 11 * 60))")
+
+  try pinClock(ctrl, hour: 12, minute: 0)
+  #expect(ctrl.rows.map(\.id) == [first.id, timed.id])
+  #expect(
+    CarPlayRowCopy.detail(for: ctrl.rows[1], nowMinutes: ctrl.nowMinutes)
+      == lorvexClockRangeLabel(startMinutes: 10 * 60, endMinutes: 11 * 60))
+}
+
+@MainActor
+@Test
+func carPlayControllerMarksOverdueRows() async throws {
+  let svc = try makeInMemoryCore()
+  let overdue = try await seedTask(svc, title: "Overdue")
+  let today = PlannedDayBridge.storageDate(forLocalInstant: Date())
+  _ = try await svc.updateTask(
+    TaskUpdateDraft(id: overdue.id, dueDate: .set(today.addingTimeInterval(-86_400))))
+  let onTime = try await seedTask(svc, title: "On time")
+  let ctrl = CarPlayTaskListController(core: svc)
+  try await ctrl.refresh()
+
+  let rows = Dictionary(uniqueKeysWithValues: ctrl.todayRows.map { ($0.id, $0) })
+  #expect(rows[overdue.id]?.isOverdue == true)
+  #expect(rows[onTime.id]?.isOverdue == false)
+  #expect(CarPlayRowCopy.detail(for: try #require(rows[overdue.id]), nowMinutes: nil) == "Overdue")
+}
+
+@MainActor
+@Test
+func carPlayControllerShowsAStartedTaskFirstAndSaysSo() async throws {
+  let svc = try makeInMemoryCore()
+  let other = try await seedTask(svc, title: "Other")
+  _ = try await svc.updateTask(TaskUpdateDraft(id: other.id, priority: .p1))
+  let task = try await seedTask(svc, title: "Drive prep")
+  _ = try await svc.updateTask(TaskUpdateDraft(id: task.id, estimatedMinutes: .set(30)))
+  let ctrl = CarPlayTaskListController(core: svc)
+  try await ctrl.refresh()
+  #expect(ctrl.todayRows.map(\.id) == [other.id, task.id])
+  #expect(CarPlayRowCopy.detail(for: ctrl.todayRows[1], nowMinutes: nil) == "About 30 min")
+
+  _ = try await svc.startTask(id: task.id)
+  try await ctrl.refresh()
+
+  #expect(ctrl.todayRows.map(\.id) == [task.id, other.id])
+  #expect(ctrl.todayRows[0].isStarted)
+  #expect(CarPlayRowCopy.detail(for: ctrl.todayRows[0], nowMinutes: nil) == "Started · about 30 min")
+}
+
+@MainActor
+@Test
+func carPlayRowCopyReadsTheClock() {
+  typealias Row = CarPlayTaskListController.Row
+  let timed = Row(id: "1", title: "Timed", startMinutes: 585, endMinutes: 645)
+  let range = lorvexClockRangeLabel(startMinutes: 585, endMinutes: 645)
+  #expect(
+    CarPlayRowCopy.detail(for: timed, nowMinutes: 600)
+      == "Until \(lorvexClockTimeLabel(minutes: 645))")
+  #expect(CarPlayRowCopy.detail(for: timed, nowMinutes: 700) == range)
+  #expect(CarPlayRowCopy.detail(for: timed, nowMinutes: 500) == range)
+  #expect(CarPlayRowCopy.detail(for: timed, nowMinutes: nil) == range)
+  #expect(
+    CarPlayRowCopy.detail(
+      for: Row(id: "2", title: "Estimated", estimatedMinutes: 25), nowMinutes: 600)
+      == "About 25 min")
+  #expect(
+    CarPlayRowCopy.detail(for: Row(id: "3", title: "Overdue", isOverdue: true), nowMinutes: 600)
+      == "Overdue")
+  #expect(
+    CarPlayRowCopy.detail(for: Row(id: "4", title: "Started", isStarted: true), nowMinutes: 600)
+      == "Started")
+  #expect(CarPlayRowCopy.detail(for: Row(id: "5", title: "Plain"), nowMinutes: 600) == nil)
 }

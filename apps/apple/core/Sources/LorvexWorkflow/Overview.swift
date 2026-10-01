@@ -6,7 +6,7 @@ import LorvexStore
 /// At-a-glance dashboard read model shared by the app and MCP surfaces.
 ///
 /// `loadOverviewSnapshot` composes per-list open counts, top-priority open
-/// tasks, recently-completed rows, the current-focus summary,
+/// tasks, recently-completed rows, the day's briefing,
 /// habit activity, and the day-bucket counts (Attention / Overdue /
 /// Today / Upcoming). The caller owns the read transaction (this operates on
 /// the supplied `db` directly).
@@ -36,6 +36,12 @@ public enum Overview {
     /// MCP compact tool response: no lists, 5 top tasks, no recently completed.
     public static func mcpCompact() -> Limits {
       Limits(lists: 0, topTasks: 5, recentlyCompleted: 0)
+    }
+    /// MCP full tool response: no lists, 10 top tasks, no recently completed.
+    /// The full shape returns only the task list, so the sections it does not
+    /// serialize are not queried.
+    public static func mcpFull() -> Limits {
+      Limits(lists: 0, topTasks: 10, recentlyCompleted: 0)
     }
   }
 
@@ -68,12 +74,6 @@ public enum Overview {
     public let openCount: Int64
   }
 
-  public struct CurrentFocusSummary: Sendable, Equatable {
-    public let taskCount: Int
-    public let briefing: String?
-    public let timezone: String?
-  }
-
   public struct HabitSummary: Sendable, Equatable {
     public let count: Int64
     public let completedToday: Int64
@@ -87,7 +87,8 @@ public enum Overview {
     public let listsTruncated: Bool
     public let topByPriority: [TaskRow]
     public let recentlyCompleted: [TaskRow]
-    public let currentFocus: CurrentFocusSummary?
+    /// The assistant's briefing for ``date``, or nil when the day has none.
+    public let briefing: String?
     public let habits: HabitSummary
   }
 
@@ -154,30 +155,13 @@ public enum Overview {
     return (rows, page.totalMatching, page.totalMatching > Int64(rows.count))
   }
 
-  static func loadCurrentFocusSummary(_ db: Database, today: String) throws
-    -> CurrentFocusSummary?
-  {
-    guard
-      let row = try Row.fetchOne(
-        db, sql: "SELECT briefing, timezone FROM current_focus WHERE date = ?",
-        arguments: [today])
+  /// The daily briefing stored for `date`, trimmed, or nil when the day has
+  /// none.
+  static func loadBriefing(_ db: Database, date: String) throws -> String? {
+    let stored = try DailyBriefingRepo.briefing(db, date: date)
+    guard let text = stored?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
     else { return nil }
-    let briefing: String? = row[0]
-    let timezone: String? = row[1]
-    // Count only focus items whose task still exists and is not in the Trash,
-    // matching `loadCurrentFocus`'s read filter — a deleted (orphan soft-ref) or
-    // archived task must not inflate the focus count.
-    let taskCount =
-      try Int64.fetchOne(
-        db,
-        sql: """
-          SELECT COUNT(*) FROM current_focus_items cfi
-          JOIN tasks t ON t.id = cfi.task_id
-          WHERE cfi.date = ? AND t.archived_at IS NULL
-          """,
-        arguments: [today])
-      ?? 0
-    return CurrentFocusSummary(taskCount: Int(taskCount), briefing: briefing, timezone: timezone)
+    return text
   }
 
   static func loadHabitSummary(_ db: Database, today: String) throws -> HabitSummary {
@@ -303,13 +287,13 @@ public enum Overview {
       db, today: today, limit: Int64(limits.topTasks))
     let recentlyCompleted = try TaskRepo.Read.getRecentlyCompletedTasks(
       db, limit: Int64(limits.recentlyCompleted))
-    let currentFocus = try loadCurrentFocusSummary(db, today: today)
+    let briefing = try loadBriefing(db, date: today)
     let habits = try loadHabitSummary(db, today: today)
 
     return Snapshot(
       date: today, stats: stats, lists: listsPage.rows, listsTotal: listsPage.total,
       listsTruncated: listsPage.truncated, topByPriority: topByPriority,
-      recentlyCompleted: recentlyCompleted, currentFocus: currentFocus, habits: habits)
+      recentlyCompleted: recentlyCompleted, briefing: briefing, habits: habits)
   }
 
 }

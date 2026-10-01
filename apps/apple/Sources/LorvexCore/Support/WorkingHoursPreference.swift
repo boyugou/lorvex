@@ -2,9 +2,9 @@ import Foundation
 
 /// Canonical handling of the `working_hours` preference value
 /// (`{"start":"HH:MM","end":"HH:MM"}`): parsing, validation, and encoding
-/// shared by every settings surface. The engine default is 09:00-18:00.
+/// shared by every settings surface. The engine default is 08:00-23:00.
 public enum WorkingHoursPreference {
-  public static let defaultWindow = (start: "09:00", end: "18:00")
+  public static let defaultWindow = (start: "08:00", end: "23:00")
 
   /// Stored JSON → window; nil when absent or malformed.
   public static func parse(_ raw: String?) -> (start: String, end: String)? {

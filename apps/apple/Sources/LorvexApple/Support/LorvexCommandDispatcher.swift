@@ -46,10 +46,10 @@ struct LorvexCommandDispatcher {
       guard let task = singleTask(in: selectedTasks) else { return }
       activate(task, on: selectionSurface)
       Task { await store.saveSelectedTaskDraft() }
-    case .toggleSelectedTaskFocus:
+    case .toggleSelectedTaskStarted:
       guard let task = singleTask(in: selectedTasks) else { return }
       activate(task, on: selectionSurface)
-      Task { await store.toggleSelectedTaskFocus() }
+      Task { await store.toggleSelectedTaskStarted() }
     case .deferSelectedTask:
       if let selectionSurface, selectedTasks.count > 1 {
         Task { await store.deferTaskSelection(on: selectionSurface) }

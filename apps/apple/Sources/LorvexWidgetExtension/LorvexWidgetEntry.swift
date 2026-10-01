@@ -27,7 +27,7 @@ public struct LorvexWidgetEntry: TimelineEntry, Equatable {
 
   public var relevance: TimelineEntryRelevance? {
     WidgetSmartStackRelevancePolicy.relevance(
-      taskCount: max(model.focusCount, model.taskRows.count),
+      taskCount: model.remainingCount,
       date: date,
       timezoneName: timezoneName
     ).map(\.timelineEntryRelevance)

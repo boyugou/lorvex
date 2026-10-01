@@ -33,57 +33,26 @@ struct MCPDataExportToolsTests {
     #expect(!export.contains("\"tasks\""))
   }
 
-  @Test("export_data cannot bypass off-tier provider focus privacy")
-  func exportDataHonorsOffTierForProviderFocusBlocks() async throws {
-    let fixture = mcpOnDiskRegistry()
-    defer { fixture.cleanup() }
-    let service = SwiftLorvexCoreService(databasePath: fixture.dbPath)
-    let date = "2026-06-27"
-    _ = try await service.setPreference(
-      key: PreferenceKeys.devCalendarAiAccessMode,
-      value: CalendarAiAccessMode.fullDetails.asString)
-    _ = try await service.saveFocusSchedule(
-      date: date,
-      blocks: [
-        FocusScheduleBlock(
-          blockType: "event", startTime: "09:00", endTime: "10:00",
-          eventSource: .provider, title: "Private appointment"),
-        FocusScheduleBlock(
-          blockType: "event", startTime: "10:00", endTime: "10:30",
-          eventSource: .freeform, title: "Authored hold"),
-      ],
-      rationale: nil)
-    _ = try await service.setPreference(
-      key: PreferenceKeys.devCalendarAiAccessMode,
-      value: CalendarAiAccessMode.off.asString)
-
-    // Explicit human backup remains complete even at off. Provider detail is
-    // transfer-neutralized, but the occupancy block itself is retained.
-    let humanJSON = try await service.exportData(
-      entities: ["focus_schedules"], format: "json")
-    let humanPayload = try JSONDecoder().decode(
-      LorvexDataExportPayload.self, from: Data(humanJSON.utf8))
-    let humanBlocks = try #require(humanPayload.focusSchedules?.first?.blocks)
-    #expect(humanBlocks.count == 2)
-    #expect(humanBlocks[0].eventSource == .provider)
-    #expect(humanBlocks[0].title == "Event")
+  @Test("export_data carries the days' briefings")
+  func exportDataCarriesDailyBriefings() async throws {
+    let (registry, service) = try mcpInMemoryRegistryWithService()
+    _ = try await service.setDailyBriefingForMcp(
+      date: "2026-06-27", briefing: "Finish the draft before the review.")
 
     let result = try await mcpRegistryCall(
-      fixture.registry,
+      registry,
       tool: "export_data",
       arguments: [
-        "entities": .array([.string("focus_schedules")]),
+        "entities": .array([.string("daily_briefings")]),
         "format": .string("json"),
       ])
+
     #expect(result.isError != true)
-    let aiJSON = try #require(embeddedResourceText(result))
-    let aiPayload = try JSONDecoder().decode(
-      LorvexDataExportPayload.self, from: Data(aiJSON.utf8))
-    let aiBlocks = try #require(aiPayload.focusSchedules?.first?.blocks)
-    #expect(aiBlocks.count == 1)
-    #expect(aiBlocks[0].position == 0)
-    #expect(aiBlocks[0].eventSource == .freeform)
-    #expect(aiBlocks[0].title == "Authored hold")
+    let json = try #require(embeddedResourceText(result))
+    let payload = try JSONDecoder().decode(LorvexDataExportPayload.self, from: Data(json.utf8))
+    #expect(payload.dailyBriefings?.map(\.date) == ["2026-06-27"])
+    #expect(payload.dailyBriefings?.first?.briefing == "Finish the draft before the review.")
+    #expect(!json.contains("\"tasks\""))
   }
 
   @Test("export_data requires explicit entities")

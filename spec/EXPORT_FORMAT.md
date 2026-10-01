@@ -3,8 +3,9 @@
 The data export is a **semantic, AI-reconciled best-effort document for
 cross-tool migration** — a human- and model-meaningful snapshot of what the user
 has, not a lossless or byte-parity sync interchange. It carries the product
-entities (tasks, lists, tags, habits, calendar events, reviews, focus, memory,
-preferences) with their meaningful fields and drops the replication scaffolding
+entities (tasks, lists, tags, habits, calendar events, reviews, daily
+briefings, memory, preferences) with their meaningful fields and drops the
+replication scaffolding
 the app uses internally. Moving data between Lorvex implementations reconciles
 these semantics; it does not replay a change log or reproduce byte-identical
 rows. See `README.md` for how this sits against the byte-canonical *sync*
@@ -26,10 +27,10 @@ The same per-entity DTOs render into two containers:
   `schemaVersion`, optional `generatedAt`, optional `appVersion`, and
   `fileCounts` mapping each member's base name to its record count) plus one
   `<member>.json` file per included category. The member inventory is **closed**:
-  the thirteen recognized members are `tasks.json`, `native_task_graph.json`,
+  the twelve recognized members are `tasks.json`, `native_task_graph.json`,
   `lists.json`, `tags.json`, `habits.json`, `calendar_series_cutovers.json`,
-  `calendar_events.json`, `daily_reviews.json`, `current_focus.json`,
-  `focus_schedules.json`, `task_calendar_event_links.json`, `memory.json`, and
+  `calendar_events.json`, `daily_reviews.json`, `daily_briefings.json`,
+  `task_calendar_event_links.json`, `memory.json`, and
   `preferences.json`; an unrecognized entry rejects the import. Every member is
   an array of the same entity DTOs except `native_task_graph.json`, which holds
   one snapshot object.
@@ -68,8 +69,7 @@ values used for CSV headers, ZIP file names, and `manifest.entityCounts` keys:
 | `calendarSeriesCutovers` | `calendar_series_cutovers` | `ExportCalendarSeriesCutover` |
 | `calendarEvents` | `calendar_events` | `ExportCalendarEvent` |
 | `dailyReviews` | `daily_reviews` | `ExportDailyReview` |
-| `currentFocus` | `current_focus` | `ExportCurrentFocus` |
-| `focusSchedules` | `focus_schedules` | `ExportFocusSchedule` |
+| `dailyBriefings` | `daily_briefings` | `ExportDailyBriefing` |
 | `taskCalendarEventLinks` | `task_calendar_event_links` | `ExportTaskCalendarEventLink` |
 | `memory` | `memory` | `ExportMemoryEntry` |
 | `preferences` | `preferences` | `ExportPreference` |
@@ -124,6 +124,8 @@ task `dueDate` / `plannedDate` / `availableFrom` carry the fractional-millisecon
 | `status` | string | Status raw value: one of `open`, `in_progress`, `completed`, `cancelled`, `someday`. A full export includes every status and archived rows. |
 | `dueDate` | string? | |
 | `plannedDate` | string? | |
+| `plannedStartTime` | string? | `HH:MM` start of the task's time on its planned day. Present exactly when `plannedEndTime` is. |
+| `plannedEndTime` | string? | `HH:MM` end of the task's time, `24:00` for the midnight that ends the day. |
 | `availableFrom` | string? | |
 | `estimatedMinutes` | int? | |
 | `tags` | [string]? | Tag display names as a first-class array. Omitted when the task has no tags. |
@@ -245,31 +247,19 @@ restore history.
 | `linkedTaskIDs` | [string] | **Always present** (`[]` when none). |
 | `linkedListIDs` | [string] | **Always present** (`[]` when none). |
 
-### `currentFocus` — `ExportCurrentFocus` (`Support/ExportFocus.swift`)
+### `dailyBriefings` — `ExportDailyBriefing` (`Support/ExportDailyBriefing.swift`)
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `date` | string | `YYYY-MM-DD`. |
-| `briefing` | string? | |
+| `briefing` | string | The assistant's note for the day. A day without a briefing has no row. |
 | `timezone` | string? | |
-| `taskIDs` | [string] | **Always present** (`[]` when none), in focus order. |
 | `createdAt` | string? | |
 | `updatedAt` | string? | |
 
-### `focusSchedules` — `ExportFocusSchedule` (`Support/ExportFocus.swift`)
-
-| Field | Type | Notes |
-|-------|------|-------|
-| `date` | string | `YYYY-MM-DD`. |
-| `rationale` | string? | |
-| `timezone` | string? | |
-| `blocks` | [object] | **Always present** (`[]` when none). |
-| `createdAt` | string? | |
-| `updatedAt` | string? | |
-
-`blocks` item (`ExportFocusScheduleBlock`): `position` (int), `blockType`,
-`startMinutes` (int), `endMinutes` (int), `taskID?`, `calendarEventID?`,
-`eventSource?` (`canonical` / `provider` / `freeform`), `title?`.
+A task's own planned time rides on the task itself (`plannedDate`,
+`plannedStartTime`, `plannedEndTime` on `ExportTask`), not on a separate
+schedule entity.
 
 ### `taskCalendarEventLinks` — `ExportTaskCalendarEventLink` (`Support/ExportTaskCalendarEventLink.swift`)
 

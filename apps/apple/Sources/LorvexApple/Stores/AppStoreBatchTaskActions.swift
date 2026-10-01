@@ -3,16 +3,16 @@ import LorvexCore
 import SwiftUI
 
 /// Per-surface behavior for the shared batch-task operations. The task
-/// surfaces (Tasks workspace, Focus/Today, a list detail) run
-/// the same six batch operations and differ only in three things, captured
-/// here: which selection set they act on, how they refresh their owning view,
-/// and whether they prune the selection afterward (Focus alone does).
+/// surfaces (Tasks workspace, Today, a list detail) run the same six batch
+/// operations and differ only in three things, captured here: which selection
+/// set they act on, how they refresh their owning view, and whether they prune
+/// the selection afterward (Today alone does).
 extension AppStoreBatchCancelSurface {
   @MainActor
   func selectedTasks(_ store: AppStore) -> [LorvexTask] {
     switch self {
     case .taskWorkspace: store.taskWorkspaceSelectedTasks
-    case .focus: store.focusWorkspaceSelectedTasks
+    case .today: store.todaySelectedTasks
     case .selectedList: store.selectedListTasksForBatch
     }
   }
@@ -23,16 +23,16 @@ extension AppStoreBatchCancelSurface {
   func refreshOwningSurface(_ store: AppStore) async throws {
     switch self {
     case .selectedList: try await store.loadSelectedListDetail()
-    case .taskWorkspace, .focus: try await store.refreshListSurfaces()
+    case .taskWorkspace, .today: try await store.refreshListSurfaces()
     }
   }
 
-  /// Focus mirrors Today's curated set, so a batch that removes tasks from the
-  /// lanes must drop them from the selection too; the other surfaces re-derive
+  /// A batch that takes tasks off Today (completing, deferring, cancelling)
+  /// must drop them from Today's selection too; the other surfaces re-derive
   /// their selection from the reloaded results.
   @MainActor
   func pruneSelection(_ store: AppStore) {
-    if case .focus = self { store.pruneFocusWorkspaceSelection() }
+    if case .today = self { store.pruneTodaySelection() }
   }
 }
 
@@ -64,9 +64,15 @@ extension AppStore {
     let ids = surface.selectedTasks(self)
       .filter { $0.status.isActive }
       .map(\.id)
+    await deferTasksToTomorrow(ids: ids, on: surface)
+  }
+
+  /// Defer `ids` to tomorrow in one core call, then refresh `surface`.
+  func deferTasksToTomorrow(ids: [LorvexTask.ID], on surface: AppStoreBatchCancelSurface) async {
     guard !ids.isEmpty else { return }
     await perform {
       let updatedToday = try await core.batchDeferTasks(ids: ids, until: tomorrowDate())
+      feedbackProvider.playFeedback(.taskDeferred)
       lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
       try await finishBatchMutation(on: surface)
     }

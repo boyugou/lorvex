@@ -35,13 +35,10 @@ extension ToolRegistry {
         toolName: "update_task"
       )
     }
-    // `tags` wins over `tags_set` when both are present — the same precedence
-    // create uses, so the two aliases resolve consistently across all tools.
     let tags: [String]?
     let dependsOn: [String]?
     do {
-      tags = try StrictArgumentArray.optionalStrings(
-        arguments["tags"] ?? arguments["tags_set"], field: "tags")
+      tags = try StrictArgumentArray.optionalStrings(arguments["tags"], field: "tags")
       dependsOn = try StrictArgumentArray.optionalStrings(
         arguments["depends_on"], field: "depends_on")
     } catch {

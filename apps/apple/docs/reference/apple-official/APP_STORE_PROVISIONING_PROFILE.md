@@ -18,8 +18,8 @@ Last verified: 2026-07-10
 ## Lorvex Mapping
 
 Lorvex ships several independently signed bundle identifiers: the macOS app, MCP
-helper app, widget/complication extensions, mobile app, Watch app, and visionOS
-app. A top-level app profile cannot stand in for nested targets. Each signed
+helper app, widget/complication extensions, mobile app, and Watch app. A
+top-level app profile cannot stand in for nested targets. Each signed
 bundle must have a matching explicit identifier, capabilities, and profile where
 the platform/package format requires one.
 

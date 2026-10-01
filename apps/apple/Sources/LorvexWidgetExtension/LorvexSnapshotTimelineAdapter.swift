@@ -9,16 +9,11 @@ public struct LorvexSnapshotTimelineAdapter {
     self.support = support
   }
 
-  public func placeholder(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil
-  ) -> LorvexSnapshotEntry {
-    entry(from: support.placeholderEntry(), viewMode: viewMode, listID: listID, isPlaceholder: true)
+  public func placeholder() -> LorvexSnapshotEntry {
+    entry(from: support.placeholderEntry(), isPlaceholder: true)
   }
 
   public static func staticPlaceholder(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil,
     refreshPolicy: WidgetTimelineRefreshPolicy = WidgetTimelineRefreshPolicy(),
     now: Date = Date()
   ) -> LorvexSnapshotEntry {
@@ -32,8 +27,6 @@ public struct LorvexSnapshotTimelineAdapter {
         defaultValue: "Open Lorvex to refresh",
         table: "Localizable",
         bundle: WidgetSupportL10n.bundle),
-      viewMode: viewMode,
-      listID: listID,
       isPlaceholder: true
     )
   }
@@ -42,14 +35,12 @@ public struct LorvexSnapshotTimelineAdapter {
   /// This intentionally bypasses the live App Group file, which may not exist
   /// before the first app launch.
   public static func staticPreview(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil,
     now: Date = Date()
   ) -> LorvexSnapshotEntry {
     let timelineEntry = WidgetTimelineEntry(
       date: now,
       state: .snapshot(
-        WidgetPreviewSnapshot.make(now: now, listID: listID),
+        WidgetPreviewSnapshot.make(now: now),
         freshness: .fresh(ageSeconds: 0)
       ),
       refreshAfter: now
@@ -60,15 +51,11 @@ public struct LorvexSnapshotTimelineAdapter {
         localized: "widget.status.updated_now",
         defaultValue: "Updated now",
         table: "Localizable",
-        bundle: WidgetSupportL10n.bundle),
-      viewMode: viewMode,
-      listID: listID
+        bundle: WidgetSupportL10n.bundle)
     )
   }
 
   public static func staticMissingSnapshotURLResult(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil,
     refreshPolicy: WidgetTimelineRefreshPolicy = WidgetTimelineRefreshPolicy(),
     now: Date = Date()
   ) -> (entry: LorvexSnapshotEntry, refreshAfter: Date) {
@@ -94,54 +81,39 @@ public struct LorvexSnapshotTimelineAdapter {
           localized: "widget.status.open_to_refresh",
           defaultValue: "Open Lorvex to refresh",
           table: "Localizable",
-          bundle: WidgetSupportL10n.bundle),
-        viewMode: viewMode,
-        listID: listID
+          bundle: WidgetSupportL10n.bundle)
       ),
       refreshAfter
     )
   }
 
-  public func snapshot(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil
-  ) -> LorvexSnapshotEntry {
-    entry(from: support.timelineEntry(), viewMode: viewMode, listID: listID)
+  public func snapshot() -> LorvexSnapshotEntry {
+    entry(from: support.timelineEntry())
   }
 
-  public func timeline(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil
-  ) -> Timeline<LorvexSnapshotEntry> {
-    let result = timelineResult(viewMode: viewMode, listID: listID)
+  public func timeline() -> Timeline<LorvexSnapshotEntry> {
+    let result = timelineResult()
     return Timeline(
       entries: [result.entry],
       policy: .after(result.refreshAfter)
     )
   }
 
-  public func timelineResult(
-    viewMode: LorvexTodayWidgetViewMode = .today,
-    listID: String? = nil
-  ) -> (entry: LorvexSnapshotEntry, refreshAfter: Date) {
+  public func timelineResult() -> (entry: LorvexSnapshotEntry, refreshAfter: Date) {
     let timelineEntry = support.timelineEntry()
     return (
-      entry(from: timelineEntry, viewMode: viewMode, listID: listID),
+      entry(from: timelineEntry),
       timelineEntry.refreshAfter
     )
   }
 
   private func entry(
     from timelineEntry: WidgetTimelineEntry,
-    viewMode: LorvexTodayWidgetViewMode,
-    listID: String?,
     isPlaceholder: Bool = false
   ) -> LorvexSnapshotEntry {
     Self.entry(
       from: timelineEntry,
       statusText: support.compactStatusText(for: timelineEntry),
-      viewMode: viewMode,
-      listID: listID,
       isPlaceholder: isPlaceholder
     )
   }
@@ -149,15 +121,11 @@ public struct LorvexSnapshotTimelineAdapter {
   private static func entry(
     from timelineEntry: WidgetTimelineEntry,
     statusText: String,
-    viewMode: LorvexTodayWidgetViewMode,
-    listID: String?,
     isPlaceholder: Bool = false
   ) -> LorvexSnapshotEntry {
     LorvexSnapshotEntry(
       timelineEntry: timelineEntry,
       statusText: statusText,
-      todayWidgetViewMode: viewMode,
-      todayWidgetListID: listID,
       isPlaceholder: isPlaceholder
     )
   }

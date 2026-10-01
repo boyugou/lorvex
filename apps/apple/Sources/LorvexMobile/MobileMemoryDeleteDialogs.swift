@@ -62,7 +62,7 @@ private var mobileMemoryDeleteMessage: Text {
   Text(
     String(
       localized: "memory.delete.confirm.message",
-      defaultValue: "The memory entry is removed. This can't be undone.", table: "Localizable",
+      defaultValue: "The memory entry is removed. This can’t be undone.", table: "Localizable",
       bundle: MobileL10n.bundle))
 }
 
@@ -71,6 +71,6 @@ private func mobileMemoryDeleteDialogTitle(_ entry: MemoryEntry) -> String {
     format: String(
       localized: "memory.delete.confirm.title", defaultValue: "Delete memory “%@”?",
       table: "Localizable", bundle: MobileL10n.bundle),
-    entry.key
+    entry.displayTitle
   )
 }

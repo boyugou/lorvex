@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 # Assert the Apple app realizes its own declared schema: the LorvexCore resources
 # it bundles must be byte-identical to the monorepo `schema/` authority the Apple
-# app owns. This is an APPLE-ONLY integrity check — it never compares against
-# `apps/tauri/...`. Apple and Tauri are only directionally aligned (shared
-# concepts via `spec/`), not byte-locked, so the Tauri schema copy may diverge
-# freely and is not consulted here.
+# app owns.
 #
 # `schema/schema.sql` is the authority; the Apple app bundles
 # `apps/apple/Sources/LorvexCore/Resources/schema.sql` (plus the migration ladder

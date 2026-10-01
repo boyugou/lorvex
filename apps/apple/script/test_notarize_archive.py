@@ -43,7 +43,7 @@ class NotarizeArchiveScriptTests(unittest.TestCase):
             "Contents/Helpers/LorvexMCPHost.app/Contents/MacOS/LorvexMCPHost"
         )
         self._create_executable(
-            "Contents/PlugIns/LorvexFocusWidget.appex/Contents/MacOS/LorvexFocusWidget"
+            "Contents/PlugIns/LorvexWidgets.appex/Contents/MacOS/LorvexWidgets"
         )
 
     def _archive_app_bundle(self) -> None:
@@ -141,6 +141,13 @@ exit 0
 
     def _environment(self, **overrides: str | None) -> dict[str, str]:
         environment = os.environ.copy()
+        # Release credentials the operator may have exported to run a real archive
+        # must not leak into these fixtures. An ambient APPLE_TEAM_ID, say, makes
+        # the script fail on a team mismatch before it ever reaches the condition
+        # the test is asserting, so the suite would pass on CI and fail on the
+        # owner's machine. Tests that need one set it explicitly.
+        for inherited in ("APPLE_TEAM_ID", "CODE_SIGN_IDENTITY", "NOTARY_KEYCHAIN_PROFILE"):
+            environment.pop(inherited, None)
         environment.update(
             {
                 "PATH": f"{self.fake_bin}:/usr/bin:/bin:/usr/sbin:/sbin",

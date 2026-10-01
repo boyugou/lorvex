@@ -33,7 +33,7 @@ struct LorvexListEntity: AppEntity, Identifiable {
   init(list: LorvexList) {
     self.init(
       id: list.id,
-      name: list.name,
+      name: list.displayName,
       openCount: list.openCount,
       totalCount: list.totalCount
     )

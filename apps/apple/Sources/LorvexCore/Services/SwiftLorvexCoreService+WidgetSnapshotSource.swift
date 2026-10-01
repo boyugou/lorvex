@@ -8,8 +8,8 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
   /// Captures every database-backed widget input under one immediate
   /// transaction and one managed-storage shared cutover lease. The transaction
   /// seeds/reads workspace identity, so the returned generation, workspace,
-  /// sequence, rows, counts, and focus ordering all describe the same physical
-  /// store revision.
+  /// sequence, rows, counts, briefing, and task times all describe the same
+  /// physical store revision.
   public func loadWidgetSnapshotSource(date: String?) async throws -> WidgetSnapshotSource {
     try withWatchCommandMaintenanceWrite { db in
       // Capture the logical day only after entering the SQLite transaction.
@@ -20,20 +20,6 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
       let timezone = try WorkflowTimezone.anchoredTimezoneName(db)
       let today = try Self.loadTodaySnapshot(db, logicalDay: logicalDay)
       Self.afterWidgetTodayReadForTesting?()
-
-      let currentFocus: CurrentFocusPlan?
-      if let header = try Self.currentFocusHeader(db, date: logicalDay) {
-        let storedIDs = try CurrentFocusItemsRepo.queryFocusTaskIds(db, date: logicalDay)
-        let taskIDs = try Self.filterExistingNonArchivedTaskIDs(db, ids: storedIDs)
-        currentFocus = SwiftLorvexFocusDeserializers.currentFocusPlan(
-          date: logicalDay,
-          taskIDs: taskIDs,
-          briefing: header.briefing,
-          timezone: header.timezone,
-          localChangeSequence: Int(try LocalChangeSeq.read(db)))
-      } else {
-        currentFocus = nil
-      }
 
       let habits = try Self.loadHabitsSnapshot(db, date: logicalDay)
       let listRows = try ListRepo.getAllListsWithCounts(db)
@@ -49,7 +35,6 @@ extension SwiftLorvexCoreService: LorvexWidgetSnapshotSourceServicing {
         logicalDay: logicalDay,
         timezone: timezone,
         today: today,
-        currentFocus: currentFocus,
         habits: habits,
         lists: lists,
         stats: stats)

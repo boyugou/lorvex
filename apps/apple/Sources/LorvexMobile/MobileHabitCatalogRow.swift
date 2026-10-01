@@ -21,7 +21,7 @@ struct MobileHabitCatalogRow: View {
     if let onSelect, let complete, let reset {
       HStack(spacing: LorvexDesign.Spacing.m) {
         Button(action: onSelect) {
-          summary
+          MobileHabitSummary(habit: habit)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
@@ -39,11 +39,11 @@ struct MobileHabitCatalogRow: View {
       .accessibilityIdentifier("mobileHabits.catalogRow.\(habit.id)")
     } else {
       HStack(spacing: LorvexDesign.Spacing.m) {
-        summary
+        MobileHabitSummary(habit: habit)
         Spacer(minLength: LorvexDesign.Spacing.s)
         MobileProgressRing(
           value: habit.todayProgressValue,
-          tint: habit.isCompleteToday ? .green : habit.tileTint,
+          tint: habit.isCompleteToday ? LorvexDesign.Palette.done : habit.tileTint,
           size: 32,
           isComplete: habit.isCompleteToday
         )
@@ -52,26 +52,6 @@ struct MobileHabitCatalogRow: View {
       .padding(.vertical, LorvexDesign.Spacing.xs)
       .accessibilityElement(children: .combine)
       .accessibilityIdentifier("mobileHabits.catalogRow.\(habit.id)")
-    }
-  }
-
-  private var summary: some View {
-    HStack(spacing: LorvexDesign.Spacing.m) {
-      MobileIconTile(icon: habit.icon, fallback: "repeat", tint: habit.tileTint, size: 30)
-
-      VStack(alignment: .leading, spacing: 3) {
-        Text(habit.name)
-          .font(.body)
-          .lineLimit(1)
-        Text(habit.todayProgressText)
-          .font(.footnote)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-        if let milestone = habit.milestone, habit.showsMilestoneStrip {
-          MobileHabitMilestoneProgressView(
-            milestone: milestone, frequencyType: habit.frequencyType, tint: habit.tileTint)
-        }
-      }
     }
   }
 }

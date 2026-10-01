@@ -33,7 +33,8 @@ final class SwiftLorvexCoreServiceHabitMemoryVersionFloorTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   func testCompletionEditsAndDeleteDominateFutureCompositeRow() async throws {
@@ -186,7 +187,7 @@ final class SwiftLorvexCoreServiceHabitMemoryVersionFloorTests: XCTestCase {
     let imported = try await service.importHabit(
       id: habit.id, name: "Restored habit", icon: nil, color: nil, cue: nil,
       frequencyType: "daily", weekdays: [], perPeriodTarget: nil, dayOfMonth: nil,
-      targetCount: 2, milestoneTarget: nil, archived: false, position: 4)
+      targetCount: 2, milestoneTarget: nil, archived: false, position: 4, createdAt: nil)
     XCTAssertEqual(imported.name, "Restored habit")
 
     try await service.importHabitReminderPolicy(

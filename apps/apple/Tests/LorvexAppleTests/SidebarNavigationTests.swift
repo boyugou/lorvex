@@ -11,52 +11,55 @@ func mainNavigationItemsMatchMacCommandOrder() {
       "today",
       "calendar",
       "tasks",
-      "lists",
-      "habits",
       "reviews",
+      "habits",
       "memory",
+      "lists",
     ])
 }
 
 @Test
 func sidebarGroupsAreTheCalmCoreSubsetOfMainNavigation() {
-  // The sidebar shows the calm core plus Memory (the assistant-context surface);
-  // the Lists catalog stays out of the fixed primary nav. Real user lists are
-  // rendered as dynamic sidebar sections that scope task review.
+  // The sidebar's groups show the day, the week, every task, the review, and
+  // habits. Memory lives in the pinned footer instead and the Lists catalog has
+  // no row; real user lists are rendered as dynamic sidebar sections that scope
+  // task review.
   let grouped = SidebarSelection.sidebarGroups.flatMap(\.items)
   // No destination appears in two groups.
   #expect(Set(grouped).count == grouped.count)
   // Every sidebar destination is a real navigation item.
   #expect(Set(grouped).isSubset(of: Set(SidebarSelection.mainNavigationItems)))
   // The demoted fixed destination never reappears in the grouped sidebar.
-  let demoted: Set<SidebarSelection> = [.lists]
+  let demoted: Set<SidebarSelection> = [.lists, .memory]
   #expect(Set(grouped).isDisjoint(with: demoted))
-  // The calm core plus Memory, in order.
-  #expect(grouped == [.today, .calendar, .tasks, .habits, .reviews, .memory])
+  #expect(grouped == [.today, .calendar, .tasks, .reviews, .habits])
   #expect(SidebarSelection.mainNavigationItems.contains(.lists))
+  #expect(SidebarSelection.mainNavigationItems.contains(.memory))
 }
 
 @Test
-func macOSNavigationPresentationNamesCalendarPlainly() {
-  #expect(SidebarSelection.calendar.title == "Calendar")
-  #expect(SidebarSelection.calendar.macOSDisplayTitle == "Calendar")
+func macOSNavigationNamesDestinationsByWhatTheUserDoes() {
+  // The sidebar says Plan, All Tasks, and Review; the shared English names stay
+  // as search aliases for the command palette.
   #expect(String(localized: SidebarSelection.calendar.macOSLocalizedTitle) == "Calendar")
-  #expect(!String(localized: SidebarSelection.calendar.macOSLocalizedTitle).contains("Upcoming"))
+  #expect(String(localized: SidebarSelection.tasks.macOSLocalizedTitle) == "All Tasks")
+  #expect(String(localized: SidebarSelection.reviews.macOSLocalizedTitle) == "Review")
+  #expect(SidebarSelection.calendar.macOSDisplayTitle == "Calendar")
   #expect(SidebarSelection.today.macOSDisplayTitle == "Today")
   #expect(SidebarSelection.tasks.macOSDisplayTitle == "Tasks")
 }
 
 @Test
 func sidebarNavigationShortcutsCoverCommandNumberRow() {
-  // ⌘1–6 walk the macOS navigation destinations top-to-bottom (Today · Calendar ·
-  // Tasks · Habits · Reviews · Memory). The Lists catalog has no sidebar row (lists
-  // are managed inline; the catalog is reached via ⌘K), so it carries no numeric
-  // accelerator.
+  // ⌘1–6 walk the sidebar top to bottom: Today, Plan, All Tasks, Review, and
+  // Habits in the groups, then Memory in the pinned footer. The Lists catalog
+  // has no sidebar row (lists are managed inline; the catalog is reached via
+  // ⌘K), so it carries no numeric accelerator.
   #expect(SidebarSelection.today.navigationShortcut == "1")
   #expect(SidebarSelection.calendar.navigationShortcut == "2")
   #expect(SidebarSelection.tasks.navigationShortcut == "3")
-  #expect(SidebarSelection.habits.navigationShortcut == "4")
-  #expect(SidebarSelection.reviews.navigationShortcut == "5")
+  #expect(SidebarSelection.reviews.navigationShortcut == "4")
+  #expect(SidebarSelection.habits.navigationShortcut == "5")
   #expect(SidebarSelection.memory.navigationShortcut == "6")
   #expect(SidebarSelection.lists.navigationShortcut == nil)
 }
@@ -72,9 +75,8 @@ func sidebarRowsUseDistinctListSelectionTags() throws {
   #expect(!source.contains("ScrollView {"))
   #expect(source.contains("planSection"))
   #expect(source.contains("listScopeSection"))
-  #expect(source.contains("reflectSection"))
+  #expect(!source.contains("reflectSection"))
   #expect(source.contains("destinationRows(.plan)"))
-  #expect(source.contains("destinationRows(.reflect)"))
   #expect(source.contains("Text(item.macOSLocalizedTitle)"))
   #expect(source.contains("ForEach(store.orderedLists) { list in"))
   // Each row carries a distinct `SidebarRowSelection` tag so the single
@@ -84,14 +86,17 @@ func sidebarRowsUseDistinctListSelectionTags() throws {
   #expect(source.contains("var selectedRow: SidebarRowSelection?"))
   #expect(source.contains("func isSelected(_ row: SidebarRowSelection) -> Bool"))
   #expect(source.contains("private func navigate(to row: SidebarRowSelection)"))
-  #expect(source.contains("store.setTaskWorkspaceListScope(id)"))
+  // A list row opens its scope through the store route the Lists catalog and
+  // the command palette share.
+  #expect(source.contains("store.openTaskListScope(id)"))
   // Plain destination navigation goes through navigateToWorkspace, which resets
   // the list scope (to nil) and clears the task selection.
   #expect(source.contains("store.navigateToWorkspace(destination)"))
-  #expect(source.contains("SidebarListRow("))
-  #expect(source.contains("minHeight: SidebarMetrics.scopeRowHeight"))
-  #expect(source.contains("detail: listScopeDetail(for: list)"))
-  #expect(source.contains("func listScopeDetail(for list: LorvexList) -> String"))
+  // Every row is one line: a list row carries its open count in the badge
+  // and nothing beneath its name.
+  #expect(source.contains(#"SidebarListRow(badge: list.openCount > 0 ? "\(list.openCount)" : nil)"#))
+  #expect(!source.contains("listScopeDetail"))
+  #expect(!source.contains("scopeRowHeight"))
   #expect(!source.contains(#""sidebar.lists.scope_detail""#))
   #expect(!source.contains("SidebarDestinationRow("))
   #expect(!source.contains("SidebarUtilityFooterLabel("))
@@ -99,15 +104,35 @@ func sidebarRowsUseDistinctListSelectionTags() throws {
 }
 
 @Test
-func sidebarOrdersTaskScopesBeforeReflectionSurfaces() throws {
+func sidebarPinsMemoryAboveSettingsInTheFooter() throws {
+  let source = try sidebarViewSource()
+  // Memory is a footer row that shows its own selection while open, pinned
+  // above Settings so a long run of lists never scrolls it away.
+  let memory = try #require(source.range(of: "store.navigateToWorkspace(.memory)")?.lowerBound)
+  let settings = try #require(source.range(of: "SettingsLink {")?.lowerBound)
+  #expect(memory < settings)
+  #expect(source.contains("SidebarFooterRow(isSelected: store.selection == .memory)"))
+  #expect(source.contains(#".accessibilityIdentifier("sidebar.memory")"#))
+}
+
+@Test
+func navigateMenuSetsTheUnnumberedCatalogApart() {
+  // The numbered destinations run in sidebar order; the Lists catalog, with no
+  // number, sits below them.
+  let numbered = SidebarSelection.mainNavigationItems.filter { $0.navigationShortcut != nil }
+  #expect(numbered == [.today, .calendar, .tasks, .reviews, .habits, .memory])
+  #expect(numbered.compactMap(\.navigationShortcut) == ["1", "2", "3", "4", "5", "6"])
+  #expect(SidebarSelection.mainNavigationItems.last == .lists)
+}
+
+@Test
+func sidebarOrdersDestinationsBeforeTaskScopes() throws {
   let source = try sidebarViewSource()
   // The `sidebarList` body references the section builders in reading order, so
   // the first textual occurrence of each name pins the on-screen section order.
   let plan = try #require(source.range(of: "planSection")?.lowerBound)
   let lists = try #require(source.range(of: "listScopeSection")?.lowerBound)
-  let reflect = try #require(source.range(of: "reflectSection")?.lowerBound)
   #expect(plan < lists)
-  #expect(lists < reflect)
 }
 
 private func sidebarViewSource() throws -> String {

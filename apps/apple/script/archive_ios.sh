@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# archive_ios.sh — Archive and (optionally) export an iOS, iPadOS, visionOS,
-# or watchOS app from the XcodeGen-generated project.
+# archive_ios.sh — Archive and (optionally) export an iOS, iPadOS, or
+# watchOS app from the XcodeGen-generated project.
 #
 # Without signing credentials the script falls back to a
 # build-for-testing invocation that validates the full compile/link graph
@@ -55,7 +55,7 @@ Modes:
   --export       archive + exportArchive to IPA (requires APPLE_TEAM_ID)
 
 Valid --scheme values (from Config/XcodeGen/project.yml):
-  LorvexMobileApp  LorvexVisionApp  LorvexWatchApp
+  LorvexMobileApp  LorvexWatchApp
 
 Environment for --export:
   APPLE_TEAM_ID      10-character Apple Developer Team ID
@@ -105,7 +105,7 @@ fi
 # ---------------------------------------------------------------------------
 # Validate scheme
 # ---------------------------------------------------------------------------
-VALID_SCHEMES=(LorvexMobileApp LorvexVisionApp LorvexWatchApp)
+VALID_SCHEMES=(LorvexMobileApp LorvexWatchApp)
 SCHEME_VALID=0
 for s in "${VALID_SCHEMES[@]}"; do
   [[ "$s" == "$SCHEME" ]] && SCHEME_VALID=1 && break
@@ -144,7 +144,7 @@ require_xcrun_tool() {
 # (bundled with Xcode 26) since 2026-04-28; `xcodebuild` merely being present is
 # not enough — an older Xcode links an SDK the App Store rejects at upload. The
 # iphoneos SDK version stands in for the Xcode version, so one check covers the
-# iOS / visionOS / watchOS schemes this script archives.
+# iOS / watchOS schemes this script archives.
 IOS_SDK_FLOOR_MAJOR=26
 require_ios_sdk_floor() {
   local version major
@@ -191,7 +191,6 @@ if [[ "$MODE" == "build-only" ]]; then
     DESTINATION=""
     case "$SCHEME" in
       LorvexMobileApp) DESTINATION="generic/platform=iOS" ;;
-      LorvexVisionApp) DESTINATION="generic/platform=visionOS" ;;
       LorvexWatchApp)  DESTINATION="generic/platform=watchOS" ;;
     esac
 
@@ -224,7 +223,7 @@ if [[ "$MODE" == "build-only" ]]; then
     echo "build-only passed: scheme=$SCHEME"
   else
     echo "build-only: xcodegen or xcodebuild not available on this host." >&2
-    echo "SwiftPM cannot build iOS/watchOS/visionOS targets on macOS without Xcode." >&2
+    echo "SwiftPM cannot build iOS/watchOS targets on macOS without Xcode." >&2
     echo "Install Xcode and xcodegen (brew install xcodegen) to enable build-only mode." >&2
     echo ""
     echo "To perform a full compile+link check without signing, set APPLE_TEAM_ID" >&2
@@ -289,7 +288,6 @@ echo "==> Archiving scheme: $SCHEME"
 ARCHIVE_DESTINATION=""
 case "$SCHEME" in
   LorvexMobileApp) ARCHIVE_DESTINATION="generic/platform=iOS" ;;
-  LorvexVisionApp) ARCHIVE_DESTINATION="generic/platform=visionOS" ;;
   LorvexWatchApp)  ARCHIVE_DESTINATION="generic/platform=watchOS" ;;
 esac
 
@@ -380,9 +378,6 @@ case "$SCHEME" in
       development)       EXPORT_OPTS_TEMPLATE="$ROOT_DIR/Config/ExportOptions/Development.plist" ;;
     esac
     ;;
-  LorvexVisionApp)
-    EXPORT_OPTS_TEMPLATE="$ROOT_DIR/Config/ExportOptions/VisionOS.plist"
-    ;;
   LorvexWatchApp)
     EXPORT_OPTS_TEMPLATE="$ROOT_DIR/Config/ExportOptions/WatchOS.plist"
     ;;
@@ -437,13 +432,11 @@ if [[ -z "$IPA_APP" ]]; then
 fi
 # Tell the recursive verifier which platform's bundle set to expect. Each
 # scheme ships a different payload shape (iPhone embeds a widget + Watch app +
-# complication; visionOS is the host app alone; a standalone watch export is the
-# Watch app + complication), so passing the platform keeps this producing script
-# and the verifier in agreement instead of asserting an iPhone shape on every
-# export.
+# complication; a standalone watch export is the Watch app + complication), so
+# passing the platform keeps this producing script and the verifier in
+# agreement instead of asserting an iPhone shape on every export.
 case "$SCHEME" in
   LorvexMobileApp) IPA_PLATFORM="ios" ;;
-  LorvexVisionApp) IPA_PLATFORM="visionos" ;;
   LorvexWatchApp)  IPA_PLATFORM="watchos" ;;
 esac
 set +e
@@ -474,5 +467,6 @@ echo "  App Store Connect upload:"
 echo "    xcrun altool --upload-app \\"
 echo "      -f '$IPA_PATH' \\"
 echo "      --type ios \\"
-echo "      --apple-id APPLE_ID --password APP_SPECIFIC_PASSWORD"
+echo "      --username APPLE_ACCOUNT_ID --password APP_SPECIFIC_PASSWORD"
+echo "  (altool's --apple-id is the app's numeric ID; the account is --username.)"
 echo "  or use Transporter.app / Xcode Organizer."

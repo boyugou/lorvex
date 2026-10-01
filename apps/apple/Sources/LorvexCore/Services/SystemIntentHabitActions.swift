@@ -6,10 +6,12 @@ extension LorvexSystemIntentRunner {
     targetCount: Int?,
     core: any LorvexCoreServicing
   ) async throws -> LorvexHabit {
+    // Behavior-preserving: an absent/blank cue leaves the stored value, a
+    // non-blank cue sets it. The intent surface has no explicit "clear" affordance.
     try await core.updateHabit(
       id: validatedHabitID(id),
       name: name.trimmedNilIfEmpty,
-      cue: cue.trimmedNilIfEmpty,
+      cue: cue.trimmedNilIfEmpty.map { .set($0) } ?? .unset,
       color: nil,
       icon: nil,
       targetCount: targetCount.map { max(1, $0) }

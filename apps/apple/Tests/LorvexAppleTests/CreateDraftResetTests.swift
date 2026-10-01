@@ -89,7 +89,11 @@ func mobileStoreBeginCreateHabitDraftResetsToDefaults() async throws {
 @MainActor
 @Test
 func mobileStoreBeginCreateCalendarDraftClearsEditedTitle() async throws {
-  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { "2026-05-23" })
+  // A mid-morning clock: the default block is clamped to the start's day, so a
+  // wall-clock `now` inside the last hour before midnight would shorten it.
+  let now = try #require(Calendar.current.date(
+    from: DateComponents(year: 2026, month: 5, day: 23, hour: 10, minute: 0)))
+  let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { "2026-05-23" }, now: { now })
   store.calendarDraft.title = "Edited event"
   store.calendarDraft.location = "Office"
 

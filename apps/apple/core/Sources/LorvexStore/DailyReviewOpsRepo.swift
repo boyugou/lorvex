@@ -274,9 +274,7 @@ public enum DailyReviewOpsRepo {
   /// carry no foreign key (only `review_date` cascades), so a task or list
   /// permanently deleted after the review linked it leaves a dangling link
   /// row. Each read EXISTS-filters against the live `tasks` / `lists` tables
-  /// so a review never surfaces an id whose target no longer exists —
-  /// matching the soft-ref filtering the sibling `current_focus_items` /
-  /// `focus_schedule_blocks` reads apply.
+  /// so a review never surfaces an id whose target no longer exists.
   private static func fetchLinkIds(
     _ db: Database, dates: [String]
   ) throws -> ([String: [String]], [String: [String]]) {

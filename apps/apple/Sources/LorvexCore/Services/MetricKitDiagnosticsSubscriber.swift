@@ -24,7 +24,7 @@
   /// classifies `metrickit.metrics` as non-diagnostic so the crash-scoped feed
   /// never surfaces them.
   ///
-  /// Available on iOS 14+ / macOS 12+ / visionOS 1+ — the platforms MetricKit
+  /// Available on iOS 14+ / macOS 12+ — the platforms MetricKit
   /// vends `MXDiagnosticPayload` on; `#if canImport(MetricKit)` excludes watchOS,
   /// which has no MetricKit. The app's iOS 18 / macOS 15 floor clears the
   /// diagnostics API's version requirement, so no runtime `@available` gate is

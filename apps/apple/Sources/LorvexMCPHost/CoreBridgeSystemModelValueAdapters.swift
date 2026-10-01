@@ -33,13 +33,15 @@ extension CoreBridgeClient {
             listID: task.listID, priority: task.priority, dueDate: task.dueDate,
             plannedDate: nil)
         }),
-      "current_focus_task_count": .int(snapshot.currentFocusTaskCount),
+      "has_briefing": .bool(snapshot.hasBriefing),
     ])
   }
 
   static func sessionContextValue(from snapshot: SessionContextSnapshot) -> Value {
     .object([
       "date": .string(snapshot.date),
+      "weekday": .string(snapshot.weekday),
+      "local_time": .string(snapshot.localTime),
       "device_id": snapshot.deviceID.map(Value.string) ?? .null,
       "sync_backend": .string(snapshot.syncBackend),
       "timezone": .string(snapshot.timezone),

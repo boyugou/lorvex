@@ -2,8 +2,10 @@ import AppKit
 import LorvexCore
 import SwiftUI
 
-/// One memory entry as a native macOS list row: an AI glyph, the key, the
-/// remembered content, and a last-updated footer. Edit and Delete appear on hover
+/// One memory entry as a native macOS list row: the entry's title
+/// (``MemoryEntry/displayTitle``), the remembered content, and a last-updated
+/// footer. It carries no leading glyph: every entry is the same kind of note,
+/// so a glyph would repeat on each row what the page title already says. Edit and Delete appear on hover
 /// and in the row's context menu, and the whole row taps to edit. Memory is
 /// AI-managed context the assistant keeps about the user; the app edits it as the
 /// AI actor.
@@ -15,17 +17,14 @@ struct MemoryEntryRow: View {
   @State private var isHovering = false
 
   var body: some View {
-    HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-      icon
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        headerLine
-        Text(entry.content)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .textSelection(.enabled)
-        footerLine
-      }
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      headerLine
+      Text(entry.content)
+        .font(LorvexDesign.Typography.secondaryText)
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .textSelection(.enabled)
+      footerLine
     }
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .contentShape(Rectangle())
@@ -44,19 +43,9 @@ struct MemoryEntryRow: View {
     .contextMenu { contextMenu }
   }
 
-  private var icon: some View {
-    Image(systemName: "sparkles")
-      .symbolRenderingMode(.hierarchical)
-      .font(.system(size: 15))
-      .foregroundStyle(.tint)
-      .frame(width: 20)
-      .padding(.top, 1)
-      .accessibilityHidden(true)
-  }
-
   private var headerLine: some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-      Text(entry.key)
+      Text(entry.displayTitle)
         .font(LorvexDesign.Typography.primaryEmphasis)
         .lineLimit(1)
       Spacer(minLength: LorvexDesign.Spacing.s)
@@ -67,7 +56,7 @@ struct MemoryEntryRow: View {
     HStack(spacing: LorvexDesign.Spacing.m) {
       Text(Self.formattedDay(entry.updatedAt))
         .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.tertiary)
+        .foregroundStyle(.secondary)
 
       Spacer(minLength: 0)
 
@@ -114,13 +103,17 @@ struct MemoryEntryRow: View {
   }
 
   private var accessibilityLabel: String {
-    "\(entry.key). \(entry.content)"
+    "\(entry.displayTitle). \(entry.content)"
   }
 
-  /// A readable absolute day (e.g. "May 22, 2026") for the row footer, falling
-  /// back to the raw string if it can't be parsed.
+  /// A readable absolute day (e.g. "May 22, 2026") for the row footer. Memory
+  /// timestamps arrive as ISO 8601 with or without fractional seconds (the MCP
+  /// host writes `.000Z`-style values), so both forms parse; an unparseable
+  /// string falls back to the raw text.
   private static func formattedDay(_ timestamp: String) -> String {
-    guard let date = LorvexDateFormatters.iso8601.date(from: timestamp) else {
+    guard let date = LorvexDateFormatters.iso8601Fractional.date(from: timestamp)
+      ?? LorvexDateFormatters.iso8601.date(from: timestamp)
+    else {
       return timestamp
     }
     return date.formatted(date: .abbreviated, time: .omitted)

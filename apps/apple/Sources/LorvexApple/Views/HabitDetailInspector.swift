@@ -14,8 +14,7 @@ struct HabitDetailInspector: View {
   @State private var isEditing = false
 
   private var habit: LorvexHabit? {
-    store.filteredHabits.first { $0.id == habitID }
-      ?? store.habits?.habits.first { $0.id == habitID }
+    store.orderedHabits.first { $0.id == habitID }
   }
 
   var body: some View {
@@ -77,17 +76,18 @@ struct HabitDetailInspector: View {
     let progress = HabitPeriodProgress.current(habit: habit, recentCompletions: recentCompletions)
     let isComplete = progress.isComplete
     let isMultiTarget = habit.targetCount > 1
+    let identity = LorvexHabitPalette.baseColor(for: habit)
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
         Image(systemName: habit.icon ?? "repeat.circle")
           .font(LorvexDesign.Typography.sectionHeader)
-          .foregroundStyle(isComplete ? AnyShapeStyle(.green) : AnyShapeStyle(.tint))
+          .foregroundStyle(isComplete ? LorvexDesign.Palette.done : identity)
           .frame(width: 36, height: 36)
           .background(
-            (isComplete ? Color.green : Color.accentColor).opacity(0.12),
+            (isComplete ? LorvexDesign.Palette.done : identity).opacity(0.12),
             in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
 
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           Text(habit.name)
             .font(LorvexDesign.Typography.screenTitle)
             .lineLimit(2)
@@ -97,7 +97,7 @@ struct HabitDetailInspector: View {
             HStack(alignment: .top, spacing: LorvexDesign.Spacing.xs) {
               Image(systemName: "sparkles")
                 .font(LorvexDesign.Typography.tertiaryText)
-                .foregroundStyle(Color(lorvexHex: habit.color) ?? .accentColor)
+                .foregroundStyle(identity)
               Text(encouragement)
                 .font(LorvexDesign.Typography.secondaryText)
                 .italic()
@@ -128,7 +128,7 @@ struct HabitDetailInspector: View {
           Label(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "pencil")
             .labelStyle(.iconOnly)
         }
-        .buttonStyle(.lorvexNeutral)
+        .buttonStyle(.bordered)
         .help(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle))
 
         Button(role: .destructive) {
@@ -137,7 +137,7 @@ struct HabitDetailInspector: View {
           Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "trash")
             .labelStyle(.iconOnly)
         }
-        .buttonStyle(.lorvexNeutral)
+        .buttonStyle(.bordered)
         .help(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle))
       }
     }
@@ -175,10 +175,10 @@ struct HabitDetailInspector: View {
           systemImage: "checkmark.circle.fill"
         )
       }
-      .buttonStyle(.lorvex(.secondary))
+      .buttonStyle(.bordered)
       .disabled(true)
     } else {
-      Button {
+      let button = Button {
         Task {
           if isComplete { await store.uncompleteHabit(habit) }
           else { await store.completeHabit(habit) }
@@ -191,7 +191,11 @@ struct HabitDetailInspector: View {
           systemImage: isComplete ? "arrow.counterclockwise" : "checkmark.circle"
         )
       }
-      .buttonStyle(isComplete ? .lorvex(.secondary) : .lorvex(.primary))
+      if isComplete {
+        button.buttonStyle(.bordered)
+      } else {
+        button.buttonStyle(.borderedProminent)
+      }
     }
   }
 
@@ -206,14 +210,14 @@ struct HabitDetailInspector: View {
       } label: {
         Image(systemName: "minus").frame(width: 22, height: 22)
       }
-      .buttonStyle(.lorvexNeutral)
+      .buttonStyle(.bordered)
       .disabled(habit.completionsToday <= 0)
       .help(String(localized: "habits.row.decrement", defaultValue: "Remove one", table: "Localizable", bundle: LorvexL10n.bundle))
       .accessibilityLabel(String(localized: "habits.row.decrement", defaultValue: "Remove one", table: "Localizable", bundle: LorvexL10n.bundle))
 
       Text("\(habit.completionsToday)/\(habit.targetCount)")
         .font(LorvexDesign.Typography.primaryEmphasis.monospacedDigit())
-        .foregroundStyle(isComplete ? AnyShapeStyle(.green) : AnyShapeStyle(.primary))
+        .foregroundStyle(isComplete ? AnyShapeStyle(LorvexDesign.Palette.done) : AnyShapeStyle(.primary))
         .frame(minWidth: 40)
         .accessibilityLabel(String(
           format: String(
@@ -227,7 +231,7 @@ struct HabitDetailInspector: View {
       } label: {
         Image(systemName: "plus").frame(width: 22, height: 22)
       }
-      .buttonStyle(.lorvexNeutral)
+      .buttonStyle(.bordered)
       .disabled(isComplete)
       .help(String(localized: "habits.row.add_one", defaultValue: "Add one", table: "Localizable", bundle: LorvexL10n.bundle))
       .accessibilityLabel(String(localized: "habits.row.add_one", defaultValue: "Add one", table: "Localizable", bundle: LorvexL10n.bundle))

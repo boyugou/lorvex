@@ -29,25 +29,32 @@ func appStoreTaskSelectionCountUsesExplicitSurface() async throws {
   let started = try await store.core.createTask(title: "Started routing task", notes: "")
   _ = try await store.core.startTaskReturningTask(id: started.id)
   await store.refresh()
-  let orderedTodayIDs = store.orderedTaskIDs(on: .focus)
+  let orderedTodayIDs = store.orderedTaskIDs(on: .today)
   let todayIDs = Set(orderedTodayIDs)
-  store.setFocusWorkspaceSelection(todayIDs)
+  store.setTodaySelection(todayIDs)
 
-  #expect(orderedTodayIDs.first == started.id)
+  // Started work sits in the Not-in-Plan lane behind missed deadlines: starting a
+  // task says it is underway, not that it outranks a blown due date. So the rows
+  // ahead of it are exactly the overdue ones.
+  let startedIndex = try #require(orderedTodayIDs.firstIndex(of: started.id))
+  #expect(
+    orderedTodayIDs.prefix(startedIndex).allSatisfy { id in
+      store.today.tasks.first { $0.id == id }.map(store.isOverdue) == true
+    })
   #expect(orderedTodayIDs.filter { $0 == started.id }.count == 1)
   #expect(orderedTodayIDs.count == todayIDs.count)
-  #expect(store.focusWorkspaceSelectedTasks.first?.id == started.id)
+  #expect(store.todaySelectedTasks.first?.id == orderedTodayIDs.first)
   // The scene supplies the surface explicitly. Another window's navigation
   // selection cannot redirect the command to a different selection set.
   store.selection = .calendar
-  #expect(store.taskSelectionCount(on: .focus) == todayIDs.count)
+  #expect(store.taskSelectionCount(on: .today) == todayIDs.count)
   #expect(store.taskSelectionCount(on: .taskWorkspace) == 0)
 
   store.selection = .today
-  store.selectOnlyFocusWorkspaceTask(started.id)
+  store.selectOnlyTodayTask(started.id)
   #expect(store.selectedTask?.id == started.id)
-  store.pruneFocusWorkspaceSelection()
-  #expect(store.focusWorkspaceSelectedTaskIDs == [started.id])
+  store.pruneTodaySelection()
+  #expect(store.todaySelectedTaskIDs == [started.id])
   store.reconcileSelectedTaskAfterRefresh()
   #expect(store.selectedTaskID == started.id)
 }
@@ -172,10 +179,13 @@ func taskDetailEstimateForSaveKeepsExistingOnMalformedInput() async throws {
 @Test
 func appStoreDoesNotSaveTodayWhenPlannedDateDraftIsMissing() async throws {
   let store = try await makeTaskEditingStore()
+  // Undated backlog work, so both date drafts start empty. It has no claim on
+  // today and is therefore outside the day pool, so it is selected and loaded
+  // the way a list row does it rather than picked out of the Today snapshot.
+  let task = try await store.core.createTask(title: "Undated planned-date subject", notes: "")
   await store.refresh()
-  let task = try #require(store.today.tasks.first { $0.dueDate == nil })
   store.selectedTaskID = task.id
-  store.syncSelectedTaskDraft()
+  await store.loadSelectedTaskDetail()
 
   store.taskDetailHasPlannedDate = true
   store.taskDetailPlannedDate = nil
@@ -185,8 +195,9 @@ func appStoreDoesNotSaveTodayWhenPlannedDateDraftIsMissing() async throws {
 
   await store.saveTaskDetailDraft(id: task.id, preserveSelection: task.id)
 
-  let saved = try #require(store.today.tasks.first { $0.id == task.id })
+  let saved = try await store.core.loadTask(id: task.id)
   #expect(saved.dueDate == nil)
+  #expect(saved.plannedDate == nil)
   #expect(store.errorMessage == nil)
 }
 
@@ -194,10 +205,13 @@ func appStoreDoesNotSaveTodayWhenPlannedDateDraftIsMissing() async throws {
 @Test
 func taskDetailPlannedDatePickerUsesStableDraftDate() async throws {
   let store = try await makeTaskEditingStore()
+  // Undated backlog work, so the planned-date draft starts empty; see
+  // `appStoreDoesNotSaveTodayWhenPlannedDateDraftIsMissing` on why the subject is
+  // created here rather than taken from the day pool.
+  let task = try await store.core.createTask(title: "Undated picker subject", notes: "")
   await store.refresh()
-  let task = try #require(store.today.tasks.first { $0.dueDate == nil })
   store.selectedTaskID = task.id
-  store.syncSelectedTaskDraft()
+  await store.loadSelectedTaskDetail()
 
   let initialPickerDate = store.taskDetailPlannedDatePickerDate
   #expect(store.taskDetailPlannedDatePickerDate == initialPickerDate)
@@ -221,7 +235,7 @@ func taskDetailPlannedDateSavePathDoesNotFallbackToToday() throws {
     encoding: .utf8)
 
   #expect(stateSource.contains("var taskDetailPlannedDateForSave: Date?"))
-  #expect(actionsSource.contains("plannedDate: taskDetailPlannedDateForSave"))
+  #expect(actionsSource.contains("plannedDate: Self.setOrClear(taskDetailPlannedDateForSave)"))
   #expect(!stateSource.contains("taskDetailPlannedDate ?? Date()"))
   #expect(!actionsSource.contains("taskDetailPlannedDate ?? Date()"))
 }
@@ -230,7 +244,7 @@ func taskDetailPlannedDateSavePathDoesNotFallbackToToday() throws {
 func taskDetailPlannedDatePickerViewDoesNotFallbackToDateNow() throws {
   let root = packageRoot().appending(path: "Sources/LorvexApple")
   let viewSource = try String(
-    contentsOf: root.appending(path: "Views/TaskDetailMetadataSection.swift"),
+    contentsOf: root.appending(path: "Views/TaskDetailView.swift"),
     encoding: .utf8)
 
   #expect(viewSource.contains("store.taskDetailPlannedDatePickerDate"))
@@ -628,7 +642,7 @@ func appStoreCancelsAndReopensSelectedPreviewTask() async throws {
 
   await store.reopenSelectedTask()
   #expect(store.selectedTask?.status == .open)
-  #expect(store.openTasks.contains { $0.id == selectedID })
+  #expect(store.today.tasks.contains { $0.id == selectedID })
   #expect(store.selectedTaskCanCancel)
 }
 
@@ -646,8 +660,8 @@ func appStoreMarksSelectedTaskSomedayAndActivatesItBackToOpen() async throws {
   #expect(store.selectedTask?.status == .someday)
   #expect(store.selectedTaskIsSomeday)
   #expect(!store.selectedTaskCanMarkSomeday)
-  // A parked task drops out of Today's open lanes while keeping its list.
-  #expect(!store.openTasks.contains { $0.id == task.id })
+  // A parked task leaves the day pool (someday is not actionable) but keeps its list.
+  #expect(!store.today.tasks.contains { $0.id == task.id })
   #expect(store.selectedTask?.listID == task.listID)
   #expect(store.errorMessage == nil)
 
@@ -656,7 +670,7 @@ func appStoreMarksSelectedTaskSomedayAndActivatesItBackToOpen() async throws {
   await store.reopenSelectedTask()
   #expect(store.selectedTask?.status == .open)
   #expect(!store.selectedTaskIsSomeday)
-  #expect(store.openTasks.contains { $0.id == task.id })
+  #expect(store.today.tasks.contains { $0.id == task.id })
   #expect(store.errorMessage == nil)
 }
 

@@ -38,7 +38,7 @@ func reopenableTaskEntityQuerySuggestsOnlyClosedTasks() async throws {
 
 @Test
 func reopenableTaskEntityQueryUsesFullCorpusInsteadOfTodaySnapshot() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   core.loadTodayError = .unsupportedOperation("loadToday must not feed reopenable task suggestions")
   let completed = try await core.createTask(title: "Completed offscreen shortcut task", notes: "")
   let cancelled = try await core.createTask(title: "Cancelled offscreen shortcut task", notes: "")

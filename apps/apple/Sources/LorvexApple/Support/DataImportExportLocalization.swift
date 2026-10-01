@@ -16,12 +16,10 @@ extension LorvexDataExportCategory {
       String(localized: "data_export.category.calendar_events", defaultValue: "Calendar Events", table: "Localizable", bundle: LorvexL10n.bundle)
     case .dailyReviews:
       String(localized: "data_export.category.daily_reviews", defaultValue: "Daily Reviews", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .currentFocus:
-      String(localized: "data_export.category.current_focus", defaultValue: "Current Focus", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .focusSchedules:
-      String(localized: "data_export.category.focus_schedules", defaultValue: "Focus Schedules", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .dailyBriefings:
+      String(localized: "data_export.category.daily_briefings", defaultValue: "Daily Briefings", table: "Localizable", bundle: LorvexL10n.bundle)
     case .taskCalendarEventLinks:
-      String(localized: "data_export.category.task_calendar_event_links", defaultValue: "Task Calendar Links", table: "Localizable", bundle: LorvexL10n.bundle)
+      String(localized: "data_export.category.task_calendar_event_links", defaultValue: "Task–Event Links", table: "Localizable", bundle: LorvexL10n.bundle)
     case .memory:
       String(localized: "data_export.category.memory", defaultValue: "Memory", table: "Localizable", bundle: LorvexL10n.bundle)
     case .preferences:
@@ -100,4 +98,15 @@ enum LorvexImportSummaryText {
   )
 
 
+}
+
+extension LorvexDataExportCategory.Group {
+  var lorvexLocalizedName: String {
+    switch self {
+    case .planning: String(localized: "data_export.group.planning", defaultValue: "Planning", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .calendar: String(localized: "data_export.group.calendar", defaultValue: "Calendar", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .reflection: String(localized: "data_export.group.reflection", defaultValue: "Reviews & Assistant", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .settings: String(localized: "data_export.group.settings", defaultValue: "Settings", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
 }

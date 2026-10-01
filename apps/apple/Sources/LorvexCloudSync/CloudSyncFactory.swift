@@ -1,44 +1,22 @@
 import Foundation
 import LorvexCore
 
-/// Builds the CloudSync runtime (mode, push subscriber, engine coordinator) for
-/// a surface that owns only a core + App-Group config, with no macOS
-/// `AppSettingsStore`.
-///
-/// This is the shared, platform-neutral construction path. The host supplies its
-/// CloudKit container identifier and a sync-state directory; everything else
-/// (generation controller, account checker, pusher, and fetcher) is wired
-/// identically to the macOS lifecycle. The macOS app keeps its own
-/// `AppSettingsStore`-driven construction in `AppCoreFactory`; both realize the
-/// same wiring, so a later convergence can point macOS at this factory.
+/// Builds the CloudSync runtime (mode and controller) for the macOS and iOS
+/// main apps. The host supplies its CloudKit container identifier and a
+/// sync-state directory; everything else is wired identically on both.
 public enum CloudSyncFactory {
-  /// Resolves the effective `CloudSyncMode`. The env var `LORVEX_CLOUDKIT_EXPORT`
-  /// overrides the persisted setting: "record-plan" → `.recordPlan`, "live" →
-  /// `.live`, any other non-nil value → `.off`. Absent env var → `persistedMode`
+  /// Resolves the effective `CloudSyncMode`. The env var `LORVEX_CLOUD_SYNC`
+  /// overrides the persisted setting: "live" → `.live`, any other non-nil
+  /// value → `.off`. Absent env var → `persistedMode`
   /// (default `.off`).
   public static func resolveMode(
     persistedMode: CloudSyncMode = .off,
     environment: [String: String] = ProcessInfo.processInfo.environment
   ) -> CloudSyncMode {
-    switch environment["LORVEX_CLOUDKIT_EXPORT"] {
-    case "record-plan": return .recordPlan
+    switch environment["LORVEX_CLOUD_SYNC"] {
     case "live": return .live
     case .some: return .off
     case .none: return persistedMode
-    }
-  }
-
-  /// The push subscriber for `mode`: a real `CKDatabaseSubscription` installer
-  /// for `.recordPlan`/`.live`, a no-op for `.off`.
-  public static func makeSubscriber(
-    mode: CloudSyncMode,
-    containerIdentifier: String = LorvexProductMetadata.cloudKitContainerIdentifier
-  ) -> any CloudSyncSubscribing {
-    switch mode {
-    case .recordPlan, .live:
-      return CloudKitCloudSyncSubscriber(containerIdentifier: containerIdentifier)
-    case .off:
-      return NoOpCloudSyncSubscriber()
     }
   }
 
@@ -69,31 +47,32 @@ public enum CloudSyncFactory {
     return cache
   }
 
-  /// The engine coordinator (outbound outbox→CK + inbound CK→applyEnvelope) for
-  /// `.live` mode. `.recordPlan` and `.off` produce no coordinator — the cycle
-  /// silently no-ops.
+  /// The CKSyncEngine-backed controller that owns this device's sync.
   ///
-  /// The reconstructible CloudKit system-fields cache is
-  /// routed to the backup-excluded ``reconstructibleCacheDirectory(_:)``
-  /// subdirectory; the consent/account state (identity fingerprint, pause reason)
-  /// stays in `stateDirectory`, backup-eligible.
-  public static func makeCoordinator(
-    mode: CloudSyncMode,
+  /// Built regardless of the sync mode: "Delete iCloud Data" must work while
+  /// sync is off, and the host starts or stops the controller as the mode
+  /// changes. A store constructs exactly one controller per sync-state
+  /// directory, because the file-backed pause, identity, and system-fields
+  /// stores assume a single owner.
+  ///
+  /// The reconstructible CloudKit system-fields cache lives in the
+  /// backup-excluded ``reconstructibleCacheDirectory(_:)``; the consent and
+  /// account state (identity fingerprint, pause reason) stays in
+  /// `stateDirectory`, backup-eligible.
+  public static func makeController(
+    store: any CloudSyncEngineStore,
     containerIdentifier: String = LorvexProductMetadata.cloudKitContainerIdentifier,
     stateDirectory: URL
-  ) -> CloudSyncEngineCoordinator? {
-    guard mode == .live else { return nil }
+  ) -> CloudSyncController {
     let cacheDirectory = prepareStateDirectories(base: stateDirectory)
-    return CloudSyncEngineCoordinator(
+    return CloudSyncController(
+      store: store,
       accountChecker: LiveCloudKitAccountStatusChecker(containerIdentifier: containerIdentifier),
-      pusher: CloudKitRecordPusher(
-        containerIdentifier: containerIdentifier,
-        systemFieldsStore: FileCloudSyncRecordSystemFieldsStore(directory: cacheDirectory)),
-      fetcher: CloudKitRemoteChangeFetcher(containerIdentifier: containerIdentifier),
       accountIdentifier: CloudKitUserRecordAccountIdentifier(containerIdentifier: containerIdentifier),
       accountIdentityStore: FileCloudSyncAccountIdentityStore(directory: stateDirectory),
-      accountPauseStore: FileCloudSyncPauseStateStore(directory: stateDirectory)
-    )
+      pauseStore: FileCloudSyncPauseStateStore(directory: stateDirectory),
+      systemFieldsStore: FileCloudSyncRecordSystemFieldsStore(directory: cacheDirectory),
+      makeEngine: LiveCloudSyncEngine.factory(containerIdentifier: containerIdentifier))
   }
 
   /// A stable, per-app sync-state directory under Application Support:

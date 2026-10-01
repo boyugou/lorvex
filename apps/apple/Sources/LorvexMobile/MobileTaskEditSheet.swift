@@ -10,6 +10,8 @@ struct MobileTaskEditSheet: View {
   let save: () async -> Void
   let cancel: () -> Void
   @FocusState private var focusedField: Field?
+  /// A tag typed into the tag field but not yet added with Return.
+  @State private var pendingTag = ""
 
   private enum Field {
     case title
@@ -66,11 +68,11 @@ struct MobileTaskEditSheet: View {
           )
           .focused($focusedField, equals: .estimate)
           .submitLabel(.done)
-          .onSubmit { Task { await save() } }
-          #if os(iOS) || os(visionOS)
+          .onSubmit { Task { await commitPendingTagAndSave() } }
+          #if os(iOS)
             .keyboardType(.numberPad)
           #endif
-          .mobileKeyboardDoneToolbar { Task { await save() } }
+          .mobileKeyboardDoneToolbar { Task { await commitPendingTagAndSave() } }
         }
 
         Section {
@@ -98,6 +100,10 @@ struct MobileTaskEditSheet: View {
             isOn: $draft.hasPlannedDate,
             date: $draft.plannedDate,
             idElement: "plannedDate")
+          if draft.hasPlannedDate {
+            MobileTaskTimeRows(
+              time: $draft.plannedTime, day: draft.plannedDate, length: draft.parsedEstimatedMinutes)
+          }
         } footer: {
           Text(
             String(
@@ -128,7 +134,7 @@ struct MobileTaskEditSheet: View {
             localized: "task_edit.section.tags", defaultValue: "Tags", table: "Localizable",
             bundle: MobileL10n.bundle)
         ) {
-          MobileTagTokenField(tags: $draft.tags, suggestions: tagSuggestions)
+          MobileTagTokenField(tags: $draft.tags, suggestions: tagSuggestions, entry: $pendingTag)
         }
 
         Section(
@@ -158,10 +164,10 @@ struct MobileTaskEditSheet: View {
         }
         ToolbarItem(placement: .confirmationAction) {
           Button {
-            Task { await save() }
+            Task { await commitPendingTagAndSave() }
           } label: {
             if isSaving {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(
                 String(
@@ -169,12 +175,23 @@ struct MobileTaskEditSheet: View {
                   bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(!draft.canSave || isSaving)
         }
       }
     }
     // Task editor detents: large only because tags, dependencies, and notes need full-height editing.
     .mobileFullEditorSheetPresentation()
+  }
+
+  /// Saves with any tag typed but not yet added, so pressing Save before
+  /// Return keeps it.
+  private func commitPendingTagAndSave() async {
+    if !pendingTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      draft.tags = MobileTagTokenField.merging(pendingTag, into: draft.tags)
+      pendingTag = ""
+    }
+    await save()
   }
 
   /// One schedulable-date row: a toggle that reveals a day `DatePicker` when on.

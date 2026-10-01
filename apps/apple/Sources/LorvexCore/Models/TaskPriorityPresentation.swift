@@ -4,15 +4,15 @@ import SwiftUI
 /// `LorvexTask.Status`'s presentation. Priority is the primary canonical sort
 /// key, so every task-row surface color-codes it identically: P1 reads as
 /// urgent (red), P2 as elevated (orange), and P3 recedes (secondary). Centralised
-/// so macOS, iOS, iPadOS, and visionOS can't drift.
+/// so macOS, iOS, and iPadOS can't drift.
 extension LorvexTask.Priority {
   /// Tint for the priority indicator. P3 uses `.secondary` so low-priority work
   /// stays visually quiet rather than competing with P1/P2.
   public var priorityTint: Color {
     switch self {
-    case .p1: .red
-    case .p2: .orange
-    case .p3: .secondary
+    case .p1: LorvexDesign.Palette.priorityHigh
+    case .p2: LorvexDesign.Palette.priorityMedium
+    case .p3: LorvexDesign.Palette.priorityLow
     }
   }
 

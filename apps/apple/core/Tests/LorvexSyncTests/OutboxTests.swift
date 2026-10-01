@@ -46,60 +46,6 @@ final class OutboxTests: XCTestCase {
     }
   }
 
-  private func beginAuthoritativeSession(_ db: Database) throws -> String {
-    let databaseInstanceId = "outbox-test-database"
-    try SyncCheckpoints.set(
-      db, key: SyncCheckpoints.keyDatabaseInstanceId,
-      value: databaseInstanceId)
-    _ = try CloudTraversalWitness.claimAccount(
-      db, accountIdentifier: "outbox-test-account")
-    return try AuthoritativeSnapshot.begin(
-      db,
-      boundary: try SyncTestSupport.cloudTraversalBoundary(
-        accountIdentifier: "outbox-test-account", zoneIdentifier: "LorvexZone"),
-      databaseInstanceId: databaseInstanceId
-    ).sessionToken
-  }
-
-  @discardableResult
-  private func insertParkedAudit(
-    _ db: Database, id: String, accountIdentifier: String,
-    version: String, due: String
-  ) throws -> Int64 {
-    let row = ChangelogWrite.ChangelogRow(
-      id: id, timestamp: "2026-01-01T00:00:00.000Z", operation: "update",
-      entityType: "task", entityId: "01966a3f-7c8b-7d4e-8f3a-000000009999",
-      summary: "retry-account isolation", initiatedBy: "assistant",
-      sourceDeviceId: "device-001", retentionEpoch: 0,
-      retentionAccountIdentifier: accountIdentifier)
-    try ChangelogWrite.writeChangelogRow(db, row)
-    try OutboxEnqueue.enqueuePayloadUpsert(
-      db, entityType: EntityName.aiChangelog, entityId: id,
-      payload: ChangelogWrite.buildChangelogSyncPayload(row),
-      context: OutboxWriteContext(
-        version: version, deviceId: "device-001"))
-    let outboxId = try XCTUnwrap(
-      Int64.fetchOne(
-        db,
-        sql: """
-          SELECT id FROM sync_outbox
-          WHERE entity_type = ? AND entity_id = ? AND synced_at IS NULL
-          """,
-        arguments: [EntityName.aiChangelog, id]))
-    try db.execute(
-      sql: """
-        UPDATE sync_outbox
-        SET retry_count = ?, disposition = ?, next_retry_at = ?,
-            recovery_round = 1
-        WHERE id = ?
-        """,
-      arguments: [
-        Outbox.maxRetries, Outbox.Disposition.retryWait.rawValue,
-        due, outboxId,
-      ])
-    return outboxId
-  }
-
   // MARK: - query_and_mutation
 
   func testEnqueueAndGetPending() throws {
@@ -251,145 +197,6 @@ final class OutboxTests: XCTestCase {
       XCTAssertEqual(
         try Outbox.earliestRetryAt(db),
         try XCTUnwrap(SyncTimestamp.parse(due)).date)
-    }
-  }
-
-  func testRetryRearmLeavesInactiveAccountAuditRowsParked() throws {
-    try withDB { db in
-      try db.execute(
-        sql: """
-          UPDATE audit_retention_binding
-          SET ever_bound = 1, active_account_identifier = ?,
-              active_zone_name = ?, updated_at = ?
-          WHERE singleton = 1
-          """,
-        arguments: [
-          "icloud-account-b", "LorvexZone",
-          "2026-08-01T00:00:00.000Z",
-        ])
-      let inactiveId = try self.insertParkedAudit(
-        db, id: "01966a3f-7c8b-7d4e-8f3a-000000004a01",
-        accountIdentifier: "icloud-account-a",
-        version: "1711234567999_0001_a1b2c3d4a1b2c3d4",
-        due: "2026-08-01T01:00:00.000Z")
-      let activeId = try self.insertParkedAudit(
-        db, id: "01966a3f-7c8b-7d4e-8f3a-000000004b01",
-        accountIdentifier: "icloud-account-b",
-        version: "1711234567999_0002_a1b2c3d4a1b2c3d4",
-        due: "2026-08-01T01:01:00.000Z")
-
-      XCTAssertEqual(
-        try Outbox.rearmRetryableFailuresDue(
-          db, now: "2026-08-01T02:00:00.000Z"),
-        1)
-      let inactive = try XCTUnwrap(
-        Row.fetchOne(
-          db,
-          sql: """
-            SELECT retry_count, disposition, next_retry_at
-            FROM sync_outbox WHERE id = ?
-            """,
-          arguments: [inactiveId]))
-      XCTAssertEqual(inactive["retry_count"] as Int64, Outbox.maxRetries)
-      XCTAssertEqual(
-        inactive["disposition"] as String?,
-        Outbox.Disposition.retryWait.rawValue)
-      XCTAssertEqual(
-        inactive["next_retry_at"] as String?, "2026-08-01T01:00:00.000Z")
-
-      let active = try XCTUnwrap(
-        Row.fetchOne(
-          db,
-          sql: """
-            SELECT retry_count, disposition, next_retry_at
-            FROM sync_outbox WHERE id = ?
-            """,
-          arguments: [activeId]))
-      XCTAssertEqual(active["retry_count"] as Int64, 0)
-      XCTAssertNil(active["disposition"] as String?)
-      XCTAssertNil(active["next_retry_at"] as String?)
-      XCTAssertEqual(
-        try Outbox.getPending(
-          db, now: "2026-08-01T02:00:00.000Z").map(\.id),
-        [activeId])
-    }
-  }
-
-  func testQuarantineAllPendingDropsEveryPendingRow() throws {
-    try withDB { db in
-      // Two pending rows plus one already synced. Quarantine must drop both
-      // pending rows (pinning retry_count to maxRetries so getPending excludes
-      // them and stamping last_error) while leaving the synced row untouched.
-      let a = makeEnvelope("task", "01966a3f-7c8b-7d4e-8f3a-0000000000a1", "1711234567890_0001_a1b2c3d4a1b2c3d4")
-      let b = makeEnvelope("task", "01966a3f-7c8b-7d4e-8f3a-0000000000a2", "1711234567890_0002_a1b2c3d4a1b2c3d4")
-      let done = makeEnvelope("task", "01966a3f-7c8b-7d4e-8f3a-0000000000a3", "1711234567890_0003_a1b2c3d4a1b2c3d4")
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, a)
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, b)
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, done)
-      let doneId = try Outbox.getPending(db).first { $0.envelope.entityId == done.entityId }!.id
-      try Outbox.markManySynced(db, outboxIds: [doneId], syncedAt: "1711234567890_0004_a1b2c3d4a1b2c3d4")
-
-      let sessionToken = try beginAuthoritativeSession(db)
-      let count = try Outbox.quarantineAllPending(
-        db, error: "over-window adopt",
-        authoritativeSessionToken: sessionToken)
-      XCTAssertEqual(
-        count, 0,
-        "beginning the authoritative session already fences its pre-session queue atomically")
-      XCTAssertTrue(try Outbox.getPending(db).isEmpty, "no pending row survives quarantine")
-      // Each quarantined row is pinned at maxRetries with the reason stamped; the
-      // synced row keeps its NULL last_error.
-      let retryA = try Int64.fetchOne(
-        db, sql: "SELECT retry_count FROM sync_outbox WHERE entity_id = ?",
-        arguments: [a.entityId])
-      XCTAssertEqual(retryA, Outbox.maxRetries)
-      let errA = try String.fetchOne(
-        db, sql: "SELECT last_error FROM sync_outbox WHERE entity_id = ?", arguments: [a.entityId])
-      XCTAssertEqual(
-        errA,
-        "authoritative snapshot adoption: pre-adoption outbound state is superseded by the complete iCloud snapshot")
-      let dispositionA = try String.fetchOne(
-        db, sql: "SELECT disposition FROM sync_outbox WHERE entity_id = ?",
-        arguments: [a.entityId])
-      XCTAssertEqual(dispositionA, Outbox.Disposition.authoritativeAdoption.rawValue)
-      let retryDone = try Int64.fetchOne(
-        db, sql: "SELECT retry_count FROM sync_outbox WHERE entity_id = ?",
-        arguments: [done.entityId])
-      XCTAssertEqual(retryDone, 0, "an already-synced row is untouched")
-    }
-  }
-
-  func testQuarantineAllPendingOnEmptyOutboxIsNoop() throws {
-    try withDB { db in
-      let sessionToken = try beginAuthoritativeSession(db)
-      let count = try Outbox.quarantineAllPending(
-        db, error: "over-window adopt",
-        authoritativeSessionToken: sessionToken)
-      XCTAssertEqual(count, 0)
-    }
-  }
-
-  func testDeletingAuthoritativeSessionCascadesItsOwnedFences() throws {
-    try withDB { db in
-      let envelope = makeEnvelope(
-        "task", "01966a3f-7c8b-7d4e-8f3a-0000000000a4",
-        "1711234567890_0004_a1b2c3d4a1b2c3d4")
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, envelope)
-      let sessionToken = try beginAuthoritativeSession(db)
-      _ = try Outbox.quarantineAllPending(
-        db, error: "snapshot adoption", authoritativeSessionToken: sessionToken)
-
-      // Exercise the schema backstop directly, bypassing the explicit release
-      // helper used by production cancel/finalize.
-      try db.execute(
-        sql: "DELETE FROM sync_authoritative_snapshot WHERE session_token = ?",
-        arguments: [sessionToken])
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_outbox WHERE authoritative_session_token = ?",
-          arguments: [sessionToken]),
-        0, "ON DELETE CASCADE prevents an orphan fence from occupying the unique slot")
     }
   }
 
@@ -787,14 +594,11 @@ final class OutboxTests: XCTestCase {
     }
   }
 
-  func testGcSyncedReapsSyncedAndAuthoritativeFenceAndReturnsSummedCount() throws {
+  func testGcSyncedReapsOnlyOldSyncedRowsAndReturnsTheCount() throws {
     try withDB { db in
-      // A synced-history row past retention (deleted by the first DELETE) and a
-      // deliberately-discarded authoritative fence (deleted by the second
-      // DELETE), plus a
-      // recent synced row and a live unsynced row that must both survive. The
-      // returned count must be exactly the two-branch sum (2), proving the split
-      // statements each contribute their own `changesCount`.
+      // A synced-history row past retention is deleted; a recent synced row and
+      // a live unsynced row both survive. The returned count is the number of
+      // deleted rows.
       let oldSynced = makeEnvelope("task", "01966a3f-7c8b-7d4e-8f3a-000000002201", "1711234567890_0000_a1b2c3d4a1b2c3d4")
       try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, oldSynced)
       let oldSyncedId = try Outbox.getPending(db)[0].id
@@ -805,21 +609,10 @@ final class OutboxTests: XCTestCase {
       let recentSyncedId = try Outbox.getPending(db)[0].id
       try Outbox.markManySynced(db, outboxIds: [recentSyncedId], syncedAt: "2099-01-01T00:00:00.000Z")
 
-      let authoritativeFence = makeEnvelope("task", "01966a3f-7c8b-7d4e-8f3a-000000002203", "1711234567890_0000_a1b2c3d4a1b2c3d4")
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, authoritativeFence)
-      let authoritativeFenceID = try Outbox.getPending(db)[0].id
-      let sessionToken = try beginAuthoritativeSession(db)
-      try db.execute(
-        sql: "UPDATE sync_outbox SET retry_count = ?, last_error = 'authoritative snapshot', disposition = ?, authoritative_session_token = ?, created_at = '2020-01-01T00:00:00.000Z' WHERE id = ?",
-        arguments: [
-          Outbox.maxRetries, Outbox.Disposition.authoritativeAdoption.rawValue,
-          sessionToken, authoritativeFenceID,
-        ])
-
       let liveUnsynced = makeEnvelope("task", "01966a3f-7c8b-7d4e-8f3a-000000002204", "1711234567890_0000_a1b2c3d4a1b2c3d4")
       try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, liveUnsynced)
 
-      XCTAssertEqual(try Outbox.gcSynced(db, retentionDays: 1), 2)
+      XCTAssertEqual(try Outbox.gcSynced(db, retentionDays: 1), 1)
       XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox"), 2)
       // Exactly the recent-synced and the live-unsynced rows remain.
       let survivors = try String.fetchAll(
@@ -830,40 +623,28 @@ final class OutboxTests: XCTestCase {
     }
   }
 
-  /// Snapshot adoption converts every unsynced row, including an already-dormant
-  /// ordinary retry, into the non-recoverable authoritative fence. Generic due
-  /// recovery must never make that pre-adoption write emit again.
-  func testAuthoritativeAdoptionSupersedesRetryWaitAndNeverAutoRearms() throws {
+  /// A future-record hold is durable recovery state: it is unsynced and carries
+  /// no synced timestamp, so the synced-history GC never reaps it however old
+  /// its row is.
+  func testGcSyncedPreservesFutureRecordHoldPastRetention() throws {
     try withDB { db in
-      let env = makeEnvelope(
-        "task", "01966a3f-7c8b-7d4e-8f3a-0000000021c1",
-        "1711234567890_0000_a1b2c3d4a1b2c3d4")
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, env)
-      let id = try Outbox.getPending(db, now: "2026-03-23T12:00:00.000Z")[0].id
-      let error = "CloudKit rejected record"
-      for minute in 0..<3 {
-        _ = try Outbox.recordRetry(
-          db, outboxId: id, retriedAt: "2026-03-23T12:0\(minute):00.000Z", error: error)
-      }
-
-      let sessionToken = try beginAuthoritativeSession(db)
-      XCTAssertEqual(
-        try Outbox.quarantineAllPending(
-          db, error: "snapshot adoption",
-          authoritativeSessionToken: sessionToken),
-        0,
-        "the session begin transaction already supersedes retry-wait rows")
-      let state = try Row.fetchOne(
+      let entityId = "01966a3f-7c8b-7d4e-8f3a-000000002205"
+      try SyncTestSupport.insertOutboxEnvelopeUnchecked(
         db,
-        sql: "SELECT disposition, next_retry_at FROM sync_outbox WHERE id = ?",
-        arguments: [id])!
+        makeEnvelope("task", entityId, "1711234567890_0000_a1b2c3d4a1b2c3d4"))
+      try FutureRecordHold.fenceExistingLocalIntent(
+        db, entityType: "task", entityId: entityId,
+        heldVersion: "1811234567890_0000_b1b2c3d4b1b2c3d4")
+      try db.execute(
+        sql: "UPDATE sync_outbox SET created_at = '2020-01-01T00:00:00.000Z' WHERE entity_id = ?",
+        arguments: [entityId])
+
+      XCTAssertEqual(try Outbox.gcSynced(db, retentionDays: 1), 0)
       XCTAssertEqual(
-        state["disposition"] as String?,
-        Outbox.Disposition.authoritativeAdoption.rawValue)
-      XCTAssertNil(state["next_retry_at"] as String?)
-      XCTAssertTrue(
-        try Outbox.getPending(db, now: "2099-01-01T00:00:00.000Z").isEmpty,
-        "authoritative adoption is never a time-based retry")
+        try String.fetchOne(
+          db, sql: "SELECT disposition FROM sync_outbox WHERE entity_id = ?",
+          arguments: [entityId]),
+        Outbox.Disposition.futureRecordHold.rawValue)
     }
   }
 
@@ -923,49 +704,11 @@ final class OutboxTests: XCTestCase {
     }
   }
 
-  /// A retention-prune delete is a durable privacy request, not disposable
-  /// sync-off backlog. It may temporarily take the queue above its ordinary cap
-  /// and must remain available to clear the shared CloudKit record later.
-  func testGcUnsyncedBeyondCapNeverDropsChangelogDelete() throws {
-    try withDB { db in
-      let auditId = "01966a3f-7c8b-7d4e-8f3a-0000000000dd"
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(
-        db,
-        SyncEnvelope(
-          entityType: .aiChangelog, entityId: auditId, operation: .delete,
-          version: try Hlc.parse("1711234567890_0000_a1b2c3d4a1b2c3d4"),
-          payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-          payload: #"{"retention_prune":true}"#, deviceId: "device-A"))
-      for i in 1...2 {
-        try SyncTestSupport.insertOutboxEnvelopeUnchecked(
-          db,
-          makeEnvelope(
-            "task", "01966a3f-7c8b-7d4e-8f3a-0000000000e\(i)",
-            "171123456789\(i)_0000_a1b2c3d4a1b2c3d4"))
-      }
-
-      XCTAssertEqual(try Outbox.gcUnsyncedBeyondCap(db, maxRows: 1), 1)
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_outbox WHERE entity_type = ? AND entity_id = ?",
-          arguments: [EntityName.aiChangelog, auditId]),
-        1)
-      XCTAssertEqual(
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox WHERE synced_at IS NULL"),
-        2, "one ordinary newest row plus the protected privacy delete remain")
-    }
-  }
-
-  /// The sync-off backlog cap owns only active queued work. A retry-wait row is
-  /// durable recovery state, while an authoritative-adoption fence is retained
-  /// by its separate time-based policy; neither may be mistaken for disposable
-  /// ordinary backlog even when the active cap is zero.
+  /// The sync-off backlog cap owns only active queued work. A retry-wait row
+  /// and a future-record hold are durable recovery state; neither may be
+  /// mistaken for disposable ordinary backlog even when the active cap is zero.
   func testGcUnsyncedBeyondCapDoesNotDeleteDispositionRows() throws {
     try withDB { db in
-      // Establish an empty authoritative session first. Rows written after its
-      // begin boundary are new local intent and are not auto-fenced.
-      let sessionToken = try beginAuthoritativeSession(db)
       let retryEnvelope = makeEnvelope(
         "task", "01966a3f-7c8b-7d4e-8f3a-0000000000f1",
         "1711234567891_0000_a1b2c3d4a1b2c3d4")
@@ -980,20 +723,13 @@ final class OutboxTests: XCTestCase {
           error: "persistent record rejection")
       }
 
-      let fenceEnvelope = makeEnvelope(
+      let holdEnvelope = makeEnvelope(
         "task", "01966a3f-7c8b-7d4e-8f3a-0000000000f2",
         "1711234567892_0000_a1b2c3d4a1b2c3d4")
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, fenceEnvelope)
-      try db.execute(
-        sql: """
-          UPDATE sync_outbox
-          SET retry_count = ?, disposition = ?, authoritative_session_token = ?
-          WHERE entity_id = ?
-          """,
-        arguments: [
-          Outbox.maxRetries, Outbox.Disposition.authoritativeAdoption.rawValue,
-          sessionToken, fenceEnvelope.entityId,
-        ])
+      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, holdEnvelope)
+      try FutureRecordHold.fenceExistingLocalIntent(
+        db, entityType: "task", entityId: holdEnvelope.entityId,
+        heldVersion: "1811234567890_0000_b1b2c3d4b1b2c3d4")
 
       let activeEnvelope = makeEnvelope(
         "task", "01966a3f-7c8b-7d4e-8f3a-0000000000f3",
@@ -1009,10 +745,10 @@ final class OutboxTests: XCTestCase {
       XCTAssertEqual(
         states[0]["disposition"] as String?,
         Outbox.Disposition.retryWait.rawValue)
-      XCTAssertEqual(states[1]["entity_id"] as String, fenceEnvelope.entityId)
+      XCTAssertEqual(states[1]["entity_id"] as String, holdEnvelope.entityId)
       XCTAssertEqual(
         states[1]["disposition"] as String?,
-        Outbox.Disposition.authoritativeAdoption.rawValue)
+        Outbox.Disposition.futureRecordHold.rawValue)
     }
   }
 

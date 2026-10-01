@@ -15,8 +15,14 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
   /// ``PlannedDayBridge``).
   public var hasDueDate: Bool
   public var dueDate: Date
-  public var hasPlannedDate: Bool
+  /// Turning the planned day off also drops ``plannedTime``, which has no
+  /// meaning without its day.
+  public var hasPlannedDate: Bool {
+    didSet { if !hasPlannedDate { plannedTime = nil } }
+  }
   public var plannedDate: Date
+  /// The task's time on its planned day, in minutes since midnight.
+  public var plannedTime: Range<Int>?
   /// The task's defer-until / hide-until date (`available_from`): the task is
   /// hidden from day surfaces until this day. Editable through the
   /// ``hasAvailableFrom`` toggle + ``availableFrom`` picker; a UTC-midnight day
@@ -36,6 +42,7 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
   private let originalEstimatedMinutes: Int?
   private let originalDueDate: Date?
   private let originalPlannedDate: Date?
+  private let originalPlannedTime: Range<Int>?
   private let originalAvailableFrom: Date?
   private let originalTags: [String]
   private let originalDependencies: [LorvexTask.ID]
@@ -53,6 +60,7 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
     hasPlannedDate = task.plannedDate != nil
     plannedDate =
       task.plannedDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultPlannedDate
+    plannedTime = task.plannedTime
     hasAvailableFrom = task.availableFrom != nil
     availableFrom =
       task.availableFrom.map { PlannedDayBridge.displayDate(forStorageDate: $0) } ?? defaultPlannedDate
@@ -64,6 +72,7 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
     originalEstimatedMinutes = task.estimatedMinutes
     originalDueDate = task.dueDate
     originalPlannedDate = task.plannedDate
+    originalPlannedTime = task.plannedTime
     originalAvailableFrom = task.availableFrom
     originalTags = task.tags
     originalDependencies = task.dependsOn
@@ -78,6 +87,12 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
   /// The `planned_date` to persist, storage-frame anchored; `nil` clears it.
   public var plannedDateForSave: Date? {
     hasPlannedDate ? PlannedDayBridge.storageDate(forLocalInstant: plannedDate) : nil
+  }
+
+  /// The time to persist: the draft's time while it has a planned day; nil
+  /// otherwise.
+  public var plannedTimeForSave: Range<Int>? {
+    hasPlannedDate ? plannedTime : nil
   }
 
   /// The `available_from` to persist, storage-frame anchored; `nil` clears the
@@ -133,11 +148,23 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
 
   /// Patch only fields the user changed relative to the sheet's opening
   /// baseline. This is deliberately the same patch surface the MCP tool uses:
-  /// an omitted field is never rewritten from a stale UI snapshot.
+  /// an omitted field is never rewritten from a stale UI snapshot. The time is
+  /// also written when the day changes and the draft keeps a time, since a
+  /// move to another day would otherwise clear it.
   var coreUpdateDraft: TaskUpdateDraft {
     let estimate = parsedEstimatedMinutes
     let due = dueDateForSave
     let planned = plannedDateForSave
+    let plannedPatch = Self.patch(planned, comparedWith: originalPlannedDate)
+    let time = plannedTimeForSave
+    let timePatch: Patch<Range<Int>> =
+      if let time, time != originalPlannedTime || plannedPatch.isSetOrClear {
+        .set(time)
+      } else if time == nil, originalPlannedTime != nil {
+        .clear
+      } else {
+        .unset
+      }
     let available = availableFromForSave
     let tags = parsedTags
     let dependencies = parsedDependencies
@@ -148,7 +175,8 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
       priority: priority == originalPriority ? nil : priority,
       estimatedMinutes: Self.patch(estimate, comparedWith: originalEstimatedMinutes),
       dueDate: Self.patch(due, comparedWith: originalDueDate),
-      plannedDate: Self.patch(planned, comparedWith: originalPlannedDate),
+      plannedDate: plannedPatch,
+      plannedTime: timePatch,
       availableFrom: Self.patch(available, comparedWith: originalAvailableFrom),
       tags: tags == originalTags ? nil : tags,
       dependsOn: dependencies == originalDependencies ? nil : dependencies)

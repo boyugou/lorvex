@@ -1,20 +1,50 @@
-# AI assistant's Operating Model
-This document defines HOW AI assistant actually uses the MCP tools to manage the task system. The other docs describe the features and data model. This doc describes the **operational playbook** — the patterns AI assistant follows when interacting with the system.
+# Assistant Operating Model
 
-This matters because AI assistant behavior is part of the product experience. On capable desktop runtimes, Lorvex's AI-native promise lives or dies by how well assistants use MCP. At the same time, these operating assumptions should never imply that the standalone app is secondary or fake.
+This document defines how an AI assistant uses Lorvex's MCP tools to manage
+the user's tasks: the mental model, the recurring patterns, the decision
+rules, and the session protocol. The other design documents describe the
+features and the data model; this one is the operational playbook.
+
+Assistant behavior is part of the product experience. Lorvex's AI-native
+promise depends on how well assistants use MCP, while the app remains a
+complete product on its own.
+
+The playbook reaches assistants in three layers, which must stay consistent
+with this document:
+
+- **Server instructions.** The MCP host advertises a condensed version as the
+  `instructions` field of its `initialize` result
+  (`apps/apple/Sources/LorvexMCPHost/MCPHostInstructions.swift`). Clients
+  such as Claude Code and Claude Desktop add it to the model's system prompt,
+  so every connected assistant starts with it.
+- **Plugin skills.** The Claude Code plugin in `plugins/lorvex` adds skills
+  for the longer workflows: planning a day, capturing tasks, the weekly
+  review, and memory upkeep.
+- **Tool descriptions.** Each tool's description carries its own contract
+  (see [What this means for tool design](#what-this-means-for-tool-design)).
+
+The first two layers may only name what the tools define: tool names,
+parameters, enum values, and fields a tool description documents.
+`MCPHostInstructionsTests` and `ClaudeCodePluginSkillsTests` fail when a
+rename leaves either layer pointing at something that no longer exists.
 
 ---
 
-## The Mental Model: AI assistant as Chief of Staff
+## The mental model: a chief of staff
 
-AI assistant operates the task database the way a brilliant chief of staff operates a leader's schedule:
+The assistant operates the task database the way a capable chief of staff
+runs a leader's schedule:
 
-1. **Observe** — Get full situational awareness before acting
-2. **Decide** — Apply judgment (deadlines, dependencies, patterns, user context)
-3. **Act** — Make changes to the database
-4. **Explain** — Every action has a human-readable reason in the changelog
+1. **Observe.** Gather the context the request needs before acting.
+2. **Decide.** Apply judgment: deadlines, dependencies, patterns, and what the
+   user has said.
+3. **Act.** Make the changes.
+4. **Explain.** Tell the user what changed and why. Every write is also
+   summarized in the AI activity log (`ai_changelog`), unless the user turned
+   recording off.
 
-AI assistant NEVER acts blindly. AI assistant should load enough context for the task at hand: use `get_session_context()` when broad context matters, or narrower reads when the task is already focused.
+The assistant never acts blindly, and it loads only as much context as the
+request needs (see the [session protocol](#session-protocol)).
 
 ---
 
@@ -43,393 +73,397 @@ adding the second direction needs no schema or sync change:
 
 ---
 
-## Common Operational Patterns
+## Common patterns
 
-### Pattern 1: Task Capture from Conversation
+### Pattern 1: Capture from conversation
 
-**Trigger:** User mentions something actionable in an MCP client
+**Trigger:** the user mentions something actionable.
 
 ```
-User: "I need to finish the paper intro by Friday. Also, remind me to call
-       the Barcelona hotel — the group booking expires soon."
+User: "I need to finish the paper intro by Friday. Also, remind me to call the
+       Barcelona hotel — the group booking expires soon."
 
-AI assistant's internal reasoning:
-- Two tasks identified
-- "finish paper intro by Friday" → clear deadline, clear action, high certainty
-- "call Barcelona hotel" → clear action, urgency ("expires soon"), high certainty
-- Both are explicit requests → create directly in lists
+Reasoning:
+- Two explicit requests with clear actions, so create both directly.
+- "by Friday" is a firm deadline. "expires soon" is urgent, so the due date
+  goes before the stated expiry to leave a buffer.
 
-AI assistant's MCP calls:
-1. get_overview()  →  understand current lists, workload
-2. batch_create_tasks([
-     {
-       title: "Finish paper intro section",
-       list_id: <paper-list-id>,
-       due_date: "2026-03-06",
-       priority: 2,
-       estimated_minutes: 120,
-       raw_input: "I need to finish the paper intro by Friday",
-       ai_notes: "User explicitly requested. Deadline is firm (Friday).",
-     },
-     {
-       title: "Call Barcelona hotel to confirm group booking",
-       list_id: <personal-list-id>,
-       due_date: "2026-03-03",
-       priority: 1,
+MCP calls:
+1. get_lists()  →  find the Paper and Personal lists
+2. batch_create_tasks({ tasks: [
+     { title: "Finish paper intro section", list_id: <paper>,
+       due_date: "2026-03-06", priority: 2, estimated_minutes: 120,
+       raw_input: "I need to finish the paper intro by Friday" },
+     { title: "Call Barcelona hotel to confirm group booking",
+       list_id: <personal>, due_date: "2026-03-03", priority: 1,
        estimated_minutes: 15,
-       raw_input: "remind me to call the Barcelona hotel — the group booking expires soon",
-       ai_notes: "Time-sensitive: group discount expiration. Set earlier deadline to provide buffer.",
-     }
-   ])
+       raw_input: "remind me to call the Barcelona hotel — the group booking expires soon" }
+   ]})
+3. set_task_ai_notes(<hotel task>,
+     "Due date set before the stated expiry to leave a buffer; the group rate lapses soon.")
 ```
 
 **Key behaviors:**
-- AI assistant picks the list based on context ("paper" → Paper list, "Barcelona hotel" → Personal)
-- AI assistant infers urgency from language ("expires soon" → earlier deadline with buffer)
-- AI assistant estimates duration based on task type (phone call = 15m, writing = 2h)
-- AI assistant writes `ai_notes` explaining its reasoning
-- AI assistant stores `raw_input` for human verification
-- Explicit request → created directly in appropriate list
+- The assistant picks the list from context ("paper" goes to Paper,
+  "Barcelona hotel" to Personal).
+- It infers urgency from language and leaves a buffer before a stated expiry.
+- It estimates duration by task type: a phone call is about 15 minutes,
+  writing about 2 hours.
+- It stores the user's words as `raw_input`, so the user can check the parse.
+- It records non-obvious reasoning with `set_task_ai_notes`, the only write
+  path for a task's AI notes. Obvious choices need no note.
 
-### Pattern 2: Ambiguous Extraction
+### Pattern 2: Ambiguous extraction
 
-**Trigger:** User says something that MIGHT be a task
+**Trigger:** the user says something that might be a task.
 
 ```
 User: "The meeting with Sarah went well. She's going to send the budget
-       numbers by Thursday. Oh and we should probably look into that new
+       numbers by Thursday. Oh, and we should probably look into that new
        vendor Jason mentioned."
 
-AI assistant's internal reasoning:
-- "She's going to send budget numbers" → this is SARAH's task, not the user's.
-  Don't create a task. But maybe a follow-up reminder if Sarah doesn't send?
-  Medium certainty.
-- "we should probably look into that new vendor" → vague commitment.
-  "we should probably" is weak intent. Lower certainty. Ask the user before creating.
+Reasoning:
+- "She's going to send the budget numbers" is Sarah's commitment, not the
+  user's. No task for it; a follow-up reminder for the user may help.
+- "we should probably look into" is weak intent. Ask before creating.
 
-AI assistant's MCP calls (after confirming with user in conversation):
-1. create_task({
-     title: "Follow up with Sarah if budget numbers not received",
-     due_date: "2026-03-06",  // Friday, one day after Sarah's Thursday promise
-     priority: 3,
-     estimated_minutes: 10,
-     raw_input: "She's going to send the budget numbers by Thursday",
-     ai_notes: "Sarah promised to send by Thursday. Created follow-up reminder for Friday in case she doesn't. Not creating a task for Sarah — she's the owner.",
-   })
-
-2. create_task({
-     title: "Research vendor Jason mentioned",
-     priority: 3,
+MCP calls (after the user confirms both):
+1. create_task({ title: "Follow up with Sarah if the budget numbers haven't arrived",
+     due_date: "2026-03-06", priority: 3, estimated_minutes: 10,
+     raw_input: "She's going to send the budget numbers by Thursday" })
+2. set_task_ai_notes(<follow-up>,
+     "Sarah owns the numbers and promised Thursday. This is a Friday check-in, not her task.")
+3. create_task({ title: "Research the vendor Jason mentioned", priority: 3,
      estimated_minutes: 30,
-     raw_input: "we should probably look into that new vendor Jason mentioned",
-     ai_notes: "Weak intent signal ('should probably'). User confirmed this is an action item in conversation.",
-   })
+     raw_input: "we should probably look into that new vendor Jason mentioned" })
 ```
 
 **Key behaviors:**
-- AI assistant distinguishes between the user's tasks and someone else's tasks
-- AI assistant interprets "she'll send by Thursday" as a follow-up trigger, not a user task
-- AI assistant recognizes weak intent ("should probably") and confirms with the user before creating
-- AI assistant's ai_notes explain the reasoning for each decision
+- The assistant separates the user's commitments from other people's.
+- It turns someone else's promise into a follow-up for the user, never a task
+  assigned to them.
+- It confirms weak intent ("should probably") before creating anything.
 
-### Pattern 3: Morning Briefing / Today's Focus
+### Pattern 3: Planning the day
 
-**Trigger:** User asks "What should I focus on today?" or "Plan my day"
+**Trigger:** "What should I focus on today?" or "Plan my day".
 
 ```
-AI assistant's MCP calls (sequential):
-1. get_overview()                    →  full situational awareness, incl. today's
-                                        actionable pool (overdue + due-today + planned-today)
-2. get_upcoming_tasks(3)             →  next 3 days for context
-3. get_current_focus()               →  check if today's focus already exists
-                                        (date defaults to today)
+Reads:
+1. get_overview()                  →  counts, today's actionable pool (overdue,
+                                      due today, planned today), top tasks
+2. get_upcoming_tasks({ days: 3 }) →  what is coming up
+3. get_daily_schedule()            →  whether today already has saved times
+4. get_calendar_timeline({ from: <today>, to: <today> })  →  today's meetings
 
-AI assistant's reasoning:
-- 7 tasks in today's pool, 2 overdue
-- "Paper intro" blocks "Submit draft" which is due Friday
-- "Board presentation" is in 10 days but needs 3 prep sessions
-- User completed 4 tasks yesterday → good momentum
-- It's Wednesday → 2 working days until Friday deadline
+Reasoning:
+- Seven tasks in today's pool, two of them overdue.
+- "Paper intro" blocks "Submit draft", which is due Friday.
+- It is Wednesday: two working days remain before Friday.
 
-AI assistant's MCP calls:
-5. set_current_focus("2026-02-28", [
-     task_id_intro,        // highest leverage — blocks Friday deadline
-     task_id_hotel,        // quick win, time-sensitive
-     task_id_pr_review,    // blocks a teammate
-     task_id_expense,      // quick administrative task
-     task_id_sync_prep     // needed for afternoon meeting
-   ], briefing: "The intro section is your top priority — it blocks Friday's submission deadline. After that, knock out the hotel booking (10 min, time-sensitive). The rest fits into your afternoon.")
-
-6. set_task_ai_notes(task_id_intro,
-     "This is your highest-leverage task today. It blocks 'Submit draft' (due Friday). At your historical pace, writing sections take ~2x your estimate. Budget extra time.")
+Writes:
+5. batch_update_tasks({ updates: [{ id: intro, planned_date: <today> },
+     { id: hotel, planned_date: <today> }, { id: pr_review, planned_date:
+     <today> }, { id: expense, planned_date: <today> }, { id: sync_prep,
+     planned_date: <today> }] })
+     →  puts the day's tasks on today; batch_defer_tasks moves what does not fit
+6. set_daily_briefing({ briefing: "The intro comes first: it blocks Friday's
+     submission. Then the hotel call (15 minutes, time-sensitive). The rest
+     fits the afternoon." })
+7. propose_daily_schedule({ include_calendar_events: true })
+     →  time blocks around today's meetings, starting no earlier than now
+8. save_daily_schedule({ date: <today>, times: [...] })
+     →  only after the user agrees with the times
 ```
 
 **Key behaviors:**
-- AI assistant considers the dependency graph (intro blocks submission)
-- AI assistant factors in historical patterns (writing takes 2x estimate)
-- AI assistant writes a briefing that explains the WHY, not just the WHAT
-- AI assistant picks 5 focus tasks for today (not 3, not 10 — calibrated to a realistic day)
-- AI assistant orders by leverage, not just urgency
-- When adding tasks to an existing plan mid-day, use `add_to_current_focus()` (append semantics) instead of `set_current_focus()` (replace semantics) to avoid wiping the existing plan
-- When a user asks to reopen a completed or cancelled task, use `reopen_task()` — it handles recurring task successor cleanup automatically
-- Surface in-progress work first: a task the user already started (status `in_progress`) is the natural thing to resume, so lead the briefing with it before proposing new focus tasks. Maintain the marker in conversation with `start_task()` when the user begins something and `pause_task()` when a started task turns out to be a mis-click; both flow through the same lifecycle funnel as complete/cancel/reopen. There is no `started_at` column — to answer "how long has this been in progress", read the timestamp of the task's most recent `start` transition in `get_ai_changelog()`.
+- The assistant leads with work already in progress (status `in_progress`):
+  the user started it, so it is the natural thing to resume.
+- It considers dependencies (the intro blocks the submission).
+- It puts as much on today as the free time holds: summed estimates against
+  the hours left after meetings, with a missing estimate treated as unknown.
+  The count follows from the time, not from a target number, and the order
+  follows leverage rather than urgency alone.
+- The briefing explains why each task matters, not just what it is.
+- Mid-day additions just set the task's `planned_date` to today (`update_task`
+  or `batch_update_tasks`); Today already lists every task that qualifies, so
+  there is no separate list to append to or replace.
+- Work that no longer fits moves with `defer_task` or `batch_defer_tasks`,
+  with a `structured_reason` (`not_today`, `low_energy`, `blocked`,
+  `needs_info`, `needs_breakdown`) when one applies. Deferrals are counted and
+  feed the weekly review. Setting `available_from` only hides a task until a
+  date; it is not a deferral.
+- `start_task` marks a task in progress when the user begins it, and
+  `pause_task` undoes a mistaken start; both go through the same lifecycle
+  funnel as complete, cancel, and reopen. There is no `started_at` column: the
+  most recent `start` transition in `get_ai_changelog` answers "how long has
+  this been in progress".
+- `reopen_task` reopens a completed, cancelled, or someday task and cleans up
+  a recurring task's successor. A reopened completed task keeps its day and
+  time, so undoing a completion puts it back where it was; a revived cancelled
+  or someday task starts without them.
 
-### Pattern 4: Weekly Review
+### Pattern 4: Weekly review
 
-**Trigger:** User says "Let's do a weekly review" (typically Friday)
+**Trigger:** "Let's do a weekly review", typically on a Friday.
 
 ```
-AI assistant's MCP calls:
-1. get_weekly_brief()         →  pre-populated review data
-2. get_overview()              →  current state
+Reads:
+1. get_weekly_brief()  →  completed this week, stalled lists, frequently
+                          deferred tasks, overdue count, someday items,
+                          estimate accuracy
+2. get_overview()      →  current state
 
-AI assistant presents to the user:
-"Here's your weekly review:
+The assistant presents:
+"Your week: 14 tasks completed. Biggest wins: the grant application and the
+auth fix.
 
-Completed this week: 14 tasks
-- Biggest wins: Submitted grant application, fixed auth module
+Carried over: 'Update API docs' was pushed to next week for the second time,
+and 'Clean photo library' has been deferred five times.
 
-Carried over: 3 tasks
-- 'Update API docs' has been pushed to next week (2nd time)
-- 'Clean photo library' — deferred 5 times total
-
-Stalled projects:
-- Spain Trip list: last activity 10 days ago. 4 open tasks.
-- Blog list: no tasks completed in 2 weeks.
+Stalled: Spain Trip has had no activity for 10 days (4 open tasks), and Blog
+has had no completions in two weeks.
 
 Suggestions:
-1. 'Clean photo library' — archive it or break it into smaller steps?
-2. Spain Trip — deadline approaching. Want me to prioritize those tasks?
-3. Blog project — still relevant, or move to Someday?"
+1. 'Clean photo library': drop it, or break it into smaller steps?
+2. Spain Trip: the trip is close. Prioritize those tasks next week?
+3. Blog: still relevant, or move it to Someday?"
 
-User: "Archive the photo library task. Prioritize Spain trip tasks for next
-       week. Move blog to someday."
+User: "Drop the photo library task. Prioritize Spain for next week. Move the
+       blog to someday."
 
-AI assistant's MCP calls:
-3. cancel_task(photo_id)
-4. batch_update_tasks([
-     {id: spain_1, priority: 2, due_date: "2026-03-03"},
-     {id: spain_2, priority: 2, due_date: "2026-03-04"},
-     {id: spain_3, priority: 3, due_date: "2026-03-05"},
-     {id: spain_4, priority: 3, due_date: "2026-03-06"}
-   ])
+Writes:
+3. cancel_task(photo)
+4. batch_update_tasks({ updates: [
+     { id: spain_1, priority: 2, planned_date: "2026-03-03" },
+     { id: spain_2, priority: 2, planned_date: "2026-03-04" },
+     { id: spain_3, priority: 3, planned_date: "2026-03-05" },
+     { id: spain_4, priority: 3, planned_date: "2026-03-06" } ]})
 5. set_task_someday(blog_1)
 6. set_task_someday(blog_2)
 ```
 
 **Key behaviors:**
-- AI assistant uses `get_weekly_brief()` to do the clerical work
-- AI assistant presents analysis in conversational, human-readable format
-- AI assistant makes suggestions but waits for user decisions
-- User gives natural language instructions → AI assistant executes via MCP
-- Three user sentences → a handful of MCP calls → entire review complete
+- `get_weekly_brief` does the clerical work.
+- The assistant presents the analysis conversationally, makes suggestions, and
+  waits for the user's decisions.
+- Three sentences from the user become a handful of MCP calls.
+- An end-of-day reflection goes through `add_daily_review` (summary, mood,
+  energy level, wins, blockers, learnings) or `amend_daily_review`.
 
-### Pattern 5: In-Conversation System Awareness
+### Pattern 5: Awareness inside another conversation
 
-**Trigger:** User is already chatting with AI assistant about anything; within that conversation the assistant notices the task system needs attention (the app itself never reaches out on its own)
+**Trigger:** the user is talking with the assistant about something else, and
+the assistant notices the task system needs attention. The app itself never
+notifies or reaches out on its own.
 
 ```
 User: "Can you help me outline the presentation for the board meeting?"
 
-AI assistant: "Of course. Before we start — I noticed you have 3 overdue tasks
-and your 'Paper intro' hasn't been touched in 4 days despite a Friday
-deadline. Want me to adjust your schedule, or should we focus on the
-presentation first?"
+Assistant: "Of course. Before we start: you have three overdue admin tasks,
+and 'Paper intro' hasn't moved in four days despite Friday's deadline. Want me
+to adjust the schedule first, or go straight to the presentation?"
 
-User: "Defer the overdue admin tasks to next week. Let's do the presentation."
+User: "Push the overdue admin tasks to next week. Let's do the presentation."
 
-AI assistant's MCP calls (before helping with presentation):
-1. batch_update_tasks([
-     {id: overdue_1, due_date: "2026-03-03"},
-     {id: overdue_2, due_date: "2026-03-03"},
-     {id: overdue_3, due_date: "2026-03-04"}
-   ])
-2. set_task_ai_notes(paper_intro_id,
-     "User has not worked on this for 4 days. Deadline is Friday. Flagged during 2/28 conversation. User chose to prioritize board presentation instead.")
-
-[Then continues helping with presentation outline]
+MCP calls (then back to the presentation):
+1. batch_defer_tasks({ task_ids: [overdue_1, overdue_2, overdue_3],
+     until_date: "2026-03-03", structured_reason: "not_today" })
+2. set_task_ai_notes(paper_intro,
+     "Untouched for four days, due Friday. Flagged on 2/28; the user chose the board presentation first.")
 ```
 
 **Key behaviors:**
-- AI assistant is context-aware even during unrelated conversations
-- Within that conversation, the assistant can surface issues it notices, but doesn't force action (and the app never notifies or reaches out on its own)
-- AI assistant respects user's choice of priority even when it disagrees
-- AI assistant logs the user's decision in ai_notes for future context
+- The assistant stays aware of the task system during unrelated
+  conversations.
+- It raises what it notices without forcing action.
+- It respects the user's choice even when it would have chosen differently,
+  and records the decision for later sessions.
 
-### Pattern 6: Conversational Task Review
+### Pattern 6: Reviewing recent captures
 
-> **Note:** The Inbox UI/review surface was removed; the conversation with the AI assistant is now the review layer. This pattern replaces the former "Inbox Processing" pattern. The schema-seeded `inbox` default list remains only as a bootstrap/default-routing artifact.
+Lorvex has no inbox review screen: the conversation with the assistant is the
+review layer. The schema's seeded `inbox` list exists only as the default home
+for captures that name no list.
 
-**Trigger:** User asks for a review of recent or uncertain tasks
+**Trigger:** the user asks to review recent or uncertain tasks.
 
 ```
-AI assistant's MCP calls:
-1. get_overview()  →  see current state, recent tasks
+Reads:
+1. list_tasks({ created_from: <three days ago>, status: "open" })
 
-AI assistant reviews recently created tasks with the user:
-"I created 3 tasks recently — let me check these with you:
+The assistant checks them with the user:
+"I created three tasks recently. Let me check them with you:
+1. 'Follow up with Sarah about the budget numbers', from 'She's going to send
+   the budget numbers by Thursday'. I set it for Friday. Does that work?
+2. 'Research the vendor Jason mentioned', from 'we should probably look into
+   that new vendor'. Keep it active, or move it to Someday?
+3. 'Buy groceries for the weekend', from yesterday's quick capture. It's in
+   Personal with no date yet."
 
-1. 'Follow up with Sarah about budget numbers'
-   Created from: 'She's going to send the budget numbers by Thursday'
-   I set this as a follow-up for Friday. Does that work?
+User: "1 is good. Move 2 to someday. 3 is due Saturday."
 
-2. 'Research vendor Jason mentioned'
-   Created from: 'we should probably look into that new vendor'
-   I put this in the background importance band. Want to keep it as active or move to someday?
-
-3. 'Buy groceries for weekend'
-   From quick capture yesterday. In your Personal list, no due date yet."
-
-User: "1 is good. 2 — move to someday.
-       3 — due Saturday."
-
-AI assistant's MCP calls:
-2. set_task_someday(task_2)
-3. update_task(task_3, {due_date: "2026-03-01"})
+MCP calls:
+1. set_task_someday(task_2)
+2. update_task({ id: task_3, due_date: "2026-03-01" })
 ```
-
-## AI assistant's Decision Framework
-
-### When to Create a Task
-- User explicitly says "create a task" / "remind me" / "I need to" → always create
-- User describes a commitment in conversation → create with medium confidence, confirm with user
-- User mentions something vague ("would be nice to...") → ask for clarification before creating
-- User describes someone ELSE's task → don't create (or create a follow-up trigger)
-
-### When to Create Directly vs Ask First
-- Explicit user request → create directly in appropriate list
-- Clear action extracted from context → create and confirm with the user in conversation
-- Vague or ambiguous → ask for clarification before creating
-
-### How to Estimate Duration
-- Phone call / email: 10-15m
-- Quick administrative task: 15-30m
-- Review or read something: 30-60m
-- Writing or creative work: 60-120m
-- Complex analysis or coding: 120-240m
-- Fill `estimated_minutes` when you have a confident rough time cost
-- Leave it blank when confidence is low instead of inventing fake precision
-- Adjust based on historical data if available
-
-### How to Set Priority
-- Use priority to express importance, not as a second due-date field
-- Let due_date, planned_date, overdue state, and focus decisions carry most urgency semantics
-- Raise priority when the task is strategically important, high-consequence, or repeatedly protected by the user
-- Lower priority when the task matters less even if it is still due someday
-
-### How to Choose a List
-- Match to existing lists by semantic similarity
-- If no good match → suggest creating a new list
-- When unsure → assign to default list and note in ai_notes
 
 ---
 
-## Session Start Protocol
+## Decision framework
 
-AI assistant should follow this sequence when a session needs broad context:
+### When to create a task
 
-1. **`get_session_context()`** — All-in-one bounded broad-context call. Returns `notes_for_ai` (if set) separately from a bounded AI-generated memory summary (most recent 10 entries with 500-char previews), plus compact overview, today's focus, today's calendar events, recent AI Activity (`ai_changelog`, last 10), and contextual guide.
-2. **Act** based on context from the response. For focused tasks, you may skip `get_session_context()` and use narrower reads directly. For full memory content (when you need to read or update a specific section in detail), use `read_memory(key)` separately.
+- An explicit request ("create a task", "remind me", "I need to"): create it
+  directly in the right list.
+- A clear commitment extracted from conversation: create it, then confirm in
+  conversation.
+- Something vague ("it would be nice to…"): ask before creating.
+- Someone else's commitment: no task. Offer a follow-up for the user instead.
 
-At the **end of significant sessions**, AI assistant should update memory:
-- `write_memory("recent_activity", ...)` — What happened this session
-- `write_memory("list_summaries", ...)` — If list state changed
-- `write_memory("pending_followups", ...)` — Things noticed but not yet acted on
-- For MCP friction, missing tools, bugs, or feature ideas, open a GitHub Issue.
-  Lorvex intentionally has no in-app or MCP feedback submission path.
+### How to estimate duration
 
-### AI Memory Sections
+- Phone call or email: 10–15 minutes.
+- Quick administrative task: 15–30 minutes.
+- Reviewing or reading: 30–60 minutes.
+- Writing or creative work: 60–120 minutes.
+- Complex analysis or coding: 120–240 minutes.
 
-AI assistant maintains these persistent memory sections:
+Fill `estimated_minutes` only with a confident rough estimate, and leave it
+empty rather than invent precision. Round up, not down. When history exists,
+the estimate summary in `get_weekly_brief` shows how the user's estimates
+compare with reality.
+
+### How to set priority
+
+- Priority expresses importance, not urgency. `due_date` (an external
+  deadline), `planned_date` (the intended work day), overdue state, and a
+  task's planned start/end time carry the timing.
+- Raise priority for strategically important or high-consequence work, or
+  work the user keeps protecting.
+- Lower it when a task matters less, even if it is due soon.
+
+### How to choose a list
+
+- Match existing lists by meaning.
+- With no good match, suggest a new list. `create_list` accepts `ai_notes`
+  describing what the list is for.
+- When unsure, use the default list and say so with `set_task_ai_notes`.
+
+### Destructive changes
+
+- Ask before deleting or cancelling many items.
+- `cancel_task` marks work abandoned and keeps it visible.
+- `archive_task` moves a task to the Trash; `unarchive_task` restores it.
+- `permanent_delete_task` removes only a task that is already archived. Use
+  it only for a task that should never have existed.
+
+---
+
+## Session protocol
+
+### Starting a session
+
+Load context in proportion to the request:
+
+1. **`get_session_context`** returns the environment frame only: today's date
+   and weekday, the current local time, the time zone, working hours, device,
+   and sync backend. It is cheap; call it whenever dates, times, or working
+   hours matter instead of inferring them.
+2. **`get_overview`** returns counts, today's actionable pool, and top tasks
+   (`shape=compact`, the default). `shape=full` adds task objects and the
+   day's briefing.
+3. **`read_memory`** returns what earlier sessions recorded (see
+   [Memory sections](#memory-sections)). Pass `key` or `keys` for specific
+   sections.
+4. For a focused request, skip the broad reads and go straight to
+   `search_tasks`, `get_task`, `list_tasks`, `get_daily_schedule`,
+   `get_calendar_timeline`, or `get_ai_changelog`.
+
+### Ending a significant session
+
+Update memory with `write_memory`:
+
+- `recent_activity`: what happened this session.
+- `list_summaries`: when list state changed.
+- `pending_followups`: things noticed but not yet acted on.
+
+For MCP friction, missing tools, bugs, or feature ideas, suggest that the user
+open a GitHub issue. Lorvex has no in-app or MCP feedback channel.
+
+### Memory sections
 
 | Key | Purpose | Update frequency |
-|-----|---------|-----------------|
-| `user_profile` | Working hours, energy patterns, communication style, preferences | Rarely (when learning something new) |
-| `list_summaries` | Active lists, status, blockers, deadlines | After sessions that change list state |
-| `behavioral_patterns` | Deferral habits, time estimation accuracy, completion rates | Weekly or when patterns shift |
-| `recent_activity` | What happened in last few sessions | Every session |
-| `pending_followups` | Things AI assistant noticed but hasn't acted on | Every session |
+|-----|---------|------------------|
+| `user_profile` | Working hours, energy patterns, communication style, preferences | Rarely, when learning something new |
+| `list_summaries` | Active lists, their status, blockers, and deadlines | After sessions that change list state |
+| `behavioral_patterns` | Deferral habits, estimation accuracy, completion rates | Weekly, or when patterns shift |
+| `recent_activity` | What happened in the last few sessions | Every significant session |
+| `pending_followups` | Things noticed but not yet acted on | Every significant session |
 
-Memory should be written as if the user will read it (they can see it in the app). Be respectful, honest, and useful. Flag uncertainty explicitly.
-
-## The get_overview() Pattern
-
-AI assistant should use `get_session_context()` or `get_overview()` when broader situational context matters before making changes. The `get_overview()` call provides:
-- All lists with task counts
-- Open/overdue/today counts
-- Daily plan status
-- Recently completed tasks
-
-This prevents AI assistant from operating with stale assumptions. It's the equivalent of a chief of staff checking the dashboard before making recommendations.
+The user can read, edit, and delete memory on the app's Memory page. Write it
+as if the user will read it, because they will: respectful, honest, useful,
+and explicit about uncertainty.
 
 ---
 
-## Error Recovery Patterns
+## Error recovery
 
-### AI assistant Created a Duplicate Task
-```
-AI assistant detects (via search_tasks) that a similar task already exists.
-→ Delete the duplicate
-→ Log in changelog: "Removed duplicate of 'Call dentist' — original exists in Health list"
-→ Optionally merge any unique details into the original
-```
+### A duplicate task
 
-### AI assistant Assigned Wrong List
 ```
-User: "That hotel task should be in the Spain Trip list, not Personal"
-AI assistant: update_task(id, {list_id: spain_list_id})
-→ Changelog: "Moved 'Confirm hotel' from Personal to Spain Trip (user correction)"
+search_tasks finds a similar task that already exists.
+→ Merge any unique details into the original (update_task or append_to_task_body).
+→ Cancel or archive the duplicate (cancel_task or archive_task).
+→ Tell the user: "Removed a duplicate of 'Call dentist'; the original is in Health."
 ```
 
-### AI assistant's Priority Was Wrong
+### The wrong list
+
 ```
-User: "The API docs aren't urgent, put it in the background band"
-AI assistant: update_task(id, {priority: 3})
-→ ai_notes: "User explicitly deprioritized this."
+User: "That hotel task belongs in Spain Trip, not Personal."
+→ move_task_to_list({ id, list_id: <spain trip> })
 ```
+
+### The wrong priority
+
+```
+User: "The API docs aren't urgent. Put them in the background band."
+→ update_task({ id, priority: 3 })
+→ set_task_ai_notes(id, "The user explicitly deprioritized this.")
+```
+
+When the user corrects a decision, record the correction in the task's AI
+notes, and in `behavioral_patterns` when it reveals a pattern, so later
+sessions do not repeat the mistake.
 
 ---
 
-## AI assistant's System Prompt Design (for MCP Context)
+## What this means for tool design
 
-When an MCP client connects to the MCP server, AI assistant should have context about HOW to use the tools effectively. This could be provided via the MCP server's tool descriptions, or via the user's assistant system prompt.
+Tool descriptions are the assistant's instruction manual: an assistant that
+reads only the description must be able to use the tool well. Poor
+descriptions produce poor assistant behavior and a poor user experience. Each
+description should state:
 
-Key instructions AI assistant needs:
-1. Use `get_session_context()` when you need bounded broad context, or `get_overview()` / narrower reads when the task is already focused
-2. Write human-readable summaries in all changelog entries
-3. Store `raw_input` for any task created from natural language
-4. Write `ai_notes` explaining reasoning for non-obvious decisions
-5. Use batch operations when creating/updating multiple tasks
-6. Confirm uncertain tasks with the user in conversation — better to ask than to be wrong
-7. When user corrects an AI decision, learn from it (update ai_notes)
-8. When proposing today's focus, explain WHY each task was chosen
-10. Keep duration estimates realistic — round up, not down
+- What the tool does.
+- When to use it, and when not to.
+- What the return value contains.
 
----
+An example of a good description:
 
-## What This Means for MCP Tool Design
-
-The tool descriptions in the MCP server should be detailed enough that AI assistant can use them without external documentation. Each tool description should include:
-- What the tool does
-- When to use it (and when NOT to)
-- Example usage patterns
-- What the return value contains
-
-This is important because the tool descriptions are AI assistant's "instruction manual" for operating the system. Poor tool descriptions = poor AI assistant behavior = poor user experience.
-
-Example of a good tool description:
 ```
-create_task: Create a new task in the system.
+create_task: Create a new task.
 
-Use this when the user explicitly requests a task, or when you identify an
-actionable commitment from conversation. For uncertain tasks, confirm with the
-user in conversation before creating.
+Use it when the user explicitly requests a task, or when you identify an
+actionable commitment in conversation. Confirm uncertain tasks with the user
+before creating them.
 
 Always provide:
-- title (clear, actionable, starts with a verb)
-- raw_input (the original user text that led to this task)
-- ai_notes (your reasoning for creating this task)
+- title (clear and actionable, starting with a verb)
+- raw_input (the user's original words that led to this task)
 
-The task will be auto-logged to the AI changelog. The complete task object
-is returned — no need for a follow-up get call.
+Record non-obvious reasoning afterwards with set_task_ai_notes. The write is
+logged to the AI activity log, and the complete task object is returned, so no
+follow-up read is needed.
 ```

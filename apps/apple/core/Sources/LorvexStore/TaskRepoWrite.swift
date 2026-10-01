@@ -23,6 +23,9 @@ public struct TaskCreateParams: Sendable {
   public var recurrenceGroupId: String? = nil
   public var canonicalOccurrenceDate: String? = nil
   public var plannedDate: String? = nil
+  /// The time of day planned on `plannedDate`, in minutes since midnight.
+  /// Requires `plannedDate`.
+  public var plannedTime: Range<Int64>? = nil
   public var availableFrom: String? = nil
   public let version: String
   public let now: String
@@ -44,6 +47,7 @@ public struct TaskCreateParams: Sendable {
     recurrenceGroupId: String? = nil,
     canonicalOccurrenceDate: String? = nil,
     plannedDate: String? = nil,
+    plannedTime: Range<Int64>? = nil,
     availableFrom: String? = nil
   ) {
     self.id = id
@@ -62,11 +66,13 @@ public struct TaskCreateParams: Sendable {
     self.recurrenceGroupId = recurrenceGroupId
     self.canonicalOccurrenceDate = canonicalOccurrenceDate
     self.plannedDate = plannedDate
+    self.plannedTime = plannedTime
     self.availableFrom = availableFrom
   }
 
   /// Run per-field validation: priority range, estimated minutes range,
-  /// and date format.
+  /// date format, and a planned time that lies within one day on a planned
+  /// date.
   public func validated() throws -> TaskCreateParams {
     guard TaskStatus.parse(status) != nil else {
       throw StoreError.validation(
@@ -94,6 +100,14 @@ public struct TaskCreateParams: Sendable {
       switch ValidationFormat.validateDateFormat(d) {
       case .success: break
       case .failure(let e): throw StoreError.validation(e.description)
+      }
+    }
+    if let time = plannedTime {
+      guard plannedDate != nil else {
+        throw StoreError.validation("a planned time needs a planned date")
+      }
+      if case .failure(let error) = ValidationNumeric.validatePlannedTime(time) {
+        throw StoreError.validation(error.description)
       }
     }
     if let d = availableFrom {
@@ -128,7 +142,13 @@ public struct TaskUpdatePatch: Sendable {
   public var listId: Patch<String>
   public var priority: Patch<Int64>
   public var estimatedMinutes: Patch<Int64>
+  /// Setting a different planned date (or clearing it) also clears the
+  /// planned time unless `plannedTime` is patched in the same update.
   public var plannedDate: Patch<String>
+  /// The time of day planned on the planned date, in minutes since midnight.
+  /// `.set` writes both time columns and needs a planned date on the row
+  /// after the update.
+  public var plannedTime: Patch<Range<Int64>>
   public var availableFrom: Patch<String>
   /// Trash-state column. `.set(ts)` archives, `.clear` restores,
   /// `.unset` skips.
@@ -153,6 +173,7 @@ public struct TaskUpdatePatch: Sendable {
     priority: Patch<Int64> = .unset,
     estimatedMinutes: Patch<Int64> = .unset,
     plannedDate: Patch<String> = .unset,
+    plannedTime: Patch<Range<Int64>> = .unset,
     availableFrom: Patch<String> = .unset,
     archivedAt: Patch<String> = .unset,
     beforeStatus: TaskStatus? = nil
@@ -169,6 +190,7 @@ public struct TaskUpdatePatch: Sendable {
     self.priority = priority
     self.estimatedMinutes = estimatedMinutes
     self.plannedDate = plannedDate
+    self.plannedTime = plannedTime
     self.availableFrom = availableFrom
     self.archivedAt = archivedAt
     self.beforeStatus = beforeStatus
@@ -204,11 +226,12 @@ extension TaskRepo {
         (id, title, body, raw_input, ai_notes, status, list_id, priority, \
          due_date, estimated_minutes, \
          recurrence, recurrence_group_id, canonical_occurrence_date, \
-         planned_date, available_from, content_version, schedule_version, \
+         planned_date, planned_start_minutes, planned_end_minutes, \
+         available_from, content_version, schedule_version, \
          lifecycle_version, archive_version, recurrence_rollover_state, \
          version, created_at, updated_at, \
          completed_at, last_deferred_at, defer_count) \
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, \
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, 0) \
         RETURNING \(TaskRepo.taskColumns)
         """
@@ -218,7 +241,8 @@ extension TaskRepo {
         params.priority, params.dueDate,
         params.estimatedMinutes,
         params.recurrence, params.recurrenceGroupId,
-        params.canonicalOccurrenceDate, params.plannedDate, params.availableFrom,
+        params.canonicalOccurrenceDate, params.plannedDate,
+        params.plannedTime?.lowerBound, params.plannedTime?.upperBound, params.availableFrom,
         params.version, params.version, params.version, params.version,
         params.recurrence != nil && TaskStatus.parse(params.status)?.isTerminal == true
           ? TaskRecurrenceRolloverState.ended.rawValue
@@ -257,8 +281,11 @@ extension TaskRepo {
       var lifecycleRegisterChanged = false
       var archiveRegisterChanged = false
       var recurrenceLifecycleCoupling = false
-      let explicitPatchColumns: Set<String> =
-        patch.plannedDate.isSetOrClear ? ["planned_date"] : []
+      var explicitPatchColumns: Set<String> = []
+      if patch.plannedDate.isSetOrClear { explicitPatchColumns.insert("planned_date") }
+      if patch.plannedTime.isSetOrClear {
+        explicitPatchColumns.formUnion(["planned_start_minutes", "planned_end_minutes"])
+      }
 
       func appendSetValue(_ column: String, _ value: (any DatabaseValueConvertible)?) {
         guard assignedColumns.insert(column).inserted else { return }
@@ -353,8 +380,37 @@ extension TaskRepo {
         appendSetValue("estimated_minutes", patch.estimatedMinutes.asBindValue)
         scheduleRegisterChanged = true
       }
-      if patch.plannedDate.isSetOrClear {
-        appendSetValue("planned_date", patch.plannedDate.asBindValue)
+      switch patch.plannedTime {
+      case .unset: break
+      case .clear:
+        appendSetNull("planned_start_minutes")
+        appendSetNull("planned_end_minutes")
+        scheduleRegisterChanged = true
+      case .set(let time):
+        if case .failure(let error) = ValidationNumeric.validatePlannedTime(time) {
+          throw StoreError.validation(error.description)
+        }
+        appendSetValue("planned_start_minutes", time.lowerBound)
+        appendSetValue("planned_end_minutes", time.upperBound)
+        scheduleRegisterChanged = true
+      }
+      switch patch.plannedDate {
+      case .unset: break
+      case .clear:
+        appendSetValue("planned_date", nil)
+        appendSetNull("planned_start_minutes")
+        appendSetNull("planned_end_minutes")
+        scheduleRegisterChanged = true
+      case .set(let date):
+        appendSetValue("planned_date", date)
+        // A time belongs to its day: moving the task to another day drops it.
+        // The right-hand side reads the row's current planned_date.
+        for column in ["planned_start_minutes", "planned_end_minutes"]
+        where assignedColumns.insert(column).inserted {
+          setClauses.append(
+            "\(column) = CASE WHEN planned_date IS ? THEN \(column) ELSE NULL END")
+          bindings.append(date)
+        }
         scheduleRegisterChanged = true
       }
       if patch.availableFrom.isSetOrClear {

@@ -6,8 +6,8 @@ extension PayloadShadow {
     "status", "list_id", "priority", "due_date", "estimated_minutes",
     "recurrence", "recurrence_exceptions", "spawned_from", "spawned_from_version",
     "recurrence_group_id", "canonical_occurrence_date", "created_at", "updated_at",
-    "completed_at", "last_deferred_at", "planned_date", "available_from",
-    "defer_count", "last_defer_reason", "recurrence_instance_key",
+    "completed_at", "last_deferred_at", "planned_date", "planned_start_minutes",
+    "planned_end_minutes", "available_from", "defer_count", "last_defer_reason", "recurrence_instance_key",
     "archived_at", "content_version", "schedule_version", "lifecycle_version",
     "archive_version", "recurrence_rollover_state", "recurrence_successor_id",
     "version",
@@ -48,9 +48,9 @@ extension PayloadShadow {
     case .list, .tag, .taskReminder, .taskChecklistItem, .habitReminderPolicy, .memory,
       .calendarSeriesCutover,
       .preference, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habit, .calendarEvent, .dailyReview, .currentFocus, .focusSchedule:
+      .habitCompletion, .habit, .calendarEvent, .dailyReview, .dailyBriefing:
       return SyncEntityDescriptor.require(kind).wireKeys
-    case .deviceState, .importSession:
+    case .deviceState, .importSession, .dailySchedule:
       return []
     }
   }
@@ -71,9 +71,9 @@ extension PayloadShadow {
     case .list, .tag, .taskReminder, .taskChecklistItem, .habitReminderPolicy, .memory,
       .calendarSeriesCutover,
       .preference, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habit, .calendarEvent, .dailyReview, .currentFocus, .focusSchedule:
+      .habitCompletion, .habit, .calendarEvent, .dailyReview, .dailyBriefing:
       return SyncEntityDescriptor.require(kind).syntheticKeys
-    case .deviceState, .importSession:
+    case .deviceState, .importSession, .dailySchedule:
       return []
     }
   }
@@ -114,13 +114,13 @@ extension PayloadShadow {
     case .list, .tag, .taskReminder, .taskChecklistItem, .habitReminderPolicy, .memory,
       .calendarSeriesCutover,
       .preference, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .habit, .calendarEvent, .dailyReview, .currentFocus, .focusSchedule:
+      .habitCompletion, .habit, .calendarEvent, .dailyReview, .dailyBriefing:
       // Migrated to ``SyncEntityDescriptor``: served by the descriptor consult
       // above, so these arms are unreachable at runtime. Kept (deriving from the
       // same descriptor) purely so the switch stays exhaustive and a NEW
       // `EntityKind` still forces a compile error here.
       return SyncEntityDescriptor.require(kind).shadowConsumedKeys
-    case .deviceState, .importSession:
+    case .deviceState, .importSession, .dailySchedule:
       // Local-only kinds never participate in payload-shadow forward-compat
       // preservation — they are not synced.
       return []

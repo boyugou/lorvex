@@ -15,9 +15,17 @@ extension AppStore {
           message: "Recurring calendar occurrence is missing its identity.")
       }
       let notes = draftCalendarNotes.trimmingCharacters(in: .whitespacesAndNewlines)
+      // Send the day only when the user actually changed it: the draft is seeded
+      // with THIS occurrence's date, so sending it unchanged would re-anchor the
+      // whole series (for `.allEvents`/segment scopes) on a metadata-only edit.
+      // When it did change, the end shifts with it so it never strands.
+      let newStartYmd = Self.ymdFormatter.string(from: draftCalendarDate)
+      let dateChanged = newStartYmd != event.startDate
       let updates = ScopedCalendarEventUpdates(
         title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
-        startDate: Self.ymdFormatter.string(from: draftCalendarDate),
+        startDate: dateChanged ? newStartYmd : nil,
+        endDate: dateChanged
+          ? shiftedCalendarEndDate(for: event, newStartDate: draftCalendarDate) : nil,
         startTime: draftCalendarAllDay
           ? nil : Self.hmFormatter.string(from: draftCalendarStartTime),
         endTime: draftCalendarAllDay ? nil : Self.hmFormatter.string(from: draftCalendarEndTime),

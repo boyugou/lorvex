@@ -4,18 +4,21 @@ import Testing
 @testable import LorvexCore
 
 /// `recentLogChangelogLevel` maps a changelog row onto a diagnostic level.
-/// Focus plan/schedule clears are recorded as `delete` operations but are
-/// routine planning actions, so they must not surface as `warn`.
+/// A cleared briefing or cleared day of times is recorded as a `delete`
+/// operation but is a routine planning action, so it must not surface as `warn`.
 @Suite("Recent-log changelog level mapping")
 struct RecentLogLevelTests {
-  @Test("focus plan/schedule clears stay info even when the op is delete")
-  func focusClearsAreInfo() {
+  @Test("briefing clears and saved days stay info even when the op is delete")
+  func dayPlanningIsInfo() {
     #expect(
       SwiftLorvexCoreService.recentLogChangelogLevel(
-        operation: "delete", entityType: .currentFocus) == .info)
+        operation: "delete", entityType: .dailyBriefing) == .info)
     #expect(
       SwiftLorvexCoreService.recentLogChangelogLevel(
-        operation: "delete", entityType: .focusSchedule) == .info)
+        operation: "upsert", entityType: .dailySchedule) == .info)
+    #expect(
+      SwiftLorvexCoreService.recentLogChangelogLevel(
+        operation: "delete", entityType: .dailySchedule) == .info)
   }
 
   @Test("genuine entity deletes and feedback warn")

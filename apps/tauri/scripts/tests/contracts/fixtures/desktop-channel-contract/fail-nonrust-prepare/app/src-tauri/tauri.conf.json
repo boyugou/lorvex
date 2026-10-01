@@ -1,9 +1,0 @@
-{
-  "build": {
-    "beforeDevCommand": "npm run prepare:mcp-runtime",
-    "beforeBuildCommand": "npm run prepare:mcp-runtime"
-  },
-  "bundle": {
-    "resources": ["resources/mcp-server"]
-  }
-}

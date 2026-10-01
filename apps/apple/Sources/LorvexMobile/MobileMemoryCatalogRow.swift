@@ -1,19 +1,21 @@
 import LorvexCore
 import SwiftUI
 
+/// A memory note in the catalog: the note's name and the first two lines of
+/// its content, with no leading tile, since every note is the same kind and a
+/// tile would only repeat the screen's title on each row. The name wraps onto a second line rather
+/// than truncating, so a large text size still shows which note a row is.
 struct MobileMemoryCatalogRow: View {
   let entry: MemoryEntry
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.m) {
-      MobileIconTile(symbol: "sparkles", tint: .purple, size: 30)
-
       VStack(alignment: .leading, spacing: 2) {
-        Text(entry.key)
-          .font(.body)
-          .lineLimit(1)
+        Text(entry.displayTitle)
+          .font(LorvexDesign.Typography.primaryText)
+          .lineLimit(2)
         Text(entry.content)
-          .font(.footnote)
+          .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .lineLimit(2)
       }

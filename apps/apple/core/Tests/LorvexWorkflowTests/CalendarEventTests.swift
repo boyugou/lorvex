@@ -7,9 +7,7 @@ import XCTest
 
 /// Tests for the calendar_event workflow subtree (create / update / load /
 /// attendees / recurrence_skeleton) plus the calendar_normalization driver.
-/// Ports the inline Rust tests from
-/// `apps/tauri/lorvex-workflow/src/calendar_event/{tests,attendees,recurrence_skeleton}.rs`
-/// and `apps/tauri/lorvex-workflow/src/calendar_normalization/tests.rs`.
+/// Ports the inline tests of the original Rust workflow crate.
 final class CalendarEventTests: XCTestCase {
 
   // MARK: - HLC + store helpers

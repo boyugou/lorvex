@@ -2,7 +2,7 @@ import LorvexCore
 import LorvexDomain
 import SwiftUI
 
-// MARK: - Two-Way Calendar Sync control panel
+// MARK: - Calendar Sync control panel
 
 struct SettingsCalendarControlPanel: View {
   @Bindable var settings: AppSettingsStore
@@ -12,30 +12,26 @@ struct SettingsCalendarControlPanel: View {
 
   var body: some View {
     Group {
+      // Plain text, like every settings row that holds a switch or a value:
+      // the control at the trailing edge already says what the row is.
       Toggle(isOn: $settings.eventKitEnabled) {
-        Label {
-          VStack(alignment: .leading, spacing: 2) {
-            Text(
-              LocalizedStringResource(
-                "settings.calendar.two_way_sync", defaultValue: "Two-Way Calendar Sync",
-                table: "Localizable", bundle: LorvexL10n.bundle))
-            Text(
-              LocalizedStringResource(
-                "settings.calendar.two_way_detail",
-                defaultValue:
-                  "Read your calendar events into Lorvex and write Lorvex-scheduled blocks into a dedicated \"Lorvex\" calendar — never your personal calendars.",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle
-              )
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          Text(
+            LocalizedStringResource(
+              "settings.calendar.sync_toggle", defaultValue: "Sync with Calendar",
+              table: "Localizable", bundle: LorvexL10n.bundle))
+          Text(
+            LocalizedStringResource(
+              "settings.calendar.two_way_detail",
+              defaultValue:
+                "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar — never your personal calendars.",
+              table: "Localizable",
+              bundle: LorvexL10n.bundle
             )
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-          }
-        } icon: {
-          Image(systemName: "calendar")
-            .symbolRenderingMode(.hierarchical)
-            .foregroundStyle(Color.accentColor)
+          )
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
         }
       }
       .accessibilityIdentifier("settings.eventkit.enabled")
@@ -57,31 +53,30 @@ struct SettingsCalendarControlPanel: View {
           Text(mode.macSettingsTitle).tag(mode)
         }
       } label: {
-        Label(
+        Text(
           String(
             localized: "settings.calendar.access.label",
             defaultValue: "Imported Event Details",
             table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          systemImage: "eye")
+            bundle: LorvexL10n.bundle))
       }
       .disabled(isSettingCalendarAccessMode)
       .accessibilityIdentifier("settings.eventkit.accessMode")
 
-      Text(calendarAccessMode.macSettingsDetail)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-        .fixedSize(horizontal: false, vertical: true)
-        .accessibilityIdentifier("settings.calendar.accessDetail")
-
-      Text(
-        String(
-          localized: "settings.calendar.access.scope_detail",
-          defaultValue:
-            "Applies to what Lorvex and connected assistants can see on this device.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle)
-      )
+      // One footnote row: what the chosen level mirrors, then whom it applies
+      // to. Two rows would put a divider between two halves of one thought.
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+        Text(calendarAccessMode.macSettingsDetail)
+          .accessibilityIdentifier("settings.calendar.accessDetail")
+        Text(
+          String(
+            localized: "settings.calendar.access.scope_detail",
+            defaultValue:
+              "Applies to what Lorvex and connected assistants can see on this device.",
+            table: "Localizable",
+            bundle: LorvexL10n.bundle)
+        )
+      }
       .font(LorvexDesign.Typography.tertiaryText)
       .foregroundStyle(.secondary)
       .fixedSize(horizontal: false, vertical: true)
@@ -89,21 +84,6 @@ struct SettingsCalendarControlPanel: View {
       EventKitCalendarFilterPicker(settings: settings, store: store)
         .disabled(!settings.eventKitEnabled || calendarAccessMode == .off)
         .accessibilityIdentifier("settings.calendar.filterPanel")
-
-      Button {
-        Task {
-          await store.applyEventKitSettings(enabled: settings.eventKitEnabled)
-        }
-      } label: {
-        Label(
-          String(
-            localized: "settings.calendar.ingest_now", defaultValue: "Ingest Now",
-            table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "arrow.down.circle"
-        )
-      }
-      .accessibilityIdentifier("settings.eventkit.ingestNow")
-      .disabled(!settings.eventKitEnabled || calendarAccessMode == .off)
     }
     .task {
       calendarAccessMode = await store.calendarAccessModeFromSettings()

@@ -129,6 +129,24 @@ enum NativeTaskGraphV1Validator {
     try requireOptionalTimestamp(task.archivedAt, field: "task.archivedAt")
     try requireOptionalDate(task.dueDate, field: "task.dueDate")
     try requireOptionalDate(task.plannedDate, field: "task.plannedDate")
+    switch (task.plannedStartMinutes, task.plannedEndMinutes) {
+    case (nil, nil):
+      break
+    case (let start?, let end?):
+      guard task.plannedDate != nil else {
+        throw invalidValue(
+          "task.plannedStartMinutes", "task \(task.id) has a time but no planned date")
+      }
+      guard start >= 0, end > start, end <= 1440 else {
+        throw invalidValue(
+          "task.plannedStartMinutes",
+          "task \(task.id) must have a start before an end within 0...1440")
+      }
+    default:
+      throw invalidValue(
+        "task.plannedStartMinutes",
+        "task \(task.id) must set plannedStartMinutes and plannedEndMinutes together")
+    }
     try requireOptionalDate(task.availableFrom, field: "task.availableFrom")
     try requireOptionalDate(
       task.canonicalOccurrenceDate, field: "task.canonicalOccurrenceDate")

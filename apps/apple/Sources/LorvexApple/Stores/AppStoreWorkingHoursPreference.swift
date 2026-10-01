@@ -2,8 +2,8 @@ import Foundation
 import LorvexCore
 
 /// Read/write surface for the `working_hours` preference — the working
-/// window the schedule-proposal engine (app button and MCP tool alike) fits
-/// focus blocks into.
+/// window the schedule proposal (the app's Suggest Times and the MCP tool
+/// alike) keeps suggested task times inside.
 extension AppStore {
   static let workingHoursDefault = WorkingHoursPreference.defaultWindow
 
@@ -21,7 +21,7 @@ extension AppStore {
     guard let encoded = WorkingHoursPreference.encode(start: start, end: end) else {
       errorMessage = String(
         localized: "settings.working_hours.invalid",
-        defaultValue: "Working hours must be HH:MM with the end after the start.",
+        defaultValue: "Day hours must be HH:MM with the end after the start.",
         table: "Localizable",
         bundle: LorvexL10n.bundle)
       return false

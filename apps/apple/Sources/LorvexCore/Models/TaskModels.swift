@@ -119,6 +119,11 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
   /// Intended work date (the `tasks.planned_date` column), set by `defer_task`
   /// or a direct update. Independent of ``dueDate``.
   public var plannedDate: Date?
+  /// The task's time on its planned day (the `tasks.planned_start_minutes` and
+  /// `tasks.planned_end_minutes` columns) as minutes since midnight in the
+  /// configured timezone: an appointment with oneself. Never set without a
+  /// ``plannedDate``; read it through ``time(on:)``.
+  public var plannedTime: Range<Int>?
   /// Defer-until / hide-until date (the `tasks.available_from` column):
   /// the task is hidden from day surfaces until this civil date, unless it is
   /// overdue. UTC-midnight anchored like ``plannedDate``. `nil` means the task
@@ -163,6 +168,7 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     status: Status,
     dueDate: Date?,
     plannedDate: Date? = nil,
+    plannedTime: Range<Int>? = nil,
     availableFrom: Date? = nil,
     estimatedMinutes: Int?,
     tags: [String],
@@ -190,6 +196,7 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     self.status = status
     self.dueDate = dueDate
     self.plannedDate = plannedDate
+    self.plannedTime = plannedDate == nil ? nil : plannedTime
     self.availableFrom = availableFrom
     self.estimatedMinutes = estimatedMinutes
     self.tags = tags
@@ -207,5 +214,29 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     self.updatedAt = updatedAt
     self.completedAt = completedAt
     self.archivedAt = archivedAt
+  }
+}
+
+extension LorvexTask {
+  /// The task's time on `logicalDay` (`yyyy-MM-dd`): its ``plannedTime`` when
+  /// the task is planned for that day, else nil. A time belongs to the day the
+  /// task is planned for, so no other day draws it.
+  public func time(on logicalDay: String) -> Range<Int>? {
+    guard let plannedTime, let plannedDate,
+      LorvexDateFormatters.ymdUTC.string(from: plannedDate) == logicalDay
+    else { return nil }
+    return plannedTime
+  }
+}
+
+extension Sequence where Element == LorvexTask {
+  /// Each task's time on `logicalDay`, keyed by task id; tasks without one are
+  /// absent.
+  public func times(on logicalDay: String) -> [LorvexTask.ID: Range<Int>] {
+    var times: [LorvexTask.ID: Range<Int>] = [:]
+    for task in self {
+      if let time = task.time(on: logicalDay) { times[task.id] = time }
+    }
+    return times
   }
 }

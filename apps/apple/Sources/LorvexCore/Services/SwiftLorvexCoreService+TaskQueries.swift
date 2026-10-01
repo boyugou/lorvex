@@ -73,47 +73,6 @@ extension SwiftLorvexCoreService {
     }
   }
 
-  public func getTodayTasks(limit: Int, offset: Int) async throws -> TaskPageResult {
-    try read { db in
-      let todayString = try WorkflowTimezone.todayYmdForConn(db)
-      return try Self.getTodayTaskPage(
-        db, date: todayString, limit: limit, offset: offset)
-    }
-  }
-
-  public func getTodayTasks(date: String, limit: Int, offset: Int) async throws
-    -> TaskPageResult
-  {
-    try read { db in
-      try Self.getTodayTaskPage(db, date: date, limit: limit, offset: offset)
-    }
-  }
-
-  private static func getTodayTaskPage(
-    _ db: Database, date: String, limit: Int, offset: Int
-  ) throws -> TaskPageResult {
-    let today: IsoDate.YMD
-    switch IsoDate.parseIsoDate(date) {
-    case .success(let ymd): today = ymd
-    case .failure(let error): throw StoreError.validation(error.description)
-    }
-    let clampedLimit = min(max(1, limit), 500)
-    // Upper-bound the offset so the UInt32 narrowing below can never trap on a
-    // hostile/huge `offset` from an MCP client (saturates instead of crashing).
-    let clampedOffset = min(max(0, offset), Int(UInt32.max))
-    let predicate = TodayPredicate(date: today)
-    let page = Pagination(limit: UInt32(clampedLimit), offset: UInt32(clampedOffset))
-    let rows = try TaskRepo.Read.getTodayTasks(db, predicate: predicate, page: page)
-    let total = try TaskRepo.Read.countTodayTasks(db, predicate: predicate)
-    let tasks = try Self.enrich(db, rows: rows)
-    return Self.pageResult(
-      tasks: tasks,
-      totalMatching: Int(total),
-      limit: clampedLimit,
-      offset: clampedOffset
-    )
-  }
-
   public func getScheduledTasks(from: String, to: String, limit: Int) async throws -> [LorvexTask] {
     try read { db in
       let clampedLimit = min(max(1, limit), 500)

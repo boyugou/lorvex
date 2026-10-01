@@ -16,7 +16,8 @@ struct LorvexWatchCommandWireTests {
       .completeTask(id: taskID),
       .cancelTask(id: taskID),
       .deferTaskToTomorrow(id: taskID, plannedDate: "2026-07-16"),
-      .removeFromFocus(id: taskID, date: "2026-07-15"),
+      .startTask(id: taskID),
+      .pauseTask(id: taskID),
       .captureTask(title: "Follow up / 下一步"),
       .completeHabit(id: habitID, date: "2026-07-15"),
     ]

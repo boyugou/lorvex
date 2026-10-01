@@ -9,7 +9,8 @@ import XCTest
 /// End-to-end coverage for the canonical-inbox convergence repair. A crafted
 /// peer delete must not merely be ignored locally: the service must replace the
 /// shared record with a fresh dominating upsert before acknowledging inbound
-/// progress, otherwise a later authoritative snapshot would remain poisoned.
+/// progress, otherwise every device that later fetches the zone would receive
+/// the delete as the current record.
 final class SwiftLorvexCoreServiceRequiredInboxRepairTests: XCTestCase {
   private func makeService() throws -> SwiftLorvexCoreService {
     let schemaURL = URL(fileURLWithPath: #filePath)
@@ -21,7 +22,8 @@ final class SwiftLorvexCoreServiceRequiredInboxRepairTests: XCTestCase {
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
     return SwiftLorvexCoreService(
-      store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+      store: try LorvexStore.openInMemory(
+        schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func inboxDelete(version: String) throws -> SyncEnvelope {

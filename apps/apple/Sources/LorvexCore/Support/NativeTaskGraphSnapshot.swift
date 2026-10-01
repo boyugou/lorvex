@@ -141,6 +141,11 @@ public struct NativeTaskSnapshot: Codable, Sendable, Equatable {
   public var lastDeferredAt: String?
   public var lastDeferReason: String?
   public var plannedDate: String?
+  /// The task's time on ``plannedDate`` in minutes since midnight
+  /// (`planned_start_minutes`); present exactly when ``plannedEndMinutes`` is.
+  public var plannedStartMinutes: Int?
+  /// The end of that time (`planned_end_minutes`), at most 1440.
+  public var plannedEndMinutes: Int?
   public var availableFrom: String?
   public var deferCount: Int
   public var archivedAt: String?
@@ -175,6 +180,8 @@ public struct NativeTaskSnapshot: Codable, Sendable, Equatable {
     lastDeferredAt: String?,
     lastDeferReason: String?,
     plannedDate: String?,
+    plannedStartMinutes: Int? = nil,
+    plannedEndMinutes: Int? = nil,
     availableFrom: String?,
     deferCount: Int,
     archivedAt: String?
@@ -208,6 +215,8 @@ public struct NativeTaskSnapshot: Codable, Sendable, Equatable {
     self.lastDeferredAt = lastDeferredAt
     self.lastDeferReason = lastDeferReason
     self.plannedDate = plannedDate
+    self.plannedStartMinutes = plannedStartMinutes
+    self.plannedEndMinutes = plannedEndMinutes
     self.availableFrom = availableFrom
     self.deferCount = deferCount
     self.archivedAt = archivedAt

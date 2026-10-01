@@ -16,7 +16,7 @@ extension SettingsView {
     Section(String(localized: "settings.data_import.section", defaultValue: "Import", table: "Localizable", bundle: LorvexL10n.bundle)) {
       Text(LocalizedStringResource(
         "settings.data_import.description",
-        defaultValue: "Load data from a JSON or ZIP file you made with Export above. You'll see what the file contains first; importing never duplicates data you already have.",
+        defaultValue: "Load data from a JSON or ZIP file you made with Export above. You’ll see what the file contains first; importing never duplicates data you already have.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))
@@ -45,7 +45,7 @@ extension SettingsView {
       if let importErrorMessage {
         Label(importErrorMessage, systemImage: "exclamationmark.triangle")
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
       }
 
       if let importSummary {
@@ -81,7 +81,7 @@ extension SettingsView {
 
   private var dataImportInteractionBlocked: Bool {
     importInProgress || store.isDataImportRunning || store.isLocalFactoryResetRunning
-      || store.isCloudDataDeletionRunning || store.isCloudDeletionMaintenanceRunning
+      || store.isCloudDataDeletionRunning
   }
 
   private var importPreviewBinding: Binding<Bool> {
@@ -147,74 +147,11 @@ extension SettingsView {
   }
 
   private func dataImportErrorMessage(for error: any Error) -> String {
-    if let boundary = error as? CloudSyncDataImportBoundary.BoundaryError {
-      switch boundary {
-      case .importAlreadyRunning, .dataMaintenanceRunning:
-        return String(
-          localized: "settings.data_import.error.busy",
-          defaultValue:
-            "Another import or data operation is still running. Wait for it to finish, then try again.",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .liveCoordinatorUnavailable, .cloudSyncRetryDeferred:
-        break
-      }
-    }
-    if let terminal = error as? CloudSyncTerminalInboundDrainError {
-      switch terminal {
-      case .accountUnavailable(.noAccount):
-        return String(
-          localized: "settings.cloud_sync.account.no_account_message",
-          defaultValue: "No iCloud account. Sign in via System Settings > Apple Account.",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .accountUnavailable(.restricted):
-        return String(
-          localized: "settings.cloud_sync.account.restricted_message",
-          defaultValue: "iCloud is restricted by a device management profile.",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .accountUnavailable(.temporarilyUnavailable):
-        return String(
-          localized: "settings.cloud_sync.account.temporarily_unavailable_message",
-          defaultValue: "iCloud account is temporarily unavailable.",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .accountUnavailable(.couldNotDetermine), .accountUnavailable(.available):
-        return String(
-          localized: "settings.cloud_sync.account.unknown_message",
-          defaultValue: "Unable to determine iCloud account status.",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .syncPaused(let reason):
-        return dataImportPausedMessage(reason)
-      case .unsupportedBackend, .runtimeNotReady, .terminalBoundaryNotReached,
-        .inboundStateIncomplete:
-        break
-      }
-    }
-    return String(
-      localized: "settings.data_import.error.cloud_sync_not_ready",
+    String(
+      localized: "settings.data_import.error.busy",
       defaultValue:
-        "Lorvex couldn’t verify the latest iCloud data, so the backup wasn’t imported. Make sure iCloud is signed in and Cloud Sync is ready, then try again.",
+        "Another import or data operation is still running. Wait for it to finish, then try again.",
       table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  private func dataImportPausedMessage(_ reason: CloudSyncPauseReason) -> String {
-    switch reason {
-    case .userDeletedZone:
-      return String(
-        localized: "settings.cloud_sync.paused.user_deleted_zone",
-        defaultValue:
-          "Lorvex data was deleted from iCloud. Sync stays paused so this Mac doesn’t re-upload it without your consent.",
-        table: "Localizable", bundle: LorvexL10n.bundle)
-    case .accountChanged:
-      return String(
-        localized: "settings.cloud_sync.paused.account_changed",
-        defaultValue:
-          "The signed-in iCloud account changed. Sync is paused so this Mac’s data isn’t mixed into a different account.",
-        table: "Localizable", bundle: LorvexL10n.bundle)
-    case .adoptionInProgress, .backfillFailed:
-      return String(
-        localized: "settings.cloud_sync.paused.backfill_failed",
-        defaultValue: "Preparing the re-upload failed. Resuming will retry it.",
-        table: "Localizable", bundle: LorvexL10n.bundle)
-    }
   }
 }
 
@@ -246,7 +183,7 @@ private struct ImportPreviewSheet: View {
       ImportPreviewCategoryPanel(
         title: String(localized: "settings.data_import.preview.in_file", defaultValue: "Can be restored", table: "Localizable", bundle: LorvexL10n.bundle),
         systemImage: "checkmark.circle.fill",
-        tint: .green,
+        tint: LorvexDesign.Palette.success,
         entries: plan.entries.filter(\.isSupported),
         emptyMessage: String(
           localized: "settings.data_import.preview.nothing_supported",
@@ -262,12 +199,12 @@ private struct ImportPreviewSheet: View {
         ImportPreviewCategoryPanel(
           title: String(
             localized: "settings.data_import.preview.not_imported",
-            defaultValue: "Not imported (can't be safely restored yet)",
+            defaultValue: "Not imported (can’t be safely restored yet)",
             table: "Localizable",
             bundle: LorvexL10n.bundle
           ),
           systemImage: "exclamationmark.triangle.fill",
-          tint: .orange,
+          tint: LorvexDesign.Palette.warning,
           entries: deferred,
           emptyMessage: "",
           accessibilityIdentifier: "dataImport.preview.deferred"
@@ -277,7 +214,7 @@ private struct ImportPreviewSheet: View {
       if let errorMessage {
         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
           .accessibilityIdentifier("dataImport.preview.error")
       }
 

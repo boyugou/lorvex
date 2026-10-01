@@ -57,7 +57,7 @@ func cloudSyncStatusReportIsOperationalWhenLiveAndAvailable() {
 
 @Test
 func cloudSyncStatusReportIsNotOperationalWhenDurablyPaused() {
-  // A standing pause (account changed / zone deleted / backfill failed) stops sync
+  // A standing pause (account changed / zone deleted) stops sync
   // until the user acts. Even under `.live` mode with an available account, the
   // report must read NOT operational so the Settings icon doesn't show green over
   // the "Sync Paused" notice.

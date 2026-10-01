@@ -24,11 +24,11 @@ extension AppStore {
     }
   }
 
-  /// Apply the user's EventKit calendar settings — the enable/disable toggle, the
-  /// calendar include/exclude filters, and an explicit re-ingest ("Ingest Now").
-  /// None of these expresses a detail-tier choice, so this path never writes
-  /// `calendar_ai_access_mode`; a plain enable/disable/filter/refresh cannot
-  /// silently raise or lower the user's persisted device-local privacy tier.
+  /// Apply the user's EventKit calendar settings — the enable/disable toggle and
+  /// the calendar include/exclude filters. Neither expresses a detail-tier
+  /// choice, so this path never writes `calendar_ai_access_mode`; a plain
+  /// enable/disable/filter change cannot silently raise or lower the user's
+  /// persisted device-local privacy tier.
   ///
   /// It then reads the effective stored tier to decide provider-scope
   /// availability (an `off` tier keeps the mirror disabled even when the toggle

@@ -31,7 +31,6 @@ extension MobileStore {
     taskCache[id] = nil
     snapshot.today.inProgressTasks.removeAll { $0.id == id }
     snapshot.today.tasks.removeAll { $0.id == id }
-    selectedListDetail?.tasks.removeAll { $0.id == id }
     calendarScheduledTasks.removeAll { $0.id == id }
     if selectedTaskID == id { selectedTaskID = nil }
   }

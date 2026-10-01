@@ -74,7 +74,7 @@ struct MobileStoreEditListSheet: View {
             submit()
           } label: {
             if store.isUpdatingList {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(
                 String(
@@ -82,6 +82,7 @@ struct MobileStoreEditListSheet: View {
                   bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(!store.canUpdateListDraft)
           .accessibilityIdentifier("mobileEditList.confirm")
         }

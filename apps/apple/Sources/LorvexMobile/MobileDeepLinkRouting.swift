@@ -19,7 +19,7 @@ public enum MobileDeepLinkRoute: Equatable, Sendable {
     guard let route = LorvexDeepLinkRoute(url: url) else { return nil }
     switch route {
     case .destination(let destination):
-      guard let (tab, _) = Self.tabAndDestination(forDestination: destination.rawValue)
+      guard let tab = Self.tabAndDestination(forDestination: destination.rawValue)
       else { return nil }
       self = .tab(tab)
     case .task(let id):
@@ -38,51 +38,34 @@ public enum MobileDeepLinkRoute: Equatable, Sendable {
     }
   }
 
-  /// Produces the full navigation target, including a `moreDestination` when
-  /// this route targets a domain workspace within the More tab.
+  /// Produces the full navigation target for this route.
   public func navigationTarget(resolvedFrom url: URL? = nil) -> MobileNavigationTarget {
     switch self {
     case .tab(let tab):
-      let moreDestination: MobileDestination?
-      if tab == .more, let url {
-        moreDestination = Self.moreDestination(from: url)
-      } else {
-        moreDestination = nil
-      }
-      return MobileNavigationTarget(selectedTab: tab, route: nil, moreDestination: moreDestination)
+      return MobileNavigationTarget(selectedTab: tab, route: nil)
     case .task(let id):
-      return MobileNavigationTarget(selectedTab: .today, route: .task(id), moreDestination: nil)
+      return MobileNavigationTarget(selectedTab: .today, route: .task(id))
     }
   }
 
-  /// Navigation target without URL context, so `moreDestination` is always `nil`.
+  /// Navigation target without URL context — identical to
+  /// `navigationTarget(resolvedFrom:)`, since neither case reads `url`. Kept as
+  /// a separate accessor for call sites that have no URL to hand.
   public var navigationTarget: MobileNavigationTarget {
     navigationTarget(resolvedFrom: nil)
   }
 
-  private static func moreDestination(from url: URL) -> MobileDestination? {
-    let host = url.host()?.lowercased() ?? ""
-    let pathComponents = url.pathComponents.filter { $0 != "/" }
-    let rawDestination: String
-    if host == Self.openHost, let first = pathComponents.first {
-      rawDestination = first
-    } else {
-      rawDestination = host
-    }
-    return tabAndDestination(forDestination: rawDestination)?.1
-  }
-
-  static func tabAndDestination(forDestination rawDestination: String)
-    -> (MobileTab, MobileDestination?)?
-  {
+  /// Resolves a raw destination string (a `SidebarSelection` raw value, or the
+  /// "review"/"reviews" alias) to the primary tab that now hosts it. Every
+  /// domain workspace lives on a primary tab: Lists and Memory are reachable
+  /// from the Tasks tab, Reviews from the Review tab.
+  static func tabAndDestination(forDestination rawDestination: String) -> MobileTab? {
     if let sidebar = SidebarSelection.matching(rawDestination) {
-      let tab = tab(for: sidebar)
-      let dest: MobileDestination? = tab == .more ? mobileDestination(for: sidebar) : nil
-      return (tab, dest)
+      return tab(for: sidebar)
     }
     switch rawDestination.lowercased() {
     case "review", "reviews":
-      return (.more, .review)
+      return .review
     default:
       return nil
     }
@@ -94,17 +77,8 @@ public enum MobileDeepLinkRoute: Equatable, Sendable {
     case .tasks: .tasks
     case .calendar: .calendar
     case .habits: .habits
-    case .lists, .memory, .reviews:
-      .more
-    }
-  }
-
-  private static func mobileDestination(for sidebar: SidebarSelection) -> MobileDestination? {
-    switch sidebar {
-    case .lists: .lists
-    case .memory: .memory
     case .reviews: .review
-    default: nil
+    case .lists, .memory: .tasks
     }
   }
 
@@ -114,7 +88,7 @@ public enum MobileDeepLinkRoute: Equatable, Sendable {
     case .tasks: .tasks
     case .calendar: .calendar
     case .habits: .habits
-    case .more: .tasks
+    case .review: .reviews
     }
   }
 }
@@ -122,36 +96,29 @@ public enum MobileDeepLinkRoute: Equatable, Sendable {
 /// A fully-specified navigation destination within the mobile app.
 ///
 /// `selectedTab` chooses the primary tab. `route` pushes a detail view within the today
-/// tab's `NavigationStack`. `moreDestination`, when set alongside `selectedTab == .more`,
-/// pushes a domain workspace in the More tab's navigation stack. `moreListRoute`, when set
-/// alongside `moreDestination == .lists`, pushes a list detail on top of the workspace.
-/// `habitsRoute`, when set alongside `selectedTab == .habits`, pushes a habit detail on the
-/// Habits tab's `NavigationStack` (the iPad/visionOS regular layout shows habit detail via
-/// selection instead, so this is a no-op there — see `MobileStore.habitsRoutePath`).
+/// tab's `NavigationStack`. `tasksRoute`, when set alongside `selectedTab == .tasks`,
+/// pushes a route (e.g. a specific list) onto the Tasks tab's stack. `habitsRoute`, when
+/// set alongside `selectedTab == .habits`, pushes a habit detail on the Habits tab's
+/// stack, which `MobileStore.redirectHiddenHabitsTab` moves onto the Tasks stack
+/// because the Habits tab is hidden from the bar.
 public struct MobileNavigationTarget: Equatable, Sendable {
   public var selectedTab: MobileTab
   public var route: MobileRoute?
-  /// Workspace destination to push inside the More tab's navigation stack.
-  /// Ignored when `selectedTab != .more`.
-  public var moreDestination: MobileDestination?
-  /// List route to push on top of the Lists workspace inside the More tab.
-  /// Only meaningful when `moreDestination == .lists`.
-  public var moreListRoute: MobileRoute?
-  /// Habit route to push on top of the Habits tab's compact (iPhone) stack.
-  /// Only meaningful when `selectedTab == .habits`.
+  /// Route to push on the Tasks tab's own stack. Ignored when `selectedTab != .tasks`.
+  public var tasksRoute: MobileRoute?
+  /// Route to push on the Habits tab's compact (iPhone) stack. Only meaningful when
+  /// `selectedTab == .habits`.
   public var habitsRoute: MobileRoute?
 
   public init(
     selectedTab: MobileTab,
     route: MobileRoute?,
-    moreDestination: MobileDestination? = nil,
-    moreListRoute: MobileRoute? = nil,
+    tasksRoute: MobileRoute? = nil,
     habitsRoute: MobileRoute? = nil
   ) {
     self.selectedTab = selectedTab
     self.route = route
-    self.moreDestination = moreDestination
-    self.moreListRoute = moreListRoute
+    self.tasksRoute = tasksRoute
     self.habitsRoute = habitsRoute
   }
 }

@@ -15,7 +15,7 @@ func appShortcutsExposeStableSystemImages() {
       "rectangle.3.group",
       "checkmark.circle",
       "calendar.badge.clock",
-      "scope",
+      "sun.max.circle",
       "list.bullet.rectangle",
       "text.magnifyingglass",
       "repeat.circle",

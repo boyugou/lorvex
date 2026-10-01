@@ -2,13 +2,14 @@ import Foundation
 
 /// The one catalog-search projection every read surface shares, so a query
 /// returns the same lists / habits / memory entries on macOS and on
-/// iOS/iPadOS/visionOS. Pure and synchronous: it filters already-loaded
+/// iOS/iPadOS. Pure and synchronous: it filters already-loaded
 /// in-memory pools and never touches the store.
 ///
 /// **Field set** is the union of what any surface historically searched — a
 /// superset is safe because a wider haystack only ever surfaces *more* of what
 /// the user could plausibly mean, never fewer:
-/// - lists: name, description, AI notes, icon, color
+/// - lists: name (shown and stored, ``LorvexList/matchNames``), description,
+///   AI notes, icon, color
 /// - habits: name, cue, frequency type, icon, color
 /// - memory: key, content
 ///
@@ -33,7 +34,7 @@ public enum LorvexCatalogSearch {
 
   public static func lists(_ lists: [LorvexList], query: String) -> [LorvexList] {
     filter(lists, query: query) { list in
-      [list.name, list.description, list.aiNotes, list.icon, list.color]
+      list.matchNames + [list.description, list.aiNotes, list.icon, list.color]
     }
   }
 

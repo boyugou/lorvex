@@ -10,7 +10,7 @@ func taskCommandsExposeNativeMenuTitles() {
     TaskCommand.allCases == [
       .showDetail,
       .save,
-      .toggleFocus,
+      .toggleStarted,
       .deferToTomorrow,
       .complete,
       .reopen,
@@ -18,8 +18,8 @@ func taskCommandsExposeNativeMenuTitles() {
     ])
   #expect(TaskCommand.showDetail.title == "Show Task Detail")
   #expect(TaskCommand.save.title == "Save Task")
-  #expect(TaskCommand.toggleFocus.title(isFocused: false) == "Add to Focus")
-  #expect(TaskCommand.toggleFocus.title(isFocused: true) == "Remove from Focus")
+  #expect(TaskCommand.toggleStarted.title(isStarted: false) == "Start Task")
+  #expect(TaskCommand.toggleStarted.title(isStarted: true) == "Pause Task")
   #expect(TaskCommand.deferToTomorrow.title == "Defer to Tomorrow")
   #expect(TaskCommand.complete.title == "Complete Task")
   #expect(TaskCommand.reopen.title == "Reopen Task")
@@ -30,7 +30,9 @@ func taskCommandsExposeNativeMenuTitles() {
 func taskCommandsExposeKeyboardShortcuts() {
   #expect(TaskCommand.showDetail.keyboardShortcut.key == "i")
   #expect(TaskCommand.save.keyboardShortcut.key == "s")
-  #expect(TaskCommand.toggleFocus.keyboardShortcut.key == "f")
+  #expect(TaskCommand.toggleStarted.keyboardShortcut.key == "s")
+  #expect(TaskCommand.toggleStarted.keyboardShortcut.modifiers == [.command, .shift])
+  #expect(TaskCommand.save.keyboardShortcut.modifiers == [.command])
   #expect(TaskCommand.deferToTomorrow.keyboardShortcut.key == "d")
   #expect(TaskCommand.complete.keyboardShortcut.key == .return)
   #expect(TaskCommand.reopen.keyboardShortcut.key == "o")
@@ -41,7 +43,7 @@ func taskCommandsExposeKeyboardShortcuts() {
 func taskCommandsMapToStableNativeActions() {
   #expect(TaskCommand.showDetail.action == .openTaskDetail)
   #expect(TaskCommand.save.action == .saveSelectedTaskDraft)
-  #expect(TaskCommand.toggleFocus.action == .toggleSelectedTaskFocus)
+  #expect(TaskCommand.toggleStarted.action == .toggleSelectedTaskStarted)
   #expect(TaskCommand.deferToTomorrow.action == .deferSelectedTask)
   #expect(TaskCommand.complete.action == .completeSelectedTask)
   #expect(TaskCommand.reopen.action == .reopenSelectedTask)
@@ -71,7 +73,7 @@ func taskCommandsMirrorSelectedTaskState() async throws {
 
   #expect(TaskCommand.showDetail.isEnabled(in: context))
   #expect(!TaskCommand.save.isEnabled(in: context))
-  #expect(TaskCommand.toggleFocus.isEnabled(in: context))
+  #expect(TaskCommand.toggleStarted.isEnabled(in: context))
   #expect(TaskCommand.deferToTomorrow.isEnabled(in: context))
   #expect(TaskCommand.complete.isEnabled(in: context))
   #expect(!TaskCommand.reopen.isEnabled(in: context))
@@ -107,12 +109,12 @@ func taskCommandsEnableBatchActionsFromFocusedSurface() async throws {
   await store.refresh()
   let activeIDs = Set(store.today.tasks.filter { $0.status.isActive }.prefix(2).map(\.id))
   #expect(activeIDs.count == 2)
-  store.setFocusWorkspaceSelection(activeIDs)
+  store.setTodaySelection(activeIDs)
   store.selection = .tasks
-  let context = LorvexTaskCommandContext(store: store, selectionSurface: .focus)
+  let context = LorvexTaskCommandContext(store: store, selectionSurface: .today)
 
   #expect(!TaskCommand.showDetail.isEnabled(in: context))
-  #expect(!TaskCommand.toggleFocus.isEnabled(in: context))
+  #expect(!TaskCommand.toggleStarted.isEnabled(in: context))
   #expect(TaskCommand.complete.isEnabled(in: context))
   #expect(TaskCommand.deferToTomorrow.isEnabled(in: context))
   #expect(TaskCommand.cancel.isEnabled(in: context))

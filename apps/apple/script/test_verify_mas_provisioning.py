@@ -564,8 +564,8 @@ class EmbeddableTargetsTests(unittest.TestCase):
             "BUNDLE_ID": "com.lorvex.apple",
             "MCP_HOST_PRODUCT": "LorvexMCPHost",
             "MCP_HOST_BUNDLE_ID": "com.lorvex.apple.mcp-host",
-            "WIDGET_APPEX_NAME": "LorvexFocusWidget.appex",
-            "WIDGET_BUNDLE_ID": "com.lorvex.apple.mobile.widget.focus",
+            "WIDGET_APPEX_NAME": "LorvexWidgets.appex",
+            "WIDGET_BUNDLE_ID": "com.lorvex.apple.focuswidget",
         }
         targets = embeddable_targets(app_bundle, metadata)
         self.assertEqual(
@@ -579,7 +579,7 @@ class EmbeddableTargetsTests(unittest.TestCase):
                 ),
                 (
                     "widget extension",
-                    app_bundle / "Contents" / "PlugIns" / "LorvexFocusWidget.appex",
+                    app_bundle / "Contents" / "PlugIns" / "LorvexWidgets.appex",
                     "WIDGET_BUNDLE_ID",
                 ),
             ],

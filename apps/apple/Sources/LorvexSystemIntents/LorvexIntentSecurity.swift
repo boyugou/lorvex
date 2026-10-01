@@ -36,7 +36,7 @@ protocol LorvexSecuredIntent: AppIntent {}
 extension LorvexSecuredIntent {
   static var openAppWhenRun: Bool { false }
 
-  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *)
+  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *)
   static var supportedModes: IntentModes { .background }
 }
 

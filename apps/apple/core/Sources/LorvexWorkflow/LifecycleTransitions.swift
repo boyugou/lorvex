@@ -108,8 +108,6 @@ public enum LifecycleTransitions {
     var spawnedTagEdges: [CopiedTagEdge] = []
     var spawnedChecklistItemIds: [String] = []
     var spawnedReminderIds: [String] = []
-    var rewiredFocusScheduleDates: [String] = []
-    var rewiredCurrentFocusDates: [String] = []
 
     if completion.updated, let snap = snapshot,
       let rule = snap.recurrence, !rule.isEmpty
@@ -123,8 +121,6 @@ public enum LifecycleTransitions {
         spawnedTagEdges = spawn.copiedTagEdges
         spawnedChecklistItemIds = spawn.copiedChecklistItemIds
         spawnedReminderIds = spawn.copiedReminderIds
-        rewiredFocusScheduleDates = spawn.rewiredFocusScheduleDates
-        rewiredCurrentFocusDates = spawn.rewiredCurrentFocusDates
       }
     }
 
@@ -134,9 +130,7 @@ public enum LifecycleTransitions {
       spawnedSuccessorId: spawnedSuccessorId,
       spawnedSuccessorTagEdges: spawnedTagEdges,
       spawnedSuccessorChecklistItemIds: spawnedChecklistItemIds,
-      spawnedSuccessorReminderIds: spawnedReminderIds,
-      rewiredFocusScheduleDates: rewiredFocusScheduleDates,
-      rewiredCurrentFocusDates: rewiredCurrentFocusDates)
+      spawnedSuccessorReminderIds: spawnedReminderIds)
   }
 
   // MARK: - Dedicated cancel surface
@@ -181,17 +175,13 @@ public enum LifecycleTransitions {
         spawnedSuccessorId: nil,
         spawnedSuccessorTagEdges: [],
         spawnedSuccessorChecklistItemIds: [],
-        spawnedSuccessorReminderIds: [],
-        rewiredFocusScheduleDates: [],
-        rewiredCurrentFocusDates: [])
+        spawnedSuccessorReminderIds: [])
     }
 
     var spawnedSuccessorId: String? = nil
     var spawnedTagEdges: [CopiedTagEdge] = []
     var spawnedChecklistItemIds: [String] = []
     var spawnedReminderIds: [String] = []
-    var rewiredFocusScheduleDates: [String] = []
-    var rewiredCurrentFocusDates: [String] = []
 
     if let snap = snapshot, let rule = snap.recurrence, !rule.isEmpty {
       if cancelSeries {
@@ -228,8 +218,6 @@ public enum LifecycleTransitions {
           spawnedTagEdges = spawn.copiedTagEdges
           spawnedChecklistItemIds = spawn.copiedChecklistItemIds
           spawnedReminderIds = spawn.copiedReminderIds
-          rewiredFocusScheduleDates = spawn.rewiredFocusScheduleDates
-          rewiredCurrentFocusDates = spawn.rewiredCurrentFocusDates
         }
       }
     }
@@ -242,9 +230,7 @@ public enum LifecycleTransitions {
       spawnedSuccessorId: spawnedSuccessorId,
       spawnedSuccessorTagEdges: spawnedTagEdges,
       spawnedSuccessorChecklistItemIds: spawnedChecklistItemIds,
-      spawnedSuccessorReminderIds: spawnedReminderIds,
-      rewiredFocusScheduleDates: rewiredFocusScheduleDates,
-      rewiredCurrentFocusDates: rewiredCurrentFocusDates)
+      spawnedSuccessorReminderIds: spawnedReminderIds)
   }
 
   // MARK: - Dedicated reopen surface

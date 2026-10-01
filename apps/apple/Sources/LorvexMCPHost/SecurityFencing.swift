@@ -12,7 +12,7 @@ import MCP
 ///
 /// Applied centrally to successful MCP structured payloads that carry
 /// user-controlled text: task/search/overview reads, memory reads, mutation
-/// echoes, and the calendar/list/tag/focus/habit/review surfaces.
+/// echoes, and the calendar/list/tag/day-planning/habit/review surfaces.
 ///
 /// Fields that are Lorvex-controlled (IDs, status enums, timestamps, counts)
 /// must NOT be fenced — fencing is for user-controlled free-text only.
@@ -133,7 +133,7 @@ enum SecurityFencing {
   /// must be fenced before inclusion in an MCP response.
   static let userContentKeys: Set<String> = [
     "title", "notes", "ai_notes", "name", "description", "content", "text",
-    "raw_input", "briefing", "summary", "body", "cue", "note", "rationale",
+    "raw_input", "briefing", "summary", "body", "cue", "note",
     "wins", "blockers", "learnings", "quote", "defer_note",
     "comment", "location", "person_name", "habit_name", "email",
     "details",

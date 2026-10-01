@@ -5,8 +5,7 @@ migrations, exactly as `../schema.sql` is the single authoritative source for
 the baseline schema. The Apple app derives its embedded migration registry from
 here; its bundled copy is never edited independently. The ladder governs the
 **Apple app's own** schema evolution for post-launch Apple↔Apple multi-device
-rolling upgrades — the Tauri app is only directionally aligned via `spec/`, not
-byte-locked to this directory.
+rolling upgrades.
 
 ## Version space
 
@@ -42,11 +41,7 @@ The Apple app owns this normalization: it computes the digest in Swift
 (`apps/apple/core/Sources/LorvexStore/MigrationSqlChecksum.swift`, the runtime
 authority) and both seeds and verifies the lock in Python
 (`apps/apple/script/verify_migration_ladder.py --seed` and its plain verify run),
-each pinned against the same lock entries by its own test suite. Tauri's Node and
-Rust implementations (`apps/tauri/scripts/verify/migration_checksums.mjs`,
-`apps/tauri/lorvex-store/src/migration/checksum`) use the same algorithm but are
-a separate, directionally-aligned realization — not a byte-locked contract with
-Apple, and never run by the Apple gate.
+each pinned against the same lock entries by its own test suite.
 
 The Apple app records the bare migration name plus this normalized hash into
 `schema_migrations` when applying a migration and verifies both on every
@@ -70,7 +65,7 @@ recorded max version exceeds what a binary registers refuses to open
 ## SQL dialect constraints
 
 Each migration runs as plain SQLite SQL through GRDB (`Database.execute(sql:)`)
-on Apple and rusqlite (`execute_batch`) on Tauri, inside a single
+inside a single
 `BEGIN IMMEDIATE` transaction the runner owns. Therefore a migration:
 
 - may contain multiple statements and SQL comments (comments don't affect the
@@ -89,9 +84,7 @@ on Apple and rusqlite (`execute_batch`) on Tauri, inside a single
   this). The Apple open path applies the baseline only to a fresh/unversioned
   database; a versioned database verifies the baseline checksum and then runs the
   numbered ladder as the sole author of post-baseline schema, so a dropped object
-  is never resurrected. This closure requirement is an Apple-only concern: the
-  Tauri app is directionally aligned, not byte-locked to this ladder, and evolves
-  its own schema independently.
+  is never resurrected.
 
 ## How the Apple app derives its registry
 
@@ -101,10 +94,6 @@ same way as `schema.sql`), and `checksums.lock` there is a byte-identical copy o
 this directory's lock. `SwiftLorvexCoreService` loads the bundled files, verifies
 each against the bundled lock, and passes the ladder to `LorvexStore.open`; a
 checksum or numbering violation refuses the open.
-
-The Tauri app maintains its own copy under `apps/tauri/lorvex-store/src/schema/`,
-but it is only directionally aligned via `spec/`: the monorepo does not enforce
-byte-equality against it, and it may diverge freely.
 
 Enforcement (Apple-only):
 

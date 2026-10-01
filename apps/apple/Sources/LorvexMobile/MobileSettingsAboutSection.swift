@@ -1,7 +1,7 @@
 import LorvexCore
 import SwiftUI
 
-/// "About" section for the iPhone/iPad/visionOS Settings screen: the app
+/// "About" section for the iPhone/iPad Settings screen: the app
 /// version plus links to the bundled open-source acknowledgments and the
 /// privacy policy summary.
 struct MobileSettingsAboutSection: View {

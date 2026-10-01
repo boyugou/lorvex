@@ -10,35 +10,32 @@ import Testing
 
 // P2 (dirty-domain reload gating): an inbound sync reloads ONLY the mobile
 // surfaces whose entity kinds it applied. These drive `MobileStore.refresh()` end
-// to end through a real coordinator + `StubFocusCoreService` (a delegating,
+// to end through a real coordinator + `StubCoreService` (a delegating,
 // call-counting core), so a habits-only push must re-read habits without touching
 // the calendar / list surfaces, while a multi-domain push re-reads each. The
-// counting core delegates the atomic traversal page to its real in-memory core,
-// so the applied-kind report is produced by the production apply path.
+// coordinator commits fetched records into the real in-memory core behind the
+// counting core, so the applied-kind report is produced by the production apply
+// path.
 
 @MainActor
 private func makeSelectiveLiveStore(
-  core: any LorvexCoreServicing,
+  core: StubCoreService,
   records: [CKRecord]
-) -> MobileStore {
-  let coordinator = CloudSyncEngineCoordinator(
-    accountChecker: StubAccountStatusChecker(availability: .available),
-    pusher: RecordingRecordPusher(),
-    fetcher: StubRemoteChangeFetcher(records: records, serverChangeTokenData: Data([0x02])),
-    accountIdentifier: StubAccountIdentifier(identifier: "account-A"),
-    accountIdentityStore: RecordingAccountIdentityStore(initial: "account-A"))
+) async throws -> MobileStore {
+  let sync = TestCloudSync(store: core.preview)
+  try await sync.deliverOnFirstFetch(records)
   return MobileStore(
     core: core,
     todayString: { "2026-05-23" },
     cloudSyncMode: .live,
-    cloudSyncCoordinator: coordinator)
+    cloudSyncController: sync.controller)
 }
 
 @MainActor
 @Test("an inbound habits-only sync reloads habits but not the calendar/list surfaces")
 func mobileInboundHabitsOnlyReloadsHabitsOnly() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-  let store = makeSelectiveLiveStore(
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = try await makeSelectiveLiveStore(
     core: core,
     records: [inboundSelectiveRecord(.habit, "01966a3f-7c8b-7d4e-8f3a-000000000021", 1)])
 
@@ -59,8 +56,8 @@ func mobileInboundHabitsOnlyReloadsHabitsOnly() async throws {
 @MainActor
 @Test("an inbound calendar-only sync reloads the calendar but not habits/lists")
 func mobileInboundCalendarOnlyReloadsCalendarOnly() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-  let store = makeSelectiveLiveStore(
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = try await makeSelectiveLiveStore(
     core: core,
     records: [inboundSelectiveRecord(.calendarEvent, "01966a3f-7c8b-7d4e-8f3a-000000000031", 2)])
 
@@ -76,8 +73,8 @@ func mobileInboundCalendarOnlyReloadsCalendarOnly() async throws {
 @MainActor
 @Test("an inbound sync spanning multiple domains reloads all of them")
 func mobileInboundMultiDomainReloadsAll() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-  let store = makeSelectiveLiveStore(
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = try await makeSelectiveLiveStore(
     core: core,
     records: [
       inboundSelectiveRecord(.habit, "01966a3f-7c8b-7d4e-8f3a-000000000041", 3),
@@ -97,8 +94,8 @@ func mobileInboundMultiDomainReloadsAll() async throws {
 @MainActor
 @Test("an inbound task sync reloads task-bearing surfaces but not habits")
 func mobileInboundTaskReloadsTaskSurfacesNotHabits() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-  let store = makeSelectiveLiveStore(
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = try await makeSelectiveLiveStore(
     core: core,
     records: [inboundSelectiveRecord(.task, "01966a3f-7c8b-7d4e-8f3a-000000000051", 5)])
 
@@ -114,30 +111,27 @@ func mobileInboundTaskReloadsTaskSurfacesNotHabits() async throws {
 }
 
 @MainActor
-@Test("selective domains invalidate view-owned task/list/habit query state")
+@Test("selective domains invalidate view-owned task/habit query state")
 func mobileInboundDomainsBumpViewInvalidationRevisions() async throws {
   let store = MobileStore(
     core: try await makeSeededInMemoryCore(), todayString: { "2026-05-23" },
     cloudSyncMode: .off)
 
   let taskBefore = store.taskWorkspaceRevision
-  let listBefore = store.listDetailRevision
   let habitBefore = store.habitDetailRevision
   await store.reloadInboundDomains([.tasks])
   #expect(store.taskWorkspaceRevision == taskBefore + 1)
-  #expect(store.listDetailRevision == listBefore + 1)
   #expect(store.habitDetailRevision == habitBefore)
 
   await store.reloadInboundDomains([.habits])
   #expect(store.taskWorkspaceRevision == taskBefore + 1)
-  #expect(store.listDetailRevision == listBefore + 1)
   #expect(store.habitDetailRevision == habitBefore + 1)
 }
 
 @MainActor
 @Test("post-mutation report adoption reloads a concurrent peer write into primary UI")
 func mobilePostMutationReportReloadsInboundPrimarySurface() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(
     core: core, todayString: { "2026-05-23" }, cloudSyncMode: .off)
   let deliveries = Mutex(0)
@@ -151,7 +145,6 @@ func mobilePostMutationReportReloadsInboundPrimarySurface() async throws {
   defer { NotificationCenter.default.removeObserver(token) }
   store.lastCloudSyncCycleReport = CloudSyncCycleReport(
     pushedRecordCount: 1, failedPushCount: 0, fetchedRecordCount: 0,
-    moreInboundComing: false,
     inbound: InboundApplyReport(applied: 1, appliedEntityTypes: [.habit]))
 
   // `publishMobileSyncSurfaces` calls this seam after its post-mutation cycle.
@@ -169,12 +162,12 @@ func mobilePostMutationReportReloadsInboundPrimarySurface() async throws {
 @MainActor
 @Test("an ordinary confirmed push does not reload unchanged local surfaces")
 func mobileOrdinaryOutboundConfirmationSkipsLocalReload() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(
     core: core, todayString: { "2026-05-23" }, cloudSyncMode: .off)
   store.lastCloudSyncCycleReport = CloudSyncCycleReport(
     pushedRecordCount: 1, failedPushCount: 0, fetchedRecordCount: 0,
-    moreInboundComing: false, inbound: InboundApplyReport())
+    inbound: InboundApplyReport())
 
   await store.reloadInboundSurfacesIfNeeded(after: .newData)
 
@@ -189,7 +182,7 @@ func mobileOrdinaryOutboundConfirmationSkipsLocalReload() async throws {
 func mobileInboundMemoryReloadPreservesDraft() async throws {
   let preview = try await makeSeededInMemoryCore()
   let entry = try await preview.upsertMemory(key: "remote-memory", content: "before")
-  let core = StubFocusCoreService(preview: preview)
+  let core = StubCoreService(preview: preview)
   let store = MobileStore(
     core: core, todayString: { "2026-05-23" }, cloudSyncMode: .off)
 

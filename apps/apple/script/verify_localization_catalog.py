@@ -17,6 +17,13 @@ key on. Those references are checked for existence against the catalog their
 `bundle:` argument names, exactly like the module-helper references — otherwise a
 string reached only through an App Intent could name a key the catalog does not
 carry and still pass (it renders in English regardless of the request locale).
+
+No catalog may carry English prose copied into a translation slot, except for
+the product and technology names in `IDENTICAL_TRANSLATION_ALLOWLIST`. The App
+Shortcuts phrase catalog (`LorvexSystemIntents/Resources/AppShortcuts.xcstrings`)
+is keyed by English phrase rather than referenced from Swift, so it is checked
+on its own: every phrase, source and translation, names the app exactly once,
+and every shipped language translates every phrase.
 """
 
 from __future__ import annotations
@@ -32,6 +39,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG_PATH = ROOT / "Sources" / "LorvexApple" / "Resources" / "Localizable.xcstrings"
+APP_SHORTCUTS_CATALOG_PATH = (
+    ROOT / "Sources" / "LorvexSystemIntents" / "Resources" / "AppShortcuts.xcstrings"
+)
+APP_NAME_TOKEN = "${applicationName}"
 DEFAULT_SOURCE_LANGUAGE = "en"
 SOURCE_LANGUAGE = DEFAULT_SOURCE_LANGUAGE
 SOURCE_ROOTS = [
@@ -71,18 +82,18 @@ MODULE_CATALOGS = [
      ]),
     ("CarPlayL10n", ROOT / "Sources" / "LorvexCarPlay" / "Resources" / "Localizable.xcstrings",
      [ROOT / "Sources" / "LorvexCarPlay"]),
+    ("CoreL10n", ROOT / "Sources" / "LorvexCore" / "Resources" / "Localizable.xcstrings",
+     [ROOT / "Sources" / "LorvexCore"]),
 ]
 CONFIG_ROOT = ROOT / "Config"
 INFO_PLIST_RESOURCE_TARGETS = {
     "LorvexMobileApp-Info.plist": "LorvexMobileApp",
-    "LorvexVisionApp-Info.plist": "LorvexVisionApp",
     "LorvexWatchApp-Info.plist": "LorvexWatchApp",
     "LorvexWatchComplication-Info.plist": "LorvexWatchComplication",
-    "LorvexWidgetExtension-Info.plist": "LorvexFocusWidgetExtension",
+    "LorvexWidgets-Info.plist": "LorvexWidgets",
     "LorvexFocusFilterExtension-Info.plist": "LorvexFocusFilterExtension",
 }
 REQUIRED_KEYS = {
-    "sidebar.section.plan",
     "sidebar.item.today",
     "sidebar.item.tasks",
     "sidebar.item.lists",
@@ -91,32 +102,33 @@ REQUIRED_KEYS = {
     "sidebar.item.reviews",
     "sidebar.item.memory",
     "sidebar.settings",
-    "today.empty.no_tasks_title",
-    "today.empty.no_tasks_description",
     "window.title.task_detail",
     "task_command.show_detail",
     "task_command.save",
-    "task_command.add_to_focus",
-    "task_command.remove_from_focus",
+    "task_command.start",
+    "task_command.pause",
     "task_command.defer_to_tomorrow",
     "task_command.complete",
     "task_command.reopen",
     "task_command.cancel",
     "app.command.refresh",
 }
-MODULE_REQUIRED_KEYS = {
-    "MobileL10n": {
-        # Retained for catalog compatibility until the Mobile catalog-cleanup
-        # checkpoint decides whether this currently unreferenced key ships.
-        "permissions.calendar",
-    },
-}
+# Per-helper keys that are required in a module catalog even though no source
+# references them through a helper/native lookup.
+MODULE_REQUIRED_KEYS: dict[str, set[str]] = {}
 
-# These are product names rather than translatable prose. Every shipped Mobile
-# locale intentionally presents the same CloudKit name.
-MOBILE_IDENTICAL_TRANSLATION_ALLOWLIST = {
+# Keys whose every translation is the English text by design: product and
+# technology names (Lorvex, CloudKit, Spotlight, EventKit) and file formats.
+IDENTICAL_TRANSLATION_ALLOWLIST = {
+    "calendar.event.source.lorvex",
+    "calendar.picker.lorvex_default",
+    "settings.diagnostics.spotlight",
     "settings.sync.backend.cloudkit",
-    "settings.sync.backend.record_plan",
+    "system.option.data_export_format.csv",
+    "system.option.data_export_format.json",
+    "system.option.provider_source.eventkit",
+    "system.focus_filter.title",
+    "widget.title.lorvex",
 }
 
 
@@ -703,6 +715,85 @@ def catalog_entry_failures(
     return failures
 
 
+CJK_NUMBER_UNIT_SPACE = re.compile(r"(?:%(?:\d+\$)?(?:lld|ld|lu|d|u)|\d) (?=[\u4e00-\u9fff])")
+
+
+def cjk_number_unit_spacing_failures(catalog: dict[str, object]) -> list[str]:
+    """Reject a breaking space between a number and the unit after it in
+    Chinese and Japanese localizations.
+
+    These scripts wrap between any two characters, so the ordinary space that
+    sets a number off from its unit or counter ("3 小时", "%lld 项") is also a
+    line break opportunity: a line can end on the number and the next start
+    with its unit. A no-break space (U+00A0) keeps the gap and binds the pair.
+    """
+    strings = catalog.get("strings")
+    if not isinstance(strings, dict):
+        return []
+
+    failures: list[str] = []
+    for key, value in strings.items():
+        localizations = value.get("localizations") if isinstance(value, dict) else None
+        if not isinstance(localizations, dict):
+            continue
+        for language, localization in localizations.items():
+            if not language.startswith(("zh", "ja")) or not isinstance(localization, dict):
+                continue
+            units = [localization.get("stringUnit")]
+            for variation in (localization.get("variations") or {}).values():
+                if isinstance(variation, dict):
+                    units.extend(
+                        case.get("stringUnit") for case in variation.values() if isinstance(case, dict)
+                    )
+            for unit in units:
+                text = unit.get("value") if isinstance(unit, dict) else None
+                match = CJK_NUMBER_UNIT_SPACE.search(text) if isinstance(text, str) else None
+                if match:
+                    failures.append(
+                        f"{key} {language} breaks between a number and its unit at "
+                        f"{match.group(0)!r}; use a no-break space (U+00A0)"
+                    )
+                    break
+    return failures
+
+
+STRAIGHT_APOSTROPHE = re.compile(r"[A-Za-z]'[A-Za-z]")
+
+
+def english_typographic_quote_failures(catalog: dict[str, object]) -> list[str]:
+    """Reject straight apostrophes and straight double quotes in English values.
+
+    English copy uses the typographic marks Apple's own interface text uses: an
+    apostrophe is ’ ("can’t", "today’s") and a quotation is “…” ("Delete
+    habit “%@”?"). A straight mark beside a curly one in the same list reads
+    as a typo.
+    """
+    strings = catalog.get("strings")
+    if not isinstance(strings, dict):
+        return []
+
+    failures: list[str] = []
+    for key, value in strings.items():
+        localizations = value.get("localizations") if isinstance(value, dict) else None
+        localization = localizations.get("en") if isinstance(localizations, dict) else None
+        if not isinstance(localization, dict):
+            continue
+        units = [localization.get("stringUnit")]
+        for variation in (localization.get("variations") or {}).values():
+            if isinstance(variation, dict):
+                units.extend(
+                    case.get("stringUnit") for case in variation.values() if isinstance(case, dict)
+                )
+        for unit in units:
+            text = unit.get("value") if isinstance(unit, dict) else None
+            if isinstance(text, str) and (STRAIGHT_APOSTROPHE.search(text) or '"' in text):
+                failures.append(
+                    f"{key} en uses a straight quote mark in {text!r}; use ’ or “…”"
+                )
+                break
+    return failures
+
+
 def copied_source_translation_failures(
     catalog: dict[str, object],
     languages: tuple[str, ...],
@@ -773,8 +864,14 @@ def copied_source_translation_failures(
                     else None
                 )
                 if not isinstance(target_plural, dict) or not target_plural:
-                    copied = False
-                    break
+                    # A language without plural forms may carry one plain
+                    # string; copying any English form into it is still a copy.
+                    target_unit = target.get("stringUnit") if isinstance(target, dict) else None
+                    target_text = target_unit.get("value") if isinstance(target_unit, dict) else None
+                    if target_text not in source_forms.values():
+                        copied = False
+                        break
+                    continue
                 for category, variant in target_plural.items():
                     unit = variant.get("stringUnit") if isinstance(variant, dict) else None
                     target_text = unit.get("value") if isinstance(unit, dict) else None
@@ -897,6 +994,46 @@ def copied_source_translation_failures(
             failures.append(
                 f"{key} copies source-language prose into every non-source localization"
             )
+    return failures
+
+
+def app_shortcut_phrase_failures(
+    catalog: dict[str, object],
+    languages: tuple[str, ...],
+) -> list[str]:
+    """Check the App Shortcuts phrase catalog, which Swift never references by key.
+
+    App Intents requires every phrase to name the app exactly once, through the
+    literal `${applicationName}` token, in the source phrase (the catalog key)
+    and in each translation. Every shipped language must translate every
+    phrase: an English phrase left in a translation slot is a voice trigger no
+    speaker of that language says.
+    """
+    strings = catalog.get("strings")
+    if not isinstance(strings, dict):
+        return ["AppShortcuts.xcstrings has no strings table"]
+    source_language = catalog_source_language(catalog)
+    failures: list[str] = []
+    for phrase, entry in strings.items():
+        if phrase.count(APP_NAME_TOKEN) != 1:
+            failures.append(f"App Shortcut phrase {phrase!r} must contain {APP_NAME_TOKEN} exactly once")
+        localizations = entry.get("localizations") if isinstance(entry, dict) else None
+        if not isinstance(localizations, dict):
+            localizations = {}
+        for language in languages:
+            if language == source_language:
+                continue
+            localization = localizations.get(language)
+            unit = localization.get("stringUnit") if isinstance(localization, dict) else None
+            value = unit.get("value") if isinstance(unit, dict) else None
+            if not isinstance(value, str) or not value.strip():
+                failures.append(f"App Shortcut phrase {phrase!r} has no {language} translation")
+            elif value == phrase:
+                failures.append(f"App Shortcut phrase {phrase!r} copies English into {language}")
+            elif value.count(APP_NAME_TOKEN) != 1:
+                failures.append(
+                    f"App Shortcut phrase {phrase!r} ({language}) must contain {APP_NAME_TOKEN} exactly once"
+                )
     return failures
 
 
@@ -1050,6 +1187,7 @@ MODULE_RESOURCE_BUNDLE_TOKENS = {
     "WidgetSupportL10n": {"WidgetSupportL10n.bundle"},
     "WidgetL10n": {"WidgetL10n.bundle"},
     "CarPlayL10n": {"CarPlayL10n.bundle"},
+    "CoreL10n": {"CoreL10n.bundle"},
 }
 APP_RESOURCE_BUNDLE_TOKENS = {"LorvexL10n.bundle"}
 
@@ -1065,6 +1203,7 @@ NATIVE_STRING_BUNDLE_TOKENS = {
     "WidgetL10n": {"WidgetL10n.bundle"},
     "WidgetSupportL10n": {"WidgetSupportL10n.bundle"},
     "CarPlayL10n": {"CarPlayL10n.bundle"},
+    "CoreL10n": {"CoreL10n.bundle"},
 }
 
 
@@ -1917,6 +2056,11 @@ def main(argv: list[str] | None = None) -> int:
         failures.extend(source_reference_failures(catalog))
         failures.extend(apple_native_bundle_qualification_failures(catalog))
         failures.extend(unreferenced_app_key_failures(catalog))
+        failures.extend(
+            copied_source_translation_failures(catalog, languages, IDENTICAL_TRANSLATION_ALLOWLIST)
+        )
+        failures.extend(cjk_number_unit_spacing_failures(catalog))
+        failures.extend(english_typographic_quote_failures(catalog))
 
     for helper, module_catalog, source_root in loaded_module_catalogs:
         failures.extend(catalog_structure_failures(module_catalog, source_language))
@@ -1931,18 +2075,23 @@ def main(argv: list[str] | None = None) -> int:
             failures.extend(
                 mobile_native_bundle_qualification_failures(module_catalog, source_root)
             )
-            failures.extend(
-                copied_source_translation_failures(
-                    module_catalog,
-                    languages,
-                    MOBILE_IDENTICAL_TRANSLATION_ALLOWLIST,
-                )
+        failures.extend(
+            copied_source_translation_failures(
+                module_catalog, languages, IDENTICAL_TRANSLATION_ALLOWLIST
             )
+        )
+        failures.extend(cjk_number_unit_spacing_failures(module_catalog))
+        failures.extend(english_typographic_quote_failures(module_catalog))
         failures.extend(unreferenced_module_key_failures(helper, module_catalog))
         module_counts.append(f"{len(catalog_keys(module_catalog))} {helper}")
 
     if catalog:
         failures.extend(default_value_equality_failures(catalog, loaded_module_catalogs))
+
+    app_shortcuts_catalog, app_shortcuts_load_failures = load_catalog(APP_SHORTCUTS_CATALOG_PATH)
+    failures.extend(app_shortcuts_load_failures)
+    if app_shortcuts_catalog:
+        failures.extend(app_shortcut_phrase_failures(app_shortcuts_catalog, languages))
 
     if args.write_bundle_localizations:
         updated = [

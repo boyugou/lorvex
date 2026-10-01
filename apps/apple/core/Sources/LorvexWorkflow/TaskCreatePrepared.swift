@@ -27,6 +27,7 @@ public struct PreparedTaskInsert: Sendable {
   public let recurrenceGroupId: String?
   public let canonicalOccurrenceDate: String?
   public let plannedDate: String?
+  public let plannedTime: Range<Int64>?
   public let availableFrom: String?
   public let version: String
   public let now: String
@@ -50,6 +51,7 @@ public struct PreparedTaskInsert: Sendable {
       recurrenceGroupId: recurrenceGroupId,
       canonicalOccurrenceDate: canonicalOccurrenceDate,
       plannedDate: plannedDate,
+      plannedTime: plannedTime,
       availableFrom: availableFrom)
     try TaskRepo.Write.createTask(db, params: params)
   }
@@ -170,6 +172,18 @@ public enum TaskCreatePrepared {
     let availableFrom: String? = try availableFromRaw.map {
       try TaskCreateDateParse.normalizeDueDateInputForConn(db, value: $0)
     }
+    let plannedTime: Range<Int64>?
+    switch (patchToOptional(input.plannedStartTime), patchToOptional(input.plannedEndTime)) {
+    case (nil, nil):
+      plannedTime = nil
+    case let (start?, end?):
+      guard plannedDate != nil else {
+        throw StoreError.validation(TaskPlannedTimeInput.missingDateMessage)
+      }
+      plannedTime = try TaskPlannedTimeInput.minutes(start: start, end: end)
+    default:
+      throw StoreError.validation(TaskPlannedTimeInput.unpairedMessage)
+    }
 
     let tagsNormalized = tags.map(normalizeTags) ?? []
     let version = hlc.nextVersionString()
@@ -211,6 +225,7 @@ public enum TaskCreatePrepared {
       recurrenceGroupId: recurrenceGroupId,
       canonicalOccurrenceDate: canonicalOccurrenceDate,
       plannedDate: plannedDate,
+      plannedTime: plannedTime,
       availableFrom: availableFrom,
       version: version,
       now: now)

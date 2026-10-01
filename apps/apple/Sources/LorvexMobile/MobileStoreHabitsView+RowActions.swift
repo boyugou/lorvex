@@ -15,7 +15,7 @@ extension MobileStoreHabitsView {
           String(localized: "habits.detail.reset", defaultValue: "Reset Today", table: "Localizable", bundle: MobileL10n.bundle),
           systemImage: "arrow.counterclockwise")
       }
-      .tint(.orange)
+      .tint(LorvexDesign.Palette.dueSoon)
       .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
     } else {
       Button {
@@ -25,7 +25,7 @@ extension MobileStoreHabitsView {
           String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
           systemImage: "checkmark.circle")
       }
-      .tint(.green)
+      .tint(LorvexDesign.Palette.done)
       .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
     }
   }
@@ -38,6 +38,18 @@ extension MobileStoreHabitsView {
       Label(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "pencil")
     }
     .tint(.accentColor)
+    .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+  }
+
+  /// Archives the habit: it leaves the catalog, Today, and reminders but keeps
+  /// its history, and the archived section below the catalog restores it.
+  /// Untinted, so the swipe button takes the system's neutral gray.
+  func habitArchiveAction(_ habit: LorvexHabit) -> some View {
+    Button {
+      Task { await store.setHabitArchived(habit, archived: true) }
+    } label: {
+      Label(MobileHabitArchiveCopy.archive, systemImage: "archivebox")
+    }
     .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
   }
 

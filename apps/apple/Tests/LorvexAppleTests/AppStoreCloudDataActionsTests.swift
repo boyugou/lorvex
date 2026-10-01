@@ -5,246 +5,153 @@ import LorvexCore
 import Testing
 
 @testable import LorvexApple
+@testable import LorvexCloudSync
 
-/// macOS store-level state transitions around "Delete Lorvex iCloud data
-/// everywhere": a successful deletion turns sync off (persisted + runtime) and
-/// records the re-opt-in state; a post-barrier cleanup failure keeps the same
-/// fail-closed state for retry; and explicit re-enable lifts only the deletion
-/// pause after publishing a fresh complete generation.
+/// macOS store-level state transitions around "Delete iCloud Data": a
+/// confirmed deletion turns sync off (persisted and runtime) and records the
+/// re-opt-in pause; an unconfirmed one leaves sync as it was; and turning sync
+/// back on lifts only the deletion pause, never an account-change pause, and
+/// never on the strength of a request made before a later deletion.
 struct AppStoreCloudDataActionsTests {
-
-  private actor DeletionCleanupGate {
-    private var entered = false
-    private var entryWaiters: [CheckedContinuation<Void, Never>] = []
-    private var releaseContinuation: CheckedContinuation<Void, Never>?
-
-    func enterAndWaitForRelease() async {
-      guard !entered else { return }
-      entered = true
-      for waiter in entryWaiters { waiter.resume() }
-      entryWaiters.removeAll()
-      await withCheckedContinuation { releaseContinuation = $0 }
-    }
-
-    func waitUntilEntered() async {
-      if entered { return }
-      await withCheckedContinuation { entryWaiters.append($0) }
-    }
-
-    func release() {
-      releaseContinuation?.resume()
-      releaseContinuation = nil
-    }
-  }
-
-  private static let zoneID = CKRecordZone.ID(
-    zoneName: CloudSyncZoneConstants.zoneName, ownerName: CKCurrentUserDefaultName)
-
   @MainActor
   private func makeFixture(
-    pusher: RecordingRecordPusher = RecordingRecordPusher(),
-    pauseStore: RecordingCloudSyncPauseStore = RecordingCloudSyncPauseStore(),
-    identityStore: RecordingAccountIdentityStore = RecordingAccountIdentityStore(),
-    core: (any LorvexCoreServicing)? = nil,
-    storeMode: CloudSyncMode = .live
-  ) async throws -> (store: AppStore, settings: AppSettingsStore, suiteName: String) {
-    let coordinator = CloudSyncEngineCoordinator(
-      accountChecker: StubAccountStatusChecker(availability: .available),
-      pusher: pusher,
-      fetcher: RecordingPusherRemoteChangeFetcher(pusher: pusher),
-      // A confirmed account identity so the explicit re-enable path can adopt and
-      // lift the pause; adoption fails closed on a nil identity (that path is
-      // covered by the CloudSync account-adopt tests).
-      accountIdentifier: StubAccountIdentifier(identifier: "cloud-data-test-account"),
-      accountIdentityStore: identityStore,
-      accountPauseStore: pauseStore)
-    let suiteName = "LorvexAppleTests.cloudData.\(UUID().uuidString)"
-    let defaults = UserDefaults(suiteName: suiteName)!
-    let settings = AppSettingsStore(defaults: defaults, environment: [:])
-    settings.cloudSyncMode = storeMode
-    let resolvedCore: any LorvexCoreServicing
-    if let core {
-      resolvedCore = core
-    } else {
-      resolvedCore = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+    storeMode: CloudSyncMode = .live,
+    initialPause: CloudSyncPauseReason? = nil,
+    currentAccount: String = "account-a"
+  ) async throws -> (store: AppStore, settings: AppSettingsStore, sync: TestCloudSync, suite: String) {
+    let core = try makeInMemoryCore()
+    let sync = TestCloudSync(store: core, account: currentAccount)
+    if let initialPause {
+      await sync.identities.saveLastAccountIdentifier("account-a")
+      await sync.pause.savePauseReason(initialPause)
     }
+    let suite = "LorvexAppleTests.cloudData.\(UUID().uuidString)"
+    let settings = AppSettingsStore(
+      defaults: try #require(UserDefaults(suiteName: suite)), environment: [:])
+    settings.cloudSyncMode = storeMode
     let store = AppStore(
-      core: resolvedCore,
-      cloudSyncMode: storeMode,
-      cloudSyncCoordinator: storeMode == .live ? coordinator : nil,
-      cloudDataMaintenanceCoordinator: coordinator)
-    return (store, settings, suiteName)
+      core: core, cloudSyncMode: storeMode, cloudSyncController: sync.controller)
+    if storeMode == .live { _ = await sync.controller.start() }
+    return (store, settings, sync, suite)
   }
 
   @MainActor
   @Test
   func deleteCloudDataEverywhereTurnsSyncOffAndRecordsReoptInState() async throws {
-    let pusher = RecordingRecordPusher()
-    let pauseStore = RecordingCloudSyncPauseStore()
-    let (store, settings, suiteName) = try await makeFixture(pusher: pusher, pauseStore: pauseStore)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
+    let (store, settings, sync, suite) = try await makeFixture()
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+    sync.confirmZoneDeletions()
 
     let errorMessage = await store.deleteCloudDataEverywhere(settings: settings)
 
     #expect(errorMessage == nil)
-    #expect(await pusher.deleteZoneCallCount == 1)
+    #expect(try sync.engine.queuedZoneDeletes() == [CloudSyncController.zoneName])
     #expect(settings.cloudSyncMode == .off, "the persisted mode flips off")
-    #expect(store.cloudSyncMode == .off, "the runtime mode halts cycles immediately")
-    #expect(await pauseStore.reason == .userDeletedZone)
+    #expect(store.cloudSyncMode == .off, "the runtime mode stops passes immediately")
+    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(store.cloudSyncPauseReason == .userDeletedZone)
   }
 
   @MainActor
   @Test
-  func cleanupFailureTurnsSyncOffAndKeepsDeletionBarrierForRetry() async throws {
-    let pusher = RecordingRecordPusher(deleteZoneError: CKError(.networkUnavailable))
-    let pauseStore = RecordingCloudSyncPauseStore()
-    let (store, settings, suiteName) = try await makeFixture(pusher: pusher, pauseStore: pauseStore)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
+  func deletionWorksWithSyncOff() async throws {
+    let (store, settings, sync, suite) = try await makeFixture(storeMode: .off)
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+    sync.confirmZoneDeletions()
+
+    #expect(await store.deleteCloudDataEverywhere(settings: settings) == nil)
+    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+  }
+
+  @MainActor
+  @Test
+  func anUnconfirmedDeletionReportsAnErrorAndLeavesSyncAsItWas() async throws {
+    let (store, settings, sync, suite) = try await makeFixture()
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+    // The zone exists, but CloudKit never confirms deleting it.
+    try sync.engine.zones = [TestCloudSync.lorvexZone]
 
     let errorMessage = await store.deleteCloudDataEverywhere(settings: settings)
 
     #expect(errorMessage != nil)
-    #expect(settings.cloudSyncMode == .off)
-    #expect(store.cloudSyncMode == .off)
-    #expect(await pauseStore.reason == .userDeletedZone)
-    #expect(store.cloudSyncPauseReason == .userDeletedZone)
+    #expect(settings.cloudSyncMode == .live)
+    #expect(store.cloudSyncMode == .live)
+    #expect(try await sync.pause.loadPauseReason() == nil)
+    #expect(store.cloudSyncPauseReason == nil)
   }
 
   @MainActor
   @Test
-  func pendingDeletionCleanupDoesNotStartDuringDataImport() async throws {
-    let pusher = RecordingRecordPusher()
-    let (store, _, suiteName) = try await makeFixture(pusher: pusher)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
-    store.isDataImportRunning = true
+  func explicitReenableLiftsTheDeletionPause() async throws {
+    let (store, _, sync, suite) = try await makeFixture(
+      storeMode: .off, initialPause: .userDeletedZone)
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
 
-    await store.retryPendingCloudDataDeletionCleanup()
+    let request = try #require(store.makeCloudDeletionReenableRequest())
+    await store.liftCloudDeletionPauseForExplicitReenable(request: request)
 
-    #expect(await pusher.allRecordZonesCallCount == 0)
-    #expect(!store.isCloudDeletionMaintenanceRunning)
-  }
-
-  @MainActor
-  @Test
-  func explicitReenableLiftsDeletionPauseAfterPublishingFreshGeneration() async throws {
-    let core = try makeInMemoryCore()
-    let pusher = RecordingRecordPusher()
-    await pusher.setGenerationState(.deleted(
-      deletionGeneration: 2, retiredZoneNames: [], modifiedAt: nil))
-    let pauseStore = RecordingCloudSyncPauseStore(initial: .userDeletedZone)
-    let identityStore = RecordingAccountIdentityStore(initial: "cloud-data-test-account")
-    let (store, _, suiteName) = try await makeFixture(
-      pusher: pusher, pauseStore: pauseStore, identityStore: identityStore,
-      core: core, storeMode: .off)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
-
-    await store.liftCloudDeletionPauseForExplicitReenable()
-
-    #expect(await pauseStore.reason == nil, "flipping sync back on is the explicit re-opt-in")
+    #expect(try await sync.pause.loadPauseReason() == nil, "turning sync back on is the re-opt-in")
     #expect(store.cloudSyncPauseReason == nil)
   }
 
   @MainActor
   @Test
   func explicitReenableLeavesAccountChangedPauseForItsOwnConsentFlow() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-    let pauseStore = RecordingCloudSyncPauseStore(initial: .accountChanged)
-    let (store, _, suiteName) = try await makeFixture(pauseStore: pauseStore, core: core, storeMode: .off)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
+    let (store, _, sync, suite) = try await makeFixture(
+      storeMode: .off, initialPause: .accountChanged)
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
 
-    await store.liftCloudDeletionPauseForExplicitReenable()
+    let request = try #require(store.makeCloudDeletionReenableRequest())
+    await store.liftCloudDeletionPauseForExplicitReenable(request: request)
 
     #expect(
-      await pauseStore.reason == .accountChanged,
+      try await sync.pause.loadPauseReason() == .accountChanged,
       "an account-switch pause must not be lifted by a mode toggle")
-    #expect(core.fullResyncBackfillCallCount == 0)
   }
 
   @MainActor
   @Test
-  func reenableRequestedDuringDeletionCannotRecreateCloudDataAfterSuccess() async throws {
-    let gate = DeletionCleanupGate()
-    let pusher = RecordingRecordPusher(
-      allRecordZonesHook: { await gate.enterAndWaitForRelease() })
-    let pauseStore = RecordingCloudSyncPauseStore()
-    let (store, settings, suiteName) = try await makeFixture(
-      pusher: pusher, pauseStore: pauseStore, core: try makeInMemoryCore(),
-      storeMode: .off)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
-
-    let deletion = Task { await store.deleteCloudDataEverywhere(settings: settings) }
-    await gate.waitUntilEntered()
-    let prematureReenable = Task {
-      await store.liftCloudDeletionPauseForExplicitReenable()
-    }
-    await Task.yield()
-    await gate.release()
-
-    #expect(await deletion.value == nil)
-    await prematureReenable.value
-    guard case .deleted? = try await pusher.currentZoneGenerationState() else {
-      Issue.record("a mode toggle made before deletion completed must not rebuild the cloud zone")
-      return
-    }
-    #expect(await pauseStore.reason == .userDeletedZone)
-    #expect(settings.cloudSyncMode == .off)
-    #expect(store.cloudSyncMode == .off)
+  func noReenableRequestCanBeMadeWhileADeletionRuns() async throws {
+    let (store, _, _, suite) = try await makeFixture(storeMode: .off)
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+    store.isCloudDataDeletionRunning = true
+    #expect(store.makeCloudDeletionReenableRequest() == nil)
   }
 
   @MainActor
   @Test
   func reenableRequestCapturedBeforeDeletionCannotRunAfterDeletion() async throws {
-    let gate = DeletionCleanupGate()
-    let pusher = RecordingRecordPusher(
-      allRecordZonesHook: { await gate.enterAndWaitForRelease() })
-    let pauseStore = RecordingCloudSyncPauseStore(initial: .userDeletedZone)
-    await pusher.setGenerationState(
-      .deleted(deletionGeneration: 2, retiredZoneNames: [], modifiedAt: nil))
-    let (store, settings, suiteName) = try await makeFixture(
-      pusher: pusher, pauseStore: pauseStore, core: try makeInMemoryCore(),
-      storeMode: .off)
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
+    let (store, settings, sync, suite) = try await makeFixture(storeMode: .off)
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+    sync.confirmZoneDeletions()
 
-    // Model Settings capturing the user's toggle before its Task is scheduled.
-    // A later accepted deletion supersedes that older intent even when the Task
-    // does not execute until the deletion has reached its durable terminal state.
+    // Settings captures the user's toggle before its Task is scheduled; a
+    // deletion accepted afterwards supersedes that older intent.
     let staleRequest = try #require(store.makeCloudDeletionReenableRequest())
-    let deletion = Task { await store.deleteCloudDataEverywhere(settings: settings) }
-    await gate.waitUntilEntered()
-    await gate.release()
-    #expect(await deletion.value == nil)
+    #expect(await store.deleteCloudDataEverywhere(settings: settings) == nil)
 
     await store.liftCloudDeletionPauseForExplicitReenable(request: staleRequest)
 
-    guard case .deleted? = try await pusher.currentZoneGenerationState() else {
-      Issue.record("a re-enable intent older than deletion must not rebuild the cloud zone")
-      return
-    }
-    #expect(await pauseStore.reason == .userDeletedZone)
+    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(settings.cloudSyncMode == .off)
     #expect(store.cloudSyncMode == .off)
   }
 
   @MainActor
   @Test
-  func resumeRequestCapturedBeforeDeletionCannotAdoptTheNewDeletedZone() async throws {
-    let pusher = RecordingRecordPusher()
-    let pauseStore = RecordingCloudSyncPauseStore(initial: .accountChanged)
-    let (store, settings, suiteName) = try await makeFixture(
-      pusher: pusher, pauseStore: pauseStore, core: try makeInMemoryCore())
-    defer { UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName) }
+  func resumeRequestCapturedBeforeDeletionCannotAdoptAfterIt() async throws {
+    // The signed-in account differs from the bound one, so the pause stands.
+    let (store, settings, sync, suite) = try await makeFixture(
+      initialPause: .accountChanged, currentAccount: "account-b")
+    defer { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
+    sync.confirmZoneDeletions()
     await store.refreshCloudSyncPauseReason()
     let staleRequest = try #require(await store.makeCloudSyncResumeRequest())
 
     #expect(await store.deleteCloudDataEverywhere(settings: settings) == nil)
     await store.adoptCurrentCloudAccountAndResumeSync(request: staleRequest)
 
-    guard case .deleted? = try await pusher.currentZoneGenerationState() else {
-      Issue.record("a resume click older than deletion must not recreate the cloud zone")
-      return
-    }
-    #expect(await pauseStore.reason == .userDeletedZone)
+    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(store.cloudSyncPauseReason == .userDeletedZone)
   }
 }

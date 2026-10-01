@@ -39,6 +39,11 @@ import LorvexSystemIntents
     /// open with nothing shown. A `nil` message lets the store apply its own
     /// localized fallback.
     nonisolated private static func postNotificationActionError(_ message: String?) {
+      // Record the durable breadcrumb BEFORE the in-process post: at a cold
+      // background launch no observer is live, so the post vanishes and the store
+      // drains this on the next foreground. Recording first means a live observer
+      // (warm case) can safely clear it after surfacing, showing it exactly once.
+      MobileNotificationActionErrorHandoff().record(message: message)
       var userInfo: [AnyHashable: Any] = [:]
       if let message { userInfo["errorMessage"] = message }
       NotificationCenter.default.post(
@@ -81,18 +86,12 @@ import LorvexSystemIntents
       completionHandler(true)
     }
 
-    /// Handles CloudKit silent remote notifications from the private-database
-    /// subscription. When the SwiftUI store is available, the delegate runs a
-    /// full refresh when the application is active; a foreground callback must
-    /// fan out newly applied data to visible views, widgets, reminders, and the
-    /// badge. Background/inactive delivery instead runs the bounded inbound
-    /// drain (`drainCloudSyncForBackgroundPush()`) inside Apple's silent-push
-    /// budget and leaves a durable fan-out handoff for the next foreground pass.
-    /// If launch has not attached the store yet, it persists a pending-sync
-    /// handoff (`MobileCloudSyncPushHandoff`) that store attachment or the next
-    /// foreground refresh consumes, posts the notification for any
-    /// already-started observer, and reports `.noData` honestly — no drain ran
-    /// in this wake.
+    /// Handles Lorvex's CloudKit silent pushes. The sync engine fetches on its
+    /// own when one arrives; this keeps the app awake for that work within the
+    /// push budget. An active app runs the full refresh so newly applied data
+    /// reaches the visible views, widgets, reminders, and badge; a background
+    /// wake runs only the sync pass. Before launch attaches the store, the push
+    /// is left to the engine, which starts with the store and fetches then.
     func application(
       _ application: UIApplication,
       didReceiveRemoteNotification userInfo: [AnyHashable: Any],
@@ -105,16 +104,15 @@ import LorvexSystemIntents
       }
       Task { @MainActor [weak self] in
         guard let store = self?.store else {
-          // Without the persisted handoff this push could vanish: the posted
-          // notification has no observer until the root view's `.task` runs,
-          // and a cold background launch may never build the UI at all.
-          MobileCloudSyncPushHandoff().recordPendingPush()
-          NotificationCenter.default.post(name: .lorvexCloudKitRemoteChange, object: nil)
           completionHandler(.noData)
           return
         }
-        let result = await store.handleCloudKitPush(
-          applicationIsActive: application.applicationState == .active)
+        // A silent push is delivered to a suspended app as readily as to an
+        // active one, and the drain below writes to the App Group database.
+        let result = await BackgroundDatabaseWork.run {
+          await store.handleCloudKitPush(
+            applicationIsActive: application.applicationState == .active)
+        }
         completionHandler(Self.backgroundFetchResult(for: result))
       }
     }

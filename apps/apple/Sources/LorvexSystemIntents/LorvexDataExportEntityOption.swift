@@ -16,8 +16,7 @@ enum LorvexDataExportEntityOption: String, AppEnum {
   case habits
   case calendarEvents
   case dailyReviews
-  case currentFocus
-  case focusSchedules
+  case dailyBriefings
   case taskCalendarEventLinks
   case memory
   case preferences
@@ -32,8 +31,7 @@ enum LorvexDataExportEntityOption: String, AppEnum {
     case .habits: .habits
     case .calendarEvents: .calendarEvents
     case .dailyReviews: .dailyReviews
-    case .currentFocus: .currentFocus
-    case .focusSchedules: .focusSchedules
+    case .dailyBriefings: .dailyBriefings
     case .taskCalendarEventLinks: .taskCalendarEventLinks
     case .memory: .memory
     case .preferences: .preferences
@@ -53,9 +51,8 @@ enum LorvexDataExportEntityOption: String, AppEnum {
     .habits: .init(title: LocalizedStringResource("system.option.data_entity.habits", defaultValue: "Habits", table: "Localizable", bundle: SystemL10n.bundle)),
     .calendarEvents: .init(title: LocalizedStringResource("system.option.data_entity.calendar_events", defaultValue: "Calendar Events", table: "Localizable", bundle: SystemL10n.bundle)),
     .dailyReviews: .init(title: LocalizedStringResource("system.option.data_entity.daily_reviews", defaultValue: "Daily Reviews", table: "Localizable", bundle: SystemL10n.bundle)),
-    .currentFocus: .init(title: LocalizedStringResource("system.option.data_entity.current_focus", defaultValue: "Current Focus", table: "Localizable", bundle: SystemL10n.bundle)),
-    .focusSchedules: .init(title: LocalizedStringResource("system.option.data_entity.focus_schedules", defaultValue: "Focus Schedules", table: "Localizable", bundle: SystemL10n.bundle)),
-    .taskCalendarEventLinks: .init(title: LocalizedStringResource("system.option.data_entity.task_calendar_event_links", defaultValue: "Task Calendar Links", table: "Localizable", bundle: SystemL10n.bundle)),
+    .dailyBriefings: .init(title: LocalizedStringResource("system.option.data_entity.daily_briefings", defaultValue: "Daily Briefings", table: "Localizable", bundle: SystemL10n.bundle)),
+    .taskCalendarEventLinks: .init(title: LocalizedStringResource("system.option.data_entity.task_calendar_event_links", defaultValue: "Task–Event Links", table: "Localizable", bundle: SystemL10n.bundle)),
     .memory: .init(title: LocalizedStringResource("system.option.data_entity.memory", defaultValue: "Memory", table: "Localizable", bundle: SystemL10n.bundle)),
     .preferences: .init(title: LocalizedStringResource("system.option.data_entity.preferences", defaultValue: "Preferences", table: "Localizable", bundle: SystemL10n.bundle)),
   ]

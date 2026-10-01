@@ -1,144 +1,214 @@
 import LorvexCore
 import SwiftUI
 
-/// Today's calendar agenda — the day's fixed commitments (Lorvex events plus
-/// the mirrored EventKit external calendar), shown at the top of Today as the
-/// frame the rest of the day fills in around.
+/// The top of Today's main column: the day on the clock, under a "Schedule"
+/// label. Calendar events and timed tasks share one time-ordered list with a
+/// line where the clock sits, so what comes next is answered by reading down.
 ///
-/// This is the "no focus plan yet" state. Once a focus schedule is proposed or
-/// saved, these same events are woven into ``FocusScheduleSection`` as `event`
-/// blocks, so Today shows this standalone agenda only while no focus timeline is
-/// present — never both, so an event is never listed twice.
+/// A timed task is the same row it is everywhere (``TodayTaskRow``), with its
+/// time leading the metadata, so it keeps its circle, hover Start and Defer,
+/// selection, and chips; the column's task list below holds only the tasks
+/// without a time, so every task appears once. An event row
+/// (``TodayEventRow``) puts a bar in its calendar's color where a task has
+/// its circle, because an event is not the user's to finish.
+///
+/// The past rows that open the day (finished meetings and finished tasks,
+/// ``LorvexTodayTimeline/earlierFold(_:)``) fold behind an "N earlier" line;
+/// an unfinished task whose time passed is never past, so it stays in view.
+/// Suggested times the user is deciding on stand above the list, which then
+/// reads "Current Schedule".
 struct TodayScheduleSection: View {
-  /// Today's events, already filtered to the day and agenda-ordered by
-  /// ``CalendarTimelineSnapshot/events(on:)``.
-  let events: [CalendarTimelineEvent]
+  @Bindable var store: AppStore
+  let rows: [LorvexTodayTimelineItem]
+  let nowMinutes: Int?
+  /// Today's list entries by task id, for the chips a row carries.
+  let items: [LorvexTask.ID: LorvexCalmToday.Item]
+  @Environment(\.undoManager) private var undoManager
+
+  @State private var showsPast = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      WorkspaceTaskSectionHeader(
-        title: String(
-          localized: "today.section.schedule", defaultValue: "Schedule", table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        count: events.count,
-        systemImage: "calendar.day.timeline.left",
-        tint: .secondary,
-        topSpacing: LorvexDesign.Spacing.s
-      )
-      .padding(.horizontal, LorvexDesign.Spacing.l)
-
-      VStack(spacing: 0) {
-        ForEach(events) { event in
-          TodayScheduleEventRow(event: event)
+      if let proposal = store.proposedDayTimes {
+        TodaySuggestedTimesSection(
+          proposal: proposal, dayRows: rows,
+          accept: { Task { await store.acceptSuggestedDayTimes(undoManager: undoManager) } },
+          dismiss: { store.dismissSuggestedDayTimes() },
+          moveUnscheduledToTomorrow: { Task { await store.moveUnscheduledSuggestionToTomorrow() } }
+        )
+        .padding(.bottom, LorvexDesign.Spacing.m)
+        .transition(.opacity)
+      }
+      TodayColumnLabel(
+        title: store.proposedDayTimes == nil ? TodayCalmCopy.scheduleTitle : TodayCalmCopy.currentScheduleTitle)
+      let fold = LorvexTodayTimeline.earlierFold(rows)
+      rowViews(rows[..<fold.lowerBound])
+      if !fold.isEmpty {
+        pastToggle(count: fold.count)
+        if showsPast {
+          rowViews(rows[fold])
         }
       }
-      .padding(.horizontal, LorvexDesign.Spacing.m)
-      .padding(.vertical, LorvexDesign.Spacing.s)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(
-        .quaternary.opacity(0.08), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-      )
-      .overlay {
-        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-          .stroke(.separator.opacity(0.18), lineWidth: 0.5)
-      }
-      .padding(.horizontal, LorvexDesign.Spacing.m)
-      .accessibilityIdentifier("today.schedule.panel")
+      rowViews(rows[fold.upperBound...])
     }
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("today.schedule")
+  }
+
+  private func rowViews(_ slice: ArraySlice<LorvexTodayTimelineItem>) -> some View {
+    ForEach(slice) { row in
+      rowView(row)
+    }
+  }
+
+  @ViewBuilder
+  private func rowView(_ row: LorvexTodayTimelineItem) -> some View {
+    switch row.kind {
+    case .task(let task):
+      let isRunning = task.status.isActionable && Self.contains(row, nowMinutes)
+      TodayTaskRow(
+        task: task, store: store, isBlocked: store.isBlocked(task),
+        timeLabel: timeLabel(row, isRunning: isRunning),
+        timeIsRunning: isRunning,
+        chips: items[task.id].map(TodayColumn.chips(for:)) ?? [])
+    case .event(let event):
+      TodayEventRow(
+        event: event,
+        timeLabel: row.startMinutes == nil
+          ? TodayCalmCopy.allDay : TodayCalmCopy.timeRange(start: row.startMinutes ?? 0, end: row.endMinutes),
+        isPast: row.isPast)
+    case .now:
+      TodayNowLine(minutes: row.startMinutes ?? 0)
+    }
+  }
+
+  /// A running time reads "Until 12:30 PM", since its end is what matters
+  /// while it runs; any other time reads as its range.
+  private func timeLabel(_ row: LorvexTodayTimelineItem, isRunning: Bool) -> String? {
+    guard let start = row.startMinutes else { return nil }
+    if isRunning, let end = row.endMinutes { return TodayCalmCopy.untilLabel(end: end) }
+    return TodayCalmCopy.timeRange(start: start, end: row.endMinutes)
+  }
+
+  private static func contains(_ row: LorvexTodayTimelineItem, _ nowMinutes: Int?) -> Bool {
+    guard let nowMinutes, let start = row.startMinutes, let end = row.endMinutes else { return false }
+    return (start..<end).contains(nowMinutes)
+  }
+
+  private func pastToggle(count: Int) -> some View {
+    Button {
+      withAnimation(.snappy(duration: 0.18)) { showsPast.toggle() }
+    } label: {
+      HStack(spacing: LorvexDesign.Spacing.m) {
+        Image(systemName: "chevron.right")
+          .imageScale(.small)
+          .rotationEffect(.degrees(showsPast ? 90 : 0))
+          .frame(width: 24)
+        Text(
+          String(
+            format: String(
+              localized: "today.schedule.earlier_count", defaultValue: "%lld earlier",
+              table: "Localizable", bundle: LorvexL10n.bundle),
+            count))
+        Spacer(minLength: 0)
+      }
+      .font(LorvexDesign.Typography.secondaryText)
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, LorvexDesign.Spacing.s)
+      .padding(.vertical, LorvexDesign.Spacing.xs)
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityIdentifier("today.schedule.earlier.toggle")
   }
 }
 
-private struct TodayScheduleEventRow: View {
+/// A calendar event in Today's schedule, laid out like a task row: a bar in
+/// the calendar's color where a task has its circle, the title, and the time
+/// with the location under it. A past event quiets its title and fades its
+/// bar.
+struct TodayEventRow: View {
   let event: CalendarTimelineEvent
+  let timeLabel: String
+  let isPast: Bool
 
   var body: some View {
-    HStack(spacing: 12) {
-      Text(timeLabel)
-        .font(LorvexDesign.Typography.tertiaryText.monospacedDigit().weight(.medium))
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(.quaternary, in: Capsule())
-        .frame(minWidth: 52)
-        .accessibilityLabel(timeAccessibilityLabel)
-
-      Image(systemName: event.allDay ? "sun.max" : "calendar")
-        .foregroundStyle(.secondary)
-        .frame(width: 18)
+    HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
+      Capsule()
+        .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
+        .frame(width: 4, height: 18)
+        .opacity(isPast ? LorvexDesign.Palette.pastMarkOpacity : 1)
+        .frame(width: 24, height: 24)
         .accessibilityHidden(true)
-
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(event.title)
-          .lineLimit(1)
-        if let subtitle {
-          Text(subtitle)
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
+          .font(LorvexDesign.Typography.primaryText)
+          .foregroundStyle(isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+          .lineLimit(2)
+        HStack(spacing: LorvexDesign.Spacing.sm) {
+          HStack(spacing: LorvexDesign.Spacing.xxs) {
+            Image(systemName: "clock").accessibilityHidden(true)
+            Text(timeLabel).monospacedDigit()
+          }
+          if let location = event.location?.trimmingCharacters(in: .whitespacesAndNewlines),
+            !location.isEmpty
+          {
+            Text("·").foregroundStyle(.tertiary)
+            Text(location).lineLimit(1)
+          }
         }
+        .font(LorvexDesign.Typography.secondaryText)
+        .foregroundStyle(.secondary)
       }
-      Spacer(minLength: 0)
-
-      if event.isRecurring || event.supportsScopedMutation {
-        Image(systemName: "repeat")
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.tertiary)
-          .accessibilityLabel(
-            String(
-              localized: "calendar.repeating_event.a11y", defaultValue: "Repeating event",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle))
-      }
+      Spacer(minLength: LorvexDesign.Spacing.s)
     }
-    .padding(.vertical, 3)
+    .padding(.vertical, LorvexDesign.Spacing.s)
+    .padding(.horizontal, LorvexDesign.Spacing.s)
     .accessibilityElement(children: .combine)
+    .accessibilityIdentifier("today.schedule.event.\(event.id)")
   }
+}
 
-  /// The leading time capsule: "All day" for all-day events, otherwise the
-  /// start time (the end time rides in the subtitle to keep the capsule narrow).
-  private var timeLabel: String {
-    if event.allDay {
-      return String(
-        localized: "calendar.all_day_short", defaultValue: "All day", table: "Localizable",
-        bundle: LorvexL10n.bundle)
+/// Where the clock sits in Today's schedule: a dot in the circle column, the
+/// time, and a rule across the column, in the now color.
+struct TodayNowLine: View {
+  let minutes: Int
+
+  var body: some View {
+    HStack(spacing: LorvexDesign.Spacing.m) {
+      Circle()
+        .fill(LorvexDesign.Palette.nowIndicator)
+        .frame(width: 8, height: 8)
+        .frame(width: 24)
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        Text(lorvexClockTimeLabel(minutes: minutes))
+          .font(LorvexDesign.Typography.tertiaryText.monospacedDigit().weight(.semibold))
+          .foregroundStyle(LorvexDesign.Palette.nowIndicator)
+        Rectangle()
+          .fill(LorvexDesign.Palette.nowIndicator)
+          .frame(height: 1)
+      }
     }
-    return event.startTime.map(lorvexClockTimeLabel)
-      ?? String(
-        localized: "calendar.time_unset_short", defaultValue: "—",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
+    .padding(.horizontal, LorvexDesign.Spacing.s)
+    .padding(.vertical, LorvexDesign.Spacing.xxs)
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel(
+      String(
+        localized: "today.schedule.now.a11y", defaultValue: "Current time", table: "Localizable",
+        bundle: LorvexL10n.bundle))
+    .accessibilityValue(lorvexClockTimeLabel(minutes: minutes))
+    .accessibilityIdentifier("today.schedule.now")
   }
+}
 
-  /// The end time and location, joined — the calm detail under the title. Nil
-  /// for an all-day event with no location, so the row stays a clean title.
-  private var subtitle: String? {
-    var parts: [String] = []
-    if !event.allDay, let end = event.endTime {
-      parts.append(
-        String(
-          format: String(
-            localized: "today.schedule.until", defaultValue: "until %@", table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          lorvexClockTimeLabel(end)))
-    }
-    if let location = event.location, !location.isEmpty { parts.append(location) }
-    return parts.isEmpty ? nil : parts.joined(separator: " · ")
-  }
+/// A section label in Today's main column ("Schedule", "Tasks"), inset to
+/// line up with the rows' circles.
+struct TodayColumnLabel: View {
+  let title: String
 
-  private var timeAccessibilityLabel: String {
-    if event.allDay {
-      return String(
-        localized: "calendar.all_day", defaultValue: "all day", table: "Localizable",
-        bundle: LorvexL10n.bundle)
-    }
-    if let start = event.startTime, let end = event.endTime {
-      return String(
-        format: String(
-          localized: "focus.schedule.block.time_accessibility", defaultValue: "%@ to %@",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        lorvexClockTimeLabel(start), lorvexClockTimeLabel(end))
-    }
-    return event.startTime.map(lorvexClockTimeLabel) ?? ""
+  var body: some View {
+    LorvexPageLabel(title)
+      .padding(.horizontal, LorvexDesign.Spacing.s)
+      .padding(.bottom, LorvexDesign.Spacing.xxs)
   }
 }

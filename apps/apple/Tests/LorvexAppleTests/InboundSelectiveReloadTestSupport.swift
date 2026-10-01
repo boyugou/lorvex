@@ -6,11 +6,12 @@ import LorvexSync
 
 // Shared fixtures for the dirty-domain reload-gating tests (macOS + iOS): build a
 // well-formed inbound CKRecord of a chosen entity kind so a real coordinator
-// decodes and atomically commits it through the backing in-memory core's current
-// traversal protocol. The resulting real apply report drives selective reload.
+// decodes and atomically commits it through the backing in-memory core's
+// `CloudSyncEngineStore` apply path. The resulting real apply report drives
+// selective reload.
 
 let inboundSelectiveZoneID = CKRecordZone.ID(
-  zoneName: CloudSyncZoneConstants.zoneName, ownerName: CKCurrentUserDefaultName)
+  zoneName: CloudSyncController.zoneName, ownerName: CKCurrentUserDefaultName)
 
 func inboundSelectiveEnvelope(_ type: EntityKind, _ id: String, _ seq: Int) -> SyncEnvelope {
   let version = try! Hlc.parse("171123456789\(seq)_0000_a1b2c3d4a1b2c3d4")
@@ -37,6 +38,8 @@ func inboundSelectiveEnvelope(_ type: EntityKind, _ id: String, _ seq: Int) -> S
       "lifecycle_version": .string(version.description),
       "list_id": .string("inbox"),
       "planned_date": .null,
+      "planned_end_minutes": .null,
+      "planned_start_minutes": .null,
       "priority": .null,
       "raw_input": .null,
       "recurrence": .null,

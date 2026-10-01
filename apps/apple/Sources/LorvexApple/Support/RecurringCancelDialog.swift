@@ -98,7 +98,7 @@ private struct RecurringCancelDialogModifier: ViewModifier {
         }
       }
       Button(
-        String(localized: "recurring_cancel.keep", defaultValue: "Don't Cancel", table: "Localizable", bundle: LorvexL10n.bundle),
+        String(localized: "recurring_cancel.keep", defaultValue: "Don’t Cancel", table: "Localizable", bundle: LorvexL10n.bundle),
         role: .cancel
       ) {
         store.pendingRecurringCancelTaskID = nil

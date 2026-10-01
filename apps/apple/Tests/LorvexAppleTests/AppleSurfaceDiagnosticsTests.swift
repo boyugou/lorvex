@@ -73,12 +73,16 @@ func appleSurfaceDiagnosticsReportsPublishedWidgetVersion() {
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
     stats: WidgetSnapshot.Stats(
-      focusCount: 1,
+      todayCount: 1,
       overdueCount: 0,
       dueTodayCount: 0
     ),
     briefing: nil,
-    focusTasks: []
+    tasks: [
+      .init(
+        id: "diagnostics-task", title: "Published task", status: "open", dueDate: nil,
+        priority: 2, listID: nil, estimatedMinutes: nil)
+    ]
   )
   let diagnostics = AppleSurfaceDiagnostics(
     spotlightIndexedTaskCount: 0,
@@ -90,8 +94,9 @@ func appleSurfaceDiagnosticsReportsPublishedWidgetVersion() {
     importedCalendarEventCount: 0
   )
 
-  #expect(diagnostics.widgetStatus == "Published v\(WidgetSnapshot.supportedVersion)")
-  #expect(diagnostics.widgetGeneratedAt == "2026-05-22T16:00:00Z")
+  #expect(diagnostics.widgetStatus == "Published")
+  #expect(diagnostics.widgetGeneratedAt == LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
+  #expect(diagnostics.widgetTodayTaskCount == 1)
 }
 
 @Test

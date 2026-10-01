@@ -85,10 +85,6 @@ public enum TaskUpdateStatus {
       contentsOf: plan.spawnedSuccessorChecklistItemIds)
     effects.spawnedSuccessorReminderIds.append(
       contentsOf: plan.spawnedSuccessorReminderIds)
-    effects.rewiredFocusScheduleDates.append(
-      contentsOf: plan.rewiredFocusScheduleDates)
-    effects.rewiredCurrentFocusDates.append(
-      contentsOf: plan.rewiredCurrentFocusDates)
     if let successorId = plan.spawnedSuccessorId {
       let successor = try TaskResponse.loadEnrichedTaskJSON(
         db, taskId: TaskId(trusted: successorId))
@@ -98,12 +94,6 @@ public enum TaskUpdateStatus {
           successorId: successorId,
           summary: spawnedSummary,
           afterTask: successor))
-      effects.focusRewireAudits.append(
-        UpdateTaskFocusRewireAudit(
-          parentTaskId: parentTaskId,
-          successorId: successorId,
-          focusScheduleDates: plan.rewiredFocusScheduleDates,
-          currentFocusDates: plan.rewiredCurrentFocusDates))
     }
     for successorId in plan.cancelledSuccessorIds {
       let successor = try TaskResponse.loadEnrichedTaskJSON(

@@ -32,6 +32,4 @@ func sharedSystemIntentRunnerReadsSystemPreferencesSetupAndDiagnostics() async t
   #expect(!changelog.entries.isEmpty)
   let recentLogs = try await LorvexSystemIntentRunner.readRecentLogs(core: core)
   #expect(recentLogs.redactionApplied)
-  let guide = try await LorvexSystemIntentRunner.readGuide(core: core)
-  #expect(!guide.suggestedActions.isEmpty)
 }

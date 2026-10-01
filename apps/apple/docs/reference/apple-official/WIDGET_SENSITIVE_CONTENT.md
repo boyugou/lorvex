@@ -23,16 +23,18 @@ Confirmed correct:
 - the iOS accessory-inline title is privacy-sensitive;
 - task titles in the accessory-rectangular widget are privacy-sensitive;
 - Watch rectangular and corner complication task titles are
-  privacy-sensitive.
+  privacy-sensitive;
+- the lead task title in the small, medium, and large Today widgets, each task
+  row title, and the large widget's briefing text are privacy-sensitive;
+- `LorvexTodayControlWidget` marks its label privacy-sensitive whenever the
+  label shows task content (the lead task's title, or how many tasks are left
+  today).
 
 Remaining gaps:
 
-- `SmallSystemWidgetView`, `SystemWidgetView`, and `TodayTaskRowView` display
-  task titles without a privacy-sensitive marker;
-- the medium/large Focus widget can also display a user-authored briefing
-  without the marker;
-- `LorvexFocusControlWidget` puts the first focus-task title in a control label
-  but marks neither the label nor the control template privacy-sensitive;
+- `LorvexTodayControlWidget` marks only its label, not the control template, so
+  the control's state is not covered by the template-level marking Apple
+  describes;
 - the widget/complication entitlement files do not use extension-wide Data
   Protection as a fallback.
 

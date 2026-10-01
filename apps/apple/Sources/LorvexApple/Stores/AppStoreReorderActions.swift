@@ -21,15 +21,12 @@ extension AppStore {
     }
   }
 
-  /// Applies an `IndexSet` move on the currently-visible habits, merged back into
-  /// the full catalog order so habits hidden by an active search keep their
-  /// positions, then persists the resulting order via the synced core.
+  /// Applies an `IndexSet` move to the habit catalog order, then persists the
+  /// resulting order via the synced core.
   func moveHabits(fromOffsets source: IndexSet, toOffset destination: Int) async {
-    var visible = filteredHabits
-    visible.move(fromOffsets: source, toOffset: destination)
-    let merged = Self.mergeReorderedVisible(
-      visible.map(\.id), intoFullOrder: (habits?.habits ?? []).map(\.id))
-    await reorderHabits(merged)
+    var ordered = orderedHabits.map(\.id)
+    ordered.move(fromOffsets: source, toOffset: destination)
+    await reorderHabits(ordered)
   }
 
   // MARK: - List reorder

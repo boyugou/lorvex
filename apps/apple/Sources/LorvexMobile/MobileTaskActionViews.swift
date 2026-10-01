@@ -1,210 +1,137 @@
 import LorvexCore
 import SwiftUI
 
+/// The secondary actions under a task's detail, as one row of equal tiles in
+/// the style of a contact card's actions: an icon over a short name. The
+/// status transition itself (Complete / Reopen / Move to Open) is the
+/// detail's prominent action (in the toolbar of a screen, in the header row of
+/// a split's pane), so the tiles carry the rest: start or pause, defer (a menu
+/// of days), someday, and cancel in the destructive tint. A parked (someday)
+/// task's toolbar action is Move to Open, so it gets a Complete tile to finish
+/// in one tap. Only actions the task's status allows are shown, and a task
+/// that allows none (completed or cancelled) shows no tiles. At the
+/// accessibility text sizes the tiles wrap two to a row.
 struct MobileTaskActionSection: View {
   let task: LorvexTask
-  let isFocused: Bool
   let isMutating: Bool
-  let toggleFocus: () async -> Void
-  let complete: () async -> Void
-  let reopen: () async -> Void
-  let deferTask: () async -> Void
+  let actions: MobileTaskRowActions
   let markSomeday: () async -> Void
-  let editRecurrence: () -> Void
   let cancel: () async -> Void
-  /// Start (`open → in_progress`) / Mark as Not Started (`in_progress → open`).
-  var start: (() async -> Void)? = nil
-  var markNotStarted: (() async -> Void)? = nil
+
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+  enum Tile: Hashable {
+    case start, pause, complete, deferTask, someday, cancel
+  }
+
+  /// The tiles `status` allows, in order.
+  static func tiles(for status: LorvexTask.Status) -> [Tile] {
+    switch status {
+    case .open: [.start, .deferTask, .someday, .cancel]
+    case .inProgress: [.pause, .deferTask, .cancel]
+    case .someday: [.complete, .deferTask, .cancel]
+    case .completed, .cancelled: []
+    }
+  }
 
   var body: some View {
-    Section {
-      focusButton
-      completeButton
-      startButton
-      deferButton
-      somedayButton
-      recurrenceButton
-      reopenButton
-      cancelButton
-    }
-  }
-
-  // Put the "In Progress" marker on an open task, or take it off a started one.
-  // Title tracks the state, mirroring the macOS detail action and context menu.
-  @ViewBuilder
-  private var startButton: some View {
-    if task.status == .open, let start {
-      Button {
-        Task { await start() }
-      } label: {
-        Label(
-          String(
-            localized: "action.start", defaultValue: "Start", table: "Localizable",
-            bundle: MobileL10n.bundle), systemImage: "play.circle")
-      }
-      .disabled(isMutating)
-      .accessibilityIdentifier("task.detail.start")
-    } else if task.status == .inProgress, let markNotStarted {
-      Button {
-        Task { await markNotStarted() }
-      } label: {
-        Label(
-          String(
-            localized: "task.action.mark_not_started", defaultValue: "Mark as Not Started",
-            table: "Localizable", bundle: MobileL10n.bundle),
-          systemImage: "pause.circle")
-      }
-      .disabled(isMutating)
-      .accessibilityIdentifier("task.detail.markNotStarted")
-    }
-  }
-
-  private var focusButton: some View {
-    Button {
-      Task { await toggleFocus() }
-    } label: {
-      Label(
-        isFocused
-          ? String(
-            localized: "action.remove_from_focus", defaultValue: "Remove from Focus",
-            table: "Localizable", bundle: MobileL10n.bundle)
-          : String(
-            localized: "action.focus", defaultValue: "Focus", table: "Localizable",
-            bundle: MobileL10n.bundle),
-        systemImage: isFocused ? "minus.circle" : "scope"
-      )
-    }
-    .disabled(isMutating)
-  }
-
-  private var completeButton: some View {
-    Button {
-      Task { await complete() }
-    } label: {
-      Label(
-        String(
-          localized: "action.complete", defaultValue: "Complete", table: "Localizable",
-          bundle: MobileL10n.bundle), systemImage: "checkmark.circle")
-    }
-    .disabled(isMutating || !canComplete)
-  }
-
-  // Mobile defer is intentionally a single direct "Defer to Tomorrow" tap — the
-  // macOS surfaces offer a day-choice menu (TaskDeferMenu: Tomorrow / In 3 days /
-  // Next Week), but a one-tap action fits the phone's quick-triage flow. The
-  // glyph matches macOS so the concept reads the same across surfaces.
-  private var deferButton: some View {
-    Button {
-      Task { await deferTask() }
-    } label: {
-      Label(
-        String(
-          localized: "action.defer_to_tomorrow", defaultValue: "Defer to Tomorrow",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        systemImage: "clock.arrow.circlepath")
-    }
-    .disabled(isMutating || !canComplete)
-  }
-
-  // Park an open task for later. Someday is a live (unresolved) status, so it
-  // sits alongside Defer rather than in the terminal actions — and only an open
-  // task can be parked (a resolved or already-parked task shows nothing here).
-  @ViewBuilder
-  private var somedayButton: some View {
-    if task.status == .open {
-      Button {
-        Task { await markSomeday() }
-      } label: {
-        Label(
-          String(
-            localized: "action.move_to_someday", defaultValue: "Move to Someday",
-            table: "Localizable", bundle: MobileL10n.bundle),
-          systemImage: "moon")
-      }
-      .disabled(isMutating)
-      .accessibilityIdentifier("task.detail.moveToSomeday")
-    }
-  }
-
-  private var recurrenceButton: some View {
-    Button {
-      editRecurrence()
-    } label: {
-      HStack {
-        Label(
-          task.recurrence == nil
-            ? String(
-              localized: "action.repeat", defaultValue: "Repeat", table: "Localizable",
-              bundle: MobileL10n.bundle)
-            : String(
-              localized: "action.edit_repeat", defaultValue: "Edit Repeat", table: "Localizable",
-              bundle: MobileL10n.bundle),
-          systemImage: "repeat"
-        )
-        if let recurrence = task.recurrence {
-          Spacer()
-          Text(recurrence.displaySummary(exceptions: task.recurrenceExceptions))
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
+    let tiles = Self.tiles(for: task.status)
+    if !tiles.isEmpty {
+      Section {
+        LazyVGrid(
+          columns: Array(
+            repeating: GridItem(.flexible(), spacing: LorvexDesign.Spacing.s),
+            count: dynamicTypeSize.isAccessibilitySize ? 2 : tiles.count),
+          spacing: LorvexDesign.Spacing.s
+        ) {
+          ForEach(tiles, id: \.self) { tile in
+            view(for: tile)
+          }
         }
+        .disabled(isMutating)
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
       }
     }
-    .disabled(isMutating)
   }
 
-  // Return a resolved OR parked task to the open list. A someday task reads as
-  // "Move to Open" (it was never finished, only parked), a completed/cancelled
-  // task as "Reopen" — both drive the same reopen transition, matching macOS.
   @ViewBuilder
-  private var reopenButton: some View {
-    if task.status == .someday {
-      Button {
-        Task { await reopen() }
-      } label: {
-        Label(
-          String(
-            localized: "action.move_to_open", defaultValue: "Move to Open", table: "Localizable",
-            bundle: MobileL10n.bundle),
-          systemImage: "arrow.up.circle")
+  private func view(for tile: Tile) -> some View {
+    switch tile {
+    case .start:
+      button(MobileTaskActionCopy.start, "play.fill", id: "task.detail.start") {
+        await actions.start()
       }
-      .disabled(isMutating)
-      .accessibilityIdentifier("task.detail.moveToOpen")
-    } else if canReopen {
-      Button {
-        Task { await reopen() }
-      } label: {
-        Label(
-          String(
-            localized: "action.reopen", defaultValue: "Reopen", table: "Localizable",
-            bundle: MobileL10n.bundle), systemImage: "arrow.counterclockwise")
+    case .pause:
+      button(MobileTaskActionCopy.pause, "pause.fill", id: "task.detail.pause") {
+        await actions.pause()
       }
-      .disabled(isMutating)
-      .accessibilityIdentifier("task.detail.reopen")
-    }
-  }
-
-  private var cancelButton: some View {
-    Button(role: .destructive) {
-      Task { await cancel() }
-    } label: {
-      Label(
+    case .complete:
+      button(MobileTaskActionCopy.complete, "checkmark", id: "task.detail.completeParked") {
+        await actions.complete()
+      }
+    case .deferTask:
+      MobileDeferMenu(deferByDays: actions.deferByDays) {
+        MobileTaskActionTile(title: MobileTaskActionCopy.deferTask, systemImage: "clock.arrow.circlepath")
+      }
+      .buttonStyle(.plain)
+      .accessibilityIdentifier("task.detail.defer")
+    case .someday:
+      button(
+        String(
+          localized: "task_detail.tile.someday", defaultValue: "Someday", table: "Localizable",
+          bundle: MobileL10n.bundle),
+        "moon", id: "task.detail.moveToSomeday"
+      ) { await markSomeday() }
+    case .cancel:
+      button(
         String(
           localized: "action.cancel_task", defaultValue: "Cancel", table: "Localizable",
-          bundle: MobileL10n.bundle), systemImage: "xmark.circle")
+          bundle: MobileL10n.bundle),
+        "xmark", id: "task.detail.cancel", tint: LorvexDesign.Palette.destructive
+      ) { await cancel() }
     }
-    .disabled(isMutating || !canCancel)
   }
 
-  private var canComplete: Bool {
-    task.status.isActive
+  private func button(
+    _ title: String, _ systemImage: String, id: String,
+    tint: Color = LorvexDesign.Palette.accent, action: @escaping () async -> Void
+  ) -> some View {
+    Button {
+      Task { await action() }
+    } label: {
+      MobileTaskActionTile(title: title, systemImage: systemImage, tint: tint)
+    }
+    .buttonStyle(.plain)
+    .accessibilityIdentifier(id)
   }
+}
 
-  private var canCancel: Bool {
-    task.status.isActive
-  }
+/// One action tile: the symbol over its name in the tile's tint, on the card
+/// surface, the full width of its grid cell.
+struct MobileTaskActionTile: View {
+  let title: String
+  let systemImage: String
+  var tint: Color = LorvexDesign.Palette.accent
 
-  private var canReopen: Bool {
-    task.status.isResolved
+  @Environment(\.isEnabled) private var isEnabled
+
+  var body: some View {
+    VStack(spacing: LorvexDesign.Spacing.xs) {
+      Image(systemName: systemImage)
+        .font(LorvexDesign.Typography.primaryText.weight(.semibold))
+        .frame(height: 22)
+      Text(title)
+        .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
+        .lineLimit(2)
+        .multilineTextAlignment(.center)
+    }
+    .foregroundStyle(tint)
+    .frame(maxWidth: .infinity, minHeight: 64)
+    .padding(.horizontal, LorvexDesign.Spacing.xs)
+    .padding(.vertical, LorvexDesign.Spacing.s)
+    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
+    .opacity(isEnabled ? 1 : 0.45)
+    .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
   }
 }

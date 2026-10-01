@@ -106,11 +106,10 @@ struct InProgressSurfaceMatrixTests {
         status: $0, dueDate: nil, estimatedMinutes: nil)
     }
     let snapshot = TodaySnapshot(
-      focusTitle: "Today", summary: "", tasks: tasks, localChangeSequence: 0)
-    let projector = WidgetSnapshotProjector(maxFocusTasks: 6)
-    let widget = projector.snapshot(today: snapshot, currentFocus: nil, timezone: nil)
-    let ids = Set(widget.focusTasks.map(\.id))
-    #expect(ids == ["wid-open", "wid-in_progress"], "widget focus = actionable only")
+      summary: "", tasks: tasks, localChangeSequence: 0)
+    let widget = WidgetSnapshotProjector().snapshot(today: snapshot, timezone: nil)
+    let ids = Set(widget.tasks.map(\.id))
+    #expect(ids == ["wid-open", "wid-in_progress"], "widget tasks = actionable only")
 
     // Pin the downstream consumer too: projection already contained a started
     // task while `WidgetRenderModelBuilder` once applied a second exact-`open`
@@ -124,9 +123,10 @@ struct InProgressSurfaceMatrixTests {
       family: .systemLarge,
       statusText: "Updated now"
     )
+    let rendered = [model.lead?.id].compactMap { $0 } + model.taskRows.map(\.id)
     #expect(
-      Set(model.taskRows.map(\.id)) == ["wid-open", "wid-in_progress"],
-      "rendered widget focus = actionable only"
+      Set(rendered) == ["wid-open", "wid-in_progress"],
+      "rendered widget tasks = actionable only"
     )
   }
 
@@ -212,14 +212,14 @@ struct InProgressSurfaceMatrixTests {
     #expect(skipped == [ids[.completed]!, ids[.cancelled]!], "only terminal tasks skip")
   }
 
-  // MARK: - Today "In Progress" section — the >10 boundary
+  // MARK: - Today's pool — uncapped, and only what the day owns
 
-  @Test("Today in-progress section reads ALL started tasks past the 10-cap overview")
-  func todayInProgressSectionUncappedBeyondCap() async throws {
+  @Test("Today reads every started task and nothing the day has no claim on")
+  func todayPoolIsUncappedAndDateBounded() async throws {
     let service = try makeInMemoryCore()
     var startedIDs: Set<String> = []
-    // 12 started tasks — more than the 10-task overview cap — plus a few plain
-    // open tasks so the capped `tasks` pool is genuinely full.
+    // 12 started tasks — more than the 10 an overview slice would return — plus
+    // plain open tasks that carry no date at all.
     for i in 0..<12 {
       let id = try await Self.makeTask(service, status: .inProgress, title: "wip-\(i)")
       startedIDs.insert(id)
@@ -229,37 +229,35 @@ struct InProgressSurfaceMatrixTests {
     }
 
     let today = try await service.loadToday()
-    #expect(today.tasks.count <= 10, "overview pool stays priority-capped")
+    #expect(
+      today.tasks.count == 12,
+      "the day pool is uncapped — hiding a commitment is worse than a long list")
+    #expect(
+      Set(today.tasks.map(\.id)) == startedIDs,
+      "undated open tasks are backlog, not today: only the started ones qualify")
     #expect(
       today.inProgressTasks.count == 12,
-      "in-progress section is uncapped — all 12 started tasks, not a slice of the cap")
+      "started work also reads uncapped through its own field")
     #expect(Set(today.inProgressTasks.map(\.id)) == startedIDs)
 
-    // The iPhone Today "In Progress" section reads the same uncapped field.
-    let snapshot = MobileHomeSnapshot(today: today, currentFocus: nil, weeklyReview: nil)
+    // iPhone: started work rides the day list, and also reads uncapped through
+    // the dedicated field the glance surfaces use.
+    let snapshot = MobileHomeSnapshot(today: today, weeklyReview: nil)
     #expect(Set(snapshot.inProgressTasks.map(\.id)) == startedIDs)
     #expect(
-      !MobileTodayTaskSections.showsOpenTaskEmptyState(for: snapshot),
-      "a started-only Today must not claim that the user needs to get started")
+      Set(Self.page(today.tasks).items.map(\.id)) == startedIDs,
+      "a started-only Today lists its started work instead of the empty day")
   }
 
-  @Test("Today capture empty state appears only when both open and started work are absent")
+  @Test("Today's empty day appears only when neither open nor started work is left")
   func todayEmptyStateExcludesInProgressOnlySnapshot() {
-    let empty = MobileHomeSnapshot(today: .empty, currentFocus: nil, weeklyReview: nil)
-    #expect(MobileTodayTaskSections.showsOpenTaskEmptyState(for: empty))
-
-    let startedToday = TodaySnapshot(
-      focusTitle: "Today", summary: "", tasks: [],
-      inProgressTasks: [Self.task(status: .inProgress)], localChangeSequence: 0)
-    let started = MobileHomeSnapshot(
-      today: startedToday, currentFocus: nil, weeklyReview: nil)
-    #expect(!MobileTodayTaskSections.showsOpenTaskEmptyState(for: started))
-
-    let openToday = TodaySnapshot(
-      focusTitle: "Today", summary: "", tasks: [Self.task(status: .open)],
-      localChangeSequence: 0)
-    let open = MobileHomeSnapshot(today: openToday, currentFocus: nil, weeklyReview: nil)
-    #expect(!MobileTodayTaskSections.showsOpenTaskEmptyState(for: open))
+    #expect(Self.page([]).items.isEmpty)
+    #expect(!Self.page([Self.task(status: .inProgress)]).items.isEmpty)
+    #expect(!Self.page([Self.task(status: .open)]).items.isEmpty)
+    #expect(
+      Self.page([Self.task(id: "s", status: .someday), Self.task(id: "c", status: .completed)])
+        .items.isEmpty,
+      "only actionable work fills the day")
   }
 
   @MainActor
@@ -269,7 +267,7 @@ struct InProgressSurfaceMatrixTests {
     let id = try await Self.makeTask(service, status: .inProgress, title: "mobile-wip")
     let today = try await service.loadToday()
     let store = MobileStore(core: service)
-    store.snapshot = MobileHomeSnapshot(today: today, currentFocus: nil, weeklyReview: nil)
+    store.snapshot = MobileHomeSnapshot(today: today, weeklyReview: nil)
 
     #expect(store.resolveTask(id)?.status == .inProgress)
     #expect(store.allKnownTasks.contains { $0.id == id })
@@ -281,6 +279,13 @@ struct InProgressSurfaceMatrixTests {
   }
 
   // MARK: - Fixtures
+
+  /// The Today page every platform draws from `tasks`, off the clock.
+  private static func page(_ tasks: [LorvexTask]) -> LorvexCalmToday {
+    LorvexCalmToday.build(
+      tasks: tasks, events: [], doneToday: 0, nowMinutes: nil, logicalDay: "2026-07-13",
+      workingHours: nil)
+  }
 
   private static func task(id: String = "t", status: LorvexTask.Status) -> LorvexTask {
     LorvexTask(

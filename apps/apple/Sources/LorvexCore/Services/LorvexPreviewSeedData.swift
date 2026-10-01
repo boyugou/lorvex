@@ -18,6 +18,15 @@ public enum LorvexPreviewSeedID {
   public static let statusUpdateTask = "6cf6e6c4-f5bc-430a-bab9-4d616c203ee3"
   /// "Look into a standing-desk setup" (P3, someday, no list).
   public static let standingDeskTask = "7de3b319-7952-4cef-a088-f99c3c60f686"
+  /// "Pick the offsite dates" (P2, completed, in `appleNativeList`). The seed's
+  /// only finished task: without one, no capture shows the completed row
+  /// treatment, the Completed filter, or a list progress bar (which draws only
+  /// above zero).
+  public static let offsiteDatesTask = "55d89c6b-5886-4e4f-879d-5bd0ce08e9b5"
+  /// "Order a second monitor" (P3, cancelled, in `inboxList`). Abandoned work
+  /// leaves the progress denominator, so the Inbox stays bar-less while
+  /// `appleNativeList` shows one — the two halves of the progress rule.
+  public static let secondMonitorTask = "17e88d29-31c7-4020-8339-e1900df699da"
   public static let agendaChecklistConfirm = "0a27bc0f-caf0-497b-af7a-f8ca7524b776"
   public static let agendaChecklistShare = "d89d33d4-eccd-4b50-9496-85265da9dd89"
   public static let venueReminder = "023fa9c1-afa7-45a7-b681-2172d4182d5c"
@@ -167,52 +176,27 @@ enum LorvexPreviewSeedData {
       ]
     }
 
-    /// A saved focus plan + schedule for today that interleaves the today
-    /// preview events (`event` blocks) with deep-work `task` blocks and a
-    /// `buffer`, so `--ui-preview -uiPreviewFocusSchedule` renders the unified
-    /// mixed timeline (and exercises all three block-kind labels).
-    static func todayPreviewFocus() -> (CurrentFocusPlan, FocusSchedule) {
-      let today = previewTodayString()
-      let zone = TimeZone.current.identifier
-      let plan = CurrentFocusPlan(
-        date: today,
-        taskIDs: [LorvexPreviewSeedID.agendaTask, LorvexPreviewSeedID.statusUpdateTask],
-        briefing: "Two deep-work blocks fitted around today's meetings.",
-        timezone: zone,
-        localChangeSequence: 0)
-      let blocks: [FocusScheduleBlock] = [
-        FocusScheduleBlock(
-          blockType: "event", startTime: "09:30", endTime: "09:45",
-          calendarEventID: LorvexPreviewSeedID.previewStandupEvent, eventSource: .canonical,
-          title: "Team standup"),
-        FocusScheduleBlock(
-          blockType: "task", startTime: "09:45", endTime: "10:45",
-          taskID: LorvexPreviewSeedID.agendaTask, title: "Draft the team offsite agenda"),
-        FocusScheduleBlock(blockType: "buffer", startTime: "10:45", endTime: "10:55"),
-        FocusScheduleBlock(
-          blockType: "task", startTime: "10:55", endTime: "11:55",
-          taskID: LorvexPreviewSeedID.statusUpdateTask, title: "Send the weekly status update"),
-        FocusScheduleBlock(
-          blockType: "event", startTime: "13:00", endTime: "13:30",
-          calendarEventID: LorvexPreviewSeedID.previewOneOnOneEvent, eventSource: .canonical,
-          title: "1:1 with Sam"),
-        FocusScheduleBlock(
-          blockType: "event", startTime: "15:30", endTime: "16:30",
-          calendarEventID: LorvexPreviewSeedID.previewDesignEvent, eventSource: .canonical,
-          title: "Design review"),
-      ]
-      let schedule = FocusSchedule(
-        date: today,
-        rationale: "Deep work fitted around your meetings.",
-        timezone: zone,
-        workingHours: FocusScheduleWorkingHours(start: "09:00", end: "17:00"),
-        totalMinutesAvailable: 360,
-        calendarEventsCount: 3,
-        blocks: blocks)
-      return (plan, schedule)
+    /// The day the preview's assistant planned: its briefing for today and the
+    /// times of two of today's tasks, set in the morning around the standup,
+    /// so `--ui-preview -uiPreviewPlannedDay` renders timed rows and task
+    /// blocks beside the day's events.
+    static func todayPreviewDay() -> (date: String, briefing: String, times: [LorvexTaskTime]) {
+      (
+        previewTodayString(),
+        "The offsite agenda comes first: the venue can't be booked until it's settled, "
+          + "so I moved the booking to tomorrow. Two meetings this afternoon.",
+        [
+          // 09:45–10:45 and 10:55–11:55.
+          LorvexTaskTime(taskID: LorvexPreviewSeedID.agendaTask, time: 585..<645),
+          LorvexTaskTime(taskID: LorvexPreviewSeedID.statusUpdateTask, time: 655..<715),
+        ]
+      )
     }
   #endif
 
+  /// Task content only. Dates are `nil` here because they have to be relative to
+  /// the store's logical day to keep the seed inside the day pool, so
+  /// `LorvexPreviewCoreFactory` owns them and stamps them at seed time.
   static let tasks: [LorvexTask] = [
     LorvexTask(
       id: LorvexPreviewSeedID.agendaTask,
@@ -267,6 +251,26 @@ enum LorvexPreviewSeedData {
       notes: "Keep this as a someday idea until the home office is sorted.",
       priority: .p3,
       status: .someday,
+      dueDate: nil,
+      estimatedMinutes: nil,
+      tags: ["home"]
+    ),
+    LorvexTask(
+      id: LorvexPreviewSeedID.offsiteDatesTask,
+      title: "Pick the offsite dates",
+      notes: "Cross-check the team calendar and lock the week.",
+      priority: .p2,
+      status: .completed,
+      dueDate: nil,
+      estimatedMinutes: 30,
+      tags: ["work", "planning"]
+    ),
+    LorvexTask(
+      id: LorvexPreviewSeedID.secondMonitorTask,
+      title: "Order a second monitor",
+      notes: "Dropped in favour of using the laptop display on the desk.",
+      priority: .p3,
+      status: .cancelled,
       dueDate: nil,
       estimatedMinutes: nil,
       tags: ["home"]

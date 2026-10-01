@@ -18,7 +18,6 @@ final class PostLocalWriteDrainReemitTests: XCTestCase {
   private let listL = "01966a3f-7c8b-7d4e-8f3a-00000000d001"
   private let taskT = "01966a3f-7c8b-7d4e-8f3a-00000000d002"
   private let parentP = "01966a3f-7c8b-7d4e-8f3a-00000000d003"
-  private let auditA = "01966a3f-7c8b-7d4e-8f3a-00000000d004"
 
   private func seed(_ db: Database) throws {
     try db.execute(
@@ -158,105 +157,5 @@ final class PostLocalWriteDrainReemitTests: XCTestCase {
         try taskUpsertOutboxCount(db, taskT), 0,
         "enqueue alone must not consume or partially fulfill pending convergence")
     }
-  }
-
-  /// A deferred full-content audit record that becomes replayable while this
-  /// device's retention is `.off` becomes durable zone-scoped physical-delete
-  /// work in the same transaction that removes the pending full-content copy.
-  func testPostLocalWriteDrainQueuesPhysicalDeleteForRejectedAuditUpsert() throws {
-    let store = try SyncTestSupport.freshStore()
-    let hlc = try HlcState(deviceSuffix: "aaaaaaaaaaaaaaaa")
-    let inboundVersion = try Hlc.parse("6000000000000_0000_bbbbbbbbbbbbbbbb")
-    try store.writer.write { db in
-      try seed(db)
-      try parkAuditRejectedByOff(db, inboundVersion: inboundVersion)
-
-      try localUpsertP(db, hlc: hlc, reconcilePending: true)
-
-      XCTAssertEqual(try PendingInbox.countPending(db), 0)
-      XCTAssertEqual(try changelogCount(db, id: auditA), 0)
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_outbox WHERE entity_type = ? AND entity_id = ?",
-          arguments: [EntityName.aiChangelog, auditA]),
-        0)
-      XCTAssertNil(
-        try Tombstone.getTombstone(
-          db, entityType: EntityName.aiChangelog, entityId: auditA))
-      let purge = try XCTUnwrap(
-        Row.fetchOne(
-          db,
-          sql: """
-            SELECT account_identifier, zone_name FROM audit_retention_purge_queue
-            WHERE entity_id = ?
-            """,
-          arguments: [auditA]))
-      XCTAssertEqual(purge["account_identifier"] as String, "account-a")
-      XCTAssertEqual(purge["zone_name"] as String, "LorvexZone-g1")
-    }
-  }
-
-  /// Without the host finalizer, retention work remains durably pending rather
-  /// than being consumed without its physical-delete obligation.
-  func testLowLevelEnqueueDoesNotConsumeRetentionHold() throws {
-    let store = try SyncTestSupport.freshStore()
-    let hlc = try HlcState(deviceSuffix: "aaaaaaaaaaaaaaaa")
-    let inboundVersion = try Hlc.parse("6000000000000_0000_bbbbbbbbbbbbbbbb")
-    try store.writer.write { db in
-      try seed(db)
-      try parkAuditRejectedByOff(db, inboundVersion: inboundVersion)
-    }
-
-    try store.writer.write { db in
-      try localUpsertP(db, hlc: hlc, reconcilePending: false)
-    }
-
-    try store.writer.read { db in
-      XCTAssertEqual(try PendingInbox.countPending(db), 1)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_outbox WHERE entity_type = ? AND entity_id = ?",
-          arguments: [EntityName.aiChangelog, auditA]),
-        0)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM audit_retention_purge_queue WHERE entity_id = ?",
-          arguments: [auditA]),
-        0)
-    }
-  }
-
-  private func parkAuditRejectedByOff(_ db: Database, inboundVersion: Hlc) throws {
-    _ = try AuditRetentionFrontier.activateAccount(
-      db, accountIdentifier: "account-a", zoneName: "LorvexZone-g1")
-    _ = try AuditRetentionFrontier.adoptPolicyForActiveAccount(
-      db, accountIdentifier: "account-a", policy: .off,
-      policyVersion: "0000000000000_0000_0000000000000000")
-
-    let row = ChangelogWrite.ChangelogRow(
-      id: auditA, timestamp: "2026-04-19T08:00:00.000Z",
-      operation: "update", entityType: "task", entityId: taskT,
-      summary: "remote private audit content", initiatedBy: "assistant",
-      sourceDeviceId: "peer-device")
-    let payload = try SyncCanonicalize.canonicalizeJSON(
-      ChangelogWrite.buildChangelogSyncPayload(row))
-    let envelope = try SyncTestSupport.completeEnvelope(
-      entityType: .aiChangelog, entityId: auditA, operation: .upsert,
-      version: inboundVersion,
-      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-      payload: payload, deviceId: "peer-device")
-    // The synthetic dependency makes the normal local parent enqueue select
-    // this row for opportunistic replay; the audit payload itself has no FK.
-    try PendingInboxDrain.enqueuePending(
-      db, envelope: envelope, reason: "waiting",
-      missingEntityType: EntityName.task, missingEntityID: parentP)
-  }
-
-  private func changelogCount(_ db: Database, id: String) throws -> Int64 {
-    try Int64.fetchOne(
-      db, sql: "SELECT COUNT(*) FROM ai_changelog WHERE id = ?", arguments: [id]) ?? -1
   }
 }

@@ -9,8 +9,9 @@ extension AppStore {
     today.logicalDay ?? Self.todayDateString()
   }
 
-  /// IANA zone that owns ``logicalTodayDateString``. Focus rows record this
-  /// product zone rather than whichever zone this Mac happens to be in.
+  /// IANA zone that owns ``logicalTodayDateString``. Calendar imports and the
+  /// Today timeline use this product zone rather than whichever zone this Mac
+  /// happens to be in.
   var logicalTimezoneName: String {
     today.timezone ?? TimeZone.current.identifier
   }

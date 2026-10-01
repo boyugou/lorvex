@@ -25,6 +25,12 @@ actor LorvexWatchCommandDelivery {
   private var drainRequested = false
   private var drainWaiters: [CheckedContinuation<Void, Never>] = []
   private var scheduledRetry: Task<Void, Never>?
+  /// Replies without a valid ACK per command, since launch. The phone answers
+  /// that way only to a command it cannot read, which no retry will change.
+  private var unreadableReplies: [String: Int] = [:]
+  /// Unreadable replies after which the head command is rejected locally, so
+  /// it stops holding every later command back.
+  static let maximumUnreadableReplies = 3
 
   init(
     journal: LorvexWatchCommandJournal,
@@ -217,7 +223,11 @@ actor LorvexWatchCommandDelivery {
         do {
           try await journal.markAttemptStarted(commandID: entry.command.id)
           let reply = try await channel.sendDirect(commandData)
-          let acknowledgement = try LorvexWatchCommandAck.decodeWireData(reply)
+          guard let acknowledgement = try? LorvexWatchCommandAck.decodeWireData(reply) else {
+            if await recordUnreadableReply(entry: entry) { continue }
+            return
+          }
+          unreadableReplies[entry.command.id] = nil
           let wireCommand = try entry.command.wireCommand()
           guard acknowledgement.matches(wireCommand) else {
             throw LorvexWatchCommandJournalError.acknowledgementMismatch
@@ -239,6 +249,29 @@ actor LorvexWatchCommandDelivery {
           return
         }
       }
+    }
+  }
+
+  /// Counts a reply that carried no valid ACK. Returns true once the command
+  /// has been rejected locally and delivery can move to the next one; until
+  /// then the command retries like any transport failure.
+  private func recordUnreadableReply(entry: LorvexWatchJournalEntry) async -> Bool {
+    let count = unreadableReplies[entry.command.id, default: 0] + 1
+    guard count >= Self.maximumUnreadableReplies else {
+      unreadableReplies[entry.command.id] = count
+      await recordTransportFailure(entry: entry)
+      return false
+    }
+    unreadableReplies[entry.command.id] = nil
+    do {
+      try await journal.rejectPendingHead(
+        commandID: entry.command.id,
+        code: LorvexWatchDeliveryRejectionText.unreadableCode)
+      await publishStatus()
+      return true
+    } catch {
+      await recordTransportFailure(entry: entry)
+      return false
     }
   }
 

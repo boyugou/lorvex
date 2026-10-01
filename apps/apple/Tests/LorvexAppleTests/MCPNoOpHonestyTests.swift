@@ -4,9 +4,9 @@ import Testing
 
 @testable import LorvexMCPHost
 
-/// Delete / unlink / focus / batch tools must report the REAL outcome: a no-op
-/// returns `deleted`/`removed`/`cleared` = false (and writes no `ai_changelog`
-/// row), rather than a phantom success. These run against the on-disk Swift core
+/// Delete / unlink / day-time / batch tools must report the REAL outcome: a
+/// no-op returns `deleted`/`removed` = false or an empty `cleared_tasks` (and
+/// writes no `ai_changelog` row), rather than a phantom success. These run against the on-disk Swift core
 /// bridge, where the outcome flag was previously hardcoded.
 @Suite("MCP no-op honesty")
 struct MCPNoOpHonestyTests {
@@ -58,100 +58,85 @@ struct MCPNoOpHonestyTests {
     #expect(noop.structuredContent?.objectValue?["deleted"]?.boolValue == false)
   }
 
-  @Test("clear_current_focus reports whether a plan was actually cleared")
-  func clearFocusHonesty() async throws {
+  @Test("save_daily_schedule reports the times a save actually cleared")
+  func clearDayTimesHonesty() async throws {
     let (registry, _, cleanup) = mcpOnDiskRegistry()
     defer { cleanup() }
     let date = "2026-06-02"
 
-    // Clearing an empty day is a no-op: cleared:false.
+    // Clearing a day with no times is a no-op: no cleared tasks.
     let empty = try await mcpRegistryCall(
-      registry, tool: "clear_current_focus", arguments: ["date": .string(date)])
-    #expect(empty.structuredContent?.objectValue?["cleared"]?.boolValue == false)
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string(date), "times": .array([])])
+    #expect(empty.isError != true)
+    #expect(empty.structuredContent?.objectValue?["cleared_tasks"]?.arrayValue?.isEmpty == true)
 
     let task = try await mcpRegistryCall(
-      registry, tool: "create_task", arguments: ["title": .string("Focus task")])
+      registry, tool: "create_task", arguments: ["title": .string("Timed task")])
     let taskID = try #require(task.structuredContent?.objectValue?["id"]?.stringValue)
     _ = try await mcpRegistryCall(
-      registry, tool: "set_current_focus",
-      arguments: ["date": .string(date), "task_ids": .array([.string(taskID)])])
+      registry, tool: "save_daily_schedule",
+      arguments: [
+        "date": .string(date),
+        "times": .array([
+          .object([
+            "task_id": .string(taskID), "start_time": .string("09:00"),
+            "end_time": .string("10:00"),
+          ])
+        ]),
+      ])
 
     let cleared = try await mcpRegistryCall(
-      registry, tool: "clear_current_focus", arguments: ["date": .string(date)])
-    let object = try #require(cleared.structuredContent?.objectValue)
-    #expect(object["cleared"]?.boolValue == true)
-    // The cleared plan is echoed under previous.
-    #expect(object["previous"]?.objectValue?["task_count"]?.intValue == 1)
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string(date), "times": .array([])])
+    let clearedIDs = cleared.structuredContent?.objectValue?["cleared_tasks"]?.arrayValue?
+      .compactMap { $0.objectValue?["id"]?.stringValue }
+    #expect(clearedIDs == [taskID])
   }
 
-  @Test("remove_from_current_focus reports whether the task was in focus")
-  func removeFocusHonesty() async throws {
-    let (registry, _, cleanup) = mcpOnDiskRegistry()
-    defer { cleanup() }
-    let date = "2026-06-03"
-
-    let a = try await mcpRegistryCall(
-      registry, tool: "create_task", arguments: ["title": .string("In focus")])
-    let inFocusID = try #require(a.structuredContent?.objectValue?["id"]?.stringValue)
-    let b = try await mcpRegistryCall(
-      registry, tool: "create_task", arguments: ["title": .string("Not in focus")])
-    let outsideID = try #require(b.structuredContent?.objectValue?["id"]?.stringValue)
-    _ = try await mcpRegistryCall(
-      registry, tool: "set_current_focus",
-      arguments: ["date": .string(date), "task_ids": .array([.string(inFocusID)])])
-
-    // Removing a task that was never in focus is a no-op: removed:false.
-    let noop = try await mcpRegistryCall(
-      registry, tool: "remove_from_current_focus",
-      arguments: ["date": .string(date), "task_id": .string(outsideID)])
-    #expect(noop.structuredContent?.objectValue?["removed"]?.boolValue == false)
-
-    let real = try await mcpRegistryCall(
-      registry, tool: "remove_from_current_focus",
-      arguments: ["date": .string(date), "task_id": .string(inFocusID)])
-    #expect(real.structuredContent?.objectValue?["removed"]?.boolValue == true)
-  }
-
-  /// B-12: a focus no-op must short-circuit before the write transaction, so it
-  /// records no ai_changelog row (previously `remove_from_current_focus` of a
-  /// task not in focus wrote a null-effect "set current focus" row).
-  @Test("focus no-ops write no ai_changelog row")
-  func focusNoOpWritesNoChangelog() async throws {
+  /// A save that changes no task's time short-circuits before any write, so it
+  /// records no ai_changelog row for the date.
+  @Test("day-time no-ops write no ai_changelog row")
+  func dayTimesNoOpWritesNoChangelog() async throws {
     let (registry, _, cleanup) = mcpOnDiskRegistry()
     defer { cleanup() }
     let date = "2026-06-05"
 
-    func focusChangelogCount(for entityID: String) async throws -> Int {
+    func dayChangelogCount(for day: String) async throws -> Int {
       let log = try await mcpRegistryCall(
         registry, tool: "get_ai_changelog",
-        arguments: ["limit": .int(50), "entity_id": .string(entityID)])
+        arguments: ["limit": .int(50), "entity_id": .string(day)])
       return log.structuredContent?.objectValue?["entries"]?.arrayValue?.count ?? 0
     }
 
-    // Clearing a day that never had a plan is a pure no-op: no changelog row.
+    // Clearing a day that never had times is a pure no-op: no changelog row.
     let emptyDate = "2026-06-06"
     _ = try await mcpRegistryCall(
-      registry, tool: "clear_current_focus", arguments: ["date": .string(emptyDate)])
-    #expect(try await focusChangelogCount(for: emptyDate) == 0)
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string(emptyDate), "times": .array([])])
+    #expect(try await dayChangelogCount(for: emptyDate) == 0)
 
-    let inFocus = try await mcpRegistryCall(
+    let task = try await mcpRegistryCall(
       registry, tool: "create_task", arguments: ["title": .string("Planned")])
-    let inFocusID = try #require(inFocus.structuredContent?.objectValue?["id"]?.stringValue)
-    let outside = try await mcpRegistryCall(
-      registry, tool: "create_task", arguments: ["title": .string("Unplanned")])
-    let outsideID = try #require(outside.structuredContent?.objectValue?["id"]?.stringValue)
+    let taskID = try #require(task.structuredContent?.objectValue?["id"]?.stringValue)
+    let times: Value = .array([
+      .object([
+        "task_id": .string(taskID), "start_time": .string("09:00"),
+        "end_time": .string("10:00"),
+      ])
+    ])
     _ = try await mcpRegistryCall(
-      registry, tool: "set_current_focus",
-      arguments: ["date": .string(date), "task_ids": .array([.string(inFocusID)])])
-    // The set itself wrote one changelog row for the date.
-    let afterSet = try await focusChangelogCount(for: date)
-    #expect(afterSet == 1)
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string(date), "times": times])
+    // The save itself wrote one changelog row for the date.
+    let afterSave = try await dayChangelogCount(for: date)
+    #expect(afterSave == 1)
 
-    // Removing a task that was never in the plan changes nothing: no new row.
+    // Saving the same times again changes nothing: no new row.
     _ = try await mcpRegistryCall(
-      registry, tool: "remove_from_current_focus",
-      arguments: ["date": .string(date), "task_id": .string(outsideID)])
-    #expect(try await focusChangelogCount(for: date) == afterSet)
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string(date), "times": times])
+    #expect(try await dayChangelogCount(for: date) == afterSave)
   }
 
   @Test("batch_complete_habits excludes already-complete habits from results/count")

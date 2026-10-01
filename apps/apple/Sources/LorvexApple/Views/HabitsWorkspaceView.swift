@@ -9,53 +9,20 @@ struct HabitsWorkspaceView: View {
   // `HabitsWorkspaceArchivedSection.swift`, can drive the same confirmation.
   @State var archivedHabitPendingDeletion: LorvexHabit?
 
+  /// The board's empty state. It carries no create action: the toolbar's add
+  /// button is the one way to start a habit.
   private var habitsEmptyState: LorvexEmptyStateModel? {
-    if store.hasActiveSearch && store.filteredHabits.isEmpty {
-      return LorvexEmptyStateModel(
-        title: String(localized: "habits.empty.search_title", defaultValue: "No Habit Results", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "habits.empty.search_description",
-          defaultValue: "No tracked habit matches the current search.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "magnifyingglass",
-        tint: .secondary,
-        chips: [
-          LorvexEmptyStateChip(
-            title: store.searchText,
-            systemImage: "text.magnifyingglass",
-            tint: .accentColor
-          )
-        ],
-        action: LorvexEmptyStateAction(
-          title: String(localized: "common.clear_search", defaultValue: "Clear Search", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "xmark.circle"
-        ) {
-          store.searchText = ""
-        }
-      )
-    }
-
     if store.habits?.habits.isEmpty == true {
       return LorvexEmptyStateModel(
         title: String(localized: "habits.empty.no_habits_title", defaultValue: "No Habits", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
           localized: "habits.empty.no_habits_description",
-          defaultValue: "Habits you track will appear here.",
+          defaultValue: "Click ＋ to start a habit you want to build.",
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
         systemImage: "repeat.circle",
-        tint: .accentColor,
-        chips: [],
-        action: LorvexEmptyStateAction(
-          title: String(localized: "habits.create", defaultValue: "Create Habit", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "plus",
-          style: .primary
-        ) {
-          isShowingCreateHabit = true
-        }
+        tint: .accentColor
       )
     }
 
@@ -63,21 +30,12 @@ struct HabitsWorkspaceView: View {
   }
 
   var body: some View {
-    // Group once per render. The grouping derives from `store.filteredHabits`
-    // (a search filter + ordered sort), so deriving it twice — once for the
-    // header flag, once for the ForEach — repeated that work for nothing.
-    let habits = store.filteredHabits
+    // Group once per render: the header and the grid both read the grouping,
+    // so deriving it twice would repeat that work for nothing.
+    let habits = store.orderedHabits
     let groups = habitGroups(habits)
-    // Resolve period progress once: it parses each habit's completion JSON, and
-    // both the header summary ("on track" count) and the per-cadence stats need
-    // it, so computing it twice would re-parse every habit for nothing.
-    let onTrack = onTrackByHabitID(habits)
     return VStack(spacing: 0) {
-      HabitsWorkspaceHeader(
-        summary: summary(habits: habits, onTrack: onTrack),
-        stats: stats(habits: habits, onTrack: onTrack),
-        create: { isShowingCreateHabit = true }
-      )
+      HabitsWorkspaceHeader(stats: stats(habits: habits, onTrack: onTrackByHabitID(habits)))
       Divider()
 
       ScrollView {
@@ -89,7 +47,7 @@ struct HabitsWorkspaceView: View {
             VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
               ForEach(groups, id: \.bucket) { group in
                 VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-                  habitGroupHeader(group.bucket, count: group.habits.count)
+                  habitGroupHeader(group.bucket)
                   habitGrid(group.habits)
                 }
               }
@@ -103,9 +61,7 @@ struct HabitsWorkspaceView: View {
           }
         }
 
-        if !store.archivedHabits.isEmpty {
-          archivedSection
-        }
+        archivedSection
       }
       .overlay {
         // Suppress the "No Habits" empty state while archived habits remain, so
@@ -116,6 +72,21 @@ struct HabitsWorkspaceView: View {
       }
     }
     .navigationTitle(String(localized: "sidebar.item.habits", defaultValue: "Habits", table: "Localizable", bundle: LorvexL10n.bundle))
+    .toolbar {
+      ToolbarSpacer(.flexible)
+
+      ToolbarItem(placement: .primaryAction) {
+        Button {
+          isShowingCreateHabit = true
+        } label: {
+          Label(
+            String(localized: "habits.workspace.create_a11y", defaultValue: "Create Habit", table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "plus")
+        }
+        .help(String(localized: "habits.workspace.create_help", defaultValue: "Create Habit", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("habits.create")
+      }
+    }
     .lorvexOpenDestinationActivity(selection: .habits, isActive: store.selection == .habits)
     .task {
       await store.loadAllHabitStats()
@@ -155,31 +126,6 @@ struct HabitsWorkspaceView: View {
     })
   }
 
-  private func summary(habits: [LorvexHabit], onTrack: [LorvexHabit.ID: Bool]) -> String {
-    let count = habits.count
-    // With no habits the empty state carries the messaging.
-    if count == 0 && !store.hasActiveSearch {
-      return String(
-        localized: "habits.summary.none", defaultValue: "Build a routine by tracking a habit.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
-    }
-    if store.hasActiveSearch {
-      return String(
-        localized: "habits.summary.search_count",
-        defaultValue: "\(count) habits matching the current search.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
-    }
-    let onTrackCount = habits.filter { onTrack[$0.id] == true }.count
-    return String(
-      format: String(
-        localized: "habits.summary.on_track", defaultValue: "%1$lld of %2$lld habits on track.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      Int64(onTrackCount), Int64(count))
-  }
-
   @ViewBuilder
   private func habitGrid(_ habits: [LorvexHabit]) -> some View {
     LazyVGrid(
@@ -213,27 +159,21 @@ struct HabitsWorkspaceView: View {
   }
 
   @ViewBuilder
-  private func habitGroupHeader(_ bucket: HabitCadenceBucket, count: Int) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Text(bucket.title)
-        .font(LorvexDesign.Typography.primaryEmphasis)
-        .foregroundStyle(.primary)
-      Text("\(count)")
-        .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 2)
-        .background(.quaternary.opacity(0.5), in: Capsule())
-      Spacer(minLength: 0)
-    }
-    .accessibilityIdentifier("habits.group.\(bucket.rawValue)")
+  /// A cadence group's title. It carries no count: the group's cards sit
+  /// right under it and never fold away.
+  private func habitGroupHeader(_ bucket: HabitCadenceBucket) -> some View {
+    Text(bucket.title)
+      .font(LorvexDesign.Typography.primaryEmphasis)
+      .foregroundStyle(.primary)
+      .accessibilityAddTraits(.isHeader)
+      .accessibilityIdentifier("habits.group.\(bucket.rawValue)")
   }
 
   /// Reorder within the habit's own cadence group: swap with its neighbor in the
   /// same bucket. Grouping is by cadence, not stored order, so a global-index
   /// move would read as a no-op when the adjacent habit sits in another group.
   private func moveHabitWithinGroup(_ habitID: LorvexHabit.ID, by delta: Int) {
-    let all = store.filteredHabits
+    let all = store.orderedHabits
     guard let habit = all.first(where: { $0.id == habitID }) else { return }
     let bucket = HabitCadenceBucket(frequencyType: habit.frequencyType)
     let groupIDs = all.filter { HabitCadenceBucket(frequencyType: $0.frequencyType) == bucket }
@@ -262,9 +202,7 @@ struct HabitsWorkspaceView: View {
       return HabitsWorkspaceStats.Bucket(
         cadence: bucket, completed: entry.completed, total: entry.total)
     }
-    // Real best streak across visible habits (0 until per-habit stats load).
-    let bestStreak = habits.compactMap { store.habitStats(for: $0.id)?.bestStreak }.max() ?? 0
-    return HabitsWorkspaceStats(buckets: buckets, bestStreak: bestStreak)
+    return HabitsWorkspaceStats(buckets: buckets)
   }
 
 }

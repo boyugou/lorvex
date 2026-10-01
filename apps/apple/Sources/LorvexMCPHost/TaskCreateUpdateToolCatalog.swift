@@ -4,7 +4,7 @@ extension TaskMutationToolCatalog {
   static let createTaskTool = Tool(
     name: "create_task",
     title: "Create Task",
-    description: "Capture one task. Accepts title plus optional notes, raw_input, list_id, priority, due_date, planned_date, available_from, tags, depends_on, checklist, and estimated_minutes. Prefer this over batch_create_tasks when creating a single task. Returns the created task, including any checklist items created from the checklist array.",
+    description: "Capture one task. Accepts title plus optional notes, raw_input, list_id, priority, due_date, planned_date, planned_start_time/planned_end_time (a time on the planned day), available_from, tags, depends_on, checklist, and estimated_minutes. Prefer this over batch_create_tasks when creating a single task. Returns the created task, including any checklist items created from the checklist array.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -43,10 +43,20 @@ extension TaskMutationToolCatalog {
           "type": .string("string"),
           "description": .string("Optional YYYY-MM-DD planned work date."),
         ]),
+        "planned_start_time": .object([
+          "type": .string("string"),
+          "description": .string(
+            "Optional HH:MM (24-hour) start of the task's time on its planned_date. Pass with planned_end_time; needs planned_date."),
+        ]),
+        "planned_end_time": .object([
+          "type": .string("string"),
+          "description": .string(
+            "Optional HH:MM (24-hour) end of the task's time, after the start; 24:00 is the midnight that ends the day. Pass with planned_start_time."),
+        ]),
         "available_from": .object([
           "type": .string("string"),
           "description": .string(
-            "Optional YYYY-MM-DD not-before date. The task stays hidden from day surfaces (Today, Upcoming, widgets) until this date, unless it is overdue. Independent of planned_date and due_date. Not defer_task — this does not move the planned day or count as a deferral."),
+            "Optional YYYY-MM-DD not-before date. The task stays hidden from day surfaces (Today, Upcoming, widgets) until this date, unless it is overdue. Independent of planned_date and due_date. Not defer_task — this does not move the planned day or count as a deferral. On a recurring task this rolls forward automatically: each spawned occurrence keeps the same day-offset from its own occurrence date (e.g. available_from = due_date hides every occurrence until its day; two days earlier shows each one two days ahead) — set it once, never per cycle."),
         ]),
         "tags": .object([
           "type": .string("array"),
@@ -67,7 +77,7 @@ extension TaskMutationToolCatalog {
         "original_id": .object([
           "type": .string("string"),
           "description": .string(
-            "Restore this task at a caller-supplied id instead of minting a new one. Use when re-creating an exported dataset so every reference to it — depends_on, task↔event links, review linked_ids, focus task_ids — resolves with no old→new id map. Omit for an ordinary new task."),
+            "Restore this task at a caller-supplied id instead of minting a new one. Use when re-creating an exported dataset so every reference to it — depends_on, task↔event links, review linked_ids — resolves with no old→new id map. Omit for an ordinary new task."),
         ]),
         "status": .object([
           "type": .string("string"),
@@ -103,7 +113,7 @@ extension TaskMutationToolCatalog {
   static let updateTaskTool = Tool(
     name: "update_task",
     title: "Update Task",
-    description: "Patch one task's editable fields (title, notes, raw_input, priority, due_date, planned_date, available_from, tags, depends_on, estimated_minutes). due_date (external deadline), planned_date (intended work day), and available_from (hide-until / not-before) are independent. Status transitions belong to complete_task, cancel_task, reopen_task, set_task_someday, and start_task/pause_task (the in_progress marker) — do not change status here. Only supplied fields are updated; an omitted field keeps its existing value; a supplied clearable field set to null/empty clears it. Returns the full updated task object.",
+    description: "Patch one task's editable fields (title, notes, raw_input, priority, due_date, planned_date, planned_start_time/planned_end_time, available_from, tags, depends_on, estimated_minutes). due_date (external deadline), planned_date (intended work day), and available_from (hide-until / not-before) are independent; a time belongs to the planned day, so moving the day without a new time clears it. Status transitions belong to complete_task, cancel_task, reopen_task, set_task_someday, and start_task/pause_task (the in_progress marker) — do not change status here. Only supplied fields are updated; an omitted field keeps its existing value; a supplied clearable field set to null/empty clears it. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -142,12 +152,22 @@ extension TaskMutationToolCatalog {
         "planned_date": .object([
           "type": .string("string"),
           "description": .string(
-            "Optional YYYY-MM-DD planned work date, or null/empty to clear. Independent of due_date."),
+            "Optional YYYY-MM-DD planned work date, or null/empty to clear. Independent of due_date. A new planned_date without a time clears the task's time; clearing planned_date clears it too."),
+        ]),
+        "planned_start_time": .object([
+          "type": .string("string"),
+          "description": .string(
+            "HH:MM (24-hour) start of the task's time on its planned day, or null to clear the time. Pass with planned_end_time. Needs a planned_date, set in the same update or already stored."),
+        ]),
+        "planned_end_time": .object([
+          "type": .string("string"),
+          "description": .string(
+            "HH:MM (24-hour) end of the task's time, after the start (24:00 is the midnight that ends the day), or null together with planned_start_time to clear the time."),
         ]),
         "available_from": .object([
           "type": .string("string"),
           "description": .string(
-            "Optional YYYY-MM-DD not-before date, or null/empty to clear. The task stays hidden from day surfaces until this date, unless it is overdue. Independent of planned_date and due_date. Not defer_task — this does not move the planned day or count as a deferral."),
+            "Optional YYYY-MM-DD not-before date, or null/empty to clear. The task stays hidden from day surfaces until this date, unless it is overdue. Independent of planned_date and due_date. Not defer_task — this does not move the planned day or count as a deferral. On a recurring task this rolls forward automatically: each spawned occurrence keeps the same day-offset from its own occurrence date (e.g. available_from = due_date hides every occurrence until its day; two days earlier shows each one two days ahead) — set it once, never per cycle."),
         ]),
         "tags": .object([
           "type": .string("array"),

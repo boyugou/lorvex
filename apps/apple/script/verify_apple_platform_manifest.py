@@ -29,7 +29,6 @@ XCODEGEN_SPEC_PATH = ROOT / "Config" / "XcodeGen" / "project.yml"
 PLATFORM_FLOOR_METADATA_KEYS = {
     "macOS": "MIN_SYSTEM_VERSION",
     "iOS": "MIN_MOBILE_SYSTEM_VERSION",
-    "visionOS": "MIN_VISION_SYSTEM_VERSION",
     "watchOS": "MIN_WATCH_SYSTEM_VERSION",
 }
 
@@ -296,10 +295,6 @@ def apple_target_manifest_failures(targets: object, metadata: dict[str, str]) ->
             "swiftpm_product": metadata["MOBILE_APP_NAME"],
             "xcodegen_target": metadata["MOBILE_APP_NAME"],
         },
-        "visionos": {
-            "swiftpm_product": metadata["VISION_APP_NAME"],
-            "xcodegen_target": metadata["VISION_APP_NAME"],
-        },
         "watchos": {
             "swiftpm_product": metadata["WATCH_APP_NAME"],
             "xcodegen_target": metadata["WATCH_APP_NAME"],
@@ -309,10 +304,9 @@ def apple_target_manifest_failures(targets: object, metadata: dict[str, str]) ->
             "xcodegen_target": metadata["WATCH_COMPLICATION_PRODUCT"],
         },
         "widget": {
-            "target": "LorvexFocusWidgetExtension",
+            "target": "LorvexWidgets",
             "swiftpm_product": "LorvexWidgetBundle",
-            "standalone_swiftpm_product": metadata["WIDGET_EXECUTABLE"],
-            "xcodegen_target": "LorvexFocusWidgetExtension",
+            "xcodegen_target": "LorvexWidgets",
         },
         "focus_filter": {
             "target": metadata["FOCUS_FILTER_EXECUTABLE"],
@@ -342,22 +336,23 @@ def swiftpm_products(source: str) -> set[str]:
 def swiftpm_platform_floors(source: str) -> dict[str, str]:
     """Map each `platforms:` entry in a Package.swift to a dotted floor string.
 
-    `.macOS(.v15)` → "15.0", `.visionOS(.v2)` → "2.0". Only the major-version
-    `.vN` spelling is recognized (the sole form these packages use); a
-    `.macOS("15.4")`-style string literal is intentionally not matched, so it
-    surfaces as a missing platform rather than a silently-passing floor.
+    Both SwiftPM spellings are recognized: `.macOS(.v15)` → "15.0" and the
+    string literal `.macOS("26.0")` → "26.0" (the 26 SDKs have no `.v26`
+    case). A literal without a minor part (`"26"`) normalizes to "26.0".
     """
-    return {
-        platform: f"{major}.0"
-        for platform, major in re.findall(
-            r"\.(macOS|iOS|visionOS|watchOS)\(\.v(\d+)\)", source
-        )
-    }
+    floors: dict[str, str] = {}
+    for platform, major in re.findall(r"\.(macOS|iOS|watchOS)\(\.v(\d+)\)", source):
+        floors[platform] = f"{major}.0"
+    for platform, version in re.findall(
+        r'\.(macOS|iOS|watchOS)\("(\d+(?:\.\d+)*)"\)', source
+    ):
+        floors[platform] = version if "." in version else f"{version}.0"
+    return floors
 
 
 def xcodegen_deployment_targets(source: str) -> dict[str, str]:
     """Parse the XcodeGen spec's top-level `deploymentTarget:` block into
-    {platform: version}. The spec pins iOS/visionOS/watchOS only — the macOS app
+    {platform: version}. The spec pins iOS/watchOS only — the macOS app
     is a SwiftPM product built outside this Xcode project.
     """
     block = re.search(
@@ -370,7 +365,7 @@ def xcodegen_deployment_targets(source: str) -> dict[str, str]:
     return {
         platform: version
         for platform, version in re.findall(
-            r'^\s{4}(macOS|iOS|visionOS|watchOS):\s*"([^"]+)"',
+            r'^\s{4}(macOS|iOS|watchOS):\s*"([^"]+)"',
             block.group("body"),
             flags=re.MULTILINE,
         )
@@ -390,7 +385,7 @@ def deployment_floor_failures(
     ``metadata`` (app_metadata.sh) is the authority. The app and core SwiftPM
     manifests must declare the same per-platform floor through their
     `platforms:` arrays, and the XcodeGen spec's `deploymentTarget:` must agree
-    for the three platforms it builds (iOS/visionOS/watchOS). The macOS floor is
+    for the platforms it builds (iOS/watchOS). The macOS floor is
     carried by the SwiftPM manifests and metadata only — no XcodeGen entry.
     """
     failures: list[str] = []
@@ -568,12 +563,6 @@ def xcodegen_setting_contract_failures(
             "info_plist": "info_plist",
             "entitlements": "entitlements",
         },
-        "visionos": {
-            "bundle": "bundle_id",
-            "info_plist": "info_plist",
-            "entitlements": "entitlements",
-            "product_name": "scheme",
-        },
         "watchos": {
             "bundle": "bundle_id",
             "info_plist": "info_plist",
@@ -667,12 +656,12 @@ def target_contract_source_failures(
     for target_name, target in targets.items():
         if not isinstance(target, dict):
             continue
-        for key in ["swiftpm_product", "standalone_swiftpm_product"]:
-            product = target.get(key)
-            if isinstance(product, str) and product not in products:
-                failures.append(
-                    f"{target_name}.{key} is not a Package.swift product: {product!r}"
-                )
+        product = target.get("swiftpm_product")
+        if isinstance(product, str) and product not in products:
+            failures.append(
+                f"{target_name}.swiftpm_product is not a Package.swift product: "
+                f"{product!r}"
+            )
         for key in ["target", "xcodegen_target"]:
             xcode_target = target.get(key)
             if isinstance(xcode_target, str) and xcode_target not in xcode_targets:
@@ -707,12 +696,11 @@ def shared_target_contract_source_failures(
             f"{swiftpm_product!r}"
         )
 
-    for key in ["ios_target", "visionos_target"]:
-        target = system_intents.get(key)
-        if isinstance(target, str) and target not in xcode_targets:
-            failures.append(
-                f"system_intents.{key} is not an XcodeGen target: {target!r}"
-            )
+    ios_target = system_intents.get("ios_target")
+    if isinstance(ios_target, str) and ios_target not in xcode_targets:
+        failures.append(
+            f"system_intents.ios_target is not an XcodeGen target: {ios_target!r}"
+        )
 
     source_path = system_intents.get("source_path")
     source_directory = Path(source_path) if isinstance(source_path, str) else None
@@ -810,12 +798,6 @@ def main() -> int:
             "display_name": metadata["MOBILE_APP_DISPLAY_NAME"],
             "minimum_os": metadata["MIN_MOBILE_SYSTEM_VERSION"],
         },
-        "visionos": {
-            "scheme": metadata["VISION_APP_NAME"],
-            "bundle_id": metadata["VISION_BUNDLE_ID"],
-            "display_name": metadata["VISION_APP_DISPLAY_NAME"],
-            "minimum_os": metadata["MIN_VISION_SYSTEM_VERSION"],
-        },
         "watchos": {
             "scheme": metadata["WATCH_APP_NAME"],
             "bundle_id": metadata["WATCH_BUNDLE_ID"],
@@ -831,7 +813,7 @@ def main() -> int:
             "extension_point": metadata["WIDGET_EXTENSION_POINT_IDENTIFIER"],
         },
         "widget": {
-            "target": "LorvexFocusWidgetExtension",
+            "target": "LorvexWidgets",
             "bundle_id": metadata["WIDGET_BUNDLE_ID"],
             "kind": metadata["WIDGET_KIND"],
             "display_name": metadata["WIDGET_DISPLAY_NAME"],
@@ -903,7 +885,7 @@ def main() -> int:
             if path_key in target:
                 require_path(target[path_key], failures)
 
-        if target_name in {"ios", "visionos"} and "info_plist" in target:
+        if target_name == "ios" and "info_plist" in target:
             failures.extend(
                 concrete_info_plist_failures(
                     target["info_plist"],

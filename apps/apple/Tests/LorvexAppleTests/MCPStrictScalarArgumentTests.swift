@@ -168,36 +168,32 @@ struct MCPStrictScalarArgumentTests {
     #expect(notes.contains("original"), "the wrong-typed update must not clear stored notes")
   }
 
-  @Test("save_focus_schedule rejects a wrong-typed block field instead of defaulting it")
-  func saveFocusScheduleRejectsWrongTypedBlockField() async throws {
-    let registry = try mcpInMemoryRegistry()
-    let result = try await mcpRegistryCall(
-      registry, tool: "save_focus_schedule",
-      arguments: [
-        "date": .string("2026-07-20"),
-        "blocks": .array([
-          .object([
-            "block_type": .int(1), "start_time": .string("09:00"),
-            "end_time": .string("10:00"), "title": .string("Deep work"),
-          ])
-        ]),
-      ])
-    try expectValidationError(result, naming: "blocks[0].block_type")
-  }
-
-  @Test("set_current_focus rejects a wrong-typed optional briefing")
-  func setCurrentFocusRejectsWrongTypedBriefing() async throws {
+  @Test("save_daily_schedule rejects a wrong-typed time field instead of defaulting it")
+  func saveDailyScheduleRejectsWrongTypedTimeField() async throws {
     let registry = try mcpInMemoryRegistry()
     let created = try await mcpRegistryCall(
-      registry, tool: "create_task", arguments: ["title": .string("Focus target")])
+      registry, tool: "create_task", arguments: ["title": .string("Timed target")])
     let id = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
 
     let result = try await mcpRegistryCall(
-      registry, tool: "set_current_focus",
+      registry, tool: "save_daily_schedule",
       arguments: [
-        "date": .string("2026-07-20"), "task_ids": .array([.string(id)]),
-        "briefing": .int(42),
+        "date": .string("2026-07-20"),
+        "times": .array([
+          .object([
+            "task_id": .string(id), "start_time": .int(900), "end_time": .string("10:00"),
+          ])
+        ]),
       ])
+    try expectValidationError(result, naming: "times[0].start_time")
+  }
+
+  @Test("set_daily_briefing rejects a wrong-typed briefing")
+  func setDailyBriefingRejectsWrongTypedBriefing() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let result = try await mcpRegistryCall(
+      registry, tool: "set_daily_briefing",
+      arguments: ["date": .string("2026-07-20"), "briefing": .int(42)])
     try expectValidationError(result, naming: "briefing")
   }
 

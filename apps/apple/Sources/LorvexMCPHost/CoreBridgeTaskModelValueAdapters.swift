@@ -1,5 +1,6 @@
 import Foundation
 import LorvexCore
+import LorvexDomain
 import MCP
 
 struct TaskValueOptions: Sendable, Equatable {
@@ -90,8 +91,9 @@ struct TaskValueOptions: Sendable, Equatable {
 
   private static let compactDefaultFields: Set<String> = [
     "id", "title", "priority", "priority_label", "status", "list_id", "estimated_minutes",
-    "due_date", "planned_date", "available_from", "tags", "defer_count", "last_defer_reason",
-    "last_deferred_at", "created_at", "updated_at", "completed_at",
+    "due_date", "planned_date", "planned_start_time", "planned_end_time", "available_from",
+    "tags", "defer_count", "last_defer_reason", "last_deferred_at", "created_at", "updated_at",
+    "completed_at",
   ]
 
   private static func group(for key: String) -> String {
@@ -99,7 +101,9 @@ struct TaskValueOptions: Sendable, Equatable {
     case "notes": return "notes"
     case "ai_notes": return "ai_notes"
     case "raw_input": return "raw_input"
-    case "due_date", "planned_date", "available_from", "estimated_minutes": return "scheduling"
+    case "due_date", "planned_date", "planned_start_time", "planned_end_time", "available_from",
+      "estimated_minutes":
+      return "scheduling"
     case "created_at", "updated_at", "completed_at": return "lifecycle"
     case "tags": return "tags"
     case "depends_on": return "dependencies"
@@ -122,7 +126,7 @@ struct TaskValueOptions: Sendable, Equatable {
   static let fieldNames: [String] = [
     "id", "title", "notes", "ai_notes", "raw_input", "priority", "priority_label",
     "status", "list_id", "estimated_minutes", "due_date", "planned_date",
-    "available_from", "recurrence", "recurrence_exceptions", "tags", "depends_on",
+    "planned_start_time", "planned_end_time", "available_from", "recurrence", "recurrence_exceptions", "tags", "depends_on",
     "checklist_items", "reminders", "lateness_state", "defer_count",
     "last_defer_reason", "last_deferred_at", "created_at", "updated_at",
     "completed_at",
@@ -194,6 +198,10 @@ extension CoreBridgeClient {
       "checklist_items": .array(task.checklistItems.map(checklistItemValue(from:))),
       "reminders": .array(task.reminders.map(reminderValue(from:))),
     ]
+    fields["planned_start_time"] =
+      task.plannedTime.map { .string(TimeOfDay.rangeBoundString($0.lowerBound)) } ?? .null
+    fields["planned_end_time"] =
+      task.plannedTime.map { .string(TimeOfDay.rangeBoundString($0.upperBound)) } ?? .null
     fields["lateness_state"] = task.latenessState.map(Value.string) ?? .null
     fields["defer_count"] = .int(task.deferCount)
     fields["last_defer_reason"] = task.lastDeferReason.map(Value.string) ?? .null

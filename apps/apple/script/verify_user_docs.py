@@ -30,8 +30,8 @@ MCP_TOOL_COUNT_PATTERNS = {
         "parameter audit count": re.compile(
             r"(?m)^  across the Apple MCP catalog \(currently (?P<count>\d+) tools\)"
         ),
-        "Tauri parity count": re.compile(
-            r"(?m)^- \*\*Full Tauri MCP parity \+ beyond\.\*\* The current Apple catalog has (?P<count>\d+) tools\."
+        "reference parity count (beyond)": re.compile(
+            r"(?m)^- \*\*MCP parity with the original reference catalog, and beyond\.\*\* The current Apple catalog has (?P<count>\d+) tools\."
         ),
         "gap closure count": re.compile(
             r"(?m)^  additions leave the current catalog at (?P<count>\d+) tools\."
@@ -42,7 +42,7 @@ MCP_TOOL_COUNT_PATTERNS = {
     },
     APPLE_NATIVE_ARCH: {
         "architecture count": re.compile(
-            r"(?m)^- It exposes (?P<count>\d+) tools spanning tasks, focus, lists, habits, calendar, reviews,"
+            r"(?m)^- It exposes (?P<count>\d+) tools spanning tasks, day planning, lists, habits, calendar,"
         ),
     },
 }
@@ -75,6 +75,9 @@ CHECKS = {
             "Future versions will add watch complications.",
             "Complication support is planned for the Infograph",
             "current focus task and a Start/End session button",
+            "current focus task and opens Lorvex directly to Today when tapped",
+            "Lorvex ships a focus complication",
+            "and focus plans route through the same native inbound sync",
             "It reads the same `widget_snapshot_v2.json` file",
             "`task_create` MCP tool",
             "`ics_export` MCP tool",
@@ -83,9 +86,9 @@ CHECKS = {
         ],
         "required": [
             "| **Notifications** | Scheduling a task reminder |",
-            "current focus task and opens Lorvex directly to Today when tapped",
+            "at the top of Today and opens Lorvex directly to Today when tapped",
             "### Watch Complications",
-            "Lorvex ships a focus complication backed by the Watch's atomically stored replica",
+            "Lorvex ships the \"Lorvex Today\" complication, backed by the Watch's atomically",
             "keeps it until a checksum- and identity-bound application ACK arrives",
             "`create_task`, `update_task`, `get_task`, `list_tasks`, `search_tasks`, `complete_task`, `cancel_task`, `reopen_task`, `defer_task`",
             "`batch_create_tasks`, `batch_update_tasks`, `batch_defer_tasks`, `batch_complete_tasks`, `batch_reopen_tasks`, `batch_move_tasks`",
@@ -96,10 +99,10 @@ CHECKS = {
             "`create_task` MCP tool",
             "`export_calendar_ics` MCP tool",
             "`export_data` MCP tool",
-            "`get_weekly_brief` tool call",
+            "`get_weekly_brief` tool",
             "`get_ai_changelog`, `get_recent_logs`",
-            "outbound record export, private database subscription, remote-change refresh,\ninbound record application, and atomic SQLite change-token checkpointing are\nready",
-            "Core planning entities such as tasks, lists, habits, calendar events, memory,\nand focus plans route through the same native inbound sync\nengine used by the Swift core tests",
+            "The inbound boundary applies decoded CloudKit records through the native",
+            "Core planning entities such as tasks, lists, habits, calendar events, memory,\nand daily briefings route through the same native inbound sync\nengine used by the Swift core tests",
             "typed HLC LWW gates, tombstones,\nredirect-aware pending inbox draining, and conflict logging",
         ],
     },
@@ -125,7 +128,7 @@ CHECKS = {
         "required": [
             "The shared `LorvexSystemIntents` target owns the `AppIntent`, `AppEntity`",
             "The mobile app entry links `LorvexSystemIntents`",
-            "`MobileStoreFactory` centralizes the mobile/vision store bootstrap",
+            "`MobileStoreFactory` centralizes the mobile store bootstrap",
             "production `LorvexWatchStoreFactory` is read-only with respect\n  to SQLite",
             "through replaceable `WCSession.updateApplicationContext`",
             "replica state fails closed instead of opening a second writable database",
@@ -183,11 +186,12 @@ CHECKS = {
         "stale": [
             "| CloudKit sync (read + write) | [PARTIAL] | Scaffold present; production container provisioning required |",
             "| Prompt-injection fencing on MCP read responses | [SHIPPED] | get_task, list_tasks, get_overview |",
+            "list/tag, focus, habit, review, and memory reads",
         ],
         "required": [
-            "| CloudKit sync (read + write) | [SHIPPED] | Live mode includes outbound record export, private database subscription, remote-change refresh, inbound record application, and atomic SQLite change-token checkpointing; distributed builds still require CloudKit entitlement/container provisioning |",
+            "| CloudKit sync (read + write) | [SHIPPED] | Live mode runs on `CKSyncEngine`: outbound record export from the local outbox, the engine's private database subscription and change fetches, inbound record application, and engine-state checkpoints in SQLite; distributed builds still require CloudKit entitlement/container provisioning |",
             "Structured read payloads carrying user-controlled text are key-aware fenced through `SecurityFencing.fenceValue`",
-            "including task, calendar, list/tag, focus, habit, review, and memory reads",
+            "including task, calendar, list/tag, day-planning, habit, review, and memory reads",
         ],
     },
     DISTRIBUTION: {
@@ -206,10 +210,10 @@ CHECKS = {
             "3. [macOS — local development and CI packages](#3-macos--local-development-and-ci-packages)",
             "4. [macOS - Mac App Store](#4-macos---mac-app-store)",
             "5. [iOS/iPadOS — App Store Connect](#5-iosipados--app-store-connect)",
-            "10. [Distribution gaps and follow-up work](#10-distribution-gaps-and-follow-up-work)",
+            "9. [Distribution gaps and follow-up work](#9-distribution-gaps-and-follow-up-work)",
             "## 4. macOS - Mac App Store",
             "## 5. iOS/iPadOS — App Store Connect",
-            "## 10. Distribution gaps and follow-up work",
+            "## 9. Distribution gaps and follow-up work",
             "./script/archive_mas.sh --preflight",
             "./script/archive_mas.sh --package",
             "`package_dmg.sh` is the only direct-distribution release command.",
@@ -265,9 +269,9 @@ CHECKS = {
             "release manifest records WidgetKit integration metadata for the embedded",
             "Home Screen widget and the Control Widget kind/display contract",
             "release manifest records CloudKit sync readiness metadata",
-            "outbound record\n  export, private database subscription, remote-change refresh, and\n  atomic SQLite change-token checkpointing are ready",
+            "outbound record\n  export, private database subscription, remote-change refresh, and\n  change-token checkpointing are ready",
             "inbound record application is ready\n  with conservative field-level remote/local merge",
-            "builds the `LorvexMobileApp`, `LorvexVisionApp`, and `LorvexWatchApp` SwiftUI entry targets",
+            "builds the `LorvexMobileApp` and `LorvexWatchApp` SwiftUI",
             "XcodeGen drift checks for bundle ids",
             "system entrypoint",
             "release manifest records quality gate verifiers for core service coverage",

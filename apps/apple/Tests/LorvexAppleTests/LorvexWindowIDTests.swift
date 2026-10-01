@@ -49,36 +49,39 @@ func lorvexWorkspaceWindowsCoverDedicatedWorkspaceScenes() {
       .today,
       .calendar,
       .tasks,
-      .lists,
-      .habits,
       .reviews,
+      .habits,
+      .lists,
     ])
   #expect(!LorvexWindowID.workspaceWindows.contains(.main))
   #expect(!LorvexWindowID.workspaceWindows.contains(.taskDetail))
-  // Each workspace window has a ⇧⌘1-6 accelerator matching its menu position.
-  #expect(LorvexWindowID.today.keyboardShortcut == "1")
-  #expect(LorvexWindowID.calendar.keyboardShortcut == "2")
-  #expect(LorvexWindowID.tasks.keyboardShortcut == "3")
-  #expect(LorvexWindowID.lists.keyboardShortcut == "4")
-  #expect(LorvexWindowID.habits.keyboardShortcut == "5")
-  #expect(LorvexWindowID.reviews.keyboardShortcut == "6")
+  #expect(LorvexWindowID.lists.keyboardShortcut == nil)
   #expect(LorvexWindowID.main.keyboardShortcut == nil)
   #expect(LorvexWindowID.taskDetail.keyboardShortcut == nil)
 }
 
+/// ⇧⌘N opens in a window the destination ⌘N navigates to, so one digit means
+/// one place across the Workspace and Navigate menus.
+@Test
+func workspaceWindowShortcutsMatchSidebarNavigationDigits() {
+  let windowed: [(LorvexWindowID, SidebarSelection)] = [
+    (.today, .today), (.calendar, .calendar), (.tasks, .tasks), (.reviews, .reviews),
+    (.habits, .habits),
+  ]
+  for (window, selection) in windowed {
+    #expect(window.keyboardShortcut != nil, "\(window)")
+    #expect(window.keyboardShortcut == selection.navigationShortcut, "\(window)")
+  }
+}
+
+/// Which windows refresh on open, not in what order: the order follows the
+/// Workspace menu, which the digit test above pins.
 @Test
 func lorvexRefreshOnOpenWindowsCoverDataBackedScenes() {
-  #expect(
-    LorvexWindowID.refreshOnOpenWindows == [
-      .today,
-      .calendar,
-      .tasks,
-      .lists,
-      .habits,
-      .reviews,
-      .taskDetail,
-    ])
-  #expect(!LorvexWindowID.refreshOnOpenWindows.contains(.main))
+  let windows = LorvexWindowID.refreshOnOpenWindows
+  #expect(windows.count == 7)
+  #expect(Set(windows) == [.today, .calendar, .tasks, .lists, .habits, .reviews, .taskDetail])
+  #expect(!windows.contains(.main))
 }
 
 @MainActor

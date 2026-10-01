@@ -68,11 +68,10 @@ CLOUD_SYNC_OWNER_TARGETS = {
     "LorvexCloudSync",
     "LorvexMobile",
     "LorvexMobileApp",
-    "LorvexVisionApp",
 }
 CLOUD_SYNC_CODE_PATTERN = re.compile(
     r"(?m)^\s*(?:@preconcurrency\s+)?import\s+(?:CloudKit|LorvexCloudSync)\b"
-    r"|\b(?:CKContainer|CloudSyncEngineCoordinator)\b"
+    r"|\b(?:CKContainer|CloudSyncController)\b"
 )
 
 
@@ -461,7 +460,7 @@ def main() -> int:
 
     if ".macOS(" not in package_source:
         failures.append("Package.swift does not declare macOS as a supported platform")
-    for platform in [".iOS(", ".visionOS(", ".watchOS("]:
+    for platform in [".iOS(", ".watchOS("]:
         if platform not in package_source:
             failures.append(f"Package.swift does not declare {platform.removesuffix('(')} support")
     for forbidden in [".linux", ".windows", "Windows", "Linux"]:

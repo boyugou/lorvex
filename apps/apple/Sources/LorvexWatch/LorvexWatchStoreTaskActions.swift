@@ -3,15 +3,37 @@ import LorvexCore
 import LorvexWidgetKitSupport
 
 extension LorvexWatchStore {
-  /// Completes the primary focus task and refreshes state.
+  /// Completes one of Today's tasks.
   ///
   /// When the backend is the read-only snapshot and a mutation forwarder is
   /// configured, the mutation is forwarded to the paired iPhone instead of
-  /// applied locally.
-  public func completePrimaryTask() async {
-    guard let task = primaryTask else { return }
-    await performMutation(.completeTask(id: task.id)) { core in
-      _ = try await core.completeTask(id: task.id)
+  /// applied locally; every task action below does the same.
+  public func completeTask(id: LorvexTask.ID) async {
+    await performMutation(.completeTask(id: id)) { core in
+      _ = try await core.completeTask(id: id)
+    }
+  }
+
+  /// Marks a task started (`in_progress`), which moves it up with the other
+  /// started tasks at the top of Today.
+  public func startTask(id: LorvexTask.ID) async {
+    await performMutation(.startTask(id: id)) { core in
+      _ = try await core.startTask(id: id)
+    }
+  }
+
+  /// Takes a task out of the started state, back to open.
+  public func pauseTask(id: LorvexTask.ID) async {
+    await performMutation(.pauseTask(id: id)) { core in
+      _ = try await core.pauseTask(id: id)
+    }
+  }
+
+  /// Cancels a task occurrence. If the task repeats, the series continues
+  /// with its next occurrence.
+  public func cancelTask(id: LorvexTask.ID) async {
+    await performMutation(.cancelTask(id: id)) { core in
+      _ = try await core.cancelTask(id: id)
     }
   }
 
@@ -33,53 +55,7 @@ extension LorvexWatchStore {
     }
   }
 
-  /// Cancels the primary focus task occurrence and refreshes state. If the task
-  /// repeats, the series continues with its next occurrence.
-  public func cancelPrimaryTask() async {
-    guard let task = primaryTask else { return }
-    await performMutation(.cancelTask(id: task.id)) { core in
-      _ = try await core.cancelTask(id: task.id)
-    }
-  }
-
-  /// Defers the primary focus task until tomorrow and refreshes state.
-  public func deferPrimaryTaskToTomorrow() async {
-    guard let task = primaryTask else { return }
-    do {
-      let tomorrow = try await tomorrowDate()
-      let plannedDate = LorvexDateFormatters.ymdUTC.string(from: tomorrow)
-      await performMutation(.deferTaskToTomorrow(id: task.id, plannedDate: plannedDate)) { core in
-        _ = try await core.deferTask(id: task.id, until: tomorrow)
-      }
-    } catch {
-      self.error = error
-    }
-  }
-
-  /// Removes the primary task from today's focus plan and refreshes state.
-  public func removePrimaryTaskFromFocus() async {
-    guard let task = primaryTask else { return }
-    do {
-      let date = try await mutationLogicalDay()
-      await performMutation(.removeFromFocus(id: task.id, date: date)) { core in
-        _ = try await core.removeFromCurrentFocus(date: date, taskID: task.id)
-      }
-    } catch {
-      self.error = error
-    }
-  }
-
-  /// Completes a specific queued focus task (identified by id) and refreshes state.
-  ///
-  /// Unlike `completePrimaryTask`, this acts on any task in the focus queue, so the
-  /// watch's "Next" rows can be completed without first promoting them to primary.
-  public func completeTask(id: LorvexTask.ID) async {
-    await performMutation(.completeTask(id: id)) { core in
-      _ = try await core.completeTask(id: id)
-    }
-  }
-
-  /// Defers a specific queued focus task until tomorrow and refreshes state.
+  /// Defers a task until tomorrow, which takes it off Today.
   public func deferTaskToTomorrow(id: LorvexTask.ID) async {
     do {
       let tomorrow = try await tomorrowDate()

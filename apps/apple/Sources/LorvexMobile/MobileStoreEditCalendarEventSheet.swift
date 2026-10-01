@@ -71,7 +71,7 @@ struct MobileStoreEditCalendarEventSheet: View {
                 systemImage: "exclamationmark.triangle"
               )
               .font(.footnote)
-              .foregroundStyle(.orange)
+              .foregroundStyle(LorvexDesign.Palette.warning)
               .accessibilityIdentifier("mobileEditCalendarEvent.timesInvalid")
             }
           }
@@ -116,6 +116,7 @@ struct MobileStoreEditCalendarEventSheet: View {
                   localized: "common.delete", defaultValue: "Delete", table: "Localizable",
                   bundle: MobileL10n.bundle), systemImage: "trash")
             }
+            .mobileDestructiveRowStyle()
             .disabled(store.isMutatingCalendarEvent)
             .accessibilityIdentifier("mobileEditCalendarEvent.delete")
           }
@@ -143,7 +144,7 @@ struct MobileStoreEditCalendarEventSheet: View {
             attemptSave()
           } label: {
             if store.isMutatingCalendarEvent {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(
                 String(
@@ -151,6 +152,7 @@ struct MobileStoreEditCalendarEventSheet: View {
                   bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(!store.canUpdateCalendarDraft)
           .accessibilityIdentifier("mobileEditCalendarEvent.confirm")
         }
@@ -223,6 +225,11 @@ struct MobileStoreEditCalendarEventSheet: View {
   // event edits/deletes directly.
   @ViewBuilder
   private func scopeButtons(isDelete: Bool) -> some View {
+    // The save and delete scope dialogs share this builder but must expose
+    // distinct identifiers: the "this event" / "this and following" buttons are
+    // otherwise identical, so a single `.scope.thisEvent` id can't tell a test
+    // (or accessibility inspection) which intent's dialog it belongs to.
+    let intent = isDelete ? "delete" : "save"
     Button(
       String(
         localized: "calendar.recurring_scope.this_event", defaultValue: "This Event",
@@ -230,7 +237,7 @@ struct MobileStoreEditCalendarEventSheet: View {
     ) {
       run(scope: .thisEvent, isDelete: isDelete)
     }
-    .accessibilityIdentifier("mobileEditCalendarEvent.scope.thisEvent")
+    .accessibilityIdentifier("mobileEditCalendarEvent.\(intent).scope.thisEvent")
     Button(
       String(
         localized: "calendar.recurring_scope.this_and_following",
@@ -238,7 +245,7 @@ struct MobileStoreEditCalendarEventSheet: View {
     ) {
       run(scope: .thisAndFollowing, isDelete: isDelete)
     }
-    .accessibilityIdentifier("mobileEditCalendarEvent.scope.thisAndFollowing")
+    .accessibilityIdentifier("mobileEditCalendarEvent.\(intent).scope.thisAndFollowing")
     Button(
       isDelete
         ? String(
@@ -251,7 +258,7 @@ struct MobileStoreEditCalendarEventSheet: View {
     ) {
       run(scope: .allEvents, isDelete: isDelete)
     }
-    .accessibilityIdentifier("mobileEditCalendarEvent.scope.allEvents")
+    .accessibilityIdentifier("mobileEditCalendarEvent.\(intent).scope.allEvents")
     Button(
       String(
         localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",

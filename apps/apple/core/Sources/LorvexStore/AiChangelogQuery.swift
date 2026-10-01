@@ -41,6 +41,15 @@ public struct AiChangelogEntry: Sendable, Equatable {
   public let mcpTool: String?
   /// Actor that wrote the row (e.g. "assistant"); nil when unrecorded.
   public let initiatedBy: String?
+  /// True when the row recorded the entity's state before the change
+  /// (`before_json`), the state an undo restores.
+  public let hasBefore: Bool
+  /// True when the row recorded the entity's state after the change.
+  public let hasAfter: Bool
+  /// The current title of the task the row is about, for a list that names
+  /// the task in its own words; nil for other entity kinds, a batch, or a task
+  /// that no longer exists.
+  public let entityTitle: String?
 }
 
 /// Shared SQL fragments for AI changelog actor filtering.
@@ -105,36 +114,31 @@ public enum AiChangelogQueryRepo {
 
   // -- shared filter construction -----------------------------------------
 
+  /// The filters every list branch applies, written against the changelog
+  /// alias `ac` (each branch joins the task title onto `ac`), with the bound
+  /// values in placeholder order.
   struct SharedFilterClauses {
-    let bare: String
     let aliased: String
     let values: [DatabaseValueConvertible]
   }
 
   static func buildSharedFilterClauses(_ query: AiChangelogQuery) -> SharedFilterClauses {
-    var bare: [String] = [AiChangelogActorFilter.assistantActorFilterSql()]
     var aliased: [String] = [AiChangelogActorFilter.assistantActorFilterSql(forAlias: "ac")]
     var values: [DatabaseValueConvertible] = []
 
     if let entityType = query.entityType {
-      bare.append("entity_type = ?")
       aliased.append("ac.entity_type = ?")
       values.append(entityType.rawValue)
     }
     if let op = query.operation {
-      bare.append("operation = ?")
       aliased.append("ac.operation = ?")
       values.append(op)
     }
     if let since = query.since {
-      bare.append("timestamp > ?")
       aliased.append("ac.timestamp > ?")
       values.append(since)
     }
-    return SharedFilterClauses(
-      bare: bare.joined(separator: " AND "),
-      aliased: aliased.joined(separator: " AND "),
-      values: values)
+    return SharedFilterClauses(aliased: aliased.joined(separator: " AND "), values: values)
   }
 
   static func listWithEntityId(
@@ -144,16 +148,24 @@ public enum AiChangelogQueryRepo {
     shared: SharedFilterClauses
   ) throws -> [AiChangelogEntry] {
     let sql = """
-      SELECT id, timestamp, operation, entity_type, entity_id, summary, mcp_tool, initiated_by \
+      SELECT id, timestamp, operation, entity_type, entity_id, summary, mcp_tool, initiated_by, \
+             has_before, has_after, entity_title \
       FROM ( \
-         SELECT id, timestamp, operation, entity_type, entity_id, summary, mcp_tool, initiated_by \
-         FROM ai_changelog \
-         WHERE entity_id = ? AND \(shared.bare) \
+         SELECT ac.id, ac.timestamp, ac.operation, ac.entity_type, ac.entity_id, \
+                ac.summary, ac.mcp_tool, ac.initiated_by, \
+                ac.before_json IS NOT NULL AS has_before, ac.after_json IS NOT NULL AS has_after, \
+                t.title AS entity_title \
+         FROM ai_changelog ac \
+         \(taskTitleJoinSql) \
+         WHERE ac.entity_id = ? AND \(shared.aliased) \
          UNION \
          SELECT ac.id, ac.timestamp, ac.operation, ac.entity_type, ac.entity_id, \
-                ac.summary, ac.mcp_tool, ac.initiated_by \
+                ac.summary, ac.mcp_tool, ac.initiated_by, \
+                ac.before_json IS NOT NULL, ac.after_json IS NOT NULL, \
+                t.title \
          FROM ai_changelog ac \
          JOIN ai_changelog_entities ace ON ace.changelog_id = ac.id \
+         \(taskTitleJoinSql) \
          WHERE ace.entity_id = ? AND \(shared.aliased) \
       ) \
       ORDER BY timestamp DESC, id DESC \
@@ -174,10 +186,13 @@ public enum AiChangelogQueryRepo {
     shared: SharedFilterClauses
   ) throws -> [AiChangelogEntry] {
     let sql = """
-      SELECT id, timestamp, operation, entity_type, entity_id, summary, mcp_tool, initiated_by \
-      FROM ai_changelog \
-      WHERE \(shared.bare) \
-      ORDER BY timestamp DESC, id DESC \
+      SELECT ac.id, ac.timestamp, ac.operation, ac.entity_type, ac.entity_id, \
+             ac.summary, ac.mcp_tool, ac.initiated_by, \
+             ac.before_json IS NOT NULL, ac.after_json IS NOT NULL, t.title \
+      FROM ai_changelog ac \
+      \(taskTitleJoinSql) \
+      WHERE \(shared.aliased) \
+      ORDER BY ac.timestamp DESC, ac.id DESC \
       LIMIT ?
       """
     var args: [DatabaseValueConvertible?] = shared.values.map { $0 as DatabaseValueConvertible? }
@@ -189,23 +204,37 @@ public enum AiChangelogQueryRepo {
     _ db: Database, sql: String, arguments: StatementArguments
   ) throws -> [AiChangelogEntry] {
     let rows = try Row.fetchAll(db, sql: sql, arguments: arguments)
-    return try rows.map { row in
-      let rawEntityType: String = row[3]
-      guard let entityType = EntityKind.parse(rawEntityType) else {
-        throw DatabaseError(
-          resultCode: .SQLITE_MISMATCH,
-          message:
-            "ai_changelog.entity_type contains unknown entity kind \"\(rawEntityType)\"")
-      }
-      return AiChangelogEntry(
-        id: row[0],
-        timestamp: row[1],
-        operation: row[2],
-        entityType: entityType,
-        entityId: row[4],
-        summary: row[5],
-        mcpTool: row[6],
-        initiatedBy: row[7])
+    return try rows.map(entry(from:))
+  }
+
+  /// Joins the task a row is about (alias `t`) onto the changelog (alias
+  /// `ac`), so its current title can be selected; other entity kinds and
+  /// vanished tasks join nothing.
+  static let taskTitleJoinSql =
+    "LEFT JOIN tasks t ON ac.entity_type = '\(EntityName.task)' AND t.id = ac.entity_id"
+
+  /// One list row from the shared column order: id, timestamp, operation,
+  /// entity_type, entity_id, summary, mcp_tool, initiated_by, has_before,
+  /// has_after, entity_title.
+  static func entry(from row: Row) throws -> AiChangelogEntry {
+    let rawEntityType: String = row[3]
+    guard let entityType = EntityKind.parse(rawEntityType) else {
+      throw DatabaseError(
+        resultCode: .SQLITE_MISMATCH,
+        message:
+          "ai_changelog.entity_type contains unknown entity kind \"\(rawEntityType)\"")
     }
+    return AiChangelogEntry(
+      id: row[0],
+      timestamp: row[1],
+      operation: row[2],
+      entityType: entityType,
+      entityId: row[4],
+      summary: row[5],
+      mcpTool: row[6],
+      initiatedBy: row[7],
+      hasBefore: row[8],
+      hasAfter: row[9],
+      entityTitle: row[10])
   }
 }

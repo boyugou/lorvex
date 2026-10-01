@@ -98,6 +98,39 @@ func mobileStoreReeditsMovedOccurrenceUsingOriginalOccurrenceDate() async throws
   #expect(store.errorMessage == nil)
 }
 
+// A metadata-only "All Events" edit (here, title only) must NOT re-anchor the
+// series to the edited occurrence's date. The draft is seeded with the tapped
+// occurrence's date; sending it unchanged would move the master start_date and
+// drop every earlier occurrence (regression guard).
+@MainActor
+@Test
+func mobileStoreScopedAllEventsTitleEditKeepsSeriesAnchor() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  let recurring = try await makeRecurringStandup(core)  // weekly from 2026-05-23
+  await store.refresh()
+
+  // A later occurrence whose date differs from the series anchor.
+  let timeline = try await core.loadCalendarTimeline(from: "2026-05-23", to: "2026-06-20")
+  let laterOccurrence = try #require(
+    timeline.events.first { $0.eventID == recurring.eventID && $0.startDate == "2026-05-30" })
+
+  store.prepareCalendarDraft(for: laterOccurrence)
+  store.calendarDraft.title = "Team Standup"  // date left at the occurrence's own day
+  let saved = await store.saveScopedCalendarEvent(laterOccurrence, scope: .allEvents)
+  #expect(saved)
+
+  // The original 2026-05-23 occurrence must survive — the anchor was not moved to
+  // 2026-05-30 — and the title change applied series-wide.
+  let after = try await core.loadCalendarTimeline(from: "2026-05-23", to: "2026-06-20")
+  let anchor = after.events.first {
+    $0.eventID == recurring.eventID && $0.startDate == "2026-05-23"
+  }
+  #expect(anchor != nil)
+  #expect(anchor?.title == "Team Standup")
+  #expect(store.errorMessage == nil)
+}
+
 @MainActor
 @Test
 func mobileStoreScopedAllEventsDeleteRemovesSeries() async throws {

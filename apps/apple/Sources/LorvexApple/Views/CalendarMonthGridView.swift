@@ -10,9 +10,10 @@ import SwiftUI
 /// ``CalendarWeekGridView``: the visible month (`monthAnchor`) drives the
 /// data fetch through the caller (`CalendarWorkspaceView`, which loads the
 /// grid's exact leading/trailing-day span so a busy month's boundary weeks
-/// aren't clipped), the grid renders from `store.filteredCalendarEvents` /
-/// `store.filteredScheduledTasks`, and list/event colors resolve the same way
-/// the week grid's all-day strip does. Clicking a day cell opens that day (the
+/// aren't clipped), the grid renders from `store.calendarTimeline`'s events and
+/// `store.scheduledTasks` (a timed task at its time on its planned
+/// day), and event colors resolve the same way the week grid's all-day strip
+/// does. Clicking a day cell opens that day (the
 /// workspace's existing day/week navigation) — clicking a chip opens that
 /// event/task instead.
 struct CalendarMonthGridView: View {
@@ -32,14 +33,12 @@ struct CalendarMonthGridView: View {
   /// `CalendarMonthGridDayCell` via `isOverflowPresented` / `onShowOverflow`.
   @State private var overflowDayID: CalendarMonthGridDay.ID? = nil
 
-  static let maxChipsPerDay = CalendarMonthGridModel.defaultMaxChipsPerDay
-
   private var weeks: [[CalendarMonthGridDay]] {
     let days = CalendarMonthGridModel.buildDays(
       monthAnchor: monthAnchor,
       calendar: calendar,
-      events: store.filteredCalendarEvents,
-      tasks: store.filteredScheduledTasks,
+      events: store.calendarTimeline?.events ?? [],
+      tasks: store.scheduledTasks,
       dayKeyFor: { AppStore.ymdFormatter.string(from: $0) }
     )
     guard !days.isEmpty else { return [] }
@@ -53,9 +52,12 @@ struct CalendarMonthGridView: View {
       Divider()
       GeometryReader { geo in
         let rowHeight = weeks.isEmpty ? 0 : geo.size.height / CGFloat(weeks.count)
+        // A day shows as many chips as its row has room for, so a tall window
+        // lays the whole day out and a short one folds it into "+N".
+        let maxVisibleChips = CalendarMonthGridDayCell.chipsFitting(in: rowHeight)
         VStack(spacing: 0) {
           ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
-            weekRow(week)
+            weekRow(week, maxVisibleChips: maxVisibleChips)
               .frame(height: rowHeight)
           }
         }
@@ -88,15 +90,14 @@ struct CalendarMonthGridView: View {
     return (Array(symbols[firstIndex...]) + Array(symbols[..<firstIndex])).map { $0.uppercased() }
   }
 
-  private func weekRow(_ week: [CalendarMonthGridDay]) -> some View {
+  private func weekRow(_ week: [CalendarMonthGridDay], maxVisibleChips: Int) -> some View {
     HStack(spacing: 0) {
       ForEach(Array(week.enumerated()), id: \.element.id) { index, day in
         CalendarMonthGridDayCell(
           day: day,
           isToday: calendar.isDateInToday(day.date),
-          maxVisibleChips: Self.maxChipsPerDay,
+          maxVisibleChips: maxVisibleChips,
           eventColor: eventColor,
-          taskColor: taskColor,
           onSelectEvent: selectEvent,
           onOpenTask: openTask,
           onOpenDay: { openDay(day.date) },
@@ -121,17 +122,5 @@ struct CalendarMonthGridView: View {
 
   private func eventColor(_ event: CalendarTimelineEvent) -> Color {
     Color(lorvexHex: event.color) ?? .accentColor
-  }
-
-  /// A scheduled-task chip's tint: its owning list's color, resolved live from
-  /// the loaded list catalog — the same recipe the week grid's all-day strip
-  /// uses. Falls back to secondary for a task with no list or an unloaded
-  /// catalog.
-  private func taskColor(_ task: LorvexTask) -> Color {
-    guard let listID = task.listID,
-      let list = store.lists?.lists.first(where: { $0.id == listID }),
-      let color = Color(lorvexHex: list.color)
-    else { return .secondary }
-    return color
   }
 }

@@ -7,33 +7,18 @@ import Testing
 
 @MainActor
 @Test
-func appStoreLoadsAndFiltersPreviewListsAndHabits() async throws {
-  let suiteName = "appStoreLoadsAndFiltersPreviewListsAndHabits.\(UUID().uuidString)"
+func appStoreLoadsPreviewListsAndHabits() async throws {
+  let suiteName = "appStoreLoadsPreviewListsAndHabits.\(UUID().uuidString)"
   let defaults = UserDefaults(suiteName: suiteName)!
   defaults.removePersistentDomain(forName: suiteName)
   defer { defaults.removePersistentDomain(forName: suiteName) }
-  let core = try await makeSeededInMemoryCore()
-  // The store's calendar timeline is a window around today; the fixed seed
-  // event (2026-05-22) sits outside it, so search exercises a fresh
-  // in-window event.
-  let todayYMD = LorvexDateFormatters.ymd.string(from: Date())
-  let searchable = try await core.createCalendarEvent(
-    title: "Migration review follow-up", startDate: todayYMD, endDate: nil,
-    startTime: "10:00", endTime: "10:30", allDay: false, location: nil, notes: nil)
-  let store = AppStore(core: core, defaults: defaults)
+  let store = AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
 
   await store.refresh()
   #expect(store.selectedListID == "inbox")
   #expect(store.selectedListDetail?.tasks.count == 1)
-
-  store.searchText = "apple"
-  #expect(store.filteredLists.map(\.id) == [LorvexPreviewSeedID.appleNativeList])
-
-  store.searchText = "end of day"
-  #expect(store.filteredHabits.map(\.id) == [LorvexPreviewSeedID.dailyReviewHabit])
-
-  store.searchText = "migration review"
-  #expect(store.filteredCalendarEvents.map(\.id) == [searchable.id])
+  #expect(store.orderedLists.contains { $0.id == LorvexPreviewSeedID.appleNativeList })
+  #expect(store.orderedHabits.contains { $0.id == LorvexPreviewSeedID.dailyReviewHabit })
 }
 
 @MainActor
@@ -47,7 +32,7 @@ func appStoreSelectsPreviewListDetail() async throws {
 
   #expect(store.selectedListDetail?.list.name == "Apple Native")
   #expect(
-    store.filteredSelectedListTasks.map(\.id) == [
+    store.selectedListTasks.map(\.id) == [
       LorvexPreviewSeedID.agendaTask,
       LorvexPreviewSeedID.statusUpdateTask,
     ])
@@ -72,10 +57,43 @@ func appStoreCreatesListAndMovesSelectedPreviewTask() async throws {
   #expect(store.selectedListDetail?.list.name == "Writing")
   #expect(store.selectedListDetail?.tasks.isEmpty == true)
 
-  await store.moveSelectedTaskToSelectedList()
+  let listID = try #require(store.selectedListID)
+  await store.moveTask(id: selectedTaskID, toListID: listID)
 
   #expect(store.selectedListDetail?.tasks.map(\.id) == [selectedTaskID])
-  #expect(store.lists?.lists.first { $0.id == store.selectedListID }?.openCount == 1)
+  #expect(store.lists?.lists.first { $0.id == listID }?.openCount == 1)
+}
+
+@MainActor
+@Test
+func appStoreListDetailLoadsFurtherPagesAndKeepsThemAcrossReloads() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let list = try await core.createList(name: "Reading", description: nil)
+  var createdIDs: [LorvexTask.ID] = []
+  for index in 0..<(AppStore.listDetailPageSize + 5) {
+    let task = try await core.createTask(TaskCreateDraft(title: "Paged list task \(index)", listID: list.id))
+    createdIDs.append(task.id)
+  }
+
+  let store = AppStore(core: core)
+  store.selectedListID = list.id
+  await store.loadSelectedListDetailForUI()
+
+  #expect(store.selectedListDetail?.tasks.count == AppStore.listDetailPageSize)
+  #expect(store.selectedListHasMoreTasks)
+
+  await store.loadMoreSelectedListTasks()
+
+  let loadedIDs = store.selectedListDetail?.tasks.map(\.id) ?? []
+  #expect(loadedIDs.count == createdIDs.count)
+  #expect(Set(loadedIDs) == Set(createdIDs))
+  #expect(!store.selectedListHasMoreTasks)
+
+  // The reload a mutation triggers keeps every loaded row instead of
+  // shrinking the list back to its first page.
+  await store.loadSelectedListDetailForUI()
+
+  #expect(store.selectedListDetail?.tasks.count == createdIDs.count)
 }
 
 @MainActor
@@ -86,7 +104,7 @@ func appStoreListDetailSelectionSupportsBatchCompleteAndReopen() async throws {
   await store.refresh()
   store.selectedListID = LorvexPreviewSeedID.appleNativeList
   await store.loadSelectedListDetailForUI()
-  let selectedIDs = Set(store.filteredSelectedListTasks.prefix(2).map(\.id))
+  let selectedIDs = Set(store.selectedListTasks.prefix(2).map(\.id))
   #expect(selectedIDs.count == 2)
   store.setSelectedListTaskSelection(selectedIDs)
 
@@ -121,7 +139,7 @@ func appStoreListDetailSelectionSupportsBatchMoveAndCancel() async throws {
   let targetListID = try #require(store.selectedListID)
   store.selectedListID = LorvexPreviewSeedID.appleNativeList
   await store.loadSelectedListDetailForUI()
-  let selectedIDs = Set(store.filteredSelectedListTasks.prefix(2).map(\.id))
+  let selectedIDs = Set(store.selectedListTasks.prefix(2).map(\.id))
   #expect(selectedIDs.count == 2)
   store.setSelectedListTaskSelection(selectedIDs)
 
@@ -153,7 +171,7 @@ func listDetailTaskRowSelectionSeparatesOpenFromBatchSelection() async throws {
   await store.refresh()
   store.selectedListID = LorvexPreviewSeedID.appleNativeList
   await store.loadSelectedListDetailForUI()
-  let tasks = store.filteredSelectedListTasks
+  let tasks = store.selectedListTasks
   let first = try #require(tasks.first)
   let second = try #require(tasks.dropFirst().first)
 
@@ -446,18 +464,18 @@ func appStoreArchivesAndRestoresHabit() async throws {
   await store.refresh()
   await store.loadArchivedHabits()
   let habit = try #require(store.habits?.habits.first { $0.id == LorvexPreviewSeedID.eveningWalkHabit })
-  #expect(store.filteredHabits.contains { $0.id == habit.id })
+  #expect(store.orderedHabits.contains { $0.id == habit.id })
   #expect(store.archivedHabits.isEmpty)
 
   // Archiving moves the habit out of the active catalog and into the archived
   // list (the restore surface).
   await store.setHabitArchived(habit, archived: true)
-  #expect(!store.filteredHabits.contains { $0.id == habit.id })
+  #expect(!store.orderedHabits.contains { $0.id == habit.id })
   #expect(store.archivedHabits.contains { $0.id == habit.id })
 
   // Restoring brings it back to the active catalog and clears it from archived.
   await store.setHabitArchived(habit, archived: false)
-  #expect(store.filteredHabits.contains { $0.id == habit.id })
+  #expect(store.orderedHabits.contains { $0.id == habit.id })
   #expect(!store.archivedHabits.contains { $0.id == habit.id })
   #expect(store.errorMessage == nil)
 }

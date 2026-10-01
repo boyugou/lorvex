@@ -1,19 +1,24 @@
 import LorvexWidgetKitSupport
 
-func widgetFocusTask(
+func widgetTodayTask(
   id: String,
   title: String,
   status: String = "open",
+  dueDate: String? = "2026-05-22",
   priority: Int?,
-  estimatedMinutes: Int?
-) -> WidgetSnapshot.FocusTask {
+  estimatedMinutes: Int?,
+  scheduledStart: String? = nil,
+  scheduledEnd: String? = nil
+) -> WidgetSnapshot.TodayTask {
   .init(
     id: id,
     title: title,
     status: status,
-    dueDate: "2026-05-22",
+    dueDate: dueDate,
     priority: priority,
     listID: nil,
-    estimatedMinutes: estimatedMinutes
+    estimatedMinutes: estimatedMinutes,
+    scheduledStart: scheduledStart,
+    scheduledEnd: scheduledEnd
   )
 }

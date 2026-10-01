@@ -20,6 +20,21 @@ struct MobileDependencyPicker: View {
       List {
         if isSearching, candidates.isEmpty {
           MobileSkeletonRows(count: 4)
+        } else if candidates.isEmpty, query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          // Empty query with no candidates: there simply are no other open tasks
+          // to depend on. "Try a different search term" would be misleading —
+          // the user hasn't searched for anything.
+          ContentUnavailableView(
+            String(
+              localized: "dependency.no_candidates", defaultValue: "No Tasks Available",
+              table: "Localizable", bundle: MobileL10n.bundle),
+            systemImage: "checklist",
+            description: Text(
+              String(
+                localized: "dependency.no_candidates.message",
+                defaultValue: "There are no other open tasks to depend on.", table: "Localizable",
+                bundle: MobileL10n.bundle))
+          )
         } else if candidates.isEmpty {
           ContentUnavailableView(
             String(
@@ -42,11 +57,12 @@ struct MobileDependencyPicker: View {
                 Text(task.title)
                   .font(LorvexDesign.Typography.primaryText)
                   .foregroundStyle(.primary)
-                Text(MobileTaskDisplayText.compactPriorityAndStatus(priority: task.priority, status: task.status))
-                  .font(LorvexDesign.Typography.tertiaryText)
-                  .foregroundStyle(.secondary)
+                if let facts = MobileDependencyFacts(task: task) {
+                  facts
+                }
               }
             }
+            .accessibilityValue(MobileDependencyFacts.accessibilityValue(for: task))
           }
         }
       }
@@ -55,7 +71,7 @@ struct MobileDependencyPicker: View {
           localized: "dependency.add", defaultValue: "Add Dependency", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS) || os(visionOS)
+      #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
       .searchable(
@@ -74,8 +90,22 @@ struct MobileDependencyPicker: View {
         }
       }
       .task(id: query) {
+        // Debounce keystrokes and drop a superseded search: `.task(id:)` cancels
+        // the prior run on a new keystroke but does not await it, and the
+        // provider swallows errors to `[]`, so without the guard whichever read
+        // resolves last wins — an out-of-order result would show stale rows under
+        // the newer query.
+        if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+          try? await Task.sleep(for: .milliseconds(250))
+          if Task.isCancelled { return }
+        }
         isSearching = true
-        candidates = await searchCandidates(query, excludedIDs)
+        let results = await searchCandidates(query, excludedIDs)
+        if Task.isCancelled {
+          isSearching = false
+          return
+        }
+        candidates = results
         isSearching = false
       }
     }

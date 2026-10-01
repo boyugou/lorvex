@@ -34,31 +34,12 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
     }
   }
 
-  var sidebarTitle: String {
-    switch self {
-    case .general:
-      title
-    case .permissions:
-      title
-    case .calendar:
-      String(localized: "settings.sidebar.calendar.title", defaultValue: "Calendar", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .cloudSync:
-      String(localized: "settings.sidebar.cloud_sync.title", defaultValue: "Cloud", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .mcpHost:
-      String(localized: "settings.sidebar.mcp_host.title", defaultValue: "Assistant", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .data:
-      title
-    case .diagnostics:
-      title
-    }
-  }
-
   var subtitle: String {
     switch self {
     case .general:
       String(
         localized: "settings.tab.general.subtitle",
-        defaultValue: "Appearance, language, and working hours.",
+        defaultValue: "Appearance, language, time, and day hours.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )
@@ -79,14 +60,14 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
     case .cloudSync:
       String(
         localized: "settings.tab.cloud_sync.subtitle",
-        defaultValue: "iCloud readiness and sync mode.",
+        defaultValue: "The same tasks on every device.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )
     case .mcpHost:
       String(
         localized: "settings.tab.mcp_host.subtitle",
-        defaultValue: "AI host connection and helper diagnostics.",
+        defaultValue: "Connection, assistants on this Mac, and memory.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )
@@ -104,25 +85,6 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )
-    }
-  }
-
-  var sidebarSubtitle: String {
-    switch self {
-    case .general:
-      String(localized: "settings.sidebar.general.subtitle", defaultValue: "Appearance and language", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .permissions:
-      String(localized: "settings.sidebar.permissions.subtitle", defaultValue: "System access", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .calendar:
-      String(localized: "settings.sidebar.calendar.subtitle", defaultValue: "Calendar integration", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .cloudSync:
-      String(localized: "settings.sidebar.cloud_sync.subtitle", defaultValue: "iCloud status", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .mcpHost:
-      String(localized: "settings.sidebar.mcp_host.subtitle", defaultValue: "Assistant connection", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .data:
-      String(localized: "settings.sidebar.data.subtitle", defaultValue: "Database and backups", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .diagnostics:
-      String(localized: "settings.sidebar.diagnostics.subtitle", defaultValue: "Health checks", table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 
@@ -183,6 +145,9 @@ struct SettingsSidebar: View {
       }
     }
     .listStyle(.sidebar)
+    // Applied before the column width, which must stay the outer modifier for
+    // the split view to read it.
+    .toolbar(removing: .sidebarToggle)
     .navigationSplitViewColumnWidth(
       min: SettingsLayoutMetrics.sidebarMinWidth,
       ideal: SettingsLayoutMetrics.sidebarIdealWidth,
@@ -193,6 +158,8 @@ struct SettingsSidebar: View {
   }
 }
 
+/// One line per category, named exactly like its detail page's header; the
+/// header's own description says what the page holds.
 private struct SettingsSidebarRow: View {
   let category: SettingsCategory
 
@@ -201,17 +168,11 @@ private struct SettingsSidebarRow: View {
       Image(systemName: category.systemImage)
         .foregroundStyle(.secondary)
         .frame(width: 22, alignment: .center)
-      VStack(alignment: .leading, spacing: 1) {
-        Text(category.sidebarTitle)
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .foregroundStyle(.primary)
-          .lineLimit(1)
-        Text(category.sidebarSubtitle)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
+      Text(category.title)
+        .font(LorvexDesign.Typography.primaryEmphasis)
+        .foregroundStyle(.primary)
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
   }
@@ -252,7 +213,7 @@ private struct SettingsDetailHeader: View {
         .frame(width: 22, alignment: .center)
         .accessibilityHidden(true)
 
-      VStack(alignment: .leading, spacing: 3) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(category.title)
           .font(LorvexDesign.Typography.sectionHeader)
         Text(category.subtitle)
@@ -270,9 +231,9 @@ private struct SettingsDetailHeader: View {
   }
 }
 
-/// The shared "Advanced" disclosure header used by the Storage, Cloud Sync, and
-/// Assistant settings panes to fold troubleshooting detail out of the default
-/// view. A plain `Button` rather than `DisclosureGroup`: the native disclosure
+/// The shared disclosure header that folds detail out of a settings pane's
+/// default view: "Advanced" in the Storage, Cloud Sync, and Assistant panes, and
+/// an entry count over the Activity pane's changelog and logs. A plain `Button` rather than `DisclosureGroup`: the native disclosure
 /// triangle drops its first click inside a freshly laid-out grouped Form (the
 /// Settings detail is an NSTableView-backed Form in a `NavigationSplitView`), so
 /// a collapsed section needed a dead first tap until the pane was re-shown; a
@@ -280,6 +241,7 @@ private struct SettingsDetailHeader: View {
 /// `accessibilityIdentifier` (`settings.<region>.advancedToggle`).
 struct SettingsAdvancedDisclosureButton: View {
   @Binding var isExpanded: Bool
+  var title = LocalizedStringResource("settings.advanced", defaultValue: "Advanced", table: "Localizable", bundle: LorvexL10n.bundle)
   let accessibilityIdentifier: String
 
   var body: some View {
@@ -287,7 +249,7 @@ struct SettingsAdvancedDisclosureButton: View {
       lorvexAnimated(.snappy(duration: 0.2)) { isExpanded.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.s) {
-        Text(LocalizedStringResource("settings.advanced", defaultValue: "Advanced", table: "Localizable", bundle: LorvexL10n.bundle))
+        Text(title)
         Spacer(minLength: 0)
         Image(systemName: "chevron.right")
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
@@ -304,7 +266,7 @@ struct SettingsAdvancedDisclosureButton: View {
       : LocalizedStringResource("common.collapsed", defaultValue: "Collapsed", table: "Localizable", bundle: LorvexL10n.bundle)))
     .accessibilityHint(String(
       localized: "settings.advanced.a11y_hint",
-      defaultValue: "Shows or hides advanced options.",
+      defaultValue: "Shows or hides more detail.",
       table: "Localizable",
       bundle: LorvexL10n.bundle))
   }

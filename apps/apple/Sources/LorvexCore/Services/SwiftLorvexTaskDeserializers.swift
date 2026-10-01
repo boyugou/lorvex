@@ -77,6 +77,7 @@ enum SwiftLorvexTaskDeserializers {
       status: status,
       dueDate: date(from: object, column: "due_date"),
       plannedDate: date(from: object, column: "planned_date"),
+      plannedTime: try plannedTime(from: object),
       availableFrom: date(from: object, column: "available_from"),
       estimatedMinutes: object["estimated_minutes"] as? Int,
       tags: try stringArray(from: object["tags"], path: "task.tags"),
@@ -95,6 +96,26 @@ enum SwiftLorvexTaskDeserializers {
       updatedAt: object["updated_at"] as? String,
       completedAt: object["completed_at"] as? String,
       archivedAt: object["archived_at"] as? String)
+  }
+
+  /// Decode the `planned_start_time` / `planned_end_time` pair (`HH:MM`, the
+  /// end may be `24:00`) into minutes since midnight. Both absent or null is no
+  /// time; one without the other, an unparseable bound, or an end not after
+  /// the start is a contract violation and throws.
+  static func plannedTime(from object: [String: Any]) throws -> Range<Int>? {
+    let start = object["planned_start_time"] as? String
+    let end = object["planned_end_time"] as? String
+    guard start != nil || end != nil else { return nil }
+    guard let start, let end,
+      case .success(let startMinutes) = TimeOfDay.parseRangeEndMinutes(start),
+      case .success(let endMinutes) = TimeOfDay.parseRangeEndMinutes(end),
+      startMinutes < endMinutes
+    else {
+      throw LorvexCoreError.malformedCoreData(
+        path: "task.planned_start_time",
+        reason: "planned time must be a start before an end, got \(start ?? "null")–\(end ?? "null")")
+    }
+    return startMinutes..<endMinutes
   }
 
   /// Decode the `tasks.priority` value. The column is nullable, and the app

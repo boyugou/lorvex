@@ -7,10 +7,10 @@ public enum TaskStatus: String, Sendable, Hashable, Codable, CaseIterable, Custo
   case open = "open"
   /// Work has started and is not finished. Actionable — surfaces everywhere
   /// `open` does (Today, Upcoming, list health, batch eligibility, blocking
-  /// graph). An optional "started" marker that any terminal transition
-  /// (`completed` / `cancelled`) replaces automatically. Orthogonal to
-  /// `current_focus` (today's shortlist) and the focus schedule (a time plan):
-  /// `in_progress` is a lifecycle status, not a planning affordance.
+  /// graph) and leads the day's list. An optional "started" marker that any
+  /// terminal transition (`completed` / `cancelled`) replaces automatically.
+  /// Orthogonal to a task's planned date and time: `in_progress` records that
+  /// work began, not when it is planned.
   case inProgress = "in_progress"
   /// Terminal — task was finished. `completed_at` is set; the row no longer
   /// surfaces in active queries.

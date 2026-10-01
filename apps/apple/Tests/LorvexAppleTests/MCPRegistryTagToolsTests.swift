@@ -26,7 +26,7 @@ struct TagToolTests {
         "id": .string(taskID),
         "title": .string("Tagged preview task"),
         "notes": .string("Preview tag smoke"),
-        "tags_set": .array([.string("preview"), .string("apple")]),
+        "tags": .array([.string("preview"), .string("apple")]),
       ]
     )
     #expect(tagged.isError != true)
@@ -87,7 +87,7 @@ struct TagToolTests {
       registry, tool: "update_task",
       arguments: [
         "id": .string(taskID), "title": .string("Delete-tag task"), "notes": .string(""),
-        "tags_set": .array([.string("temp"), .string("keep")]),
+        "tags": .array([.string("temp"), .string("keep")]),
       ])
 
     let deleted = try await mcpRegistryCall(
@@ -127,7 +127,7 @@ struct TagToolTests {
       registry, tool: "update_task",
       arguments: [
         "id": .string(taskA), "title": .string("Merge task A"), "notes": .string(""),
-        "tags_set": .array([.string("temp")]),
+        "tags": .array([.string("temp")]),
       ])
 
     let createdB = try await mcpRegistryCall(
@@ -138,7 +138,7 @@ struct TagToolTests {
       registry, tool: "update_task",
       arguments: [
         "id": .string(taskB), "title": .string("Merge task B"), "notes": .string(""),
-        "tags_set": .array([.string("temp"), .string("keep")]),
+        "tags": .array([.string("temp"), .string("keep")]),
       ])
 
     let merged = try await mcpRegistryCall(

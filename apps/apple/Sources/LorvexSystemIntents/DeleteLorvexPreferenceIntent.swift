@@ -20,7 +20,7 @@ struct DeleteLorvexPreferenceIntent: LorvexAuthenticatedIntent {
     try await requestLorvexDestructiveConfirmation(
       IntentDialog(
         LocalizedStringResource(
-          "system.confirm.delete", defaultValue: "Delete this item? This can't be undone.",
+          "system.confirm.delete", defaultValue: "Delete this item? This can’t be undone.",
           table: "Localizable", bundle: SystemL10n.bundle)))
     try await LorvexTaskIntentRunner.deletePreference(key: key)
     return .result(

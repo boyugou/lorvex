@@ -1,24 +1,27 @@
 import Foundation
 
-/// One entry a month-grid day cell can show: either a calendar event or a
-/// scheduled task, in the day's display order (see
-/// ``CalendarMonthGridModel/buildDays(monthAnchor:calendar:events:tasks:dayKeyFor:)``).
+/// One entry a month-grid day cell can show: a calendar event, a task planned
+/// or due on the day without a time, or a task at its time on the day, in the
+/// day's display order (see ``CalendarMonthGridDay/entries``).
 public enum CalendarMonthGridEntry: Identifiable, Equatable, Sendable {
   case event(CalendarTimelineEvent)
   case task(LorvexTask)
+  /// A task and its time on the day in minutes since midnight.
+  case timedTask(LorvexTask, time: Range<Int>)
 
   public var id: String {
     switch self {
     case .event(let event): "event#\(event.id)"
     case .task(let task): "task#\(task.id)"
+    case .timedTask(let task, _): "timed#\(task.id)"
     }
   }
 }
 
-/// One day cell's content in the month grid: every event and scheduled task
-/// that falls on this date, plus whether the date belongs to the anchor month
-/// (leading/trailing days from adjacent months render dimmed but still show
-/// their own content).
+/// One day cell's content in the month grid: every event and every planned,
+/// due, or timed task that falls on this date, plus whether the date belongs
+/// to the anchor month (leading/trailing days from adjacent months render
+/// dimmed but still show their own content).
 public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
   public let date: Date
   /// `yyyy-MM-dd` key matching `CalendarTimelineEvent.startDate`.
@@ -29,7 +32,10 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
   /// clock-ordered agenda. Unbounded; callers cap the visible count with
   /// ``CalendarMonthGridModel/chips(for:maxVisible:)``.
   public let events: [CalendarTimelineEvent]
+  /// Tasks planned or due on the day without a time on it.
   public let scheduledTasks: [LorvexTask]
+  /// Tasks with a time on this day, in start order.
+  public let timedTasks: [LorvexTask]
   public var id: String { dayKey }
 
   public init(
@@ -37,13 +43,36 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
     dayKey: String,
     isCurrentMonth: Bool,
     events: [CalendarTimelineEvent],
-    scheduledTasks: [LorvexTask]
+    scheduledTasks: [LorvexTask],
+    timedTasks: [LorvexTask] = []
   ) {
     self.date = date
     self.dayKey = dayKey
     self.isCurrentMonth = isCurrentMonth
     self.events = events
     self.scheduledTasks = scheduledTasks
+    self.timedTasks = timedTasks
+  }
+
+  /// The day's entries in reading order: all-day events, then timed events and
+  /// timed tasks together by start time (title on a tie), then the tasks
+  /// planned or due on the day without a time.
+  public var entries: [CalendarMonthGridEntry] {
+    let allDay = events.filter(\.allDay).map(CalendarMonthGridEntry.event)
+    let timed: [(minute: Int, title: String, entry: CalendarMonthGridEntry)] =
+      events.filter { !$0.allDay }.map {
+        (CalendarGridModel.parseMinutes($0.startTime) ?? -1, $0.title, .event($0))
+      }
+      + timedTasks.compactMap { task in
+        task.plannedTime.map { time in
+          (time.lowerBound, task.title, CalendarMonthGridEntry.timedTask(task, time: time))
+        }
+      }
+    let ordered = timed.sorted { lhs, rhs in
+      if lhs.minute != rhs.minute { return lhs.minute < rhs.minute }
+      return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+    }
+    return allDay + ordered.map(\.entry) + scheduledTasks.map(CalendarMonthGridEntry.task)
   }
 }
 
@@ -63,8 +92,10 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
 ///   intersects within the grid range, regardless of `allDay` — unlike the
 ///   week/day timeline, the month grid has no intra-day axis to clip a timed
 ///   event to, so it is shown as a whole-day entry on each day it touches.
-/// - `LorvexTask` has no intra-day start, so a scheduled task renders on its
-///   planned day (falling back to due day) only.
+/// - A task with a time renders as a timed chip on its planned day, the way the
+///   week grid draws it; a task without one renders as a plain chip on its
+///   planned day (falling back to its due day). A cancelled task is not drawn,
+///   and a task passed twice is drawn once.
 public enum CalendarMonthGridModel {
   /// Cells shown per row before the rest of a busy day folds into a "+N"
   /// overflow chip (see ``chips(for:maxVisible:)``).
@@ -120,22 +151,31 @@ public enum CalendarMonthGridModel {
       }
     }
 
+    var timedByKey: [String: [LorvexTask]] = [:]
     var tasksByKey: [String: [LorvexTask]] = [:]
-    for task in tasks {
-      guard let key = CalendarGridModel.scheduledTaskDayKey(task) else { continue }
-      if keySet.contains(key) {
-        tasksByKey[key, default: []].append(task)
+    var seenTaskIDs = Set<LorvexTask.ID>()
+    for task in tasks where task.status != .cancelled && seenTaskIDs.insert(task.id).inserted {
+      if let plannedDate = task.plannedDate, task.plannedTime != nil {
+        let key = LorvexDateFormatters.ymdUTC.string(from: plannedDate)
+        if keySet.contains(key) { timedByKey[key, default: []].append(task) }
+        continue
       }
+      guard let key = CalendarGridModel.scheduledTaskDayKey(task), keySet.contains(key) else { continue }
+      tasksByKey[key, default: []].append(task)
     }
 
     return zip(dayDates, dayKeys).map { date, key in
       let dayEvents = (eventsByKey[key] ?? []).sorted(by: orderedBefore)
+      let dayTimed = (timedByKey[key] ?? []).sorted {
+        ($0.plannedTime?.lowerBound ?? 0) < ($1.plannedTime?.lowerBound ?? 0)
+      }
       return CalendarMonthGridDay(
         date: date,
         dayKey: key,
         isCurrentMonth: calendar.isDate(date, equalTo: monthStart, toGranularity: .month),
         events: dayEvents,
-        scheduledTasks: tasksByKey[key] ?? []
+        scheduledTasks: tasksByKey[key] ?? [],
+        timedTasks: dayTimed
       )
     }
   }
@@ -147,8 +187,7 @@ public enum CalendarMonthGridModel {
   public static func chips(
     for day: CalendarMonthGridDay, maxVisible: Int
   ) -> (visible: [CalendarMonthGridEntry], overflowCount: Int) {
-    let all: [CalendarMonthGridEntry] =
-      day.events.map { .event($0) } + day.scheduledTasks.map { .task($0) }
+    let all = day.entries
     guard all.count > maxVisible else { return (all, 0) }
     let cap = max(maxVisible - 1, 0)
     return (Array(all.prefix(cap)), all.count - cap)

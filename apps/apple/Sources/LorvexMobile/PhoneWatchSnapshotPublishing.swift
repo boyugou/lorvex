@@ -15,12 +15,18 @@ enum WatchReplicaSnapshotProjectionError: Error, Equatable {
 }
 
 /// Converts the shared widget snapshot into the bounded subset the Watch app
-/// actually reads. Source order is stable, so a constrained replica always
-/// contains the same leading focus tasks and habits for the same source value.
+/// reads: the head of Today's list with each task's saved time, today's
+/// habits, and the day's counts. Source order is stable, so a constrained
+/// replica always holds the same leading tasks and habits for the same source
+/// value. The briefing and the list catalog stay on the phone; the watch shows
+/// neither.
 struct WatchReplicaSnapshotProjector: Sendable {
-  static let maximumFocusTasks = 6
+  /// The most tasks the replica carries. The watch counts the rest from the
+  /// uncapped `stats.today_count` ("3 more today").
+  static let maximumTasks = 20
+  /// Tasks kept before habits give way to the transfer budget.
+  static let minimumTasksBeforeHabits = 6
   static let maximumVisibleHabits = 16
-  static let maximumBriefingUTF8Bytes = 4 * 1024
 
   func encodedSnapshot(from source: WidgetSnapshot) throws -> Data {
     guard source.version == WidgetSnapshot.supportedVersion else {
@@ -34,15 +40,18 @@ struct WatchReplicaSnapshotProjector: Sendable {
       try Self.requireCanonicalDate(logicalDay, field: "logical_day")
     }
 
-    let focusTasks = try source.focusTasks.prefix(Self.maximumFocusTasks).map { task in
-      try Self.requireCanonicalUUID(task.id, field: "focus_tasks.id")
-      guard LorvexTask.Status(rawValue: task.status)?.isActionable == true else {
-        throw WatchReplicaSnapshotProjectionError.invalidSemanticField("focus_tasks.status")
+    let tasks = try source.tasks.prefix(Self.maximumTasks).map { task in
+      try Self.requireCanonicalUUID(task.id, field: "tasks.id")
+      guard task.isActionable else {
+        throw WatchReplicaSnapshotProjectionError.invalidSemanticField("tasks.status")
       }
       if let dueDate = task.dueDate {
-        try Self.requireCanonicalDate(dueDate, field: "focus_tasks.due_date")
+        try Self.requireCanonicalDate(dueDate, field: "tasks.due_date")
       }
-      return WidgetSnapshot.FocusTask(
+      // A saved time reaches the watch only as a well-formed pair; anything
+      // else is dropped rather than failing the whole replica.
+      let time = Self.clockPair(task.scheduledStart, task.scheduledEnd)
+      return WidgetSnapshot.TodayTask(
         id: task.id,
         title: Self.bounded(task.title, maximumUTF8Bytes: 1_024),
         status: task.status,
@@ -52,7 +61,9 @@ struct WatchReplicaSnapshotProjector: Sendable {
         // second mutation-capable identifier through a contract that does not
         // need it, and is safer than truncating an opaque identity.
         listID: nil,
-        estimatedMinutes: task.estimatedMinutes)
+        estimatedMinutes: task.estimatedMinutes,
+        scheduledStart: time?.start,
+        scheduledEnd: time?.end)
     }
     let habits = try source.habits.prefix(Self.maximumVisibleHabits).map { habit in
       try Self.requireCanonicalUUID(habit.id, field: "habits.id")
@@ -66,10 +77,8 @@ struct WatchReplicaSnapshotProjector: Sendable {
         completedToday: habit.completedToday,
         target: habit.target)
     }
+    var taskCount = tasks.count
     var habitCount = habits.count
-    var briefing = source.briefing.map {
-      Self.bounded($0, maximumUTF8Bytes: Self.maximumBriefingUTF8Bytes)
-    }
 
     while true {
       let projected = WidgetSnapshot(
@@ -77,25 +86,28 @@ struct WatchReplicaSnapshotProjector: Sendable {
         generatedAt: source.generatedAt,
         storageGeneration: source.storageGeneration,
         focusFilterRevision: source.focusFilterRevision,
-        workspaceInstanceID: source.workspaceInstanceID,
+        // The envelope fence carries the canonical lowercase id, and the watch
+        // pairs the two, so the embedded snapshot carries the same spelling.
+        workspaceInstanceID: source.workspaceInstanceID.lowercased(),
         localChangeSequence: source.localChangeSequence,
         timezone: source.timezone,
         logicalDay: source.logicalDay,
         stats: source.stats,
-        briefing: briefing,
-        focusTasks: Array(focusTasks),
+        briefing: nil,
+        tasks: Array(tasks.prefix(taskCount)),
         habits: Array(habits.prefix(habitCount)),
-        todayTasks: [],
         lists: [],
         listStats: [])
       let data = try JSONEncoder().encode(projected)
       if data.count <= LorvexWatchReplicaEnvelope.maximumSnapshotBytes {
         return data
       }
-      if habitCount > 0 {
+      if taskCount > Self.minimumTasksBeforeHabits {
+        taskCount -= 1
+      } else if habitCount > 0 {
         habitCount -= 1
-      } else if briefing != nil {
-        briefing = nil
+      } else if taskCount > 0 {
+        taskCount -= 1
       } else {
         throw WatchReplicaSnapshotProjectionError.essentialFieldsExceedLimit
       }
@@ -109,6 +121,16 @@ struct WatchReplicaSnapshotProjector: Sendable {
     guard LorvexWatchWire.isCanonicalUUID(value) else {
       throw WatchReplicaSnapshotProjectionError.invalidSemanticField(field)
     }
+  }
+
+  /// A same-day `HH:mm` time whose end follows its start, or `nil`. A time
+  /// that ends at midnight ends at `24:00`.
+  static func clockPair(_ start: String?, _ end: String?) -> (start: String, end: String)? {
+    guard let start, let end, start.utf8.count == 5, end.utf8.count == 5,
+      let startMinutes = lorvexMinutesSinceMidnight(start),
+      let endMinutes = lorvexEndMinutesSinceMidnight(end), endMinutes > startMinutes
+    else { return nil }
+    return (start, end)
   }
 
   /// Semantic date fields are routing/freshness inputs, not display strings.
@@ -175,7 +197,9 @@ public struct WatchSnapshotReplicaMirror: Sendable {
     do {
       let snapshotData = try WatchReplicaSnapshotProjector().encodedSnapshot(from: snapshot)
       let workspaceInstanceID = try await commandService.currentWatchWorkspaceInstanceID()
-      guard workspaceInstanceID == snapshot.workspaceInstanceID else {
+      // The ledger canonicalizes the id to lowercase while the snapshot carries
+      // the stored spelling (an uppercase UUID string), so compare canonical forms.
+      guard workspaceInstanceID == snapshot.workspaceInstanceID.lowercased() else {
         throw WatchReplicaSnapshotProjectionError.invalidSemanticField(
           "workspace_instance_id")
       }
@@ -205,19 +229,9 @@ public struct WatchSnapshotReplicaMirror: Sendable {
     public init() {}
 
     public func reloadTimelines() {
-      // WidgetCenter on visionOS is visionOS 26.0+; other platforms already
-      // meet the deployment minimum.
-      #if os(visionOS)
-        if #available(visionOS 26.0, *) {
-          WidgetCenter.shared.reloadTimelines(
-            ofKind: LorvexProductMetadata.watchComplicationKind
-          )
-        }
-      #else
-        WidgetCenter.shared.reloadTimelines(
-          ofKind: LorvexProductMetadata.watchComplicationKind
-        )
-      #endif
+      WidgetCenter.shared.reloadTimelines(
+        ofKind: LorvexProductMetadata.watchComplicationKind
+      )
     }
   }
 #endif

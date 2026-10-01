@@ -178,19 +178,18 @@ final class TaskAvailableFromFilterTests: XCTestCase {
     XCTAssertEqual(Set(ids(rows)), ["scheduled"])
   }
 
-  // MARK: - Focus auto-proposal candidates (DECISION #5)
+  // MARK: - Suggested times
 
-  func testFocusCandidatesExcludeHidden() throws {
+  func testSuggestedTimesSkipHiddenTasksButKeepOverdueOnes() throws {
     let store = try TestSupport.freshStore()
     try seedFixture(store)
-    let candidates = try store.writer.read { db in
-      try FocusScheduleProposal.loadTaskCandidates(
-        db, taskIds: ["visible", "hidden", "boundary", "overdue"], asOf: self.today)
+    let proposal = try store.writer.read { db in
+      try DayScheduleProposal.propose(
+        db, date: self.today, anchorTimezone: "UTC", accessMode: .off)
     }
-    let got = Set(candidates.map(\.id))
-    XCTAssertTrue(got.contains("visible"))
-    XCTAssertTrue(got.contains("boundary"))
-    XCTAssertTrue(got.contains("overdue"), "overdue-wins: still a focus candidate")
-    XCTAssertFalse(got.contains("hidden"), "hidden tasks are excluded from auto-proposal")
+    let got = Set((proposal.slots.map(\.task) + proposal.unscheduled).map(\.id))
+    XCTAssertEqual(
+      got, ["visible", "boundary", "overdue"],
+      "a hidden task gets no suggested time; an overdue one still does")
   }
 }

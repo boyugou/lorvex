@@ -56,7 +56,7 @@ extension AppStore {
   /// wrote into it) is likewise left in place; no EventKit delete is issued.
   func performFactoryReset(settings: AppSettingsStore) async {
     guard !isDataImportRunning, !isLocalFactoryResetRunning,
-      !isCloudDataDeletionRunning, !isCloudDeletionMaintenanceRunning
+      !isCloudDataDeletionRunning
     else { return }
     isLocalFactoryResetRunning = true
     defer { isLocalFactoryResetRunning = false }
@@ -78,19 +78,6 @@ extension AppStore {
     if isRefreshing {
       await refreshAndWaitForLatest()
     }
-    // After resolving the canonical path below, quiesce CloudKit sync at the
-    // app level BEFORE closing/wiping the store, so
-    // the post-reset `replaceCore → refresh → publishAppleSyncSurfaces →
-    // runCloudSyncCycle` no-ops instead of running a cycle against the fresh,
-    // empty database. `runCloudSyncCycle` guards on the RUNTIME `cloudSyncMode`;
-    // `settings.resetToDefaults()` below flips only the PERSISTED mode, leaving
-    // the runtime value `.live` for the reset's own refresh. That refresh's cycle
-    // would find a database with no traversal state and start a nil-token baseline
-    // against the still-existing CloudKit generation — repopulating the database
-    // the user just erased. Turning the
-    // runtime mode off (and resetting pacing) mirrors `deleteCloudDataEverywhere`;
-    // no `userDeletedZone` pause, because a local reset leaves the cloud copy
-    // intact and re-downloads it when the user re-enables sync.
     // Delete before mutating settings: a failed erase must abort with the
     // storage selection untouched, never leave settings reset but the data
     // intact. The managed path is independent of the storage preference, so
@@ -109,20 +96,18 @@ extension AppStore {
       return
     }
     // Resolve the canonical path before changing runtime state. A failed App
-    // Group lookup must leave live sync exactly as it was; otherwise the guard
-    // above would return with persisted settings still live but this process
-    // silently stuck off.
+    // Group lookup must leave live sync exactly as it was.
+    //
+    // Stop sync before touching the files: turning the runtime mode off keeps
+    // the reset's own refresh from starting a pass, and stopping the
+    // controller cancels the engine's operations, so no fetched batch lands in
+    // the fresh database and repopulates what the user just erased. A local
+    // reset leaves the iCloud copy intact; it downloads again when the user
+    // turns sync back on.
     let previousCloudSyncMode = cloudSyncMode
     cloudSyncMode = .off
-    cloudSyncPacing.reset()
+    await cloudSyncController?.stop()
     let widgetResetTarget = widgetSnapshotPublisher.factoryResetTarget
-    // Quiesce CloudSync before touching the files. Setting the runtime mode off
-    // prevents new host-triggered cycles, while the coordinator gate waits for
-    // any already-detached cycle/account action to reach a terminal boundary and
-    // keeps it out through close + generation bump + deletion. The storage lock
-    // protects individual DB calls, but without this wider boundary an old cycle
-    // could finish one transaction, let reset replace the file, then continue its
-    // next phase against the fresh database and silently repopulate the reset.
     let coreToClose = core
     let resetStorage: @Sendable () throws -> Int = {
       // The main service and every cached per-surface service (in-process
@@ -157,11 +142,7 @@ extension AppStore {
     }
     let widgetResetOutcome: WidgetSnapshotFactoryResetOutcome?
     do {
-      if let coordinator = cloudSyncCoordinator ?? cloudDataMaintenanceCoordinator {
-        widgetResetOutcome = try await coordinator.withQuiescedCloudSync(cutover)
-      } else {
-        widgetResetOutcome = try await cutover()
-      }
+      widgetResetOutcome = try await cutover()
     } catch {
       // Every throw from `cutover` means the storage reset did not report a
       // completed canonical wipe. Derived OS surfaces may already have been
@@ -169,7 +150,6 @@ extension AppStore {
       // I/O failure), so restore the runtime sync mode and best-effort rebuild
       // from whatever canonical database remains before reporting the failure.
       cloudSyncMode = previousCloudSyncMode
-      cloudSyncPacing.reset()
       await refreshAndWaitForLatest()
       errorMessage = String(
         localized: "settings.reset.delete_failed",
@@ -180,10 +160,14 @@ extension AppStore {
       )
       return
     }
+    await cloudSyncController?.forgetCachedRecordState()
     settings.resetToDefaults()
     let replacementCore =
       Self.factoryResetDependencies?.makeReplacementCore() ?? AppCoreFactory.make()
     await replaceCore(replacementCore, refreshAfterReplacement: false)
+    if let engineStore = replacementCore as? any CloudSyncEngineStore {
+      await cloudSyncController?.replaceStore(engineStore)
+    }
     await refreshAndWaitForLatest()
     if widgetResetOutcome?.publicationSucceeded == false,
       lastPublishedWidgetSnapshot == nil

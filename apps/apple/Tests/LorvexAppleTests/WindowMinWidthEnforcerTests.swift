@@ -28,6 +28,19 @@ private func makeStore(_ suiteName: String) async throws -> AppStore {
   return AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
 }
 
+/// The floor the enforcer actually applies for `window`: the pane-derived
+/// minimum, clamped to the screen's visible width exactly as
+/// `WindowMinWidthEnforcer.Coordinator.enforce()` clamps it. Without the clamp
+/// the three-pane floor (1000 + 320) exceeds a 13" display, and the enforcer
+/// deliberately never demands more width than the screen can give.
+@MainActor
+private func enforcedFloor(for window: NSWindow, inspectorOpen: Bool) -> CGFloat {
+  var width = LorvexWindowID.main.minimumContentSize.width
+  if inspectorOpen { width += MainWindowLayoutMetrics.inspectorIdealWidth }
+  if let screen = window.screen { width = min(width, screen.visibleFrame.width) }
+  return width
+}
+
 /// Poll until `condition` holds (the Observation onChange hop is async).
 @MainActor
 private func eventually(
@@ -53,13 +66,13 @@ func enforcerRaisesFloorAndGrowsWindowWhenTaskSelected() async throws {
   let coordinator = WindowMinWidthEnforcer.Coordinator(store: store)
   coordinator.attach(to: window)
 
-  let base = LorvexWindowID.main.minimumContentSize.width
+  let base = enforcedFloor(for: window, inspectorOpen: false)
   #expect(window.contentMinSize.width == base)
 
   // Selecting a task raises the floor by the inspector's ideal width and
   // grows the too-narrow window on the spot.
   store.selectedTaskID = store.today.tasks.first?.id ?? "task-1"
-  let expected = base + MainWindowLayoutMetrics.inspectorIdealWidth
+  let expected = enforcedFloor(for: window, inspectorOpen: true)
   let grew = await eventually {
     window.contentMinSize.width == expected
       && window.contentRect(forFrameRect: window.frame).width >= expected
@@ -78,8 +91,7 @@ func enforcerSnapsBackAfterResizeBelowFloor() async throws {
 
   let coordinator = WindowMinWidthEnforcer.Coordinator(store: store)
   coordinator.attach(to: window)
-  let expected = LorvexWindowID.main.minimumContentSize.width
-    + MainWindowLayoutMetrics.inspectorIdealWidth
+  let expected = enforcedFloor(for: window, inspectorOpen: true)
   _ = await eventually { window.contentMinSize.width == expected }
 
   // Programmatic resizes bypass contentMinSize; the resize hook must snap
@@ -102,12 +114,11 @@ func enforcerLowersFloorWhenSelectionClears() async throws {
 
   let coordinator = WindowMinWidthEnforcer.Coordinator(store: store)
   coordinator.attach(to: window)
-  let raised = LorvexWindowID.main.minimumContentSize.width
-    + MainWindowLayoutMetrics.inspectorIdealWidth
+  let raised = enforcedFloor(for: window, inspectorOpen: true)
   _ = await eventually { window.contentMinSize.width == raised }
 
   store.selectedTaskID = nil
-  let base = LorvexWindowID.main.minimumContentSize.width
+  let base = enforcedFloor(for: window, inspectorOpen: false)
   let lowered = await eventually { window.contentMinSize.width == base }
   #expect(lowered, "closing the inspector returns the floor to the base minimum")
   // The window itself keeps its size — only the floor moves.

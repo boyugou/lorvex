@@ -1,27 +1,16 @@
 import LorvexCore
 import SwiftUI
 
+/// The task workspace's first load: a small spinner and "Loading Tasks" where
+/// the rows will appear. It is the only loading cue; the header adds none.
 struct TasksInitialLoadingState: View {
   var body: some View {
-    HStack(spacing: LorvexDesign.Spacing.m) {
+    HStack(spacing: LorvexDesign.Spacing.s) {
       ProgressView()
         .controlSize(.small)
-
-      VStack(alignment: .leading, spacing: 2) {
-        Text(LocalizedStringResource("tasks.loading.title", defaultValue: "Loading Tasks", table: "Localizable", bundle: LorvexL10n.bundle))
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .foregroundStyle(.primary)
-        Text(LocalizedStringResource(
-          "tasks.loading.description",
-          defaultValue: "Keeping the review queue ready while Lorvex refreshes task data.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
+      Text(LocalizedStringResource("tasks.loading.title", defaultValue: "Loading Tasks", table: "Localizable", bundle: LorvexL10n.bundle))
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
-        .lineLimit(2)
-      }
-
       Spacer(minLength: 0)
     }
     .padding(.horizontal, LorvexDesign.Spacing.l)
@@ -31,213 +20,86 @@ struct TasksInitialLoadingState: View {
   }
 }
 
-struct TaskStatusSection: View {
-  let title: String
-  let status: TaskWorkspaceSection
+/// The open tasks at the top of the Tasks workspace, straight under the
+/// quick-add field. They carry no header: the field above them already says
+/// this is the list being worked, and a title would only add an indent level.
+struct TaskOpenRows: View {
   let tasks: [LorvexTask]
   @Bindable var store: AppStore
-  var systemImage: String? = nil
-  var tint: Color? = nil
-  var topSpacing: CGFloat = LorvexDesign.Spacing.m
+  /// False while the rows are a preview whose overflow folds into Backlog,
+  /// which then owns paging.
   var showsLoadMore = true
-  /// A section nested under a top-level group (History / Later) — its header is
-  /// rendered subordinate and its content is indented to read as a child.
-  var isSubsection = false
 
   var body: some View {
-    if !tasks.isEmpty || (showsLoadMore && store.taskWorkspaceHasMore(status: status)) {
-      VStack(alignment: .leading, spacing: 0) {
-        WorkspaceTaskSectionHeader(
-          title: title,
-          countText: store.taskWorkspaceHasMore(status: status) ? "\(tasks.count)+" : "\(tasks.count)",
-          systemImage: systemImage ?? status.sectionSymbolName,
-          tint: tint ?? (status == .open ? .accentColor : status.sectionTint),
-          topSpacing: topSpacing,
-          isSubsection: isSubsection
-        )
-        .padding(.horizontal, LorvexDesign.Spacing.l)
-
-        ForEach(tasks) { task in
-          TaskRowDropTarget(task: task, store: store)
-            .padding(.horizontal, LorvexDesign.Spacing.m)
-        }
-        if showsLoadMore && store.taskWorkspaceHasMore(status: status) {
-          Button {
-            Task { await store.loadMoreTaskWorkspace(status: status) }
-          } label: {
-            Label(
-              String(localized: "tasks.results.load_more", defaultValue: "Load More", table: "Localizable", bundle: LorvexL10n.bundle),
-              systemImage: "arrow.down.circle"
-            )
-          }
-          .buttonStyle(.borderless)
-          .disabled(store.taskWorkspaceIsLoadingMore(status: status))
-          .padding(.horizontal, LorvexDesign.Spacing.l)
-          .padding(.vertical, LorvexDesign.Spacing.s)
+    let timeLabels = store.todayTimeLabels
+    VStack(alignment: .leading, spacing: 0) {
+      ForEach(tasks) { task in
+        TaskRowDropTarget(task: task, store: store, timeLabel: timeLabels[task.id])
+          .padding(.horizontal, LorvexDesign.Spacing.m)
+      }
+      if showsLoadMore && store.taskWorkspaceHasMore(status: .open) {
+        WorkspaceTaskLoadMoreButton(isLoading: store.taskWorkspaceIsLoadingMore(status: .open)) {
+          Task { await store.loadMoreTaskWorkspace(status: .open) }
         }
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      // Nest the whole sub-section (header + rows) under its parent group.
-      .padding(.leading, isSubsection ? LorvexDesign.Spacing.m : 0)
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.top, LorvexDesign.Spacing.xs)
   }
 }
 
-struct TaskOpenBacklogDisclosure: View {
+/// A folded group of the Tasks workspace (Backlog, Later, History): a quiet
+/// fold row, then, when unfolded, one flat run of task rows on the same two
+/// columns as the open tasks above. The group has no sub-headers; each row's
+/// own status circle and metadata say what kind of task it is.
+///
+/// `pagedSections` are the workspace sections whose pages feed `tasks`. Load
+/// More appears while any of them has another page, and fetches the next page
+/// of each one that does.
+struct TaskFoldSection: View {
   @Binding var isExpanded: Bool
+  let title: String
   let tasks: [LorvexTask]
+  let pagedSections: [TaskWorkspaceSection]
   @Bindable var store: AppStore
+  let accessibilityIdentifier: String
 
-  private var hasMore: Bool {
-    store.taskWorkspaceHasMore(status: .open)
+  private var sectionsWithMore: [TaskWorkspaceSection] {
+    pagedSections.filter { store.taskWorkspaceHasMore(status: $0) }
   }
 
   var body: some View {
-    if !tasks.isEmpty || hasMore {
+    let sectionsWithMore = sectionsWithMore
+    if !tasks.isEmpty || !sectionsWithMore.isEmpty {
       VStack(alignment: .leading, spacing: 0) {
         WorkspaceTaskDisclosureHeader(
           isExpanded: $isExpanded,
-          title: String(localized: "tasks.section.backlog", defaultValue: "Backlog", table: "Localizable", bundle: LorvexL10n.bundle),
-          countText: hasMore ? "\(tasks.count)+" : "\(tasks.count)",
-          systemImage: "tray.full",
-          tint: .secondary
+          title: title,
+          countText: sectionsWithMore.isEmpty ? "\(tasks.count)" : "\(tasks.count)+"
         )
-        .padding(.horizontal, LorvexDesign.Spacing.l)
-        .padding(.top, LorvexDesign.Spacing.s)
+        .padding(.horizontal, WorkspaceTaskColumns.markerLeading)
+        .padding(.top, LorvexDesign.Spacing.m)
+        .padding(.bottom, LorvexDesign.Spacing.xs)
 
         if isExpanded {
           ForEach(tasks) { task in
             TaskRowDropTarget(task: task, store: store)
               .padding(.horizontal, LorvexDesign.Spacing.m)
           }
-          if hasMore {
-            Button {
-              Task { await store.loadMoreTaskWorkspace(status: .open) }
-            } label: {
-              Label(
-                String(localized: "tasks.results.load_more", defaultValue: "Load More", table: "Localizable", bundle: LorvexL10n.bundle),
-                systemImage: "arrow.down.circle"
-              )
+          if !sectionsWithMore.isEmpty {
+            WorkspaceTaskLoadMoreButton(
+              isLoading: sectionsWithMore.contains { store.taskWorkspaceIsLoadingMore(status: $0) }
+            ) {
+              Task {
+                for section in sectionsWithMore {
+                  await store.loadMoreTaskWorkspace(status: section)
+                }
+              }
             }
-            .buttonStyle(.borderless)
-            .disabled(store.taskWorkspaceIsLoadingMore(status: .open))
-            .padding(.horizontal, LorvexDesign.Spacing.l)
-            .padding(.vertical, LorvexDesign.Spacing.s)
           }
         }
       }
-      .accessibilityIdentifier("tasks.openBacklog.disclosure")
-    }
-  }
-}
-
-struct TaskLaterDisclosure: View {
-  @Binding var isExpanded: Bool
-  let deferredTasks: [LorvexTask]
-  let scheduledTasks: [LorvexTask]
-  let somedayTasks: [LorvexTask]
-  @Bindable var store: AppStore
-
-  private var count: Int {
-    deferredTasks.count + scheduledTasks.count + somedayTasks.count
-  }
-
-  private var hasMore: Bool {
-    store.taskWorkspaceHasMore(status: .deferred)
-      || store.taskWorkspaceHasMore(status: .scheduled)
-      || store.taskWorkspaceHasMore(status: .someday)
-  }
-
-  var body: some View {
-    if count > 0 || hasMore {
-      VStack(alignment: .leading, spacing: 0) {
-        WorkspaceTaskDisclosureHeader(
-          isExpanded: $isExpanded,
-          title: String(localized: "tasks.section.later", defaultValue: "Later", table: "Localizable", bundle: LorvexL10n.bundle),
-          countText: hasMore ? "\(count)+" : "\(count)",
-          systemImage: "clock",
-          tint: .secondary
-        )
-        .padding(.horizontal, LorvexDesign.Spacing.l)
-        .padding(.top, LorvexDesign.Spacing.s)
-
-        if isExpanded {
-          TaskStatusSection(
-            title: String(localized: "tasks.section.deferred", defaultValue: "Deferred", table: "Localizable", bundle: LorvexL10n.bundle),
-            status: .deferred,
-            tasks: deferredTasks,
-            store: store,
-            topSpacing: LorvexDesign.Spacing.s,
-            isSubsection: true
-          )
-          TaskStatusSection(
-            title: String(localized: "tasks.section.scheduled", defaultValue: "Snoozed", table: "Localizable", bundle: LorvexL10n.bundle),
-            status: .scheduled,
-            tasks: scheduledTasks,
-            store: store,
-            topSpacing: LorvexDesign.Spacing.s,
-            isSubsection: true
-          )
-          TaskStatusSection(
-            title: String(localized: "tasks.section.someday", defaultValue: "Someday", table: "Localizable", bundle: LorvexL10n.bundle),
-            status: .someday,
-            tasks: somedayTasks,
-            store: store,
-            topSpacing: LorvexDesign.Spacing.s,
-            isSubsection: true
-          )
-        }
-      }
-      .accessibilityIdentifier("tasks.later.disclosure")
-    }
-  }
-}
-
-struct TaskHistoryDisclosure: View {
-  @Binding var isExpanded: Bool
-  let completedTasks: [LorvexTask]
-  let cancelledTasks: [LorvexTask]
-  @Bindable var store: AppStore
-
-  private var count: Int {
-    completedTasks.count + cancelledTasks.count
-  }
-
-  var body: some View {
-    if count > 0 || store.taskWorkspaceHasMore(status: .completed) || store.taskWorkspaceHasMore(status: .cancelled) {
-      VStack(alignment: .leading, spacing: 0) {
-        WorkspaceTaskDisclosureHeader(
-          isExpanded: $isExpanded,
-          title: String(localized: "tasks.section.history", defaultValue: "History", table: "Localizable", bundle: LorvexL10n.bundle),
-          countText: store.taskWorkspaceHasMore(status: .completed) || store.taskWorkspaceHasMore(status: .cancelled)
-            ? "\(count)+"
-            : "\(count)",
-          systemImage: "clock.arrow.circlepath",
-          tint: .secondary
-        )
-        .padding(.horizontal, LorvexDesign.Spacing.l)
-        .padding(.top, LorvexDesign.Spacing.s)
-
-        if isExpanded {
-          TaskStatusSection(
-            title: String(localized: "tasks.section.completed", defaultValue: "Completed", table: "Localizable", bundle: LorvexL10n.bundle),
-            status: .completed,
-            tasks: completedTasks,
-            store: store,
-            topSpacing: LorvexDesign.Spacing.s,
-            isSubsection: true
-          )
-          TaskStatusSection(
-            title: String(localized: "tasks.section.cancelled", defaultValue: "Cancelled", table: "Localizable", bundle: LorvexL10n.bundle),
-            status: .cancelled,
-            tasks: cancelledTasks,
-            store: store,
-            topSpacing: LorvexDesign.Spacing.s,
-            isSubsection: true
-          )
-        }
-      }
-      .accessibilityIdentifier("tasks.history.disclosure")
+      .accessibilityIdentifier(accessibilityIdentifier)
     }
   }
 }
@@ -245,6 +107,8 @@ struct TaskHistoryDisclosure: View {
 struct TaskRowDropTarget: View {
   let task: LorvexTask
   @Bindable var store: AppStore
+  /// When the task happens today, if it is timed (``AppStore/todayTimeLabels``).
+  var timeLabel: String? = nil
 
   private var isBatchSelected: Bool {
     store.taskWorkspaceSelectedTaskIDs.contains(task.id)
@@ -259,8 +123,12 @@ struct TaskRowDropTarget: View {
       batchAccessibilityIdentifier: "tasks.row.batchSelect.\(task.id)",
       toggleBatchSelection: { store.toggleTaskWorkspaceBatchSelection(task.id) },
       openTask: { store.selectOnlyTaskInWorkspace(task.id) },
-      // The Tasks workspace spans every list, so each row shows its owning list.
-      showsOwningList: true
+      // Unscoped, the workspace spans every list, so the owning list is the row's
+      // most useful context. Scoped to one list, every row would repeat the list
+      // already named in the header — the same reason a list's own detail pane
+      // never shows it.
+      showsOwningList: store.taskWorkspaceListScopeID == nil,
+      timeLabel: timeLabel
     )
   }
 }

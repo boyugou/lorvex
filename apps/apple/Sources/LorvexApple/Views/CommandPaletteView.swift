@@ -2,14 +2,15 @@ import LorvexCore
 import SwiftUI
 
 /// ⌘K command palette: a focused search field over a grouped result list for
-/// fast keyboard-driven navigation, task search, quick capture, and global
-/// actions. Result building lives in `CommandPaletteResults` (pure, tested);
-/// this view owns presentation, focus, and keyboard handling.
+/// fast keyboard-driven navigation to workspaces and lists, task search, quick
+/// capture, and global actions. Result building lives in
+/// `CommandPaletteResults` (pure, tested); this view owns presentation, focus,
+/// and keyboard handling.
 struct CommandPaletteView: View {
   var store: AppStore
   @Environment(\.dismiss) private var dismiss
 
-  @State private var query = ""
+  @State private var query: String
   @State private var taskResults: [LorvexTask] = []
   @State private var highlightedIndex = 0
   @FocusState private var fieldFocused: Bool
@@ -25,8 +26,18 @@ struct CommandPaletteView: View {
   // as "no results."
   @State private var searchError: String?
 
+  /// `initialQuery` opens the palette already filtered; the preview tour uses
+  /// it to capture a typed state.
+  init(store: AppStore, initialQuery: String = "") {
+    self.store = store
+    _query = State(initialValue: initialQuery)
+  }
+
   private var groups: [CommandPaletteGroup] {
-    CommandPaletteResults.groups(query: query, tasks: taskResults)
+    CommandPaletteResults.groups(
+      query: query, tasks: taskResults,
+      lists: store.orderedLists + store.orderedArchivedLists,
+      now: LorvexPreviewClock.now(in: .current))
   }
 
   private var flatResults: [CommandPaletteResult] {
@@ -125,8 +136,8 @@ struct CommandPaletteView: View {
   private func errorBanner(_ message: String) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "exclamationmark.triangle.fill")
-        .foregroundStyle(.orange)
-      VStack(alignment: .leading, spacing: 2) {
+        .foregroundStyle(LorvexDesign.Palette.warning)
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(LocalizedStringResource("common.error", defaultValue: "Error", table: "Localizable", bundle: LorvexL10n.bundle))
           .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
         Text(message)
@@ -138,7 +149,7 @@ struct CommandPaletteView: View {
     }
     .padding(LorvexDesign.Spacing.m)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+    .background(LorvexDesign.Palette.warning.opacity(0.10), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
     .padding(.horizontal, LorvexDesign.Spacing.m)
     .accessibilityIdentifier("commandPalette.searchError")
   }
@@ -147,7 +158,7 @@ struct CommandPaletteView: View {
   private func groupSection(
     _ group: CommandPaletteGroup, indexByID: [String: Int]
   ) -> some View {
-    Text(group.localizedTitle.uppercased())
+    Text(group.localizedTitle)
       .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
       .foregroundStyle(.secondary)
       .padding(.horizontal, LorvexDesign.Spacing.m)
@@ -189,9 +200,15 @@ struct CommandPaletteView: View {
     switch result {
     case .navigate(let selection):
       store.navigateToWorkspace(selection)
-    case .openTask(let id, _, _):
-      store.selection = .tasks
-      store.selectedTaskID = id
+    case .openTask(let id, _, _, _):
+      // Across every list, so the task's row is on screen whichever list holds
+      // it; the shared route loads the task when no loaded view has it.
+      store.setTaskWorkspaceListScope(nil)
+      if let load = store.applyRouteNavigation(.task(id)) {
+        Task { await load() }
+      }
+    case .openList(let id, _, _, _):
+      store.openTaskListScope(id)
     case .createTask(let title):
       // Create from the typed title directly rather than stomping the shared
       // capture draft (read/written by Quick Capture and the menu-bar capture).

@@ -133,8 +133,7 @@ extension SwiftLorvexCoreService {
         guard existing.entityType == incomingContender.entityType,
           existing.entityId == incomingContender.entityId
         else { return false }
-        return existing.entityType == .aiChangelog
-          || existing.version == incomingContender.version
+        return existing.version == incomingContender.version
       }
       guard let index,
         case .resolveEqualVersionCollision(let existing, let existingFloor) =
@@ -143,12 +142,8 @@ extension SwiftLorvexCoreService {
         pending.append(PendingApplyRepair(obligation: incoming, kind: kind))
         return
       }
-      let joined =
-        existing.entityType == .aiChangelog
-        ? try SyncMutationSemantics.deterministicWinnerIgnoringVersion(
-          existing, incomingContender)
-        : try SyncMutationSemantics.deterministicWinner(
-          existing, incomingContender)
+      let joined = try SyncMutationSemantics.deterministicWinner(
+        existing, incomingContender)
       var floor = max(existing.version, incomingContender.version)
       if let existingFloor { floor = max(floor, existingFloor) }
       if let incomingFloor { floor = max(floor, incomingFloor) }
@@ -221,7 +216,7 @@ extension SwiftLorvexCoreService {
 
   static func shouldAbortInboundBatch(for error: ApplyError) -> Bool {
     switch error {
-    case .db, .store, .dbBusyOrLocked, .transactionRequired:
+    case .db, .store, .dbTransient, .transactionRequired:
       // Genuinely transient / IO `.db`, store, and lock-contention failures are
       // recoverable: abort the batch so the whole page is refetched and retried.
       return true

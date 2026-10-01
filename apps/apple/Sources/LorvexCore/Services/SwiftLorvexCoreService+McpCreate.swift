@@ -50,7 +50,9 @@ extension SwiftLorvexCoreService {
         frequencyType: habit.frequencyType, weekdays: habit.weekdays,
         perPeriodTarget: habit.perPeriodTarget, dayOfMonth: habit.dayOfMonth,
         targetCount: habit.targetCount, milestone: milestone, archived: habit.archived,
-        position: habit.position)
+        // A create, not a restore: the habit starts existing now, so it takes
+        // the current instant even if the DTO carries a creation date.
+        position: habit.position, createdAt: nil)
     }
   }
 }

@@ -97,8 +97,8 @@ import Testing
     #expect(provider.notes == nil)
   }
 
-  /// FIX 1 (privacy): a non-tier-expressing calendar action — the enable toggle,
-  /// a filter tweak, or the "Ingest Now" button, all of which funnel through
+  /// FIX 1 (privacy): a non-tier-expressing calendar action — the enable toggle
+  /// or a filter tweak, both of which funnel through
   /// `applyEventKitSettings(enabled:)` — must NOT force-rewrite the AI tier back
   /// to `full_details`. With `busy_only` stored, applying settings leaves the
   /// tier at `busy_only` and the re-ingest it drives stays busy-only (the

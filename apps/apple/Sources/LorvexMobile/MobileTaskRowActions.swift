@@ -1,186 +1,202 @@
 import LorvexCore
 import SwiftUI
 
-/// The shared Focus / Complete / Defer affordances for a mobile task row:
-/// leading (focus) and trailing (complete + defer) swipe actions plus a
-/// mirroring context menu. Used by both the plain action row and the
-/// batch-selectable workspace row; the latter passes `isBatchSelecting: true`
-/// to suppress the actions while selecting.
+/// What a task row can do on iPhone and iPad: complete the task, start or
+/// pause it, and move it to a later day. Hosts build it with
+/// ``MobileStore/rowActions(for:afterSuccess:)``, so every row surface offers
+/// the same actions.
+struct MobileTaskRowActions {
+  var complete: () async -> Void
+  var start: () async -> Void
+  var pause: () async -> Void
+  /// Moves the task to the day `days` days after today.
+  var deferByDays: (Int) async -> Void
+}
+
+/// The days a task can be deferred by from a row's context menu or the task
+/// detail: tomorrow, in three days, or next week, the choices the macOS defer
+/// menu offers.
+enum MobileDeferChoice: Int, CaseIterable, Identifiable {
+  case tomorrow = 1
+  case inThreeDays = 3
+  case nextWeek = 7
+
+  var id: Int { rawValue }
+
+  var title: String {
+    switch self {
+    case .tomorrow:
+      String(
+        localized: "date_chip.tomorrow", defaultValue: "Tomorrow", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    case .inThreeDays:
+      String(
+        localized: "task.defer.in_3_days", defaultValue: "In 3 days", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    case .nextWeek:
+      String(
+        localized: "date_chip.next_week", defaultValue: "Next Week", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    }
+  }
+
+  var systemImage: String {
+    switch self {
+    case .tomorrow: "sun.max"
+    case .inThreeDays: "calendar"
+    case .nextWeek: "calendar.badge.clock"
+    }
+  }
+}
+
+/// A Defer menu listing the ``MobileDeferChoice`` days.
+struct MobileDeferMenu<MenuLabel: View>: View {
+  let deferByDays: (Int) async -> Void
+  @ViewBuilder var label: () -> MenuLabel
+
+  var body: some View {
+    Menu {
+      ForEach(MobileDeferChoice.allCases) { choice in
+        Button {
+          Task { await deferByDays(choice.rawValue) }
+        } label: {
+          Label(choice.title, systemImage: choice.systemImage)
+        }
+      }
+    } label: {
+      label()
+    }
+  }
+}
+
+/// The words the row actions and the task detail share.
+enum MobileTaskActionCopy {
+  static var start: String {
+    String(
+      localized: "action.start", defaultValue: "Start", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
+  static var pause: String {
+    String(
+      localized: "task.action.pause", defaultValue: "Pause", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
+  static var complete: String {
+    String(
+      localized: "action.complete", defaultValue: "Complete", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
+  static var reopen: String {
+    String(
+      localized: "action.reopen", defaultValue: "Reopen", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
+  /// What a task's completion circle does: Complete for an open task, Reopen
+  /// for a done one.
+  static func completionToggle(isDone: Bool) -> String {
+    isDone ? reopen : complete
+  }
+
+  static var deferTask: String {
+    String(
+      localized: "action.defer", defaultValue: "Defer", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+}
+
+/// The shared row actions (``MobileTaskRowActions``): Start or Pause on the
+/// leading swipe; Complete (the full swipe) and Defer to tomorrow on the
+/// trailing swipe; and a context menu with Complete, Start or Pause, and a
+/// Defer menu of days. Used by the plain action row and the batch-selectable
+/// workspace row; the latter passes `isBatchSelecting: true` to suppress the
+/// actions while selecting.
 private struct MobileTaskRowActionsModifier: ViewModifier {
   let task: LorvexTask
-  let isFocused: Bool
+  let actions: MobileTaskRowActions
   let isMutating: Bool
   let isBatchSelecting: Bool
-  let toggleFocus: () async -> Void
-  let complete: () async -> Void
-  let deferTask: () async -> Void
-  /// Start (`open → in_progress`); `nil` on surfaces that don't own the action.
-  var start: (() async -> Void)? = nil
-  /// Mark as Not Started (`in_progress → open`).
-  var markNotStarted: (() async -> Void)? = nil
 
-  private var isDone: Bool { task.status.isResolved }
-  private var canStart: Bool { task.status == .open && start != nil }
-  private var canMarkNotStarted: Bool { task.status == .inProgress && markNotStarted != nil }
+  private var isResolved: Bool { task.status.isResolved }
 
   func body(content: Content) -> some View {
     content
-      .swipeActions(edge: .leading, allowsFullSwipe: false) {
-        Button {
-          Task { await toggleFocus() }
-        } label: {
-          Label(
-            isFocused
-              ? String(
-                localized: "task.unfocus", defaultValue: "Unfocus", table: "Localizable",
-                bundle: MobileL10n.bundle)
-              : String(
-                localized: "action.focus", defaultValue: "Focus", table: "Localizable",
-                bundle: MobileL10n.bundle),
-            systemImage: isFocused ? "minus.circle" : "scope")
-        }
-        .tint(.blue)
-        .disabled(isMutating || isBatchSelecting)
-
-        if canStart, let start {
-          Button {
-            Task { await start() }
-          } label: {
-            Label(
-              String(
-                localized: "action.start", defaultValue: "Start", table: "Localizable",
-                bundle: MobileL10n.bundle), systemImage: "play.circle")
-          }
-          .tint(.accentColor)
+      .swipeActions(edge: .leading, allowsFullSwipe: true) {
+        startOrPauseButton
+          .tint(LorvexDesign.Palette.accent)
           .disabled(isMutating || isBatchSelecting)
-        }
-        if canMarkNotStarted, let markNotStarted {
-          Button {
-            Task { await markNotStarted() }
-          } label: {
-            Label(
-              String(
-                localized: "action.mark_not_started", defaultValue: "Not Started",
-                table: "Localizable", bundle: MobileL10n.bundle),
-              systemImage: "pause.circle")
-          }
-          .tint(.accentColor)
-          .disabled(isMutating || isBatchSelecting)
-        }
       }
       .swipeActions(edge: .trailing, allowsFullSwipe: true) {
         Button {
-          Task { await complete() }
+          Task { await actions.complete() }
         } label: {
-          Label(
-            String(
-              localized: "action.complete", defaultValue: "Complete", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "checkmark.circle")
+          Label(MobileTaskActionCopy.complete, systemImage: "checkmark.circle")
         }
-        .tint(.green)
-        .disabled(isMutating || isDone || isBatchSelecting)
+        .tint(LorvexDesign.Palette.done)
+        .disabled(isMutating || isResolved || isBatchSelecting)
 
         Button {
-          Task { await deferTask() }
+          Task { await actions.deferByDays(MobileDeferChoice.tomorrow.rawValue) }
         } label: {
-          Label(
-            String(
-              localized: "action.defer", defaultValue: "Defer", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "clock")
+          Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
         }
-        .tint(.orange)
-        .disabled(isMutating || isDone || isBatchSelecting)
+        .tint(LorvexDesign.Palette.dueSoon)
+        .disabled(isMutating || isResolved || isBatchSelecting)
       }
       .contextMenu {
         if !isBatchSelecting {
           Button {
-            Task { await complete() }
+            Task { await actions.complete() }
           } label: {
-            Label(
-              String(
-                localized: "action.complete", defaultValue: "Complete", table: "Localizable",
-                bundle: MobileL10n.bundle), systemImage: "checkmark.circle")
+            Label(MobileTaskActionCopy.complete, systemImage: "checkmark.circle")
           }
-          .disabled(isMutating || isDone)
+          .disabled(isMutating || isResolved)
 
-          if canStart, let start {
-            Button {
-              Task { await start() }
-            } label: {
-              Label(
-                String(
-                  localized: "action.start", defaultValue: "Start", table: "Localizable",
-                  bundle: MobileL10n.bundle), systemImage: "play.circle")
-            }
+          startOrPauseButton
             .disabled(isMutating)
-          }
-          if canMarkNotStarted, let markNotStarted {
-            Button {
-              Task { await markNotStarted() }
-            } label: {
-              Label(
-                String(
-                  localized: "task.action.mark_not_started", defaultValue: "Mark as Not Started",
-                  table: "Localizable", bundle: MobileL10n.bundle),
-                systemImage: "pause.circle")
-            }
-            .disabled(isMutating)
-          }
 
-          Button {
-            Task { await deferTask() }
-          } label: {
-            Label(
-              String(
-                localized: "action.defer", defaultValue: "Defer", table: "Localizable",
-                bundle: MobileL10n.bundle), systemImage: "clock")
+          MobileDeferMenu(deferByDays: actions.deferByDays) {
+            Label(MobileTaskActionCopy.deferTask, systemImage: "clock")
           }
-          .disabled(isMutating || isDone)
-
-          Button {
-            Task { await toggleFocus() }
-          } label: {
-            Label(
-              isFocused
-                ? String(
-                  localized: "task.unfocus", defaultValue: "Unfocus", table: "Localizable",
-                  bundle: MobileL10n.bundle)
-                : String(
-                  localized: "action.focus", defaultValue: "Focus", table: "Localizable",
-                  bundle: MobileL10n.bundle),
-              systemImage: isFocused ? "minus.circle" : "scope")
-          }
-          .disabled(isMutating)
+          .disabled(isMutating || isResolved)
         }
       }
+  }
+
+  /// Start on an open task, Pause on a started one, nothing otherwise.
+  @ViewBuilder
+  private var startOrPauseButton: some View {
+    if task.status == .open {
+      Button {
+        Task { await actions.start() }
+      } label: {
+        Label(MobileTaskActionCopy.start, systemImage: "play.circle")
+      }
+    } else if task.status == .inProgress {
+      Button {
+        Task { await actions.pause() }
+      } label: {
+        Label(MobileTaskActionCopy.pause, systemImage: "pause.circle")
+      }
+    }
   }
 }
 
 extension View {
-  /// Attach the shared Focus / Complete / Defer swipe actions and context menu
-  /// to a task row. Pass `isBatchSelecting: true` to disable them (and hide the
-  /// context menu) while the row is in batch-selection mode.
+  /// Attach the shared row actions (``MobileTaskRowActions``) as swipe actions
+  /// and a context menu. Pass `isBatchSelecting: true` to disable them and hide
+  /// the context menu while the row is in batch-selection mode.
   func taskRowActions(
     task: LorvexTask,
-    isFocused: Bool,
+    actions: MobileTaskRowActions,
     isMutating: Bool,
-    isBatchSelecting: Bool,
-    toggleFocus: @escaping () async -> Void,
-    complete: @escaping () async -> Void,
-    deferTask: @escaping () async -> Void,
-    start: (() async -> Void)? = nil,
-    markNotStarted: (() async -> Void)? = nil
+    isBatchSelecting: Bool
   ) -> some View {
     modifier(
       MobileTaskRowActionsModifier(
-        task: task,
-        isFocused: isFocused,
-        isMutating: isMutating,
-        isBatchSelecting: isBatchSelecting,
-        toggleFocus: toggleFocus,
-        complete: complete,
-        deferTask: deferTask,
-        start: start,
-        markNotStarted: markNotStarted))
+        task: task, actions: actions, isMutating: isMutating, isBatchSelecting: isBatchSelecting))
   }
 }

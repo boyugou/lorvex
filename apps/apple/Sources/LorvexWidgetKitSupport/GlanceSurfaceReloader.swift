@@ -9,38 +9,30 @@ import WidgetKit
 /// surface while leaving the other on an older snapshot.
 public struct GlanceSurfaceReloader: Sendable {
   private let reloadWidgetTimelines: @Sendable () -> Void
-  private let reloadFocusControl: @Sendable () -> Void
+  private let reloadTodayControl: @Sendable () -> Void
 
   public init(
     reloadWidgetTimelines: @escaping @Sendable () -> Void,
-    reloadFocusControl: @escaping @Sendable () -> Void
+    reloadTodayControl: @escaping @Sendable () -> Void
   ) {
     self.reloadWidgetTimelines = reloadWidgetTimelines
-    self.reloadFocusControl = reloadFocusControl
+    self.reloadTodayControl = reloadTodayControl
   }
 
   public func reloadAll() {
     reloadWidgetTimelines()
-    reloadFocusControl()
+    reloadTodayControl()
   }
 
-  /// Production WidgetKit invalidation. Control widgets are unavailable on
-  /// visionOS and require newer OS releases than ordinary widgets elsewhere.
+  /// Production WidgetKit invalidation: every widget timeline, then the Today
+  /// control.
   public static let live = GlanceSurfaceReloader(
     reloadWidgetTimelines: {
-      #if os(visionOS)
-        if #available(visionOS 26.0, *) {
-          WidgetCenter.shared.reloadAllTimelines()
-        }
-      #else
-        WidgetCenter.shared.reloadAllTimelines()
-      #endif
+      WidgetCenter.shared.reloadAllTimelines()
     },
-    reloadFocusControl: {
-      #if !os(visionOS)
-        if #available(iOS 18.0, macOS 26.0, watchOS 26.0, *) {
-          ControlCenter.shared.reloadControls(ofKind: LorvexProductMetadata.controlWidgetKind)
-        }
-      #endif
+    reloadTodayControl: {
+      if #available(iOS 18.0, macOS 26.0, watchOS 26.0, *) {
+        ControlCenter.shared.reloadControls(ofKind: LorvexProductMetadata.controlWidgetKind)
+      }
     })
 }

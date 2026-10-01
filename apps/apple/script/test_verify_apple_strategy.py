@@ -99,7 +99,7 @@ class VerifyAppleStrategyTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (widget_sources / "Widget.swift").write_text(
-                "let coordinator: CloudSyncEngineCoordinator?\n",
+                "let coordinator: CloudSyncController?\n",
                 encoding="utf-8",
             )
             (watch_sources / "Watch.swift").write_text(
@@ -127,13 +127,13 @@ class VerifyAppleStrategyTests(unittest.TestCase):
             app_sources.mkdir(parents=True)
             intent_sources.mkdir(parents=True)
             (app_sources / "Bootstrap.swift").write_text(
-                "import CloudKit\nlet coordinator: CloudSyncEngineCoordinator?\n",
+                "import CloudKit\nlet coordinator: CloudSyncController?\n",
                 encoding="utf-8",
             )
             (intent_sources / "Intent.swift").write_text(
                 """
                 // import CloudKit
-                /* CloudSyncEngineCoordinator must stay in the main app. */
+                /* CloudSyncController must stay in the main app. */
                 let documentation = "CKContainer is intentionally unavailable here"
                 """,
                 encoding="utf-8",

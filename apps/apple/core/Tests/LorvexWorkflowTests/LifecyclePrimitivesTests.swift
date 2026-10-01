@@ -495,15 +495,47 @@ final class LifecyclePrimitivesTests: XCTestCase {
     XCTAssertFalse(result.updated)
   }
 
-  func testReopenTaskClearsCompletionAndDeferralState() throws {
+  func testReopenTaskFromCompletedKeepsThePlan() throws {
     let store = try WorkflowTestSupport.freshStore()
     try insertTask(store.writer, id: "t1", status: "completed")
     try store.writer.write { db in
       try db.execute(
         sql:
           "UPDATE tasks SET completed_at = '2026-03-01T00:00:00Z', "
-          + "planned_date = '2026-03-01', "
-          + "last_deferred_at = '2026-02-28T00:00:00Z', "
+          + "planned_date = '2026-03-01', planned_start_minutes = 540, "
+          + "planned_end_minutes = 600, defer_count = 2 WHERE id = 't1'")
+    }
+    let result = try store.writer.write { db in
+      try LifecycleStatus.reopenTask(
+        db, taskId: tid("t1"),
+        now: "2026-03-26T10:00:00Z",
+        reminderVersion: "0000000000000_0000_a0a0a0a0a0a0a0a0")
+    }
+    XCTAssertTrue(result.updated)
+    let row = try store.writer.read { db in
+      try Row.fetchOne(
+        db,
+        sql:
+          "SELECT status, completed_at, planned_date, planned_start_minutes, "
+          + "planned_end_minutes, defer_count FROM tasks WHERE id = 't1'"
+      )
+    }
+    XCTAssertEqual(row?[0] as String?, "open")
+    XCTAssertNil(row?[1] as String?)
+    XCTAssertEqual(row?[2] as String?, "2026-03-01")
+    XCTAssertEqual(row?[3] as Int64?, 540)
+    XCTAssertEqual(row?[4] as Int64?, 600)
+    XCTAssertEqual(row?[5] as Int64?, 2)
+  }
+
+  func testReopenTaskFromCancelledClearsPlanAndDeferralState() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try insertTask(store.writer, id: "t1", status: "cancelled")
+    try store.writer.write { db in
+      try db.execute(
+        sql:
+          "UPDATE tasks SET planned_date = '2026-03-01', planned_start_minutes = 540, "
+          + "planned_end_minutes = 600, last_deferred_at = '2026-02-28T00:00:00Z', "
           + "defer_count = 2 WHERE id = 't1'")
     }
     let result = try store.writer.write { db in
@@ -517,14 +549,16 @@ final class LifecyclePrimitivesTests: XCTestCase {
       try Row.fetchOne(
         db,
         sql:
-          "SELECT status, completed_at, planned_date, last_deferred_at, defer_count FROM tasks WHERE id = 't1'"
+          "SELECT status, planned_date, planned_start_minutes, planned_end_minutes, "
+          + "last_deferred_at, defer_count FROM tasks WHERE id = 't1'"
       )
     }
     XCTAssertEqual(row?[0] as String?, "open")
     XCTAssertNil(row?[1] as String?)
-    XCTAssertNil(row?[2] as String?)
-    XCTAssertNil(row?[3] as String?)
-    XCTAssertEqual(row?[4] as Int64?, 0)
+    XCTAssertNil(row?[2] as Int64?)
+    XCTAssertNil(row?[3] as Int64?)
+    XCTAssertNil(row?[4] as String?)
+    XCTAssertEqual(row?[5] as Int64?, 0)
   }
 
   func testReopenAlreadyOpenReturnsNotUpdated() throws {

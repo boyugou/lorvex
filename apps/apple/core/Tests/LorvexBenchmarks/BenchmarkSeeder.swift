@@ -241,11 +241,6 @@ enum BenchmarkSeeder {
             recurrence, recurring ? ver : nil, ver, ver, ver, todayStartUtc, todayStartUtc,
           ])
       }
-
-      // ---- trigram FTS index: not auto-installed at open; build it so the
-      // CJK/substring search path is exercised against real data. ----
-      try FtsRepo.installTasksTrigramTriggers(db)
-      try FtsRepo.rebuildTasksTrigram(db)
     }
 
     // Ensure the SQLite query planner has fresh statistics for EQP audits.

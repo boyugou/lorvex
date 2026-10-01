@@ -111,6 +111,8 @@ struct BackupV1Task: Codable, Sendable {
   var status: String
   var dueDate: String?
   var plannedDate: String?
+  var plannedStartTime: String?
+  var plannedEndTime: String?
   var availableFrom: String?
   var estimatedMinutes: Int?
   var tags: [String]?
@@ -138,6 +140,8 @@ struct BackupV1Task: Codable, Sendable {
     status = current.status
     dueDate = current.dueDate
     plannedDate = current.plannedDate
+    plannedStartTime = current.plannedStartTime
+    plannedEndTime = current.plannedEndTime
     availableFrom = current.availableFrom
     estimatedMinutes = current.estimatedMinutes
     tags = current.tags
@@ -161,7 +165,8 @@ struct BackupV1Task: Codable, Sendable {
   func current() throws -> ExportTask {
     ExportTask(
       id: id, title: title, notes: notes, priority: priority, status: status,
-      dueDate: dueDate, plannedDate: plannedDate, availableFrom: availableFrom,
+      dueDate: dueDate, plannedDate: plannedDate, plannedStartTime: plannedStartTime,
+      plannedEndTime: plannedEndTime, availableFrom: availableFrom,
       estimatedMinutes: estimatedMinutes, tags: tags, rawInput: rawInput,
       dependsOn: dependsOn, listID: listID, aiNotes: aiNotes,
       checklist: try checklist?.map { try $0.current() },
@@ -282,6 +287,7 @@ struct BackupV1Habit: Codable, Sendable {
   var color: String?
   var archived: Bool
   var position: Int64
+  var createdAt: String?
   var completions: [BackupV1HabitCompletion]
   var reminderPolicies: [BackupV1HabitReminderPolicy]
 
@@ -299,6 +305,7 @@ struct BackupV1Habit: Codable, Sendable {
     color = current.color
     archived = current.archived
     position = current.position
+    createdAt = current.createdAt
     completions = current.completions.map(BackupV1HabitCompletion.init(current:))
     reminderPolicies = current.reminderPolicies.map(BackupV1HabitReminderPolicy.init(current:))
   }
@@ -309,7 +316,7 @@ struct BackupV1Habit: Codable, Sendable {
       frequencyType: frequencyType, weekdays: weekdays,
       perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth,
       targetCount: targetCount, milestoneTarget: milestoneTarget,
-      archived: archived, position: position,
+      archived: archived, position: position, createdAt: createdAt,
       completions: completions.map(\.current),
       reminderPolicies: reminderPolicies.map(\.current))
   }
@@ -476,89 +483,24 @@ struct BackupV1DailyReview: Codable, Sendable, Equatable {
   }
 }
 
-struct BackupV1CurrentFocus: Codable, Sendable, Equatable {
+struct BackupV1DailyBriefing: Codable, Sendable, Equatable {
   var date: String
-  var briefing: String?
+  var briefing: String
   var timezone: String?
-  var taskIDs: [String]
   var createdAt: String?
   var updatedAt: String?
 
-  init(current: ExportCurrentFocus) {
+  init(current: ExportDailyBriefing) {
     date = current.date
     briefing = current.briefing
     timezone = current.timezone
-    taskIDs = current.taskIDs
     createdAt = current.createdAt
     updatedAt = current.updatedAt
   }
 
-  var current: ExportCurrentFocus {
-    ExportCurrentFocus(
-      date: date, briefing: briefing, timezone: timezone, taskIDs: taskIDs,
-      createdAt: createdAt, updatedAt: updatedAt)
-  }
-}
-
-struct BackupV1FocusScheduleBlock: Codable, Sendable, Equatable {
-  var position: Int
-  var blockType: String
-  var startMinutes: Int
-  var endMinutes: Int
-  var taskID: String?
-  var calendarEventID: String?
-  var eventSource: String?
-  var title: String?
-
-  init(current: ExportFocusScheduleBlock) {
-    position = current.position
-    blockType = current.blockType
-    startMinutes = current.startMinutes
-    endMinutes = current.endMinutes
-    taskID = current.taskID
-    calendarEventID = current.calendarEventID
-    eventSource = current.eventSource?.rawValue
-    title = current.title
-  }
-
-  func current() throws -> ExportFocusScheduleBlock {
-    let source: FocusScheduleEventSource?
-    if let eventSource {
-      guard let parsed = FocusScheduleEventSource(rawValue: eventSource) else {
-        throw BackupV1WireError.invalidFocusEventSource(eventSource)
-      }
-      source = parsed
-    } else {
-      source = nil
-    }
-    return ExportFocusScheduleBlock(
-      position: position, blockType: blockType, startMinutes: startMinutes,
-      endMinutes: endMinutes, taskID: taskID, calendarEventID: calendarEventID,
-      eventSource: source, title: title)
-  }
-}
-
-struct BackupV1FocusSchedule: Codable, Sendable {
-  var date: String
-  var rationale: String?
-  var timezone: String?
-  var blocks: [BackupV1FocusScheduleBlock]
-  var createdAt: String?
-  var updatedAt: String?
-
-  init(current: ExportFocusSchedule) {
-    date = current.date
-    rationale = current.rationale
-    timezone = current.timezone
-    blocks = current.blocks.map(BackupV1FocusScheduleBlock.init(current:))
-    createdAt = current.createdAt
-    updatedAt = current.updatedAt
-  }
-
-  func current() throws -> ExportFocusSchedule {
-    ExportFocusSchedule(
-      date: date, rationale: rationale, timezone: timezone,
-      blocks: try blocks.map { try $0.current() },
+  var current: ExportDailyBriefing {
+    ExportDailyBriefing(
+      date: date, briefing: briefing, timezone: timezone,
       createdAt: createdAt, updatedAt: updatedAt)
   }
 }

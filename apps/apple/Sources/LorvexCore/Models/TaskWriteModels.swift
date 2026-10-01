@@ -9,12 +9,18 @@ public struct TaskCreateDraft: Equatable, Sendable {
   public var estimatedMinutes: Int?
   public var dueDate: Date?
   public var plannedDate: Date?
+  /// The task's time on ``plannedDate`` in minutes since midnight; needs a
+  /// planned date.
+  public var plannedTime: Range<Int>?
   public var availableFrom: Date?
   public var tags: [String]?
   public var dependsOn: [LorvexTask.ID]?
   /// The user's verbatim original capture text, stored alongside the
   /// AI-parsed `title`/`notes`. `nil` records no raw capture.
   public var rawInput: String?
+  /// How the task repeats. A repeating task needs a due day; without one the
+  /// core uses the logical today as its first occurrence.
+  public var recurrence: TaskRecurrenceRule?
 
   public init(
     title: String,
@@ -24,10 +30,12 @@ public struct TaskCreateDraft: Equatable, Sendable {
     estimatedMinutes: Int? = nil,
     dueDate: Date? = nil,
     plannedDate: Date? = nil,
+    plannedTime: Range<Int>? = nil,
     availableFrom: Date? = nil,
     tags: [String]? = nil,
     dependsOn: [LorvexTask.ID]? = nil,
-    rawInput: String? = nil
+    rawInput: String? = nil,
+    recurrence: TaskRecurrenceRule? = nil
   ) {
     self.title = title
     self.notes = notes
@@ -36,10 +44,12 @@ public struct TaskCreateDraft: Equatable, Sendable {
     self.estimatedMinutes = estimatedMinutes
     self.dueDate = dueDate
     self.plannedDate = plannedDate
+    self.plannedTime = plannedTime
     self.availableFrom = availableFrom
     self.tags = tags
     self.dependsOn = dependsOn
     self.rawInput = rawInput
+    self.recurrence = recurrence
   }
 }
 
@@ -52,6 +62,11 @@ public struct TaskUpdateDraft: Equatable, Sendable {
   public var estimatedMinutes: Patch<Int>
   public var dueDate: Patch<Date>
   public var plannedDate: Patch<Date>
+  /// The task's time on its planned day, in minutes since midnight: `.set`
+  /// needs a planned date, set in the same draft or already stored; `.clear`
+  /// removes the time; `.unset` leaves it. A draft that moves the task to
+  /// another day without setting a time clears the time.
+  public var plannedTime: Patch<Range<Int>>
   public var availableFrom: Patch<Date>
   public var tags: [String]?
   public var dependsOn: [LorvexTask.ID]?
@@ -60,6 +75,9 @@ public struct TaskUpdateDraft: Equatable, Sendable {
   /// singular `updateTask(_:)` path (which surfaces `raw_input` in its tool
   /// schema); `batchUpdateTasks` leaves it `.unset`.
   public var rawInput: Patch<String>
+  /// True clears the task's priority (`priority` is then ignored); false, the
+  /// default, leaves it to `priority`, where nil means unchanged.
+  public var clearsPriority: Bool
 
   public init(
     id: LorvexTask.ID,
@@ -70,10 +88,12 @@ public struct TaskUpdateDraft: Equatable, Sendable {
     estimatedMinutes: Patch<Int> = .unset,
     dueDate: Patch<Date> = .unset,
     plannedDate: Patch<Date> = .unset,
+    plannedTime: Patch<Range<Int>> = .unset,
     availableFrom: Patch<Date> = .unset,
     tags: [String]? = nil,
     dependsOn: [LorvexTask.ID]? = nil,
-    rawInput: Patch<String> = .unset
+    rawInput: Patch<String> = .unset,
+    clearsPriority: Bool = false
   ) {
     self.id = id
     self.title = title
@@ -83,10 +103,12 @@ public struct TaskUpdateDraft: Equatable, Sendable {
     self.estimatedMinutes = estimatedMinutes
     self.dueDate = dueDate
     self.plannedDate = plannedDate
+    self.plannedTime = plannedTime
     self.availableFrom = availableFrom
     self.tags = tags
     self.dependsOn = dependsOn
     self.rawInput = rawInput
+    self.clearsPriority = clearsPriority
   }
 }
 

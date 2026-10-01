@@ -24,9 +24,9 @@ extension AppStore {
     if detachedWindowStores.isEmpty {
       defaults.removePersistentDomain(forName: suiteName)
     }
-    // A detached window never owns the App-Group snapshot: its `today`/`habits`/
-    // `currentFocus` are not the full live state, so letting it publish would blank
-    // the widgets. Use a no-op publisher; the main window's snapshot is authoritative.
+    // A detached window never owns the App-Group snapshot: its `today`/`habits`
+    // are not the full live state, so letting it publish would blank the widgets.
+    // Use a no-op publisher; the main window's snapshot is authoritative.
     let store = AppStore(
       core: core,
       feedbackProvider: feedbackProvider,
@@ -50,15 +50,6 @@ extension AppStore {
         // an absent mode as permission to shed it.
         self.map { $0.cloudSyncMode != .live } ?? false
       },
-      cloudSyncSubscriber: NoOpCloudSyncSubscriber(),
-      cloudSyncCoordinator: nil,
-      // A detached window must never run CloudKit itself, but its foreground
-      // refresh still performs local retention. Route that maintenance through
-      // the parent app's retained operation gate so it cannot cap the outbox or
-      // mutate sync debt while the main window is importing, rebuilding, or
-      // deleting the CloudKit namespace.
-      cloudDataMaintenanceCoordinator:
-        cloudDataMaintenanceCoordinator ?? cloudSyncCoordinator,
       eventKitCoordinator: eventKitCoordinator,
       badgeEnabled: badgeEnabled,
       setBadge: setBadge,
@@ -226,7 +217,7 @@ extension AppStore {
       let reloadedLists = try await snapshotCore.loadLists()
       guard detachedReloadIsCurrent(observerEpoch) else { return }
       let reloadedDetail = try await snapshotCore.loadListDetail(
-        id: listID, limit: 100, offset: 0)
+        id: listID, limit: listDetailReloadLimit(for: listID), offset: 0)
       guard detachedReloadIsCurrent(observerEpoch) else { return }
       lists = reloadedLists
       selectedListDetail = reloadedDetail
@@ -258,7 +249,8 @@ extension AppStore {
     selectedListID = listID
     await perform {
       lists = try await core.loadLists()
-      selectedListDetail = try await core.loadListDetail(id: listID, limit: 100, offset: 0)
+      selectedListDetail = try await core.loadListDetail(
+        id: listID, limit: listDetailReloadLimit(for: listID), offset: 0)
     }
   }
 }

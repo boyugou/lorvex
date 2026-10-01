@@ -44,11 +44,13 @@ public struct LorvexWidgetTimelineAdapter {
   /// when the app has never produced an App Group snapshot.
   public static func staticPreview(
     family: WidgetFamilyKind,
+    listID: String? = nil,
     now: Date = Date()
   ) -> LorvexWidgetEntry {
     let timelineEntry = WidgetTimelineEntry(
       date: now,
-      state: .snapshot(WidgetPreviewSnapshot.make(now: now), freshness: .fresh(ageSeconds: 0)),
+      state: .snapshot(
+        WidgetPreviewSnapshot.make(now: now, listID: listID), freshness: .fresh(ageSeconds: 0)),
       refreshAfter: now
     )
     let model = WidgetRenderModelBuilder().model(
@@ -73,13 +75,9 @@ public struct LorvexWidgetTimelineAdapter {
     let placeholderSnapshot = WidgetSnapshot(
       generatedAt: "1970-01-01T00:00:00Z",
       timezone: nil,
-      stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 0),
-      briefing: String(
-        localized: "widget.placeholder.ready",
-        defaultValue: "Lorvex is ready.",
-        table: "Localizable",
-        bundle: WidgetSupportL10n.bundle),
-      focusTasks: []
+      stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0),
+      briefing: nil,
+      tasks: []
     )
     return WidgetTimelineEntry(
       date: now,
@@ -90,15 +88,21 @@ public struct LorvexWidgetTimelineAdapter {
     )
   }
 
-  public func snapshot(family: WidgetFamilyKind) -> LorvexWidgetEntry {
-    entry(from: support.timelineEntry(), family: family)
+  public func snapshot(family: WidgetFamilyKind, listID: String? = nil) -> LorvexWidgetEntry {
+    entry(from: support.timelineEntry(listID: listID), family: family)
   }
 
-  public func timeline(family: WidgetFamilyKind) -> Timeline<LorvexWidgetEntry> {
-    let timelineEntry = support.timelineEntry()
+  /// One entry per instant the Today glance changes until the reload point, so
+  /// the lead stays right, its ring keeps filling, and its line stays true
+  /// between reloads.
+  public func timeline(
+    family: WidgetFamilyKind, listID: String? = nil
+  ) -> Timeline<LorvexWidgetEntry> {
+    let timelineEntries = support.timelineEntries(listID: listID)
+    let reloadAfter = timelineEntries.first?.refreshAfter ?? Date()
     return Timeline(
-      entries: [entry(from: timelineEntry, family: family)],
-      policy: .after(timelineEntry.refreshAfter)
+      entries: timelineEntries.map { entry(from: $0, family: family) },
+      policy: .after(reloadAfter)
     )
   }
 

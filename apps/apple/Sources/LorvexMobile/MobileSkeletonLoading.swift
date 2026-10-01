@@ -56,7 +56,9 @@ struct MobileSkeletonRow: View {
   }
 }
 
-struct MobileListDetailSkeleton: View {
+/// The loading placeholder for a pushed detail screen (a habit, a memory
+/// note): a header block of a title and two lines, over a section of rows.
+struct MobileDetailSkeleton: View {
   var body: some View {
     Section {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
@@ -77,12 +79,16 @@ struct MobileListDetailSkeleton: View {
     .allowsHitTesting(false)
     .accessibilityHidden(true)
 
-    Section(String(localized: "list_detail.section.tasks", defaultValue: "Tasks", table: "Localizable", bundle: MobileL10n.bundle)) {
+    Section {
       MobileSkeletonRows(count: 4)
     }
   }
 }
 
+/// The first-load placeholder, shaped like Today: the page's date and facts
+/// line over the background, then one untitled section of task rows, until the
+/// snapshot arrives. It covers the whole page, date included, so it draws the
+/// header's shape itself.
 struct MobileInitialWorkspaceSkeleton: View {
   var body: some View {
     List {
@@ -90,29 +96,24 @@ struct MobileInitialWorkspaceSkeleton: View {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
           Capsule()
             .fill(.secondary.opacity(0.24))
-            .frame(width: 220, height: 18)
+            .frame(width: 230, height: 26)
           Capsule()
             .fill(.secondary.opacity(0.18))
-            .frame(width: 280, height: 12)
-          HStack(spacing: LorvexDesign.Spacing.s) {
-            ForEach(0..<3, id: \.self) { _ in
-              Capsule()
-                .fill(.secondary.opacity(0.16))
-                .frame(width: 72, height: 18)
-            }
-          }
+            .frame(width: 180, height: 12)
         }
-        .padding(.vertical, LorvexDesign.Spacing.s)
+        .padding(.vertical, LorvexDesign.Spacing.xs)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(
+          EdgeInsets(
+            top: LorvexDesign.Spacing.xs, leading: 0, bottom: LorvexDesign.Spacing.xs, trailing: 0))
       }
 
-      Section(String(localized: "today.section.next", defaultValue: "Next", table: "Localizable", bundle: MobileL10n.bundle)) {
-        MobileSkeletonRows(count: 1, showsTrailingDetail: true)
-      }
-
-      Section(String(localized: "today.section.today", defaultValue: "Today", table: "Localizable", bundle: MobileL10n.bundle)) {
-        MobileSkeletonRows(count: 3)
+      Section {
+        MobileSkeletonRows(count: 4)
       }
     }
+    .contentMargins(.top, LorvexDesign.Spacing.s, for: .scrollContent)
     .redacted(reason: .placeholder)
     .mobileSkeletonShimmer()
     .allowsHitTesting(false)
@@ -130,11 +131,7 @@ private struct MobileSkeletonShimmer: ViewModifier {
           .mask(content)
           .allowsHitTesting(false)
       }
-      .onAppear {
-        withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
-          isAnimating = true
-        }
-      }
+      .onAppear { isAnimating = true }
   }
 
   private var shimmer: some View {
@@ -151,6 +148,11 @@ private struct MobileSkeletonShimmer: ViewModifier {
       .frame(width: max(proxy.size.width * 0.35, 80))
       .rotationEffect(.degrees(18))
       .offset(x: isAnimating ? proxy.size.width * 1.2 : -proxy.size.width * 0.6)
+      // Scoped to the band's own offset: a `withAnimation` around the state
+      // change would carry the forever-repeating animation to every other
+      // change in the update the skeleton appears in, such as the surrounding
+      // screen's first real layout, which then never settles.
+      .animation(.linear(duration: 1.4).repeatForever(autoreverses: false), value: isAnimating)
     }
   }
 }

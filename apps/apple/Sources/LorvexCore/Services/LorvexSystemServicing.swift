@@ -3,6 +3,21 @@ import Foundation
 public protocol LorvexSystemServicing: Sendable {
   func loadRuntimeDiagnostics() async throws -> RuntimeDiagnosticsSnapshot
 
+  /// Cloud Sync queue state derived from the local outbox: the pending /
+  /// retrying / failed depths, the oldest and newest pending `created_at`, the
+  /// newest per-row push error still attached to an unsynced row, this device's
+  /// sync id, and the `reseed_required` checkpoint.
+  ///
+  /// The same value ``loadRuntimeDiagnostics()`` reports as its `sync` member,
+  /// read on its own — no Overview snapshot, task/list counts, changelog page,
+  /// or merged log stream — so a surface that only needs the queue depth pays
+  /// for one narrow read instead of the whole diagnostics composition, and can
+  /// therefore keep a displayed depth live. `backend` is a fixed `"unknown"`
+  /// placeholder here: the effective transport is app-runtime state (persisted
+  /// mode plus CloudKit account) that a database-only read cannot observe, and
+  /// `lastSyncedAt` is likewise runtime state the app layer owns.
+  func loadSyncStatus() async throws -> SyncStatusSnapshot
+
   func loadAIChangelog(
     limit: Int?,
     offset: Int?,
@@ -50,5 +65,17 @@ public protocol LorvexSystemServicing: Sendable {
 
   func getOverviewCompact() async throws -> OverviewCompactSnapshot
 
+  func loadOverviewTaskList() async throws -> OverviewTaskListSnapshot
+
   func getSessionContext() async throws -> SessionContextSnapshot
+
+  /// Records that the MCP client identified by `clientName` is active on this
+  /// device. Device-local bookkeeping for Settings: never synced, exported, or
+  /// logged as an assistant change.
+  func recordAssistantActivity(clientName: String, clientTitle: String?, clientVersion: String?)
+    async throws
+
+  /// The MCP clients that have used this device's helper, most recently active
+  /// first.
+  func loadAssistantSessions() async throws -> [AssistantSessionRecord]
 }

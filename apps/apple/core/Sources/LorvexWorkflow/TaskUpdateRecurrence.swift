@@ -45,8 +45,6 @@ public enum TaskUpdateRecurrence {
     effects.reminderUpsertIds.append(contentsOf: disable.reminderUpsertIds)
     effects.affectedDependentIds.append(contentsOf: disable.affectedDependentIds)
     effects.deletedDependencyEdges.append(contentsOf: disable.deletedDependencyEdges)
-    effects.rewiredCurrentFocusDates.append(contentsOf: disable.currentFocusDates)
-    effects.rewiredFocusScheduleDates.append(contentsOf: disable.focusScheduleDates)
     for successorId in disable.cancelledSuccessorIds {
       let task = try TaskResponse.loadEnrichedTaskJSON(
         db, taskId: TaskId(trusted: successorId))

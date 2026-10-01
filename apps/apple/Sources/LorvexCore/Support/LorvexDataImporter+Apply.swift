@@ -1,6 +1,12 @@
 import Foundation
 
 extension LorvexDataImporter {
+  /// Thrown by a host's import action when another import, factory reset, or
+  /// iCloud-data deletion is still running.
+  public struct BusyError: Error, Equatable, Sendable {
+    public init() {}
+  }
+
   /// Restore a decoded import.
   public static func apply(
     plan: LorvexImportPlan,
@@ -87,9 +93,8 @@ extension LorvexDataImporter {
           using: core)
       }
       await run(.dailyReviews) { await applyDailyReviews(payload.dailyReviews ?? [], using: core) }
-      await run(.currentFocus) { await applyCurrentFocus(payload.currentFocus ?? [], using: core) }
-      await run(.focusSchedules) {
-        await applyFocusSchedules(payload.focusSchedules ?? [], using: core)
+      await run(.dailyBriefings) {
+        await applyDailyBriefings(payload.dailyBriefings ?? [], using: core)
       }
       await run(.taskCalendarEventLinks) {
         await applyTaskCalendarEventLinks(payload.taskCalendarEventLinks ?? [], using: core)

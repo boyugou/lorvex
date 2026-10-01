@@ -4,36 +4,9 @@ import Testing
 
 @Test
 func mobileTabsPromotePrimaryDailySurfaces() {
-  #expect(MobileTab.allCases == [.today, .tasks, .calendar, .habits, .more])
+  #expect(MobileTab.allCases == [.today, .tasks, .calendar, .habits, .review])
   #expect(MobileTab.tasks.systemImage == "checklist")
   #expect(MobileTab.today.title == "Today")
-}
-
-@Test
-func mobileChromeUsesTabsOnCompactAndSidebarOnRegularLayouts() {
-  #expect(MobileChromeStyle.preferred(horizontalSizeClass: .compact) == .tabBar)
-  #expect(MobileChromeStyle.preferred(horizontalSizeClass: .regular) == .sidebar)
-
-  #if os(visionOS)
-    #expect(MobileChromeStyle.preferred(horizontalSizeClass: nil) == .sidebar)
-  #else
-    #expect(MobileChromeStyle.preferred(horizontalSizeClass: nil) == .tabBar)
-  #endif
-}
-
-@Test
-func mobileShellConfigurationKeepsMobileAndVisionMetadataSeparate() {
-  #expect(MobileShellConfiguration.mobile.appDisplayName == MobileAppMetadata.appDisplayName)
-  #expect(MobileShellConfiguration.vision.appDisplayName == VisionAppMetadata.appDisplayName)
-  #expect(
-    MobileShellConfiguration.mobile.preferredChromeStyle(horizontalSizeClass: .compact)
-      == .tabBar)
-  #expect(
-    MobileShellConfiguration.mobile.preferredChromeStyle(horizontalSizeClass: .regular)
-      == .sidebar)
-  #expect(
-    MobileShellConfiguration.vision.preferredChromeStyle(horizontalSizeClass: .compact)
-      == .sidebar)
 }
 
 @Test

@@ -3,34 +3,33 @@ import LorvexCore
 import LorvexWidgetKitSupport
 
 extension LorvexWatchStore {
-  func resolvedFocusTasks(
-    focus: CurrentFocusPlan?,
-    logicalDay: String,
-    core: any LorvexCoreServicing
-  ) async throws -> [LorvexTask] {
-    guard let focus, !focus.taskIDs.isEmpty else { return [] }
-    // An actionable task deferred to a future day (planned_date > today) drops
-    // out of today's watch focus, even though it stays actionable. A started
-    // (in_progress) task is actionable and stays eligible. Tasks with no planned
-    // date, or one on/before today, remain in focus.
-    var focusEligible: [LorvexTask] = []
-    for id in focus.taskIDs {
-      let task: LorvexTask
-      do {
-        task = try await core.loadTask(id: id)
-      } catch LorvexCoreError.taskNotFound {
-        continue
-      }
-      guard task.status.isActionable else { continue }
-      guard let planned = task.plannedDate else {
-        focusEligible.append(task)
-        continue
-      }
-      if LorvexDateFormatters.ymdUTC.string(from: planned) <= logicalDay {
-        focusEligible.append(task)
-      }
-    }
-    return focus.taskIDs.compactMap { id in focusEligible.first { $0.id == id } }
+  /// Today's list at `nowMinutes` with its lead first when one leads
+  /// (``TodayLead``: a running saved time, else a started task, else the next
+  /// saved time). The rest keep Today's order.
+  public func orderedTasks(at nowMinutes: Int) -> [LorvexTask] {
+    TodayLead.ordered(
+      tasks, nowMinutes: nowMinutes, time: { savedTimes[$0.id] },
+      isStarted: { $0.status == .inProgress })
+  }
+
+  /// The task Today leads with at `date`, or nil when no task leads.
+  public func lead(at date: Date) -> LorvexTask? {
+    TodayLead.lead(
+      in: tasks, nowMinutes: productMinutes(at: date), time: { savedTimes[$0.id] },
+      isStarted: { $0.status == .inProgress }
+    ).map { tasks[$0.index] }
+  }
+
+  /// The task's saved time when it contains `nowMinutes`, else nil.
+  public func runningTime(of task: LorvexTask, at nowMinutes: Int) -> Range<Int>? {
+    guard let time = savedTimes[task.id], time.contains(nowMinutes) else { return nil }
+    return time
+  }
+
+  /// Minutes since midnight of the product day at `date`, in the day's
+  /// timezone (the watch's own zone when the day names none).
+  public func productMinutes(at date: Date) -> Int {
+    WidgetTodayGlance.minutes(at: date, timezoneName: timezone)
   }
 
   func refreshFromSnapshot(url: URL) throws {
@@ -43,31 +42,32 @@ extension LorvexWatchStore {
         throw LorvexCoreError.validation(
           field: "logical_day", message: "The watch snapshot has no valid logical day.")
       }
-      let taskIDs = tasks.map(\.id)
       logicalDay = snapshotDay
-      currentFocus = CurrentFocusPlan(
-        date: snapshotDay,
-        taskIDs: taskIDs,
-        briefing: snapshot.briefing,
-        timezone: snapshot.timezone,
-        localChangeSequence: 0
-      )
-      focusTasks = tasks
-      primaryTask = tasks.first
+      timezone = snapshot.timezone
+      self.tasks = tasks
+      moreCount = max(0, snapshot.stats.todayCount - tasks.count)
+      savedTimes = snapshot.actionableTasks.reduce(into: [:]) { times, task in
+        if times[task.id] == nil, let time = WidgetTodayGlance.time(of: task) {
+          times[task.id] = time
+        }
+      }
       habits = snapshot.habits
+      completedTodayCount = snapshot.stats.completedTodayCount
       snapshotStatusText = Self.snapshotStatusLabel(snapshot, now: refreshDate)
+      staleAgeLabel = WidgetSnapshotFreshnessPolicy().classify(snapshot: snapshot, now: refreshDate)
+        .staleAgeLabel()
     case .fallback(let fallback):
-      currentFocus = nil
-      primaryTask = nil
-      focusTasks = []
+      self.tasks = []
+      moreCount = 0
       habits = []
+      savedTimes = [:]
       throw LorvexWatchSnapshotError.unavailable(fallback)
     }
   }
 
-  /// v3 producers materialize `logicalDay`. The fallback only exists to read a
-  /// legacy v3 payload that omitted it; derive in the payload's declared
-  /// product timezone, never in the watch process's timezone.
+  /// Producers materialize `logicalDay`; when a payload omits it, the day is
+  /// derived in the payload's declared product timezone, never in the watch
+  /// process's timezone.
   nonisolated static func logicalDay(for snapshot: WidgetSnapshot, at date: Date) -> String? {
     if let logicalDay = snapshot.logicalDay { return logicalDay }
     guard let timezoneID = snapshot.timezone, let timezone = TimeZone(identifier: timezoneID)

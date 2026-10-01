@@ -38,7 +38,7 @@ struct ReadLorvexListDetailIntent: LorvexAuthenticatedIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.list.detail.read.dialog",
-          defaultValue: "\(detail.list.name) has \(detail.totalMatching) matching tasks.",
+          defaultValue: "\(detail.list.displayName) has \(detail.totalMatching) matching tasks.",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

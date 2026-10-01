@@ -46,10 +46,12 @@ extension SwiftLorvexCoreService {
     _ db: Database, hlc: HlcSession, deviceId: String, id: LorvexTask.ID, title: String,
     notes: String, aiNotes: String?, rawInput: String?, priority: LorvexTask.Priority,
     status: LorvexTask.Status, estimatedMinutes: Int?, dueDate: Date?, plannedDate: Date?,
+    plannedTime: Range<Int>? = nil,
     availableFrom: Date?, tags: [String], dependsOn: [LorvexTask.ID], listId: LorvexList.ID?
   ) throws -> LorvexTask {
     let statusPatch: Patch<String> =
       status == .someday ? .set("someday") : .unset
+    let plannedTimePatches = Self.plannedTimePatches(plannedTime.map { .set($0) } ?? .unset)
     let taskInput = TaskCreateInput(
       title: title,
       listId: listId.map { .set($0) } ?? .unset,
@@ -66,6 +68,8 @@ extension SwiftLorvexCoreService {
       plannedDate: plannedDate.map {
         .set(SwiftLorvexTaskDeserializers.plannedDateFormatter.string(from: $0))
       } ?? .unset,
+      plannedStartTime: plannedTimePatches.start,
+      plannedEndTime: plannedTimePatches.end,
       availableFrom: availableFrom.map {
         .set(SwiftLorvexTaskDeserializers.plannedDateFormatter.string(from: $0))
       } ?? .unset,
@@ -169,8 +173,8 @@ extension SwiftLorvexCoreService {
     values.append(canonicalUpdatedAt ?? SyncTimestampFormat.syncTimestampNow())
     if canonicalUpdatedAt != nil {
       // Historical identity metadata is outside the four value groups. The
-      // content register is its replay carrier on this import-only surface so
-      // an authoritative-snapshot cutover cannot discard the correction.
+      // content register carries it on this import-only surface so a peer's
+      // register-wise merge cannot discard the correction.
       registerIntent.insert(.content)
     }
     let version = hlc.nextVersionString()

@@ -37,6 +37,11 @@ extension AppStore {
     set { taskDetailStorage.taskDetailHasPlannedDate = newValue }
   }
 
+  var taskDetailPlannedTime: Range<Int>? {
+    get { taskDetailStorage.taskDetailPlannedTime }
+    set { taskDetailStorage.taskDetailPlannedTime = newValue }
+  }
+
   var taskDetailDueDate: Date? {
     get { taskDetailStorage.taskDetailDueDate }
     set {

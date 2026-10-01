@@ -1,23 +1,21 @@
 import LorvexCore
 import SwiftUI
 
+/// New Habit: the habit's icon, name, and encouragement on top, then its
+/// rhythm and reminders as form sections (``CreationSheetLayout``).
 struct CreateHabitSheet: View {
   @Bindable var store: AppStore
   @Binding var isPresented: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      HabitFormFields(
-        store: store,
-        idPrefix: "createHabit",
-        nameTitle: String(
-          localized: "habits.sheet.create.title", defaultValue: "New habit name",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle)
-      )
-
+    CreationSheetLayout(
+      title: String(localized: "habits.sheet.create.title", defaultValue: "New Habit", table: "Localizable", bundle: LorvexL10n.bundle),
+      height: 540) {
+      HabitSheetHeader(store: store, idPrefix: "createHabit")
+    } sections: {
+      HabitFormSections(store: store, idPrefix: "createHabit")
       HabitDraftReminderField(store: store)
-
+    } footer: {
       DraftSheetFooter(
         idPrefix: "createHabit",
         confirmTitle: String(localized: "common.create", defaultValue: "Create", table: "Localizable", bundle: LorvexL10n.bundle),
@@ -36,8 +34,6 @@ struct CreateHabitSheet: View {
         }
       )
     }
-    .padding(20)
-    .frame(minWidth: 400, idealWidth: 440)
     .onAppear { store.beginCreateHabitDraft() }
   }
 }

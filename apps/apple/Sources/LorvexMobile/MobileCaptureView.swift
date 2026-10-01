@@ -4,6 +4,9 @@ import SwiftUI
 struct MobileCaptureSections: View {
   @Binding var draft: MobileCaptureDraft
   let isCapturing: Bool
+  /// Reads the details out of a single typed line for the preview under the
+  /// title; several lines are previewed only by the footer hint.
+  let preview: (String) -> MobileCapturePreview
   let onSubmit: (() async -> Void)?
   @FocusState private var focusedField: Field?
 
@@ -24,12 +27,22 @@ struct MobileCaptureSections: View {
       .focused($focusedField, equals: .title)
       .submitLabel(.next)
       .onSubmit { focusedField = .notes }
+      // Quick capture is a typing task; start in the title so the sheet needs
+      // no first tap.
+      .onAppear { focusedField = .title }
       .accessibilityLabel(
         String(
           localized: "capture.title.a11y", defaultValue: "Task title", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
       .accessibilityIdentifier("mobileCapture.title")
+      if draft.parsedTitles.count <= 1 {
+        let current = preview(draft.title)
+        if !current.words.isEmpty {
+          MobileCapturePreviewLine(preview: current)
+            .transition(.opacity)
+        }
+      }
       MobilePlainTextEditor(
         text: $draft.notes,
         placeholder: String(
@@ -47,54 +60,13 @@ struct MobileCaptureSections: View {
       )
       .accessibilityIdentifier("mobileCapture.notes")
     } footer: {
-      // Surface the quick-capture model: dump many, let the assistant organize.
+      // Surface the capture vocabulary: one task per line, details in words.
       Text(
         String(
-          localized: "capture.footer.hint",
+          localized: "capture.footer.words",
           defaultValue:
-            "Capture one task per line — your assistant sorts the priorities, dates, and lists.",
+            "One task per line. Words like “tomorrow”, “3pm”, “every Monday”, “20 min”, or “#list” fill in its details.",
           table: "Localizable", bundle: MobileL10n.bundle))
-    }
-
-    Section {
-      Button {
-        submit()
-      } label: {
-        if isCapturing {
-          Label {
-            Text(
-              String(
-                localized: "capture.capturing", defaultValue: "Capturing", table: "Localizable",
-                bundle: MobileL10n.bundle))
-          } icon: {
-            // White to read on the prominent (accent) button fill, matching the
-            // label text; a spinning ProgressView instead of a static glyph.
-            ProgressView().tint(.white)
-          }
-          .frame(maxWidth: .infinity)
-        } else {
-          Label(
-            String(
-              localized: "capture.capture", defaultValue: "Capture", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "plus.circle.fill"
-          )
-          .frame(maxWidth: .infinity)
-        }
-      }
-      .buttonStyle(.borderedProminent)
-      .controlSize(.large)
-      .disabled(!draft.canSubmit || isCapturing)
-      .accessibilityLabel(
-        isCapturing
-          ? String(
-            localized: "capture.capturing_task.a11y", defaultValue: "Capturing task",
-            table: "Localizable", bundle: MobileL10n.bundle)
-          : String(
-            localized: "capture.capture_task.a11y", defaultValue: "Capture task",
-            table: "Localizable", bundle: MobileL10n.bundle)
-      )
-      .accessibilityIdentifier("mobileCapture.confirm")
-      .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
   }
 

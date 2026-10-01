@@ -188,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     process_names = tuple(args.process_name) or (
         metadata.get("APP_NAME", "Lorvex"),
         metadata.get("MCP_HOST_PRODUCT", "LorvexMCPHost"),
-        metadata.get("WIDGET_EXECUTABLE", "LorvexFocusWidget"),
+        metadata.get("WIDGET_EXECUTABLE", "LorvexWidgets"),
     )
     try:
         generation = reset_installed_app_group(

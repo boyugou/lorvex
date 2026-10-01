@@ -50,7 +50,7 @@ enum MobileTaskWorkspaceStatus: String, CaseIterable, Identifiable, Sendable {
     case .cancelled:
       String(
         localized: "tasks.empty.cancelled.message",
-        defaultValue: "Cancelled tasks stay visible here so old decisions remain inspectable.",
+        defaultValue: "Cancelled tasks stay here, so you can look back on past decisions.",
         table: "Localizable", bundle: MobileL10n.bundle)
     }
   }
@@ -92,14 +92,27 @@ struct MobileTaskWorkspacePage: Equatable, Sendable {
   var tasks: [LorvexTask]
   var totalMatching: Int
   var nextOffset: Int?
+  /// True when the scope narrows the raw status/list query in memory, so each
+  /// page's `totalMatching` is only that page's post-filter count rather than a
+  /// stable global total. Governs how ``appending(_:)`` combines the counts.
+  var isNarrowed: Bool = false
 
   static let empty = MobileTaskWorkspacePage(tasks: [], totalMatching: 0, nextOffset: nil)
 
   func appending(_ page: MobileTaskWorkspacePage) -> MobileTaskWorkspacePage {
-    MobileTaskWorkspacePage(
+    // Non-narrowing scopes carry the same global DB total on every page, so
+    // keeping the newest page's `totalMatching` is correct. Narrowing scopes
+    // carry only a per-page filtered count; last-wins would make the header
+    // read the last page's slice (e.g. "30 tasks" over 70 visible rows) and
+    // even decrease as more loads. Summing yields the rows loaded so far — the
+    // honest count for a narrowed set whose true corpus total is unknown without
+    // scanning every window.
+    let narrowed = isNarrowed || page.isNarrowed
+    return MobileTaskWorkspacePage(
       tasks: tasks + page.tasks,
-      totalMatching: page.totalMatching,
-      nextOffset: page.nextOffset
+      totalMatching: narrowed ? totalMatching + page.totalMatching : page.totalMatching,
+      nextOffset: page.nextOffset,
+      isNarrowed: narrowed
     )
   }
 }

@@ -321,45 +321,6 @@ final class OutboxCoalesceTests: XCTestCase {
     }
   }
 
-  /// Equal-version full-resync enqueue is generic recovery and must not revive a
-  /// pre-adoption write that snapshot adoption intentionally fenced. A genuinely
-  /// new user edit carries a newer HLC and may replace the fence normally.
-  func testEqualVersionCoalesceNeverRearmsAuthoritativeAdoption() throws {
-    try withDB { db in
-      let entityId = "01966a3f-7c8b-7d4e-8f3a-00000000219b"
-      let version = "1711234567890_0000_a1b2c3d4a1b2c3d4"
-      try SyncTestSupport.insertOutboxEnvelopeUnchecked(db, env("task", entityId, version))
-      let databaseInstanceId = "coalesce-test-database"
-      try SyncCheckpoints.set(
-        db, key: SyncCheckpoints.keyDatabaseInstanceId,
-        value: databaseInstanceId)
-      _ = try CloudTraversalWitness.claimAccount(
-        db, accountIdentifier: "coalesce-test-account")
-      let session = try AuthoritativeSnapshot.begin(
-        db,
-        boundary: try SyncTestSupport.cloudTraversalBoundary(
-          accountIdentifier: "coalesce-test-account", zoneIdentifier: "LorvexZone"),
-        databaseInstanceId: databaseInstanceId)
-      _ = try Outbox.quarantineAllPending(
-        db, error: "authoritative snapshot adoption",
-        authoritativeSessionToken: session.sessionToken)
-
-      XCTAssertNil(try Outbox.enqueueCoalesced(db, env("task", entityId, version)))
-      let (retry, _) = try retryState(db, entityId)
-      XCTAssertEqual(retry, Outbox.maxRetries)
-      let disposition = try String.fetchOne(
-        db,
-        sql: "SELECT disposition FROM sync_outbox WHERE entity_id = ? AND synced_at IS NULL",
-        arguments: [entityId])
-      XCTAssertEqual(disposition, Outbox.Disposition.authoritativeAdoption.rawValue)
-
-      let newer = "1811234567890_0000_b1b2c3d4b1b2c3d4"
-      XCTAssertNotNil(try Outbox.enqueueCoalesced(db, env("task", entityId, newer)))
-      let pending = try Outbox.getPending(db)
-      XCTAssertEqual(pending.map(\.envelope.version.description), [newer])
-    }
-  }
-
   /// A non-exhausted equal-version coalesce stays a no-op (the normal stale-LWW
   /// branch): only an explicit retry-wait row is revived.
   func testEqualVersionCoalesceIsStillNoopForHealthyRow() throws {

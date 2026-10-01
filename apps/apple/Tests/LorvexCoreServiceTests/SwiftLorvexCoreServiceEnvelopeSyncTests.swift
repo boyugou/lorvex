@@ -37,16 +37,21 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
   /// A schema-valid task upsert payload. `list_id` points at the seeded inbox
   /// list so the FK preflight does not defer the envelope.
+  /// A complete `task` upsert from a peer. `plannedTime` gives the task a
+  /// planned day and a time on it, carried verbatim so a test can send a pair
+  /// the table rejects.
   private func taskUpsertEnvelope(
     id: String = "01966a3f-7c8b-7d4e-8f3a-000000000001",
     title: String = "Inbound task",
-    listId: String
+    listId: String,
+    plannedTime: (date: String, start: Int64, end: Int64)? = nil
   ) -> SyncEnvelope {
     let version = try! Hlc.parse("1711234567890_0000_a1b2c3d4a1b2c3d4")
     let payload = (try? SyncCanonicalize.canonicalizeJSON(.object([
@@ -68,7 +73,9 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       "title": .string(title),
       "status": .string("open"),
       "list_id": .string(listId),
-      "planned_date": .null,
+      "planned_date": plannedTime.map { .string($0.date) } ?? .null,
+      "planned_end_minutes": plannedTime.map { .int($0.end) } ?? .null,
+      "planned_start_minutes": plannedTime.map { .int($0.start) } ?? .null,
       "priority": .null,
       "raw_input": .null,
       "recurrence": .null,
@@ -371,18 +378,6 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     XCTAssertEqual(state.0, before + 1)
     XCTAssertEqual(state.1, "Recovered from shadow")
     XCTAssertEqual(state.2, 0)
-  }
-
-  private func beginAuthoritativeSnapshot(
-    _ service: SwiftLorvexCoreService, accountIdentifier: String,
-    zoneIdentifier: String = "LorvexZone"
-  ) throws -> AuthoritativeSnapshotSession {
-    _ = try service.claimCloudTraversalAccount(accountIdentifier: accountIdentifier)
-    let boundary = try CloudTraversalBoundary(
-      accountIdentifier: accountIdentifier, zoneIdentifier: zoneIdentifier,
-      generation: 1, generationIdentifier: "test-generation",
-      readyWitness: "test-ready-witness")
-    return try service.beginAuthoritativeSnapshot(boundary: boundary)
   }
 
   /// `createTask` enqueues a `task` Upsert envelope to `sync_outbox` for the
@@ -1190,7 +1185,8 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
 
     XCTAssertTrue(report.reconciledCollisionOutboxIds.isEmpty)
     XCTAssertTrue(report.inbound.appliedEntityTypes.isEmpty)
-    XCTAssertEqual(try service.unresolvedFutureRecordCount(), 1)
+    XCTAssertEqual(
+      try service.read { db in try PendingInboxDrain.unresolvedFutureRecordCount(db) }, 1)
     XCTAssertTrue(try service.pendingOutbound().isEmpty)
     let held = try service.read { db in
       try Row.fetchOne(
@@ -1325,7 +1321,9 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     XCTAssertEqual(state.2, "Local content")
   }
 
-  func testOutboundCollisionBatchRollsBackEarlierRepairWhenLaterCapabilityIsInvalid()
+  /// One collision that cannot be reconciled is rolled back alone and recorded
+  /// as a per-record failure; the other collisions in the batch still commit.
+  func testOutboundCollisionBatchIsolatesACollisionThatCannotBeReconciled()
     async throws
   {
     let service = try makeService()
@@ -1343,32 +1341,32 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       byReplacingTitle: second.envelope, with: "Invalid second server",
       version: mismatchedVersion)
 
-    XCTAssertThrowsError(
-      try service.reconcileOutbound(
-        OutboundReconciliationRequest(collisions: [
-          OutboundCollisionRecord(
-            outboxId: first.outboxId,
-            kind: .equalVersion(serverEnvelope: firstServer)),
-          OutboundCollisionRecord(
-            outboxId: second.outboxId,
-            kind: .equalVersion(serverEnvelope: invalidSecondServer)),
-        ]))) { error in
-          XCTAssertEqual(
-            error as? SwiftLorvexCoreService.OutboundCollisionReconciliationError,
-            .mismatchedVersion(outboxId: second.outboxId))
-        }
+    let report = try service.reconcileOutbound(
+      OutboundReconciliationRequest(collisions: [
+        OutboundCollisionRecord(
+          outboxId: first.outboxId,
+          kind: .equalVersion(serverEnvelope: firstServer)),
+        OutboundCollisionRecord(
+          outboxId: second.outboxId,
+          kind: .equalVersion(serverEnvelope: invalidSecondServer)),
+      ]))
 
+    XCTAssertEqual(report.reconciledCollisionOutboxIds, [first.outboxId])
     let after = try service.pendingOutbound()
     let firstAfter = try XCTUnwrap(after.first { $0.envelope.entityId == firstTask.id })
+    XCTAssertNotEqual(
+      firstAfter.outboxId, first.outboxId, "the reconciled collision queued a successor")
     let secondAfter = try XCTUnwrap(after.first { $0.envelope.entityId == secondTask.id })
-    XCTAssertEqual(firstAfter.outboxId, first.outboxId)
-    XCTAssertEqual(firstAfter.envelope, first.envelope)
     XCTAssertEqual(secondAfter.outboxId, second.outboxId)
-    XCTAssertEqual(secondAfter.envelope, second.envelope)
-    XCTAssertEqual(
+    XCTAssertEqual(secondAfter.envelope, second.envelope, "the failed collision rolled back")
+    let failure = try XCTUnwrap(
       try service.read { db in
-        try String.fetchOne(db, sql: "SELECT title FROM tasks WHERE id = ?", arguments: [firstTask.id])
-      }, "First local")
+        try Row.fetchOne(
+          db, sql: "SELECT retry_count, last_error FROM sync_outbox WHERE id = ?",
+          arguments: [second.outboxId])
+      })
+    XCTAssertEqual(failure["retry_count"] as Int64, 1)
+    XCTAssertTrue((failure["last_error"] as String?)?.contains("could not be reconciled") == true)
   }
 
   func testOutboundCollisionForCoalescedOldCapabilityIsIgnoredAndNotReceipted()
@@ -1402,113 +1400,6 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     XCTAssertEqual(replacementAfter, replacementBefore)
     let loaded = try await service.loadTask(id: task.id)
     XCTAssertEqual(loaded.title, "New local intent")
-  }
-
-  func testOutboundAuditCollisionReplacesImmutableProjectionAndEnqueuesSuccessor()
-    async throws
-  {
-    let service = try makeService()
-    _ = try service.activateAuditRetentionAccount(
-      accountIdentifier: "audit-collision-account",
-      zoneName: "LorvexData-e1-audit-collision")
-    _ = try await service.createTask(title: "Audited local write", notes: "")
-    let local = try XCTUnwrap(
-      try service.pendingOutbound().first { $0.envelope.entityType == .aiChangelog })
-    guard case .object(var serverObject)? = JSONValue.parse(local.envelope.payload) else {
-      return XCTFail("local audit payload must be an object")
-    }
-    serverObject["summary"] = .string("Divergent cloned audit summary")
-    let server = SyncEnvelope(
-      entityType: local.envelope.entityType,
-      entityId: local.envelope.entityId,
-      operation: local.envelope.operation,
-      version: local.envelope.version,
-      payloadSchemaVersion: local.envelope.payloadSchemaVersion,
-      payload: try SyncCanonicalize.canonicalizeJSON(.object(serverObject)),
-      deviceId: "cloned-peer")
-    let expected = try SyncMutationSemantics.deterministicWinner(
-      local.envelope, server)
-    guard case .object(let expectedObject)? = JSONValue.parse(expected.payload),
-      case .string(let expectedSummary)? = expectedObject["summary"]
-    else { return XCTFail("deterministic audit winner must carry a summary") }
-
-    let report = try service.reconcileOutbound(
-      OutboundReconciliationRequest(collisions: [
-        OutboundCollisionRecord(
-          outboxId: local.outboxId,
-          kind: .equalVersion(serverEnvelope: server))
-      ]))
-
-    let replacement = try XCTUnwrap(
-      try service.pendingOutbound().first {
-        $0.envelope.entityType == .aiChangelog
-          && $0.envelope.entityId == local.envelope.entityId
-      })
-    XCTAssertNotEqual(replacement.outboxId, local.outboxId)
-    XCTAssertGreaterThan(replacement.envelope.version, local.envelope.version)
-    XCTAssertEqual(report.reconciledCollisionOutboxIds, [local.outboxId])
-    XCTAssertEqual(
-      try service.read { db in
-        try String.fetchOne(
-          db, sql: "SELECT summary FROM ai_changelog WHERE id = ?",
-          arguments: [local.envelope.entityId])
-      },
-      expectedSummary)
-  }
-
-  func testOutboundAuditImmutableConflictChoosesVersionIndependentContent()
-    async throws
-  {
-    let service = try makeService()
-    _ = try service.activateAuditRetentionAccount(
-      accountIdentifier: "audit-immutable-account",
-      zoneName: "LorvexData-e1-audit-immutable")
-    _ = try await service.createTask(title: "Audited immutable write", notes: "")
-    let local = try XCTUnwrap(
-      try service.pendingOutbound().first { $0.envelope.entityType == .aiChangelog })
-    guard case .object(var serverObject)? = JSONValue.parse(local.envelope.payload) else {
-      return XCTFail("local audit payload must be an object")
-    }
-    serverObject["summary"] = .string("Higher-HLC server audit summary")
-    let serverVersion = try Hlc(
-      physicalMs: local.envelope.version.physicalMs + 1, counter: 0,
-      deviceSuffix: "eeeeeeeeeeeeeeee")
-    serverObject["version"] = .string(serverVersion.description)
-    let server = SyncEnvelope(
-      entityType: local.envelope.entityType,
-      entityId: local.envelope.entityId,
-      operation: local.envelope.operation,
-      version: serverVersion,
-      payloadSchemaVersion: local.envelope.payloadSchemaVersion,
-      payload: try SyncCanonicalize.canonicalizeJSON(.object(serverObject)),
-      deviceId: "newer-peer")
-    let expected = try SyncMutationSemantics.deterministicWinnerIgnoringVersion(
-      local.envelope, server)
-    guard case .object(let expectedObject)? = JSONValue.parse(expected.payload),
-      case .string(let expectedSummary)? = expectedObject["summary"]
-    else { return XCTFail("deterministic audit winner must carry a summary") }
-
-    let report = try service.reconcileOutbound(
-      OutboundReconciliationRequest(collisions: [
-        OutboundCollisionRecord(
-          outboxId: local.outboxId,
-          kind: .immutableIdentity(serverEnvelope: server))
-      ]))
-
-    let replacement = try XCTUnwrap(
-      try service.pendingOutbound().first {
-        $0.envelope.entityType == .aiChangelog
-          && $0.envelope.entityId == local.envelope.entityId
-      })
-    XCTAssertGreaterThan(replacement.envelope.version, serverVersion)
-    XCTAssertEqual(report.reconciledCollisionOutboxIds, [local.outboxId])
-    XCTAssertEqual(
-      try service.read { db in
-        try String.fetchOne(
-          db, sql: "SELECT summary FROM ai_changelog WHERE id = ?",
-          arguments: [local.envelope.entityId])
-      },
-      expectedSummary)
   }
 
   /// SY2: a PERSISTENT per-row failure still escalates through the same-error
@@ -1548,9 +1439,9 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     XCTAssertGreaterThanOrEqual(retryWaitLogs, 1, "retry wait must be surfaced to error_logs")
   }
 
-  /// Runtime/MCP diagnostics report ordinary retry wait as a failed outbound
-  /// item, but not an intentional authoritative-adoption fence.
-  func testSyncDiagnosticsDistinguishRetryWaitFromAuthoritativeAdoption() async throws {
+  /// Runtime/MCP diagnostics report a row parked in retry wait as a failed
+  /// outbound item rather than a pending one.
+  func testSyncDiagnosticsCountRetryWaitAsFailedNotPending() async throws {
     let service = try makeService()
     let task = try await service.createTask(title: "Diagnostic retry", notes: "")
     let id = try XCTUnwrap(
@@ -1564,119 +1455,81 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     let waiting = try await service.loadRuntimeDiagnostics().sync
     XCTAssertEqual(waiting.failedCount, 1)
     XCTAssertEqual(waiting.pendingCount, pendingBefore - 1)
-
-    _ = try beginAuthoritativeSnapshot(
-      service, accountIdentifier: "diagnostics-test-account")
-    let adopted = try await service.loadRuntimeDiagnostics().sync
-    XCTAssertEqual(adopted.failedCount, 0)
-    XCTAssertEqual(adopted.pendingCount, 0)
   }
 
-  /// The facade must release only the canceled snapshot's discard fences, not
-  /// revive their stale payloads. A later local-authoritative rebuild then
-  /// re-enqueues the current DB snapshot through the ordinary full-resync path.
-  func testCancelAuthoritativeSnapshotReleasesFenceForLaterFullResync() async throws {
+  /// The transport's own words for a rejected push are the only thing on the
+  /// device that names why a queue is stuck, so the status read must carry the
+  /// newest one still attached to an unsynced row — and stop carrying it once
+  /// that row uploads.
+  func testSyncStatusSurfacesNewestUnsyncedOutboxError() async throws {
     let service = try makeService()
-    let task = try await service.createTask(title: "Local rebuild winner", notes: "")
-    let originalVersion = try service.read { db in
-      try String.fetchOne(db, sql: "SELECT version FROM tasks WHERE id = ?", arguments: [task.id])
+    let task = try await service.createTask(title: "Stuck upload", notes: "")
+    let id = try XCTUnwrap(
+      try service.pendingOutbound().first { $0.envelope.entityId == task.id }?.outboxId)
+
+    let clean = try await service.loadSyncStatus().lastError
+    XCTAssertNil(clean, "a queue that has never failed must not claim an error")
+
+    try service.recordOutboundFailure(
+      outboxId: id, error: "CKErrorDomain 26: zone not found", kind: .perRecord)
+    let firstFailure = try await service.loadSyncStatus().lastError
+    XCTAssertEqual(firstFailure, "CKErrorDomain 26: zone not found")
+
+    // A later failure on the same row replaces the message rather than leaving
+    // the first one to be read as current.
+    try service.recordOutboundFailure(
+      outboxId: id, error: "CKErrorDomain 9: not authenticated", kind: .transient)
+    let secondFailure = try await service.loadSyncStatus().lastError
+    XCTAssertEqual(secondFailure, "CKErrorDomain 9: not authenticated")
+
+    while true {
+      let page = try service.pendingOutbound()
+      if page.isEmpty { break }
+      try service.markOutboundSynced(outboxIds: page.map(\.outboxId))
     }
-
-    _ = try beginAuthoritativeSnapshot(
-      service, accountIdentifier: "cancel-test-account")
-    XCTAssertTrue(try service.pendingOutbound().isEmpty)
-
-    try service.cancelAuthoritativeSnapshot()
-    XCTAssertTrue(
-      try service.pendingOutbound().isEmpty,
-      "cancel discards the old queue instead of re-arming pre-adoption writes")
-    let remainingFences = try service.read { db in
-      try Int.fetchOne(
-        db,
-        sql: """
-          SELECT COUNT(*) FROM sync_outbox
-          WHERE disposition = 'authoritative_adoption'
-          """) ?? -1
-    }
-    XCTAssertEqual(remainingFences, 0)
-
-    let report = try service.enqueueFullResyncBackfill()
-    XCTAssertGreaterThan(report.emitted, 0)
-    let rebuilt = try XCTUnwrap(
-      try service.pendingOutbound().map(\.envelope).first {
-        $0.entityType == .task && $0.entityId == task.id
-      })
-    XCTAssertEqual(rebuilt.version.description, originalVersion)
+    let drained = try await service.loadSyncStatus().lastError
+    XCTAssertNil(
+      drained, "an uploaded row's past failure is history, not current queue state")
   }
 
-  /// End-to-end through `EnvelopeSyncServicing`: successful remote-authoritative
-  /// finalization must discard a fenced newer local payload, then leave the
-  /// unique slot free for a later lower-HLC full-resync enqueue.
-  func testFinalizeAuthoritativeSnapshotReleasesFenceForLowerHlcFullResync() async throws {
+  /// `loadSyncStatus` exists so a status surface can re-read the queue depth
+  /// often without paying for the whole diagnostics composition. It is only a
+  /// safe substitute if the two never disagree, so pin field-for-field equality
+  /// across the dispositions the outbox actually moves through: freshly staged,
+  /// parked in retry wait, and fully drained.
+  func testNarrowSyncStatusReadMatchesRuntimeDiagnostics() async throws {
     let service = try makeService()
-    let inboxId = try seededListId(service)
-    let local = try await service.createTask(title: "Newer stale local", notes: "")
-    let remote = taskUpsertEnvelope(
-      id: local.id, title: "Adopted lower-HLC remote", listId: inboxId)
-    let inboxEnvelope = try service.read { db -> SyncEnvelope in
-      let snapshot = try OutboxEnqueue.readEntityPayloadSnapshot(
-        db, entityType: EntityName.list, entityId: inboxId)
-      guard case .object(var fields) = snapshot else {
-        throw XCTSkip("seeded inbox payload must be an object")
-      }
-      fields["version"] = .string(remote.version.description)
-      return SyncEnvelope(
-        entityType: .list, entityId: inboxId, operation: .upsert,
-        version: remote.version,
-        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-        payload: try SyncCanonicalize.canonicalizeJSON(.object(fields)),
-        deviceId: "remote-device")
-    }
-    let staged: (SyncEnvelope) -> AuthoritativeSnapshotRemoteRecord = { envelope in
-      AuthoritativeSnapshotRemoteRecord(
-        recordName: SyncRecordName.opaque(
-          entityType: envelope.entityType.asString, entityId: envelope.entityId),
-        state: .decoded, envelope: envelope)
-    }
+    let task = try await service.createTask(title: "Narrow status parity", notes: "")
 
-    let session = try beginAuthoritativeSnapshot(
-      service, accountIdentifier: "finalize-test-account")
-    try service.markAuthoritativeSnapshotReady(sessionToken: session.sessionToken)
-    try service.stageAuthoritativeSnapshotPage(
-      records: [staged(inboxEnvelope), staged(remote)], deletedRecordNames: [],
-      sessionToken: session.sessionToken)
+    let staged = try await service.loadSyncStatus()
+    let stagedDiagnostics = try await service.loadRuntimeDiagnostics().sync
+    XCTAssertEqual(staged, stagedDiagnostics)
+    XCTAssertGreaterThan(staged.pendingCount, 0)
+    XCTAssertNotNil(staged.oldestPendingAt)
 
-    _ = try service.finalizeAuthoritativeSnapshot(
-      sessionToken: session.sessionToken, accountIdentifier: session.accountIdentifier,
-      zoneName: session.zoneName, enrolledZoneEpoch: nil)
-    let adopted = try service.read { db in
-      try Row.fetchOne(
-        db, sql: "SELECT title, version FROM tasks WHERE id = ?", arguments: [local.id])
+    let outboxId = try XCTUnwrap(
+      try service.pendingOutbound().first { $0.envelope.entityId == task.id }?.outboxId)
+    for _ in 0..<3 {
+      try service.recordOutboundFailure(
+        outboxId: outboxId, error: "CloudKit rejected record", kind: .perRecord)
     }
-    let adoptedRow = try XCTUnwrap(adopted)
-    XCTAssertEqual(adoptedRow["title"] as String, "Adopted lower-HLC remote")
-    XCTAssertEqual(adoptedRow["version"] as String, remote.version.description)
-    XCTAssertFalse(
-      try service.pendingOutbound().contains {
-        $0.envelope.entityType == .task && $0.envelope.entityId == local.id
-      },
-      "the stale pre-adoption task payload must not survive finalization")
-    XCTAssertEqual(
-      try service.read { db in
-        try Int.fetchOne(
-          db,
-          sql: "SELECT COUNT(*) FROM sync_outbox WHERE disposition = 'authoritative_adoption'")
-          ?? -1
-      },
-      0)
+    let waiting = try await service.loadSyncStatus()
+    let waitingDiagnostics = try await service.loadRuntimeDiagnostics().sync
+    XCTAssertEqual(waiting, waitingDiagnostics)
+    XCTAssertEqual(waiting.failedCount, 1)
+    XCTAssertEqual(waiting.pendingCount, staged.pendingCount - 1)
 
-    let report = try service.enqueueFullResyncBackfill()
-    let rebuilt = try XCTUnwrap(
-      try service.pendingOutbound().map(\.envelope).first {
-        $0.entityType == .task && $0.entityId == local.id
-      })
-    XCTAssertGreaterThan(report.emitted, 0)
-    XCTAssertEqual(rebuilt.version, remote.version)
+    while true {
+      let page = try service.pendingOutbound()
+      if page.isEmpty { break }
+      try service.markOutboundSynced(outboxIds: page.map(\.outboxId))
+    }
+    let drained = try await service.loadSyncStatus()
+    let drainedDiagnostics = try await service.loadRuntimeDiagnostics().sync
+    XCTAssertEqual(drained, drainedDiagnostics)
+    XCTAssertEqual(drained.pendingCount, 0)
+    XCTAssertNil(drained.oldestPendingAt)
+    XCTAssertNil(drained.newestPendingAt)
   }
 
   /// A WHOLESALE chunk failure stamps the identical error on every row each
@@ -1955,38 +1808,23 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
 
   /// Defense-in-depth (D4 Layer 2): a DETERMINISTIC SQLITE_CONSTRAINT that
   /// ESCAPES the trust-boundary validators must still degrade to a single dropped
-  /// envelope, not a batch-fatal wedge. A `focus_schedule` block typed `task`
-  /// with a null `task_id` trips the `(block_type, task_id, event_id)`
-  /// consistency CHECK inside the applier — a constraint the day-scoped validators
-  /// do not pre-empt. The classifier maps it to `.dbConstraint` (non-fatal), so a
-  /// valid task sibling ordered after it still applies.
+  /// envelope, not a batch-fatal wedge. A task whose time ends before it starts
+  /// passes the field validators, which leave the pair's coherence to the
+  /// materialized row, and trips the `tasks` time CHECK inside the applier. The
+  /// classifier maps it to `.dbConstraint` (non-fatal), so a valid task sibling
+  /// ordered after it still applies.
   func testApplyInboundDeterministicConstraintDroppedNotWedged() async throws {
     let service = try makeService()
     let listId = try seededListId(service)
-    let badSchedule = SyncEnvelope(
-      entityType: .focusSchedule, entityId: "2026-04-01", operation: .upsert,
-      version: try Hlc.parse("1711234567890_0000_a1b2c3d4a1b2c3d4"),
-      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-      payload: (try? SyncCanonicalize.canonicalizeJSON(
-        .object([
-          "created_at": .string("2026-04-01T00:00:00Z"),
-          "updated_at": .string("2026-04-01T00:00:00Z"),
-          "blocks": .array([
-            // block_type "task" REQUIRES a non-null task_id; omitting it trips
-            // the schema CHECK the day-scoped applier does not pre-validate.
-            .object([
-              "block_type": .string("task"), "start_minutes": .int(540), "end_minutes": .int(570),
-              "event_source": .null,
-            ])
-          ]),
-        ]))) ?? "{}",
-      deviceId: "device-remote")
+    let badTime = taskUpsertEnvelope(
+      id: "01966a3f-7c8b-7d4e-8f3a-0000000000d6", title: "Time ends before it starts",
+      listId: listId, plannedTime: (date: "2026-04-01", start: 600, end: 540))
     let valid = taskUpsertEnvelope(
       id: "01966a3f-7c8b-7d4e-8f3a-0000000000d7", title: "Valid sibling", listId: listId)
 
-    // Constraint-violating envelope FIRST: before the classifier fix this
-    // re-aborted the whole page (batch-fatal); now it drops and the batch drains.
-    let report = try service.applyInbound([badSchedule, valid], undecodable: 0)
+    // Constraint-violating envelope FIRST: a batch-fatal classification would
+    // abort the whole page; a drop lets the batch drain.
+    let report = try service.applyInbound([badTime, valid], undecodable: 0)
 
     XCTAssertEqual(
       report.applied, 1, "valid sibling must apply — a deterministic constraint must not wedge")
@@ -1994,8 +1832,8 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     try service.read { db in
       XCTAssertEqual(
         try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?", arguments: ["2026-04-01"])
-          ?? -1, 0, "the whole envelope savepoint rolled back — no partial focus_schedule row")
+          db, sql: "SELECT COUNT(*) FROM tasks WHERE id = ?", arguments: [badTime.entityId])
+          ?? -1, 0, "the whole envelope savepoint rolled back — no partial task row")
       XCTAssertEqual(
         try Int.fetchOne(
           db, sql: "SELECT COUNT(*) FROM tasks WHERE id = ?", arguments: [valid.entityId]) ?? -1,
@@ -2125,13 +1963,14 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     let listId = try seededListId(service)
     let forwardCompat = try CurrentSyncEnvelopeTestSupport.complete(
       SyncEnvelope(
-        entityType: .focusSchedule,
+        entityType: .dailyBriefing,
         entityId: "2026-04-01",
         operation: .upsert,
         version: try Hlc.parse("1711234567893_0000_a1b2c3d4a1b2c3d4"),
         payloadSchemaVersion: LorvexVersion.payloadSchemaVersion + 1,
         payload: try SyncCanonicalize.canonicalizeJSON(
           .object([
+            "briefing": .string("Forward-compatible briefing"),
             "created_at": .string("2026-04-01T00:00:00Z"),
             "updated_at": .string("2026-04-01T00:00:00Z"),
             "future_metadata": .object(["planner": .string("v2")]),
@@ -2157,12 +1996,12 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
           ?? 0, 1)
       XCTAssertEqual(
         try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?", arguments: ["2026-04-01"])
+          db, sql: "SELECT COUNT(*) FROM daily_briefings WHERE date = ?", arguments: ["2026-04-01"])
           ?? 0, 1)
       XCTAssertEqual(
         try Int.fetchOne(
           db, sql: "SELECT COUNT(*) FROM sync_pending_inbox WHERE envelope_entity_type = ?",
-          arguments: ["focus_schedule"]) ?? 0, 0)
+          arguments: ["daily_briefing"]) ?? 0, 0)
       let rawShadow = try XCTUnwrap(
         try String.fetchOne(
           db,
@@ -2170,7 +2009,7 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
             SELECT raw_payload_json FROM sync_payload_shadow
             WHERE entity_type = ? AND entity_id = ?
             """,
-          arguments: [EntityName.focusSchedule, "2026-04-01"]))
+          arguments: [EntityName.dailyBriefing, "2026-04-01"]))
       guard case .object(let shadow)? = JSONValue.parse(rawShadow) else {
         return XCTFail("forward-compat payload shadow must be an object")
       }
@@ -2187,8 +2026,9 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       title: "Inbound valid before invalid operation",
       listId: listId)
     let invalid = SyncEnvelope(
-      entityType: .aiChangelog,
-      entityId: "01966a3f-7c8b-7d4e-8f3a-000000000022",
+      entityType: .entityRedirect,
+      entityId: SyncRecordName.opaque(
+        entityType: EntityName.list, entityId: "01966a3f-7c8b-7d4e-8f3a-000000000022"),
       operation: .delete,
       version: try Hlc.parse("1711234567892_0000_a1b2c3d4a1b2c3d4"),
       payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
@@ -2208,7 +2048,7 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       try Int.fetchOne(
         db,
         sql: "SELECT COUNT(*) FROM error_logs WHERE source = 'sync.apply.inbound_invalid' "
-          + "AND message LIKE '%delete is not supported for ai_changelog%'") ?? 0
+          + "AND message LIKE '%delete is not supported for entity_redirect%'") ?? 0
     }
     XCTAssertGreaterThanOrEqual(logged, 1)
   }
@@ -2931,75 +2771,38 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       tomb, futureVersion, "the tombstone must dominate the future version, not sit below it")
   }
 
-  func testLocalClearOfFutureStampedCurrentFocusStampsDominatingDeleteEnvelope() async throws {
+  func testLocalClearOfFutureStampedDailyBriefingStampsDominatingDeleteEnvelope() async throws {
     let service = try makeService()
     let date = "2026-04-21"
     let futureVersion = honestFutureVersion()
     let upsert = try CurrentSyncEnvelopeTestSupport.complete(
       SyncEnvelope(
-        entityType: .currentFocus, entityId: date, operation: .upsert,
+        entityType: .dailyBriefing, entityId: date, operation: .upsert,
         version: futureVersion,
         payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
         payload: try SyncCanonicalize.canonicalizeJSON(
           .object([
-            "briefing": .string("Future focus"),
+            "briefing": .string("Future briefing"),
             "timezone": .string("UTC"),
-            "task_ids": .array([]),
             "created_at": .string("2026-04-21T00:00:00.000Z"),
             "updated_at": .string("2026-04-21T00:00:00.000Z"),
           ])),
         deviceId: "device-remote"))
     XCTAssertEqual(try service.applyInbound([upsert], undecodable: 0).applied, 1)
 
-    _ = try await service.clearCurrentFocus(date: date)
+    _ = try await service.setDailyBriefingForMcp(date: date, briefing: nil)
 
     let remaining = try service.read { db in
       try Int.fetchOne(
-        db, sql: "SELECT COUNT(*) FROM current_focus WHERE date = ?", arguments: [date]) ?? -1
+        db, sql: "SELECT COUNT(*) FROM daily_briefings WHERE date = ?", arguments: [date]) ?? -1
     }
     XCTAssertEqual(remaining, 0)
     let deleteEnvelope = try XCTUnwrap(
-      try pending(service, kind: .currentFocus, id: date).last)
+      try pending(service, kind: .dailyBriefing, id: date).last)
     XCTAssertEqual(deleteEnvelope.operation, .delete)
     XCTAssertGreaterThan(deleteEnvelope.version, futureVersion)
     let tomb = try XCTUnwrap(
-      try tombstoneVersion(service, entityType: EntityName.currentFocus, entityId: date))
-    XCTAssertGreaterThan(tomb, futureVersion)
-  }
-
-  func testLocalClearOfFutureStampedFocusScheduleStampsDominatingDeleteEnvelope() async throws {
-    let service = try makeService()
-    let date = "2026-04-22"
-    let futureVersion = honestFutureVersion(counter: 1)
-    let upsert = try CurrentSyncEnvelopeTestSupport.complete(
-      SyncEnvelope(
-        entityType: .focusSchedule, entityId: date, operation: .upsert,
-        version: futureVersion,
-        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-        payload: try SyncCanonicalize.canonicalizeJSON(
-          .object([
-            "rationale": .string("Future schedule"),
-            "timezone": .string("UTC"),
-            "blocks": .array([]),
-            "created_at": .string("2026-04-22T00:00:00.000Z"),
-            "updated_at": .string("2026-04-22T00:00:00.000Z"),
-          ])),
-        deviceId: "device-remote"))
-    XCTAssertEqual(try service.applyInbound([upsert], undecodable: 0).applied, 1)
-
-    try await service.clearFocusSchedule(date: date)
-
-    let remaining = try service.read { db in
-      try Int.fetchOne(
-        db, sql: "SELECT COUNT(*) FROM focus_schedule WHERE date = ?", arguments: [date]) ?? -1
-    }
-    XCTAssertEqual(remaining, 0)
-    let deleteEnvelope = try XCTUnwrap(
-      try pending(service, kind: .focusSchedule, id: date).last)
-    XCTAssertEqual(deleteEnvelope.operation, .delete)
-    XCTAssertGreaterThan(deleteEnvelope.version, futureVersion)
-    let tomb = try XCTUnwrap(
-      try tombstoneVersion(service, entityType: EntityName.focusSchedule, entityId: date))
+      try tombstoneVersion(service, entityType: EntityName.dailyBriefing, entityId: date))
     XCTAssertGreaterThan(tomb, futureVersion)
   }
 
@@ -3296,22 +3099,6 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
       try service.isReseedRequired(), "a complete backfill pass clears the marker")
   }
 
-  /// Local enrollment is a fail-closed gate, not a best-effort hint.
-  /// Corruption must throw instead of being folded to "not enrolled".
-  func testMalformedZoneEpochEnrollmentFailsClosed() throws {
-    let service = try makeService()
-    let account = "account-A"
-
-    try service.write { db in
-      try db.execute(
-        sql: "INSERT INTO sync_checkpoints (key, value) VALUES (?1, 'not-an-epoch')",
-        arguments: [SyncCheckpoints.keyEnrolledZoneEpoch(accountIdentifier: account)])
-    }
-    XCTAssertThrowsError(try service.enrolledZoneEpoch(forAccountIdentifier: account)) { error in
-      XCTAssertEqual(error as? ZoneEpochCheckpointStateError, .invalidEnrollment)
-    }
-  }
-
   // MARK: - Outbound enqueue coverage across write surfaces
 
   /// Filter the pending outbox to envelopes for one `(kind, id)`, asserting the
@@ -3502,11 +3289,9 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
 
   // MARK: - Negative: local-only writes never enqueue
 
-  /// Setting a LOCAL-ONLY preference never enqueues a `preference` envelope: the
-  /// preference value must not cross the sync boundary. The append-only
-  /// `ai_changelog` audit of the action itself DOES ride (ACF-14 cross-device
-  /// audit sync), so the only envelope a local-only write may add is that audit
-  /// row — never a `preference` envelope for the local-only key.
+  /// Setting a LOCAL-ONLY preference enqueues nothing: the preference value must
+  /// not cross the sync boundary, and the audit row of the action is
+  /// device-local so it is never queued either.
   func testLocalOnlyWritesDoNotEnqueue() async throws {
     let service = try makeService()
     let before = try service.pendingOutbound().map(\.envelope)
@@ -3514,19 +3299,13 @@ final class SwiftLorvexCoreServiceEnvelopeSyncTests: XCTestCase {
     _ = try await service.setPreference(key: PreferenceKeys.prefTheme, value: "dark")
 
     let after = try service.pendingOutbound().map(\.envelope)
-    // The local-only preference itself never crosses the sync boundary.
+    XCTAssertEqual(
+      after.count, before.count,
+      "a local-only preference write must not enqueue any envelope")
     XCTAssertFalse(
       after.contains {
         $0.entityType == .preference && $0.entityId == PreferenceKeys.prefTheme
       })
-    // The write enqueues no NON-audit envelope. The only thing that may ride is
-    // the append-only ai_changelog audit of the action (ACF-14 cross-device
-    // audit sync), which is not a `preference` envelope.
-    let addedNonAudit =
-      after.filter { $0.entityType != .aiChangelog }.count
-      - before.filter { $0.entityType != .aiChangelog }.count
-    XCTAssertEqual(
-      addedNonAudit, 0, "a local-only preference write must not enqueue a syncable entity")
   }
 
   // MARK: - SYNC-MED-2: habit archive-interleaving winner re-emit

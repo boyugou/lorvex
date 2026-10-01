@@ -10,8 +10,8 @@ extension OutboxEnqueue {
   /// Read the current snapshot of an entity from the DB as a JSON value.
   ///
   /// Routing by entity type:
-  /// - Aggregate roots with dedicated composition (`current_focus`,
-  ///   `focus_schedule`, `daily_review`, `calendar_event`) go through
+  /// - Aggregate roots with dedicated composition (`daily_review`,
+  ///   `calendar_event`) go through
   ///   ``PayloadBuild/buildAggregatePayload(_:entityType:entityId:)`` — the SOLE
   ///   payload source for these kinds. A missing parent header resolves to
   ///   ``EnqueueError/entityNotFound(entityType:entityId:)`` (never a
@@ -176,18 +176,13 @@ extension OutboxEnqueue {
     // `pragma_table_info`. A descriptor may also contain derived-local storage
     // columns used only by the inbound applier; those never enter this SELECT.
     // The shadow layer still classifies them as locally understood so a peer
-    // cannot make this runtime preserve and re-emit one as an unknown key. The
-    // device-local filter still applies (a descriptor column classified
-    // device-local is never shipped).
+    // cannot make this runtime preserve and re-emit one as an unknown key.
     // Entities without a descriptor keep the pragma-driven reader.
-    let sourceColumns: [String]
+    let columns: [String]
     if let descriptor = SyncEntityDescriptor.descriptor(for: entityType) {
-      sourceColumns = descriptor.outboundColumns
+      columns = descriptor.outboundColumns
     } else {
-      sourceColumns = try pragmaTableColumns(db, table: table)
-    }
-    let columns = sourceColumns.filter {
-      !StorageSchema.isDeviceLocalColumn(table: table, column: $0)
+      columns = try pragmaTableColumns(db, table: table)
     }
     if columns.isEmpty {
       throw EnqueueError.unknownEntityType("(table \(table) has no columns)")
@@ -560,9 +555,10 @@ extension OutboxEnqueue {
 
     let isDelete = operation == .delete
     // 5. Validate operation legality. Entity kind and canonical HLC were parsed
-    //    before all mutation at the top of this function.
-    if (entityKind == .aiChangelog || entityKind == .calendarSeriesCutover),
-      operation == .delete
+    //    before all mutation at the top of this function. The audit trail is
+    //    device-local and never enters the outbox.
+    if entityKind == .aiChangelog
+      || (entityKind == .calendarSeriesCutover && operation == .delete)
     {
       throw EnqueueError.unsupportedOperation(
         entityType: entityType, operation: operation.asString)
@@ -684,7 +680,7 @@ extension OutboxEnqueue {
       return nil
     case .deferred(let reason):
       throw EnqueueError.store(.invariant("redirected local upsert deferred: \(reason.message)"))
-    case .repairRequired, .upsertRejectedByRetention:
+    case .repairRequired:
       throw EnqueueError.store(.invariant("redirected local upsert reached an invalid outcome"))
     }
   }

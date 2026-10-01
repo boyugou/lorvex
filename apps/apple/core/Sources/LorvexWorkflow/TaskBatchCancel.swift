@@ -122,10 +122,6 @@ public enum TaskBatchCancel {
         contentsOf: result.spawnedSuccessorChecklistItemIds)
       syncEffects.spawnedSuccessorReminderIds.append(
         contentsOf: result.spawnedSuccessorReminderIds)
-      syncEffects.rewiredFocusScheduleDates.append(
-        contentsOf: result.rewiredFocusScheduleDates)
-      syncEffects.rewiredCurrentFocusDates.append(
-        contentsOf: result.rewiredCurrentFocusDates)
     }
 
     let afterTasks = try loadEnrichedTasksExisting(db, ids: ids)
@@ -314,8 +310,6 @@ public struct BatchCancelSyncEffects: Sendable {
   public var spawnedSuccessorTagEdges: [CopiedTagEdge] = []
   public var spawnedSuccessorChecklistItemIds: [String] = []
   public var spawnedSuccessorReminderIds: [String] = []
-  public var rewiredFocusScheduleDates: [String] = []
-  public var rewiredCurrentFocusDates: [String] = []
   public init() {}
 }
 

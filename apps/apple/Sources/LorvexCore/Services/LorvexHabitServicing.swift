@@ -36,7 +36,10 @@ public protocol LorvexHabitServicing: Sendable {
   /// synced display order are preserved by newer exports. `milestoneTarget` is
   /// set only when supplied (non-nil): on an id conflict a nil leaves any
   /// existing value in place, so a milestone that arrived via sync is never
-  /// clobbered by a milestone-less re-import.
+  /// clobbered by a milestone-less re-import. `createdAt` restores the habit's
+  /// original creation instant; a nil (an archive written before the field
+  /// existed) falls back to the import instant, which shortens the habit's
+  /// adherence window to the restore day.
   func importHabit(
     id: LorvexHabit.ID,
     name: String,
@@ -50,7 +53,8 @@ public protocol LorvexHabitServicing: Sendable {
     targetCount: Int,
     milestoneTarget: Int?,
     archived: Bool,
-    position: Int64
+    position: Int64,
+    createdAt: String?
   ) async throws -> LorvexHabit
 
   func completeHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot
@@ -68,13 +72,15 @@ public protocol LorvexHabitServicing: Sendable {
 
   /// Update a habit. `cadence` nil = leave the cadence unchanged; a non-nil
   /// value replaces the whole cadence atomically (interpreted as in
-  /// `createHabit`). `milestoneTarget` is a three-state patch: `.unset` leaves
-  /// the milestone goal untouched, `.clear` removes it (SQL NULL), and
-  /// `.set(value)` sets it (value must be positive).
+  /// `createHabit`). `cue` is a three-state patch: `.unset` leaves the cue
+  /// untouched, `.clear` (or a `.set` that is blank after sanitizing) removes it
+  /// (SQL NULL), and `.set(value)` sets it. `milestoneTarget` is a three-state
+  /// patch: `.unset` leaves the milestone goal untouched, `.clear` removes it
+  /// (SQL NULL), and `.set(value)` sets it (value must be positive).
   func updateHabit(
     id: LorvexHabit.ID,
     name: String?,
-    cue: String?,
+    cue: Patch<String>,
     color: String?,
     icon: String?,
     targetCount: Int?,
@@ -249,7 +255,7 @@ extension LorvexHabitServicing {
   /// Convenience for callers that set a cadence but leave the milestone goal
   /// untouched.
   public func updateHabit(
-    id: LorvexHabit.ID, name: String?, cue: String?, color: String?, icon: String?,
+    id: LorvexHabit.ID, name: String?, cue: Patch<String>, color: String?, icon: String?,
     targetCount: Int?, archived: Bool?, cadence: HabitCadenceInput?
   ) async throws -> LorvexHabit {
     try await updateHabit(
@@ -266,7 +272,7 @@ extension LorvexHabitServicing {
       id: id, name: name, icon: nil, color: nil, cue: cue, frequencyType: frequencyType,
       weekdays: weekdays,
       perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth, targetCount: targetCount,
-      milestoneTarget: nil, archived: false, position: 0)
+      milestoneTarget: nil, archived: false, position: 0, createdAt: nil)
   }
 
   /// Convenience for callers that carry no appearance, archive state, or
@@ -279,12 +285,12 @@ extension LorvexHabitServicing {
       id: id, name: name, icon: nil, color: nil, cue: cue, frequencyType: frequencyType,
       weekdays: weekdays,
       perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth, targetCount: targetCount,
-      milestoneTarget: milestoneTarget, archived: false, position: 0)
+      milestoneTarget: milestoneTarget, archived: false, position: 0, createdAt: nil)
   }
 
   /// Convenience for callers that don't change the cadence.
   public func updateHabit(
-    id: LorvexHabit.ID, name: String?, cue: String?, color: String?, icon: String?,
+    id: LorvexHabit.ID, name: String?, cue: Patch<String>, color: String?, icon: String?,
     targetCount: Int?, archived: Bool?
   ) async throws -> LorvexHabit {
     try await updateHabit(
@@ -294,7 +300,7 @@ extension LorvexHabitServicing {
 
   /// Convenience for callers that don't change the archived flag or cadence.
   public func updateHabit(
-    id: LorvexHabit.ID, name: String?, cue: String?, color: String?, icon: String?,
+    id: LorvexHabit.ID, name: String?, cue: Patch<String>, color: String?, icon: String?,
     targetCount: Int?
   ) async throws -> LorvexHabit {
     try await updateHabit(

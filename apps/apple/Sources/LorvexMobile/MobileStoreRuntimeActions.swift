@@ -14,15 +14,10 @@ extension MobileStore {
   /// triggers collapse into a single rerun. Coalesced callers are resumed with
   /// the final rerun's result, so a caller's `await` still means "a body that saw
   /// my trigger has finished" — the app delegate's background-fetch completion
-  /// stays honest. Once the loop drains, `applyPendingCloudSyncModeIfNeeded()`
-  /// runs (as the flight's `afterDrain`) so a sync-mode change queued while this
-  /// refresh or its embedded cycle was in flight applies now that the refresh is
-  /// no longer active. Re-entrancy-safe on `@MainActor`.
+  /// stays honest. Re-entrancy-safe on `@MainActor`.
   @discardableResult
   public func refresh() async -> MobileCloudSyncLifecycleResult {
-    await refreshFlight.run(
-      body: { await performRefresh() },
-      afterDrain: { await applyPendingCloudSyncModeIfNeeded() })
+    await refreshFlight.run(body: { await performRefresh() })
   }
 
   private func performRefresh() async -> MobileCloudSyncLifecycleResult {
@@ -34,40 +29,45 @@ extension MobileStore {
     // only a non-live mode may shed an oversized active outbox backlog.
     await runLocalRetentionMaintenance()
 
-    // Publish the local snapshot FIRST — before ANY network work, including
-    // CloudKit subscription registration, which makes a real network request on
-    // the first cold-start refresh (`hasRegisteredSubscription` is process-local).
-    // So the UI shows on-disk data without waiting on the network at all (macOS's
-    // refresh already loads local-first). The loading indicator only appears while
+    // Publish the local snapshot FIRST — before any network work — so the UI
+    // shows on-disk data without waiting on the network at all. The loading indicator only appears while
     // the snapshot is still empty (the root view gates on `isLoading && today ==
     // .empty`), so a cold launch shows the spinner until this fast local load lands
     // and a later reload over populated data is silent.
     guard await loadLocalSurfaces(clearOnFailure: true) else { return .failed }
 
-    // Now the network: register the push subscription, then run the push+pull cycle.
-    // A confirmed import owns the coordinator gate while it writes, and queued
-    // mode changes must linearize before imported rows can leave the device.
-    // Its final refresh is therefore local-only; the import finisher clears the
-    // fence, applies the latest requested mode, then starts one explicit cycle
-    // only if the resulting mode is still Live.
+    // Local writes since the last pass (this app's own mutations, an MCP or App
+    // Intent write that raised the change signal) have already changed the
+    // outbox depth. Read it before the network so Settings reflects the queue as
+    // it stands, rather than only after a cycle gets to run.
+    await refreshSyncStatus()
+
+    // Now the network. A confirmed import's own refresh stays local; the
+    // import finishes with one explicit pass.
     guard !isDataImportRunning else { return .noData }
-    await registerCloudSyncSubscriptionIfNeeded()
     let syncResult = await runCloudSyncCycle()
     await reloadInboundSurfacesIfNeeded(after: syncResult)
     return syncResult
   }
 
-  /// Adopt canonical rows a completed sync cycle may have committed into the
-  /// primary UI without starting another sync cycle.
+  /// Adopt what a completed sync cycle changed: the outbox depth it moved, and
+  /// any canonical rows it committed — without starting another sync cycle.
   ///
-  /// This is shared by the full-refresh path and the normal post-mutation drain:
-  /// both can pull peer writes after their visible surfaces were last read. A
+  /// This is the shared tail of every pass (the full refresh, the
+  /// post-mutation drain, a pass the engine ran on its own), so it is where a
+  /// pass's effects reach the UI. The queue-status re-read is skipped for
+  /// `.noData`, which is a pass that moved nothing or a gate (sync off, no
+  /// account, paused) that ran no work.
+  ///
+  /// Surface adoption itself needs `.newData`: both the refresh path and the
+  /// drain can pull peer writes after their visible surfaces were last read. A
   /// bounded applied-kind set gets the selective executor; a fetched but
   /// empty/diffuse set falls back to a best-effort full local reload. A push
   /// conflict reports the exact kinds its server winner changed, while an
   /// ordinary confirmed push performs no local reload. Neither branch calls
   /// CloudKit, so adoption cannot form a sync loop.
   func reloadInboundSurfacesIfNeeded(after syncResult: MobileCloudSyncLifecycleResult) async {
+    if syncResult != .noData { await refreshSyncStatus() }
     guard syncResult == .newData else { return }
     guard let report = lastCloudSyncCycleReport else { return }
     let appliedKinds = report.inbound.appliedEntityTypes
@@ -115,7 +115,6 @@ extension MobileStore {
         from: weekDigestFromDay, to: weekDigestToDay, limit: 7)) ?? []
       snapshot = MobileHomeSnapshot(
         today: loadedToday,
-        currentFocus: try await core.loadCurrentFocus(date: date),
         weeklyReview: try await loadedWeeklyReview
       )
       rescheduleLogicalDayBoundaryWake()
@@ -134,18 +133,33 @@ extension MobileStore {
       }
       dayReviewEvidence = await loadedDayEvidence
       weekReviewDigest = await loadedWeekDigest
-      focusSchedule = try await core.loadFocusSchedule(date: date)
       let planningError = await loadPlanningSnapshotsPreservingLoadedState(date: date)
+      // Keep an already-open Memory workspace fresh after an out-of-band write
+      // that reaches the full refresh rather than the selective `.memory` inbound
+      // path — an in-process App Intent / Shortcut or an MCP edit. Only when
+      // already loaded; mirror the inbound reconcile (adopt the snapshot, prune a
+      // selection/edit whose entry is gone) while leaving the composer draft the
+      // user may be typing.
+      if memory != nil, let loadedMemory = try? await core.loadMemory() {
+        memory = loadedMemory
+        let liveKeys = Set(loadedMemory.entries.map(\.key))
+        if let selectedMemoryKey, !liveKeys.contains(selectedMemoryKey) {
+          self.selectedMemoryKey = nil
+        }
+        if let memoryEditingKey, !liveKeys.contains(memoryEditingKey) {
+          self.memoryEditingKey = nil
+        }
+      }
       if selectedTaskID == nil {
-        selectedTaskID = snapshot.nextTask?.id
+        selectedTaskID = snapshot.today.tasks.first?.id
       }
       _ = try? await publishWidgetSnapshot()
       await rescheduleReminders()
       await updateBadge()
       if let planningError {
-        await presentUserFacingError(planningError)
+        await presentRefreshFailure(planningError)
       } else {
-        errorMessage = nil
+        clearRefreshFailure()
       }
       invalidateAllViewOwnedData()
       return true
@@ -155,27 +169,9 @@ extension MobileStore {
       // which, for a fatal open, is the `unrecoverable` fatal copy.
       surfaceDatabaseRecoveryNoticeIfNeeded()
       if clearOnFailure { clearLoadedSnapshots() }
-      await presentUserFacingError(error)
+      await presentRefreshFailure(error)
       return false
     }
-  }
-
-  @discardableResult
-  public func refreshResettingCloudSyncPacing() async -> MobileCloudSyncLifecycleResult {
-    // A foreground/manual full refresh runs the sync cycle, paying off any
-    // persisted push handoff (a push that arrived before the store attached)
-    // so it does not trigger a redundant drain later. Keep the exact token until
-    // a real successful cycle returns; a transport/account gate is not an ACK.
-    let handoffToken = MobileCloudSyncPushHandoff(defaults: defaults).pendingToken
-    let startingSuccessfulGeneration = cloudSyncSuccessfulCycleGeneration
-    cloudSyncPacing.reset()
-    await retryPendingCloudDataDeletionCleanup()
-    let result = await refresh()
-    acknowledgePendingCloudSyncPush(
-      token: handoffToken,
-      startingSuccessfulGeneration: startingSuccessfulGeneration,
-      result: result)
-    return result
   }
 
   @discardableResult
@@ -188,22 +184,17 @@ extension MobileStore {
   }
 
   func clearLoadedSnapshots() {
-    snapshot = MobileHomeSnapshot(
-      today: .empty,
-      currentFocus: nil,
-      weeklyReview: nil
-    )
+    snapshot = MobileHomeSnapshot(today: .empty, weeklyReview: nil)
     lists = nil
-    selectedListDetail = nil
     habits = nil
     habitDetailsByID = [:]
+    archivedHabits = []
     calendarTimeline = nil
     calendarScheduledTasks = []
     dailyReview = nil
     dayReviewEvidence = nil
     weekReviewDigest = []
-    focusSchedule = nil
-    proposedFocusSchedule = nil
+    proposedDayTimes = nil
     selectedTaskID = nil
     invalidateAllViewOwnedData()
   }
@@ -213,33 +204,43 @@ extension MobileStore {
     isCapturing = true
     defer { isCapturing = false }
     do {
-      let created = try await submitCaptureDraftTasks()
-      selectedTaskID = created.first?.id
+      _ = try await submitCaptureDraftTasks()
       captureDraft = MobileCaptureDraft()
-      await refresh()
+      // The write is committed; repaint from the on-disk store and close the
+      // sheet now. `refresh()` joins the shared single-flight, whose in-flight
+      // pass can include the sync cycle's network tail (a first Live enable
+      // pushes the entire baseline), so awaiting it here pins the sheet on
+      // "Capturing" for the duration of someone else's sync. Local reload +
+      // view invalidation is what actually surfaces the new task; the full
+      // fan-out (outbox drain, widgets, sync) follows without gating dismissal.
+      invalidateAllViewOwnedData()
+      _ = await loadLocalSurfaces(clearOnFailure: false)
       // Quick capture is a sheet over whatever surface raised it; close it and
-      // let the new task land in the active list on refresh, rather than yanking
-      // the user to a different tab.
+      // let the new task land in the active list, rather than yanking the user
+      // to a different tab. Captured work is undated, so it belongs to the inbox
+      // and not to today — the dismissal plus haptic is the confirmation, and
+      // nothing is selected, since a task with no claim on today would not
+      // resolve against the surfaces the user is left looking at.
       isPresentingCapture = false
       feedbackProvider.playFeedback(.captureSubmitted)
       errorMessage = nil
+      Task { await self.refresh() }
     } catch {
       await presentUserFacingError(error)
     }
   }
 
+  /// Each captured line becomes one task with the details its words name
+  /// (see `captureTaskDraft(line:notes:)`); several lines go through one batch.
   private func submitCaptureDraftTasks() async throws -> [LorvexTask] {
-    let titles = captureDraft.parsedTitles
-    guard titles.count > 1 else {
-      let task = try await core.createTask(
-        title: captureDraft.trimmedTitle,
-        notes: captureDraft.notes
-      )
-      return [task]
+    let lines = captureDraft.parsedTitles
+    let drafts = try (lines.isEmpty ? [captureDraft.trimmedTitle] : lines).map {
+      try captureTaskDraft(line: $0, notes: captureDraft.notes)
     }
-    return try await core.batchCreateTasks(titles.map {
-      TaskCreateDraft(title: $0, notes: captureDraft.notes)
-    })
+    if drafts.count == 1 {
+      return [try await core.createTask(drafts[0])]
+    }
+    return try await core.batchCreateTasks(drafts)
   }
 
   public func taskIsMutating(_ id: LorvexTask.ID) -> Bool {
@@ -276,33 +277,26 @@ extension MobileStore {
   }
 
   @discardableResult
-  func mutateTask(id taskID: LorvexTask.ID? = nil, _ operation: () async throws -> Void) async -> Bool {
-    guard beginTaskMutation(id: taskID) else { return false }
-    defer { endTaskMutation(id: taskID) }
-    do {
-      try await operation()
-      await refresh()
-      errorMessage = nil
-      return true
-    } catch {
-      await presentUserFacingError(error)
-      return false
-    }
-  }
-
-  @discardableResult
   func mutateTaskReturningToday(
     id taskID: LorvexTask.ID? = nil,
+    affectedIDs: [LorvexTask.ID] = [],
     _ operation: () async throws -> TodaySnapshot
   ) async -> Bool {
     guard beginTaskMutation(id: taskID) else { return false }
     defer { endTaskMutation(id: taskID) }
     do {
       snapshot.today = try await operation()
-      let date = logicalTodayString
-      snapshot.currentFocus = try await core.loadCurrentFocus(date: date)
       if let taskID, let mutatedTask = try? await core.loadTask(id: taskID) {
         replaceKnownTask(mutatedTask)
+      }
+      // A batch mutation has no single `taskID`, so reconcile each affected task
+      // into the store's cross-tab surfaces (`calendarScheduledTasks`, the task
+      // cache) the same way the single-task path does — otherwise the Calendar
+      // tab keeps the pre-mutation status until its own window reloads.
+      for affectedID in affectedIDs where affectedID != taskID {
+        if let mutated = try? await core.loadTask(id: affectedID) {
+          replaceKnownTask(mutated)
+        }
       }
       if let selectedTaskID, selectedTaskID != taskID,
         let selectedTask = try? await core.loadTask(id: selectedTaskID)
@@ -310,6 +304,7 @@ extension MobileStore {
         replaceKnownTask(selectedTask)
       }
       invalidateTaskViews()
+      await reloadReviewEvidenceAfterTaskMutation()
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       await updateBadge()
@@ -331,10 +326,9 @@ extension MobileStore {
     do {
       let updated = try await operation()
       snapshot.today = try await core.loadToday()
-      let date = logicalTodayString
-      snapshot.currentFocus = try await core.loadCurrentFocus(date: date)
       replaceKnownTask(updated)
       invalidateTaskViews()
+      await reloadReviewEvidenceAfterTaskMutation()
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       await updateBadge()

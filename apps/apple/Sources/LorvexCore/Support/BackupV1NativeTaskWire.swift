@@ -87,6 +87,8 @@ struct BackupV1NativeTask: Codable, Sendable, Equatable {
   var lastDeferredAt: String?
   var lastDeferReason: String?
   var plannedDate: String?
+  var plannedStartMinutes: Int?
+  var plannedEndMinutes: Int?
   var availableFrom: String?
   var deferCount: Int
   var archivedAt: String?
@@ -121,6 +123,8 @@ struct BackupV1NativeTask: Codable, Sendable, Equatable {
     lastDeferredAt = current.lastDeferredAt
     lastDeferReason = current.lastDeferReason
     plannedDate = current.plannedDate
+    plannedStartMinutes = current.plannedStartMinutes
+    plannedEndMinutes = current.plannedEndMinutes
     availableFrom = current.availableFrom
     deferCount = current.deferCount
     archivedAt = current.archivedAt
@@ -155,7 +159,8 @@ struct BackupV1NativeTask: Codable, Sendable, Equatable {
       version: try BackupV1WireValidation.hlc(version, field: "nativeTaskGraph.tasks.version"),
       createdAt: createdAt, updatedAt: updatedAt, completedAt: completedAt,
       lastDeferredAt: lastDeferredAt, lastDeferReason: lastDeferReason,
-      plannedDate: plannedDate, availableFrom: availableFrom,
+      plannedDate: plannedDate, plannedStartMinutes: plannedStartMinutes,
+      plannedEndMinutes: plannedEndMinutes, availableFrom: availableFrom,
       deferCount: deferCount, archivedAt: archivedAt)
   }
 }

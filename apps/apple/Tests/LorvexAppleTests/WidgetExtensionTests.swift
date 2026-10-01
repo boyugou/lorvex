@@ -30,7 +30,7 @@ func widgetConfigurationDefaultsUseStorageAndRoutingMetadata() {
 @Test
 @MainActor
 func additionalWidgetKindsUseSharedProductMetadata() {
-  #expect(LorvexTodayWidget.kind == LorvexProductMetadata.todayWidgetKind)
+  #expect(LorvexTodayWidget.kind == LorvexProductMetadata.widgetKind)
   #expect(LorvexProgressWidget.kind == LorvexProductMetadata.progressWidgetKind)
   #expect(LorvexHabitsWidget.kind == LorvexProductMetadata.habitsWidgetKind)
 }
@@ -53,7 +53,7 @@ func widgetInfoPlistAppGroupMatchesSharedProductMetadata() throws {
     .deletingLastPathComponent()  // …/Tests
     .deletingLastPathComponent()  // …/apple
     .appendingPathComponent("Config")
-    .appendingPathComponent("LorvexWidgetExtension-Info.plist")
+    .appendingPathComponent("LorvexWidgets-Info.plist")
 
   let data = try Data(contentsOf: plistURL)
   let plist = try #require(
@@ -65,14 +65,14 @@ func widgetInfoPlistAppGroupMatchesSharedProductMetadata() throws {
 
 @Test
 func widgetProviderMapsSystemFamiliesToRenderFamilies() {
-  #expect(LorvexFocusWidgetProvider.familyKind(for: .systemSmall) == .systemSmall)
-  #expect(LorvexFocusWidgetProvider.familyKind(for: .systemMedium) == .systemMedium)
-  #expect(LorvexFocusWidgetProvider.familyKind(for: .systemLarge) == .systemLarge)
+  #expect(LorvexTodayWidgetTimelineProvider.familyKind(for: .systemSmall) == .systemSmall)
+  #expect(LorvexTodayWidgetTimelineProvider.familyKind(for: .systemMedium) == .systemMedium)
+  #expect(LorvexTodayWidgetTimelineProvider.familyKind(for: .systemLarge) == .systemLarge)
   #if os(iOS)
-    #expect(LorvexFocusWidgetProvider.familyKind(for: .systemExtraLarge) == .systemLarge)
-    #expect(LorvexFocusWidgetProvider.familyKind(for: .accessoryInline) == .accessoryInline)
+    #expect(LorvexTodayWidgetTimelineProvider.familyKind(for: .systemExtraLarge) == .systemLarge)
+    #expect(LorvexTodayWidgetTimelineProvider.familyKind(for: .accessoryInline) == .accessoryInline)
     #expect(
-      LorvexFocusWidgetProvider.familyKind(for: .accessoryRectangular) == .accessoryRectangular
+      LorvexTodayWidgetTimelineProvider.familyKind(for: .accessoryRectangular) == .accessoryRectangular
     )
   #endif
 }
@@ -83,9 +83,10 @@ func extraLargeFamilyMapsToLargeButIsNoLongerExposed() throws {
   // design floating in a much larger frame), so neither widget advertises it in
   // `supportedFamilies` — but `familyKind` still maps it to systemLarge if the OS
   // ever requests it.
-  #expect(LorvexFocusWidgetProvider.familyKind(for: .systemExtraLarge) == .systemLarge)
+  #expect(LorvexTodayWidgetTimelineProvider.familyKind(for: .systemExtraLarge) == .systemLarge)
   let todaySource = try widgetExtensionSourceFile("LorvexTodayWidget.swift")
-  #expect(todaySource.contains("case .systemLarge, .systemExtraLarge: .systemLarge"))
+  #expect(todaySource.contains("private static var supportedFamilies: [WidgetFamily]"))
+  #expect(!todaySource.contains(".systemExtraLarge,"))
 }
 
 @Test
@@ -121,9 +122,9 @@ func widgetTimelineAdapterProducesRefreshPolicyAndRenderModel() throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
-    briefing: "Review focus",
-    focusTasks: [
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
+    briefing: "Ship the adapter before the review.",
+    tasks: [
       .init(
         id: "task-widget",
         title: "Ship widget adapter",
@@ -148,6 +149,8 @@ func widgetTimelineAdapterProducesRefreshPolicyAndRenderModel() throws {
 
   #expect(timeline.entries.count == 1)
   #expect(timeline.entries.first?.date == now)
+  #expect(timeline.entries.first?.model.lead == nil)
+  #expect(timeline.entries.first?.model.briefing == "Ship the adapter before the review.")
   #expect(timeline.entries.first?.model.taskRows.map(\.id) == ["task-widget"])
 }
 
@@ -183,50 +186,40 @@ func widgetStaticPlaceholderUsesRefreshPolicyCadence() {
 func widgetGalleryPreviewUsesRepresentativeUnredactedContent() throws {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
 
-  let focus = LorvexWidgetTimelineAdapter.staticPreview(family: .systemMedium, now: now)
-  #expect(focus.date == now)
-  #expect(focus.isPlaceholder == false)
-  #expect(focus.model.taskRows.map(\.id) == ["widget-preview-focus"])
-  #expect(focus.model.state == .content)
+  let today = LorvexWidgetTimelineAdapter.staticPreview(family: .systemMedium, now: now)
+  #expect(today.date == now)
+  #expect(today.isPlaceholder == false)
+  #expect(today.model.lead?.id == "widget-preview-spec")
+  #expect(today.model.lead?.isRunning == true)
+  #expect(today.model.state == .content)
 
-  let raw = LorvexSnapshotTimelineAdapter.staticPreview(viewMode: .focus, now: now)
+  let raw = LorvexSnapshotTimelineAdapter.staticPreview(now: now)
   let snapshot = try #require(raw.snapshot)
   #expect(raw.date == now)
   #expect(raw.isPlaceholder == false)
-  #expect(raw.todayWidgetViewMode == .focus)
-  #expect(snapshot.focusTasks.first?.status == LorvexTask.Status.inProgress.rawValue)
-  #expect(snapshot.todayTasks.count == 1)
+  #expect(snapshot.tasks.first?.status == LorvexTask.Status.inProgress.rawValue)
+  #expect(snapshot.tasks.count == 4)
   #expect(snapshot.habits.count == 1)
   #expect(snapshot.stats.completedTodayCount == 2)
 
-  let filtered = LorvexSnapshotTimelineAdapter.staticPreview(
-    viewMode: .today,
-    listID: "preview-list",
-    now: now
-  )
-  #expect(filtered.snapshot?.focusTasks.first?.listID == "preview-list")
-  #expect(filtered.snapshot?.todayTasks.first?.listID == "preview-list")
-  #expect(filtered.snapshot?.listStats.first?.id == "preview-list")
+  let scoped = WidgetPreviewSnapshot.make(now: now, listID: "preview-list")
+  #expect(scoped.tasks.allSatisfy { $0.listID == "preview-list" })
+  #expect(scoped.listStats.first?.id == "preview-list")
 }
 
 @Test
 func widgetProvidersSelectGalleryPreviewWithoutReadingAppGroupState() throws {
   let configuration = LorvexWidgetConfiguration()
 
-  let focus = LorvexFocusWidgetProvider(configuration: configuration)
+  let today = LorvexTodayWidgetTimelineProvider(configuration: configuration)
     .makeSnapshotEntry(family: .systemSmall, isPreview: true)
-  #expect(focus.isPlaceholder == false)
-  #expect(focus.model.taskRows.map(\.id) == ["widget-preview-focus"])
+  #expect(today.isPlaceholder == false)
+  #expect(today.model.lead?.id == "widget-preview-spec")
 
   let raw = LorvexSnapshotTimelineProvider(configuration: configuration)
     .makeSnapshotEntry(isPreview: true)
   #expect(raw.isPlaceholder == false)
   #expect(raw.snapshot?.habits.count == 1)
-
-  let today = LorvexTodayWidgetTimelineProvider(configuration: configuration)
-    .makeSnapshotEntry(viewMode: .today, isPreview: true)
-  #expect(today.isPlaceholder == false)
-  #expect(today.snapshot?.todayTasks.count == 1)
 
   // The non-preview path still reports missing App Group state honestly.
   #expect(LorvexSnapshotTimelineProvider(configuration: configuration)
@@ -243,9 +236,9 @@ func widgetSnapshotAndTimelineEntriesAreNotPlaceholders() throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: []
+    tasks: []
   )
   try JSONEncoder().encode(snapshot).write(to: snapshotURL, options: [.atomic])
 
@@ -281,7 +274,7 @@ func widgetTimelineAdapterPropagatesFallbackStatusToRenderModel() throws {
 }
 
 @Test
-func snapshotTimelineAdapterPropagatesFallbackStatusAndViewConfiguration() throws {
+func snapshotTimelineAdapterPropagatesFallbackStatus() throws {
   let tempDirectory = FileManager.default.temporaryDirectory
     .appendingPathComponent("lorvex-snapshot-adapter-fallback-\(UUID().uuidString)", isDirectory: true)
   let snapshotURL = tempDirectory.appendingPathComponent(WidgetSnapshotLoader.defaultSnapshotFileName)
@@ -296,13 +289,11 @@ func snapshotTimelineAdapterPropagatesFallbackStatusAndViewConfiguration() throw
   )
   let adapter = LorvexSnapshotTimelineAdapter(support: support)
 
-  let entry = adapter.snapshot(viewMode: .focus, listID: "list-work")
+  let entry = adapter.snapshot()
 
   #expect(entry.date == now)
   #expect(entry.snapshot == nil)
   #expect(entry.statusText == "Snapshot data damaged")
-  #expect(entry.todayWidgetViewMode == .focus)
-  #expect(entry.todayWidgetListID == "list-work")
   #expect(entry.isPlaceholder == false)
 }
 
@@ -328,7 +319,7 @@ func snapshotTimelineAdapterUsesRefreshPolicyFromSharedSupport() throws {
   )
   let adapter = LorvexSnapshotTimelineAdapter(support: support)
 
-  let timeline = adapter.timeline(viewMode: .today)
+  let timeline = adapter.timeline()
 
   #expect(timeline.entries.count == 1)
   #expect(timeline.entries.first?.date == now)
@@ -339,18 +330,16 @@ func snapshotTimelineAdapterUsesRefreshPolicyFromSharedSupport() throws {
 @Test
 func snapshotTimelineAdapterStaticPlaceholderIsMarkedAsPlaceholder() {
   let now = Date(timeIntervalSince1970: 1_779_465_900)
-  let entry = LorvexSnapshotTimelineAdapter.staticPlaceholder(viewMode: .focus, now: now)
+  let entry = LorvexSnapshotTimelineAdapter.staticPlaceholder(now: now)
 
   #expect(entry.date == now)
   #expect(entry.isPlaceholder == true)
-  #expect(entry.todayWidgetViewMode == .focus)
 }
 
 @Test
 func snapshotTimelineAdapterBuildsFallbackWhenSnapshotURLIsUnavailable() {
   let now = Date(timeIntervalSince1970: 1_779_465_900)
   let result = LorvexSnapshotTimelineAdapter.staticMissingSnapshotURLResult(
-    viewMode: .today,
     refreshPolicy: WidgetTimelineRefreshPolicy(
       freshIntervalSeconds: 300,
       warningIntervalSeconds: 600,
@@ -375,25 +364,7 @@ func snapshotTimelineAdapterBuildsFallbackWhenSnapshotURLIsUnavailable() {
 }
 
 @Test
-func todayWidgetProviderBuildsFallbackWhenSnapshotURLIsUnavailable() {
-  let provider = LorvexTodayWidgetTimelineProvider(configuration: LorvexWidgetConfiguration())
-
-  let result = provider.makeTimelineEntry(viewMode: .focus, listID: "list-work")
-
-  #expect(result.entry.snapshot == nil)
-  #expect(result.entry.statusText == "Open Lorvex to refresh")
-  #expect(result.entry.todayWidgetViewMode == .focus)
-  #expect(result.entry.todayWidgetListID == "list-work")
-  #expect(result.refreshAfter > result.entry.date)
-  guard case .fallback(let fallback) = result.entry.state else {
-    Issue.record("Expected missing Today widget snapshot URL to produce fallback entry")
-    return
-  }
-  #expect(fallback.reason == .missingFile)
-}
-
-@Test
-func focusWidgetEntryExposesSmartStackRelevanceForFocusTasks() {
+func todayWidgetEntryExposesSmartStackRelevanceForTheTasksLeft() {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
   let entry = LorvexWidgetEntry(
     date: now,
@@ -401,19 +372,13 @@ func focusWidgetEntryExposesSmartStackRelevanceForFocusTasks() {
       family: .systemSmall,
       state: .content,
       headline: "Today",
-      subheadline: "Focus queue",
+      subheadline: "",
       statusText: "Updated now",
-      focusCountText: "2 Focus",
-      focusCount: 2,
-      attentionCountText: nil,
-      taskRows: [
-        WidgetTaskRenderRow(
-          id: "task-1",
-          title: "First",
-          metadata: nil,
-          priorityLabel: "P1"
-        )
-      ],
+      lead: WidgetLeadRender(
+        id: "task-1", title: "First", line: nil, shortLine: nil, progress: 0,
+        isRunning: false, minutesLeft: nil, isOverdue: false, urlString: "lorvex://task/task-1"),
+      taskRows: [WidgetTaskRenderRow(id: "task-2", title: "Second", metadata: nil)],
+      upcomingCount: 1,
       urlString: "lorvex://open/today"
     )
   )

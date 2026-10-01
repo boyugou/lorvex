@@ -54,7 +54,7 @@ struct MobileStoreCreateHabitSheet: View {
               .focused($focusedField, equals: .target)
               .submitLabel(.done)
               .onSubmit { submit() }
-              #if os(iOS) || os(visionOS)
+              #if os(iOS)
                 .keyboardType(.numberPad)
               #endif
               .mobileKeyboardDoneToolbar { submit() }
@@ -81,11 +81,12 @@ struct MobileStoreCreateHabitSheet: View {
             submit()
           } label: {
             if store.isCreatingHabit {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(String(localized: "common.create", defaultValue: "Create", table: "Localizable", bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(!store.canCreateHabitDraft)
           .accessibilityIdentifier("mobileCreateHabit.confirm")
         }

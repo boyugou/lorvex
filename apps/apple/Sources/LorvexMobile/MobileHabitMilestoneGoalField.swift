@@ -20,7 +20,7 @@ struct MobileHabitMilestoneGoalField: View {
           String(localized: "habits.sheet.field.milestone_goal_placeholder", defaultValue: "None", table: "Localizable", bundle: MobileL10n.bundle),
           text: $text
         )
-        #if os(iOS) || os(visionOS)
+        #if os(iOS)
           .keyboardType(.numberPad)
         #endif
         .mobileKeyboardDoneToolbar()

@@ -18,7 +18,8 @@ final class SwiftLorvexCoreServiceCalendarOccurrenceInvariantTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func uuid() -> String { UUID().uuidString.lowercased() }

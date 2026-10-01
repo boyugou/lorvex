@@ -34,6 +34,16 @@ struct LorvexPreviewCoreFactoryTests {
 
     let desk = try await core.loadTask(id: LorvexPreviewSeedID.standingDeskTask)
     #expect(desk.status == .someday)
+
+    // The two terminal rows. `importRemoteTask` carries `completed` through on
+    // its own; `cancelled` is replayed through the real cancel mutation, so
+    // this also pins that the replay landed.
+    let offsiteDates = try await core.loadTask(id: LorvexPreviewSeedID.offsiteDatesTask)
+    #expect(offsiteDates.status == .completed)
+    #expect(offsiteDates.listID == LorvexPreviewSeedID.appleNativeList)
+    let secondMonitor = try await core.loadTask(id: LorvexPreviewSeedID.secondMonitorTask)
+    #expect(secondMonitor.status == .cancelled)
+    #expect(secondMonitor.listID == LorvexPreviewSeedID.inboxList)
   }
 
   @Test("seeded lists carry the live open/total counts")
@@ -45,10 +55,17 @@ struct LorvexPreviewCoreFactoryTests {
     // toward the total but not the open bucket.
     let inbox = try #require(catalog.lists.first { $0.id == LorvexPreviewSeedID.inboxList })
     #expect(inbox.openCount == 1)
-    #expect(inbox.totalCount == 2)
+    #expect(inbox.totalCount == 3)
     let appleNative = try #require(catalog.lists.first { $0.id == LorvexPreviewSeedID.appleNativeList })
     #expect(appleNative.openCount == 2)
-    #expect(appleNative.totalCount == 2)
+    #expect(appleNative.totalCount == 3)
+
+    // The two halves of the progress rule, which the seed exists to show.
+    // Abandoned work leaves the denominator, so the Inbox's cancelled row keeps
+    // it at zero and no bar is drawn; `appleNativeList` has one finished task
+    // of three and draws a third of a bar.
+    #expect(inbox.progressFraction == 0)
+    #expect(try #require(appleNative.progressFraction) == 1.0 / 3.0)
   }
 
   @Test("seeded habits reproduce the fixture's completion stats")
@@ -61,6 +78,13 @@ struct LorvexPreviewCoreFactoryTests {
     let walk = try #require(habits.habits.first { $0.id == LorvexPreviewSeedID.eveningWalkHabit })
     #expect(walk.completionsToday == 0)
     #expect(walk.totalCompletions == 8)
+
+    // The habits are seeded as long-standing, so each rate is a real trailing
+    // 30-day figure (12 and 8 of 30 due days). Seeded at the current instant
+    // they would instead be scored over the one day of the seed and read a
+    // flat 100% and 0% beside their streaks.
+    #expect(abs(review.completionRate30d - 12.0 / 30.0) < 0.02)
+    #expect(abs(walk.completionRate30d - 8.0 / 30.0) < 0.02)
   }
 
   @Test("seeded calendar event renders in its timeline window")

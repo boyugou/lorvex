@@ -166,7 +166,7 @@ struct PhoneWatchConnectivityReceiverContractTests {
     let initRange = try #require(source.range(of: "init() {"))
     let rootRange = try #require(source.range(of: "private var rootContent"))
     let receiverRange = try #require(
-      source.range(of: "let receiver = PhoneWatchConnectivityReceiver(store: builtStore)"))
+      source.range(of: "let receiver = PhoneWatchConnectivityReceiver(\n        store: builtStore,"))
     let activateRange = try #require(source.range(of: "receiver?.activate()"))
     #expect(receiverRange.lowerBound > initRange.lowerBound)
     #expect(activateRange.lowerBound > receiverRange.lowerBound)
@@ -178,7 +178,8 @@ struct PhoneWatchConnectivityReceiverContractTests {
         .appending(path: "Sources/LorvexMobile/PhoneWatchConnectivityReceiver.swift"),
       encoding: .utf8)
     #expect(receiverSource.contains("guard activationState == .activated else { return }"))
-    #expect(receiverSource.contains("self?.scheduleReplicaBaselineRefresh()"))
+    #expect(receiverSource.contains("await self?.refreshReplicaBaseline()"))
+    #expect(source.contains("databaseAccess: PhoneWatchDatabaseAccess("))
   }
 }
 

@@ -2,6 +2,52 @@ import Foundation
 import LorvexCore
 
 extension AppStore {
+  /// Rows in one page of a list's tasks. The core clamps any request to 500.
+  static let listDetailPageSize = 100
+
+  /// How many rows a reload of `listID`'s tasks asks for: one page, or every
+  /// row already loaded once the user has paged further, so the reload a
+  /// mutation triggers does not drop the rows below the first page out from
+  /// under the reader.
+  func listDetailReloadLimit(for listID: LorvexList.ID) -> Int {
+    guard let detail = selectedListDetail, detail.list.id == listID else {
+      return Self.listDetailPageSize
+    }
+    return max(Self.listDetailPageSize, detail.tasks.count)
+  }
+
+  /// Whether the selected list has actionable tasks beyond the loaded rows.
+  var selectedListHasMoreTasks: Bool {
+    selectedListDetail?.nextOffset != nil
+  }
+
+  /// Append the next page of the selected list's actionable tasks below the
+  /// loaded rows. A page is dropped when the detail it continues was replaced
+  /// while it was in flight — another list was selected, or a reload landed —
+  /// since its offset no longer lines up with the rows on screen; a row that
+  /// is already loaded is never appended twice.
+  func loadMoreSelectedListTasks() async {
+    guard !isLoadingMoreSelectedListTasks, let current = selectedListDetail,
+      let nextOffset = current.nextOffset
+    else {
+      return
+    }
+    isLoadingMoreSelectedListTasks = true
+    defer { isLoadingMoreSelectedListTasks = false }
+    await perform {
+      let page = try await core.loadListDetail(
+        id: current.list.id, limit: Self.listDetailPageSize, offset: nextOffset)
+      guard selectedListDetail == current else { return }
+      let loadedIDs = Set(current.tasks.map(\.id))
+      var merged = page
+      merged.tasks = current.tasks + page.tasks.filter { !loadedIDs.contains($0.id) }
+      merged.returned = merged.tasks.count
+      merged.limit = merged.tasks.count
+      merged.offset = 0
+      selectedListDetail = merged
+    }
+  }
+
   func loadSelectedListDetailForUI() async {
     await perform {
       try await loadSelectedListDetail()
@@ -33,7 +79,8 @@ extension AppStore {
       selectedListDetail = nil
       selectedListTaskIDs.removeAll()
     }
-    let detail = try await core.loadListDetail(id: listID, limit: 100, offset: 0)
+    let detail = try await core.loadListDetail(
+      id: listID, limit: listDetailReloadLimit(for: listID), offset: 0)
     // The selection can change while the load is in flight (the user clicks a
     // different list). Discard a result for a list that is no longer selected so
     // it can't overwrite the newer selection's detail.

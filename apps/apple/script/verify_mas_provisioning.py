@@ -4,7 +4,7 @@
 Run against the bundle produced by ``script/archive_mas.sh --package`` (or any
 signed ``.app`` — the checks are inert when a target has no profile). For each
 of the three embeddable targets — the macOS app, the MCP helper bundled app,
-and the Focus widget ``.appex`` — this script looks for
+and the widget ``.appex`` — this script looks for
 ``Contents/embedded.provisionprofile``:
 
 * Present: decode it with ``security cms -D -i`` (no network, no Apple

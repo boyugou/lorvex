@@ -3,7 +3,10 @@ import SwiftUI
 
 /// The scoped task list — the drill-in from the Tasks home. Shows the tasks for
 /// one ``MobileTasksScope`` (a smart collection or a list), querying the core
-/// task corpus directly rather than reusing the small Today snapshot.
+/// task corpus directly rather than reusing the small Today snapshot. Scoped to
+/// a list, it is that list's only screen, whichever way it opened, and
+/// ``MobileListScopeChrome`` adds the list's description and its Edit / Delete
+/// menu.
 @MainActor
 public struct MobileStoreTasksView: View {
   @Bindable var store: MobileStore
@@ -14,6 +17,15 @@ public struct MobileStoreTasksView: View {
   @State var page = MobileTaskWorkspacePage.empty
   @State var isLoading = false
   @State var isLoadingMore = false
+  /// A reload requested while a `loadMore` (or another `load`) was in flight,
+  /// deferred so it can't write `page` concurrently. Drained when the in-flight
+  /// load settles, so a mutation/inbound reload issued while the next page loads
+  /// is never silently dropped, leaving resolved tasks or stale-query rows on
+  /// screen.
+  @State var pendingReload = false
+  /// True while the footer below the last loaded row is on screen. A settled
+  /// load reads it to fetch the next page without waiting for another scroll.
+  @State var isLoadedEndVisible = false
   @State var selectedTaskID: LorvexTask.ID?
   @State var isBatchSelecting = false
   @State var batchSelectedTaskIDs = Set<LorvexTask.ID>()
@@ -51,15 +63,16 @@ public struct MobileStoreTasksView: View {
       Button {
         toggleBatchSelectionMode()
       } label: {
-        Label(
+        // Words, as Mail and Files write them: a glyph here would repeat the
+        // Tasks tab's checklist and read as a jump to Tasks.
+        Text(
           isBatchSelecting
             ? String(
               localized: "common.done", defaultValue: "Done", table: "Localizable",
               bundle: MobileL10n.bundle)
             : String(
               localized: "tasks.batch.select", defaultValue: "Select", table: "Localizable",
-              bundle: MobileL10n.bundle),
-          systemImage: isBatchSelecting ? "checkmark.circle" : "checklist")
+              bundle: MobileL10n.bundle))
       }
       // Never disable while batch selecting, or an emptied page would trap the
       // user in selection mode with no way back out.
@@ -69,22 +82,12 @@ public struct MobileStoreTasksView: View {
 
       // No manual refresh button — pull-to-refresh (.refreshable) + live sync
       // already keep the list current; a refresh button reads as a stale idiom.
-      // The add affordance steps aside during selection (nothing to add then).
-      if !isBatchSelecting {
-        Button {
-          store.isPresentingCapture = true
-        } label: {
-          Label(
-            String(
-              localized: "capture.sheet.title", defaultValue: "Capture", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "plus")
-        }
-        .lorvexToolbarHoverEffect()
-        .accessibilityIdentifier("mobileTasks.new")
-      }
+      // No ＋ either: the tab bar's round ＋ raises capture on every tab.
     }
+    .modifier(
+      MobileListScopeChrome(store: store, listID: scope.listID, isBatchSelecting: isBatchSelecting))
     .refreshable {
-      await store.refreshResettingCloudSyncPacing()
+      await store.refresh()
       await load()
     }
     .searchable(
@@ -165,7 +168,7 @@ public struct MobileStoreTasksView: View {
         Text(
           String(
             localized: "tasks.detail.empty.message",
-            defaultValue: "Choose a task from the workspace list to inspect details and actions.",
+            defaultValue: "Choose a task to see its details.",
             table: "Localizable", bundle: MobileL10n.bundle))
       }
     }
@@ -188,30 +191,29 @@ public struct MobileStoreTasksView: View {
               message: scope.baseStatus.emptyMessage
             )
           } else {
+            let timeLabels = store.todayTimeLabels
             ForEach(page.tasks) { task in
-              taskRow(task)
+              taskRow(task, timeLabel: timeLabels[task.id])
                 .id(task.id)
             }
           }
-        } header: {
-          Text(sectionTitle)
         } footer: {
-          if let nextOffset = page.nextOffset {
-            Button {
-              Task { await loadMore(offset: nextOffset) }
-            } label: {
-              if isLoadingMore {
-                ProgressView()
-              } else {
-                Label(
-                  String(
-                    localized: "tasks.results.load_more", defaultValue: "Load More",
-                    table: "Localizable", bundle: MobileL10n.bundle),
-                  systemImage: "chevron.down.circle")
+          // Reaching the end of the loaded rows fetches the next page, so the
+          // list scrolls on without a Load More button.
+          if page.nextOffset != nil {
+            ProgressView()
+              .frame(maxWidth: .infinity)
+              .accessibilityLabel(
+                String(
+                  localized: "tasks.results.loading_more", defaultValue: "Loading more tasks",
+                  table: "Localizable", bundle: MobileL10n.bundle)
+              )
+              .accessibilityIdentifier("mobileTasks.loadingMore")
+              .onAppear {
+                isLoadedEndVisible = true
+                loadMoreIfAtLoadedEnd()
               }
-            }
-            .disabled(isLoading || isLoadingMore)
-            .accessibilityIdentifier("mobileTasks.loadMore")
+              .onDisappear { isLoadedEndVisible = false }
           }
         }
       }
@@ -235,11 +237,10 @@ public struct MobileStoreTasksView: View {
   }
 
   @ViewBuilder
-  private func taskRow(_ task: LorvexTask) -> some View {
+  private func taskRow(_ task: LorvexTask, timeLabel: String?) -> some View {
     if horizontalSizeClass == .regular || isBatchSelecting {
       MobileTaskWorkspaceSelectableRow(
         task: task,
-        isFocused: store.taskIsFocused(task.id),
         isMutating: store.taskIsMutating(task.id),
         select: {
           if isBatchSelecting {
@@ -250,20 +251,16 @@ public struct MobileStoreTasksView: View {
         },
         isBatchSelecting: isBatchSelecting,
         isBatchSelected: batchSelectedTaskIDs.contains(task.id),
-        toggleFocus: { await store.toggleTaskFocus(task.id) },
-        complete: { await mutateAndReload { await store.completeTask(task.id) } },
-        deferTask: { await mutateAndReload { await store.deferTaskToTomorrow(task.id) } }
+        actions: store.rowActions(for: task.id) { await load() },
+        timeLabel: timeLabel
       )
       .tag(task.id)
     } else {
       MobileActionTaskRow(
         task: task,
-        isFocused: store.taskIsFocused(task.id),
         isMutating: store.taskIsMutating(task.id),
-        select: { store.selectTask(task.id) },
-        toggleFocus: { await store.toggleTaskFocus(task.id) },
-        complete: { await mutateAndReload { await store.completeTask(task.id) } },
-        deferTask: { await mutateAndReload { await store.deferTaskToTomorrow(task.id) } }
+        actions: store.rowActions(for: task.id) { await load() },
+        timeLabel: timeLabel
       )
     }
   }
@@ -295,7 +292,7 @@ private struct MobileTaskBatchActionBar: View {
           "action.defer", defaultValue: "Defer",
           table: "Localizable", bundle: MobileL10n.bundle),
         identifier: "defer",
-        systemImage: "clock", tint: .orange,
+        systemImage: "clock", tint: LorvexDesign.Palette.dueSoon,
         enabled: canCompleteOrDefer, action: deferTask)
       action(
         label: LocalizedStringResource(

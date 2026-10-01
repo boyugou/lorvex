@@ -571,8 +571,14 @@ func liveAccessListsUserCalendarsForSettingsFilter() async throws {
 func liveAccessAvailableCalendarsDoesNotPromptWhenUnauthorized() async throws {
   let store = FakeEKEventStore()
   store.fullAccessGranted = false
+  // Pin the authorization status too. Left at its default it reads this host's
+  // real `EKEventStore.authorizationStatus`, so a machine that has granted the
+  // test runner calendar access reports `.fullAccess` and the "unauthorized"
+  // premise silently stops holding. `.notDetermined` is the status under which
+  // prompting would be tempting, which is the behaviour this test forbids.
   let access = LiveEventKitAccess(
     store: store,
+    authorizationStatusProvider: { .notDetermined },
     readAuthorizationProvider: { store.fullAccessGranted })
 
   await #expect(throws: EventKitAccessError.readAccessDenied) {

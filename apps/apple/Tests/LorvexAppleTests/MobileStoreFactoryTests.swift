@@ -124,26 +124,45 @@ struct MobileStoreFactoryTests {
         == (try await service.currentWatchWorkspaceInstanceID()))
     let mirrored = try JSONDecoder().decode(WidgetSnapshot.self, from: envelope.snapshotData)
     #expect(mirrored.stats == snapshot.stats)
-    #expect(mirrored.briefing == snapshot.briefing)
-    #expect(mirrored.focusTasks == snapshot.focusTasks)
+    #expect(mirrored.briefing == nil, "the watch shows no briefing, so it stays on the phone")
+    #expect(mirrored.tasks == snapshot.tasks)
     #expect(mirrored.habits == snapshot.habits)
-    #expect(mirrored.todayTasks.isEmpty)
     #expect(mirrored.lists.isEmpty)
     #expect(mirrored.listStats.isEmpty)
+  }
+
+  @Test("Watch mirror accepts the stored (uppercase) spelling of the workspace id")
+  func watchMirrorCanonicalizesStoredWorkspaceID() async throws {
+    let service = try await makeSeededInMemoryCore()
+    let transport = FactoryRecordingWatchReplicaPublisher()
+    let mirror = WatchSnapshotReplicaMirror(
+      commandService: service,
+      publisher: transport)
+    let canonicalID = try await service.currentWatchWorkspaceInstanceID()
+    // `sync_checkpoints` stores the instance id as `UUID().uuidString`, so a
+    // snapshot projected from the store carries the uppercase spelling.
+    let snapshot = watchSnapshotFixture(workspaceInstanceID: canonicalID.uppercased())
+
+    await mirror.publish(snapshot: snapshot)
+
+    let envelope = try #require(transport.lastEnvelope)
+    #expect(envelope.workspaceInstanceID == canonicalID)
   }
 
   @Test("maximal source data projects to a valid bounded Watch snapshot")
   func watchProjectionAlwaysFitsReplicaEnvelope() throws {
     let longText = String(repeating: "🧭", count: 200)
-    let focusTasks = (0..<40).map { index in
-      WidgetSnapshot.FocusTask(
+    let tasks = (0..<200).map { index in
+      WidgetSnapshot.TodayTask(
         id: snapshotIdentifier(index),
         title: longText,
-        status: "open",
+        status: index.isMultiple(of: 5) ? "in_progress" : "open",
         dueDate: "2026-07-16",
         priority: index % 4,
         listID: snapshotIdentifier(index + 1_000),
-        estimatedMinutes: 60)
+        estimatedMinutes: 60,
+        scheduledStart: index.isMultiple(of: 2) ? "09:00" : nil,
+        scheduledEnd: index.isMultiple(of: 2) ? "10:00" : nil)
     }
     let habits = (0..<200).map { index in
       WidgetSnapshot.HabitSummary(
@@ -153,21 +172,12 @@ struct MobileStoreFactoryTests {
         completedToday: index % 3,
         target: 3)
     }
-    let todayTasks = (0..<200).map { index in
-      WidgetSnapshot.TodayTask(
-        id: snapshotIdentifier(index + 3_000),
-        title: longText,
-        dueDate: "2026-07-16",
-        priority: index % 4,
-        estimatedMinutes: 60,
-        listID: snapshotIdentifier(index + 4_000))
-    }
     let lists = (0..<200).map { index in
       WidgetSnapshot.ListSummary(
         id: snapshotIdentifier(index + 4_000), name: longText, icon: "list.bullet")
     }
     let stats = WidgetSnapshot.Stats(
-      focusCount: 40, overdueCount: 20, dueTodayCount: 30,
+      todayCount: 200, overdueCount: 20, dueTodayCount: 30,
       attentionCount: 50, completedTodayCount: 10)
     let source = WidgetSnapshot(
       generatedAt: "2026-07-16T12:00:00Z",
@@ -175,35 +185,34 @@ struct MobileStoreFactoryTests {
       logicalDay: "2026-07-16",
       stats: stats,
       briefing: String(repeating: "b", count: 100_000),
-      focusTasks: focusTasks,
+      tasks: tasks,
       habits: habits,
-      todayTasks: todayTasks,
       lists: lists,
       listStats: lists.map { WidgetSnapshot.ListStats(id: $0.id, stats: stats) })
 
     let data = try WatchReplicaSnapshotProjector().encodedSnapshot(from: source)
     let projected = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+    let kept = Array(tasks.prefix(projected.tasks.count))
 
     #expect(data.count <= LorvexWatchReplicaEnvelope.maximumSnapshotBytes)
+    #expect(projected.tasks.count <= WatchReplicaSnapshotProjector.maximumTasks)
     #expect(
-      projected.focusTasks.map(\.id)
-        == Array(focusTasks.prefix(WatchReplicaSnapshotProjector.maximumFocusTasks)).map(\.id))
+      projected.tasks.count >= WatchReplicaSnapshotProjector.minimumTasksBeforeHabits,
+      "habits give way before the head of Today's list does")
+    #expect(projected.tasks.map(\.id) == kept.map(\.id))
+    #expect(projected.tasks.map(\.status) == kept.map(\.status))
+    #expect(projected.tasks.map(\.dueDate) == kept.map(\.dueDate))
+    #expect(projected.tasks.map(\.scheduledStart) == kept.map(\.scheduledStart))
+    #expect(projected.tasks.map(\.scheduledEnd) == kept.map(\.scheduledEnd))
+    #expect(projected.tasks.allSatisfy { $0.listID == nil })
     #expect(projected.habits.count <= WatchReplicaSnapshotProjector.maximumVisibleHabits)
     #expect(projected.habits.map(\.id) == Array(habits.prefix(projected.habits.count)).map(\.id))
     #expect(projected.habits.allSatisfy { $0.icon == nil })
     #expect(projected.generatedAt == source.generatedAt)
     #expect(projected.timezone == source.timezone)
     #expect(projected.logicalDay == source.logicalDay)
-    #expect(
-      projected.focusTasks.map(\.status)
-        == Array(focusTasks.prefix(WatchReplicaSnapshotProjector.maximumFocusTasks)).map(\.status))
-    #expect(
-      projected.focusTasks.map(\.dueDate)
-        == Array(focusTasks.prefix(WatchReplicaSnapshotProjector.maximumFocusTasks)).map(\.dueDate))
-    #expect(projected.focusTasks.allSatisfy { $0.listID == nil })
-    #expect(projected.stats == stats)
-    #expect(projected.briefing?.utf8.count ?? 0 <= WatchReplicaSnapshotProjector.maximumBriefingUTF8Bytes)
-    #expect(projected.todayTasks.isEmpty)
+    #expect(projected.stats == stats, "the uncapped today count lets the watch say how many more")
+    #expect(projected.briefing == nil)
     #expect(projected.lists.isEmpty)
     #expect(projected.listStats.isEmpty)
   }
@@ -217,8 +226,8 @@ struct MobileStoreFactoryTests {
       logicalDay: valid.logicalDay,
       stats: valid.stats,
       briefing: valid.briefing,
-      focusTasks: [
-        WidgetSnapshot.FocusTask(
+      tasks: [
+        WidgetSnapshot.TodayTask(
           id: "00000000-0000-4000-8000-000000000001-extra",
           title: "Do not fabricate this entity",
           status: "open",
@@ -230,7 +239,7 @@ struct MobileStoreFactoryTests {
       habits: [])
 
     #expect(
-      throws: WatchReplicaSnapshotProjectionError.invalidSemanticField("focus_tasks.id")
+      throws: WatchReplicaSnapshotProjectionError.invalidSemanticField("tasks.id")
     ) {
       try WatchReplicaSnapshotProjector().encodedSnapshot(from: source)
     }
@@ -265,12 +274,13 @@ private func watchSnapshotFixture(
     timezone: "America/Los_Angeles",
     logicalDay: "2026-07-16",
     stats: .init(
-      focusCount: 1, overdueCount: 0, dueTodayCount: 1, completedTodayCount: 2),
+      todayCount: 1, overdueCount: 0, dueTodayCount: 1, completedTodayCount: 2),
     briefing: "Ready.",
-    focusTasks: [
+    tasks: [
       .init(
         id: snapshotIdentifier(1), title: "Review spec", status: "in_progress",
-        dueDate: "2026-07-16", priority: 1, listID: nil, estimatedMinutes: 30)
+        dueDate: "2026-07-16", priority: 1, listID: nil, estimatedMinutes: 30,
+        scheduledStart: "09:00", scheduledEnd: "09:30")
     ],
     habits: [
       .init(
@@ -303,7 +313,6 @@ private final class FactoryRecordingMobileWidgetSnapshotPublisher: MobileWidgetS
 {
   struct Publication: Sendable {
     var today: TodaySnapshot
-    var currentFocus: CurrentFocusPlan?
     var habitCatalog: HabitCatalogSnapshot?
     var lists: ListCatalogSnapshot?
   }
@@ -316,7 +325,6 @@ private final class FactoryRecordingMobileWidgetSnapshotPublisher: MobileWidgetS
       recordedPublications.append(
         Publication(
           today: source.today,
-          currentFocus: source.currentFocus,
           habitCatalog: source.habits,
           lists: source.lists))
     }
@@ -324,36 +332,10 @@ private final class FactoryRecordingMobileWidgetSnapshotPublisher: MobileWidgetS
       storageGeneration: source.storageGeneration,
       logicalDay: source.logicalDay,
       today: source.today,
-      currentFocus: source.currentFocus,
       timezone: "UTC",
       habitCatalog: source.habits,
       listCatalog: source.lists,
       statsSource: source.stats)
-  }
-
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot {
-    lock.withLock {
-      recordedPublications.append(
-        Publication(
-          today: today,
-          currentFocus: currentFocus,
-          habitCatalog: habitCatalog,
-          lists: lists
-        )
-      )
-    }
-    return WidgetSnapshotProjector().snapshot(
-      today: today,
-      currentFocus: currentFocus,
-      timezone: "UTC",
-      habitCatalog: habitCatalog,
-      listCatalog: lists
-    )
   }
 
   var publications: [Publication] {

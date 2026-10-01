@@ -34,39 +34,52 @@ public struct MobileStoreHabitsView: View {
       Button {
         toggleBatchSelectionMode()
       } label: {
-        Label(
+        // Words, as Mail and Files write them: a glyph here would repeat the
+        // Tasks tab's checklist and read as a jump to Tasks.
+        Text(
           isBatchSelecting
             ? String(localized: "common.done", defaultValue: "Done", table: "Localizable", bundle: MobileL10n.bundle)
-            : String(localized: "habits.batch.select", defaultValue: "Select", table: "Localizable", bundle: MobileL10n.bundle),
-          systemImage: isBatchSelecting ? "checkmark.circle" : "checklist")
+            : String(localized: "habits.batch.select", defaultValue: "Select", table: "Localizable", bundle: MobileL10n.bundle))
       }
-      .disabled(activeHabits.isEmpty || store.habits == nil)
+      // "Done" (batch mode) must never disable — it is the only way out; only
+      // "Select" is gated on there being habits to select (unfiltered, so a
+      // no-match search doesn't hide the entry point).
+      .disabled(store.habits == nil || (!isBatchSelecting && allActiveHabits.isEmpty))
       .lorvexToolbarHoverEffect()
       .accessibilityIdentifier("mobileHabits.batch.toggle")
 
-      Button {
-        isShowingCreateHabit = true
-      } label: {
-        Label(String(localized: "habits.new", defaultValue: "New Habit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "plus")
+      // Selection mode offers only its own actions, as on the Memory screen.
+      if !isBatchSelecting {
+        Button {
+          isShowingCreateHabit = true
+        } label: {
+          Label(String(localized: "habits.new", defaultValue: "New Habit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "plus")
+        }
+        .lorvexToolbarHoverEffect()
+        .accessibilityIdentifier("mobileHabits.toolbarCreate")
       }
-      .lorvexToolbarHoverEffect()
-      .accessibilityIdentifier("mobileHabits.toolbarCreate")
     }
     .task {
       if store.habits == nil {
         await store.refresh()
       }
     }
-    .task(id: habitIDs) {
+    // Keyed on the UNFILTERED set so it only fires when a habit is actually
+    // deleted/archived — not on every search keystroke, which would drop
+    // batch selections and clear the open habit just for being filtered out.
+    .task(id: allActiveHabitIDs) {
       if let selectedHabitID = store.selectedHabitID,
-        !activeHabits.contains(where: { $0.id == selectedHabitID })
+        !allActiveHabits.contains(where: { $0.id == selectedHabitID })
       {
         store.selectHabit(nil)
       }
       pruneBatchSelection()
+      // A habit archived or restored on another device moves between the two
+      // lists, so the archived one follows the active set.
+      await store.loadArchivedHabits()
     }
     .refreshable {
-      await store.refreshResettingCloudSyncPacing()
+      await store.refresh()
     }
     .searchable(
       text: $searchQuery,
@@ -74,7 +87,6 @@ public struct MobileStoreHabitsView: View {
     )
     .sheet(isPresented: $isShowingCreateHabit) {
       MobileStoreCreateHabitSheet(store: store, isPresented: $isShowingCreateHabit)
-        .lorvexSpatialBackground()
     }
     .sheet(item: $editingHabit) { habit in
       MobileStoreEditHabitSheet(
@@ -85,7 +97,6 @@ public struct MobileStoreHabitsView: View {
           set: { if !$0 { editingHabit = nil } }
         )
       )
-      .lorvexSpatialBackground()
     }
     .safeAreaInset(edge: .bottom) {
       if isBatchSelecting {
@@ -135,6 +146,13 @@ public struct MobileStoreHabitsView: View {
     } message: {
       Text(String(localized: "habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: MobileL10n.bundle))
     }
+    #if DEBUG
+      .onAppear {
+        if let query = MobileSearchDebugState.takeInitialQuery(for: .habits) {
+          searchQuery = query
+        }
+      }
+    #endif
     .accessibilityIdentifier("mobileHabits.root")
   }
 
@@ -153,13 +171,15 @@ public struct MobileStoreHabitsView: View {
               editingHabit = $0
             },
             deleteHabit: { await store.deleteHabit($0) },
+            archiveHabit: { await store.setHabitArchived($0, archived: true) },
             complete: { await store.completeHabit($0) },
             reset: { await store.uncompleteHabit($0) },
             searchQuery: searchQuery,
             detailRoute: { .habit($0.id) }
           )
+          archivedSection
         } else {
-          Section(String(localized: "destination.habits", defaultValue: "Habits", table: "Localizable", bundle: MobileL10n.bundle)) {
+          Section {
             MobileSkeletonRows(count: 4, showsTrailingDetail: true)
           }
         }
@@ -171,7 +191,11 @@ public struct MobileStoreHabitsView: View {
     MobileAdaptiveListDetail(selection: habitSelection) {
       regularList
     } detail: { id in
-      if let habit = activeHabits.first(where: { $0.id == id }) {
+      // Resolve from the UNFILTERED active set: an active search filters
+      // `activeHabits`, and resolving detail from it would blank the open habit's
+      // detail pane to the placeholder just because the user typed a non-matching
+      // query — matching how Tasks/Lists/Memory keep their detail during search.
+      if let habit = allActiveHabits.first(where: { $0.id == id }) {
         detailPanel(for: habit)
       } else {
         placeholder
@@ -183,15 +207,16 @@ public struct MobileStoreHabitsView: View {
 
   private var regularList: some View {
     List(selection: habitSelection) {
-      Section(String(localized: "destination.habits", defaultValue: "Habits", table: "Localizable", bundle: MobileL10n.bundle)) {
+      Section {
         if store.habits == nil {
           MobileSkeletonRows(count: 4, showsTrailingDetail: true)
         } else if allActiveHabits.isEmpty {
-          ContentUnavailableView(
-            String(localized: "habits.empty.no_active", defaultValue: "No Active Habits", table: "Localizable", bundle: MobileL10n.bundle),
-            systemImage: "repeat")
+          MobileEmptyState(
+            icon: "repeat",
+            title: String(localized: "habits.empty.no_active", defaultValue: "No Active Habits", table: "Localizable", bundle: MobileL10n.bundle),
+            message: String(localized: "habits.empty.no_active.message", defaultValue: "Tap ＋ to start a habit you want to build.", table: "Localizable", bundle: MobileL10n.bundle))
         } else if activeHabits.isEmpty {
-          ContentUnavailableView.search(text: searchQuery)
+          MobileEmptyState.search(text: searchQuery)
         } else {
           ForEach(activeHabits) { habit in
             habitCatalogRow(habit)
@@ -202,10 +227,12 @@ public struct MobileStoreHabitsView: View {
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 habitCompletionAction(habit)
                 habitDeleteAction(habit)
+                habitArchiveAction(habit)
               }
               .contextMenu {
                 habitCompletionAction(habit)
                 habitEditAction(habit)
+                habitArchiveAction(habit)
                 habitDeleteAction(habit)
               }
               .tag(habit.id)
@@ -213,7 +240,14 @@ public struct MobileStoreHabitsView: View {
         }
         // No inline "New Habit" row — the toolbar ＋ is the single add affordance.
       }
+      if !isBatchSelecting {
+        archivedSection
+      }
     }
+    // Focusable like the Tasks list, so a selected row shows the focus
+    // system's quiet fill; the accent fill of a list outside the focus system
+    // hides the row's own tint and its trailing control.
+    .focusable()
   }
 
   /// Batch mode wraps the whole row in one toggle button (the ring is passive);
@@ -263,6 +297,7 @@ public struct MobileStoreHabitsView: View {
         editingHabit = habit
       },
       deleteHabit: { await store.deleteHabit(habit) },
+      archiveHabit: { await store.setHabitArchived(habit, archived: true) },
       complete: { await store.completeHabit(habit) },
       reset: { await store.uncompleteHabit(habit) },
       addReminder: { time in await store.addHabitReminder(habitID: habit.id, time: time) },
@@ -279,11 +314,20 @@ public struct MobileStoreHabitsView: View {
     }
   }
 
+  /// The archived habits that match the search, below the active catalog.
+  private var archivedSection: some View {
+    MobileHabitArchivedSection(
+      habits: LorvexCatalogSearch.habits(store.archivedHabits, query: searchQuery),
+      isMutating: store.isMutatingHabit || store.isDeletingHabit,
+      restore: { habit in Task { await store.setHabitArchived(habit, archived: false) } },
+      requestDelete: { confirmingDeleteHabit = $0 })
+  }
+
   private var placeholder: some View {
     ContentUnavailableView {
       Label(String(localized: "habits.detail.empty.title", defaultValue: "Select a Habit", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "repeat")
     } description: {
-      Text(String(localized: "habits.detail.empty.description", defaultValue: "Choose a habit to review its progress and update today's completion.", table: "Localizable", bundle: MobileL10n.bundle))
+      Text(String(localized: "habits.detail.empty.description", defaultValue: "Choose a habit to see its progress.", table: "Localizable", bundle: MobileL10n.bundle))
     }
   }
 
@@ -311,19 +355,21 @@ public struct MobileStoreHabitsView: View {
       habit.name)
   }
 
-  private var habitIDs: [LorvexHabit.ID] {
-    activeHabits.map(\.id)
+  private var allActiveHabitIDs: [LorvexHabit.ID] {
+    allActiveHabits.map(\.id)
   }
 
+  // Batch actions operate on the full selection, not just the search-visible
+  // subset — the selection persists across a search used to find more habits.
   private var incompleteBatchHabitIDs: [LorvexHabit.ID] {
-    activeHabits
+    allActiveHabits
       .filter { batchSelectedHabitIDs.contains($0.id) }
       .filter { $0.completionsToday < $0.targetCount }
       .map(\.id)
   }
 
   private var completedBatchHabitIDs: [LorvexHabit.ID] {
-    activeHabits
+    allActiveHabits
       .filter { batchSelectedHabitIDs.contains($0.id) }
       .filter { $0.completionsToday > 0 }
       .map(\.id)
@@ -347,7 +393,9 @@ public struct MobileStoreHabitsView: View {
   }
 
   private func pruneBatchSelection() {
-    let liveIDs = Set(activeHabits.map(\.id))
+    // Intersect with the UNFILTERED set: a search must never drop a selection,
+    // only a genuinely removed/archived habit should.
+    let liveIDs = Set(allActiveHabits.map(\.id))
     batchSelectedHabitIDs = batchSelectedHabitIDs.intersection(liveIDs)
   }
 

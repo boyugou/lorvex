@@ -49,7 +49,7 @@ private struct MobileRecurringCancelDialogModifier: ViewModifier {
       }
       Button(
         String(
-          localized: "recurring_cancel.keep", defaultValue: "Don't Cancel", table: "Localizable",
+          localized: "recurring_cancel.keep", defaultValue: "Don’t Cancel", table: "Localizable",
           bundle: MobileL10n.bundle), role: .cancel
       ) {
         store.pendingRecurringCancelTaskID = nil

@@ -22,9 +22,7 @@ extension AppStore {
       Task { [weak self] in await self?.observeDatabaseChangeSignal() },
       Task { [weak self] in await self?.observeCloudKitAccountChanges() },
       Task { [weak self] in await self?.observeCalendarDayChange() },
-      // One immediate launch attempt pays off a `.deleted` barrier whose prior
-      // physical cleanup was interrupted even when ordinary sync remains off.
-      Task { [weak self] in await self?.retryPendingCloudDataDeletionCleanup() },
+      Task { [weak self] in await self?.connectCloudSyncReports() },
     ]
     rescheduleLogicalDayBoundaryWake()
   }
@@ -45,13 +43,11 @@ extension AppStore {
     }
   }
 
-  /// Resets sync identity when the signed-in iCloud account changes. CloudKit
-  /// posts `CKAccountChanged` on sign-in/sign-out/account switch; on it the
-  /// registered-subscription flag is process/account scoped, so it is reset and
-  /// the next `refresh` re-subscribes. Checkpoints are already account+generation
-  /// qualified: a switch pauses, and explicit adoption clears the old lineage
-  /// rather than destroying a valid checkpoint on a same-account notification.
-  /// Runs for the app's lifetime via
+  /// Re-evaluates CloudKit when the signed-in iCloud account changes. CloudKit
+  /// posts `CKAccountChanged` on sign-in, sign-out, and account switch. The
+  /// controller compares the account with the one the local data last synced
+  /// with: the same account resumes, a different one pauses until the user
+  /// chooses to sync with it. Runs for the app's lifetime via
   /// `startLifetimeObserversIfNeeded`.
   func observeCloudKitAccountChanges() async {
     let stream = NotificationCenter.default.notifications(named: .CKAccountChanged)
@@ -60,50 +56,21 @@ extension AppStore {
     }
   }
 
-  /// Performs the account-change identity gate and invalidates process-local
-  /// subscription state. An unchanged/first account immediately re-enters the
-  /// ordinary refresh path to re-register and drain; a real switch stays paused.
-  /// Best-effort — a gate-state failure is recorded, never thrown, matching the
-  /// silent-sync contract.
+  /// Re-evaluates the controller and publishes its state; a running
+  /// controller then syncs through the ordinary refresh.
   func handleCloudKitAccountChange() async {
-    hasRegisteredSubscription = false
-    // A new identity starts fresh: clear breaker/backoff for the new account.
-    cloudSyncPacing.reset()
-    guard cloudSyncMode == .live else { return }
-    guard let cloudSyncCoordinator else { return }
-    var shouldResumeSameAccountSync = false
-    do {
-      // A switch never copies this device's data into the newly observed Apple
-      // ID. It closes the account gate until explicit adoption; a same-account
-      // notification leaves the qualified checkpoint intact.
-      let decision = try await cloudSyncCoordinator.handleAccountChange()
-      shouldResumeSameAccountSync = decision == .backfilled
-      if decision == .backfillFailed {
-        lastCloudSyncRemoteChangeErrorMessage = await cloudSyncUserFacingErrorMessage(
-          forMessage: "CloudKit full-resync backfill failed; sync is paused until retry.",
-          source: "macos.cloud_sync.account_change")
-      } else {
-        lastCloudSyncRemoteChangeErrorMessage = nil
-      }
-    } catch {
-      lastCloudSyncRemoteChangeErrorMessage = await cloudSyncUserFacingErrorMessage(
-        for: error, source: "macos.cloud_sync.account_change")
-    }
-    // Surface a durable pause the account change may have set (a switch to a
-    // different Apple ID) so Settings can offer the adopt action.
-    await refreshCloudSyncPauseReason()
-    // CKAccountChanged is also the only deterministic recovery signal after a
-    // retry wake discovers that iCloud is temporarily unavailable and cancels
-    // itself. For the unchanged/first account, immediately re-enter the normal
-    // refresh single-flight: it re-registers the subscription and starts one
-    // ordinary coordinator drain with freshly reset pacing. A real account
-    // switch or user-deleted zone remains paused and deliberately does not run.
-    if shouldResumeSameAccountSync {
-      // The coordinator gate may have waited behind an in-flight cycle that
-      // recorded a failure after the notification's eager reset above. Reset at
-      // the actual recovery edge as well so this refresh is not paced off.
-      cloudSyncPacing.reset()
-      await refresh()
+    guard cloudSyncMode == .live, let cloudSyncController else { return }
+    let state = await cloudSyncController.handleAccountChange()
+    await applyCloudSyncControllerState(state)
+    if state == .running { await refresh() }
+  }
+
+  /// Hands the reports of syncs the engine starts on its own (a push, the
+  /// system scheduler, a retry) to the same completion path as an explicit
+  /// cycle. Runs once via `startLifetimeObserversIfNeeded`.
+  func connectCloudSyncReports() async {
+    await cloudSyncController?.setReportHandler { [weak self] report in
+      await self?.handleCompletedCloudSyncReport(report)
     }
   }
 
@@ -141,12 +108,11 @@ extension AppStore {
     let stream = NotificationCenter.default.notifications(
       named: NSApplication.didBecomeActiveNotification)
     for await _ in stream {
-      // A deliberate return to the app is an explicit reset point for the sync
-      // circuit breaker: clear any open breaker / backoff so the refresh's
-      // cycle attempts immediately rather than staying wedged behind a stale
-      // failure window (e.g. failures accumulated offline, now back online).
-      cloudSyncPacing.reset()
-      await retryPendingCloudDataDeletionCleanup()
+      // iCloud may have become usable while the app was in the background
+      // (signed in, network back); re-evaluate an unavailable controller.
+      if case .unavailable = await cloudSyncController?.state {
+        await handleCloudKitAccountChange()
+      }
       await refresh()
     }
   }
@@ -188,7 +154,7 @@ extension AppStore {
       } else {
         toastMessage = String(
           localized:
-            "notification.action.failed", defaultValue: "Couldn't perform that action.",
+            "notification.action.failed", defaultValue: "Couldn’t perform that action.",
           table: "Localizable",
           bundle: LorvexL10n.bundle)
       }
@@ -201,143 +167,84 @@ extension AppStore {
   func observeRemoteChanges() async {
     let stream = NotificationCenter.default.notifications(named: .lorvexCloudKitRemoteChange)
     for await _ in stream {
-      // `refresh()` runs the sync cycle via `publishAppleSyncSurfaces`, so a
-      // push notification just triggers a refresh — no separate cycle call.
+      // `refresh()` ends with a sync cycle, so a push notification just
+      // triggers a refresh — no separate cycle call.
       await refresh()
     }
   }
 
-  /// Run the invisible sync, draining the inbound backlog and pacing failures,
-  /// off the main actor. Best-effort: account-gating and errors are recorded in
-  /// the status fields and never thrown — sync is silent. No-ops when sync is
-  /// off / iCloud is unavailable.
-  ///
-  /// Pacing gates *when* a cycle runs without changing the silent contract:
-  ///
-  /// - Before running, `cloudSyncPacing.shouldRun` skips the trigger while the
-  ///   previous attempts are in their backoff window or the circuit breaker is
-  ///   open (after 20 consecutive failures). A single app-owned task wakes at
-  ///   the next retry/deferred-work deadline; the breaker itself is reset
-  ///   explicitly on account change and app activation.
-  /// - `runDrainingCycle` loops until `moreInboundComing` is false, so a large
-  ///   remote backlog drains in one trigger instead of one page per trigger.
-  /// - A nil report is classified after refreshing the durable pause and live
-  ///   account status. An account/generation boundary is retried after ordinary
-  ///   backoff; an explicit unavailable account or durable pause cancels the
-  ///   wake; a transient account-status failure advances ordinary retry backoff.
-  /// - Failure (advances the backoff) means a thrown cycle error OR a report
-  ///   that made no progress while a push failed:
-  ///   `failedPushCount > 0 && pushedRecordCount == 0 && fetchedRecordCount == 0`.
-  ///   Any progress (a push confirmed or a record fetched) counts as success
-  ///   and resets the failure count.
+  /// Runs one CloudKit pass: fetch, then send. Best-effort and silent: the
+  /// outcome lands in the status fields and is never thrown. Starts the
+  /// controller first when it has not started yet; a no-op while sync is off.
+  /// Retries, throttling, and push-triggered syncs belong to `CKSyncEngine`,
+  /// so this only runs on local triggers (a refresh after a local write, app
+  /// activation, an account change).
   func runCloudSyncCycle() async {
     await cloudSyncCycleFlight.run {
       await runCloudSyncCycleBody()
     }
   }
 
-  /// One gated CloudKit pass. ``runCloudSyncCycle()`` owns coalescing around
-  /// this body so a trigger arriving at any suspension point requests a
-  /// serialized trailing pass rather than starting a competing coordinator
-  /// operation or disappearing.
   private func runCloudSyncCycleBody() async {
-    guard cloudSyncMode == .live else {
-      cancelCloudSyncRetryWake()
-      return
+    guard cloudSyncMode == .live, let cloudSyncController else { return }
+    // Stopped, failed, or waiting for iCloud: evaluate again, so a transient
+    // failure or a returning account recovers on the next pass. A pause waits
+    // for the user.
+    switch await cloudSyncController.state {
+    case .running, .paused: break
+    case .stopped, .unavailable, .failed:
+      await applyCloudSyncControllerState(await cloudSyncController.start())
     }
-    guard let cloudSyncCoordinator else {
-      cancelCloudSyncRetryWake()
-      return
-    }
-    let snapshotCore = core
-    guard snapshotCore is any EnvelopeSyncServicing else {
-      cancelCloudSyncRetryWake()
-      return
-    }
-    let now = self.now()
-    // ±10% jitter to desynchronize backoff across devices.
-    guard cloudSyncPacing.shouldRun(now: now, jitterFraction: Double.random(in: -1...1)) else {
-      updateCloudSyncRetryWake(after: nil, retryCurrentWork: true)
-      return
-    }
-    cloudSyncPacing.recordAttempt(now: now)
-
     do {
-      // CloudKit I/O + apply transactions run off @MainActor in a detached task.
       let report = try await Task.detached(priority: .utility) {
         let signpost = LorvexSignpost.begin(.cloudSync)
         defer { LorvexSignpost.end(signpost) }
-        return try await cloudSyncCoordinator.runDrainingCycle(core: snapshotCore)
+        return try await cloudSyncController.syncNow()
       }.value
-      // Surface any durable pause the cycle just set (a closed-app account
-      // switch or an external zone deletion is detected inside the cycle) or
-      // cleared, so the Settings notice stays current.
-      await refreshCloudSyncPauseReason()
-      // A nil report is deliberately ambiguous at the coordinator API: it can
-      // mean a durable pause/account loss, or a safe account/generation boundary
-      // abort whose local outbox rows remain pending. Re-prove the live account
-      // here before deciding whether the app-owned wake can be discarded.
       guard let report else {
-        await reconcileCloudSyncRetryWakeAfterNilReport(using: cloudSyncCoordinator)
+        await applyCloudSyncControllerState(await cloudSyncController.state)
         return
       }
-      lastCloudSyncCycleReport = report
-      if Self.cloudSyncCycleMadeNoProgress(report) {
-        cloudSyncPacing.recordFailure()
-        lastCloudSyncRemoteChangeErrorMessage = await cloudSyncUserFacingErrorMessage(
-          forMessage: "CloudKit push failed without making progress",
-          source: "macos.cloud_sync.cycle")
-      } else {
-        cloudSyncPacing.recordSuccess()
-        lastCloudSyncRemoteChangeSucceededAt = now
-        lastCloudSyncRemoteChangeErrorMessage = nil
-      }
-      await reconcileSurfacesAfterCompletedCloudSyncCycle(report)
-      updateCloudSyncRetryWake(after: report, retryCurrentWork: false)
+      await handleCompletedCloudSyncReport(report)
     } catch {
-      if let partial = error as? CloudSyncPartialCycleFailure {
-        lastCloudSyncCycleReport = partial.partialReport
-        await reconcileSurfacesAfterCompletedCloudSyncCycle(partial.partialReport)
-      }
-      await refreshCloudSyncPauseReason()
-      // A CloudKit `.requestRateLimited` / `.serviceUnavailable` names the
-      // earliest instant the server will accept a retry; honor it as a throttle
-      // that survives the next push/activation reset, so a user trigger cannot
-      // stampede past an active server rate limit.
-      if let retryAfter = CloudSyncTransientClassifier.serverRetryAfter(error) {
-        cloudSyncPacing.recordServerThrottle(retryAfter: retryAfter, now: now)
-      }
-      cloudSyncPacing.recordFailure()
       lastCloudSyncRemoteChangeErrorMessage = await cloudSyncUserFacingErrorMessage(
         for: error, source: "macos.cloud_sync.cycle")
-      updateCloudSyncRetryWake(
-        after: (error as? CloudSyncPartialCycleFailure)?.partialReport,
-        retryCurrentWork: true)
+      await applyCloudSyncControllerState(await cloudSyncController.state)
     }
   }
 
-  private func reconcileCloudSyncRetryWakeAfterNilReport(
-    using coordinator: CloudSyncEngineCoordinator
-  ) async {
-    guard cloudSyncPauseReason == nil else {
-      cancelCloudSyncRetryWake()
-      return
-    }
-    let availability =
-      (try? await coordinator.accountChecker.checkAccountStatus()) ?? .couldNotDetermine
-    cloudKitAccountAvailability = availability
-    switch availability {
-    case .available:
-      // The cycle crossed a peer account/generation transition without
-      // consuming its local results. Back off before re-reading authority, but
-      // preserve an app-owned wake even if the notification is lost.
-      cloudSyncPacing.recordFailure()
-      updateCloudSyncRetryWake(after: nil, retryCurrentWork: true)
-    case .couldNotDetermine, .temporarilyUnavailable:
-      cloudSyncPacing.recordFailure()
-      updateCloudSyncRetryWake(after: nil, retryCurrentWork: true)
-    case .noAccount, .restricted:
-      cancelCloudSyncRetryWake()
+  /// Records a completed pass and reloads what it changed.
+  func handleCompletedCloudSyncReport(_ report: CloudSyncCycleReport) async {
+    lastCloudSyncCycleReport = report
+    lastCloudSyncRemoteChangeSucceededAt = now()
+    lastCloudSyncRemoteChangeErrorMessage =
+      report.iCloudStorageFull
+      ? String(
+        localized: "settings.cloud_sync.storage_full",
+        defaultValue: "Your iCloud storage is full. Lorvex will finish syncing when there’s space.",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+      : nil
+    await reconcileSurfacesAfterCompletedCloudSyncCycle(report)
+  }
+
+  /// Publishes the controller's state to the status surfaces. A failure's
+  /// technical detail goes to the diagnostics log; the status row gets the
+  /// user-facing message.
+  func applyCloudSyncControllerState(_ state: CloudSyncControllerState) async {
+    switch state {
+    case .stopped:
+      break
+    case .running:
+      cloudKitAccountAvailability = .available
+      cloudSyncPauseReason = nil
+    case .unavailable(let availability):
+      cloudKitAccountAvailability = availability
+    case .paused(let reason):
+      cloudKitAccountAvailability = .available
+      cloudSyncPauseReason = reason
+    case .failed(let detail):
+      lastCloudSyncRemoteChangeErrorMessage = await cloudSyncUserFacingErrorMessage(
+        forMessage: detail, source: "macos.cloud_sync.controller")
     }
   }
 
@@ -357,55 +264,29 @@ extension AppStore {
     // state. A server winner can arrive through the outbound conflict path, so
     // canonical changes must trigger adoption even when CloudKit fetched no
     // page. Fetched-but-unattributable pages conservatively request a full read.
-    if report.fetchedRecordCount > 0 || !report.inbound.appliedEntityTypes.isEmpty {
-      if isRefreshing {
-        // A refresh fan-out is in flight (this cycle runs at its tail) and
-        // already read every UI surface from the PRE-apply state. Bring the
-        // just-applied records onto the surfaces that read them:
-        //
-        // - When the apply attributes its changes to a bounded set of domains,
-        //   reload ONLY those inline (`performSelectiveInboundReload`) — a
-        //   habits-only push re-reads habits, not the task workspace / lists /
-        //   calendar / reviews. The inline reload runs before this cycle returns,
-        //   so the records reach the UI in the same refresh without a full rerun.
-        // - Otherwise (records fetched but not cleanly attributable — all
-        //   foreign / skipped, or a diffuse `preference` change) request a full
-        //   trailing rerun through the single-flight `refresh()` loop, which
-        //   re-reads every surface, republishes the widget, and re-plans
-        //   reminders/badge. Any number of such records collapse into this one
-        //   pending rerun (`runDrainingCycle` already drained the backlog, so the
-        //   rerun's own cycle fetches nothing), so the loop converges after a
-        //   single extra fan-out instead of stampeding.
-        if let domains = InboundReloadScope.domains(for: report.inbound.appliedEntityTypes) {
-          await performSelectiveInboundReload(domains)
-        } else {
-          refreshFlight.requestRerun()
-        }
-      } else {
-        // No refresh is in flight (typically the post-local-mutation outbox
-        // drain), so the primary UI needs the same domain-selective adoption —
-        // not merely a reminder/badge recompute. Otherwise a concurrent remote
-        // habit/list/memory edit commits locally yet remains absent from the
-        // open workspace. The selective executor already republishes every
-        // affected derived surface. An unattributable batch falls back to one
-        // full refresh; its tail sync call observes this cycle's running-id
-        // guard and returns, so it cannot recurse.
-        if let domains = InboundReloadScope.domains(for: report.inbound.appliedEntityTypes) {
-          await performSelectiveInboundReload(domains)
-        } else {
-          await refresh()
-        }
-      }
+    guard report.fetchedRecordCount > 0 || !report.inbound.appliedEntityTypes.isEmpty else {
+      return
     }
-  }
-
-  /// A cycle "made no progress" — the backoff predicate for a non-nil report —
-  /// when a push failed and neither direction advanced: nothing pushed and
-  /// nothing fetched. A push throw is folded into `failedPushCount` by the
-  /// coordinator (it is not re-thrown), so this is the report-shaped half of
-  /// the failure predicate; the thrown-error half is handled in the `catch`.
-  static func cloudSyncCycleMadeNoProgress(_ report: CloudSyncCycleReport) -> Bool {
-    report.failedPushCount > 0 && report.pushedRecordCount == 0 && report.fetchedRecordCount == 0
+    if isRefreshing {
+      // A local pass is running beside this cycle and may already have read
+      // some surfaces from the pre-apply state. Reloading next to it could let
+      // its older reads land after newer ones, so arm one trailing pass of the
+      // same single-flight instead; that pass re-reads every surface.
+      refreshFlight.requestRerun()
+    } else if let domains = InboundReloadScope.domains(for: report.inbound.appliedEntityTypes) {
+      // A bounded set of domains reloads selectively: a habits-only push
+      // re-reads habits, not the task workspace, lists, calendar, or reviews.
+      // The selective executor republishes every affected derived surface.
+      await performSelectiveInboundReload(domains)
+    } else {
+      // Records fetched but not cleanly attributable (typically this device's
+      // own pushed records coming back, all skipped as already applied) or a
+      // diffuse `preference` change: re-read every local surface. This runs
+      // inside the cycle, so it must be the local-only reload. `refresh()` ends
+      // by waiting on the sync cycle, and waiting on the cycle that is running
+      // this code would leave both single-flights waiting on each other.
+      await refreshLocalSurfaces()
+    }
   }
 
   func replaceCore(
@@ -426,37 +307,26 @@ extension AppStore {
     }
   }
 
-  /// Registers the private-database push subscription the first time only.
-  /// Registration is an idempotent CloudKit upsert; the flag avoids re-issuing it
-  /// on every refresh, and a failure is recorded (never thrown) with the flag left
-  /// false so the next refresh retries. `refresh` calls this after the local
-  /// fan-out — so a slow or offline network never blocks the first paint — and the
-  /// account-change handler resets the flag so the next refresh re-subscribes under
-  /// the new identity. No-op (succeeds silently) when sync is off (the injected
-  /// subscriber is the `NoOp` one).
-  func registerCloudSyncSubscriptionIfNeeded() async {
-    guard !hasRegisteredSubscription else { return }
-    do {
-      try await cloudSyncSubscriber.registerSubscription()
-      hasRegisteredSubscription = true
-      lastCloudSyncSubscriptionErrorMessage = nil
-    } catch {
-      lastCloudSyncSubscriptionErrorMessage = await cloudSyncUserFacingErrorMessage(
-        for: error, source: "macos.cloud_sync.subscription")
-    }
-  }
-
-  /// Runs the full refresh fan-out under the shared `refreshFlight`, coalescing
-  /// concurrent triggers.
+  /// Reloads every local surface, then converges with iCloud.
   ///
-  /// A trigger arriving while a refresh is in flight (a database-change signal,
-  /// `didBecomeActive`, or a CloudKit push, each from its own stream) arms one
-  /// trailing rerun and returns at once instead of starting a
-  /// parallel fan-out; the in-flight refresh reruns exactly once after it
-  /// completes. Any number of pending triggers collapse into a single rerun, so a
-  /// write that committed after the in-flight refresh started its reads is picked
-  /// up rather than staying stale until the next unrelated trigger. The coalesced
-  /// caller does not await the in-flight run (`refresh()` returns no result), so a
+  /// A refresh has two halves. The local pass (``performLocalRefresh()``) reads
+  /// every surface from the on-disk store and republishes the derived surfaces;
+  /// it runs under the shared `refreshFlight`. The sync tail
+  /// (``runRefreshSyncTail()``) runs retention and one coalesced CloudKit
+  /// cycle; it runs only after the local pass
+  /// has released the flight. A slow, offline, or stalled CloudKit exchange
+  /// therefore never delays the next local reload: a helper-process write
+  /// (the MCP host, a widget) reaches the UI as soon as its change signal lands.
+  ///
+  /// A trigger arriving while a local pass is in flight (a database-change
+  /// signal, `didBecomeActive`, or a CloudKit push, each from its own stream)
+  /// arms one trailing local pass and returns at once; any number of such
+  /// triggers collapse into that one pass, so a write that committed after the
+  /// in-flight pass started its reads is still picked up. The leader runs the
+  /// sync tail after the trailing pass, which pushes whatever those writes
+  /// queued. A pass started inside a sync cycle has no tail of its own, so the
+  /// coalesced trigger also arms one trailing cycle pass while a cycle runs.
+  /// The coalesced caller does not await the in-flight run, so a
   /// notification-observer loop stays free to receive its next trigger.
   /// Re-entrancy-safe on `@MainActor`: the running/pending flags are read and
   /// written without an intervening suspension before the guard.
@@ -464,34 +334,47 @@ extension AppStore {
     guard !isLocalFactoryResetRunning else { return }
     guard !isRefreshing else {
       refreshFlight.requestRerun()
+      if isCloudSyncCycleRunning { cloudSyncCycleFlight.requestRerun() }
       return
     }
-    await refreshFlight.run(body: { await performRefresh() })
+    await refreshFlight.run(body: { await performLocalRefresh() })
+    await runRefreshSyncTail()
   }
 
   /// Awaitable refresh seam for a caller that must not report completion until
-  /// a fan-out that observed its preceding write has settled. Ordinary observer
-  /// triggers intentionally return immediately when coalesced; destructive or
-  /// multi-record workflows use this variant so their shared busy fence covers
-  /// the trailing rerun as well.
+  /// a local pass that observed its preceding write has settled, followed by
+  /// the sync tail. Ordinary observer triggers intentionally return immediately
+  /// when coalesced; destructive or multi-record workflows use this variant so
+  /// their shared busy fence covers the trailing pass as well.
   func refreshAndWaitForLatest() async {
-    await refreshFlight.run(body: { await performRefresh() })
+    await refreshFlight.run(body: { await performLocalRefresh() })
+    await runRefreshSyncTail()
   }
 
-  private func performRefresh() async {
+  /// Re-reads every local surface under the refresh single-flight, with no
+  /// sync tail. A sync cycle uses this to adopt a fetched page it cannot
+  /// attribute to specific domains: the cycle is already running, and a full
+  /// ``refresh()`` would end by waiting on it.
+  func refreshLocalSurfaces() async {
+    guard !isLocalFactoryResetRunning else { return }
+    await refreshFlight.run(body: { await performLocalRefresh() })
+  }
+
+  /// The network half of a refresh, run after the local pass has released
+  /// `refreshFlight`: local retention, then one sync cycle that pulls peer
+  /// changes and sends the outbox. Errors land in the cycle's status fields;
+  /// sync is invisible and best-effort.
+  private func runRefreshSyncTail() async {
+    await runLocalRetentionMaintenance()
+    await runCloudSyncCycle()
+  }
+
+  /// Reads and publishes every local surface. Performs no network work, so an
+  /// offline or slow-network launch shows on-disk data immediately, and it
+  /// never waits on the CloudSync operation gate.
+  private func performLocalRefresh() async {
     let signpost = LorvexSignpost.begin(.refreshTotal)
     defer { LorvexSignpost.end(signpost) }
-    // Retention must not depend on successful UI reads or a live CloudKit apply.
-    // Run its always-safe subset at the start of every foreground refresh;
-    // only a non-live configured mode may shed an oversized active outbox.
-    await runLocalRetentionMaintenance()
-    // Load and render the local surfaces FIRST — before ANY network work,
-    // including CloudKit push-subscription registration, which makes a real
-    // network request on the first cold-start refresh (`hasRegisteredSubscription`
-    // is process-local). So an offline or slow-network launch shows on-disk data
-    // immediately instead of freezing the first paint until the network returns,
-    // matching the iPhone refresh. The subscription is registered after this
-    // fan-out, just before the push+pull cycle in `publishAppleSyncSurfaces`.
     do {
       // Snapshot the detail draft before any awaited read. A peer can move,
       // complete, defer, or delete the selected task while the user is typing;
@@ -502,13 +385,11 @@ extension AppStore {
       // Today is the atomic source of the product logical day/timezone. Load it
       // first, then fan out every other day-scoped read using that exact key;
       // deriving `date` from the Mac clock could pair a Jul-21 Today snapshot
-      // with Jul-20 focus/habits when the configured zone crosses midnight first.
+      // with Jul-20 habits when the configured zone crosses midnight first.
       today = try await core.loadToday()
       rescheduleLogicalDayBoundaryWake()
       let date = logicalTodayDateString
       surfaceDatabaseRecoveryNoticeIfNeeded()
-      async let loadedCurrentFocus = core.loadCurrentFocus(date: date)
-      async let loadedFocusSchedule = core.loadFocusSchedule(date: date)
       // The Reviews surface's Day scope may be showing a past day (editable or
       // read-only); refresh reloads the selected day, not today's.
       async let loadedDailyReview = core.loadDailyReview(date: dailyReviewEditorDate)
@@ -524,8 +405,6 @@ extension AppStore {
       async let loadedHabits = core.loadHabits(date: date)
       async let loadedRuntimeDiagnostics = try? core.loadRuntimeDiagnostics()
 
-      currentFocus = try await loadedCurrentFocus
-      focusSchedule = try await loadedFocusSchedule
       // Keep an in-progress daily review the user is typing — only adopt the
       // freshly-loaded values when the draft has no unsaved edits.
       let dailyReviewWasClean = dailyReviewDraftMatchesLoaded
@@ -588,24 +467,18 @@ extension AppStore {
         _ = await (taskIndex, reminderSchedule, badge)
       }
       await contentIndex
-      // The local surfaces are loaded and rendered; NOW touch the network.
-      // Register the push subscription (first cold-start refresh only) before the
-      // push+pull cycle that `publishAppleSyncSurfaces` runs, so a slow or offline
-      // network delays sync convergence but never the first paint.
-      await registerCloudSyncSubscriptionIfNeeded()
-      // Publishing the widget snapshot and draining the sync outbox is a
-      // secondary, best-effort surface: a malformed sync entry (e.g. one that
-      // fails title validation) must never wipe the freshly-loaded primary UI or
-      // raise a modal on launch. Its own status fields record any failure.
-      await publishAppleSyncSurfaces()
-      // Re-evaluate after indexing/scheduling/network awaits: the user may have
+      // The widget snapshot is a derived, best-effort surface: a missing or
+      // corrupt App-Group sidecar or a transient file-lock failure must never
+      // wipe the freshly loaded primary UI or raise a modal on launch.
+      try? await publishWidgetSnapshot()
+      // Re-evaluate after the indexing/scheduling awaits: the user may have
       // started typing after the earlier reconciliation. A clean inspector must
       // force-adopt peer changes even when its draft is already bound to the same
       // task id; the ordinary non-force sync deliberately no-ops in that case.
       if dirtyTaskIDToPreserve(after: taskDetailReload) != selectedTaskID {
         syncSelectedTaskDraft(force: true)
       }
-      errorMessage = nil
+      clearRefreshFailure()
     } catch {
       // A recovering open may have set aside a database before this failure (or
       // an unrelated later load failed after a clean recovery); surface the
@@ -613,7 +486,7 @@ extension AppStore {
       // fatal open, is the `unrecoverable` fatal copy rather than "try again".
       surfaceDatabaseRecoveryNoticeIfNeeded()
       clearLoadedStateAfterRefreshFailure()
-      await presentUserFacingError(error)
+      await presentRefreshFailure(error)
     }
   }
 

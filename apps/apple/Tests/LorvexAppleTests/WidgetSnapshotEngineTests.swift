@@ -17,7 +17,6 @@ struct WidgetSnapshotEngineTests {
 
   private func makeToday(taskID: String, title: String) -> TodaySnapshot {
     TodaySnapshot(
-      focusTitle: "Today",
       summary: "",
       tasks: [
         makePublisherWidgetTask(
@@ -54,8 +53,7 @@ struct WidgetSnapshotEngineTests {
     )
 
     let published = try await engine.publish(
-      today: makeToday(taskID: "task-engine", title: "Write via engine"),
-      currentFocus: nil
+      today: makeToday(taskID: "task-engine", title: "Write via engine")
     )
 
     guard case .snapshot(let loaded) = WidgetSnapshotLoader().loadSnapshot(at: url) else {
@@ -63,7 +61,7 @@ struct WidgetSnapshotEngineTests {
       return
     }
     #expect(loaded == published)
-    #expect(loaded.focusTasks.map(\.id) == ["task-engine"])
+    #expect(loaded.tasks.map(\.id) == ["task-engine"])
     #expect(reloadCount.value == 1)
     #expect(snapshotExistedAtReload.value)
   }
@@ -81,11 +79,10 @@ struct WidgetSnapshotEngineTests {
     )
 
     let published = try await engine.publish(
-      today: makeToday(taskID: "task-noop", title: "No disk write"),
-      currentFocus: nil
+      today: makeToday(taskID: "task-noop", title: "No disk write")
     )
 
-    #expect(published.focusTasks.map(\.id) == ["task-noop"])
+    #expect(published.tasks.map(\.id) == ["task-noop"])
     #expect(reloadCount.value == 1)
   }
 
@@ -116,7 +113,6 @@ struct WidgetSnapshotEngineTests {
 
     let published = try await engine.publish(
       today: makeToday(taskID: "task-mirror", title: "Mirror me"),
-      currentFocus: nil,
       habitCatalog: nil,
       lists: lists
     )
@@ -126,10 +122,14 @@ struct WidgetSnapshotEngineTests {
     #expect(received.lists.map(\.id) == ["list-1"])
   }
 
-  @Test("refresh loads today/focus/habits/lists from core and reloads once")
+  @Test("refresh loads today/habits/lists from core and reloads once")
   func refreshLoadsFromCore() async throws {
     let core = try await makeSeededInMemoryCore()
-    let task = try await core.createTask(title: "Loaded from core", notes: "")
+    // Planned on the day the refresh below asks for, so the task is on that
+    // day's list — which is what `tasks` carries.
+    let day = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-05-23"))
+    let task = try await core.createTask(
+      TaskCreateDraft(title: "Loaded from core", plannedDate: day))
     _ = try await core.createHabit(name: "Stretch", cue: nil, targetCount: 1)
 
     let tempDirectory = FileManager.default.temporaryDirectory
@@ -146,7 +146,7 @@ struct WidgetSnapshotEngineTests {
 
     let published = try await engine.refresh(core: core, today: "2026-05-23")
 
-    #expect(published.todayTasks.contains { $0.id == task.id })
+    #expect(published.tasks.contains { $0.id == task.id })
     #expect(!published.habits.isEmpty)
     #expect(reloadCount.value == 1)
     guard case .snapshot(let loaded) = WidgetSnapshotLoader().loadSnapshot(at: url) else {
@@ -158,7 +158,7 @@ struct WidgetSnapshotEngineTests {
 
   private func snapshot(
     generatedAt: String,
-    focusTaskID: String,
+    taskID: String,
     storageGeneration: Int = 0,
     workspaceInstanceID: String = "11111111-1111-4111-8111-111111111111",
     logicalDay: String = "2026-05-23",
@@ -171,15 +171,14 @@ struct WidgetSnapshotEngineTests {
       localChangeSequence: localChangeSequence,
       timezone: "UTC",
       logicalDay: logicalDay,
-      stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 0),
+      stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 0),
       briefing: nil,
-      focusTasks: [
+      tasks: [
         .init(
-          id: focusTaskID, title: "Focus", status: "open",
+          id: taskID, title: "Task", status: "open",
           dueDate: nil, priority: 1, listID: nil, estimatedMinutes: nil)
       ],
-      habits: [],
-      todayTasks: []
+      habits: []
     )
   }
 
@@ -193,12 +192,12 @@ struct WidgetSnapshotEngineTests {
     let store = WidgetSnapshotFileStore()
     let postMidnight = snapshot(
       generatedAt: "2026-05-24T00:00:01Z",
-      focusTaskID: "new-day",
+      taskID: "new-day",
       logicalDay: "2026-05-24",
       localChangeSequence: 7)
     let delayedPreMidnight = snapshot(
       generatedAt: "2099-05-24T00:00:02Z",
-      focusTaskID: "old-day",
+      taskID: "old-day",
       logicalDay: "2026-05-23",
       localChangeSequence: 7)
 
@@ -220,7 +219,6 @@ struct WidgetSnapshotEngineTests {
       logicalDay: "2026-05-23",
       timezone: "Pacific/Kiritimati",
       today: makeToday(taskID: "captured-day", title: "Captured before midnight"),
-      currentFocus: nil,
       habits: nil,
       lists: nil,
       stats: nil)
@@ -248,10 +246,10 @@ struct WidgetSnapshotEngineTests {
 
     let store = WidgetSnapshotFileStore()
     let newer = snapshot(
-      generatedAt: "2026-05-27T10:00:00Z", focusTaskID: "newer",
+      generatedAt: "2026-05-27T10:00:00Z", taskID: "newer",
       localChangeSequence: 2)
     let older = snapshot(
-      generatedAt: "2099-05-27T10:00:00Z", focusTaskID: "older",
+      generatedAt: "2099-05-27T10:00:00Z", taskID: "older",
       localChangeSequence: 1)
 
     _ = try await store.write(newer, to: url)
@@ -262,7 +260,7 @@ struct WidgetSnapshotEngineTests {
       return
     }
     #expect(loaded.generatedAt == newer.generatedAt)
-    #expect(loaded.focusTasks.map(\.id) == ["newer"])
+    #expect(loaded.tasks.map(\.id) == ["newer"])
     #expect(winner == newer)
   }
 
@@ -285,7 +283,7 @@ struct WidgetSnapshotEngineTests {
 
     let store = WidgetSnapshotFileStore(lockTimeout: 0.05, lockRetryInterval: 0.005)
     let published = snapshot(
-      generatedAt: "2026-05-27T10:00:00Z", focusTaskID: "held-lock",
+      generatedAt: "2026-05-27T10:00:00Z", taskID: "held-lock",
       localChangeSequence: 3)
     do {
       _ = try await store.write(published, to: url)
@@ -306,13 +304,13 @@ struct WidgetSnapshotEngineTests {
     let store = WidgetSnapshotFileStore()
     let postReset = snapshot(
       generatedAt: "2026-05-27T10:00:01Z",
-      focusTaskID: "post-reset",
+      taskID: "post-reset",
       storageGeneration: 8,
       workspaceInstanceID: "22222222-2222-4222-8222-222222222222",
       localChangeSequence: 0)
     let stalePreReset = snapshot(
       generatedAt: "2099-05-27T10:00:00Z",
-      focusTaskID: "private-pre-reset-title",
+      taskID: "private-pre-reset-title",
       storageGeneration: 7,
       workspaceInstanceID: "11111111-1111-4111-8111-111111111111",
       localChangeSequence: 99_999)
@@ -326,7 +324,7 @@ struct WidgetSnapshotEngineTests {
       return
     }
     #expect(loaded == postReset)
-    #expect(!loaded.focusTasks.contains { $0.title == "private-pre-reset-title" })
+    #expect(!loaded.tasks.contains { $0.title == "private-pre-reset-title" })
   }
 
   @Test("a malformed file cannot pin the cache with a forged high ordering key")
@@ -346,7 +344,7 @@ struct WidgetSnapshotEngineTests {
     ).write(to: url, options: .atomic)
 
     let valid = snapshot(
-      generatedAt: "2026-05-27T10:00:01Z", focusTaskID: "valid",
+      generatedAt: "2026-05-27T10:00:01Z", taskID: "valid",
       localChangeSequence: 1)
     let winner = try await WidgetSnapshotFileStore().write(valid, to: url)
 
@@ -366,7 +364,7 @@ struct WidgetSnapshotEngineTests {
     defer { try? FileManager.default.removeItem(at: tempDirectory) }
 
     let newer = snapshot(
-      generatedAt: "2026-05-27T10:00:01Z", focusTaskID: "newer",
+      generatedAt: "2026-05-27T10:00:01Z", taskID: "newer",
       localChangeSequence: 2)
     _ = try await WidgetSnapshotFileStore().write(newer, to: url)
 
@@ -383,7 +381,7 @@ struct WidgetSnapshotEngineTests {
       logicalDay: "2026-05-23",
       timezone: "UTC",
       today: TodaySnapshot(
-        focusTitle: "Today", summary: "",
+        summary: "",
         tasks: [
           makePublisherWidgetTask(
             id: "older", title: "Older", priority: .p1,
@@ -391,7 +389,6 @@ struct WidgetSnapshotEngineTests {
         ],
         workspaceInstanceID: "11111111-1111-4111-8111-111111111111",
         localChangeSequence: 1),
-      currentFocus: nil,
       habits: nil,
       lists: nil,
       stats: nil)
@@ -416,17 +413,17 @@ struct WidgetSnapshotEngineTests {
     let store = WidgetSnapshotFileStore()
     try await store.write(
       snapshot(
-        generatedAt: "2026-05-27T10:00:00Z", focusTaskID: "first",
+        generatedAt: "2026-05-27T10:00:00Z", taskID: "first",
         localChangeSequence: 1),
       to: url)
     try await store.write(
       snapshot(
-        generatedAt: "2026-05-27T10:00:00Z", focusTaskID: "same-second",
+        generatedAt: "2026-05-27T10:00:00Z", taskID: "same-second",
         localChangeSequence: 1),
       to: url)
     try await store.write(
       snapshot(
-        generatedAt: "2026-05-27T10:00:05Z", focusTaskID: "later",
+        generatedAt: "2026-05-27T10:00:05Z", taskID: "later",
         localChangeSequence: 2),
       to: url)
 
@@ -434,29 +431,25 @@ struct WidgetSnapshotEngineTests {
       Issue.record("Expected a readable snapshot on disk")
       return
     }
-    #expect(loaded.focusTasks.map(\.id) == ["later"])
+    #expect(loaded.tasks.map(\.id) == ["later"])
   }
 
-  @Test("engine applies a persisted focus filter before projecting")
+  @Test("engine applies a persisted Focus filter before projecting")
   func appliesPersistedFocusFilter() async throws {
     let core = try await makeSeededInMemoryCore()
-    let focusTask = try await core.createTask(title: "Focused", notes: "")
-    let otherTask = try await core.createTask(title: "Unfocused", notes: "")
-    _ = try await core.addToCurrentFocus(
-      date: "2026-05-23",
-      taskIDs: [focusTask.id],
-      briefing: nil,
-      timezone: "UTC"
-    )
+    let workList = try await core.createList(name: "Deep work", description: nil)
+    let workTask = try await core.createTask(
+      TaskCreateDraft(title: "In the filtered list", listID: workList.id))
+    let otherTask = try await core.createTask(TaskCreateDraft(title: "In another list"))
+    try await planTask(core, workTask.id, on: "2026-05-23")
+    try await planTask(core, otherTask.id, on: "2026-05-23")
 
     let tempDirectory = FileManager.default.temporaryDirectory
       .appendingPathComponent("lorvex-engine-focus-\(UUID().uuidString)", isDirectory: true)
     defer { try? FileManager.default.removeItem(at: tempDirectory) }
     let store = FocusFilterStore(
       managedDatabasePath: tempDirectory.appendingPathComponent("db.sqlite").path)
-    _ = try await store.save(
-      FocusFilterConfiguration(activeProfileID: "Deep Work", showNonFocusTasks: false)
-    )
+    _ = try await store.save(FocusFilterConfiguration(listIDs: [workList.id]))
 
     let destination = WidgetSnapshotPublisher.Destination(
       snapshotURL: nil,
@@ -467,8 +460,8 @@ struct WidgetSnapshotEngineTests {
 
     let published = try await engine.refresh(core: core, today: "2026-05-23")
 
-    #expect(published.focusTasks.contains { $0.id == focusTask.id })
-    #expect(!published.focusTasks.contains { $0.id == otherTask.id })
+    #expect(published.tasks.contains { $0.id == workTask.id })
+    #expect(!published.tasks.contains { $0.id == otherTask.id })
   }
 
   @Test("a delayed pre-Focus publisher cannot overwrite the newer Focus revision")
@@ -480,8 +473,9 @@ struct WidgetSnapshotEngineTests {
     let store = FocusFilterStore(
       managedDatabasePath: tempDirectory.appendingPathComponent("db.sqlite").path)
     let workspace = "11111111-1111-4111-8111-111111111111"
-    let focusTask = makePublisherWidgetTask(
-      id: "focus", title: "Focus", priority: .p1, dueDate: nil, estimatedMinutes: nil)
+    let workTask = makePublisherWidgetTask(
+      id: "work", title: "Work", priority: .p1, dueDate: nil, estimatedMinutes: nil,
+      listID: "list-work")
     let otherTask = makePublisherWidgetTask(
       id: "other", title: "Other", priority: .p2, dueDate: nil, estimatedMinutes: nil)
     let source = WidgetSnapshotSource(
@@ -489,18 +483,16 @@ struct WidgetSnapshotEngineTests {
       logicalDay: "2026-05-23",
       timezone: "UTC",
       today: TodaySnapshot(
-        focusTitle: "Today", summary: "", tasks: [focusTask, otherTask],
+        summary: "", tasks: [workTask, otherTask],
         workspaceInstanceID: workspace, localChangeSequence: 7),
-      currentFocus: CurrentFocusPlan(
-        date: "2026-05-23", taskIDs: [focusTask.id], briefing: nil,
-        timezone: "UTC", localChangeSequence: 7),
       habits: nil,
       lists: nil,
       stats: nil)
 
-    // The old projection loads revision 0, then pauses inside projection. While
-    // paused, the system Focus transition atomically mints revision 1 and a
-    // second publisher commits that state for the same database revision.
+    // The old projection loads revision 0 (no Focus filter), then pauses inside
+    // projection. While paused, the system Focus transition atomically mints
+    // revision 1 and a second publisher commits that state for the same
+    // database revision.
     let oldProjectionPaused = EngineGate()
     let releaseOldProjection = EngineGate()
     let oldPublisher = WidgetSnapshotPublisher(
@@ -513,8 +505,7 @@ struct WidgetSnapshotEngineTests {
     let oldTask = Task { try await oldPublisher.publish(source: source) }
     #expect(oldProjectionPaused.wait(timeout: 30))
 
-    let active = try await store.save(
-      FocusFilterConfiguration(activeProfileID: "Deep Work", showNonFocusTasks: true))
+    let active = try await store.save(FocusFilterConfiguration(listIDs: ["list-work"]))
     #expect(active.revision == 1)
     let freshPublisher = WidgetSnapshotPublisher(
       destination: .init(snapshotURL: url, focusFilterStore: store, reload: {}),
@@ -523,7 +514,7 @@ struct WidgetSnapshotEngineTests {
       }))
     let fresh = try await freshPublisher.publish(source: source)
     #expect(fresh.focusFilterRevision == 1)
-    #expect(fresh.focusTasks.map(\.id).contains("other"))
+    #expect(fresh.tasks.map(\.id) == ["work"])
 
     releaseOldProjection.signal()
     let oldCallWinner = try await oldTask.value

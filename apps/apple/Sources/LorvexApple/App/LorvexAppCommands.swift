@@ -84,6 +84,16 @@ struct LorvexAppCommands: Commands {
       SidebarVisibilityCommandButton()
     }
 
+    // Find in the Edit menu, where macOS users look for it. The app adds no
+    // text-editing command set, so this group is otherwise empty.
+    CommandGroup(replacing: .textEditing) {
+      Button(String(localized: "app.commands.find", defaultValue: "Find…", table: "Localizable", bundle: LorvexL10n.bundle)) {
+        openWindow(.main)
+        store.beginSearch()
+      }
+      .keyboardShortcut("f", modifiers: [.command])
+    }
+
     CommandGroup(after: .newItem) {
       Button(AppCommand.newTask.title) {
         // Surface the main window so the focused inline quick-add is visible if
@@ -111,8 +121,16 @@ struct LorvexAppCommands: Commands {
       }
     }
 
+    // The numbered sidebar destinations in sidebar order, then the Lists
+    // catalog, which has no row and no number, set apart below them.
     CommandMenu(AppCommandMenu.navigate.title) {
-      ForEach(SidebarSelection.mainNavigationItems) { selection in
+      ForEach(SidebarSelection.mainNavigationItems.filter { $0.navigationShortcut != nil }) {
+        selection in
+        navigationButton(selection)
+      }
+      Divider()
+      ForEach(SidebarSelection.mainNavigationItems.filter { $0.navigationShortcut == nil }) {
+        selection in
         navigationButton(selection)
       }
     }
@@ -171,7 +189,7 @@ struct LorvexAppCommands: Commands {
   }
 
   private func taskCommandButton(_ command: TaskCommand) -> some View {
-    Button(command.title(isFocused: taskCommandContext?.singleTaskIsFocused ?? false)) {
+    Button(command.title(isStarted: taskCommandContext?.singleTaskIsStarted ?? false)) {
       guard let taskCommandContext else { return }
       command.perform(in: taskCommandContext) { taskID in
         openTaskDetail(taskID)

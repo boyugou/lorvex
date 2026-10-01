@@ -3,7 +3,7 @@ import LorvexCore
 
 /// The App-Group snapshot the host app writes for widgets/complications to read.
 ///
-/// Codable is synthesized and strict for the v3 fields: every field
+/// Codable is synthesized and strict for the v4 fields: every field
 /// except the nullable `timezone`, `logicalDay`, and `briefing` must be present,
 /// so a snapshot must carry `version` and all
 /// data arrays (empty arrays, never omitted). `WidgetSnapshotLoader` owns compat:
@@ -11,7 +11,7 @@ import LorvexCore
 /// graceful fallback, so a stale or foreign-shaped file degrades to a placeholder
 /// rather than a partial decode.
 public struct WidgetSnapshot: Codable, Equatable, Sendable {
-  public static let supportedVersion = 3
+  public static let supportedVersion = 4
   public static let unscopedWorkspaceInstanceID = "00000000-0000-0000-0000-000000000000"
 
   public let version: Int
@@ -31,17 +31,20 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
   public let localChangeSequence: Int
   public let timezone: String?
   /// Calendar day for which Today/habit/progress fields were materialized.
-  /// New producers always set this; it remains optional so an in-place app
-  /// update can safely expire a previously written v2 snapshot by deriving the
-  /// source day from `generatedAt` and `timezone`.
+  /// Producers set it; when it is absent, freshness derives the source day
+  /// from `generatedAt` and `timezone`.
   public let logicalDay: String?
   public let stats: Stats
+  /// The assistant's briefing for ``logicalDay``. Nil when the day has none,
+  /// when titles are hidden, and while a system Focus filter narrows the list,
+  /// since the briefing speaks about the whole day.
   public let briefing: String?
-  public let focusTasks: [FocusTask]
+  /// Today's list in Today's order: started tasks first, then by priority and
+  /// due date. Narrowed to the system Focus filter's lists while one is active.
+  /// Every glance reads its lead task and its rows from here.
+  public let tasks: [TodayTask]
   /// Today's habit statuses (empty when none).
   public let habits: [HabitSummary]
-  /// Open tasks due today or overdue (empty when none).
-  public let todayTasks: [TodayTask]
   /// Lists available for configurable widget filters (empty when none).
   public let lists: [ListSummary]
   /// Per-list stats for configurable widgets (empty when none).
@@ -58,9 +61,8 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     case logicalDay = "logical_day"
     case stats
     case briefing
-    case focusTasks = "focus_tasks"
+    case tasks
     case habits
-    case todayTasks = "today_tasks"
     case lists
     case listStats = "list_stats"
   }
@@ -76,9 +78,8 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     logicalDay: String? = nil,
     stats: Stats,
     briefing: String?,
-    focusTasks: [FocusTask],
+    tasks: [TodayTask],
     habits: [HabitSummary] = [],
-    todayTasks: [TodayTask] = [],
     lists: [ListSummary] = [],
     listStats: [ListStats] = []
   ) {
@@ -92,10 +93,20 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     self.logicalDay = logicalDay
     self.stats = stats
     self.briefing = briefing
-    self.focusTasks = focusTasks
+    self.tasks = tasks
     self.habits = habits
-    self.todayTasks = todayTasks
     self.lists = lists
     self.listStats = listStats
+  }
+
+  /// The `version` of an encoded snapshot, read without decoding the rest. A
+  /// snapshot of another version has another shape, so a reader checks this
+  /// first and reports a version mismatch rather than a damaged file.
+  public static func encodedVersion(of data: Data) throws -> Int {
+    try JSONDecoder().decode(VersionProbe.self, from: data).version
+  }
+
+  private struct VersionProbe: Decodable {
+    let version: Int
   }
 }

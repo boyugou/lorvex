@@ -12,11 +12,17 @@ import PackageDescription
 //   cd apps/apple/core && swift test
 let package = Package(
     name: "LorvexAppleCore",
+    // SwiftPM only synthesizes an Info.plist for a target's resource bundle
+    // when the package declares a default localization. Without it,
+    // `LorvexAppleCore_LorvexSync.bundle` ships as a `.bundle` directory with
+    // no Info.plist — not a valid bundle, and a structural deviation from an
+    // Xcode-produced app. Matches the app package's declaration
+    // (../Package.swift).
+    defaultLocalization: "en",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18),
-        .visionOS(.v2),
-        .watchOS(.v11)
+        .macOS("26.0"),
+        .iOS("26.0"),
+        .watchOS("26.0")
     ],
     products: [
         .library(name: "LorvexDomain", targets: ["LorvexDomain"]),

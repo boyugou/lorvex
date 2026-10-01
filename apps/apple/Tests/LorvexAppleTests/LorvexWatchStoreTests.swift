@@ -10,30 +10,30 @@ import Testing
 @MainActor
 struct LorvexWatchStoreTests {
 
-  @Test("refresh with active focus populates primaryTask")
-  func refreshPopulatesPrimaryTask() async throws {
-    let service = try await makeSeededInMemoryCore()
+  @Test("refresh lists Today's tasks from a live core")
+  func refreshListsTodayTasks() async throws {
+    let service = try makeInMemoryCore()
     let title = "Design watch UI"
-    try await seedWatchFocus(in: service, date: "2026-05-24", title: title)
+    let task = try await seedWatchTodayTask(in: service, date: "2026-05-24", title: title)
 
     let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-24")
     await store.refresh()
 
-    #expect(store.primaryTask != nil)
-    #expect(store.primaryTask?.title == title)
+    #expect(store.tasks.map(\.id) == [task.id])
+    #expect(store.lead(at: Date()) == nil, "an untimed, unstarted task is listed, not led")
+    #expect(store.moreCount == 0)
     #expect(store.snapshotStatusText == "Live from Lorvex")
     #expect(store.error == nil)
   }
 
-  @Test("refresh with no focus plan leaves primaryTask nil")
-  func refreshWithoutFocusPlan() async throws {
-    let service = try await makeSeededInMemoryCore()
-    let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-24")
+  @Test("refresh with nothing on Today leaves the list empty")
+  func refreshWithEmptyToday() async throws {
+    let store = LorvexWatchStore(core: try makeInMemoryCore(), logicalDayOverride: "2026-05-24")
 
     await store.refresh()
 
-    #expect(store.primaryTask == nil)
-    #expect(store.currentFocus == nil)
+    #expect(store.tasks.isEmpty)
+    #expect(store.lead(at: Date()) == nil)
     #expect(store.error == nil)
   }
 
@@ -47,8 +47,8 @@ struct LorvexWatchStoreTests {
     #expect(store.isLoading == false)
   }
 
-  @Test("snapshot backend loads primary focus task read-only")
-  func snapshotBackendLoadsPrimaryTaskReadOnly() async throws {
+  @Test("snapshot backend loads Today's list read-only")
+  func snapshotBackendLoadsTodayReadOnly() async throws {
     let snapshotURL = FileManager.default.temporaryDirectory
       .appendingPathComponent("lorvex-watch-\(UUID().uuidString)")
       .appendingPathComponent(LorvexWatchReplicaStore.defaultReplicaFileName)
@@ -59,9 +59,9 @@ struct LorvexWatchStoreTests {
     let snapshot = WidgetSnapshot(
       generatedAt: "2026-05-24T12:00:00Z",
       timezone: "America/Los_Angeles",
-      stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
-      briefing: "Watch focus",
-      focusTasks: [
+      stats: .init(todayCount: 3, overdueCount: 0, dueTodayCount: 1),
+      briefing: nil,
+      tasks: [
         .init(
           id: "watch-task",
           title: "Review Apple companion",
@@ -69,7 +69,9 @@ struct LorvexWatchStoreTests {
           dueDate: "2026-05-24",
           priority: 1,
           listID: nil,
-          estimatedMinutes: 25
+          estimatedMinutes: 25,
+          scheduledStart: "09:00",
+          scheduledEnd: "09:30"
         )
       ]
     )
@@ -81,37 +83,37 @@ struct LorvexWatchStoreTests {
     )
     await store.refresh()
 
-    #expect(store.primaryTask?.id == "watch-task")
-    #expect(store.primaryTask?.title == "Review Apple companion")
-    #expect(store.primaryTask?.priority == .p1)
-    #expect(store.primaryTask?.estimatedMinutes == 25)
-    #expect(store.currentFocus?.taskIDs == ["watch-task"])
-    #expect(store.currentFocus?.briefing == "Watch focus")
+    let task = try #require(store.tasks.first)
+    #expect(store.tasks.count == 1)
+    #expect(task.id == "watch-task")
+    #expect(task.title == "Review Apple companion")
+    #expect(task.priority == .p1)
+    #expect(task.estimatedMinutes == 25)
+    #expect(store.savedTimes["watch-task"] == 540..<570)
+    // The phone sends the head of a long list with the whole list's length.
+    #expect(store.moreCount == 2)
     #expect(store.snapshotStatusText == "Synced 3m ago")
     #expect(
       LorvexWatchStore.snapshotStatusLabel(
         snapshot,
         now: Date(timeIntervalSince1970: 1_779_624_180)
       ) == "Synced 3m ago")
-    #expect(store.canCompletePrimaryTask == false)
-    #expect(store.canCancelPrimaryTask == false)
-    #expect(store.canDeferPrimaryTask == false)
-    #expect(store.canRemovePrimaryTaskFromFocus == false)
+    #expect(store.canMutateTasks == false)
     #expect(store.canCaptureTask == false)
-    #expect(
-      store.completionUnavailableReason == "Open Lorvex on iPhone or Mac to complete this task.")
-    #expect(store.focusMutationUnavailableReason == "Open Lorvex on iPhone or Mac to change focus.")
+    #expect(store.taskActionUnavailableReason == "Open Lorvex on iPhone to change tasks.")
     #expect(store.captureUnavailableReason == "Open Lorvex on iPhone or Mac to capture new tasks.")
     #expect(store.error == nil)
 
-    await store.completePrimaryTask()
+    await store.completeTask(id: task.id)
     #expect(store.error != nil)
-    await store.cancelPrimaryTask()
+    await store.startTask(id: task.id)
     #expect(store.error != nil)
-    await store.deferPrimaryTaskToTomorrow()
+    await store.cancelTask(id: task.id)
     #expect(store.error != nil)
-    await store.removePrimaryTaskFromFocus()
+    await store.deferTaskToTomorrow(id: task.id)
     #expect(store.error != nil)
+    // Nothing was forwarded, so nothing changed optimistically either.
+    #expect(store.tasks.map(\.id) == ["watch-task"])
     store.captureTitle = "Snapshot capture"
     await store.captureTask()
     #expect(store.error != nil)
@@ -126,16 +128,10 @@ struct LorvexWatchStoreTests {
 
     await store.refresh()
 
-    #expect(store.primaryTask == nil)
-    #expect(store.currentFocus == nil)
+    #expect(store.tasks.isEmpty)
     #expect(store.snapshotStatusText == "Open Lorvex to sync")
     #expect(store.error is LorvexWatchSnapshotError)
-    #expect(store.canCompletePrimaryTask == false)
-    #expect(store.canCancelPrimaryTask == false)
-    #expect(store.canDeferPrimaryTask == false)
-    #expect(store.canRemovePrimaryTaskFromFocus == false)
-    #expect(store.completionUnavailableReason == nil)
-    #expect(store.focusMutationUnavailableReason == nil)
+    #expect(store.canMutateTasks == false)
   }
 
   @Test("snapshot backend reports invalid snapshot data")
@@ -153,8 +149,7 @@ struct LorvexWatchStoreTests {
 
     await store.refresh()
 
-    #expect(store.primaryTask == nil)
-    #expect(store.currentFocus == nil)
+    #expect(store.tasks.isEmpty)
     #expect(store.snapshotStatusText == "Snapshot data damaged")
     guard
       let error = store.error as? LorvexWatchSnapshotError,
@@ -168,7 +163,7 @@ struct LorvexWatchStoreTests {
       error.localizedDescription == String(
         format: String(
           localized: "watch.error.snapshot_unavailable",
-          defaultValue: "Focus snapshot unavailable: %@",
+          defaultValue: "Watch data unavailable: %@",
           table: "Localizable",
           bundle: WatchL10n.bundle),
         "Snapshot data damaged")
@@ -195,14 +190,13 @@ struct LorvexWatchStoreTests {
         "local_change_sequence": 1,
         "timezone": "UTC",
         "stats": {
-          "focus_count": 0,
+          "today_count": 0,
           "overdue_count": 0,
           "due_today_count": 0
         },
         "briefing": null,
-        "focus_tasks": [],
+        "tasks": [],
         "habits": [],
-        "today_tasks": [],
         "lists": [],
         "list_stats": []
       }
@@ -216,8 +210,7 @@ struct LorvexWatchStoreTests {
 
     await store.refresh()
 
-    #expect(store.primaryTask == nil)
-    #expect(store.currentFocus == nil)
+    #expect(store.tasks.isEmpty)
     #expect(store.snapshotStatusText == "Update Lorvex to sync")
     guard
       let error = store.error as? LorvexWatchSnapshotError,
@@ -232,31 +225,28 @@ struct LorvexWatchStoreTests {
   @Test("multiple refreshes are idempotent")
   func multipleRefreshesAreIdempotent() async throws {
     let service = try await makeSeededInMemoryCore()
-    try await seedWatchFocus(in: service, date: "2026-05-24", title: "Idempotent task")
+    try await seedWatchTodayTask(in: service, date: "2026-05-24", title: "Idempotent task")
 
     let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-24")
     await store.refresh()
-    let firstTitle = store.primaryTask?.title
+    let first = store.tasks.map(\.id)
 
     await store.refresh()
-    let secondTitle = store.primaryTask?.title
 
-    #expect(firstTitle == secondTitle)
+    #expect(!first.isEmpty)
+    #expect(store.tasks.map(\.id) == first)
   }
 
-  @Test("core backend exposes writable completion without unavailable reason")
-  func coreBackendCompletionHasNoUnavailableReason() async throws {
+  @Test("core backend offers task actions without an unavailable reason")
+  func coreBackendTaskActionsHaveNoUnavailableReason() async throws {
     let service = try await makeSeededInMemoryCore()
-    try await seedWatchFocus(in: service, date: "2026-05-24", title: "Writable watch task")
+    try await seedWatchTodayTask(in: service, date: "2026-05-24", title: "Writable watch task")
 
     let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-24")
     await store.refresh()
 
-    #expect(store.canCompletePrimaryTask == true)
-    #expect(store.canDeferPrimaryTask == true)
-    #expect(store.canRemovePrimaryTaskFromFocus == true)
-    #expect(store.completionUnavailableReason == nil)
-    #expect(store.focusMutationUnavailableReason == nil)
+    #expect(store.canMutateTasks == true)
+    #expect(store.taskActionUnavailableReason == nil)
   }
 
   @Test("core backend captures a new inbox task")
@@ -268,67 +258,62 @@ struct LorvexWatchStoreTests {
     #expect(store.canCaptureTask == true)
 
     await store.captureTask()
-    let today = try await service.loadToday()
+    // Captured work is undated, so it lands in the inbox rather than the day pool.
+    let open = try await service.listTasks(
+      status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
 
-    #expect(today.tasks.contains { $0.title == "Capture from watch" })
+    #expect(open.tasks.contains { $0.title == "Capture from watch" })
     #expect(store.captureTitle == "")
     #expect(store.error == nil)
   }
 
   @Test("core refresh failure clears stale watch state")
   func coreRefreshFailureClearsStaleState() async throws {
-    let service = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-    let task = try await service.createTask(title: "Do not show stale watch focus", notes: "")
-    _ = try await service.addToCurrentFocus(
-      date: "2026-05-24",
-      taskIDs: [task.id],
-      briefing: nil,
-      timezone: "UTC"
-    )
+    let service = StubCoreService(preview: try await makeSeededInMemoryCore())
+    let task = try await seedWatchTodayTask(
+      in: service, date: "2026-05-24", title: "Do not show a stale watch list")
     let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-24")
     await store.refresh()
 
-    #expect(store.primaryTask?.id == task.id)
+    #expect(store.tasks.contains { $0.id == task.id })
 
-    service.loadCurrentFocusError = .unsupportedOperation("Current focus unavailable.")
+    service.loadTodayError = .unsupportedOperation("Today unavailable.")
     await store.refresh()
 
-    #expect(store.currentFocus == nil)
-    #expect(store.primaryTask == nil)
-    #expect(store.focusTasks.isEmpty)
+    #expect(store.tasks.isEmpty)
+    #expect(store.savedTimes.isEmpty)
+    #expect(store.logicalDay == nil)
     #expect(store.snapshotStatusText == "Snapshot unavailable")
     #expect(store.error != nil)
   }
 
   @Test("overlapping refresh coalesces and does not clobber succeeded state")
   func overlappingRefreshCoalescesWithoutClobber() async throws {
-    let service = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-    let task = try await service.createTask(title: "Keep me visible", notes: "")
-    _ = try await service.addToCurrentFocus(
-      date: "2026-05-24", taskIDs: [task.id], briefing: nil, timezone: "UTC")
+    let service = StubCoreService(preview: try await makeSeededInMemoryCore())
+    let task = try await seedWatchTodayTask(
+      in: service, date: "2026-05-24", title: "Keep me visible")
 
     let gate = WatchRefreshGate()
-    service.loadCurrentFocusGate = { await gate.gate() }
+    service.loadTodayGate = { await gate.gate() }
 
     let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-24")
 
-    // Refresh A enters `loadCurrentFocus` and blocks on the gate.
+    // Refresh A enters `loadToday` and blocks on the gate.
     let a = Task { await store.refresh() }
     await gate.waitUntilEntered()
 
     // A is mid-flight. B must coalesce (record pending) rather than run a second
-    // concurrent body — so only A has entered `loadCurrentFocus` so far.
+    // concurrent body — so only A has entered `loadToday` so far.
     await store.refresh()
-    #expect(service.loadCurrentFocusCallCount == 1)
+    #expect(service.loadTodayCallCount == 1)
 
     // Releasing A lets it finish; `refreshPending` reruns the body exactly once,
     // producing clean populated state rather than a clobbered mix.
     await gate.release()
     await a.value
 
-    #expect(service.loadCurrentFocusCallCount == 2)
-    #expect(store.primaryTask?.id == task.id)
-    #expect(store.currentFocus != nil)
+    #expect(service.loadTodayCallCount == 2)
+    #expect(store.tasks.contains { $0.id == task.id })
     #expect(store.error == nil)
     #expect(store.isLoading == false)
   }
@@ -362,9 +347,8 @@ private func writeWatchStoreReplica(_ snapshot: WidgetSnapshot, to url: URL) thr
     logicalDay: snapshot.logicalDay,
     stats: snapshot.stats,
     briefing: snapshot.briefing,
-    focusTasks: snapshot.focusTasks,
+    tasks: snapshot.tasks,
     habits: snapshot.habits,
-    todayTasks: snapshot.todayTasks,
     lists: snapshot.lists,
     listStats: snapshot.listStats)
   let envelope = try LorvexWatchReplicaEnvelope(
@@ -374,7 +358,7 @@ private func writeWatchStoreReplica(_ snapshot: WidgetSnapshot, to url: URL) thr
 }
 
 /// Async barrier for the overlapping-refresh test: blocks the *first*
-/// `loadCurrentFocus` at a controllable point (signaling entry first) so the
+/// `loadToday` at a controllable point (signaling entry first) so the
 /// test can request a second refresh while the first is provably in flight.
 /// Later invocations pass through so the coalesced rerun is not blocked.
 private actor WatchRefreshGate {

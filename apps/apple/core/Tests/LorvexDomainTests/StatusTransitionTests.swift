@@ -19,11 +19,21 @@ final class StatusTransitionTests: XCTestCase {
     XCTAssertTrue(actions.contains(.setNull(column: "last_defer_reason")))
   }
 
-  func testReopenFromCompleted() {
+  func testUncompletingKeepsThePlan() {
+    // Undoing a completion puts the task back where it was: only the
+    // completion timestamp goes.
     let actions = statusTransitionColumns(
       oldStatus: .completed, newStatus: .open, now: "2026-03-26T10:00:00Z")
+    XCTAssertEqual(actions, [.setNull(column: "completed_at")])
+  }
+
+  func testCancelledToOpenClearsPlanAndDeferral() {
+    let actions = statusTransitionColumns(
+      oldStatus: .cancelled, newStatus: .open, now: "2026-03-26T10:00:00Z")
     XCTAssertTrue(actions.contains(.setNull(column: "completed_at")))
     XCTAssertTrue(actions.contains(.setNull(column: "planned_date")))
+    XCTAssertTrue(actions.contains(.setNull(column: "planned_start_minutes")))
+    XCTAssertTrue(actions.contains(.setNull(column: "planned_end_minutes")))
     XCTAssertTrue(actions.contains(.setNull(column: "last_deferred_at")))
     XCTAssertTrue(actions.contains(.setNull(column: "last_defer_reason")))
     XCTAssertTrue(actions.contains(.setInt(column: "defer_count", value: 0)))
@@ -48,6 +58,8 @@ final class StatusTransitionTests: XCTestCase {
       oldStatus: .someday, newStatus: .open, now: "2026-03-26T10:00:00Z")
     XCTAssertTrue(actions.contains(.setNull(column: "completed_at")))
     XCTAssertTrue(actions.contains(.setNull(column: "planned_date")))
+    XCTAssertTrue(actions.contains(.setNull(column: "planned_start_minutes")))
+    XCTAssertTrue(actions.contains(.setNull(column: "planned_end_minutes")))
     XCTAssertTrue(actions.contains(.setNull(column: "last_deferred_at")))
     XCTAssertTrue(actions.contains(.setNull(column: "last_defer_reason")))
     XCTAssertTrue(actions.contains(.setInt(column: "defer_count", value: 0)))

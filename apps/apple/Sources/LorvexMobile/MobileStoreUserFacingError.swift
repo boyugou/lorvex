@@ -1,5 +1,9 @@
 import Foundation
 import LorvexCore
+import OSLog
+
+private let userFacingErrorLog = Logger(
+  subsystem: "com.lorvex.mobile", category: "user-facing-error")
 
 extension MobileStore {
   /// Localized copy for the generic error categories, resolved from the
@@ -16,7 +20,7 @@ extension MobileStore {
       storageUnavailable: String(
         localized: "error.storage_unavailable",
         defaultValue:
-          "Lorvex can't access its data storage, so this couldn't be completed. Please restart Lorvex.",
+          "Lorvex can’t access its data storage, so this couldn’t be completed. Please restart Lorvex.",
         table: "Localizable", bundle: MobileL10n.bundle),
       databaseNewer: String(
         localized: "error.database_newer",
@@ -38,11 +42,74 @@ extension MobileStore {
     let classification = UserFacingError.classify(error)
     errorMessage = UserFacingError.message(for: classification, copy: userFacingErrorCopy)
     guard classification.category != .validation else { return }
-    try? await core.appendDiagnosticLog(
-      source: "ios.ui.action_failed",
-      level: "error",
-      message: "A user action failed.",
-      details: classification.technicalDetail)
+    await recordFailure(classification, source: "ios.ui.action_failed", message: "A user action failed.")
+  }
+
+  /// Present a failure of the local refresh, which runs without the user
+  /// asking (on foreground, after a sync, on a push), in the root alert. The
+  /// first occurrence of a message is shown; the same message again is only
+  /// logged until a refresh succeeds and clears the latch, so a persistent
+  /// failure does not raise the alert on every refresh. A different message is
+  /// shown, since it is a new fact. Every occurrence reaches `error_logs`.
+  func presentRefreshFailure(_ error: Error) async {
+    let classification = UserFacingError.classify(error)
+    let message = UserFacingError.message(for: classification, copy: userFacingErrorCopy)
+    if message != surfacedRefreshFailureMessage {
+      surfacedRefreshFailureMessage = message
+      errorMessage = message
+    }
+    guard classification.category != .validation else { return }
+    await recordFailure(classification, source: "ios.refresh_failed", message: "A refresh failed.")
+  }
+
+  /// Clear the refresh-failure latch after a successful refresh, dismissing
+  /// the alert only when it still shows that refresh failure, so an action's
+  /// own error stays up until the user acknowledges it.
+  func clearRefreshFailure() {
+    if surfacedRefreshFailureMessage != nil, errorMessage == surfacedRefreshFailureMessage {
+      errorMessage = nil
+    }
+    surfacedRefreshFailureMessage = nil
+  }
+
+  /// Records a failure's technical detail in the unified log and in
+  /// `error_logs`. A storage failure, or one `error_logs` refuses, also goes to
+  /// the fallback file: when the store is what fails, `error_logs` cannot be
+  /// trusted to hold the row that explains it (its insert is best-effort and
+  /// drops a failed write silently).
+  func recordFailure(
+    _ classification: UserFacingError.Classification, source: String, message: String
+  ) async {
+    logTechnicalDetail(classification, source: source)
+    var recorded = true
+    do {
+      try await core.appendDiagnosticLog(
+        source: source, level: "error", message: message,
+        details: classification.technicalDetail)
+    } catch {
+      recorded = false
+    }
+    var isStorageFailure = false
+    if case .unrecoverable = classification.category { isStorageFailure = true }
+    if !recorded || isStorageFailure {
+      diagnosticFallback.append(
+        source: source, message: message, details: classification.technicalDetail)
+    }
+  }
+
+  /// Mirrors the `error_logs` routing into the unified log, so a failure whose
+  /// root cause is the store itself — which makes `error_logs` unreachable — is
+  /// still diagnosable from the device log. The raw detail is public in debug
+  /// builds only; release builds keep it private.
+  private func logTechnicalDetail(_ classification: UserFacingError.Classification, source: String) {
+    let category = String(describing: classification.category)
+    #if DEBUG
+      userFacingErrorLog.error(
+        "\(source, privacy: .public) failed [\(category, privacy: .public)]: \(classification.technicalDetail, privacy: .public)")
+    #else
+      userFacingErrorLog.error(
+        "\(source, privacy: .public) failed [\(category, privacy: .public)]: \(classification.technicalDetail, privacy: .private)")
+    #endif
   }
 
   private func localizedRecurrenceEditorMessage(_ error: TaskRecurrenceEditorError) -> String {
@@ -70,11 +137,7 @@ extension MobileStore {
   func userFacingBannerMessage(for error: Error, source: String) async -> String {
     let classification = UserFacingError.classify(error)
     if classification.category != .validation {
-      try? await core.appendDiagnosticLog(
-        source: source,
-        level: "error",
-        message: "A user action failed.",
-        details: classification.technicalDetail)
+      await recordFailure(classification, source: source, message: "A user action failed.")
     }
     return UserFacingError.message(for: classification, copy: userFacingErrorCopy)
   }
@@ -96,15 +159,20 @@ extension MobileStore {
   /// category deliberately collapses to the generic retry message.
   func cloudSyncUserFacingErrorMessage(for error: Error, source: String) async -> String {
     let classification = UserFacingError.classify(error)
-    try? await core.appendDiagnosticLog(
-      source: source,
-      level: "error",
-      message: "Cloud sync failed.",
-      details: classification.technicalDetail)
+    await recordFailure(classification, source: source, message: "Cloud sync failed.")
     if case .unrecoverable = classification.category {
       return UserFacingError.message(for: classification, copy: userFacingErrorCopy)
     }
-    return userFacingErrorCopy.somethingWentWrong
+    // Append the compact NSError identity so a tester reading the sync status
+    // row can report an actionable code ("CKErrorDomain 12") instead of only
+    // the generic copy; the full detail is already in the diagnostics log.
+    // Swift errors bridge to a "Module.Type" domain that carries no user value,
+    // so only genuine framework domains (dot-free) are surfaced.
+    let nsError = error as NSError
+    guard !nsError.domain.contains(".") else {
+      return userFacingErrorCopy.somethingWentWrong
+    }
+    return "\(userFacingErrorCopy.somethingWentWrong) (\(nsError.domain) \(nsError.code))"
   }
 
   func cloudSyncUserFacingErrorMessage(forMessage message: String, source: String) async -> String {

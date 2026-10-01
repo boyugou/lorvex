@@ -184,7 +184,7 @@ struct LorvexWatchCommandJournalTests {
         acknowledgement, retryAt: .distantFuture) == .rejected)
     let rejected = try #require(await journal.deliveryStatus().rejectedCommands.first)
     #expect(rejected.code == "future_policy")
-    #expect(rejected.reason == "This action wasn't applied on iPhone.")
+    #expect(rejected.reason == "This action wasn’t applied on iPhone.")
     #expect(!rejected.reason.contains("diagnostic"))
   }
 

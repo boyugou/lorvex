@@ -242,51 +242,6 @@ final class CalendarEventGroupedMergeTests: XCTestCase {
     XCTAssertEqual(peerSnapshot, sourceSnapshot)
   }
 
-  func testAuthoritativeResetRebuildsBaseAndDecisionBelowLocalClocks() throws {
-    let remoteBase = try envelope(
-      title: "Authoritative base", startTime: "09:00", recurrence: "{\"FREQ\":\"DAILY\"}",
-      generation: contentEditVersion, contentVersion: contentEditVersion,
-      topologyVersion: contentEditVersion, rowVersion: contentEditVersion)
-    let localBase = try envelope(
-      title: "Superseded local base", startTime: "13:00",
-      recurrence: "{\"FREQ\":\"WEEKLY\"}", generation: localHighVersion,
-      contentVersion: localHighVersion, topologyVersion: localHighVersion,
-      rowVersion: localHighVersion)
-    let remoteDecision = try decisionEnvelope(
-      state: .replacement, title: "Authoritative decision", rowVersion: contentEditVersion)
-    let localDecision = try decisionEnvelope(
-      state: .cancelled, title: "Superseded local decision", rowVersion: localHighVersion)
-    let decisionId = remoteDecision.entityId
-    let store = try SyncTestSupport.freshStore()
-
-    try store.writer.write { db in
-      XCTAssertEqual(
-        try Apply.applyEnvelope(db, registry: registry, envelope: localBase), .applied)
-      XCTAssertEqual(
-        try Apply.applyEnvelope(db, registry: registry, envelope: localDecision), .applied)
-
-      XCTAssertTrue(
-        try ApplyLww.resetVersionForAuthoritativeSnapshot(
-          db, entityType: EntityName.calendarEvent, entityId: eventId))
-      XCTAssertTrue(
-        try ApplyLww.resetVersionForAuthoritativeSnapshot(
-          db, entityType: EntityName.calendarEvent, entityId: decisionId))
-      XCTAssertNil(
-        try String.fetchOne(
-          db, sql: "SELECT id FROM calendar_events WHERE id = ?", arguments: [eventId]))
-      XCTAssertNil(
-        try String.fetchOne(
-          db, sql: "SELECT id FROM calendar_events WHERE id = ?", arguments: [decisionId]))
-
-      XCTAssertEqual(
-        try Apply.applyEnvelope(db, registry: registry, envelope: remoteBase), .applied)
-      XCTAssertEqual(
-        try Apply.applyEnvelope(db, registry: registry, envelope: remoteDecision), .applied)
-      XCTAssertEqual(try snapshot(db)["title"]!, "Authoritative base")
-      XCTAssertEqual(try snapshot(db, id: decisionId)["title"]!, "Authoritative decision")
-    }
-  }
-
   func testRegisterShapesAndClocksAreRejectedAtTheTypedBoundary() throws {
     let contentAboveRow = try envelope(
       title: "Invalid content", startTime: "09:00", recurrence: "{\"FREQ\":\"DAILY\"}",

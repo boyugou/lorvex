@@ -12,37 +12,35 @@ contributors. For product architecture detail, see
 apps/apple/
 ├── Sources/
 │   ├── LorvexCore/             # Platform-neutral models, protocol, factory
-│   ├── LorvexCloudSync/        # CloudKit sync engine (account status, push, checkpoints)
+│   ├── LorvexCloudSync/        # CloudKit transport (CloudSyncController over CKSyncEngine)
 │   ├── LorvexMarkdownUI/       # swift-markdown → SwiftUI rendering
 │   ├── LorvexApple/            # macOS app shell (SwiftUI + AppKit)
-│   ├── LorvexMobile/           # iOS/iPadOS/visionOS surface
+│   ├── LorvexMobile/           # iOS/iPadOS surface
 │   ├── LorvexMobileApp/        # iOS @main entry point
-│   ├── LorvexVisionApp/        # visionOS @main entry point
 │   ├── LorvexSystemIntents/    # Shared App Intents and Shortcuts provider
 │   ├── LorvexWatch/            # watchOS shared store + WatchConnectivity client
-│   ├── LorvexWatchApp/         # watchOS focus companion entry point
+│   ├── LorvexWatchApp/         # watchOS companion entry point
 │   ├── LorvexWatchComplication/# watchOS complications (WidgetKit on watchOS)
 │   ├── LorvexCarPlay/          # CarPlay scene delegate + templates
 │   ├── LorvexMCPHost/          # MCP stdio server executable
 │   ├── LorvexWidgetKitSupport/ # Shared widget snapshot/timeline infrastructure
 │   ├── LorvexWidgetViews/      # Reusable SwiftUI widget views
-│   ├── LorvexWidgetIntents/    # Interactive widget AppIntents (iOS 18+)
+│   ├── LorvexWidgetIntents/    # Interactive widget AppIntents
 │   ├── LorvexWidgetExtension/  # WidgetKit TimelineProvider + container
 │   ├── LorvexWidgetBundle/     # @main WidgetBundle entry
-│   ├── LorvexFocusWidget/      # Standalone focus widget
 │   └── LorvexCoreSmoke/        # Executable smoke check for the on-disk Swift core
 ├── Tests/                      # Swift Testing test targets
 ├── core/                       # Native Swift core package (canonical behavior)
 ├── script/                     # Build, verify, packaging scripts
 ├── Config/
-│   └── XcodeGen/               # project.yml for iOS/visionOS/watchOS/Widget
+│   └── XcodeGen/               # project.yml for iOS/watchOS/Widget
 └── docs/                       # Architecture, user guide, release notes
 ```
 
 ### Key module responsibilities
 
 **`LorvexCore`** — Shared domain types (`LorvexTask`, `TodaySnapshot`,
-`CurrentFocusPlan`, etc.), the `LorvexCoreServicing` protocol,
+`WeeklyReviewSnapshot`, etc.), the `LorvexCoreServicing` protocol,
 `SwiftLorvexCoreService` (over the `LorvexAppleCore` package, on-disk in
 production and in-memory for tests/previews via
 `SwiftLorvexCoreService.inMemory()` / `LorvexPreviewCoreFactory`), system
@@ -51,22 +49,23 @@ Shortcuts descriptor. Every platform target imports this module.
 
 **`LorvexApple`** — The macOS `@main` SwiftUI app. `AppStore` is split into
 focused extension files per concern (`AppStoreBatchTaskActions.swift`,
-`AppStoreFocusActions.swift`, etc.). Views follow the
+`AppStoreDayTimesActions.swift`, etc.). Views follow the
 `<Domain>WorkspaceView / <Domain>DetailView / <Domain>Row` naming convention.
 
-**`LorvexMobile`** — iOS/iPadOS/visionOS SwiftUI library. `MobileStore` is the
+**`LorvexMobile`** — iOS/iPadOS SwiftUI library. `MobileStore` is the
 root state owner for mobile; it wraps the same `LorvexCoreServicing` boundary.
 Compact layouts use `TabView`; regular-width layouts use `NavigationSplitView`.
 
-**`LorvexCloudSync`** — CloudKit transport and synchronization engine. Only the
-main-app implementation modules (`LorvexApple`, `LorvexMobile`,
-`LorvexMobileApp`, and `LorvexVisionApp`) may link or import it. Each device's
-main app retains one `CloudSyncEngineCoordinator` and routes normal sync plus
-account, import, retention, and cloud-data maintenance through that same actor
-gate.
+**`LorvexCloudSync`** — CloudKit transport. `CloudSyncController` is an actor
+that wraps one `CKSyncEngine` on the private database and is the engine's
+delegate; it builds outbound records from the local outbox and applies fetched
+records through Core's inbound apply. Only the main-app implementation modules
+(`LorvexApple`, `LorvexMobile`, and `LorvexMobileApp`) may link or import it.
+Each device's main app retains one controller and routes foreground sync,
+account adoption, and iCloud data deletion through it.
 
-**`LorvexSystemIntents`** — Shared App Intents target for macOS, iOS/iPadOS,
-and visionOS. It owns `AppIntent`, `AppEntity`, `SetFocusFilterIntent`, and
+**`LorvexSystemIntents`** — Shared App Intents target for macOS and iOS/iPadOS.
+It owns `AppIntent`, `AppEntity`, `SetFocusFilterIntent`, and
 `AppShortcutsProvider` types, while delegating task mutations to
 `LorvexSystemIntentRunner` in `LorvexCore`. Add user-facing Shortcuts/App
 Intents here, not under the macOS-only app target.
@@ -94,9 +93,9 @@ architecture change and requires an explicit ownership design first.
 
 ### Prerequisites
 
-- Xcode 16 or later (provides Swift 6 toolchain)
+- Xcode 26 or later (provides the Swift 6 toolchain and the 26 SDKs)
 - Python 3 (for verification scripts)
-- XcodeGen (for iOS/visionOS/watchOS/Widget Xcode projects): `brew install xcodegen`
+- XcodeGen (for iOS/watchOS/Widget Xcode projects): `brew install xcodegen`
 
 ### Build and test
 
@@ -134,31 +133,28 @@ cold-launches that exact installed copy, and does not back up or restore either
 the previous app or its data. See `docs/DISTRIBUTION.md` for its operator-only
 environment.
 
-### iOS, visionOS, and watchOS builds (requires XcodeGen + Xcode)
+### iOS and watchOS builds (requires XcodeGen + Xcode)
 
-The iOS, visionOS, and watchOS targets cannot be built with `swift build` alone;
+The iOS and watchOS targets cannot be built with `swift build` alone;
 they require an Xcode project generated by XcodeGen.
 
 ```bash
 # Verify the XcodeGen project is correct (generates and validates project.yml)
 ./script/verify_xcodegen_project.sh
 
-# Compile-only check for an iOS, visionOS, or watchOS target (no signing needed)
+# Compile-only check for an iOS or watchOS target (no signing needed)
 ./script/archive_ios.sh --scheme LorvexMobileApp --build-only
-./script/archive_ios.sh --scheme LorvexVisionApp --build-only
 ./script/archive_ios.sh --scheme LorvexWatchApp  --build-only
 
 # Archive + export IPA to App Store Connect (requires APPLE_TEAM_ID)
 export APPLE_TEAM_ID="ABCDE12345"
 ./script/archive_ios.sh --scheme LorvexMobileApp --export
-./script/archive_ios.sh --scheme LorvexVisionApp --export
 ```
 
 `archive_ios.sh` runs `xcodegen` against `Config/XcodeGen/project.yml` to
 regenerate the Xcode project under `dist/ios-xcode-project/` before every
 archive. The script selects the correct `generic/platform` destination for each
-scheme: `iOS` for `LorvexMobileApp`, `visionOS` for `LorvexVisionApp`, and
-`watchOS` for `LorvexWatchApp`.
+scheme: `iOS` for `LorvexMobileApp` and `watchOS` for `LorvexWatchApp`.
 
 **watchOS embed requirement.** The App Store requires a watchOS app to ship
 inside its companion iOS app. `archive_ios.sh --scheme LorvexWatchApp --export`
@@ -176,19 +172,11 @@ status.
 # iOS simulator
 ./script/verify_mobile_simulator.sh
 
-# visionOS simulator
-./script/verify_vision_simulator.sh
-
 # watchOS simulator
 ./script/verify_watch_simulator.sh
 
 # iPhone Release device graph, unsigned (catches Release-only link failures)
 ./script/verify_mobile_release_link.sh
-
-# visionOS Release device graph, unsigned (catches Release-only compile/link
-# failures, including APIs gated behind an OS version newer than the
-# visionOS deployment floor)
-./script/verify_vision_release_link.sh
 ```
 
 The platform-specific scripts fail early with SDK/runtime diagnostics if the
@@ -419,8 +407,8 @@ changes. It runs:
    theme-system source paths, non-Swift MCP host drift, and Rust MCP server
    fallback names such as `RustMCP`, `MCPServer`, `MCPDaemon`, or
    `MCPSupervisor`. The same verifier pins main-app-only CloudSync ownership by
-   rejecting `LorvexCloudSync` dependencies, CloudKit imports, or coordinator
-   construction in non-app production targets.
+   rejecting `LorvexCloudSync` dependencies, CloudKit imports, or
+   `CloudSyncController` construction in non-app production targets.
 6. MCP tool catalog contract checks (`script/verify_mcp_tool_catalog.py`)
 7. Build matrix checks (`script/verify_build_matrix.py`) to ensure every Apple
    executable product is declared and built by the full gate
@@ -482,10 +470,10 @@ For incremental UI or test changes, `swift build && swift test` is sufficient.
 Example:
 
 ```
-Add add_to_current_focus tool to MCP host
+Add set_daily_briefing tool to MCP host
 
-The AI client needs a way to append a task to the current focus plan without
-replacing the whole ordered set. Wires the existing CurrentFocusItemsRepo union
-path through the typed tool definition and returns the updated focus plan.
+The AI client needs a way to write the day's briefing text without touching
+the tasks planned for it. Wires the existing DailyBriefingRepo upsert path
+through the typed tool definition and returns the day's updated briefing.
 Closes #57.
 ```

@@ -1,20 +1,27 @@
 import LorvexCore
 import SwiftUI
 
-/// The Tasks tab home: a 2×2 grid of smart collections over a "My Lists"
-/// section. Drilling into any of them pushes the scoped task list
-/// (``MobileStoreTasksView``). Lists are first-class here now, instead of a
-/// separate "More" destination.
+/// The Tasks tab home: a grid of smart collections over a "My Lists" section.
+/// Drilling into any of them pushes the scoped task list
+/// (``MobileStoreTasksView``). The grid is two columns, and one column at
+/// accessibility text sizes, where a half-width card would break its name
+/// mid-word. A store with no task in any status has nothing for the grid to
+/// count, so an invitation to capture the first task stands in its place.
 @MainActor
 public struct MobileStoreTasksHomeView: View {
   @Bindable var store: MobileStore
   @State private var searchQuery = ""
   @State private var searchResults = MobileTaskWorkspacePage.empty
   @State private var isSearching = false
-  /// Counts for the smart-collection cards, keyed by the scope's description.
+  /// Counts for the smart-collection cards and the Completed / Cancelled rows,
+  /// keyed by the scope's description.
   @State private var smartCounts: [String: Int] = [:]
+  /// Whether the store holds any task, or nil until the counts load (the grid
+  /// shows meanwhile, so a store with tasks never shifts its layout).
+  @State private var holdsTasks: Bool?
   @State private var isShowingCreateList = false
   @State private var editingList: LorvexList?
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   public init(store: MobileStore) {
     self.store = store
@@ -34,15 +41,15 @@ public struct MobileStoreTasksHomeView: View {
     }
     .navigationTitle(MobileDestination.tasks.title)
     .searchable(text: $searchQuery, prompt: String(localized: "tasks.search.prompt", defaultValue: "Search tasks", table: "Localizable", bundle: MobileL10n.bundle))
-    .toolbar {
-      Button {
-        store.isPresentingCapture = true
-      } label: {
-        Label(String(localized: "capture.sheet.title", defaultValue: "Capture", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "plus")
+    #if DEBUG
+      .onAppear {
+        if let query = MobileSearchDebugState.takeInitialQuery(for: .tasks) {
+          searchQuery = query
+        }
       }
-      .lorvexToolbarHoverEffect()
-      .accessibilityIdentifier("mobileTasks.new")
-    }
+    #endif
+    // No toolbar ＋: the tab bar's round ＋ already raises capture on every tab,
+    // and a second one in the navigation bar was the same action twice.
     // Scopes ride MobileRoute (`.tasksScope`) so they push onto the same typed
     // `tasksRoutePath` as task-detail routes; both resolve through the one
     // MobileRoute destination below.
@@ -50,7 +57,7 @@ public struct MobileStoreTasksHomeView: View {
       MobileStoreRouteView(route: route, store: store)
     }
     .refreshable {
-      await store.refreshResettingCloudSyncPacing()
+      await store.refresh()
       await reloadSmartCounts()
     }
     .task(id: store.taskWorkspaceRevision) {
@@ -72,7 +79,6 @@ public struct MobileStoreTasksHomeView: View {
     }
     .sheet(isPresented: $isShowingCreateList) {
       MobileStoreCreateListSheet(store: store, isPresented: $isShowingCreateList)
-        .lorvexSpatialBackground()
     }
     .sheet(item: $editingList) { list in
       MobileStoreEditListSheet(
@@ -80,7 +86,6 @@ public struct MobileStoreTasksHomeView: View {
         store: store,
         isPresented: Binding(get: { editingList != nil }, set: { if !$0 { editingList = nil } })
       )
-      .lorvexSpatialBackground()
     }
     .accessibilityIdentifier("mobileTasksHome.root")
   }
@@ -90,25 +95,33 @@ public struct MobileStoreTasksHomeView: View {
   private var overview: some View {
     List {
       Section {
-        smartGrid
-          .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-          .listRowBackground(Color.clear)
-          .listRowSeparator(.hidden)
+        if holdsTasks == false {
+          firstTaskInvitation
+        } else {
+          // No side insets: row insets count from the section's edge, so the
+          // cards line up with the list groups below rather than sitting
+          // inside them.
+          smartGrid
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
       }
 
       Section {
         if store.lists == nil {
           MobileSkeletonRows(count: 4)
         } else if userLists.isEmpty {
-          ContentUnavailableView {
-            Label(String(localized: "lists.empty.no_lists", defaultValue: "No Lists", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "folder")
-          } description: {
-            Text(String(localized: "tasks.lists.empty.message", defaultValue: "Group related tasks into a list — or ask your AI assistant to.", table: "Localizable", bundle: MobileL10n.bundle))
-          }
+          // Text only: the header ＋ already owns "new list", so the row points
+          // at it instead of repeating the action.
+          MobileEmptyState(
+            icon: "folder",
+            title: String(localized: "lists.empty.no_lists", defaultValue: "No Lists", table: "Localizable", bundle: MobileL10n.bundle),
+            message: String(localized: "tasks.lists.empty.message", defaultValue: "Tap ＋ to group related tasks into a list — or ask your assistant to.", table: "Localizable", bundle: MobileL10n.bundle))
         } else {
           ForEach(userLists) { list in
             NavigationLink(value: MobileRoute.tasksScope(.list(list.id))) {
-              MobileListCatalogRow(list: list, showsChevron: false, showsProgress: false)
+              MobileListCatalogRow(list: list)
             }
             .swipeActions(edge: .leading, allowsFullSwipe: false) {
               Button {
@@ -119,59 +132,100 @@ public struct MobileStoreTasksHomeView: View {
               }
               .tint(.accentColor)
             }
+            // The core never deletes the Inbox, and refuses a list that still
+            // holds tasks, so the Inbox has no delete and a non-empty list's
+            // stays disabled.
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-              Button(role: .destructive) {
-                Task { await store.deleteList(list) }
-              } label: {
-                Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
+              if !list.isInbox {
+                Button(role: .destructive) {
+                  Task { await store.deleteList(list) }
+                } label: {
+                  Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
+                }
+                .disabled(list.totalCount != 0 || store.isDeletingList)
               }
-              .disabled(list.totalCount != 0 || store.isDeletingList)
             }
             .accessibilityIdentifier("mobileTasks.list.\(list.id)")
           }
         }
 
+        // New List closes the user's lists, where a new one will appear.
+        Button {
+          isShowingCreateList = true
+        } label: {
+          Label(String(localized: "lists.new", defaultValue: "New List", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "plus.circle.fill")
+        }
+        .accessibilityIdentifier("mobileTasks.newList")
+      } header: {
+        Text(String(localized: "destination.lists", defaultValue: "Lists", table: "Localizable", bundle: MobileL10n.bundle))
+      }
+
+      // The finished and cancelled tasks are history across every list, not
+      // lists of their own, so they sit in a card apart from the lists.
+      Section {
+        // The two history rows carry the same tile and count as the list
+        // rows, so both cards share one icon column and separator inset and
+        // every destination states its size.
         NavigationLink(value: MobileRoute.tasksScope(.completed)) {
-          Label {
-            Text(String(localized: "tasks.scope.completed", defaultValue: "Completed", table: "Localizable", bundle: MobileL10n.bundle))
-          } icon: {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(LorvexDesign.Palette.done)
-          }
+          MobileNavigationRow(
+            title: String(localized: "tasks.scope.completed", defaultValue: "Completed", table: "Localizable", bundle: MobileL10n.bundle),
+            systemImage: "checkmark",
+            tint: LorvexDesign.Palette.done,
+            count: smartCounts[String(describing: MobileTasksScope.completed)])
         }
         .accessibilityIdentifier("mobileTasks.completed")
 
         NavigationLink(value: MobileRoute.tasksScope(.cancelled)) {
-          Label {
-            Text(String(localized: "tasks.scope.cancelled", defaultValue: "Cancelled", table: "Localizable", bundle: MobileL10n.bundle))
-          } icon: {
-            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
-          }
+          MobileNavigationRow(
+            title: String(localized: "tasks.scope.cancelled", defaultValue: "Cancelled", table: "Localizable", bundle: MobileL10n.bundle),
+            systemImage: "xmark",
+            tint: LorvexDesign.Palette.cancelled,
+            count: smartCounts[String(describing: MobileTasksScope.cancelled)])
         }
         .accessibilityIdentifier("mobileTasks.cancelled")
-      } header: {
-        HStack {
-          Text(String(localized: "destination.lists", defaultValue: "Lists", table: "Localizable", bundle: MobileL10n.bundle))
-          Spacer()
-          Button {
-            isShowingCreateList = true
-          } label: {
-            Label(String(localized: "lists.new", defaultValue: "New List", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "plus")
-              .labelStyle(.iconOnly)
-          }
-          .accessibilityIdentifier("mobileTasks.newList")
+      }
+
+      // Habits and Memory have no place in the tab bar, so they open from here.
+      Section {
+        NavigationLink(value: MobileRoute.workspace(.habits)) {
+          MobileNavigationRow(
+            title: String(
+              localized: "tasksHome.habits", defaultValue: "Habits", table: "Localizable",
+              bundle: MobileL10n.bundle),
+            systemImage: MobileDestination.habits.systemImage,
+            tint: MobileDestination.habits.tileTint
+          )
         }
+        .accessibilityIdentifier("mobileTasks.habits")
+        NavigationLink(value: MobileRoute.workspace(.memory)) {
+          MobileNavigationRow(
+            title: String(
+              localized: "tasksHome.memory", defaultValue: "Memory", table: "Localizable",
+              bundle: MobileL10n.bundle),
+            systemImage: MobileDestination.memory.systemImage,
+            tint: MobileDestination.memory.tileTint
+          )
+        }
+        .accessibilityIdentifier("mobileTasks.memory")
       }
     }
   }
 
+  /// Two columns, or one at accessibility text sizes, where a half-width card
+  /// has no room for "Scheduled" and breaks it mid-word (Reminders stacks its
+  /// smart lists the same way).
+  private var smartGridColumns: [GridItem] {
+    if dynamicTypeSize.isAccessibilitySize {
+      return [GridItem(.flexible())]
+    }
+    return [
+      GridItem(.flexible(), spacing: LorvexDesign.Spacing.m),
+      GridItem(.flexible()),
+    ]
+  }
+
   private var smartGrid: some View {
-    LazyVGrid(
-      columns: [
-        GridItem(.flexible(), spacing: LorvexDesign.Spacing.m),
-        GridItem(.flexible()),
-      ],
-      spacing: LorvexDesign.Spacing.m
-    ) {
+    LazyVGrid(columns: smartGridColumns, spacing: LorvexDesign.Spacing.m) {
       ForEach(MobileTaskSmartCollection.grid) { collection in
         // A Button (pushing the route programmatically) rather than a
         // NavigationLink, so the grid cards don't carry List disclosure chevrons.
@@ -189,6 +243,16 @@ public struct MobileStoreTasksHomeView: View {
     }
   }
 
+  /// Text only, like every empty state here: the tab bar's ＋ already owns
+  /// capture, so the row points at it instead of repeating the action.
+  private var firstTaskInvitation: some View {
+    MobileEmptyState(
+      icon: MobileDestination.tasks.systemImage,
+      title: String(localized: "tasks.home.empty.title", defaultValue: "No Tasks Yet", table: "Localizable", bundle: MobileL10n.bundle),
+      message: String(localized: "tasks.home.empty.message", defaultValue: "Tap ＋ to capture your first task — or ask your assistant to add some.", table: "Localizable", bundle: MobileL10n.bundle))
+    .accessibilityIdentifier("mobileTasks.firstTask")
+  }
+
   // MARK: - Search results
 
   private var searchResultsList: some View {
@@ -196,17 +260,13 @@ public struct MobileStoreTasksHomeView: View {
       if isSearching && searchResults.tasks.isEmpty {
         MobileSkeletonRows(count: 5)
       } else if searchResults.tasks.isEmpty {
-        ContentUnavailableView.search(text: searchQuery)
+        MobileEmptyState.search(text: searchQuery)
       } else {
         ForEach(searchResults.tasks) { task in
           MobileActionTaskRow(
             task: task,
-            isFocused: store.taskIsFocused(task.id),
             isMutating: store.taskIsMutating(task.id),
-            select: { store.selectTask(task.id) },
-            toggleFocus: { await store.toggleTaskFocus(task.id) },
-            complete: { await store.completeTask(task.id) },
-            deferTask: { await store.deferTaskToTomorrow(task.id) }
+            actions: store.rowActions(for: task.id)
           )
         }
       }
@@ -219,16 +279,36 @@ public struct MobileStoreTasksHomeView: View {
     store.lists?.lists ?? []
   }
 
+  /// Loads every count the overview shows. The grid's scopes need a wide page
+  /// because two of them (Scheduled, Priority) narrow in memory, so their total
+  /// is the size of the filtered page. The history scopes do not narrow, so
+  /// their total is the query's own and one row is enough to read it — which
+  /// matters most for Completed, the one scope that grows without bound.
+  /// Only when every count is zero does it ask whether the store holds any
+  /// task at all, since a task the counts leave out still makes the grid
+  /// worth showing.
   private func reloadSmartCounts() async {
     for collection in MobileTaskSmartCollection.grid {
       let page = await store.taskWorkspacePage(scope: collection.scope, query: "", limit: 200)
       smartCounts[String(describing: collection.scope)] = page.totalMatching
     }
+    for scope in [MobileTasksScope.completed, .cancelled] {
+      let page = await store.taskWorkspacePage(scope: scope, query: "", limit: 1)
+      smartCounts[String(describing: scope)] = page.totalMatching
+    }
+    let holds = smartCounts.values.contains { $0 > 0 } ? true : await store.holdsAnyTask()
+    if holds != holdsTasks {
+      withAnimation(.snappy(duration: 0.25)) { holdsTasks = holds }
+    }
   }
 }
 
-/// A smart-collection card: a colored icon, a big count, and a label — the
-/// Reminders idiom, rendered in Lorvex's design system.
+/// A smart-collection card: the collection's tinted icon tile, its open count,
+/// and its name. The tile is the same ``MobileIconTile`` the list rows below
+/// the grid lead with, so the four collections and the lists read as one
+/// catalog in one vocabulary rather than a bright strip of badges over a
+/// quieter list; the count stays the card's largest element because it is the
+/// one fact the card exists to show.
 struct MobileTaskCollectionCard: View {
   let collection: MobileTaskSmartCollection
   let count: Int?
@@ -236,25 +316,21 @@ struct MobileTaskCollectionCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
       HStack(alignment: .top) {
-        Image(systemName: collection.systemImage)
-          .font(.headline)
-          .foregroundStyle(.white)
-          .frame(width: 30, height: 30)
-          .background(collection.tint.gradient, in: Circle())
+        MobileIconTile(symbol: collection.systemImage, tint: collection.tint, size: 30)
         Spacer()
         Text(count.map(String.init) ?? "—")
-          .font(.title.weight(.semibold).monospacedDigit())
+          .font(.title2.weight(.semibold).monospacedDigit())
           .foregroundStyle(.primary)
           .contentTransition(.numericText())
           .accessibilityHidden(true)
       }
       Text(collection.title)
-        .font(.subheadline.weight(.semibold))
+        .font(LorvexDesign.Typography.secondaryText.weight(.medium))
         .foregroundStyle(.secondary)
     }
     .padding(LorvexDesign.Spacing.m)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
       count.map { "\(collection.title), \($0)" } ?? collection.title)

@@ -40,7 +40,7 @@ struct MobileStoreRecurrenceEditor: View {
           ) {
             Picker(
               String(
-                localized: "recurrence.repeats", defaultValue: "Repeats",
+                localized: "recurrence.anchor.label", defaultValue: "Repeat Mode",
                 table: "Localizable", bundle: MobileL10n.bundle),
               selection: $store.taskDetailRecurrenceAnchor
             ) {
@@ -94,7 +94,7 @@ struct MobileStoreRecurrenceEditor: View {
           localized: "recurrence.title", defaultValue: "Recurrence", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS) || os(visionOS)
+      #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
       .toolbar {
@@ -120,6 +120,7 @@ struct MobileStoreRecurrenceEditor: View {
               }
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(isSaving || !store.taskDetailRecurrenceCanSave)
         }
       }

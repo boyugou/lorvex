@@ -58,45 +58,10 @@ public extension WidgetSnapshot {
     public var isDoneToday: Bool { completedToday >= target }
   }
 
-  /// A single today-list task for widget display.
-  struct TodayTask: Codable, Equatable, Sendable {
-    public let id: String
-    public let title: String
-    public let dueDate: String?
-    public let priority: Int?
-    public let estimatedMinutes: Int?
-    public let listID: String?
-
-    enum CodingKeys: String, CodingKey {
-      case id, title, priority
-      case dueDate = "due_date"
-      case estimatedMinutes = "estimated_minutes"
-      case listID = "list_id"
-    }
-
-    public init(
-      id: String,
-      title: String,
-      dueDate: String?,
-      priority: Int?,
-      estimatedMinutes: Int?,
-      listID: String? = nil
-    ) {
-      self.id = id
-      self.title = title
-      self.dueDate = dueDate
-      self.priority = priority
-      self.estimatedMinutes = estimatedMinutes
-      self.listID = listID
-    }
-
-    public var taskURL: URL {
-      LorvexDeepLinkContract.taskURL(id)
-    }
-  }
-
   struct Stats: Codable, Equatable, Sendable {
-    public let focusCount: Int
+    /// Tasks left on Today, uncapped: the length of the day's whole list, which
+    /// a consumer holding a capped ``WidgetSnapshot/tasks`` still counts from.
+    public let todayCount: Int
     public let overdueCount: Int
     public let dueTodayCount: Int
     public let attentionCount: Int
@@ -105,7 +70,7 @@ public extension WidgetSnapshot {
     public let completedTodayCount: Int
 
     enum CodingKeys: String, CodingKey {
-      case focusCount = "focus_count"
+      case todayCount = "today_count"
       case overdueCount = "overdue_count"
       case dueTodayCount = "due_today_count"
       case attentionCount = "attention_count"
@@ -113,13 +78,13 @@ public extension WidgetSnapshot {
     }
 
     public init(
-      focusCount: Int,
+      todayCount: Int,
       overdueCount: Int,
       dueTodayCount: Int,
       attentionCount: Int? = nil,
       completedTodayCount: Int = 0
     ) {
-      self.focusCount = focusCount
+      self.todayCount = max(0, todayCount)
       self.overdueCount = overdueCount
       self.dueTodayCount = dueTodayCount
       self.attentionCount = attentionCount ?? overdueCount + dueTodayCount
@@ -128,7 +93,7 @@ public extension WidgetSnapshot {
 
     public init(from decoder: Decoder) throws {
       let container = try decoder.container(keyedBy: CodingKeys.self)
-      focusCount = try container.decode(Int.self, forKey: .focusCount)
+      todayCount = try container.decode(Int.self, forKey: .todayCount)
       overdueCount = try container.decode(Int.self, forKey: .overdueCount)
       dueTodayCount = try container.decodeIfPresent(Int.self, forKey: .dueTodayCount) ?? 0
       attentionCount =
@@ -140,7 +105,7 @@ public extension WidgetSnapshot {
 
     public func encode(to encoder: Encoder) throws {
       var container = encoder.container(keyedBy: CodingKeys.self)
-      try container.encode(focusCount, forKey: .focusCount)
+      try container.encode(todayCount, forKey: .todayCount)
       try container.encode(overdueCount, forKey: .overdueCount)
       try container.encode(dueTodayCount, forKey: .dueTodayCount)
       try container.encode(attentionCount, forKey: .attentionCount)
@@ -148,7 +113,8 @@ public extension WidgetSnapshot {
     }
   }
 
-  struct FocusTask: Codable, Equatable, Sendable {
+  /// One task on Today's list as glances draw it.
+  struct TodayTask: Codable, Equatable, Sendable, Identifiable {
     public let id: String
     public let title: String
     public let status: String
@@ -156,6 +122,10 @@ public extension WidgetSnapshot {
     public let priority: Int?
     public let listID: String?
     public let estimatedMinutes: Int?
+    /// The task's saved time today as `HH:mm`, when it has one. A time that
+    /// ends at midnight is `24:00`.
+    public let scheduledStart: String?
+    public let scheduledEnd: String?
 
     enum CodingKeys: String, CodingKey {
       case id
@@ -165,6 +135,8 @@ public extension WidgetSnapshot {
       case priority
       case listID = "list_id"
       case estimatedMinutes = "estimated_minutes"
+      case scheduledStart = "scheduled_start"
+      case scheduledEnd = "scheduled_end"
     }
 
     public init(
@@ -174,7 +146,9 @@ public extension WidgetSnapshot {
       dueDate: String?,
       priority: Int?,
       listID: String?,
-      estimatedMinutes: Int?
+      estimatedMinutes: Int?,
+      scheduledStart: String? = nil,
+      scheduledEnd: String? = nil
     ) {
       self.id = id
       self.title = title
@@ -183,18 +157,27 @@ public extension WidgetSnapshot {
       self.priority = priority
       self.listID = listID
       self.estimatedMinutes = estimatedMinutes
+      self.scheduledStart = scheduledStart
+      self.scheduledEnd = scheduledEnd
     }
 
     /// True when the task is actionable (`open` or `in_progress`). Widgets,
-    /// complications, and the watch must keep a started task visible just like
-    /// the app's Today and reminder surfaces do.
+    /// complications, and the watch keep a started task visible just like the
+    /// app's Today page does.
     public var isActionable: Bool {
       LorvexTask.Status(rawValue: status)?.isActionable == true
     }
+
+    /// True when the task is started (`in_progress`).
+    public var isStarted: Bool { status == LorvexTask.Status.inProgress.rawValue }
+
+    public var taskURL: URL {
+      LorvexDeepLinkContract.taskURL(id)
+    }
   }
 
-  /// Actionable focus tasks in snapshot order. The single definition used by
-  /// every widget/watch/complication consumer prevents those downstream
-  /// surfaces from silently dropping `in_progress` after projection.
-  var actionableFocusTasks: [FocusTask] { focusTasks.filter(\.isActionable) }
+  /// Actionable tasks in Today's order. The single definition every widget,
+  /// watch, and complication consumer reads, so none of them silently drops a
+  /// started task after projection.
+  var actionableTasks: [TodayTask] { tasks.filter(\.isActionable) }
 }

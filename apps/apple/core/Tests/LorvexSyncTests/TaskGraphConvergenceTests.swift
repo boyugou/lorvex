@@ -10,11 +10,8 @@ final class TaskGraphConvergenceTests: XCTestCase {
   private let parentId = "66666666-6666-7666-8666-666666666661"
   private let recurrenceGroupId = "66666666-6666-7666-8666-666666666662"
   private let otherTaskId = "66666666-6666-7666-8666-666666666663"
-  private let completedTaskId = "66666666-6666-7666-8666-666666666664"
   private let cancelledTaskId = "66666666-6666-7666-8666-666666666665"
   private let reminderId = "66666666-6666-7666-8666-666666666666"
-  private let currentFocusDate = "2026-07-22"
-  private let focusScheduleDate = "2026-07-23"
   private let base = "1760000000100_0000_aaaaaaaaaaaaaaaa"
   private let completion = "1760000000200_0000_bbbbbbbbbbbbbbbb"
   private let contradiction = "1760000000300_0000_cccccccccccccccc"
@@ -62,15 +59,12 @@ final class TaskGraphConvergenceTests: XCTestCase {
         .relatedEntity(
           entityType: .taskDependency, entityId: "\(parentId):\(otherTaskId)",
           operation: .delete, knownVersionFloor: floor),
-        .relatedEntity(
-          entityType: .currentFocus, entityId: currentFocusDate,
-          operation: .upsert, knownVersionFloor: floor),
       ],
       additionalFloor: floor)
 
     XCTAssertEqual(
       obligation.affectedEntityTypes,
-      [.task, .taskReminder, .taskDependency, .currentFocus])
+      [.task, .taskReminder, .taskDependency])
   }
 
   func testReminderBeforeParentContradictionIsCancelledAndReemitted() throws {
@@ -299,77 +293,6 @@ final class TaskGraphConvergenceTests: XCTestCase {
             + "WHERE entity_type = 'task_dependency' AND entity_id = ?1",
           arguments: [edgeId]),
         "upsert")
-    }
-  }
-
-  func testFocusRootsBeforeParentContradictionRemoveOnlyGeneratedSuccessor() throws {
-    let store = try SyncTestSupport.freshStore()
-    try store.writer.write { db in
-      try seedAuthorizedChain(db)
-      try applyOrdinaryTask(db, id: otherTaskId, status: "open", version: base)
-      XCTAssertEqual(
-        try apply(db, currentFocusEnvelope(taskIds: [successorId, otherTaskId])), .applied)
-      XCTAssertEqual(
-        try apply(db, focusScheduleEnvelope(taskIds: [successorId, otherTaskId])), .applied)
-
-      let obligation = try contradictionObligation(db)
-      let rootFloor = try Hlc.parseCanonical(dependentVersion)
-      XCTAssertTrue(
-        obligation.targets.contains(
-          .relatedEntity(
-            entityType: .currentFocus, entityId: currentFocusDate, operation: .upsert,
-            knownVersionFloor: rootFloor)))
-      XCTAssertTrue(
-        obligation.targets.contains(
-          .relatedEntity(
-            entityType: .focusSchedule, entityId: focusScheduleDate, operation: .upsert,
-            knownVersionFloor: rootFloor)))
-      XCTAssertEqual(try currentFocusTaskIds(db), [otherTaskId])
-      XCTAssertEqual(try focusScheduleTaskIds(db), [otherTaskId])
-
-      try fulfill(db, obligation: obligation.value)
-      XCTAssertEqual(
-        try String.fetchAll(
-          db,
-          sql:
-            "SELECT entity_type FROM sync_outbox "
-            + "WHERE entity_type IN ('current_focus', 'focus_schedule') "
-            + "ORDER BY entity_type"),
-        ["current_focus", "focus_schedule"])
-    }
-  }
-
-  func testFocusRootsAfterParentContradictionPreserveOrdinaryTerminalTasks() throws {
-    let store = try SyncTestSupport.freshStore()
-    try store.writer.write { db in
-      try seedContradictedChain(db)
-      try applyOrdinaryTask(db, id: completedTaskId, status: "completed", version: base)
-      try applyOrdinaryTask(db, id: cancelledTaskId, status: "cancelled", version: base)
-      let ids = [successorId, completedTaskId, cancelledTaskId]
-
-      let currentOutcome = try apply(db, currentFocusEnvelope(taskIds: ids))
-      let currentRepair = try unwrapTaskGraphObligation(currentOutcome)
-      XCTAssertEqual(
-        currentRepair.targets,
-        [
-          .relatedEntity(
-            entityType: .currentFocus, entityId: currentFocusDate, operation: .upsert,
-            knownVersionFloor: try Hlc.parseCanonical(dependentVersion))
-        ])
-      XCTAssertEqual(try currentFocusTaskIds(db), [completedTaskId, cancelledTaskId])
-      try fulfill(db, obligation: currentRepair.value)
-
-      let scheduleOutcome = try apply(db, focusScheduleEnvelope(taskIds: ids))
-      let scheduleRepair = try unwrapTaskGraphObligation(scheduleOutcome)
-      XCTAssertEqual(
-        scheduleRepair.targets,
-        [
-          .relatedEntity(
-            entityType: .focusSchedule, entityId: focusScheduleDate, operation: .upsert,
-            knownVersionFloor: try Hlc.parseCanonical(dependentVersion))
-        ])
-      XCTAssertEqual(try focusScheduleTaskIds(db), [completedTaskId, cancelledTaskId])
-      try fulfill(db, obligation: scheduleRepair.value)
     }
   }
 
@@ -632,41 +555,6 @@ final class TaskGraphConvergenceTests: XCTestCase {
       deviceId: "peer")
   }
 
-  private func currentFocusEnvelope(taskIds: [String]) throws -> SyncEnvelope {
-    try SyncTestSupport.completeEnvelope(
-      entityType: .currentFocus, entityId: currentFocusDate, operation: .upsert,
-      version: Hlc.parse(dependentVersion),
-      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-      payload: try SyncCanonicalize.canonicalizeJSON(
-        .object([
-          "task_ids": .array(taskIds.map(JSONValue.string)),
-          "created_at": .string("2026-07-21T12:00:00.000Z"),
-          "updated_at": .string("2026-07-21T12:00:00.000Z"),
-        ])),
-      deviceId: "peer")
-  }
-
-  private func focusScheduleEnvelope(taskIds: [String]) throws -> SyncEnvelope {
-    let blocks = taskIds.enumerated().map { index, taskId in
-      JSONValue.object([
-        "block_type": .string("task"), "start_minutes": .int(Int64(480 + index * 60)),
-        "end_minutes": .int(Int64(510 + index * 60)), "task_id": .string(taskId),
-        "calendar_event_id": .null, "event_source": .null, "title": .string("Task"),
-      ])
-    }
-    return try SyncTestSupport.completeEnvelope(
-      entityType: .focusSchedule, entityId: focusScheduleDate, operation: .upsert,
-      version: Hlc.parse(dependentVersion),
-      payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-      payload: try SyncCanonicalize.canonicalizeJSON(
-        .object([
-          "blocks": .array(blocks),
-          "created_at": .string("2026-07-21T12:00:00.000Z"),
-          "updated_at": .string("2026-07-21T12:00:00.000Z"),
-        ])),
-      deviceId: "peer")
-  }
-
   private func deleteEnvelope(
     entityType: EntityKind, entityId: String, version: String
   ) throws -> SyncEnvelope {
@@ -687,23 +575,5 @@ final class TaskGraphConvergenceTests: XCTestCase {
 
   private func dependencyCount(_ db: Database) throws -> Int {
     try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM task_dependencies") ?? -1
-  }
-
-  private func currentFocusTaskIds(_ db: Database) throws -> [String] {
-    try String.fetchAll(
-      db,
-      sql:
-        "SELECT task_id FROM current_focus_items WHERE date = ?1 "
-        + "ORDER BY position",
-      arguments: [currentFocusDate])
-  }
-
-  private func focusScheduleTaskIds(_ db: Database) throws -> [String] {
-    try String.fetchAll(
-      db,
-      sql:
-        "SELECT task_id FROM focus_schedule_blocks "
-        + "WHERE date = ?1 AND task_id IS NOT NULL ORDER BY position",
-      arguments: [focusScheduleDate])
   }
 }

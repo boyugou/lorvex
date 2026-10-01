@@ -1,16 +1,32 @@
 import Foundation
 import LorvexCore
+import LorvexDomain
 import SwiftUI
 
 extension AppStore {
   /// The refresh tail shared by the single-task mutations: refresh the list
-  /// surfaces, reload the Tasks workspace if it is loaded, then publish the
-  /// Apple sync surfaces. Defined once so callers can't drift on which surfaces
+  /// surfaces, reload the Tasks workspace if it is loaded and the review's
+  /// task lists if Review is on screen, then publish the Apple sync surfaces. Defined once so callers can't drift on which surfaces
   /// they reload; animation and selection-draft sync stay with the caller.
   func afterSelectedTaskMutation() async throws {
     try await refreshListSurfaces()
     await reloadTaskWorkspaceIfLoaded()
+    await reloadReviewEvidenceIfShown()
     await republishSurfacesAfterLocalMutation()
+  }
+
+  /// The review pages list tasks a change can move: the day's done and
+  /// still-open tasks, the week's overdue and pushed ones. While Review is on
+  /// screen, a task completed or reopened from its rows (or by ⌘Z) moves
+  /// between those lists right away. A failed read keeps what is shown.
+  func reloadReviewEvidenceIfShown() async {
+    guard selection == .reviews else { return }
+    let day = try? await core.loadDaySummary(date: selectedReviewDate)
+    let week = try? await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
+    lorvexAnimated(.snappy(duration: 0.18)) {
+      if let day { dayReviewEvidence = day }
+      if let week { weeklyReview = week }
+    }
   }
 }
 
@@ -34,19 +50,25 @@ extension AppStore {
       syncSelectedTaskDraft()
       return
     }
+    // Every field is written as the draft holds it. The time is written
+    // whenever the draft has one, so moving the task to another day keeps its
+    // time, and cleared only when the stored task has one to clear.
+    let time = taskDetailPlannedTimeForSave
+    let storedTime = taskForDetailDraft(id: id)?.plannedTime
+    let draft = TaskUpdateDraft(
+      id: id,
+      title: taskDetailTitle,
+      notes: taskDetailNotes,
+      priority: taskDetailPriority,
+      estimatedMinutes: Self.setOrClear(taskDetailEstimateForSave(taskID: id)),
+      dueDate: Self.setOrClear(taskDetailDueDateForSave),
+      plannedDate: Self.setOrClear(taskDetailPlannedDateForSave),
+      plannedTime: time.map { .set($0) } ?? (storedTime == nil ? .unset : .clear),
+      availableFrom: Self.setOrClear(taskDetailAvailableFromForSave),
+      tags: parsedTaskDetailTags,
+      dependsOn: parsedTaskDetailDependencies)
     await perform {
-      let updated = try await core.updateTask(
-        id: id,
-        title: taskDetailTitle,
-        notes: taskDetailNotes,
-        priority: taskDetailPriority,
-        estimatedMinutes: taskDetailEstimateForSave(taskID: id),
-        dueDate: taskDetailDueDateForSave,
-        plannedDate: taskDetailPlannedDateForSave,
-        availableFrom: taskDetailAvailableFromForSave,
-        tags: parsedTaskDetailTags,
-        dependsOn: parsedTaskDetailDependencies
-      )
+      let updated = try await core.updateTask(draft)
       today = try await core.loadToday()
       replaceTask(updated)
       try await refreshListSurfaces()
@@ -72,6 +94,11 @@ extension AppStore {
     }
   }
 
+  /// A draft field as a patch that writes it: its value, or a clear.
+  private static func setOrClear<T: Sendable>(_ value: T?) -> Patch<T> {
+    value.map { .set($0) } ?? .clear
+  }
+
   func clearSelectedTaskAINotes() async {
     guard let id = selectedTask?.id else { return }
     await perform {
@@ -84,6 +111,13 @@ extension AppStore {
 
   func completeSelectedTask(undoManager: UndoManager? = nil) async {
     guard let id = selectedTask?.id else { return }
+    await completeTask(id: id, undoManager: undoManager)
+  }
+
+  /// Complete the task `id` from a control that names it (the selected task's
+  /// action, a review page's row), without changing `selectedTaskID`. Plays
+  /// completion feedback and registers a ⌘Z reopen.
+  func completeTask(id: LorvexTask.ID, undoManager: UndoManager? = nil) async {
     do {
       let updatedToday = try await core.completeTask(id: id)
       lorvexAnimated(.snappy(duration: 0.18)) {
@@ -122,6 +156,18 @@ extension AppStore {
       try await afterSelectedTaskMutation()
       syncSelectedTaskDraft()
     }
+  }
+
+  /// Toggle completion for a task drawn on the calendar grid. The task is read
+  /// fresh from the core, since the grid's copy may be older, so the toggle
+  /// acts on its current status, then behaves exactly like
+  /// `toggleTaskCompletion`. The visible calendar window reloads afterwards so
+  /// a block on another day, which Today does not cover, picks up the new
+  /// status.
+  func toggleCalendarTaskCompletion(id: LorvexTask.ID, undoManager: UndoManager? = nil) async {
+    guard let task = try? await core.loadTask(id: id) else { return }
+    await toggleTaskCompletion(task, undoManager: undoManager)
+    try? await refreshCurrentCalendarTimeline()
   }
 
   /// Defer a specific task to `date` from a list-row control, without changing
@@ -272,10 +318,10 @@ extension AppStore {
     }
   }
 
-  /// Start the selected task (`open → in_progress`) — put the "In Progress"
-  /// marker on. Mirrors ``reopenSelectedTask()``: animates the row and keeps the
-  /// selection so the detail inspector stays open. A dependency-blocked start
-  /// surfaces the core's typed error.
+  /// Start the selected task (`open → in_progress`): mark it as begun, which
+  /// moves it to the top of Today. Mirrors ``reopenSelectedTask()``: animates
+  /// the row and keeps the selection so the detail inspector stays open. A
+  /// dependency-blocked start surfaces the core's typed error.
   func startSelectedTask() async {
     guard let id = selectedTaskID else { return }
     await perform {
@@ -293,10 +339,10 @@ extension AppStore {
     }
   }
 
-  /// Remove the "In Progress" marker from the selected task
-  /// (`in_progress → open`, the "Mark as Not Started" action). Leaves the task's
-  /// planning state (planned_date / defer_count) untouched.
-  func markSelectedTaskNotStarted() async {
+  /// Pause the selected task (`in_progress → open`): take the started mark
+  /// off. Leaves the task's planning state (planned_date / defer_count)
+  /// untouched.
+  func pauseSelectedTask() async {
     guard let id = selectedTaskID else { return }
     await perform {
       let updatedToday = try await core.pauseTask(id: id)
@@ -310,6 +356,40 @@ extension AppStore {
       taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
       syncSelectedTaskDraft()
+    }
+  }
+
+  /// Start the selected task, or pause it when it is already started. Does
+  /// nothing for a task that is neither open nor started.
+  func toggleSelectedTaskStarted() async {
+    switch selectedTask?.status {
+    case .open: await startSelectedTask()
+    case .inProgress: await pauseSelectedTask()
+    default: return
+    }
+  }
+
+  /// Start `task` from a row's hover control or context menu, without changing
+  /// `selectedTaskID`, so acting on a row never moves the inspector.
+  func startTaskFromRow(_ task: LorvexTask) async {
+    guard task.status == .open else { return }
+    await perform {
+      let updatedToday = try await core.startTask(id: task.id)
+      feedbackProvider.playFeedback(.taskReopened)
+      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      try await afterSelectedTaskMutation()
+    }
+  }
+
+  /// Pause `task` from a row's hover control or context menu, without
+  /// changing `selectedTaskID`.
+  func pauseTaskFromRow(_ task: LorvexTask) async {
+    guard task.status == .inProgress else { return }
+    await perform {
+      let updatedToday = try await core.pauseTask(id: task.id)
+      feedbackProvider.playFeedback(.taskReopened)
+      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      try await afterSelectedTaskMutation()
     }
   }
 

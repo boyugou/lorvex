@@ -100,7 +100,6 @@ func appStoreReminderDefaultUsesTheLoadedTodayTimezone() throws {
   let tokyo = try #require(TimeZone(identifier: "Asia/Tokyo"))
   let now = try #require(LorvexDateFormatters.iso8601.date(from: "2026-07-21T23:30:00Z"))
   store.today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [],
     logicalDay: "2026-07-22",
@@ -138,7 +137,7 @@ func taskReminderSurfacesWireTheProductTimezoneAndNoDateOnlyDuePreset() throws {
   #expect(mobileComposer.contains(".environment(\\.timeZone, timeZone)"))
   #expect(!mobileComposer.contains("oneHourBeforeDue"))
   #expect(!mobileComposer.contains("let dueDate:"))
-  #expect(mobileDetail.contains("MobileReminderComposerRow(timeZone: timeZone)"))
+  #expect(mobileDetail.contains("MobileReminderComposerRow(\n                timeZone: timeZone,"))
   #expect(mobileDetail.contains("reminder: reminder,\n              timeZone: timeZone"))
   #expect(macReminder.contains("timeZone: store.logicalTimeZone"))
   #expect(macReminder.contains(".environment(\\.timeZone, timeZone)"))

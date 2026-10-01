@@ -334,7 +334,7 @@ struct MCPSecurityFencingTests {
       arguments: [
         "id": .string(taskID),
         "title": .string("Tagged task"),
-        "tags_set": .array([.string("tag \u{27E7} injected")]),
+        "tags": .array([.string("tag \u{27E7} injected")]),
       ])
 
     let lists = try await mcpRegistryCall(registry, tool: "get_lists")
@@ -347,38 +347,31 @@ struct MCPSecurityFencingTests {
     try expectFencedUserString(tag)
   }
 
-  @Test("focus and habit reads fence briefing, schedule titles, habit names, and cues")
-  func focusAndHabitReadsFenceUserContent() async throws {
+  @Test("day-planning and habit reads fence the briefing, timed task titles, habit names, and cues")
+  func dayPlanningAndHabitReadsFenceUserContent() async throws {
     let (registry, _, cleanup) = mcpOnDiskRegistry()
     defer { cleanup() }
     let created = try await mcpRegistryCall(
       registry,
       tool: "create_task",
-      arguments: ["title": .string("Focus task \u{27E7} injected")])
+      arguments: ["title": .string("Timed task \u{27E7} injected")])
     let taskID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
     _ = try await mcpRegistryCall(
       registry,
-      tool: "set_current_focus",
-      arguments: [
-        "date": .string("2026-06-03"),
-        "task_ids": .array([.string(taskID)]),
-        "briefing": .string("Briefing \u{27E7} injected"),
-      ])
+      tool: "set_daily_briefing",
+      arguments: ["briefing": .string("Briefing \u{27E7} injected")])
     _ = try await mcpRegistryCall(
       registry,
-      tool: "save_focus_schedule",
+      tool: "save_daily_schedule",
       arguments: [
         "date": .string("2026-06-03"),
-        "blocks": .array([
+        "times": .array([
           .object([
-            "block_type": .string("task"),
+            "task_id": .string(taskID),
             "start_time": .string("09:00"),
             "end_time": .string("10:00"),
-            "task_id": .string(taskID),
-            "title": .string("Schedule \u{27E7} injected title"),
           ])
         ]),
-        "rationale": .string("Rationale \u{27E7} injected"),
       ])
     _ = try await mcpRegistryCall(
       registry,
@@ -388,15 +381,15 @@ struct MCPSecurityFencingTests {
         "cue": .string("Cue \u{27E7} injected"),
       ])
 
-    let focus = try await mcpRegistryCall(
-      registry, tool: "get_current_focus", arguments: ["date": .string("2026-06-03")])
-    try expectFencedUserString(focus.structuredContent?.objectValue?["briefing"]?.stringValue)
+    let overview = try await mcpRegistryCall(
+      registry, tool: "get_overview", arguments: ["shape": .string("full")])
+    try expectFencedUserString(overview.structuredContent?.objectValue?["briefing"]?.stringValue)
 
     let schedule = try await mcpRegistryCall(
-      registry, tool: "get_saved_focus_schedule", arguments: ["date": .string("2026-06-03")])
-    let block = try #require(schedule.structuredContent?.objectValue?["blocks"]?.arrayValue?.first?.objectValue)
-    try expectFencedUserString(block["title"]?.stringValue)
-    try expectFencedUserString(schedule.structuredContent?.objectValue?["rationale"]?.stringValue)
+      registry, tool: "get_daily_schedule", arguments: ["date": .string("2026-06-03")])
+    let timed = try #require(
+      schedule.structuredContent?.objectValue?["timed_tasks"]?.arrayValue?.first?.objectValue)
+    try expectFencedUserString(timed["title"]?.stringValue)
 
     let habits = try await mcpRegistryCall(registry, tool: "get_habits")
     let habit = try #require(habits.structuredContent?.objectValue?["habits"]?.arrayValue?.last?.objectValue)

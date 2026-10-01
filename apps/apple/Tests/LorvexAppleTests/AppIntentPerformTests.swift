@@ -24,8 +24,11 @@ func captureIntentRunnerCreatesTaskForValidTitle() async throws {
   )
   #expect(title == "Intent test task")
 
-  let today = try await core.loadToday()
-  #expect(today.tasks.contains { $0.title == "Intent test task" })
+  // Captured work is undated, so it lands in the inbox rather than the day pool;
+  // the open list is what witnesses the create.
+  let open = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  #expect(open.tasks.contains { $0.title == "Intent test task" })
 }
 
 @Test
@@ -55,8 +58,9 @@ func captureIntentPerformCreatesTaskInHermeticDatabase() async throws {
   // A fresh reader on the same on-disk database sees the created task, proving
   // perform() ran against the bound temp DB rather than the default location.
   let reader = SwiftLorvexCoreService(databasePath: tmp)
-  let today = try await reader.loadToday()
-  #expect(today.tasks.contains { $0.title == "Perform-path task" })
+  let open = try await reader.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  #expect(open.tasks.contains { $0.title == "Perform-path task" })
 }
 
 // MARK: - Returning-value task intents (read / list / capture)

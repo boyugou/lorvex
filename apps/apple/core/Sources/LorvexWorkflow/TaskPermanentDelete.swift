@@ -17,14 +17,11 @@ import LorvexStore
 /// 2. Collect tombstone-bound sync payloads for every cascading edge
 ///    / child (`task_tags`, `task_checklist_items`, `task_reminders`,
 ///    `task_calendar_event_links`, `task_dependencies`).
-/// 3. Collect focus parent dates that
-///    reference this task.
-/// 4. Explicitly DELETE `current_focus_items`, `focus_schedule_blocks`,
-///    and `task_dependencies` rows referencing this task on either
-///    side. The schema's FK cascade handles the rest.
-/// 5. Re-root any surviving recurrence neighbors so no durable lineage or
+/// 3. Explicitly DELETE `task_dependencies` rows referencing this task on
+///    either side. The schema's FK cascade handles the rest.
+/// 4. Re-root any surviving recurrence neighbors so no durable lineage or
 ///    authorization points at the row being removed.
-/// 6. LWW-gated `hardDeleteTaskLww` on the parent row. The synthetic
+/// 5. LWW-gated `hardDeleteTaskLww` on the parent row. The synthetic
 ///    task tombstone payload uses the pre-delete row.
 public enum TaskPermanentDelete {
   /// Input for ``permanentDeleteTask(_:hlc:input:)``.
@@ -47,17 +44,6 @@ public enum TaskPermanentDelete {
     }
   }
 
-  /// Per-date focus aggregates the delete touched, so the caller can
-  /// re-emit the affected aggregate snapshots.
-  public struct FocusParentDates: Sendable {
-    public let currentFocus: [String]
-    public let focusSchedule: [String]
-    public init(currentFocus: [String] = [], focusSchedule: [String] = []) {
-      self.currentFocus = currentFocus
-      self.focusSchedule = focusSchedule
-    }
-  }
-
   public struct PermanentDeleteTaskResult: Sendable {
     public let taskId: String
     public let title: String
@@ -65,7 +51,6 @@ public enum TaskPermanentDelete {
     public let payload: JSONValue
     public let beforeTask: JSONValue
     public let deleteSyncs: [SyncPayloadChange]
-    public let focusParentDates: FocusParentDates
     /// Surviving task rows whose schedule or lifecycle register changed while
     /// severing recurrence links to the deleted row. The service boundary must
     /// enqueue task upserts for these ids in the same outer transaction.
@@ -112,12 +97,6 @@ public enum TaskPermanentDelete {
       EdgeName.taskDependency,
       try PayloadLoaders.loadTaskDependenciesForTask(db, taskId: taskIdStr)))
 
-    let focusParentDates = try collectFocusParentDates(db, taskId: taskIdStr)
-
-    try db.execute(
-      sql: "DELETE FROM current_focus_items WHERE task_id = ?", arguments: [taskIdStr])
-    try db.execute(
-      sql: "DELETE FROM focus_schedule_blocks WHERE task_id = ?", arguments: [taskIdStr])
     try db.execute(
       sql: "DELETE FROM task_dependencies WHERE task_id = ?", arguments: [taskIdStr])
     try db.execute(
@@ -151,7 +130,6 @@ public enum TaskPermanentDelete {
       payload: payload,
       beforeTask: beforeTask,
       deleteSyncs: deleteSyncs,
-      focusParentDates: focusParentDates,
       rerootedTaskIds: rerootedTaskIds,
       summary: summary)
   }
@@ -164,20 +142,6 @@ public enum TaskPermanentDelete {
     rows.map { id, payload in
       SyncPayloadChange(entityType: entityType, entityId: id, payload: payload)
     }
-  }
-
-  private static func collectFocusParentDates(
-    _ db: Database, taskId: String
-  ) throws -> FocusParentDates {
-    let currentFocus = try String.fetchAll(
-      db,
-      sql: "SELECT DISTINCT date FROM current_focus_items WHERE task_id = ?",
-      arguments: [taskId])
-    let focusSchedule = try String.fetchAll(
-      db,
-      sql: "SELECT DISTINCT date FROM focus_schedule_blocks WHERE task_id = ?",
-      arguments: [taskId])
-    return FocusParentDates(currentFocus: currentFocus, focusSchedule: focusSchedule)
   }
 
   /// Sever both possible recurrence relationships around the deleted row:

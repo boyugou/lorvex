@@ -1,8 +1,9 @@
 import LorvexCore
 import SwiftUI
 
-/// Full-screen Memory workspace for iPhone/iPad. Exposes key/content drafting,
-/// all memory entries, and delete affordances.
+/// Full-screen Memory workspace for iPhone/iPad: every memory entry with
+/// search, batch selection, and delete. New entries are drafted in the New
+/// Memory sheet behind the toolbar ＋; existing ones open the editor sheet.
 @MainActor
 public struct MobileStoreMemoryView: View {
   @Bindable var store: MobileStore
@@ -12,13 +13,8 @@ public struct MobileStoreMemoryView: View {
   @State private var batchSelectedMemoryKeys = Set<MemoryEntry.ID>()
   @State private var entryPendingDeletion: MemoryEntry?
   @State private var isConfirmingBatchDelete = false
-  @State private var isPresentingMemoryEditor = false
-  @FocusState private var focusedField: Field?
-
-  private enum Field {
-    case key
-    case content
-  }
+  @State private var editingEntry: MemoryEntry?
+  @State private var isComposingMemory = false
 
   public init(store: MobileStore) {
     self.store = store
@@ -37,12 +33,27 @@ public struct MobileStoreMemoryView: View {
       Button {
         toggleBatchSelection()
       } label: {
-        Label(batchSelectionTitle, systemImage: batchSelectionIcon)
+        // Words, as Mail and Files write them: a glyph here would repeat the
+        // Tasks tab's checklist and read as a jump to Tasks.
+        Text(batchSelectionTitle)
       }
       // Never disable while batch selecting, or an emptied catalog would trap the
-      // user in selection mode with no way back out.
-      .disabled(!isBatchSelecting && (store.memory == nil || memoryEntries.isEmpty))
+      // user in selection mode with no way back out. Gate on the UNFILTERED set so
+      // a no-match search doesn't hide the entry point (mirrors the Lists screen).
+      .disabled(!isBatchSelecting && (store.memory == nil || allMemoryEntries.isEmpty))
+      .lorvexToolbarHoverEffect()
       .accessibilityIdentifier("mobileMemory.batch.toggle")
+
+      if !isBatchSelecting {
+        Button {
+          isComposingMemory = true
+        } label: {
+          Label(newMemoryTitle, systemImage: "plus")
+        }
+        .lorvexToolbarHoverEffect()
+        .disabled(store.isSavingMemory)
+        .accessibilityIdentifier("mobileMemory.new")
+      }
     }
     .task {
       if store.memory == nil {
@@ -58,7 +69,7 @@ public struct MobileStoreMemoryView: View {
       pruneBatchSelection()
     }
     .refreshable {
-      await store.refreshResettingCloudSyncPacing()
+      await store.refresh()
       await store.loadMemorySnapshot()
     }
     .searchable(
@@ -73,10 +84,21 @@ public struct MobileStoreMemoryView: View {
       deleteEntry: deleteMemoryEntry,
       deleteBatch: { Task { await deleteSelectedMemory() } }
     )
-    .sheet(isPresented: $isPresentingMemoryEditor) {
-      MobileStoreMemoryEditorSheet(store: store, isPresented: $isPresentingMemoryEditor)
-        .lorvexSpatialBackground()
+    .sheet(item: $editingEntry) { entry in
+      MobileStoreMemoryEditorSheet(store: store, entry: entry)
     }
+    .sheet(isPresented: $isComposingMemory) {
+      MobileStoreMemoryComposerSheet(store: store)
+    }
+    #if DEBUG
+      .onAppear {
+        // Dev/QA only: the `lorvex://memorycomposer` screenshot hook raises the
+        // New Memory sheet so it can be captured without a tap.
+        if MobileMemoryDebugState.takePresentsComposerOnAppear() {
+          isComposingMemory = true
+        }
+      }
+    #endif
     .safeAreaInset(edge: .bottom) {
       if isBatchSelecting {
         MobileBatchActionBar(
@@ -122,103 +144,33 @@ public struct MobileStoreMemoryView: View {
 
   private var regularList: some View {
     List(selection: memorySelection) {
-      if !isBatchSelecting {
-        draftSection
-      }
       catalogSection
     }
-  }
-
-  private var draftSection: some View {
-    Section(memoryDraftSectionTitle) {
-      VStack(alignment: .leading, spacing: 5) {
-        Text(
-          String(
-            localized: "memory.field.key", defaultValue: "Key", table: "Localizable",
-            bundle: MobileL10n.bundle)
-        )
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-        TextField("", text: $store.memoryKeyDraft)
-          .autocorrectionDisabled()
-          .focused($focusedField, equals: .key)
-          .submitLabel(.next)
-          .onSubmit { focusedField = .content }
-          .accessibilityLabel(
-            String(
-              localized: "memory.field.key", defaultValue: "Key", table: "Localizable",
-              bundle: MobileL10n.bundle)
-          )
-          .accessibilityIdentifier("mobileMemory.key")
-      }
-      VStack(alignment: .leading, spacing: 5) {
-        Text(
-          String(
-            localized: "memory.field.content", defaultValue: "Content", table: "Localizable",
-            bundle: MobileL10n.bundle)
-        )
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-        TextField("", text: $store.memoryContentDraft, axis: .vertical)
-          .lineLimit(3...8)
-          .focused($focusedField, equals: .content)
-          .submitLabel(.done)
-          .onSubmit { submitMemoryDraft() }
-          .accessibilityLabel(
-            String(
-              localized: "memory.field.content", defaultValue: "Content", table: "Localizable",
-              bundle: MobileL10n.bundle)
-          )
-          .accessibilityIdentifier("mobileMemory.content")
-      }
-      Button {
-        submitMemoryDraft()
-      } label: {
-        Label(
-          store.isSavingMemory
-            ? String(
-              localized: "memory.saving", defaultValue: "Saving Memory", table: "Localizable",
-              bundle: MobileL10n.bundle)
-            : String(
-              localized: "memory.save", defaultValue: "Save Memory", table: "Localizable",
-              bundle: MobileL10n.bundle),
-          systemImage: "brain")
-      }
-      .disabled(!store.canSaveMemoryDraft)
-      .accessibilityIdentifier("mobileMemory.save")
-      if store.memoryEditingKey != nil {
-        Button(
-          String(
-            localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",
-            bundle: MobileL10n.bundle), role: .cancel
-        ) {
-          store.clearMemoryDraft()
-        }
-        .accessibilityIdentifier("mobileMemory.cancelEdit")
-      }
-    }
+    // Focusable like the Tasks list, so a selected row shows the focus
+    // system's quiet fill; the accent fill of a list outside the focus system
+    // hides the row's own tint and its trailing control.
+    .focusable()
   }
 
   private var catalogSection: some View {
-    Section(
-      String(
-        localized: "destination.memory", defaultValue: "Memory", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    ) {
+    Section {
       if store.memory == nil {
         MobileSkeletonRows(count: 4)
       } else if let memory = store.memory, memory.entries.isEmpty {
-        // Bounded inline empty-state (matches the rest of the app) — a
-        // ContentUnavailableView in a List Section inflates the row height.
+        // Text only: the toolbar ＋ already owns "new memory", so the row points
+        // at it instead of repeating the action.
         MobileEmptyState(
           icon: "brain",
-          tint: .purple,
+          tint: LorvexDesign.Palette.Destination.memory,
           title: String(
             localized: "memory.empty.no_entries", defaultValue: "No Memory Entries",
-            table: "Localizable", bundle: MobileL10n.bundle)
-        )
+            table: "Localizable", bundle: MobileL10n.bundle),
+          message: String(
+            localized: "memory.empty.message",
+            defaultValue: "Tap ＋ to save something your assistant should remember.",
+            table: "Localizable", bundle: MobileL10n.bundle))
       } else if memoryEntries.isEmpty {
-        ContentUnavailableView.search(text: searchQuery)
+        MobileEmptyState.search(text: searchQuery)
       } else {
         ForEach(memoryEntries) { entry in
           catalogRow(for: entry)
@@ -264,13 +216,7 @@ public struct MobileStoreMemoryView: View {
         batchSelectableRow(for: entry)
       }
     } else {
-      NavigationLink {
-        MobileStoreMemoryDetailDestination(
-          store: store,
-          initialEntryID: entry.id,
-          edit: presentEditor(for:)
-        )
-      } label: {
+      NavigationLink(value: MobileRoute.memoryEntry(entry.id)) {
         batchSelectableRow(for: entry)
       }
     }
@@ -280,13 +226,13 @@ public struct MobileStoreMemoryView: View {
     ContentUnavailableView {
       Label(
         String(
-          localized: "memory.detail.empty.title", defaultValue: "Select Memory",
+          localized: "memory.detail.empty.title", defaultValue: "Select a Memory",
           table: "Localizable", bundle: MobileL10n.bundle), systemImage: "brain")
     } description: {
       Text(
         String(
           localized: "memory.detail.empty.description",
-          defaultValue: "Choose a memory entry to inspect its content.", table: "Localizable",
+          defaultValue: "Choose a memory to read it.", table: "Localizable",
           bundle: MobileL10n.bundle))
     }
   }
@@ -326,10 +272,6 @@ public struct MobileStoreMemoryView: View {
       : String(
         localized: "memory.batch.select", defaultValue: "Select", table: "Localizable",
         bundle: MobileL10n.bundle)
-  }
-
-  private var batchSelectionIcon: String {
-    isBatchSelecting ? "checkmark.circle" : "checkmark.circle.badge.plus"
   }
 
   private func batchSelectableRow(for entry: MemoryEntry) -> some View {
@@ -386,19 +328,11 @@ public struct MobileStoreMemoryView: View {
     }
   }
 
-  private func prepareDraft(from entry: MemoryEntry) {
-    store.beginEditingMemory(entry)
-  }
-
   private func presentEditor(for entry: MemoryEntry) {
-    prepareDraft(from: entry)
-    isPresentingMemoryEditor = true
-  }
-
-  private func submitMemoryDraft() {
-    Task {
-      await store.saveMemoryDraft()
-    }
+    // The editor sheet owns its own draft seeded from `entry`; the New Memory
+    // sheet's draft lives in the store, so a half-typed new entry survives
+    // opening the editor for another one.
+    editingEntry = entry
   }
 
   private func memoryEditAction(_ entry: MemoryEntry) -> some View {
@@ -410,7 +344,7 @@ public struct MobileStoreMemoryView: View {
           localized: "common.edit", defaultValue: "Edit", table: "Localizable",
           bundle: MobileL10n.bundle), systemImage: "pencil")
     }
-    .tint(.blue)
+    .tint(LorvexDesign.Palette.accent)
     .disabled(store.isSavingMemory)
     .accessibilityIdentifier("mobileMemory.edit.\(entry.key)")
   }
@@ -428,13 +362,9 @@ public struct MobileStoreMemoryView: View {
     .accessibilityIdentifier("mobileMemory.delete.\(entry.key)")
   }
 
-  private var memoryDraftSectionTitle: String {
-    store.memoryEditingKey == nil
-      ? String(
-        localized: "memory.section.save", defaultValue: "Save Memory", table: "Localizable",
-        bundle: MobileL10n.bundle)
-      : String(
-        localized: "memory.section.edit", defaultValue: "Edit Memory", table: "Localizable",
-        bundle: MobileL10n.bundle)
+  private var newMemoryTitle: String {
+    String(
+      localized: "memory.new", defaultValue: "New Memory", table: "Localizable",
+      bundle: MobileL10n.bundle)
   }
 }

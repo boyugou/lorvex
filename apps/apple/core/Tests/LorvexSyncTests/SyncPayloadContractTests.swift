@@ -202,25 +202,15 @@ final class SyncPayloadContractTests: XCTestCase {
     }
     XCTAssertFalse(try SyncPayloadContractFixture.violations(for: rangeDrift).isEmpty)
 
-    let unitDrift = try replacingPayload(try XCTUnwrap(byType[.focusSchedule])) {
-      guard case .array(var blocks)? = $0["blocks"], case .object(var first) = blocks[0] else {
-        return
-      }
-      first["start_minutes"] = .string("09:00")
-      blocks[0] = .object(first)
-      $0["blocks"] = .array(blocks)
+    let unitDrift = try replacingPayload(try XCTUnwrap(byType[.task])) {
+      $0["planned_start_minutes"] = .string("09:00")
     }
     XCTAssertFalse(try SyncPayloadContractFixture.violations(for: unitDrift).isEmpty)
 
-    let nestedObjectDrift = try replacingPayload(try XCTUnwrap(byType[.focusSchedule])) {
-      guard case .array(var blocks)? = $0["blocks"], case .object(var first) = blocks[0] else {
-        return
-      }
-      first["unreleased_field"] = .bool(true)
-      blocks[0] = .object(first)
-      $0["blocks"] = .array(blocks)
+    let minuteOfDayDrift = try replacingPayload(try XCTUnwrap(byType[.task])) {
+      $0["planned_end_minutes"] = .int(1441)
     }
-    XCTAssertFalse(try SyncPayloadContractFixture.violations(for: nestedObjectDrift).isEmpty)
+    XCTAssertFalse(try SyncPayloadContractFixture.violations(for: minuteOfDayDrift).isEmpty)
 
     let arrayItemDrift = try replacingPayload(try XCTUnwrap(byType[.calendarEvent])) {
       $0["attendees"] = .array([.string("not-an-attendee-object")])
@@ -255,20 +245,6 @@ final class SyncPayloadContractTests: XCTestCase {
     XCTAssertTrue(
       try SyncPayloadContractRegistry.violations(for: enumMutation)
         .contains { $0.contains("outside enum") })
-
-    let nestedMutation = replacingSchemaVersion(
-      try replacingPayload(try XCTUnwrap(byType[.focusSchedule])) {
-        guard case .array(var blocks)? = $0["blocks"],
-          case .object(var first) = blocks.first
-        else { return }
-        first["future_nested_key"] = .string("not shadowable")
-        blocks[0] = .object(first)
-        $0["blocks"] = .array(blocks)
-      },
-      futureVersion)
-    XCTAssertTrue(
-      try SyncPayloadContractRegistry.violations(for: nestedMutation)
-        .contains { $0.contains("future_nested_key") })
 
     let reservedMutation = replacingSchemaVersion(
       try replacingPayload(try XCTUnwrap(byType[.habit])) {
@@ -363,9 +339,6 @@ final class SyncPayloadContractTests: XCTestCase {
       let registry = EntityApplierRegistry(appliers: EntityApplierRegistry.defaultEntityAppliers())
 
       try store.writer.write { db in
-        _ = try AuditRetentionFrontier.activateAccount(
-          db, accountIdentifier: "golden-contract-account", zoneName: "LorvexZone-golden")
-
         let orderedTypes = EntityKind.topologicalEntityOrder.filter {
           contract.entities[$0] != nil
         }
@@ -394,38 +367,21 @@ final class SyncPayloadContractTests: XCTestCase {
           let envelope = try XCTUnwrap(grouped[entityType]?.first)
           let result = try Apply.applyEnvelope(
             db, registry: registry, envelope: envelope)
-          if envelope.entityType == .currentFocus || envelope.entityType == .focusSchedule {
-            // The golden task deliberately exercises the cancelled + archived
-            // fields, while both golden day roots deliberately reference that
-            // same identity. The payload remains valid wire input, but the
-            // absorbing task-state invariant must normalize the root to a
-            // typed Delete repair instead of materializing an invalid reference.
-            guard case .repairRequired(
-              .propagateTaskRollover(let targets, let additionalFloor)) = result
-            else {
-              return XCTFail(
-                "expected day-root reference repair for payload contract v\(version) "
-                  + "\(entityType) envelope, got \(result)")
-            }
-            XCTAssertEqual(additionalFloor, envelope.version)
-            XCTAssertEqual(
-              targets,
-              [
-                .relatedEntity(
-                  entityType: envelope.entityType, entityId: envelope.entityId,
-                  operation: .delete, knownVersionFloor: envelope.version)
-              ])
-          } else {
-            XCTAssertEqual(
-              result, .applied,
-              "real inbound applier rejected payload contract v\(version) \(entityType) envelope")
-          }
+          XCTAssertEqual(
+            result, .applied,
+            "real inbound applier rejected payload contract v\(version) \(entityType) envelope")
         }
 
+        // The manifests still describe `ai_changelog`, but the audit trail is
+        // device-local: inbound apply skips its envelopes and stores nothing.
         let audit = try XCTUnwrap(grouped[EntityName.aiChangelog]?.first)
         XCTAssertEqual(
-          try Apply.applyEnvelope(db, registry: registry, envelope: audit), .applied,
-          "real inbound audit applier rejected payload contract v\(version) envelope")
+          try Apply.applyEnvelope(db, registry: registry, envelope: audit),
+          .skipped(
+            reason: "ai_changelog is device-local; audit envelopes are not applied",
+            winnerVersion: nil),
+          "payload contract v\(version) audit envelope must be skipped")
+        XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog"), 0)
       }
     }
   }
@@ -488,37 +444,47 @@ final class SyncPayloadContractTests: XCTestCase {
     }
 
     XCTAssertEqual(contract.entities[EntityName.task]?.fields["estimated_minutes"]?.unit, "minutes")
-    let blockFields = contract.entities[EntityName.focusSchedule]?.fields["blocks"]?
-      .items?.properties
-    XCTAssertEqual(blockFields?["start_minutes"]?.unit, "minute-of-day")
-    XCTAssertEqual(blockFields?["end_minutes"]?.unit, "minute-of-day")
+    let taskFields = contract.entities[EntityName.task]?.fields
+    XCTAssertEqual(taskFields?["planned_start_minutes"]?.unit, "minute-of-day")
+    XCTAssertEqual(taskFields?["planned_end_minutes"]?.unit, "minute-of-day")
   }
 
-  func testAiChangelogProductionUpsertFunnelMatchesManifest() throws {
+  /// The audit trail is device-local, so the production outbox funnel refuses
+  /// an `ai_changelog` upsert before it can queue anything, even though the
+  /// frozen manifests still describe the entity's wire shape.
+  func testAiChangelogUpsertIsRefusedByTheProductionFunnel() throws {
     let store = try SyncTestSupport.freshStore()
     try store.writer.write { db in
-      let id = uuid(901)
-      let row = ChangelogWrite.ChangelogRow(
-        id: id, timestamp: "2026-07-14T12:00:00.000Z", operation: "update",
-        entityType: "task", entityId: nil, entityIds: [],
-        summary: "Contract probe", initiatedBy: "assistant", mcpTool: nil,
-        sourceDeviceId: deviceID, beforeJson: nil, afterJson: nil,
-        retentionEpoch: 7)
-      try ChangelogWrite.writeChangelogRow(db, row)
-      let payload = try ChangelogWrite.buildChangelogSyncPayload(row)
-      try OutboxEnqueue.enqueuePayloadUpsert(
-        db, entityType: EntityName.aiChangelog, entityId: id, payload: payload,
-        context: OutboxWriteContext(version: version, deviceId: deviceID))
-      let envelope = try XCTUnwrap(Outbox.getPending(db).first?.envelope)
-      XCTAssertEqual(envelope.entityType, .aiChangelog)
-      XCTAssertEqual(try SyncPayloadContractFixture.violations(for: envelope), [])
-      guard case .object(let object)? = JSONValue.parse(envelope.payload) else {
-        return XCTFail("final ai_changelog payload must be an object")
+      XCTAssertThrowsError(
+        try OutboxEnqueue.enqueuePayloadUpsert(
+          db, entityType: EntityName.aiChangelog, entityId: uuid(901),
+          payload: .object([
+            "timestamp": .string("2026-07-14T12:00:00.000Z"),
+            "operation": .string("update"),
+            "entity_type": .string("task"),
+            "summary": .string("Contract probe"),
+            "initiated_by": .string("assistant"),
+            "source_device_id": .string(deviceID),
+          ]),
+          context: OutboxWriteContext(version: version, deviceId: deviceID))
+      ) { error in
+        guard case EnqueueError.unsupportedOperation(let entityType, let operation) = error else {
+          return XCTFail("expected unsupportedOperation, got \(error)")
+        }
+        XCTAssertEqual(entityType, EntityName.aiChangelog)
+        XCTAssertEqual(operation, "upsert")
       }
-      XCTAssertEqual(object["retention_epoch"], .int(7))
-      XCTAssertNil(object["retention_account_identifier"])
-      XCTAssertNil(object["cloud_presence_possible"])
+      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox"), 0)
     }
+  }
+
+  /// The numbered manifest keeps the `ai_changelog` golden upsert envelope valid
+  /// against its own contract.
+  func testAiChangelogGoldenEnvelopeStillMatchesManifest() throws {
+    let envelopes = try SyncPayloadContractFixture.goldenEnvelopes()
+    let audit = try XCTUnwrap(envelopes.first { $0.entityType == .aiChangelog })
+    XCTAssertEqual(audit.operation, .upsert)
+    XCTAssertEqual(try SyncPayloadContractFixture.violations(for: audit), [])
   }
 
   func testProductionDeleteFunnelMatchesEachExactOperationShape() throws {
@@ -533,7 +499,7 @@ final class SyncPayloadContractTests: XCTestCase {
         let entityID: String
         switch kind {
         case .preference: entityID = PreferenceKeys.prefWorkingHours
-        case .dailyReview, .currentFocus, .focusSchedule: entityID = "2026-07-14"
+        case .dailyReview, .dailyBriefing: entityID = "2026-07-14"
         case .taskTag, .taskDependency, .taskCalendarEventLink:
           entityID = "\(uuid(1000 + index)):\(uuid(2000 + index))"
         case .habitCompletion:

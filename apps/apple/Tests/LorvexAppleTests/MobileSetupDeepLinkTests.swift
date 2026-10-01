@@ -28,10 +28,10 @@ func mobileSetupPreferencesPersistCompletion() {
 @Test
 func mobileDeepLinksMapAppleSystemEntrypointsToMobileNavigation() throws {
   #expect(MobileDeepLinkRoute(url: URL(string: "lorvex://open/today")!) == .tab(.today))
-  // Calendar and Habits are first-class tabs now; Reviews lives inside More.
+  // Calendar, Habits, and Reviews are first-class tabs now.
   #expect(MobileDeepLinkRoute(url: URL(string: "lorvex://calendar")!) == .tab(.calendar))
   #expect(MobileDeepLinkRoute(url: URL(string: "lorvex://habits")!) == .tab(.habits))
-  #expect(MobileDeepLinkRoute(url: URL(string: "lorvex://reviews")!) == .tab(.more))
+  #expect(MobileDeepLinkRoute(url: URL(string: "lorvex://reviews")!) == .tab(.review))
   // Capture is an action (a sheet), not a navigable destination.
   #expect(MobileDeepLinkRoute(url: URL(string: "lorvex://open/capture")!) == nil)
   #expect(MobileDeepLinkRoute(url: URL(string: "https://lorvex/open/today")!) == nil)
@@ -55,17 +55,17 @@ func mobileDeepLinksMapAppleSystemEntrypointsToMobileNavigation() throws {
 
 @Test
 func mobileDeepLinksAcceptEverySharedCoreDestination() {
-  // Primary surfaces (tasks / calendar / habits) deep-link to their own tab; every
-  // secondary workspace resolves into the More tab. Mirrors `tab(for:)` in
-  // MobileDeepLinkRouting after the information-architecture restructure.
+  // Primary surfaces (tasks / calendar / habits / reviews) deep-link to their
+  // own tab; Lists and Memory resolve into the Tasks tab, where both are
+  // reachable. Mirrors `tab(for:)` in MobileDeepLinkRouting.
   let expectedTabs: [SidebarSelection: MobileTab] = [
     .today: .today,
     .tasks: .tasks,
-    .lists: .more,
+    .lists: .tasks,
     .calendar: .calendar,
     .habits: .habits,
-    .reviews: .more,
-    .memory: .more,
+    .reviews: .review,
+    .memory: .tasks,
   ]
 
   for destination in SidebarSelection.allCases {
@@ -93,7 +93,6 @@ func mobileIntentHandoffAcceptsCaseVariantDestinations() {
     MobileIntentHandoff.storeDestination("MEMORY")
     let target = MobileIntentHandoff.consumeNavigationTarget()
 
-    #expect(target?.selectedTab == .more)
-    #expect(target?.moreDestination == .memory)
+    #expect(target?.selectedTab == .tasks)
   }
 }

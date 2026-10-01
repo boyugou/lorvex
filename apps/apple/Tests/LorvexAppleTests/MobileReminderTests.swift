@@ -11,7 +11,7 @@ func mobileStoreAddsAndRemovesRemindersThroughCore() async throws {
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   let reminderDate = Date(timeIntervalSince1970: 1_779_494_400)
 
   let added = await store.addReminder(taskID: task.id, date: reminderDate)
@@ -33,14 +33,14 @@ func mobileStoreAddsAndRemovesRemindersThroughCore() async throws {
 @MainActor
 @Test
 func mobileStoreReminderMutationsDoNotReloadPlanningSnapshots() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
 
   await store.refresh()
   let listLoads = core.loadListsCallCount
   let habitLoads = core.loadHabitsCallCount
   let calendarLoads = core.loadCalendarTimelineCallCount
-  let task = try #require(store.snapshot.openTasks.first)
+  let task = try #require(store.snapshot.today.tasks.first)
   let reminderDate = Date(timeIntervalSince1970: 1_779_494_400)
 
   let added = await store.addReminder(taskID: task.id, date: reminderDate)
@@ -49,7 +49,7 @@ func mobileStoreReminderMutationsDoNotReloadPlanningSnapshots() async throws {
   #expect(core.loadListsCallCount == listLoads)
   #expect(core.loadHabitsCallCount == habitLoads)
   #expect(core.loadCalendarTimelineCallCount == calendarLoads)
-  let storedReminderAt = try #require(store.selectedTask?.reminders.first?.reminderAt)
+  let storedReminderAt = try #require(store.resolveTask(task.id)?.reminders.first?.reminderAt)
   let reminderParser = ISO8601DateFormatter()
   reminderParser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
   #expect(reminderParser.date(from: storedReminderAt) == reminderDate)
@@ -81,7 +81,7 @@ func mobileStoreSchedulesTaskRemindersOutsideStaleTodaySnapshot() async throws {
 @Test
 func mobileStoreReminderSchedulingUsesReminderBoundedTaskQuery() async throws {
   let scheduler = RecordingTaskReminderScheduler()
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(
     core: core,
     taskReminderScheduler: scheduler
@@ -150,9 +150,9 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
     todayString: { "2026-05-23" }
   )
 
-  // Seed 12 tasks planned today — more than the 10-task dashboard cap, so the
-  // canonical badge source (the uncapped scheduled/overdue query) reports more
-  // than the ≤10 `snapshot.today.tasks` pool would.
+  // Seed 12 tasks planned today. The badge must come from the canonical
+  // scheduled/overdue query rather than from a day surface: the two answer
+  // different questions, and only the canonical one is a due-count.
   let today = try #require(Calendar(identifier: .gregorian).date(from: DateComponents(
     timeZone: TimeZone(secondsFromGMT: 0), year: 2026, month: 5, day: 23)))
   var ids: [LorvexTask.ID] = []
@@ -171,7 +171,7 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
   }
 
   await store.refresh()
-  #expect(store.snapshot.today.tasks.count == 10)  // dashboard pool is capped
+  #expect(store.snapshot.today.tasks.count == 12)  // the day pool is uncapped
 
   // Complete one task through the mutation path (`mutateTaskReturningToday`),
   // whose post-mutation badge update now routes through the canonical source.
@@ -180,9 +180,6 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
   let scheduled = try await core.getScheduledTasks(
     from: "0001-01-01", to: "2026-05-23", limit: 500)
   let canonical = BadgeCoordinator.badgeCount(tasks: scheduled, today: "2026-05-23")
-  let capped = BadgeCoordinator.badgeCount(
-    tasks: store.snapshot.today.tasks, today: "2026-05-23")
   #expect(canonical == 11)  // 12 planned today, one now completed
-  #expect(canonical > capped)  // capped is 10 — the dashboard slice
   #expect(await recorder.lastCount() == canonical)
 }

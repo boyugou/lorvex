@@ -118,7 +118,7 @@ struct CalendarEventRepeatField: View {
     String(
       format: String(localized: "recurrence.summary.interval", defaultValue: "Every %1$lld %2$@", table: "Localizable", bundle: LorvexL10n.bundle),
       max(1, rule.interval ?? 1),
-      rule.freq.localizedIntervalUnitPlural)
+      rule.freq.localizedIntervalUnit(count: max(1, rule.interval ?? 1)))
   }
 
   // MARK: Bindings that project onto the single typed rule

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import plistlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +13,35 @@ CORE_RESOURCE_PAYLOADS = {
     "schema.sql": b"CREATE TABLE example(id TEXT PRIMARY KEY);\n",
     "checksums.lock": b'{"001":{"name":"001_schema.sql"}}\n',
 }
+
+
+def _wrapped_bundle(root: Path, name: str) -> Path:
+    """Create a bundle in the wrapped macOS layout and return its payload root."""
+    bundle = root / name
+    payload = bundle / "Contents" / "Resources"
+    payload.mkdir(parents=True)
+    _write_bundle_plist(bundle)
+    return payload
+
+
+def _write_bundle_plist(bundle: Path, **overrides: object) -> Path:
+    """Stamp the identity the staging gives every embedded resource bundle."""
+    info: dict[str, object] = {
+        "CFBundleIdentifier": f"com.lorvex.apple.resource.{bundle.stem.lower()}",
+        "CFBundleName": bundle.stem,
+        "CFBundlePackageType": "BNDL",
+        "CFBundleInfoDictionaryVersion": "6.0",
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleSupportedPlatforms": ["MacOSX"],
+        "LSMinimumSystemVersion": "15.0",
+    }
+    info.update(overrides)
+    plist_path = bundle / "Contents" / "Info.plist"
+    plist_path.parent.mkdir(parents=True, exist_ok=True)
+    plist_path.write_bytes(
+        plistlib.dumps({key: value for key, value in info.items() if value is not None})
+    )
+    return plist_path
 
 
 class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
@@ -48,7 +78,7 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                 app
                 / "Contents"
                 / "PlugIns"
-                / "LorvexFocusWidget.appex"
+                / "LorvexWidgets.appex"
                 / "Contents"
                 / "Resources"
             ),
@@ -75,14 +105,13 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
         manifests: dict[str, bytes],
     ) -> None:
         for root in VerifySwiftPMResourceBundlesTests._surface_resources(app).values():
-            core_bundle = root / "LorvexApple_LorvexCore.bundle"
-            core_bundle.mkdir(parents=True)
+            root.mkdir(parents=True, exist_ok=True)
+            core_payload = _wrapped_bundle(root, "LorvexApple_LorvexCore.bundle")
             for name, payload in CORE_RESOURCE_PAYLOADS.items():
-                (core_bundle / name).write_bytes(payload)
-            contract_dir = (
-                root / "LorvexAppleCore_LorvexSync.bundle" / "SyncPayloadContracts"
-            )
-            contract_dir.mkdir(parents=True)
+                (core_payload / name).write_bytes(payload)
+            sync_payload = _wrapped_bundle(root, "LorvexAppleCore_LorvexSync.bundle")
+            contract_dir = sync_payload / "SyncPayloadContracts"
+            contract_dir.mkdir()
             for name, payload in manifests.items():
                 (contract_dir / name).write_bytes(payload)
 
@@ -116,7 +145,7 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
             app = root / "Lorvex.app"
             authority, embedded, manifests = self._source_contracts(root)
             self._install_resource_bundles(app, manifests)
-            (app / "LorvexApple_LorvexApple.bundle").mkdir()
+            _wrapped_bundle(app, "LorvexApple_LorvexApple.bundle")
 
             self.assertEqual(
                 self._verification_failures(app, root, authority, embedded),
@@ -140,12 +169,14 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                 / "Contents"
                 / "Resources"
             )
+            resources.mkdir(parents=True)
+            helper_resources.mkdir(parents=True)
             for name in (
                 "LorvexApple_LorvexCore.bundle",
                 "LorvexAppleCore_LorvexSync.bundle",
             ):
-                (resources / name).mkdir(parents=True)
-            (helper_resources / "LorvexApple_LorvexCore.bundle").mkdir(parents=True)
+                _wrapped_bundle(resources, name)
+            _wrapped_bundle(helper_resources, "LorvexApple_LorvexCore.bundle")
 
             self.assertIn(
                 "required SwiftPM resource bundle missing from MCP helper: "
@@ -163,7 +194,7 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                 app
                 / "Contents"
                 / "PlugIns"
-                / "LorvexFocusWidget.appex"
+                / "LorvexWidgets.appex"
                 / "Contents"
                 / "Resources"
                 / "LorvexAppleCore_LorvexSync.bundle"
@@ -185,6 +216,8 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                 manifest = (
                     resources
                     / "LorvexAppleCore_LorvexSync.bundle"
+                    / "Contents"
+                    / "Resources"
                     / "SyncPayloadContracts"
                     / "001.json"
                 )
@@ -206,6 +239,8 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                 manifest = (
                     resources
                     / "LorvexAppleCore_LorvexSync.bundle"
+                    / "Contents"
+                    / "Resources"
                     / "SyncPayloadContracts"
                     / "999.json"
                 )
@@ -228,6 +263,8 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                 manifest = (
                     resources
                     / "LorvexAppleCore_LorvexSync.bundle"
+                    / "Contents"
+                    / "Resources"
                     / "SyncPayloadContracts"
                     / "001.json"
                 )
@@ -248,7 +285,13 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
             self._install_resource_bundles(app, manifests)
             for surface, resources in self._surface_resources(app).items():
                 for name, payload in CORE_RESOURCE_PAYLOADS.items():
-                    resource = resources / "LorvexApple_LorvexCore.bundle" / name
+                    resource = (
+                        resources
+                        / "LorvexApple_LorvexCore.bundle"
+                        / "Contents"
+                        / "Resources"
+                        / name
+                    )
                     with self.subTest(surface=surface, resource=name):
                         resource.unlink()
                         self.assertIn(
@@ -267,7 +310,13 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
             self._install_resource_bundles(app, manifests)
             for surface, resources in self._surface_resources(app).items():
                 for name, payload in CORE_RESOURCE_PAYLOADS.items():
-                    resource = resources / "LorvexApple_LorvexCore.bundle" / name
+                    resource = (
+                        resources
+                        / "LorvexApple_LorvexCore.bundle"
+                        / "Contents"
+                        / "Resources"
+                        / name
+                    )
                     with self.subTest(surface=surface, resource=name):
                         resource.write_bytes(b"drift\n")
                         self.assertIn(
@@ -278,6 +327,95 @@ class VerifySwiftPMResourceBundlesTests(unittest.TestCase):
                             ),
                         )
                         resource.write_bytes(payload)
+
+    def test_rejects_bundle_without_info_plist_on_every_surface(self) -> None:
+        """A package that omits `defaultLocalization` stages a bundle with no plist."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app = root / "Lorvex.app"
+            authority, embedded, manifests = self._source_contracts(root)
+            self._install_resource_bundles(app, manifests)
+            for surface, resources in self._surface_resources(app).items():
+                bundle = resources / "LorvexAppleCore_LorvexSync.bundle"
+                plist_path = bundle / "Contents" / "Info.plist"
+                payload = plist_path.read_bytes()
+                with self.subTest(surface=surface):
+                    plist_path.unlink()
+                    relative = bundle.relative_to(app)
+                    self.assertIn(
+                        f"staged bundle has no Info.plist: {relative}",
+                        self._verification_failures(app, root, authority, embedded),
+                    )
+                    plist_path.write_bytes(payload)
+
+    def test_rejects_bundle_missing_a_required_plist_key(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app = root / "Lorvex.app"
+            authority, embedded, manifests = self._source_contracts(root)
+            self._install_resource_bundles(app, manifests)
+            bundle = app / "Contents" / "Resources" / "LorvexApple_LorvexCore.bundle"
+            for key in (
+                "CFBundleIdentifier",
+                "CFBundleName",
+                "CFBundleDevelopmentRegion",
+            ):
+                with self.subTest(key=key):
+                    _write_bundle_plist(bundle, **{key: None})
+                    self.assertIn(
+                        f"staged bundle Info.plist is missing {key}: "
+                        f"{bundle.relative_to(app)}",
+                        self._verification_failures(app, root, authority, embedded),
+                    )
+            _write_bundle_plist(bundle)
+
+    def test_rejects_bundle_with_wrong_package_type(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app = root / "Lorvex.app"
+            authority, embedded, manifests = self._source_contracts(root)
+            self._install_resource_bundles(app, manifests)
+            bundle = app / "Contents" / "Resources" / "LorvexApple_LorvexCore.bundle"
+            _write_bundle_plist(bundle, CFBundlePackageType="APPL")
+
+            self.assertIn(
+                "staged bundle Info.plist CFBundlePackageType is 'APPL', expected "
+                f"'BNDL': {bundle.relative_to(app)}",
+                self._verification_failures(app, root, authority, embedded),
+            )
+
+    def test_rejects_flat_bundle_layout(self) -> None:
+        """`swift build` emits the flat iOS shape; the macOS payload must be wrapped."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app = root / "Lorvex.app"
+            authority, embedded, manifests = self._source_contracts(root)
+            self._install_resource_bundles(app, manifests)
+            flat = app / "Contents" / "Resources" / "Flat_Bundle.bundle"
+            flat.mkdir(parents=True)
+            (flat / "payload.json").write_bytes(b"{}\n")
+
+            self.assertIn(
+                "staged bundle uses the flat iOS layout, expected a wrapped "
+                f"Contents/ directory: {flat.relative_to(app)}",
+                self._verification_failures(app, root, authority, embedded),
+            )
+
+    def test_rejects_payload_left_outside_contents(self) -> None:
+        """A half-wrapped bundle keeps resources the loader will not find."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            app = root / "Lorvex.app"
+            authority, embedded, manifests = self._source_contracts(root)
+            self._install_resource_bundles(app, manifests)
+            bundle = app / "Contents" / "Resources" / "LorvexApple_LorvexCore.bundle"
+            (bundle / "stray.json").write_bytes(b"{}\n")
+
+            self.assertIn(
+                "staged bundle keeps payload outside Contents/, so it was "
+                f"wrapped incompletely: {bundle.relative_to(app)}: ['stray.json']",
+                self._verification_failures(app, root, authority, embedded),
+            )
 
     def test_rejects_embedded_source_drift_before_packaging(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

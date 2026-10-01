@@ -96,16 +96,6 @@ extension CoreBridgeClient {
       from: try await createCalendarEventModel(draft: draft, originalID: originalID))
   }
 
-  /// ``createCalendarEventModel(draft:originalID:)`` mapped to the MCP event
-  /// `Value` shape — the per-item entry `batch_create_calendar_events` calls
-  /// while assembling its `{results, count, skipped}` envelope.
-  func createCalendarEventModelValue(
-    draft: CalendarEventCreateDraft, originalID: String?
-  ) async throws -> Value {
-    Self.calendarEventValue(
-      from: try await createCalendarEventModel(draft: draft, originalID: originalID))
-  }
-
   /// Create one canonical calendar event from a draft, shared by
   /// `create_calendar_event` and each row of `batch_create_calendar_events`.
   /// With an `original_id` the event is restored id-preserving through the

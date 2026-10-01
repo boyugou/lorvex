@@ -242,7 +242,7 @@ def ci_workflow_failures(
     verify_all_path: Path = VERIFY_ALL_SCRIPT,
 ) -> list[str]:
     """The Apple CI workflow delegates its gate to ``verify_all.sh`` plus the
-    two platform Release-link scripts. Assert that delegation is present and not
+    platform Release-link script. Assert that delegation is present and not
     failure-swallowed, then follow it into ``verify_all.sh`` for the individual
     verifier commands that gate now owns."""
     if not path.is_file():
@@ -252,7 +252,6 @@ def ci_workflow_failures(
     delegation_markers = [
         "./script/verify_all.sh",
         "./script/verify_mobile_release_link.sh",
-        "./script/verify_vision_release_link.sh",
     ]
     failures = _required_command_failures(source, delegation_markers, "Apple CI workflow")
     failures.extend(verify_all_gate_failures(verify_all_path))

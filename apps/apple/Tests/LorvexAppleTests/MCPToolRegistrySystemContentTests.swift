@@ -15,20 +15,15 @@ struct SystemToolTests {
     let result = try await mcpRegistryCall(registry, tool: "get_session_context")
     #expect(result.isError != true)
     #expect(!mcpTextContent(result).isEmpty)
-    // Flat envelope matching the on-disk core adapter, not the old composite
-    // (`memory`/`overview`/`current_focus`/…) object.
+    // Flat envelope matching the on-disk core adapter.
     let object = try #require(result.structuredContent?.objectValue)
     #expect(object["date"]?.stringValue != nil)
+    #expect(object["weekday"]?.stringValue != nil)
+    #expect(object["local_time"]?.stringValue?.wholeMatch(of: #/\d{2}:\d{2}/#) != nil)
     #expect(object["sync_backend"]?.stringValue == "unknown")
     #expect(object.keys.contains("device_id"))
     #expect(object.keys.contains("timezone"))
     #expect(object.keys.contains("working_hours"))
-    // `raw_sections` was a dead, always-empty field and is no longer emitted.
-    #expect(object["raw_sections"] == nil)
-    // The composite preview keys must be gone.
-    for legacy in ["memory", "overview", "current_focus", "today_events", "recent_changelog", "guide", "habits"] {
-      #expect(object[legacy] == nil, "unexpected composite key \(legacy)")
-    }
   }
 
   @Test("get_overview compact top_tasks are the slim projection, not full tasks")
@@ -60,10 +55,10 @@ struct SystemToolTests {
     #expect(result.structuredContent?.objectValue?["tasks"] != nil)
   }
 
-  @Test("get_overview surfaces current focus read failures")
-  func overviewSurfacesCurrentFocusFailure() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-    core.loadCurrentFocusError = .unsupportedOperation("Current focus unavailable.")
+  @Test("get_overview surfaces overview read failures")
+  func overviewSurfacesReadFailure() async throws {
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+    core.loadOverviewTaskListError = .unsupportedOperation("Overview unavailable.")
     let bridge = CoreBridgeClient(databasePath: "/tmp/lorvex-test.sqlite", service: core)
     let registry = ToolRegistry(coreBridge: bridge)
 
@@ -72,7 +67,7 @@ struct SystemToolTests {
     let result = try await mcpRegistryCall(
       registry, tool: "get_overview", arguments: ["shape": .string("full")])
     #expect(result.isError == true)
-    #expect(mcpTextContent(result).contains("Current focus unavailable."))
+    #expect(mcpTextContent(result).contains("Overview unavailable."))
   }
 
   @Test("get_all_preferences returns non-error result")

@@ -20,7 +20,7 @@ struct DeleteLorvexHabitReminderPolicyIntent: LorvexAuthenticatedIntent {
     try await requestLorvexDestructiveConfirmation(
       IntentDialog(
         LocalizedStringResource(
-          "system.confirm.delete", defaultValue: "Delete this item? This can't be undone.",
+          "system.confirm.delete", defaultValue: "Delete this item? This can’t be undone.",
           table: "Localizable", bundle: SystemL10n.bundle)))
     let removed = try await LorvexTaskIntentRunner.deleteHabitReminderPolicy(policyID: policyID)
     guard let removed else {

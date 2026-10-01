@@ -1,10 +1,8 @@
 import LorvexCore
 import SwiftUI
-import TipKit
 
-/// Which reflection the Reviews workspace is focused on. The daily entry and the
-/// weekly digest share one three-zone scaffold (header + date navigation +
-/// two-column body); the scope toggle swaps the contents of the two columns.
+/// Which reflection the Reviews workspace is focused on: the day's calm review
+/// page, or the week's digest beside its evidence.
 enum ReviewMode: String, CaseIterable, Hashable {
   case daily
   case weekly
@@ -12,42 +10,61 @@ enum ReviewMode: String, CaseIterable, Hashable {
 
 struct ReviewsWorkspaceView: View {
   @Bindable var store: AppStore
-  @State private var mode: ReviewMode = .daily
+  @State private var mode: ReviewMode = ReviewsWorkspaceView.initialMode
   @State private var dailyReviewEditorFocused = false
-  private let dailyReviewTip = DailyReviewTip()
+
+  /// The mode the workspace opens in: the day page, unless a DEBUG preview
+  /// tour names the week digest in its defaults (`review.workspace.mode`).
+  private static var initialMode: ReviewMode {
+    #if DEBUG
+      if LorvexUIPreview.toursWorkspaces,
+        let raw = LorvexUIPreview.previewDefaults.string(forKey: "review.workspace.mode"),
+        let mode = ReviewMode(rawValue: raw)
+      {
+        return mode
+      }
+    #endif
+    return .daily
+  }
 
   var body: some View {
     VStack(spacing: 0) {
-      ReviewsWorkspaceNavigationBar(
-        store: store,
-        mode: $mode,
-        dayStepShortcutsEnabled: !dailyReviewEditorFocused
-      )
+      ReviewsWorkspaceHeader()
 
       Divider()
 
-      // Body shares the header's reading lane so the reflection column's left
-      // edge lines up with the workspace title (and with the other workspaces'
-      // content), instead of spanning the full width while the lane-centered
-      // title sits indented above it.
-      WorkspaceReviewLane {
-        HStack(spacing: 0) {
-          reflectionColumn
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-          Divider()
-
-          ReviewEvidencePanel(content: evidenceContent)
-            .frame(width: ReviewsWorkspaceLayout.evidenceWidth)
+      // Day scope is one calm reading column; Week scope keeps the digest
+      // beside the week's evidence.
+      switch mode {
+      case .daily:
+        DailyReviewForm(
+          store: store,
+          editingDate: store.dailyReviewEditingDate,
+          onReturnToToday: { Task { await store.endEditingDailyReview() } },
+          isReadOnly: !store.selectedReviewDayIsEditable,
+          onEditorFocusChange: { dailyReviewEditorFocused = $0 }
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+      case .weekly:
+        WeeklyReviewPage(store: store) { date in
+          Task {
+            await store.selectReviewDay(date)
+            mode = .daily
+          }
         }
-        .frame(maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(.background)
     }
-    .navigationTitle(String(localized: "sidebar.item.reviews", defaultValue: "Reviews", table: "Localizable", bundle: LorvexL10n.bundle))
+    .navigationTitle(String(localized: "sidebar.item.reviews", defaultValue: "Review", table: "Localizable", bundle: LorvexL10n.bundle))
+    .toolbar {
+      ReviewsWorkspaceToolbar(
+        store: store,
+        state: ReviewsNavigationState(store: store, mode: mode),
+        mode: $mode,
+        dayStepShortcutsEnabled: !dailyReviewEditorFocused
+      )
+    }
     .lorvexOpenDestinationActivity(selection: .reviews, isActive: store.selection == .reviews)
-    .popoverTip(dailyReviewTip)
     // Load the viewed week's digest when entering Week scope; switching back to
     // Day flushes any pending draft (below).
     .task(id: mode) {
@@ -56,9 +73,9 @@ struct ReviewsWorkspaceView: View {
       }
     }
     // Autosave: persist the daily draft ~1.2s after the user stops editing, the
-    // same model as Notes — the footer button stays as the explicit confirm,
-    // but a finished entry should never be lost to a missed click. Each
-    // keystroke changes the signature, cancelling the pending sleep (debounce).
+    // same model as Notes; the page has no Save button. Each keystroke changes
+    // the signature, cancelling the pending sleep (debounce). App quit flushes
+    // a draft still inside the debounce.
     .task(id: dailyReviewDraftSignature) {
       // Autosave ANY unsaved edit (body-only included) — the core accepts a
       // summary-less review, so the old "needs a summary" gate dropped wins /
@@ -84,45 +101,6 @@ struct ReviewsWorkspaceView: View {
     }
   }
 
-  @ViewBuilder
-  private var reflectionColumn: some View {
-    switch mode {
-    case .daily:
-      DailyReviewForm(
-        store: store,
-        scrollsInternally: true,
-        saveState: dailyReviewSaveState,
-        // The footer's explicit "commit now" — kept because app-quit within the
-        // autosave debounce isn't otherwise flushed. It routes through the same
-        // guarded flush as every autosave exit, so a click racing a just-fired
-        // autosave is a no-op (no duplicate write / changelog row) rather than a
-        // second save fighting the first.
-        onSave: { Task { await store.flushDailyReviewDraftIfNeeded() } },
-        editingDate: store.dailyReviewEditingDate,
-        onReturnToToday: { Task { await store.endEditingDailyReview() } },
-        isReadOnly: !store.selectedReviewDayIsEditable,
-        onEditorFocusChange: { dailyReviewEditorFocused = $0 }
-      )
-    case .weekly:
-      WeekReviewDigest(
-        reviews: store.weekReviewDigest,
-        onSelectDay: { date in
-          Task {
-            await store.selectReviewDay(date)
-            mode = .daily
-          }
-        }
-      )
-    }
-  }
-
-  private var evidenceContent: ReviewEvidencePanel.Content {
-    switch mode {
-    case .daily: .day(store.dayReviewEvidence)
-    case .weekly: .week(store.weeklyReview)
-    }
-  }
-
   /// One value that changes with any edit to the daily draft, driving the
   /// autosave debounce.
   private var dailyReviewDraftSignature: String {
@@ -139,21 +117,5 @@ struct ReviewsWorkspaceView: View {
       store.dailyReviewEditorDate,
     ].joined(separator: "\u{1F}")
   }
-
-  /// Drives the footer status + Save affordance from saved-vs-unsaved state, not
-  /// summary presence. The core accepts a summary-less review and the autosave
-  /// persists any unsaved edit, so body-only edits (wins / blockers / learnings
-  /// / mood / energy) are `.unsaved` work to persist — never gated behind a
-  /// missing summary. `.needsSummary` now means only "empty draft, nothing
-  /// saved yet," so the footer's enabled state matches what autosave actually does.
-  private var dailyReviewSaveState: DailyReviewSaveState {
-    if !store.dailyReviewDraftMatchesLoaded { return .unsaved }
-    return store.dailyReview != nil ? .saved : .needsSummary
-  }
 }
 
-private enum ReviewsWorkspaceLayout {
-  /// The fixed width of the right-hand evidence panel; the reflection column
-  /// takes the remaining width.
-  static let evidenceWidth: CGFloat = 300
-}

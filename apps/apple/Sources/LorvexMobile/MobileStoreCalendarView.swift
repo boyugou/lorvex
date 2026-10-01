@@ -2,8 +2,8 @@ import LorvexCore
 import SwiftUI
 
 /// Full-screen Calendar workspace for iPhone/iPad. Renders the phone-native
-/// adaptive time-axis grid (`MobileCalendarDayView`) in Day mode and a grouped
-/// seven-day agenda in Week mode; the segmented toggle lives in that view's
+/// time-axis grid (`MobileCalendarDayView`): width-adaptive 1/2/3 days in Day
+/// mode, seven days in Week mode; the segmented toggle lives in that view's
 /// toolbar. Both modes read the same `store.calendarTimeline` fetch path.
 @MainActor
 public struct MobileStoreCalendarView: View {
@@ -30,5 +30,12 @@ public struct MobileStoreCalendarView: View {
       prompt: String(
         localized: "calendar.search.prompt", defaultValue: "Search events", table: "Localizable",
         bundle: MobileL10n.bundle))
+    // Folded into a toolbar glyph until tapped: the grid already stacks its
+    // header row (and in Day mode a week strip) under the navigation bar, and
+    // a full search field on top of them pushed the first hour of the day
+    // below the fold. The minimized behavior exists on iOS only.
+    #if os(iOS)
+      .searchToolbarBehavior(.minimize)
+    #endif
   }
 }

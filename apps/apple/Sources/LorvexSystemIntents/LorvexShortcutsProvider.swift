@@ -25,9 +25,10 @@ import AppIntents
 ///   (`Resources/AppShortcuts.xcstrings`), keyed by the English phrase with the
 ///   literal `${applicationName}` token — never through `Localizable.xcstrings`.
 ///   That catalog is consumed by the Xcode `ExtractAppIntentsMetadata` build
-///   phase (`swift build` does not run it), and it is outside the reach of
-///   `script/verify_localization_catalog.py`, which only validates the module
-///   `Localizable.xcstrings` catalogs.
+///   phase (`swift build` does not run it). No Swift code references its keys,
+///   so `script/verify_localization_catalog.py` checks it on its own: every
+///   phrase and translation names the app exactly once, and every shipped
+///   language translates every phrase.
 struct LorvexShortcutsProvider: AppShortcutsProvider {
   static let shortcutTileColor: ShortcutTileColor = .blue
 
@@ -81,13 +82,13 @@ struct LorvexShortcutsProvider: AppShortcutsProvider {
         systemImageName: "calendar.badge.clock"
       ),
       AppShortcut(
-        intent: AddLorvexTaskToFocusIntent(),
+        intent: PlanLorvexTaskForTodayIntent(),
         phrases: [
-          "Focus a task in \(.applicationName)",
-          "Add a task to focus in \(.applicationName)",
+          "Plan a task for today in \(.applicationName)",
+          "Move a task to today in \(.applicationName)",
         ],
-        shortTitle: LocalizedStringResource("system.shortcut.focus.short_title", defaultValue: "Focus Task", table: "Localizable", bundle: SystemL10n.bundle),
-        systemImageName: "scope"
+        shortTitle: LocalizedStringResource("system.shortcut.plan_today.short_title", defaultValue: "Plan for Today", table: "Localizable", bundle: SystemL10n.bundle),
+        systemImageName: "sun.max.circle"
       ),
       AppShortcut(
         intent: ListLorvexTasksIntent(),

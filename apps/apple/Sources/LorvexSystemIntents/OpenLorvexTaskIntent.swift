@@ -5,7 +5,7 @@ struct OpenLorvexTaskIntent: LorvexUnauthenticatedIntent {
   static let description = IntentDescription(LocalizedStringResource("system.task.open.description", defaultValue: "Open Lorvex to a specific task.", table: "Localizable", bundle: SystemL10n.bundle))
   static let openAppWhenRun = true
 
-  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *)
+  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *)
   static var supportedModes: IntentModes { .foreground }
 
   @Parameter(

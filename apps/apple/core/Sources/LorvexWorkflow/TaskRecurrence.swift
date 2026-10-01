@@ -135,7 +135,11 @@ public enum TaskRecurrence {
     }
   }
 
-  private static func ruleJSONString(_ rule: RuleInput) throws -> String {
+  /// The rule as the canonical recurrence JSON a task stores (upper-case
+  /// RFC 5545 keys), for a write that carries a rule in its own input, such
+  /// as a create. Throws a validation error for an unknown frequency or an
+  /// empty weekday list.
+  public static func ruleJSONString(_ rule: RuleInput) throws -> String {
     if let byday = rule.byday, byday.isEmpty {
       throw StoreError.validation(
         "BYDAY array must contain at least one weekday code (or be omitted)")

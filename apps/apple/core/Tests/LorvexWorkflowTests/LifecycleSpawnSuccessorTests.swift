@@ -5,10 +5,10 @@ import XCTest
 @testable import LorvexStore
 @testable import LorvexWorkflow
 
-/// Parity port of `lorvex_workflow::lifecycle::tests::recurrence`,
-/// `cancel_series` (spawn-side), `focus_rewire`, plus the recurring-task
-/// cases from `transitions`. Covers the real
-/// ``LifecycleRecurrenceSpawnHandler`` end-to-end.
+/// The recurrence spawn path end to end through the real
+/// ``LifecycleRecurrenceSpawnHandler``: successor creation, series cancel,
+/// reopen lineage, the recurring-task transitions, and what happens to a
+/// planned time across the chain.
 final class LifecycleSpawnSuccessorTests: XCTestCase {
   private func tid(_ s: String) -> TaskId { TaskId(trusted: s) }
 
@@ -1252,7 +1252,7 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
     }
   }
 
-  // MARK: - focus_rewire.rs ports
+  // MARK: - planned time across the recurrence chain
 
   private func seedDailyParent(
     _ writer: any DatabaseWriter, taskId: String, dueDate: String, createdAt: String
@@ -1264,207 +1264,75 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
         dueDate: dueDate,
         canonicalOccurrenceDate: dueDate,
         recurrence: #"{"FREQ":"DAILY","INTERVAL":1}"#,
-        recurrenceGroupId: "grp-rewire",
+        recurrenceGroupId: "grp-time",
         createdAt: createdAt))
   }
 
-  private func seedCurrentFocusItem(
-    _ writer: any DatabaseWriter, date: String, taskId: String
+  private func setPlannedTime(
+    _ writer: any DatabaseWriter, taskId: String, date: String, start: Int64, end: Int64
   ) throws {
     try writer.write { db in
       try db.execute(
-        sql:
-          "INSERT OR IGNORE INTO current_focus "
-          + "(date, briefing, timezone, version, created_at, updated_at) "
-          + "VALUES (?1, NULL, 'UTC', '0000000000000_0000_a0a0a0a0a0a0a0a0', "
-          + "        '2026-04-01T00:00:00Z', '2026-04-01T00:00:00Z')",
-        arguments: [date])
-      try db.execute(
-        sql:
-          "INSERT INTO current_focus_items (date, position, task_id) "
-          + "VALUES (?1, 0, ?2)",
-        arguments: [date, taskId])
+        sql: """
+          UPDATE tasks SET planned_date = ?2, planned_start_minutes = ?3,
+            planned_end_minutes = ?4 WHERE id = ?1
+          """,
+        arguments: [taskId, date, start, end])
     }
   }
 
-  private func seedFocusScheduleBlock(
-    _ writer: any DatabaseWriter, planDate: String, taskId: String
-  ) throws {
-    try writer.write { db in
-      try db.execute(
-        sql:
-          "INSERT OR IGNORE INTO focus_schedule "
-          + "(date, rationale, timezone, version, created_at, updated_at) "
-          + "VALUES (?1, NULL, 'UTC', '0000000000000_0000_a0a0a0a0a0a0a0a0', "
-          + "        '2026-04-01T00:00:00Z', '2026-04-01T00:00:00Z')",
-        arguments: [planDate])
-      try db.execute(
-        sql:
-          "INSERT INTO focus_schedule_blocks "
-          + "(date, position, block_type, start_minutes, end_minutes, "
-          + " task_id, calendar_event_id, title) "
-          + "VALUES (?1, 0, 'task', 540, 600, ?2, NULL, 'Morning slot')",
-        arguments: [planDate, taskId])
+  private func plannedTime(_ writer: any DatabaseWriter, _ taskId: String) throws -> [Int64?] {
+    try writer.read { db in
+      let row = try XCTUnwrap(
+        Row.fetchOne(
+          db, sql: "SELECT planned_start_minutes, planned_end_minutes FROM tasks WHERE id = ?1",
+          arguments: [taskId]))
+      return [row[0], row[1]]
     }
   }
 
-  func testSpawnRecurrenceSuccessorRewiresCurrentFocusItems() throws {
+  func testCompletionKeepsThePlannedTimeAndTheSuccessorStartsWithout() throws {
     let store = try WorkflowTestSupport.freshStore()
     try seedDailyParent(
-      store.writer, taskId: "daily-rewire-a",
-      dueDate: "2026-04-04", createdAt: "2026-04-01T00:00:00Z")
-    try seedCurrentFocusItem(store.writer, date: "2026-04-04", taskId: "daily-rewire-a")
+      store.writer, taskId: "daily-time-a", dueDate: "2026-04-04",
+      createdAt: "2026-04-01T00:00:00Z")
+    try setPlannedTime(store.writer, taskId: "daily-time-a", date: "2026-04-04", start: 540, end: 600)
+
     let result = try runCompletion(
-      store, taskId: "daily-rewire-a",
-      now: "2026-04-04T18:00:00Z",
+      store, taskId: "daily-time-a", now: "2026-04-04T18:00:00Z",
       version: "0000000000000_0000_2352a00000000001")
-    let succId = try XCTUnwrap(result.spawnedSuccessorId)
-    let rewired = try store.writer.read { db in
-      try String.fetchOne(
-        db,
-        sql:
-          "SELECT task_id FROM current_focus_items "
-          + "WHERE date = '2026-04-04' AND position = 0")
-    }
-    XCTAssertEqual(rewired, succId)
-    XCTAssertEqual(result.rewiredCurrentFocusDates, ["2026-04-04"])
-    XCTAssertTrue(result.rewiredFocusScheduleDates.isEmpty)
-  }
+    let successorId = try XCTUnwrap(result.spawnedSuccessorId)
 
-  func testSpawnRecurrenceSuccessorRewiresFocusScheduleBlocksForTodayAndLater() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    let parentID = "00000000-0000-7000-8000-00000000000b"
-    try seedDailyParent(
-      store.writer, taskId: parentID,
-      dueDate: "2026-04-04", createdAt: "2026-04-01T00:00:00Z")
-    try seedFocusScheduleBlock(store.writer, planDate: "2026-04-04", taskId: parentID)
-    try seedFocusScheduleBlock(store.writer, planDate: "2026-04-05", taskId: parentID)
-    let result = try runCompletion(
-      store, taskId: parentID,
-      now: "2026-04-04T18:00:00Z",
-      version: "0000000000000_0000_2352b00000000001")
-    let succId = try XCTUnwrap(result.spawnedSuccessorId)
-    let pair = try store.writer.read { db in
-      try Row.fetchAll(
-        db,
-        sql:
-          "SELECT date, task_id FROM focus_schedule_blocks "
-          + "WHERE position = 0 ORDER BY date ASC")
-    }
-    XCTAssertEqual(pair.count, 2)
-    XCTAssertEqual(pair[0][0] as String, "2026-04-04")
-    XCTAssertEqual(pair[0][1] as String, succId)
-    XCTAssertEqual(pair[1][0] as String, "2026-04-05")
-    XCTAssertEqual(pair[1][1] as String, succId)
     XCTAssertEqual(
-      result.rewiredFocusScheduleDates, ["2026-04-04", "2026-04-05"])
+      try plannedTime(store.writer, "daily-time-a"), [540, 600],
+      "a finished task keeps its time, so the day still shows when it was done")
+    XCTAssertEqual(
+      try plannedTime(store.writer, successorId), [nil, nil],
+      "the next occurrence is a new day; it gets its own time when it is planned")
   }
 
-  func testSpawnRecurrenceSuccessorPreservesHistoricalFocusBlocks() throws {
+  func testRevivedSuccessorLosesItsPlannedTime() throws {
     let store = try WorkflowTestSupport.freshStore()
-    let parentID = "00000000-0000-7000-8000-00000000000c"
+    try seedTimezonePreference(store.writer, "UTC")
     try seedDailyParent(
-      store.writer, taskId: parentID,
-      dueDate: "2026-04-04", createdAt: "2026-04-01T00:00:00Z")
-    try seedFocusScheduleBlock(store.writer, planDate: "2026-04-03", taskId: parentID)
-    try seedCurrentFocusItem(store.writer, date: "2026-04-02", taskId: parentID)
-    try seedFocusScheduleBlock(store.writer, planDate: "2026-04-04", taskId: parentID)
-    let result = try runCompletion(
-      store, taskId: parentID,
-      now: "2026-04-04T18:00:00Z",
-      version: "0000000000000_0000_2352c00000000001")
-    let succId = try XCTUnwrap(result.spawnedSuccessorId)
-    let histBlock = try store.writer.read { db in
-      try String.fetchOne(
-        db,
-        sql:
-          "SELECT task_id FROM focus_schedule_blocks "
-          + "WHERE date = '2026-04-03' AND position = 0")
-    }
-    XCTAssertEqual(histBlock, parentID)
-    let histItem = try store.writer.read { db in
-      try String.fetchOne(
-        db,
-        sql:
-          "SELECT task_id FROM current_focus_items "
-          + "WHERE date = '2026-04-02' AND position = 0")
-    }
-    XCTAssertEqual(histItem, parentID)
-    let todayBlock = try store.writer.read { db in
-      try String.fetchOne(
-        db,
-        sql:
-          "SELECT task_id FROM focus_schedule_blocks "
-          + "WHERE date = '2026-04-04' AND position = 0")
-    }
-    XCTAssertEqual(todayBlock, succId)
-    XCTAssertEqual(result.rewiredFocusScheduleDates, ["2026-04-04"])
-    XCTAssertTrue(result.rewiredCurrentFocusDates.isEmpty)
-  }
+      store.writer, taskId: "daily-time-b", dueDate: "2026-04-01",
+      createdAt: "2026-03-30T00:00:00Z")
 
-  func testReopenRestoresSuccessorFocusReferencesToParent() throws {
-    let store = try WorkflowTestSupport.freshStore()
-    let parentId = "00000000-0000-7000-8000-00000000000d"
-    try seedDailyParent(
-      store.writer, taskId: parentId,
-      dueDate: "2026-04-04", createdAt: "2026-04-01T00:00:00Z")
-    try seedCurrentFocusItem(
-      store.writer, date: "2026-04-04", taskId: parentId)
-    try seedCurrentFocusItem(
-      store.writer, date: "2026-04-05", taskId: parentId)
-    try seedFocusScheduleBlock(
-      store.writer, planDate: "2026-04-04", taskId: parentId)
-
-    let completion = try runCompletion(
-      store, taskId: parentId,
-      now: "2026-04-04T18:00:00Z",
-      version: "0000000000001_0000_2352d00000000001")
-    let successorId = try XCTUnwrap(completion.spawnedSuccessorId)
-
-    // Simulate the parent being independently added to the same day's focus
-    // after spawn. Rewind must not violate the per-day task uniqueness index.
-    try store.writer.write { db in
-      try db.execute(
-        sql:
-          "INSERT INTO current_focus_items (date, position, task_id) "
-          + "VALUES ('2026-04-04', 1, ?1)",
-        arguments: [parentId])
-    }
+    let first = try runCompletion(
+      store, taskId: "daily-time-b", now: "2026-04-01T10:00:00Z",
+      version: "0000000000001_0000_1111111111111111")
+    let successorId = try XCTUnwrap(first.spawnedSuccessorId)
+    try setPlannedTime(store.writer, taskId: successorId, date: "2026-04-02", start: 600, end: 660)
 
     let reopen = try runReopen(
-      store, taskId: parentId, oldStatus: .completed,
-      now: "2026-04-04T19:00:00Z",
-      version: "0000000000002_0000_2352d00000000001")
-
+      store, taskId: "daily-time-b", oldStatus: .completed,
+      now: "2026-04-01T11:00:00Z", version: "0000000000003_0000_1111111111111111")
     XCTAssertEqual(reopen.transition.cancelledSuccessorIds, [successorId])
-    XCTAssertEqual(
-      reopen.transition.rewiredCurrentFocusDates,
-      ["2026-04-04", "2026-04-05"])
-    XCTAssertEqual(
-      reopen.transition.rewiredFocusScheduleDates,
-      ["2026-04-04"])
 
-    let currentRows = try store.writer.read { db in
-      try Row.fetchAll(
-        db,
-        sql:
-          "SELECT date, task_id FROM current_focus_items "
-          + "WHERE date IN ('2026-04-04', '2026-04-05') "
-          + "ORDER BY date ASC, position ASC")
-    }
-    XCTAssertEqual(currentRows.count, 2)
-    XCTAssertEqual(currentRows[0][0] as String, "2026-04-04")
-    XCTAssertEqual(currentRows[0][1] as String, parentId)
-    XCTAssertEqual(currentRows[1][0] as String, "2026-04-05")
-    XCTAssertEqual(currentRows[1][1] as String, parentId)
-
-    let scheduledTaskId = try store.writer.read { db in
-      try String.fetchOne(
-        db,
-        sql:
-          "SELECT task_id FROM focus_schedule_blocks "
-          + "WHERE date = '2026-04-04' AND position = 0")
-    }
-    XCTAssertEqual(scheduledTaskId, parentId)
+    let recomplete = try runCompletion(
+      store, taskId: "daily-time-b", now: "2026-04-01T12:00:00Z",
+      version: "0000000000004_0000_1111111111111111")
+    XCTAssertEqual(recomplete.spawnedSuccessorId, successorId)
+    XCTAssertEqual(try plannedTime(store.writer, successorId), [nil, nil])
   }
 }

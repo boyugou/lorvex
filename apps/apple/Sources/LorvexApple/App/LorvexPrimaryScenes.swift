@@ -23,6 +23,7 @@ private func mainWindowScene(
       settings: settings,
       openMainWindow: openMainWindow
     )
+    .lorvexClockLocale()
   }
   .commands {
     LorvexAppCommands(store: store)
@@ -36,8 +37,9 @@ private func mainWindowScene(
   ])
   .lorvexDefaultWindowPosition()
   .lorvexMainWindowSizing()
-  // The main window has no global toolbar/search row; content starts at the
-  // top of the window and workspace-specific actions stay inline in content.
-  // The sidebar still keeps the standard traffic-light area visible.
+  // The title bar text is hidden: each workspace names itself with a large
+  // in-content title, while its navigation and actions ride in the unified
+  // toolbar the workspaces populate through `.toolbar`. The sidebar keeps the
+  // standard traffic-light area visible.
   .windowStyle(.hiddenTitleBar)
 }

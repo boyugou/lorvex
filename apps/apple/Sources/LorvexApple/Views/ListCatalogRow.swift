@@ -10,8 +10,16 @@ private enum ListCatalogRowMetrics {
   static let progressMaxWidth: CGFloat = 76
 }
 
+/// One list in the Lists catalog as a card: its icon, name, counts, and
+/// progress, then its first open tasks in the canonical order with a count of
+/// the rest, so the catalog shows what each list holds next. Clicking the card
+/// opens the list's Tasks scope; clicking a previewed task opens that task
+/// there. Edit and Delete appear on hover at the card's top edge.
 struct ListCatalogRow: View {
   let list: LorvexList
+  /// The list's first open tasks; empty shows the counts alone.
+  var previewTasks: [LorvexTask] = []
+  var openTask: (LorvexTask.ID) -> Void = { _ in }
   let select: () -> Void
   let edit: () -> Void
   let delete: () -> Void
@@ -49,19 +57,17 @@ struct ListCatalogRow: View {
       if isShowingActions {
         actions
           .padding(.trailing, LorvexDesign.Spacing.s)
+          // Level with the header line, not the middle of a tall card.
+          .padding(.top, ListCatalogRowMetrics.verticalPadding)
+          .frame(maxHeight: .infinity, alignment: .top)
           .transition(.opacity)
       }
     }
     .reduceMotionAnimation(.easeInOut(duration: 0.12), value: isShowingActions)
     .onHover { isShowingActions = $0 }
     .help(String(localized: "list_row.open_scope.help", defaultValue: "Open Tasks in This List", table: "Localizable", bundle: LorvexL10n.bundle))
-    .accessibilityElement(children: .combine)
-    .accessibilityLabel(listAccessibilityLabel(
-      list,
-      format: String(
-        localized: "a11y.list.format", defaultValue: "%1$@: %2$lld open tasks, %3$lld total",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)))
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel(accessibilityLabelText)
     // The row opens its Tasks scope on tap / Return / Space, but a raw
     // `.onTapGesture` is invisible to VoiceOver. Announce it as a button and
     // expose the same open affordance as the default accessibility action so VO
@@ -112,6 +118,31 @@ struct ListCatalogRow: View {
   }
 
   private var rowContent: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      header
+      if !previewTasks.isEmpty {
+        VStack(alignment: .leading, spacing: 0) {
+          ForEach(previewTasks) { task in
+            ListCatalogPreviewTaskRow(task: task) { openTask(task.id) }
+          }
+          if list.openCount > previewTasks.count {
+            Text(moreText(list.openCount - previewTasks.count))
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+              .padding(.vertical, LorvexDesign.Spacing.xxs)
+          }
+        }
+        // Under the name, past the icon column.
+        .padding(.leading, ListCatalogRowMetrics.iconSize + LorvexDesign.Spacing.m)
+      }
+    }
+  }
+
+  private func moreText(_ count: Int) -> String {
+    String(localized: "list_row.more_open", defaultValue: "\(count) more open", table: "Localizable", bundle: LorvexL10n.bundle)
+  }
+
+  private var header: some View {
     HStack(alignment: .center, spacing: LorvexDesign.Spacing.m) {
       LorvexListIconView(
         icon: list.icon,
@@ -121,12 +152,12 @@ struct ListCatalogRow: View {
         background: .roundedSquare(
           size: ListCatalogRowMetrics.iconSize,
           opacity: 0.07,
-          cornerRadius: 6
+          cornerRadius: LorvexDesign.Radius.s
         )
       )
 
       VStack(alignment: .leading, spacing: 4) {
-        Text(list.name)
+        Text(list.displayName)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .foregroundStyle(.primary)
           .lineLimit(1)
@@ -140,7 +171,7 @@ struct ListCatalogRow: View {
 
   private var rowBackground: AnyShapeStyle {
     if isShowingActions {
-      return AnyShapeStyle(.quaternary.opacity(0.22))
+      return AnyShapeStyle(LorvexDesign.Palette.hoverFill)
     }
     return AnyShapeStyle(Color.clear)
   }
@@ -154,7 +185,11 @@ struct ListCatalogRow: View {
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
 
-      if let fraction = list.progressFraction {
+      // Only once something is done. An empty bar restates "N open · N total"
+      // in a vaguer form and, being a flat tinted capsule, reads as a loading
+      // placeholder; the bar earns its place when it shows a proportion the
+      // count line cannot show at a glance.
+      if let fraction = list.progressFraction, fraction > 0 {
         LorvexProgressBar(value: fraction, tint: tint)
           .frame(maxWidth: ListCatalogRowMetrics.progressMaxWidth)
           .accessibilityHidden(true)
@@ -173,7 +208,7 @@ struct ListCatalogRow: View {
       .accessibilityLabel(
         String(
           format: String(localized: "list_row.edit.a11y", defaultValue: "Edit %@", table: "Localizable", bundle: LorvexL10n.bundle),
-          list.name
+          list.displayName
         ))
       .accessibilityIdentifier("list.action.edit")
 
@@ -188,30 +223,47 @@ struct ListCatalogRow: View {
       .accessibilityLabel(
         String(
           format: String(localized: "list_row.delete.a11y", defaultValue: "Delete %@", table: "Localizable", bundle: LorvexL10n.bundle),
-          list.name
+          list.displayName
         ))
       .accessibilityIdentifier("list.action.delete")
     }
   }
 
+  /// The line under the name: the open and total counts, or "No tasks" for a
+  /// list that holds no task at all.
   private var countSummaryText: String {
-    String(
+    guard list.totalCount > 0 else {
+      return String(localized: "list_row.no_tasks", defaultValue: "No tasks", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+    return String(
       format: String(localized: "list_row.counts", defaultValue: "%lld open · %lld total", table: "Localizable", bundle: LorvexL10n.bundle),
       list.openCount,
       list.totalCount
     )
   }
 
+  private var accessibilityLabelText: String {
+    guard list.totalCount > 0 else {
+      return "\(list.displayName), \(countSummaryText)"
+    }
+    return listAccessibilityLabel(
+      list,
+      format: String(
+        localized: "a11y.list.format", defaultValue: "%1$@: %2$lld open tasks, %3$lld total",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle))
+  }
+
   private var deleteDialogTitle: String {
     if list.totalCount == 0 {
       return String(
         format: String(localized: "list_row.delete.title", defaultValue: "Delete list “%@”?", table: "Localizable", bundle: LorvexL10n.bundle),
-        list.name
+        list.displayName
       )
     }
     return String(
       format: String(localized: "list_row.archive.title", defaultValue: "Archive list “%@”?", table: "Localizable", bundle: LorvexL10n.bundle),
-      list.name
+      list.displayName
     )
   }
 
@@ -226,7 +278,7 @@ struct ListCatalogRow: View {
     }
     return String(
       localized: "list_row.archive.nonempty_count_message",
-      defaultValue: "\(list.totalCount) tasks remain in \"\(list.name)\". Archive the list to retire it while keeping its tasks and history; you can unarchive it later.",
+      defaultValue: "\(list.totalCount) tasks remain in “\(list.displayName)”. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
       table: "Localizable",
       bundle: LorvexL10n.bundle)
   }

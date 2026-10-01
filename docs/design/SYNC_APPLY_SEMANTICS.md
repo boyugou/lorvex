@@ -62,11 +62,12 @@ or GC decisions.
 
 For a normal domain or edge envelope, apply proceeds in this order:
 
-1. Validate `payloadSchemaVersion`. A payload newer than the supported
-   compatibility window defers. A forward-compatible `ai_changelog` payload
-   also defers because append-only audit rows have no later LWW promotion seam.
-2. Reject local-only kinds and validate the canonical entity id.
-3. For composite edges, resolve each parent through permanent aliases and
+1. Skip `ai_changelog` envelopes: the audit trail is device-local, so an
+   inbound audit record is never applied.
+2. Validate `payloadSchemaVersion`. A payload newer than the supported
+   compatibility window defers.
+3. Reject local-only kinds and validate the canonical entity id.
+4. For composite edges, resolve each parent through permanent aliases and
    rebuild the composite id before any death or LWW gate.
 4. Look up a permanent alias for the exact identity. Alias handling precedes
    ordinary tombstones and is described below.
@@ -106,8 +107,7 @@ or cross-type metadata.
 Whole-row aggregates and independent children use entity-level HLC LWW.
 Composite relations use their canonical composite identity. Parent-owned child
 collections embedded in an aggregate payload are replaced or merged according
-to that aggregate's typed applier. `ai_changelog` is append-only and
-id-deduplicated rather than row-version LWW.
+to that aggregate's typed applier.
 
 `task` and base `calendar_event` rows are grouped registers, not whole-row
 LWW. A task carries four independently versioned registers — content,
@@ -135,7 +135,8 @@ typed resolution name. Conflict logs are local diagnostics, not synced state.
 
 `Apply.applyEnvelope` can return `repairRequired` with a typed obligation that
 the caller must discharge inside the same transaction that consumes the
-envelope, before the triggering CloudKit page is acknowledged:
+envelope, before the engine state that covers the fetched records is
+persisted:
 
 - `reassertRequiredInbox`: a peer deleted the canonical inbox list. Keep the
   local row and replace the peer's shared delete record with an upsert whose
@@ -163,8 +164,8 @@ an older-schema envelope that omits an absence-preserved child collection
 keeps the local children; a list delete re-homes the list's live tasks to the
 inbox; a grouped-register join composes fields from both contenders. In each
 case the applying device re-emits the complete merged snapshot at a fresh
-dominating HLC so peers and rebuilt generations converge on the composed
-state instead of the envelope's partial view.
+dominating HLC so peers converge on the composed state instead of the
+envelope's partial view.
 
 The re-emit's fresh HLC can, in a one-round-trip window, overwrite a peer's
 subsequent genuine edit that lands between the omitting envelope's version and
@@ -178,9 +179,16 @@ Missing hard dependencies and future-compatible envelopes are retained in
 event-driven by relevant local or inbound changes. HOLD-class future records do
 not consume the ordinary retry budget.
 
-The FK declaration used by normal apply is also used by authoritative-snapshot
-dependency closure. Adding a hard dependency in only one of those paths is a
-protocol bug.
+Neither do failures the envelope did not cause. `ApplyError.dbTransient` covers
+SQLite lock contention (`SQLITE_BUSY`, `SQLITE_LOCKED`) and a database suspended
+so the process holds no App Group file lock while the system suspends it
+(`SQLITE_ABORT`, `SQLITE_INTERRUPT`). Those refresh `last_attempted_at` without
+bumping `attempt_count`. The distinction is load-bearing rather than cosmetic:
+crossing the attempt cap promotes an envelope to a permanent conflict and
+discards it, so charging the budget for attempts that never reached an applier
+would drop inbound records because the app happened to be backgrounded. Any new
+SQLite result code that means "try the identical envelope again later" belongs
+in this class, not in the `db` default.
 
 ## Permanent entity redirects
 
@@ -222,19 +230,11 @@ Redirect invariants:
 - a terminal target's ordinary tombstone satisfies the dependency: the alias is
   retained and any live source is suppressed rather than resurrecting data.
 
-An incremental CloudKit physical deletion of an `entity_redirect` slot does
-not delete the local alias. The inbound page resolves the opaque record name
-against the local redirect table and establishes the same canonical upsert in
-the outbox before its traversal cursor commits. An already-eligible exact
-upsert satisfies that obligation idempotently; a newer row or a future/adoption
-fence does not. The same direct slot detection reasserts the permanent inbox and
-`calendar_series_cutover` invariants even when no pending-inbox or retry row
-exists. By contrast, an explicit complete-zone/account adoption clears
-pre-session aliases and rebuilds only the aliases present in the adopted zone:
-"permanent" is a store/generation invariant, not authority over a deliberate
-adopt-cloud-truth boundary.
+The transport ignores CloudKit record deletions, because Lorvex deletes records
+only logically, as `delete` envelopes. A physically deleted `entity_redirect`
+record therefore never removes the local alias, which stays permanent.
 
-An alias may arrive on an earlier CloudKit page than its target record. It stays
+An alias may arrive in an earlier fetch batch than its target record. It stays
 in the durable pending inbox; either a later live target upsert or a later target
 tombstone satisfies the dependency and replays the alias.
 
@@ -279,60 +279,51 @@ One atomic merge emits current state for all three independent facts:
 - permanent `entity_redirect` upsert for every loser;
 - ordinary domain delete for every loser.
 
-This means another device and a rebuilt CloudKit generation do not need to
+This means another device and a full-resync backfill do not need to
 rediscover the original collision to preserve alias semantics.
 
-## Generation and full-resync reconstruction
+## Transport boundary
 
-A generation snapshot enumerates durable SQLite state, not only the current
-outbox:
+`CloudSyncController` (`apps/apple/Sources/LorvexCloudSync`) wraps `CKSyncEngine`
+and reaches the apply layer only through `CloudSyncEngineStore`:
 
-- every live syncable row/edge;
-- every ordinary tombstone as a delete, except exact CloudKit-confirmed deletes
-  at or before an explicitly published compaction cutoff;
+- **Inbound.** Fetched `LorvexEntity` records are decoded. The decoded
+  envelopes and the schema-ahead raw records go to `applyFetchedRecords` in one
+  transaction; corrupt records are counted as undecodable and foreign record
+  types are ignored. Inbound `ai_changelog` envelopes are ignored and CloudKit
+  record deletions are ignored. The transport persists the engine state that
+  covers a fetch only after its apply has committed, so a crash re-fetches
+  records that the apply treats as replays.
+- **Outbound.** The newest unsynced outbox envelope of each entity is sent, and
+  older rows for the same entity are confirmed with it. `reconcileOutbound`
+  commits each sent batch in one transaction: confirmed rows are marked synced,
+  server winners are applied, equal-HLC and typed-join collisions are joined,
+  and per-record failures are recorded. A `serverRecordChanged` conflict is
+  classified as an exact replay (confirm), a schema-ahead server record (park
+  it and hold the local intent), a server win, a local win (send again on top
+  of the server's change tag), or a collision for `reconcileOutbound`.
+- **Device-local audit.** `ai_changelog` is never uploaded: Core refuses to
+  enqueue it, so it never reaches the outbox.
+
+## Full-resync backfill
+
+A device that uploads its whole database into a fresh zone (its first sync, a
+newly adopted iCloud account, or sync turned back on after iCloud data was
+deleted) calls `enqueueFullResyncBackfill`. It enqueues, at their stored
+versions:
+
+- every live syncable row and edge, parents first;
 - every `sync_entity_redirects` row as an `entity_redirect` upsert;
-- account-routed audit state allowed by its retention frontier.
+- every ordinary tombstone as a delete, last.
 
-`entity_redirect` tombstones are never counted or emitted. The capture manifest
-and terminal readback digest cover redirect records like every other current
-record.
-
-Legacy full-resync backfill follows the same separation: live rows, ordinary
-deletes, and permanent aliases are independently reconstructed at their stored
-versions.
-
-Delete compaction is generation-bound, not ordinary time-based GC. A device may
-propose a cutoff only from its greatest exact CloudKit record modification time;
-candidate receipts remain lease-local until the matching seal is read back and
-the ready control CAS publishes the same cutoff. Publication atomically promotes
-those exact receipts and removes only matching tombstone/outbox delete versions.
-The cutoff is covered only by a completed nil-token baseline whose exact
-per-traversal witness has a strictly later CloudKit modification time. Equality
-at millisecond precision is insufficient. A database without that proof adopts
-the complete generation snapshot authoritatively rather than unioning stale
-local rows. Device wall clocks, incremental receipts, and checkpoint save times
-never establish compaction or recovery authority.
-
-## Authoritative snapshot adoption
-
-Over-window recovery stages a complete remote inventory before touching live
-domain state. Finalization is one SQLite transaction:
-
-1. capture genuine post-session local outbox intents and their hard-dependency
-   closure;
-2. remove superseded local rows and clear the old death, alias, pending, and
-   payload-shadow ledgers;
-3. replay remote ordinary upserts in parent-first topological order;
-4. replay remote ordinary deletes in child-first topological order;
-5. replay remote `entity_redirect` upserts last;
-6. restamp and replay post-session local ordinary upserts, deletes, then aliases
-   with the same phase ordering;
-7. remove the durable session only after every replay succeeds.
-
-An alias target is a hard dependency for both remote and post-session replay.
-A target ordinary tombstone satisfies that dependency. If any staged record is
-unknown, corrupt, or cannot apply, the whole finalization rolls back and the
-session remains recoverable.
+`entity_redirect` tombstones are never emitted, and `ai_changelog` is never
+enqueued. The backfill never mints a fresh HLC, and re-enqueuing at the stored
+version is idempotent, so it cannot overwrite a concurrent peer edit. CloudKit
+delivery order is not semantic: a missing alias target defers durably in the
+pending inbox until its live row or tombstone arrives. Tombstones stay in
+CloudKit for the life of the zone; deletes are not compacted. Nothing local is
+discarded when an account is adopted: the local database is uploaded and
+merged with the account's existing records by HLC.
 
 ## Payload shadows
 
@@ -346,13 +337,12 @@ An older-schema update cannot express an intentional clear for a field it does
 not know. When it supersedes a same-identity row that carries a higher-schema
 shadow, the shadow is retained and its base HLC advances atomically to the new
 live version. The receiver then emits the complete merged snapshot at a fresh
-dominating HLC. This makes a fresh/rebuilt peer recover the preserved value
+dominating HLC. This makes a fresh peer recover the preserved value
 instead of recreating only the legacy insert default.
 
 Promotion is fail-closed. The shadow and live row must name the exact same HLC;
 a missing row, corrupt version, schema-version value outside `1...UInt32.max`,
 or any provenance mismatch leaves the shadow intact and emits diagnostics.
-Generation capture enforces the same equal-version and exact-schema rules.
 
 For a same-type natural-key collision, any participant payload shadow makes the
 entire merge defer. The shadow contains fields this binary cannot interpret, so
@@ -380,23 +370,17 @@ address, so every device writes the same LWW identity for the same occurrence.
 Shared domain validation covers sync, import and workflow writes, while SQLite
 CHECKs/triggers make direct writers obey the same shape.
 
-## Outbox recovery and authoritative fences
+## Outbox recovery and future-record fences
 
-`sync_outbox.disposition` distinguishes three non-retryable-by-default
-states from ordinary pending rows:
+`sync_outbox.disposition` distinguishes two non-retryable-by-default states
+from ordinary pending rows:
 
 - `retry_wait` keeps the full envelope and a bounded backoff schedule;
-- `authoritative_adoption` quarantines pre-session writes intentionally and is
-  never rearmed by generic retry;
 - `future_record_hold` preserves a local intent fenced by a future-authored
   CloudKit record, carrying that record's maximum HLC
   (`future_record_version`) and a durable `future_record_resolution` policy
   (`lww`, `remote_authoritative`, or `local_after_future`) for the upgraded
   build that eventually understands the opaque record.
-
-Post-session user/MCP writes remain active, are captured before adoption, and
-are replayed on top of the remote baseline. Successful finalize or explicit
-cancel deletes the owned fences; it does not revive stale pre-adoption intent.
 
 A queued base calendar-event or task Upsert also carries the device-local
 `sync_outbox.register_intent` bitmask (calendar: content/topology bits; task:
@@ -415,9 +399,9 @@ winner without mislabeling remote content as local intent.
 - Permanent aliases: `EntityRedirect.swift`, `ApplyRedirect.swift`
 - Aggregate merges: `AggregateMergeEngine.swift`
 - Deferred work: `PendingInboxDrain.swift`
-- Generation snapshot: `GenerationSnapshot*.swift`
-- Authoritative adoption: `AuthoritativeSnapshot*.swift`
+- Full-resync backfill: `FullResyncBackfill.swift`
+- Transport: `apps/apple/Sources/LorvexCloudSync/CloudSyncController*.swift`
+  and `docs/decisions/cksyncengine-transport.md`
 - Schema authority: `schema/schema.sql`
-- Focused contracts: `EntityRedirectTests.swift`,
-  `AuthoritativeSnapshotTests.swift`, `GenerationSnapshotStagingTests.swift`,
-  and the per-aggregate merge test suites
+- Focused contracts: `EntityRedirectTests.swift` and the per-aggregate merge
+  test suites

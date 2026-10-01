@@ -30,8 +30,6 @@ extension ApplyTask {
         repairTargets: &repairTargets)
       try tombstoneCascadingChildren(
         db, taskId: entityId, version: version, deletedAt: applyTs)
-      repairTargets += try TaskGraphReconciliation.removeFocusReferences(
-        db, taskId: entityId)
     }
     if case .rejected = decision { repairTargets.removeAll() }
     return TaskDeleteApplyResult(

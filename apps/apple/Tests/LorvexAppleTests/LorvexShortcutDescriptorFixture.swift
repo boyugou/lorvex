@@ -10,7 +10,7 @@ enum LorvexShortcutDescriptor: CaseIterable, Equatable, Sendable {
   case readOverview
   case completeTask
   case deferTask
-  case focusTask
+  case planTaskForToday
   case listTasks
   case searchTasks
   case createHabit
@@ -23,7 +23,7 @@ enum LorvexShortcutDescriptor: CaseIterable, Equatable, Sendable {
     case .readOverview: "Overview"
     case .completeTask: "Complete Task"
     case .deferTask: "Defer Task"
-    case .focusTask: "Focus Task"
+    case .planTaskForToday: "Plan for Today"
     case .listTasks: "List Tasks"
     case .searchTasks: "Search Tasks"
     case .createHabit: "Create Habit"
@@ -38,7 +38,7 @@ enum LorvexShortcutDescriptor: CaseIterable, Equatable, Sendable {
     case .readOverview: "rectangle.3.group"
     case .completeTask: "checkmark.circle"
     case .deferTask: "calendar.badge.clock"
-    case .focusTask: "scope"
+    case .planTaskForToday: "sun.max.circle"
     case .listTasks: "list.bullet.rectangle"
     case .searchTasks: "text.magnifyingglass"
     case .createHabit: "repeat.circle"

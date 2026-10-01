@@ -26,10 +26,16 @@ extension LorvexHabit {
       targetCount)
   }
 
-  /// The habit's tile / ring / icon tint: its custom color, or the Lorvex brand
-  /// accent when it has none.
+  /// The habit's tile / ring / icon tint: its identity color
+  /// (``LorvexHabitPalette/baseColor(for:)``), the same hue the Mac shows.
   var tileTint: Color {
-    Color(lorvexHex: color) ?? LorvexDesign.Palette.accent
+    LorvexHabitPalette.baseColor(for: self)
+  }
+
+  /// The habit's tile / ring symbol: its stored icon when that names a real SF
+  /// Symbol, otherwise "repeat".
+  var tileSymbol: String {
+    MobileIconTile.symbol(for: icon, fallback: "repeat")
   }
 
   /// Whether the milestone strip has a real reading to show — a nonzero

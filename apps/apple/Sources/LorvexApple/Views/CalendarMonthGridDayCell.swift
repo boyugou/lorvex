@@ -4,13 +4,18 @@ import SwiftUI
 private enum CalendarMonthGridDayCellMetrics {
   static let cellPadding: CGFloat = 5
   static let dayNumberSize: CGFloat = 20
+  /// A chip's height: one line of tertiary text plus its vertical padding.
+  static let chipHeight: CGFloat = 16
+  static let chipSpacing: CGFloat = LorvexDesign.Spacing.xxs
   static let chipCornerRadius: CGFloat = 4
   static let chipAccentRailWidth: CGFloat = 2
 }
 
-/// One month-grid day cell: the day number, a bounded stack of event/task
-/// chips, and a "+N" overflow when the day has more items than
-/// ``CalendarMonthGridView/maxChipsPerDay``.
+/// One month-grid day cell: the day number, a bounded stack of event and task
+/// chips (a timed item leads with its start time; a task wears the calendar
+/// task surface rather than an event's fill and rail), and a "+N" overflow
+/// when the day has more items than `maxVisibleChips`, which the grid sizes to
+/// the row (``chipsFitting(in:)``).
 ///
 /// Clicking anywhere in the cell background (including the day number) opens
 /// that day (`onOpenDay`) — the whole cell is one Tab-focusable, Return/Space-
@@ -29,9 +34,9 @@ struct CalendarMonthGridDayCell: View {
   let isToday: Bool
   let maxVisibleChips: Int
   let eventColor: (CalendarTimelineEvent) -> Color
-  let taskColor: (LorvexTask) -> Color
   let onSelectEvent: (CalendarTimelineEvent) -> Void
   let onOpenTask: (LorvexTask) -> Void
+  @Environment(\.calendar) private var calendar
   let onOpenDay: () -> Void
   @Binding var isOverflowPresented: Bool
   let onShowOverflow: () -> Void
@@ -40,8 +45,16 @@ struct CalendarMonthGridDayCell: View {
     CalendarMonthGridModel.chips(for: day, maxVisible: maxVisibleChips)
   }
 
+  /// How many chips (the "+N" chip included) a cell `rowHeight` tall can stack
+  /// under its day number without running into the row below; at least one.
+  static func chipsFitting(in rowHeight: CGFloat) -> Int {
+    let metrics = CalendarMonthGridDayCellMetrics.self
+    let stack = rowHeight - metrics.cellPadding * 2 - metrics.dayNumberSize - metrics.chipSpacing
+    return max(1, Int(stack / (metrics.chipHeight + metrics.chipSpacing)))
+  }
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    VStack(alignment: .leading, spacing: CalendarMonthGridDayCellMetrics.chipSpacing) {
       dayNumber
       ForEach(chips.visible) { entry in
         chipRow(entry)
@@ -114,12 +127,59 @@ struct CalendarMonthGridDayCell: View {
       Button {
         onOpenTask(task)
       } label: {
-        chip(title: task.title, color: taskColor(task))
+        taskChip(
+          title: task.title, isDone: task.status == .completed,
+          isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), calendar: calendar))
+      }
+      .buttonStyle(.plain)
+      .calendarPointingHandCursor()
+      .opacity(day.isCurrentMonth ? 1 : 0.55)
+    case .timedTask(let task, let time):
+      Button {
+        onOpenTask(task)
+      } label: {
+        taskChip(
+          title: chipTitle(for: task, at: time), isDone: task.status == .completed, isOverdue: false)
       }
       .buttonStyle(.plain)
       .calendarPointingHandCursor()
       .opacity(day.isCurrentMonth ? 1 : 0.55)
     }
+  }
+
+  /// A task's chip, timed or not, wears the calendar task surface: a hollow
+  /// dashed outline in the accent tint rather than an event's solid fill and
+  /// rail, so time set aside for the user's own work never reads like a
+  /// meeting. A finished task is struck through and faded.
+  /// A task's chip. `isOverdue` ends it with the overdue clock, as the
+  /// week's all-day strip does for a task past its due day; a timed task's
+  /// chip, like its week block, leaves it off.
+  private func taskChip(title: String, isDone: Bool, isOverdue: Bool) -> some View {
+    HStack(spacing: 2) {
+      Text(title)
+        .font(LorvexDesign.Typography.tertiaryText)
+        .strikethrough(isDone)
+        .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      if isOverdue {
+        Image(systemName: "clock.badge.exclamationmark")
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(LorvexDesign.Palette.overdue)
+          .accessibilityLabel(
+            String(localized: "task_detail.pill.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle))
+      }
+    }
+      .padding(.horizontal, 4)
+      .padding(.vertical, 1)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .lorvexCalendarTaskSurface(
+        isDone: isDone, cornerRadius: CalendarMonthGridDayCellMetrics.chipCornerRadius)
+  }
+
+  /// A timed task's chip leads with its start time like a timed event's.
+  private func chipTitle(for task: LorvexTask, at time: Range<Int>) -> String {
+    "\(lorvexClockTimeLabel(minutes: time.lowerBound)) \(task.title)"
   }
 
   private func chip(title: String, color: Color) -> some View {
@@ -170,16 +230,23 @@ struct CalendarMonthGridDayCell: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       Text(LocalizedStringResource("calendar.overflow.title", defaultValue: "Hidden events", table: "Localizable", bundle: LorvexL10n.bundle))
         .font(LorvexDesign.Typography.primaryEmphasis)
-      ForEach(day.events) { event in
-        overflowRow(title: chipTitle(for: event), color: eventColor(event)) {
-          isOverflowPresented = false
-          onSelectEvent(event)
-        }
-      }
-      ForEach(day.scheduledTasks) { task in
-        overflowRow(title: task.title, color: taskColor(task)) {
-          isOverflowPresented = false
-          onOpenTask(task)
+      ForEach(day.entries) { entry in
+        switch entry {
+        case .event(let event):
+          overflowRow(title: chipTitle(for: event), color: eventColor(event)) {
+            isOverflowPresented = false
+            onSelectEvent(event)
+          }
+        case .task(let task):
+          overflowRow(title: task.title, color: LorvexDesign.Palette.accent) {
+            isOverflowPresented = false
+            onOpenTask(task)
+          }
+        case .timedTask(let task, let time):
+          overflowRow(title: chipTitle(for: task, at: time), color: LorvexDesign.Palette.accent) {
+            isOverflowPresented = false
+            onOpenTask(task)
+          }
         }
       }
     }

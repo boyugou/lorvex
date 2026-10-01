@@ -134,8 +134,15 @@ public enum HabitHeatmapModel {
     }
   }
 
-  public static func weekdayInitials(calendar: Calendar) -> [String] {
-    let symbols = calendar.veryShortWeekdaySymbols
+  /// The heatmap's row labels: the very short weekday symbols in `locale`'s
+  /// language ("S", "M", … or "日", "一", …), rotated so the first row is
+  /// `calendar.firstWeekday`. The grid's calendar carries no locale of its own —
+  /// it fixes only the week layout and the date keys — so the language comes
+  /// from `locale` while the row order stays the grid's.
+  public static func weekdayInitials(calendar: Calendar, locale: Locale = .current) -> [String] {
+    var localized = calendar
+    localized.locale = locale
+    let symbols = localized.veryShortWeekdaySymbols
     let first = calendar.firstWeekday - 1
     guard symbols.count == 7, first >= 0, first < 7 else { return symbols }
     return Array(symbols[first...] + symbols[..<first])
@@ -267,6 +274,14 @@ public enum HabitPeriodProgress {
     }
   }
 
+  /// The period ``current(habit:recentCompletions:today:calendar:)`` counts
+  /// over: the day for a habit with a per-day target above one, whatever its
+  /// cadence, otherwise the cadence's own day, week, or month.
+  public static func period(for habit: LorvexHabit) -> HabitRhythmStrip.Granularity {
+    if max(habit.targetCount, 1) > 1 { return .day }
+    return HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType)
+  }
+
   public static func current(
     habit: LorvexHabit,
     recentCompletions: [String],
@@ -274,10 +289,7 @@ public enum HabitPeriodProgress {
     calendar: Calendar = .current
   ) -> Value {
     let target = max(habit.targetCount, 1)
-    if target > 1 {
-      return Value(completed: max(habit.completionsToday, 0), required: target)
-    }
-    switch HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType) {
+    switch period(for: habit) {
     case .day:
       return Value(completed: max(habit.completionsToday, 0), required: target)
     case .week:

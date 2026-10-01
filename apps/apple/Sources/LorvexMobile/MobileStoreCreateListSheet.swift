@@ -81,7 +81,7 @@ struct MobileStoreCreateListSheet: View {
             submit()
           } label: {
             if store.isCreatingList {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(
                 String(
@@ -89,6 +89,7 @@ struct MobileStoreCreateListSheet: View {
                   bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(!store.canCreateListDraft)
           .accessibilityIdentifier("mobileCreateList.confirm")
         }

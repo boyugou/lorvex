@@ -21,7 +21,7 @@ The current developer machine reports Xcode 26.6, which satisfies the SDK gate.
 The GitHub Apple workflow runs on `macos-15`, explicitly selects the newest
 installed Xcode 26.x, exports that `DEVELOPER_DIR`, and fails if Xcode 26 is not
 available. Its evidence step prints the selected Xcode version and requires the
-macOS, iOS, xrOS, and watchOS 26 SDKs. The iOS archive script independently
+macOS, iOS, and watchOS 26 SDKs. The iOS archive script independently
 rejects an iPhoneOS SDK older than version 26 before a device archive.
 
 The repository verifies privacy manifests and recursively rejects a

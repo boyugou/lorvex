@@ -16,8 +16,8 @@ import LorvexStore
 ///    and accumulated into ``CreateTaskSyncEffects``.
 /// 4. When `completed: true`,
 ///    ``LifecycleTransitions/applyCompletionTransition(_:taskId:now:reminderVersion:handler:)``
-///    runs immediately and any spawned successor / focus rewire / cancelled
-///    reminder is folded into the effects envelope.
+///    runs immediately and any spawned successor / cancelled reminder is
+///    folded into the effects envelope.
 /// 5. Final payload is the enriched task JSON + optional next-occurrence +
 ///    newly-unblocked dependents + optional intake advice.
 ///
@@ -79,12 +79,6 @@ public enum TaskCreate {
         contentsOf: completion.cancelledReminderIds)
       if let successorIdString = completion.spawnedSuccessorId {
         let successorTyped = TaskId(trusted: successorIdString)
-        syncEffects.focusRewireAudits.append(
-          CreateTaskFocusRewireAudit(
-            parentTaskId: typedTaskId,
-            successorId: successorTyped,
-            focusScheduleDates: completion.rewiredFocusScheduleDates,
-            currentFocusDates: completion.rewiredCurrentFocusDates))
         let successor = try TaskResponse.loadEnrichedTaskJSON(
           db, taskId: successorTyped)
         nextOccurrence = successor
@@ -100,10 +94,6 @@ public enum TaskCreate {
         contentsOf: completion.spawnedSuccessorChecklistItemIds)
       syncEffects.spawnedSuccessorReminderIds.append(
         contentsOf: completion.spawnedSuccessorReminderIds)
-      syncEffects.rewiredFocusScheduleDates.append(
-        contentsOf: completion.rewiredFocusScheduleDates)
-      syncEffects.rewiredCurrentFocusDates.append(
-        contentsOf: completion.rewiredCurrentFocusDates)
       newlyUnblockedIds = try findActiveTasksDependingOn(db, taskId: typedTaskId)
     }
 

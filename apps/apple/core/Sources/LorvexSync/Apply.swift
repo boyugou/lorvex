@@ -23,9 +23,6 @@ public enum DeferralReason: Sendable, Equatable {
   /// and remains held until a later recovery policy can interpret it safely.
   case operationallyUnusableHlc(
     remoteVersion: Hlc, maximumOperationalPhysicalMs: UInt64)
-  /// An audit upsert belongs to an account-relative retention generation whose
-  /// frontier/policy has not yet been joined and authorized locally.
-  case auditRetentionFrontierRefresh(requiredEpoch: Int64)
   /// A required foreign-key dependency is not yet present locally.
   case missingDependency(entityType: EntityKind, entityId: String)
   /// An aggregate-level invariant guard refused the envelope on the receiving
@@ -41,7 +38,6 @@ public enum DeferralReason: Sendable, Equatable {
   /// of its ``message``, so the two cannot drift.
   public static let schemaTooNewReasonMarker = "payload_schema_version"
   public static let operationallyUnusableHlcReasonMarker = "hlc_operational_hold"
-  public static let auditRetentionFrontierReasonMarker = "audit_retention_frontier"
   /// Stable substring the retention sweep matches against a stored
   /// `sync_pending_inbox.reason` to recognize an ``aggregateInvariantBlocked``
   /// HOLD — the tail of its ``message``, so the two cannot drift.
@@ -61,10 +57,6 @@ public enum DeferralReason: Sendable, Equatable {
         + "\(remoteVersion.description) has no strict successor inside the static "
         + "operational HLC boundary (physical_ms through "
         + "\(maximumOperationalPhysicalMs), counter through \(Hlc.maxCounter))"
-    case .auditRetentionFrontierRefresh(let requiredEpoch):
-      return
-        "\(Self.auditRetentionFrontierReasonMarker) refresh required for epoch "
-        + "\(requiredEpoch)"
     case .missingDependency(let entityType, let entityId):
       return "missing dependency: \(entityType.asString)/\(entityId)"
     case .aggregateInvariantBlocked(let entityType, let entityId, let invariant):
@@ -79,11 +71,6 @@ public enum DeferralReason: Sendable, Equatable {
 public enum ApplyResult: Sendable, Equatable {
   /// The envelope was applied successfully.
   case applied
-  /// The inbound `ai_changelog` upsert was refused by the local retention
-  /// policy/frontier. No audit row was stored; the applier atomically queued an
-  /// exact-zone CloudKit physical delete and removed every local full-content
-  /// copy.
-  case upsertRejectedByRetention
   /// The addressed mutation was rejected to preserve a permanent local
   /// invariant, but merely skipping it would leave the shared record in a shape
   /// that poisons future sync. The host must fulfill this typed repair in the same
@@ -188,7 +175,7 @@ public enum TaskGraphRepairTarget: Sendable, Equatable {
 public enum ApplyRepairObligation: Sendable, Equatable {
   /// A peer attempted to delete the canonical inbox. Keep the local row and
   /// replace the peer's shared delete record with an upsert whose HLC dominates
-  /// `remoteDeleteVersion`, so subsequent authoritative snapshots remain valid.
+  /// `remoteDeleteVersion`, so every peer converges on the kept inbox.
   case reassertRequiredInbox(remoteDeleteVersion: Hlc)
   /// A peer attempted to delete the product timezone, which is an upsert-only
   /// authority once setup can sync. Preserve the local value when present;
@@ -207,7 +194,7 @@ public enum ApplyRepairObligation: Sendable, Equatable {
   case propagateCalendarCleanup(
     targets: [CalendarCleanupRepairTarget], additionalFloor: Hlc)
   /// A task lifecycle decision normalized one or more task-graph records.
-  /// Re-emit every canonical task/reminder/day-root snapshot and dependency
+  /// Re-emit every canonical task and reminder snapshot and dependency
   /// tombstone before the triggering CloudKit page is acknowledged.
   case propagateTaskRollover(targets: [TaskGraphRepairTarget], additionalFloor: Hlc)
   /// Two different semantic mutations reused one HLC. The contender is the
@@ -218,8 +205,8 @@ public enum ApplyRepairObligation: Sendable, Equatable {
 
   /// Entity kinds whose canonical rows/tombstones the repair itself may mutate.
   /// Callers add the triggering envelope kind separately, then union this set
-  /// into their reload/report surface so a derived reminder, dependency, or
-  /// day-root write is never hidden behind a task-only notification.
+  /// into their reload/report surface so a derived reminder or dependency
+  /// write is never hidden behind a task-only notification.
   public var affectedEntityTypes: Set<EntityKind> {
     switch self {
     case .reassertRequiredInbox:
@@ -269,13 +256,22 @@ public enum ApplyError: Error, Equatable {
   case store(String)
   /// A database error surfaced from raw SQL.
   case db(String)
-  /// A database error whose SQLite primary result code is `SQLITE_BUSY` (5) or
-  /// `SQLITE_LOCKED` (6) — a transient lock-contention failure. The pending-inbox
-  /// drain treats this class as recoverable (re-records `last_attempted_at`
-  /// without bumping `attempt_count`) rather than counting it toward the per-row
-  /// retry cap. Surfaces the same `description`
-  /// as ``db(_:)`` so error wording stays byte-identical.
-  case dbBusyOrLocked(String)
+  /// A database error the envelope did not cause, and that an identical later
+  /// attempt can still succeed at. Two sources produce it: lock contention
+  /// (`SQLITE_BUSY` 5, `SQLITE_LOCKED` 6), and a database suspended so the
+  /// process does not hold a shared-container file lock while the operating
+  /// system suspends it (`SQLITE_ABORT` 4, `SQLITE_INTERRUPT` 9).
+  ///
+  /// The pending-inbox drain treats this class as recoverable — it re-records
+  /// `last_attempted_at` without bumping `attempt_count` — rather than counting
+  /// it toward the per-row retry cap. That distinction is load-bearing: the cap
+  /// promotes an envelope to a permanent conflict and discards it, so charging
+  /// the budget for attempts that never reached an applier would drop inbound
+  /// records for no reason but the app having been backgrounded.
+  ///
+  /// Surfaces the same `description` as ``db(_:)`` so error wording stays
+  /// byte-identical.
+  case dbTransient(String)
   /// A database error whose SQLite primary result code is `SQLITE_CONSTRAINT`
   /// (19) — a DETERMINISTIC constraint trip (CHECK / NOT NULL / FK / UNIQUE),
   /// not a transient failure. Re-running the identical envelope re-fails
@@ -285,11 +281,11 @@ public enum ApplyError: Error, Equatable {
   /// same CloudKit fetch page forever and wedge all inbound sync (the
   /// inbound-apply path has no quarantine of its own). The trust-boundary
   /// validators (`ApplyTask` cross-field CHECKs, `ApplyDayScoped` mood/energy
-  /// scale, the calendar / focus enum gates) pre-empt the known cases as
+  /// scale, the calendar enum gates) pre-empt the known cases as
   /// ``invalidPayload(_:)``; this classification is the defense-in-depth net for
   /// any unforeseen deterministic constraint. Genuinely transient / IO failures
   /// stay ``db(_:)`` (batch-fatal, retry the whole page) and lock contention
-  /// stays ``dbBusyOrLocked(_:)``; the split is by the SQLite result code in
+  /// stays ``dbTransient(_:)``; the split is by the SQLite result code in
   /// ``lift(_:)``. Surfaces the same `description` as ``db(_:)`` so error
   /// wording stays byte-identical.
   case dbConstraint(String)
@@ -348,7 +344,7 @@ public enum ApplyError: Error, Equatable {
       return "store error: \(msg)"
     case .db(let msg):
       return "database error: \(msg)"
-    case .dbBusyOrLocked(let msg):
+    case .dbTransient(let msg):
       return "database error: \(msg)"
     case .dbConstraint(let msg):
       return "database error: \(msg)"
@@ -412,8 +408,11 @@ extension ApplyError {
     }
     if let dbError = error as? DatabaseError {
       switch dbError.resultCode {
-      case .SQLITE_BUSY, .SQLITE_LOCKED:
-        return .dbBusyOrLocked("\(error)")
+      case .SQLITE_BUSY, .SQLITE_LOCKED, .SQLITE_ABORT, .SQLITE_INTERRUPT:
+        // ABORT/INTERRUPT are what a suspended database raises. They say the
+        // process stepped aside to avoid holding a lock across suspension, not
+        // that this envelope is unapplicable, so they retry like contention.
+        return .dbTransient("\(error)")
       case .SQLITE_CONSTRAINT:
         // A deterministic constraint trip (CHECK / NOT NULL / FK / UNIQUE): the
         // same envelope re-fails identically, so classify it distinctly from a
@@ -525,6 +524,13 @@ public enum Apply {
     _ db: Database, registry: EntityApplierRegistry, envelope originalEnvelope: SyncEnvelope
   ) throws -> ApplyResult {
     var envelope = originalEnvelope
+    // The audit trail is device-local: an `ai_changelog` envelope is never
+    // applied, whatever its content.
+    if envelope.entityType == .aiChangelog {
+      return .skipped(
+        reason: "ai_changelog is device-local; audit envelopes are not applied",
+        winnerVersion: nil)
+    }
     // Capture the apply timestamp ONCE and thread it through every helper.
     let applyTs = SyncTimestampFormat.syncTimestampNow()
 
@@ -579,26 +585,16 @@ public enum Apply {
           localVersion: LorvexVersion.payloadSchemaVersion))
     }
 
-    // The append-only audit stream and permanent alias ledger have no safe
-    // partial-promotion seam. Applying a next-generation control record while
-    // truncating an unknown semantic field could make retention or identity
-    // resolution irreversible, so hold both kinds intact until an upgraded
-    // build understands the complete payload.
-    if acceptance == .parseForwardCompat,
-      envelope.entityType == .aiChangelog || envelope.entityType == .entityRedirect
-    {
+    // The permanent alias ledger has no safe partial-promotion seam. Applying
+    // a next-generation redirect while truncating an unknown semantic field
+    // could make identity resolution irreversible, so hold it intact until an
+    // upgraded build understands the complete payload.
+    if acceptance == .parseForwardCompat, envelope.entityType == .entityRedirect {
       return .deferred(
         reason: .schemaTooNew(
           remoteVersion: envelope.payloadSchemaVersion,
           localVersion: LorvexVersion.payloadSchemaVersion))
     }
-
-    // A prior complete snapshot may have classified a preserved future-held
-    // row as stale pre-session state. Once this build understands the terminal
-    // remote envelope, make that row yield before ordinary LWW compares it.
-    // This runs inside the per-envelope savepoint, so any later deferral or
-    // validation failure restores the local row and its fence atomically.
-    try FutureRecordHold.prepareTerminalEnvelopeApply(db, envelope: envelope)
 
     // The absorbing alias kind has its own apply semantics: upsert only, exact
     // source digest validation, durable target deferral, and min-target join.
@@ -617,8 +613,8 @@ public enum Apply {
 
     // Audit retention is preference-shaped at the product API only. Its value
     // is account-scoped control-plane metadata, so even a valid, hand-crafted
-    // legacy `.preference` record must not create a second authority, shadow,
-    // or tombstone locally.
+    // `.preference` record must not create a second authority, shadow, or
+    // tombstone locally.
     if envelope.entityType == .preference,
       PreferenceKeys.isControlPlanePreference(envelope.entityId)
     {

@@ -154,23 +154,8 @@ extension SwiftLorvexCoreService {
     try read { db in try Self.tagsForDataExport(db) }
   }
 
-  public func loadCurrentFocusForDataExport() async throws -> [ExportCurrentFocus] {
-    try read { db in try Self.currentFocusForDataExport(db) }
-  }
-
-  public func loadFocusSchedulesForDataExport() async throws -> [ExportFocusSchedule] {
-    try read { db in try Self.focusSchedulesForDataExport(db, includeProviderBlocks: true) }
-  }
-
-  public func loadFocusSchedulesForAIDataExport() async throws -> [ExportFocusSchedule] {
-    try read { db in
-      // Read the tier and the schedule aggregate in one transaction. A
-      // concurrent downgrade therefore cannot leave this export with a tier
-      // sampled before the blocks it governs.
-      let accessMode = try DeviceStateRepo.readCalendarAiAccessMode(db)
-      return try Self.focusSchedulesForDataExport(
-        db, includeProviderBlocks: accessMode.includesProvider)
-    }
+  public func loadDailyBriefingsForDataExport() async throws -> [ExportDailyBriefing] {
+    try read { db in try Self.dailyBriefingsForDataExport(db) }
   }
 
   public func loadTaskCalendarEventLinksForDataExport() async throws -> [ExportTaskCalendarEventLink] {
@@ -196,20 +181,17 @@ extension SwiftLorvexCoreService {
     }
   }
 
-  static func currentFocusForDataExport(_ db: Database) throws -> [ExportCurrentFocus] {
+  static func dailyBriefingsForDataExport(_ db: Database) throws -> [ExportDailyBriefing] {
     let rows = try Row.fetchAll(
       db,
       sql: """
         SELECT date, briefing, timezone, created_at, updated_at
-        FROM current_focus
+        FROM daily_briefings
         ORDER BY date ASC
         """)
-    let taskIDsByDate = try currentFocusTaskIDsByDate(db)
     return rows.map { row in
-      let date: String = row[0]
-      return ExportCurrentFocus(
-        date: date, briefing: row[1], timezone: row[2],
-        taskIDs: taskIDsByDate[date] ?? [], createdAt: row[3], updatedAt: row[4])
+      ExportDailyBriefing(
+        date: row[0], briefing: row[1], timezone: row[2], createdAt: row[3], updatedAt: row[4])
     }
   }
 
@@ -241,83 +223,4 @@ extension SwiftLorvexCoreService {
       ExportMemoryEntry(id: row[0], key: row[1], content: row[2], updatedAt: row[3])
     }
   }
-
-  private static func currentFocusTaskIDsByDate(_ db: Database) throws -> [String: [String]] {
-    let rows = try Row.fetchAll(
-      db,
-      sql: "SELECT date, task_id FROM current_focus_items ORDER BY date ASC, position ASC")
-    var out: [String: [String]] = [:]
-    for row in rows {
-      let date: String = row[0]
-      let taskID: String = row[1]
-      out[date, default: []].append(taskID)
-    }
-    return out
-  }
-
-  static func focusSchedulesForDataExport(
-    _ db: Database, includeProviderBlocks: Bool
-  ) throws -> [ExportFocusSchedule] {
-    let rows = try Row.fetchAll(
-      db,
-      sql: """
-        SELECT date, rationale, timezone, created_at, updated_at
-        FROM focus_schedule
-        ORDER BY date ASC
-        """)
-    let blocksByDate = try focusScheduleBlocksByDate(
-      db, includeProviderBlocks: includeProviderBlocks)
-    return rows.map { row in
-      let date: String = row[0]
-      return ExportFocusSchedule(
-        date: date,
-        rationale: row[1],
-        timezone: row[2],
-        blocks: blocksByDate[date] ?? [],
-        createdAt: row[3],
-        updatedAt: row[4])
-    }
-  }
-
-  private static func focusScheduleBlocksByDate(
-    _ db: Database, includeProviderBlocks: Bool
-  ) throws
-    -> [String: [ExportFocusScheduleBlock]]
-  {
-    let rows = try Row.fetchAll(
-      db,
-      sql: """
-        SELECT date, position, block_type, start_minutes, end_minutes, task_id, calendar_event_id, event_source, title
-        FROM focus_schedule_blocks
-        ORDER BY date ASC, position ASC
-        """)
-    var out: [String: [ExportFocusScheduleBlock]] = [:]
-    for row in rows {
-      let date: String = row[0]
-      let position: Int64 = row[1]
-      let start: Int64 = row[3]
-      let end: Int64 = row[4]
-      let calendarEventID: String? = row[6]
-      let eventSource = (row[7] as String?).flatMap(FocusScheduleEventSource.parse)
-      guard includeProviderBlocks || eventSource != .provider else { continue }
-      let normalized = FocusScheduleSnapshot.normalizeBlockForExternalTransfer(
-        eventSource: eventSource, calendarEventId: calendarEventID, title: row[8])
-      // Filtering a provider block can leave gaps in the persisted positions.
-      // AI export remains valid strict-import input by compacting the retained
-      // order to zero-based contiguous positions.
-      let exportedPosition = includeProviderBlocks ? Int(position) : (out[date]?.count ?? 0)
-      out[date, default: []].append(
-        ExportFocusScheduleBlock(
-          position: exportedPosition,
-          blockType: row[2],
-          startMinutes: Int(start),
-          endMinutes: Int(end),
-          taskID: row[5],
-          calendarEventID: normalized.calendarEventId,
-          eventSource: eventSource,
-          title: normalized.title))
-    }
-    return out
-  }
-
 }

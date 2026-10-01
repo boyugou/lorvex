@@ -4,7 +4,6 @@ extension ToolRegistry {
   func dependencyGraphResult(arguments: [String: Value]) async throws -> CallTool.Result {
     let taskID = try StrictScalarArguments.optionalString(
       arguments["task_id"], field: "task_id")
-      ?? StrictScalarArguments.optionalString(arguments["id"], field: "id")
     let listID = try StrictScalarArguments.optionalString(arguments["list_id"], field: "list_id")
     let includeInactive = try StrictScalarArguments.bool(
       arguments["include_inactive"], field: "include_inactive", default: false)

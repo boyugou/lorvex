@@ -188,3 +188,62 @@ func savingADependencyCycleIsRejectedByTheCoreBackstop() async throws {
   #expect(store.errorMessage != nil)
   #expect(try await core.loadTask(id: a.id).dependsOn.isEmpty)
 }
+
+@MainActor
+@Test
+func openingADependencyShowsItAtOnceAndMovesTheTodayHighlight() async throws {
+  let store = try await makeDependencyEditorStore()
+  await store.refresh()
+  let rows = store.todayOrderedTasks
+  try #require(rows.count >= 2)
+  store.selectOnlyTodayTask(rows[0].id)
+
+  // A task Today shows takes the Today highlight with it.
+  store.openDependency(rows[1])
+  #expect(store.selectedTaskID == rows[1].id)
+  #expect(store.todaySelectedTaskIDs == [rows[1].id])
+
+  // A task Today does not show resolves in the detail before its fuller
+  // record loads, and leaves no Today row highlighted.
+  let offToday = try await store.core.createTask(title: "Book the offsite venue", notes: "")
+  store.openDependency(offToday)
+  #expect(store.selectedTaskID == offToday.id)
+  #expect(store.selectedTask?.id == offToday.id)
+  #expect(store.todaySelectedTaskIDs.isEmpty)
+}
+
+/// A dependency row's circle completes the blocker in place while the task that
+/// waits on it stays selected with its dependency edits still unsaved: the
+/// toggle must neither discard that draft nor leave the row reading the
+/// blocker's old status.
+@MainActor
+@Test
+func completingADependencyFromItsRowKeepsTheUnsavedDependencyDraft() async throws {
+  let store = try await makeDependencyEditorStore()
+  await store.refresh()
+  let task = try #require(store.today.tasks.first)
+  store.selectedTaskID = task.id
+  store.syncSelectedTaskDraft()
+
+  let core = store.core
+  let blocker = try await core.createTask(title: "Book the venue", notes: "")
+  let other = try await core.createTask(title: "Confirm the caterer", notes: "")
+  store.taskDetailDependencies = [blocker.id, other.id]
+  #expect(store.selectedTaskDraftHasChanges)
+
+  await store.toggleTaskCompletion(blocker)
+
+  #expect(store.selectedTaskID == task.id)
+  #expect(store.taskDetailDependencies == [blocker.id, other.id])
+  #expect(store.selectedTaskDraftHasChanges)
+  let rows = await store.dependencyTasks(for: store.taskDetailDependencies)
+  #expect(rows.first { $0.id == blocker.id }?.status == .completed)
+  #expect(rows.first { $0.id == other.id }?.status == .open)
+
+  // The same circle reopens it.
+  let done = try #require(rows.first { $0.id == blocker.id })
+  await store.toggleTaskCompletion(done)
+  let reopened = await store.dependencyTasks(for: [blocker.id])
+  #expect(reopened.first?.status == .open)
+  #expect(store.errorMessage == nil)
+}

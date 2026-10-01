@@ -855,80 +855,53 @@ final class OutboxEnqueuePayloadTests: XCTestCase {
     }
   }
 
-  // MARK: - aggregates.rs
+  // MARK: - day-scoped and task payloads
 
-  func testAggregateFocusScheduleCarriesBlocks() throws {
+  func testDailyBriefingCarriesItsTextAndTimezone() throws {
     try withDB { db in
       let hlc = try setupHlc()
       let date = "2026-04-10"
       try db.execute(
         sql: """
-          INSERT INTO focus_schedule (date, rationale, timezone, version, created_at, updated_at)
-          VALUES (?, 'plan', 'UTC', '0000000000000_0000_0000000000000000',
+          INSERT INTO daily_briefings (date, briefing, timezone, version, created_at, updated_at)
+          VALUES (?, 'Two meetings, then the report.', 'UTC',
+                  '0000000000000_0000_0000000000000000',
                   '2026-04-10T00:00:00.000Z', '2026-04-10T00:00:00.000Z')
           """,
         arguments: [date])
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule_blocks
-              (date, position, block_type, start_minutes, end_minutes, title)
-          VALUES (?, 0, 'buffer', 540, 600, 'Warm up'), (?, 1, 'buffer', 600, 660, 'Plan')
-          """,
-        arguments: [date, date])
 
       try enqueueEntityUpsert(
-        db, entityType: EntityName.focusSchedule, entityId: date, hlcState: hlc,
+        db, entityType: EntityName.dailyBriefing, entityId: date, hlcState: hlc,
         deviceId: "dev-001")
 
-      let payload = try parseOutboxPayload(db, EntityName.focusSchedule, date)
-      guard case .object(let obj) = payload, case .array(let blocks)? = obj["blocks"] else {
-        return XCTFail("blocks must be present")
-      }
-      XCTAssertEqual(blocks.count, 2)
-      guard case .object(let b0) = blocks[0], case .object(let b1) = blocks[1] else {
-        return XCTFail("block not object")
-      }
-      XCTAssertEqual(b0["start_minutes"], .int(540))
-      XCTAssertEqual(b1["title"], .string("Plan"))
+      let payload = try parseOutboxPayload(db, EntityName.dailyBriefing, date)
+      guard case .object(let obj) = payload else { return XCTFail("payload must be an object") }
+      XCTAssertEqual(obj["date"], .string(date))
+      XCTAssertEqual(obj["briefing"], .string("Two meetings, then the report."))
+      XCTAssertEqual(obj["timezone"], .string("UTC"))
     }
   }
 
-  func testAggregateCurrentFocusCarriesTaskIds() throws {
+  func testTaskCarriesItsPlannedTime() throws {
     try withDB { db in
       let hlc = try setupHlc()
-      let date = "2026-04-11"
-      try seedDefaultListAndTasks(
-        db,
-        [
-          "01966a3f-7c8b-7d4e-8f3a-000000002152", "01966a3f-7c8b-7d4e-8f3a-000000002153",
-        ])
+      let taskID = "01966a3f-7c8b-7d4e-8f3a-000000002152"
+      try seedDefaultListAndTasks(db, [taskID])
       try db.execute(
         sql: """
-          INSERT INTO current_focus (date, briefing, timezone, version, created_at, updated_at)
-          VALUES (?, 'today', 'UTC', '0000000000000_0000_0000000000000000',
-                  '2026-04-11T00:00:00.000Z', '2026-04-11T00:00:00.000Z')
+          UPDATE tasks SET planned_date = '2026-04-11', planned_start_minutes = 540,
+            planned_end_minutes = 600 WHERE id = ?
           """,
-        arguments: [date])
-      try CurrentFocusItemsRepo.materializeFocusItems(
-        db, date: date,
-        taskIds: [
-          "01966a3f-7c8b-7d4e-8f3a-000000002153", "01966a3f-7c8b-7d4e-8f3a-000000002152",
-        ])
+        arguments: [taskID])
 
       try enqueueEntityUpsert(
-        db, entityType: EntityName.currentFocus, entityId: date, hlcState: hlc,
-        deviceId: "dev-001")
+        db, entityType: EntityName.task, entityId: taskID, hlcState: hlc, deviceId: "dev-001")
 
-      let payload = try parseOutboxPayload(db, EntityName.currentFocus, date)
-      guard case .object(let obj) = payload, case .array(let arr)? = obj["task_ids"] else {
-        return XCTFail("task_ids must be present")
-      }
-      XCTAssertEqual(
-        arr,
-        [
-          .string("01966a3f-7c8b-7d4e-8f3a-000000002153"),
-          .string("01966a3f-7c8b-7d4e-8f3a-000000002152"),
-        ])
+      let payload = try parseOutboxPayload(db, EntityName.task, taskID)
+      guard case .object(let obj) = payload else { return XCTFail("payload must be an object") }
+      XCTAssertEqual(obj["planned_date"], .string("2026-04-11"))
+      XCTAssertEqual(obj["planned_start_minutes"], .int(540))
+      XCTAssertEqual(obj["planned_end_minutes"], .int(600))
     }
   }
 

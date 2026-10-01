@@ -82,9 +82,11 @@ func previewBatchCompleteTasksMarksAllCompleted() async throws {
 func previewBatchReopenTasksResetsStatus() async throws {
   let service = try await makeSeededInMemoryCore()
   _ = try await service.completeTask(id: LorvexPreviewSeedID.agendaTask)
-  let snapshot = try await service.batchReopenTasks(ids: [LorvexPreviewSeedID.agendaTask]).snapshot
-  let reopened = snapshot.tasks.first { $0.id == LorvexPreviewSeedID.agendaTask }
-  #expect(reopened?.status == .open)
+  _ = try await service.batchReopenTasks(ids: [LorvexPreviewSeedID.agendaTask])
+  // Read the task itself: the returned Today snapshot is the day's pool, so an
+  // undated task is legitimately absent from it and cannot witness the status.
+  let reopened = try await service.loadTask(id: LorvexPreviewSeedID.agendaTask)
+  #expect(reopened.status == .open)
 }
 
 @Test

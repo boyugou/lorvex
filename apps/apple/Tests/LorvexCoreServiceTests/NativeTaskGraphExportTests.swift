@@ -40,7 +40,8 @@ final class NativeTaskGraphExportTests: XCTestCase {
   }
 
   private func makeService() throws -> SwiftLorvexCoreService {
-    SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL()))
+    SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL(), migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func seedCompleteGraph(_ service: SwiftLorvexCoreService) throws -> (
@@ -162,8 +163,8 @@ final class NativeTaskGraphExportTests: XCTestCase {
         try db.execute(
           sql: """
             INSERT INTO sync_tombstones (
-              entity_type, entity_id, version, deleted_at, cloud_confirmed_at
-            ) VALUES (?, ?, ?, ?, '2026-01-02T00:00:00.000Z')
+              entity_type, entity_id, version, deleted_at
+            ) VALUES (?, ?, ?, ?)
             """,
           arguments: [entityType, entityID, Self.v2, Self.now])
       }

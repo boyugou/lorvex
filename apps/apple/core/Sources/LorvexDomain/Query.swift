@@ -11,12 +11,6 @@ public struct TodayPredicate: Sendable, Equatable {
   public init(date: IsoDate.YMD) { self.date = date }
 }
 
-/// `due_date < as_of_date AND status = 'open'`.
-public struct OverduePredicate: Sendable, Equatable {
-  public var asOfDate: IsoDate.YMD
-  public init(asOfDate: IsoDate.YMD) { self.asOfDate = asOfDate }
-}
-
 /// Effective action date (`planned_date` when present, otherwise `due_date`)
 /// falls strictly after `from_date` and on or before `from_date + days`,
 /// while the task is not already deadline-overdue.

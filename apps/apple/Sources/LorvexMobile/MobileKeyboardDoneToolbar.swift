@@ -10,27 +10,21 @@ struct MobileKeyboardDoneToolbar: ViewModifier {
   @FocusState private var focused: Bool
 
   func body(content: Content) -> some View {
-    // The `.keyboard` toolbar placement is unavailable on visionOS, which has no
-    // on-screen keyboard accessory bar; the Done affordance is iOS/iPadOS only.
-    #if os(visionOS)
-      content.focused($focused)
-    #else
-      content
-        .focused($focused)
-        .toolbar {
-          ToolbarItemGroup(placement: .keyboard) {
-            Spacer()
-            Button(
-              String(
-                localized: "common.done", defaultValue: "Done", table: "Localizable",
-                bundle: MobileL10n.bundle)
-            ) {
-              onDone?()
-              focused = false
-            }
+    content
+      .focused($focused)
+      .toolbar {
+        ToolbarItemGroup(placement: .keyboard) {
+          Spacer()
+          Button(
+            String(
+              localized: "common.done", defaultValue: "Done", table: "Localizable",
+              bundle: MobileL10n.bundle)
+          ) {
+            onDone?()
+            focused = false
           }
         }
-    #endif
+      }
   }
 }
 

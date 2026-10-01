@@ -5,18 +5,20 @@ Drives the `LorvexMCPHost` binary over stdio JSON-RPC (the same transport the ap
 assistant uses), so every row is created through `SwiftLorvexCoreService` with the
 proper `ai_changelog` entries — no hand-written SQL, no bypassing of invariants.
 
-Creates a handful of lists, a varied set of tasks (priorities, due dates including
-overdue and today, tags, estimates, notes, checklists, completed items), today's
-focus selection, and a few habits — enough to exercise and visually verify every
-task surface (Today, Tasks, Lists, Habits) with lifelike content.
+Creates a handful of lists, a varied set of tasks (priorities, planned and due dates
+including overdue and today, tags, estimates, notes, checklists, completed items),
+today's plan (a started task, two timed tasks, and the assistant's briefing), and a
+few habits — enough to exercise and visually verify every task surface (Today,
+Tasks, Lists, Habits) with lifelike content.
 
 Usage:
   script/seed_demo_data.py                 # seed Lorvex-managed local storage
   script/seed_demo_data.py --db /path/to/db.sqlite
   script/seed_demo_data.py --fresh         # back up any existing DB and seed an empty one
 
-The MCP `planned_date` argument maps to the model's `dueDate`, so it drives both the
-scheduled/Today surfaces and the overdue styling.
+A task's `plan` sets its planned date and `due` its due date, both as day offsets
+from today: a past planned date keeps the task on Today, and a past due date marks
+it overdue.
 """
 
 from __future__ import annotations
@@ -50,8 +52,9 @@ def day(offset: int) -> str:
 
 
 # --- demo content -----------------------------------------------------------
-# Each task: title, notes, priority(1-3), plan(day offset or None), tags, est(min),
-#            list (None = Inbox), done(bool), focus(bool), checklist[(text, done)]
+# Each task: title, notes, priority(1-3), plan(day offset or None), due(day offset),
+#            tags, est(min), list (None = Inbox), done(bool), started(bool),
+#            time((start, end) as HH:MM today), checklist[(text, done)]
 # (name, description, hex color, SF Symbol icon)
 LISTS = [
     ("Work", "Projects, reviews, and shipping work", "#AF52DE", "briefcase.fill"),
@@ -62,12 +65,13 @@ LISTS = [
 
 TASKS: list[dict[str, Any]] = [
     dict(title="Draft the Q3 planning brief", notes="Pull last quarter's numbers before drafting the narrative.",
-         priority=1, plan=-2, tags=["planning", "writing"], est=90, list="Work", focus=True,
+         priority=1, plan=-2, tags=["planning", "writing"], est=90, list="Work", started=True,
          checklist=[("Gather Q2 metrics", True), ("Outline three priorities", True),
                     ("Draft the narrative section", False), ("Circulate for review", False)]),
     dict(title="Review pull requests for the sync engine", notes="Focus on the conflict-resolution path.",
-         priority=2, plan=0, tags=["code-review"], est=45, list="Work", focus=True),
-    dict(title="Prepare the sprint demo", notes="", priority=2, plan=0, tags=["meeting"], est=30, list="Work"),
+         priority=2, plan=0, tags=["code-review"], est=45, list="Work", time=("10:00", "10:45")),
+    dict(title="Prepare the sprint demo", notes="", priority=2, plan=0, tags=["meeting"], est=30, list="Work",
+         time=("14:00", "14:30")),
     dict(title="Reply to the design feedback thread", notes="", priority=3, plan=0, tags=["design"], list="Work",
          checklist=[("Read all comments", True), ("Reply to Alex", False), ("Resolve resolved threads", False),
                     ("Share updated mocks", False), ("Schedule follow-up", False)]),
@@ -77,8 +81,8 @@ TASKS: list[dict[str, Any]] = [
     dict(title="Send the weekly status update", notes="", priority=2, plan=0, tags=["comms"], list="Work", done=True),
 
     dict(title="Book a dentist appointment", notes="Overdue — call before noon.",
-         priority=2, plan=-3, tags=["health"], list="Personal"),
-    dict(title="Call mom", notes="", priority=2, plan=0, tags=["family"], list="Personal", focus=True),
+         priority=2, plan=-3, due=-1, tags=["health"], list="Personal"),
+    dict(title="Call mom", notes="", priority=2, plan=0, tags=["family"], list="Personal"),
     dict(title="Plan the weekend hike", notes="Check the trail conditions and pack water.",
          priority=3, plan=5, tags=["outdoors"], list="Personal"),
     dict(title="Renew gym membership", notes="", priority=3, plan=None, list="Personal"),
@@ -96,6 +100,13 @@ TASKS: list[dict[str, Any]] = [
     dict(title="Try the new espresso recipe", notes="", priority=3, plan=None),
     dict(title="Research a standing desk", notes="Compare three options under $500.", priority=3, plan=6, tags=["home"]),
 ]
+
+# The assistant's note on today, shown above Today's list.
+BRIEFING = (
+    "The Q3 planning brief is under way and leads the day. The sync-engine review "
+    "takes the 10:00 slot and the demo prep sits before the afternoon demo; the "
+    "postmortem moved to tomorrow."
+)
 
 # (name, cue, target_count, hex color, SF Symbol icon)
 HABITS = [
@@ -205,7 +216,7 @@ def seed(host: Host) -> None:
         host.call("update_list", {"id": lid, "color": color, "icon": icon})
     print(f"PASS: created {len(list_ids)} lists")
 
-    focus_ids: list[str] = []
+    times: list[dict[str, str]] = []
     for spec in TASKS:
         res = host.call("create_task", {"title": spec["title"], "notes": spec.get("notes", "")})
         tid = first_id(res)
@@ -215,8 +226,10 @@ def seed(host: Host) -> None:
         update: dict[str, Any] = {"id": tid, "title": spec["title"], "priority": spec["priority"]}
         if spec.get("plan") is not None:
             update["planned_date"] = day(spec["plan"])
+        if spec.get("due") is not None:
+            update["due_date"] = day(spec["due"])
         if spec.get("tags"):
-            update["tags_set"] = spec["tags"]
+            update["tags"] = spec["tags"]
         if spec.get("est") is not None:
             update["estimated_minutes"] = spec["est"]
         host.call("update_task", update)
@@ -231,14 +244,19 @@ def seed(host: Host) -> None:
                     host.call("toggle_task_checklist_item", {"item_id": item["id"], "completed": True})
         if spec.get("done"):
             host.call("complete_task", {"id": tid})
-        if spec.get("focus"):
-            focus_ids.append(tid)
+        if spec.get("started"):
+            host.call("start_task", {"id": tid})
+        if spec.get("time"):
+            start, end = spec["time"]
+            times.append({"task_id": tid, "start_time": start, "end_time": end})
 
     print(f"PASS: created {len(TASKS)} tasks")
 
-    if focus_ids:
-        host.call("set_current_focus", {"date": day(0), "task_ids": focus_ids})
-        print(f"PASS: set today's focus ({len(focus_ids)} tasks)")
+    if times:
+        host.call("save_daily_schedule", {"date": day(0), "times": times})
+        print(f"PASS: timed {len(times)} of today's tasks")
+    host.call("set_daily_briefing", {"date": day(0), "briefing": BRIEFING})
+    print("PASS: wrote today's briefing")
 
     habit_ids: list[tuple[str, int]] = []
     for name, cue, target, color, icon in HABITS:

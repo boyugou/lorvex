@@ -180,7 +180,7 @@ struct CalendarEventSheet: View {
               "common.delete", defaultValue: "Delete", table: "Localizable",
               bundle: LorvexL10n.bundle))
         }
-        .buttonStyle(.lorvexSecondary)
+        .buttonStyle(.bordered)
         .disabled(isSubmitting)
         .accessibilityLabel(
           String(
@@ -198,7 +198,7 @@ struct CalendarEventSheet: View {
       }
 
       Button(confirmTitle) { submit() }
-        .buttonStyle(.lorvexPrimary)
+        .buttonStyle(.borderedProminent)
         .keyboardShortcut(.defaultAction)
         .disabled(isConfirmDisabled)
         .help(confirmHelp)

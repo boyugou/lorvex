@@ -4,7 +4,7 @@ import LorvexCore
 enum AppStoreBatchCancelSurface: Sendable {
   case taskWorkspace
   case selectedList
-  case focus
+  case today
 }
 
 struct AppStorePendingRecurringBatchCancel: Sendable {
@@ -79,8 +79,8 @@ extension AppStore {
       await cancelTaskWorkspaceSelection(recurringScope: scope, pending: pending)
     case .selectedList:
       await cancelSelectedListTaskSelection(recurringScope: scope, pending: pending)
-    case .focus:
-      await cancelFocusWorkspaceSelection(recurringScope: scope, pending: pending)
+    case .today:
+      await cancelTodaySelection(recurringScope: scope, pending: pending)
     }
   }
 }

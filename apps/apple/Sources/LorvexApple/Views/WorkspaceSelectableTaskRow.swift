@@ -16,18 +16,50 @@ struct WorkspaceSelectableTaskRow: View {
   let batchAccessibilityIdentifier: String
   let toggleBatchSelection: () -> Void
   let openTask: () -> Void
-  var isFocused = false
+  /// See ``LorvexTaskRow/isBlocked``.
+  var isBlocked = false
   /// Show the task's owning list — set on cross-list surfaces (Tasks, Today),
   /// left off in a single list's detail pane.
   var showsOwningList = false
-  /// Reveal a quick defer control on hover — set on the Today list, where
-  /// pushing a task to another day is the dominant inline action.
-  var showsDeferButton = false
+  /// Reveal the Start or Pause and defer controls on hover: set on the Today
+  /// list, where starting a task and pushing it to another day are the
+  /// dominant inline actions.
+  var showsTodayActions = false
+  /// See ``LorvexTaskRow/timeLabel``.
+  var timeLabel: String? = nil
+  /// See ``LorvexTaskRow/timeIsRunning``.
+  var timeIsRunning = false
+  /// See ``LorvexTaskRow/chips``.
+  var chips: [LorvexTaskRowChip] = []
 
   @State private var isHovering = false
 
+  /// More than one task is selected. A plain click selects the task it opens,
+  /// so a single selected task is just the open one; only a real batch shows
+  /// the trailing selection controls.
+  private var batchIsActive: Bool {
+    store.taskSelectionCount(on: selectionSurface) > 1
+  }
+
+  /// Select adds the row to the selection, as ⌘-click does; Deselect takes it
+  /// out of a batch. The open task outside a batch gets neither.
+  private var batchMenuItem: WorkspaceTaskBatchMenuItem? {
+    if !isBatchSelected {
+      return WorkspaceTaskBatchMenuItem(
+        title: String(localized: "tasks.row.select", defaultValue: "Select", table: "Localizable", bundle: LorvexL10n.bundle),
+        toggle: toggleBatchSelection)
+    }
+    guard batchIsActive else { return nil }
+    return WorkspaceTaskBatchMenuItem(
+      title: String(localized: "tasks.row.deselect", defaultValue: "Deselect", table: "Localizable", bundle: LorvexL10n.bundle),
+      toggle: toggleBatchSelection)
+  }
+
   var body: some View {
-    TaskRowItem(store: store, task: task, isFocused: isFocused, showsOwningList: showsOwningList)
+    TaskRowItem(
+      store: store, task: task, isBlocked: isBlocked,
+      showsOwningList: showsOwningList, timeLabel: timeLabel, timeIsRunning: timeIsRunning,
+      chips: chips)
       // macOS multi-select conventions: ⌘-click toggles a row in/out of the
       // batch, ⇧-click extends the range from the last plain-clicked anchor, a
       // plain click opens the task. Modifiers are read at click time via
@@ -49,14 +81,17 @@ struct WorkspaceSelectableTaskRow: View {
       .overlay(alignment: .topTrailing) {
         // Trailing affordances are secondary. Keep them out of the leading scan
         // path so selected rows do not grow a noisy gutter beside the completion
-        // circle. Defer sits left of batch-select; both reveal on hover.
+        // circle. Start and defer sit left of batch-select and reveal on hover;
+        // batch-select shows only during a batch, since outside one its circle
+        // would read as a second completion circle.
         HStack(spacing: WorkspaceSelectableTaskRowMetrics.trailingControlSpacing) {
-          if showsDeferButton {
+          if showsTodayActions, task.status.isActionable {
+            WorkspaceRowStartButton(store: store, task: task, isVisible: isHovering)
             WorkspaceRowDeferButton(store: store, task: task, isVisible: isHovering)
           }
           WorkspaceBatchSelectionButton(
-            isSelected: isBatchSelected,
-            isVisible: isHovering,
+            isSelected: isBatchSelected && batchIsActive,
+            isVisible: isHovering && batchIsActive,
             accessibilityIdentifier: batchAccessibilityIdentifier,
             action: toggleBatchSelection
           )
@@ -83,7 +118,7 @@ struct WorkspaceSelectableTaskRow: View {
       }
       .onHover { isHovering = $0 }
       .contextMenu {
-        WorkspaceTaskContextMenu(store: store, task: task)
+        WorkspaceTaskContextMenu(store: store, task: task, batchItem: batchMenuItem)
       }
       .background {
         if isBatchSelected {

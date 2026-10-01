@@ -2,61 +2,115 @@ import LorvexCore
 import SwiftUI
 
 extension TaskDetailView {
-  func headerActions(task: LorvexTask, draftHasChanges: Bool, canSave: Bool) -> some View {
-    TaskDetailActionRail {
-      // No prominent Complete/Reopen button: the selected task's row sits right
-      // beside this inspector with an always-visible tap-to-complete circle, so a
-      // second Complete here is pure duplication. Complete / Reopen / Move-to-Open
-      // live in the ⋯ menu instead (the someday → open case isn't on the circle).
-      ViewThatFits(in: .horizontal) {
-        HStack(spacing: LorvexDesign.Spacing.s) {
-          if draftHasChanges {
-            saveButton(canSave: canSave)
-          }
-          focusButton
-          moreActionsMenu(task: task)
-        }
-
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-          if draftHasChanges {
-            saveButton(canSave: canSave)
-          }
-          HStack(spacing: LorvexDesign.Spacing.s) {
-            focusButton
-            moreActionsMenu(task: task)
-          }
-        }
+  /// Two verbs and an overflow.
+  ///
+  /// Start and Defer are what a person reaches for while working a day: begin
+  /// the task, or move it to another day. Everything else is rare enough that
+  /// promoting it would make the panel read as a control surface. Each verb
+  /// shows only while it applies, so a finished task keeps just the overflow.
+  /// Complete is deliberately absent: the circle beside the title owns it, and
+  /// the task's own row sits a few points away with the same affordance.
+  func headerActions(task: LorvexTask) -> some View {
+    HStack(spacing: LorvexDesign.Spacing.s) {
+      if store.selectedTaskCanStart || store.selectedTaskCanPause {
+        startToggle
       }
+      if !task.status.isResolved {
+        deferButton
+      }
+      Spacer(minLength: 0)
+      moreActionsMenu(task: task)
     }
     .accessibilityIdentifier("task.detail.header.actions")
   }
 
-  private func saveButton(canSave: Bool) -> some View {
-    Button {
-      Task { await store.saveSelectedTaskDraft() }
+  /// Whether the task is started, as a toggle that states where it stands:
+  /// "Start" on an open task, and the accent "Started" on a started one,
+  /// which pauses it when clicked.
+  ///
+  /// Tinted rather than filled: a solid accent button is the panel's strongest
+  /// signal, and being started is a state, not the thing to do here. The
+  /// off-state label is a verb so the control explains itself before it is used.
+  private var startToggle: some View {
+    let isStarted = store.selectedTaskCanPause
+    return Button {
+      Task {
+        if isStarted {
+          await store.pauseSelectedTask()
+        } else {
+          await store.startSelectedTask()
+        }
+      }
     } label: {
-      Label(String(localized: "common.save", defaultValue: "Save", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "square.and.arrow.down")
+      HStack(spacing: LorvexDesign.Spacing.xs) {
+        Image(systemName: isStarted ? "play.fill" : "play")
+          .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+        Text(
+          isStarted
+            ? String(localized: "task.row.started", defaultValue: "Started", table: "Localizable", bundle: LorvexL10n.bundle)
+            : String(localized: "task.action.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle)
+        )
+        .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
+        .fixedSize()
+      }
+      .foregroundStyle(
+        isStarted ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.primary)
+      )
+      .padding(.horizontal, 10)
+      .padding(.vertical, LorvexDesign.Spacing.xs)
+      .background {
+        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
+          .fill(
+            isStarted
+              ? AnyShapeStyle(LorvexDesign.Palette.accent.opacity(0.14))
+              : AnyShapeStyle(.quaternary.opacity(0.5)))
+      }
+      .overlay {
+        if isStarted {
+          RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
+            .stroke(LorvexDesign.Palette.accent.opacity(0.35), lineWidth: 0.5)
+        }
+      }
+      .contentShape(Rectangle())
     }
-    .buttonStyle(.lorvexPrimary)
-    .fixedSize(horizontal: true, vertical: false)
-    .disabled(!canSave)
-    .accessibilityIdentifier("task.detail.save")
+    .buttonStyle(.plain)
+    .help(
+      isStarted
+        ? String(
+          localized: "task_detail.actions.pause.help",
+          defaultValue: "Pause this task. It stays on its day.",
+          table: "Localizable", bundle: LorvexL10n.bundle)
+        : String(
+          localized: "task_detail.actions.start.help",
+          defaultValue: "Start this task. Started tasks lead Today.",
+          table: "Localizable", bundle: LorvexL10n.bundle))
+    .accessibilityAddTraits(isStarted ? .isSelected : [])
+    .accessibilityIdentifier("task.detail.toggle.started")
   }
 
-  private var focusButton: some View {
-    Button {
-      Task { await store.toggleSelectedTaskFocus() }
-    } label: {
-      Label(
-        store.selectedTaskIsFocused
-          ? String(localized: "task_detail.actions.unfocus", defaultValue: "Unfocus", table: "Localizable", bundle: LorvexL10n.bundle)
-          : String(localized: "task_detail.actions.focus", defaultValue: "Focus", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: store.selectedTaskIsFocused ? "minus.circle" : "scope"
-      )
+  private var deferButton: some View {
+    TaskDeferMenu(
+      store: store,
+      onDefer: { date in Task { await store.deferSelectedTask(until: date) } }
+    ) {
+      HStack(spacing: LorvexDesign.Spacing.xs) {
+        Image(systemName: "clock.arrow.circlepath").font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+        Text(String(localized: "common.defer", defaultValue: "Defer", table: "Localizable", bundle: LorvexL10n.bundle))
+          .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
+          .fixedSize()
+      }
+      .foregroundStyle(.primary)
+      .padding(.horizontal, 10)
+      .padding(.vertical, LorvexDesign.Spacing.xs)
+      .background {
+        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s).fill(.quaternary.opacity(0.5))
+      }
+      .contentShape(Rectangle())
     }
-    .buttonStyle(.lorvexSecondary)
-    .fixedSize(horizontal: true, vertical: false)
-    .accessibilityIdentifier("task.detail.toggle.focus")
+    .menuStyle(.borderlessButton)
+    .menuIndicator(.hidden)
+    .fixedSize()
+    .accessibilityIdentifier("task.detail.defer")
   }
 
   /// Complete / Reopen / Move-to-Open as a ⋯-menu item (the row circle is the
@@ -95,30 +149,6 @@ extension TaskDetailView {
     Menu {
       completionMenuItem
       Divider()
-
-      if store.selectedTaskCanStart {
-        Button {
-          Task { await store.startSelectedTask() }
-        } label: {
-          Label(
-            String(localized: "task.action.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "play.circle")
-        }
-        .accessibilityIdentifier("task.detail.start")
-      }
-      if store.selectedTaskCanMarkNotStarted {
-        Button {
-          Task { await store.markSelectedTaskNotStarted() }
-        } label: {
-          Label(
-            String(
-              localized: "task.action.mark_not_started", defaultValue: "Mark as Not Started",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            systemImage: "pause.circle")
-        }
-        .accessibilityIdentifier("task.detail.markNotStarted")
-      }
 
       TaskDeferMenu(store: store, onDefer: { date in
         Task { await store.deferSelectedTask(until: date) }
@@ -196,24 +226,10 @@ extension TaskDetailView {
         .labelStyle(.iconOnly)
     }
     .menuStyle(.button)
-    .buttonStyle(.lorvexNeutral)
+    .buttonStyle(.bordered)
     .menuIndicator(.hidden)
     .fixedSize(horizontal: true, vertical: false)
     .help(String(localized: "common.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityIdentifier("task.detail.more")
-  }
-}
-
-private struct TaskDetailActionRail<Content: View>: View {
-  @ViewBuilder let content: () -> Content
-
-  var body: some View {
-    content()
-      .controlSize(.small)
-      .buttonBorderShape(.roundedRectangle(radius: LorvexDesign.Radius.s))
-      .labelStyle(.titleAndIcon)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.top, LorvexDesign.Spacing.xs)
-      .accessibilityIdentifier("task.detail.actionRail")
   }
 }

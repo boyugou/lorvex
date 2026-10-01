@@ -14,21 +14,12 @@ extension SettingsView {
         .onChange(of: settings.cloudSyncMode) { _, mode in
           switch mode {
           case .off:
-            store.cloudSyncMode = .off
-          case .live, .recordPlan:
-            // Turning sync back on is the explicit re-opt-in after a Lorvex
-            // iCloud-data deletion: lift the durable pause and enqueue the
-            // re-upload now, so the first live cycle (after relaunch) resumes
-            // instead of wedging at the consent gate. A no-op unless a
-            // deletion pause is standing.
-            // Capture ordering now: a toggle made before an explicit deletion
-            // finishes is superseded by that deletion's terminal Off state,
-            // even if a newly-created Task would start after deletion returns.
-            if let request = store.makeCloudDeletionReenableRequest() {
-              Task {
-                await store.liftCloudDeletionPauseForExplicitReenable(request: request)
-              }
-            }
+            store.turnOffCloudSync()
+          case .live:
+            // Takes effect at once. Turning sync back on is also the explicit
+            // re-opt-in after a Lorvex iCloud-data deletion, which the store
+            // honors by lifting that pause before its first cycle.
+            store.turnOnCloudSync(settings: settings)
           }
         }
     }
@@ -46,11 +37,11 @@ extension SettingsView {
       }
     }
 
-    Section(String(localized: "settings.cloud_sync.last_cycle_section", defaultValue: "Last Cycle", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      SettingsCloudSyncCyclePanel(
-        subscriptionError: store.lastCloudSyncSubscriptionErrorMessage,
-        report: store.lastCloudSyncCycleReport
-      )
+    // With sync off and no pass yet, an empty Last Cycle group says nothing.
+    if statusReport.mode != .off || store.lastCloudSyncCycleReport != nil {
+      Section(String(localized: "settings.cloud_sync.last_cycle_section", defaultValue: "Last Cycle", table: "Localizable", bundle: LorvexL10n.bundle)) {
+        SettingsCloudSyncCyclePanel(report: store.lastCloudSyncCycleReport)
+      }
     }
   }
 
@@ -91,13 +82,6 @@ extension SettingsView {
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )
-    case .adoptionInProgress, .backfillFailed:
-      return String(
-        localized: "settings.cloud_sync.paused.backfill_failed",
-        defaultValue: "Preparing the re-upload failed. Resuming will retry it.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
     case nil:
       return ""
     }
@@ -130,11 +114,18 @@ extension SettingsView {
     .accessibilityIdentifier("settings.cloudSync.resume")
   }
 
+  /// The Status rows. A row is tinted only when something needs the user:
+  /// an account that blocks sync, an upload that failed, a standing pause.
+  /// With sync off the mode row would only repeat the picker above and the
+  /// account has not been checked, so both are left out; the pending row stays
+  /// neutral and says what uploads once sync is turned on.
   private func cloudSyncOverviewRows(_ report: CloudSyncStatusReport) -> [SettingsCloudSyncOverviewRow] {
+    let accountUnchecked =
+      report.mode == .off && report.accountAvailability == .couldNotDetermine
     var rows = [
       SettingsCloudSyncOverviewRow(
         id: "mode",
-        title: String(localized: "settings.cloud_sync.mode", defaultValue: "Sync Mode", table: "Localizable", bundle: LorvexL10n.bundle),
+        title: CloudSyncMode.localizedSettingsStatusTitle,
         value: report.mode.localizedSettingsTitle,
         detail: report.localizedSettingsSummary,
         systemImage: report.isOperational ? "icloud.fill" : "icloud.slash",
@@ -143,23 +134,28 @@ extension SettingsView {
       SettingsCloudSyncOverviewRow(
         id: "account",
         title: String(localized: "settings.cloud_sync.account", defaultValue: "Account", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: report.accountAvailability.localizedSettingsStatusLabel,
-        detail: report.accountAvailability.userFacingMessage,
-        systemImage: "person.crop.circle.badge.checkmark",
-        level: report.accountAvailability == .available ? .success : .warning
+        value: accountUnchecked
+          ? String(
+            localized: "settings.cloud_sync.account.not_checked", defaultValue: "Not checked",
+            table: "Localizable", bundle: LorvexL10n.bundle)
+          : report.accountAvailability.localizedSettingsStatusLabel,
+        detail: accountUnchecked
+          ? String(
+            localized: "settings.cloud_sync.account.not_checked_detail",
+            defaultValue: "iCloud is checked once sync is turned on.",
+            table: "Localizable", bundle: LorvexL10n.bundle)
+          : report.accountAvailability.userFacingMessage,
+        systemImage: accountUnchecked ? "person.crop.circle" : "person.crop.circle.badge.checkmark",
+        level: accountUnchecked
+          ? .neutral : (report.accountAvailability == .available ? .success : .warning)
       ),
       SettingsCloudSyncOverviewRow(
         id: "pending",
         title: String(localized: "settings.cloud_sync.pending_changes", defaultValue: "Pending Changes", table: "Localizable", bundle: LorvexL10n.bundle),
         value: "\(report.pendingCount)",
-        detail: String(
-          localized: "settings.cloud_sync.pending_detail",
-          defaultValue: "Local changes waiting for the next sync cycle.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
+        detail: cloudSyncPendingDetail(report),
         systemImage: "tray.and.arrow.up",
-        level: report.pendingCount > 0 ? .warning : .neutral
+        level: cloudSyncPushError(report) == nil ? .neutral : .warning
       ),
     ]
 
@@ -227,7 +223,40 @@ extension SettingsView {
       )
     }
 
+    if report.mode == .off {
+      rows.removeAll { $0.id == "mode" || ($0.id == "account" && accountUnchecked) }
+    }
     return rows
+  }
+
+  /// The error of the last upload attempt, only while sync is live: with sync
+  /// off nothing uploads, so an error kept from before the mode changed
+  /// describes nothing the user can act on.
+  private func cloudSyncPushError(_ report: CloudSyncStatusReport) -> String? {
+    report.mode == .live ? report.lastPushError : nil
+  }
+
+  /// What the pending count means right now: why the last upload failed,
+  /// where the changes go while sync is off, or that they wait for the next
+  /// cycle.
+  private func cloudSyncPendingDetail(_ report: CloudSyncStatusReport) -> String {
+    if let error = cloudSyncPushError(report) {
+      return error
+    }
+    if report.mode == .off && report.pendingCount > 0 {
+      return String(
+        localized: "settings.cloud_sync.pending_detail_off",
+        defaultValue: "Local changes that upload once iCloud sync is turned on.",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle
+      )
+    }
+    return String(
+      localized: "settings.cloud_sync.pending_detail",
+      defaultValue: "Local changes waiting for the next sync cycle.",
+      table: "Localizable",
+      bundle: LorvexL10n.bundle
+    )
   }
 
   @ViewBuilder
@@ -255,38 +284,16 @@ private struct SettingsCloudSyncModePanel: View {
 
   var body: some View {
     Group {
-      Picker(
-        String(localized: "settings.cloud_sync.mode", defaultValue: "Sync Mode", table: "Localizable", bundle: LorvexL10n.bundle),
-        selection: $mode
-      ) {
-        // `.recordPlan` is a developer/debug mode — keep it out of the
-        // user-facing picker (Off / Live), unless it is somehow the current
-        // selection, so the picker still reflects the active mode.
-        ForEach(CloudSyncMode.allCases.filter { $0 != .recordPlan || mode == .recordPlan }) { item in
-          Text(item.localizedSettingsTitle).tag(item)
-        }
-      }
+      Toggle(
+        CloudSyncMode.localizedSettingsToggle,
+        isOn: Binding(get: { mode == .live }, set: { mode = $0 ? .live : .off })
+      )
       .accessibilityIdentifier("settings.cloudSync.modePanel")
 
       Text(mode.localizedSettingsDetail)
         .foregroundStyle(.secondary)
         .font(LorvexDesign.Typography.tertiaryText)
         .fixedSize(horizontal: false, vertical: true)
-
-      if mode != .off {
-        Label(
-          String(
-            localized: "settings.cloud_sync.restart_notice",
-            defaultValue: "Changes take effect after restarting the app.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ),
-          systemImage: "arrow.clockwise"
-        )
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-        .accessibilityIdentifier("settings.cloudSync.restartNotice")
-      }
     }
   }
 }
@@ -316,7 +323,7 @@ private struct SettingsCloudSyncOverviewItem: View {
 
   var body: some View {
     LabeledContent {
-      VStack(alignment: .trailing, spacing: 2) {
+      VStack(alignment: .trailing, spacing: LorvexDesign.Spacing.xxs) {
         Text(row.value)
           .foregroundStyle(.primary)
           .monospacedDigit()

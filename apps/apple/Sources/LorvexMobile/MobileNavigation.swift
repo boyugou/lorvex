@@ -6,8 +6,7 @@ public enum MobileTab: String, CaseIterable, Identifiable, Sendable {
   case tasks
   case calendar
   case habits
-  /// The "More" tab on iPhone — presents a list of additional domain destinations.
-  case more
+  case review
 
   public var id: String { rawValue }
 
@@ -23,16 +22,16 @@ public enum MobileTab: String, CaseIterable, Identifiable, Sendable {
         bundle: MobileL10n.bundle)
     case .calendar:
       String(
-        localized: "destination.calendar", defaultValue: "Calendar", table: "Localizable",
+        localized: "destination.plan", defaultValue: "Calendar", table: "Localizable",
         bundle: MobileL10n.bundle)
     case .habits:
       String(
         localized: "destination.habits", defaultValue: "Habits", table: "Localizable",
         bundle: MobileL10n.bundle)
-    case .more:
+    case .review:
       String(
-        localized: "tab.more", defaultValue: "More", table: "Localizable", bundle: MobileL10n.bundle
-      )
+        localized: "destination.review", defaultValue: "Review", table: "Localizable",
+        bundle: MobileL10n.bundle)
     }
   }
 
@@ -42,12 +41,14 @@ public enum MobileTab: String, CaseIterable, Identifiable, Sendable {
     case .tasks: "checklist"
     case .calendar: "calendar"
     case .habits: "repeat"
-    case .more: "ellipsis.circle"
+    case .review: "text.badge.checkmark"
     }
   }
 }
 
-/// A destination reachable from the "More" tab on iPhone or the full sidebar on iPad.
+/// A workspace destination: a primary tab, or a secondary workspace reached
+/// from a row or button inside a primary tab (Memory and Habits on the Tasks
+/// home, Settings on Today), or from the keyboard-shortcut mnemonic system.
 public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sendable {
   case tasks
   case calendar
@@ -59,17 +60,6 @@ public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sen
 
   public var id: String { rawValue }
 
-  /// Domain workspaces shown in the iPhone "More" list and the iPad sidebar's
-  /// secondary section. Excludes the surfaces promoted to primary tabs
-  /// (tasks / calendar / habits) and Settings, which sits in its own group.
-  ///
-  /// Lists is intentionally omitted: it's merged into the Tasks tab, whose home
-  /// presents lists as first-class rows alongside the smart collections, so a
-  /// separate More/sidebar entry would be redundant.
-  public static let secondaryWorkspaces: [MobileDestination] = [
-    .memory, .review,
-  ]
-
   public var title: String {
     switch self {
     case .tasks:
@@ -78,7 +68,7 @@ public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sen
         bundle: MobileL10n.bundle)
     case .calendar:
       String(
-        localized: "destination.calendar", defaultValue: "Calendar", table: "Localizable",
+        localized: "destination.plan", defaultValue: "Calendar", table: "Localizable",
         bundle: MobileL10n.bundle)
     case .habits:
       String(
@@ -110,7 +100,7 @@ public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sen
     case .habits: "repeat.circle"
     case .lists: "folder"
     case .memory: "brain"
-    case .review: "chart.line.uptrend.xyaxis"
+    case .review: "text.badge.checkmark"
     case .settings: "gearshape"
     }
   }
@@ -131,9 +121,17 @@ public enum MobileDestination: String, CaseIterable, Identifiable, Hashable, Sen
 public enum MobileRoute: Hashable, Sendable {
   case task(LorvexTask.ID)
   case habit(LorvexHabit.ID)
-  case list(LorvexList.ID)
-  /// A scoped task list (a smart collection or a list) pushed from the Tasks
-  /// home. Carried as a `MobileRoute` so it rides the same typed `tasksRoutePath`
-  /// as task-detail pushes.
+  /// A scoped task list (a smart collection or a list). A list's screen is
+  /// always this route, `.tasksScope(.list(id))`, whether the Tasks home, a
+  /// deep link, Handoff, or a newly created list pushes it. Carried as a
+  /// `MobileRoute` so it rides the same typed stacks as task-detail pushes.
   case tasksScope(MobileTasksScope)
+  /// A memory entry's detail, pushed from the Memory workspace's list at
+  /// compact width the way a task or habit row pushes its own detail.
+  case memoryEntry(MemoryEntry.ID)
+  /// A secondary workspace pushed onto the stack of the primary tab that hosts
+  /// it in the tab-bar layout: Memory rides the Tasks tab, Settings rides
+  /// Today. Carried as a route so keyboard mnemonics, deep links, and the
+  /// in-content rows all push the same screen.
+  case workspace(MobileDestination)
 }

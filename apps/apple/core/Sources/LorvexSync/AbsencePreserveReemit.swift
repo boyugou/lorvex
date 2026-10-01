@@ -29,8 +29,8 @@ public struct AbsenceReemitTarget: Sendable, Equatable {
 ///     payload shadow while applying a legacy update.
 ///
 ///   * Absence-preserving child collections — the aggregate appliers preserve an
-///     entity's child collection (current_focus items, daily_review task/list
-///     links) when the inbound envelope OMITS that key rather than wiping it.
+///     entity's child collection (daily_review task/list links) when the
+///     inbound envelope OMITS that key rather than wiping it.
 ///     Preservation makes the merged local row differ from the envelope.
 ///   * Per-device `list_id` fallback — a `task` upsert whose payload named a
 ///     `list_id` this device has tombstoned lands in the device's inbox/oldest
@@ -66,12 +66,6 @@ public enum AbsencePreserveReemit {
 
   private static func collections(for entityType: EntityKind) -> [Collection] {
     switch entityType {
-    case .currentFocus:
-      return [
-        Collection(
-          payloadKey: "task_ids",
-          childExistsSQL: "SELECT EXISTS(SELECT 1 FROM current_focus_items WHERE date = ?)")
-      ]
     case .dailyReview:
       return [
         Collection(

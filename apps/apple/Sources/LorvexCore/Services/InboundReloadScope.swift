@@ -6,8 +6,8 @@ import LorvexDomain
 ///
 /// Domains name the store's *primary read surfaces*, not its derived ones: a
 /// store recomputes reminders / badge / widget / Spotlight from whichever of
-/// these reloaded (task or habit rows drive reminders; today / focus / habits /
-/// lists drive the widget snapshot). Each store interprets each case with its
+/// these reloaded (task or habit rows drive reminders; today / habits / lists
+/// drive the widget snapshot). Each store interprets each case with its
 /// own load calls — macOS and iOS share the vocabulary, not the implementation.
 ///
 /// `CaseIterable` is load-bearing: every per-platform inbound-reload executor
@@ -19,17 +19,16 @@ import LorvexDomain
 /// compile-time obligation on both executors, which is the point: a new domain
 /// cannot be silently left unhandled on one platform.
 public enum InboundReloadDomain: Sendable, Hashable, CaseIterable {
-  /// The `TodaySnapshot` (top-priority open tasks + open-count summary).
+  /// The Today list (overdue, planned-for-today, and started tasks) and the
+  /// day's briefing.
   case today
   /// The task pools/workspace, the selected-task detail, and everything derived
   /// from the full task set (task Spotlight index, task reminders, badge).
   case tasks
   /// The list catalog and the selected list's detail.
   case lists
-  /// The calendar timeline and the scheduled-task overlay.
+  /// The calendar timeline and the tasks timed on it.
   case calendar
-  /// The current-focus plan and the saved focus schedule.
-  case focus
   /// The daily review, its day evidence, the weekly review, and the review digest.
   case reviews
   /// The habit catalog and per-habit stats.
@@ -59,10 +58,10 @@ public enum InboundReloadScope {
     for kind in kinds {
       switch kind {
       case .task:
-        // A task can move lists, (re)schedule, join/leave focus, and land on the
-        // day's completion evidence, so its blast radius is every task-bearing
-        // surface.
-        domains.formUnion([.today, .tasks, .lists, .calendar, .focus, .reviews])
+        // A task can move lists, (re)schedule, gain or lose a time of day, and
+        // land on the day's completion evidence, so its blast radius is every
+        // task-bearing surface.
+        domains.formUnion([.today, .tasks, .lists, .calendar, .reviews])
       case .taskReminder, .taskChecklistItem, .taskTag, .taskDependency:
         // Task-child / task-edge data is rendered by both the task workspace and
         // the selected-list detail. Reminder rescheduling is folded into `.tasks`.
@@ -78,16 +77,16 @@ public enum InboundReloadScope {
         // evidence is list/task based and does not render the tag catalog.
         domains.formUnion([.today, .tasks, .lists])
       case .calendarEvent:
-        // A base delete cascades task-event links, while scoped edits and
-        // decision cleanup can also alter saved focus blocks. Reload every
-        // surface that renders either relationship, not just the timeline.
-        // Daily-review evidence also includes the selected day's event count.
-        domains.formUnion([.calendar, .today, .tasks, .focus, .reviews])
+        // A base delete cascades task-event links, and Today's schedule lays
+        // the day's events beside its timed tasks. Reload every surface that
+        // renders either, not just the timeline. Daily-review evidence also
+        // includes the selected day's event count.
+        domains.formUnion([.calendar, .today, .tasks, .reviews])
       case .calendarSeriesCutover:
         // Boundaries change effective recurrence ownership, can invalidate
         // occurrence decisions, and therefore have the same rendered blast
         // radius as the segment events they partition.
-        domains.formUnion([.calendar, .today, .tasks, .focus, .reviews])
+        domains.formUnion([.calendar, .today, .tasks, .reviews])
       case .habit, .habitCompletion:
         // Review evidence joins habits and completions, so a peer completion,
         // rename, or delete changes both the habit cards and daily/weekly review.
@@ -96,8 +95,8 @@ public enum InboundReloadScope {
         domains.insert(.habits)
       case .dailyReview:
         domains.insert(.reviews)
-      case .currentFocus, .focusSchedule:
-        domains.insert(.focus)
+      case .dailyBriefing:
+        domains.insert(.today)
       case .memory:
         domains.insert(.memory)
       case .aiChangelog:
@@ -113,7 +112,7 @@ public enum InboundReloadScope {
         // notifications, calendar detail level, …) with no single home surface;
         // reload everything rather than risk missing one.
         return nil
-      case .deviceState, .importSession:
+      case .deviceState, .importSession, .dailySchedule:
         // Local-only kinds should never arrive inbound; if one does, fall back to
         // a full reload rather than silently ignore an unmodelled change.
         return nil
@@ -137,8 +136,8 @@ public enum InboundReloadScope {
   }
 
   /// Whether a selective reload of `domains` should republish the widget snapshot,
-  /// which reads today, current focus, habits, and lists.
+  /// which reads today, habits, and lists.
   public static func republishesWidget(_ domains: Set<InboundReloadDomain>) -> Bool {
-    !domains.isDisjoint(with: [.today, .tasks, .focus, .habits, .lists])
+    !domains.isDisjoint(with: [.today, .tasks, .habits, .lists])
   }
 }

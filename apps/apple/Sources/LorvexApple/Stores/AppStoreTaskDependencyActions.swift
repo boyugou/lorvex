@@ -21,6 +21,21 @@ extension AppStore {
     set { taskDetailDependsOnText = newValue.joined(separator: ", ") }
   }
 
+  /// Opens `task`, one the detail's task waits on, in that detail's place.
+  /// The task is cached first, so the detail resolves it at once and stays on
+  /// screen while the selection change saves the outgoing task's draft and
+  /// loads the fuller record. The Today and Tasks lists move their highlight
+  /// to it, or clear it when they do not show it, so no row stays highlighted
+  /// for a task the detail no longer shows.
+  func openDependency(_ task: LorvexTask) {
+    taskDetailStorage.loadedTasksByID[task.id] = task
+    todayStorage.selectedTaskIDs =
+      todayOrderedTasks.contains { $0.id == task.id } ? [task.id] : []
+    taskWorkspaceStorage.selectedTaskIDs =
+      taskWorkspaceTask(id: task.id) == nil ? [] : [task.id]
+    selectedTaskID = task.id
+  }
+
   /// Candidate tasks for the dependency picker. An empty query lists actionable
   /// (open + in-progress) tasks; a non-empty query runs the core text search.
   /// `excludedIDs` (self, already-selected dependencies, and any cycle-creating

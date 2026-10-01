@@ -67,11 +67,9 @@ public struct WidgetTimelineProviderSupport {
     let snapshot = WidgetSnapshot(
       generatedAt: Self.placeholderGeneratedAt,
       timezone: nil,
-      stats: .init(focusCount: 0, overdueCount: 0, dueTodayCount: 0),
-      briefing: String(
-        localized: "widget.placeholder.ready", defaultValue: "Lorvex is ready.",
-        table: "Localizable", bundle: WidgetSupportL10n.bundle),
-      focusTasks: []
+      stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0),
+      briefing: nil,
+      tasks: []
     )
     return WidgetTimelineEntry(
       date: date,
@@ -80,7 +78,9 @@ public struct WidgetTimelineProviderSupport {
     )
   }
 
-  public func timelineEntry() -> WidgetTimelineEntry {
+  /// The entry for now. `listID` narrows the snapshot to one list (see
+  /// ``WidgetSnapshot/scoped(toList:)``); nil keeps it whole.
+  public func timelineEntry(listID: String? = nil) -> WidgetTimelineEntry {
     let date = now()
     let unvalidatedResult = loader.loadSnapshot(at: configuration.snapshotURL)
     let result = configuration.freshnessPolicy.validatingCurrentDay(
@@ -89,7 +89,8 @@ public struct WidgetTimelineProviderSupport {
       calendar: configuration.calendar
     )
     switch result {
-    case .snapshot(let snapshot):
+    case .snapshot(let loaded):
+      let snapshot = loaded.scoped(toList: listID)
       let freshness = configuration.freshnessPolicy.classify(snapshot: snapshot, now: date)
       return WidgetTimelineEntry(
         date: date,
@@ -108,6 +109,30 @@ public struct WidgetTimelineProviderSupport {
           from: date, freshness: nil, calendar: configuration.calendar)
       )
     }
+  }
+
+  /// The entry for now followed by one entry at each instant the Today glance
+  /// changes before the reload point — a saved time's start or end, and a tick
+  /// every ten minutes inside one — so the lead, its ring, and its line advance
+  /// between reloads without spending the widget's refresh budget. A snapshot
+  /// without saved times yields the single entry.
+  public func timelineEntries(listID: String? = nil) -> [WidgetTimelineEntry] {
+    let first = timelineEntry(listID: listID)
+    guard case .snapshot(let snapshot, let freshness) = first.state else { return [first] }
+    let dates = WidgetTodayGlance.changeDates(
+      tasks: snapshot.tasks,
+      from: first.date,
+      until: first.refreshAfter,
+      timezoneName: snapshot.timezone,
+      calendar: configuration.freshnessPolicy.logicalCalendar(
+        for: snapshot, fallback: configuration.calendar))
+    return [first]
+      + dates.map { date in
+        WidgetTimelineEntry(
+          date: date,
+          state: .snapshot(snapshot, freshness: freshness),
+          refreshAfter: first.refreshAfter)
+      }
   }
 
   /// The reload point for a timeline built at `date`: the sooner of the

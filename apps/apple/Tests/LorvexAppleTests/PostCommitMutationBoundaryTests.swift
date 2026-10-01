@@ -29,13 +29,13 @@ func macOSPostCommitReconciliationIsDiagnosticOnly() async throws {
 @Test("macOS inline create stays successful when its loaded workspace cannot reload")
 func macOSInlineCreateWorkspaceFailureIsDiagnosticOnly() async throws {
   let preview = try await makeSeededInMemoryCore()
-  let core = StubFocusCoreService(preview: preview)
+  let core = StubCoreService(preview: preview)
   let store = AppStore(core: core)
   await store.loadTaskWorkspace()
   #expect(store.taskWorkspaceHasLoaded)
 
   core.listTasksError = .unsupportedOperation("Injected workspace read failure.")
-  await store.createTaskInInbox(title: "Durable post-commit capture")
+  await store.createInlineTask("Durable post-commit capture", destination: .inbox)
 
   #expect(store.errorMessage == nil)
   let page = try await preview.listTasks(
@@ -45,7 +45,7 @@ func macOSInlineCreateWorkspaceFailureIsDiagnosticOnly() async throws {
   let logs = try await preview.loadRecentLogs(
     limit: 10, offset: 0, since: nil, levels: nil,
     sources: ["error_log"], redact: false)
-  #expect(logs.entries.contains { $0.origin == "macos.task.create_in_inbox.reconcile" })
+  #expect(logs.entries.contains { $0.origin == "macos.task.create_inline.reconcile" })
 }
 
 @MainActor

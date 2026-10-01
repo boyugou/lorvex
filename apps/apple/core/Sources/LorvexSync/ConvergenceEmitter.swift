@@ -13,25 +13,12 @@ public enum ConvergenceEmitter {
     case targetGone
   }
 
-  /// The exact canonical state re-established after CloudKit physically
-  /// removed an identity that must remain represented remotely. A live row is
-  /// re-authored at a strict successor; a terminal tombstone is re-enqueued at
-  /// its original death HLC so recovery never resurrects the entity.
-  public enum CanonicalStateOutcome: Sendable, Equatable {
-    case enqueuedUpsert
-    case enqueuedDelete
-    case alreadyPendingDelete
-  }
-
   public enum EmissionError: Error, CustomStringConvertible {
     case missingCanonicalVersion(entityType: String, entityId: String)
     case invalidCanonicalVersion(entityType: String, entityId: String, value: String)
     case invalidMintedVersion(entityType: String, entityId: String, value: String)
     case nonDominatingVersion(
       entityType: String, entityId: String, floor: String, minted: String)
-    case missingCanonicalState(entityType: String, entityId: String)
-    case deleteReassertionNotEligible(
-      entityType: String, entityId: String, version: String)
 
     public var description: String {
       switch self {
@@ -43,10 +30,6 @@ public enum ConvergenceEmitter {
         return "convergence minter returned invalid version \(value): \(type)/\(id)"
       case .nonDominatingVersion(let type, let id, let floor, let minted):
         return "convergence version \(minted) does not dominate \(floor): \(type)/\(id)"
-      case .missingCanonicalState(let type, let id):
-        return "convergence target has neither a live row nor a tombstone: \(type)/\(id)"
-      case .deleteReassertionNotEligible(let type, let id, let version):
-        return "convergence delete at \(version) is not eligible for upload: \(type)/\(id)"
       }
     }
   }
@@ -75,85 +58,6 @@ public enum ConvergenceEmitter {
       db, entityType: entityType, entityId: entityId, payload: payload,
       mintVersion: mintVersion, deviceId: deviceId)
     return .enqueued
-  }
-
-  /// Strict physical-deletion recovery for a canonical identity. The two legal
-  /// endpoints are deliberately distinguished before any death metadata is
-  /// changed:
-  ///
-  /// - a live row proves that any same-identity tombstone is contradictory, so
-  ///   the tombstone is removed and the current snapshot is re-authored;
-  /// - an absent row with a tombstone remains deleted, so an eligible Delete is
-  ///   rebuilt at the stored death HLC without removing or advancing the
-  ///   tombstone;
-  /// - absence of both states is an invariant failure and aborts the containing
-  ///   inbound page transaction.
-  @discardableResult
-  public static func enqueueCurrentCanonicalState(
-    _ db: Database,
-    entityType: String,
-    entityId: String,
-    mintVersion: (Hlc?) -> String,
-    deviceId: String
-  ) throws -> CanonicalStateOutcome {
-    let payload: JSONValue?
-    do {
-      payload = try OutboxEnqueue.readEntityPayloadSnapshot(
-        db, entityType: entityType, entityId: entityId)
-    } catch EnqueueError.entityNotFound {
-      payload = nil
-    }
-
-    if let payload {
-      // The live snapshot was established first, inside the same writer
-      // transaction. Only now is it safe to classify the tombstone as stale.
-      _ = try Tombstone.removeTombstone(
-        db, entityType: entityType, entityId: entityId)
-      try enqueueSnapshot(
-        db, entityType: entityType, entityId: entityId, payload: payload,
-        mintVersion: mintVersion, deviceId: deviceId)
-      return .enqueuedUpsert
-    }
-
-    guard
-      let tombstone = try Tombstone.getTombstone(
-        db, entityType: entityType, entityId: entityId)
-    else {
-      throw EmissionError.missingCanonicalState(
-        entityType: entityType, entityId: entityId)
-    }
-
-    let emitted = try OutboxEnqueue.enqueuePayloadDeleteReportingInsertion(
-      db, entityType: entityType, entityId: entityId, payload: .object([:]),
-      context: OutboxWriteContext(
-        version: tombstone.version, deviceId: deviceId))
-    if emitted { return .enqueuedDelete }
-
-    // Equal-version coalescing is a valid idempotent result only when the exact
-    // canonical Delete is already transport-eligible. Never accept a newer row,
-    // retry fence, or malformed payload as satisfying this recovery obligation.
-    let expectedPayload = try SyncCanonicalize.canonicalizeJSON(
-      .object(["version": .string(tombstone.version)]))
-    let alreadyReady = try Bool.fetchOne(
-      db,
-      sql: """
-        SELECT EXISTS(
-          SELECT 1 FROM sync_outbox
-          WHERE entity_type = ? AND entity_id = ? AND synced_at IS NULL
-            AND operation = ? AND version = ?
-            AND payload_schema_version = ? AND payload = ?
-            AND disposition IS NULL AND retry_count < ?
-        )
-        """,
-      arguments: [
-        entityType, entityId, SyncNaming.opDelete, tombstone.version,
-        LorvexVersion.payloadSchemaVersion, expectedPayload, Outbox.maxRetries,
-      ]) ?? false
-    guard alreadyReady else {
-      throw EmissionError.deleteReassertionNotEligible(
-        entityType: entityType, entityId: entityId, version: tombstone.version)
-    }
-    return .alreadyPendingDelete
   }
 
   private static func enqueueSnapshot(

@@ -8,8 +8,8 @@ extension CalendarTimelineQueries {
   /// from the same projected-occurrence stream as the timeline query. All-day
   /// events are excluded (they block the date, not a minute window).
   /// Ranges are deliberately not merged: every occurrence retains its own
-  /// canonical/provider provenance for display and persisted focus blocks.
-  /// Callers that pack tasks separately union only the occupancy spans. Sorted
+  /// canonical/provider provenance for display. Callers that pack tasks
+  /// separately union only the occupancy spans. Sorted
   /// deterministically by `(start_minutes ASC, end_minutes DESC, source ASC,
   /// canonical_event_id ASC, title ASC)`.
   public static func getDayBlockingRanges(
@@ -102,10 +102,9 @@ extension CalendarTimelineQueries {
 
     return BlockingEventRange(
       source: item.source,
-      // Persist the stable source-event address, not the expanded occurrence's
-      // derived UI identity. Natural recurring occurrences have no row of their
-      // own, so saving `item.id` would leave focus references that a later
-      // series delete/cutover cannot enumerate or clean up.
+      // Report the stable source-event address, not the expanded occurrence's
+      // derived UI identity: natural recurring occurrences have no row of
+      // their own, so `item.id` names nothing a caller could look up.
       canonicalEventId: item.source == .canonical ? item.eventId : nil,
       title: item.title,
       startMinutes: max(startMinutes, 0),

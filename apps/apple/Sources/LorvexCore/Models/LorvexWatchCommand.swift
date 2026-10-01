@@ -169,8 +169,10 @@ public struct LorvexWatchCommand: Sendable, Equatable {
       return ["type": "cancel_task", "id": id]
     case .deferTaskToTomorrow(let id, let plannedDate):
       return ["type": "defer_task_to_tomorrow", "id": id, "date": plannedDate]
-    case .removeFromFocus(let id, let date):
-      return ["type": "remove_from_focus", "id": id, "date": date]
+    case .startTask(let id):
+      return ["type": "start_task", "id": id]
+    case .pauseTask(let id):
+      return ["type": "pause_task", "id": id]
     case .captureTask(let title):
       return ["type": "capture_task", "title": title]
     case .completeHabit(let id, let date):
@@ -197,11 +199,12 @@ public struct LorvexWatchCommand: Sendable, Equatable {
       mutation = .deferTaskToTomorrow(
         id: try LorvexWatchWire.string(object, "id"),
         plannedDate: try LorvexWatchWire.string(object, "date"))
-    case "remove_from_focus":
-      keys = ["type", "id", "date"]
-      mutation = .removeFromFocus(
-        id: try LorvexWatchWire.string(object, "id"),
-        date: try LorvexWatchWire.string(object, "date"))
+    case "start_task":
+      keys = ["type", "id"]
+      mutation = .startTask(id: try LorvexWatchWire.string(object, "id"))
+    case "pause_task":
+      keys = ["type", "id"]
+      mutation = .pauseTask(id: try LorvexWatchWire.string(object, "id"))
     case "capture_task":
       keys = ["type", "title"]
       mutation = .captureTask(title: try LorvexWatchWire.string(object, "title"))
@@ -232,10 +235,12 @@ public struct LorvexWatchCommand: Sendable, Equatable {
         id: try LorvexWatchWire.canonicalUUID(id, field: "mutation.id"),
         plannedDate: try LorvexWatchWire.canonicalDate(
           plannedDate, field: "mutation.date"))
-    case .removeFromFocus(let id, let date):
-      return .removeFromFocus(
-        id: try LorvexWatchWire.canonicalUUID(id, field: "mutation.id"),
-        date: try LorvexWatchWire.canonicalDate(date, field: "mutation.date"))
+    case .startTask(let id):
+      return .startTask(
+        id: try LorvexWatchWire.canonicalUUID(id, field: "mutation.id"))
+    case .pauseTask(let id):
+      return .pauseTask(
+        id: try LorvexWatchWire.canonicalUUID(id, field: "mutation.id"))
     case .captureTask(let title):
       guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
         title.count <= ValidationLimits.maxTitleLength

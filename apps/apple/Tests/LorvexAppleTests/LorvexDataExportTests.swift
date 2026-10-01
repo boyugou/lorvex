@@ -137,36 +137,27 @@ func exportJSONContainsDailyReviewFields() throws {
 }
 
 @Test
-func exportJSONContainsFocusFields() throws {
+func exportJSONContainsDailyBriefingAndPlannedTimeFields() throws {
   let payload = LorvexDataExportPayload(
-    currentFocus: [
-      ExportCurrentFocus(
-        date: "2026-06-02",
-        briefing: "Protect morning",
-        timezone: "America/Los_Angeles",
-        taskIDs: ["task-1"],
-        createdAt: "2026-06-02T08:00:00Z",
-        updatedAt: "2026-06-02T09:00:00Z")
+    tasks: [
+      ExportTask(
+        id: "task-1", title: "Timed task", priority: "P2", status: "open", dueDate: nil,
+        plannedDate: "2026-06-02T00:00:00.000Z", plannedStartTime: "09:00",
+        plannedEndTime: "10:00", estimatedMinutes: nil)
     ],
-    focusSchedules: [
-      ExportFocusSchedule(
+    dailyBriefings: [
+      ExportDailyBriefing(
         date: "2026-06-02",
-        rationale: "Energy first",
+        briefing: "Protect the morning",
         timezone: "America/Los_Angeles",
-        blocks: [
-          ExportFocusScheduleBlock(
-            position: 0, blockType: "task", startMinutes: 540, endMinutes: 600,
-            taskID: "task-1")
-        ],
         createdAt: "2026-06-02T08:00:00Z",
         updatedAt: "2026-06-02T09:00:00Z")
     ])
   let json = try LorvexDataExporter.render(payload: payload, format: .json)
-  #expect(json.contains("\"currentFocus\""))
-  #expect(json.contains("\"focusSchedules\""))
-  #expect(json.contains("\"Protect morning\""))
-  #expect(json.contains("\"startMinutes\""))
-  #expect(json.contains("\"task-1\""))
+  #expect(json.contains("\"dailyBriefings\""))
+  #expect(json.contains("\"Protect the morning\""))
+  #expect(json.contains("\"plannedStartTime\" : \"09:00\""))
+  #expect(json.contains("\"plannedEndTime\" : \"10:00\""))
 }
 
 @Test

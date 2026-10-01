@@ -1,4 +1,4 @@
-/// Numeric-range validators (priority, estimated_minutes, mood,
+/// Numeric-range validators (priority, estimated_minutes, planned time, mood,
 /// reminder window).
 public enum ValidationNumeric {
   /// Inclusive-range check shared by every numeric validator. Emits
@@ -24,6 +24,21 @@ public enum ValidationNumeric {
   /// Zero is rejected — "no work" is not a meaningful estimate.
   public static func validateEstimatedMinutes(_ m: Int64) -> Result<Void, ValidationError> {
     checkRange(field: "estimated_minutes", min: 1, max: ValidationLimits.maxEstimatedMinutes, actual: m)
+  }
+
+  /// Validate a task's planned time of day in minutes since midnight: it
+  /// starts at 0...1439 and ends after it starts, at 1440 (midnight) at the
+  /// latest, so it never crosses into the next day.
+  public static func validatePlannedTime(_ time: Range<Int64>) -> Result<Void, ValidationError> {
+    if case .failure(let error) = checkRange(
+      field: "planned_start_minutes", min: 0, max: 1439, actual: time.lowerBound)
+    {
+      return .failure(error)
+    }
+    if time.isEmpty {
+      return .failure(.message("a planned time must end after it starts"))
+    }
+    return checkRange(field: "planned_end_minutes", min: 1, max: 1440, actual: time.upperBound)
   }
 
   /// Validate a mood or energy_level rating: must be in ``ValidationLimits/moodMin``...``ValidationLimits/moodMax``.

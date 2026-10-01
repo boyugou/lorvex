@@ -1,6 +1,7 @@
 import Foundation
 import LorvexCore
 import LorvexWidgetKitSupport
+import OSLog
 
 /// Watch-side endpoint for strict phone replica envelopes.
 ///
@@ -9,6 +10,7 @@ import LorvexWidgetKitSupport
 /// intentionally not a `WCSessionDelegate`; the connectivity forwarder owns the
 /// single delegate slot and routes replica payloads here.
 public final class LorvexWatchSnapshotReceiver: NSObject, @unchecked Sendable {
+  private static let log = Logger(subsystem: "com.lorvex.watch", category: "replica")
   private let replicaStore: LorvexWatchReplicaStore
   private let reloadAllTimelines: @Sendable () -> Void
   private let onSnapshotWritten: @Sendable () -> Void
@@ -71,6 +73,9 @@ public final class LorvexWatchSnapshotReceiver: NSObject, @unchecked Sendable {
     do {
       return try await applyReplicaData(data, ingressSequence: ingressSequence)
     } catch {
+      Self.log.error(
+        "Replica from the phone rejected (\(data.count, privacy: .public) bytes): \(String(describing: error), privacy: .public)"
+      )
       return false
     }
   }

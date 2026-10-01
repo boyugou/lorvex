@@ -24,6 +24,8 @@ public enum DayReview {
     public let title: String
     public let status: String
     public let deferCount: Int64
+    /// The day the task is planned for as `YYYY-MM-DD`, when it has one.
+    public let plannedDate: String?
   }
 
   public struct DaySummary: Sendable, Equatable {
@@ -32,6 +34,9 @@ public enum DayReview {
     public let topCompleted: [TaskItem]
     public let createdCount: Int64
     public let dueOpenCount: Int64
+    /// The first still-open tasks due that day, in the canonical task order;
+    /// ``dueOpenCount`` is the total.
+    public let dueOpenTasks: [TaskItem]
     public let habitsCompleted: Int64
     public let habitsTotal: Int64
     public let eventCount: Int64
@@ -47,7 +52,7 @@ public enum DayReview {
            AND completed_at < ?2
     """
   static let completedItemsSQL = """
-    SELECT id, title, status, defer_count
+    SELECT id, title, status, defer_count, planned_date
          FROM tasks
          WHERE status = 'completed'
            AND tasks.archived_at IS NULL
@@ -69,6 +74,15 @@ public enum DayReview {
          WHERE status IN (\(StatusName.actionableStatusSqlList))
            AND tasks.archived_at IS NULL
            AND due_date = ?1
+    """
+  static let dueOpenItemsSQL = """
+    SELECT id, title, status, defer_count, planned_date
+         FROM tasks
+         WHERE status IN (\(StatusName.actionableStatusSqlList))
+           AND tasks.archived_at IS NULL
+           AND due_date = ?1
+         ORDER BY \(TaskRepo.taskOrderBy)
+         LIMIT ?2
     """
   /// Active habits and the subset whose logged completion `value` met the
   /// target on the day. Identical shape to ``Overview/loadHabitSummary``.
@@ -99,11 +113,13 @@ public enum DayReview {
 
   /// Day-summary read model for the local calendar day `date` (`YYYY-MM-DD`),
   /// interpreted in the user's configured timezone. `completedLimit` caps
-  /// ``DaySummary/topCompleted`` and must be in `1...limitCap`.
+  /// ``DaySummary/topCompleted`` and `dueOpenLimit` caps
+  /// ``DaySummary/dueOpenTasks``; both must be in `1...limitCap`.
   public static func loadDaySummary(
-    _ db: Database, date: String, completedLimit: UInt32
+    _ db: Database, date: String, completedLimit: UInt32, dueOpenLimit: UInt32
   ) throws -> DaySummary {
     try validateLimit("completed_limit", completedLimit)
+    try validateLimit("due_open_limit", dueOpenLimit)
 
     let window = try WorkflowTimezone.dayWindowUtcBoundsForConn(
       db, endingOn: date, spanDays: 1)
@@ -116,11 +132,18 @@ public enum DayReview {
       db, sql: completedItemsSQL,
       arguments: [window.startUtc, window.endUtc, completedLimit]
     ).map { row in
-      TaskItem(id: row[0], title: row[1], status: row[2], deferCount: row[3])
+      TaskItem(
+        id: row[0], title: row[1], status: row[2], deferCount: row[3], plannedDate: row[4])
     }
     let createdCount =
       try Int64.fetchOne(db, sql: createdCountSQL, arguments: [window.startUtc, window.endUtc]) ?? 0
     let dueOpenCount = try Int64.fetchOne(db, sql: dueOpenCountSQL, arguments: [day]) ?? 0
+    let dueOpenTasks = try Row.fetchAll(
+      db, sql: dueOpenItemsSQL, arguments: [day, dueOpenLimit]
+    ).map { row in
+      TaskItem(
+        id: row[0], title: row[1], status: row[2], deferCount: row[3], plannedDate: row[4])
+    }
 
     let habitRow = try Row.fetchOne(db, sql: habitSummarySQL, arguments: [day])
     let habitsTotal = (habitRow?[0] as Int64?) ?? 0
@@ -136,7 +159,7 @@ public enum DayReview {
 
     return DaySummary(
       date: day, completedCount: completedCount, topCompleted: topCompleted,
-      createdCount: createdCount, dueOpenCount: dueOpenCount,
+      createdCount: createdCount, dueOpenCount: dueOpenCount, dueOpenTasks: dueOpenTasks,
       habitsCompleted: habitsCompleted, habitsTotal: habitsTotal, eventCount: eventCount)
   }
 }

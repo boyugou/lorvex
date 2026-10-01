@@ -1,48 +1,65 @@
 # Roadmap
 
-Organized by lane: **Apple** (`apps/apple`), **Tauri** (`apps/tauri`), and
-**Shared** (`schema/`, `spec/`). The Apple core port has landed; its design is in
-`docs/superpowers/specs/pure-swift-core-and-monorepo-design.md`.
+Organized by lane: **Apple** (`apps/apple`) and **Shared** (`schema/`, `spec/`,
+`cloudkit/`). The Apple core port has landed; its decision record is
+`docs/decisions/pure-swift-core-port.md`.
 
-Platform ownership is intentionally split:
-
-- **Apple Swift** is the shipping line for Apple ecosystem targets: macOS App
-  Store, direct macOS builds, iOS, iPadOS, watchOS, visionOS, WidgetKit, App
-  Intents, EventKit, CloudKit/iCloud, and other Apple-native capabilities.
-- **Tauri** is the cross-platform desktop line for Windows and Linux. Its macOS
-  build remains useful as a developer/reference build for contributors who only
-  have a MacBook, but it is not the future Mac App Store, iCloud, iOS, or iPadOS
-  implementation path. Android can be explored later as a non-Apple mobile
-  target.
-- Historical Tauri iCloud/CloudKit work, including old-schema CloudKit
-  containers, is abandonable. Do not invest in preserving those containers as a
-  future migration target unless a new explicit migration design is accepted.
+Apple Swift is the only shipping line: macOS App Store, direct macOS builds,
+iOS, iPadOS, watchOS, WidgetKit, App Intents, EventKit, CloudKit/iCloud, and
+other Apple-native capabilities. visionOS is out of scope for now. The former
+cross-platform Tauri line was removed from this repository on 2026-09-17.
 
 ## Next up
 
 ### Apple (Swift)
-- CloudKit live activation: the `.live` export/ingest path exists
-  (`CloudKitCloudSyncSubscriber`, `CloudSyncEngineCoordinator`) but is gated on
-  container provisioning. The container `iCloud.com.lorvex.apple` must be
-  registered against the App ID and the record types deployed before live sync
-  can write (see `apps/apple/docs/SURFACE_DESIGN.md`).
+- CloudKit live sync on devices: the container `iCloud.com.lorvex.apple` is
+  provisioned and its schema is deployed to Production. The `.live` mode runs
+  `CloudSyncController`, an actor wrapping `CKSyncEngine` over one `Lorvex`
+  zone (`docs/decisions/cksyncengine-transport.md`). Still owed: two-device
+  proof on TestFlight builds, including the iOS sync pass that runs inside a
+  background task before the database suspends, and silent-push wakes.
 - CarPlay runtime activation: entitlement approval pending from Apple.
-- watchOS / visionOS / CarPlay / Widgets design audits (need on-device).
+- watchOS / CarPlay / Widgets design audits (need on-device).
+- Claude Code plugin distribution: `/plugin marketplace add boyugou/lorvex`
+  resolves once the public repository carries `plugins/lorvex` and
+  `.claude-plugin/marketplace.json`.
 
 ### Shared
-- `schema/schema.sql` is the Apple app's schema authority; Apple and Tauri are
-  directionally aligned via `spec/` concepts, not byte-locked. The Tauri schema
-  copy may diverge freely, and cross-platform data transfer is AI-reconciled
-  best-effort. Shared remains schema/spec/contracts; CloudKit/iCloud ownership
-  lives under Apple Swift, not shared Tauri runtime planning.
-
-### Tauri
-- Re-scope docs and code toward Windows/Linux desktop. Remove/deprecate Tauri
-  iCloud/CloudKit, old-schema CloudKit container, iOS, iPadOS, and Mac App Store
-  implementation paths over time. Calendar-provider logic that is not Apple
-  ecosystem-specific can remain.
+- `schema/schema.sql` is the app's schema authority. Schema changes go through
+  the numbered migration ladder and the sync-payload manifests
+  (`schema/migrations/README.md`, `schema/sync_payload/`).
 
 ## Done
+- **Review pages name the tasks their sentences count.** The week page's
+  **Overdue** section lists open tasks past their due date, earliest first,
+  each with how long ago it was due in local days; the day page's **Still
+  open** section lists the tasks due that day that are not done. Both lists
+  show up to five and end with a count of the rest, and every listed row opens
+  its task (macOS selects it in All Tasks; iPhone pushes it on the Review
+  stack). One shared view draws these lists and the week's "Kept getting
+  pushed" rows (`LorvexReviewTaskList`). The data comes from
+  `WeeklyReview.Snapshot.overdueTasks` and `DayReview.DaySummary.dueOpenTasks`;
+  the MCP `get_weekly_brief` output is unchanged.
+- **Assistants on This Mac.** The MCP helper records the name, title, and
+  version each client sends in the `initialize` handshake, and refreshes the
+  last-used time at most every ten minutes while the client calls tools. macOS
+  Settings → Assistant lists each client with when it last used Lorvex, so a
+  user can confirm a connection works end to end. The record is device-local
+  (`device_state`), written outside the sync, change-log, and HLC paths.
+- **Assistant guidance in three layers.** The MCP host sends a condensed
+  operating model as its `initialize` instructions
+  (`apps/apple/Sources/LorvexMCPHost/MCPHostInstructions.swift`), which Claude
+  Code and Claude Desktop put in the model's system prompt; the Claude Code
+  plugin (`plugins/lorvex`) starts the helper inside the installed app and adds
+  plan-day, capture, weekly-review, and tidy-memory skills; tool descriptions
+  carry each tool's contract. `get_session_context` reports the weekday and
+  local time. Tests fail when the instructions or a skill name a tool,
+  parameter, or field the tools do not define. The playbook is
+  `docs/design/AI_OPERATING_MODEL.md`.
+- **Shipped languages: English and Simplified Chinese.** Every catalog, bundle
+  plist, `InfoPlist.strings` set, and the in-app language picker carry exactly
+  `en` and `zh-Hans`, so a UI string costs one translation. The eleven other
+  localizations were dropped on 2026-09-17 and remain in git history.
 - **Habit milestones.** Streak/count milestone waypoints (auto-ladder plus an
   optional user `milestone_target`) with a celebration when a waypoint is crossed;
   the macOS and iPhone/iPad habit surfaces ship progress, goal editing, and
@@ -58,7 +75,7 @@ Platform ownership is intentionally split:
 - **Crash/diagnostics observability.** A MetricKit subscriber persists
   crash/hang/CPU/disk diagnostics into `error_logs`; the iOS Settings surface shows
   a read-only Recent Diagnostics list.
-- **MCP catalog at 118 tools.** Trimmed `get_capabilities` and
+- **MCP catalog at 114 tools.** Trimmed `get_capabilities` and
   `list_pending_outbox_entries`.
 - **`saved_search` removed** — schema tables plus all UI/core/sync; the feature no
   longer exists.
@@ -73,7 +90,7 @@ Platform ownership is intentionally split:
   armed at launch) guards the two-regime invariant in
   `docs/design/SCHEMA_OPTIMALITY.md`.
 - **MCP tool-parity audit vs the Tauri reference.** Diffed the
-  85 reference tools against Apple's catalog (now 118): two real
+  85 reference tools against Apple's catalog (now 114): two real
   create-but-never-delete gaps closed (`delete_habit_reminder_policy` with
   tombstone-emitting sync semantics; `remove_calendar_event_exception`
   restoring skipped occurrences, behavior-pinned against the timeline
@@ -119,7 +136,7 @@ Platform ownership is intentionally split:
   users. All pinned by the dual-backend contract suite (22 contracts × 2
   backends).
 - **MCP tool-parameter integrity audit.** Every declared input
-  across the Apple MCP catalog (currently 118 tools) checked against handler
+  across the Apple MCP catalog (currently 114 tools) checked against handler
   reads, both directions. Three surfaces advertised parameters they ignored — all
   fixed end to end with dual-backend contracts: the core
   `getWeeklyReviewSnapshot(weekOf:)` week anchor (anchored week windows, also
@@ -166,8 +183,8 @@ Platform ownership is intentionally split:
   daily-review autosave + history strip, habits check-in lane, 14pt reading
   sizes, labeled header actions, inline quick-add on Today and list panes.
   Open: ARCH-01/03…11 architectural refactors (standalone projects).
-- **Full Tauri MCP parity + beyond.** The current Apple catalog has 118 tools.
-  Earlier parity work added tools beyond Tauri: `edit_scoped_calendar_event`,
+- **MCP parity with the original reference catalog, and beyond.** The current Apple catalog has 114 tools.
+  Parity work added tools the reference never had: `edit_scoped_calendar_event`,
   `delete_scoped_calendar_event`
   (full recurring-event scope machinery using `CalendarRecurrenceScope`),
   `batch_create_calendar_events`,
@@ -182,7 +199,7 @@ Platform ownership is intentionally split:
   `delete_preference`, `add_calendar_event_exception`. Also added
   `batchCancelTasksInList` to the service layer (LorvexCoreServicing) and
   `deletePreference` + `addCalendarEventException` service methods. Later
-  additions leave the current catalog at 118 tools.
+  additions leave the current catalog at 114 tools.
 - **Tasks workspace @AppStorage persistence.** `isTableMode` saved so the
   user's list/table toggle survives navigation and restarts.
 - **MCP durable idempotency.** `mcp_idempotency` table backing wired end-to-end:
@@ -210,10 +227,7 @@ Platform ownership is intentionally split:
   Apple-only schema-integrity checks (embed byte-parity via
   `verify_schema_embed.sh`, migration ladder, schema freeze). The workflow is
   `workflow_dispatch`-only while hosted macOS CI is paused; the local
-  `apps/apple/script/verify_all.sh` gate is the validation of record. There is
-  no cross-runtime schema-parity gate — Apple and Tauri are directionally
-  aligned, not byte-locked. Tauri gates itself via its own workflow tree under
-  `apps/tauri/.github/workflows/`.
+  `apps/apple/script/verify_all.sh` gate is the validation of record.
 - **Pure-Swift core port (Phases 1–5).** The `LorvexAppleCore` package backs the
   Apple app end-to-end:
   - Phase 1 — `LorvexDomain`: value types, validation, RRULE recurrence, DST,
@@ -223,11 +237,13 @@ Platform ownership is intentionally split:
   - Phase 4 — `LorvexSync`: CloudKit envelope, conflict resolution.
   - Phase 5 — cutover: `SwiftLorvexCoreService` backs `LorvexCoreServicing` over
     the Swift core; the app builds and `swift test` (app + core) passes.
-- **Current focus + focus schedule on the Swift core.** `set_current_focus`,
-  `add_to_current_focus`, `remove_from_current_focus`, `clear_current_focus`,
-  and `save_focus_schedule` back the curated focus list and the saved daily
-  plan over the real on-disk store — the plan-first model that replaced the
-  retired session timer.
+- **Today as one ordered list; Focus retired.** Today shows every unfinished
+  task planned for today or earlier, due today or overdue, or already
+  started, ordered started-first then by priority then by due date, with no
+  separate current-task concept and no saved focus schedule.
+  `set_daily_briefing`, `get_daily_schedule`, and `save_daily_schedule` back
+  the assistant's per-day briefing and optional planned start/end times over
+  the real on-disk store.
 - **Feedback routing.** All contact and support routes through the
   https://lorvex.app/support/ pages; Lorvex does not expose an in-app or MCP
   feedback submission path.
@@ -237,5 +253,6 @@ Platform ownership is intentionally split:
 - **Script suite reconciled.** The `apps/apple/script/` verify/packaging suite
   runs against the Swift backend; no `cargo`/bridge step remains.
 - **Phase 0 — monorepo merge.** Apple tree → `apps/apple`; Tauri snapshot →
-  `apps/tauri`; shared `schema/`, `cloudkit/`, `spec/` hoisted to root; root
-  README/CLAUDE/ROADMAP. `rust-bridge/` deleted.
+  `apps/tauri` (removed again on 2026-09-17, tag `tauri-snapshot-final`); shared
+  `schema/`, `cloudkit/`, `spec/` hoisted to root; root README/CLAUDE/ROADMAP.
+  `rust-bridge/` deleted.

@@ -128,54 +128,31 @@ extension LorvexDataImporter {
     )
   }
 
-  static func applyCurrentFocus(
-    _ entries: [ExportCurrentFocus], using core: any LorvexCoreServicing
+  static func applyDailyBriefings(
+    _ briefings: [ExportDailyBriefing], using core: any LorvexCoreServicing
   ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
     guard let importer = core as? any LorvexNativeImportServicing else {
-      return unsupportedFocusResult(.currentFocus, entries.map(\.date))
-    }
-    var imported = 0
-    var skipped = 0
-    var errors: [LorvexImportError] = []
-    for entry in entries {
-      do {
-        // Atomic non-destructive restore: skip a date a concurrent write already
-        // holds (a fresh-HLC import would revert a newer local plan and re-propagate
-        // it) or one the user cleared after the backup, in one transaction with the
-        // write. A date not present locally still imports.
-        if try await importer.importCurrentFocusIfAbsent(entry) {
-          imported += 1
-        } else {
-          skipped += 1
-        }
-      } catch {
-        errors.append(
-          LorvexImportError(
-            category: .currentFocus, recordRef: entry.date, message: error.localizedDescription))
+      let errors = briefings.map {
+        LorvexImportError(
+          category: .dailyBriefings, recordRef: $0.date,
+          message: "Daily briefing import is unsupported by this backend.")
       }
-    }
-    return (
-      LorvexImportCategoryResult(category: .currentFocus, imported: imported, skipped: skipped),
-      errors
-    )
-  }
-
-  static func applyFocusSchedules(
-    _ schedules: [ExportFocusSchedule], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
-    guard let importer = core as? any LorvexNativeImportServicing else {
-      return unsupportedFocusResult(.focusSchedules, schedules.map(\.date))
+      return (
+        LorvexImportCategoryResult(
+          category: .dailyBriefings, imported: 0, skipped: briefings.count),
+        errors
+      )
     }
     var imported = 0
     var skipped = 0
     var errors: [LorvexImportError] = []
-    for schedule in schedules {
+    for briefing in briefings {
       do {
         // Atomic non-destructive restore: skip a date a concurrent write already
-        // holds (a fresh-HLC import would revert a newer local schedule and
+        // holds (a fresh-version import would revert a newer local briefing and
         // re-propagate it) or one the user cleared after the backup, in one
         // transaction with the write. A date not present locally still imports.
-        if try await importer.importFocusScheduleIfAbsent(schedule) {
+        if try await importer.importDailyBriefingIfAbsent(briefing) {
           imported += 1
         } else {
           skipped += 1
@@ -183,26 +160,12 @@ extension LorvexDataImporter {
       } catch {
         errors.append(
           LorvexImportError(
-            category: .focusSchedules, recordRef: schedule.date,
+            category: .dailyBriefings, recordRef: briefing.date,
             message: error.localizedDescription))
       }
     }
     return (
-      LorvexImportCategoryResult(category: .focusSchedules, imported: imported, skipped: skipped),
-      errors
-    )
-  }
-
-  private static func unsupportedFocusResult(
-    _ category: LorvexDataExportCategory, _ refs: [String]
-  ) -> (LorvexImportCategoryResult, [LorvexImportError]) {
-    let errors = refs.map {
-      LorvexImportError(
-        category: category, recordRef: $0,
-        message: "Focus aggregate import is unsupported by this backend.")
-    }
-    return (
-      LorvexImportCategoryResult(category: category, imported: 0, skipped: refs.count),
+      LorvexImportCategoryResult(category: .dailyBriefings, imported: imported, skipped: skipped),
       errors
     )
   }

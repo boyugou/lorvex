@@ -57,10 +57,14 @@ extension CoreBridgeClient {
     // Three-state milestone patch: absent key → unchanged, JSON null → clear,
     // a value → set.
     let milestone = try Self.intPatch(from: arguments, key: "milestone_target")
+    // Behavior-preserving: absent/null cue leaves the stored value; a present
+    // string sets it (a blank string clears, matching the habit-cue domain
+    // normalization). `update_habit` has no distinct JSON-null "clear" affordance.
     let habit = try await service.updateHabit(
       id: id,
       name: try StrictScalarArguments.optionalString(arguments["name"], field: "name"),
-      cue: try StrictScalarArguments.optionalString(arguments["cue"], field: "cue"),
+      cue: try StrictScalarArguments.optionalString(arguments["cue"], field: "cue")
+        .map { Patch.set($0) } ?? .unset,
       color: try StrictScalarArguments.optionalString(arguments["color"], field: "color"),
       icon: try StrictScalarArguments.optionalString(arguments["icon"], field: "icon"),
       targetCount: try StrictScalarArguments.optionalInt(

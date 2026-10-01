@@ -2,81 +2,126 @@ import LorvexCore
 import SwiftUI
 
 extension TaskDetailView {
-  func headerSection(task: LorvexTask, draftHasChanges: Bool, canSave: Bool) -> some View {
+  /// Title block: the task's completion circle, the inline title, when the task's time ends
+  /// while that time is running, and the status facts that are true right now.
+  ///
+  /// The list and priority live in the property sentence below, and the
+  /// started state in the Start toggle under the header, so this block does
+  /// not repeat them. Nothing here reports save state: the panel autosaves.
+  func headerSection(task: LorvexTask) -> some View {
     TaskDetailPanel(accessibilityIdentifier: "task.detail.header.panel", chrome: .header) {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-        HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
+      HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
+        completionCircle(task: task)
+
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
           TextField(
             String(localized: "task_detail.header.title_placeholder", defaultValue: "Title", table: "Localizable", bundle: LorvexL10n.bundle),
             text: taskTitleBinding(for: task),
             axis: .vertical
           )
-            .font(LorvexDesign.Typography.sectionHeader)
-            .textFieldStyle(.plain)
-            // Start at a single line and grow up to four: a fixed 2-line minimum
-            // reserved a permanently-blank second line under every short title.
-            .lineLimit(1...4)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            .focused($titleFieldFocused)
-            .accessibilityLabel(String(localized: "task_detail.header.title_a11y", defaultValue: "Task title", table: "Localizable", bundle: LorvexL10n.bundle))
-            .accessibilityIdentifier("task.detail.title")
+          .font(LorvexDesign.Typography.screenTitle)
+          .textFieldStyle(.plain)
+          .lineLimit(1...4)
+          .fixedSize(horizontal: false, vertical: true)
+          .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+          .focused($titleFieldFocused)
+          .accessibilityLabel(String(localized: "task_detail.header.title_a11y", defaultValue: "Task title", table: "Localizable", bundle: LorvexL10n.bundle))
+          .accessibilityIdentifier("task.detail.title")
 
-          // The dot reflects *any* unsaved edit, not just savable ones — if the
-          // estimate field is mid-edit (invalid) the title/notes changes are still
-          // unsaved, so the indicator must show rather than falsely reading "saved".
-          // Save only appears once the draft is dirty. It still stays gated on
-          // `selectedTaskCanSave`, and invalid fields explain why it's disabled.
-          if draftHasChanges {
-            Circle()
-              .fill(.tint)
-              .frame(width: 8, height: 8)
-              .padding(.top, 7)
-              .accessibilityLabel(Text(LocalizedStringResource("task_detail.unsaved_changes", defaultValue: "Unsaved changes", table: "Localizable", bundle: LorvexL10n.bundle)))
-              .accessibilityIdentifier("task.detail.titleUnsavedIndicator")
+          if let until = runningLine(task: task) {
+            Text(until)
+              .font(LorvexDesign.Typography.pageLabel)
+              .foregroundStyle(LorvexDesign.Palette.accent)
+              .accessibilityIdentifier("task.detail.header.until")
           }
 
-          pinAsStickyButton(task: task)
+          statusPills(task: task)
+        }
 
+        HStack(spacing: 0) {
+          pinAsStickyButton(task: task)
           hideInspectorButton
         }
-
-        ViewThatFits(in: .horizontal) {
-          HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
-            headerMetadataTokens(task: task)
-            priorityPicker(task: task)
-          }
-
-          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-            headerMetadataTokens(task: task)
-            priorityPicker(task: task)
-          }
-        }
-        .accessibilityIdentifier("task.detail.header.metadata")
-
-        headerActions(task: task, draftHasChanges: draftHasChanges, canSave: canSave)
       }
     }
   }
 
-  private func pinAsStickyButton(task: LorvexTask) -> some View {
+  /// The task's completion circle: the same priority-tinted glyph as its
+  /// row in every list, set larger, so it reads as the control that checks
+  /// the task off rather than a decoration.
+  @ViewBuilder
+  private func completionCircle(task: LorvexTask) -> some View {
+    let isDone = task.status == .completed
     Button {
-      openWindow(id: LorvexWindowID.stickyTaskGroupID, value: StickyTaskRef(taskID: task.id))
+      Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
     } label: {
-      Label(
-        String(localized: "task_detail.pin_sticky", defaultValue: "Pin as Sticky", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "pin"
-      )
-      .labelStyle(.iconOnly)
+      Image(systemName: task.statusCircleGlyph)
+        .font(LorvexDesign.Typography.screenTitle.weight(.regular))
+        .foregroundStyle(task.statusCircleStyle)
+        .contentTransition(.symbolEffect(.replace))
+        .symbolEffect(.bounce, value: isDone)
+        .frame(width: 32, height: 32)
+        .contentShape(Circle())
     }
-    .buttonStyle(.lorvexNeutral)
-    .fixedSize(horizontal: true, vertical: false)
-    .help(String(
-      localized: "task_detail.pin_sticky.help",
-      defaultValue: "Open this task in a floating sticky window",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle))
-    .accessibilityIdentifier("task.detail.pinSticky")
+    .buttonStyle(.plain)
+    .disabled(task.status == .cancelled || task.status == .someday)
+    .help(TaskDisplayText.completionToggle(isDone: isDone))
+    .accessibilityLabel(TaskDisplayText.completionToggle(isDone: isDone))
+    .accessibilityIdentifier("task.detail.completionCircle")
+  }
+
+  /// The task on Today while its time today contains the clock; nil for any
+  /// other task. Read from the whole day, which the search field does not
+  /// narrow.
+  private func runningItem(task: LorvexTask) -> LorvexCalmToday.Item? {
+    guard task.status.isActionable else { return nil }
+    return store.calmToday.items.first { $0.id == task.id && $0.isRunning }
+  }
+
+  /// "Until 3:00 PM" while the task's time is running; nil otherwise, since
+  /// the property sentence already states the time.
+  private func runningLine(task: LorvexTask) -> String? {
+    runningItem(task: task)?.time.map { TodayCalmCopy.untilLabel(end: $0.upperBound) }
+  }
+
+  /// Facts about the task's current state, never editable fields. Priority lives
+  /// in the property sentence; repeating it here would be the same value in two
+  /// places.
+  @ViewBuilder
+  private func statusPills(task: LorvexTask) -> some View {
+    let isBlocked = store.isBlocked(task)
+    if store.taskDetailDueIsOverdue || isBlocked {
+      HStack(spacing: LorvexDesign.Spacing.xs) {
+        if store.taskDetailDueIsOverdue {
+          TaskDetailStatusPill(
+            text: String(localized: "task_detail.pill.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "clock.badge.exclamationmark",
+            tint: LorvexDesign.Palette.overdue)
+        }
+        if isBlocked {
+          TaskDetailStatusPill(
+            text: TaskDisplayText.blocked,
+            systemImage: "lock.fill",
+            tint: LorvexDesign.Palette.blocked)
+        }
+      }
+      .padding(.top, 1)
+      .accessibilityIdentifier("task.detail.header.pills")
+    }
+  }
+
+  private func pinAsStickyButton(task: LorvexTask) -> some View {
+    LorvexIconButton(
+      systemImage: "pin",
+      label: String(
+        localized: "task_detail.pin_sticky.help",
+        defaultValue: "Open this task in a floating sticky window",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      accessibilityIdentifier: "task.detail.pinSticky"
+    ) {
+      openWindow(id: LorvexWindowID.stickyTaskGroupID, value: StickyTaskRef(taskID: task.id))
+    }
   }
 
   // The shared inspector ✕ (matches the habit and calendar panels); re-clicking
@@ -85,44 +130,6 @@ extension TaskDetailView {
     InspectorCloseButton(accessibilityIdentifier: "task.detail.inspector.close") {
       store.selectedTaskID = nil
     }
-  }
-
-  @ViewBuilder
-  private func headerMetadataTokens(task: LorvexTask) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.xs) {
-      TaskDetailMetadataToken(
-        title: TaskDisplayText.status(task.status),
-        systemImage: task.status.statusSymbolName,
-        tint: task.status.statusTint
-      )
-
-      if let lateness = task.latenessState, !lateness.isEmpty {
-        TaskDetailMetadataToken(
-          title: Self.displayLateness(lateness),
-          systemImage: "exclamationmark.triangle",
-          tint: .orange
-        )
-      }
-    }
-  }
-
-  /// Short "P1/P2/P3" labels and `fixedSize` keep the segmented control compact
-  /// so it never overflows the narrow detail inspector. The full "Priority 1"
-  /// wording lives in the accessibility value below.
-  private func priorityPicker(task: LorvexTask) -> some View {
-    LorvexSegmentedControl(
-      options: LorvexTask.Priority.allCases,
-      selection: taskPriorityBinding(for: task),
-      title: { $0.rawValue },
-      accessibilityIdentifier: "task.detail.priorityControl",
-      accessibilityLabel: String(
-        localized: "task_detail.header.priority", defaultValue: "Priority",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      optionTint: { $0.priorityTint }
-    )
-    .fixedSize()
-    .accessibilityValue(TaskDisplayText.priority(displayPriority(for: task)))
   }
 
   /// The header can render before `TaskDetailView.onAppear`/selection-change
@@ -170,60 +177,18 @@ extension TaskDetailView {
     }
   }
 
-  private func displayPriority(for task: LorvexTask) -> LorvexTask.Priority {
+  func displayPriority(for task: LorvexTask) -> LorvexTask.Priority {
     store.taskDetailDraftTaskID == task.id ? store.taskDetailPriority : task.priority
-  }
-
-  private static func displayLateness(_ rawValue: String) -> String {
-    switch rawValue {
-    case "past_planned":
-      String(
-        localized: "task_detail.lateness.past_planned",
-        defaultValue: "Past planned date",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case "overdue_unhandled":
-      String(
-        localized: "task_detail.lateness.overdue_unhandled",
-        defaultValue: "Overdue",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case "overdue_acknowledged":
-      String(
-        localized: "task_detail.lateness.overdue_acknowledged",
-        defaultValue: "Overdue acknowledged",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    default:
-      rawValue
-        .split(separator: "_")
-        .map { part in
-          part.prefix(1).uppercased() + String(part.dropFirst())
-        }
-        .joined(separator: " ")
-    }
   }
 }
 
-private struct TaskDetailMetadataToken: View {
-  let title: String
+/// A small status fact in the task header — never an editable field.
+struct TaskDetailStatusPill: View {
+  let text: String
   let systemImage: String
   let tint: Color
 
   var body: some View {
-    HStack(spacing: 4) {
-      Image(systemName: systemImage)
-        .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-        .foregroundStyle(tint)
-        .accessibilityHidden(true)
-      Text(title)
-        .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-    }
-    .accessibilityLabel(title)
+    LorvexChip(text, systemImage: systemImage, tint: tint)
   }
 }

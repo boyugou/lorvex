@@ -1,10 +1,15 @@
 import LorvexCore
 import SwiftUI
 
-/// Phone-native calendar: a vertical time-axis day view (hour gutter on the
+/// Phone-native calendar: one vertical time-axis grid (hour gutter on the
 /// left, events as lane-packed blocks, all-day strip on top, live now-line)
-/// with horizontal swipe between days. A compact week strip + date picker jump
-/// to any day. On wide layouts (landscape / Plus) it shows a 3-day variant.
+/// whose two modes differ only in how many days it shows. Day mode shows one
+/// day on a phone (two or three on a wide iPad, with the agenda beside it),
+/// swiped by day, under a week strip that jumps to any day of the week. Week
+/// mode shows the seven days of a week, swiped by week; tapping a day's header
+/// opens that day in Day mode. Above both sits one header row: the month (or
+/// the week's range) and a Today button that keeps its slot, hidden while
+/// today is in view, so nothing beside it moves when it appears.
 ///
 /// Reuses the hoisted pure `CalendarGridModel` lane packer for the visible
 /// day(s) and the mobile store's existing `loadCalendarTimeline` fetch path
@@ -16,8 +21,7 @@ public struct MobileCalendarDayView: View {
   @Bindable var store: MobileStore
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-  /// When true, render a seven-day grouped agenda and page by week instead of
-  /// squeezing seven time-axis columns into a phone or multitasking window.
+  /// When true, the grid shows the seven days of a week and pages by week.
   var weekMode: Bool = false
   /// The calendar search text, owned by the enclosing `MobileStoreCalendarView`.
   /// Narrows the visible events to those matching title / location / notes.
@@ -26,7 +30,14 @@ public struct MobileCalendarDayView: View {
   @State var loadedAnchor: Date?
   @State var isShowingCreateEvent = false
   @State var editingEvent: CalendarTimelineEvent?
-  @State private var eventAwaitingDeleteScope: CalendarTimelineEvent?
+  // Not private: the agenda-body extension (a separate file) routes scoped
+  // deletes through this same this/future/all dialog.
+  @State var eventAwaitingDeleteScope: CalendarTimelineEvent?
+  /// The calendar's width, so the mode picker names the day grid ("Day",
+  /// "3 Days") even while the week is showing. The day count is derived when
+  /// the picker draws rather than stored, because it also depends on the
+  /// size class, which can settle after the width is first measured.
+  @State private var calendarWidth: CGFloat = 0
 
   let calendar = Calendar.current
   /// Bounded rolling page window so we never materialize an unbounded range.
@@ -107,7 +118,7 @@ public struct MobileCalendarDayView: View {
   public var body: some View {
     Group {
       if weekMode {
-        weekAgendaBody
+        dayGrid(dayCount: 7)
       } else if horizontalSizeClass == .regular {
         GeometryReader { geo in
           let dayCount = dayCount(for: geo.size.width)
@@ -129,10 +140,22 @@ public struct MobileCalendarDayView: View {
       .navigationBarTitleDisplayMode(.inline)
     #endif
     .toolbar { toolbarContent }
-    .task(id: visibleDate) { await ensureWindowLoaded() }
+    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+      calendarWidth = width
+    }
+    .task(id: visibleDate) {
+      await ensureWindowLoaded()
+    }
+    .task {
+      if store.workdayEndMinutes == nil { await store.loadWorkdayWindow() }
+    }
+    .onAppear {
+      guard !weekMode, let key = store.calendarPendingDayKey else { return }
+      store.calendarPendingDayKey = nil
+      if let day = Self.keyFormatter.date(from: key) { jump(to: day) }
+    }
     .sheet(isPresented: $isShowingCreateEvent) {
       MobileStoreCreateCalendarEventSheet(store: store, isPresented: $isShowingCreateEvent)
-        .lorvexSpatialBackground()
     }
     .sheet(item: $editingEvent) { event in
       MobileStoreEditCalendarEventSheet(
@@ -146,7 +169,6 @@ public struct MobileCalendarDayView: View {
           set: { if !$0 { editingEvent = nil } }
         )
       )
-      .lorvexSpatialBackground()
     }
     .mobileCalendarDeleteScopeDialog(
       event: $eventAwaitingDeleteScope,
@@ -154,103 +176,103 @@ public struct MobileCalendarDayView: View {
     )
     .accessibilityIdentifier("mobileCalendarDay.root")
     .overlay {
-      // No event in the loaded window matches the active query: stand in a
-      // search-empty state over the (now empty) grid rather than a blank day.
-      if isSearching, filteredEvents.isEmpty {
+      // No event matches the query AND no scheduled task is present: only then
+      // is the grid genuinely empty. The search filters events only, so
+      // scheduled tasks stay visible; showing "No Results" over them would
+      // float a contradictory empty state atop real content.
+      if isSearching, filteredEvents.isEmpty, store.calendarScheduledTasks.isEmpty {
         ContentUnavailableView.search(text: searchQuery)
           .allowsHitTesting(false)
       }
     }
   }
 
+  // The time grid in either mode. Its text stops growing at the largest
+  // standard size: the week strip, column headers, and hour rows have fixed
+  // geometry, so at accessibility sizes weekday names would break letter by
+  // letter and event titles would clip. The agenda beside it keeps growing.
   func dayGrid(dayCount: Int) -> some View {
     VStack(spacing: 0) {
-      if weekMode {
-        // Week range + prev/next, so the nav bar stays uncrowded and you can see
-        // which week is shown. Changes `dayOffset`; the pinned header and column
-        // both key off `visibleDate`, so they move together.
-        weekNavigationHeader
-        Divider()
-        // Pinned 7-day header so the labels stay put while the time grid scrolls.
-        MobileCalendarColumnHeaders(
-          columns: visibleColumns(dayCount: 7), calendar: calendar, gutterWidth: 52)
-        Divider()
-        // No pager: a `.page` TabView centers a column shorter than the page,
-        // floating the grid mid-screen. The plain column is given an explicit
-        // height so it fills from the top instead of being center-aligned.
-        GeometryReader { geo in
-          column(forOffset: dayOffset, dayCount: 7, showsHeaders: false)
-            .frame(width: geo.size.width, height: geo.size.height)
-        }
-        .simultaneousGesture(weekPagingSwipe)
-      } else {
-        MobileCalendarWeekStrip(visibleDate: visibleDate, calendar: calendar) { day in
+      calendarHeader
+      // Week mode's column headers already name every day of the week.
+      if !weekMode {
+        MobileCalendarWeekStripPager(
+          visibleDate: visibleDate, today: today, calendar: calendar,
+          weekRange: (pageRange.lowerBound / 7)...(pageRange.upperBound / 7)
+        ) { day in
           jump(to: day)
         }
         Divider()
-        pager(dayCount: dayCount)
       }
+      pager(dayCount: dayCount)
     }
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
   }
 
-  /// Compact week-navigation bar shown above the grouped agenda in week mode:
-  /// `‹  Jun 28 – Jul 4  ›`. Prev/next step `dayOffset` by one week.
-  var weekNavigationHeader: some View {
-    HStack(spacing: 12) {
-      Button {
-        stepPage(-1)
-      } label: {
-        Image(systemName: "chevron.left").font(.body.weight(.semibold))
-          .frame(width: 44, height: 44)
-          .contentShape(Rectangle())
-      }
-      .lorvexToolbarHoverEffect()
-      .accessibilityIdentifier("mobileCalendar.week.previous")
-      .accessibilityLabel(
-        String(
-          localized: "calendar.week.previous", defaultValue: "Previous week", table: "Localizable",
-          bundle: MobileL10n.bundle))
-      Spacer(minLength: 0)
-      Text(weekRangeLabel)
-        .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
+  /// The row above the grid: what the grid shows, then Today. Today keeps
+  /// its slot while today is in view, only hidden, so the title never shifts
+  /// when the user swipes away and the button appears.
+  private var calendarHeader: some View {
+    let isOnToday = dayOffset == 0
+    return HStack(spacing: LorvexDesign.Spacing.m) {
+      Text(headerTitle)
+        .font(LorvexDesign.Typography.primaryEmphasis)
         .monospacedDigit()
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
         .accessibilityAddTraits(.isHeader)
+        .contentTransition(.numericText())
       Spacer(minLength: 0)
-      Button {
-        stepPage(1)
-      } label: {
-        Image(systemName: "chevron.right").font(.body.weight(.semibold))
-          .frame(width: 44, height: 44)
-          .contentShape(Rectangle())
-      }
-      .lorvexToolbarHoverEffect()
-      .accessibilityIdentifier("mobileCalendar.week.next")
-      .accessibilityLabel(
+      Button(
         String(
-          localized: "calendar.week.next", defaultValue: "Next week", table: "Localizable",
-          bundle: MobileL10n.bundle))
+          localized: "calendar.today", defaultValue: "Today", table: "Localizable",
+          bundle: MobileL10n.bundle)
+      ) { withAnimation { dayOffset = 0 } }
+      .buttonStyle(.bordered)
+      .controlSize(.small)
+      .opacity(isOnToday ? 0 : 1)
+      .disabled(isOnToday)
+      .accessibilityHidden(isOnToday)
+      .accessibilityIdentifier("mobileCalendarDay.today")
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 6)
+    .padding(.horizontal, LorvexDesign.Spacing.l)
+    .padding(.top, LorvexDesign.Spacing.xs)
+    .animation(.snappy(duration: 0.2), value: isOnToday)
+    .accessibilityIdentifier("mobileCalendarDay.header")
   }
 
-  /// Locale-aware label for the visible week, e.g. "Jun 28 – Jul 4, 2026".
-  private var weekRangeLabel: String {
-    let end = calendar.date(byAdding: .day, value: 6, to: visibleDate) ?? visibleDate
+  /// The week's range in week mode ("Sep 27 – Oct 3"); the visible day's
+  /// month and year in day mode ("October 2026"), since the week strip under
+  /// it already names the days.
+  private var headerTitle: String {
+    if weekMode {
+      return Self.weekRangeLabel(
+        from: visibleDate, calendar: calendar, now: LorvexPreviewClock.now(in: calendar),
+        locale: MobileL10n.locale)
+    }
+    var style = Date.FormatStyle().month(.wide).year().locale(MobileL10n.locale)
+    style.timeZone = calendar.timeZone
+    return visibleDate.formatted(style)
+  }
+
+  /// The week that starts on `start` as a locale-aware range: "Sep 27 –
+  /// Oct 3" or "9月27日至10月3日" while the week lies in `now`'s year, and with
+  /// its years ("Dec 27, 2026 – Jan 2, 2027") once it reaches outside it. The
+  /// `MMMd` and `yMMMd` templates rather than the medium date style, which
+  /// writes a Chinese interval in numerals ("2026/6/28 – 2026/7/4"). Where it
+  /// wraps, it breaks only after its dash.
+  nonisolated static func weekRangeLabel(
+    from start: Date, calendar: Calendar, now: Date, locale: Locale
+  ) -> String {
+    let end = calendar.date(byAdding: .day, value: 6, to: start) ?? start
+    let isThisYear =
+      calendar.isDate(start, equalTo: now, toGranularity: .year)
+      && calendar.isDate(end, equalTo: now, toGranularity: .year)
     let formatter = DateIntervalFormatter()
-    formatter.locale = MobileL10n.locale
-    formatter.dateStyle = .medium
-    formatter.timeStyle = .none
-    return formatter.string(from: visibleDate, to: end)
-  }
-
-  /// The lane-packed `CalendarGridDay` columns for the currently visible window —
-  /// used to render the pinned week header outside the pager.
-  func visibleColumns(dayCount: Int) -> [CalendarGridDay] {
-    CalendarGridModel.buildDays(
-      rangeStart: visibleDate, dayCount: dayCount, calendar: calendar,
-      events: filteredEvents, tasks: store.calendarScheduledTasks,
-      dayKeyFor: { Self.keyFormatter.string(from: $0) })
+    formatter.locale = locale
+    formatter.timeZone = calendar.timeZone
+    formatter.dateTemplate = isThisYear ? "MMMd" : "yMMMd"
+    return lorvexUnbreakable(formatter.string(from: start, to: end))
   }
 
   /// Regular-width iPad can mean anything from a narrow Stage Manager tile to a
@@ -278,16 +300,6 @@ public struct MobileCalendarDayView: View {
 
   @ToolbarContentBuilder
   private var toolbarContent: some ToolbarContent {
-    ToolbarItem(placement: .navigation) {
-      Button(
-        String(
-          localized: "calendar.today", defaultValue: "Today", table: "Localizable",
-          bundle: MobileL10n.bundle)
-      ) { withAnimation { dayOffset = 0 } }
-      .disabled(dayOffset == 0)
-      .lorvexToolbarHoverEffect()
-      .accessibilityIdentifier("mobileCalendarDay.today")
-    }
     // Centered in the nav bar (not crammed beside ＋ in the trailing area, where
     // "Week" truncated to "We…"); the tab bar already names this surface, so the
     // switcher stands in for the redundant inline title — mirrors Apple Calendar.
@@ -298,13 +310,18 @@ public struct MobileCalendarDayView: View {
           bundle: MobileL10n.bundle), selection: $store.calendarPresentationMode
       ) {
         ForEach(MobileCalendarPresentationMode.allCases) { mode in
-          Text(mode.title).tag(mode)
+          Text(mode.title(gridDayCount: dayCount(for: calendarWidth))).tag(mode)
         }
       }
       .pickerStyle(.segmented)
+      // A segmented control in the toolbar keeps the titles it was created
+      // with, so it is rebuilt whenever the grid's day count renames a segment.
+      .id(dayCount(for: calendarWidth))
       .frame(maxWidth: 280)
       .accessibilityIdentifier("mobileCalendar.presentationToggle")
     }
+    // The tab bar's plus captures a task; New Event carries the calendar glyph
+    // so the two creation buttons never read as the same action.
     ToolbarItem(placement: .primaryAction) {
       Button {
         let date = defaultCreateDate
@@ -313,7 +330,7 @@ public struct MobileCalendarDayView: View {
         Label(
           String(
             localized: "calendar.new_event", defaultValue: "New Event", table: "Localizable",
-            bundle: MobileL10n.bundle), systemImage: "plus")
+            bundle: MobileL10n.bundle), systemImage: "calendar.badge.plus")
       }
       .lorvexToolbarHoverEffect()
       .accessibilityIdentifier("mobileCalendar.toolbarCreate")
@@ -322,16 +339,18 @@ public struct MobileCalendarDayView: View {
 
   // MARK: Pager
 
-  /// One full-width calendar column (1, 2, or 3 days) wired to the store's
+  /// One full-width calendar page (1, 2, 3, or 7 days) wired to the store's
   /// mutation callbacks.
   private func column(forOffset offset: Int, dayCount: Int, showsHeaders: Bool) -> some View {
     MobileCalendarDayColumn(
       startDate: date(forOffset: offset),
       dayCount: dayCount,
       showsHeaders: showsHeaders,
+      circlesTodayInHeaders: weekMode,
       events: filteredEvents,
       tasks: store.calendarScheduledTasks,
       calendar: calendar,
+      onOpenDay: weekMode ? { day in openInDayMode(day) } : nil,
       onTapEvent: { event in
         store.prepareCalendarDraft(for: event)
         editingEvent = event
@@ -345,9 +364,7 @@ public struct MobileCalendarDayView: View {
       },
       onTapTask: { task in
         store.cacheTasks([task])
-        store.openNavigationTarget(
-          MobileNavigationTarget(selectedTab: .today, route: .task(task.id))
-        )
+        store.openTaskRouteOnCurrentStack(task.id)
       },
       onDropTask: { ref, day in
         Task { @MainActor in
@@ -361,14 +378,23 @@ public struct MobileCalendarDayView: View {
         Task { @MainActor in
           await reschedule(event, toDay: targetDay, minute: newStartMinute)
         }
+      },
+      onToggleTask: { task in
+        Task { @MainActor in await store.toggleTaskCompletion(task) }
+      },
+      isRunningNow: { block, day in
+        guard day.dayKey == store.logicalTodayString, let now = store.nowMinutesInProductDay
+        else { return false }
+        return block.startMin <= now && now < block.endMin
       }
     )
   }
 
-  /// Day / 3-day pager. The now-line ticks inside each column's own scoped
-  /// `TimelineView`, so the per-minute refresh never re-instantiates the pages
-  /// or re-runs the lane-packer (`CalendarGridModel.buildDays`) — only the thin
-  /// now-line overlay rebuilds. Week mode uses the grouped agenda instead.
+  /// The grid's pager, one page per day (or per week in week mode). The
+  /// now-line ticks inside each column's own scoped `TimelineView`, so the
+  /// per-minute refresh never re-instantiates the pages or re-runs the
+  /// lane-packer (`CalendarGridModel.buildDays`) — only the thin now-line
+  /// overlay rebuilds.
   private func pager(dayCount: Int) -> some View {
     TabView(selection: $dayOffset) {
       ForEach(pageRange, id: \.self) { offset in
@@ -384,5 +410,12 @@ public struct MobileCalendarDayView: View {
   // MARK: Actions
 
   static var keyFormatter: DateFormatter { LorvexDateFormatters.ymd }
+
+  /// Switches to Day mode on `day`; the day view that replaces this one
+  /// opens on it through `calendarPendingDayKey`.
+  private func openInDayMode(_ day: Date) {
+    store.calendarPendingDayKey = Self.keyFormatter.string(from: day)
+    store.calendarPresentationMode = .grid
+  }
 
 }

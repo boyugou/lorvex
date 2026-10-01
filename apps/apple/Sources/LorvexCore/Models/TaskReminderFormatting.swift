@@ -4,7 +4,7 @@ public extension TaskReminder {
   /// Localized date-time in the supplied product timezone. Task reminders are
   /// absolute instants, but their wall-clock intent belongs to Lorvex's synced
   /// timezone rather than the timezone of whichever device renders the row.
-  func displaySummary(timeZone: TimeZone, locale: Locale = .autoupdatingCurrent) -> String {
+  func displaySummary(timeZone: TimeZone, locale: Locale = LorvexClockFormat.displayLocale) -> String {
     TaskReminderDateTime.displayString(
       reminderAt: reminderAt,
       timeZone: timeZone,
@@ -66,7 +66,7 @@ public enum TaskReminderDateTime {
   public static func displayString(
     reminderAt: String,
     timeZone: TimeZone,
-    locale: Locale = .autoupdatingCurrent
+    locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
     guard let date = date(from: reminderAt) else { return reminderAt }
     return displayString(from: date, timeZone: timeZone, locale: locale)
@@ -75,23 +75,17 @@ public enum TaskReminderDateTime {
   public static func displayString(
     from date: Date,
     timeZone: TimeZone,
-    locale: Locale = .autoupdatingCurrent
+    locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
-    var style = Date.FormatStyle(date: .abbreviated, time: .shortened, locale: locale)
-    style.calendar = Calendar(identifier: .gregorian)
-    style.timeZone = timeZone
-    return style.format(date)
+    LorvexDateFormatters.dayAndClockTime(date, timeZone: timeZone, locale: locale)
   }
 
   public static func displayTimeString(
     from date: Date,
     timeZone: TimeZone,
-    locale: Locale = .autoupdatingCurrent
+    locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
-    var style = Date.FormatStyle(date: .omitted, time: .shortened, locale: locale)
-    style.calendar = Calendar(identifier: .gregorian)
-    style.timeZone = timeZone
-    return style.format(date)
+    LorvexDateFormatters.clockTime(date, timeZone: timeZone, locale: locale)
   }
 
   public static func calendar(timeZone: TimeZone) -> Calendar {

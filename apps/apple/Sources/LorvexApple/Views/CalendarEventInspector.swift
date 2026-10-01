@@ -40,7 +40,7 @@ struct CalendarEventInspector: View {
           }
           if let attendees = event.attendees, !attendees.isEmpty {
             detailRow(icon: "person.2", title: attendeesTitle) {
-              VStack(alignment: .leading, spacing: 2) {
+              VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
                 ForEach(attendees, id: \.email) { attendee in
                   plainText(attendee.name ?? attendee.email)
                 }
@@ -72,7 +72,7 @@ struct CalendarEventInspector: View {
 
   private var header: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
-      RoundedRectangle(cornerRadius: 2, style: .continuous)
+      RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
         .fill(tint)
         .frame(width: 4, height: 28)
       Text(event.title)
@@ -88,7 +88,7 @@ struct CalendarEventInspector: View {
 
   private var scheduleRow: some View {
     detailRow(icon: "calendar", title: whenTitle) {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         plainText(Self.dateLabel(event.startDate))
         if event.allDay {
           Text(
@@ -98,13 +98,10 @@ struct CalendarEventInspector: View {
           )
           .font(LorvexDesign.Typography.secondaryText)
           .foregroundStyle(.secondary)
-        } else {
-          let range = lorvexClockTimeRange(start: event.startTime, end: event.endTime)
-          if !range.isEmpty {
-            Text(range)
-              .font(LorvexDesign.Typography.secondaryText)
-              .foregroundStyle(.secondary)
-          }
+        } else if let start = event.startTime {
+          Text(lorvexClockRangeLabel(start: start, end: event.endTime))
+            .font(LorvexDesign.Typography.secondaryText)
+            .foregroundStyle(.secondary)
         }
       }
     }
@@ -114,7 +111,7 @@ struct CalendarEventInspector: View {
   private var sourceRow: some View {
     if let display = displaySource {
       detailRow(icon: event.editable ? "calendar.badge.checkmark" : "lock", title: calendarTitle) {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           plainText(display.title)
           if let account = display.account, !account.isEmpty, account != display.title {
             Text(account)
@@ -159,7 +156,7 @@ struct CalendarEventInspector: View {
             localized: "common.edit", defaultValue: "Edit", table: "Localizable",
             bundle: LorvexL10n.bundle), systemImage: "pencil")
       }
-      .buttonStyle(.lorvexPrimary)
+      .buttonStyle(.borderedProminent)
       .accessibilityIdentifier("calendar.event.inspector.edit")
 
       Button(role: .destructive, action: requestDelete) {
@@ -168,7 +165,7 @@ struct CalendarEventInspector: View {
             localized: "common.delete", defaultValue: "Delete", table: "Localizable",
             bundle: LorvexL10n.bundle), systemImage: "trash")
       }
-      .buttonStyle(.lorvexSecondary)
+      .buttonStyle(.bordered)
       .accessibilityIdentifier("calendar.event.inspector.delete")
 
       Spacer(minLength: 0)
@@ -185,7 +182,7 @@ struct CalendarEventInspector: View {
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .frame(width: 18)
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(title)
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
           .foregroundStyle(.secondary)

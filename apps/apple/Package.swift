@@ -2,14 +2,17 @@
 
 import PackageDescription
 
+/// This package's root directory, for linker flags that take a file path.
+let manifestPath: String = #filePath
+let packageRoot = String(manifestPath.dropLast("/Package.swift".count))
+
 let package = Package(
     name: "LorvexApple",
     defaultLocalization: "en",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18),
-        .visionOS(.v2),
-        .watchOS(.v11)
+        .macOS("26.0"),
+        .iOS("26.0"),
+        .watchOS("26.0")
     ],
     products: [
         .library(name: "LorvexCore", targets: ["LorvexCore"]),
@@ -25,9 +28,7 @@ let package = Package(
         .library(name: "LorvexWatch", targets: ["LorvexWatch"]),
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
-        .executable(name: "LorvexVisionApp", targets: ["LorvexVisionApp"]),
         .executable(name: "LorvexWidgetBundle", targets: ["LorvexWidgetBundle"]),
-        .executable(name: "LorvexFocusWidget", targets: ["LorvexFocusWidget"]),
         .executable(name: "LorvexMCPHost", targets: ["LorvexMCPHost"]),
         .executable(name: "LorvexWatchApp", targets: ["LorvexWatchApp"]),
         .executable(name: "LorvexWatchComplication", targets: ["LorvexWatchComplication"])
@@ -61,15 +62,19 @@ let package = Package(
             // ACKNOWLEDGMENTS.md is the aggregated third-party notices document
             // (script/generate_acknowledgments.py, gated by
             // script/verify_acknowledgments.py) bundled here because LorvexCore is
-            // the one target every app surface (macOS, iOS/iPadOS, visionOS) links.
+            // the one target every app surface (macOS, iOS/iPadOS) links.
             // PRIVACY_SUMMARY.md is the in-app privacy summary mirroring the
             // repository-root PRIVACY.md, bundled the same way for the same reason.
+            // Localizable.xcstrings holds the words every surface shows alike
+            // because they name shared data (the seeded Inbox's name), for the
+            // same reason.
             resources: [
                 .copy("Resources/schema.sql"),
                 .copy("Resources/checksums.lock"),
                 .copy("Resources/Migrations"),
                 .copy("Resources/ACKNOWLEDGMENTS.md"),
-                .copy("Resources/PRIVACY_SUMMARY.md")
+                .copy("Resources/PRIVACY_SUMMARY.md"),
+                .process("Resources/Localizable.xcstrings")
             ]
         ),
         .target(
@@ -145,7 +150,22 @@ let package = Package(
                 "LorvexSystemIntents",
                 "LorvexWidgetKitSupport",
             ],
-            resources: [.process("Resources")]
+            resources: [.process("Resources")],
+            // A debug build runs unbundled (`swift run`, the `--ui-preview`
+            // capture tour), and an executable without localizations of its own
+            // pins every resource bundle to English. The embedded Info.plist
+            // declares the shipped languages so those runs follow
+            // -AppleLanguages like the packaged app. Inside a staged Lorvex.app
+            // the bundle's own Info.plist takes precedence over the section.
+            linkerSettings: [
+                .unsafeFlags(
+                    [
+                        "-Xlinker", "-sectcreate", "-Xlinker", "__TEXT",
+                        "-Xlinker", "__info_plist",
+                        "-Xlinker", "\(packageRoot)/Config/LorvexAppleSwiftPM-Info.plist",
+                    ],
+                    .when(configuration: .debug))
+            ]
         ),
         .executableTarget(
             name: "LorvexMobileApp",
@@ -161,15 +181,6 @@ let package = Package(
             ]
         ),
         .executableTarget(
-            name: "LorvexVisionApp",
-            dependencies: [
-                "LorvexCore",
-                "LorvexMobile",
-                "LorvexCloudSync",
-                "LorvexSystemIntents"
-            ]
-        ),
-        .executableTarget(
             name: "LorvexWidgetBundle",
             dependencies: [
                 "LorvexWidgetExtension"
@@ -179,22 +190,6 @@ let package = Package(
             // executable). An app extension's entry point must be
             // `_NSExtensionMain` (App Store reject ITMS-90898), which a plain
             // executable target does not link; request it explicitly.
-            linkerSettings: [
-                .unsafeFlags(["-Xlinker", "-e", "-Xlinker", "_NSExtensionMain"])
-            ]
-        ),
-        .executableTarget(
-            name: "LorvexFocusWidget",
-            dependencies: [
-                "LorvexWidgetExtension",
-                "LorvexWidgetKitSupport"
-            ],
-            // An app extension's Mach-O entry point must be `_NSExtensionMain`,
-            // not the `_main` a plain executable target links (App Store reject
-            // ITMS-90898). Xcode passes this for extension targets; the
-            // pure-SwiftPM macOS build must request it explicitly. NSExtensionMain
-            // (Foundation) bootstraps the extension from its Info.plist
-            // NSExtensionPointIdentifier and hands off to the @main WidgetBundle.
             linkerSettings: [
                 .unsafeFlags(["-Xlinker", "-e", "-Xlinker", "_NSExtensionMain"])
             ]

@@ -77,6 +77,7 @@ extension AppStore {
       taskDetailEstimatedMinutesText,
       String(taskDetailHasPlannedDate),
       String(taskDetailPlannedDatePickerDate.timeIntervalSinceReferenceDate),
+      taskDetailPlannedTime.map { "\($0.lowerBound)-\($0.upperBound)" } ?? "",
       String(taskDetailHasDueDate),
       String(taskDetailDueDatePickerDate.timeIntervalSinceReferenceDate),
       String(taskDetailHasAvailableFrom),
@@ -104,6 +105,7 @@ extension AppStore {
       || taskDetailPriority != task.priority
       || parsedTaskDetailEstimate != task.estimatedMinutes
       || plannedDate != task.plannedDate
+      || taskDetailPlannedTimeForSave != task.plannedTime
       || taskDetailDueDateForSave != task.dueDate
       || taskDetailAvailableFromForSave != task.availableFrom
     {
@@ -138,6 +140,12 @@ extension AppStore {
     // formats in UTC, so re-anchor or an east-of-UTC save lands on the
     // previous day.
     return taskDetailPlannedDate.map { PlannedDayBridge.storageDate(forLocalInstant: $0) }
+  }
+
+  /// The time to persist: the draft's time while the draft has a planned day,
+  /// since a time belongs to its day; nil otherwise.
+  var taskDetailPlannedTimeForSave: Range<Int>? {
+    taskDetailHasPlannedDate ? taskDetailPlannedTime : nil
   }
 
   var taskDetailPlannedDatePickerDate: Date {
@@ -245,11 +253,14 @@ extension AppStore {
       .filter { seen.insert($0).inserted }
   }
 
+  /// Turning the planned day off also drops the draft's time, which has no
+  /// meaning without its day.
   func setTaskDetailHasPlannedDate(_ enabled: Bool) {
     taskDetailHasPlannedDate = enabled
     if enabled, taskDetailPlannedDate == nil {
       taskDetailPlannedDate = taskDetailStorage.taskDetailPlannedDatePickerDate
     }
+    if !enabled { taskDetailPlannedTime = nil }
   }
 
   func setTaskDetailHasDueDate(_ enabled: Bool) {

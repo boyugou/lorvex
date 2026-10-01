@@ -261,29 +261,6 @@ final class RecurrenceConfigApplyTests: XCTestCase {
           + "VALUES ('child-reminder', ?1, '2026-04-16T09:00:00.000Z', ?2, "
           + "'2026-04-15T10:00:00.000Z')",
         arguments: [successorId, baseVersion])
-      try db.execute(
-        sql:
-          "INSERT INTO current_focus (date, version, created_at, updated_at) "
-          + "VALUES ('2026-04-16', ?1, '2026-04-15T10:00:00.000Z', "
-          + "'2026-04-15T10:00:00.000Z')",
-        arguments: [baseVersion])
-      try db.execute(
-        sql:
-          "INSERT INTO current_focus_items (date, position, task_id) "
-          + "VALUES ('2026-04-16', 0, ?1)",
-        arguments: [successorId])
-      try db.execute(
-        sql:
-          "INSERT INTO focus_schedule (date, version, created_at, updated_at) "
-          + "VALUES ('2026-04-16', ?1, '2026-04-15T10:00:00.000Z', "
-          + "'2026-04-15T10:00:00.000Z')",
-        arguments: [baseVersion])
-      try db.execute(
-        sql:
-          "INSERT INTO focus_schedule_blocks "
-          + "(date, position, block_type, start_minutes, end_minutes, task_id) "
-          + "VALUES ('2026-04-16', 0, 'task', 540, 600, ?1)",
-        arguments: [successorId])
     }
 
     let result = try store.writer.write { db in
@@ -297,8 +274,6 @@ final class RecurrenceConfigApplyTests: XCTestCase {
     XCTAssertEqual(result.disableEffects.cancelledSuccessorIds, [successorId])
     XCTAssertEqual(result.disableEffects.reminderUpsertIds, ["child-reminder"])
     XCTAssertEqual(result.disableEffects.deletedDependencyEdges.count, 1)
-    XCTAssertEqual(result.disableEffects.currentFocusDates, ["2026-04-16"])
-    XCTAssertEqual(result.disableEffects.focusScheduleDates, ["2026-04-16"])
     try store.writer.read { db in
       let child = try Row.fetchOne(
         db,
@@ -312,14 +287,6 @@ final class RecurrenceConfigApplyTests: XCTestCase {
       XCTAssertEqual(
         try Int.fetchOne(
           db, sql: "SELECT COUNT(*) FROM task_dependencies WHERE task_id = ?1",
-          arguments: [successorId]), 0)
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM current_focus_items WHERE task_id = ?1",
-          arguments: [successorId]), 0)
-      XCTAssertEqual(
-        try Int.fetchOne(
-          db, sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE task_id = ?1",
           arguments: [successorId]), 0)
     }
   }

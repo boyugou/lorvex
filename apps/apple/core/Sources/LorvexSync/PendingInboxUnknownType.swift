@@ -69,12 +69,11 @@ extension PendingInboxDrain {
 
   /// Count exact future-authored records that this build still cannot apply.
   ///
-  /// These rows are the only durable copy after a CloudKit cursor advances. A
-  /// generation rebuild must therefore retain its predecessor while this count
-  /// is nonzero: the immutable candidate snapshot can encode canonical rows and
-  /// payload shadows, but cannot encode a future entity kind or operation. The
-  /// predicate intentionally excludes standing aggregate/audit deferrals; those
-  /// are current-schema records whose canonical state remains representable.
+  /// These rows are the only local copy once the sync engine's change token
+  /// has moved past them, so they stay held until a build that understands
+  /// them drains the inbox. The predicate excludes standing aggregate/audit
+  /// deferrals: those are current-schema records whose canonical state is
+  /// already representable.
   public static func unresolvedFutureRecordCount(_ db: Database) throws -> Int {
     try Int.fetchOne(
       db,

@@ -38,6 +38,7 @@ struct LorvexMemoryEntityQuery: EntityQuery, EntityStringQuery {
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
       entity.key.localizedCaseInsensitiveContains(query)
+        || MemoryEntry.displayTitle(forKey: entity.key).localizedCaseInsensitiveContains(query)
     }
   }
 }

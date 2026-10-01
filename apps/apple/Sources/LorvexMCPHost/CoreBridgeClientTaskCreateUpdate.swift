@@ -14,7 +14,7 @@ extension CoreBridgeClient {
   /// When `original_id` is supplied the task is restored id-preserving through
   /// the native importer's atomic skip-if-present/tombstoned record path, so
   /// every exported cross-reference (depends_on, task↔event links, review
-  /// `linked_ids`, focus `task_ids`) resolves without an old→new id map; the
+  /// `linked_ids`) resolves without an old→new id map; the
   /// ordinary server-assigns-the-id create path runs without `original_id`.
   ///
   /// The optional `status` (open/in_progress/someday/completed/cancelled), the
@@ -56,8 +56,7 @@ extension CoreBridgeClient {
   func taskRecordSpec(
     arguments: [String: Value], title: String, reference: String
   ) throws -> TaskRecordCreateSpec {
-    let tagsValue = arguments["tags"] ?? arguments["tags_set"]
-    let tags = try StrictArgumentArray.optionalStrings(tagsValue, field: "tags")
+    let tags = try StrictArgumentArray.optionalStrings(arguments["tags"], field: "tags")
     let dependsOn = try StrictArgumentArray.optionalStrings(
       arguments["depends_on"], field: "depends_on")
     let originalID = try Self.strictImportOriginalID(arguments["original_id"], field: "original_id")
@@ -79,6 +78,7 @@ extension CoreBridgeClient {
         try StrictScalarArguments.optionalString(arguments["due_date"], field: "due_date")),
       plannedDate: try Self.resolveOptionalPlannedDate(
         try StrictScalarArguments.optionalString(arguments["planned_date"], field: "planned_date")),
+      plannedTime: try Self.plannedTime(from: arguments),
       availableFrom: try Self.resolveOptionalPlannedDate(
         try StrictScalarArguments.optionalString(
           arguments["available_from"], field: "available_from")),
@@ -185,7 +185,9 @@ extension CoreBridgeClient {
   /// so `priority` here is a valid 1/2/3 or nil (omitted → keep existing).
   /// `due_date` (external deadline), `planned_date` (intended work day), and
   /// `available_from` (hide-until / not-before) are independent columns, each
-  /// patched from its own key.
+  /// patched from its own key. `planned_start_time` / `planned_end_time` patch
+  /// the task's time on its planned day as one pair
+  /// (``plannedTimePatch(from:)``).
   func updateTask(
     id: String,
     title: String?,
@@ -211,6 +213,7 @@ extension CoreBridgeClient {
       estimatedMinutes: try Self.intPatch(from: arguments, key: "estimated_minutes"),
       dueDate: try Self.datePatch(from: arguments, key: "due_date"),
       plannedDate: try Self.datePatch(from: arguments, key: "planned_date"),
+      plannedTime: try Self.plannedTimePatch(from: arguments),
       availableFrom: try Self.datePatch(from: arguments, key: "available_from"),
       tags: tags,
       dependsOn: dependsOn,

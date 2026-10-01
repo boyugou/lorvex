@@ -57,14 +57,6 @@ extension AppStore {
     calendarTimeline?.eventsOccurring(on: logicalTodayDateString) ?? []
   }
 
-  /// True when Today should show the standalone schedule agenda: there are
-  /// events today and no focus timeline is displayed. When a focus schedule
-  /// (proposed or saved) exists, those same events are woven into it as `event`
-  /// blocks, so the standalone agenda steps aside to avoid listing them twice.
-  var showsStandaloneTodaySchedule: Bool {
-    proposedFocusSchedule == nil && focusSchedule == nil && !todayScheduleEvents.isEmpty
-  }
-
   var draftCalendarTitle: String {
     get { calendarStorage.draftCalendarTitle }
     set { calendarStorage.draftCalendarTitle = newValue }

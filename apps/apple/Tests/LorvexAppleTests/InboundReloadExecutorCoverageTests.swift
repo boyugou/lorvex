@@ -6,7 +6,7 @@ import Testing
 @testable import LorvexApple
 @testable import LorvexMobile
 
-// Phase 2: each store's inbound-reload executor dispatches `InboundReloadDomain`
+// Each store's inbound-reload executor dispatches `InboundReloadDomain`
 // through a `switch` with no `default`, so "handle every domain" is a compile-time
 // obligation — a new case can't be silently unhandled on one platform. That
 // exhaustiveness is enforced by the compiler; these runtime smokes pin the
@@ -29,10 +29,10 @@ struct InboundReloadExecutorCoverageTests {
     // The real exhaustiveness guarantee is the no-`default` switch in each executor
     // (a new case fails to compile). This pins the vocabulary so an accidental
     // add/remove of a domain surfaces here too.
-    #expect(InboundReloadDomain.allCases.count == 9)
+    #expect(InboundReloadDomain.allCases.count == 8)
     #expect(
       Set(InboundReloadDomain.allCases) == [
-        .today, .tasks, .lists, .calendar, .focus, .reviews, .habits, .memory, .diagnostics,
+        .today, .tasks, .lists, .calendar, .reviews, .habits, .memory, .diagnostics,
       ])
   }
 
@@ -70,28 +70,23 @@ struct InboundReloadExecutorCoverageTests {
   @Test("mobile executor: each surface-owning domain reloads its surface when reloaded alone")
   func mobileExecutorReloadsEachSurfaceDomain() async throws {
     do {
-      let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+      let core = StubCoreService(preview: try await makeSeededInMemoryCore())
       await makeStore(core: core).reloadInboundDomains([.today])
       #expect(core.loadTodayCallCount == 1)
     }
     do {
-      let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+      let core = StubCoreService(preview: try await makeSeededInMemoryCore())
       await makeStore(core: core).reloadInboundDomains([.lists])
       #expect(core.loadListsCallCount == 1)
     }
     do {
-      let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+      let core = StubCoreService(preview: try await makeSeededInMemoryCore())
       await makeStore(core: core).reloadInboundDomains([.calendar])
       #expect(core.loadCalendarTimelineCallCount == 1)
       #expect(core.scheduledTasksCallCount == 1)
     }
     do {
-      let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
-      await makeStore(core: core).reloadInboundDomains([.focus])
-      #expect(core.loadCurrentFocusCallCount == 1)
-    }
-    do {
-      let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+      let core = StubCoreService(preview: try await makeSeededInMemoryCore())
       await makeStore(core: core).reloadInboundDomains([.habits])
       #expect(core.loadHabitsCallCount == 1)
     }
@@ -100,7 +95,7 @@ struct InboundReloadExecutorCoverageTests {
   @MainActor
   @Test("mobile executor: .tasks is a documented no-op — no store-published task pool read")
   func mobileExecutorTasksDomainIsNoOp() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
     await makeStore(core: core).reloadInboundDomains([.tasks])
 
     // The mobile Tasks tab self-loads via `.task(id:)`; there is no store-published
@@ -117,7 +112,7 @@ struct InboundReloadExecutorCoverageTests {
   @MainActor
   @Test("mobile executor: .diagnostics is a documented no-op — reloads nothing")
   func mobileExecutorDiagnosticsDomainIsNoOp() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
     await makeStore(core: core).reloadInboundDomains([.diagnostics])
 
     // Mobile diagnostics is loaded on demand when Settings appears, not by the
@@ -134,7 +129,7 @@ struct InboundReloadExecutorCoverageTests {
   @MainActor
   @Test("macOS executor: .diagnostics reloads the diagnostics surface (unlike mobile)")
   func appStoreExecutorDiagnosticsDomainReloads() async throws {
-    let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+    let core = StubCoreService(preview: try await makeSeededInMemoryCore())
     await AppStore(core: core).performSelectiveInboundReload([.diagnostics])
 
     // macOS's full refresh loads runtime diagnostics, so its selective executor

@@ -57,6 +57,46 @@ enum BenchSupport {
     return try String(contentsOfFile: schemaPath, encoding: .utf8)
   }
 
+  /// The versioned migrations (version 2 and later) pinned by
+  /// `schema/migrations/checksums.lock`, in ascending version order. Each
+  /// entry's `name` is the bare snake_case name (the file name without its
+  /// `NNN_` prefix and `.sql` suffix) and `sql` is the file contents, matching
+  /// how the app layer loads the ladder at open time.
+  static func loadSchemaMigrations(
+    file: StaticString = #filePath
+  ) throws -> [LorvexStore.SchemaMigration] {
+    var path = (String(describing: file) as NSString).deletingLastPathComponent
+    for _ in 0..<5 {
+      path = (path as NSString).deletingLastPathComponent
+    }
+    let directory = (path as NSString).appendingPathComponent("schema/migrations")
+    let lockData = try Data(
+      contentsOf: URL(
+        fileURLWithPath: (directory as NSString).appendingPathComponent("checksums.lock")))
+    guard let lock = try JSONSerialization.jsonObject(with: lockData) as? [String: [String: Any]]
+    else {
+      throw NSError(
+        domain: "SchemaMigrations", code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "checksums.lock is not a JSON object of objects"])
+    }
+    var migrations: [LorvexStore.SchemaMigration] = []
+    for (key, entry) in lock {
+      guard let version = Int(key), version >= 2, let fileName = entry["name"] as? String else {
+        continue
+      }
+      guard fileName.hasSuffix(".sql"), let underscore = fileName.firstIndex(of: "_") else {
+        throw NSError(
+          domain: "SchemaMigrations", code: 2,
+          userInfo: [NSLocalizedDescriptionKey: "unexpected migration file name \(fileName)"])
+      }
+      let name = String(fileName[fileName.index(after: underscore)...].dropLast(".sql".count))
+      let sql = try String(
+        contentsOfFile: (directory as NSString).appendingPathComponent(fileName), encoding: .utf8)
+      migrations.append(LorvexStore.SchemaMigration(version: version, name: name, sql: sql))
+    }
+    return migrations.sorted { $0.version < $1.version }
+  }
+
   /// Fresh on-disk store in a unique temp directory. On-disk (not in-memory)
   /// so query plans, WAL, and page-cache behavior match production. Caller is
   /// responsible for cleanup via the returned URL's parent directory.
@@ -66,7 +106,8 @@ enum BenchSupport {
       .appendingPathComponent("lorvex-bench-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     let dbURL = dir.appendingPathComponent("bench.sqlite")
-    let store = try LorvexStore.open(at: dbURL, schemaSQL: sql)
+    let store = try LorvexStore.open(
+      at: dbURL, schemaSQL: sql, migrations: try loadSchemaMigrations(file: file))
     return (store, dir)
   }
 

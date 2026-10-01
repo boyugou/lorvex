@@ -3,17 +3,16 @@ import LorvexWidgetKitSupport
 import WidgetKit
 
 /// A timeline entry that carries the raw `WidgetSnapshot` (or nil on fallback) for widgets
-/// that render directly from snapshot fields rather than through `WidgetRenderModel`.
+/// that render directly from snapshot fields rather than through `WidgetRenderModel`
+/// (Habits, Progress).
 public struct LorvexSnapshotEntry: TimelineEntry, Equatable {
   public let date: Date
   public let state: WidgetTimelineEntryState
-  /// Age classification of `snapshot` so the Today/Habits/Progress widgets can
+  /// Age classification of `snapshot` so the Habits and Progress widgets can
   /// flag stale data instead of rendering a day-old snapshot as if current.
   /// `.unknownTimestamp` when there is no snapshot.
   public let freshness: WidgetSnapshotFreshness
   public let statusText: String
-  public let todayWidgetViewMode: LorvexTodayWidgetViewMode
-  public let todayWidgetListID: String?
 
   /// `true` for the system-requested placeholder entry (before real data has
   /// loaded), so the entry view can apply `.redacted(reason: .placeholder)`
@@ -25,8 +24,6 @@ public struct LorvexSnapshotEntry: TimelineEntry, Equatable {
     snapshot: WidgetSnapshot?,
     freshness: WidgetSnapshotFreshness = .unknownTimestamp,
     statusText: String = "",
-    todayWidgetViewMode: LorvexTodayWidgetViewMode = .today,
-    todayWidgetListID: String? = nil,
     isPlaceholder: Bool = false
   ) {
     self.date = date
@@ -43,16 +40,12 @@ public struct LorvexSnapshotEntry: TimelineEntry, Equatable {
       )
     self.freshness = freshness
     self.statusText = statusText
-    self.todayWidgetViewMode = todayWidgetViewMode
-    self.todayWidgetListID = todayWidgetListID
     self.isPlaceholder = isPlaceholder
   }
 
   public init(
     timelineEntry: WidgetTimelineEntry,
     statusText: String,
-    todayWidgetViewMode: LorvexTodayWidgetViewMode = .today,
-    todayWidgetListID: String? = nil,
     isPlaceholder: Bool = false
   ) {
     date = timelineEntry.date
@@ -64,8 +57,6 @@ public struct LorvexSnapshotEntry: TimelineEntry, Equatable {
       self.freshness = .unknownTimestamp
     }
     self.statusText = statusText
-    self.todayWidgetViewMode = todayWidgetViewMode
-    self.todayWidgetListID = todayWidgetListID
     self.isPlaceholder = isPlaceholder
   }
 
@@ -81,13 +72,8 @@ public struct LorvexSnapshotEntry: TimelineEntry, Equatable {
 
   public var relevance: TimelineEntryRelevance? {
     guard let snapshot else { return nil }
-    // De-dupe by id: a task that is both due today and in the actionable focus
-    // queue must count once, or the Smart Stack relevance score is inflated.
-    let dueTodayIDs = Set(snapshot.todayTasks.map(\.id))
-    let actionableFocusIDs = Set(snapshot.actionableFocusTasks.map(\.id))
-    let count = dueTodayIDs.union(actionableFocusIDs).count
     return WidgetSmartStackRelevancePolicy.relevance(
-      taskCount: count,
+      taskCount: snapshot.stats.todayCount,
       date: date,
       timezoneName: snapshot.timezone
     ).map(\.timelineEntryRelevance)

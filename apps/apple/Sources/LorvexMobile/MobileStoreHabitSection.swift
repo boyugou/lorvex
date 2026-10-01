@@ -1,92 +1,65 @@
 import LorvexCore
 import SwiftUI
 
+/// The Habits screen's compact catalog: a row per active habit that matches
+/// the search, an empty state while no habit is active, and the search's
+/// no-results row while none match. The screen's navigation title names the
+/// list, so the section draws no header of its own.
 struct MobileStoreHabitsSection: View {
-  let habits: [LorvexHabit]?
+  let habits: [LorvexHabit]
   let isMutating: Bool
   let editHabit: (LorvexHabit) -> Void
   let deleteHabit: (LorvexHabit) async -> Bool
+  let archiveHabit: (LorvexHabit) async -> Bool
   let complete: (LorvexHabit) async -> Bool
   let reset: (LorvexHabit) async -> Bool
   let searchQuery: String
-  let displayLimit: Int?
-  let viewAll: (() -> Void)?
-  let detailRoute: ((LorvexHabit) -> MobileRoute)?
-
-  init(
-    habits: [LorvexHabit]?,
-    isMutating: Bool,
-    editHabit: @escaping (LorvexHabit) -> Void,
-    deleteHabit: @escaping (LorvexHabit) async -> Bool,
-    complete: @escaping (LorvexHabit) async -> Bool,
-    reset: @escaping (LorvexHabit) async -> Bool,
-    searchQuery: String = "",
-    displayLimit: Int? = nil,
-    viewAll: (() -> Void)? = nil,
-    detailRoute: ((LorvexHabit) -> MobileRoute)? = nil
-  ) {
-    self.habits = habits
-    self.isMutating = isMutating
-    self.editHabit = editHabit
-    self.deleteHabit = deleteHabit
-    self.complete = complete
-    self.reset = reset
-    self.searchQuery = searchQuery
-    self.displayLimit = displayLimit
-    self.viewAll = viewAll
-    self.detailRoute = detailRoute
-  }
+  let detailRoute: (LorvexHabit) -> MobileRoute
 
   var body: some View {
-    Section(String(localized: "destination.habits", defaultValue: "Habits", table: "Localizable", bundle: MobileL10n.bundle)) {
-      let allActiveHabits = habits?.filter { !$0.archived } ?? []
-      let matchingHabits = LorvexCatalogSearch.habits(allActiveHabits, query: searchQuery)
-      let visibleHabitCount = displayLimit.map { min(matchingHabits.count, $0) } ?? matchingHabits.count
-      let activeHabits = matchingHabits.prefix(visibleHabitCount)
-      let hiddenHabitCount = max(0, matchingHabits.count - visibleHabitCount)
-      if habits == nil {
-        MobileSkeletonRows(count: displayLimit ?? 4, showsTrailingDetail: true)
-      } else if allActiveHabits.isEmpty {
+    Section {
+      let activeHabits = habits.filter { !$0.archived }
+      let matchingHabits = LorvexCatalogSearch.habits(activeHabits, query: searchQuery)
+      if activeHabits.isEmpty {
         MobileEmptyState(
           icon: "repeat",
           title: String(localized: "habits.empty.no_active", defaultValue: "No Active Habits", table: "Localizable", bundle: MobileL10n.bundle),
           message: String(localized: "habits.empty.no_active.message", defaultValue: "Tap ＋ to start a habit you want to build.", table: "Localizable", bundle: MobileL10n.bundle))
-      } else if activeHabits.isEmpty {
-        ContentUnavailableView.search(text: searchQuery)
+      } else if matchingHabits.isEmpty {
+        MobileEmptyState.search(text: searchQuery)
       } else {
-        ForEach(Array(activeHabits)) { habit in
+        ForEach(matchingHabits) { habit in
           MobileHabitRow(
             habit: habit,
             isMutating: isMutating,
             editHabit: { editHabit(habit) },
             deleteHabit: { await deleteHabit(habit) },
+            archiveHabit: { await archiveHabit(habit) },
             complete: { await complete(habit) },
             reset: { await reset(habit) },
-            detailRoute: detailRoute.map { $0(habit) }
+            detailRoute: detailRoute(habit)
           )
         }
       }
-
-      if hiddenHabitCount > 0, let viewAll {
-        Button(action: viewAll) {
-          Label(String(localized: "habits.view_all", defaultValue: "View All Habits", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "repeat")
-        }
-        .accessibilityIdentifier("mobileHabits.viewAll")
-      }
-      // No inline "New Habit" row — the toolbar ＋ is the single add affordance,
-      // and Today's habits summary is read-only (create lives on the Habits tab).
+      // No inline "New Habit" row — the toolbar ＋ is the single add affordance.
     }
   }
 }
 
-private struct MobileHabitRow: View {
+/// One habit in the Habits list: icon tile, name, today's progress, the
+/// milestone line, and the trailing completion ring. Tapping the row opens
+/// the habit's detail. Edit rides the leading swipe and Delete (confirmed)
+/// and Archive the trailing one; the context menu offers the same actions
+/// plus complete / reset.
+struct MobileHabitRow: View {
   let habit: LorvexHabit
   let isMutating: Bool
   let editHabit: () -> Void
   let deleteHabit: () async -> Bool
+  let archiveHabit: () async -> Bool
   let complete: () async -> Bool
   let reset: () async -> Bool
-  let detailRoute: MobileRoute?
+  let detailRoute: MobileRoute
 
   @State private var isConfirmingDelete = false
 
@@ -116,6 +89,9 @@ private struct MobileHabitRow: View {
       }
       .disabled(isMutating)
       .accessibilityIdentifier("mobileHabits.delete.\(habit.id)")
+
+      archiveButton
+        .accessibilityIdentifier("mobileHabits.archive.\(habit.id)")
     }
     .swipeActions(edge: .leading, allowsFullSwipe: false) {
       Button {
@@ -152,6 +128,8 @@ private struct MobileHabitRow: View {
       }
       .disabled(isMutating)
 
+      archiveButton
+
       Button(role: .destructive) {
         isConfirmingDelete = true
       } label: {
@@ -175,44 +153,27 @@ private struct MobileHabitRow: View {
     }
   }
 
-  @ViewBuilder
+  /// Archive needs no confirmation: the habit keeps its history and returns
+  /// from the Habits screen's archived section. Untinted, so the swipe button
+  /// takes the system's neutral gray rather than a color that implies loss.
+  private var archiveButton: some View {
+    Button {
+      Task { _ = await archiveHabit() }
+    } label: {
+      Label(MobileHabitArchiveCopy.archive, systemImage: "archivebox")
+    }
+    .disabled(isMutating)
+  }
+
+  /// No trailing disclosure chevron: the row is plainly tappable, and the
+  /// chevron would sit between the summary and the completion ring.
   private var detailLabel: some View {
-    if let detailRoute {
-      // Navigate on tap WITHOUT the trailing disclosure chevron — the row is
-      // obviously tappable and the chevron is just clutter (a hidden zero-opacity
-      // NavigationLink carries the navigation; the content draws on top).
-      ZStack {
-        NavigationLink(value: detailRoute) { EmptyView() }
-          .opacity(0)
-        HStack(spacing: LorvexDesign.Spacing.m) {
-          habitSummary
-          Spacer(minLength: LorvexDesign.Spacing.s)
-        }
-      }
-    } else {
+    NavigationLink(value: detailRoute) {
       HStack(spacing: LorvexDesign.Spacing.m) {
-        habitSummary
+        MobileHabitSummary(habit: habit)
         Spacer(minLength: LorvexDesign.Spacing.s)
       }
     }
-  }
-
-  private var habitSummary: some View {
-    HStack(spacing: LorvexDesign.Spacing.m) {
-      MobileIconTile(icon: habit.icon, fallback: "repeat", tint: habit.tileTint, size: 30)
-      VStack(alignment: .leading, spacing: 3) {
-        Text(habit.name)
-          .font(.body)
-          .lineLimit(1)
-        Text(habit.todayProgressText)
-          .font(.footnote)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-        if let milestone = habit.milestone, habit.showsMilestoneStrip {
-          MobileHabitMilestoneProgressView(
-            milestone: milestone, frequencyType: habit.frequencyType, tint: habit.tileTint)
-        }
-      }
-    }
+    .navigationLinkIndicatorVisibility(.hidden)
   }
 }

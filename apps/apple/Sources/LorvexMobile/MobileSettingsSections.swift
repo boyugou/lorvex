@@ -8,55 +8,46 @@ struct MobileStoreSettingsNotificationsSection: View {
   @Bindable var store: MobileStore
   @State private var showTaskNotesInNotifications = false
 
+  // One group per toggle so each footer sits directly under the switch it
+  // explains, the way the system Settings app lays out notification options.
   var body: some View {
-    Section(
-      String(
-        localized: "settings.section.notifications", defaultValue: "Notifications",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    ) {
+    // The permission row names the group itself, so it carries no header
+    // that would repeat "Notifications" over it.
+    Section {
+      MobileNotificationPermissionRow(onAuthorized: { await store.replenishReminderWindow() })
+    }
+
+    Section {
       Toggle(isOn: badgeBinding) {
-        Label(
+        Text(
           String(
             localized: "settings.badge_with_due_tasks", defaultValue: "Badge with Due Tasks",
-            table: "Localizable", bundle: MobileL10n.bundle), systemImage: "app.badge")
+            table: "Localizable", bundle: MobileL10n.bundle))
       }
       .accessibilityIdentifier("mobileSettings.badgeEnabled")
+    } footer: {
       Text(
         String(
           localized: "settings.badge.footer",
           defaultValue: "Show the count of overdue and due-today tasks on the app icon.",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      )
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
+          table: "Localizable", bundle: MobileL10n.bundle))
+    }
 
+    Section {
       Toggle(isOn: showTaskNotesBinding) {
-        Label(
+        Text(
           String(
             localized: "settings.show_task_notes", defaultValue: "Show Task Notes in Notifications",
-            table: "Localizable", bundle: MobileL10n.bundle),
-          systemImage: "note.text")
+            table: "Localizable", bundle: MobileL10n.bundle))
       }
       .accessibilityIdentifier("mobileSettings.showTaskNotesInNotifications")
+    } footer: {
       Text(
         String(
           localized: "settings.show_task_notes.footer",
           defaultValue:
             "When off, reminders show only the task title — never your notes — on the lock screen and banners.",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      )
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-
-      NavigationLink {
-        PermissionsStatusView()
-      } label: {
-        Label(
-          String(
-            localized: "settings.permission_status", defaultValue: "Permission Status",
-            table: "Localizable", bundle: MobileL10n.bundle), systemImage: "checkmark.shield")
-      }
-      .accessibilityIdentifier("mobileSettings.permissionsStatus")
+          table: "Localizable", bundle: MobileL10n.bundle))
     }
     .task {
       showTaskNotesInNotifications = await store.loadShowTaskNotesInNotificationsPreference()
@@ -95,104 +86,89 @@ struct MobileStoreSettingsCloudSyncSection: View {
   @State private var deleteCloudSucceeded = false
 
   var body: some View {
-    Section(
-      String(
-        localized: "settings.section.cloud_sync", defaultValue: "Cloud Sync", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    ) {
-      // The picker stays enabled during a transition: a change requested
-      // mid-transition or mid-cycle is queued (latest wins) and applied when
-      // the active work completes, and the binding reads
-      // `cloudSyncModeTarget` so the segment shows the queued target instead
-      // of snapping back.
-      Picker(
+    modeSection
+    // Off has nothing to report, and the mode footer already says so; the
+    // backend itself is a Diagnostics row.
+    if store.cloudSyncMode == .live {
+      statusSection
+    }
+    deleteCloudDataSection
+  }
+
+  /// The iCloud switch with its transition spinner.
+  private var modeSection: some View {
+    Section {
+      Toggle(
         String(
-          localized: "settings.sync.mode", defaultValue: "Sync Mode", table: "Localizable",
-          bundle: MobileL10n.bundle), selection: cloudSyncModeBinding
-      ) {
-        Text(
-          String(
-            localized: "settings.sync.mode.off", defaultValue: "Off", table: "Localizable",
-            bundle: MobileL10n.bundle)
-        ).tag(CloudSyncMode.off)
-        Text(
-          String(
-            localized: "settings.sync.mode.live", defaultValue: "Live", table: "Localizable",
-            bundle: MobileL10n.bundle)
-        ).tag(CloudSyncMode.live)
-      }
-      .pickerStyle(.segmented)
+          localized: "settings.sync.toggle", defaultValue: "Sync with iCloud", table: "Localizable",
+          bundle: MobileL10n.bundle),
+        isOn: cloudSyncIsOnBinding
+      )
       .accessibilityIdentifier("mobileSettings.cloudSync.mode")
 
-      if store.isSettingCloudSyncMode || store.pendingCloudSyncMode != nil {
+      if let transitionDetail = modeTransitionDetail {
         HStack(spacing: 8) {
           ProgressView()
             .controlSize(.small)
-          Text(
-            String(
-              localized: "settings.sync.enabling", defaultValue: "Updating Cloud Sync…",
-              table: "Localizable", bundle: MobileL10n.bundle)
-          )
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
+          Text(transitionDetail)
+            .font(LorvexDesign.Typography.tertiaryText)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityIdentifier("mobileSettings.cloudSync.inProgress")
       }
+    } header: {
+      Text(
+        String(
+          localized: "settings.section.cloud_sync", defaultValue: "Cloud Sync",
+          table: "Localizable", bundle: MobileL10n.bundle))
+    } footer: {
+      Text(modeDetail)
+    }
+  }
 
-      // The footer follows the queued or effective picker target so it cannot
-      // contradict a segment change while the transition is still pending.
-      Group {
-        switch store.cloudSyncModeTarget {
-        case .live:
-          Text(
-            String(
-              localized: "settings.sync.mode.detail.live",
-              defaultValue:
-                "Cloud Sync pushes local changes to iCloud and pulls remote changes when Lorvex refreshes.",
-              table: "Localizable",
-              bundle: MobileL10n.bundle
-            ))
-        case .off, .recordPlan:
-          Text(
-            String(
-              localized: "settings.sync.mode.detail.off",
-              defaultValue: "Cloud Sync is disabled. Local data stays on this device.",
-              table: "Localizable",
-              bundle: MobileL10n.bundle
-            ))
-        }
-      }
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
+  private var modeDetail: String {
+    switch store.cloudSyncMode {
+    case .live:
+      return String(
+        localized: "settings.sync.detail.on",
+        defaultValue:
+          "Your tasks, lists, and habits stay the same on every device signed in to your iCloud account.",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .off:
+      return String(
+        localized: "settings.sync.detail.off",
+        defaultValue:
+          "Your tasks stay on this device. Turn this on to see the same tasks, lists, and habits on your other devices.",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    }
+  }
 
+  /// Account and activity rows plus the paused notice, shown while the mode is
+  /// Live.
+  private var statusSection: some View {
+    Section {
       LabeledContent(
         String(
-          localized: "settings.sync.backend", defaultValue: "Backend", table: "Localizable",
-          bundle: MobileL10n.bundle), value: store.cloudSyncBackendLabel
+          localized: "settings.sync.account", defaultValue: "Account", table: "Localizable",
+          bundle: MobileL10n.bundle), value: syncAccountValue
       )
-      .accessibilityIdentifier("mobileSettings.syncBackend")
-      if store.cloudSyncMode == .live {
+      .accessibilityIdentifier("mobileSettings.syncAccount")
+      if shouldShowICloudSettingsLink {
+        MobileSettingsRecoveryLink(
+          label: String(
+            localized: "settings.sync.open_icloud_settings", defaultValue: "Open Settings",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          accessibilityIdentifier: "mobileSettings.sync.openICloudSettings")
+      }
+      if let activityDescription = syncActivityValue {
         LabeledContent(
           String(
-            localized: "settings.sync.account", defaultValue: "Account", table: "Localizable",
-            bundle: MobileL10n.bundle), value: syncAccountValue
+            localized: "settings.sync.status", defaultValue: "Status", table: "Localizable",
+            bundle: MobileL10n.bundle), value: activityDescription
         )
-        .accessibilityIdentifier("mobileSettings.syncAccount")
-        if shouldShowICloudSettingsLink {
-          MobileSettingsRecoveryLink(
-            label: String(
-              localized: "settings.sync.open_icloud_settings", defaultValue: "Open iCloud Settings",
-              table: "Localizable", bundle: MobileL10n.bundle),
-            accessibilityIdentifier: "mobileSettings.sync.openICloudSettings")
-        }
+        .accessibilityIdentifier("mobileSettings.syncStatus")
       }
-      LabeledContent(
-        String(
-          localized: "settings.sync.pending_changes", defaultValue: "Pending Changes",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        value: "\(store.mobileCloudSyncStatusReport.pendingCount)"
-      )
-      .accessibilityIdentifier("mobileSettings.syncPending")
       if let lastSuccess = syncLastSuccessValue {
         LabeledContent(
           String(
@@ -207,23 +183,13 @@ struct MobileStoreSettingsCloudSyncSection: View {
             localized: "settings.sync.last_error", defaultValue: "Last Error", table: "Localizable",
             bundle: MobileL10n.bundle), value: lastError
         )
-        .foregroundStyle(.red)
+        .foregroundStyle(LorvexDesign.Palette.error)
         .accessibilityIdentifier("mobileSettings.syncLastError")
-      } else if store.runtimeDiagnostics == nil {
-        Text(
-          String(
-            localized: "settings.sync.loading", defaultValue: "Sync status loading…",
-            table: "Localizable", bundle: MobileL10n.bundle)
-        )
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
       }
 
-      if store.cloudSyncMode == .live, store.cloudSyncPauseReason != nil {
+      if store.cloudSyncPauseReason != nil {
         pausedNotice
       }
-
-      deleteCloudDataRows
     }
   }
 
@@ -241,7 +207,7 @@ struct MobileStoreSettingsCloudSyncSection: View {
           bundle: MobileL10n.bundle),
         systemImage: "pause.circle.fill"
       )
-      .foregroundStyle(.orange)
+      .foregroundStyle(LorvexDesign.Palette.warning)
       Text(pausedDetail)
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(.secondary)
@@ -333,11 +299,6 @@ struct MobileStoreSettingsCloudSyncSection: View {
         defaultValue:
           "The signed-in iCloud account changed. Sync is paused so this device’s data isn’t mixed into a different account.",
         table: "Localizable", bundle: MobileL10n.bundle)
-    case .adoptionInProgress, .backfillFailed:
-      return String(
-        localized: "settings.sync.paused.backfill_failed",
-        defaultValue: "Preparing the re-upload failed. Resuming will retry it.",
-        table: "Localizable", bundle: MobileL10n.bundle)
     case nil:
       return ""
     }
@@ -346,92 +307,124 @@ struct MobileStoreSettingsCloudSyncSection: View {
   /// "Delete iCloud Data" is deliberately available regardless of the sync
   /// mode: the common case is a user who turned sync off and wants the cloud
   /// copy gone without re-enabling sync (which would move data) first.
-  @ViewBuilder
-  private var deleteCloudDataRows: some View {
-    Button(role: .destructive) {
-      showDeleteCloudConfirmation = true
-    } label: {
-      if deleteCloudInProgress {
-        ProgressView().frame(maxWidth: .infinity)
-      } else {
+  private var deleteCloudDataSection: some View {
+    Section {
+      // The in-flight spinner rides the trailing edge rather than replacing
+      // the label, so the row keeps its title and its width while it works.
+      Button(role: .destructive) {
+        showDeleteCloudConfirmation = true
+      } label: {
         Label(
           String(
             localized: "settings.sync.delete_cloud.title", defaultValue: "Delete iCloud Data…",
             table: "Localizable", bundle: MobileL10n.bundle),
           systemImage: "icloud.slash")
       }
-    }
-    .disabled(
-      deleteCloudInProgress || store.isSettingCloudSyncMode || store.isDataImportRunning)
-    .accessibilityIdentifier("mobileSettings.sync.deleteCloudData")
-    .sheet(isPresented: $showDeleteCloudConfirmation) {
-      MobileTypedConfirmationSheet(
-        title: String(
-          localized: "settings.sync.delete_cloud.confirm.action",
-          defaultValue: "Delete iCloud Data", table: "Localizable", bundle: MobileL10n.bundle),
-        message: String(
-          localized: "settings.sync.delete_cloud.confirm.message",
-          defaultValue:
-            "This permanently removes all Lorvex data from your iCloud account, for every device that syncs with it. Data stored on this device stays intact. Sync stays off until you turn it back on.",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        confirmationWord: String(
-          localized: "settings.sync.delete_cloud.confirm.word", defaultValue: "DELETE",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        confirmTitle: String(
-          localized: "settings.sync.delete_cloud.confirm.action",
-          defaultValue: "Delete iCloud Data", table: "Localizable", bundle: MobileL10n.bundle),
-        accessibilityIdentifierPrefix: "mobileSettings.sync.deleteCloudData.confirm"
-      ) {
-        deleteCloudInProgress = true
-        deleteCloudErrorMessage = nil
-        deleteCloudSucceeded = false
-        Task {
-          deleteCloudErrorMessage = await store.deleteCloudDataEverywhere()
-          deleteCloudSucceeded = deleteCloudErrorMessage == nil
-          deleteCloudInProgress = false
+      .mobileDestructiveRowStyle()
+      .disabled(
+        deleteCloudInProgress || store.isSettingCloudSyncMode || store.isDataImportRunning)
+      .overlay(alignment: .trailing) {
+        if deleteCloudInProgress { ProgressView() }
+      }
+      .accessibilityIdentifier("mobileSettings.sync.deleteCloudData")
+      .sheet(isPresented: $showDeleteCloudConfirmation) {
+        MobileDestructiveConfirmationSheet(
+          title: String(
+            localized: "settings.sync.delete_cloud.confirm.action",
+            defaultValue: "Delete iCloud Data", table: "Localizable", bundle: MobileL10n.bundle),
+          message: String(
+            localized: "settings.sync.delete_cloud.confirm.message",
+            defaultValue:
+              "This permanently removes all Lorvex data from your iCloud account, for every device that syncs with it. Data stored on this device stays intact. Sync stays off until you turn it back on.",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          confirmTitle: String(
+            localized: "settings.sync.delete_cloud.confirm.action",
+            defaultValue: "Delete iCloud Data", table: "Localizable", bundle: MobileL10n.bundle),
+          accessibilityIdentifierPrefix: "mobileSettings.sync.deleteCloudData.confirm"
+        ) {
+          deleteCloudInProgress = true
+          deleteCloudErrorMessage = nil
+          deleteCloudSucceeded = false
+          Task {
+            deleteCloudErrorMessage = await store.deleteCloudDataEverywhere()
+            deleteCloudSucceeded = deleteCloudErrorMessage == nil
+            deleteCloudInProgress = false
+          }
         }
       }
-    }
 
-    Text(
-      String(
-        localized: "settings.sync.delete_cloud.footer",
-        defaultValue:
-          "Delete every Lorvex record from your iCloud account — for all devices that sync with it. Data on this device is not touched. Sync turns off until you re-enable it, which re-uploads this device’s data.",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    )
-    .font(LorvexDesign.Typography.tertiaryText)
-    .foregroundStyle(.secondary)
+      if let deleteCloudErrorMessage {
+        Label(deleteCloudErrorMessage, systemImage: "exclamationmark.triangle")
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(LorvexDesign.Palette.error)
+          .accessibilityIdentifier("mobileSettings.sync.deleteCloudData.error")
+      }
 
-    if let deleteCloudErrorMessage {
-      Label(deleteCloudErrorMessage, systemImage: "exclamationmark.triangle")
+      if deleteCloudSucceeded {
+        Label(
+          String(
+            localized: "settings.sync.delete_cloud.success",
+            defaultValue: "Lorvex data was deleted from iCloud. Sync is now off.",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          systemImage: "checkmark.circle"
+        )
         .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.orange)
-        .accessibilityIdentifier("mobileSettings.sync.deleteCloudData.error")
-    }
-
-    if deleteCloudSucceeded {
-      Label(
+        .foregroundStyle(LorvexDesign.Palette.success)
+        .accessibilityIdentifier("mobileSettings.sync.deleteCloudData.success")
+      }
+    } footer: {
+      Text(
         String(
-          localized: "settings.sync.delete_cloud.success",
-          defaultValue: "Lorvex data was deleted from iCloud. Sync is now off.",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        systemImage: "checkmark.circle"
-      )
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.green)
-      .accessibilityIdentifier("mobileSettings.sync.deleteCloudData.success")
+          localized: "settings.sync.delete_cloud.footer",
+          defaultValue:
+            "Delete every Lorvex record from your iCloud account — for all devices that sync with it. Data on this device is not touched. Sync turns off until you re-enable it, which re-uploads this device’s data.",
+          table: "Localizable", bundle: MobileL10n.bundle))
     }
   }
 
-  private var cloudSyncModeBinding: Binding<CloudSyncMode> {
+  private var cloudSyncIsOnBinding: Binding<Bool> {
     Binding(
-      get: { store.cloudSyncModeTarget == .live ? .live : .off },
-      set: { mode in
-        let request = store.makeCloudSyncModeRequest(mode)
+      get: { store.cloudSyncMode == .live },
+      set: { isOn in
+        let request = store.makeCloudSyncModeRequest(isOn ? .live : .off)
         Task { await store.setCloudSyncModeFromSettings(request) }
       }
     )
+  }
+
+  /// Copy for the spinner row while turning sync on checks the account;
+  /// `nil` otherwise.
+  private var modeTransitionDetail: String? {
+    guard store.isSettingCloudSyncMode else { return nil }
+    return String(
+      localized: "settings.sync.enabling", defaultValue: "Updating Cloud Sync…",
+      table: "Localizable", bundle: MobileL10n.bundle)
+  }
+
+  /// Cloud Sync state for the Status row, or `nil` while the user's chosen mode
+  /// is Off — the mode footer already covers that case, and a state line for a
+  /// sync that will not run would be noise.
+  private var syncActivityValue: String? {
+    switch store.cloudSyncActivityState {
+    case .disabled:
+      return nil
+    case .checking:
+      return String(
+        localized: "settings.sync.status.checking", defaultValue: "Checking…", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    case .upToDate:
+      return String(
+        localized: "settings.sync.status.up_to_date", defaultValue: "Up to date",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .syncing:
+      return String(
+        localized: "settings.sync.status.syncing", defaultValue: "Syncing…", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    case .waiting:
+      return String(
+        localized: "settings.sync.status.waiting", defaultValue: "Waiting to sync",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    }
   }
 
   private var syncAccountValue: String {
@@ -464,7 +457,7 @@ struct MobileStoreSettingsCloudSyncSection: View {
   }
 
   private var syncLastError: String? {
-    store.lastCloudSyncRemoteChangeErrorMessage ?? store.lastCloudSyncSubscriptionErrorMessage
+    store.lastCloudSyncRemoteChangeErrorMessage
   }
 
   private var syncLastSuccessValue: String? {

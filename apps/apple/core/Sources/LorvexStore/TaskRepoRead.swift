@@ -112,6 +112,90 @@ extension TaskRepo {
       return try rows.map(TaskRepo.rowToTaskRow)
     }
 
+    /// The day surface's actionable pool: every task today holds, uncapped and
+    /// in Today's order — started tasks first, then the rest, each group in
+    /// canonical ``TaskRepo/taskOrderBy`` order. Membership is
+    /// `overdue ∪ (today_pool ∧ visible) ∪ in_progress`.
+    ///
+    /// The first two arms reuse the canonical bucket predicates, so the list can
+    /// never disagree with ``Overview/Stats/attentionCount``, which is derived
+    /// from the same buckets. Overdue is folded in rather than split out — a
+    /// missed day still belongs to today — and, like the OVERDUE bucket, skips the
+    /// visibility conjunct so a defer-until cannot suppress a blown deadline.
+    ///
+    /// The `in_progress` arm is date-independent on purpose: a task stays started
+    /// across days, so started work never falls off the day just because no date
+    /// points at it. Started tasks lead because they are what the user is in the
+    /// middle of; every surface that shows the day reads this one order.
+    ///
+    /// Deliberately date-bounded and uncapped, unlike
+    /// ``getOpenTasksByPriority(_:today:limit:)``: that read answers "what is most
+    /// important overall" for a summary, and capping a summary is fine. A day
+    /// surface answers "what does today hold", where an undated backlog item is
+    /// wrong and a hidden commitment is worse than a long list.
+    public static func getTodayPoolTasks(
+      _ db: Database, today: String
+    ) throws -> [TaskRow] {
+      let overdue = TaskReadBuckets.overdueBucketPredicate(
+        taskAlias: "tasks", datePlaceholder: ":today")
+      let todayPool = TaskReadBuckets.todayPoolBucketPredicate(
+        taskAlias: "tasks", datePlaceholder: ":today")
+      let visible = TaskReadBuckets.availableVisibilityPredicate(
+        taskAlias: "tasks", datePlaceholder: ":today")
+      let rows = try Row.fetchAll(
+        db,
+        sql: """
+          SELECT \(TaskRepo.taskColumns) FROM tasks \
+          WHERE status IN (\(StatusName.actionableStatusSqlList)) AND tasks.archived_at IS NULL \
+          AND (\(overdue) \
+               OR (\(todayPool) AND \(visible)) \
+               OR tasks.status = '\(StatusName.inProgress)') \
+          ORDER BY tasks.status = '\(StatusName.inProgress)' DESC, \(TaskRepo.taskOrderBy)
+          """,
+        arguments: ["today": today])
+      return try rows.map(TaskRepo.rowToTaskRow)
+    }
+
+    /// Count of actionable, non-archived tasks across the whole workspace.
+    ///
+    /// The single number behind a day surface's headline ("N open tasks"), read on
+    /// its own so a caller that wants only the count does not pay for the full
+    /// overview aggregate — lists, top-by-priority, recently-completed, and the
+    /// streak walk — to reach one field of it.
+    public static func countActionableTasks(_ db: Database) throws -> Int64 {
+      let row = try Row.fetchOne(
+        db,
+        sql: "SELECT COUNT(*) FROM tasks "
+          + "WHERE status IN (\(StatusName.actionableStatusSqlList)) "
+          + "AND archived_at IS NULL")
+      return row?[0] ?? 0
+    }
+
+    /// Ids, among `taskIDs`, that cannot be started because at least one task
+    /// they depend on is still active. Empty input returns empty.
+    ///
+    /// Day surfaces show a blocked task rather than hiding it — it was planned
+    /// for today, so silently dropping it reads as data loss — but they must be
+    /// able to mark it, since it is the one row in the list that cannot be
+    /// picked up.
+    public static func blockedTaskIDs(
+      _ db: Database, among taskIDs: [String]
+    ) throws -> Set<String> {
+      guard !taskIDs.isEmpty else { return [] }
+      let placeholders = databaseQuestionMarks(count: taskIDs.count)
+      let rows = try Row.fetchAll(
+        db,
+        sql: """
+          SELECT DISTINCT td.task_id AS task_id FROM task_dependencies td \
+          JOIN tasks AS blocker ON blocker.id = td.depends_on_task_id \
+          WHERE td.task_id IN (\(placeholders)) \
+          AND blocker.status IN (\(StatusName.activeStatusSqlList)) \
+          AND blocker.archived_at IS NULL
+          """,
+        arguments: StatementArguments(taskIDs))
+      return Set(rows.compactMap { $0["task_id"] as String? })
+    }
+
     /// Every started (`in_progress`) task, uncapped, in canonical
     /// ``TaskRepo/taskOrderBy`` order.
     ///

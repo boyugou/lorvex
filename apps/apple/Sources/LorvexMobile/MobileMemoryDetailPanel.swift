@@ -1,24 +1,34 @@
 import LorvexCore
 import SwiftUI
 
+/// A memory entry's detail: its title, the note's text, when it was last
+/// updated, and the edit and delete actions. The panel fills the width it is
+/// given: a split's detail pane as it is, and a pushed screen inset to the
+/// enclosing screen's readable margin, which a scroll view only honors when it
+/// applies the margin itself.
 struct MobileMemoryDetailPanel: View {
   let entry: MemoryEntry
   let isSaving: Bool
   let edit: () -> Void
   let delete: () -> Void
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xl) {
         header
-        content
-        metadata
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+          content
+          updatedCaption
+            .padding(.horizontal, LorvexDesign.Spacing.l)
+        }
         actions
       }
-      .frame(maxWidth: 760, alignment: .leading)
+      .frame(maxWidth: .infinity, alignment: .leading)
       .padding(LorvexDesign.Spacing.xl)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .mobileReadableScrollMargins()
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.background)
     .accessibilityIdentifier("mobileMemory.detailPanel")
   }
@@ -29,11 +39,11 @@ struct MobileMemoryDetailPanel: View {
         .font(LorvexDesign.Typography.screenTitle)
         .foregroundStyle(.tint)
         .frame(width: 56, height: 56)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
         .accessibilityHidden(true)
 
-      Text(entry.key)
-        .font(LorvexDesign.Typography.sectionHeader)
+      Text(entry.displayTitle)
+        .font(LorvexDesign.Typography.detailTitle)
         .textSelection(.enabled)
     }
   }
@@ -44,36 +54,41 @@ struct MobileMemoryDetailPanel: View {
       .textSelection(.enabled)
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(LorvexDesign.Spacing.l)
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
   }
 
-  private var metadata: some View {
-    metric(
-      title: String(
-        localized: "memory.detail.updated", defaultValue: "Updated", table: "Localizable",
-        bundle: MobileL10n.bundle),
-      value: entry.updatedAt,
-      systemImage: "calendar")
+  /// When the note last changed, as a caption under its text: secondary
+  /// information, so it takes no card of its own.
+  private var updatedCaption: some View {
+    Text(
+      String(
+        format: String(
+          localized: "memory.detail.updated_at", defaultValue: "Updated %@", table: "Localizable",
+          bundle: MobileL10n.bundle),
+        formattedUpdatedAt)
+    )
+    .font(LorvexDesign.Typography.tertiaryText)
+    .foregroundStyle(.secondary)
+    .monospacedDigit()
   }
 
-  private func metric(title: String, value: String, systemImage: String) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      Label(title, systemImage: systemImage)
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.secondary)
-      Text(value)
-        .font(LorvexDesign.Typography.primaryEmphasis)
-        .monospacedDigit()
-        .lineLimit(2)
-        .minimumScaleFactor(0.8)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(LorvexDesign.Spacing.l)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+  /// `updatedAt` is the canonical `SyncTimestamp` — always millisecond form
+  /// (`…SS.mmmZ`), so it must be parsed with the fractional-seconds formatter
+  /// (`iso8601` without `.withFractionalSeconds` returns nil and would silently
+  /// fall back to the raw string). Rendered as a readable local date/time.
+  private var formattedUpdatedAt: String {
+    LorvexDateFormatters.iso8601Fractional.date(from: entry.updatedAt)
+      .map { LorvexDateFormatters.dayAndClockTime($0) } ?? entry.updatedAt
   }
 
+  /// Edit and Delete side by side, stacked at accessibility text sizes so
+  /// neither label breaks mid-word.
   private var actions: some View {
-    HStack(spacing: LorvexDesign.Spacing.m) {
+    let layout =
+      dynamicTypeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: LorvexDesign.Spacing.m))
+      : AnyLayout(HStackLayout(spacing: LorvexDesign.Spacing.m))
+    return layout {
       Button {
         edit()
       } label: {
@@ -95,6 +110,7 @@ struct MobileMemoryDetailPanel: View {
             bundle: MobileL10n.bundle), systemImage: "trash")
       }
       .buttonStyle(.bordered)
+      .mobileDestructiveBorderedStyle()
       .disabled(isSaving)
       .accessibilityIdentifier("mobileMemory.detail.delete")
     }

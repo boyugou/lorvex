@@ -44,42 +44,12 @@ private actor MobileRefreshGate {
   }
 }
 
-/// Returns one server page exactly once, then an empty terminal page. This lets
-/// the outer refresh flight observe `.newData` on its first pass and `.noData`
-/// on the coalesced trailing pass.
-private actor OneShotMobileRefreshFetcher: CloudSyncRemoteChangeFetching {
-  private var records: [CKRecord]
-  private(set) var callCount = 0
-
-  init(records: [CKRecord]) {
-    self.records = records
-  }
-
-  func fetchChanges(
-    after _: CloudSyncChangeCursor?,
-    context: CloudSyncGenerationContext,
-    traversalWitnessIdentifier: String?,
-    boundaryGuard _: (@Sendable () async -> Bool)?
-  ) async throws -> CloudSyncRemoteChangeBatch {
-    callCount += 1
-    let page = records
-    records = []
-    return CloudSyncRemoteChangeBatch(
-      records: page,
-      serverChangeTokenData: Data([UInt8(clamping: callCount)]),
-      moreComing: false,
-      observedGenerationRoot: true,
-      observedReadyWitness: context.readyWitness,
-      observedTraversalWitnessIdentifiers: traversalWitnessIdentifier.map { [$0] } ?? [])
-  }
-}
-
 // MARK: - Overlapping refreshes
 
 @MainActor
 @Test
 func mobileOverlappingRefreshDoesNotClobberNewerSnapshotWithOlderRead() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   core.todayOverride = try await core.preview.loadToday()
   let gate = MobileRefreshGate()
   core.loadTodayGate = { await gate.gate() }
@@ -90,7 +60,13 @@ func mobileOverlappingRefreshDoesNotClobberNewerSnapshotWithOlderRead() async th
   await gate.waitUntilEntered()
 
   // The data changes while A is suspended mid-read.
-  let marker = try await core.preview.createTask(title: "Arrived after the first read", notes: "")
+  // Planned on the store's own logical day so the marker reaches the day pool,
+  // which is what the assertions below read.
+  let markerDay = try await core.preview.loadToday().logicalDay
+  let marker = try await core.preview.createTask(
+    TaskCreateDraft(
+      title: "Arrived after the first read",
+      plannedDate: markerDay.flatMap(LorvexDateFormatters.ymdUTC.date(from:))))
   core.todayOverride = try await core.preview.loadToday()
 
   // Refresh B arrives while A is in flight. It must coalesce into a rerun of
@@ -119,7 +95,7 @@ func mobileOverlappingRefreshDoesNotClobberNewerSnapshotWithOlderRead() async th
 @MainActor
 @Test
 func mobileConcurrentRefreshTriggersCoalesceIntoSingleRerun() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let gate = MobileRefreshGate()
   core.loadTodayGate = { await gate.gate() }
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
@@ -156,12 +132,12 @@ func mobileConcurrentRefreshTriggersCoalesceIntoSingleRerun() async throws {
 @MainActor
 @Test
 func mobileRefreshCoalescingRetainsNewDataAcrossTrailingNoOpPass() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let gate = MobileRefreshGate()
   core.loadTodayGate = { await gate.gate() }
 
   let zoneID = CKRecordZone.ID(
-    zoneName: CloudSyncZoneConstants.zoneName, ownerName: CKCurrentUserDefaultName)
+    zoneName: CloudSyncController.zoneName, ownerName: CKCurrentUserDefaultName)
   let envelope = SyncEnvelope(
     entityType: .task,
     entityId: "01966a3f-7c8b-7d4e-8f3a-000000000099",
@@ -170,19 +146,14 @@ func mobileRefreshCoalescingRetainsNewDataAcrossTrailingNoOpPass() async throws 
     payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
     payload: "{}",
     deviceId: "device-refresh-flight")
-  let fetcher = OneShotMobileRefreshFetcher(
-    records: [CloudSyncEnvelopeRecord.makeRecord(envelope, zoneID: zoneID)])
-  let coordinator = CloudSyncEngineCoordinator(
-    accountChecker: StubAccountStatusChecker(availability: .available),
-    pusher: RecordingRecordPusher(),
-    fetcher: fetcher,
-    accountIdentifier: StubAccountIdentifier(identifier: "account-A"),
-    accountIdentityStore: RecordingAccountIdentityStore(initial: "account-A"))
+  // One fetched page on the first pass, nothing on the coalesced trailing one.
+  let sync = TestCloudSync(store: core.preview)
+  try await sync.deliverOnFirstFetch([CloudSyncEnvelopeRecord.makeRecord(envelope, zoneID: zoneID)])
   let store = MobileStore(
     core: core,
     todayString: { "2026-05-23" },
     cloudSyncMode: .live,
-    cloudSyncCoordinator: coordinator)
+    cloudSyncController: sync.controller)
 
   let first = Task { await store.refresh() }
   await gate.waitUntilEntered()
@@ -200,5 +171,5 @@ func mobileRefreshCoalescingRetainsNewDataAcrossTrailingNoOpPass() async throws 
   #expect(
     overlappingResult == .newData,
     "the trailing no-op refresh must not erase data applied by the first pass")
-  #expect(await fetcher.callCount >= 1)
+  #expect(try sync.engine.fetchCount >= 1)
 }

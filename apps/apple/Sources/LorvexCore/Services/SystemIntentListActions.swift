@@ -9,10 +9,13 @@ extension LorvexSystemIntentRunner {
   ) async throws -> LorvexList {
     let listID = try validatedListID(id)
     let trimmedName = name.trimmedNilIfEmpty
+    // Behavior-preserving: an absent/blank description leaves the stored value, a
+    // non-blank description sets it. The intent surface has no explicit "clear"
+    // affordance.
     return try await core.updateList(
       id: listID,
       name: trimmedName,
-      description: description.trimmedNilIfEmpty,
+      description: description.trimmedNilIfEmpty.map { .set($0) } ?? .unset,
       color: nil,
       icon: nil
     )

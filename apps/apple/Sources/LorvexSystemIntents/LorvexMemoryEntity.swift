@@ -11,7 +11,7 @@ struct LorvexMemoryEntity: AppEntity, Identifiable {
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(
-      title: "\(key)",
+      title: "\(MemoryEntry.displayTitle(forKey: key))",
       image: .init(systemName: "brain.head.profile")
     )
   }

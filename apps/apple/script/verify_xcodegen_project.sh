@@ -32,34 +32,28 @@ PROJECT_LIST="$(xcodebuild -project "$PROJECT_PATH" \
 
 for target in \
   LorvexMobileApp \
-  LorvexVisionApp \
-  LorvexFocusWidgetExtension \
+  LorvexWidgets \
   LorvexFocusFilterExtension \
   LorvexCore \
   LorvexCloudSync \
   LorvexMobile \
-  LorvexCoreVision \
-  LorvexCloudSyncVision \
-  LorvexWidgetKitSupportVision \
-  LorvexMobileVision \
   LorvexCoreWatch \
   LorvexWatch \
   LorvexWatchApp \
   LorvexWatchComplication \
   LorvexSystemIntents \
-  LorvexSystemIntentsVision \
   LorvexWidgetIntents; do
   grep -q "        $target$" <<<"$PROJECT_LIST"
 done
 
-for scheme in LorvexMobileApp LorvexVisionApp LorvexWatchApp LorvexFocusWidgetExtension; do
+for scheme in LorvexMobileApp LorvexWatchApp LorvexWidgets; do
   grep -q "        $scheme$" <<<"$PROJECT_LIST"
 done
 
 grep -q "com.apple.product-type.app-extension" "$PROJECT_FILE"
 grep -q "LorvexWidgetBundle.swift" "$PROJECT_FILE"
-grep -q "LorvexWidgetExtension-Info.plist" "$PROJECT_FILE"
-grep -q "LorvexFocusWidgetExtension.entitlements" "$PROJECT_FILE"
+grep -q "LorvexWidgets-Info.plist" "$PROJECT_FILE"
+grep -q "LorvexWidgets.entitlements" "$PROJECT_FILE"
 grep -q "LorvexFocusFilterExtension-Info.plist" "$PROJECT_FILE"
 grep -q "LorvexFocusFilterExtension.entitlements" "$PROJECT_FILE"
 grep -q "LorvexWatchApp-Info.plist" "$PROJECT_FILE"
@@ -81,12 +75,12 @@ def fail(message: str) -> None:
 
 
 widget_target_match = re.search(
-    r"/\* LorvexFocusWidgetExtension \*/ = \{\n\t\t\tisa = PBXNativeTarget;(?P<body>.*?)\n\t\t\};",
+    r"/\* LorvexWidgets \*/ = \{\n\t\t\tisa = PBXNativeTarget;(?P<body>.*?)\n\t\t\};",
     source,
     re.DOTALL,
 )
 if not widget_target_match:
-    fail("Missing LorvexFocusWidgetExtension target in generated project")
+    fail("Missing LorvexWidgets target in generated project")
 
 widget_target_body = widget_target_match.group("body")
 
@@ -95,7 +89,7 @@ frameworks_phase_match = re.search(
     widget_target_body,
 )
 if not frameworks_phase_match:
-    fail("LorvexFocusWidgetExtension has no Frameworks build phase")
+    fail("LorvexWidgets has no Frameworks build phase")
 
 frameworks_phase_id = frameworks_phase_match.group(1)
 frameworks_phase = re.search(
@@ -104,17 +98,17 @@ frameworks_phase = re.search(
     re.DOTALL,
 )
 if not frameworks_phase:
-    fail("LorvexFocusWidgetExtension Frameworks build phase is missing")
+    fail("LorvexWidgets Frameworks build phase is missing")
 
 if "/* LorvexWidgetIntents.framework in Frameworks */" not in frameworks_phase.group("body"):
-    fail("LorvexFocusWidgetExtension does not link LorvexWidgetIntents.framework")
+    fail("LorvexWidgets does not link LorvexWidgetIntents.framework")
 
 dependency_ids = re.findall(
     r"([A-F0-9]+) /\* PBXTargetDependency \*/",
     widget_target_body,
 )
 if not dependency_ids:
-    fail("LorvexFocusWidgetExtension has no generated target dependencies")
+    fail("LorvexWidgets has no generated target dependencies")
 
 for dependency_id in dependency_ids:
     dependency_match = re.search(
@@ -125,7 +119,7 @@ for dependency_id in dependency_ids:
     if dependency_match and "/* LorvexWidgetIntents */" in dependency_match.group("body"):
         break
 else:
-    fail("LorvexFocusWidgetExtension is missing a PBXTargetDependency on LorvexWidgetIntents")
+    fail("LorvexWidgets is missing a PBXTargetDependency on LorvexWidgetIntents")
 
 
 focus_filter_target_match = re.search(

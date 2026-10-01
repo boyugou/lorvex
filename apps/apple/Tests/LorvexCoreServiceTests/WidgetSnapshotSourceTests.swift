@@ -58,9 +58,14 @@ final class WidgetSnapshotSourceTests: XCTestCase {
     // Keep this safely in the future so the fixture exercises an actual
     // unavailable-until boundary regardless of when the suite is run.
     let nextDay = try XCTUnwrap(LorvexDateFormatters.ymdUTC.date(from: "2099-05-24"))
+    // Planned on the earlier day so the task is in *both* days' pools on date
+    // alone; `available_from` is then the single variable the two reads differ
+    // on, which is exactly the boundary under test.
+    let firstDay = try XCTUnwrap(LorvexDateFormatters.ymdUTC.date(from: "2099-05-23"))
     let hiddenUntilNextDay = try await service.createTask(
       TaskCreateDraft(
         title: "Hidden until the next logical day",
+        plannedDate: firstDay,
         availableFrom: nextDay))
 
     let before = try await service.loadWidgetSnapshotSource(date: "2099-05-23")

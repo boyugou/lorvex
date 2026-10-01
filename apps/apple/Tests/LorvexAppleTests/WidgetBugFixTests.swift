@@ -22,7 +22,6 @@ func widgetSnapshotProjectorComputesCompletedTodayCount() {
   let yesterday = now.addingTimeInterval(-24 * 60 * 60)
 
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
       makeBugFixTask(id: "open-1", status: .open, dueDate: now),
@@ -40,7 +39,7 @@ func widgetSnapshotProjectorComputesCompletedTodayCount() {
   )
   let projector = WidgetSnapshotProjector(calendar: calendar, now: { now })
 
-  let snapshot = projector.snapshot(today: today, currentFocus: nil, timezone: nil)
+  let snapshot = projector.snapshot(today: today, timezone: nil)
 
   // Only the task completed today counts — independent of its due date.
   #expect(snapshot.stats.completedTodayCount == 1)
@@ -51,7 +50,7 @@ func widgetProgressViewCompletedCountUsesCompletedTodayField() {
   // ProgressWidgetView must read stats.completedTodayCount, not compute
   // totalCount - openCount (which was the original bug).
   let stats = WidgetSnapshot.Stats(
-    focusCount: 3,
+    todayCount: 3,
     overdueCount: 0,
     dueTodayCount: 2,
     completedTodayCount: 5
@@ -61,8 +60,8 @@ func widgetProgressViewCompletedCountUsesCompletedTodayField() {
 
 // MARK: - Item: due-today / overdue stats are time-zone correct
 
-/// `task.dueDate` is a UTC-midnight Date (the `planned_date` `YYYY-MM-DD` is
-/// parsed in UTC). The due-today/overdue counts previously compared it with
+/// `task.dueDate` is a UTC-midnight Date (the stored `due_date` `YYYY-MM-DD`
+/// is parsed in UTC). The due-today/overdue counts previously compared it with
 /// `calendar.isDate(_:inSameDayAs:)` against the *local* calendar, which shifts
 /// a UTC-anchored due date back a day for any user behind UTC — so a task due on
 /// the user's local "today" was miscounted as overdue. This pins the
@@ -82,7 +81,6 @@ func widgetSnapshotProjectorDueTodayIsTimeZoneCorrect() {
   let now = Date(timeIntervalSince1970: dueToday.timeIntervalSince1970 + 17 * 3600)
 
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
       makeBugFixTask(id: "due-today", status: .open, dueDate: dueToday),
@@ -91,7 +89,7 @@ func widgetSnapshotProjectorDueTodayIsTimeZoneCorrect() {
     localChangeSequence: 1
   )
   let projector = WidgetSnapshotProjector(calendar: pacific, now: { now })
-  let snapshot = projector.snapshot(today: today, currentFocus: nil, timezone: nil)
+  let snapshot = projector.snapshot(today: today, timezone: nil)
 
   // The 05-28 task is due today (not shifted to 05-27); only the 05-27 task is
   // overdue. The pre-fix local-calendar comparison produced 0 / 2 here.
@@ -99,16 +97,20 @@ func widgetSnapshotProjectorDueTodayIsTimeZoneCorrect() {
   #expect(snapshot.stats.overdueCount == 1)
 }
 
-// MARK: - Item 2: focusCount int round-trip
+// MARK: - Item 2: the remaining count is a plain Int
 
 @Test
-func widgetRenderModelExposesFocusCountAsInt() {
+func widgetRenderModelCountsTheRemainingTasksAsAnInt() {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 7, overdueCount: 0, dueTodayCount: 0),
+    stats: .init(todayCount: 7, overdueCount: 0, dueTodayCount: 0),
     briefing: nil,
-    focusTasks: []
+    tasks: ["task-1", "task-2"].map {
+      .init(
+        id: $0, title: $0, status: "open", dueDate: nil, priority: 2, listID: nil,
+        estimatedMinutes: nil)
+    }
   )
   let entry = WidgetTimelineEntry(
     date: Date(timeIntervalSince1970: 1_779_465_600),
@@ -121,10 +123,11 @@ func widgetRenderModelExposesFocusCountAsInt() {
     statusText: "Now"
   )
 
-  // focusCount must be available as a plain Int, no string parsing required.
-  #expect(model.focusCount == 7)
-  // The text label should still be consistent.
-  #expect(model.focusCountText == "7 in focus")
+  // The count is a plain Int taken from the day's count, even when the
+  // snapshot lists fewer tasks than the day holds.
+  #expect(model.remainingCount == 7)
+  #expect(model.lead == nil, "no listed task is timed or started")
+  #expect(model.circularContent == .remaining(7))
 }
 
 // MARK: - Helpers

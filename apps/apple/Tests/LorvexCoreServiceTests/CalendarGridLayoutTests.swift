@@ -201,6 +201,67 @@ final class CalendarGridModelDayTests: XCTestCase {
     XCTAssertEqual(day.timedBlocks.first?.endMin, 60)  // 01:00
   }
 
+  /// A short event followed by a touching block is packed from its real end:
+  /// both render full width, stacked, and the short one is drawn to its real
+  /// end rather than to the 20-minute minimum, which would cover the block
+  /// below it.
+  func testTouchingShortEventStacksAtItsRealHeight() {
+    let anchor = date("2026-05-27")
+    let events = [
+      event(id: "standup", startDate: "2026-05-27", startTime: "09:30", endTime: "09:45", allDay: false),
+      event(id: "review", startDate: "2026-05-27", startTime: "09:45", endTime: "10:45", allDay: false),
+    ]
+    let days = CalendarGridModel.buildDays(
+      rangeStart: anchor,
+      dayCount: 1,
+      calendar: calendar,
+      events: events,
+      tasks: [],
+      dayKeyFor: { Self.keyFormatter.string(from: $0) }
+    )
+
+    let blocks = days[0].timedBlocks
+    XCTAssertEqual(blocks.map(\.laneCount), [1, 1])
+    let standup = blocks.first { $0.event.id == "standup" }
+    XCTAssertEqual(standup?.endMin, 585)
+    XCTAssertEqual(standup?.drawnEndMin, 585)
+  }
+
+  /// A short event with room below it reports its real end and is drawn to
+  /// the grid's minimum height.
+  func testLoneShortEventDrawsToMinimumHeight() {
+    let anchor = date("2026-05-27")
+    let events = [
+      event(id: "call", startDate: "2026-05-27", startTime: "09:30", endTime: "09:35", allDay: false)
+    ]
+    let days = CalendarGridModel.buildDays(
+      rangeStart: anchor,
+      dayCount: 1,
+      calendar: calendar,
+      events: events,
+      tasks: [],
+      dayKeyFor: { Self.keyFormatter.string(from: $0) }
+    )
+
+    let call = days[0].timedBlocks.first
+    XCTAssertEqual(call?.endMin, 575)
+    XCTAssertEqual(call?.drawnEndMin, 570 + CalendarGridModel.minBlockMinutes)
+  }
+
+  /// The drawn end stops at the next start inside the minimum window and at
+  /// the end of the day.
+  func testDrawnEndStopsAtNextStartAndDayEnd() {
+    let intervals = [
+      CalendarGridLayout.Interval(id: "a", startMin: 570, endMin: 575),
+      CalendarGridLayout.Interval(id: "b", startMin: 582, endMin: 640),
+      CalendarGridLayout.Interval(id: "late", startMin: 1430, endMin: 1435),
+    ]
+    let ends = CalendarGridLayout.drawnEndMinutes(intervals, minimumMinutes: 20)
+    XCTAssertEqual(ends["a"], 582)
+    XCTAssertEqual(ends["b"], 640)
+    XCTAssertEqual(ends["late"], 1440)
+  }
+
   /// A due-dated task on the anchor day routes to that day's all-day strip
   /// (`scheduledTasks`), never as a positioned block; a task due elsewhere is
   /// dropped.

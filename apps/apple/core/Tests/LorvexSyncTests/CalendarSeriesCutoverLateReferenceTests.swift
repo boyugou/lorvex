@@ -74,37 +74,6 @@ final class CalendarSeriesCutoverLateReferenceTests: XCTestCase {
       payload: payload, deviceId: deviceID)
   }
 
-  private func schedule(
-    date: String, version: String, eventID: String, retainBuffer: Bool
-  ) throws -> SyncEnvelope {
-    var blocks: [JSONValue] = [
-      .object([
-        "block_type": .string("event"), "start_minutes": .int(540),
-        "end_minutes": .int(600), "task_id": .null,
-        "calendar_event_id": .string(eventID), "event_source": .string("canonical"),
-        "title": .string("Deleted segment"),
-      ])
-    ]
-    if retainBuffer {
-      blocks.append(
-        .object([
-          "block_type": .string("buffer"), "start_minutes": .int(600),
-          "end_minutes": .int(630), "task_id": .null, "calendar_event_id": .null,
-          "event_source": .null, "title": .string("Keep buffer"),
-        ]))
-    }
-    let payload = try SyncCanonicalize.canonicalizeJSON(.object([
-      "date": .string(date), "rationale": .string("Late schedule"),
-      "timezone": .string("UTC"), "blocks": .array(blocks),
-      "created_at": .string(timestamp), "updated_at": .string(timestamp),
-      "version": .string(version),
-    ]))
-    return try SyncTestSupport.completeEnvelope(
-      entityType: .focusSchedule, entityId: date, operation: .upsert,
-      version: parsed(version), payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-      payload: payload, deviceId: deviceID)
-  }
-
   private func apply(_ db: Database, _ envelope: SyncEnvelope) throws -> ApplyResult {
     try Apply.applyEnvelope(db, registry: registry, envelope: envelope)
   }
@@ -185,61 +154,6 @@ final class CalendarSeriesCutoverLateReferenceTests: XCTestCase {
               EdgeName.taskCalendarEventLink, edge.entityId,
               EntityName.calendarEvent, segmentID,
             ]),
-          0)
-      }
-    }
-  }
-
-  func testDeletedBoundarySanitizesLateFocusScheduleAndDeletesEmptyAggregate() throws {
-    let cutoverDate = "2026-08-22"
-    let segmentID = cutoverID(cutoverDate)
-    let retainedDate = "2026-08-23"
-    let emptyDate = "2026-08-24"
-    let retained = try schedule(
-      date: retainedDate, version: v2, eventID: segmentID, retainBuffer: true)
-    let empty = try schedule(
-      date: emptyDate, version: v3, eventID: segmentID, retainBuffer: false)
-    let store = try SyncTestSupport.freshStore()
-    try store.writer.write { db in
-      XCTAssertEqual(try apply(db, deletedCutover(cutoverDate)), .applied)
-
-      let retainedResult = try apply(db, retained)
-      XCTAssertTrue(
-        try targets(retainedResult).contains(
-          CalendarCleanupRepairTarget(
-            entityType: .focusSchedule, entityId: retainedDate,
-            operation: .upsert)))
-      XCTAssertEqual(
-        try String.fetchAll(
-          db,
-          sql: "SELECT block_type FROM focus_schedule_blocks WHERE date = ?",
-          arguments: [retainedDate]),
-        ["buffer"])
-      try fulfill(db, retainedResult, successor: v4)
-      let sanitized = try XCTUnwrap(pending(db, kind: .focusSchedule, id: retainedDate))
-      XCTAssertEqual(sanitized.operation, .upsert)
-      XCTAssertFalse(sanitized.payload.contains(segmentID))
-      XCTAssertTrue(sanitized.payload.contains("Keep buffer"))
-
-      let emptyResult = try apply(db, empty)
-      XCTAssertTrue(
-        try targets(emptyResult).contains(
-          CalendarCleanupRepairTarget(
-            entityType: .focusSchedule, entityId: emptyDate,
-            operation: .delete)))
-      XCTAssertNil(
-        try String.fetchOne(
-          db, sql: "SELECT date FROM focus_schedule WHERE date = ?", arguments: [emptyDate]))
-      try fulfill(
-        db, emptyResult, successor: "1760000000500_0001_6666666666666666")
-      XCTAssertEqual(try pending(db, kind: .focusSchedule, id: emptyDate)?.operation, .delete)
-
-      for table in ["sync_conflict_log", "sync_payload_shadow"] {
-        XCTAssertEqual(
-          try Int.fetchOne(
-            db,
-            sql: "SELECT COUNT(*) FROM \(table) WHERE entity_type = ? AND entity_id IN (?, ?)",
-            arguments: [EntityName.focusSchedule, retainedDate, emptyDate]),
           0)
       }
     }

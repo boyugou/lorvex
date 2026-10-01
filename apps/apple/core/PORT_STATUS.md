@@ -11,10 +11,8 @@ It owns the pure domain, store, sync, workflow, and runtime primitives used by
 the app, MCP host, widgets, watch, mobile, and system-intent surfaces.
 
 The Apple-owned root schema remains this core's storage contract. The Apple core
-tracks that schema and language-neutral specs directly, not a Tauri
-implementation detail. Tauri can
-still be useful as historical context when auditing an old port decision, but it
-is not the active oracle for new Apple work.
+tracks that schema and language-neutral specs directly. The archived Rust
+implementation is historical context only, not an oracle for new work.
 
 ## Landed Areas
 
@@ -23,7 +21,7 @@ is not the active oracle for new Apple work.
 - `LorvexStore`: GRDB-backed schema opening/migration, repositories, task
   reads/writes/search/graph/reminders/calendar links/checklists, calendar event
   storage, task recurrence exceptions, calendar occurrence decisions,
-  focus/daily-review/list/tag/memory/provider
+  daily-briefing/daily-review/list/tag/memory/provider
   repositories, changelog writes/queries, payload shadow, pending inbox store,
   error-log writes, widget snapshot assembly, and SQL transaction helpers.
 - `LorvexSync`: envelope validation, canonicalization, LWW helpers, outbox,
@@ -82,7 +80,7 @@ python3 script/verify_localization_catalog.py
 
 ## Maintenance Rules
 
-- Do not add Apple code that depends on Tauri UI, Node packaging, or Rust bridge
+- Do not add Apple code that depends on web UI, Node packaging, or Rust bridge
   assumptions.
 - Do not reintroduce stale port-status language such as active Rust-oracle
   claims, bridge-era placeholders, or historical phase plans.

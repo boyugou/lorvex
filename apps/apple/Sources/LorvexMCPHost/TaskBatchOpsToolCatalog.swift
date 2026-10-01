@@ -33,7 +33,7 @@ enum TaskBatchOpsToolCatalog {
   static let batchReopenTool = Tool(
     name: "batch_reopen_tasks",
     title: "Batch Reopen Tasks",
-    description: "Reopen multiple completed or cancelled tasks at once. Clears completed_at, planned_date, last_deferred_at, and defer_count on each. For completed recurring tasks, cancels any auto-spawned successors. Returns {results, count, skipped} where results is the reopened task objects and skipped is [{id, reason}].",
+    description: "Reopen multiple completed or cancelled tasks at once. A completed task keeps its planned_date, planned time, and defer_count; a cancelled task starts fresh, with its planned_date, planned time, last_deferred_at, and defer_count cleared. For completed recurring tasks, cancels any auto-spawned successors. Returns {results, count, skipped} where results is the reopened task objects and skipped is [{id, reason}].",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

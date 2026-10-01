@@ -10,16 +10,17 @@ enum LorvexWindowID: String, CaseIterable {
   case reviews
   case taskDetail = "task-detail"
 
-  // The detachable workspace Window scenes shown in the Workspace menu. `.main`
-  // (the primary three-pane window) and `.taskDetail` (the inspector) are their
-  // own scenes and stay out of this list.
+  // The detachable workspace Window scenes shown in the Workspace menu, in the
+  // Navigate menu's order so a position names the same destination in both.
+  // `.main` (the primary three-pane window) and `.taskDetail` (the inspector)
+  // are their own scenes and stay out of this list.
   static let workspaceWindows: [LorvexWindowID] = [
     .today,
     .calendar,
     .tasks,
-    .lists,
-    .habits,
     .reviews,
+    .habits,
+    .lists,
   ]
 
   static let refreshOnOpenWindows: [LorvexWindowID] =
@@ -41,11 +42,11 @@ enum LorvexWindowID: String, CaseIterable {
     switch self {
     case .main: "Lorvex"  // brand name — not localized
     case .today: String(localized: "sidebar.item.today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .tasks: String(localized: "sidebar.item.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .tasks: String(localized: "sidebar.item.tasks", defaultValue: "All Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
     case .calendar: String(localized: "sidebar.item.calendar", defaultValue: "Calendar", table: "Localizable", bundle: LorvexL10n.bundle)
     case .lists: String(localized: "sidebar.item.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle)
     case .habits: String(localized: "sidebar.item.habits", defaultValue: "Habits", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .reviews: String(localized: "sidebar.item.reviews", defaultValue: "Reviews", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .reviews: String(localized: "sidebar.item.reviews", defaultValue: "Review", table: "Localizable", bundle: LorvexL10n.bundle)
     case .taskDetail: String(localized: "window.title.task_detail", defaultValue: "Task Detail", table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
@@ -75,16 +76,17 @@ enum LorvexWindowID: String, CaseIterable {
     }
   }
 
-  /// ⇧⌘1-6 open the six workspace windows, mirroring the ⌘1-6 sidebar
-  /// navigation but in a separate window instead of switching the main pane.
+  /// ⇧⌘1-5 open Today, Plan, All Tasks, Review, and Habits in their own
+  /// windows: the same digit as the ⌘1-5 sidebar navigation to the same
+  /// destination. Lists has no digit, because ⌘6 goes to Memory, which has no
+  /// window of its own.
   var keyboardShortcut: KeyEquivalent? {
     switch self {
     case .today:    "1"
     case .calendar: "2"
     case .tasks:    "3"
-    case .lists:    "4"
+    case .reviews:  "4"
     case .habits:   "5"
-    case .reviews:  "6"
     default: nil
     }
   }

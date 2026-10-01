@@ -182,11 +182,6 @@ final class StorageSchemaTests: XCTestCase {
       StorageSchema.isSqliteBoolColumn(table: "habit_reminder_policies", column: "reminder_time"))
     XCTAssertFalse(StorageSchema.isSqliteBoolColumn(table: "calendar_events", column: "title"))
   }
-
-  func testRejectsSyncedColumnsAsDeviceLocal() {
-    XCTAssertFalse(StorageSchema.isDeviceLocalColumn(table: "memories", column: "content"))
-    XCTAssertFalse(StorageSchema.isDeviceLocalColumn(table: "tasks", column: "title"))
-  }
 }
 
 // MARK: - Sql

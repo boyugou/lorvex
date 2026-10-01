@@ -1,9 +1,11 @@
 import LorvexCore
 import SwiftUI
 
-/// Settings control for the `working_hours` preference: the daily window the
-/// schedule proposal (app button and the assistant's propose_daily_schedule
-/// alike) fits focus blocks into. Native hour-and-minute pickers; changes
+/// Settings control for the `working_hours` preference: the daily window each
+/// day's load is measured against (the week grid's captions, the iPhone Plan
+/// strips, Today's overbooked headline), and that the schedule proposal (the
+/// app's Suggest Times and the assistant's propose_daily_schedule alike) keeps
+/// suggested task times inside. Native hour-and-minute pickers; changes
 /// persist immediately and invalid windows (end at/before start) are rejected
 /// by the store with a visible error.
 struct SettingsWorkingHoursRow: View {
@@ -14,7 +16,7 @@ struct SettingsWorkingHoursRow: View {
   @State private var isLoaded = false
 
   var body: some View {
-    Section(String(localized: "settings.working_hours.title", defaultValue: "Working Hours", table: "Localizable", bundle: LorvexL10n.bundle)) {
+    Section(String(localized: "settings.working_hours.title", defaultValue: "Day Hours", table: "Localizable", bundle: LorvexL10n.bundle)) {
       LabeledContent(String(localized: "settings.working_hours.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle)) {
         LorvexTimeChip(date: start, accessibilityIdentifier: "settings.workingHours.start") {
           start = $0
@@ -31,7 +33,7 @@ struct SettingsWorkingHoursRow: View {
 
       Text(LocalizedStringResource(
         "settings.working_hours.caption",
-        defaultValue: "Schedule proposals fit focus blocks inside this window.",
+        defaultValue: "The hours Lorvex plans your tasks into. How full a day is counts against them, and suggested times stay inside them.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))

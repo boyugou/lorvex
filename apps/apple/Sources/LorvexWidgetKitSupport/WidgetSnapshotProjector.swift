@@ -2,38 +2,34 @@ import Foundation
 import LorvexCore
 
 public struct WidgetSnapshotProjector: Sendable {
-  public var maxFocusTasks: Int
   public var calendar: Calendar
   public var now: @Sendable () -> Date
 
   public init(
-    maxFocusTasks: Int = 6,
     calendar: Calendar = .autoupdatingCurrent,
     now: @escaping @Sendable () -> Date = Date.init
   ) {
-    self.maxFocusTasks = max(1, maxFocusTasks)
     self.calendar = calendar
     self.now = now
   }
 
   /// Projects the App-Group widget snapshot.
   ///
-  /// The rendered focus/today task lists come from ``TodaySnapshot/tasks`` — the
-  /// priority-capped top-N dashboard pool, which is the correct set to show. The
-  /// numeric stats (focus / overdue / due-today / completed-today, top-level and
-  /// per-list) come from `statsSource` when supplied: its uncapped actionable
-  /// (open + in_progress) set and recently-completed set, so the counts reflect
-  /// the whole workload rather than the ≤N slice and completed-today is a real
-  /// count instead of a structural zero. When `statsSource` is nil the stats fall
-  /// back to the dashboard pool (the pre-canonical behavior), which under-counts
-  /// past the cap and cannot see completed tasks — callers with core access
-  /// should pass a `statsSource`.
+  /// The task list is ``TodaySnapshot/tasks``, Today's list in Today's order,
+  /// each task carrying its time today (``LorvexTask/time(on:)``), and narrowed
+  /// to the system Focus filter's lists while one is active. The numeric stats
+  /// (overdue / due-today / completed-today, top-level and per-list) come from
+  /// `statsSource` when supplied: its uncapped actionable (open + in_progress)
+  /// set and recently-completed set, so the counts reflect the whole workload
+  /// rather than just the day and completed-today is a real count instead of a
+  /// structural zero. When `statsSource` is nil the stats fall back to the day's
+  /// list, which under-counts undated and future work and cannot see completed
+  /// tasks — callers with core access should pass a `statsSource`.
   public func snapshot(
     storageGeneration: Int = 0,
     focusFilterRevision: Int = 0,
     logicalDay: String? = nil,
     today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
     timezone: String?,
     hideTitles: Bool = false,
     focusFilter: FocusFilterConfiguration = .inactive,
@@ -41,61 +37,49 @@ public struct WidgetSnapshotProjector: Sendable {
     listCatalog: ListCatalogSnapshot? = nil,
     statsSource: WidgetStatsSource? = nil
   ) -> WidgetSnapshot {
-    let expandBeyondFocus = focusFilter.isActive && focusFilter.showNonFocusTasks
-
-    // Rendered pool: the priority-capped dashboard list drives the focus/today
-    // task lists the widget actually shows.
-    let renderActionable = today.tasks.filter { $0.status.isActionable }
-    let renderFiltered = focusFilteredTasks(
-      from: renderActionable, currentFocus: currentFocus, focusFilter: focusFilter)
-    let orderedTasks = focusOrderedTasks(
-      from: renderFiltered, currentFocus: currentFocus, expandBeyondFocus: expandBeyondFocus)
+    // The day's list as every glance shows it: Today's order, narrowed to the
+    // Focus filter's lists while one is active.
+    let dayTasks = today.tasks.filter { $0.status.isActionable }
+    let listedTasks = Self.focusScoped(dayTasks, focusFilter: focusFilter)
 
     // Stats pool: the uncapped canonical actionable set (open + started) when a
-    // `statsSource` is supplied, else the dashboard pool. Overdue/due-today and
-    // per-list open counts are computed against `statsBase` — all actionable
-    // tasks, not just the focus-filtered subset — so they reflect the full
-    // workload even when the filter is active; the focus count uses the
-    // focus-filtered/ordered `statsOrdered`.
-    let statsBase = statsSource?.actionableTasks.filter { $0.status.isActionable } ?? renderActionable
-    let statsFiltered = focusFilteredTasks(
-      from: statsBase, currentFocus: currentFocus, focusFilter: focusFilter)
-    let statsOrdered = focusOrderedTasks(
-      from: statsFiltered, currentFocus: currentFocus, expandBeyondFocus: expandBeyondFocus)
+    // `statsSource` is supplied, else the day's list. Overdue / due-today and
+    // per-list counts are computed against all actionable tasks, not the
+    // Focus-narrowed subset, so they reflect the full workload.
+    let statsBase = statsSource?.actionableTasks.filter { $0.status.isActionable } ?? dayTasks
     // Completed-today is counted off the canonical recently-completed set (the
-    // dashboard pool is actionable-only, so it never contains a completed task).
+    // day's list is actionable-only, so it never contains a completed task).
     let completedBase = statsSource?.completedTodayTasks ?? today.tasks
-    let productCalendar = Self.calendar(
-      timezoneName: timezone ?? currentFocus?.timezone,
-      fallback: calendar)
+    let productCalendar = Self.calendar(timezoneName: timezone, fallback: calendar)
 
     let nowDate = now()
-    let focusTasks = orderedTasks.prefix(maxFocusTasks).map { task in
-      WidgetSnapshot.FocusTask(
+    let todayYmd = logicalDay ?? Self.localDateOnlyString(from: nowDate, calendar: productCalendar)
+    let privateTitle = String(
+      localized: "widget.task.private", defaultValue: "Private task",
+      table: "Localizable", bundle: WidgetSupportL10n.bundle)
+    let tasks = listedTasks.map { task in
+      let time = task.time(on: todayYmd)
+      return WidgetSnapshot.TodayTask(
         id: task.id,
-        title: hideTitles
-          ? String(
-            localized: "widget.task.private", defaultValue: "Private task",
-            table: "Localizable", bundle: WidgetSupportL10n.bundle)
-          : task.title,
+        title: hideTitles ? privateTitle : task.title,
         status: task.status.rawValue,
         dueDate: task.dueDate.map(Self.dateOnlyString),
         priority: task.priority.tier,
         listID: task.listID,
-        estimatedMinutes: task.estimatedMinutes
+        estimatedMinutes: task.estimatedMinutes,
+        scheduledStart: time.map { lorvexStoredClockTime(minutes: $0.lowerBound) },
+        scheduledEnd: time.map { lorvexStoredClockTime(minutes: $0.upperBound) }
       )
     }
 
-    // `task.dueDate` is a UTC-midnight Date — the `planned_date` `YYYY-MM-DD` is
-    // parsed in UTC (see `SwiftLorvexTaskDeserializers.plannedDate`), so its
-    // canonical wall-calendar day must be read back in UTC, exactly as the
-    // surfaced `dueDate` string is. "Today" is the user's perceived local day,
-    // read via `calendar`. Comparing the two as `YYYY-MM-DD` strings keeps the
-    // due-today/overdue counts consistent with the displayed date and correct
-    // across time zones — a plain `calendar.isDate(_:inSameDayAs:)` against the
-    // local calendar would shift a UTC-anchored due date by a day for any user
-    // not on UTC.
-    let todayYmd = logicalDay ?? Self.localDateOnlyString(from: nowDate, calendar: productCalendar)
+    // `task.dueDate` is a UTC-midnight Date — the stored `due_date`
+    // `YYYY-MM-DD` is parsed in UTC — so its canonical wall-calendar day must
+    // be read back in UTC, exactly as the surfaced `dueDate` string is.
+    // "Today" is the user's perceived local day, read via `calendar`.
+    // Comparing the two as `YYYY-MM-DD` strings keeps the due-today/overdue
+    // counts consistent with the displayed date and correct across time zones —
+    // a plain `calendar.isDate(_:inSameDayAs:)` against the local calendar
+    // would shift a UTC-anchored due date by a day for any user not on UTC.
     let dueTodayPredicate: (LorvexTask) -> Bool = { task in
       guard let dueDate = task.dueDate else { return false }
       return Self.dateOnlyString(from: dueDate) == todayYmd
@@ -139,29 +123,12 @@ public struct WidgetSnapshotProjector: Sendable {
           )
         } ?? []
 
-    let todayTaskList: [WidgetSnapshot.TodayTask] = orderedTasks
-      .map { task in
-        WidgetSnapshot.TodayTask(
-          id: task.id,
-        title: hideTitles
-          ? String(
-            localized: "widget.task.private", defaultValue: "Private task",
-            table: "Localizable", bundle: WidgetSupportL10n.bundle)
-          : task.title,
-        dueDate: task.dueDate.map(Self.dateOnlyString),
-        priority: task.priority.tier,
-        estimatedMinutes: task.estimatedMinutes,
-        listID: task.listID
-      )
-    }
-
     let listStats: [WidgetSnapshot.ListStats] = listCatalog?.lists.map { list in
       let openInList = statsBase.filter { $0.listID == list.id }
-      let focusInList = statsOrdered.filter { $0.listID == list.id }
       return WidgetSnapshot.ListStats(
         id: list.id,
         stats: .init(
-          focusCount: focusInList.count,
+          todayCount: listedTasks.filter { $0.listID == list.id }.count,
           overdueCount: openInList.filter(overduePredicate).count,
           dueTodayCount: openInList.filter(dueTodayPredicate).count,
           completedTodayCount: completedBase.filter {
@@ -177,18 +144,19 @@ public struct WidgetSnapshotProjector: Sendable {
       workspaceInstanceID: today.workspaceInstanceID
         ?? WidgetSnapshot.unscopedWorkspaceInstanceID,
       localChangeSequence: today.localChangeSequence,
-      timezone: timezone ?? currentFocus?.timezone,
+      timezone: timezone,
       logicalDay: todayYmd,
       stats: .init(
-        focusCount: statsOrdered.count,
+        todayCount: listedTasks.count,
         overdueCount: overdueCount,
         dueTodayCount: dueTodayCount,
         completedTodayCount: completedTodayCount
       ),
-      briefing: hideTitles ? nil : currentFocus?.briefing,
-      focusTasks: Array(focusTasks),
+      // The briefing speaks about the whole day, so a Focus-narrowed list, like
+      // hidden titles, goes without it.
+      briefing: hideTitles || focusFilter.isActive ? nil : today.briefing,
+      tasks: tasks,
       habits: habitSummaries,
-      todayTasks: todayTaskList,
       lists: listCatalog?.lists.map {
         WidgetSnapshot.ListSummary(id: $0.id, name: $0.name, icon: $0.icon)
       } ?? [],

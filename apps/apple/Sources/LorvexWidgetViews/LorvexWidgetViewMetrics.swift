@@ -23,11 +23,10 @@ public struct LorvexWidgetViewMetrics: Equatable, Sendable {
       LorvexWidgetViewMetrics(
         family: family, showsBriefing: false, horizontalPadding: 12, verticalPadding: 12)
     case .systemMedium:
-      // No briefing line on medium: it duplicates the footer counts and, with
-      // three task rows + header + footer, pushed the content past the 158pt
-      // canvas (clipping the header and last row). Large keeps it — it has room.
+      // No briefing line on medium: the lead block, two rows, and the foot
+      // line fill its 158pt canvas. Large has the room and keeps it.
       LorvexWidgetViewMetrics(
-        family: family, showsBriefing: false, horizontalPadding: 14, verticalPadding: 12)
+        family: family, showsBriefing: false, horizontalPadding: 14, verticalPadding: 10)
     case .systemLarge:
       LorvexWidgetViewMetrics(
         family: family, showsBriefing: true, horizontalPadding: 16, verticalPadding: 14)

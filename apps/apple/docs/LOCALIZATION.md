@@ -20,7 +20,7 @@ separately:
 
 | Surface | Display language follows | How it resolves |
 |---|---|---|
-| Main app UI (macOS / iOS / iPadOS / visionOS) | the app's selected language — the system language, or an in-app override | in-process against the module bundle (`Text("key", bundle:)`, `String(localized: … bundle:)`) |
+| Main app UI (macOS / iOS / iPadOS) | the app's selected language — the system language, or an in-app override | in-process against the module bundle (`Text("key", bundle:)`, `String(localized: … bundle:)`) |
 | Widgets, Watch, CarPlay | the host process's language (system language) | in-process against the module bundle |
 | Notifications | the app/system language at the time the notification is scheduled | in-process, eager (e.g. `String(localized: "notification.snooze.body", table: "Localizable", bundle: MobileL10n.bundle)`) |
 | App Intents / Shortcuts / Siri / Spotlight | the **invoking request's** locale — which can differ from the app-process language | deferred `LocalizedStringResource`, resolved by the framework at presentation |
@@ -32,9 +32,10 @@ continues to follow the system `Locale`; aligning manually constructed date and
 relative-time formatters with an in-app language override is tracked as a
 separate finalization item. Where a catalog entry defines native plural
 variations, `String(localized:)`/`LocalizedStringResource` integer
-interpolation selects the CLDR category automatically. A set of flat numeric
-format keys is not yet plural-aware; the open per-key disposition inventory is
-tracked in `docs/plans/L2_NATIVE_LOCALIZATION_MIGRATION.md`.
+interpolation selects the CLDR category automatically. English (`en`, the
+source language) and Simplified Chinese (`zh-Hans`) are the shipped languages.
+English uses the `one`/`other` plural categories and Chinese only `other`, so
+plural variations stay small; every UI string needs exactly one translation.
 
 ### The App-Intent request-locale seam
 
@@ -110,8 +111,9 @@ localize through two different catalogs:
 
 ## Catalog location
 
-There are seven catalogs — one per UI module — each resolved against its owning
-module bundle (there is no single shared catalog):
+There are eight catalogs — one per UI module, plus LorvexCore's for the words
+that name shared data rather than a surface's controls — each resolved against
+its owning module bundle:
 
 ```
 Sources/LorvexApple/Resources/Localizable.xcstrings           → Text("key", bundle: LorvexL10n.bundle) / String(localized:…, bundle: LorvexL10n.bundle)
@@ -121,7 +123,12 @@ Sources/LorvexWatch/Resources/Localizable.xcstrings           → Text("key", bu
 Sources/LorvexWidgetViews/Resources/Localizable.xcstrings     → Text("key", bundle: WidgetL10n.bundle) / String(localized:…, bundle: WidgetL10n.bundle)
 Sources/LorvexWidgetKitSupport/Resources/Localizable.xcstrings → String(localized:…, bundle: WidgetSupportL10n.bundle) / LocalizedStringResource(…, bundle: WidgetSupportL10n.bundle)
 Sources/LorvexCarPlay/Resources/Localizable.xcstrings         → String(localized:…, bundle: CarPlayL10n.bundle)
+Sources/LorvexCore/Resources/Localizable.xcstrings            → String(localized:…, bundle: CoreL10n.bundle)
 ```
+
+(`LorvexCore` is linked by every surface, so a word it resolves reads the same
+on the Mac, iPhone, widgets, and in Shortcuts. Today it holds one entry, the
+seeded Inbox's name; see the Simplified Chinese conventions below.)
 
 (`LorvexWidgetKitSupport` is the shared widget snapshot/timeline layer — native
 APIs resolve the strings baked into its render model plus status / relative-age
@@ -138,8 +145,8 @@ source path. Framework calls MUST pass the owning module's `bundle:` explicitly:
 a bare `Text("…")` resolves against `Bundle.main` (the host app), not the
 framework catalog. All modules use native `Text` / `String(localized:)` or
 deferred `LocalizedStringResource` directly. `LorvexL10n`, `MobileL10n`,
-`SystemL10n`, `WatchL10n`, `WidgetSupportL10n`, `WidgetL10n`, and
-`CarPlayL10n` are resource-location facades only; native String Catalog APIs
+`SystemL10n`, `WatchL10n`, `WidgetSupportL10n`, `WidgetL10n`, `CarPlayL10n`,
+and `CoreL10n` are resource-location facades only; native String Catalog APIs
 resolve every string at runtime. Widget configuration data is storage-only:
 `LorvexWidgetConfiguration` does not carry localized gallery copy and there is
 no shared gallery-copy resolver — each widget definition owns its deferred
@@ -147,7 +154,7 @@ metadata and uses the appropriate catalog bundle.
 Every bundle accessor uses the `#if SWIFT_PACKAGE` pattern
 (`Bundle.module` under SwiftPM, `Bundle(for:)` in the native XcodeGen build).
 
-`script/verify_localization_catalog.py` (in `verify_all.sh`) validates all seven
+`script/verify_localization_catalog.py` (in `verify_all.sh`) validates all eight
 catalogs: structure, that every key carries every language declared by any
 Apple catalog, and that every remaining module helper call, bundle-qualified native
 `Text` / `String(localized:)`, and bundle-owned `LocalizedStringResource`
@@ -250,77 +257,79 @@ canonical fallback value for development builds.
 
 5. Run `python3 script/verify_localization_catalog.py` and the relevant Swift tests to confirm nothing is broken.
 
+## Simplified Chinese conventions
+
+The `zh-Hans` catalogs follow Apple's Simplified Chinese usage and keep one term
+per concept across every catalog, so a thing reads the same on the Mac, iPhone,
+watch, widgets, and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| List (a task list) | 列表 | 清单 names a task's checklist |
+| Checklist | 清单 | an item is 清单项 |
+| Someday | 将来某天 | quoted as “将来某天” inside a sentence |
+| Plan block | 时间块 | |
+| A block's end (Until 21:30) | 21:30 结束 | pairs with 21:30 开始 for a block ahead |
+| Suggested times (a proposed schedule) | 建议时间 | the suggested list heads 建议的时间; once saved, the day's times are 当前日程 |
+| Overdue | 逾期, 已逾期 | 已过期 means expired, as a stale saved watch action is |
+| Open (a task not yet done) | 未完成 | 进行中 is the In Progress status and the block running now; a compact widget count may say 待办 |
+| Counting tasks | 项 (你完成了 1 项任务, 还剩 3 项) | what is heard (Siri dialogs, VoiceOver labels) says 个, which reads more naturally aloud |
+| Review (the day and the week) | 回顾 | in Shortcuts and Siri too |
+| Capture (quick add) | 添加任务 | |
+| Inbox (the seeded list) | 收件箱 | shown while the list keeps its seeded name |
+| Assistant context (a task's AI notes) | 助手上下文 | |
+| Copy, restart | 复制, 重启 | |
+| Dock | 程序坞 | |
+
+- Punctuation is full width (，。？！：；), and quotation marks are “ ” and ‘ ’.
+- A space separates Chinese from Arabic numerals and Latin words ("还剩 5 项任务",
+  "90 分钟", "iCloud 同步"). Example text that a user types, such as "30分钟" in
+  the capture hint, is written the way people type it.
+- Chinese text may wrap between any two characters, including after a "#". The
+  capture hint therefore writes “#列表名” with an invisible word joiner
+  (U+2060) after the "#", so the example never splits across lines.
+- A count and the noun it counts go through a format with positional
+  specifiers, never concatenation in code, because the word order differs:
+  `common.count_label` is `%1$lld %2$@` in English and `%2$@ %1$lld` in
+  Chinese ("接下来 4").
+- Sentences assembled from several catalog entries are joined with
+  `LorvexReviewSentence.join`, which puts no space after a full-width stop.
+- The serif voice (a review's sentence, the menu bar sentence, an assistant's
+  aside) is set with `Text(_:serifVoice:)`. On macOS it sets the Chinese runs of
+  a string in Songti directly, because New York's own fallback to Songti lays
+  the full-width marks out one and a half ems wide.
+- The seeded Inbox list stores the English name "Inbox" as ordinary synced
+  data that assistants read. Surfaces show every list through
+  `LorvexList.displayName`, which gives the seeded Inbox the `list.inbox.name`
+  entry of LorvexCore's catalog until someone renames it. A list editor opens
+  on the shown name and stores the seeded name again when it is saved
+  unchanged (`LorvexListNaming.nameToStore`), and search and a typed `#list`
+  accept both names.
+- Siri and Shortcuts phrases live in `AppShortcuts.xcstrings`. A Chinese phrase
+  keeps spaces around the app name, as around any Latin word
+  ("在 ${applicationName} 中添加任务").
+- The verifier rejects a translation that copies the English text, except the
+  product and technology names in its `IDENTICAL_TRANSLATION_ALLOWLIST`, and
+  requires every App Shortcuts phrase to be translated and to name the app
+  exactly once.
+
 ## How to add a new locale
 
-The preferred batch path is script-driven. It keeps the seven `.xcstrings`
-catalogs, per-target `InfoPlist.strings`, and `CFBundleLocalizations` metadata
-in one verified flow.
+Every catalog and every shipping bundle must carry the same language set, so a
+locale is added everywhere in one change:
 
-1. Generate the current missing-language pack. Without `--languages`, the script
-   targets the remaining non-RTL 13→27 expansion batch:
-
-   ```sh
-   python3 script/localization_expand.py translation-pack --out /tmp/lorvex_translation_pack.json
-   ```
-
-   To target a smaller slice, pass a comma-separated list:
-
-   ```sh
-   python3 script/localization_expand.py translation-pack --languages hi,id --out /tmp/lorvex_hi_id.json
-   ```
-
-2. Translate the pack as JSON only. Preferred response shape: keep every
-   `catalogStrings` row and `infoPlistStrings` entry intact, then add a
-   `translations` object containing every language listed by that row's `langs`
-   or `missing` metadata. The translated response must include both top-level
-   keys, even when one side is empty. Example:
-
-   ```json
-   {
-     "catalogStrings": [
-       {
-         "en": "Today",
-         "zhHans": "今天",
-         "langs": ["hi"],
-         "occurrences": [{"catalog": "Sources/LorvexMobile/Resources/Localizable.xcstrings", "key": "today.title"}],
-         "translations": {"hi": "आज"}
-       }
-     ],
-     "infoPlistStrings": {
-       "LorvexMobileApp": {
-         "Quick Capture": {
-           "en": "Quick Capture",
-           "missing": ["hi"],
-           "translations": {"hi": "त्वरित कैप्चर"}
-         }
-       }
-     }
-   }
-   ```
-
-   Compact `{english:{lang:value}}` and `{target:{key:{lang:value}}}` tables are
-   still accepted, but the enriched shape is safer because `apply-pack` rejects
-   rows whose required languages are incomplete or whose translations include
-   languages not listed by that row's metadata.
-
-3. Validate and apply the translated response in one preflighted write:
-
-   ```sh
-   python3 script/localization_expand.py apply-pack --in /tmp/lorvex_hi_id_translated.json
-   ```
-
-   `apply-pack` validates catalog strings and InfoPlist strings before writing
-   either side. It rejects unknown languages/targets, empty translations, missing
-   metadata-declared languages, stale catalog occurrences, stale InfoPlist gaps,
-   malformed metadata, catalog occurrence paths outside the Apple root, and
-   printf placeholder drift. If the response includes a top-level
-   `languages` array, `apply-pack` uses it automatically; that array must contain
-   unique, non-empty language strings. Pass `--languages hi,id` only when
-   intentionally overriding or applying a compact response without top-level
-   language metadata.
-
+1. Add a `<lang>` block with `state: translated` to every entry in each of the
+   eight String Catalogs under `Sources/*/Resources/*.xcstrings` (Xcode's String
+   Catalog editor does this per catalog; a small script that walks the JSON is
+   fine too). Plural entries need every CLDR category the language uses.
+2. Add `Config/InfoPlist/<Target>/<lang>.lproj/InfoPlist.strings` for each
+   shipping target, translating every key of the English file beside it.
+3. Add the language to `AppLanguage` (`Sources/LorvexCore/Support/AppLanguage.swift`)
+   with its endonym so the in-app language picker offers it.
 4. Sync bundle metadata so the OS includes the locale in app, complication, and
-   widget bundles:
+   widget bundles, and in the Info.plist embedded in the debug executable
+   (`Config/LorvexAppleSwiftPM-Info.plist`, described under the headless
+   screenshots below):
 
    ```sh
    python3 script/verify_localization_catalog.py --write-bundle-localizations
@@ -332,11 +341,8 @@ in one verified flow.
    other catalog must also have `fr`; if one Info.plist omits `fr`, the verifier
    fails.
 
-6. Run the app with the scheme's application language set to the new locale (`Edit Scheme → Run → Options → Application Language`).
-
-Manual Xcode String Catalog editing still works for small corrections: add a
-parallel locale block with `state: translated` inside every catalog entry, then
-run the same verifier and bundle-localization sync commands.
+6. Run the app with the scheme's application language set to the new locale
+   (`Edit Scheme → Run → Options → Application Language`).
 
 ## How to test with a different locale
 
@@ -357,6 +363,29 @@ selection; it also verifies catalog structure and complete language parity.
 Scheme-based simulator/device checks remain useful for layout and OS-owned
 surfaces, not for proving basic lookup semantics.
 
+**Headless screenshots:**
+
+The capture scripts take extra launch arguments, so a visual pass in another
+language needs no scheme change:
+
+```sh
+LORVEX_TOUR_EXTRA_ARGS="-AppleLanguages (zh-Hans) -AppleLocale zh_CN" \
+  script/ui_tour_macos.sh light /tmp/shots-zh
+LORVEX_SIM_EXTRA_ARGS="-AppleLanguages (zh-Hans) -AppleLocale zh_CN" \
+  script/ios_sim_screenshots.sh /tmp/shots-zh light today tasks
+```
+
+The macOS tour runs the unbundled debug executable. When an executable declares
+no localizations of its own, Foundation matches every module bundle in the
+process to the development language, so `String(localized:bundle:)` stays
+English whatever `-AppleLanguages` says, while a `LocalizedStringResource`,
+which resolves against its own locale, follows it. Debug builds therefore embed
+`Config/LorvexAppleSwiftPM-Info.plist`, which declares the shipped languages, as
+the executable's `__TEXT,__info_plist` section (see the `LorvexApple` target in
+`Package.swift`); packaged apps declare the same list in their bundle
+Info.plist. The plist has no `CFBundleIdentifier`, so the debug executable keeps
+its own `UserDefaults` domain.
+
 ## Xcode workflow for translating
 
 1. Generate the Xcode project: `script/verify_xcodegen_project.sh`.
@@ -373,7 +402,7 @@ surfaces, not for proving basic lookup semantics.
 
 ## Adding strings to mobile, intents, watch, widget, and CarPlay targets
 
-`LorvexMobile` (iOS/iPadOS/visionOS), `LorvexWatch` (watchOS), and
+`LorvexMobile` (iOS/iPadOS), `LorvexWatch` (watchOS), and
 `LorvexWidgetViews` (home-screen widgets) each ship their own String Catalog
 under the target's `Resources/` directory. `LorvexSystemIntents` also ships a
 catalog for App Intents, Shortcuts, Siri, and Spotlight metadata, and
@@ -396,7 +425,7 @@ To add a translatable string to one of these surfaces:
           table: "Localizable", bundle: WatchL10n.bundle)  // ✓ imperative/a11y
    LocalizedStringResource("system.open.title", defaultValue: "Open Lorvex",
                            table: "Localizable", bundle: SystemL10n.bundle)  // ✓ deferred intent
-   String(localized: "carplay.focus.running", defaultValue: "Running",
+   String(localized: "carplay.detail.started", defaultValue: "Started",
           table: "Localizable", bundle: CarPlayL10n.bundle)  // ✓ CarPlay
    ```
    For interpolation on an in-process surface (Mobile / Watch / Widget / CarPlay

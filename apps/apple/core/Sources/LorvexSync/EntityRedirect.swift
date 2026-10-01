@@ -11,11 +11,6 @@ import LorvexStore
 /// lexicographically smallest terminal id and a corrective HLC is emitted when
 /// that join differs from the incoming record.
 public enum EntityRedirect {
-  public enum ReassertionOutcome: Sendable, Equatable {
-    case enqueued
-    case alreadyPending
-  }
-
   public struct Record: Sendable, Equatable {
     public var sourceType: EntityKind
     public var sourceId: String
@@ -90,49 +85,6 @@ public enum EntityRedirect {
       match = candidate
     }
     return match
-  }
-
-  /// Re-enqueues an existing permanent alias after CloudKit physically removed
-  /// its record slot. The stored HLC is intentionally preserved: absence has no
-  /// competing value to dominate, while minting a newer semantic version could
-  /// incorrectly outrank a future-schema redirect that later reappears.
-  public static func reassertCurrent(
-    _ db: Database, wireEntityId: String, deviceId: String
-  ) throws -> ReassertionOutcome {
-    guard let record = try get(db, wireEntityId: wireEntityId) else {
-      throw ApplyError.invalidPayload(
-        "entity redirect recovery could not resolve its opaque wire identity")
-    }
-    let envelope = try makeEnvelope(record: record, deviceId: deviceId)
-    do {
-      if try Outbox.enqueueCoalesced(db, envelope) != nil { return .enqueued }
-    } catch { throw ApplyError.lift(error) }
-
-    // Equal-version coalescing is deliberately a no-op when the exact
-    // obligation is already ready to emit. Treat only that fully canonical,
-    // eligible row as success: a newer row or an adoption/future-record fence
-    // must still abort the inbound page instead of being silently accepted.
-    let alreadyReady = try Bool.fetchOne(
-      db,
-      sql: """
-        SELECT EXISTS(
-          SELECT 1 FROM sync_outbox
-          WHERE entity_type = ? AND entity_id = ? AND synced_at IS NULL
-            AND operation = ? AND version = ?
-            AND payload_schema_version = ? AND payload = ?
-            AND disposition IS NULL AND retry_count < ?
-        )
-        """,
-      arguments: [
-        EntityName.entityRedirect, wireEntityId, SyncNaming.opUpsert,
-        envelope.version.description, envelope.payloadSchemaVersion,
-        envelope.payload, Outbox.maxRetries,
-      ]) ?? false
-    guard alreadyReady else {
-      throw ApplyError.store(
-        "entity redirect recovery did not establish an eligible canonical outbox row")
-    }
-    return .alreadyPending
   }
 
   /// Advance and enqueue the canonical redirect occupying `wireEntityId` above
@@ -468,9 +420,9 @@ public enum EntityRedirect {
       floorVersion: outcome.record.version, createdAt: createdAt, deviceId: deviceId)
   }
 
-  /// Parse and validate the shared redirect payload shape. `ApplyFk` reuses this
-  /// exact boundary so authoritative local-intent dependency closure cannot
-  /// drift from inbound apply.
+  /// Parse and validate the shared redirect payload shape. Dependency
+  /// preflight, mutation-impact analysis, and repair reuse this exact boundary
+  /// so they cannot drift from inbound apply.
   static func decodePayload(wireEntityId: String, payload rawPayload: String) throws -> Payload {
     let object = try ApplyJSON.parseObject(rawPayload)
     let expectedKeys: Set<String> = ["source_type", "source_id", "target_id", "version"]

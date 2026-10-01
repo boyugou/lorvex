@@ -141,8 +141,6 @@ extension Outbox {
     // through to the replacement path below and resets its retry state.
     // An OLDER incoming version remains stale even for retry wait: reviving it
     // would replace a newer queued edit with obsolete content.
-    // An authoritative-adoption fence is NOT recoverable this way; only a newer
-    // HLC (a genuine post-adoption edit) may replace it.
     if let existingRow = existing,
       let existingHlc = try? Hlc.parseCanonical(existingRow.version)
     {
@@ -161,8 +159,7 @@ extension Outbox {
     let effectiveRegisterIntent: EntityRegisterIntent
     if let existing,
       existing.operation == SyncNaming.opUpsert,
-      envelope.operation == .upsert,
-      existing.disposition != .authoritativeAdoption
+      envelope.operation == .upsert
     {
       let retained = existing.registerIntent.retainingUnchangedRegisters(
         existingPayload: existing.payload, replacementPayload: envelope.payload)

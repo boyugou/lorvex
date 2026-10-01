@@ -4,59 +4,66 @@ import Testing
 
 @testable import LorvexWidgetViews
 
-// Behavior of the Lock Screen accessory families (Focus + Habits): the
-// unavailable/empty/remaining boundary of the circular view, redaction of user-authored
-// content, and that every accessory family constructs its body without a crash
-// in both the empty and populated states.
+// Behavior of the Lock Screen accessory families (Today + Habits): what the
+// circular glance says, redaction of user-authored content, and that every
+// accessory family constructs its body without a crash in both the empty and
+// populated states.
 
-// MARK: - Focus circular: unavailable vs empty vs remaining classification
+// MARK: - Today circular: what the ring says
 
-@Test
-func focusCircularIsEmptyWhenNothingTracked() {
-  // No focus tasks and nothing completed: the empty glyph, not a "0" ring that a
-  // glance could misread as "0% done".
-  #expect(AccessoryCircularWidgetView.content(focusCount: 0) == .empty)
+private func lead(
+  isRunning: Bool = false, minutesLeft: Int? = nil, progress: Double = 0
+) -> WidgetLeadRender {
+  WidgetLeadRender(
+    id: "task-1", title: "Ship the widget polish", line: nil, shortLine: nil,
+    progress: progress, isRunning: isRunning, minutesLeft: minutesLeft, isOverdue: false,
+    urlString: "lorvex://task/task-1")
+}
+
+private func circularModel(
+  state: WidgetRenderState = .content, lead: WidgetLeadRender?, upcoming: Int = 0
+) -> WidgetRenderModel {
+  WidgetRenderModel(
+    family: .accessoryCircular, state: state, headline: "Today", subheadline: "",
+    statusText: "Updated now", lead: lead, upcomingCount: upcoming)
 }
 
 @Test
-func focusCircularShowsOnlyTheRemainingFocusCount() {
-  #expect(AccessoryCircularWidgetView.content(focusCount: 1) == .remaining(1))
-  #expect(AccessoryCircularWidgetView.content(focusCount: 4) == .remaining(4))
+func todayCircularShowsACheckmarkWhenNothingIsLeft() {
+  // No lead: the checkmark, not a "0" ring that a glance could misread as
+  // "0% done" — however many tasks got completed today.
+  #expect(circularModel(lead: nil).circularContent == .empty)
+  #expect(circularModel(state: .empty, lead: nil).circularContent == .empty)
 }
 
 @Test
-func focusCircularDoesNotTreatGlobalCompletionsAsFocusProgress() {
-  // The view no longer accepts a completed-today input: unrelated completed
-  // tasks cannot turn an empty focus plan into a full progress ring.
-  #expect(AccessoryCircularWidgetView.content(focusCount: 0) == .empty)
-}
-
-@Test
-func focusCircularClampsNegativeInputs() {
-  #expect(AccessoryCircularWidgetView.content(focusCount: -2) == .empty)
-}
-
-@Test
-func focusCircularClassifiesFallbackAsUnavailableNotEmpty() {
-  // A `.fallback` render state coerces every count to 0, which would otherwise
-  // classify as `.empty` and show the "no focus set" glyph — reassuring the user
-  // that all is well when the snapshot actually failed to load. Fallback must win
-  // over the counts and render the distinct unavailable glyph.
+func todayCircularCountsDownARunningTime() {
   #expect(
-    AccessoryCircularWidgetView.content(state: .fallback, focusCount: 0)
-      == .unavailable)
+    circularModel(lead: lead(isRunning: true, minutesLeft: 12, progress: 0.7), upcoming: 2)
+      .circularContent == .running(minutesLeft: 12))
+}
+
+@Test
+func todayCircularShowsTheTasksLeftWhenNoTimeRuns() {
+  #expect(circularModel(lead: lead(), upcoming: 0).circularContent == .remaining(1))
+  #expect(circularModel(lead: lead(), upcoming: 3).circularContent == .remaining(4))
+}
+
+@Test
+func todayCircularClassifiesFallbackAsUnavailableNotEmpty() {
+  // A `.fallback` render state would otherwise classify as `.empty` and show
+  // the "All clear" checkmark — reassuring the user that all is well when the
+  // snapshot actually failed to load. Fallback must win over the content.
+  #expect(circularModel(state: .fallback, lead: nil).circularContent == .unavailable)
   #expect(
-    AccessoryCircularWidgetView.content(state: .fallback, focusCount: 2)
-      == .unavailable)
-  // A genuine empty (fresh snapshot, nothing tracked) stays `.empty`.
-  #expect(
-    AccessoryCircularWidgetView.content(state: .empty, focusCount: 0) == .empty)
+    circularModel(state: .fallback, lead: lead(isRunning: true, minutesLeft: 5), upcoming: 1)
+      .circularContent == .unavailable)
 }
 
 @MainActor
 @Test
-func focusFallbackFamiliesRenderUnavailableNotAllClear() {
-  // The small, inline, and circular Focus families each construct their body for
+func todayFallbackFamiliesRenderUnavailableNotAllClear() {
+  // The small, inline, and circular Today families each construct their body for
   // a `.fallback` model without trapping. A broken snapshot reaches these with
   // counts of 0; the honest-fallback branch must handle it distinctly from the
   // genuine empty "All clear".
@@ -67,19 +74,20 @@ func focusFallbackFamiliesRenderUnavailableNotAllClear() {
 }
 
 @Test
-func focusFallbackBranchesAreDistinctFromAllClear() throws {
+func todayFallbackBranchesAreDistinctFromAllClear() throws {
   // Guard against a regression that drops the fallback branch and lets a broken
-  // snapshot fall through to the "All clear" empty treatment. Each view must
-  // branch on `model.state == .fallback`.
+  // snapshot fall through to the "All clear" empty treatment. The small and
+  // inline views branch on `model.state == .fallback`; the circular view draws
+  // the render model's `.unavailable` content.
   for file in [
     "LorvexWidgetSmallView.swift",
     "LorvexWidgetAccessoryInlineView.swift",
-    "LorvexWidgetAccessoryCircularView.swift",
   ] {
     #expect(
       try widgetViewsSource(file).contains(".fallback"),
       "\(file) must branch on the fallback render state")
   }
+  #expect(try widgetViewsSource("LorvexWidgetAccessoryCircularView.swift").contains(".unavailable"))
 }
 
 // MARK: - Accessory view bodies construct in both states
@@ -128,7 +136,7 @@ func habitNameIsRedactionAwareOnStandBy() throws {
 }
 
 @Test
-func focusAccessoryTitlesAreRedactionAware() throws {
+func todayAccessoryTitlesAreRedactionAware() throws {
   // Inline shows the top task's title; rectangular shows task-row titles. Both
   // are private and must redact on a locked Lock Screen.
   #expect(
@@ -143,7 +151,7 @@ func inlineEmptyStateIsNonSensitiveAndLegible() throws {
   // The empty inline shows a non-sensitive "All clear" that stays legible when
   // locked, rather than redacting a benign line to a placeholder bar.
   let source = try widgetViewsSource("LorvexWidgetAccessoryInlineView.swift")
-  #expect(source.contains("model.focusCount == 0"))
+  #expect(source.contains("model.lead == nil"))
   #expect(source.contains("widget.small.all_clear"))
 }
 
@@ -153,14 +161,10 @@ private func emptyAccessoryModel(_ family: WidgetFamilyKind) -> WidgetRenderMode
   WidgetRenderModel(
     family: family,
     state: .empty,
-    headline: "Focus",
-    subheadline: "No focus tasks yet.",
+    headline: "Today",
+    subheadline: "Nothing left today.",
     statusText: "Updated now",
-    focusCountText: "0 in focus",
-    focusCount: 0,
-    completedCount: 0,
-    attentionCountText: nil,
-    taskRows: []
+    completedCount: 0
   )
 }
 
@@ -168,35 +172,30 @@ private func contentAccessoryModel(_ family: WidgetFamilyKind) -> WidgetRenderMo
   WidgetRenderModel(
     family: family,
     state: .content,
-    headline: family == .accessoryInline ? "Ship the widget polish" : "Focus",
-    subheadline: "Focus on the next useful step.",
+    headline: family == .accessoryInline ? "Ship the widget polish" : "Today",
+    subheadline: "",
     statusText: "Updated now",
-    focusCountText: "2 in focus",
-    focusCount: 2,
     completedCount: 1,
-    attentionCountText: "1 due",
+    lead: lead(isRunning: true, minutesLeft: 12, progress: 0.7),
     taskRows: [
       WidgetTaskRenderRow(
-        id: "task-1", title: "Ship the widget polish", metadata: "25m",
-        priorityLabel: "Priority 1", priorityTier: 1, urlString: "lorvex://task/task-1")
-    ]
+        id: "task-2", title: "Write the release note", metadata: "11:00 AM",
+        urlString: "lorvex://task/task-2")
+    ],
+    upcomingCount: 1
   )
 }
 
 private func fallbackAccessoryModel(_ family: WidgetFamilyKind) -> WidgetRenderModel {
   // Mirrors what `WidgetRenderModelBuilder` emits for a `.fallback` entry: the
-  // honest "unavailable" copy with every count coerced to 0.
+  // honest "unavailable" copy with no lead and every count at 0.
   WidgetRenderModel(
     family: family,
     state: .fallback,
     headline: "Lorvex",
     subheadline: "Widget data is not available.",
     statusText: "Open Lorvex to refresh",
-    focusCountText: "0 in focus",
-    focusCount: 0,
-    completedCount: 0,
-    attentionCountText: nil,
-    taskRows: []
+    completedCount: 0
   )
 }
 

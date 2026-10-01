@@ -38,7 +38,9 @@ final class ManagedStorageCutoverTests: XCTestCase {
     let url = URL(fileURLWithPath: path)
     try FileManager.default.createDirectory(
       at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-    return try LorvexStore.open(at: url, schemaSQL: RuntimeTestSupport.loadSchemaSQL())
+    return try LorvexStore.open(
+      at: url, schemaSQL: RuntimeTestSupport.loadSchemaSQL(),
+      migrations: RuntimeTestSupport.loadSchemaMigrations())
   }
 
   private func generation() -> Int? {

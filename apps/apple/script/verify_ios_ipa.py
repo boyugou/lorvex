@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recursively verify a re-signed iOS/visionOS/watchOS export (the shipped IPA
+"""Recursively verify a re-signed iOS/watchOS export (the shipped IPA
 payload).
 
 ``script/archive_ios.sh --export`` produces an ``.ipa`` for one of the platforms
@@ -9,8 +9,6 @@ it archives, and the expected bundle shape depends on that platform:
   widget and Focus Filter extensions (``PlugIns/*.appex``), the embedded Watch app
   (``Watch/*.app``), and the Watch complication
   (``Watch/<app>.app/PlugIns/*.appex``).
-* visionOS (``LorvexVisionApp``): the host app alone — it embeds no widget or
-  Watch payload.
 * watchOS (``LorvexWatchApp``, development export only — the watch app has no
   standalone App Store export): the Watch app host and its complication
   (``PlugIns/*.appex``).
@@ -18,8 +16,7 @@ it archives, and the expected bundle shape depends on that platform:
 The target platform is taken from ``--platform`` when given (``archive_ios.sh``
 passes it), otherwise auto-detected from the payload's ``Info.plist``
 ``DTPlatformName``; an unrecognized/absent value falls back to the iPhone shape.
-The bundle set asserted below is the one that platform actually ships, so a
-visionOS export is no longer rejected by an iPhone-shaped expectation.
+The bundle set asserted below is the one that platform actually ships.
 
 ``verify_macho_closure.py`` proves the dynamic-link closure of that payload; this
 proves the *distribution* integrity that closure verification cannot see. For
@@ -107,11 +104,11 @@ class Platform:
     ``bundle_id_keys`` are the ``app_metadata.sh`` keys whose values form the
     exact set of executable-bundle ids the platform's IPA must contain: the
     iPhone build embeds a widget + Watch app + complication alongside its host,
-    visionOS ships the host app alone, and a (development-only) standalone
-    watchOS export is the Watch app host plus its complication.
+    and a (development-only) standalone watchOS export is the Watch app host
+    plus its complication.
     ``root_plugin_role`` labels a ``PlugIns/*.appex`` found directly under the
-    payload host app — a widget on iPhone/visionOS, the complication on a
-    standalone watch export — so failure messages name the bundle's real role.
+    payload host app — a widget on iPhone, the complication on a standalone
+    watch export — so failure messages name the bundle's real role.
     """
 
     key: str
@@ -132,12 +129,6 @@ IPHONE_PLATFORM = Platform(
     ),
     root_plugin_role=WIDGET_ROLE,
 )
-VISIONOS_PLATFORM = Platform(
-    key="visionos",
-    label="visionOS",
-    bundle_id_keys=("VISION_BUNDLE_ID",),
-    root_plugin_role=WIDGET_ROLE,
-)
 WATCHOS_PLATFORM = Platform(
     key="watchos",
     label="watchOS",
@@ -147,15 +138,13 @@ WATCHOS_PLATFORM = Platform(
 
 PLATFORMS_BY_KEY = {
     platform.key: platform
-    for platform in (IPHONE_PLATFORM, VISIONOS_PLATFORM, WATCHOS_PLATFORM)
+    for platform in (IPHONE_PLATFORM, WATCHOS_PLATFORM)
 }
 
 # ``DTPlatformName`` values Xcode writes into a built app's Info.plist, mapped to
-# the platform whose bundle set the payload must satisfy. visionOS is "xros".
+# the platform whose bundle set the payload must satisfy.
 _DT_PLATFORM_NAMES = {
     "iphoneos": IPHONE_PLATFORM,
-    "xros": VISIONOS_PLATFORM,
-    "visionos": VISIONOS_PLATFORM,
     "watchos": WATCHOS_PLATFORM,
 }
 
@@ -261,8 +250,8 @@ def discover_payload_bundles(
     """The host app plus every nested executable bundle, in nesting order.
 
     Nested slots mirror an App Store iOS export: the host app's own
-    ``PlugIns/*.appex`` extensions (``root_plugin_role`` — a widget on
-    iPhone/visionOS, the complication on a standalone watch export), its embedded
+    ``PlugIns/*.appex`` extensions (``root_plugin_role`` — a widget on iPhone,
+    the complication on a standalone watch export), its embedded
     ``Watch/*.app``, and each Watch app's ``PlugIns/*.appex`` complications."""
     bundles = [DiscoveredBundle(HOST_ROLE, payload_app)]
 
@@ -672,7 +661,7 @@ def resolve_payload_app(artifact: Path, work_root: Path) -> Path | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Recursively verify a re-signed iOS/visionOS/watchOS IPA export "
+            "Recursively verify a re-signed iOS/watchOS IPA export "
             "(signatures, entitlements, embedded profiles, privacy manifests, "
             "version metadata)."
         )

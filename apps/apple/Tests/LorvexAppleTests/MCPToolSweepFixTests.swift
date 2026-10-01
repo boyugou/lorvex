@@ -197,57 +197,49 @@ struct MCPToolSweepFixTests {
       })
   }
 
-  @Test("save_focus_schedule applies task blocks to production current focus")
-  func saveFocusScheduleAppliesTaskBlocksToProductionCurrentFocus() async throws {
+  @Test("save_daily_schedule plans unplanned tasks onto the date and lists them in start order")
+  func saveDailySchedulePlansTasksInStartOrder() async throws {
     let fixture = mcpOnDiskRegistry()
     defer { fixture.cleanup() }
 
     let first = try await mcpRegistryCall(
-      fixture.registry, tool: "create_task", arguments: ["title": .string("Focus one")])
+      fixture.registry, tool: "create_task", arguments: ["title": .string("Timed one")])
     let second = try await mcpRegistryCall(
-      fixture.registry, tool: "create_task", arguments: ["title": .string("Focus two")])
+      fixture.registry, tool: "create_task", arguments: ["title": .string("Timed two")])
     let firstID = try #require(first.structuredContent?.objectValue?["id"]?.stringValue)
     let secondID = try #require(second.structuredContent?.objectValue?["id"]?.stringValue)
 
     let saved = try await mcpRegistryCall(
       fixture.registry,
-      tool: "save_focus_schedule",
+      tool: "save_daily_schedule",
       arguments: [
         "date": .string("2026-06-26"),
-        "blocks": .array([
+        "times": .array([
           .object([
-            "block_type": .string("task"),
-            "task_id": .string(firstID),
-            "start_time": .string("09:00"),
-            "end_time": .string("09:30"),
-          ]),
-          .object([
-            "block_type": .string("buffer"),
-            "start_time": .string("09:30"),
-            "end_time": .string("09:45"),
-          ]),
-          .object([
-            "block_type": .string("task"),
             "task_id": .string(secondID),
             "start_time": .string("09:45"),
             "end_time": .string("10:15"),
           ]),
+          .object([
+            "task_id": .string(firstID),
+            "start_time": .string("09:00"),
+            "end_time": .string("09:30"),
+          ]),
         ]),
-        "rationale": .string("Test schedule"),
       ])
     #expect(saved.isError != true)
-    // The save return carries the merged current-focus plan directly, so the
-    // caller sees the full effect without a follow-up get_current_focus.
-    let savedFocus = saved.structuredContent?.objectValue?["current_focus"]?.objectValue
-    #expect(savedFocus?["task_ids"]?.arrayValue?.compactMap(\.stringValue) == [firstID, secondID])
+    // The save return lists the day's timed tasks directly, so the caller sees
+    // the full effect without a follow-up get_daily_schedule.
+    let timedIDs = saved.structuredContent?.objectValue?["timed_tasks"]?.arrayValue?
+      .compactMap { $0.objectValue?["id"]?.stringValue }
+    #expect(timedIDs == [firstID, secondID])
 
-    let focus = try await mcpRegistryCall(
-      fixture.registry,
-      tool: "get_current_focus",
-      arguments: ["date": .string("2026-06-26")])
-    let taskIDs = focus.structuredContent?.objectValue?["task_ids"]?.arrayValue?
-      .compactMap(\.stringValue)
-    #expect(taskIDs == [firstID, secondID])
+    let task = try await mcpRegistryCall(
+      fixture.registry, tool: "get_task", arguments: ["id": .string(firstID)])
+    let object = task.structuredContent?.objectValue
+    #expect(object?["planned_date"]?.stringValue == "2026-06-26")
+    #expect(object?["planned_start_time"]?.stringValue == "09:00")
+    #expect(object?["planned_end_time"]?.stringValue == "09:30")
   }
 
   @Test("set_task_ai_notes replaces and clears current context")
@@ -415,13 +407,14 @@ struct MCPToolSweepFixTests {
     #expect(task["match_reasons"]?.arrayValue?.compactMap(\.stringValue) == ["ai_notes"])
   }
 
-  @Test("get_saved_focus_schedule returns null when none is saved")
-  func savedFocusScheduleReturnsNullWhenEmpty() async throws {
+  @Test("get_daily_schedule returns no timed tasks for a day without times")
+  func dailyScheduleIsEmptyForAnUntimedDay() async throws {
     let result = try await mcpRegistryCall(
-      try mcpInMemoryRegistry(), tool: "get_saved_focus_schedule",
+      try mcpInMemoryRegistry(), tool: "get_daily_schedule",
       arguments: ["date": .string("2026-06-22")])
     #expect(result.isError != true)
-    #expect(result.structuredContent == .null)
+    #expect(result.structuredContent?.objectValue?["date"]?.stringValue == "2026-06-22")
+    #expect(result.structuredContent?.objectValue?["timed_tasks"]?.arrayValue?.isEmpty == true)
   }
 
   @Test("get_guide tailors guidance to the requested topic")

@@ -40,31 +40,6 @@ public enum Outbox {
   /// reset this streak because they are not evidence that the row is poisoned.
   public static let sameErrorEscalationThreshold: Int64 = 3
 
-  /// One shared eligibility predicate for account-bound audit rows. Both the
-  /// active FIFO scan and its deferred-retry wake query must use this exact
-  /// clause: an audit row owned by a previously active iCloud account is durable
-  /// but cannot be emitted into, or wake a tight retry loop for, the current
-  /// account's zone.
-  static let activeAccountAuditEligibilitySQL = """
-    (
-      outbox.entity_type <> ?
-      OR EXISTS (
-        SELECT 1
-        FROM ai_changelog audit
-        JOIN audit_retention_binding binding ON binding.singleton = 1
-        WHERE audit.id = outbox.entity_id
-          AND (
-            (binding.ever_bound = 0
-             AND audit.retention_account_identifier IS NULL)
-            OR
-            (binding.ever_bound = 1
-             AND audit.retention_account_identifier =
-                 binding.active_account_identifier)
-          )
-      )
-    )
-    """
-
   /// Truncate an error string to ``outboxLastErrorMaxBytes`` without splitting a
   /// UTF-8 code point.
   public static func truncateOutboxLastError(_ error: String) -> String {
@@ -189,13 +164,8 @@ public enum Outbox {
   /// Get all envelopes ready to emit.
   ///
   /// An entry is ready when `synced_at` and `disposition` are NULL and
-  /// `retry_count < maxRetries`. Before reading, due ordinary failures are
-  /// re-armed; authoritative-adoption fences are never eligible.
-  /// Account-bound audit rows are additionally eligible only while their
-  /// canonical `ai_changelog` row belongs to the active account. Pending audit
-  /// work for an inactive account remains durable in this shared queue and is
-  /// exposed again when that account resumes; it can never leak into another
-  /// account's CloudKit zone.
+  /// `retry_count < maxRetries`. Before reading, due retry-wait rows are
+  /// re-armed; future-record holds are never eligible.
   /// Results are ordered by `id ASC` (FIFO) and capped at ``maxPendingFetch``.
   /// `afterOutboxId` is an exclusive, monotonic cursor used by one transport
   /// drain: rows already attempted by that drain stay behind the cursor, so a
@@ -234,11 +204,10 @@ public enum Outbox {
           AND outbox.id > ?
           AND outbox.disposition IS NULL
           AND outbox.retry_count < ?
-          AND \(activeAccountAuditEligibilitySQL)
         ORDER BY outbox.id ASC
         LIMIT ?
         """,
-      arguments: [afterOutboxId ?? 0, maxRetries, EntityName.aiChangelog, maxPendingFetch])
+      arguments: [afterOutboxId ?? 0, maxRetries, maxPendingFetch])
     let lastScannedOutboxId = rows.last.map { row -> Int64 in row["id"] }
 
     var entries: [OutboxEntry] = []
@@ -340,8 +309,7 @@ public enum Outbox {
   /// Bulk-mark a batch of outbox entries as synced in chunked UPDATEs. Only
   /// overwrites `synced_at` when still NULL (so a re-pushed envelope keeps its
   /// original timestamp) and guards on `synced_at IS NULL`; `retry_count` /
-  /// `last_retry_at` are preserved, only `last_error` is cleared. A late push
-  /// callback cannot mark an authoritative-adoption fence as synced.
+  /// `last_retry_at` are preserved, only `last_error` is cleared.
   public static func markManySynced(_ db: Database, outboxIds: [Int64], syncedAt: String) throws {
     if outboxIds.isEmpty { return }
     let chunkSize = 500
@@ -373,24 +341,13 @@ public enum Outbox {
 
   // MARK: - GC
 
-  /// Delete outbox entries past the retention window: synced rows older than
-  /// the window, plus intentionally discarded authoritative-adoption fences.
-  /// Ordinary retry-wait rows are never age-deleted; they remain recoverable
-  /// after an app or CloudKit repair.
-  /// Returns the total number of deleted rows.
-  ///
-  /// Issued as TWO separate DELETEs rather than one OR'd statement. The branches
-  /// are disjoint (`synced_at IS NOT NULL` vs `synced_at IS NULL`), so the net
-  /// deletion is identical, but a single `A OR B` DELETE cannot be multi-indexed
-  /// when `B` ranges over the unindexed unsynced subset — SQLite would fall back
-  /// to a full scan of `sync_outbox` every cycle, leaving `idx_sync_outbox_synced_at`
-  /// inert. Splitting lets the synced-history DELETE use that partial index and
-  /// the authoritative-discard DELETE use its narrow created-at partial index.
+  /// Delete synced outbox rows older than the retention window, through the
+  /// partial `idx_sync_outbox_synced_at` index. Unsynced rows are never
+  /// age-deleted: retry-wait rows remain recoverable after an app or CloudKit
+  /// repair. Returns the number of deleted rows.
   @discardableResult
   public static func gcSynced(_ db: Database, retentionDays: UInt32) throws -> UInt64 {
     let retentionOffset = "-\(retentionDays) days"
-    // Synced-history branch: served by the partial `idx_sync_outbox_synced_at`
-    // (`WHERE synced_at IS NOT NULL`).
     try db.execute(
       sql: """
         DELETE FROM sync_outbox
@@ -398,36 +355,21 @@ public enum Outbox {
           AND synced_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', ?)
         """,
       arguments: [retentionOffset])
-    let deletedSynced = db.changesCount
-    // Intentional-discard branch. Generic retry wait is deliberately excluded.
-    try db.execute(
-      sql: """
-        DELETE FROM sync_outbox
-        WHERE synced_at IS NULL
-          AND disposition = ?
-          AND created_at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', ?)
-        """,
-      arguments: [Disposition.authoritativeAdoption.rawValue, retentionOffset])
-    let deletedAuthoritativeFence = db.changesCount
-    return UInt64(deletedSynced + deletedAuthoritativeFence)
+    return UInt64(db.changesCount)
   }
 
   /// Bound the never-pushed ACTIVE backlog: delete active unsynced rows beyond
   /// the newest `maxRows`, oldest first. Returns the number of rows deleted.
   ///
   /// ``gcSynced(_:retentionDays:)`` reaps only rows that were pushed
-  /// (`synced_at IS NOT NULL`) or intentionally fenced by authoritative adoption.
-  /// A row that is never pushed — the whole outbox on a sync-off install, where
+  /// (`synced_at IS NOT NULL`). A row that is never pushed — the whole outbox on a sync-off install, where
   /// nothing drains it — stays `synced_at IS NULL, retry_count = 0` forever, so
   /// that GC never touches it and the queue grows one row per local mutation
   /// without bound. This is the backstop that caps it: keep the newest `maxRows`
   /// (a generous backlog a later sign-in still delivers in full) and shed only
-  /// the oldest active queued changes past the cap. Persisted retry-wait rows
-  /// and authoritative-adoption fences are excluded: their typed recovery and
-  /// retention policies own their lifetime. Every `ai_changelog` row is also
-  /// exempt: canonical audit retention bounds that stream, while shedding an
-  /// inactive account's emit-once upsert here would make it unrecoverable when
-  /// that account resumes.
+  /// the oldest active queued changes past the cap. Retry-wait rows and
+  /// future-record holds are excluded: their typed recovery owns their
+  /// lifetime.
   ///
   /// Age order is `id DESC`: `id` is `INTEGER PRIMARY KEY AUTOINCREMENT`, and the
   /// coalesce path DELETEs then re-INSERTs a superseded entity's row (minting a
@@ -452,21 +394,15 @@ public enum Outbox {
         DELETE FROM sync_outbox
         WHERE synced_at IS NULL
           AND disposition IS NULL
-          AND entity_type <> ?
           AND id NOT IN (
             SELECT id FROM sync_outbox
             WHERE synced_at IS NULL
               AND disposition IS NULL
-              AND entity_type <> ?
             ORDER BY id DESC
             LIMIT ?
           )
         """,
-      arguments: [
-        EntityName.aiChangelog,
-        EntityName.aiChangelog,
-        cap,
-      ])
+      arguments: [cap])
     return UInt64(db.changesCount)
   }
 
@@ -580,88 +516,6 @@ public enum Outbox {
         WHERE id = ? AND synced_at IS NULL AND disposition IS NULL
         """,
       arguments: [retriedAt, truncatedError, outboxId])
-  }
-
-  /// Fence every eligible unsynced outbox row — active or already in ordinary
-  /// retry wait — by assigning the typed authoritative-adoption disposition, pinning
-  /// `retry_count` to ``maxRetries``, and stamping `last_error`. Used by over-window
-  /// snapshot re-enrollment (S-5): a device adopting a peer-rebuilt zone as truth
-  /// must not push its pre-adoption pending upserts — one for an entity peers have
-  /// since deleted and reclaimed the tombstone for would resurrect it fleet-wide.
-  /// `authoritativeSessionToken` durably binds each fence to the snapshot intent
-  /// that created it. Finalize/cancel deletes only that session's rows rather
-  /// than re-arming superseded writes. Already-synced rows are untouched; an
-  /// authoritative row from a replaced session is transferred to the current
-  /// owner defensively. A permanent future-record hold is deliberately excluded:
-  /// the app cannot adopt or discard an intent whose remote identity it cannot
-  /// yet interpret. Returns the number of rows newly fenced or transferred.
-  @discardableResult
-  public static func quarantineAllPending(
-    _ db: Database, error: String, authoritativeSessionToken: String
-  ) throws -> Int {
-    guard !authoritativeSessionToken.isEmpty, authoritativeSessionToken.count <= 128 else {
-      throw OutboxError.sql("authoritative snapshot session token is empty or over 128 characters")
-    }
-    try db.execute(
-      sql: """
-        UPDATE sync_outbox \
-        SET retry_count = ?, last_error = ?, \
-            disposition = ?, authoritative_session_token = ?, \
-            next_retry_at = NULL \
-        WHERE synced_at IS NULL \
-          AND (disposition IS NULL OR disposition <> ?) \
-          AND ( \
-            entity_type <> ? \
-            OR EXISTS ( \
-              SELECT 1 \
-              FROM ai_changelog audit \
-              JOIN audit_retention_binding binding ON binding.singleton = 1 \
-              WHERE audit.id = sync_outbox.entity_id \
-                AND ( \
-                  (binding.ever_bound = 0 \
-                   AND audit.retention_account_identifier IS NULL) \
-                  OR \
-                  (binding.ever_bound = 1 \
-                   AND audit.retention_account_identifier = \
-                       binding.active_account_identifier) \
-                ) \
-            ) \
-          ) \
-          AND (disposition IS NULL OR disposition <> ? \
-               OR authoritative_session_token <> ?)
-        """,
-      arguments: [
-        maxRetries, truncateOutboxLastError(error),
-        Disposition.authoritativeAdoption.rawValue,
-        authoritativeSessionToken,
-        Disposition.futureRecordHold.rawValue,
-        EntityName.aiChangelog,
-        Disposition.authoritativeAdoption.rawValue,
-        authoritativeSessionToken,
-      ])
-    return db.changesCount
-  }
-
-  /// Permanently discard the stale outbound rows fenced by one completed or
-  /// canceled remote-authoritative session. Deleting (rather than resetting)
-  /// them is essential: re-arming would resurrect pre-adoption local state.
-  /// A later local-authoritative rebuild re-enqueues the then-current DB rows
-  /// through the normal full-resync path after this unique-slot release.
-  @discardableResult
-  public static func releaseAuthoritativeAdoptionFences(
-    _ db: Database, authoritativeSessionToken: String
-  ) throws -> Int {
-    try db.execute(
-      sql: """
-        DELETE FROM sync_outbox
-        WHERE synced_at IS NULL
-          AND disposition = ?
-          AND authoritative_session_token = ?
-        """,
-      arguments: [
-        Disposition.authoritativeAdoption.rawValue, authoritativeSessionToken,
-      ])
-    return db.changesCount
   }
 
 }

@@ -20,11 +20,11 @@ jobs:
   swift-package:
     name: Swift package
     runs-on: macos-15
-    # verify_all.sh builds every product (app, mobile, vision, watch, widgets,
+    # verify_all.sh builds every product (app, mobile, watch, widgets,
     # MCP host), runs both test suites and every static verifier from a cold
     # checkout with no dependency cache, then stages the macOS app and audits the
     # packaged bundle (codesign/entitlements, Mach-O distribution + load closure,
-    # verify_packaging.sh); the two Release-link builds below each re-run xcodegen
+    # verify_packaging.sh); the Release-link build below re-runs xcodegen
     # + a from-scratch xcodebuild. LORVEX_VERIFY_SKIP_PACKAGING=1 skips only the
     # GUI smoke launch and the real signing/notarize path, whose identities live
     # only on the owner's machine, so distribution is finalized locally, not in
@@ -34,35 +34,63 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      # The macos-15 runner ships several Xcode releases and defaults to 16.4;
-      # the App Store submission toolchain is Xcode 26 (macOS 26 SDK). Pin the
-      # newest installed Xcode 26.x for every subsequent step by exporting
-      # DEVELOPER_DIR, and hard-fail if the runner image carries no Xcode 26 (so
-      # a silent image change can't quietly drop the submission SDK).
-      - name: Select Xcode 26
+      # The runner ships several Xcode releases and defaults to an older one, so
+      # every subsequent step runs against an explicitly chosen DEVELOPER_DIR.
+      # App Store submissions require SDK 26 or later, which is also the app's
+      # deployment floor; the newest installed release at or above that floor is
+      # the right choice, and building against a newer SDK than the deployment
+      # target is the intended configuration. The job hard-fails when the image
+      # carries nothing recent enough, so a silent image change cannot quietly
+      # drop below the submission SDK.
+      - name: Select the submission toolchain (Xcode 26 or newer)
         run: |
           set -euo pipefail
           dev_dir=""
-          for candidate in $(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V -r); do
+          for candidate in $(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V -r); do
+            version="${candidate##*/Xcode_}"
+            major="${version%%.*}"
+            [[ "$major" =~ ^[0-9]+$ ]] || continue
+            (( major >= 26 )) || continue
             if [[ -x "$candidate/Contents/Developer/usr/bin/xcodebuild" ]]; then
               dev_dir="$candidate/Contents/Developer"
               break
             fi
           done
           if [[ -z "$dev_dir" ]]; then
-            echo "::error::No Xcode 26.x found under /Applications; cannot pin the submission toolchain." >&2
+            echo "::error::No Xcode 26 or newer found under /Applications; cannot pin the submission toolchain." >&2
             ls -d /Applications/Xcode_*.app 2>/dev/null >&2 || true
             exit 1
           fi
           echo "Selected $dev_dir"
           echo "DEVELOPER_DIR=$dev_dir" >> "$GITHUB_ENV"
           sudo xcode-select -s "$dev_dir"
-      # Prove the pinned toolchain is Xcode 26 with the macOS/iOS/xrOS/watchOS 26
-      # SDKs present; the grep fails the job if the submission SDK is not 26.
+      # Record the selected toolchain and fail the job unless each of the three
+      # submission platforms has an SDK at or above the floor. Checking every
+      # platform separately matters: a single alternation over the SDK list
+      # passes as soon as any one platform matches.
       - name: Toolchain evidence
         run: |
+          set -euo pipefail
           xcodebuild -version
-          xcodebuild -showsdks | grep -Ei 'ios 26|macos 26|xros 26|watchos 26'
+          sdks=$(xcodebuild -showsdks)
+          printf '%s\n' "$sdks"
+          require_sdk() {
+            local label="$1" prefix="$2" version
+            version=$(printf '%s\n' "$sdks" \
+              | sed -n "s/.*-sdk ${prefix}\([0-9][0-9.]*\).*/\1/p" | sort -V | tail -1)
+            if [[ -z "$version" ]]; then
+              echo "::error::The selected toolchain installs no ${label} SDK." >&2
+              exit 1
+            fi
+            if (( ${version%%.*} < 26 )); then
+              echo "::error::${label} SDK ${version} is below the required 26." >&2
+              exit 1
+            fi
+            echo "${label} SDK ${version}"
+          }
+          require_sdk macOS macosx
+          require_sdk iOS iphoneos
+          require_sdk watchOS watchos
       - name: Install XcodeGen
         env:
           HOMEBREW_NO_AUTO_UPDATE: "1"
@@ -85,18 +113,6 @@ jobs:
           set -e
           if [[ "$status" -eq 78 ]]; then
             echo "::notice::iOS Release link skipped (environment unavailable on this runner)"
-          elif [[ "$status" -ne 0 ]]; then
-            exit "$status"
-          fi
-      - name: visionOS Release link
-        working-directory: apps/apple
-        run: |
-          set +e
-          ./script/verify_vision_release_link.sh
-          status=$?
-          set -e
-          if [[ "$status" -eq 78 ]]; then
-            echo "::notice::visionOS Release link skipped (environment unavailable on this runner)"
           elif [[ "$status" -ne 0 ]]; then
             exit "$status"
           fi

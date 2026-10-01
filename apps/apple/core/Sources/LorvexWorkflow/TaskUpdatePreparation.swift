@@ -21,6 +21,9 @@ public struct PreparedTaskUpdate: Sendable {
   public var priority: Patch<Int64>
   public var estimatedMinutes: Patch<Int64>
   public var plannedDate: Patch<String>
+  /// The planned time in minutes since midnight, validated as a pair and
+  /// against the planned date the task has after the update.
+  public var plannedTime: Patch<Range<Int64>>
   public var availableFrom: Patch<String>
   public var beforeStatus: TaskStatus
 }
@@ -204,6 +207,10 @@ public enum TaskUpdatePreparation {
         try TaskCreateDateParse.normalizeDueDateInputForConn(db, value: v)
       }
 
+    let plannedTime = try preparePlannedTime(
+      db, update: update, plannedDate: plannedDate,
+      newStatus: normalizedStatus.flatMap(TaskStatus.parse), beforeStatus: beforeStatusTyped)
+
     let changedTags =
       update.tagsSet != nil || update.tagsAdd != nil || update.tagsRemove != nil
     let newTags: [String]?
@@ -238,8 +245,48 @@ public enum TaskUpdatePreparation {
       priority: normalizedPriority.map { Int64($0) },
       estimatedMinutes: estimatedMinutes,
       plannedDate: plannedDate,
+      plannedTime: plannedTime,
       availableFrom: availableFrom,
       beforeStatus: beforeStatusTyped)
+  }
+
+  /// Validate the `planned_start_time` / `planned_end_time` pair into minutes
+  /// since midnight. Both fields move together; a time must end after it
+  /// starts and needs a planned date once the update lands, so it is rejected
+  /// alongside a cleared date, alongside a reopen that resets the date, or on
+  /// a task left without one.
+  private static func preparePlannedTime(
+    _ db: Database,
+    update: TaskUpdateInput,
+    plannedDate: Patch<String>,
+    newStatus: TaskStatus?,
+    beforeStatus: TaskStatus
+  ) throws -> Patch<Range<Int64>> {
+    switch (update.plannedStartTime, update.plannedEndTime) {
+    case (.unset, .unset):
+      return .unset
+    case (.clear, .clear):
+      return .clear
+    case (.set(let startRaw), .set(let endRaw)):
+      let time = try TaskPlannedTimeInput.minutes(start: startRaw, end: endRaw)
+      switch plannedDate {
+      case .set: break
+      case .clear: throw StoreError.validation(TaskPlannedTimeInput.missingDateMessage)
+      case .unset:
+        let reopening =
+          newStatus == .open && beforeStatus != .open && beforeStatus != .inProgress
+        let hasDate =
+          try Bool.fetchOne(
+            db, sql: "SELECT planned_date IS NOT NULL FROM tasks WHERE id = ?",
+            arguments: [update.id]) ?? false
+        if reopening || !hasDate {
+          throw StoreError.validation(TaskPlannedTimeInput.missingDateMessage)
+        }
+      }
+      return .set(time)
+    default:
+      throw StoreError.validation(TaskPlannedTimeInput.unpairedMessage)
+    }
   }
 
   /// Validate that `id` parses through the canonical entity-id sentinel

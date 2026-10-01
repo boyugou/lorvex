@@ -10,7 +10,7 @@ public enum LorvexQuickAction: String, CaseIterable, Sendable {
   /// Presents quick task capture immediately: the capture sheet on iOS/iPadOS,
   /// the focused inline quick-add field on macOS.
   case quickCapture = "com.lorvex.apple.quickCapture"
-  /// Navigates to the Today view showing the current focus plan and task list.
+  /// Navigates to the Today view: the day's task list, schedule, and briefing.
   case openToday = "com.lorvex.apple.openToday"
 
   /// The type string used in `UIApplicationShortcutItem` declarations. Matches

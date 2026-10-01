@@ -15,20 +15,21 @@ final class ImportContractHardeningTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func uuid() -> String { UUID().uuidString.lowercased() }
 
-  func testParentOwnedImportRejectsMalformedSoftReferenceIDsBeforeWriting() async throws {
+  func testImportRejectsMalformedRecordsBeforeWriting() async throws {
     let service = try makeService()
 
     do {
-      try await service.importCurrentFocus(
-        ExportCurrentFocus(date: "2026-07-17", taskIDs: ["not-a-canonical-task-id"]))
-      XCTFail("A malformed current-focus child identity must be rejected.")
+      try await service.importDailyBriefing(
+        ExportDailyBriefing(date: "2026-07-17", briefing: "   "))
+      XCTFail("A blank daily briefing must be rejected.")
     } catch {
-      XCTAssertTrue(error.localizedDescription.contains("canonical task identity"))
+      XCTAssertTrue(error.localizedDescription.contains("must not be blank"))
     }
 
     do {
@@ -43,7 +44,7 @@ final class ImportContractHardeningTests: XCTestCase {
 
     let counts = try service.read { db -> (Int, Int, Int) in
       (
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM current_focus") ?? -1,
+        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM daily_briefings") ?? -1,
         try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM daily_reviews") ?? -1,
         try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox") ?? -1
       )

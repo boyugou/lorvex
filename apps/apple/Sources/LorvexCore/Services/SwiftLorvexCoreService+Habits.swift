@@ -108,7 +108,8 @@ extension SwiftLorvexCoreService {
     targetCount: Int,
     milestoneTarget: Int?,
     archived: Bool,
-    position: Int64
+    position: Int64,
+    createdAt: String?
   ) async throws -> LorvexHabit {
     let milestone = try Self.normalizedMilestoneTarget(milestoneTarget)
     return try withWrite { db, hlc, deviceId in
@@ -116,21 +117,23 @@ extension SwiftLorvexCoreService {
         db, hlc: hlc, deviceId: deviceId, id: id, name: name, icon: icon, color: color, cue: cue,
         frequencyType: frequencyType, weekdays: weekdays, perPeriodTarget: perPeriodTarget,
         dayOfMonth: dayOfMonth, targetCount: targetCount, milestone: milestone, archived: archived,
-        position: position)
+        position: position, createdAt: createdAt)
     }
   }
 
   /// Upsert one imported habit row (identity, cadence, weekdays) and enqueue its
   /// sync envelope + changelog, inside the caller's transaction. `milestone` is
   /// the already-normalized target. Shared by
-  /// ``importHabit(id:name:icon:color:cue:frequencyType:weekdays:perPeriodTarget:dayOfMonth:targetCount:milestoneTarget:archived:position:)``
+  /// ``importHabit(id:name:icon:color:cue:frequencyType:weekdays:perPeriodTarget:dayOfMonth:targetCount:milestoneTarget:archived:position:createdAt:)``
   /// and the transactional habit-record importer so a habit upsert commits
-  /// atomically with its completions and reminder policies.
+  /// atomically with its completions and reminder policies. `createdAt` is the
+  /// habit's original creation instant from the archive; a nil or blank value
+  /// falls back to the import instant and a malformed one is rejected.
   func upsertImportedHabitInTx(
     _ db: Database, hlc: HlcSession, deviceId: String, id: LorvexHabit.ID, name: String,
     icon: String?, color: String?, cue: String?, frequencyType: String, weekdays: [Int],
     perPeriodTarget: Int?, dayOfMonth: Int?, targetCount: Int, milestone: Int?, archived: Bool,
-    position: Int64
+    position: Int64, createdAt: String?
   ) throws -> LorvexHabit {
     let importedCadence = try ExportHabit.cadence(
       frequencyType: frequencyType, weekdays: weekdays, perPeriodTarget: perPeriodTarget,
@@ -146,6 +149,10 @@ extension SwiftLorvexCoreService {
       hlc: hlc, existingVersion: existingVersion,
       entityType: EntityName.habit, entityId: id)
     let now = SyncTimestampFormat.syncTimestampNow()
+    // A habit's creation day is the left edge of its adherence window, so the
+    // archive's value is restored rather than replaced by the import instant.
+    let created = try Self.canonicalImportTimestamp(
+      createdAt, field: "habit createdAt", fallback: now)
     // `created_at` is preserved on conflict (the original creation instant
     // survives re-import). Restore is authoritative, so an existing row is
     // replaced at a freshly minted version that dominates its current floor.
@@ -174,7 +181,7 @@ extension SwiftLorvexCoreService {
         id, validated.name, validated.icon, validated.color, validated.cue,
         fields.frequencyType, fields.perPeriodTarget, fields.dayOfMonth.map { Int64($0) },
         validated.targetCount, milestone.map { Int64($0) }, archived ? 1 : 0,
-        validated.lookupKey, position, version, now, now,
+        validated.lookupKey, position, version, created, now,
       ])
     if db.changesCount == 0 {
       let observed = try String.fetchOne(
@@ -204,7 +211,7 @@ extension SwiftLorvexCoreService {
   public func updateHabit(
     id: LorvexHabit.ID,
     name: String?,
-    cue: String?,
+    cue: Patch<String>,
     color: String?,
     icon: String?,
     targetCount: Int?,
@@ -226,7 +233,7 @@ extension SwiftLorvexCoreService {
           name: name,
           icon: icon.map { Patch.set($0) } ?? .unset,
           color: color.map { Patch.set($0) } ?? .unset,
-          cue: cue.map { Patch.set($0) } ?? .unset,
+          cue: cue,
           frequency: domainCadence,
           targetCount: targetCount.map { Int64($0) },
           archived: ArchiveAction.fromOptionalBool(archived)))

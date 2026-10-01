@@ -16,6 +16,13 @@ import Testing
 /// its next operation and reopens the recreated file. No post-reset write may
 /// land in the deleted inode, and no handle may keep serving the pre-reset
 /// data (split brain).
+///
+/// The tests run one at a time. Several pause a database operation on a
+/// barrier while the test body waits for it synchronously, so each holds
+/// cooperative-pool threads; side by side under a parallel run they starve the
+/// shared pool, and an operation can take half a minute just to reach its
+/// barrier.
+@Suite(.serialized)
 struct StorageGenerationCutoverTests {
 
   @Test
@@ -260,6 +267,8 @@ struct StorageGenerationCutoverTests {
           "lifecycle_version": .string(version.description),
           "list_id": .string("inbox"),
           "planned_date": .null,
+          "planned_end_minutes": .null,
+          "planned_start_minutes": .null,
           "priority": .null,
           "raw_input": .null,
           "recurrence": .null,
@@ -327,20 +336,19 @@ struct StorageGenerationCutoverTests {
       }
       #expect(barrier.waitUntilPaused(), "the write never reached its transaction barrier")
 
-      let resetState = BackgroundOperationState()
-      let resetTask = Task.detached {
-        resetState.markStarted()
-        defer { resetState.markCompleted() }
+      let reset = BackgroundOperation()
+      reset.start {
         try SwiftLorvexCoreService.resetManagedStorage(at: URL(fileURLWithPath: dbPath))
       }
-      #expect(resetState.waitUntilStarted(), "the reset task never started")
+      #expect(reset.waitUntilStarted(), "the reset thread never started")
       #expect(
-        !resetState.waitUntilCompleted(timeout: 0.2),
+        !reset.waitUntilCompleted(timeout: 0.2),
         "factory reset completed while a managed write transaction was still active")
 
       barrier.release()
       _ = try await writeTask.value
-      try await resetTask.value
+      #expect(reset.waitUntilCompleted(), "factory reset never finished after the write committed")
+      try reset.rethrowFailure()
       #expect(ManagedStorageGeneration.read(forDatabase: dbPath) == 1)
       #expect(try await service.getPreference(key: "theme") == nil)
       #expect(try await service.getPreference(key: "language") == nil)
@@ -371,26 +379,25 @@ struct StorageGenerationCutoverTests {
           barrier.pause
         ) {
           try await service.loadSnapshotForDataExport(
-            entities: ["lists"], forAI: false, includeNativeTaskGraph: false)
+            entities: ["lists"], includeNativeTaskGraph: false)
         }
       }
       #expect(barrier.waitUntilPaused(), "the export never reached its read barrier")
 
-      let resetState = BackgroundOperationState()
-      let resetTask = Task.detached {
-        resetState.markStarted()
-        defer { resetState.markCompleted() }
+      let reset = BackgroundOperation()
+      reset.start {
         try SwiftLorvexCoreService.resetManagedStorage(at: URL(fileURLWithPath: dbPath))
       }
-      #expect(resetState.waitUntilStarted(), "the reset task never started")
+      #expect(reset.waitUntilStarted(), "the reset thread never started")
       #expect(
-        !resetState.waitUntilCompleted(timeout: 0.2),
+        !reset.waitUntilCompleted(timeout: 0.2),
         "factory reset completed while an export read transaction was still active")
 
       barrier.release()
       let snapshot = try await exportTask.value
       #expect(snapshot.payload.lists != nil)
-      try await resetTask.value
+      #expect(reset.waitUntilCompleted(), "factory reset never finished after the export ended")
+      try reset.rethrowFailure()
       #expect(ManagedStorageGeneration.read(forDatabase: dbPath) == 1)
       #expect(try await service.getPreference(key: "theme") == nil)
     }
@@ -690,7 +697,13 @@ struct StorageGenerationCutoverTests {
       condition.unlock()
     }
 
-    func waitUntilPaused(timeout: TimeInterval = 10) -> Bool {
+    /// Waits for the operation under test to reach its barrier. The timeout is
+    /// generous because it only bounds *scheduling*, not the behaviour asserted:
+    /// the pause either happens or the test fails either way, so a tight bound
+    /// only converts a loaded machine into a false failure. The full gate runs
+    /// this suite alongside packaging and archive steps, where a task can wait
+    /// well past ten seconds for a core.
+    func waitUntilPaused(timeout: TimeInterval = 60) -> Bool {
       condition.lock()
       defer { condition.unlock() }
       let deadline = Date().addingTimeInterval(timeout)
@@ -708,33 +721,55 @@ struct StorageGenerationCutoverTests {
     }
   }
 
-  /// Observable lifecycle for the detached reset task used by the operation-
-  /// lease tests.
-  private final class BackgroundOperationState: @unchecked Sendable {
+  /// Runs the operation-lease tests' synchronous factory reset on a thread of
+  /// its own and exposes its lifecycle. A dedicated `Thread`, not a detached
+  /// task: the test body blocks cooperative-pool threads in its `NSCondition`
+  /// waits, and under a parallel test run the pool can be exhausted, so a
+  /// detached task may not start before the wait gives up. All state is
+  /// `NSCondition`-guarded.
+  private final class BackgroundOperation: @unchecked Sendable {
     private let condition = NSCondition()
     private var started = false
     private var completed = false
+    private var failure: (any Error)?
 
-    func markStarted() {
-      condition.lock()
-      started = true
-      condition.broadcast()
-      condition.unlock()
-    }
-
-    func markCompleted() {
-      condition.lock()
-      completed = true
-      condition.broadcast()
-      condition.unlock()
+    /// Starts `body` on a new thread; call once.
+    func start(_ body: @escaping @Sendable () throws -> Void) {
+      Thread { [self] in
+        update { started = true }
+        do {
+          try body()
+        } catch {
+          update { failure = error }
+        }
+        update { completed = true }
+      }.start()
     }
 
     func waitUntilStarted(timeout: TimeInterval = 10) -> Bool {
       wait(timeout: timeout) { started }
     }
 
-    func waitUntilCompleted(timeout: TimeInterval) -> Bool {
+    /// The default bound is generous for the same reason as
+    /// ``BlockingOperationBarrier/waitUntilPaused(timeout:)``: it only bounds
+    /// scheduling on a loaded machine.
+    func waitUntilCompleted(timeout: TimeInterval = 60) -> Bool {
       wait(timeout: timeout) { completed }
+    }
+
+    /// Rethrows the error `body` threw, if any.
+    func rethrowFailure() throws {
+      condition.lock()
+      let failure = self.failure
+      condition.unlock()
+      if let failure { throw failure }
+    }
+
+    private func update(_ change: () -> Void) {
+      condition.lock()
+      change()
+      condition.broadcast()
+      condition.unlock()
     }
 
     private func wait(timeout: TimeInterval, until predicate: () -> Bool) -> Bool {

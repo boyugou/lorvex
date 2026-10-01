@@ -7,10 +7,12 @@ import SwiftUI
 /// Renders the trailing `weeks` weeks as a column-per-week grid of small
 /// rounded cells whose fill reflects each day's summed completions against the
 /// habit's target on a graded five-shade ramp (`HabitHeatmapModel.Cell.level`):
-/// no activity → a neutral quaternary wash, then four steps of the app accent up
-/// to a full-accent "met" cell; days outside the window are empty slots. The
-/// ramp is opacity steps of the environment `.tint` (the user's Apple accent),
-/// so it stays token-derived and renders correctly in light and dark.
+/// no activity → a neutral quaternary wash, then four steps of the habit's
+/// identity color (``LorvexHabitPalette/baseColor(for:)``, the hue of its card
+/// and of the iOS heatmap) up to a full-color "met" cell; days outside the
+/// window are empty slots. The ramp is opacity steps of `.tint`, which the grid
+/// and legend set to that identity color, so it renders in light and dark
+/// without hardcoded shades.
 ///
 /// Data comes from the store's cached `HabitDetail` (completions + stats),
 /// which the caller loads via `AppStore.loadHabitDetail(id:)`.
@@ -50,10 +52,14 @@ struct HabitHeatmapView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
       HabitHeatmapStatsLine(
-        habitID: habit.id, stats: detail?.stats, frequencyType: habit.frequencyType)
+        habitID: habit.id, stats: detail?.stats, frequencyType: habit.frequencyType,
+        habitTint: LorvexHabitPalette.baseColor(for: habit))
       if detail != nil {
-        heatmap(grid: cachedGrid)
-        legend
+        Group {
+          heatmap(grid: cachedGrid)
+          legend
+        }
+        .tint(LorvexHabitPalette.baseColor(for: habit))
       } else {
         ProgressView()
           .controlSize(.small)
@@ -142,10 +148,10 @@ struct HabitHeatmapView: View {
     return fill(forLevel: cell.level)
   }
 
-  /// The graded accent ramp: level 0 (no activity) is a neutral quaternary wash;
-  /// levels 1…4 step up the environment `.tint` (the app accent) opacity to a
-  /// full-accent "met" cell. Opacity steps keep the ramp derived from the accent
-  /// token and correct in light and dark rather than hardcoding shades.
+  /// The graded ramp: level 0 (no activity) is a neutral quaternary wash;
+  /// levels 1…4 step up the opacity of `.tint` (the habit's identity color) to
+  /// a full-color "met" cell, correct in light and dark without hardcoded
+  /// shades.
   private func fill(forLevel level: Int) -> AnyShapeStyle {
     switch level {
     case ...0: return AnyShapeStyle(.quaternary)

@@ -41,7 +41,7 @@ extension SwiftLorvexCoreService {
             "preference '\(key)' must be 'maximum', 'off', or a positive integer day count")
         }
         try Self.writeAuditRetentionPreference(
-          db, service: self, deviceId: deviceId, hlc: hlc, policy: policy,
+          db, service: self, deviceId: deviceId, policy: policy,
           operation: SyncNaming.opUpsert, summary: "Set preference '\(key)'")
         return value
       }
@@ -126,7 +126,7 @@ extension SwiftLorvexCoreService {
       if PreferenceKeys.isControlPlanePreference(key) {
         let previous = ChangelogRetentionPolicy.read(db).wireValue
         try Self.writeAuditRetentionPreference(
-          db, service: self, deviceId: deviceId, hlc: hlc, policy: .maximum,
+          db, service: self, deviceId: deviceId, policy: .maximum,
           operation: SyncNaming.opDelete, summary: "Deleted preference '\(key)'")
         return McpDeletionReceipt(previous: previous)
       }
@@ -184,9 +184,8 @@ extension SwiftLorvexCoreService {
     }
   }
 
-  /// Purge the entire device-local EventKit mirror, scrub any saved provider
-  /// focus-block label, and disable its provider scope, run atomically with a
-  /// detail-reducing calendar-access change (a
+  /// Purge the entire device-local EventKit mirror and disable its provider
+  /// scope, run atomically with a detail-reducing calendar-access change (a
   /// `setPreference` downgrade, or a `deletePreference` that falls back to the
   /// stricter default). Previously-mirrored full-detail rows (titles, locations,
   /// descriptions, organizer/attendees, video-call URL) must not survive at rest
@@ -199,16 +198,6 @@ extension SwiftLorvexCoreService {
   private static func purgeEventKitMirrorForDetailDowngrade(_ db: Database) throws {
     try ProviderRepo.clearProviderEventsByScope(
       db, providerKind: ProviderKind.eventkit, providerScope: eventKitScope)
-    // Provider focus-block titles are device-local detail. Their outbound
-    // schedule snapshot is already always normalized to "Event", so this local
-    // scrub changes no syncable representation and intentionally does not mint
-    // a focus-schedule HLC or enqueue an outbox item.
-    try db.execute(
-      sql: """
-        UPDATE focus_schedule_blocks
-        SET title = 'Event'
-        WHERE event_source = 'provider' AND (title IS NULL OR title <> 'Event')
-        """)
     try ProviderRepo.updateProviderScopeState(
       db, providerKind: ProviderKind.eventkit, providerScope: eventKitScope,
       transition: .toggle(enabled: false))
@@ -315,27 +304,20 @@ extension SwiftLorvexCoreService {
     return version
   }
 
-  /// Mutate the virtual retention preference directly through its dedicated
-  /// control plane. No `preferences` row, `.preference` outbox item, tombstone,
-  /// or payload shadow may coexist with that authority.
+  /// Store the virtual retention preference in this device's `device_state`
+  /// (``AuditRetention``) and apply it at once. It is never a `preferences`
+  /// row and never syncs: each device keeps its own audit trail. The change is
+  /// recorded after the prune, so it survives an `off` policy's purge only
+  /// when recording is still allowed.
   private static func writeAuditRetentionPreference(
     _ db: Database,
     service: SwiftLorvexCoreService,
     deviceId: String,
-    hlc: HlcSession,
     policy: ChangelogRetentionPolicy,
     operation: String,
     summary: String
   ) throws {
-    try AuditRetentionFrontier.enforceControlPlanePreferenceIsolation(db)
-    let priorVersion = try AuditRetentionFrontier.currentPolicyVersion(db)
-    let version = try VersionFloor.mint(
-      hlc: hlc,
-      existingVersion: priorVersion.isEmpty ? nil : priorVersion,
-      entityType: EntityName.preference,
-      entityId: PreferenceKeys.prefAiChangelogRetentionPolicy)
-    try AuditRetentionFrontier.adoptPolicyForCurrentScope(
-      db, policy: policy, policyVersion: version)
+    try AuditRetention.setPolicy(db, policy)
     try AuditRetention.gcChangelog(db)
     try service.writeChangelogRow(
       db,

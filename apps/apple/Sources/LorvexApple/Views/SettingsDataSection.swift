@@ -51,14 +51,13 @@ extension SettingsView {
       }
       .disabled(
         cloudDeleteInProgress || resetInProgress || store.isDataImportRunning
-          || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning
-          || store.isCloudDeletionMaintenanceRunning)
+          || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning)
       .accessibilityIdentifier("settings.cloudDelete.button")
 
       if let cloudDeleteErrorMessage {
         Label(cloudDeleteErrorMessage, systemImage: "exclamationmark.triangle")
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
           .accessibilityIdentifier("settings.cloudDelete.error")
       }
 
@@ -72,7 +71,7 @@ extension SettingsView {
           systemImage: "checkmark.circle"
         )
         .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.green)
+        .foregroundStyle(LorvexDesign.Palette.success)
         .accessibilityIdentifier("settings.cloudDelete.success")
       }
     }
@@ -109,8 +108,7 @@ extension SettingsView {
       }
       .disabled(
         resetInProgress || cloudDeleteInProgress || store.isDataImportRunning
-          || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning
-          || store.isCloudDeletionMaintenanceRunning)
+          || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning)
       .accessibilityIdentifier("settings.reset.button")
     }
   }
@@ -129,7 +127,9 @@ extension SettingsView {
       ExportCategoryPicker(
         selection: $selectedExportCategories,
         idPrefix: "dataExport",
+        layout: .grid,
         categoryName: { $0.lorvexLocalizedDisplayLabel },
+        groupName: { $0.lorvexLocalizedName },
         selectAllLabel: String(
           localized: "data_export.select_all", defaultValue: "Select All",
           table: "Localizable",
@@ -200,13 +200,13 @@ extension SettingsView {
       if let errorMessage = exportErrorMessage {
         Label(errorMessage, systemImage: "exclamationmark.triangle")
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.orange)
+          .foregroundStyle(LorvexDesign.Palette.warning)
       }
 
       if let exportSuccessMessage {
         Label(exportSuccessMessage, systemImage: "checkmark.circle")
           .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.green)
+          .foregroundStyle(LorvexDesign.Palette.success)
           .accessibilityIdentifier("dataExport.success")
       }
     }

@@ -33,8 +33,13 @@ final class LorvexStoreManagedCompletenessTests: XCTestCase {
     }
     try seed.close()
 
+    // The open runs with the real ladder: the load-bearing tables are checked
+    // before any migration, so the missing tables surface as the recoverable
+    // completeness failure instead of a migration failure, which would
+    // deliberately re-throw rather than quarantine.
     let store = try LorvexStore.open(
-      at: dbURL, schemaSQL: sql, schemaChecksum: checksum, managed: true)
+      at: dbURL, schemaSQL: sql, schemaChecksum: checksum,
+      migrations: try TestSupport.loadSchemaMigrations(), managed: true)
 
     // It recovered: the stamped-but-incomplete file was set aside (preserved) and
     // a fresh database now lives at the original path.
@@ -49,12 +54,7 @@ final class LorvexStoreManagedCompletenessTests: XCTestCase {
     // The replacement is fully realized and seeded.
     let tables = try SchemaIntrospection.dump(store).filter { $0.type == "table" }.map(\.name)
     for expected in [
-      "lists", "tasks", "error_logs", "sync_checkpoints",
-      "sync_cloudkit_account_binding", "sync_cloudkit_authority_witness",
-      "sync_cloudkit_generation_descriptor",
-      "sync_cloudkit_traversal_progress",
-      "sync_cloudkit_traversal_witness", "sync_cloudkit_incremental_cursor",
-      "sync_cloudkit_corrupt_record_fences", "preferences",
+      "lists", "tasks", "error_logs", "sync_checkpoints", "sync_outbox", "preferences",
     ] {
       XCTAssertTrue(tables.contains(expected), "fresh database missing table: \(expected)")
     }
@@ -74,7 +74,8 @@ final class LorvexStoreManagedCompletenessTests: XCTestCase {
     let sql = try Self.loadSchemaSQL()
 
     let store = try LorvexStore.open(
-      at: dbURL, schemaSQL: sql, schemaChecksum: "fresh-managed-checksum", managed: true)
+      at: dbURL, schemaSQL: sql, schemaChecksum: "fresh-managed-checksum",
+      migrations: try TestSupport.loadSchemaMigrations(), managed: true)
 
     XCTAssertNil(store.recovery, "a healthy fresh managed open must not be quarantined")
     let siblings = try FileManager.default.contentsOfDirectory(atPath: dir.path)
@@ -127,7 +128,9 @@ final class LorvexStoreManagedCompletenessTests: XCTestCase {
     let sql = try Self.loadSchemaSQL()
     let checksum = "inbox-ensure-checksum"
 
-    _ = try LorvexStore.open(at: dbURL, schemaSQL: sql, schemaChecksum: checksum, managed: true)
+    let migrations = try TestSupport.loadSchemaMigrations()
+    _ = try LorvexStore.open(
+      at: dbURL, schemaSQL: sql, schemaChecksum: checksum, migrations: migrations, managed: true)
 
     // Remove the inbox row out-of-band (foreign keys off so the ON DELETE
     // RESTRICT guard does not block the deletion in the test fixture).
@@ -145,7 +148,7 @@ final class LorvexStoreManagedCompletenessTests: XCTestCase {
 
     // Reopening the managed store re-ensures the canonical inbox row.
     let reopened = try LorvexStore.open(
-      at: dbURL, schemaSQL: sql, schemaChecksum: checksum, managed: true)
+      at: dbURL, schemaSQL: sql, schemaChecksum: checksum, migrations: migrations, managed: true)
     XCTAssertNil(reopened.recovery, "an inbox-only gap is not a quarantine condition")
     let inbox = try reopened.writer.read { db in
       try Row.fetchOne(db, sql: "SELECT id, name FROM lists WHERE id = 'inbox'")

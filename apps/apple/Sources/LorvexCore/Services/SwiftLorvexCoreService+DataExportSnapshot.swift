@@ -5,11 +5,11 @@ import LorvexStore
 
 extension SwiftLorvexCoreService {
   /// Captures the complete selected export in one GRDB read transaction. Every
-  /// category, aggregate child, AI-access preference, and native task root is
-  /// therefore projected from the same SQLite snapshot even while another app
-  /// process writes the shared store.
+  /// category, aggregate child, and native task root is therefore projected
+  /// from the same SQLite snapshot even while another app process writes the
+  /// shared store.
   public func loadSnapshotForDataExport(
-    entities: [String], forAI: Bool, includeNativeTaskGraph: Bool
+    entities: [String], includeNativeTaskGraph: Bool
   ) async throws -> LorvexDataExportSnapshot {
     let all = entities.isEmpty || entities.contains("all")
     let selected = Set(entities)
@@ -60,22 +60,10 @@ extension SwiftLorvexCoreService {
         include(.dailyReviews)
         ? try Self.dailyReviewsForDataExport(db)
         : nil
-      let currentFocus =
-        include(.currentFocus)
-        ? try Self.currentFocusForDataExport(db)
+      let dailyBriefings =
+        include(.dailyBriefings)
+        ? try Self.dailyBriefingsForDataExport(db)
         : nil
-
-      let focusSchedules: [ExportFocusSchedule]?
-      if include(.focusSchedules) {
-        let includeProviderBlocks =
-          forAI
-          ? try DeviceStateRepo.readCalendarAiAccessMode(db).includesProvider
-          : true
-        focusSchedules = try Self.focusSchedulesForDataExport(
-          db, includeProviderBlocks: includeProviderBlocks)
-      } else {
-        focusSchedules = nil
-      }
 
       let taskCalendarEventLinks =
         include(.taskCalendarEventLinks)
@@ -106,7 +94,7 @@ extension SwiftLorvexCoreService {
         tasks: tasks, nativeTaskGraph: nativeTaskGraph, lists: lists, tags: tags,
         habits: habits, calendarSeriesCutovers: calendarBundle?.cutovers,
         calendarEvents: calendarBundle?.events, dailyReviews: dailyReviews,
-        currentFocus: currentFocus, focusSchedules: focusSchedules,
+        dailyBriefings: dailyBriefings,
         taskCalendarEventLinks: taskCalendarEventLinks, memory: memory,
         preferences: preferences)
       let deviceID = try SyncCheckpoints.get(db, key: SyncCheckpoints.keyDeviceId)
@@ -129,6 +117,15 @@ extension SwiftLorvexCoreService {
   ) throws -> [ExportHabit] {
     let active = try loadHabitsSnapshot(db, date: date).habits
     let archived = try loadHabitsSnapshot(db, date: date, archived: true).habits
+    // `LorvexHabit` is the display projection and carries no creation instant,
+    // so the rows' `created_at` is read alongside it. Without it every restored
+    // habit reports its adherence over the single day of the import.
+    var createdAtByID: [String: String] = [:]
+    for row in try Row.fetchAll(db, sql: "SELECT id, created_at FROM habits") {
+      let id: String = row["id"]
+      let createdAt: String? = row["created_at"]
+      createdAtByID[id] = createdAt
+    }
     return try (active + archived).map { habit in
       let completionCount =
         try Int.fetchOne(
@@ -145,7 +142,8 @@ extension SwiftLorvexCoreService {
       let reminderPolicies = try habitReminderPoliciesForDataExport(db, id: habit.id)
         .map(ExportHabitReminderPolicy.init(from:))
       return ExportHabit(
-        from: habit, completions: completions, reminderPolicies: reminderPolicies)
+        from: habit, createdAt: createdAtByID[habit.id], completions: completions,
+        reminderPolicies: reminderPolicies)
     }
   }
 

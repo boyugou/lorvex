@@ -240,7 +240,7 @@ def clean_widget_snapshot_failure(
         return str(error)
     if generated_at < reset_at:
         return "widget snapshot was generated before the final destructive reset"
-    for key in ("focus_tasks", "habits", "today_tasks"):
+    for key in ("tasks", "habits"):
         if payload.get(key) != []:
             return f"clean widget snapshot still contains {key} rows"
     if "Smoke-test" in json.dumps(payload, sort_keys=True):
@@ -299,7 +299,7 @@ def wait_for_clean_derived_state(
     database_path = reset.get("databasePath")
     if not isinstance(database_path, str):
         raise RuntimeProbeFailure("final reset evidence has no database path")
-    snapshot_path = Path(database_path).parent / "widget_snapshot_v3.json"
+    snapshot_path = Path(database_path).parent / "widget_snapshot.json"
 
     deadline = time.monotonic() + timeout
     last_failure = "widget snapshot has not been published"
@@ -531,7 +531,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--evidence-dir", type=Path)
     parser.add_argument("--app-name", default="Lorvex")
     parser.add_argument("--widget-bundle-id", default="com.lorvex.apple.focuswidget")
-    parser.add_argument("--widget-appex-name", default="LorvexFocusWidget.appex")
+    parser.add_argument("--widget-appex-name", default="LorvexWidgets.appex")
     parser.add_argument("--process-name", action="append", default=[])
     parser.add_argument("--clean-reset-evidence", type=Path)
     parser.add_argument("--stability-seconds", type=float, default=3.0)

@@ -39,7 +39,6 @@ final class SyncEntityDescriptorTests: XCTestCase {
 
   private func pragmaColumns(_ db: Database, _ table: String) throws -> [String] {
     try String.fetchAll(db, sql: "SELECT name FROM pragma_table_info('\(table)') ORDER BY cid")
-      .filter { !StorageSchema.isDeviceLocalColumn(table: table, column: $0) }
   }
 
   /// Per-descriptor role invariants that hold without a DB: projections contain

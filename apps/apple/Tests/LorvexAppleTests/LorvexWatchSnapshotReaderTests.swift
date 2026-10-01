@@ -36,9 +36,9 @@ struct LorvexWatchSnapshotReaderTests {
       workspaceInstanceID: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       localChangeSequence: 1,
       timezone: "UTC",
-      stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
-      briefing: "Daily briefing",
-      focusTasks: [
+      stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
+      briefing: nil,
+      tasks: [
         .init(
           id: "task-1",
           title: taskTitle,

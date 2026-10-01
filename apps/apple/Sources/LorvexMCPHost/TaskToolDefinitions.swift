@@ -71,10 +71,10 @@ enum TaskToolDefinitions {
     // Listing orders 116/117: the in_progress lifecycle pair, appended to the
     // contiguous global order while grouped with the complete/cancel/reopen
     // family they mirror.
-    .write(116, TaskMutationToolCatalog.startTaskTool) {
+    .write(112, TaskMutationToolCatalog.startTaskTool) {
       try await $0.setTaskStatusResult(arguments: $1, operation: .start)
     },
-    .write(117, TaskMutationToolCatalog.pauseTaskTool) {
+    .write(113, TaskMutationToolCatalog.pauseTaskTool) {
       try await $0.setTaskStatusResult(arguments: $1, operation: .pause)
     },
     .write(80, TaskMutationToolCatalog.setTaskSomedayTool) {
@@ -89,49 +89,49 @@ enum TaskToolDefinitions {
     .write(83, TaskMutationToolCatalog.moveTaskToListTool) {
       try await $0.moveTaskToListResult(arguments: $1)
     },
-    .write(96, TaskRecurrenceToolCatalog.setRecurrenceTool) {
+    .write(92, TaskRecurrenceToolCatalog.setRecurrenceTool) {
       try await $0.setTaskRecurrenceResult(arguments: $1)
     },
-    .write(97, TaskRecurrenceToolCatalog.removeRecurrenceTool) {
+    .write(93, TaskRecurrenceToolCatalog.removeRecurrenceTool) {
       try await $0.removeTaskRecurrenceResult(arguments: $1)
     },
-    .write(98, TaskRecurrenceToolCatalog.addExceptionTool) {
+    .write(94, TaskRecurrenceToolCatalog.addExceptionTool) {
       try await $0.addTaskRecurrenceExceptionResult(arguments: $1)
     },
-    .write(99, TaskRecurrenceToolCatalog.removeExceptionTool) {
+    .write(95, TaskRecurrenceToolCatalog.removeExceptionTool) {
       try await $0.removeTaskRecurrenceExceptionResult(arguments: $1)
     },
-    .write(100, TaskBatchOpsToolCatalog.batchCompleteTool) {
+    .write(96, TaskBatchOpsToolCatalog.batchCompleteTool) {
       try await $0.batchCompleteTasksResult(arguments: $1)
     },
-    .write(101, TaskBatchOpsToolCatalog.batchCancelTool) {
+    .write(97, TaskBatchOpsToolCatalog.batchCancelTool) {
       try await $0.batchCancelTasksResult(arguments: $1)
     },
-    .write(102, TaskMutationToolCatalog.batchCancelTasksInListTool) {
+    .write(98, TaskMutationToolCatalog.batchCancelTasksInListTool) {
       try await $0.batchCancelTasksInListResult(arguments: $1)
     },
-    .write(103, TaskBatchOpsToolCatalog.batchReopenTool) {
+    .write(99, TaskBatchOpsToolCatalog.batchReopenTool) {
       try await $0.batchReopenTasksResult(arguments: $1)
     },
-    .write(104, TaskBatchOpsToolCatalog.batchMoveTool) {
+    .write(100, TaskBatchOpsToolCatalog.batchMoveTool) {
       try await $0.batchMoveTasksResult(arguments: $1)
     },
-    .write(105, TaskBatchOpsToolCatalog.appendBodyTool) {
+    .write(101, TaskBatchOpsToolCatalog.appendBodyTool) {
       try await $0.appendToTaskBodyResult(arguments: $1)
     },
-    .write(106, TaskBatchOpsToolCatalog.setRemindersTool) {
+    .write(102, TaskBatchOpsToolCatalog.setRemindersTool) {
       try await $0.setTaskRemindersResult(arguments: $1)
     },
-    .read(112, TaskToolCatalog.dependencyGraphTool) {
+    .read(108, TaskToolCatalog.dependencyGraphTool) {
       try await $0.dependencyGraphResult(arguments: $1)
     },
-    .read(113, TaskToolCatalog.upcomingTasksTool) {
+    .read(109, TaskToolCatalog.upcomingTasksTool) {
       try await $0.upcomingTasksResult(arguments: $1)
     },
-    .read(114, TaskToolCatalog.dueTaskRemindersTool) {
+    .read(110, TaskToolCatalog.dueTaskRemindersTool) {
       try await $0.dueTaskRemindersResult(arguments: $1)
     },
-    .read(115, TaskToolCatalog.upcomingTaskRemindersTool) {
+    .read(111, TaskToolCatalog.upcomingTaskRemindersTool) {
       try await $0.upcomingTaskRemindersResult(arguments: $1)
     },
   ]

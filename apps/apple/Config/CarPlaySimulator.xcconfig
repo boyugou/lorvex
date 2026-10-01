@@ -1,0 +1,9 @@
+// CarPlaySimulator.xcconfig
+// Passed to xcodebuild by script/ios_sim_build.sh when LORVEX_IOS_CARPLAY=1.
+// A command-line xcconfig applies to every target, so the override is keyed
+// by target name: only LorvexMobileApp is signed with the simulator CarPlay
+// entitlements; every other target keeps its own CODE_SIGN_ENTITLEMENTS
+// through $(inherited). Simulator QA only — never used by device or App
+// Store builds.
+LORVEX_CARPLAY_SIM_ENTITLEMENTS_LorvexMobileApp = $(SRCROOT)/../../Config/LorvexMobileAppCarPlaySimulator.entitlements
+CODE_SIGN_ENTITLEMENTS = $(LORVEX_CARPLAY_SIM_ENTITLEMENTS_$(TARGET_NAME):default=$(inherited))

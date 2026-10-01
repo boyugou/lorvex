@@ -2,41 +2,14 @@ import Foundation
 import LorvexCore
 
 extension WidgetSnapshotProjector {
-  /// Returns the subset of `tasks` that should be projected given the current focus filter.
-  ///
-  /// When the filter is active and `showNonFocusTasks` is false, only tasks whose IDs
-  /// appear in `currentFocus.taskIDs` are kept. If there is no current focus plan the
-  /// task list is returned unchanged regardless of the filter state.
-  func focusFilteredTasks(
-    from tasks: [LorvexTask],
-    currentFocus: CurrentFocusPlan?,
-    focusFilter: FocusFilterConfiguration
+  /// `tasks` narrowed to the Focus filter's lists while one is active, in the
+  /// order given; every task otherwise.
+  static func focusScoped(
+    _ tasks: [LorvexTask], focusFilter: FocusFilterConfiguration
   ) -> [LorvexTask] {
-    guard focusFilter.isActive, !focusFilter.showNonFocusTasks,
-          let focusTaskIDs = currentFocus?.taskIDs, !focusTaskIDs.isEmpty
-    else {
-      return tasks
-    }
-    let allowedIDs = Set(focusTaskIDs)
-    return tasks.filter { allowedIDs.contains($0.id) }
-  }
-
-  func focusOrderedTasks(
-    from tasks: [LorvexTask],
-    currentFocus: CurrentFocusPlan?,
-    expandBeyondFocus: Bool = false
-  ) -> [LorvexTask] {
-    guard let currentFocus, !currentFocus.taskIDs.isEmpty else {
-      return tasks
-    }
-    let tasksByID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-    let focused = currentFocus.taskIDs.compactMap { tasksByID[$0] }
-    if expandBeyondFocus {
-      let focusedIDs = Set(currentFocus.taskIDs)
-      let others = tasks.filter { !focusedIDs.contains($0.id) }
-      return focused + others
-    }
-    return focused.isEmpty ? tasks : focused
+    guard focusFilter.isActive else { return tasks }
+    let listIDs = Set(focusFilter.listIDs)
+    return tasks.filter { task in task.listID.map(listIDs.contains) ?? false }
   }
 
   static func dateOnlyString(from date: Date) -> String {

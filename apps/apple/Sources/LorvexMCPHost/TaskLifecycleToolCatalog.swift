@@ -50,7 +50,7 @@ extension TaskMutationToolCatalog {
   static let reopenTaskTool = Tool(
     name: "reopen_task",
     title: "Reopen Task",
-    description: "Reopen a completed, cancelled, or someday task (set back to open status). Clears completed_at, planned_date, last_deferred_at, and defer_count. For completed recurring tasks, also cancels any auto-spawned successor to prevent duplicates. Returns the full updated task object.",
+    description: "Reopen a completed, cancelled, or someday task (set back to open status). A completed task keeps its planned_date, planned time, and defer_count, so undoing a completion puts it back where it was; a cancelled or someday task starts fresh, with its planned_date, planned time, last_deferred_at, and defer_count cleared. For completed recurring tasks, also cancels any auto-spawned successor to prevent duplicates. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -85,15 +85,6 @@ extension CalendarTimelineQueries {
       segmentEventId: segmentEventId, seriesCutoverId: seriesCutoverId)
   }
 
-  /// Convenience guard for scoped workflows. Membership is based on the
-  /// original recurrence slot, never a replacement's moved display date.
-  public static func calendarSeriesOwnsOccurrence(
-    _ db: Database, eventId: String, recurrenceInstanceDate: String
-  ) throws -> Bool {
-    try getCalendarSeriesOwnership(db, eventId: eventId)?
-      .owns(recurrenceInstanceDate: recurrenceInstanceDate) == true
-  }
-
   /// Resolve a segment from the durable relation alone, without requiring its
   /// `calendar_events` row to have arrived. Sync preflight uses this for the
   /// boundary-first order: an occurrence decision may be retained for its known

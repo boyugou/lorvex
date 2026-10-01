@@ -122,6 +122,17 @@ struct HabitPeriodProgressTests {
 
   // today = 2026-06-24 (Wed); current Mon–Sun week is 2026-06-22…06-28; month June.
 
+  @Test("The counted period is the day for any per-day target, else the cadence's own")
+  func periodFollowsTargetThenCadence() {
+    #expect(HabitPeriodProgress.period(for: habit(freq: "daily")) == .day)
+    #expect(HabitPeriodProgress.period(for: habit(freq: "weekly", weekdays: [0, 2])) == .week)
+    #expect(HabitPeriodProgress.period(for: habit(freq: "times_per_week", perPeriodTarget: 3)) == .week)
+    #expect(HabitPeriodProgress.period(for: habit(freq: "monthly", dayOfMonth: 1)) == .month)
+    #expect(
+      HabitPeriodProgress.period(for: habit(freq: "weekly", weekdays: [0, 2], target: 3)) == .day,
+      "a per-day target above one counts today's completions whatever the cadence")
+  }
+
   @Test("Daily uses today's count against the per-day target")
   func daily() {
     let value = HabitPeriodProgress.current(

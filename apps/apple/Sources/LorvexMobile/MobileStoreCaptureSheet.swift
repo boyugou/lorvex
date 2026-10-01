@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The global quick-capture sheet — raised by the ＋ on Today / Tasks (and ⌘N).
 /// Capture is an action, not a destination, so it lives in a sheet with the
-/// native dismiss idiom rather than occupying a primary tab.
+/// native Cancel / Capture bar actions rather than occupying a primary tab.
 struct MobileStoreCaptureSheet: View {
   @Bindable var store: MobileStore
 
@@ -11,16 +11,15 @@ struct MobileStoreCaptureSheet: View {
       Form {
         MobileCaptureSections(
           draft: $store.captureDraft,
-          isCapturing: store.isCapturing
+          isCapturing: store.isCapturing,
+          preview: store.capturePreview
         ) {
           await store.submitCaptureDraft()
         }
       }
       // Long capture form with multi-line notes: let the user swipe the scroll to
-      // dismiss the keyboard. `scrollDismissesKeyboard` is unavailable on visionOS.
-      #if !os(visionOS)
-        .scrollDismissesKeyboard(.interactively)
-      #endif
+      // dismiss the keyboard.
+      .scrollDismissesKeyboard(.interactively)
       .navigationTitle(
         String(
           localized: "capture.sheet.title", defaultValue: "Capture", table: "Localizable",
@@ -39,6 +38,32 @@ struct MobileStoreCaptureSheet: View {
             store.isPresentingCapture = false
           }
           .accessibilityIdentifier("mobileCapture.cancel")
+        }
+        ToolbarItem(placement: .confirmationAction) {
+          Button {
+            Task { await store.submitCaptureDraft() }
+          } label: {
+            if store.isCapturing {
+              ProgressView().tint(.white)
+            } else {
+              Text(
+                String(
+                  localized: "common.add", defaultValue: "Add", table: "Localizable",
+                  bundle: MobileL10n.bundle))
+            }
+          }
+          .mobileProminentToolbarButtonStyle()
+          .disabled(!store.captureDraft.canSubmit || store.isCapturing)
+          .accessibilityLabel(
+            store.isCapturing
+              ? String(
+                localized: "capture.capturing_task.a11y", defaultValue: "Capturing task",
+                table: "Localizable", bundle: MobileL10n.bundle)
+              : String(
+                localized: "capture.capture_task.a11y", defaultValue: "Capture task",
+                table: "Localizable", bundle: MobileL10n.bundle)
+          )
+          .accessibilityIdentifier("mobileCapture.confirm")
         }
       }
     }

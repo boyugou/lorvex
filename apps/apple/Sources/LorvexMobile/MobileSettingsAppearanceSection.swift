@@ -3,9 +3,12 @@ import SwiftUI
 
 /// Appearance picker (System/Light/Dark) for the mobile Settings screen. Writes
 /// the same `@AppStorage` key the root view reads to drive `preferredColorScheme`,
-/// so a change takes effect immediately across the app.
+/// so a change takes effect immediately across the app. It is a segmented
+/// control, or one row per choice at accessibility text sizes, where a
+/// segmented control's labels stop growing with the text.
 struct MobileSettingsAppearanceSection: View {
   @AppStorage(AppAppearance.preferenceKey) private var appearanceRaw = AppAppearance.system.rawValue
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   private var appearance: Binding<AppAppearance> {
     Binding(
@@ -16,28 +19,31 @@ struct MobileSettingsAppearanceSection: View {
 
   var body: some View {
     Section {
-      Picker(
-        String(
-          localized: "settings.appearance", defaultValue: "Appearance", table: "Localizable",
-          bundle: MobileL10n.bundle), selection: appearance
-      ) {
-        ForEach(AppAppearance.allCases) { option in
-          Label(option.mobileSettingsLabel, systemImage: option.symbolName).tag(option)
-        }
+      if dynamicTypeSize.isAccessibilitySize {
+        picker
+          .pickerStyle(.inline)
+          .labelsHidden()
+      } else {
+        picker
+          .pickerStyle(.segmented)
       }
-      .pickerStyle(.segmented)
     } header: {
       Text(
         String(
           localized: "settings.section.appearance", defaultValue: "Appearance",
           table: "Localizable", bundle: MobileL10n.bundle))
-    } footer: {
-      Text(
-        String(
-          localized: "settings.appearance.footer",
-          defaultValue:
-            "System follows your device Light/Dark setting; Light and Dark force that appearance everywhere in Lorvex.",
-          table: "Localizable", bundle: MobileL10n.bundle))
+    }
+  }
+
+  private var picker: some View {
+    Picker(
+      String(
+        localized: "settings.appearance", defaultValue: "Appearance", table: "Localizable",
+        bundle: MobileL10n.bundle), selection: appearance
+    ) {
+      ForEach(AppAppearance.allCases) { option in
+        Label(option.mobileSettingsLabel, systemImage: option.symbolName).tag(option)
+      }
     }
   }
 }

@@ -18,8 +18,8 @@ final class AppSettingsStore {
   let environment: [String: String]
 
   /// Persisted Cloud Sync mode. Defaults to `.off`. The env var
-  /// `LORVEX_CLOUDKIT_EXPORT` overrides this at runtime; see
-  /// `AppCoreFactory.resolveCloudSyncMode(settings:environment:)`.
+  /// `LORVEX_CLOUD_SYNC` overrides this at runtime; see
+  /// `CloudSyncFactory.resolveMode(persistedMode:environment:)`.
   /// Changing this setting takes effect at next app launch.
   var cloudSyncMode: CloudSyncMode {
     didSet { defaults.set(cloudSyncMode.rawValue, forKey: Key.cloudSyncMode) }

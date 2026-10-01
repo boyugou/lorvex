@@ -25,7 +25,6 @@ SHORTCUTS_PROVIDER_PARTS = [
     SHORTCUTS_PROVIDER_SOURCE,
 ]
 MOBILE_INFO_PLIST = ROOT / "Config" / "LorvexMobileApp-Info.plist"
-VISION_INFO_PLIST = ROOT / "Config" / "LorvexVisionApp-Info.plist"
 BUILD_AND_RUN_SCRIPT = ROOT / "script" / "build_and_run.sh"
 SYSTEM_INTENT_ACTION_CLASSES = {
     "capture_task": "CaptureLorvexTaskIntent",
@@ -42,6 +41,8 @@ SYSTEM_INTENT_ACTION_CLASSES = {
     "complete_task": "CompleteLorvexTaskIntent",
     "cancel_task": "CancelLorvexTaskIntent",
     "reopen_task": "ReopenLorvexTaskIntent",
+    "start_task": "StartLorvexTaskIntent",
+    "pause_task": "PauseLorvexTaskIntent",
     "defer_task": "DeferLorvexTaskIntent",
     "append_task_body": "AppendLorvexTaskBodyIntent",
     "set_task_reminders": "SetLorvexTaskRemindersIntent",
@@ -90,13 +91,10 @@ SYSTEM_INTENT_ACTION_CLASSES = {
     "read_habit_reminder_policies": "ReadLorvexHabitReminderPoliciesIntent",
     "upsert_habit_reminder_policy": "UpsertLorvexHabitReminderPolicyIntent",
     "delete_habit_reminder_policy": "DeleteLorvexHabitReminderPolicyIntent",
-    "focus_task": "AddLorvexTaskToFocusIntent",
-    "read_current_focus": "ReadLorvexCurrentFocusIntent",
-    "clear_current_focus": "ClearLorvexCurrentFocusIntent",
-    "remove_task_from_focus": "RemoveLorvexTaskFromFocusIntent",
-    "read_focus_schedule": "ReadLorvexFocusScheduleIntent",
-    "propose_focus_schedule": "ProposeLorvexFocusScheduleIntent",
-    "save_focus_schedule": "SaveLorvexFocusScheduleIntent",
+    "plan_task_for_today": "PlanLorvexTaskForTodayIntent",
+    "read_day_times": "ReadLorvexDayTimesIntent",
+    "propose_day_times": "ProposeLorvexDayTimesIntent",
+    "save_day_times": "SaveLorvexDayTimesIntent",
     "save_daily_review": "SaveLorvexDailyReviewIntent",
     "amend_daily_review": "AmendLorvexDailyReviewIntent",
     "read_review_history": "ReadLorvexReviewHistoryIntent",
@@ -117,7 +115,6 @@ SYSTEM_INTENT_ACTION_CLASSES = {
     "read_sync_status": "ReadLorvexSyncStatusIntent",
     "read_ai_changelog": "ReadLorvexAIChangelogIntent",
     "read_recent_logs": "ReadLorvexRecentLogsIntent",
-    "read_guide": "ReadLorvexGuideIntent",
 }
 
 
@@ -333,8 +330,6 @@ def main() -> int:
         failures.append(f"mobile activity source missing: {MOBILE_ACTIVITY_SOURCE}")
     if not MOBILE_INFO_PLIST.is_file():
         failures.append(f"mobile Info.plist missing: {MOBILE_INFO_PLIST}")
-    if not VISION_INFO_PLIST.is_file():
-        failures.append(f"vision Info.plist missing: {VISION_INFO_PLIST}")
     if not SHORTCUTS_PROVIDER_SOURCE.is_file():
         failures.append(f"shortcuts provider source missing: {SHORTCUTS_PROVIDER_SOURCE}")
     for path in SHORTCUTS_PROVIDER_PARTS:
@@ -372,7 +367,6 @@ def main() -> int:
                         BUILD_AND_RUN_SCRIPT.read_text(encoding="utf-8")
                     ),
                     "mobile": plist_user_activity_types(MOBILE_INFO_PLIST),
-                    "vision": plist_user_activity_types(VISION_INFO_PLIST),
                 },
             )
         )

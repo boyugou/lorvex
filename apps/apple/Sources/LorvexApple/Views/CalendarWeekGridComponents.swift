@@ -25,14 +25,15 @@ enum CalendarWeekGridMetrics {
   static let hourLineOpacity: CGFloat = 0.5
   static let halfHourLineOpacity: CGFloat = 0.18
   /// Corner radius for a timed event block and its drag-to-create preview ghost.
-  /// Deliberately tighter than `LorvexDesign.Radius.s` (6): a block can render as
-  /// short as `CalendarEventBlockMetrics.minimumHeight` (16pt), where a 6pt
-  /// radius reads as an over-rounded pill rather than a calendar block.
+  /// Deliberately tighter than `LorvexDesign.Radius.s` (6): a block is often as
+  /// short as the 16pt that `CalendarGridModel.minBlockMinutes` gives a short
+  /// one, where a 6pt radius reads as an over-rounded pill rather than a
+  /// calendar block.
   static let eventCornerRadius: CGFloat = 4
 }
 
 func calendarWeekOverflowTimeText(for event: CalendarTimelineEvent) -> String {
-  lorvexClockTimeRange(start: event.startTime, end: event.endTime)
+  event.startTime.map { lorvexClockRangeLabel(start: $0, end: event.endTime) } ?? ""
 }
 
 func calendarWeekOverflowBlockAccessibilityLabel(_ block: CalendarGridTimedBlock) -> String {
@@ -78,88 +79,11 @@ struct CalendarWeekGridHourCell: View {
   }
 }
 
-struct CalendarWeekEmptyOverlay: View {
-  let visibleDayCount: Int
-  let createEvent: () -> Void
-
-  private var isSingleDay: Bool { visibleDayCount == 1 }
-
-  var body: some View {
-    HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: "calendar.badge.plus")
-        .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-        .foregroundStyle(.tint)
-        .frame(width: 20)
-
-      VStack(alignment: .leading, spacing: 2) {
-        Text(title)
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .lineLimit(1)
-
-        Text(description)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .lineLimit(2)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-
-      Button {
-        createEvent()
-      } label: {
-        Label {
-          Text(String(localized: "calendar.create_event", defaultValue: "Create Event", table: "Localizable", bundle: LorvexL10n.bundle))
-        } icon: {
-          Image(systemName: "plus")
-        }
-      }
-      .buttonStyle(.lorvexPrimary)
-      .buttonBorderShape(.capsule)
-      .controlSize(.small)
-    }
-    .padding(.horizontal, LorvexDesign.Spacing.m)
-    .padding(.vertical, LorvexDesign.Spacing.s)
-    // Span the column band as a top banner rather than a fixed-width island
-    // floating over the middle of the week — the empty state is about the whole
-    // visible range, so it reads better anchored across it.
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
-    .overlay {
-      RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-        .stroke(.separator.opacity(0.12), lineWidth: 0.5)
-    }
-    .accessibilityIdentifier(isSingleDay ? "calendar.day.empty" : "calendar.week.empty")
-  }
-
-  private var title: LocalizedStringResource {
-    if isSingleDay {
-      return LocalizedStringResource("calendar.day.empty.title", defaultValue: "Open Day", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-    return LocalizedStringResource("calendar.week.empty.title", defaultValue: "Open Week", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  private var description: LocalizedStringResource {
-    if isSingleDay {
-      return LocalizedStringResource(
-        "calendar.day.empty.description",
-        defaultValue: "No events or planned tasks are scheduled today.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    }
-    return LocalizedStringResource(
-      "calendar.week.empty.description",
-      defaultValue: "No events or planned tasks are scheduled in this week.",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle
-    )
-  }
-}
-
-/// Shown in place of the empty-week banner when Calendar access is denied,
-/// restricted, or add-only — states an in-app prompt can't fix — so an empty
-/// grid reads as "access is off," not "you have nothing scheduled." It only
-/// appears for `needsSettingsRecovery`; a user who never connected a calendar
-/// (`notDetermined`) keeps the normal empty state rather than being nagged.
+/// Shown over an empty grid when Calendar access is denied, restricted, or
+/// add-only — states an in-app prompt can't fix — so the grid reads as
+/// "access is off," not "you have nothing scheduled." It only appears for
+/// `needsSettingsRecovery`; a user who never connected a calendar
+/// (`notDetermined`) sees the bare grid rather than being nagged.
 struct CalendarWeekAuthorizeOverlay: View {
   @Environment(\.openURL) private var openURL
 
@@ -170,10 +94,10 @@ struct CalendarWeekAuthorizeOverlay: View {
     HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "calendar.badge.exclamationmark")
         .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-        .foregroundStyle(.orange)
+        .foregroundStyle(LorvexDesign.Palette.warning)
         .frame(width: 20)
 
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(LocalizedStringResource("calendar.week.unauthorized.title", defaultValue: "Calendar Access Off", table: "Localizable", bundle: LorvexL10n.bundle))
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(1)
@@ -199,7 +123,7 @@ struct CalendarWeekAuthorizeOverlay: View {
           Image(systemName: "gearshape")
         }
       }
-      .buttonStyle(.lorvexPrimary)
+      .buttonStyle(.borderedProminent)
       .buttonBorderShape(.capsule)
       .controlSize(.small)
     }

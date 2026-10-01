@@ -7,32 +7,21 @@ app.
 
 - [`../README.md`](../README.md) — what the monorepo is.
 - [`../CLAUDE.md`](../CLAUDE.md) — operating manual for agents.
-- [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Tauri / Shared).
-- [`APPLE_DEVELOPER.md`](APPLE_DEVELOPER.md) — Apple Developer portal, code
-  signing, notarization, and CloudKit setup (non-secret identifiers only).
+- [`../ROADMAP.md`](../ROADMAP.md) — status by lane (Apple / Shared).
 
 ## Platform ownership
 
-- **Apple Swift** (`../apps/apple`) owns every Apple ecosystem distribution and
-  capability: macOS App Store, direct macOS builds, iOS, iPadOS, watchOS,
-  visionOS, WidgetKit, App Intents, EventKit, CloudKit/iCloud, and other
-  Apple-native integration work.
-- **Tauri** (`../apps/tauri`) owns Windows/Linux desktop. Its macOS build is a
-  developer/reference build for Mac-only contributors, not the future Mac App
-  Store, iCloud, iOS, or iPadOS path. Android is a future non-Apple mobile
-  exploration and should get its own design.
-- Historical Tauri CloudKit/iCloud material, including old-schema containers,
-  is legacy context and can be abandoned unless a future migration design
-  explicitly revives it.
+- **Apple Swift** (`../apps/apple`) owns every distribution and capability:
+  macOS App Store, direct macOS builds, iOS, iPadOS, watchOS, WidgetKit, App
+  Intents, EventKit, CloudKit/iCloud, and other Apple-native integration work.
+  The former cross-platform Tauri line was removed on 2026-09-17.
 
-## Shared design & vision
+## Design & vision
 
-Shared behavioral contracts. Apple Swift is the canonical product
-implementation; companion implementations use these docs and shared fixtures to
-converge without serving as Apple's oracle.
+Behavioral contracts and product philosophy for the Apple app.
 
 - [`vision/DESIGN_PHILOSOPHY.md`](vision/DESIGN_PHILOSOPHY.md) — AI-native product philosophy, the control-model inversion, and design principles.
-- [`design/AI_OPERATING_MODEL.md`](design/AI_OPERATING_MODEL.md) — How an AI assistant uses MCP tools: the Chief of Staff mental model, operational patterns, and session protocol.
+- [`design/AI_OPERATING_MODEL.md`](design/AI_OPERATING_MODEL.md) — Assistant operating model: how guidance reaches an assistant (server instructions, plugin skills, tool descriptions), the chief-of-staff model, operational patterns, and session protocol.
 - [`design/CALENDAR_BEHAVIOR.md`](design/CALENDAR_BEHAVIOR.md) — Three-family calendar ownership model (tasks / canonical events / provider mirrors) and interaction rules.
 - [`design/SORT_KEYS.md`](design/SORT_KEYS.md) — Canonical task sort key (`priority_effective ASC, due_date ASC NULLS LAST, id ASC`) and allowed per-view deviations.
 - [`design/SYNC_APPLY_SEMANTICS.md`](design/SYNC_APPLY_SEMANTICS.md) — Sync apply pipeline, HLC conflict resolution, LWW rules, idempotency, and ai_changelog semantics.
@@ -44,17 +33,21 @@ converge without serving as Apple's oracle.
 - [`../spec/README.md`](../spec/README.md) — cross-language behavior contract.
 - [`../cloudkit/README.md`](../cloudkit/README.md) — the Apple app's
   authoritative CloudKit record-type deploy contract (`schema.ckdb`).
-  Production CloudKit/iCloud ownership is Apple Swift-only; only the Tauri-era
-  containers are historical, and Tauri must not add new iCloud/CloudKit
-  implementation work.
 
-## Design specs
+## Assistant integration
 
-Cross-cutting architecture and design decisions:
+- [`../plugins/lorvex/README.md`](../plugins/lorvex/README.md) — the Claude Code
+  plugin: MCP launcher, skills, install, and updates.
+- [`../apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md`](../apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
+  — connecting any MCP client to the helper inside the app.
 
-- [`superpowers/specs/pure-swift-core-and-monorepo-design.md`](superpowers/specs/pure-swift-core-and-monorepo-design.md) — Apple core port to pure Swift + monorepo structure.
+## Decision records
 
-## Per-app docs
+Why the repository is shaped the way it is:
 
-- **Apple:** `../apps/apple/docs/` (surface design, UX polish, setup, reference, architecture, execution) and `../apps/apple/CLAUDE.md`.
-- **Tauri:** `../apps/tauri/docs/` and `../apps/tauri/CLAUDE.md`.
+- [`decisions/pure-swift-core-port.md`](decisions/pure-swift-core-port.md) — the Apple core's port to pure Swift and the monorepo structure.
+- [`decisions/today-one-list.md`](decisions/today-one-list.md) — Today as one list: the concepts that replace Focus, the page, glances, and the assistant's planning flow.
+
+## App docs
+
+- `../apps/apple/docs/` (surface design, design system, setup, reference, architecture, execution) and `../apps/apple/CLAUDE.md`.

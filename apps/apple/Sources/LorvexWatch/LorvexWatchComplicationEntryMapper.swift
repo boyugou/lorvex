@@ -1,70 +1,80 @@
 import Foundation
 import LorvexWidgetKitSupport
 
-/// Maps a `WidgetSnapshotLoadResult` to a `LorvexWatchComplicationEntry`.
+/// Maps the watch replica to complication timeline entries.
 ///
-/// Pure function — the testable core of the complication provider. The entry
-/// carries the next actionable-focus task title plus the actionable-task count for
-/// per-family layouts.
+/// Pure functions — the testable core of the complication provider. A
+/// snapshot yields an entry for now and one at each instant the Today glance
+/// changes before the reload point (a saved time's start or end, and a tick
+/// inside a running time), so the lead and its ring advance without spending
+/// the complication's refresh budget.
 public enum LorvexWatchComplicationEntryMapper {
-
-  public static func entry(
-    from result: WidgetSnapshotLoadResult,
-    at date: Date = Date()
-  ) -> LorvexWatchComplicationEntry {
-    let presentation = FocusGlancePresentation.resolve(from: result, now: date)
-    switch presentation.availability {
-    case .content:
-      let count = presentation.actionableCount
-      return LorvexWatchComplicationEntry(
-        date: date,
-        taskTitle: presentation.primaryTask?.title,
-        statusText: statusText(taskCount: count),
-        openFocusCount: count,
-        availability: .content,
-        primaryPriorityTier: presentation.primaryTask?.priority,
-        timezoneName: presentation.timezoneName
-      )
-    case .empty:
-      return LorvexWatchComplicationEntry(
-        date: date,
-        taskTitle: nil,
-        statusText: String(
-          localized: "watch.complication.no_focus", defaultValue: "No focus",
-          table: "Localizable", bundle: WatchL10n.bundle),
-        openFocusCount: 0,
-        availability: .empty,
-        timezoneName: presentation.timezoneName
-      )
-    case .unavailable:
-      return LorvexWatchComplicationEntry(
-        date: date,
-        taskTitle: nil,
-        statusText: String(
-          localized: "watch.status.unavailable", defaultValue: "Snapshot unavailable",
-          table: "Localizable", bundle: WatchL10n.bundle),
-        openFocusCount: 0,
-        availability: .unavailable
+  /// The entries for a load result read at `date`, and when to reload.
+  public static func timeline(
+    from unvalidatedResult: WidgetSnapshotLoadResult,
+    at date: Date,
+    calendar fallbackCalendar: Calendar = .autoupdatingCurrent
+  ) -> (entries: [LorvexWatchComplicationEntry], refreshAfter: Date) {
+    let freshnessPolicy = WidgetSnapshotFreshnessPolicy()
+    let refreshPolicy = WidgetTimelineRefreshPolicy()
+    let result = freshnessPolicy.validatingCurrentDay(
+      unvalidatedResult, now: date, calendar: fallbackCalendar)
+    switch result {
+    case .snapshot(let snapshot):
+      let freshness = freshnessPolicy.classify(snapshot: snapshot, now: date)
+      let calendar = freshnessPolicy.logicalCalendar(for: snapshot, fallback: fallbackCalendar)
+      let refreshAfter = refreshPolicy.nextRefreshDate(
+        after: date, freshness: freshness, freshnessPolicy: freshnessPolicy, calendar: calendar)
+      let dates =
+        [date]
+        + WidgetTodayGlance.changeDates(
+          tasks: snapshot.tasks, from: date, until: refreshAfter,
+          timezoneName: snapshot.timezone, calendar: calendar)
+      let entries = dates.map { entryDate in
+        entry(
+          from: WidgetTimelineEntry(
+            date: entryDate, state: .snapshot(snapshot, freshness: freshness),
+            refreshAfter: refreshAfter))
+      }
+      return (entries, refreshAfter)
+    case .fallback(let fallback):
+      let refreshAfter = refreshPolicy.nextRefreshDate(
+        after: date, freshness: nil, freshnessPolicy: freshnessPolicy, calendar: fallbackCalendar)
+      return (
+        [entry(from: WidgetTimelineEntry(date: date, state: .fallback(fallback), refreshAfter: refreshAfter))],
+        refreshAfter
       )
     }
   }
 
-  // MARK: - Helpers
+  /// The entry for a load result read at `date`: the first entry of
+  /// ``timeline(from:at:calendar:)``.
+  public static func entry(
+    from result: WidgetSnapshotLoadResult,
+    at date: Date = Date(),
+    calendar: Calendar = .autoupdatingCurrent,
+    isPlaceholder: Bool = false
+  ) -> LorvexWatchComplicationEntry {
+    let first = timeline(from: result, at: date, calendar: calendar).entries[0]
+    return LorvexWatchComplicationEntry(
+      date: first.date, model: first.model, timezoneName: first.timezoneName,
+      isPlaceholder: isPlaceholder)
+  }
 
-  private static func statusText(taskCount: Int) -> String {
-    switch taskCount {
-    case 0:
-      String(
-        localized: "watch.complication.no_focus", defaultValue: "No focus",
-        table: "Localizable", bundle: WatchL10n.bundle)
-    case 1:
-      String(
-        localized: "watch.complication.one_task", defaultValue: "1 focus task",
-        table: "Localizable", bundle: WatchL10n.bundle)
-    default:
-      String(
-        localized: "watch.complication.tasks", defaultValue: "\(taskCount) tasks",
-        table: "Localizable", bundle: WatchL10n.bundle)
+  /// The entry for one timeline instant. The rectangular family's model is
+  /// the richest (the lead and the task after it); every family reads from it.
+  static func entry(from timelineEntry: WidgetTimelineEntry) -> LorvexWatchComplicationEntry {
+    let statusText: String
+    switch timelineEntry.state {
+    case .snapshot:
+      statusText = ""
+    case .fallback(let fallback):
+      statusText = LorvexWatchStore.snapshotUnavailableStatusText(fallback)
     }
+    return LorvexWatchComplicationEntry(
+      date: timelineEntry.date,
+      model: WidgetRenderModelBuilder().model(
+        entry: timelineEntry, family: .accessoryRectangular, statusText: statusText),
+      timezoneName: timelineEntry.state.snapshot?.timezone)
   }
 }

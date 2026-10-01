@@ -22,8 +22,8 @@ also gives every device the same record identity without synchronizing a
 separate lookup table, which is valuable for conflict-safe upserts.
 
 It is not fully opaque for low-entropy inputs. The repository itself defines
-date strings as the natural IDs for `daily_review`, `current_focus`, and
-`focus_schedule`, and defines a small public catalog of preference keys. A
+date strings as the natural IDs for `daily_review` and `daily_briefing`, and
+defines a small public catalog of preference keys. A
 party that sees record IDs can precompute the SHA-256 value for plausible
 `(type, id)` pairs and recognize those records. This is a cryptographic
 inference from Apple's record-ID contract and Lorvex's naming function, not an
@@ -32,8 +32,7 @@ Apple statement about SHA-256.
 Examples of readily enumerable inputs include:
 
 - `daily_review\0YYYY-MM-DD`;
-- `current_focus\0YYYY-MM-DD`;
-- `focus_schedule\0YYYY-MM-DD`;
+- `daily_briefing\0YYYY-MM-DD`;
 - `preference\0timezone`, `preference\0theme`, and the other fixed keys.
 
 High-entropy UUID entity IDs do not have the same dictionary-recovery problem.

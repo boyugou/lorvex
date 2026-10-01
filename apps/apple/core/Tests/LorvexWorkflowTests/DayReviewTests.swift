@@ -147,7 +147,7 @@ final class DayReviewTests: XCTestCase {
     }
 
     let summary = try store.writer.read { db in
-      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5)
+      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 5)
     }
 
     XCTAssertEqual(summary.date, Self.day)
@@ -159,6 +159,7 @@ final class DayReviewTests: XCTestCase {
     XCTAssertEqual(summary.topCompleted.map { $0.id }, ["done-early", "done-late", "due-done"])
     XCTAssertEqual(summary.createdCount, 1)  // only created-today
     XCTAssertEqual(summary.dueOpenCount, 1)  // only due-open
+    XCTAssertEqual(summary.dueOpenTasks.map { $0.id }, ["due-open"])
     XCTAssertEqual(summary.habitsTotal, 2)  // hb1, hb2 (hb3 archived)
     XCTAssertEqual(summary.habitsCompleted, 1)  // hb1 met target
     XCTAssertEqual(summary.eventCount, 3)  // ev-same, ev-span, pev-cover
@@ -177,10 +178,34 @@ final class DayReviewTests: XCTestCase {
     }
 
     let summary = try store.writer.read { db in
-      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 2)
+      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 2, dueOpenLimit: 5)
     }
     XCTAssertEqual(summary.completedCount, 4)
     XCTAssertEqual(summary.topCompleted.count, 2)
+  }
+
+  func testDueOpenTasksFollowTaskOrderUnderTheirCap() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try store.writer.write { db in
+      try setLosAngelesTimezone(db)
+      try insertList(db, id: "l1")
+      try insertTask(db, id: "due-p3", title: "P3", status: "open", priority: 3, dueDate: Self.day)
+      try insertTask(db, id: "due-p1", title: "P1", status: "open", priority: 1, dueDate: Self.day)
+      try insertTask(
+        db, id: "due-p2", title: "P2", status: "in_progress", priority: 2, dueDate: Self.day)
+      try insertTask(
+        db, id: "due-tomorrow", title: "Tomorrow", status: "open", priority: 1,
+        dueDate: "2026-04-06")
+      try insertTask(
+        db, id: "due-archived", title: "Archived", status: "open", priority: 1,
+        dueDate: Self.day, archivedAt: "2026-04-05T12:00:00Z")
+    }
+
+    let summary = try store.writer.read { db in
+      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 2)
+    }
+    XCTAssertEqual(summary.dueOpenCount, 3)
+    XCTAssertEqual(summary.dueOpenTasks.map { $0.id }, ["due-p1", "due-p2"])
   }
 
   func testEventCountUsesActiveOccurrenceDecisionVisibility() throws {
@@ -216,7 +241,7 @@ final class DayReviewTests: XCTestCase {
     }
 
     let cancelled = try store.writer.read { db in
-      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5)
+      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 5)
     }
     XCTAssertEqual(cancelled.eventCount, 0)
 
@@ -229,7 +254,7 @@ final class DayReviewTests: XCTestCase {
           now: "2026-04-03T00:00:00Z"))
     }
     let inherited = try store.writer.read { db in
-      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5)
+      try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 5)
     }
     XCTAssertEqual(inherited.eventCount, 1)
   }
@@ -238,8 +263,14 @@ final class DayReviewTests: XCTestCase {
     let store = try WorkflowTestSupport.freshStore()
     try store.writer.write { db in try setLosAngelesTimezone(db) }
     try store.writer.read { db in
-      XCTAssertThrowsError(try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 0))
-      XCTAssertThrowsError(try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 51))
+      XCTAssertThrowsError(
+        try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 0, dueOpenLimit: 5))
+      XCTAssertThrowsError(
+        try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 51, dueOpenLimit: 5))
+      XCTAssertThrowsError(
+        try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 0))
+      XCTAssertThrowsError(
+        try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 51))
     }
   }
 }

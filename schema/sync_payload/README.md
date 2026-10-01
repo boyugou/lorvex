@@ -23,8 +23,8 @@ typed object `properties`. Every object type must explicitly declare an object
 policy. `additional_properties: false` closes it; an empty `properties` object
 with `additional_properties: true` deliberately preserves arbitrary subkeys
 (currently EventKit attendee dictionaries and preference JSON). These are
-wire-level constraints, not a copy of SQLite affinity: focus-block start/end
-values carry the `minute-of-day` unit, task estimates carry `minutes`, while
+wire-level constraints, not a copy of SQLite affinity: a task's planned
+start/end values carry the `minute-of-day` unit, task estimates carry `minutes`, while
 `09:30` fields use the `hh-mm` string format. The `uuid-or-inbox` format records
 the canonical non-UUID list sentinel rather than pretending every list identity
 is a UUID. Sync timestamps are the exact 24-byte millisecond UTC rendering
@@ -140,4 +140,4 @@ later public archive; the release gate rejects an appended current manifest
 that has not yet been captured.
 
 These manifests govern the Apple implementation only. They do not impose schema
-or wire-format parity on the Tauri app.
+or wire-format parity with any other implementation.

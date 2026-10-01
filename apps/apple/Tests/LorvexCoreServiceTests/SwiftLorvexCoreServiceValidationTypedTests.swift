@@ -72,22 +72,28 @@ struct SwiftLorvexCoreServiceValidationTypedTests {
     }
   }
 
-  @Test("a focus task block requires a canonical task UUID")
-  func focusTaskBlockRejectsNoncanonicalTaskID() async throws {
+  @Test("a day's times take only open or started tasks")
+  func dayTimesRejectUnknownTask() async throws {
     let service = try SwiftLorvexCoreService.inMemory()
     await #expect(
       throws: LorvexCoreError.validation(
-        field: "task_id",
-        message: "Focus schedule 'task' block requires a canonical task UUID.")
+        field: "times",
+        message: "Task not-a-uuid is not an open or started task, so it cannot take a time.")
     ) {
-      _ = try await service.saveFocusSchedule(
+      _ = try await service.saveDayTimes(
         date: "2026-07-16",
-        blocks: [
-          FocusScheduleBlock(
-            blockType: "task", startTime: "09:00", endTime: "10:00",
-            taskID: "not-a-uuid", title: "Invalid task")
-        ],
-        rationale: nil)
+        times: [LorvexTaskTime(taskID: "not-a-uuid", time: 540..<600)])
+    }
+  }
+
+  @Test("a malformed day throws .validation(field: date)")
+  func dayTimesRejectMalformedDate() async throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    await #expect(
+      throws: LorvexCoreError.validation(
+        field: "date", message: "date must be a valid YYYY-MM-DD date.")
+    ) {
+      _ = try await service.saveDayTimes(date: "July 16", times: [])
     }
   }
 

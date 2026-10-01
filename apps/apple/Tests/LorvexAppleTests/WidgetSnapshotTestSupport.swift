@@ -7,7 +7,8 @@ func makePublisherWidgetTask(
   priority: LorvexTask.Priority,
   status: LorvexTask.Status = .open,
   dueDate: Date?,
-  estimatedMinutes: Int?
+  estimatedMinutes: Int?,
+  listID: String? = nil
 ) -> LorvexTask {
   LorvexTask(
     id: id,
@@ -17,6 +18,7 @@ func makePublisherWidgetTask(
     status: status,
     dueDate: dueDate,
     estimatedMinutes: estimatedMinutes,
-    tags: []
+    tags: [],
+    listID: listID
   )
 }

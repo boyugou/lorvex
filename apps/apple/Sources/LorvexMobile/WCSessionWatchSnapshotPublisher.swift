@@ -41,9 +41,8 @@ enum WatchSnapshotTransferGate {
   }
 }
 
-// Gated on `os(iOS)` (not `canImport(WatchConnectivity)`) because
-// visionOS imports WatchConnectivity too, yet has no paired watch — the
-// publisher only makes sense on the iPhone.
+// Gated on `os(iOS)`: the publisher only makes sense on the iPhone, which is
+// the only device with a paired watch.
 #if os(iOS)
   import LorvexWidgetKitSupport
   import OSLog

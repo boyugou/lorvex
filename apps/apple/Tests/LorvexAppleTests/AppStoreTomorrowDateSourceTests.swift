@@ -31,7 +31,7 @@ struct TomorrowDateSourceTests {
     for file in [
       "AppStoreTaskWorkspaceBatchActions.swift",
       "AppStoreListTaskBatchActions.swift",
-      "AppStoreFocusTaskBatchActions.swift",
+      "AppStoreTodayTaskBatchActions.swift",
     ] {
       let contents = try source(storesRoot.appending(path: file))
       #expect(
@@ -60,16 +60,18 @@ struct TomorrowDateSourceTests {
       "\(file) should not duplicate tomorrow-date error wording")
   }
 
-  @Test("mobile defer actions share the MobileStore tomorrowDate helper")
-  func mobileDeferActionsShareTomorrowDateHelper() throws {
+  @Test("mobile defer actions share the MobileStore storage-date helper")
+  func mobileDeferActionsShareStorageDateHelper() throws {
     let actions = try source(
       packageRoot().appending(path: "Sources/LorvexMobile/MobileStoreTaskActions.swift"))
-    #expect(actions.contains("private func tomorrowDate() throws -> Date"))
+    #expect(actions.contains("private func storageDate(daysFromToday days: Int) throws -> Date"))
     #expect(actions.contains("forLogicalDay: logicalTodayString"))
     #expect(!actions.contains("Calendar.current.date(byAdding: .day"))
-    #expect(actions.contains("try await core.deferTask(id: id, until: tomorrowDate())"))
     #expect(
-      actions.contains("try await core.batchDeferTasks(ids: uniqueIDs, until: tomorrowDate())"))
+      actions.contains("try await core.deferTask(id: id, until: storageDate(daysFromToday: days))"))
+    #expect(
+      actions.contains(
+        "try await core.batchDeferTasks(ids: uniqueIDs, until: storageDate(daysFromToday: 1))"))
     #expect(!actions.contains("?? now()"))
   }
 
@@ -80,12 +82,8 @@ struct TomorrowDateSourceTests {
     #expect(actions.contains("private func tomorrowDate() async throws -> Date"))
     #expect(actions.contains("let day = try await mutationLogicalDay()"))
     #expect(!actions.contains("Calendar.current.date(byAdding: .day"))
-    #expect(actions.components(separatedBy: "let tomorrow = try await tomorrowDate()").count - 1 == 2)
-    #expect(
-      actions.components(
-        separatedBy: "LorvexDateFormatters.ymdUTC.string(from: tomorrow)"
-      ).count - 1 == 2)
-    #expect(actions.contains("try await core.deferTask(id: task.id, until: tomorrow)"))
+    #expect(actions.components(separatedBy: "let tomorrow = try await tomorrowDate()").count - 1 == 1)
+    #expect(actions.contains("LorvexDateFormatters.ymdUTC.string(from: tomorrow)"))
     #expect(actions.contains("try await core.deferTask(id: id, until: tomorrow)"))
     #expect(!actions.contains("?? self.now()"))
   }

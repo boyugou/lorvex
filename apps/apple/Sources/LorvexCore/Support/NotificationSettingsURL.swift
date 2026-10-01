@@ -5,7 +5,7 @@ import Foundation
 /// On iOS, opens UIApplication.openSettingsURLString. On macOS, opens the
 /// Notification preferences pane in System Settings.
 public enum LorvexNotificationSettingsURL {
-  #if os(iOS) || os(visionOS)
+  #if os(iOS)
     public static let settingsURL = URL(string: "app-settings:") ?? URL(fileURLWithPath: "/")
   #elseif os(macOS)
     public static let settingsURL = URL(

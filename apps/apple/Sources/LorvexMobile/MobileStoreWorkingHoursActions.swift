@@ -17,7 +17,7 @@ extension MobileStore {
     guard let encoded = WorkingHoursPreference.encode(start: start, end: end) else {
       errorMessage = String(
         localized: "settings.working_hours.invalid",
-        defaultValue: "Working hours must be HH:MM with the end after the start.",
+        defaultValue: "Day hours must be HH:MM with the end after the start.",
         table: "Localizable", bundle: MobileL10n.bundle)
       return false
     }

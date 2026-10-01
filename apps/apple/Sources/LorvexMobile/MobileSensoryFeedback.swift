@@ -2,13 +2,10 @@ import SwiftUI
 
 /// The haptic kinds views in this module play through `lorvexSensoryFeedback`.
 ///
-/// Deliberately not SwiftUI's own `SensoryFeedback`: that type (and the
-/// `.sensoryFeedback` modifier itself) is `@available(..., visionOS 26.0, *)`,
-/// but `Sources/LorvexMobile` is compiled against both the iOS target
-/// (`LorvexMobile`, floor iOS 18.0) and the visionOS target (`LorvexMobileVision`,
-/// floor visionOS 2.0). Naming SwiftUI's type in a shared, unguarded signature
-/// would fail the visionOS build outright — this proxy lets call sites name a
-/// haptic without the visionOS compilation ever referencing the unavailable type.
+/// A small closed set rather than SwiftUI's own `SensoryFeedback`, so the
+/// module's haptics stay a deliberate vocabulary and call sites need no
+/// platform checks: SwiftPM also compiles `LorvexMobile` for macOS, where the
+/// modifier below is a no-op.
 public enum LorvexSensoryFeedback: Equatable, Sendable {
   case success
   case selection
@@ -22,11 +19,8 @@ public enum LorvexSensoryFeedback: Equatable, Sendable {
 extension View {
   /// Plays `feedback` whenever `trigger` changes.
   ///
-  /// Backed by SwiftUI's `.sensoryFeedback` on iOS/iPadOS, where the haptic
-  /// engine and the API both exist. A no-op everywhere else — currently just
-  /// visionOS, which has no Taptic Engine and (independently) doesn't ship the
-  /// API until visionOS 26, past this app's visionOS 2.0 floor. Keeps a single
-  /// call site correct on both targets instead of `#if os(iOS)` at every use.
+  /// Backed by SwiftUI's `.sensoryFeedback` on iOS/iPadOS; a no-op in the
+  /// macOS SwiftPM build of this module, so call sites need no `#if os(iOS)`.
   public func lorvexSensoryFeedback<T: Equatable>(
     _ feedback: LorvexSensoryFeedback,
     trigger: T

@@ -2,9 +2,9 @@ import Foundation
 import LorvexCore
 import Testing
 
-private func task(due: Date?) -> LorvexTask {
+private func task(due: Date?, status: LorvexTask.Status = .open) -> LorvexTask {
   LorvexTask(
-    id: "t", title: "T", notes: "", priority: .p2, status: .open,
+    id: "t", title: "T", notes: "", priority: .p2, status: status,
     dueDate: due, estimatedMinutes: nil, tags: []
   )
 }
@@ -26,12 +26,42 @@ func dueIsOverdueIsDayGranular() {
   #expect(task(due: nil).isOverdue(now: now, calendar: cal) == false)
 }
 
+/// Only unresolved work is overdue: a finished or cancelled task keeps its past
+/// due date but never reads as a missed deadline, while a started or parked one
+/// still does.
+@Test
+func resolvedTasksAreNeverOverdue() {
+  let now = Date(timeIntervalSince1970: 1_780_000_000)
+  let yesterday = now.addingTimeInterval(-26 * 3600)
+
+  #expect(task(due: yesterday, status: .completed).isOverdue(now: now, calendar: cal) == false)
+  #expect(task(due: yesterday, status: .cancelled).isOverdue(now: now, calendar: cal) == false)
+  #expect(task(due: yesterday, status: .inProgress).isOverdue(now: now, calendar: cal) == true)
+  #expect(task(due: yesterday, status: .someday).isOverdue(now: now, calendar: cal) == true)
+}
+
 /// The relative label is present exactly when the task has a due date.
 @Test
 func dueRelativeLabelPresenceFollowsDueDate() {
   let now = Date(timeIntervalSince1970: 1_780_000_000)
   #expect(task(due: nil).cachedDueRelativeLabel(now: now, calendar: cal) == nil)
   #expect(task(due: now).cachedDueRelativeLabel(now: now, calendar: cal) != nil)
+}
+
+/// Due today reads "today", never "now", and the neighbours read by the day:
+/// the label counts whole days, whatever the hour of either instant.
+@Test
+func dueRelativeLabelCountsWholeDays() {
+  let now = Date(timeIntervalSince1970: 1_780_000_000)
+  let formatter = RelativeDateTimeFormatter()
+  formatter.dateTimeStyle = .named
+  formatter.unitsStyle = .abbreviated
+  func day(_ offset: Int) -> String { formatter.localizedString(from: DateComponents(day: offset)) }
+  #expect(task(due: now).cachedDueRelativeLabel(now: now, calendar: cal) == day(0))
+  #expect(task(due: now.addingTimeInterval(-3 * 3600)).cachedDueRelativeLabel(now: now, calendar: cal) == day(0))
+  #expect(task(due: now.addingTimeInterval(26 * 3600)).cachedDueRelativeLabel(now: now, calendar: cal) == day(1))
+  #expect(task(due: now.addingTimeInterval(-26 * 3600)).cachedDueRelativeLabel(now: now, calendar: cal) == day(-1))
+  #expect(task(due: now).cachedDueRelativeLabel(now: now, calendar: cal) != formatter.localizedString(for: now, relativeTo: now))
 }
 
 /// Production planned dates materialize the stored day string at UTC midnight
@@ -56,6 +86,23 @@ func utcMidnightDueDateReadsAsItsOwnDayWestOfUTC() throws {
 
   #expect(task(due: storedToday).isOverdue(now: now, calendar: losAngeles) == false)
   #expect(task(due: storedYesterday).isOverdue(now: now, calendar: losAngeles) == true)
+}
+
+/// Due soon is today or tomorrow for unresolved work, read in the user's day:
+/// never an overdue task, a later day, or a finished one.
+@Test
+func dueSoonIsTodayOrTomorrow() throws {
+  var losAngeles = Calendar(identifier: .gregorian)
+  losAngeles.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+  let now = try #require(losAngeles.date(from: DateComponents(year: 2026, month: 6, day: 10, hour: 21)))
+  func stored(_ key: String) throws -> Date { try #require(LorvexDateFormatters.ymdUTC.date(from: key)) }
+
+  #expect(task(due: try stored("2026-06-10")).isDueSoon(now: now, calendar: losAngeles))
+  #expect(task(due: try stored("2026-06-11")).isDueSoon(now: now, calendar: losAngeles))
+  #expect(!task(due: try stored("2026-06-12")).isDueSoon(now: now, calendar: losAngeles))
+  #expect(!task(due: try stored("2026-06-09")).isDueSoon(now: now, calendar: losAngeles))
+  #expect(!task(due: try stored("2026-06-10"), status: .completed).isDueSoon(now: now, calendar: losAngeles))
+  #expect(!task(due: nil).isDueSoon(now: now, calendar: losAngeles))
 }
 
 /// The bridge between the storage frame (naive day at UTC midnight) and the

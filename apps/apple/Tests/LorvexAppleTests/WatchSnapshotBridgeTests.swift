@@ -21,9 +21,9 @@ struct WatchSnapshotBridgeTests {
       workspaceInstanceID: workspaceInstanceID ?? workspaceA,
       localChangeSequence: localChangeSequence,
       timezone: "UTC",
-      stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 0),
+      stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 0),
       briefing: nil,
-      focusTasks: [
+      tasks: [
         .init(
           id: "11111111-1111-4111-8111-111111111111",
           title: title,
@@ -51,9 +51,8 @@ struct WatchSnapshotBridgeTests {
       logicalDay: snapshot.logicalDay,
       stats: snapshot.stats,
       briefing: snapshot.briefing,
-      focusTasks: snapshot.focusTasks,
+      tasks: snapshot.tasks,
       habits: snapshot.habits,
-      todayTasks: snapshot.todayTasks,
       lists: snapshot.lists,
       listStats: snapshot.listStats)
     return try LorvexWatchReplicaEnvelope(
@@ -87,7 +86,7 @@ struct WatchSnapshotBridgeTests {
       Data(contentsOf: replicaURL(in: temp)))
     let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: committed.snapshotData)
     #expect(committed.workspaceInstanceID == workspaceA)
-    #expect(decoded.focusTasks.map(\.title) == ["Ship feature"])
+    #expect(decoded.tasks.map(\.title) == ["Ship feature"])
   }
 
   @Test("accepted replica refreshes complication and foreground store")
@@ -128,7 +127,7 @@ struct WatchSnapshotBridgeTests {
     let envelope = try LorvexWatchReplicaEnvelope.decodeWireData(
       Data(contentsOf: replicaURL(in: temp)))
     let committed = try JSONDecoder().decode(WidgetSnapshot.self, from: envelope.snapshotData)
-    #expect(committed.focusTasks.map(\.title) == ["Newer"])
+    #expect(committed.tasks.map(\.title) == ["Newer"])
   }
 
   @Test("replacement workspace advances fence even with an older snapshot timestamp")
@@ -180,7 +179,7 @@ struct WatchSnapshotBridgeTests {
       Data(contentsOf: replicaURL(in: temp)))
     let committed = try JSONDecoder().decode(WidgetSnapshot.self, from: envelope.snapshotData)
     #expect(committed.storageGeneration == 8)
-    #expect(committed.focusTasks.map(\.title) == ["Fresh empty generation"])
+    #expect(committed.tasks.map(\.title) == ["Fresh empty generation"])
   }
 
   @Test("an older callback task cannot roll back a newer workspace")
@@ -212,7 +211,7 @@ struct WatchSnapshotBridgeTests {
       Data(contentsOf: replicaURL(in: temp)))
     let snapshot = try JSONDecoder().decode(WidgetSnapshot.self, from: committed.snapshotData)
     #expect(committed.workspaceInstanceID == workspaceB)
-    #expect(snapshot.focusTasks.map(\.title) == ["Current callback"])
+    #expect(snapshot.tasks.map(\.title) == ["Current callback"])
   }
 
   @Test("dropped stale replica does not refresh either surface")

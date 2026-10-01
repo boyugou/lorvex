@@ -30,25 +30,6 @@ extension TaskRepo.Read {
     return try rows.map(TaskRepo.rowToTaskRow)
   }
 
-  /// Count of open tasks in the today-pool bucket.
-  public static func countTodayTasks(
-    _ db: Database, predicate: TodayPredicate
-  ) throws -> Int64 {
-    let date = predicate.date.canonicalString
-    let pred = TaskReadBuckets.todayPoolBucketPredicate(
-      taskAlias: "tasks", datePlaceholder: "?1")
-    let visible = TaskReadBuckets.availableVisibilityPredicate(
-      taskAlias: "tasks", datePlaceholder: "?1")
-    let sql = """
-      SELECT COUNT(*) FROM tasks \
-      WHERE status IN (\(StatusName.actionableStatusSqlList)) \
-      AND tasks.archived_at IS NULL \
-      AND \(pred) \
-      AND \(visible)
-      """
-    return try Int64.fetchOne(db, sql: sql, arguments: [date]) ?? 0
-  }
-
   // MARK: - Scheduled (defer-until / hidden)
 
   /// Open tasks currently hidden by `available_from` (defer-until) and not yet

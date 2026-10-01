@@ -90,8 +90,23 @@ final class OverviewTests: XCTestCase {
     XCTAssertEqual(snapshot.stats.openCount, 2)
     // The schema seeds the `inbox` list; it should appear with an open count.
     XCTAssertTrue(snapshot.lists.contains { $0.id == "inbox" })
-    XCTAssertNil(snapshot.currentFocus)
+    XCTAssertNil(snapshot.briefing)
     XCTAssertEqual(snapshot.habits.count, 0)
+  }
+
+  func testBriefingIsTheStoredTextTrimmed() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    let briefing = try store.writer.write { db -> String? in
+      try DailyBriefingRepo.upsertBriefing(
+        db, date: "2026-04-01", briefing: "  Two meetings, then the report.\n", timezone: "UTC",
+        version: "0000000000001_0000_0000000000000001", now: "2026-04-01T08:00:00Z")
+      return try Overview.loadBriefing(db, date: "2026-04-01")
+    }
+    XCTAssertEqual(briefing, "Two meetings, then the report.")
+    let otherDay = try store.writer.read { db in
+      try Overview.loadBriefing(db, date: "2026-04-02")
+    }
+    XCTAssertNil(otherDay)
   }
 
   func testStreakCountsContiguousDays() throws {

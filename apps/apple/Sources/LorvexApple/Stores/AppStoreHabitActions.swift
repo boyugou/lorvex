@@ -45,7 +45,7 @@ extension AppStore {
 
   func createDraftHabit() async {
     // Guard against a double Return/click during the create round-trip (write +
-    // Spotlight reindex + sync), which would otherwise create duplicate habits.
+    // reload), which would otherwise create duplicate habits.
     guard !draftHabitTargetCountBlocksConfirm, !isCreating else { return }
     isCreating = true
     defer { isCreating = false }
@@ -86,13 +86,13 @@ extension AppStore {
       // writing it back verbatim is faithful — no clobbering of a cadence
       // authored elsewhere.
       let draft = draftHabitCadenceInput()
-      // Three-state milestone patch: a positive field sets the goal; an empty or
-      // invalid field clears any existing goal (an optional personal target, so
-      // blanking it is an explicit "no goal", never a silent leave-as-is).
+      // Three-state cue and milestone patches: a non-empty field sets the value;
+      // an empty field clears it (blanking a cue or goal in the editor is an
+      // explicit "no value", never a silent leave-as-is).
       _ = try await core.updateHabit(
         id: habit.id,
         name: name,
-        cue: draftHabitCue.trimmedNilIfEmpty,
+        cue: draftHabitCue.trimmedNilIfEmpty.map { .set($0) } ?? .clear,
         color: draftHabitColor,
         icon: draftHabitIcon,
         targetCount: draft.targetCount,
@@ -177,7 +177,7 @@ extension AppStore {
   func setHabitArchived(_ habit: LorvexHabit, archived: Bool) async {
     await perform {
       _ = try await core.updateHabit(
-        id: habit.id, name: nil, cue: nil, color: nil, icon: nil, targetCount: nil,
+        id: habit.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
         archived: archived)
       habits = try await core.loadHabits(date: logicalTodayDateString)
       await loadAllHabitStats()
@@ -245,6 +245,43 @@ extension AppStore {
     } catch {
       await presentUserFacingError(error)
     }
+  }
+
+  /// Check `habit` in on `date` (`YYYY-MM-DD`) by the shared rule
+  /// (``LorvexHabitCheckIn``): today goes through the ordinary check-in, with
+  /// its feedback and milestone celebration; an earlier day, which the day
+  /// review writes, goes to the core for that day, after which today's habits
+  /// and stats reload, since a past day moves streaks. Both then reload an
+  /// open review's evidence, whose sentence counts habits kept.
+  func checkInHabit(_ habit: LorvexHabit, on date: String) async {
+    let action = LorvexHabitCheckIn.action(for: habit)
+    guard action != .none else { return }
+    if date == logicalTodayDateString {
+      switch action {
+      case .complete: await completeHabit(habit)
+      case .uncomplete: await uncompleteHabit(habit)
+      case .addOne: await adjustHabitCompletion(habit, delta: 1)
+      case .none: break
+      }
+    } else {
+      do {
+        switch action {
+        case .complete: _ = try await core.completeHabit(id: habit.id, date: date)
+        case .uncomplete: _ = try await core.uncompleteHabit(id: habit.id, date: date)
+        case .addOne: _ = try await core.adjustHabitCompletion(id: habit.id, date: date, delta: 1)
+        case .none: break
+        }
+        feedbackProvider.playFeedback(action == .uncomplete ? .habitReset : .habitCompleted)
+        habits = try await core.loadHabits(date: logicalTodayDateString)
+        errorMessage = nil
+        await refreshHabitDetailIfLoaded(id: habit.id)
+        await loadAllHabitStats()
+        await republishSurfacesAfterLocalMutation()
+      } catch {
+        await presentUserFacingError(error)
+      }
+    }
+    await reloadReviewEvidenceIfShown()
   }
 
   /// Load completion history + stats for a habit and cache it for the heatmap.

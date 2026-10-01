@@ -19,13 +19,6 @@ enum AppGroupAccess {
     return entitlementGroups(from: value).contains(appGroupID)
   }
 
-  static func userDefaults(
-    for appGroupID: String = LorvexProductMetadata.appGroupIdentifier
-  ) -> UserDefaults? {
-    guard isEntitled(to: appGroupID) else { return nil }
-    return UserDefaults(suiteName: appGroupID)
-  }
-
   static func containerURL(
     for appGroupID: String = LorvexProductMetadata.appGroupIdentifier,
     fileManager: FileManager = .default

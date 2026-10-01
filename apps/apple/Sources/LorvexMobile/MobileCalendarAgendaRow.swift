@@ -1,25 +1,36 @@
 import LorvexCore
 import SwiftUI
 
+/// An event under a day of the agenda: a glyph (a sun for an all-day event),
+/// its title, and its time and place, with a repeat mark when it repeats. The
+/// title and the time each keep to two lines, and show whole at the
+/// accessibility text sizes. An event the clock has cleared steps back
+/// without losing legibility: its glyph fades and its title takes the
+/// secondary style, as a past row of the Today schedule does.
 struct MobileCalendarAgendaRow: View {
   let event: CalendarTimelineEvent
+  var isPast = false
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
+      // As wide as a task row's completion circle, so event and task titles
+      // share one leading edge.
       Image(systemName: event.allDay ? "sun.max" : "calendar")
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
-        .frame(width: 22)
+        .opacity(isPast ? LorvexDesign.Palette.pastMarkOpacity : 1)
+        .mobileTaskCircleFrame(isSquare: false)
         .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
         Text(event.title)
           .font(LorvexDesign.Typography.primaryEmphasis)
-          .lineLimit(2)
+          .foregroundStyle(isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+          .lineLimitUnlessAccessibilitySize(2)
         Text(subtitle)
           .font(LorvexDesign.Typography.secondaryText)
           .foregroundStyle(.secondary)
-          .lineLimit(2)
+          .lineLimitUnlessAccessibilitySize(2)
       }
 
       Spacer(minLength: LorvexDesign.Spacing.s)
@@ -39,58 +50,107 @@ struct MobileCalendarAgendaRow: View {
     .accessibilityIdentifier("mobileCalendar.agendaRow.\(event.id)")
   }
 
+  /// The time, then the place, joined by a dot. The time stays whole except
+  /// after a span's dash; a long place wraps between its words.
   private var subtitle: String {
-    let time =
-      event.allDay
-      ? String(
+    var facts = [lorvexUnbreakable(timeLabel)]
+    if let location = event.location, !location.isEmpty { facts.append(location) }
+    return lorvexDotJoined(facts)
+  }
+
+  /// The event's time on the user's 12- or 24-hour clock, as a span when it
+  /// has an end ("9:00 – 9:30 AM", naming the day period once), the way the
+  /// task rows beside it read theirs; "all day" or "time unset" when it has no
+  /// clock time.
+  private var timeLabel: String {
+    guard !event.allDay else {
+      return String(
         localized: "calendar.all_day", defaultValue: "all day", table: "Localizable",
         bundle: MobileL10n.bundle)
-      : event.startTime
-        ?? String(
-          localized: "calendar.time_unset", defaultValue: "time unset", table: "Localizable",
-          bundle: MobileL10n.bundle)
-    if let location = event.location, !location.isEmpty {
-      return "\(time) - \(location)"
     }
-    return time
+    guard let start = event.startTime else {
+      return String(
+        localized: "calendar.time_unset", defaultValue: "time unset", table: "Localizable",
+        bundle: MobileL10n.bundle)
+    }
+    return lorvexClockRangeLabel(start: start, end: event.endTime)
   }
 }
 
+/// A task under a day of the agenda: its completion circle, then its title and
+/// the facts the day gives it (``subtitle(for:dayKey:)``). Like an event row's,
+/// the title and the facts each keep to two lines, and show whole at the
+/// accessibility text sizes. The circle completes the task and the rest of
+/// the row opens it; the row swipes and long-presses with the shared task
+/// actions. A done or cancelled task keeps its place with its title struck
+/// through, as on every task row.
 struct MobileCalendarAgendaTaskRow: View {
   let task: LorvexTask
+  /// The row's day as `yyyy-MM-dd`, to read the task's time on it and to tell
+  /// a due date from a planned one.
+  let dayKey: String
+  let isMutating: Bool
+  let actions: MobileTaskRowActions
+  let open: () -> Void
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-      Image(systemName: "checklist")
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.secondary)
-        .frame(width: 22)
-        .accessibilityHidden(true)
+      MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: actions.complete)
 
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(task.title)
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .lineLimit(2)
-        Text(subtitle)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-          .lineLimit(2)
+      Button(action: open) {
+        HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+            Text(task.title)
+              .font(LorvexDesign.Typography.primaryEmphasis)
+              .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+              .strikethrough(task.status.isResolved, color: .secondary)
+              .lineLimitUnlessAccessibilitySize(2)
+            if let subtitle = Self.subtitle(for: task, dayKey: dayKey) {
+              Text(subtitle)
+                .font(LorvexDesign.Typography.secondaryText)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+                .lineLimitUnlessAccessibilitySize(2)
+            }
+          }
+          Spacer(minLength: 0)
+        }
+        // Level with the completion circle, which insets itself by `Spacing.xs`.
+        .padding(.top, LorvexDesign.Spacing.xs)
+        .contentShape(Rectangle())
       }
-
-      Spacer(minLength: LorvexDesign.Spacing.s)
+      .buttonStyle(.plain)
+      .accessibilityElement(children: .combine)
+      .accessibilityIdentifier("mobileCalendar.agendaTaskRow.\(task.id)")
     }
-    .padding(.vertical, LorvexDesign.Spacing.s)
-    .accessibilityElement(children: .combine)
-    .accessibilityIdentifier("mobileCalendar.agendaTaskRow.\(task.id)")
+    // Together with the inset above, the circle and the title start
+    // `Spacing.s` from the top, where an event row's title starts.
+    .padding(.top, LorvexDesign.Spacing.xs)
+    .padding(.bottom, LorvexDesign.Spacing.s)
+    .lorvexRowHoverEffect()
+    .taskRowActions(task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false)
   }
 
-  private var subtitle: String {
-    [
-      MobileTaskDisplayText.priority(task.priority),
-      MobileTaskDisplayText.status(task.status),
-      task.estimatedMinutes.map { MobileTaskDisplayText.compactEstimateMinutes($0) },
-    ]
-    .compactMap { $0 }
-    .joined(separator: " - ")
+  private var isDormant: Bool { task.status.isResolved || task.status == .someday }
+
+  /// The line under a task's title on the day `dayKey` (`yyyy-MM-dd`): the
+  /// task's time that day when it has one, else its estimate, then "Due" when
+  /// the day is its due date, joined by a dot; nil when none of them applies.
+  /// Each fact stays whole except after a span's dash, so the line breaks only
+  /// there or after a dot.
+  nonisolated static func subtitle(for task: LorvexTask, dayKey: String) -> String? {
+    var facts: [String] = []
+    if let time = task.time(on: dayKey) {
+      facts.append(lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound))
+    } else if let minutes = task.estimatedMinutes, minutes > 0 {
+      facts.append(MobileTaskDisplayText.compactEstimateMinutes(minutes))
+    }
+    if let due = task.dueDate, LorvexDateFormatters.ymdUTC.string(from: due) == dayKey {
+      facts.append(
+        String(
+          localized: "calendar.agenda.task.due", defaultValue: "Due", table: "Localizable",
+          bundle: MobileL10n.bundle))
+    }
+    return facts.isEmpty ? nil : lorvexDotJoined(facts.map(lorvexUnbreakable))
   }
 }

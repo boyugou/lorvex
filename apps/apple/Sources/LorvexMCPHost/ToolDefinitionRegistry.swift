@@ -6,7 +6,7 @@ enum ToolDefinitionRegistry {
   static let all: [ToolDefinition] = (
     TaskToolDefinitions.all
       + ContentToolDefinitions.all
-      + FocusToolDefinitions.all
+      + DayPlanningToolDefinitions.all
       + HabitToolDefinitions.all
       + SystemToolDefinitions.all
   ).sorted { $0.listingOrder < $1.listingOrder }

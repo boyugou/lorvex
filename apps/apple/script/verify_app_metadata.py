@@ -12,24 +12,19 @@ from metadata_env import load_metadata
 
 ROOT = Path(__file__).resolve().parents[1]
 SWIFT_METADATA_PATH = ROOT / "Sources" / "LorvexCore" / "Models" / "ProductMetadata.swift"
+XCODEGEN_PROJECT_PATH = ROOT / "Config" / "XcodeGen" / "project.yml"
 APP_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexApple.entitlements"
 CLOUDKIT_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexAppleCloudKit.entitlements"
 MOBILE_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexMobileApp.entitlements"
 MOBILE_CLOUDKIT_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexMobileAppCloudKit.entitlements"
-VISION_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexVisionApp.entitlements"
-VISION_CLOUDKIT_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexVisionAppCloudKit.entitlements"
-VISION_CLOUDKIT_APPSTORE_ENTITLEMENTS_PATH = (
-    ROOT / "Config" / "LorvexVisionAppCloudKitAppStore.entitlements"
-)
 WATCH_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWatchApp.entitlements"
 WATCH_COMPLICATION_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWatchComplication.entitlements"
-WIDGET_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWidgetExtension.entitlements"
+WIDGET_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWidgetsMacOS.entitlements"
 CARPLAY_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexCarPlay.entitlements"
 MOBILE_INFO_PLIST_PATH = ROOT / "Config" / "LorvexMobileApp-Info.plist"
-VISION_INFO_PLIST_PATH = ROOT / "Config" / "LorvexVisionApp-Info.plist"
 WATCH_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWatchApp-Info.plist"
 WATCH_COMPLICATION_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWatchComplication-Info.plist"
-WIDGET_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWidgetExtension-Info.plist"
+WIDGET_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWidgets-Info.plist"
 MCP_HOST_INFO_PLIST_PATH = ROOT / "Config" / "LorvexMCPHost-Info.plist"
 BUILD_AND_RUN_SCRIPT_PATH = ROOT / "script" / "build_and_run.sh"
 # Every shipped Info.plist — checked-in static files and the macOS app's
@@ -40,7 +35,6 @@ BUILD_AND_RUN_SCRIPT_PATH = ROOT / "script" / "build_and_run.sh"
 # questionnaire at every upload.
 EXPORT_COMPLIANCE_INFO_PLIST_PATHS = [
     MOBILE_INFO_PLIST_PATH,
-    VISION_INFO_PLIST_PATH,
     WATCH_INFO_PLIST_PATH,
     WATCH_COMPLICATION_INFO_PLIST_PATH,
     WIDGET_INFO_PLIST_PATH,
@@ -61,8 +55,6 @@ METADATA_MAP = {
     "APP_DISPLAY_NAME": "appDisplayName",
     "MOBILE_APP_NAME": "mobileAppName",
     "MOBILE_APP_DISPLAY_NAME": "mobileAppDisplayName",
-    "VISION_APP_NAME": "visionAppName",
-    "VISION_APP_DISPLAY_NAME": "visionAppDisplayName",
     "WATCH_APP_NAME": "watchAppName",
     "WATCH_APP_DISPLAY_NAME": "watchAppDisplayName",
     "WATCH_COMPLICATION_PRODUCT": "watchComplicationProduct",
@@ -74,7 +66,6 @@ METADATA_MAP = {
     "MCP_SERVER_NAME": "mcpServerName",
     "BUNDLE_ID": "bundleIdentifier",
     "MOBILE_BUNDLE_ID": "mobileBundleIdentifier",
-    "VISION_BUNDLE_ID": "visionBundleIdentifier",
     "WATCH_BUNDLE_ID": "watchBundleIdentifier",
     "WIDGET_BUNDLE_ID": "widgetBundleIdentifier",
     "WIDGET_EXECUTABLE": "widgetExecutable",
@@ -92,7 +83,6 @@ METADATA_MAP = {
     "BUILD_VERSION": "buildVersion",
     "MIN_SYSTEM_VERSION": "minimumSystemVersion",
     "MIN_MOBILE_SYSTEM_VERSION": "minimumMobileSystemVersion",
-    "MIN_VISION_SYSTEM_VERSION": "minimumVisionSystemVersion",
     "MIN_WATCH_SYSTEM_VERSION": "minimumWatchSystemVersion",
     "URL_SCHEME": "urlScheme",
     "APP_CATEGORY": "appCategory",
@@ -138,10 +128,8 @@ def verify_entitlements(
 
     ``forbid_aps_environment`` asserts the file declares no `aps-environment`
     key at all. Use it for targets with no push-notification delivery path
-    (visionOS converges via foreground/scene-active polling, not a CloudKit
-    push subscription) so an unused push capability can't be silently
-    reintroduced — App Store review rejects capabilities without a matching
-    implementation."""
+    so an unused push capability can't be silently reintroduced — App Store
+    review rejects capabilities without a matching implementation."""
     if not path.is_file():
         failures.append(f"missing entitlements file: {path.relative_to(ROOT)}")
         return
@@ -518,6 +506,37 @@ def verify_system_intents_layout(failures: list[str]) -> None:
             failures.append(f"missing shared App Intents file: {path.relative_to(ROOT)}")
 
 
+def verify_xcodegen_release_versions(metadata: dict[str, str], failures: list[str]) -> None:
+    """Pin the generated Xcode project's version settings to the release metadata.
+
+    The Watch app and Focus-filter Info.plists carry `$(CURRENT_PROJECT_VERSION)`
+    instead of a literal, so the XcodeGen project — not `app_metadata.sh` —
+    decides what those nested bundles are built with. A stale setting here
+    produces an archive whose nested CFBundleVersion disagrees with the host
+    app's, which the plist checks above cannot see because those plists hold a
+    build-setting reference rather than a value.
+    """
+    if not XCODEGEN_PROJECT_PATH.is_file():
+        failures.append(f"missing XcodeGen project: {display_path(XCODEGEN_PROJECT_PATH)}")
+        return
+
+    text = XCODEGEN_PROJECT_PATH.read_text(encoding="utf-8")
+    for setting, expected in (
+        ("CURRENT_PROJECT_VERSION", metadata.get("BUILD_VERSION")),
+        ("MARKETING_VERSION", metadata.get("MARKETING_VERSION")),
+    ):
+        match = re.search(rf'^\s*{setting}:\s*"([^"]*)"\s*$', text, re.MULTILINE)
+        if match is None:
+            failures.append(
+                f"{display_path(XCODEGEN_PROJECT_PATH)} has no quoted {setting} setting"
+            )
+        elif match.group(1) != expected:
+            failures.append(
+                f"{display_path(XCODEGEN_PROJECT_PATH)} {setting} mismatch: "
+                f"project={match.group(1)!r} expected={expected!r}"
+            )
+
+
 def main() -> int:
     shell_metadata = load_metadata()
     swift_metadata = load_swift_metadata()
@@ -530,6 +549,8 @@ def main() -> int:
             failures.append(
                 f"{shell_key}/{swift_key} mismatch: shell={shell_value!r} swift={swift_value!r}"
             )
+
+    verify_xcodegen_release_versions(shell_metadata, failures)
 
     verify_entitlements(
         APP_ENTITLEMENTS_PATH,
@@ -568,36 +589,6 @@ def main() -> int:
         failures,
     )
     verify_entitlements(
-        VISION_ENTITLEMENTS_PATH,
-        shell_metadata.get("APP_GROUP_ID"),
-        shell_metadata.get("CLOUDKIT_CONTAINER_ID"),
-        False,
-        False,
-        False,
-        failures,
-        forbid_aps_environment=True,
-    )
-    verify_entitlements(
-        VISION_CLOUDKIT_ENTITLEMENTS_PATH,
-        shell_metadata.get("APP_GROUP_ID"),
-        shell_metadata.get("CLOUDKIT_CONTAINER_ID"),
-        True,
-        False,
-        False,
-        failures,
-        forbid_aps_environment=True,
-    )
-    verify_entitlements(
-        VISION_CLOUDKIT_APPSTORE_ENTITLEMENTS_PATH,
-        shell_metadata.get("APP_GROUP_ID"),
-        shell_metadata.get("CLOUDKIT_CONTAINER_ID"),
-        True,
-        False,
-        False,
-        failures,
-        forbid_aps_environment=True,
-    )
-    verify_entitlements(
         WATCH_ENTITLEMENTS_PATH,
         shell_metadata.get("APP_GROUP_ID"),
         shell_metadata.get("CLOUDKIT_CONTAINER_ID"),
@@ -627,7 +618,6 @@ def main() -> int:
     verify_carplay_entitlements(CARPLAY_ENTITLEMENTS_PATH, failures)
     verify_mobile_carplay_activation_template(MOBILE_INFO_PLIST_PATH, failures)
     verify_platform_app_info_plist(MOBILE_INFO_PLIST_PATH, shell_metadata, "MOBILE", failures)
-    verify_platform_app_info_plist(VISION_INFO_PLIST_PATH, shell_metadata, "VISION", failures)
     verify_watch_info_plist(WATCH_INFO_PLIST_PATH, shell_metadata, failures)
     verify_watch_complication_info_plist(WATCH_COMPLICATION_INFO_PLIST_PATH, shell_metadata, failures)
     verify_widget_info_plist(WIDGET_INFO_PLIST_PATH, shell_metadata, failures)

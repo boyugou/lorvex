@@ -129,7 +129,7 @@ enum CurrentSyncEnvelopeTestSupport {
       object["id"] = .string(entityId)
     case .preference:
       object["key"] = .string(entityId)
-    case .dailyReview, .currentFocus, .focusSchedule:
+    case .dailyReview, .dailyBriefing:
       object["date"] = .string(entityId)
     case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion:
       guard case .success(let pair) = CompositeEdge.splitCompositeEdgeId(entityId) else { return }
@@ -149,7 +149,7 @@ enum CurrentSyncEnvelopeTestSupport {
       default:
         break
       }
-    case .aiChangelog, .entityRedirect, .deviceState, .importSession:
+    case .aiChangelog, .entityRedirect, .deviceState, .importSession, .dailySchedule:
       break
     }
   }
@@ -244,6 +244,8 @@ enum CurrentSyncEnvelopeTestSupport {
         "last_defer_reason": .null,
         "last_deferred_at": .null,
         "planned_date": .null,
+        "planned_end_minutes": .null,
+        "planned_start_minutes": .null,
         "priority": .null,
         "raw_input": .null,
         "recurrence": .null,
@@ -295,10 +297,8 @@ enum CurrentSyncEnvelopeTestSupport {
       object["color"] = .null
     case .taskChecklistItem:
       object["completed_at"] = .null
-    case .currentFocus:
-      object["task_ids"] = .array([])
-    case .focusSchedule:
-      object["blocks"] = .array([])
+    case .dailyBriefing:
+      object["timezone"] = .null
     case .dailyReview:
       object["linked_list_ids"] = .array([])
       object["linked_task_ids"] = .array([])

@@ -1,6 +1,12 @@
 import Foundation
 import LorvexCore
 
+/// A calendar timeline window as `yyyy-MM-dd` day keys, both ends inclusive.
+struct MobileCalendarWindow: Equatable, Sendable {
+  let from: String
+  let to: String
+}
+
 extension MobileStore {
   public var canCreateCalendarDraft: Bool {
     calendarDraft.canSubmit && !isMutatingCalendarEvent
@@ -30,11 +36,15 @@ extension MobileStore {
 
     calendarDraft = MobileCalendarDraft(now: now)
     await reconcileAfterCommittedMutation(source: "ios.calendar.create.reconcile") {
-      let date = logicalTodayString
-      calendarTimeline = try await core.loadCalendarTimeline(
-        from: date,
-        to: Self.calendarEndDateString(from: date)
-      )
+      // Reconcile the window the user is actually viewing, not a today-anchored
+      // one: the day view loads `[visibleDate-7, visibleDate+7]`, so reloading a
+      // fixed `[today, today+14]` here would drop every pre-existing event in a
+      // week the user paged away to. Matches the scoped-mutation and macOS
+      // reconcile paths. Falls back to the today window only when no timeline is
+      // loaded (a create raised before the timeline first loads).
+      let from = calendarWindowToReload?.from ?? logicalTodayString
+      let to = calendarWindowToReload?.to ?? Self.calendarEndDateString(from: logicalTodayString)
+      calendarTimeline = try await core.loadCalendarTimeline(from: from, to: to)
       if calendarTimeline?.events.contains(where: { $0.eventID == event.eventID }) != true {
         calendarTimeline?.events.append(event)
       }
@@ -61,13 +71,27 @@ extension MobileStore {
   /// the last edited or tapped-slot draft. Day-grid taps seed their own time
   /// slot and bypass this.
   public func beginCreateCalendarDraft() {
-    let start = now()
-    calendarDraft = MobileCalendarDraft(
-      date: start,
-      startTime: start,
-      endTime: start.addingTimeInterval(60 * 60),
-      allDay: false
-    )
+    calendarDraft = MobileCalendarDraft.timedDefault(start: now())
+  }
+
+  /// The stored end date shifted to preserve the event's day-span when the
+  /// single-day edit form moves the start day. `MobileCalendarDraft` has one
+  /// `date` and no end-day field, so the whole event moves to the new start day
+  /// and the end must move by the same offset. A single-day event (nil end) stays
+  /// nil. Passing the core's `nil` (preserve) instead would strand the original
+  /// end — which then fails "end before start" moving the day forward, or
+  /// silently rewrites the event as multi-day moving it back, syncing that
+  /// corruption to peers.
+  func shiftedCalendarEndDate(for event: CalendarTimelineEvent, newStartDate: Date) -> String? {
+    guard let originalEnd = event.endDate else { return nil }
+    let newStartYmd = Self.ymdFormatter.string(from: newStartDate)
+    guard
+      let start = Self.ymdFormatter.date(from: event.startDate),
+      let end = Self.ymdFormatter.date(from: originalEnd)
+    else { return originalEnd }
+    // Rounding absorbs any ±1h DST offset in the raw seconds difference.
+    let spanDays = Int((end.timeIntervalSince(start) / 86_400).rounded())
+    return LorvexDateFormatters.ymdUTCAddingDays(newStartYmd, days: spanDays) ?? originalEnd
   }
 
   @discardableResult
@@ -82,7 +106,7 @@ extension MobileStore {
         id: event.eventID,
         title: calendarDraft.trimmedTitle,
         startDate: Self.ymdFormatter.string(from: calendarDraft.date),
-        endDate: nil,
+        endDate: shiftedCalendarEndDate(for: event, newStartDate: calendarDraft.date),
         startTime: calendarDraft.allDay
           ? nil : Self.hmFormatter.string(from: calendarDraft.startTime),
         endTime: calendarDraft.allDay ? nil : Self.hmFormatter.string(from: calendarDraft.endTime),
@@ -132,7 +156,14 @@ extension MobileStore {
         id: event.eventID,
         title: event.title,
         startDate: Self.ymdFormatter.string(from: newStart),
-        endDate: nil,
+        // Move the end date to the dropped day too. Passing `nil` (preserve)
+        // strands the stored end on the ORIGINAL day when a drag crosses day
+        // columns (iPad multi-day layout), which for an event with an explicit
+        // same-day end throws "end before start" moving forward or silently
+        // creates a multi-day span moving back. `newEnd` already carries the
+        // preserved duration, so its day is correct — including a legitimate
+        // cross-midnight span.
+        endDate: Self.ymdFormatter.string(from: newEnd),
         startTime: Self.hmFormatter.string(from: newStart),
         endTime: Self.hmFormatter.string(from: newEnd),
         allDay: event.allDay,
@@ -169,14 +200,37 @@ extension MobileStore {
   }
 
   /// Loads the calendar timeline window around `anchor` for the day/3-day
-  /// view. Fetches `[anchor-7d, anchor+7d]` so horizontal swipes in either
+  /// view. Fetches `radiusDays` each side (a week by default) so horizontal swipes in either
   /// direction render without an immediate refetch; the day view re-invokes
   /// this when the visible date nears the window edge. Reuses the existing
   /// `loadCalendarTimeline` core read — no new data path.
-  func refreshCalendarTimeline(around anchor: Date) async {
+  func refreshCalendarTimeline(around anchor: Date, radiusDays: Int = 7) async {
     let anchorDay = Self.ymdFormatter.string(from: anchor)
-    let start = LorvexDateFormatters.ymdUTCAddingDays(anchorDay, days: -7) ?? anchorDay
-    let end = LorvexDateFormatters.ymdUTCAddingDays(anchorDay, days: 7) ?? anchorDay
+    let start = LorvexDateFormatters.ymdUTCAddingDays(anchorDay, days: -radiusDays) ?? anchorDay
+    let end = LorvexDateFormatters.ymdUTCAddingDays(anchorDay, days: radiusDays) ?? anchorDay
+    await refreshCalendarTimeline(from: start, to: end)
+  }
+
+  /// Reload the window the day view currently owns rather than re-anchoring to a
+  /// fixed date. Falls back to a window around `fallbackAnchor` only when no
+  /// timeline is loaded yet. A background `.EKEventStoreChanged` and a CloudKit
+  /// inbound reload both fire while the user may be browsing a far week; using
+  /// this instead of `refreshCalendarTimeline(around: now())` refreshes that
+  /// week in place instead of snapping the loaded window back to today (which
+  /// would silently empty the viewed days until a >5-day page turn).
+  func refreshLoadedCalendarWindow(fallbackAnchor: Date) async {
+    if let window = calendarWindowToReload {
+      await refreshCalendarTimeline(from: window.from, to: window.to)
+    } else {
+      await refreshCalendarTimeline(around: fallbackAnchor)
+    }
+  }
+
+  /// Ingest, load, and commit a specific calendar window under the shared
+  /// supersede token so a slower in-flight load can never pair one window's
+  /// events with another window's scheduled tasks.
+  func refreshCalendarTimeline(from start: String, to end: String) async {
+    calendarRequestedWindow = MobileCalendarWindow(from: start, to: end)
     calendarTimelineLoadToken &+= 1
     let token = calendarTimelineLoadToken
     do {
@@ -196,6 +250,13 @@ extension MobileStore {
     }
   }
 
+  /// The window a refresh reloads: the one the calendar surface last asked
+  /// for, even while that load is still in flight, else the loaded one. Nil
+  /// before any calendar load, when a refresh falls back to a today window.
+  var calendarWindowToReload: MobileCalendarWindow? {
+    calendarRequestedWindow ?? calendarTimeline.map { MobileCalendarWindow(from: $0.from, to: $0.to) }
+  }
+
   /// Reconciles the exact already-visible calendar window after an explicit
   /// Settings change. EventKit errors are surfaced to the Settings caller, but
   /// the canonical timeline is still re-read first: permission revocation and
@@ -206,6 +267,7 @@ extension MobileStore {
     throughDay: String,
     requestAccess: Bool
   ) async throws {
+    calendarRequestedWindow = MobileCalendarWindow(from: fromDay, to: throughDay)
     calendarTimelineLoadToken &+= 1
     let token = calendarTimelineLoadToken
     let ingestError: (any Error)?
@@ -228,16 +290,17 @@ extension MobileStore {
     errorMessage = nil
   }
 
+  /// The user's events from the logical today through the next 30 days as
+  /// `.ics` text (the core's default export range), or `nil` after surfacing
+  /// an error. Settings › Data Export offers it, so it never depends on which
+  /// window the calendar last loaded.
   public func exportCalendarICS() async -> String? {
     guard !isExportingCalendarICS else { return nil }
     isExportingCalendarICS = true
     defer { isExportingCalendarICS = false }
 
     do {
-      let ics = try await core.exportCalendarICS(
-        from: calendarTimeline?.from,
-        to: calendarTimeline?.to
-      )
+      let ics = try await core.exportCalendarICS(from: nil, to: nil)
       errorMessage = nil
       return ics
     } catch {

@@ -16,19 +16,15 @@ extension ToolRegistry {
     return try await coreBridge.service.getSessionContext().date
   }
 
-  /// Resolve the target task id for a task-scoped tool. `task_id` is the one
-  /// documented schema name; `id` is accepted as a silent parse-time fallback so
-  /// a caller that reaches for the task's own field name (as seen on `get_task`
-  /// output) still resolves. Returns nil when neither is present as a non-empty
-  /// string, so the caller emits its own `task_id` validation error.
+  /// Resolve the target task id for a task-scoped tool from its `task_id`
+  /// argument. Returns nil when it is absent or an empty string, so the caller
+  /// emits its own `task_id` validation error.
   static func taskScopedID(from arguments: [String: Value]) throws -> String? {
-    if let taskID = try StrictScalarArguments.optionalString(
-      arguments["task_id"], field: "task_id"), !taskID.isEmpty
-    { return taskID }
-    if let id = try StrictScalarArguments.optionalString(arguments["id"], field: "id"),
-      !id.isEmpty
-    { return id }
-    return nil
+    guard
+      let taskID = try StrictScalarArguments.optionalString(
+        arguments["task_id"], field: "task_id"), !taskID.isEmpty
+    else { return nil }
+    return taskID
   }
 
   static func priorityNumber(from value: Value?) -> Int? {

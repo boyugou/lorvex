@@ -24,9 +24,9 @@ stale entries, so an exception can never linger past the code it describes.
 Local-only kinds (``device_state``, ``import_session``) stay out of scope
 automatically because they are not in ``allSyncableTypes``.
 
-The gate also cross-checks the Swift readiness capability ids against the
-release strategy and the per-field encryption split against the CloudKit
-schema template.
+The gate also cross-checks the per-field encryption split of the one record
+type the runtime writes, ``LorvexEntity``, against the CloudKit schema
+template.
 """
 
 from __future__ import annotations
@@ -35,21 +35,13 @@ import re
 import sys
 from pathlib import Path
 
-from release_strategy import CLOUDKIT_SYNC_READINESS
-
 
 ROOT = Path(__file__).resolve().parents[1]
-SWIFT_READINESS = ROOT / "Sources" / "LorvexCloudSync" / "CloudSyncReadiness.swift"
 SYNC_NAMING = ROOT / "core" / "Sources" / "LorvexDomain" / "NamingEntity.swift"
 SYNC_APPLY_DISPATCH = ROOT / "core" / "Sources" / "LorvexSync" / "ApplyDispatch.swift"
 SYNC_APPLIERS_DIR = ROOT / "core" / "Sources" / "LorvexSync"
 CORE_SERVICE_DIR = ROOT / "Sources" / "LorvexCore" / "Services"
 ENVELOPE_RECORD = ROOT / "Sources" / "LorvexCloudSync" / "CloudSyncEnvelopeRecord.swift"
-ZONE_EPOCH_RECORD = ROOT / "Sources" / "LorvexCloudSync" / "CloudSyncZoneEpochRecord.swift"
-SERVER_CLOCK_RECORD = ROOT / "Sources" / "LorvexCloudSync" / "CloudSyncServerClock.swift"
-AUDIT_RETENTION_METADATA = (
-    ROOT / "Sources" / "LorvexCloudSync" / "CloudSyncAuditRetentionMetadata.swift"
-)
 CKDB_SCHEMA = ROOT.parents[1] / "cloudkit" / "schema.ckdb"
 
 
@@ -67,11 +59,10 @@ EXCEPTABLE_PROPERTIES = {"outbound_upsert", "outbound_delete"}
 DIRECTIONALITY_EXCEPTIONS: dict[str, dict[str, str]] = {
     "ai_changelog": {
         "outbound_delete": (
-            "append-only audit envelope stream: no ai_changelog delete envelope "
-            "exists. Retention instead converges through the account-scoped, "
-            "monotonic audit frontier and a durable exact-zone physical CloudKit "
-            "purge queue; inbound apply rejects and re-queues records below that "
-            "frontier. Upserts remain emit-once and deduplicate by id on peers."
+            "device-local assistant change log: the CloudKit transport confirms "
+            "ai_changelog outbox rows without uploading them and ignores inbound "
+            "copies, so no ai_changelog delete envelope exists; retention prunes "
+            "each device's own rows locally."
         ),
     },
     "daily_review": {
@@ -96,60 +87,6 @@ DIRECTIONALITY_EXCEPTIONS: dict[str, dict[str, str]] = {
         ),
     },
 }
-
-
-SWIFT_TO_RELEASE_ID = {
-    "export": "outbound_record_export",
-    "subscription": "private_database_subscription",
-    "remote-refresh": "remote_change_refresh",
-    "inbound-apply": "inbound_record_application",
-    "change-token": "change_token_checkpointing",
-}
-
-
-def swift_readiness_ids(source: str) -> dict[str, list[str]]:
-    result: dict[str, list[str]] = {"ready": [], "pending": []}
-    pattern = re.compile(
-        r'Capability\(\s*id:\s*"([^"]+)".*?status:\s*\.(ready|pending)',
-        flags=re.DOTALL,
-    )
-    for swift_id, status in pattern.findall(source):
-        release_id = SWIFT_TO_RELEASE_ID.get(swift_id)
-        if release_id is None:
-            result.setdefault("unknown", []).append(swift_id)
-            continue
-        result[status].append(release_id)
-    return result
-
-
-def cloudkit_sync_readiness_failures(
-    swift_source: str,
-    expected: dict[str, list[str]] = CLOUDKIT_SYNC_READINESS,
-) -> list[str]:
-    actual = swift_readiness_ids(swift_source)
-    failures: list[str] = []
-
-    unknown = actual.get("unknown", [])
-    if unknown:
-        failures.append(f"CloudKit readiness declares unknown Swift capability id(s): {unknown}")
-
-    for status in ["ready", "pending"]:
-        if actual.get(status, []) != expected.get(status, []):
-            failures.append(
-                f"CloudKit readiness {status} mismatch: "
-                f"expected {expected.get(status, [])!r}, got {actual.get(status, [])!r}"
-            )
-
-    declared = set(actual.get("ready", [])) | set(actual.get("pending", []))
-    expected_declared = set(expected.get("ready", [])) | set(expected.get("pending", []))
-    missing = sorted(expected_declared - declared)
-    if missing:
-        failures.append(f"CloudKit readiness missing release capability id(s): {missing}")
-    extra = sorted(declared - expected_declared)
-    if extra:
-        failures.append(f"CloudKit readiness has extra release capability id(s): {extra}")
-
-    return failures
 
 
 def naming_wire_map(naming_source: str) -> dict[str, str]:
@@ -514,247 +451,8 @@ def cloudkit_field_encryption_failures(
     return failures
 
 
-def cloudkit_zone_epoch_schema_failures(
-    zone_epoch_source: str,
-    ckdb_source: str,
-) -> list[str]:
-    """Ensure the runtime's zone-epoch metadata record type is declared in the
-    CloudKit template with the complete plaintext generation-readiness shape.
-
-    The over-window resurrection guard saves an epoch record of its OWN record
-    type (`CloudSyncZoneEpochRecord.recordType`). Production CloudKit rejects a
-    save to an UNDECLARED record type, so a template missing it — or declaring the
-    epoch/readiness/lease fields missing, encrypted, or mistyped — silently
-    breaks the partial-generation barrier while every ordinary entity push still
-    succeeds. This turns that "false green" into a gated failure.
-    """
-    failures: list[str] = []
-    type_match = re.search(r'static let recordType\s*=\s*"([^"]+)"', zone_epoch_source)
-    field_constants = {
-        "protocolVersionField": "INT64",
-        "epochField": "INT64",
-        "stateField": "STRING",
-        "activeEpochField": "INT64",
-        "generationIDField": "STRING",
-        "activeZoneField": "STRING",
-        "readyWitnessField": "STRING",
-        "candidateGenerationIDField": "STRING",
-        "candidateZoneField": "STRING",
-        "rebuildIdentifierField": "STRING",
-        "rebuildOwnerField": "STRING",
-        "rebuildPhaseField": "STRING",
-        "leaseActivityAtField": "STRING",
-        "retiredZonesField": "STRING",
-        "tombstoneCompactionCutoffField": "STRING",
-    }
-    parsed_fields: dict[str, tuple[str, str]] = {}
-    for constant, expected_type in field_constants.items():
-        match = re.search(
-            rf'static let {re.escape(constant)}\s*=\s*"([^"]+)"', zone_epoch_source
-        )
-        if match is not None:
-            parsed_fields[constant] = (match.group(1), expected_type)
-    if type_match is None or len(parsed_fields) != len(field_constants):
-        failures.append(
-            "could not parse recordType and generation-readiness field constants from "
-            f"{ZONE_EPOCH_RECORD}"
-        )
-        return failures
-    record_type = type_match.group(1)
-    block = re.search(
-        rf"RECORD TYPE {re.escape(record_type)}\s*\((.*?)\);", ckdb_source, flags=re.DOTALL
-    )
-    if block is None:
-        failures.append(
-            f"schema.ckdb is missing RECORD TYPE {record_type} — the runtime saves this "
-            "record type but production CloudKit rejects an undeclared type"
-        )
-        return failures
-    declarations: dict[str, re.Match[str]] = {}
-    for line in block.group(1).splitlines():
-        match = re.match(r"\s*([a-z_][a-zA-Z0-9_]*)\s+(ENCRYPTED\s+)?([A-Z0-9]+)", line)
-        if match:
-            declarations[match.group(1)] = match
-    for field_name, expected_type in parsed_fields.values():
-        field_decl = declarations.get(field_name)
-        if field_decl is None:
-            failures.append(
-                f"schema.ckdb RECORD TYPE {record_type} is missing field {field_name!r}"
-            )
-            continue
-        if field_decl.group(2) is not None:
-            failures.append(
-                f"schema.ckdb {record_type}.{field_name} is declared ENCRYPTED but the runtime "
-                f"writes it in the clear — declare it plaintext {expected_type}"
-            )
-        if field_decl.group(3) != expected_type:
-            failures.append(
-                f"schema.ckdb {record_type}.{field_name} must be {expected_type}, "
-                f"got {field_decl.group(3)!r}"
-            )
-    return failures
-
-
-def cloudkit_server_clock_schema_failures(
-    server_clock_source: str,
-    ckdb_source: str,
-) -> list[str]:
-    """Pin the fixed plaintext server-clock singleton to its deployed shape."""
-    failures: list[str] = []
-    type_match = re.search(r'static let recordType\s*=\s*"([^"]+)"', server_clock_source)
-    nonce_match = re.search(r'static let nonceField\s*=\s*"([^"]+)"', server_clock_source)
-    if type_match is None or nonce_match is None:
-        return [
-            "could not parse recordType and nonceField from "
-            f"{SERVER_CLOCK_RECORD}"
-        ]
-    record_type = type_match.group(1)
-    nonce_field = nonce_match.group(1)
-    block = re.search(
-        rf"RECORD TYPE {re.escape(record_type)}\s*\((.*?)\);",
-        ckdb_source,
-        flags=re.DOTALL,
-    )
-    if block is None:
-        return [
-            f"schema.ckdb is missing RECORD TYPE {record_type} — the runtime saves this "
-            "record type but production CloudKit rejects an undeclared type"
-        ]
-    declaration = re.search(
-        rf"^\s*{re.escape(nonce_field)}\s+(ENCRYPTED\s+)?([A-Z0-9]+)",
-        block.group(1),
-        flags=re.MULTILINE,
-    )
-    if declaration is None:
-        failures.append(
-            f"schema.ckdb RECORD TYPE {record_type} is missing field {nonce_field!r}"
-        )
-        return failures
-    if declaration.group(1) is not None:
-        failures.append(
-            f"schema.ckdb {record_type}.{nonce_field} is declared ENCRYPTED but the runtime "
-            "writes it in the clear — declare it plaintext STRING"
-        )
-    if declaration.group(2) != "STRING":
-        failures.append(
-            f"schema.ckdb {record_type}.{nonce_field} must be STRING, "
-            f"got {declaration.group(2)!r}"
-        )
-    return failures
-
-
-def cloudkit_audit_retention_metadata_schema_failures(
-    metadata_source: str,
-    ckdb_source: str,
-) -> list[str]:
-    """Pin the audit-retention metadata record's all-encrypted wire shape.
-
-    The record is fetched by fixed id and never queried by a custom field, so
-    exposing its policy, activity cutoff, or policy HLC/device suffix in
-    plaintext is both unnecessary and a privacy regression. CloudKit fixes
-    encryption at field creation; catch Swift/template drift before promotion.
-    """
-    failures: list[str] = []
-    type_match = re.search(r'static let recordType\s*=\s*"([^"]+)"', metadata_source)
-    if type_match is None:
-        return ["could not parse audit-retention metadata recordType"]
-
-    expected_types = {
-        "protocolVersionField": "INT64",
-        "generationEpochField": "INT64",
-        "generationIDField": "STRING",
-        "frontierEpochField": "INT64",
-        "cutoffTimestampField": "STRING",
-        "cutoffEntityIDField": "STRING",
-        "policyField": "STRING",
-        "policyVersionField": "STRING",
-        "policyAuthorizedEpochField": "INT64",
-    }
-    constants = dict(
-        re.findall(r"static let (\w+Field)\s*=\s*\"([^\"]+)\"", metadata_source)
-    )
-    missing_constants = sorted(set(expected_types) - set(constants))
-    if missing_constants:
-        failures.append(
-            "audit-retention metadata is missing Swift field constants: "
-            + ", ".join(missing_constants)
-        )
-        return failures
-
-    encrypted_match = re.search(
-        r"static let encryptedFields\s*=\s*\[(.*?)\]",
-        metadata_source,
-        flags=re.DOTALL,
-    )
-    if encrypted_match is None:
-        return ["could not parse audit-retention metadata encryptedFields"]
-    encrypted_constants = {
-        name.strip()
-        for name in encrypted_match.group(1).split(",")
-        if name.strip()
-    }
-    if encrypted_constants != set(expected_types):
-        failures.append(
-            "audit-retention metadata encryptedFields does not exactly classify "
-            "the complete custom field set"
-        )
-
-    record_type = type_match.group(1)
-    block = re.search(
-        rf"RECORD TYPE {re.escape(record_type)}\s*\((.*?)\);",
-        ckdb_source,
-        flags=re.DOTALL,
-    )
-    if block is None:
-        failures.append(f"schema.ckdb is missing RECORD TYPE {record_type}")
-        return failures
-    declarations: dict[str, re.Match[str]] = {}
-    for line in block.group(1).splitlines():
-        match = re.match(
-            r"\s*([a-z_][a-zA-Z0-9_]*)\s+(ENCRYPTED\s+)?([A-Z0-9]+)",
-            line,
-        )
-        if match:
-            declarations[match.group(1)] = match
-
-    expected_wire_names = {constants[name] for name in expected_types}
-    for constant, expected_type in expected_types.items():
-        field_name = constants[constant]
-        declaration = declarations.get(field_name)
-        if declaration is None:
-            failures.append(
-                f"schema.ckdb RECORD TYPE {record_type} is missing field {field_name!r}"
-            )
-            continue
-        if declaration.group(2) is None:
-            failures.append(
-                f"schema.ckdb {record_type}.{field_name} is plaintext; "
-                "declare it ENCRYPTED"
-            )
-        if declaration.group(3) != expected_type:
-            failures.append(
-                f"schema.ckdb {record_type}.{field_name} must be {expected_type}, "
-                f"got {declaration.group(3)!r}"
-            )
-        encrypted_subscript = f"encryptedValues[{constant}]"
-        if encrypted_subscript not in metadata_source:
-            failures.append(
-                f"runtime does not access {field_name!r} through CKRecord.encryptedValues"
-            )
-    for field_name in declarations:
-        if field_name not in expected_wire_names:
-            failures.append(
-                f"schema.ckdb {record_type} has unclassified custom field {field_name!r}"
-            )
-    return failures
-
-
 def main() -> int:
     failures: list[str] = []
-    if not SWIFT_READINESS.exists():
-        failures.append(f"CloudKit readiness Swift contract is missing: {SWIFT_READINESS}")
-    else:
-        failures.extend(cloudkit_sync_readiness_failures(SWIFT_READINESS.read_text(encoding="utf-8")))
     sync_sources = {
         path.name: path.read_text(encoding="utf-8")
         for path in SYNC_APPLIERS_DIR.glob("*.swift")
@@ -783,38 +481,6 @@ def main() -> int:
                 ckdb_text,
             )
         )
-        if ZONE_EPOCH_RECORD.exists():
-            failures.extend(
-                cloudkit_zone_epoch_schema_failures(
-                    ZONE_EPOCH_RECORD.read_text(encoding="utf-8"),
-                    ckdb_text,
-                )
-            )
-        else:
-            failures.append(f"CloudKit zone-epoch record contract is missing: {ZONE_EPOCH_RECORD}")
-        if SERVER_CLOCK_RECORD.exists():
-            failures.extend(
-                cloudkit_server_clock_schema_failures(
-                    SERVER_CLOCK_RECORD.read_text(encoding="utf-8"),
-                    ckdb_text,
-                )
-            )
-        else:
-            failures.append(
-                f"CloudKit server-clock record contract is missing: {SERVER_CLOCK_RECORD}"
-            )
-        if AUDIT_RETENTION_METADATA.exists():
-            failures.extend(
-                cloudkit_audit_retention_metadata_schema_failures(
-                    AUDIT_RETENTION_METADATA.read_text(encoding="utf-8"),
-                    ckdb_text,
-                )
-            )
-        else:
-            failures.append(
-                "CloudKit audit-retention metadata contract is missing: "
-                f"{AUDIT_RETENTION_METADATA}"
-            )
     if failures:
         print("CloudKit sync readiness verification failed:", file=sys.stderr)
         for failure in failures:

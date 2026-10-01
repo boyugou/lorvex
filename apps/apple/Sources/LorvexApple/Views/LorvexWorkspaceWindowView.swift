@@ -20,7 +20,7 @@ struct LorvexWorkspaceWindowView: View {
   private var taskCommandContext: LorvexTaskCommandContext? {
     switch windowID {
     case .today:
-      LorvexTaskCommandContext(store: store, selectionSurface: .focus)
+      LorvexTaskCommandContext(store: store, selectionSurface: .today)
     case .tasks:
       LorvexTaskCommandContext(store: store, selectionSurface: .taskWorkspace)
     case .taskDetail:
@@ -37,6 +37,7 @@ struct LorvexWorkspaceWindowView: View {
       TodayView(store: store)
     case .tasks:
       TasksView(store: store)
+        .lorvexWorkspaceSearchField(store: store, selection: .tasks)
     case .calendar:
       CalendarWorkspaceView(store: store)
     case .lists:

@@ -15,16 +15,22 @@
 //      LorvexMobileApp.entitlements).
 //   3. Add the CPTemplateApplicationScene configuration to
 //      LorvexMobileApp-Info.plist (see the documentation block in that file).
+//
+// A simulator build can be made CarPlay-capable without Apple's approval:
+// script/carplay_sim_enable.sh patches the built app's Info.plist and re-signs
+// it ad hoc with the CarPlay entitlement.
 
 #if canImport(CarPlay) && os(iOS)
   import CarPlay
   import Foundation
   import LorvexCore
+  import UIKit
 
-  /// CarPlay scene delegate. Builds and maintains a CPListTemplate with two
-  /// sections — Focus tasks and all remaining Today tasks — and wires each row
-  /// to present a `CPActionSheetTemplate` of task actions (Complete, defer,
-  /// un-focus, Handoff) rather than completing on a single tap.
+  /// CarPlay scene delegate. Presents Today's list as one `CPListTemplate`
+  /// titled Today, in Today's order with a task whose time is running first.
+  /// Each row carries a one-line detail (its time, else its state or estimate)
+  /// and a state glyph, and opens a `CPActionSheetTemplate` (Done, Tomorrow
+  /// instead, Open on iPhone) rather than completing on a single tap.
   @MainActor
   public final class LorvexCarPlaySceneDelegate: NSObject,
     CPTemplateApplicationSceneDelegate
@@ -40,6 +46,11 @@
     /// The pending debounced refresh. Each incoming change cancels and restarts
     /// it, so a burst of writes collapses into a single list refresh.
     private var pendingRefreshTask: Task<Void, Never>?
+
+    /// Re-renders the list at each minute boundary so a running time's "Until"
+    /// detail and the lead row follow the clock without a core read. Cancelled
+    /// on disconnect.
+    private var minuteTickerTask: Task<Void, Never>?
 
     /// Coalescing window for live data-change refreshes. Writes from the MCP host
     /// (the product's primary write surface) can land in bursts; one refresh after
@@ -74,6 +85,7 @@
       // freezes for the rest of the drive.
       triggerSyncOnConnect()
       startObservingDataChanges()
+      startMinuteTicker()
       Task { [weak self] in
         guard let self else { return }
         do {
@@ -93,6 +105,8 @@
       dataChangeObserverTask = nil
       pendingRefreshTask?.cancel()
       pendingRefreshTask = nil
+      minuteTickerTask?.cancel()
+      minuteTickerTask = nil
       self.interfaceController = nil
     }
 
@@ -141,6 +155,19 @@
       }
     }
 
+    /// Wakes at each minute boundary and re-renders the already-loaded rows.
+    private func startMinuteTicker() {
+      minuteTickerTask?.cancel()
+      minuteTickerTask = Task { [weak self] in
+        while !Task.isCancelled {
+          let secondsIntoMinute = Calendar.current.component(.second, from: Date())
+          try? await Task.sleep(for: .seconds(max(1, 60 - secondsIntoMinute)))
+          guard !Task.isCancelled, let self else { return }
+          self.updateRootTemplateSections()
+        }
+      }
+    }
+
     /// Asks the in-process store that owns the CloudSync coordinator to drain the
     /// outbox and pull from CloudKit. CarPlay's own core has no sync coordinator,
     /// so it signals the host app over the established remote-change channel
@@ -149,6 +176,8 @@
       NotificationCenter.default.post(
         name: Self.cloudKitRemoteChangeNotification, object: nil)
     }
+
+    // MARK: - Template
 
     private func buildTemplate() -> CPListTemplate {
       var sections: [CPListSection] = []
@@ -168,35 +197,33 @@
       }
 
       // CarPlay caps total rows per template (driving safety). Reserve the
-      // retry slot, give Focus priority, then fill the remainder with Today.
+      // retry slot; the list is cut from its end, so the lead task always shows.
       let budget = max(0, Int(CPListTemplate.maximumItemCount) - (hasError ? 1 : 0))
-      let focusRows = Array(controller.focusRows.prefix(budget))
-      let todayRows = Array(controller.todayRows.prefix(max(0, budget - focusRows.count)))
-
-      if !hasError, focusRows.isEmpty, todayRows.isEmpty {
-        sections.append(CPListSection(items: [makeEmptyStateItem()]))
-        return CPListTemplate(title: "Lorvex", sections: sections)
-      }
-
-      if !focusRows.isEmpty {
+      let nowMinutes = controller.nowMinutes
+      let rows = Array(controller.rows.prefix(budget))
+      if !rows.isEmpty {
         sections.append(CPListSection(
-          items: focusRows.map(makeItem),
-          header: String(
-            localized: "carplay.section.focus", defaultValue: "Focus",
-            table: "Localizable", bundle: CarPlayL10n.bundle),
-          sectionIndexTitle: nil
-        ))
+          items: rows.map { makeItem(for: $0, nowMinutes: nowMinutes) }))
       }
-      if !todayRows.isEmpty {
-        sections.append(CPListSection(
-          items: todayRows.map(makeItem),
-          header: String(
-            localized: "carplay.section.today", defaultValue: "Today",
-            table: "Localizable", bundle: CarPlayL10n.bundle),
-          sectionIndexTitle: nil
-        ))
-      }
-      return CPListTemplate(title: "Lorvex", sections: sections)
+
+      let template = CPListTemplate(
+        title: String(
+          localized: "carplay.title", defaultValue: "Today",
+          table: "Localizable", bundle: CarPlayL10n.bundle),
+        sections: sections)
+      // Shown by the system only while the template has no sections: a clear
+      // day reads as a quiet screen, not as a fake tappable row.
+      template.emptyViewTitleVariants = [
+        String(
+          localized: "carplay.empty.title", defaultValue: "All clear",
+          table: "Localizable", bundle: CarPlayL10n.bundle)
+      ]
+      template.emptyViewSubtitleVariants = [
+        String(
+          localized: "carplay.empty.detail", defaultValue: "Nothing left for today.",
+          table: "Localizable", bundle: CarPlayL10n.bundle)
+      ]
+      return template
     }
 
     private func makeRetryItem(detail: String) -> CPListItem {
@@ -222,77 +249,64 @@
       return retryItem
     }
 
-    /// A single non-actionable row shown when there is nothing to do. Leaving
-    /// `handler` nil keeps it from rendering a tappable disclosure.
-    private func makeEmptyStateItem() -> CPListItem {
-      CPListItem(
-        text: String(
-          localized: "carplay.empty.title", defaultValue: "All clear",
-          table: "Localizable", bundle: CarPlayL10n.bundle),
-        detailText: String(
-          localized: "carplay.empty.detail", defaultValue: "No tasks for today.",
-          table: "Localizable", bundle: CarPlayL10n.bundle)
-      )
-    }
-
-    /// Builds a task row. Tapping it presents an action sheet rather than
-    /// completing immediately — a single tap can no longer accidentally close a
-    /// task, and the driver gets defer / un-focus / Handoff affordances too.
-    private func makeItem(for row: CarPlayTaskListController.Row) -> CPListItem {
-      let item = CPListItem(text: row.title, detailText: nil)
+    /// Builds a task row: title, the clock detail, and a state glyph. Tapping
+    /// it presents an action sheet rather than completing immediately — a
+    /// single tap can no longer accidentally close a task.
+    private func makeItem(
+      for row: CarPlayTaskListController.Row,
+      nowMinutes: Int?
+    ) -> CPListItem {
+      let item = CPListItem(
+        text: row.title,
+        detailText: CarPlayRowCopy.detail(for: row, nowMinutes: nowMinutes),
+        image: Self.stateImage(for: row))
+      item.accessoryType = .disclosureIndicator
       // CarPlay invokes the handler on the main thread but its type is not
       // `@MainActor`-isolated, so hop explicitly before touching state.
       item.handler = { [weak self] _, completion in
         completion()
-        Task { @MainActor in self?.presentActions(for: row) }
+        Task { @MainActor in self?.presentActions(for: row, nowMinutes: nowMinutes) }
       }
       return item
     }
 
-    private func presentActions(for row: CarPlayTaskListController.Row) {
-      // CPAlertActionHandler is not `@MainActor`-isolated, so each handler hops
-      // back onto the main actor before touching the controller or templates.
+    /// One glyph per row state, with the meaning colors carry everywhere else
+    /// in Lorvex: blue is what the driver started, red is a missed deadline,
+    /// grey is the rest of the day.
+    private static func stateImage(for row: CarPlayTaskListController.Row) -> UIImage? {
+      let name: String
+      let tint: UIColor
+      if row.isStarted {
+        name = "play.circle.fill"
+        tint = .systemBlue
+      } else if row.isOverdue {
+        name = "exclamationmark.circle"
+        tint = .systemRed
+      } else {
+        name = "circle"
+        tint = .systemGray
+      }
+      let configuration = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular)
+      return UIImage(systemName: name, withConfiguration: configuration)?
+        .withTintColor(tint, renderingMode: .alwaysOriginal)
+    }
+
+    // MARK: - Actions
+
+    private func presentActions(for row: CarPlayTaskListController.Row, nowMinutes: Int?) {
       var actions: [CPAlertAction] = [
-        CPAlertAction(
+        mutationAction(
           title: String(
-            localized: "carplay.action.complete", defaultValue: "Complete",
-            table: "Localizable", bundle: CarPlayL10n.bundle),
-          style: .default
-        ) { [weak self] _ in
-          Task { @MainActor in
-            guard let self else { return }
-            self.dismissPresented()
-            await self.runAndRefresh { try await self.controller.complete(id: row.id) }
-          }
-        },
-        CPAlertAction(
-          title: String(
-            localized: "carplay.action.defer_tomorrow", defaultValue: "Defer to Tomorrow",
-            table: "Localizable", bundle: CarPlayL10n.bundle),
-          style: .default
-        ) { [weak self] _ in
-          Task { @MainActor in
-            guard let self else { return }
-            self.dismissPresented()
-            await self.runAndRefresh { try await self.controller.deferToTomorrow(id: row.id) }
-          }
-        },
+            localized: "carplay.action.complete", defaultValue: "Done",
+            table: "Localizable", bundle: CarPlayL10n.bundle)
+        ) { [controller] in try await controller.complete(id: row.id) }
       ]
 
-      if row.isFocus {
-        actions.append(CPAlertAction(
-          title: String(
-            localized: "carplay.action.remove_focus", defaultValue: "Remove from Focus",
-            table: "Localizable", bundle: CarPlayL10n.bundle),
-          style: .default
-        ) { [weak self] _ in
-          Task { @MainActor in
-            guard let self else { return }
-            self.dismissPresented()
-            await self.runAndRefresh { try await self.controller.removeFromFocus(id: row.id) }
-          }
-        })
-      }
+      actions.append(mutationAction(
+        title: String(
+          localized: "carplay.action.defer_tomorrow", defaultValue: "Tomorrow instead",
+          table: "Localizable", bundle: CarPlayL10n.bundle)
+      ) { [controller] in try await controller.deferToTomorrow(id: row.id) })
 
       actions.append(CPAlertAction(
         title: String(
@@ -315,8 +329,27 @@
         Task { @MainActor in self?.dismissPresented() }
       })
 
-      let sheet = CPActionSheetTemplate(title: row.title, message: nil, actions: actions)
+      let sheet = CPActionSheetTemplate(
+        title: row.title,
+        message: CarPlayRowCopy.detail(for: row, nowMinutes: nowMinutes),
+        actions: actions)
       interfaceController?.presentTemplate(sheet, animated: true, completion: nil)
+    }
+
+    /// An action that dismisses the sheet, runs one controller mutation, and
+    /// re-renders the list. `CPAlertActionHandler` is not `@MainActor`-isolated,
+    /// so the handler hops onto the main actor first.
+    private func mutationAction(
+      title: String,
+      work: @escaping @MainActor () async throws -> Void
+    ) -> CPAlertAction {
+      CPAlertAction(title: title, style: .default) { [weak self] _ in
+        Task { @MainActor in
+          guard let self else { return }
+          self.dismissPresented()
+          await self.runAndRefresh(work)
+        }
+      }
     }
 
     /// Runs an async mutation, then refreshes the root list. A failure is mapped

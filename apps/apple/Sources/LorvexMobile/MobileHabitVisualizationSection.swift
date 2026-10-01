@@ -17,7 +17,8 @@ struct MobileHabitVisualizationSection: View {
       } else {
         MobileSkeletonRows(count: 3, showsTrailingDetail: true)
         .padding(LorvexDesign.Spacing.l)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(
+          .regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
         .accessibilityIdentifier("mobileHabits.detail.visualization.loading")
       }
     }
@@ -25,11 +26,16 @@ struct MobileHabitVisualizationSection: View {
   }
 }
 
+/// The period's progress, the streaks, and the 30-day rate. The dial and its
+/// caption lead, beside the three stats where the width holds them all
+/// (an iPad pane), over them as three columns on a phone, and over three rows
+/// of a label and its value where three columns would break their labels
+/// (at accessibility text sizes).
 private struct MobileHabitMomentumPanel: View {
   let habit: LorvexHabit
   let stats: HabitStats
-  @ScaledMetric(relativeTo: .body) private var ringSize: CGFloat = 74
-  @ScaledMetric(relativeTo: .body) private var ringLineWidth: CGFloat = 8
+
+  private enum StatLayout { case column, row }
 
   private var progress: HabitPeriodProgress.Value {
     HabitPeriodProgress.current(habit: habit, recentCompletions: stats.recentCompletions)
@@ -38,121 +44,156 @@ private struct MobileHabitMomentumPanel: View {
   var body: some View {
     ViewThatFits(in: .horizontal) {
       HStack(spacing: LorvexDesign.Spacing.m) {
-        ring
-        stat(
-          title: LocalizedStringResource(
-            "habits.detail.current_streak",
-            defaultValue: "Current Streak",
-            table: "Localizable",
-            bundle: MobileL10n.bundle),
-          value: "\(stats.currentStreak)",
-          tint: .orange)
-        stat(
-          title: LocalizedStringResource(
-            "habits.detail.best_streak",
-            defaultValue: "Best Streak",
-            table: "Localizable",
-            bundle: MobileL10n.bundle),
-          value: "\(stats.bestStreak)",
-          tint: .orange)
-        stat(
-          title: LocalizedStringResource(
-            "habits.detail.rate_30d",
-            defaultValue: "30-day",
-            table: "Localizable",
-            bundle: MobileL10n.bundle),
-          value: stats.completionRate30d.formatted(.percent.precision(.fractionLength(0))),
-          tint: .accentColor)
+        // Laid out before the three stretching stats so the title beside the
+        // ring keeps its one line instead of taking a quarter of the width.
+        ring.layoutPriority(1)
+        statViews(.column)
       }
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         ring
         HStack(spacing: LorvexDesign.Spacing.m) {
-          stat(
-            title: LocalizedStringResource(
-              "habits.detail.current_streak",
-              defaultValue: "Current Streak",
-              table: "Localizable",
-              bundle: MobileL10n.bundle),
-            value: "\(stats.currentStreak)",
-            tint: .orange)
-          stat(
-            title: LocalizedStringResource(
-              "habits.detail.best_streak",
-              defaultValue: "Best Streak",
-              table: "Localizable",
-              bundle: MobileL10n.bundle),
-            value: "\(stats.bestStreak)",
-            tint: .orange)
-          stat(
-            title: LocalizedStringResource(
-              "habits.detail.rate_30d",
-              defaultValue: "30-day",
-              table: "Localizable",
-              bundle: MobileL10n.bundle),
-            value: stats.completionRate30d.formatted(.percent.precision(.fractionLength(0))),
-            tint: .accentColor)
+          statViews(.column)
+        }
+      }
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+        ring
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+          statViews(.row)
         }
       }
     }
     .padding(LorvexDesign.Spacing.l)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(momentumAccessibilityLabel)
     .accessibilityIdentifier("mobileHabits.detail.momentum")
   }
 
+  /// The dial with the period's name and count, beside it while both fit
+  /// whole and under it in a narrower width.
   private var ring: some View {
-    HStack(spacing: LorvexDesign.Spacing.m) {
-      ZStack {
-        Circle()
-          .stroke(tint.opacity(0.18), lineWidth: ringLineWidth)
-        Circle()
-          .trim(from: 0, to: fraction)
-          .stroke(tint.gradient, style: StrokeStyle(lineWidth: ringLineWidth, lineCap: .round))
-          .rotationEffect(.degrees(-90))
-          .animation(.easeInOut(duration: 0.25), value: fraction)
-        VStack(spacing: 1) {
-          Text("\(progress.completed)")
-            .font(.system(.title3, design: .rounded).weight(.semibold))
-            .monospacedDigit()
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-          Text("/\(progress.required)")
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-            .monospacedDigit()
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-        }
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: LorvexDesign.Spacing.m) {
+        dial
+        periodText
       }
-      .frame(width: ringSize, height: ringSize)
-
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(String(localized: "habits.detail.period_progress", defaultValue: "Period Progress", table: "Localizable", bundle: MobileL10n.bundle))
-          .font(LorvexDesign.Typography.primaryEmphasis)
-        Text(periodCaption)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+        dial
+        periodText
       }
-      Spacer(minLength: 0)
     }
   }
 
-  private func stat(title: LocalizedStringResource, value: String, tint: Color) -> some View {
+  private var dial: some View {
+    MobileHabitMomentumDial(
+      completed: progress.completed, required: progress.required, fraction: fraction, tint: tint
+    )
+    // Past the first accessibility size the dial would crowd its caption off
+    // the line; it keeps that size, the count inside it included.
+    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+  }
+
+  private var periodText: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      Text(title)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-      Text(value)
+      Text(periodTitle)
         .font(LorvexDesign.Typography.primaryEmphasis)
-        .foregroundStyle(tint)
-        .monospacedDigit()
+      Text(periodCaption)
+        .font(LorvexDesign.Typography.secondaryText)
+        .foregroundStyle(.secondary)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  /// The period the ring counts over, named plainly: "Today" for a daily habit
+  /// or any per-day target, "This Week" or "This Month" for the longer cadences.
+  private var periodTitle: String {
+    switch HabitPeriodProgress.period(for: habit) {
+    case .day:
+      String(localized: "habits.detail.today", defaultValue: "Today", table: "Localizable", bundle: MobileL10n.bundle)
+    case .week:
+      String(localized: "habits.detail.this_week", defaultValue: "This Week", table: "Localizable", bundle: MobileL10n.bundle)
+    case .month:
+      String(localized: "habits.detail.this_month", defaultValue: "This Month", table: "Localizable", bundle: MobileL10n.bundle)
+    }
+  }
+
+  /// The current streak, the best streak, and the 30-day rate, each laid out
+  /// as `layout` says. Written out rather than looped: a `ViewThatFits`
+  /// candidate holds no `ForEach`.
+  @ViewBuilder
+  private func statViews(_ layout: StatLayout) -> some View {
+    stat(
+      layout,
+      title: LocalizedStringResource(
+        "habits.detail.current_streak",
+        defaultValue: "Current Streak",
+        table: "Localizable",
+        bundle: MobileL10n.bundle),
+      value: lorvexHabitStreakLabel(stats.currentStreak, frequencyType: habit.frequencyType),
+      tint: currentStreakTint)
+    stat(
+      layout,
+      title: LocalizedStringResource(
+        "habits.detail.best_streak",
+        defaultValue: "Best Streak",
+        table: "Localizable",
+        bundle: MobileL10n.bundle),
+      value: lorvexHabitStreakLabel(stats.bestStreak, frequencyType: habit.frequencyType),
+      tint: bestStreakTint)
+    stat(
+      layout,
+      title: LocalizedStringResource(
+        "habits.detail.rate_30d",
+        defaultValue: "30-day",
+        table: "Localizable",
+        bundle: MobileL10n.bundle),
+      value: stats.completionRate30d.formatted(.percent.precision(.fractionLength(0))),
+      tint: .accentColor)
+  }
+
+  /// A stat as a column (its label over its value, sharing the width with the
+  /// others) or as a row (its label, then its value at the trailing edge).
+  @ViewBuilder
+  private func stat(_ layout: StatLayout, title: LocalizedStringResource, value: String, tint: Color)
+    -> some View
+  {
+    let label = Text(title)
+      .font(LorvexDesign.Typography.tertiaryText)
+      .foregroundStyle(.secondary)
+    let reading = Text(value)
+      .font(LorvexDesign.Typography.primaryEmphasis)
+      .foregroundStyle(tint)
+      .monospacedDigit()
+    switch layout {
+    case .column:
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+        label
+        reading
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+    case .row:
+      HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+        label
+        Spacer(minLength: LorvexDesign.Spacing.s)
+        reading
+          .fixedSize()
+      }
+    }
   }
 
   private var tint: Color {
-    progress.isComplete ? .green : habit.tileTint
+    progress.isComplete ? LorvexDesign.Palette.done : habit.tileTint
+  }
+
+  /// The current-streak stat tint: the habit's own identity color while the
+  /// streak is active (non-zero), `neutral` once it has broken to zero.
+  private var currentStreakTint: Color {
+    stats.currentStreak > 0 ? habit.tileTint : LorvexDesign.Palette.neutral
+  }
+
+  /// The best-streak stat tint: the habit's own identity color once a streak
+  /// has been recorded, `neutral` when the habit has never held one.
+  private var bestStreakTint: Color {
+    stats.bestStreak > 0 ? habit.tileTint : LorvexDesign.Palette.neutral
   }
 
   private var fraction: Double {
@@ -160,11 +201,16 @@ private struct MobileHabitMomentumPanel: View {
     return min(1, Double(progress.completed) / Double(progress.required))
   }
 
+  /// What the period still asks for. The dial already shows the count done
+  /// over the count required, so the caption says how many remain ("2 to go")
+  /// or that the period is done.
   private var periodCaption: String {
-    String(
-      format: String(localized: "habits.detail.period_progress.value", defaultValue: "%1$lld of %2$lld done", table: "Localizable", bundle: MobileL10n.bundle),
-      progress.completed,
-      progress.required
+    if progress.isComplete {
+      return String(localized: "habits.detail.period_done", defaultValue: "Done", table: "Localizable", bundle: MobileL10n.bundle)
+    }
+    return String(
+      format: String(localized: "habits.detail.period_remaining", defaultValue: "%lld to go", table: "Localizable", bundle: MobileL10n.bundle),
+      max(progress.required - progress.completed, 1)
     )
   }
 
@@ -176,6 +222,48 @@ private struct MobileHabitMomentumPanel: View {
       stats.currentStreak,
       stats.bestStreak
     )
+  }
+}
+
+/// The period's progress as a ring around its count, the count done over the
+/// count required ("2" over "/3"). The ring, its stroke, and the count grow
+/// with the text together.
+private struct MobileHabitMomentumDial: View {
+  let completed: Int
+  let required: Int
+  /// How much of the ring is drawn, from 0 to 1.
+  let fraction: Double
+  let tint: Color
+  @Environment(\.colorScheme) private var colorScheme
+  @ScaledMetric(relativeTo: .body) private var size: CGFloat = 74
+  @ScaledMetric(relativeTo: .body) private var lineWidth: CGFloat = 8
+
+  var body: some View {
+    ZStack {
+      Circle()
+        .stroke(
+          tint.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)),
+          lineWidth: lineWidth)
+      Circle()
+        .trim(from: 0, to: fraction)
+        .stroke(tint.gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+        .rotationEffect(.degrees(-90))
+        .animation(.easeInOut(duration: 0.25), value: fraction)
+      VStack(spacing: 1) {
+        Text("\(completed)")
+          .font(.system(.title3, design: .rounded).weight(.semibold))
+          .monospacedDigit()
+          .lineLimit(1)
+          .minimumScaleFactor(0.7)
+        Text("/\(required)")
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(.secondary)
+          .monospacedDigit()
+          .lineLimit(1)
+          .minimumScaleFactor(0.7)
+      }
+    }
+    .frame(width: size, height: size)
   }
 }
 
@@ -195,27 +283,48 @@ private struct MobileHabitRhythmPanel: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       Text(String(localized: "habits.detail.rhythm", defaultValue: "Rhythm", table: "Localizable", bundle: MobileL10n.bundle))
         .font(LorvexDesign.Typography.primaryEmphasis)
-      HStack(spacing: 5) {
-        ForEach(Array(cells.enumerated()), id: \.offset) { _, cell in
-          Capsule()
-            .fill(cell.filled ? AnyShapeStyle(tint) : AnyShapeStyle(Color.secondary.opacity(0.18)))
-            .overlay {
-              if cell.isCurrent {
-                Capsule().strokeBorder(tint.opacity(cell.filled ? 0.35 : 0.7), lineWidth: 1)
+      let labels = dayLabels
+      HStack(alignment: .top, spacing: 5) {
+        ForEach(Array(cells.enumerated()), id: \.offset) { index, cell in
+          VStack(spacing: LorvexDesign.Spacing.xs) {
+            Capsule()
+              .fill(cell.filled ? AnyShapeStyle(tint) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+              .frame(height: 14)
+              .overlay {
+                if cell.isCurrent {
+                  Capsule().strokeBorder(tint.opacity(cell.filled ? 0.35 : 0.7), lineWidth: 1)
+                }
               }
+            if index < labels.count {
+              Text(labels[index])
+                .font(LorvexDesign.Typography.tertiaryText)
+                .foregroundStyle(cell.isCurrent ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+                .fixedSize()
             }
+          }
         }
       }
-      .frame(height: 14)
     }
     .padding(LorvexDesign.Spacing.l)
-    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(rhythmAccessibilityLabel)
     .accessibilityIdentifier("mobileHabits.detail.rhythm")
   }
 
   private var tint: Color { habit.tileTint }
+
+  /// Narrow weekdays under a daily habit's seven cells, oldest first, so the
+  /// strip reads as this week rather than seven anonymous marks; empty for a
+  /// weekly or monthly strip.
+  private var dayLabels: [String] {
+    guard HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType) == .day else { return [] }
+    let calendar = Calendar.current
+    let today = Date()
+    return (0..<cells.count).reversed().compactMap { daysAgo in
+      calendar.date(byAdding: .day, value: -daysAgo, to: today)?.formatted(.dateTime.weekday(.narrow))
+    }
+  }
 
   private var rhythmAccessibilityLabel: String {
     let filled = cells.filter(\.filled).count
@@ -227,16 +336,57 @@ private struct MobileHabitRhythmPanel: View {
   }
 }
 
+/// Lays out a habit heatmap's week columns, oldest to newest, showing as many
+/// of the newest as the proposed width fits at the fixed cell size, between a
+/// season and a year: a phone shows about five months, an iPad pane or a
+/// readable-width screen the whole year. The columns that do not fit are
+/// placed far outside the bounds, so what shows always ends on the current
+/// week. The count is decided here, per layout pass, rather than measured
+/// into view state: a navigation transition proposes alternating widths to
+/// the incoming screen, and state derived from them flips every frame.
+struct MobileHabitHeatmapLayout: Layout {
+  static let minimumWeeks = 16
+  static let maximumWeeks = 52
+  static let cellSize: CGFloat = 10
+  static let cellSpacing: CGFloat = 3
+
+  /// The columns shown of `count` in `width`: the newest that fit at the cell
+  /// size and spacing, at least `minimumWeeks` (overflowing a narrower width),
+  /// and all of them for an unbounded width.
+  static func shownColumns(of count: Int, fitting width: CGFloat?) -> Int {
+    guard let width, width.isFinite else { return count }
+    let fitted = Int(max(0, width + cellSpacing) / (cellSize + cellSpacing))
+    return min(count, max(minimumWeeks, fitted))
+  }
+
+  static func width(ofColumns count: Int) -> CGFloat {
+    guard count > 0 else { return 0 }
+    return CGFloat(count) * (cellSize + cellSpacing) - cellSpacing
+  }
+
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    let shown = Self.shownColumns(of: subviews.count, fitting: proposal.width)
+    let height = subviews.first?.sizeThatFits(.unspecified).height ?? 0
+    return CGSize(width: Self.width(ofColumns: shown), height: height)
+  }
+
+  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    let shown = Self.shownColumns(of: subviews.count, fitting: bounds.width)
+    let hidden = subviews.count - shown
+    for (index, subview) in subviews.enumerated() {
+      let column = index - hidden
+      let x = column < 0
+        ? bounds.minX - 100_000
+        : bounds.minX + CGFloat(column) * (Self.cellSize + Self.cellSpacing)
+      subview.place(at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading, proposal: .unspecified)
+    }
+  }
+}
+
 private struct MobileHabitHeatmapPanel: View {
   let habit: LorvexHabit
   let detail: MobileStore.HabitDetail
   @State private var cachedGrid: HabitHeatmapModel.Grid
-
-  private static let defaultWeeks = 16
-  private let weeks = Self.defaultWeeks
-  private let cellSize: CGFloat = 10
-  private let cellSpacing: CGFloat = 3
-  @ScaledMetric(relativeTo: .caption) private var weekdayLabelWidth: CGFloat = 10
 
   private let calendar: Calendar
 
@@ -245,12 +395,7 @@ private struct MobileHabitHeatmapPanel: View {
     self.detail = detail
     let calendar = Self.makeCalendar()
     self.calendar = calendar
-    _cachedGrid = State(initialValue: Self.makeGrid(
-      habit: habit,
-      detail: detail,
-      weeks: Self.defaultWeeks,
-      calendar: calendar
-    ))
+    _cachedGrid = State(initialValue: Self.makeGrid(habit: habit, detail: detail, calendar: calendar))
   }
 
   private static func makeCalendar() -> Calendar {
@@ -261,21 +406,35 @@ private struct MobileHabitHeatmapPanel: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      HStack {
-        Text(String(localized: "habits.detail.heatmap", defaultValue: "Completion Heatmap", table: "Localizable", bundle: MobileL10n.bundle))
-          .font(LorvexDesign.Typography.primaryEmphasis)
-        Spacer()
-        legend
+      // The title and the legend share a line while both fit whole; in a
+      // narrower line (at accessibility text sizes) the legend moves under
+      // the title rather than squeezing it into a broken word.
+      ViewThatFits(in: .horizontal) {
+        HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+          title
+            .lineLimit(1)
+          Spacer(minLength: LorvexDesign.Spacing.s)
+          legend
+        }
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+          title
+            .fixedSize(horizontal: false, vertical: true)
+          legend
+        }
       }
       if detail.completions.completions.isEmpty {
         Text(String(localized: "habits.detail.heatmap.empty", defaultValue: "No completion history yet", table: "Localizable", bundle: MobileL10n.bundle))
           .font(LorvexDesign.Typography.secondaryText)
           .foregroundStyle(.secondary)
       }
-      heatmap
+      MobileHabitHeatmapGrid(grid: cachedGrid, calendar: calendar, tint: tint)
+        // The cells keep one size at every text size, so the month and
+        // weekday labels stop growing where a month's name would outgrow
+        // its month's columns.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
     .padding(LorvexDesign.Spacing.l)
-    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(heatmapAccessibilityLabel)
     .accessibilityIdentifier("mobileHabits.detail.heatmap")
@@ -287,99 +446,164 @@ private struct MobileHabitHeatmapPanel: View {
     }
   }
 
-  private var heatmap: some View {
+  private var title: some View {
+    Text(String(localized: "habits.detail.heatmap", defaultValue: "Completion Heatmap", table: "Localizable", bundle: MobileL10n.bundle))
+      .font(LorvexDesign.Typography.primaryEmphasis)
+  }
+
+  /// The three cell states the grid draws, between "Less" and "More", in the
+  /// grid's own cells and capped at the grid's text size.
+  private var legend: some View {
+    HStack(spacing: LorvexDesign.Spacing.xs) {
+      Text(String(localized: "habits.detail.heatmap.legend.less", defaultValue: "Less", table: "Localizable", bundle: MobileL10n.bundle))
+      MobileHabitHeatmapCell(intensity: .none, tint: tint)
+      MobileHabitHeatmapCell(intensity: .partial, tint: tint)
+      MobileHabitHeatmapCell(intensity: .met, tint: tint)
+      Text(String(localized: "habits.detail.heatmap.legend.more", defaultValue: "More", table: "Localizable", bundle: MobileL10n.bundle))
+    }
+    .font(LorvexDesign.Typography.tertiaryText)
+    .foregroundStyle(.secondary)
+    .lineLimit(1)
+    .fixedSize()
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    .accessibilityHidden(true)
+  }
+
+  private var tint: Color {
+    habit.tileTint
+  }
+
+  private func refreshCachedGrid() {
+    cachedGrid = Self.makeGrid(habit: habit, detail: detail, calendar: calendar)
+  }
+
+  /// The whole year, of which the layout shows what fits.
+  private static func makeGrid(
+    habit: LorvexHabit,
+    detail: MobileStore.HabitDetail,
+    calendar: Calendar
+  ) -> HabitHeatmapModel.Grid {
+    HabitHeatmapModel.makeGrid(
+      completions: detail.completions.completions,
+      targetCount: habit.targetCount,
+      weeks: MobileHabitHeatmapLayout.maximumWeeks,
+      endDate: Date(),
+      calendar: calendar
+    )
+  }
+
+  /// Describes the year the grid holds, not only the columns on screen.
+  private var heatmapAccessibilityLabel: String {
+    let cells = cachedGrid.columns.flatMap { $0 }
+    let met = cells.filter { $0.intensity == .met }.count
+    let partial = cells.filter { $0.intensity == .partial }.count
+    return MobileHabitAccessibilityText.heatmapLabel(
+      weeks: cachedGrid.columns.count, targetMetDays: met, partialDays: partial)
+  }
+}
+
+/// The heatmap's cells, a week to a column under the month labels, beside a
+/// column of weekday initials. The cells have one size at every text size;
+/// the labels' row and column grow with the labels' text, which the panel
+/// caps.
+private struct MobileHabitHeatmapGrid: View {
+  let grid: HabitHeatmapModel.Grid
+  let calendar: Calendar
+  let tint: Color
+
+  private let cellSize = MobileHabitHeatmapLayout.cellSize
+  private let cellSpacing = MobileHabitHeatmapLayout.cellSpacing
+  @ScaledMetric(relativeTo: .caption) private var weekdayLabelWidth: CGFloat = 10
+
+  var body: some View {
     HStack(alignment: .top, spacing: cellSpacing) {
       weekdayColumn
-      VStack(alignment: .leading, spacing: cellSpacing) {
-        monthRow
-        HStack(alignment: .top, spacing: cellSpacing) {
-          ForEach(Array(cachedGrid.columns.enumerated()), id: \.offset) { _, column in
-            VStack(spacing: cellSpacing) {
-              ForEach(column) { cell in
-                cellView(cell)
-              }
-            }
-          }
+      MobileHabitHeatmapLayout {
+        ForEach(Array(grid.columns.enumerated()), id: \.offset) { index, column in
+          weekColumn(column, monthLabel: grid.monthLabels[index])
         }
       }
     }
   }
 
+  /// The month labels' row: one line of the label text, empty, so the
+  /// weekday column and every week column start their cells at one height.
+  private func monthRow(width: CGFloat) -> some View {
+    Text(verbatim: " ")
+      .font(LorvexDesign.Typography.tertiaryText)
+      .hidden()
+      .frame(width: width, alignment: .leading)
+  }
+
   private var weekdayColumn: some View {
     VStack(alignment: .leading, spacing: cellSpacing) {
-      Text(" ")
-        .font(LorvexDesign.Typography.tertiaryText)
+      monthRow(width: weekdayLabelWidth)
       ForEach(Array(HabitHeatmapModel.weekdayInitials(calendar: calendar).enumerated()), id: \.offset) { index, symbol in
         Text(index.isMultiple(of: 2) ? symbol : " ")
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .lineLimit(1)
           .minimumScaleFactor(0.7)
-          .frame(minWidth: weekdayLabelWidth, minHeight: cellSize, alignment: .leading)
+          .frame(minWidth: weekdayLabelWidth, minHeight: cellSize, maxHeight: cellSize, alignment: .leading)
       }
     }
   }
 
-  private var monthRow: some View {
-    HStack(spacing: cellSpacing) {
-      ForEach(Array(cachedGrid.monthLabels.enumerated()), id: \.offset) { _, label in
-        Color.clear
-          .frame(width: cellSize, height: 13)
-          .overlay(alignment: .leading) {
-            if let label {
-              Text(label)
-                .font(LorvexDesign.Typography.tertiaryText)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .fixedSize()
-            }
+  /// One week: its month label, set where a month begins and drawn past the
+  /// cell's width, over the day cells.
+  private func weekColumn(_ column: [HabitHeatmapModel.Cell], monthLabel: String?) -> some View {
+    VStack(spacing: cellSpacing) {
+      monthRow(width: cellSize)
+        .overlay(alignment: .leading) {
+          if let monthLabel {
+            Text(monthLabel)
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+              .fixedSize()
           }
+        }
+      ForEach(column) { cell in
+        MobileHabitHeatmapCell(intensity: cell.intensity, tint: tint)
       }
     }
   }
+}
 
-  private var legend: some View {
-    HStack(spacing: LorvexDesign.Spacing.xs) {
-      Text(String(localized: "habits.detail.heatmap.legend.less", defaultValue: "Less", table: "Localizable", bundle: MobileL10n.bundle))
-      ForEach([HabitHeatmapModel.Intensity.none, .partial, .met], id: \.self) { intensity in
-        RoundedRectangle(cornerRadius: 3, style: .continuous)
-          .fill(fill(for: intensity))
-          .frame(width: cellSize, height: cellSize)
-      }
-      Text(String(localized: "habits.detail.heatmap.legend.more", defaultValue: "More", table: "Localizable", bundle: MobileL10n.bundle))
-    }
-    .font(LorvexDesign.Typography.tertiaryText)
-    .foregroundStyle(.secondary)
-    .accessibilityHidden(true)
-  }
+/// One day of the heatmap: a rounded square filled by how far the day went
+/// toward its target, with a mark that tells the states apart without color
+/// (a slash for part of the target, a dot for the target met).
+private struct MobileHabitHeatmapCell: View {
+  let intensity: HabitHeatmapModel.Intensity
+  let tint: Color
 
-  private func cellView(_ cell: HabitHeatmapModel.Cell) -> some View {
-    RoundedRectangle(cornerRadius: 3, style: .continuous)
-      .fill(fill(for: cell.intensity))
-      .overlay {
-        cue(for: cell.intensity)
-      }
-      .frame(width: cellSize, height: cellSize)
+  private let size = MobileHabitHeatmapLayout.cellSize
+
+  var body: some View {
+    RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
+      .fill(fill)
+      .overlay { cue }
+      .frame(width: size, height: size)
   }
 
   @ViewBuilder
-  private func cue(for intensity: HabitHeatmapModel.Intensity) -> some View {
+  private var cue: some View {
     switch intensity {
     case .partial:
       Capsule()
         .fill(tint.opacity(0.7))
-        .frame(width: cellSize * 0.35, height: 2)
+        .frame(width: size * 0.35, height: 2)
         .rotationEffect(.degrees(-45))
     case .met:
       Circle()
         .fill(.primary.opacity(0.22))
-        .frame(width: cellSize * 0.42, height: cellSize * 0.42)
+        .frame(width: size * 0.42, height: size * 0.42)
     case .absent, .none:
       EmptyView()
     }
   }
 
-  private func fill(for intensity: HabitHeatmapModel.Intensity) -> AnyShapeStyle {
+  private var fill: AnyShapeStyle {
     switch intensity {
     case .absent:
       return AnyShapeStyle(Color.clear)
@@ -390,42 +614,6 @@ private struct MobileHabitHeatmapPanel: View {
     case .met:
       return AnyShapeStyle(tint)
     }
-  }
-
-  private var tint: Color {
-    habit.tileTint
-  }
-
-  private func refreshCachedGrid() {
-    cachedGrid = Self.makeGrid(
-      habit: habit,
-      detail: detail,
-      weeks: weeks,
-      calendar: calendar
-    )
-  }
-
-  private static func makeGrid(
-    habit: LorvexHabit,
-    detail: MobileStore.HabitDetail,
-    weeks: Int,
-    calendar: Calendar
-  ) -> HabitHeatmapModel.Grid {
-    HabitHeatmapModel.makeGrid(
-      completions: detail.completions.completions,
-      targetCount: habit.targetCount,
-      weeks: weeks,
-      endDate: Date(),
-      calendar: calendar
-    )
-  }
-
-  private var heatmapAccessibilityLabel: String {
-    let cells = cachedGrid.columns.flatMap { $0 }
-    let met = cells.filter { $0.intensity == .met }.count
-    let partial = cells.filter { $0.intensity == .partial }.count
-    return MobileHabitAccessibilityText.heatmapLabel(
-      weeks: weeks, targetMetDays: met, partialDays: partial)
   }
 }
 

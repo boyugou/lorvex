@@ -1,8 +1,9 @@
 import LorvexCore
 import SwiftUI
 
-/// The sidebar's Lists section: inline list creation via a "+" on the section
-/// header, per-row Edit / reorder / Delete context menus, drag-to-reorder via
+/// The sidebar's Lists section: the lists, then a quiet "New List" row that
+/// opens the create sheet (the Reminders pattern: creation sits where the
+/// lists end, not as a glyph on the header), per-row Edit / reorder / Delete context menus, drag-to-reorder via
 /// `.onMove`, and drag-a-task-onto-a-list drop targets. This is the
 /// Reminders/Notes pattern — lists are managed inline where they live. It is the
 /// scoped list picker in the Tasks workspace sidebar: each row selects a list to
@@ -12,11 +13,7 @@ extension SidebarView {
     var listScopeSection: some View {
         Section {
             ForEach(store.orderedLists) { list in
-                SidebarListRow(
-                    minHeight: SidebarMetrics.scopeRowHeight,
-                    detail: listScopeDetail(for: list),
-                    badge: list.openCount > 0 ? "\(list.openCount)" : nil
-                ) {
+                SidebarListRow(badge: list.openCount > 0 ? "\(list.openCount)" : nil) {
                     SidebarListIcon(
                         icon: list.icon,
                         tint: isSelected(.listScope(list.id))
@@ -24,7 +21,7 @@ extension SidebarView {
                             : (Color(lorvexHex: list.color) ?? .accentColor)
                     )
                 } title: {
-                    Text(list.name)
+                    Text(list.displayName)
                 }
                 .listRowInsets(SidebarMetrics.rowInsets)
                 .tag(SidebarRowSelection.listScope(list.id))
@@ -89,29 +86,33 @@ extension SidebarView {
             .onMove { source, destination in
                 moveLists(fromOffsets: source, toOffset: destination)
             }
+            newListRow
         } header: {
-            listSectionHeader
+            SidebarSectionHeader(title: LocalizedStringResource("sidebar.section.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle))
         }
     }
 
-    private var listSectionHeader: some View {
-        HStack(spacing: LorvexDesign.Spacing.xs) {
-            SidebarSectionHeader(title: LocalizedStringResource("sidebar.section.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle))
-            Spacer(minLength: 0)
-            Button {
-                isShowingCreateList = true
-            } label: {
+    /// The last row of the Lists section: a plus in the icon column and
+    /// "New List" in the secondary style, so it reads as an action beside the
+    /// lists rather than as one of them. It carries no selection tag, so
+    /// clicking it opens the create sheet without moving the selection.
+    private var newListRow: some View {
+        Button {
+            isShowingCreateList = true
+        } label: {
+            SidebarListRow {
                 Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(SidebarTypography.title.weight(.medium))
+            } title: {
+                Text(LocalizedStringResource("sidebar.lists.new", defaultValue: "New List", table: "Localizable", bundle: LorvexL10n.bundle))
                     .foregroundStyle(.secondary)
-                    .frame(width: 18, height: 18)
-                    .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .help(String(localized: "lists.create.help", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle))
-            .accessibilityLabel(String(localized: "lists.create.a11y", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle))
-            .accessibilityIdentifier("sidebar.lists.create")
         }
+        .buttonStyle(.plain)
+        .listRowInsets(SidebarMetrics.rowInsets)
+        .moveDisabled(true)
+        .help(String(localized: "lists.create.help", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("sidebar.lists.create")
     }
 
     /// The sidebar's Archived section: lists retired via archive. Hidden when
@@ -124,16 +125,13 @@ extension SidebarView {
         if !store.orderedArchivedLists.isEmpty {
             Section {
                 ForEach(store.orderedArchivedLists) { list in
-                    SidebarListRow(
-                        minHeight: SidebarMetrics.scopeRowHeight,
-                        detail: archivedListScopeDetail(for: list)
-                    ) {
+                    SidebarListRow {
                         SidebarListIcon(
                             icon: list.icon,
                             tint: isSelected(.listScope(list.id)) ? .white : .secondary
                         )
                     } title: {
-                        Text(list.name)
+                        Text(list.displayName)
                     }
                     .listRowInsets(SidebarMetrics.rowInsets)
                     .tag(SidebarRowSelection.listScope(list.id))
@@ -203,22 +201,6 @@ extension SidebarView {
         }
     }
 
-    private func archivedListScopeDetail(for list: LorvexList) -> String {
-        if list.totalCount == 0 {
-            return String(
-                localized: "sidebar.archived_scope.empty",
-                defaultValue: "Archived · empty",
-                table: "Localizable",
-                bundle: LorvexL10n.bundle
-            )
-        }
-        return String(
-            localized: "sidebar.archived_scope.task_count",
-            defaultValue: "Archived · \(list.totalCount) tasks",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle)
-    }
-
     func deleteListDialogTitle(_ list: LorvexList) -> String {
         // The archived branch only ever offers Unarchive, never re-archive, so
         // its title stays a plain delete prompt (the message explains why delete
@@ -226,12 +208,12 @@ extension SidebarView {
         if list.totalCount == 0 || list.isArchived {
             return String(
                 format: String(localized: "list_row.delete.title", defaultValue: "Delete list “%@”?", table: "Localizable", bundle: LorvexL10n.bundle),
-                list.name
+                list.displayName
             )
         }
         return String(
             format: String(localized: "list_row.archive.title", defaultValue: "Archive list “%@”?", table: "Localizable", bundle: LorvexL10n.bundle),
-            list.name
+            list.displayName
         )
     }
 
@@ -250,7 +232,7 @@ extension SidebarView {
             // its tasks back so they can be cleared before a later delete.
             return String(
                 localized: "list_row.delete.archived_nonempty_message",
-                defaultValue: "This list can't be deleted while it still holds tasks. Unarchive it to restore the list and its tasks, then move or clear them before deleting it.",
+                defaultValue: "This list can’t be deleted while it still holds tasks. Unarchive it to restore the list and its tasks, then move or clear them before deleting it.",
                 table: "Localizable",
                 bundle: LorvexL10n.bundle
             )
@@ -260,7 +242,7 @@ extension SidebarView {
         // under the list's name, and it can be restored later.
         return String(
             localized: "list_row.archive.nonempty_count_message",
-            defaultValue: "\(list.totalCount) tasks remain in \"\(list.name)\". Archive the list to retire it while keeping its tasks and history; you can unarchive it later.",
+            defaultValue: "\(list.totalCount) tasks remain in “\(list.displayName)”. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
             table: "Localizable",
             bundle: LorvexL10n.bundle)
     }

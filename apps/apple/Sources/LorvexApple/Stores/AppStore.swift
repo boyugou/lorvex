@@ -11,7 +11,7 @@ import LorvexCloudSync
 final class AppStore {
   // MARK: - Per-domain storage structs
 
-  var focusStorage = AppStoreFocusStorage()
+  var todayStorage = AppStoreTodayStorage()
   var dailyReviewStorage = AppStoreDailyReviewStorage()
   var listsStorage = AppStoreListsStorage()
   var calendarStorage = AppStoreCalendarStorage()
@@ -30,7 +30,7 @@ final class AppStore {
       // detail pane is meaningless on Habits / Memory, and a stale ID survives
       // across launches via UserDefaults producing a blank detail pane when the
       // underlying task has been deleted on another device. Workspaces that
-      // consume the selection on navigation: today, tasks, focus, lists
+      // consume the selection on navigation: today, tasks, lists
       // (see `selectionUsesSelectedTaskID`). Calendar is the
       // exception — it clears on navigation but opens the inspector on an
       // explicit event tap, which `reconcileSelectedTaskAfterRefresh` preserves.
@@ -41,6 +41,10 @@ final class AppStore {
       // selection when navigating away so it can't reopen on an unrelated tab.
       if selection != .habits {
         selectedHabitID = nil
+      }
+      // A query narrows only the workspace it was typed in.
+      if selection != oldValue {
+        searchText = ""
       }
     }
   }
@@ -65,6 +69,13 @@ final class AppStore {
         selectedHabitID = nil
       }
     }
+  }
+
+  /// Whether Today's Done section is folded, remembered across launches. The
+  /// store owns it rather than the view so arrow keys, shift-click ranges, and
+  /// Select All on Today skip exactly the rows the fold hides.
+  var isTodayDoneCollapsed = false {
+    didSet { defaults.set(isTodayDoneCollapsed, forKey: Key.todayDoneCollapsed) }
   }
 
   /// Collapse whichever right-hand inspector is open (task or habit), the same
@@ -105,25 +116,40 @@ final class AppStore {
   /// confirmation appears regardless of which window raised it.
   var pendingPermanentDeleteTask: LorvexTask?
 
-  // MARK: - Task capture drafts (small cluster; kept flat)
+  // MARK: - Task capture
 
-  var draftTitle = ""
-  var draftNotes = ""
-
-  /// Monotonic counter the New Task command (⌘N) and empty-state capture
-  /// buttons bump via `requestQuickAddFocus()`. Every `QuickAddRow` observes it
-  /// and claims keyboard focus when the value changes, so capture happens inline
-  /// in the current surface instead of in a popup window.
+  /// Monotonic counter the New Task command (⌘N) bumps via
+  /// `requestQuickAddFocus()`. Every `QuickAddRow` observes it and claims
+  /// keyboard focus when the value changes, so capture happens inline in the
+  /// current surface instead of in a popup window.
   var quickAddFocusToken = 0
 
-  // MARK: - Search (single property; kept flat)
+  // MARK: - Search (kept flat)
 
+  /// The query typed into the current workspace's toolbar search field. Only
+  /// All Tasks and Memory have one, and the query is cleared whenever the
+  /// workspace or the Tasks list scope changes, so it never filters a surface
+  /// that shows no field.
   var searchText = ""
+
+  /// Set by Find (⌘F) and cleared by the search field that takes focus. A flag
+  /// rather than a counter, so a workspace that appears after the request —
+  /// Find from a workspace without search opens All Tasks — still sees it
+  /// pending.
+  var isSearchFocusRequested = false
 
   /// Tasks due today or overdue, computed from the same full task pool and
   /// "today" the app-icon badge uses, so the menu-bar attention chip/glyph and
   /// the dock badge always show the same number. Updated whenever the badge is.
   var menuBarAttentionCount = 0
+
+  // MARK: - Settings navigation
+
+  /// A Settings category another surface asked the Settings window to show,
+  /// such as the first-run wizard's Connect an Assistant button. The Settings
+  /// window selects it when it opens, or at once when it is already open, and
+  /// then clears it.
+  var requestedSettingsCategory: SettingsCategory?
 
   // MARK: - Command palette (⌘K overlay; kept flat)
 
@@ -131,12 +157,27 @@ final class AppStore {
   /// by the menu command so a `Commands` button can drive a view-owned sheet.
   var showCommandPalette = false
 
-  /// True while a capture/create action is writing through the core. Create
-  /// surfaces clear their draft only after the write plus a Spotlight reindex
-  /// and sync fan-out, a window in which a second Return would otherwise start a
-  /// duplicate create; the action guards on this flag and the buttons disable on
-  /// it.
+  /// True while a create action is writing through the core and reading the
+  /// surfaces that show the new row. The capture panel and the list, habit, and
+  /// calendar sheets guard their actions on it and disable their confirm button
+  /// on it, so a double Return cannot start a duplicate create. It is released
+  /// before any post-commit fan-out (Spotlight, reminders, badge, widget, sync),
+  /// which can take as long as a CloudKit cycle. The inline quick-add rows never
+  /// raise it; they serialize through `inlineCaptureCommitTail` instead.
   var isCreating = false
+
+  /// The most recent inline quick-add commit (`createInlineTask(_:destination:)`).
+  /// Each commit is a write plus the reads that show the new row; the next
+  /// commit awaits this one first, so lines typed back to back all land, in
+  /// order, without their reads interleaving.
+  @ObservationIgnored var inlineCaptureCommitTail: Task<Void, Never>?
+
+  /// Coalescing single-flight for the fan-out a task create owes the rest of
+  /// the system (`publishAfterTaskCreate()`): Spotlight, reminders, badge,
+  /// widget snapshot, one sync cycle. A create that lands while a pass is in
+  /// flight arms one trailing pass instead of running a second reminder re-plan
+  /// against the same notification center.
+  @ObservationIgnored let taskCreateFanOutFlight = RefreshSingleFlight<Void>()
 
   /// Coalescing single-flight for the full `refresh()` fan-out. A trigger
   /// arriving while a refresh is in flight — a database-change signal,
@@ -177,11 +218,6 @@ final class AppStore {
   /// product zones differ.
   @ObservationIgnored var logicalDayBoundaryWakeTask: Task<Void, Never>?
 
-  /// One app-owned wake for retry/deferred CloudSync work. It never runs in the
-  /// MCP host or extensions; those processes only author the shared outbox.
-  @ObservationIgnored var cloudSyncRetryWakeTask: Task<Void, Never>?
-  @ObservationIgnored var cloudSyncRetryWakeGeneration: UInt64 = 0
-
   // MARK: - Diagnostics (single property; kept flat)
 
   var runtimeDiagnostics: RuntimeDiagnosticsSnapshot?
@@ -216,6 +252,12 @@ final class AppStore {
   /// Drives the blocking alert in `ContentView`. Set for errors that require
   /// explicit user acknowledgement (e.g. core write failures on mutation).
   var errorMessage: String?
+
+  /// The message of the refresh failure already shown in the blocking alert. A
+  /// refresh runs on its own (activation, sync, database change), so the same
+  /// failure is shown once and then only logged until a refresh succeeds; see
+  /// ``presentRefreshFailure(_:)``.
+  @ObservationIgnored var surfacedRefreshFailureMessage: String?
 
   /// Drives the auto-dismissing toast in `ContentView`. Set for transient
   /// action failures that don't require acknowledgement (e.g. export errors,
@@ -297,21 +339,11 @@ final class AppStore {
   var shouldIncludeActiveOutboxCap: Bool {
     includeActiveOutboxCapProvider?() ?? (cloudSyncMode != .live)
   }
-  let cloudSyncSubscriber: any CloudSyncSubscribing
-  /// Drives one invisible sync cycle (outbound `sync_outbox` → CloudKit, inbound
-  /// CloudKit → `applyEnvelope`) against the ported engine. It is nil when the
-  /// store starts without a live backend. A live-started store may retain this
-  /// value after an explicit cloud deletion flips its runtime mode to Off; the
-  /// mode gate still halts cycles and the stable value avoids a second actor
-  /// graph over the sync-state directory.
-  let cloudSyncCoordinator: CloudSyncEngineCoordinator?
-  /// The one coordinator instance used by every iCloud-data maintenance action
-  /// for this store, including while ordinary sync is off. In live mode this is
-  /// the same coordinator value as ``cloudSyncCoordinator`` (and therefore
-  /// shares its operation gate and file-backed actors); in off mode it remains
-  /// retained so repeated delete/retry/re-enable actions cannot construct
-  /// competing actor sets over one sync-state directory.
-  @ObservationIgnored let cloudDataMaintenanceCoordinator: CloudSyncEngineCoordinator?
+  /// The CloudKit transport. It exists whenever the app can reach CloudKit,
+  /// whether or not sync is on, because deleting iCloud data works with sync
+  /// off; it runs an engine only while ``cloudSyncMode`` is `.live` and the
+  /// iCloud account allows it. Nil in previews and tests without CloudKit.
+  @ObservationIgnored let cloudSyncController: CloudSyncController?
   /// EventKit two-way coordinator (tiered read into the local provider mirror +
   /// isolated write-back into the dedicated Lorvex calendar). Set at startup
   /// once the concrete provider-capable core + real `EventKitAccessing` exist;
@@ -320,10 +352,8 @@ final class AppStore {
   var eventKitIntegrationEnabled: Bool
   let setBadge: @Sendable (Int) async -> Void
   let now: @Sendable () -> Date
-  let cloudSyncRetrySleep: @Sendable (TimeInterval) async throws -> Void
   let defaults: UserDefaults
 
-  var hasRegisteredSubscription = false
   /// True from the user's final restore confirmation through the post-import
   /// refresh. Settings uses this shared store state (rather than per-window
   /// view state) to keep mode changes and destructive maintenance from racing a
@@ -332,9 +362,6 @@ final class AppStore {
   /// Prevents a second Settings window from capturing the old core while a
   /// factory reset closes and replaces the managed database.
   var isLocalFactoryResetRunning = false
-  /// Coalesces launch/activation cleanup triggers so they do not queue duplicate
-  /// maintenance operations on the retained coordinator.
-  var isCloudDeletionMaintenanceRunning = false
   /// Suppresses a mode-toggle re-enable requested before an in-flight explicit
   /// cloud deletion reaches its terminal state. Such an early request predates
   /// the deletion result and must not recreate the just-deleted generation.
@@ -354,9 +381,7 @@ final class AppStore {
     widgetSnapshotPublisher: any WidgetSnapshotPublishing = NoopWidgetSnapshotPublisher(),
     cloudSyncMode: CloudSyncMode = .off,
     includeActiveOutboxCapProvider: (@MainActor @Sendable () -> Bool)? = nil,
-    cloudSyncSubscriber: any CloudSyncSubscribing = NoOpCloudSyncSubscriber(),
-    cloudSyncCoordinator: CloudSyncEngineCoordinator? = nil,
-    cloudDataMaintenanceCoordinator: CloudSyncEngineCoordinator? = nil,
+    cloudSyncController: CloudSyncController? = nil,
     eventKitCoordinator: EventKitCoordinator? = nil,
     eventKitIntegrationEnabled: Bool? = nil,
     badgeEnabled: Bool = true,
@@ -371,9 +396,6 @@ final class AppStore {
     clearDeliveredNotificationsForFactoryReset: @escaping @Sendable () async -> Void = {},
     setBadge: @escaping @Sendable (Int) async -> Void = { _ in },
     now: @escaping @Sendable () -> Date = Date.init,
-    cloudSyncRetrySleep: @escaping @Sendable (TimeInterval) async throws -> Void = { delay in
-      try await Task.sleep(for: .seconds(delay))
-    },
     defaults: UserDefaults = .standard
   ) {
     self.core = core
@@ -385,9 +407,7 @@ final class AppStore {
     self.widgetSnapshotPublisher = widgetSnapshotPublisher
     self.cloudSyncMode = cloudSyncMode
     self.includeActiveOutboxCapProvider = includeActiveOutboxCapProvider
-    self.cloudSyncSubscriber = cloudSyncSubscriber
-    self.cloudSyncCoordinator = cloudSyncCoordinator
-    self.cloudDataMaintenanceCoordinator = cloudDataMaintenanceCoordinator ?? cloudSyncCoordinator
+    self.cloudSyncController = cloudSyncController
     self.eventKitCoordinator = eventKitCoordinator
     self.eventKitIntegrationEnabled = eventKitIntegrationEnabled ?? (eventKitCoordinator != nil)
     self.badgeEnabled = badgeEnabled
@@ -397,8 +417,7 @@ final class AppStore {
       clearDeliveredNotificationsForFactoryReset
     self.setBadge = setBadge
     self.now = now
-    self.cloudSyncRetrySleep = cloudSyncRetrySleep
     self.defaults = defaults
-    restorePersistedLaunchState()
+    self.isTodayDoneCollapsed = defaults.bool(forKey: Key.todayDoneCollapsed)
   }
 }

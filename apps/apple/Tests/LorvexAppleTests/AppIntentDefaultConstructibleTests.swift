@@ -17,6 +17,8 @@ func taskLifecycleIntentsAreDefaultConstructible() {
   _ = ReadLorvexUpcomingTasksIntent()
   _ = ReadLorvexDependencyGraphIntent()
   _ = CompleteLorvexTaskIntent()
+  _ = StartLorvexTaskIntent()
+  _ = PauseLorvexTaskIntent()
   _ = UpdateLorvexTaskIntent()
   _ = CancelLorvexTaskIntent()
   _ = ReopenLorvexTaskIntent()
@@ -47,6 +49,8 @@ func taskLifecycleIntentsAreDefaultConstructible() {
   #expect(ReadLorvexUpcomingTasksIntent.openAppWhenRun == false)
   #expect(ReadLorvexDependencyGraphIntent.openAppWhenRun == false)
   #expect(CompleteLorvexTaskIntent.openAppWhenRun == false)
+  #expect(StartLorvexTaskIntent.openAppWhenRun == false)
+  #expect(PauseLorvexTaskIntent.openAppWhenRun == false)
   #expect(UpdateLorvexTaskIntent.openAppWhenRun == false)
   #expect(CancelLorvexTaskIntent.openAppWhenRun == false)
   #expect(ReopenLorvexTaskIntent.openAppWhenRun == false)
@@ -154,7 +158,6 @@ func diagnosticsIntentsAreDefaultConstructible() {
   _ = ReadLorvexSyncStatusIntent()
   _ = ReadLorvexAIChangelogIntent()
   _ = ReadLorvexRecentLogsIntent()
-  _ = ReadLorvexGuideIntent()
   #expect(ReadLorvexPreferencesIntent.openAppWhenRun == false)
   #expect(ReadLorvexPreferenceIntent.openAppWhenRun == false)
   #expect(SetLorvexPreferenceIntent.openAppWhenRun == false)
@@ -169,7 +172,6 @@ func diagnosticsIntentsAreDefaultConstructible() {
   #expect(ReadLorvexSyncStatusIntent.openAppWhenRun == false)
   #expect(ReadLorvexAIChangelogIntent.openAppWhenRun == false)
   #expect(ReadLorvexRecentLogsIntent.openAppWhenRun == false)
-  #expect(ReadLorvexGuideIntent.openAppWhenRun == false)
 }
 
 @Test

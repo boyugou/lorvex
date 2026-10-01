@@ -36,11 +36,7 @@ private struct LorvexSkeletonRow: View {
         .frame(height: 10)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(LorvexDesign.Spacing.m)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(
-      .quaternary.opacity(0.18),
-      in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
+    .lorvexInsetPanel()
   }
 }
 
@@ -59,15 +55,17 @@ private struct LorvexSkeletonShimmer: ViewModifier {
           .frame(width: max(proxy.size.width * 0.35, 80))
           .rotationEffect(.degrees(18))
           .offset(x: isAnimating ? proxy.size.width * 1.2 : -proxy.size.width * 0.6)
+          // Scoped to the band's own offset: a `withAnimation` around the
+          // state change would carry the forever-repeating animation to every
+          // other change in the update the skeleton appears in, such as the
+          // surrounding workspace's first real layout, which then never
+          // settles.
+          .animation(.linear(duration: 1.4).repeatForever(autoreverses: false), value: isAnimating)
         }
         .mask(content)
         .allowsHitTesting(false)
       }
-      .onAppear {
-        withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) {
-          isAnimating = true
-        }
-      }
+      .onAppear { isAnimating = true }
   }
 }
 

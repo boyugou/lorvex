@@ -10,6 +10,9 @@ public struct WeeklyReviewSnapshot: Equatable, Sendable {
   public var estimateCoverageRatio: Double?
   public var topCompleted: [ReviewTaskSummary]
   public var frequentlyDeferred: [ReviewTaskSummary]
+  /// Open tasks due before the window's last day, earliest due first; the
+  /// `overdueOpen` field above is the total count.
+  public var overdueTasks: [ReviewTaskSummary]
   /// The most recently parked Someday/Maybe items (`status='someday'`), ordered
   /// `created_at DESC` — someday entries are undated, so recency is the axis a
   /// review pass scans by. The `someday` field above is the total count.
@@ -25,6 +28,7 @@ public struct WeeklyReviewSnapshot: Equatable, Sendable {
     estimateCoverageRatio: Double?,
     topCompleted: [ReviewTaskSummary],
     frequentlyDeferred: [ReviewTaskSummary],
+    overdueTasks: [ReviewTaskSummary] = [],
     topSomeday: [ReviewTaskSummary]
   ) {
     self.windowTitle = windowTitle
@@ -36,7 +40,24 @@ public struct WeeklyReviewSnapshot: Equatable, Sendable {
     self.estimateCoverageRatio = estimateCoverageRatio
     self.topCompleted = topCompleted
     self.frequentlyDeferred = frequentlyDeferred
+    self.overdueTasks = overdueTasks
     self.topSomeday = topSomeday
+  }
+}
+
+extension WeeklyReviewSnapshot {
+  /// The window as a localized month-and-day range for a page's date line
+  /// ("September 22 – 28", "September 29 – October 5"), read from the
+  /// `"YYYY-MM-DD - YYYY-MM-DD"` form the core writes into `windowTitle`.
+  /// A `windowTitle` in any other form is returned unchanged.
+  public func windowRangeLabel(locale: Locale = .autoupdatingCurrent) -> String {
+    let parts = windowTitle.components(separatedBy: " - ")
+    guard parts.count == 2,
+      let start = LorvexDateFormatters.ymd.date(from: parts[0]),
+      let end = LorvexDateFormatters.ymd.date(from: parts[1]),
+      start <= end
+    else { return windowTitle }
+    return (start..<end).formatted(.interval.month(.wide).day().locale(locale))
   }
 }
 
@@ -117,12 +138,21 @@ public struct ReviewTaskSummary: Identifiable, Equatable, Sendable {
   public var title: String
   public var status: String
   public var deferCount: Int
+  /// The task's due day as `YYYY-MM-DD`, when it has one.
+  public var dueDate: String?
+  /// The day the task is planned for as `YYYY-MM-DD`, when it has one.
+  public var plannedDate: String?
 
-  public init(id: String, title: String, status: String, deferCount: Int) {
+  public init(
+    id: String, title: String, status: String, deferCount: Int, dueDate: String? = nil,
+    plannedDate: String? = nil
+  ) {
     self.id = id
     self.title = title
     self.status = status
     self.deferCount = deferCount
+    self.dueDate = dueDate
+    self.plannedDate = plannedDate
   }
 }
 
@@ -156,6 +186,9 @@ public struct DayReviewSummary: Equatable, Sendable {
   public var topCompleted: [ReviewTaskSummary]
   public var createdCount: Int
   public var dueOpenCount: Int
+  /// The first still-open tasks due that day, in the canonical task order;
+  /// `dueOpenCount` is the total.
+  public var dueOpenTasks: [ReviewTaskSummary]
   public var habitsCompleted: Int
   public var habitsTotal: Int
   public var eventCount: Int
@@ -166,6 +199,7 @@ public struct DayReviewSummary: Equatable, Sendable {
     topCompleted: [ReviewTaskSummary],
     createdCount: Int,
     dueOpenCount: Int,
+    dueOpenTasks: [ReviewTaskSummary] = [],
     habitsCompleted: Int,
     habitsTotal: Int,
     eventCount: Int
@@ -175,6 +209,7 @@ public struct DayReviewSummary: Equatable, Sendable {
     self.topCompleted = topCompleted
     self.createdCount = createdCount
     self.dueOpenCount = dueOpenCount
+    self.dueOpenTasks = dueOpenTasks
     self.habitsCompleted = habitsCompleted
     self.habitsTotal = habitsTotal
     self.eventCount = eventCount

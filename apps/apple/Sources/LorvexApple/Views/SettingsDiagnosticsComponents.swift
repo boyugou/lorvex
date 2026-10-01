@@ -31,9 +31,9 @@ struct SettingsDiagnosticsRowView: View {
 
   var body: some View {
     LabeledContent {
-      VStack(alignment: .trailing, spacing: 2) {
+      VStack(alignment: .trailing, spacing: LorvexDesign.Spacing.xxs) {
         Text(row.value)
-          .foregroundStyle(row.level == .error ? .red : .primary)
+          .foregroundStyle(valueColor)
           .multilineTextAlignment(.trailing)
           .lineLimit(2)
         if let detail = row.detail, !detail.isEmpty {
@@ -45,45 +45,25 @@ struct SettingsDiagnosticsRowView: View {
         }
       }
     } label: {
-      Label(row.title, systemImage: row.systemImage)
-        .foregroundStyle(row.level == .neutral ? AnyShapeStyle(.primary) : AnyShapeStyle(row.level.color))
+      // The status color marks the icon only, so a row name never reads as a
+      // link.
+      Label {
+        Text(row.title)
+      } icon: {
+        Image(systemName: row.systemImage)
+          .foregroundStyle(row.level == .neutral ? AnyShapeStyle(.primary) : AnyShapeStyle(row.level.color))
+      }
     }
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("settings.diagnostics.row.\(row.id)")
   }
-}
 
-struct SettingsDiagnosticsGuidePanel: View {
-  let guide: GuideSnapshot
-
-  var body: some View {
-    Group {
-      Label {
-        VStack(alignment: .leading, spacing: 3) {
-          Text(guide.topic.isEmpty
-            ? String(localized: "settings.diagnostics.guide", defaultValue: "Guide", table: "Localizable", bundle: LorvexL10n.bundle)
-            : guide.topic)
-            .font(LorvexDesign.Typography.primaryEmphasis)
-          Text(guide.summary)
-            .font(LorvexDesign.Typography.secondaryText)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-      } icon: {
-        Image(systemName: "sparkles")
-          .symbolRenderingMode(.hierarchical)
-          .foregroundStyle(Color.accentColor)
-      }
-
-      if !guide.suggestedActions.isEmpty {
-        ForEach(guide.suggestedActions, id: \.self) { action in
-          Label(action, systemImage: "checkmark.circle")
-            .font(LorvexDesign.Typography.secondaryText)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-        }
-      }
+  /// A value that needs attention (a warning or an error) takes its status
+  /// color; a healthy or neutral value reads as plain text.
+  private var valueColor: Color {
+    switch row.level {
+    case .warning, .error: row.level.color
+    case .neutral, .success: .primary
     }
-    .accessibilityIdentifier("settings.diagnostics.guidePanel")
   }
 }

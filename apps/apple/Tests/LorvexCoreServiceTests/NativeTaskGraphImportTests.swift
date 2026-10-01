@@ -25,7 +25,8 @@ final class NativeTaskGraphImportTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   private func clock(_ raw: String) throws -> Hlc {
@@ -324,14 +325,13 @@ final class NativeTaskGraphImportTests: XCTestCase {
         },
         expectedVersion)
     }
-    let changelogOutboxVersion = try XCTUnwrap(
-      service.read { db in
-        try String.fetchOne(
-          db,
-          sql: "SELECT version FROM sync_outbox WHERE entity_type = ?",
+    XCTAssertEqual(
+      try service.read { db in
+        try Int.fetchOne(
+          db, sql: "SELECT COUNT(*) FROM sync_outbox WHERE entity_type = ?",
           arguments: [EntityName.aiChangelog])
-      })
-    XCTAssertGreaterThan(try clock(changelogOutboxVersion), v2)
+      },
+      0, "the import's audit row is device-local and never queued for sync")
     XCTAssertEqual(
       try service.read { db in
         try String.fetchOne(
@@ -390,17 +390,17 @@ final class NativeTaskGraphImportTests: XCTestCase {
     let disposition = try await service.importNativeTaskGraphIfFresh(snapshot)
     XCTAssertEqual(disposition, .imported(taskCount: 1))
 
-    let restoredDeletes = try service.read { db -> [(String, String, String, String?)] in
+    let restoredDeletes = try service.read { db -> [(String, String, String)] in
       try Row.fetchAll(
         db,
         sql: """
-          SELECT entity_type, entity_id, version, cloud_confirmed_at
+          SELECT entity_type, entity_id, version
           FROM sync_tombstones ORDER BY entity_type, entity_id
           """
-      ).map { ($0["entity_type"], $0["entity_id"], $0["version"], $0["cloud_confirmed_at"]) }
+      ).map { ($0["entity_type"], $0["entity_id"], $0["version"]) }
     }
     XCTAssertEqual(restoredDeletes.count, tombstones.count)
-    XCTAssertTrue(restoredDeletes.allSatisfy { $0.2 == Self.v2 && $0.3 == nil })
+    XCTAssertTrue(restoredDeletes.allSatisfy { $0.2 == Self.v2 })
     XCTAssertEqual(
       try service.read { db in
         try Int.fetchOne(
@@ -423,17 +423,13 @@ final class NativeTaskGraphImportTests: XCTestCase {
           arguments: [Self.v2])
       },
       tombstones.count)
-    let auditVersion = try XCTUnwrap(
-      service.read { db in
-        try String.fetchOne(
-          db,
-          sql: """
-            SELECT version FROM sync_outbox
-            WHERE entity_type = ?
-            """,
+    XCTAssertEqual(
+      try service.read { db in
+        try Int.fetchOne(
+          db, sql: "SELECT COUNT(*) FROM sync_outbox WHERE entity_type = ?",
           arguments: [EntityName.aiChangelog])
-      })
-    XCTAssertGreaterThan(try clock(auditVersion), v2)
+      },
+      0, "the import's audit row is device-local and never queued for sync")
 
     let shadowState = try service.read { db -> (String, Int, String, String, String) in
       let row = try XCTUnwrap(

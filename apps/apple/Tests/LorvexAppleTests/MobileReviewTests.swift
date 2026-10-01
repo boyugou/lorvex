@@ -246,6 +246,40 @@ func mobileStoreSelectReviewDayFlushesUnsavedDailyReviewDraft() async throws {
   #expect(store.dailyReview?.summary == "Older day")
 }
 
+// A body-only edit — a mood/energy rating with no summary — has `canSave ==
+// false` (a summary is the manual-Save rule), but it is still a valid review the
+// core accepts. Switching day must persist it via the auto-flush and must NOT be
+// blocked, or the user is trapped on the current day with the edit silently
+// discarded (regression guard).
+@MainActor
+@Test
+func mobileStoreSelectReviewDayFlushesBodyOnlyDailyReviewDraft() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let olderDay = mobileReviewYmdAddingDays(mobileReviewToday, -2)
+  _ = try await core.importDailyReview(
+    date: olderDay,
+    summary: "Older day",
+    mood: nil,
+    energyLevel: nil,
+    wins: nil,
+    blockers: nil,
+    learnings: nil
+  )
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+
+  await store.loadDailyReviewDraft()
+  store.dailyReviewDraft = MobileDailyReviewDraft(summary: "", mood: 4, energy: 2)
+  #expect(!store.dailyReviewDraft.canSave)
+
+  await store.selectReviewDay(olderDay)
+  let todayReview = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+
+  #expect(todayReview.mood == 4)
+  #expect(todayReview.energyLevel == 2)
+  #expect(store.selectedReviewDate == olderDay)
+  #expect(store.dailyReview?.summary == "Older day")
+}
+
 @MainActor
 @Test
 func mobileStoreDoesNotSaveDailyReviewBeforeDraftLoadFinishes() async throws {
@@ -262,7 +296,7 @@ func mobileStoreDoesNotSaveDailyReviewBeforeDraftLoadFinishes() async throws {
 @MainActor
 @Test
 func mobileStoreDailyReviewSaveSurfacesWeeklyReviewReloadFailure() async throws {
-  let core = StubFocusCoreService(preview: try await makeSeededInMemoryCore())
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { mobileReviewToday })
 
   await store.refresh()
@@ -289,4 +323,26 @@ func mobileStoreRejectsBlankDailyReviewSummary() async throws {
   #expect(!saved)
   #expect(store.dailyReview == nil)
   #expect(store.errorMessage == nil)
+}
+
+/// The daily review's still-open rows complete their task in place, so the
+/// task must move from Still open to What moved forward without leaving the
+/// page.
+@MainActor
+@Test
+func mobileCompletingAStillOpenTaskMovesItIntoTheDaysDoneList() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let created = try await core.createTask(title: "Due today", notes: "")
+  _ = try await core.updateTask(
+    id: created.id, title: created.title, notes: "", priority: created.priority,
+    estimatedMinutes: nil, dueDate: LorvexDateFormatters.ymdUTC.date(from: mobileReviewToday),
+    plannedDate: nil, availableFrom: nil, tags: [], dependsOn: [])
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  await store.refresh()
+  #expect(store.dayReviewEvidence?.dueOpenTasks.map(\.id) == [created.id])
+
+  #expect(await store.completeTask(created.id))
+
+  #expect(store.dayReviewEvidence?.dueOpenTasks.isEmpty == true)
+  #expect(store.dayReviewEvidence?.topCompleted.map(\.id) == [created.id])
 }

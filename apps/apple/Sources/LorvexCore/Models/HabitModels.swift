@@ -79,6 +79,17 @@ public struct HabitMilestoneInfo: Equatable, Sendable {
     self.progressToNext = progressToNext
     self.justReached = justReached
   }
+
+  /// How far the reading is toward `nextMilestone`, measured from zero, in
+  /// `0...1`: an 8-day streak aiming at 14 days reads 8/14. A bar drawn beside
+  /// the next value alone shows this fraction. `progressToNext` measures from
+  /// the milestone already reached instead (the same streak is 1/7 of the way
+  /// from the 7-day rung), which only reads correctly when that rung is
+  /// labelled too.
+  public var fractionOfNext: Double {
+    guard nextMilestone > 0 else { return 1 }
+    return min(max(Double(value) / Double(nextMilestone), 0), 1)
+  }
 }
 
 public struct LorvexHabit: Identifiable, Equatable, Sendable {

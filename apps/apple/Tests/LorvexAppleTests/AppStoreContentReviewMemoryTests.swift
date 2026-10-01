@@ -16,10 +16,11 @@ func appStoreLoadsPreviewWeeklyReview() async throws {
   // a relative label.
   let windowTitle = try #require(store.weeklyReview?.windowTitle)
   #expect(windowTitle.wholeMatch(of: /\d{4}-\d{2}-\d{2} - \d{4}-\d{2}-\d{2}/) != nil)
-  // All four seeded tasks (someday included) were created this week; the
-  // Today pool carries only the three open ones.
-  #expect(store.weeklyReview?.createdThisWeek == 4)
-  #expect(store.weeklyReview?.completedThisWeek == 0)
+  // All six seeded tasks (someday, completed, and cancelled included) were
+  // created this week; the Today pool carries only the three open ones, and
+  // exactly one of the six is finished.
+  #expect(store.weeklyReview?.createdThisWeek == 6)
+  #expect(store.weeklyReview?.completedThisWeek == 1)
 }
 
 @MainActor
@@ -234,4 +235,57 @@ func appStoreRefreshReloadsMemoryWithoutClobberingComposerDraft() async throws {
   #expect(store.memoryEditingKey == editing.key)
   #expect(store.memoryKeyDraft == editing.key)
   #expect(store.memoryContentDraft == "unsaved composer text")
+}
+
+/// The daily review's still-open rows complete their task in place: on the
+/// Review page the task moves from Still open to What moved forward, and ⌘Z
+/// moves it back.
+@MainActor
+@Test
+func appStoreCompletingAStillOpenTaskOnReviewMovesItBetweenTheDaysLists() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let today = AppStore.todayDateString()
+  let created = try await core.createTask(title: "Due today", notes: "")
+  _ = try await core.updateTask(
+    id: created.id, title: created.title, notes: "", priority: created.priority,
+    estimatedMinutes: nil, dueDate: LorvexDateFormatters.ymdUTC.date(from: today),
+    plannedDate: nil, availableFrom: nil, tags: [], dependsOn: [])
+  let store = AppStore(core: core)
+  await store.refresh()
+  store.selection = .reviews
+  await store.selectReviewDay(today)
+  #expect(store.dayReviewEvidence?.dueOpenTasks.map(\.id) == [created.id])
+
+  let undoManager = UndoManager()
+  await store.completeTask(id: created.id, undoManager: undoManager)
+
+  #expect(store.dayReviewEvidence?.dueOpenTasks.isEmpty == true)
+  #expect(store.dayReviewEvidence?.topCompleted.map(\.id) == [created.id])
+  #expect(store.selectedTaskID == nil)
+
+  await store.reopenTaskForUndo(created.id)
+  #expect(store.dayReviewEvidence?.dueOpenTasks.map(\.id) == [created.id])
+}
+
+/// The week review's overdue rows complete their task in place too: the task
+/// leaves the overdue list without the page reloading by hand.
+@MainActor
+@Test
+func appStoreCompletingAnOverdueTaskOnReviewDropsItFromTheWeek() async throws {
+  let core = try SwiftLorvexCoreService.inMemory()
+  let yesterday = LorvexDateFormatters.ymdUTCAddingDays(AppStore.todayDateString(), days: -1)!
+  let created = try await core.createTask(title: "Overdue", notes: "")
+  _ = try await core.updateTask(
+    id: created.id, title: created.title, notes: "", priority: created.priority,
+    estimatedMinutes: nil, dueDate: LorvexDateFormatters.ymdUTC.date(from: yesterday),
+    plannedDate: nil, availableFrom: nil, tags: [], dependsOn: [])
+  let store = AppStore(core: core)
+  await store.refresh()
+  store.selection = .reviews
+  await store.loadWeeklyReview(weekOf: nil)
+  #expect(store.weeklyReview?.overdueTasks.map(\.id) == [created.id])
+
+  await store.completeTask(id: created.id)
+
+  #expect(store.weeklyReview?.overdueTasks.isEmpty == true)
 }

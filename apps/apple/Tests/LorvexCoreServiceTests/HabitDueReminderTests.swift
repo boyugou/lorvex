@@ -5,7 +5,7 @@ import Testing
 @testable import LorvexCore
 
 /// `getDueHabitReminderOccurrences` semantics against the real
-/// `SwiftLorvexCoreService`. Mirrors the Tauri `reminders/tests.rs` cases
+/// `SwiftLorvexCoreService`. Mirrors the original Rust reminder test cases
 /// (scheduled vs unscheduled day, period met vs below target across cadences,
 /// multi-time same day, past-time skip), but exercised over the rolling horizon
 /// the Apple local scheduler consumes instead of a single "due now" tick.
@@ -31,7 +31,8 @@ struct HabitDueReminderTests {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schema = try String(contentsOf: schemaURL, encoding: .utf8)
-    let service = SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schema))
+    let service = SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schema, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
     return service
   }
 

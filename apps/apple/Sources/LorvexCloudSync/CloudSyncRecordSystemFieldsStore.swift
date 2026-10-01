@@ -38,6 +38,31 @@ public protocol CloudSyncRecordSystemFieldsStoring: Sendable {
   /// that does not exist in the new zone (which returns `unknownItem` per record
   /// and, since that is not transient, moves the outbox toward retry wait).
   func removeAll() async
+
+  /// Store many entries with one write. A first sync can cache thousands of
+  /// records; writing them one by one would rewrite the backing file each time.
+  func storeAll(_ entries: [String: Data], accountIdentifier: String, zoneName: String) async
+
+  /// Forget the given record names with one write.
+  func remove(recordNames: Set<String>, accountIdentifier: String, zoneName: String) async
+}
+
+extension CloudSyncRecordSystemFieldsStoring {
+  public func storeAll(
+    _ entries: [String: Data], accountIdentifier: String, zoneName: String
+  ) async {
+    for (recordName, data) in entries {
+      await store(data, accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)
+    }
+  }
+
+  public func remove(
+    recordNames: Set<String>, accountIdentifier: String, zoneName: String
+  ) async {
+    for recordName in recordNames {
+      await remove(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)
+    }
+  }
 }
 
 /// File-backed ``CloudSyncRecordSystemFieldsStoring``: one JSON file mapping
@@ -80,6 +105,33 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
     persist(map)
   }
 
+  public func storeAll(
+    _ entries: [String: Data], accountIdentifier: String, zoneName: String
+  ) async {
+    guard !entries.isEmpty else { return }
+    var map = loaded()
+    for (recordName, data) in entries {
+      map[key(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)] = data
+    }
+    cache = map
+    persist(map)
+  }
+
+  public func remove(
+    recordNames: Set<String>, accountIdentifier: String, zoneName: String
+  ) async {
+    guard !recordNames.isEmpty else { return }
+    var map = loaded()
+    let priorCount = map.count
+    for recordName in recordNames {
+      map.removeValue(
+        forKey: key(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName))
+    }
+    guard map.count != priorCount else { return }
+    cache = map
+    persist(map)
+  }
+
   public func removeAll(accountIdentifier: String, zoneName: String) async {
     var map = loaded()
     let prefix = keyPrefix(accountIdentifier: accountIdentifier, zoneName: zoneName)
@@ -118,62 +170,6 @@ public actor FileCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsSt
     CloudSyncBackupExclusion.exclude(directory)
     try? data.write(to: fileURL, options: [.atomic])
   }
-
-  private func key(accountIdentifier: String, zoneName: String, recordName: String) -> String {
-    keyPrefix(accountIdentifier: accountIdentifier, zoneName: zoneName) + encoded(recordName) + "|"
-  }
-
-  private func keyPrefix(accountIdentifier: String, zoneName: String) -> String {
-    encoded(accountIdentifier) + "|" + encoded(zoneName) + "|"
-  }
-
-  private func encoded(_ value: String) -> String {
-    Data(value.utf8).base64EncodedString()
-  }
-}
-
-/// In-memory ``CloudSyncRecordSystemFieldsStoring`` — the non-persistent fallback
-/// for surfaces that build a pusher without a sync-state directory, and the test
-/// double. Its win survives only the process lifetime, which still collapses
-/// intra-session re-push conflicts.
-public actor InMemoryCloudSyncRecordSystemFieldsStore: CloudSyncRecordSystemFieldsStoring {
-  private var map: [String: Data] = [:]
-
-  public init() {}
-
-  public func systemFields(
-    accountIdentifier: String, zoneName: String, recordName: String
-  ) async -> Data? {
-    map[key(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)]
-  }
-
-  public func store(
-    _ systemFields: Data, accountIdentifier: String, zoneName: String, recordName: String
-  ) async {
-    map[key(accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName)] = systemFields
-  }
-
-  public func remove(accountIdentifier: String, zoneName: String, recordName: String) async {
-    map.removeValue(
-      forKey: key(
-        accountIdentifier: accountIdentifier, zoneName: zoneName, recordName: recordName))
-  }
-
-  public func removeAll(accountIdentifier: String, zoneName: String) async {
-    let prefix = keyPrefix(accountIdentifier: accountIdentifier, zoneName: zoneName)
-    map = map.filter { !$0.key.hasPrefix(prefix) }
-  }
-
-  public func removeAll() async {
-    map.removeAll()
-  }
-
-  /// Test helper: number of cached records.
-  public func cachedRecordCount() -> Int { map.count }
-
-  /// Test helper: forget every cached entry (simulate a lost / never-persisted
-  /// cache to prove the conflict path returns without it).
-  public func clear() { map.removeAll() }
 
   private func key(accountIdentifier: String, zoneName: String, recordName: String) -> String {
     keyPrefix(accountIdentifier: accountIdentifier, zoneName: zoneName) + encoded(recordName) + "|"

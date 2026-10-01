@@ -76,26 +76,19 @@ public struct SuccessorCancelSideEffects: Sendable, Equatable {
   public let cancelledReminderIds: [String]
   public let deletedDependencyEdges: [DeletedDependencyEdge]
   public let affectedDependentIds: [String]
-  public let rewiredFocusScheduleDates: [String]
-  public let rewiredCurrentFocusDates: [String]
 
   public init(
     cancelledReminderIds: [String],
     deletedDependencyEdges: [DeletedDependencyEdge],
-    affectedDependentIds: [String],
-    rewiredFocusScheduleDates: [String] = [],
-    rewiredCurrentFocusDates: [String] = []
+    affectedDependentIds: [String]
   ) {
     self.cancelledReminderIds = cancelledReminderIds
     self.deletedDependencyEdges = deletedDependencyEdges
     self.affectedDependentIds = affectedDependentIds
-    self.rewiredFocusScheduleDates = rewiredFocusScheduleDates
-    self.rewiredCurrentFocusDates = rewiredCurrentFocusDates
   }
 
   public static let empty = SuccessorCancelSideEffects(
-    cancelledReminderIds: [], deletedDependencyEdges: [], affectedDependentIds: [],
-    rewiredFocusScheduleDates: [], rewiredCurrentFocusDates: [])
+    cancelledReminderIds: [], deletedDependencyEdges: [], affectedDependentIds: [])
 }
 
 /// A tag edge copied from parent to spawned successor.
@@ -136,13 +129,6 @@ public struct LifecycleTransitionResult: Sendable, Equatable {
   public let cancelledSuccessorIds: [String]
   /// Aggregated sync side effects from all cancelled successors.
   public let successorCancelSideEffects: SuccessorCancelSideEffects
-  /// Dates whose `focus_schedule_blocks` rows were rewired from the
-  /// completed/cancelled parent to the spawned successor. Callers must
-  /// enqueue an `ENTITY_FOCUS_SCHEDULE` upsert envelope per date.
-  public let rewiredFocusScheduleDates: [String]
-  /// Dates whose `current_focus_items` rows were rewired. Callers must
-  /// enqueue an `ENTITY_CURRENT_FOCUS` upsert envelope per date.
-  public let rewiredCurrentFocusDates: [String]
 
   public init(
     sideEffects: StatusSideEffects.Result,
@@ -151,9 +137,7 @@ public struct LifecycleTransitionResult: Sendable, Equatable {
     spawnedSuccessorChecklistItemIds: [String],
     spawnedSuccessorReminderIds: [String],
     cancelledSuccessorIds: [String],
-    successorCancelSideEffects: SuccessorCancelSideEffects,
-    rewiredFocusScheduleDates: [String],
-    rewiredCurrentFocusDates: [String]
+    successorCancelSideEffects: SuccessorCancelSideEffects
   ) {
     self.sideEffects = sideEffects
     self.spawnedSuccessorId = spawnedSuccessorId
@@ -162,8 +146,6 @@ public struct LifecycleTransitionResult: Sendable, Equatable {
     self.spawnedSuccessorReminderIds = spawnedSuccessorReminderIds
     self.cancelledSuccessorIds = cancelledSuccessorIds
     self.successorCancelSideEffects = successorCancelSideEffects
-    self.rewiredFocusScheduleDates = rewiredFocusScheduleDates
-    self.rewiredCurrentFocusDates = rewiredCurrentFocusDates
   }
 }
 
@@ -192,8 +174,6 @@ public struct CompletionLifecycleTransitionResult: Sendable, Equatable {
   public let spawnedSuccessorTagEdges: [CopiedTagEdge]
   public let spawnedSuccessorChecklistItemIds: [String]
   public let spawnedSuccessorReminderIds: [String]
-  public let rewiredFocusScheduleDates: [String]
-  public let rewiredCurrentFocusDates: [String]
 
   public init(
     updated: Bool,
@@ -201,9 +181,7 @@ public struct CompletionLifecycleTransitionResult: Sendable, Equatable {
     spawnedSuccessorId: String?,
     spawnedSuccessorTagEdges: [CopiedTagEdge],
     spawnedSuccessorChecklistItemIds: [String],
-    spawnedSuccessorReminderIds: [String],
-    rewiredFocusScheduleDates: [String],
-    rewiredCurrentFocusDates: [String]
+    spawnedSuccessorReminderIds: [String]
   ) {
     self.updated = updated
     self.cancelledReminderIds = cancelledReminderIds
@@ -211,8 +189,6 @@ public struct CompletionLifecycleTransitionResult: Sendable, Equatable {
     self.spawnedSuccessorTagEdges = spawnedSuccessorTagEdges
     self.spawnedSuccessorChecklistItemIds = spawnedSuccessorChecklistItemIds
     self.spawnedSuccessorReminderIds = spawnedSuccessorReminderIds
-    self.rewiredFocusScheduleDates = rewiredFocusScheduleDates
-    self.rewiredCurrentFocusDates = rewiredCurrentFocusDates
   }
 }
 
@@ -229,8 +205,6 @@ public struct CancelLifecycleTransitionResult: Sendable, Equatable {
   public let spawnedSuccessorTagEdges: [CopiedTagEdge]
   public let spawnedSuccessorChecklistItemIds: [String]
   public let spawnedSuccessorReminderIds: [String]
-  public let rewiredFocusScheduleDates: [String]
-  public let rewiredCurrentFocusDates: [String]
 
   public init(
     updated: Bool,
@@ -240,9 +214,7 @@ public struct CancelLifecycleTransitionResult: Sendable, Equatable {
     spawnedSuccessorId: String?,
     spawnedSuccessorTagEdges: [CopiedTagEdge],
     spawnedSuccessorChecklistItemIds: [String],
-    spawnedSuccessorReminderIds: [String],
-    rewiredFocusScheduleDates: [String],
-    rewiredCurrentFocusDates: [String]
+    spawnedSuccessorReminderIds: [String]
   ) {
     self.updated = updated
     self.cancelledReminderIds = cancelledReminderIds
@@ -252,7 +224,5 @@ public struct CancelLifecycleTransitionResult: Sendable, Equatable {
     self.spawnedSuccessorTagEdges = spawnedSuccessorTagEdges
     self.spawnedSuccessorChecklistItemIds = spawnedSuccessorChecklistItemIds
     self.spawnedSuccessorReminderIds = spawnedSuccessorReminderIds
-    self.rewiredFocusScheduleDates = rewiredFocusScheduleDates
-    self.rewiredCurrentFocusDates = rewiredCurrentFocusDates
   }
 }

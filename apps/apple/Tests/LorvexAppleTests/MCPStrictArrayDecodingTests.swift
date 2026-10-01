@@ -319,24 +319,26 @@ struct StrictArrayBatchTests {
     expectMCPStructuredError(result, code: "validation", tool: "batch_cancel_tasks_in_list")
   }
 
-  @Test("set_current_focus rejects a wrong-typed task_ids element")
-  func setCurrentFocusRejectsBadElement() async throws {
+  @Test("save_daily_schedule rejects a wrong-typed times element")
+  func saveDailyScheduleRejectsBadElement() async throws {
     let registry = try mcpInMemoryRegistry()
-    let id = try await makeTask(registry, title: "Focus target")
+    let id = try await makeTask(registry, title: "Timed target")
+    let time: Value = .object([
+      "task_id": .string(id), "start_time": .string("09:00"), "end_time": .string("10:00"),
+    ])
     let result = try await xcall(
-      registry, tool: "set_current_focus",
-      arguments: ["date": .string("2026-07-12"), "task_ids": .array([.string(id), .int(0)])])
-    expectMCPStructuredError(result, code: "validation", tool: "set_current_focus")
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string("2026-07-12"), "times": .array([time, .int(0)])])
+    expectMCPStructuredError(result, code: "validation", tool: "save_daily_schedule")
   }
 
-  @Test("add_to_current_focus rejects a wrong-typed task_ids element")
-  func addToCurrentFocusRejectsBadElement() async throws {
+  @Test("save_daily_schedule rejects a times value that is not an array")
+  func saveDailyScheduleRejectsNonArrayTimes() async throws {
     let registry = try mcpInMemoryRegistry()
-    let id = try await makeTask(registry, title: "Focus add target")
     let result = try await xcall(
-      registry, tool: "add_to_current_focus",
-      arguments: ["date": .string("2026-07-12"), "task_ids": .array([.string(id), .null])])
-    expectMCPStructuredError(result, code: "validation", tool: "add_to_current_focus")
+      registry, tool: "save_daily_schedule",
+      arguments: ["date": .string("2026-07-12"), "times": .string("09:00-10:00")])
+    expectMCPStructuredError(result, code: "validation", tool: "save_daily_schedule")
   }
 
   @Test("batch_create_tasks skips (does not drop) a row whose tags element is wrong-typed")

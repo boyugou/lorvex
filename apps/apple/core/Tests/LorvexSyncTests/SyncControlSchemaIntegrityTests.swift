@@ -13,32 +13,6 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
 
   func testControlTablesUseOneIndexPerInvariant() throws {
     try withDB { db in
-      let generationIndexes = try Row.fetchAll(
-        db, sql: "PRAGMA index_list('sync_generation_snapshot_items')")
-      XCTAssertFalse(
-        generationIndexes.contains {
-          $0["name"] as String == "idx_generation_snapshot_items_record_name"
-        },
-        "the UNIQUE(lease_identifier, record_name) autoindex already serves this lookup")
-      XCTAssertTrue(
-        generationIndexes.contains {
-          $0["origin"] as String == "u" && ($0["unique"] as Int64) == 1
-        })
-
-      let progressColumns = try Row.fetchAll(
-        db, sql: "PRAGMA table_info('sync_cloudkit_traversal_progress')")
-      let primaryKeyColumns = progressColumns
-        .filter { ($0["pk"] as Int64) > 0 }
-        .sorted { ($0["pk"] as Int64) < ($1["pk"] as Int64) }
-        .map { $0["name"] as String }
-      XCTAssertEqual(primaryKeyColumns, ["account_identifier"])
-      let progressIndexes = try Row.fetchAll(
-        db, sql: "PRAGMA index_list('sync_cloudkit_traversal_progress')")
-      XCTAssertFalse(
-        progressIndexes.contains {
-          $0["name"] as String == "idx_sync_cloudkit_traversal_progress_account"
-        })
-
       let habitCompletionIndexes = try Row.fetchAll(
         db, sql: "PRAGMA index_list('habit_completions')")
       XCTAssertFalse(
@@ -83,72 +57,79 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
     }
   }
 
-  func testAuditRetentionIndexesServeExactZonePagingAndEntityPresence() throws {
+  /// CKSyncEngine owns account identity, change tokens, zone traversal, and
+  /// record-fetch retries, so the tables the custom transport kept for those
+  /// purposes, and the audit-retention bookkeeping tied to it, do not exist in
+  /// the migrated schema.
+  func testRetiredTransportTablesAreAbsentFromTheMigratedSchema() throws {
     try withDB { db in
-      let pendingColumns = try Row.fetchAll(
-        db, sql: "PRAGMA index_info('idx_audit_retention_purge_pending')")
-        .sorted { ($0["seqno"] as Int64) < ($1["seqno"] as Int64) }
-        .map { $0["name"] as String }
-      XCTAssertEqual(
-        pendingColumns,
-        ["account_identifier", "zone_name", "next_attempt_at", "created_at", "entity_id"])
-
-      let pendingPlan = try Row.fetchAll(
-        db,
-        sql: """
-          EXPLAIN QUERY PLAN
-          SELECT entity_id FROM audit_retention_purge_queue
-          WHERE account_identifier = ? AND zone_name = ?
-            AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
-          ORDER BY created_at ASC, entity_id ASC
-          LIMIT ?
-          """,
-        arguments: [
-          "account", "zone", "2026-07-15T00:00:00.000Z", 200,
-        ])
-      let pendingDetail = pendingPlan.map { $0["detail"] as String }.joined(separator: "\n")
-      XCTAssertTrue(
-        pendingDetail.contains("idx_audit_retention_purge_pending"),
-        "exact-zone purge paging must use its composite index; plan:\n\(pendingDetail)")
-
-      let presenceColumns = try Row.fetchAll(
-        db, sql: "PRAGMA index_info('idx_audit_changelog_presence_entity')")
-        .sorted { ($0["seqno"] as Int64) < ($1["seqno"] as Int64) }
-        .map { $0["name"] as String }
-      XCTAssertEqual(presenceColumns, ["entity_id", "account_identifier", "zone_name"])
-
-      let presencePlan = try Row.fetchAll(
-        db,
-        sql: """
-          EXPLAIN QUERY PLAN
-          SELECT account_identifier, zone_name, retention_epoch
-          FROM audit_changelog_cloud_presence WHERE entity_id = ?
-          """,
-        arguments: ["audit-id"])
-      let presenceDetail = presencePlan.map { $0["detail"] as String }.joined(separator: "\n")
-      XCTAssertTrue(
-        presenceDetail.contains("idx_audit_changelog_presence_entity"),
-        "entity-presence lookup must use its covering index; plan:\n\(presenceDetail)")
-    }
-  }
-
-  func testSnapshotManifestsAreBoundToThePhysicalAccountDatabase() throws {
-    try withDB { db in
-      for table in ["sync_generation_snapshot_staging", "sync_authoritative_snapshot"] {
-        let rows = try Row.fetchAll(db, sql: "PRAGMA foreign_key_list('\(table)')")
-          .filter { $0["table"] as String == "sync_cloudkit_account_binding" }
-          .sorted { ($0["seq"] as Int64) < ($1["seq"] as Int64) }
-        XCTAssertEqual(rows.map { $0["from"] as String }, [
-          "account_identifier", "database_instance_id",
-        ])
-        XCTAssertEqual(rows.map { $0["to"] as String }, [
-          "account_identifier", "database_instance_id",
-        ])
+      let tables = Set(
+        try String.fetchAll(db, sql: "SELECT name FROM sqlite_master WHERE type = 'table'"))
+      let retired = [
+        "sync_cloudkit_account_binding", "sync_cloudkit_authority_witness",
+        "sync_cloudkit_generation_descriptor", "sync_cloudkit_traversal_progress",
+        "sync_cloudkit_traversal_witness", "sync_cloudkit_incremental_cursor",
+        "sync_cloudkit_corrupt_record_fences", "sync_generation_snapshot_staging",
+        "sync_generation_snapshot_items", "sync_generation_snapshot_readback_items",
+        "sync_generation_snapshot_tombstone_receipts",
+        "sync_generation_snapshot_compacted_tombstones", "sync_authoritative_snapshot",
+        "sync_authoritative_snapshot_records", "audit_retention_binding",
+        "audit_retention_account_state", "audit_retention_candidate_authorization",
+        "audit_retention_outbound_authorization", "audit_retention_purge_queue",
+        "audit_changelog_cloud_presence",
+      ]
+      for table in retired {
+        XCTAssertFalse(tables.contains(table), "\(table) must not exist after the ladder")
+      }
+      for table in ["sync_outbox", "sync_tombstones", "ai_changelog", "ai_changelog_entities"] {
+        XCTAssertTrue(tables.contains(table), "\(table) must survive the ladder")
       }
     }
   }
 
-  func testRetryAndAuditReadinessInvalidShapesAreRejectedBySQLite() throws {
+  func testRetiredColumnsAreAbsentFromTheMigratedSchema() throws {
+    try withDB { db in
+      func columns(_ table: String) throws -> Set<String> {
+        Set(try String.fetchAll(db, sql: "SELECT name FROM pragma_table_info('\(table)')"))
+      }
+      let outbox = try columns("sync_outbox")
+      XCTAssertFalse(outbox.contains("authoritative_session_token"))
+      XCTAssertFalse(outbox.contains("future_record_resolution"))
+      XCTAssertTrue(outbox.contains("future_record_version"))
+      let audit = try columns("ai_changelog")
+      XCTAssertFalse(audit.contains("retention_epoch"))
+      XCTAssertFalse(audit.contains("retention_account_identifier"))
+      XCTAssertFalse(try columns("sync_tombstones").contains("cloud_confirmed_at"))
+    }
+  }
+
+  /// The outbox keeps two dispositions; the retired authoritative-adoption
+  /// fence is no longer a storable value.
+  func testOutboxDispositionAcceptsOnlyRetryWaitAndFutureRecordHold() throws {
+    try withDB { db in
+      let version = "1800000000000_0000_1111222233334444"
+      func insert(disposition: String, id: String) throws {
+        try db.execute(
+          sql: """
+            INSERT INTO sync_outbox
+                (entity_type, entity_id, operation, version,
+                 payload_schema_version, payload, device_id, disposition,
+                 next_retry_at, future_record_version)
+            VALUES ('list', ?, 'upsert', ?, 1, '{}', 'schema-integrity', ?, ?, ?)
+            """,
+          arguments: [
+            id, version, disposition,
+            disposition == "retry_wait" ? "2026-07-15T00:00:00.000Z" : nil,
+            disposition == "future_record_hold" ? version : nil,
+          ])
+      }
+      XCTAssertNoThrow(try insert(disposition: "retry_wait", id: "disposition-retry"))
+      XCTAssertNoThrow(try insert(disposition: "future_record_hold", id: "disposition-hold"))
+      XCTAssertThrowsError(try insert(disposition: "authoritative_adoption", id: "disposition-old"))
+    }
+  }
+
+  func testInvalidPendingInboxShapeIsRejectedBySQLite() throws {
     try withDB { db in
       XCTAssertThrowsError(
         try db.execute(
@@ -159,43 +140,19 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
             ) VALUES ('{}', 'test', 'task', 'task-1', 'version',
                       '2026-07-14T00:00:00.000Z', '2026-07-14T00:00:00.000Z', 0)
             """))
-
-      XCTAssertThrowsError(
-        try db.execute(
-          sql: """
-            INSERT INTO audit_retention_account_state (
-              account_identifier, frontier_epoch, policy_authorized_epoch,
-              policy_ready, created_at, updated_at
-            ) VALUES ('invalid-ready-account', 1, 0, 1,
-                      '2026-07-14T00:00:00.000Z', '2026-07-14T00:00:00.000Z')
-            """))
-
-      XCTAssertThrowsError(
-        try db.execute(
-          sql: """
-            INSERT INTO audit_changelog_cloud_presence (
-              account_identifier, zone_name, entity_id, retention_epoch, marked_at
-            ) VALUES ('orphan-account', 'zone', 'audit-1', 0,
-                      '2026-07-14T00:00:00.000Z')
-            """),
-        "cloud-presence evidence cannot exist without durable account state")
     }
   }
 
   func testEveryOrderingHlcColumnHasCanonicalSchemaGuard() throws {
     try withDB { db in
       let expected: Set<String> = [
-        "audit_retention_account_state.policy_version",
-        "audit_retention_binding.unbound_policy_version",
-        "audit_retention_candidate_authorization.policy_version",
         "calendar_series_cutovers.version",
         "calendar_events.content_version",
         "calendar_events.recurrence_generation",
         "calendar_events.recurrence_topology_version",
         "calendar_events.version",
-        "current_focus.version",
+        "daily_briefings.version",
         "daily_reviews.version",
-        "focus_schedule.version",
         "habit_completions.version",
         "habit_reminder_policies.version",
         "habits.version",
@@ -203,9 +160,6 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
         "memories.version",
         "preferences.version",
         "sync_entity_redirects.version",
-        "sync_generation_snapshot_compacted_tombstones.version",
-        "sync_generation_snapshot_staging.retention_policy_version",
-        "sync_generation_snapshot_tombstone_receipts.version",
         "sync_outbox.future_record_version",
         "sync_outbox.version",
         "sync_payload_shadow.base_version",
@@ -357,34 +311,6 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
             deletedAt: "2026-07-15T00:00:00.000Z"),
           "\(entityType) must never enter the ordinary death ledger")
       }
-    }
-  }
-
-  func testAuthoritativeEnvelopeHasTheSamePerRecordDiskBoundAsGenerationStaging() throws {
-    try withDB { db in
-      let databaseID = "schema-integrity-database"
-      try SyncCheckpoints.set(
-        db, key: SyncCheckpoints.keyDatabaseInstanceId, value: databaseID)
-      _ = try CloudTraversalWitness.claimAccount(
-        db, accountIdentifier: "schema-integrity-account")
-      let session = try AuthoritativeSnapshot.begin(
-        db,
-        boundary: try SyncTestSupport.cloudTraversalBoundary(
-          accountIdentifier: "schema-integrity-account",
-          zoneIdentifier: "schema-integrity-zone"),
-        databaseInstanceId: databaseID)
-
-      XCTAssertThrowsError(
-        try db.execute(
-          sql: """
-            INSERT INTO sync_authoritative_snapshot_records
-                (session_id, record_name, state, envelope)
-            VALUES (?, 'oversized-record', 'decoded', ?)
-            """,
-          arguments: [
-            session.sessionToken,
-            String(repeating: "x", count: GenerationSnapshot.maximumEncodedEnvelopeBytes + 1),
-          ]))
     }
   }
 }

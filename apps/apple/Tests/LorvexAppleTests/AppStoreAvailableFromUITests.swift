@@ -172,14 +172,16 @@ private func availableFromSource(_ relativePath: String) throws -> String {
 }
 
 @Test
-func inspectorSchedulingPanelHasAvailableFromRow() throws {
-  let source = try availableFromSource("Sources/LorvexApple/Views/TaskDetailMetadataSection.swift")
-  #expect(source.contains(#".accessibilityIdentifier("task.detail.availableFrom")"#))
-  #expect(source.contains(#"systemImage: "eye.slash""#))
+func inspectorRowWiresTheHideUntilPicker() throws {
+  // The "Hide until" property row opens a day picker bound to the
+  // available-from draft; unset, it is offered as a dashed addition.
+  let source = try availableFromSource("Sources/LorvexApple/Views/TaskDetailView.swift")
+  #expect(source.contains(#"case "hideUntil":"#))
+  #expect(source.contains(#"field("hideUntil", "eye.slash""#))
   #expect(source.contains("store.taskDetailHasAvailableFrom"))
   #expect(source.contains("store.setTaskDetailHasAvailableFrom(true)"))
   #expect(source.contains("store.taskDetailAvailableFromPickerDate"))
-  #expect(source.contains(#""task_detail.metadata.available_from""#))
+  #expect(source.contains(#""task_detail.metadata.available_from_hint""#))
 }
 
 @Test
@@ -202,14 +204,13 @@ func snoozeMenuIsWiredIntoContextAndDetailMenus() throws {
 }
 
 @Test
-func laterDisclosureRendersScheduledSubsection() throws {
-  let components = try availableFromSource("Sources/LorvexApple/Views/TasksWorkspaceComponents.swift")
-  #expect(components.contains(#""tasks.section.scheduled""#))
-  #expect(components.contains("status: .scheduled"))
-  #expect(components.contains("tasks: scheduledTasks"))
+func laterFoldIncludesAndPagesSnoozedTasks() throws {
+  let later = try availableFromSource("Sources/LorvexApple/Views/TasksWorkspaceLaterState.swift")
+  #expect(later.contains("visibleDeferredTasks + visibleScheduledTasks + visibleSomedayTasks"))
 
   let view = try availableFromSource("Sources/LorvexApple/Views/TasksWorkspaceView.swift")
-  #expect(view.contains("scheduledTasks: visibleScheduledTasks"))
+  #expect(view.contains("tasks: visibleLaterTasks"))
+  #expect(view.contains("pagedSections: [.deferred, .scheduled, .someday]"))
 }
 
 @Test
@@ -217,5 +218,7 @@ func listRowRendersHiddenUntilBadge() throws {
   let row = try availableFromSource("Sources/LorvexApple/Views/LorvexTaskRow.swift")
   #expect(row.contains("task.hiddenUntilShortLabel()"))
   #expect(row.contains(#"Image(systemName: "eye.slash")"#))
-  #expect(row.contains(#""task.row.hidden_until""#))
+  #expect(row.contains("Text(TaskDisplayText.hiddenUntil(hiddenLabel))"))
+  let displayText = try availableFromSource("Sources/LorvexApple/Support/TaskDisplayText.swift")
+  #expect(displayText.contains(#""task.row.hidden_until""#))
 }

@@ -353,8 +353,7 @@ final class PayloadShadowTests: XCTestCase {
       EntityKind.preference.asString: "preferences",
       EntityKind.memory.asString: "memories",
       EntityKind.dailyReview.asString: "daily_reviews",
-      EntityKind.currentFocus.asString: "current_focus",
-      EntityKind.focusSchedule.asString: "focus_schedule",
+      EntityKind.dailyBriefing.asString: "daily_briefings",
       EntityKind.taskReminder.asString: "task_reminders",
       EntityKind.taskChecklistItem.asString: "task_checklist_items",
       EntityKind.habitReminderPolicy.asString: "habit_reminder_policies",
@@ -372,16 +371,19 @@ final class PayloadShadowTests: XCTestCase {
 
     let payloadOnlySynthetics: [String: Set<String>] = [
       EntityKind.calendarEvent.asString: ["recurrence_exceptions"],
-      EntityKind.currentFocus.asString: ["task_ids"],
-      EntityKind.focusSchedule.asString: ["blocks"],
       EntityKind.dailyReview.asString: ["linked_task_ids", "linked_list_ids"],
       EntityKind.task.asString: ["recurrence_exceptions"],
       // `entity_ids` materializes into a join table; `version` is injected by
-      // the generic outbox funnel. `cloud_presence_possible` was an obsolete
-      // local evidence column and remains denylisted so an untrusted peer cannot
-      // preserve and relay that reserved key through a payload shadow.
+      // the generic outbox funnel. The audit trail is device-local, but the
+      // immutable sync payload manifests still describe the `ai_changelog`
+      // wire shape, so the shadow keeps owning its keys: `retention_epoch` is
+      // a manifest field with no column, and `retention_account_identifier`
+      // and `cloud_presence_possible` are reserved keys that stay denylisted
+      // so an untrusted peer cannot preserve and relay them through a payload
+      // shadow.
       EntityKind.aiChangelog.asString: [
-        "entity_ids", "version", "cloud_presence_possible",
+        "entity_ids", "version", "retention_epoch", "retention_account_identifier",
+        "cloud_presence_possible",
       ],
       // `weekdays` rides in the habit payload but materializes into the
       // `habit_weekdays` child, not a `habits` column.
@@ -395,11 +397,6 @@ final class PayloadShadowTests: XCTestCase {
         let allSchemaCols = Set(
           try String.fetchAll(
             db, sql: "SELECT name FROM pragma_table_info(?) ORDER BY cid", arguments: [table]))
-        // Device-local routing need not be part of the wire projection, but may
-        // still be shadow-owned so an inbound payload cannot relay it.
-        let wireSchemaCols = allSchemaCols.filter {
-          !StorageSchema.isDeviceLocalColumn(table: table, column: $0)
-        }
         XCTAssertFalse(allSchemaCols.isEmpty, "table \(table) for \(entityType) has no columns")
 
         let owned = Set(PayloadShadow.ownedKeysForEntity(entityType))
@@ -408,7 +405,7 @@ final class PayloadShadowTests: XCTestCase {
         let exceptions = schemaOnlyExceptions[entityType] ?? []
         let synthetics = payloadOnlySynthetics[entityType] ?? []
 
-        let schemaNotOwned = wireSchemaCols.filter {
+        let schemaNotOwned = allSchemaCols.filter {
           !owned.contains($0) && !exceptions.contains($0)
         }
         if !schemaNotOwned.isEmpty {

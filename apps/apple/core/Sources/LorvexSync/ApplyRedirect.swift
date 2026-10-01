@@ -228,7 +228,7 @@ enum ApplyRedirect {
     let fields: [String]
     switch kind {
     case .task, .tag, .list, .habit, .calendarEvent,
-      .memory, .dailyReview, .currentFocus, .focusSchedule, .preference:
+      .memory, .dailyReview, .dailyBriefing, .preference:
       fields = ["id"]
     case .calendarSeriesCutover:
       return false
@@ -238,7 +238,7 @@ enum ApplyRedirect {
     case .habitCompletion: fields = ["habit_id", "completed_date"]
     case .taskReminder, .taskChecklistItem: fields = ["task_id"]
     case .habitReminderPolicy: fields = ["habit_id"]
-    case .aiChangelog, .entityRedirect, .deviceState, .importSession:
+    case .aiChangelog, .entityRedirect, .deviceState, .importSession, .dailySchedule:
       return false
     }
     var changed = false

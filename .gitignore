@@ -4,6 +4,10 @@ dist/
 *.xcuserstate
 DerivedData/
 apps/apple/core/build/
+# Per-user workspace state Xcode writes when a SwiftPM package is opened
+# directly. The supported Xcode path is the XcodeGen-generated project
+# (script/archive_ios.sh); opening the package is a local convenience only.
+.swiftpm/
 
 
 # Build artifacts
@@ -33,3 +37,9 @@ apps/apple/docs/APPLE_DEVELOPER.md
 
 # Superpowers brainstorm artifacts
 .superpowers/
+
+# Codex CLI local environment
+.codex/
+
+# Per-machine Claude Code notes (owner-only, never shared)
+CLAUDE.local.md

@@ -9,10 +9,15 @@ enum CommandPaletteResult: Identifiable, Equatable {
   case navigate(SidebarSelection)
   /// Select an existing task and jump to it in the Tasks workspace.
   ///
-  /// `subtitle` is the dimmed secondary line (`priority · status · due`) the
-  /// palette renders under the title; `nil` when the task has no metadata worth
-  /// surfacing.
-  case openTask(id: LorvexTask.ID, title: String, subtitle: String?)
+  /// `subtitle` is the dimmed line under the title
+  /// (``CommandPaletteResults/taskSubtitle(_:listNames:now:calendar:)``);
+  /// `nil` when the task has nothing worth surfacing. `isDone` marks a
+  /// completed or cancelled task, whose row leads with a check instead of an
+  /// empty circle.
+  case openTask(id: LorvexTask.ID, title: String, subtitle: String?, isDone: Bool = false)
+  /// Open a list in the Tasks workspace, as its sidebar row does. `icon` and
+  /// `colorHex` are the list's own, so the row wears the sidebar's icon.
+  case openList(id: LorvexList.ID, name: String, icon: String?, colorHex: String?)
   /// Capture a new task from the current query text.
   case createTask(title: String)
   /// Run a global app command (refresh, new task window, …).
@@ -21,7 +26,8 @@ enum CommandPaletteResult: Identifiable, Equatable {
   var id: String {
     switch self {
     case .navigate(let selection): "navigate.\(selection.rawValue)"
-    case .openTask(let id, _, _): "task.\(id)"
+    case .openTask(let id, _, _, _): "task.\(id)"
+    case .openList(let id, _, _, _): "list.\(id)"
     case .createTask: "create"
     case .action(let command): "action.\(command.id)"
     }
@@ -39,8 +45,10 @@ enum CommandPaletteResult: Identifiable, Equatable {
           bundle: LorvexL10n.bundle
         ),
         String(localized: selection.macOSLocalizedTitle))
-    case .openTask(_, let title, _):
+    case .openTask(_, let title, _, _):
       return title
+    case .openList(_, let name, _, _):
+      return name
     case .createTask(let title):
       return String(
         format: String(
@@ -59,7 +67,8 @@ enum CommandPaletteResult: Identifiable, Equatable {
   var systemImage: String {
     switch self {
     case .navigate(let selection): selection.systemImage
-    case .openTask: "checklist"
+    case .openTask(_, _, _, let isDone): isDone ? "checkmark.circle" : "circle"
+    case .openList: "folder"
     case .createTask: "plus.circle"
     case .action(let command): command.systemImage
     }
@@ -88,6 +97,8 @@ struct CommandPaletteGroup: Identifiable, Equatable {
         table: "Localizable",
         bundle: LorvexL10n.bundle
       )
+    case "Lists":
+      String(localized: "command_palette.group.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle)
     case "Tasks":
       String(localized: "command_palette.group.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
     case "Actions":
@@ -98,58 +109,84 @@ struct CommandPaletteGroup: Identifiable, Equatable {
   }
 }
 
-/// Pure result-building for the command palette. Given the typed query and the
-/// current task pool, produces the grouped, ordered result list the palette
-/// renders. No view, store, or actor state — every input is passed in so the
-/// transformation is unit-testable in isolation.
+/// Pure result-building for the command palette. Given the typed query, the
+/// current task pool, and the lists, produces the grouped, ordered result list
+/// the palette renders. No view, store, or actor state — every input is passed
+/// in so the transformation is unit-testable in isolation.
 enum CommandPaletteResults {
   /// Maximum number of task matches surfaced, keeping the palette scannable.
   static let taskResultLimit = 8
 
-  /// Builds grouped results for `rawQuery` against `tasks`.
+  /// Builds grouped results for `rawQuery` against `tasks` and `lists`.
+  /// `lists` may include archived lists: they name the tasks they hold, but
+  /// only active lists are offered as places to open. `now` dates the task
+  /// rows' relative due labels.
   ///
   /// - Empty query: shows every navigation destination plus the global actions,
   ///   so the palette doubles as a launcher with nothing typed.
-  /// - Non-empty query: a "New Task" group with a create action comes
-  ///   first, then navigation destinations whose title matches, then up to
-  ///   ``taskResultLimit`` tasks matching via `LorvexTask.matchesSearch`, then
-  ///   matching global actions.
+  /// - Non-empty query: navigation destinations and lists whose name contains
+  ///   the query, up to ``taskResultLimit`` tasks matching via
+  ///   `LorvexTask.matchesSearch`, matching global actions, and a "New Task"
+  ///   group that captures the query as a task.
+  ///
+  /// The first row is what Return does, so it follows the query's intent. A
+  /// query that begins a destination's or a list's name, or one of its words,
+  /// is a jump, and those groups lead; any other query leads with capture.
+  /// Task matches never lead, so capturing a title an existing task shares
+  /// still creates the new task.
   static func groups(
     query rawQuery: String,
     tasks: [LorvexTask],
+    lists: [LorvexList] = [],
+    now: Date = Date(),
     destinations: [SidebarSelection] = SidebarSelection.mainNavigationItems,
     actions: [AppCommand] = AppCommand.allCases
   ) -> [CommandPaletteGroup] {
     let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-    var groups: [CommandPaletteGroup] = []
-
-    if !query.isEmpty {
-      groups.append(
-        CommandPaletteGroup(
-          title: "New Task",
-          results: [.createTask(title: query)]
-        ))
-    }
-
-    let navResults =
+    let matchedDestinations =
       query.isEmpty
-      ? destinations.map { CommandPaletteResult.navigate($0) }
-      : destinations
-        .filter {
-          $0.macOSDisplayTitle.localizedCaseInsensitiveContains(query)
-            || String(localized: $0.macOSLocalizedTitle).localizedCaseInsensitiveContains(query)
-        }
-        .map { CommandPaletteResult.navigate($0) }
-    if !navResults.isEmpty {
-      groups.append(CommandPaletteGroup(title: "Navigation", results: navResults))
+      ? destinations
+      : destinations.filter { names(of: $0).contains { $0.localizedCaseInsensitiveContains(query) } }
+    let matchedLists =
+      query.isEmpty
+      ? []
+      : lists.filter { !$0.isArchived && $0.displayName.localizedCaseInsensitiveContains(query) }
+
+    var jumps: [CommandPaletteGroup] = []
+    if !matchedDestinations.isEmpty {
+      jumps.append(
+        CommandPaletteGroup(title: "Navigation", results: matchedDestinations.map { .navigate($0) }))
+    }
+    if !matchedLists.isEmpty {
+      jumps.append(
+        CommandPaletteGroup(
+          title: "Lists",
+          results: matchedLists.map {
+            .openList(id: $0.id, name: $0.displayName, icon: $0.icon, colorHex: $0.color)
+          }))
     }
 
-    if !query.isEmpty {
+    var groups: [CommandPaletteGroup] = []
+    if query.isEmpty {
+      groups = jumps
+    } else {
+      let capture = CommandPaletteGroup(title: "New Task", results: [.createTask(title: query)])
+      let isJump =
+        matchedDestinations.contains { names(of: $0).contains { beginsNameOrWord($0, query: query) } }
+        || matchedLists.contains { beginsNameOrWord($0.displayName, query: query) }
+      groups = isJump ? jumps + [capture] : [capture] + jumps
+
+      let listNames = Dictionary(
+        lists.map { ($0.id, $0.displayName) }, uniquingKeysWith: { first, _ in first })
       let taskResults =
         tasks
         .filter { $0.matchesSearch(query) }
         .prefix(taskResultLimit)
-        .map { CommandPaletteResult.openTask(id: $0.id, title: $0.title, subtitle: taskSubtitle($0)) }
+        .map {
+          CommandPaletteResult.openTask(
+            id: $0.id, title: $0.title, subtitle: taskSubtitle($0, listNames: listNames, now: now),
+            isDone: $0.status.isResolved)
+        }
       if !taskResults.isEmpty {
         groups.append(CommandPaletteGroup(title: "Tasks", results: Array(taskResults)))
       }
@@ -168,23 +205,58 @@ enum CommandPaletteResults {
     return groups
   }
 
+  /// The names a destination answers to: its stable English title and the
+  /// title the sidebar shows in the current language ("Calendar" and "Plan").
+  private static func names(of destination: SidebarSelection) -> [String] {
+    [destination.macOSDisplayTitle, String(localized: destination.macOSLocalizedTitle)]
+  }
+
+  /// Whether `query` begins `name` or one of its words, ignoring case and
+  /// diacritics: "hab" begins "Habits", and "nat" begins "Apple Native".
+  static func beginsNameOrWord(_ name: String, query: String) -> Bool {
+    let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .anchored]
+    if name.range(of: query, options: options) != nil { return true }
+    return name.split(whereSeparator: \.isWhitespace).contains {
+      $0.range(of: query, options: options) != nil
+    }
+  }
+
   /// The flat, ordered list of results across every group — the sequence the
   /// up/down arrow selection moves through.
   static func flatResults(_ groups: [CommandPaletteGroup]) -> [CommandPaletteResult] {
     groups.flatMap(\.results)
   }
 
-  /// The dimmed `priority · status · due` secondary line for a task row.
-  /// Priority and status are always present; the due date is appended only when
-  /// the task has one.
-  static func taskSubtitle(_ task: LorvexTask) -> String {
-    var parts: [String] = [
-      TaskDisplayText.compactPriorityAndStatus(priority: task.priority, status: task.status)
-    ]
-    if let due = task.dueDateDisplaySummary {
-      parts.append(due)
+  /// The dimmed line under a task row: what tells two similar tasks apart. It
+  /// names the list that holds the task (from `listNames`), then, for a task
+  /// still to do, when it is due relative to `now` ("Due today") and its status
+  /// unless it is simply open; a finished or cancelled task says so instead of
+  /// when it was due. `nil` when none of these applies.
+  static func taskSubtitle(
+    _ task: LorvexTask, listNames: [LorvexList.ID: String] = [:], now: Date = Date(),
+    calendar: Calendar = .current
+  ) -> String? {
+    var parts: [String] = []
+    if let listID = task.listID, let name = listNames[listID] {
+      parts.append(name)
     }
-    return parts.joined(separator: " · ")
+    switch task.status {
+    case .completed, .cancelled:
+      parts.append(TaskDisplayText.status(task.status))
+    case .open, .inProgress, .someday:
+      if let due = task.cachedDueRelativeLabel(now: now, calendar: calendar) {
+        parts.append(
+          String(
+            format: String(
+              localized: "command_palette.task.due", defaultValue: "Due %@", table: "Localizable",
+              bundle: LorvexL10n.bundle),
+            due))
+      }
+      if task.status != .open {
+        parts.append(TaskDisplayText.status(task.status))
+      }
+    }
+    return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
 
   /// The case-insensitive ranges in `text` where `rawQuery` matches, in order and

@@ -1,39 +1,19 @@
 import LorvexCore
 import Testing
 
-func makeWatchFocusPlan(date: String, taskIDs: [String]) -> CurrentFocusPlan {
-  CurrentFocusPlan(
-    date: date,
-    taskIDs: taskIDs,
-    briefing: nil,
-    timezone: "UTC",
-    localChangeSequence: 1
-  )
-}
-
+/// Creates a task on Today's list and returns it. The task is planned for the
+/// `yyyy-MM-dd` day `date`; Today's pool keeps a task planned for today or any
+/// earlier day, so a fixed past date stays on the list whatever day the suite
+/// runs.
 @discardableResult
-func seedWatchFocus(
-  in service: SwiftLorvexCoreService,
+func seedWatchTodayTask(
+  in service: any LorvexCoreServicing,
   date: String,
   title: String,
+  priority: LorvexTask.Priority = .p2,
   estimatedMinutes: Int? = nil
 ) async throws -> LorvexTask {
-  let created = try await service.createTask(title: title, notes: "")
-  let task = try await service.updateTask(
-    id: created.id,
-    title: created.title,
-    notes: created.notes,
-    priority: created.priority,
-    estimatedMinutes: estimatedMinutes,
-    plannedDate: created.dueDate,
-    tags: created.tags,
-    dependsOn: created.dependsOn
-  )
-  _ = try await service.setCurrentFocus(
-    date: date,
-    taskIDs: [task.id],
-    briefing: nil,
-    timezone: "UTC"
-  )
-  return task
+  let created = try await service.createTask(
+    TaskCreateDraft(title: title, priority: priority, estimatedMinutes: estimatedMinutes))
+  return try await planTask(service, created.id, on: date)
 }

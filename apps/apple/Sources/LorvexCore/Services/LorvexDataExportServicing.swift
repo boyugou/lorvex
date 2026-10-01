@@ -8,9 +8,9 @@ public protocol LorvexDataExportServicing: LorvexCalendarServicing,
   ///
   /// `entities` is a list of canonical category names — the raw values of
   /// `LorvexDataExportCategory` (`"tasks"`, `"lists"`, `"tags"`, `"habits"`,
-  /// `"calendar_events"`, `"daily_reviews"`,
-  /// `"current_focus"`, `"focus_schedules"`, `"task_calendar_event_links"`,
-  /// `"memory"`, `"preferences"`). An empty array or
+  /// `"calendar_events"`, `"daily_reviews"`, `"daily_briefings"`,
+  /// `"task_calendar_event_links"`, `"memory"`, `"preferences"`). An empty
+  /// array or
   /// `["all"]` includes every category. `format` is `"json"` or `"csv"`
   /// (default: `"json"`).
   ///
@@ -22,10 +22,9 @@ public protocol LorvexDataExportServicing: LorvexCalendarServicing,
   /// Returns the rendered string (JSON or multi-section CSV).
   func exportData(entities: [String], format: String) async throws -> String
 
-  /// Serializes data for an AI-facing caller while enforcing the device-local
-  /// calendar AI-access tier. This is deliberately distinct from
-  /// ``exportData(entities:format:)``: a user-requested backup remains complete,
-  /// while MCP/AI exports must not expose provider-calendar occupancy at `off`.
+  /// Serializes data for an AI-facing caller: the portable migration document,
+  /// without the exact Apple task graph a user's JSON backup carries, since an
+  /// assistant reads and re-creates records rather than restoring rows.
   func exportDataForAI(
     entities: [String], format: String, appVersion: String?, generatedAt: String?
   ) async throws -> String
@@ -34,11 +33,10 @@ public protocol LorvexDataExportServicing: LorvexCalendarServicing,
   /// Storage-backed conformers implement this requirement with a single database
   /// read transaction; the protocol default rejects export so a new backend
   /// cannot accidentally assemble a backup from unrelated point reads.
-  /// `forAI` controls the calendar-detail projection, while
   /// `includeNativeTaskGraph` keeps the exact Apple task graph out of AI/CSV
   /// migration documents.
   func loadSnapshotForDataExport(
-    entities: [String], forAI: Bool, includeNativeTaskGraph: Bool
+    entities: [String], includeNativeTaskGraph: Bool
   ) async throws -> LorvexDataExportSnapshot
 
   // MARK: - Full-table export reads
@@ -72,19 +70,8 @@ public protocol LorvexDataExportServicing: LorvexCalendarServicing,
   /// this bundle instead of independent reads that could straddle a split.
   func loadCalendarBundleForDataExport() async throws -> ExportCalendarBundle
 
-  /// Every persisted current-focus day (briefing + member task ids) for a
-  /// full data export.
-  func loadCurrentFocusForDataExport() async throws -> [ExportCurrentFocus]
-
-  /// Every persisted focus-schedule day (rationale + blocks) for a full data
-  /// export.
-  func loadFocusSchedulesForDataExport() async throws -> [ExportFocusSchedule]
-
-  /// Every persisted focus-schedule day projected through the device-local
-  /// calendar AI-access tier. Provider blocks are omitted at `off`; retained
-  /// blocks are position-renumbered so the result remains valid import data.
-  /// The access tier and rows must be read atomically by the implementation.
-  func loadFocusSchedulesForAIDataExport() async throws -> [ExportFocusSchedule]
+  /// Every day's briefing, in date order, for a full data export.
+  func loadDailyBriefingsForDataExport() async throws -> [ExportDailyBriefing]
 
   /// Every task-to-calendar-event link for a full data export.
   func loadTaskCalendarEventLinksForDataExport() async throws -> [ExportTaskCalendarEventLink]

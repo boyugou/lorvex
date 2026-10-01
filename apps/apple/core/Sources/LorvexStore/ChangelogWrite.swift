@@ -35,10 +35,6 @@ public enum ChangelogWrite {
     public var sourceDeviceId: String
     public var beforeJson: String?
     public var afterJson: String?
-    /// Account-relative audit-retention generation carried on the sync upsert.
-    public var retentionEpoch: Int64
-    /// Local routing metadata; deliberately absent from the sync payload.
-    public var retentionAccountIdentifier: String?
 
     public init(
       id: String,
@@ -52,9 +48,7 @@ public enum ChangelogWrite {
       mcpTool: String? = nil,
       sourceDeviceId: String,
       beforeJson: String? = nil,
-      afterJson: String? = nil,
-      retentionEpoch: Int64 = 0,
-      retentionAccountIdentifier: String? = nil
+      afterJson: String? = nil
     ) {
       self.id = id
       self.timestamp = timestamp
@@ -68,23 +62,17 @@ public enum ChangelogWrite {
       self.sourceDeviceId = sourceDeviceId
       self.beforeJson = beforeJson
       self.afterJson = afterJson
-      self.retentionEpoch = retentionEpoch
-      self.retentionAccountIdentifier = retentionAccountIdentifier
     }
   }
 
   /// Insert one row into `ai_changelog` and replace its entity-id registry.
   public static func writeChangelogRow(_ db: Database, _ row: ChangelogRow) throws {
-    guard row.retentionEpoch >= 0 else {
-      throw StoreError.validation("ai_changelog retention_epoch must be nonnegative")
-    }
     try db.execute(
       sql: """
         INSERT INTO ai_changelog (
           id, timestamp, operation, entity_type, entity_id, summary,
-          initiated_by, mcp_tool, source_device_id, before_json, after_json,
-          retention_epoch, retention_account_identifier
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          initiated_by, mcp_tool, source_device_id, before_json, after_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
       arguments: [
         row.id,
@@ -98,49 +86,8 @@ public enum ChangelogWrite {
         row.sourceDeviceId,
         row.beforeJson,
         row.afterJson,
-        row.retentionEpoch,
-        row.retentionAccountIdentifier,
       ])
     try replaceChangelogEntities(db, changelogId: row.id, entityIds: row.entityIds)
-  }
-
-  /// Build the emit-once sync payload for one `ai_changelog` row.
-  ///
-  /// The append-only audit stream has no simple `(table, pk)`, so the generic
-  /// outbox snapshot reader cannot read it; this is the dedicated builder for the
-  /// bounded outbound path. It produces EXACTLY the keys the changelog apply
-  /// handler reads on a peer, so an emitted envelope round-trips through id-dedup
-  /// apply without a re-read:
-  /// - `entity_ids` is a STRINGIFIED JSON array — a JSON *string* whose content
-  ///   is the JSON array of the row's batch entity ids — matching how the applier
-  ///   reads it as an optional string and re-parses via ``parseEntityIdsJson(_:)``.
-  ///   An empty set emits JSON null (absent / null / empty all decode to "no
-  ///   entities").
-  /// - The nullable text columns emit JSON null when unset.
-  public static func buildChangelogSyncPayload(_ row: ChangelogRow) throws -> JSONValue {
-    guard row.retentionEpoch >= 0 else {
-      throw StoreError.validation("ai_changelog retention_epoch must be nonnegative")
-    }
-    let entityIdsValue: JSONValue
-    if row.entityIds.isEmpty {
-      entityIdsValue = .null
-    } else {
-      entityIdsValue = .string(try canonicalizeJSON(.array(row.entityIds.map(JSONValue.string))))
-    }
-    return .object([
-      "timestamp": .string(row.timestamp),
-      "operation": .string(row.operation),
-      "entity_type": .string(row.entityType),
-      "entity_id": row.entityId.map(JSONValue.string) ?? .null,
-      "entity_ids": entityIdsValue,
-      "summary": .string(row.summary),
-      "initiated_by": .string(row.initiatedBy),
-      "mcp_tool": row.mcpTool.map(JSONValue.string) ?? .null,
-      "source_device_id": .string(row.sourceDeviceId),
-      "before_json": row.beforeJson.map(JSONValue.string) ?? .null,
-      "after_json": row.afterJson.map(JSONValue.string) ?? .null,
-      "retention_epoch": .int(row.retentionEpoch),
-    ])
   }
 
   /// Replace the changelog row's full entity-id registry with the provided

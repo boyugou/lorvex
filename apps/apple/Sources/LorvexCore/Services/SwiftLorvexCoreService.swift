@@ -239,7 +239,7 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
   /// Test seam after the Today portion of the atomic widget source has been
   /// read, while the same SQLite transaction and managed-storage lease remain
   /// active. A peer writer can be started here to prove it cannot split the
-  /// later focus/list/habit/stat reads into another revision.
+  /// later list/habit/stat reads into another revision.
   @TaskLocal static var afterWidgetTodayReadForTesting: (@Sendable () -> Void)?
 
   /// Test seam: invoked inside ``runWriteAttempt``'s `BEGIN IMMEDIATE` body,
@@ -307,15 +307,32 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
   /// backs production storage.
   let writeInitiatorDefault: String
 
+  /// The current instant for reads whose answer depends on the time of day. A
+  /// suggestion of times for today consults it so the suggestion never starts
+  /// in the part of the day that has already passed. Production reads
+  /// ``systemWallClock``; tests and previews pin it so such reads are
+  /// deterministic.
+  let wallClock: @Sendable () -> Date
+
+  /// The clock an on-disk service reads by default: the system time, except in
+  /// a DEBUG preview run that pins the product day with `-lorvexPreviewNow`
+  /// (``LorvexPreviewClock``), where it is today at that time, so a capture's
+  /// proposals start where its Today says the clock is.
+  public static let systemWallClock: @Sendable () -> Date = {
+    LorvexPreviewClock.now(in: Calendar.current)
+  }
+
   public init(
     databasePath: String?,
     schemaSQL: String? = nil,
     surface: HlcSurface = .app,
-    writeInitiatorDefault: String = ChangelogInitiator.unattributed
+    writeInitiatorDefault: String = ChangelogInitiator.unattributed,
+    wallClock: @escaping @Sendable () -> Date = SwiftLorvexCoreService.systemWallClock
   ) {
     self.databasePath = databasePath
     self.hlcSurface = surface
     self.writeInitiatorDefault = writeInitiatorDefault
+    self.wallClock = wallClock
     if let schemaSQL {
       // An explicitly-supplied schema (tests / embedders) opts out of the
       // bookkeeping contract — the caller owns the schema's identity.
@@ -338,10 +355,14 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
   /// dominant local surface previews and unit fixtures stand in for; a fail-closed
   /// provenance test passes ``ChangelogInitiator/unattributed`` to exercise a
   /// forgotten binding.
-  init(store: LorvexStore, writeInitiatorDefault: String = ChangelogInitiator.user) {
+  init(
+    store: LorvexStore, writeInitiatorDefault: String = ChangelogInitiator.user,
+    wallClock: @escaping @Sendable () -> Date = { Date() }
+  ) {
     self.databasePath = nil
     self.hlcSurface = .app
     self.writeInitiatorDefault = writeInitiatorDefault
+    self.wallClock = wallClock
     self.schemaSQLProvider = { "" }
     self.schemaChecksumProvider = { nil }
     self.schemaMigrationsProvider = { [] }

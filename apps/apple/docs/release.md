@@ -3,12 +3,12 @@
 Lorvex Apple has a fail-closed production Developer ID DMG path and a separate
 Mac App Store package path. Local app/ZIP packaging remains for development and
 CI only. The full verification gate also
-builds the `LorvexMobileApp`, `LorvexVisionApp`, and `LorvexWatchApp` SwiftUI
-entry targets and checks the mobile, visionOS, watchOS, and Widget metadata
+builds the `LorvexMobileApp` and `LorvexWatchApp` SwiftUI
+entry targets and checks the mobile, watchOS, and Widget metadata
 contracts. It also
 verifies the XcodeGen project that defines the iOS app, embedded Widget and
-Focus Filter extensions, visionOS app, and watchOS app. The repo has simulator packaging
-scripts for iOS/iPadOS, visionOS, and watchOS; they preflight the local Xcode
+Focus Filter extensions, and watchOS app. The repo has simulator packaging
+scripts for iOS/iPadOS and watchOS; they preflight the local Xcode
 SDK/runtime installation before building, installing, and launching the app on a
 simulator.
 
@@ -26,8 +26,7 @@ App Store / Developer ID public submission:
   (`./script/verify_migration_ladder.py --seed` on an existing entry). Change the schema only
   by appending a numbered migration to the canonical `schema/migrations/`
   directory (new `NNN_<name>.sql` + a new lock entry + a byte-copy into the Apple
-  embed; the Tauri schema is directionally aligned, not byte-locked, and is never
-  compared against canonical; see `schema/migrations/README.md`). Re-run and
+  embed; see `schema/migrations/README.md`). Re-run and
   commit `./script/verify_schema_freeze.py --arm` before archiving each later
   public release; the archive gate rejects a migration or payload-contract
   version that the release policy has not captured. Never
@@ -136,12 +135,12 @@ or final mounted-artifact evidence:
   Home Screen widget and the Control Widget kind/display contract
 - release manifest records CloudKit sync readiness metadata: outbound record
   export, private database subscription, remote-change refresh, and
-  atomic SQLite change-token checkpointing are ready; inbound record application is ready
-  with conservative field-level remote/local merge. Live CloudKit remote-change
-  pushes now fetch private record-zone changes and commit decoded records plus
-  the successor token atomically through the Swift sync engine before the normal
-  app refresh. Core planning entities
-  including tasks, lists, habits, calendar events, memory, and focus plans
+  change-token checkpointing are ready; inbound record application is ready
+  with conservative field-level remote/local merge. A Lorvex CloudKit remote-change
+  push makes `CKSyncEngine` fetch the private record-zone changes, and the
+  store commits the decoded records through the Swift sync engine before the
+  normal app refresh. Core planning entities
+  including tasks, lists, habits, calendar events, memory, and daily briefings
   have outbox export and inbound applier coverage.
 - app bundle and nested Widget extension both include
   `PrivacyInfo.xcprivacy`, declaring no tracking, no collected data types, and
@@ -151,7 +150,7 @@ or final mounted-artifact evidence:
   `script/verify_mcp_tool_catalog.py` proves that the typed tool-definition
   registry contains that exact unique set with valid write/idempotency metadata
 - release manifest metadata, artifact paths, archive size, and SHA-256
-- release manifest strategy: Apple-only across macOS, iOS, iPadOS, visionOS,
+- release manifest strategy: Apple-only across macOS, iOS, iPadOS,
   watchOS, WidgetKit, and App Intents; Swift-native MCP; no CLI product,
   no Rust at runtime, and system appearance instead of a cross-platform theme
   system
@@ -165,30 +164,29 @@ or final mounted-artifact evidence:
 ```bash
 ./script/verify_apple_simulators.sh
 ./script/verify_mobile_simulator.sh
-./script/verify_vision_simulator.sh
 ./script/verify_watch_simulator.sh
 ```
 
 These scripts generate an Xcode project from `Config/XcodeGen/project.yml`,
-build `LorvexMobileApp` for iOS Simulator, `LorvexVisionApp` for visionOS
-Simulator, or `LorvexWatchApp` for watchOS Simulator, check the generated app
-bundle metadata, install it on the configured simulator, launch it, and
-terminate it. The generated iOS project also contains the embedded
-`LorvexFocusWidgetExtension` target with the real `WidgetBundle` entrypoint and
-the separately signed `LorvexFocusFilterExtension` App Intents target.
-`verify_apple_simulators.sh` runs the three platform-specific simulator
-verifiers plus `verify_mobile_release_link.sh` and `verify_vision_release_link.sh`
-— unsigned Release device-graph builds (`-configuration Release -destination
-'generic/platform=iOS'` / `'generic/platform=visionOS'` `CODE_SIGNING_ALLOWED=NO`,
-both thin wrappers around the shared `verify_release_link.sh`) that catch
-Release-only compile/link failures invisible to Debug/simulator builds and to
-SwiftPM's single-unit link, including API calls gated behind an OS version
-newer than a platform's deployment-target floor — as the aggregate local Apple
-platform gate, printing a per-check summary before returning. If one or more
-checks find their simulator runtime or platform SDK unavailable, it returns 78
-after running every check so the missing-environment list is complete.
+build `LorvexMobileApp` for iOS Simulator or `LorvexWatchApp` for watchOS
+Simulator, check the generated app bundle metadata, install it on the
+configured simulator, launch it, and terminate it. The generated iOS project
+also contains the embedded `LorvexWidgets` target with the real
+`WidgetBundle` entrypoint and the separately signed
+`LorvexFocusFilterExtension` App Intents target.
+`verify_apple_simulators.sh` runs the two platform-specific simulator
+verifiers plus `verify_mobile_release_link.sh`
+— an unsigned Release device-graph build (`-configuration Release -destination
+'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO`, a thin wrapper around the
+shared `verify_release_link.sh`) that catches Release-only compile/link
+failures invisible to Debug/simulator builds and to SwiftPM's single-unit
+link, including API calls gated behind an OS version newer than the
+platform's deployment-target floor — as the aggregate local Apple platform
+gate, printing a per-check summary before returning. If one or more checks
+find their simulator runtime or platform SDK unavailable, it returns 78 after
+running every check so the missing-environment list is complete.
 `verify_xcodegen_project.sh` also emits and verifies
-`dist/lorvex-apple-platform-manifest.json`, which records the iOS, visionOS,
+`dist/lorvex-apple-platform-manifest.json`, which records the iOS,
 watchOS, Watch complication, Widget, Focus Filter, and shared App Intents targets, bundle ids, Info.plists,
 entitlements, simulator verifier scripts, the aggregate simulator verifier, App
 Group, CloudKit container, URL scheme, XcodeGen drift checks for bundle ids,
@@ -203,7 +201,6 @@ Set `LORVEX_IOS_SIMULATOR_NAME` to choose a different simulator name. If Xcode's
 installed simulator SDK and CoreSimulator runtimes do not match, the
 platform-specific script exits before building and prints the available
 destinations, SDKs, and runtimes.
-Set `LORVEX_VISION_SIMULATOR_NAME` to choose a different visionOS simulator.
 Set `LORVEX_WATCH_SIMULATOR_NAME` to choose a different watchOS simulator.
 
 ## Standalone ZIP notarization preflight (diagnostic utility)
@@ -262,9 +259,9 @@ xcrun notarytool store-credentials "lorvex-notary" \
 export APPLE_TEAM_ID="TEAMID"
 export CODE_SIGN_IDENTITY="Developer ID Application: Example, Inc. (TEAMID)"
 export NOTARY_KEYCHAIN_PROFILE="lorvex-notary"
-export DEVELOPER_ID_APP_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexApple-DeveloperID.provisionprofile"
-export DEVELOPER_ID_MCP_HOST_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexMCPHost-DeveloperID.provisionprofile"
-export DEVELOPER_ID_WIDGET_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexFocusWidget-DeveloperID.provisionprofile"
+export DEVELOPER_ID_APP_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexApple.devid.provisionprofile"
+export DEVELOPER_ID_MCP_HOST_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexMCPHost.devid.provisionprofile"
+export DEVELOPER_ID_WIDGET_PROVISIONING_PROFILE="$PWD/secrets/profiles/LorvexWidgets.devid.provisionprofile"
 export LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET=1
 ./script/package_dmg.sh
 ```

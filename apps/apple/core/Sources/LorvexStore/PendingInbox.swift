@@ -220,8 +220,12 @@ public enum PendingInbox {
       arguments: [id])
   }
 
-  /// Transient busy/locked attempts also refresh only the timestamp.
-  public static func recordReattemptBusy(_ db: Database, id: Int64) throws {
+  /// Record an attempt that failed for a reason outside the envelope — lock
+  /// contention or a suspended database — by refreshing only
+  /// `last_attempted_at`. `attempt_count` is deliberately left alone so the
+  /// row keeps its full retry budget for attempts that actually reached an
+  /// applier.
+  public static func recordTransientReattempt(_ db: Database, id: Int64) throws {
     try recordAttemptTimestamp(db, id: id)
   }
 

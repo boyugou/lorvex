@@ -6,13 +6,9 @@ import unittest
 from verify_cloudkit_sync_readiness import (
     SYNC_NAMING,
     ckdb_lorvex_entity_fields,
-    cloudkit_audit_retention_metadata_schema_failures,
     cloudkit_entity_coverage_failures,
     cloudkit_field_encryption_failures,
-    cloudkit_sync_readiness_failures,
-    cloudkit_zone_epoch_schema_failures,
     field_encryption_contract,
-    swift_readiness_ids,
     syncable_kinds,
 )
 
@@ -59,140 +55,6 @@ CKDB_SOURCE = """
     );
 """
 
-
-ZONE_EPOCH_SOURCE = """
-  static let recordType = "LorvexZoneEpoch"
-  static let recordName = "lorvex-zone-epoch"
-  static let protocolVersionField = "protocol_version"
-  static let epochField = "epoch"
-  static let stateField = "state"
-  static let activeEpochField = "active_epoch"
-  static let generationIDField = "generation_id"
-  static let activeZoneField = "active_zone"
-  static let readyWitnessField = "ready_witness"
-  static let candidateGenerationIDField = "candidate_generation_id"
-  static let candidateZoneField = "candidate_zone"
-  static let rebuildIdentifierField = "rebuild_id"
-  static let rebuildOwnerField = "rebuild_owner"
-  static let rebuildPhaseField = "rebuild_phase"
-  static let leaseActivityAtField = "lease_activity_at"
-  static let retiredZonesField = "retired_zones_json"
-  static let tombstoneCompactionCutoffField = "tombstone_compaction_cutoff"
-"""
-
-CKDB_WITH_EPOCH = (
-    CKDB_SOURCE
-    + '''
-    RECORD TYPE LorvexZoneEpoch (
-        "___recordID"   REFERENCE QUERYABLE,
-        protocol_version           INT64,
-        epoch                      INT64,
-        state                      STRING,
-        active_epoch               INT64,
-        generation_id              STRING,
-        active_zone                STRING,
-        ready_witness              STRING,
-        candidate_generation_id    STRING,
-        candidate_zone             STRING,
-        rebuild_id                 STRING,
-        rebuild_owner              STRING,
-        rebuild_phase              STRING,
-        lease_activity_at          STRING,
-        retired_zones_json         STRING,
-        tombstone_compaction_cutoff STRING,
-        GRANT WRITE TO "_creator"
-    );
-'''
-)
-
-
-AUDIT_RETENTION_METADATA_SOURCE = """
-  static let recordType = "LorvexAuditRetentionMetadata"
-  static let protocolVersionField = "protocol_version"
-  static let generationEpochField = "generation_epoch"
-  static let generationIDField = "generation_id"
-  static let frontierEpochField = "frontier_epoch"
-  static let cutoffTimestampField = "cutoff_timestamp"
-  static let cutoffEntityIDField = "cutoff_entity_id"
-  static let policyField = "policy"
-  static let policyVersionField = "policy_version"
-  static let policyAuthorizedEpochField = "policy_authorized_epoch"
-  static let encryptedFields = [
-    protocolVersionField, generationEpochField, generationIDField,
-    frontierEpochField, cutoffTimestampField, cutoffEntityIDField,
-    policyField, policyVersionField, policyAuthorizedEpochField,
-  ]
-  record.encryptedValues[protocolVersionField] = value
-  record.encryptedValues[generationEpochField] = value
-  record.encryptedValues[generationIDField] = value
-  record.encryptedValues[frontierEpochField] = value
-  record.encryptedValues[cutoffTimestampField] = value
-  record.encryptedValues[cutoffEntityIDField] = value
-  record.encryptedValues[policyField] = value
-  record.encryptedValues[policyVersionField] = value
-  record.encryptedValues[policyAuthorizedEpochField] = value
-"""
-
-CKDB_WITH_AUDIT_RETENTION = (
-    CKDB_SOURCE
-    + """
-    RECORD TYPE LorvexAuditRetentionMetadata (
-        "___recordID"          REFERENCE QUERYABLE,
-        protocol_version        ENCRYPTED INT64,
-        generation_epoch        ENCRYPTED INT64,
-        generation_id           ENCRYPTED STRING,
-        frontier_epoch          ENCRYPTED INT64,
-        cutoff_timestamp        ENCRYPTED STRING,
-        cutoff_entity_id        ENCRYPTED STRING,
-        policy                  ENCRYPTED STRING,
-        policy_version          ENCRYPTED STRING,
-        policy_authorized_epoch ENCRYPTED INT64,
-        GRANT WRITE TO "_creator"
-    );
-"""
-)
-
-
-SWIFT_SOURCE = """
-Capability(
-  id: "export",
-  title: "Outbound record export",
-  status: .ready,
-  detail: "Projects tasks."
-),
-Capability(
-  id: "subscription",
-  title: "Private database subscription",
-  status: .ready,
-  detail: "Registers pushes."
-),
-Capability(
-  id: "remote-refresh",
-  title: "Remote-change refresh",
-  status: .ready,
-  detail: "Refreshes."
-),
-Capability(
-  id: "inbound-apply",
-  title: "Inbound record application",
-  status: .ready,
-  detail: "Merged."
-),
-Capability(
-  id: "change-token",
-  title: "Change-token checkpointing",
-  status: .ready,
-  detail: "Checkpointed."
-),
-"""
-
-
-# --- Entity-coverage fixtures ------------------------------------------------
-#
-# A miniature but shape-faithful authority: naming constants, the EntityKind
-# enum, a local-only kind kept OUT of allSyncableTypes, an edge referenced via
-# EdgeName (whose constant lives in another Swift file, so it must resolve
-# through the enum-case map), and an inbound-only audit kind.
 
 NAMING_SOURCE = """
 public enum EntityName {
@@ -360,8 +222,7 @@ KNOWN_LIVE_SYNCABLE_WIRES = {
     "preference",
     "memory",
     "daily_review",
-    "current_focus",
-    "focus_schedule",
+    "daily_briefing",
     "task_reminder",
     "task_checklist_item",
     "habit_reminder_policy",
@@ -387,53 +248,6 @@ def coverage_failures(
 
 
 class VerifyCloudKitSyncReadinessTests(unittest.TestCase):
-    def test_swift_readiness_ids_maps_swift_ids_to_release_ids(self) -> None:
-        self.assertEqual(
-            swift_readiness_ids(SWIFT_SOURCE),
-            {
-                "ready": [
-                    "outbound_record_export",
-                    "private_database_subscription",
-                    "remote_change_refresh",
-                    "inbound_record_application",
-                    "change_token_checkpointing",
-                ],
-                "pending": [],
-            },
-        )
-
-    def test_cloudkit_sync_readiness_failures_accepts_matching_contract(self) -> None:
-        self.assertEqual(cloudkit_sync_readiness_failures(SWIFT_SOURCE), [])
-
-    def test_cloudkit_sync_readiness_failures_rejects_status_drift(self) -> None:
-        drifted = SWIFT_SOURCE.replace('id: "inbound-apply"', 'id: "inbound-apply"').replace(
-            "status: .ready,\n  detail: \"Merged.\"",
-            "status: .pending,\n  detail: \"Merged.\"",
-            1,
-        )
-
-        failures = cloudkit_sync_readiness_failures(drifted)
-
-        self.assertTrue(any("ready mismatch" in failure for failure in failures))
-        self.assertTrue(any("pending mismatch" in failure for failure in failures))
-
-    def test_cloudkit_sync_readiness_failures_rejects_unknown_swift_id(self) -> None:
-        source = SWIFT_SOURCE + """
-        Capability(
-          id: "server-token",
-          title: "Server token",
-          status: .pending,
-          detail: "New unchecked capability."
-        ),
-        """
-
-        self.assertEqual(
-            cloudkit_sync_readiness_failures(source),
-            ["CloudKit readiness declares unknown Swift capability id(s): ['server-token']"],
-        )
-
-    # --- Syncable-kind inventory derivation ----------------------------------
-
     def test_syncable_kinds_derived_from_all_syncable_types(self) -> None:
         kinds, failures = syncable_kinds(NAMING_SOURCE)
 
@@ -738,71 +552,6 @@ try self.enqueueDelete(db, hlc: hlc, deviceId: deviceId, kind: .dailyReview, ent
                 "client writes it in the clear — declare it plaintext"
             ],
         )
-
-    def test_zone_epoch_schema_accepts_declared_int64_record_type(self) -> None:
-        self.assertEqual(
-            cloudkit_zone_epoch_schema_failures(ZONE_EPOCH_SOURCE, CKDB_WITH_EPOCH), []
-        )
-
-    def test_audit_retention_schema_accepts_complete_encrypted_shape(self) -> None:
-        self.assertEqual(
-            cloudkit_audit_retention_metadata_schema_failures(
-                AUDIT_RETENTION_METADATA_SOURCE,
-                CKDB_WITH_AUDIT_RETENTION,
-            ),
-            [],
-        )
-
-    def test_audit_retention_schema_rejects_plaintext_policy(self) -> None:
-        drifted = CKDB_WITH_AUDIT_RETENTION.replace(
-            "policy                  ENCRYPTED STRING",
-            "policy                  STRING",
-        )
-        failures = cloudkit_audit_retention_metadata_schema_failures(
-            AUDIT_RETENTION_METADATA_SOURCE,
-            drifted,
-        )
-        self.assertTrue(any("policy is plaintext" in failure for failure in failures), failures)
-
-    def test_zone_epoch_schema_fails_when_record_type_absent(self) -> None:
-        # The exact production gap: the runtime saves LorvexZoneEpoch but the
-        # template never declared it, so production CloudKit would reject the save.
-        failures = cloudkit_zone_epoch_schema_failures(ZONE_EPOCH_SOURCE, CKDB_SOURCE)
-        self.assertEqual(len(failures), 1)
-        self.assertIn("missing RECORD TYPE LorvexZoneEpoch", failures[0])
-
-    def test_zone_epoch_schema_fails_when_epoch_is_encrypted(self) -> None:
-        encrypted = CKDB_WITH_EPOCH.replace(
-            "epoch                      INT64",
-            "epoch                      ENCRYPTED INT64",
-        )
-        failures = cloudkit_zone_epoch_schema_failures(ZONE_EPOCH_SOURCE, encrypted)
-        self.assertEqual(len(failures), 1)
-        self.assertIn("declared ENCRYPTED", failures[0])
-
-    def test_zone_epoch_schema_fails_on_wrong_field_type(self) -> None:
-        wrong = CKDB_WITH_EPOCH.replace(
-            "epoch                      INT64",
-            "epoch                      STRING",
-        )
-        failures = cloudkit_zone_epoch_schema_failures(ZONE_EPOCH_SOURCE, wrong)
-        self.assertEqual(len(failures), 1)
-        self.assertIn("must be INT64", failures[0])
-
-    def test_zone_epoch_schema_fails_when_readiness_field_is_missing(self) -> None:
-        missing = CKDB_WITH_EPOCH.replace("        state                      STRING,\n", "")
-        failures = cloudkit_zone_epoch_schema_failures(ZONE_EPOCH_SOURCE, missing)
-        self.assertEqual(len(failures), 1)
-        self.assertIn("missing field 'state'", failures[0])
-
-    def test_zone_epoch_schema_fails_when_lease_field_is_encrypted(self) -> None:
-        encrypted = CKDB_WITH_EPOCH.replace(
-            "rebuild_id                 STRING",
-            "rebuild_id                 ENCRYPTED STRING",
-        )
-        failures = cloudkit_zone_epoch_schema_failures(ZONE_EPOCH_SOURCE, encrypted)
-        self.assertEqual(len(failures), 1)
-        self.assertIn("rebuild_id is declared ENCRYPTED", failures[0])
 
     def test_field_encryption_failures_rejects_unclassified_ckdb_field(self) -> None:
         # A template field the client neither encrypts nor writes plaintext is

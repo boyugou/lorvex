@@ -19,6 +19,6 @@ extension LorvexWidgetActionIntent {
   public static var isDiscoverable: Bool { false }
   public static var openAppWhenRun: Bool { false }
 
-  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *)
+  @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *)
   public static var supportedModes: IntentModes { .background }
 }

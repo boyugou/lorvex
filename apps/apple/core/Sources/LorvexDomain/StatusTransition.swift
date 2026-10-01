@@ -45,15 +45,18 @@ public func statusTransitionColumns(
     actions.append(.setNull(column: "last_deferred_at"))
     actions.append(.setNull(column: "last_defer_reason"))
   }
-  // Reopen reset: returning a terminal or soft-parked task to `open` wipes the
-  // stale completion / deferral residue so it re-enters the active pool clean.
-  // Deliberately excludes `in_progress → open` (the "pause" / un-start): pausing
-  // a started task is a mis-click recovery that must leave no residue — it
-  // restores exactly the open state the task held before it was started, keeping
-  // `planned_date` and `defer_count` intact (start → pause is a metadata no-op).
-  if newStatus == .open && oldStatus != .open && oldStatus != .inProgress {
+  // Revival reset: returning a cancelled or someday task to `open` is a fresh
+  // start. Its planned date, the time planned on it, and its deferral history
+  // were decided before the task was set aside, so they are cleared.
+  // Un-completing (`completed → open`) and pausing (`in_progress → open`) are
+  // the reverse of a single tap, usually a mis-tap, and restore the task where
+  // it was: its planned date, time, and `defer_count` stay, so it returns to
+  // the same day and the same place on that day's grid.
+  if newStatus == .open && (oldStatus == .cancelled || oldStatus == .someday) {
     actions.append(.setNull(column: "completed_at"))
     actions.append(.setNull(column: "planned_date"))
+    actions.append(.setNull(column: "planned_start_minutes"))
+    actions.append(.setNull(column: "planned_end_minutes"))
     actions.append(.setNull(column: "last_deferred_at"))
     actions.append(.setNull(column: "last_defer_reason"))
     actions.append(.setInt(column: "defer_count", value: 0))

@@ -3,46 +3,11 @@ import LorvexCore
 import LorvexWidgetKitSupport
 
 public protocol MobileWidgetSnapshotPublishing: Sendable {
-  /// Publishes one transactionally captured source. Shipping adapters override
-  /// this requirement so the managed-storage generation cannot be dropped by a
-  /// new adapter or test double.
+  /// Publishes one transactionally captured source, so the projection never
+  /// mixes Today, habit, list, and stats revisions and the managed-storage
+  /// generation orders the write.
   @MainActor
   func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot
-
-  @MainActor
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot
-
-  /// Publishes with the uncapped canonical `statsSource` threaded into the
-  /// projection so the widget's numeric stats reflect the whole workload. The
-  /// default implementation ignores `statsSource` and forwards to the four-arg
-  /// form; the file-backed publisher overrides it to pass the source through.
-  @MainActor
-  func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot
-}
-
-extension MobileWidgetSnapshotPublishing {
-  @MainActor
-  public func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot {
-    try await publish(
-      today: today, currentFocus: currentFocus, habitCatalog: habitCatalog, lists: lists)
-  }
 }
 
 /// The no-op mobile publisher used when no App Group is configured: an engine
@@ -56,35 +21,6 @@ public struct NoopMobileWidgetSnapshotPublisher: MobileWidgetSnapshotPublishing 
     try await WidgetSnapshotPublisher(
       destination: WidgetSnapshotPublisher.Destination(snapshotURL: nil, reload: {})
     ).publish(source: source)
-  }
-
-  public func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot {
-    try await publish(
-      today: today, currentFocus: currentFocus, habitCatalog: habitCatalog, lists: lists,
-      statsSource: nil)
-  }
-
-  public func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot {
-    try await WidgetSnapshotPublisher(
-      destination: WidgetSnapshotPublisher.Destination(snapshotURL: nil, reload: {})
-    ).publish(
-      today: today,
-      currentFocus: currentFocus,
-      habitCatalog: habitCatalog,
-      lists: lists,
-      statsSource: statsSource
-    )
   }
 }
 
@@ -104,15 +40,15 @@ public struct MobileWidgetReloadTrigger: Sendable {
   })
 }
 
-/// iOS / iPadOS / visionOS host adapter over the shared `WidgetSnapshotPublisher`
+/// iOS / iPadOS host adapter over the shared `WidgetSnapshotPublisher`
 /// engine.
 ///
-/// Fills the engine `Destination` from the App-Group container (URL +
-/// focus-filter store) and reloads via `MobileWidgetReloadTrigger`. On iPhone the
-/// factory attaches a `mirror` that forwards the
-/// projected snapshot value to a Watch-specific mirror. That mirror derives a
-/// bounded replica containing only the focus, habit, briefing, and aggregate
-/// fields consumed by the Watch; widget-only task/list catalogs stay local.
+/// Fills the engine `Destination` from the App-Group container (URL + system
+/// Focus filter store) and reloads via `MobileWidgetReloadTrigger`. On iPhone
+/// the factory attaches a `mirror` that forwards the projected snapshot value
+/// to a Watch-specific mirror. That mirror derives a bounded replica containing
+/// only the day's tasks, habits, briefing, and aggregate fields the watch
+/// reads; widget-only list catalogs stay local.
 public struct MobileFileWidgetSnapshotPublisher: MobileWidgetSnapshotPublishing {
   private let snapshotURL: URL
   private let managedDatabasePath: String?
@@ -152,17 +88,6 @@ public struct MobileFileWidgetSnapshotPublisher: MobileWidgetSnapshotPublishing 
     )
   }
 
-  public func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?
-  ) async throws -> WidgetSnapshot {
-    try await publish(
-      today: today, currentFocus: currentFocus, habitCatalog: habitCatalog, lists: lists,
-      statsSource: nil)
-  }
-
   public func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot {
     try await makePublisher().publish(source: source)
   }
@@ -177,32 +102,6 @@ public struct MobileFileWidgetSnapshotPublisher: MobileWidgetSnapshotPublishing 
         mirror: mirror
       ),
       projector: projector
-    )
-  }
-
-  public func publish(
-    today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
-    habitCatalog: HabitCatalogSnapshot?,
-    lists: ListCatalogSnapshot?,
-    statsSource: WidgetStatsSource?
-  ) async throws -> WidgetSnapshot {
-    let publisher = WidgetSnapshotPublisher(
-      destination: WidgetSnapshotPublisher.Destination(
-        snapshotURL: snapshotURL,
-        managedDatabasePath: managedDatabasePath,
-        focusFilterStore: focusFilterStore,
-        reload: reloadTrigger.reload,
-        mirror: mirror
-      ),
-      projector: projector
-    )
-    return try await publisher.publish(
-      today: today,
-      currentFocus: currentFocus,
-      habitCatalog: habitCatalog,
-      lists: lists,
-      statsSource: statsSource
     )
   }
 

@@ -19,22 +19,19 @@ The repository keeps domain evolution out of the CloudKit type system:
 
 - one domain record type, `LorvexEntity`, shared by all 20 syncable entity
   types;
-- seven separate transport/control record types for the default-zone
-  generation authority and server clock, generation root/seal, traversal
-  witness, encrypted audit-retention authority, and post-ready wakeups;
+- seven control record types that the current `CKSyncEngine` transport
+  never reads or writes; they stay in the template only because deployed
+  production record types cannot be deleted;
 - one bounded deterministic record name per logical entity, which hides the raw
   input strings but remains dictionary-testable for low-entropy natural IDs;
 - seven encrypted string fields;
 - no query dependency for inbound sync; and
 - an envelope payload schema version independent of CloudKit field growth.
 
-The checked-in template also retains CloudKit's system `Users` type. The
-transport/control records intentionally keep bounded, non-user recovery
-metadata in plaintext, except `LorvexAuditRetentionMetadata`, whose custom
-fields are encrypted. This is well suited to a frozen production schema. The
-remaining risk is operational: repository source cannot prove the live
-production container matches `cloudkit/schema.ckdb` or that the subscription
-definition was exercised in development before deployment.
+The checked-in template also retains CloudKit's system `Users` type. This is
+well suited to a frozen production schema. The remaining risk is operational:
+repository source cannot prove the live production container matches
+`cloudkit/schema.ckdb`.
 
 ## Irreversible Release Gate
 

@@ -54,11 +54,12 @@ final class TaskResponseTests: XCTestCase {
     guard case .object(let map) = json else {
       return XCTFail("expected JSON object")
     }
-    // 28 TaskRow columns + 5 enrichment slots.
+    // 28 TaskRow columns, the planned-time pair, and 5 enrichment slots.
     let expected: Set<String> = [
       "id", "title", "body", "raw_input", "ai_notes",
       "status", "list_id", "priority", "version", "created_at", "updated_at",
-      "due_date", "estimated_minutes", "planned_date", "available_from",
+      "due_date", "estimated_minutes", "planned_date", "planned_start_time",
+      "planned_end_time", "available_from",
       "defer_count", "last_deferred_at", "last_defer_reason",
       "recurrence", "recurrence_exceptions", "spawned_from", "recurrence_group_id",
       "canonical_occurrence_date", "recurrence_instance_key",
@@ -278,7 +279,7 @@ final class TaskResponseTests: XCTestCase {
     // a drift between the encoder and the assertion surfaces as a
     // single-character diff in the test output.
     let expected = #"""
-      {"ai_notes":null,"archived_at":null,"available_from":null,"body":null,"canonical_occurrence_date":null,"checklist_items":null,"completed_at":null,"created_at":"2026-01-01T00:00:00.000Z","defer_count":0,"depends_on":null,"due_date":"2999-04-15","estimated_minutes":null,"id":"t1","last_defer_reason":null,"last_deferred_at":null,"lateness_state":null,"list_id":"L1","planned_date":null,"priority":null,"raw_input":null,"recurrence":null,"recurrence_exceptions":null,"recurrence_group_id":null,"recurrence_instance_key":null,"reminders":[],"spawned_from":null,"status":"open","tags":null,"title":"Hello","updated_at":"2026-01-01T00:00:00.000Z","version":"0000000000000_0000_0000000000000000"}
+      {"ai_notes":null,"archived_at":null,"available_from":null,"body":null,"canonical_occurrence_date":null,"checklist_items":null,"completed_at":null,"created_at":"2026-01-01T00:00:00.000Z","defer_count":0,"depends_on":null,"due_date":"2999-04-15","estimated_minutes":null,"id":"t1","last_defer_reason":null,"last_deferred_at":null,"lateness_state":null,"list_id":"L1","planned_date":null,"planned_end_time":null,"planned_start_time":null,"priority":null,"raw_input":null,"recurrence":null,"recurrence_exceptions":null,"recurrence_group_id":null,"recurrence_instance_key":null,"reminders":[],"spawned_from":null,"status":"open","tags":null,"title":"Hello","updated_at":"2026-01-01T00:00:00.000Z","version":"0000000000000_0000_0000000000000000"}
       """#.trimmingCharacters(in: .whitespacesAndNewlines)
     XCTAssertEqual(encoded, expected)
   }

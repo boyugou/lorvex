@@ -71,7 +71,7 @@ public struct ImportSummaryView: View {
         systemImage: "checkmark.circle"
       )
       .font(.caption)
-      .foregroundStyle(.green)
+      .foregroundStyle(LorvexDesign.Palette.success)
 
       ForEach(summary.results) { result in
         Text(
@@ -84,19 +84,19 @@ public struct ImportSummaryView: View {
       if !summary.errors.isEmpty {
         Text(text.errorSummary(summary.errors.count))
         .font(.caption2)
-        .foregroundStyle(.orange)
+        .foregroundStyle(LorvexDesign.Palette.warning)
 
         ForEach(Array(summary.errors.prefix(Self.maxVisibleErrors).enumerated()), id: \.offset) {
           _, error in
           Text("• \(text.categoryName(error.category)) \(error.recordRef): \(error.message)")
             .font(.caption2)
-            .foregroundStyle(.orange)
+            .foregroundStyle(LorvexDesign.Palette.warning)
         }
 
         if summary.errors.count > Self.maxVisibleErrors {
           Text(text.hiddenErrorsSummary(summary.errors.count - Self.maxVisibleErrors))
             .font(.caption2)
-            .foregroundStyle(.orange)
+            .foregroundStyle(LorvexDesign.Palette.warning)
         }
       }
     }

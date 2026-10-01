@@ -102,7 +102,7 @@ selecting Xcode. The official runner inventory lists Xcode 16.4 as that image's
 default even when Xcode 26 is also installed.
 
 Impact: CI can be fully green under a compiler/SDK that cannot produce an
-acceptable current iPhone, Watch, or Vision submission. API availability,
+acceptable current iPhone or Watch submission. API availability,
 linking, generated metadata, and packaging behavior can differ in Xcode 26.
 
 The current local machine has Xcode 26.6, so local release work can satisfy the
@@ -195,8 +195,8 @@ Confidence: High
 
 `CloudSyncEnvelopeRecord.recordName()` uses the unsalted SHA-256 of
 `entity_type + NUL + entity_id`. `CKRecord.ID` is record metadata, not an
-encrypted field. Dates are natural IDs for daily reviews/current focus/focus
-schedules, and preference IDs come from a small fixed catalog. An observer can
+encrypted field. Dates are natural IDs for daily reviews and daily briefings,
+and preference IDs come from a small fixed catalog. An observer can
 therefore precompute those hashes and recognize type/date/preference presence
 even though every custom field is encrypted.
 
@@ -289,22 +289,21 @@ Primary source: [Platform version information](https://developer.apple.com/help/
 
 Related source: [App Review Guidelines, 1.5](https://developer.apple.com/app-store/review/guidelines/#developer-information)
 
-## F16 — Sensitive Widget Coverage Stops at Accessory Families
+## F16 — Sensitive Widget Coverage Leaves the Control Template and Data Protection
 
-Severity: Medium privacy gap  
+Severity: Low privacy gap  
 Confidence: High
 
-Lorvex correctly marks task titles privacy-sensitive in its accessory-inline,
-accessory-rectangular, and Watch rectangular/corner views. However, the
-standard small/medium/large Focus and Today widgets still display task titles
-and sometimes a user-authored briefing without the marker. The Focus Control
-Widget also displays the first task title without marking its label or control
-template. No extension-wide Data Protection entitlement supplies a fallback.
+Lorvex marks task titles privacy-sensitive in its accessory-inline,
+accessory-rectangular, and Watch rectangular/corner views, in the small,
+medium, and large Today widgets (the lead task title, each row title, and the
+large widget's briefing), and in the label of the Today control widget. The
+control template itself is not marked privacy-sensitive, and no extension-wide
+Data Protection entitlement supplies a fallback.
 
-Impact: in Lock Screen, StandBy, Always-On, Mac-from-iPhone, CarPlay, or Control
-surfaces, system privacy settings cannot reliably redact all user-authored
-Lorvex text. A task title may contain health, work, relationship, or other
-sensitive information.
+Impact: on the Lock Screen and in Control surfaces, the control's state is not
+covered by template-level redaction, and no lock-state fallback redacts widget
+content if a future view omits the marker.
 
 Primary source: [Creating a widget extension](https://developer.apple.com/documentation/widgetkit/creating-a-widget-extension)
 
@@ -318,7 +317,7 @@ Confidence: High
 Apple's `AppIntent.authenticationPolicy` defaults to `.alwaysAllowed`, which
 explicitly permits execution while the device is locked. Lorvex defines 93
 system App Intents and six widget intents; none sets an authentication policy.
-The system intents are linked into the macOS, iPhone/iPad, and visionOS apps,
+The system intents are linked into the macOS and iPhone/iPad apps,
 default to discoverable, and their own provider documentation says they remain
 invokable through Shortcuts and automations.
 
@@ -347,6 +346,10 @@ Local mapping: [APP_INTENT_AUTHENTICATION.md](APP_INTENT_AUTHENTICATION.md)
 
 Severity: Medium data-contract/product-semantics debt  
 Confidence: High for the absence of shipping Swift consumers
+
+Status: Resolved. The registry now defines 11 keys, each with a shipping Swift
+consumer; keys without behavior are rejected rather than reserved, and
+`PreferenceKeysTests` pins the removed keys as rejected.
 
 The Apple preference registry contains 38 canonical keys. Twenty-six have no
 shipping Swift reference outside the registry itself, yet the generic system
@@ -686,9 +689,9 @@ Severity: Medium release-configuration decision
 
 Confidence: High
 
-The agreed release direction is macOS 15, iOS/iPadOS 18, watchOS 11, and
-visionOS 2, with Xcode 26 and OS-26 APIs availability-gated. The repository
-still declares macOS 14, iOS 17, watchOS 10, and visionOS 1 across SwiftPM,
+The agreed release direction is macOS 15, iOS/iPadOS 18, and watchOS 11,
+with Xcode 26 and OS-26 APIs availability-gated. The repository
+still declares macOS 14, iOS 17, and watchOS 10 across SwiftPM,
 XcodeGen, metadata, and Info-plist sources.
 
 Impact: the current build remains valid, but modernization work cannot safely

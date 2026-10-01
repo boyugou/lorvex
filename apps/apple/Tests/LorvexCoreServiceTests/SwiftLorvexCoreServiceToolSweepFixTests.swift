@@ -19,7 +19,8 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -32,7 +33,8 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return (SwiftLorvexCoreService(store: store), store)
   }
 
@@ -512,215 +514,6 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
     XCTAssertEqual(saved.linkedListIDs, [latestList.id])
   }
 
-  // MARK: - focus references do not outlive their targets
-
-  func testArchivingTaskRemovesItFromCurrentFocusAndFocusSchedule() async throws {
-    let (service, store) = try makeServiceAndStore()
-    let keep = try await service.createTask(title: "Keep in focus", notes: "")
-    let archived = try await service.createTask(title: "Archive out of focus", notes: "")
-
-    _ = try await service.setCurrentFocus(
-      date: "2026-06-26",
-      taskIDs: [archived.id, keep.id],
-      briefing: "Two-task plan",
-      timezone: "America/Los_Angeles")
-    _ = try await service.saveFocusSchedule(
-      date: "2026-06-26",
-      blocks: [
-        FocusScheduleBlock(
-          blockType: "task", startTime: "09:00", endTime: "10:00",
-          taskID: archived.id, title: archived.title),
-        FocusScheduleBlock(
-          blockType: "buffer", startTime: "10:00", endTime: "10:15",
-          title: "Buffer"),
-      ],
-      rationale: "Regression")
-
-    _ = try await service.archiveTask(id: archived.id)
-
-    let loadedFocus = try await service.loadCurrentFocus(date: "2026-06-26")
-    let focus = try XCTUnwrap(loadedFocus)
-    XCTAssertEqual(focus.taskIDs, [keep.id])
-
-    let loadedSchedule = try await service.loadFocusSchedule(date: "2026-06-26")
-    let schedule = try XCTUnwrap(loadedSchedule)
-    XCTAssertEqual(schedule.blocks.count, 1)
-    XCTAssertEqual(schedule.blocks.first?.blockType, "buffer")
-    XCTAssertNil(schedule.blocks.first?.taskID)
-
-    try await store.writer.read { db in
-      let currentRefs = try Int.fetchOne(
-        db,
-        sql: "SELECT COUNT(*) FROM current_focus_items WHERE task_id = ?",
-        arguments: [archived.id]) ?? 0
-      let scheduleRefs = try Int.fetchOne(
-        db,
-        sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE task_id = ?",
-        arguments: [archived.id]) ?? 0
-      XCTAssertEqual(currentRefs, 0)
-      XCTAssertEqual(scheduleRefs, 0)
-    }
-
-    do {
-      _ = try await service.setCurrentFocus(
-        date: "2026-06-27",
-        taskIDs: [archived.id],
-        briefing: nil,
-        timezone: "America/Los_Angeles")
-      XCTFail("archived tasks must not be accepted into current focus")
-    } catch {
-      // Expected.
-    }
-
-    let rejectedBlock = FocusScheduleBlock(
-      blockType: "task", startTime: "09:00", endTime: "10:00",
-      taskID: archived.id, title: archived.title)
-    do {
-      _ = try await service.saveFocusSchedule(
-        date: "2026-06-28", blocks: [rejectedBlock], rationale: nil)
-      XCTFail("archived tasks must not be accepted into a locally-authored focus schedule")
-    } catch {
-      let persisted = try await service.loadFocusSchedule(date: "2026-06-28")
-      XCTAssertNil(persisted)
-    }
-
-    let importedBlock = ExportFocusScheduleBlock(
-      position: 0, blockType: "task", startMinutes: 540, endMinutes: 600,
-      taskID: archived.id, title: archived.title)
-    do {
-      try await service.importFocusSchedule(
-        ExportFocusSchedule(date: "2026-06-29", blocks: [importedBlock]))
-      XCTFail("archived tasks must not be accepted by overwrite-style schedule import")
-    } catch {
-      let persisted = try await service.loadFocusSchedule(date: "2026-06-29")
-      XCTAssertNil(persisted)
-    }
-    let importedIfAbsent = try await service.importFocusScheduleIfAbsent(
-      ExportFocusSchedule(date: "2026-06-30", blocks: [importedBlock]))
-    XCTAssertFalse(importedIfAbsent)
-    let persistedIfAbsent = try await service.loadFocusSchedule(date: "2026-06-30")
-    XCTAssertNil(persistedIfAbsent)
-  }
-
-  func testRemoveFromCurrentFocusSucceedsWhenSiblingIsNoLongerActive() async throws {
-    let service = try makeService()
-    let keep = try await service.createTask(title: "Keep", notes: "")
-    let drop = try await service.createTask(title: "Drop", notes: "")
-    _ = try await service.setCurrentFocus(
-      date: "2026-06-26", taskIDs: [keep.id, drop.id],
-      briefing: nil, timezone: "America/Los_Angeles")
-    // A focus sibling completes — it is no longer in an "active" status. Removing
-    // a DIFFERENT item must not re-validate (and choke on) the survivor: a pure
-    // removal introduces no new id to validate.
-    _ = try await service.completeTask(id: keep.id)
-    let focus = try await service.removeFromCurrentFocus(date: "2026-06-26", taskID: drop.id)
-    let plan = try XCTUnwrap(focus)
-    XCTAssertEqual(plan.taskIDs, [keep.id])
-  }
-
-  func testDeletingCalendarEventRemovesItFromFocusSchedule() async throws {
-    let (service, store) = try makeServiceAndStore()
-    let event = try await service.createCalendarEvent(
-      title: "Planning block",
-      startDate: "2026-06-26",
-      endDate: nil,
-      startTime: "11:00",
-      endTime: "11:30",
-      allDay: false,
-      location: nil,
-      notes: nil,
-      recurrence: nil,
-      timezone: "America/Los_Angeles",
-      url: nil,
-      color: nil,
-      eventType: nil,
-      personName: nil,
-      attendees: nil)
-
-    _ = try await service.saveFocusSchedule(
-      date: "2026-06-26",
-      blocks: [
-        FocusScheduleBlock(
-          blockType: "event", startTime: "11:00", endTime: "11:30",
-          calendarEventID: event.id, eventSource: .canonical, title: event.title),
-        FocusScheduleBlock(
-          blockType: "buffer", startTime: "11:30", endTime: "11:45",
-          title: "Reset"),
-      ],
-      rationale: "Calendar-linked plan")
-
-    try await service.deleteCalendarEvent(id: event.id)
-
-    let loadedSchedule = try await service.loadFocusSchedule(date: "2026-06-26")
-    let schedule = try XCTUnwrap(loadedSchedule)
-    XCTAssertEqual(schedule.blocks.count, 1)
-    XCTAssertEqual(schedule.blocks.first?.blockType, "buffer")
-    XCTAssertNil(schedule.blocks.first?.calendarEventID)
-
-    try await store.writer.read { db in
-      let refs = try Int.fetchOne(
-        db,
-        sql: "SELECT COUNT(*) FROM focus_schedule_blocks WHERE calendar_event_id = ?",
-        arguments: [event.id]) ?? 0
-      XCTAssertEqual(refs, 0)
-    }
-  }
-
-  func testFocusScheduleReadPreservesSoftReferencesBeforeTargetsArrive() async throws {
-    let (service, store) = try makeServiceAndStore()
-    let task = try await service.createTask(title: "Dangling task block", notes: "")
-    let event = try await service.createCalendarEvent(
-      title: "Dangling event block",
-      startDate: "2026-06-27",
-      endDate: nil,
-      startTime: "13:00",
-      endTime: "13:30",
-      allDay: false,
-      location: nil,
-      notes: nil,
-      recurrence: nil,
-      timezone: "America/Los_Angeles",
-      url: nil,
-      color: nil,
-      eventType: nil,
-      personName: nil,
-      attendees: nil)
-
-    _ = try await service.saveFocusSchedule(
-      date: "2026-06-27",
-      blocks: [
-        FocusScheduleBlock(
-          blockType: "task", startTime: "09:00", endTime: "10:00",
-          taskID: task.id, title: task.title),
-        FocusScheduleBlock(
-          blockType: "event", startTime: "10:00", endTime: "10:30",
-          calendarEventID: event.id, eventSource: .canonical, title: event.title),
-        FocusScheduleBlock(
-          blockType: "event", startTime: "10:30", endTime: "11:00",
-          eventSource: .freeform, title: "Freeform event"),
-        FocusScheduleBlock(
-          blockType: "buffer", startTime: "11:00", endTime: "11:15",
-          title: "Reset"),
-      ],
-      rationale: "Dangling read regression")
-
-    try await store.writer.write { db in
-      try db.execute(sql: "DELETE FROM tasks WHERE id = ?", arguments: [task.id])
-      try db.execute(sql: "DELETE FROM calendar_events WHERE id = ?", arguments: [event.id])
-    }
-
-    let loadedSchedule = try await service.loadFocusSchedule(date: "2026-06-27")
-    let loaded = try XCTUnwrap(loadedSchedule)
-
-    XCTAssertEqual(
-      loaded.blocks.map(\.title),
-      [task.title, event.title, "Freeform event", "Reset"])
-    XCTAssertEqual(loaded.blocks[0].taskID, task.id)
-    XCTAssertEqual(loaded.blocks[1].calendarEventID, event.id)
-    XCTAssertEqual(loaded.blocks[1].eventSource, .canonical)
-    XCTAssertEqual(loaded.blocks[2].eventSource, .freeform)
-  }
-
   // MARK: - someday no-op does not pollute the changelog
 
   func testMarkSomedayOnAlreadySomedayDoesNotLogChangelog() async throws {
@@ -755,7 +548,7 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
     }
 
     let result = try await service.updateList(
-      id: list.id, name: nil, description: nil, color: nil, icon: nil, aiNotes: nil)
+      id: list.id, name: nil, description: .unset, color: nil, icon: nil, aiNotes: nil)
 
     XCTAssertEqual(result.id, list.id)
     XCTAssertEqual(result.name, "Project")
@@ -779,7 +572,7 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
 
   func testSnapshotsExposeRealLocalChangeSequence() async throws {
     let (service, store) = try makeServiceAndStore()
-    let task = try await service.createTask(title: "Focus me", notes: "")
+    let task = try await service.createTask(title: "Start me", notes: "")
     let expectedAfterCreate = try await store.writer.read { db in
       try Int64.fetchOne(
         db, sql: "SELECT value FROM local_counters WHERE name = 'local_change_seq'")
@@ -787,15 +580,14 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
     let todaySequence = try await service.loadToday().localChangeSequence
     XCTAssertEqual(todaySequence, Int(expectedAfterCreate ?? -1))
 
-    _ = try await service.setCurrentFocus(
-      date: "2026-06-28", taskIDs: [task.id], briefing: nil, timezone: "UTC")
-    let expectedAfterFocus = try await store.writer.read { db in
+    _ = try await service.startTask(id: task.id)
+    let expectedAfterStart = try await store.writer.read { db in
       try Int64.fetchOne(
         db, sql: "SELECT value FROM local_counters WHERE name = 'local_change_seq'")
     }
-    let loadedFocusSequence = try await service.loadCurrentFocus(date: "2026-06-28")?
-      .localChangeSequence
-    XCTAssertEqual(loadedFocusSequence, Int(expectedAfterFocus ?? -1))
+    XCTAssertNotEqual(expectedAfterStart, expectedAfterCreate)
+    let overviewSequence = try await service.loadOverviewTaskList().localChangeSequence
+    XCTAssertEqual(overviewSequence, Int(expectedAfterStart ?? -1))
   }
 
   // MARK: - recurrence-exception no-op does not bump version / sync / changelog
@@ -918,7 +710,7 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
 
     let before = try await listObservables(service, store, listID: list.id)
     let result = try await service.updateList(
-      id: list.id, name: "Project", description: "Original", color: "#FF0000", icon: "star",
+      id: list.id, name: "Project", description: .set("Original"), color: "#FF0000", icon: "star",
       aiNotes: nil)
     let after = try await listObservables(service, store, listID: list.id)
 
@@ -940,7 +732,7 @@ final class SwiftLorvexCoreServiceToolSweepFixTests: XCTestCase {
 
     let before = try await listObservables(service, store, listID: list.id)
     let result = try await service.updateList(
-      id: list.id, name: "Project", description: "Original", color: "#00FF00", icon: "star",
+      id: list.id, name: "Project", description: .set("Original"), color: "#00FF00", icon: "star",
       aiNotes: nil)
     let after = try await listObservables(service, store, listID: list.id)
 

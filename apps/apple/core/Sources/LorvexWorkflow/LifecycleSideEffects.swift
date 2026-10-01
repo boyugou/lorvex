@@ -11,23 +11,17 @@ public struct SpawnedRecurrenceSuccessor: Sendable, Equatable {
   public let copiedTagEdges: [CopiedTagEdge]
   public let copiedChecklistItemIds: [String]
   public let copiedReminderIds: [String]
-  public let rewiredFocusScheduleDates: [String]
-  public let rewiredCurrentFocusDates: [String]
 
   public init(
     successorId: String,
     copiedTagEdges: [CopiedTagEdge],
     copiedChecklistItemIds: [String],
-    copiedReminderIds: [String],
-    rewiredFocusScheduleDates: [String],
-    rewiredCurrentFocusDates: [String]
+    copiedReminderIds: [String]
   ) {
     self.successorId = successorId
     self.copiedTagEdges = copiedTagEdges
     self.copiedChecklistItemIds = copiedChecklistItemIds
     self.copiedReminderIds = copiedReminderIds
-    self.rewiredFocusScheduleDates = rewiredFocusScheduleDates
-    self.rewiredCurrentFocusDates = rewiredCurrentFocusDates
   }
 }
 
@@ -103,8 +97,6 @@ enum LifecycleSideEffects {
     var spawnedTagEdges: [CopiedTagEdge] = []
     var spawnedChecklistItemIds: [String] = []
     var spawnedReminderIds: [String] = []
-    var rewiredFocusScheduleDates: [String] = []
-    var rewiredCurrentFocusDates: [String] = []
     var cancelledSuccessorIds: [String] = []
     var successorCancelSideEffects: SuccessorCancelSideEffects = .empty
 
@@ -127,8 +119,6 @@ enum LifecycleSideEffects {
           spawnedTagEdges = spawn.copiedTagEdges
           spawnedChecklistItemIds = spawn.copiedChecklistItemIds
           spawnedReminderIds = spawn.copiedReminderIds
-          rewiredFocusScheduleDates = spawn.rewiredFocusScheduleDates
-          rewiredCurrentFocusDates = spawn.rewiredCurrentFocusDates
         }
       }
     }
@@ -141,10 +131,6 @@ enum LifecycleSideEffects {
           now: input.now, reminderVersion: input.reminderVersion)
         cancelledSuccessorIds = outcome.ids
         successorCancelSideEffects = outcome.sideEffects
-        rewiredFocusScheduleDates.append(
-          contentsOf: outcome.sideEffects.rewiredFocusScheduleDates)
-        rewiredCurrentFocusDates.append(
-          contentsOf: outcome.sideEffects.rewiredCurrentFocusDates)
       }
     }
 
@@ -155,9 +141,7 @@ enum LifecycleSideEffects {
       spawnedSuccessorChecklistItemIds: spawnedChecklistItemIds,
       spawnedSuccessorReminderIds: spawnedReminderIds,
       cancelledSuccessorIds: cancelledSuccessorIds,
-      successorCancelSideEffects: successorCancelSideEffects,
-      rewiredFocusScheduleDates: rewiredFocusScheduleDates,
-      rewiredCurrentFocusDates: rewiredCurrentFocusDates)
+      successorCancelSideEffects: successorCancelSideEffects)
   }
 
   /// The empty side-effect result used by no-op orchestrator paths
@@ -173,8 +157,6 @@ enum LifecycleSideEffects {
       spawnedSuccessorChecklistItemIds: [],
       spawnedSuccessorReminderIds: [],
       cancelledSuccessorIds: [],
-      successorCancelSideEffects: .empty,
-      rewiredFocusScheduleDates: [],
-      rewiredCurrentFocusDates: [])
+      successorCancelSideEffects: .empty)
   }
 }

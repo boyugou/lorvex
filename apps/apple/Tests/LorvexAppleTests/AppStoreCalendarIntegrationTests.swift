@@ -32,41 +32,66 @@ private func makeCoordinator(
     isEnabled: { enabled })
 }
 
-@Test
-func calendarIntegrationReportSettingsStatusUsesLocalizationCatalog() throws {
-  let root = URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent()
-    .deletingLastPathComponent()
-    .deletingLastPathComponent()
-  let settingsSource = try String(
-    contentsOf: root.appending(path: "Sources/LorvexApple/Views/SettingsCalendarSection.swift"),
-    encoding: .utf8
-  )
-  let displaySource = try String(
-    contentsOf: root.appending(path: "Sources/LorvexApple/Support/CalendarIntegrationReportDisplay.swift"),
-    encoding: .utf8
-  )
+private let calendarReadFailure = CalendarIntegrationReport.failed(
+  operation: "eventkit-import", error: LorvexCoreError.unsupportedOperation("Calendar unavailable"))
+private let calendarWriteFailure = CalendarIntegrationReport.failed(
+  operation: "eventkit-export", error: LorvexCoreError.unsupportedOperation("Calendar unavailable"))
 
-  #expect(settingsSource.contains("SettingsCalendarStatusPanel("))
-  #expect(settingsSource.contains("importReport.localizedSettingsStatus"))
-  #expect(settingsSource.contains("exportReport.localizedSettingsStatus"))
-  #expect(displaySource.contains(#""settings.calendar.status.not_started""#))
-  #expect(displaySource.contains(#""settings.calendar.status.succeeded""#))
-  #expect(displaySource.contains(#""settings.calendar.status.skipped""#))
-  #expect(displaySource.contains(#""settings.calendar.status.failed""#))
+@Test
+func calendarSettingsNoticesStaySilentWhileAllIsWell() {
+  #expect(
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: false, isSyncEnabled: true,
+      importReport: .succeeded(operation: "eventkit-import", eventCount: 12),
+      exportReport: .notStarted
+    ).isEmpty)
+  #expect(
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: false, isSyncEnabled: false,
+      importReport: .notStarted, exportReport: .notStarted
+    ).isEmpty)
 }
 
 @Test
-func calendarIntegrationReportLocalizedSettingsStatusMatchesSourceFallbacks() {
-  #expect(CalendarIntegrationReport.notStarted.localizedSettingsStatus == "Not Started")
-  #expect(CalendarIntegrationReport.succeeded(operation: "eventkit-import", eventCount: 1).localizedSettingsStatus == "Succeeded")
-  #expect(CalendarIntegrationReport.skipped(operation: "eventkit-export").localizedSettingsStatus == "Skipped")
+func calendarSettingsNoticesReportEachFailureWhileSyncIsOn() {
   #expect(
-    CalendarIntegrationReport.failed(
-      operation: "eventkit-export",
-      error: LorvexCoreError.unsupportedOperation("Calendar unavailable")
-    ).localizedSettingsStatus == "Failed"
-  )
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: false, isSyncEnabled: true,
+      importReport: calendarReadFailure, exportReport: calendarWriteFailure
+    ) == [.readFailed, .writeFailed])
+  #expect(
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: false, isSyncEnabled: true,
+      importReport: .succeeded(operation: "eventkit-import", eventCount: 3),
+      exportReport: calendarWriteFailure
+    ) == [.writeFailed])
+}
+
+/// A failure recorded before the user turned two-way sync off describes
+/// nothing current, so the page does not report it.
+@Test
+func calendarSettingsNoticesIgnoreFailuresWhileSyncIsOff() {
+  #expect(
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: false, isSyncEnabled: false,
+      importReport: calendarReadFailure, exportReport: calendarWriteFailure
+    ).isEmpty)
+}
+
+/// Denied access explains a failed read or write, so the page shows only the
+/// way back to System Settings, whether or not sync is on.
+@Test
+func calendarSettingsNoticesLetDeniedAccessStandAlone() {
+  #expect(
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: true, isSyncEnabled: true,
+      importReport: calendarReadFailure, exportReport: calendarWriteFailure
+    ) == [.accessDenied])
+  #expect(
+    SettingsCalendarNotice.notices(
+      needsAccessRecovery: true, isSyncEnabled: false,
+      importReport: .notStarted, exportReport: .notStarted
+    ) == [.accessDenied])
 }
 
 @MainActor

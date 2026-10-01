@@ -31,13 +31,6 @@ extension SwiftLorvexCoreService {
 
     try enqueueUpserts(
       db, hlc: hlc, deviceId: deviceId, kind: .task, entityIds: plan.cancelledSuccessorIds)
-
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-      entityIds: plan.rewiredFocusScheduleDates)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-      entityIds: plan.rewiredCurrentFocusDates)
   }
 
   /// Translate the flattened `BatchCancelSyncEffects` from
@@ -45,9 +38,9 @@ extension SwiftLorvexCoreService {
   /// flips each task's status to `cancelled` — the rows survive — so this
   /// upserts the cancelled tasks (Swift's changelog write does not enqueue),
   /// fans out the reminder/dependency-edge side effects, and re-emits any
-  /// spawned recurrence successors, their copied children, and the focus
-  /// aggregates rewired off the cancelled tasks. It must never DELETE-cascade
-  /// the cancelled tasks' children, which still belong to the living rows.
+  /// spawned recurrence successors and their copied children. It must never
+  /// DELETE-cascade the cancelled tasks' children, which still belong to the
+  /// living rows.
   func flushBatchCancelEffects(
     _ db: Database, hlc: HlcSession, deviceId: String, effects: BatchCancelSyncEffects
   ) throws {
@@ -70,13 +63,6 @@ extension SwiftLorvexCoreService {
     try enqueueUpserts(
       db, hlc: hlc, deviceId: deviceId, kind: .taskReminder,
       entityIds: effects.spawnedSuccessorReminderIds)
-
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .focusSchedule,
-      entityIds: effects.rewiredFocusScheduleDates)
-    try enqueueUpserts(
-      db, hlc: hlc, deviceId: deviceId, kind: .currentFocus,
-      entityIds: effects.rewiredCurrentFocusDates)
   }
 
   private func flushStatusSideEffects(

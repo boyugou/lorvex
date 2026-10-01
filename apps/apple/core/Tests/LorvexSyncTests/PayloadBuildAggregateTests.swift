@@ -5,21 +5,12 @@ import XCTest
 @testable import LorvexStore
 @testable import LorvexSync
 
-/// Ports `lorvex-sync/src/payload_build/aggregate/tests.rs`. Each of the four
-/// aggregate roots embeds its materialized child collection; non-aggregate
-/// kinds and missing rows return `nil`; every registered aggregate resolves
-/// through a builder arm (never the missing-arm invariant error).
+/// The aggregate payload builders: each aggregate root with dedicated
+/// composition (`daily_review`, `calendar_event`) embeds its materialized child
+/// collection; non-aggregate kinds and missing rows return `nil`; every
+/// registered aggregate resolves through a builder arm (never the missing-arm
+/// invariant error).
 final class PayloadBuildAggregateTests: XCTestCase {
-  private func seedScheduleHeader(_ db: Database, date: String) throws {
-    try db.execute(
-      sql: """
-        INSERT INTO focus_schedule (date, rationale, timezone, version, created_at, updated_at) \
-        VALUES (?, 'rationale', 'UTC', '0000000000000_0000_0000000000000000', \
-                '2026-04-01T00:00:00.000Z', '2026-04-01T00:00:00.000Z')
-        """,
-      arguments: [date])
-  }
-
   private func seedList(_ db: Database, id: String) throws {
     try db.execute(
       sql: """
@@ -36,59 +27,6 @@ final class PayloadBuildAggregateTests: XCTestCase {
         VALUES (?, 'T', ?, '0000000000000_0000_0000000000000000', '2026-04-01T00:00:00.000Z', '2026-04-01T00:00:00.000Z')
         """,
       arguments: [id, listId])
-  }
-
-  func testCurrentFocusPayloadEmbedsTaskIdsInPositionOrder() throws {
-    let store = try SyncTestSupport.freshStore()
-    let date = "2026-04-01"
-    try store.writer.write { db in
-      try db.execute(
-        sql: """
-          INSERT INTO current_focus (date, briefing, timezone, version, created_at, updated_at) \
-          VALUES (?, 'brief', 'UTC', '0000000000000_0000_0000000000000000', \
-                  '2026-04-01T00:00:00.000Z', '2026-04-01T00:00:00.000Z')
-          """,
-        arguments: [date])
-      try seedList(db, id: "list-default")
-      for tid in ["t-2", "t-1"] {
-        try seedTask(db, id: tid, listId: "list-default")
-      }
-      try CurrentFocusItemsRepo.materializeFocusItems(db, date: date, taskIds: ["t-2", "t-1"])
-
-      let payload = try PayloadBuild.buildAggregatePayload(
-        db, entityType: EntityName.currentFocus, entityId: date)
-      guard case .object(let obj) = payload, case .array(let taskIds) = obj["task_ids"] else {
-        return XCTFail("expected task_ids array")
-      }
-      XCTAssertEqual(taskIds, [.string("t-2"), .string("t-1")])
-    }
-  }
-
-  func testFocusSchedulePayloadEmbedsBlocks() throws {
-    let store = try SyncTestSupport.freshStore()
-    let date = "2026-04-02"
-    try store.writer.write { db in
-      try seedScheduleHeader(db, date: date)
-      try db.execute(
-        sql: """
-          INSERT INTO focus_schedule_blocks \
-              (date, position, block_type, start_minutes, end_minutes, title) \
-          VALUES (?, 0, 'buffer', 540, 600, 'Warm up'), (?, 1, 'buffer', 600, 660, 'Plan')
-          """,
-        arguments: [date, date])
-
-      let payload = try PayloadBuild.buildAggregatePayload(
-        db, entityType: EntityName.focusSchedule, entityId: date)
-      guard case .object(let obj) = payload, case .array(let blocks) = obj["blocks"] else {
-        return XCTFail("expected blocks array")
-      }
-      XCTAssertEqual(blocks.count, 2)
-      guard case .object(let b0) = blocks[0], case .object(let b1) = blocks[1] else {
-        return XCTFail("expected block objects")
-      }
-      XCTAssertEqual(b0["start_minutes"], .int(540))
-      XCTAssertEqual(b1["title"], .string("Plan"))
-    }
   }
 
   func testDailyReviewPayloadEmbedsLinks() throws {
@@ -188,6 +126,9 @@ final class PayloadBuildAggregateTests: XCTestCase {
       XCTAssertNil(try PayloadBuild.buildAggregatePayload(db, entityType: "task", entityId: "task-x"))
       XCTAssertNil(try PayloadBuild.buildAggregatePayload(db, entityType: "list", entityId: "list-x"))
       XCTAssertNil(try PayloadBuild.buildAggregatePayload(db, entityType: "habit", entityId: "h-x"))
+      XCTAssertNil(
+        try PayloadBuild.buildAggregatePayload(
+          db, entityType: "daily_briefing", entityId: "2026-04-01"))
     }
   }
 

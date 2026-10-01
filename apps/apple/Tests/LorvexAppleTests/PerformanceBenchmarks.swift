@@ -84,7 +84,6 @@ private func make1000ExportTasks() -> [ExportTask] {
 
 private func makeTodaySnapshotWith1000Tasks() -> TodaySnapshot {
   TodaySnapshot(
-    focusTitle: "Benchmark Day",
     summary: "Benchmark snapshot",
     tasks: make1000Tasks(),
     localChangeSequence: 1
@@ -132,9 +131,8 @@ func appStoreRefreshParallelizesIndependentCoreLoads() throws {
   #expect(source.contains("today = try await core.loadToday()"))
   #expect(source.contains("let date = logicalTodayDateString"))
   for load in [
-    "async let loadedCurrentFocus",
-    "async let loadedFocusSchedule",
     "async let loadedDailyReview",
+    "async let loadedDayEvidence",
     "async let loadedWeeklyReview",
     "async let loadedLists",
     "async let loadedHabits",
@@ -203,7 +201,7 @@ func benchmarkWidgetSnapshotProjector() async throws {
   let projector = WidgetSnapshotProjector(now: { Date(timeIntervalSince1970: 1_779_465_600) })
   let today = makeTodaySnapshotWith1000Tasks()
   let elapsed = await nonThrowingMedianMs {
-    _ = projector.snapshot(today: today, currentFocus: nil, timezone: "UTC")
+    _ = projector.snapshot(today: today, timezone: "UTC")
   }
   #expect(elapsed < 30, "WidgetSnapshotProjector.snapshot median \(String(format: "%.1f", elapsed))ms exceeded 30ms threshold")
 }

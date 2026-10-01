@@ -23,7 +23,8 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
       .deletingLastPathComponent()
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    let store = try LorvexStore.openInMemory(schemaSQL: schemaSQL)
+    let store = try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations())
     return SwiftLorvexCoreService(store: store)
   }
 
@@ -264,135 +265,51 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
     XCTAssertEqual(reminder.originalTz, "America/Los_Angeles")
   }
 
-  func testFocusImportExportPreservesAggregates() async throws {
+  func testDailyBriefingAndTaskTimeImportExportRoundTrip() async throws {
     let service = try makeService()
-    let taskAID = uuid()
-    let taskBID = uuid()
+    let taskID = uuid()
     let payload = LorvexDataExportPayload(
       tasks: [
         ExportTask(
-          id: taskAID, title: "Morning task", priority: "P2", status: "open",
-          dueDate: nil, estimatedMinutes: nil),
-        ExportTask(
-          id: taskBID, title: "Afternoon task", priority: "P2", status: "open",
-          dueDate: nil, estimatedMinutes: nil),
+          id: taskID, title: "Morning task", priority: "P2", status: "open",
+          dueDate: nil, plannedDate: "2026-06-02T00:00:00.000Z", plannedStartTime: "09:15",
+          plannedEndTime: "10:15", estimatedMinutes: 60)
       ],
-      currentFocus: [
-        ExportCurrentFocus(
+      dailyBriefings: [
+        ExportDailyBriefing(
           date: "2026-06-02",
-          briefing: "Protect morning",
+          briefing: "Protect the morning.",
           timezone: "America/Los_Angeles",
-          taskIDs: [taskAID, taskBID],
           createdAt: "2026-06-02T08:00:00Z",
           updatedAt: "2026-06-02T09:00:00Z")
-      ],
-      focusSchedules: [
-        ExportFocusSchedule(
-          date: "2026-06-02",
-          rationale: "Energy first",
-          timezone: "America/Los_Angeles",
-          blocks: [
-            ExportFocusScheduleBlock(
-              position: 0, blockType: "buffer", startMinutes: 540, endMinutes: 555,
-              title: "Setup"),
-            ExportFocusScheduleBlock(
-              position: 1, blockType: "task", startMinutes: 555, endMinutes: 615,
-              taskID: taskAID),
-          ],
-          createdAt: "2026-06-02T08:10:00Z",
-          updatedAt: "2026-06-02T09:10:00Z")
       ])
     let plan = LorvexDataImporter.plan(for: payload)
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Focus import should not error: \(summary.errors)")
-    let json = try await service.exportData(
-      entities: ["current_focus", "focus_schedules"], format: "json")
-    let exportedPayload = try JSONDecoder().decode(
-      LorvexDataExportPayload.self, from: Data(json.utf8))
-    let focus = try XCTUnwrap(exportedPayload.currentFocus?.first { $0.date == "2026-06-02" })
-    XCTAssertEqual(focus.briefing, "Protect morning")
-    XCTAssertEqual(focus.timezone, "America/Los_Angeles")
-    XCTAssertEqual(focus.taskIDs, [taskAID, taskBID])
-    XCTAssertEqual(focus.createdAt, "2026-06-02T08:00:00.000Z")
-    XCTAssertEqual(focus.updatedAt, "2026-06-02T09:00:00.000Z")
-
-    let schedule = try XCTUnwrap(
-      exportedPayload.focusSchedules?.first { $0.date == "2026-06-02" })
-    XCTAssertEqual(schedule.rationale, "Energy first")
-    XCTAssertEqual(schedule.timezone, "America/Los_Angeles")
-    XCTAssertEqual(schedule.createdAt, "2026-06-02T08:10:00.000Z")
-    XCTAssertEqual(schedule.updatedAt, "2026-06-02T09:10:00.000Z")
-    XCTAssertEqual(schedule.blocks.count, 2)
-    XCTAssertEqual(schedule.blocks[0].blockType, "buffer")
-    XCTAssertEqual(schedule.blocks[0].startMinutes, 540)
-    XCTAssertEqual(schedule.blocks[1].blockType, "task")
-    XCTAssertEqual(schedule.blocks[1].taskID, taskAID)
+    XCTAssertTrue(summary.errors.isEmpty, "Import should not error: \(summary.errors)")
+    let json = try await service.exportData(entities: ["tasks", "daily_briefings"], format: "json")
+    let exported = try JSONDecoder().decode(LorvexDataExportPayload.self, from: Data(json.utf8))
+    let briefing = try XCTUnwrap(exported.dailyBriefings?.first { $0.date == "2026-06-02" })
+    XCTAssertEqual(briefing.briefing, "Protect the morning.")
+    XCTAssertEqual(briefing.timezone, "America/Los_Angeles")
+    XCTAssertEqual(briefing.createdAt, "2026-06-02T08:00:00.000Z")
+    XCTAssertEqual(briefing.updatedAt, "2026-06-02T09:00:00.000Z")
+    let task = try XCTUnwrap(exported.tasks?.first { $0.id == taskID })
+    XCTAssertEqual(task.plannedStartTime, "09:15")
+    XCTAssertEqual(task.plannedEndTime, "10:15")
   }
 
-  func testFocusImportExportPreservesProvenanceAndNeutralizesProviderTitle() async throws {
+  func testDailyBriefingImportKeepsAnExistingBriefing() async throws {
     let service = try makeService()
-    let canonicalEventID = uuid()
-    _ = try await service.importCalendarEvent(
-      id: canonicalEventID, title: "Lorvex event", startDate: "2026-06-04",
-      startTime: "10:00", endDate: "2026-06-04", endTime: "10:30",
-      allDay: false, location: nil, notes: nil, url: nil, color: nil,
-      eventType: nil, personName: nil, attendees: nil, timezone: nil,
-      recurrence: nil, seriesId: nil, recurrenceInstanceDate: nil)
-    try await service.importFocusSchedule(
-      ExportFocusSchedule(
-        date: "2026-06-04",
-        blocks: [
-          ExportFocusScheduleBlock(
-            position: 0, blockType: "event", startMinutes: 540, endMinutes: 570,
-            eventSource: .provider, title: "Private appointment"),
-          ExportFocusScheduleBlock(
-            position: 1, blockType: "event", startMinutes: 570, endMinutes: 600,
-            eventSource: .freeform, title: "Lunch"),
-          ExportFocusScheduleBlock(
-            position: 2, blockType: "event", startMinutes: 600, endMinutes: 630,
-            calendarEventID: canonicalEventID, eventSource: .canonical, title: "Lorvex event"),
-        ]))
+    _ = try await service.setDailyBriefingForMcp(date: "2026-06-03", briefing: "Written here.")
 
-    let exportedSchedules = try await service.loadFocusSchedulesForDataExport()
-    let schedule = try XCTUnwrap(exportedSchedules.first { $0.date == "2026-06-04" })
-    XCTAssertEqual(schedule.blocks[0].eventSource, .provider)
-    XCTAssertNil(schedule.blocks[0].calendarEventID)
-    XCTAssertEqual(schedule.blocks[0].title, "Event")
-    XCTAssertEqual(schedule.blocks[1].eventSource, .freeform)
-    XCTAssertEqual(schedule.blocks[1].title, "Lunch")
-    XCTAssertEqual(schedule.blocks[2].eventSource, .canonical)
-    XCTAssertEqual(schedule.blocks[2].calendarEventID, canonicalEventID)
-    XCTAssertEqual(schedule.blocks[2].title, "Lorvex event")
-  }
+    let imported = try await service.importDailyBriefingIfAbsent(
+      ExportDailyBriefing(date: "2026-06-03", briefing: "From the backup."))
 
-  func testFocusImportRejectsInvalidPositionsIntervalsAndTaskIDsAtomically() async throws {
-    let service = try makeService()
-    for blocks in [
-      [
-        ExportFocusScheduleBlock(
-          position: 1, blockType: "buffer", startMinutes: 540, endMinutes: 570)
-      ],
-      [
-        ExportFocusScheduleBlock(
-          position: 0, blockType: "buffer", startMinutes: 540, endMinutes: 540)
-      ],
-      [
-        ExportFocusScheduleBlock(
-          position: 0, blockType: "task", startMinutes: 540, endMinutes: 570,
-          taskID: "not-a-uuid")
-      ],
-    ] {
-      do {
-        try await service.importFocusSchedule(
-          ExportFocusSchedule(date: "2026-06-05", blocks: blocks))
-        XCTFail("invalid focus schedule import should fail")
-      } catch {
-        let persistedSchedule = try await service.loadFocusSchedule(date: "2026-06-05")
-        XCTAssertNil(persistedSchedule)
-      }
-    }
+    XCTAssertFalse(imported)
+    let briefings = try await service.loadDailyBriefingsForDataExport()
+    XCTAssertEqual(briefings.first { $0.date == "2026-06-03" }?.briefing, "Written here.")
   }
 
   func testTaskCalendarEventLinkImportExportPreservesSyncableEdge() async throws {

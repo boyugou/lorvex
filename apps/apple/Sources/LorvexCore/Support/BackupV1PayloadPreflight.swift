@@ -62,8 +62,7 @@ enum BackupV1PayloadPreflight {
       } ?? [],
       label: "calendar occurrence identity")
     try requireUnique(payload.dailyReviews?.map(\.date) ?? [], label: "daily review date")
-    try requireUnique(payload.currentFocus?.map(\.date) ?? [], label: "current-focus date")
-    try requireUnique(payload.focusSchedules?.map(\.date) ?? [], label: "focus-schedule date")
+    try requireUnique(payload.dailyBriefings?.map(\.date) ?? [], label: "daily briefing date")
     try requireUnique(
       payload.taskCalendarEventLinks?.map { taskCalendarLinkID($0) } ?? [],
       label: "task-calendar link")
@@ -101,24 +100,17 @@ enum BackupV1PayloadPreflight {
     try requireUnique(activeHabitLookupKeys, label: "active habit lookup key")
     try requireUnique(habitReminderPolicyIDs, label: "habit reminder-policy id")
 
-    for focus in payload.currentFocus ?? [] {
-      try requireUnique(focus.taskIDs, label: "current-focus \(focus.date) task id")
+    for briefing in payload.dailyBriefings ?? [] {
+      guard case .success = IsoDate.parseIsoDate(briefing.date) else {
+        throw inconsistent("daily briefing has invalid date \(display(briefing.date))")
+      }
+      guard !briefing.briefing.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw inconsistent("daily briefing \(briefing.date) is blank")
+      }
     }
     for review in payload.dailyReviews ?? [] {
       try requireUnique(review.linkedTaskIDs, label: "daily-review \(review.date) task link")
       try requireUnique(review.linkedListIDs, label: "daily-review \(review.date) list link")
-    }
-    for schedule in payload.focusSchedules ?? [] {
-      let positions = schedule.blocks.map(\.position)
-      try requireUnique(
-        positions.map(String.init), label: "focus-schedule \(schedule.date) position")
-      guard positions.sorted() == Array(0..<positions.count) else {
-        throw inconsistent(
-          "focus-schedule \(schedule.date) positions must be contiguous from zero")
-      }
-      for block in schedule.blocks {
-        try validateFocusScheduleBlock(block, date: schedule.date)
-      }
     }
   }
 
@@ -126,8 +118,6 @@ enum BackupV1PayloadPreflight {
     _ payload: LorvexDataExportPayload
   ) throws {
     let includedTaskIDs = payload.tasks.map { Set($0.map(\.id)) }
-    let archivedTaskIDs = Set(
-      (payload.tasks ?? []).lazy.filter { $0.archivedAt != nil }.map(\.id))
     let includedListIDs = payload.lists.map { Set($0.map(\.id)) }
     let includedEventIDs = payload.calendarEvents.map { Set($0.map(\.id)) }
     let eventsByID = Dictionary(
@@ -140,15 +130,6 @@ enum BackupV1PayloadPreflight {
         try requireSubset(
           task.dependsOn ?? [], of: includedTaskIDs,
           label: "task \(task.id) dependency")
-      }
-      for focus in payload.currentFocus ?? [] {
-        try requireSubset(
-          focus.taskIDs, of: includedTaskIDs,
-          label: "current-focus \(focus.date) task")
-        if let archived = focus.taskIDs.first(where: archivedTaskIDs.contains) {
-          throw inconsistent(
-            "current-focus \(focus.date) references archived task \(archived)")
-        }
       }
       for review in payload.dailyReviews ?? [] {
         try requireSubset(
@@ -209,30 +190,6 @@ enum BackupV1PayloadPreflight {
         else {
           throw inconsistent(
             "active calendar boundary \(cutover.id) has a malformed segment event")
-        }
-      }
-    }
-
-    for schedule in payload.focusSchedules ?? [] {
-      for block in schedule.blocks {
-        if block.blockType == "task", let taskID = block.taskID,
-          let includedTaskIDs, !includedTaskIDs.contains(taskID)
-        {
-          throw inconsistent(
-            "focus-schedule \(schedule.date) references omitted task \(taskID)")
-        }
-        if block.blockType == "task", let taskID = block.taskID,
-          archivedTaskIDs.contains(taskID)
-        {
-          throw inconsistent(
-            "focus-schedule \(schedule.date) references archived task \(taskID)")
-        }
-        if block.blockType == "event", block.eventSource == .canonical,
-          let calendarEventID = block.calendarEventID, let includedEventIDs,
-          !includedEventIDs.contains(calendarEventID)
-        {
-          throw inconsistent(
-            "focus-schedule \(schedule.date) references omitted calendar event \(calendarEventID)")
         }
       }
     }
@@ -324,43 +281,6 @@ enum BackupV1PayloadPreflight {
 
   private static func taskCalendarLinkID(_ link: ExportTaskCalendarEventLink) -> String {
     "\(link.taskID):\(link.calendarEventID)"
-  }
-
-  private static func validateFocusScheduleBlock(
-    _ block: ExportFocusScheduleBlock, date: String
-  ) throws {
-    guard block.startMinutes >= 0, block.endMinutes > block.startMinutes,
-      block.endMinutes <= 1440
-    else {
-      throw inconsistent("focus-schedule \(date) has invalid block minutes")
-    }
-    switch block.blockType {
-    case "task":
-      guard block.taskID != nil, block.calendarEventID == nil, block.eventSource == nil else {
-        throw inconsistent("focus-schedule \(date) has a contradictory task block")
-      }
-    case "event":
-      guard block.taskID == nil, let source = block.eventSource else {
-        throw inconsistent("focus-schedule \(date) has a contradictory event block")
-      }
-      switch source {
-      case .canonical:
-        guard block.calendarEventID != nil else {
-          throw inconsistent("focus-schedule \(date) has a canonical event block without an id")
-        }
-      case .provider, .freeform:
-        guard block.calendarEventID == nil else {
-          throw inconsistent(
-            "focus-schedule \(date) has a noncanonical event block with an id")
-        }
-      }
-    case "buffer":
-      guard block.taskID == nil, block.calendarEventID == nil, block.eventSource == nil else {
-        throw inconsistent("focus-schedule \(date) has a contradictory buffer block")
-      }
-    default:
-      throw inconsistent("focus-schedule \(date) has unknown block type \(block.blockType)")
-    }
   }
 
   private static func display(_ value: String) -> String {

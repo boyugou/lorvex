@@ -14,8 +14,10 @@ func sharedSystemIntentRunnerMutatesTasksWithoutAppleAppTargetState() async thro
     notes: "Created through LorvexCore.",
     core: core
   )
-  var today = try await core.loadToday()
-  let created = try #require(today.tasks.first { $0.title == "Shared system intent task" })
+  let openAfterCapture = try await core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(
+    openAfterCapture.tasks.first { $0.title == "Shared system intent task" })
   #expect(createdTitle == "Shared system intent task")
   #expect(created.notes == "Created through LorvexCore.")
   let detailUpdated = try await LorvexSystemIntentRunner.updateTask(
@@ -43,15 +45,13 @@ func sharedSystemIntentRunnerMutatesTasksWithoutAppleAppTargetState() async thro
     core: core
   )
   #expect(cancelledTitle == "Shared system lifecycle task")
-  today = try await core.loadToday()
-  // Cancelled tasks leave the open-only Today snapshot.
-  #expect(!today.tasks.contains { $0.id == lifecycleTask.id })
   #expect(try await core.loadTask(id: lifecycleTask.id).status == .cancelled)
   let reopenedTitle = try await LorvexSystemIntentRunner.reopenTask(
     id: " \(lifecycleTask.id) ",
     core: core
   )
   #expect(reopenedTitle == "Shared system lifecycle task")
-  today = try await core.loadToday()
-  #expect(today.tasks.first { $0.id == lifecycleTask.id }?.status == .open)
+  // Read the row: undated work has no claim on today, so the day pool cannot
+  // witness a status round-trip.
+  #expect(try await core.loadTask(id: lifecycleTask.id).status == .open)
 }

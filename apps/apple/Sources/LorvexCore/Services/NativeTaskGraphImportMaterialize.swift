@@ -14,10 +14,11 @@ enum NativeTaskGraphImportMaterialize {
             lifecycle_version, archive_version, recurrence_rollover_state,
             recurrence_successor_id, version, created_at, updated_at,
             completed_at, last_deferred_at, last_defer_reason, planned_date,
+            planned_start_minutes, planned_end_minutes,
             available_from, defer_count, archived_at
           ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
           )
           """,
         arguments: [
@@ -30,7 +31,8 @@ enum NativeTaskGraphImportMaterialize {
           task.archiveVersion.description, task.recurrenceRolloverState,
           task.recurrenceSuccessorID, task.version.description, task.createdAt,
           task.updatedAt, task.completedAt, task.lastDeferredAt,
-          task.lastDeferReason, task.plannedDate, task.availableFrom,
+          task.lastDeferReason, task.plannedDate, task.plannedStartMinutes,
+          task.plannedEndMinutes, task.availableFrom,
           task.deferCount, task.archivedAt,
         ])
     }

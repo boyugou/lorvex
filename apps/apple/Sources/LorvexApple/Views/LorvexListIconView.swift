@@ -61,6 +61,12 @@ struct LorvexListIconView: View {
   }
 
   private var systemImageName: String? {
+    Self.symbolName(for: icon)
+  }
+
+  /// The SF Symbol name a list icon names, or nil when the icon is an emoji or
+  /// empty. List icons store either one; an all-ASCII value is a symbol name.
+  static func symbolName(for icon: String?) -> String? {
     guard let icon, !icon.isEmpty, icon.unicodeScalars.allSatisfy(\.isASCII) else {
       return nil
     }

@@ -5,7 +5,6 @@ import Foundation
 public enum RuntimePlatform: Sendable, Equatable {
   case macOS
   case iOS
-  case visionOS
   case watchOS
   case otherUnix
   case windows
@@ -16,8 +15,6 @@ public enum RuntimePlatform: Sendable, Equatable {
       return .macOS
     #elseif os(iOS)
       return .iOS
-    #elseif os(visionOS)
-      return .visionOS
     #elseif os(watchOS)
       return .watchOS
     #elseif os(Windows)

@@ -1,171 +1,120 @@
 import LorvexCore
 import SwiftUI
 
-/// The calm field panel shared by the create and edit habit sheets.
-struct HabitFormFields: View {
+/// The top of the create and edit habit sheets: the habit's icon tile and
+/// name (``CreationSheetHeader``), with the encouragement typed on the line
+/// under the name.
+struct HabitSheetHeader: View {
   @Bindable var store: AppStore
   let idPrefix: String
-  var nameTitle: String = String(
-    localized: "habits.sheet.field.name", defaultValue: "Name",
-    table: "Localizable",
-    bundle: LorvexL10n.bundle)
-  /// Claimed when the sheet appears so the user can type immediately.
-  @FocusState private var nameFocused: Bool
 
   var body: some View {
-    DraftSheetPanel(accessibilityIdentifier: "\(idPrefix).fields") {
-      DraftSheetField(
-        title: nameTitle,
-        systemImage: "text.cursor"
-      ) {
-        TextField(
-          nameTitle,
-          text: $store.draftHabitName
-        )
-        .font(LorvexDesign.Typography.primaryText)
-        .textFieldStyle(.plain)
-        .focused($nameFocused)
-        .accessibilityLabel(String(
-          localized: "habits.sheet.field.name_a11y",
-          defaultValue: "Habit name",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-        .accessibilityIdentifier("\(idPrefix).name")
-      }
+    CreationSheetHeader(
+      icon: $store.draftHabitIcon,
+      color: $store.draftHabitColor,
+      name: $store.draftHabitName,
+      defaultIcon: "repeat.circle",
+      namePrompt: String(
+        localized: "habits.sheet.field.name_prompt", defaultValue: "Habit name", table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      nameAccessibilityLabel: String(
+        localized: "habits.sheet.field.name_a11y", defaultValue: "Habit name", table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      idPrefix: idPrefix
+    ) {
+      // "Encouragement", not "Cue": a motivating line shown on the habit, not a
+      // when-to-do trigger. The storage column stays `cue`.
+      TextField(
+        String(
+          localized: "habits.sheet.field.encouragement_prompt", defaultValue: "Add an encouraging line",
+          table: "Localizable", bundle: LorvexL10n.bundle),
+        text: $store.draftHabitCue
+      )
+      .font(LorvexDesign.Typography.secondaryText)
+      .foregroundStyle(.secondary)
+      .textFieldStyle(.plain)
+      .accessibilityLabel(String(
+        localized: "habits.sheet.field.encouragement_a11y", defaultValue: "Habit encouragement",
+        table: "Localizable", bundle: LorvexL10n.bundle))
+      .accessibilityIdentifier("\(idPrefix).cue")
+    }
+  }
+}
 
-      // "Encouragement", not "Cue": this field is a motivating line shown on the
-      // habit (matching iOS), not a when-to-do trigger. The storage column stays
-      // `cue` (the Apple schema column), so the `draftHabitCue` binding is kept.
-      DraftSheetField(
-        title: String(
-          localized: "habits.sheet.field.encouragement", defaultValue: "Encouragement",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        systemImage: "sparkles"
-      ) {
-        LorvexPlainTextEditor(
-          text: $store.draftHabitCue,
-          placeholder: String(
-            localized: "habits.sheet.field.encouragement_placeholder",
-            defaultValue: "A motivating line you’ll see on the habit",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          minHeight: 40,
-          maxHeight: 44,
-          fontSize: 14
-        )
-        .accessibilityLabel(String(
-          localized: "habits.sheet.field.encouragement_a11y",
-          defaultValue: "Habit encouragement",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-        .accessibilityIdentifier("\(idPrefix).cue")
-      }
+/// The rhythm of a habit as grouped form sections, shared by the create and
+/// edit habit sheets: the frequency, the check-ins that complete a day (for
+/// the cadences that count per day), and the optional milestone to celebrate.
+struct HabitFormSections: View {
+  @Bindable var store: AppStore
+  let idPrefix: String
 
-      DraftSheetField(
-        title: String(localized: "habits.sheet.field.frequency", defaultValue: "Frequency", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "repeat"
-      ) {
-        HabitCadenceEditor(store: store, idPrefix: idPrefix)
-      }
-
-      // "Times a week" owns its count via its own stepper, and monthly is a
-      // single check-in on a chosen day — so neither shows the per-period count
-      // field (a second, conflicting count for the former; a "5×/month but one
-      // reminder" mismatch for the latter).
+  var body: some View {
+    Section {
+      HabitCadenceEditor(store: store, idPrefix: idPrefix)
+      // "Times a week" owns its count in its own stepper, and monthly is one
+      // check-in on a chosen day, so neither shows a per-day count.
       if store.draftHabitCadenceMode != .timesPerWeek && store.draftHabitCadenceMode != .monthly {
-        DraftSheetField(title: targetTitle, systemImage: "number") {
-          TextField(targetTitle, text: $store.draftHabitTargetCountText)
-            .font(LorvexDesign.Typography.primaryText)
-            .textFieldStyle(.plain)
-            .frame(maxWidth: 120, alignment: .leading)
-            .accessibilityLabel(targetTitle)
-            .accessibilityIdentifier("\(idPrefix).targetCount")
-          Text(LocalizedStringResource("habits.sheet.field.target_per_day_hint", defaultValue: "How many check-ins complete a day.", table: "Localizable", bundle: LorvexL10n.bundle))
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-        }
-      }
-
-      DraftSheetField(
-        title: String(
-          localized: "habits.sheet.field.milestone_goal", defaultValue: "Celebrate after",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        systemImage: "flag.checkered"
-      ) {
-        HStack(spacing: LorvexDesign.Spacing.s) {
-          TextField(
-            String(
-              localized: "habits.sheet.field.milestone_goal_placeholder", defaultValue: "Optional number",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            text: $store.draftHabitMilestoneTargetText
-          )
-          .font(LorvexDesign.Typography.primaryText)
-          .textFieldStyle(.plain)
-          .frame(maxWidth: 120, alignment: .leading)
-          .accessibilityLabel(String(
-            localized: "habits.sheet.field.milestone_goal", defaultValue: "Celebrate after",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle))
-          .accessibilityIdentifier("\(idPrefix).milestoneTarget")
-
-          if !store.draftHabitMilestoneTargetText.isEmpty {
-            Button {
-              store.draftHabitMilestoneTargetText = ""
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            .help(String(
-              localized: "habits.sheet.field.milestone_goal_clear", defaultValue: "Clear milestone goal",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle))
-            .accessibilityLabel(String(
-              localized: "habits.sheet.field.milestone_goal_clear", defaultValue: "Clear milestone goal",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle))
-            .accessibilityIdentifier("\(idPrefix).milestoneTarget.clear")
+        LabeledContent(
+          String(
+            localized: "habits.sheet.field.target_times_per_day", defaultValue: "Times per day",
+            table: "Localizable", bundle: LorvexL10n.bundle)
+        ) {
+          HStack(spacing: LorvexDesign.Spacing.s) {
+            Text("\(targetCount.wrappedValue)")
+              .monospacedDigit()
+            Stepper(
+              String(
+                localized: "habits.sheet.field.target_times_per_day", defaultValue: "Times per day",
+                table: "Localizable", bundle: LorvexL10n.bundle),
+              value: targetCount, in: 1...99
+            )
+            .labelsHidden()
           }
         }
-        Text(milestoneGoalHint)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
+        .accessibilityIdentifier("\(idPrefix).targetCount")
       }
-
-      LorvexIconColorField(
-        icon: $store.draftHabitIcon,
-        color: $store.draftHabitColor,
-        idPrefix: idPrefix
-      )
+    } header: {
+      Text(LocalizedStringResource(
+        "habits.sheet.field.frequency", defaultValue: "Frequency", table: "Localizable",
+        bundle: LorvexL10n.bundle))
     }
-    .task {
-      nameFocused = false
-      await Task.yield()
-      nameFocused = true
+
+    Section {
+      LabeledContent(
+        String(
+          localized: "habits.sheet.field.milestone_goal", defaultValue: "Celebrate after",
+          table: "Localizable", bundle: LorvexL10n.bundle)
+      ) {
+        TextField(
+          String(
+            localized: "habits.sheet.field.milestone_goal_none", defaultValue: "None",
+            table: "Localizable", bundle: LorvexL10n.bundle),
+          text: $store.draftHabitMilestoneTargetText
+        )
+        .multilineTextAlignment(.trailing)
+        .textFieldStyle(.plain)
+        .frame(maxWidth: 80)
+        .accessibilityLabel(String(
+          localized: "habits.sheet.field.milestone_goal", defaultValue: "Celebrate after",
+          table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("\(idPrefix).milestoneTarget")
+      }
+    } footer: {
+      Text(milestoneGoalHint)
     }
   }
 
-  /// The per-day check-in goal. This field is shown only for Daily and
-  /// Weekly-specific-days cadences, where `target_count` is the number of
-  /// completions that mark one (scheduled) day done — so it reads as "times per
-  /// day" rather than the ambiguous "per period". (Times-a-week and monthly hide
-  /// it: the former's count lives in its own stepper, the latter is once.)
-  private var targetTitle: String {
-    String(
-      localized: "habits.sheet.field.target_times_per_day", defaultValue: "Times per day",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
+  /// The per-day check-in goal, stored as the draft's text so the store's
+  /// validation keeps owning it; the stepper reads an unparsable draft as 1.
+  private var targetCount: Binding<Int> {
+    Binding(
+      get: { store.parsedDraftHabitTargetCount ?? 1 },
+      set: { store.draftHabitTargetCountText = "\($0)" })
   }
 
-  /// Cadence-aware hint for the optional milestone goal: a streak length for the
-  /// streak cadences (daily / weekly), a completion count for the cumulative
-  /// cadences (times-a-week / monthly). Both note that the habit doesn't stop at
-  /// the goal — a milestone is a celebration moment, not an end.
+  /// A streak length for the streak cadences (daily, weekly days), a
+  /// completion count for the cumulative ones (times a week, monthly). Both
+  /// note the habit keeps going: a milestone is a celebration, not an end.
   private var milestoneGoalHint: String {
     switch store.draftHabitCadenceMode {
     case .timesPerWeek, .monthly:

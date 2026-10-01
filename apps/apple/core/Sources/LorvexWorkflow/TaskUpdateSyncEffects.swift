@@ -42,26 +42,6 @@ public struct UpdateTaskCancelledSuccessor: Sendable {
   }
 }
 
-/// Focus rewire audit row recording which parent→successor rewire
-/// produced a focus-aggregate bump on a specific date.
-public struct UpdateTaskFocusRewireAudit: Sendable {
-  public let parentTaskId: String
-  public let successorId: String
-  public let focusScheduleDates: [String]
-  public let currentFocusDates: [String]
-  public init(
-    parentTaskId: String,
-    successorId: String,
-    focusScheduleDates: [String],
-    currentFocusDates: [String]
-  ) {
-    self.parentTaskId = parentTaskId
-    self.successorId = successorId
-    self.focusScheduleDates = focusScheduleDates
-    self.currentFocusDates = currentFocusDates
-  }
-}
-
 /// Aggregated sync side-effects from one or more single-row updates.
 /// Used by both `update_task` (single-element vectors) and the
 /// eventual `batch_update_tasks` (multi-row aggregation). The surface
@@ -86,9 +66,6 @@ public struct TaskUpdateSyncEffects: Sendable {
   public var spawnedSuccessorTagEdges: [CopiedTagEdge]
   public var spawnedSuccessorChecklistItemIds: [String]
   public var spawnedSuccessorReminderIds: [String]
-  public var focusRewireAudits: [UpdateTaskFocusRewireAudit]
-  public var rewiredFocusScheduleDates: [String]
-  public var rewiredCurrentFocusDates: [String]
 
   public init(
     taskUpsertIds: [String] = [],
@@ -105,10 +82,7 @@ public struct TaskUpdateSyncEffects: Sendable {
     rerootedSuccessorIds: [String] = [],
     spawnedSuccessorTagEdges: [CopiedTagEdge] = [],
     spawnedSuccessorChecklistItemIds: [String] = [],
-    spawnedSuccessorReminderIds: [String] = [],
-    focusRewireAudits: [UpdateTaskFocusRewireAudit] = [],
-    rewiredFocusScheduleDates: [String] = [],
-    rewiredCurrentFocusDates: [String] = []
+    spawnedSuccessorReminderIds: [String] = []
   ) {
     self.taskUpsertIds = taskUpsertIds
     self.reminderUpsertIds = reminderUpsertIds
@@ -125,9 +99,6 @@ public struct TaskUpdateSyncEffects: Sendable {
     self.spawnedSuccessorTagEdges = spawnedSuccessorTagEdges
     self.spawnedSuccessorChecklistItemIds = spawnedSuccessorChecklistItemIds
     self.spawnedSuccessorReminderIds = spawnedSuccessorReminderIds
-    self.focusRewireAudits = focusRewireAudits
-    self.rewiredFocusScheduleDates = rewiredFocusScheduleDates
-    self.rewiredCurrentFocusDates = rewiredCurrentFocusDates
   }
 }
 

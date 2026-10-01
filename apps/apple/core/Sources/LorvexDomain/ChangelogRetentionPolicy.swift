@@ -1,8 +1,8 @@
-/// User-configurable retention policy for the `ai_changelog` audit trail,
-/// exposed as the JSON value of the virtual control-plane preference
-/// ``PreferenceKeys/prefAiChangelogRetentionPolicy``. The durable value lives
-/// in account-scoped audit-retention metadata, never in an ordinary synced
-/// `preferences` row.
+/// User-configurable retention policy for this device's `ai_changelog` audit
+/// trail, exposed as the JSON value of the virtual preference
+/// ``PreferenceKeys/prefAiChangelogRetentionPolicy``. The audit trail never
+/// leaves the device, so the durable value lives in the device-local
+/// `device_state` table, never in an ordinary synced `preferences` row.
 ///
 /// Three states, chosen so an assistant inspecting `get_all_preferences` sees a
 /// self-documenting token rather than a sentinel integer:
@@ -10,9 +10,8 @@
 /// - ``maximum``: keep up to the absolute row-count safeguard
 ///   (``SyncNaming/auditMaxEntriesSafeguard``).
 /// - ``days(_:)``: keep entries newer than `N` days (`N > 0`).
-/// - ``off``: never store — new local audit writes are suppressed at the
-///   mutation choke point AND every existing row is purged by the retention
-///   sweep, self-healing rows synced in from an out-of-date peer.
+/// - ``off``: never store — new audit writes are suppressed at the mutation
+///   choke point and every existing row is purged.
 ///
 /// The API/wire value is JSON text: the string `"maximum"` / `"off"`, or a bare
 /// positive integer number of days. ``parse(_:)`` is deliberately tolerant so an
@@ -85,29 +84,6 @@ extension ChangelogRetentionPolicy {
     case .maximum: return "\"maximum\""
     case .off: return "\"off\""
     case .days(let n): return String(n)
-    }
-  }
-
-  /// Deterministic, data-preserving repair for the otherwise impossible case
-  /// where one policy version names two values. A malformed/restored control
-  /// plane must never turn ambiguity into extra deletion: maximum retention
-  /// beats a bounded window, the longer bounded window wins, and every retained
-  /// policy beats `off`. This join is commutative, associative, and idempotent,
-  /// so CloudKit metadata and local adoption can share one convergence rule.
-  public static func conservativeCollisionWinner(
-    _ lhs: ChangelogRetentionPolicy, _ rhs: ChangelogRetentionPolicy
-  ) -> ChangelogRetentionPolicy {
-    switch (lhs, rhs) {
-    case (.maximum, _), (_, .maximum):
-      return .maximum
-    case (.days(let left), .days(let right)):
-      return .days(max(left, right))
-    case (.days, .off):
-      return lhs
-    case (.off, .days):
-      return rhs
-    case (.off, .off):
-      return .off
     }
   }
 }

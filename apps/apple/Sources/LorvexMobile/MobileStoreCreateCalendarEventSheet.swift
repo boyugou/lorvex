@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 struct MobileStoreCreateCalendarEventSheet: View {
@@ -67,7 +68,7 @@ struct MobileStoreCreateCalendarEventSheet: View {
                 systemImage: "exclamationmark.triangle"
               )
               .font(.footnote)
-              .foregroundStyle(.orange)
+              .foregroundStyle(LorvexDesign.Palette.warning)
               .accessibilityIdentifier("mobileCreateCalendarEvent.timesInvalid")
             }
           }
@@ -121,7 +122,7 @@ struct MobileStoreCreateCalendarEventSheet: View {
             submit()
           } label: {
             if store.isMutatingCalendarEvent {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(
                 String(
@@ -129,6 +130,7 @@ struct MobileStoreCreateCalendarEventSheet: View {
                   bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(!store.canCreateCalendarDraft)
           .accessibilityIdentifier("mobileCreateCalendarEvent.confirm")
         }

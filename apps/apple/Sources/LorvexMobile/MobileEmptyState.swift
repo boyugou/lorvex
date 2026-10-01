@@ -46,3 +46,24 @@ struct MobileEmptyState: View {
     .padding(.vertical, LorvexDesign.Spacing.xs)
   }
 }
+
+extension MobileEmptyState {
+  /// The no-results row for a `.searchable` list whose query matched nothing.
+  /// Bounded like every other `MobileEmptyState`, so it sits in a `List`
+  /// `Section` at normal row height where `ContentUnavailableView.search` would
+  /// inflate the row. The title quotes the trimmed query.
+  static func search(text query: String) -> MobileEmptyState {
+    MobileEmptyState(
+      icon: "magnifyingglass",
+      tint: LorvexDesign.Palette.neutral,
+      title: String(
+        format: String(
+          localized: "search.empty.title", defaultValue: "No Results for “%@”",
+          table: "Localizable", bundle: MobileL10n.bundle),
+        query.trimmingCharacters(in: .whitespacesAndNewlines)),
+      message: String(
+        localized: "search.empty.message",
+        defaultValue: "Check the spelling or try a different search.",
+        table: "Localizable", bundle: MobileL10n.bundle))
+  }
+}

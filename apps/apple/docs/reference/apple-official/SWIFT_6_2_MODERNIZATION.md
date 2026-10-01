@@ -33,7 +33,7 @@ Modernization gaps:
 - No target enables Approachable Concurrency or deliberate default isolation.
 - Thirteen source files instantiate `NSLock`; none uses
   `Synchronization.Mutex`. `Mutex` is available at exactly the proposed
-  macOS 15 / iOS 18 / watchOS 11 / visionOS 2 floor and couples protected state
+  macOS 15 / iOS 18 / watchOS 11 floor and couples protected state
   with scoped access.
 - The source contains many `@unchecked Sendable`, `nonisolated(unsafe)`, and
   `@preconcurrency` escape hatches. Some are justified wrappers around imported

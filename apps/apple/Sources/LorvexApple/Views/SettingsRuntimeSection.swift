@@ -6,19 +6,13 @@ extension SettingsView {
   var appearanceSection: some View {
     Section(String(localized: "settings.section.appearance", defaultValue: "Appearance", table: "Localizable", bundle: LorvexL10n.bundle)) {
       AppearanceThumbnailPicker(selection: $settings.appearance)
-      Text(LocalizedStringResource(
-        "settings.appearance.footer",
-        defaultValue: "System follows your macOS Light/Dark setting; Light and Dark force that appearance everywhere in Lorvex.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ))
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
     }
   }
 
+  /// The language and clock pickers as a group of their own, with no header:
+  /// each row already names what it sets.
   var languageSection: some View {
-    Section(String(localized: "settings.section.language", defaultValue: "Language", table: "Localizable", bundle: LorvexL10n.bundle)) {
+    Section {
       Picker(
         String(localized: "settings.language", defaultValue: "Language", table: "Localizable", bundle: LorvexL10n.bundle),
         selection: $selectedLanguage
@@ -58,6 +52,9 @@ extension SettingsView {
           }
         }
       }
+
+      SettingsClockFormatRow()
+      SettingsTimeZoneRow(store: store)
     }
   }
 
@@ -133,7 +130,7 @@ private struct AppearanceSwatch: View {
                 .font(LorvexDesign.Typography.secondaryText)
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(.white, LorvexDesign.Palette.accent)
-                .padding(3)
+                .padding(LorvexDesign.Spacing.xxs)
                 .transition(.scale.combined(with: .opacity))
             }
           }
@@ -173,12 +170,12 @@ private struct AppearancePreviewCanvas: View {
   var body: some View {
     VStack(spacing: 0) {
       HStack(spacing: 3) {
-        Circle().fill(Color.red.opacity(0.85)).frame(width: 5, height: 5)
-        Circle().fill(Color.yellow.opacity(0.85)).frame(width: 5, height: 5)
-        Circle().fill(Color.green.opacity(0.85)).frame(width: 5, height: 5)
+        Circle().fill(Color.red.opacity(0.85)).frame(width: 5, height: 5)  // lorvex-design-token: allow
+        Circle().fill(Color.yellow.opacity(0.85)).frame(width: 5, height: 5)  // lorvex-design-token: allow
+        Circle().fill(Color.green.opacity(0.85)).frame(width: 5, height: 5)  // lorvex-design-token: allow
         Spacer(minLength: 0)
       }
-      .padding(.horizontal, 6)
+      .padding(.horizontal, LorvexDesign.Spacing.sm)
       .frame(height: 14)
       .background(barColor)
 
@@ -187,14 +184,14 @@ private struct AppearancePreviewCanvas: View {
         Capsule().fill(lineColor.opacity(0.6)).frame(width: 48, height: 4)
         Capsule().fill(lineColor.opacity(0.6)).frame(width: 40, height: 4)
       }
-      .padding(6)
+      .padding(LorvexDesign.Spacing.sm)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     .background(canvasColor)
   }
 
   private var canvasColor: Color {
-    isDark ? Color(red: 0.11, green: 0.11, blue: 0.12) : Color(red: 0.97, green: 0.97, blue: 0.98)
+    isDark ? Color(red: 0.11, green: 0.11, blue: 0.12) : Color(red: 0.97, green: 0.97, blue: 0.98)  // lorvex-design-token: allow
   }
 
   private var barColor: Color {

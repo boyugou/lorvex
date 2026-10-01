@@ -6,23 +6,26 @@ import UserNotifications
 /// Step sequence for the first-run setup wizard.
 enum SetupWizardStep: Int, CaseIterable, Sendable {
   case welcome = 0
+  case cloudSync
   case permissions
   case done
 }
 
+/// Where one permission stands in the wizard: not asked yet, asked and
+/// waiting on the system prompt, or answered.
 enum SetupPermissionState: Equatable, Sendable {
   case idle
   case requesting
   case granted
   case denied
-  case skipped
 }
 
 /// View model for the first-run setup wizard.
 ///
-/// Tracks the current step and permission outcomes. Calling `complete(settings:)`
-/// persists `setupCompleted = true` to `AppSettingsStore`, preventing the wizard
-/// from appearing on subsequent launches.
+/// Tracks the current step and permission outcomes.
+/// Calling `complete(settings:)` persists `setupCompleted = true` to
+/// `AppSettingsStore`, preventing the wizard from appearing on subsequent
+/// launches.
 @MainActor
 @Observable
 final class SetupWizardState {
@@ -56,9 +59,6 @@ final class SetupWizardState {
       notificationsPermissionState = .denied
     }
   }
-
-  func skipCalendar() { calendarPermissionState = .skipped }
-  func skipNotifications() { notificationsPermissionState = .skipped }
 
   /// Marks the wizard as complete and persists the flag to avoid future presentation.
   func complete(settings: AppSettingsStore) {

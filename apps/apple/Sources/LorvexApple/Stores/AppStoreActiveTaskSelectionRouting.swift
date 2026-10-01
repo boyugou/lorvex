@@ -1,18 +1,27 @@
 import LorvexCore
 
 extension AppStore {
-  var focusSurfaceOrderedTasks: [LorvexTask] {
+  /// Today's selectable rows in the order the main column draws them: the
+  /// schedule's unfinished timed tasks in time order, the tasks without a
+  /// time, then, while the Done section is open, what it lists. Arrow keys,
+  /// shift-click ranges, Select All, batch actions, and the inspector's
+  /// refresh check all read this one order, so none of them reaches a row the
+  /// page hides or skips one it shows. Finished timed tasks stay out: the
+  /// schedule may fold them behind its "earlier" line.
+  var todayOrderedTasks: [LorvexTask] {
+    let timed = todaySchedule.compactMap { row -> LorvexTask? in
+      guard case .task(let task) = row.kind, task.status.isActionable else { return nil }
+      return task
+    }
+    let untimed = todayUntimedItems.map(\.task)
+    let done = isTodayDoneCollapsed ? [] : todayDoneListTasks
     var seen = Set<LorvexTask.ID>()
-    return (
-      filteredInProgressTodayTasks
-        + filteredFocusedTasks
-        + filteredRemainingTodayTasks
-    ).filter { seen.insert($0.id).inserted }
+    return (timed + untimed + done).filter { seen.insert($0.id).inserted }
   }
 
   func taskSelectionCount(on surface: AppStoreBatchCancelSurface) -> Int {
     switch surface {
-    case .focus: focusWorkspaceSelectionCount
+    case .today: todaySelectionCount
     case .taskWorkspace: taskWorkspaceSelectionCount
     case .selectedList: selectedListTaskSelectionCount
     }
@@ -36,12 +45,12 @@ extension AppStore {
 
   func orderedTaskIDs(on surface: AppStoreBatchCancelSurface) -> [LorvexTask.ID] {
     switch surface {
-    case .focus:
-      focusSurfaceOrderedTasks.map(\.id)
+    case .today:
+      todayOrderedTasks.map(\.id)
     case .taskWorkspace:
       taskWorkspaceVisibleOrderedTaskIDs ?? taskWorkspaceAllTasks.map(\.id)
     case .selectedList:
-      filteredSelectedListTasks.map(\.id)
+      selectedListTasks.map(\.id)
     }
   }
 
@@ -50,7 +59,7 @@ extension AppStore {
     on surface: AppStoreBatchCancelSurface
   ) {
     switch surface {
-    case .focus: setFocusWorkspaceSelection(ids)
+    case .today: setTodaySelection(ids)
     case .taskWorkspace: setTaskWorkspaceSelection(ids)
     case .selectedList: setSelectedListTaskSelection(ids)
     }
@@ -79,7 +88,7 @@ extension AppStore {
     on surface: AppStoreBatchCancelSurface
   ) {
     switch surface {
-    case .focus: selectOnlyFocusWorkspaceTask(id)
+    case .today: selectOnlyTodayTask(id)
     case .taskWorkspace: selectOnlyTaskInWorkspace(id)
     case .selectedList: selectOnlySelectedListTask(id)
     }

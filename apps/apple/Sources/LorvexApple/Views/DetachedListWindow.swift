@@ -35,11 +35,15 @@ private struct DetachedListWindowContent: View {
   let listID: LorvexList.ID
 
   @State private var windowStore: AppStore?
+  /// Set once the first load of the list finishes. Until then the window shows
+  /// its loading view, never the no-list placeholder a list deleted elsewhere
+  /// leaves behind.
+  @State private var hasLoaded = false
   @Environment(\.controlActiveState) private var controlActiveState
 
   var body: some View {
     Group {
-      if let windowStore {
+      if let windowStore, hasLoaded {
         ListDetailPane(store: windowStore)
           .lorvexRecurringCancelDialog(windowStore)
           .lorvexPermanentDeleteDialog(windowStore)
@@ -61,6 +65,7 @@ private struct DetachedListWindowContent: View {
       // mid-load; a signal before the load merely no-ops (no entity selected yet).
       detachedStore.startDetachedWindowObserversIfNeeded()
       await detachedStore.loadDetachedListWindow(listID: listID)
+      hasLoaded = true
     }
     .onDisappear { windowStore?.stopDetachedWindowObservers() }
     // Re-read the list when the window regains key, so changes made in the main

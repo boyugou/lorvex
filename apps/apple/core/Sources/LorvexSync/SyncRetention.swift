@@ -35,25 +35,20 @@ public enum SyncRetention {
 
   /// Run the per-cycle retention GC sweep in the sync runtime's finalizer order.
   ///
-  /// Steps, in order: outbox synced-row GC, tombstone GC, conflict-log GC,
-  /// pending-inbox horizon GC, changelog retention GC, and the diagnostics
-  /// (`error_logs`) age + row-cap GC. The ordinary tombstone step is deliberately
-  /// a no-op: physical reclamation requires an exact CloudKit-confirmed cutoff
-  /// bound into a successfully published immutable generation, never a local
-  /// maintenance clock. The call remains in fixed order for call-site stability.
+  /// Steps, in order: outbox synced-row GC, conflict-log GC, pending-inbox
+  /// horizon GC, changelog retention GC, and the diagnostics (`error_logs`)
+  /// age + row-cap GC. Tombstones are never collected: they stay for the life
+  /// of the zone so a delete always outranks a stale concurrent edit.
   ///
   /// Each step is best-effort: a failure is appended to `error_logs` at warn
   /// level and the remaining steps continue. This never throws — a GC error must
   /// not abort the apply of real inbound data nor trip the sync circuit breaker.
   ///
-  /// Audit pruning advances the account frontier and enqueues CloudKit physical
-  /// deletes; it never creates sync tombstones/delete envelopes.
+  /// Audit pruning is a plain local delete (``AuditRetention/gcChangelog(_:)``);
+  /// the audit trail never leaves the device.
   public static func runPostApplyGC(_ db: Database, syncedAt: String) {
     runStep(db, source: "sync.retention.outbox_gc") {
       try Outbox.gcSynced(db, retentionDays: outboxRetentionDays)
-    }
-    runStep(db, source: "sync.retention.tombstone_gc") {
-      try Tombstone.gcTombstonesWatermark(db)
     }
     runStep(db, source: "sync.retention.conflict_log_gc") {
       try ConflictLog.gcConflicts(db, retentionDays: conflictLogRetentionDays)
@@ -74,24 +69,21 @@ public enum SyncRetention {
     // until the build catches up or the invariant relaxes; growth is bounded by
     // coalescing superseded parked versions and observable via the retained-hold
     // breadcrumb below.
-    if !hasGenerationSnapshotStaging(db) {
-      runStep(db, source: "sync.retention.pending_inbox_gc") {
-        try flagReseedRequiredIfExpiredPresent(
-          db, horizonDays: SyncNaming.fullResyncHorizonDays, syncedAt: syncedAt)
-        try coalesceSupersededHoldsPastHorizon(
-          db, horizonDays: SyncNaming.fullResyncHorizonDays)
-        let reaped = try PendingInbox.gcExpiredEntries(
-          db, horizonDays: SyncNaming.fullResyncHorizonDays,
-          exemptReasonSQL: PendingInboxDrain.budgetExemptHoldReasonSQL)
-        try logRetainedHoldsPastHorizon(
-          db, horizonDays: SyncNaming.fullResyncHorizonDays)
-        return reaped
-      }
+    runStep(db, source: "sync.retention.pending_inbox_gc") {
+      try flagReseedRequiredIfExpiredPresent(
+        db, horizonDays: SyncNaming.fullResyncHorizonDays, syncedAt: syncedAt)
+      try coalesceSupersededHoldsPastHorizon(
+        db, horizonDays: SyncNaming.fullResyncHorizonDays)
+      let reaped = try PendingInbox.gcExpiredEntries(
+        db, horizonDays: SyncNaming.fullResyncHorizonDays,
+        exemptReasonSQL: PendingInboxDrain.budgetExemptHoldReasonSQL)
+      try logRetainedHoldsPastHorizon(
+        db, horizonDays: SyncNaming.fullResyncHorizonDays)
+      return reaped
     }
 
-    // The changelog GC honours the user's `ai_changelog_retention_policy`. A
-    // Missing/malformed preference means "maximum": the changelog keeps
-    // everything under its absolute row-count safeguard.
+    // The changelog GC honours this device's audit retention policy
+    // (``AuditRetention``); a missing or malformed value means "maximum".
     runStep(db, source: "sync.retention.changelog_gc") {
       try AuditRetention.gcChangelog(db)
     }
@@ -125,9 +117,6 @@ public enum SyncRetention {
   /// and pending/conflict maintenance still run in every mode. Idempotent and
   /// best-effort; safe to call on every foreground.
   ///
-  /// Expired audit rows produce durable account-scoped physical-delete work;
-  /// sync inactivity never turns a privacy deletion into a local-only delete.
-  ///
   /// When `includeActiveOutboxCap` is true it also bounds the never-pushed
   /// `sync_outbox` backlog
   /// (``LorvexSync/Outbox/gcUnsyncedBeyondCap(_:maxRows:)``), which the outbox's
@@ -152,15 +141,13 @@ public enum SyncRetention {
   /// Apply the intentionally lossy sync-off backlog cap without ever making the
   /// loss silent. Deleting an active outbox row means incremental transport no
   /// longer contains a complete history, so the reseed marker is committed in
-  /// the same savepoint. The next live cycle then enumerates canonical live rows
-  /// and every tombstone not covered by an authoritative generation cutoff
-  /// before advancing its traversal.
+  /// the same savepoint. The next live cycle then re-enqueues every canonical
+  /// live row and every tombstone.
   @discardableResult
   static func gcActiveOutboxAndFlagReseed(
     _ db: Database, maxRows: Int, syncedAt: String
   ) throws -> UInt64 {
     try StoreTransactions.withSavepoint(db, "outbox_cap_reseed") { db in
-      guard !hasGenerationSnapshotStaging(db) else { return 0 }
       let deleted = try Outbox.gcUnsyncedBeyondCap(db, maxRows: maxRows)
       guard deleted > 0 else { return 0 }
       try SyncCheckpoints.set(
@@ -174,16 +161,6 @@ public enum SyncRetention {
           resolvedAt: syncedAt, resolutionType: ResolutionName.reseedRequired))
       return deleted
     }
-  }
-
-  /// Lossy maintenance cannot run while an immutable generation capture is in
-  /// flight. That capture's final completeness proof and ready publication must
-  /// observe one continuous transport-debt set. Safe age-based diagnostics and
-  /// synced-row cleanup still run; pending/quarantine shedding and the active
-  /// outbox cap resume after the staging singleton is finalized or discarded.
-  private static func hasGenerationSnapshotStaging(_ db: Database) -> Bool {
-    (try? Int.fetchOne(
-      db, sql: "SELECT 1 FROM sync_generation_snapshot_staging LIMIT 1")) == 1
   }
 
   /// The local maintenance subset that is safe in every configured sync mode.
@@ -208,9 +185,10 @@ public enum SyncRetention {
   /// resolve — flagging it would only loop a futile reseed. Must run
   /// BEFORE the delete (afterward there is nothing to detect). A device this far
   /// behind on genuine orphan records cannot apply them incrementally, so the
-  /// signal makes the sync transport run a full reseed at its next cycle start
-  /// (and the host surface the state) instead of dropping newer-peer records
-  /// silently.
+  /// signal makes the sync transport run a full reseed and fetch the whole
+  /// zone again (and the host surface the state) instead of dropping
+  /// newer-peer records silently: a refetched orphan whose parent has since
+  /// arrived applies, and one still missing its parent is parked again.
   static func flagReseedRequiredIfExpiredPresent(
     _ db: Database, horizonDays: UInt32, syncedAt: String
   ) throws {
@@ -243,6 +221,7 @@ public enum SyncRetention {
           + "expired_quarantine_rows=\(expiredQuarantineCount)",
         resolvedAt: syncedAt, resolutionType: ResolutionName.reseedRequired))
     try SyncCheckpoints.set(db, key: SyncNaming.reseedRequiredCheckpointKey, value: "true")
+    try SyncCheckpoints.set(db, key: SyncNaming.refetchRequiredCheckpointKey, value: "true")
   }
 
   /// Coalesce budget-exempt HOLD rows past the horizon down to the newest

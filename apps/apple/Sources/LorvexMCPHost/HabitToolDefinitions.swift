@@ -32,16 +32,16 @@ enum HabitToolDefinitions {
     .write(68, ListHabitToolCatalog.reorderHabitsTool) {
       try await $0.reorderHabitsResult(arguments: $1)
     },
-    .write(92, ListHabitToolCatalog.completeHabitTool) {
+    .write(88, ListHabitToolCatalog.completeHabitTool) {
       try await $0.completeHabitResult(arguments: $1)
     },
-    .write(93, ListHabitToolCatalog.batchCompleteHabitTool) {
+    .write(89, ListHabitToolCatalog.batchCompleteHabitTool) {
       try await $0.batchCompleteHabitResult(arguments: $1)
     },
-    .write(94, ListHabitToolCatalog.uncompleteHabitTool) {
+    .write(90, ListHabitToolCatalog.uncompleteHabitTool) {
       try await $0.uncompleteHabitResult(arguments: $1)
     },
-    .write(95, ListHabitToolCatalog.adjustHabitCompletionTool) {
+    .write(91, ListHabitToolCatalog.adjustHabitCompletionTool) {
       try await $0.adjustHabitCompletionResult(arguments: $1)
     },
   ]

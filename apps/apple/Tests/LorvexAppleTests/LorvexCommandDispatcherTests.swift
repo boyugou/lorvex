@@ -93,14 +93,14 @@ func commandDispatcherRoutesByExplicitFocusedSurface() async throws {
   let rootTask = try #require(tasks.first)
   let focusedTask = try #require(tasks.dropFirst().first)
   store.setTaskWorkspaceSelection([rootTask.id])
-  store.setFocusWorkspaceSelection([focusedTask.id])
+  store.setTodaySelection([focusedTask.id])
   store.selectedTaskID = rootTask.id
   var openedTaskID: LorvexTask.ID?
   let dispatcher = LorvexCommandDispatcher(store: store) { _ in }
 
   dispatcher.perform(
     .openTaskDetail,
-    selectionSurface: .focus,
+    selectionSurface: .today,
     openTaskDetail: { openedTaskID = $0 }
   )
 

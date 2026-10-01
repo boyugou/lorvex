@@ -21,10 +21,8 @@ func factorySplitsCacheFromConsentAndExcludesOnlyTheCache() throws {
   let base = makeTempDirectoryURL("factory")
   defer { try? FileManager.default.removeItem(at: base) }
 
-  let coordinator = CloudSyncFactory.makeCoordinator(mode: .live, stateDirectory: base)
-  #expect(coordinator != nil)
-
-  let cache = CloudSyncFactory.reconstructibleCacheDirectory(base)
+  let cache = CloudSyncFactory.prepareStateDirectories(base: base)
+  #expect(cache == CloudSyncFactory.reconstructibleCacheDirectory(base))
   #expect(FileManager.default.fileExists(atPath: cache.path))
   #expect(
     isExcludedFromBackup(cache) == true,
@@ -40,7 +38,7 @@ func recordSystemFieldsStoreExcludesItsDirectoryFromBackupOnWrite() async throws
   defer { try? FileManager.default.removeItem(at: dir) }
   let store = FileCloudSyncRecordSystemFieldsStore(directory: dir)
 
-  await store.store(Data([0xAB]), forRecordName: "task|abc")
+  await store.store(Data([0xAB]), accountIdentifier: "account-A", zoneName: "Lorvex", recordName: "task|abc")
 
   #expect(isExcludedFromBackup(dir) == true)
 }

@@ -10,14 +10,13 @@ extension MobileStore {
     return resolveTask(selectedTaskID)
   }
 
-  /// Resolve a task by id across every loaded pool — the Today snapshot, the
-  /// open list detail, and the focus plan — so a detail route opened from a
-  /// list row (whose task isn't in Today) finds it instead of 404ing.
+  /// Resolve a task by id across every loaded pool — the Today snapshot and
+  /// the task cache, which every scoped task page fills — so a detail route
+  /// opened from a list row (whose task isn't in Today) finds it instead of
+  /// 404ing.
   public func resolveTask(_ id: LorvexTask.ID) -> LorvexTask? {
     if let task = snapshot.inProgressTasks.first(where: { $0.id == id }) { return task }
     if let task = snapshot.today.tasks.first(where: { $0.id == id }) { return task }
-    if let task = selectedListDetail?.tasks.first(where: { $0.id == id }) { return task }
-    if let task = snapshot.focusTasks.first(where: { $0.id == id }) { return task }
     return taskCache[id]
   }
 
@@ -27,12 +26,6 @@ extension MobileStore {
       tasksByID[task.id] = task
     }
     for task in snapshot.today.tasks {
-      tasksByID[task.id] = task
-    }
-    for task in selectedListDetail?.tasks ?? [] {
-      tasksByID[task.id] = task
-    }
-    for task in snapshot.focusTasks {
       tasksByID[task.id] = task
     }
     for task in taskCache.values {
@@ -57,9 +50,6 @@ extension MobileStore {
     }
     if let index = snapshot.today.tasks.firstIndex(where: { $0.id == task.id }) {
       snapshot.today.tasks[index] = task
-    }
-    if let index = selectedListDetail?.tasks.firstIndex(where: { $0.id == task.id }) {
-      selectedListDetail?.tasks[index] = task
     }
     // Calendar lane membership is planned-first (`planned_date ?? due_date`).
     let actionDate = task.plannedDate ?? task.dueDate

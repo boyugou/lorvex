@@ -34,29 +34,20 @@ func detachedWindowStorePreservesInjectedClock() async throws {
 
 @MainActor
 @Test
-func detachedWindowKeepsCloudKitOffButSharesTheParentsMaintenanceGate() async throws {
-  let coordinator = CloudSyncEngineCoordinator(
-    accountChecker: StubAccountStatusChecker(),
-    pusher: RecordingRecordPusher(),
-    fetcher: StubRemoteChangeFetcher(records: []),
-    accountIdentifier: StubAccountIdentifier(identifier: "account-A"),
-    accountIdentityStore: RecordingAccountIdentityStore(initial: "account-A"),
-    accountPauseStore: RecordingCloudSyncPauseStore())
+func detachedWindowKeepsCloudKitOffAndFollowsTheParentsRetentionPolicy() async throws {
+  let core = try await makeSeededInMemoryCore()
   let parent = AppStore(
-    core: try await makeSeededInMemoryCore(),
+    core: core,
     cloudSyncMode: .live,
-    cloudSyncCoordinator: coordinator,
-    cloudDataMaintenanceCoordinator: coordinator)
+    cloudSyncController: TestCloudSync(store: core).controller)
 
   let detached = parent.makeDetachedWindowStore()
 
   #expect(detached.cloudSyncMode == .off)
-  #expect(detached.cloudSyncCoordinator == nil)
+  #expect(detached.cloudSyncController == nil)
   #expect(
     detached.shouldIncludeActiveOutboxCap == false,
-    "a coordinator-less window must inherit the live app's no-shedding policy")
-  let detachedMaintenance = try #require(detached.cloudDataMaintenanceCoordinator)
-  #expect(detachedMaintenance.operationGate === coordinator.operationGate)
+    "a controller-less window must inherit the live app's no-shedding policy")
 
   parent.cloudSyncMode = .off
   #expect(
@@ -187,7 +178,7 @@ struct DetachedWindowConvergenceTests {
   @Test("closing a detached window rejects a DB read that already started")
   func detachedObserverStopRejectsSuspendedReadResult() async throws {
     let preview = try await makeSeededInMemoryCore()
-    let core = StubFocusCoreService(preview: preview)
+    let core = StubCoreService(preview: preview)
     let target: LorvexTask.ID = LorvexPreviewSeedID.agendaTask
     let original = try await preview.loadTask(id: target)
     core.loadTaskOverride = original
@@ -223,7 +214,7 @@ struct DetachedWindowConvergenceTests {
   @Test("core replacement rejects a suspended read from the previous database")
   func detachedCoreReplacementRejectsPreviousCoreRead() async throws {
     let oldPreview = try await makeSeededInMemoryCore()
-    let oldCore = StubFocusCoreService(preview: oldPreview)
+    let oldCore = StubCoreService(preview: oldPreview)
     let target: LorvexTask.ID = LorvexPreviewSeedID.agendaTask
     oldCore.loadTaskOverride = try await oldPreview.loadTask(id: target)
 
@@ -247,7 +238,7 @@ struct DetachedWindowConvergenceTests {
     let newPreview = try await makeSeededInMemoryCore()
     let newTask = try await newPreview.updateTask(
       TaskUpdateDraft(id: target, title: "Canonical replacement core"))
-    let newCore = StubFocusCoreService(preview: newPreview)
+    let newCore = StubCoreService(preview: newPreview)
     newCore.loadTaskOverride = newTask
     await detached.adoptReplacedCore(newCore)
     #expect(detached.selectedTask?.title == "Canonical replacement core")

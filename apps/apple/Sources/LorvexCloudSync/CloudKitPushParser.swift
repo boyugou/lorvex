@@ -1,4 +1,6 @@
+@preconcurrency import CloudKit
 import Foundation
+import LorvexCore
 
 // MARK: - Notification name
 
@@ -27,16 +29,17 @@ extension Notification.Name {
 
 // MARK: - Parser
 
-/// Inspects a remote-notification payload and determines whether it
-/// originated from a Lorvex CloudKit database subscription.
+/// Inspects a remote-notification payload and determines whether it is a
+/// CloudKit push for Lorvex's container.
 public enum CloudKitPushParser {
-  /// Returns `true` when the payload contains a CloudKit notification whose
-  /// subscription ID starts with `"lorvex-"`.
+  /// Returns `true` when the payload is a CloudKit notification for
+  /// `iCloud.com.lorvex.apple`. The subscription is not inspected: the sync
+  /// engine registers its own database subscription under an identifier it
+  /// chooses, and Lorvex owns no other subscription in that container.
   public static func isLorvexCloudKitNotification(_ userInfo: [String: Any]) -> Bool {
-    guard
-      let ck = userInfo["ck"] as? [String: Any],
-      let sub = ck["sub"] as? String
-    else { return false }
-    return sub.hasPrefix("lorvex-")
+    guard let notification = CKNotification(fromRemoteNotificationDictionary: userInfo) else {
+      return false
+    }
+    return notification.containerIdentifier == LorvexProductMetadata.cloudKitContainerIdentifier
   }
 }

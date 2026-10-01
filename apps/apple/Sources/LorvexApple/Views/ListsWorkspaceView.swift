@@ -9,58 +9,25 @@ struct ListsWorkspaceView: View {
   /// The catalog row currently under a task drag, highlighted so the drop
   /// target reads clearly — mirrors the sidebar list rows' drop affordance.
   @State private var dropTargetedListID: LorvexList.ID?
+  /// Each list's first open tasks, previewed on its card.
+  @State private var listPreviews: [LorvexList.ID: [LorvexTask]] = [:]
 
   private enum OverviewMetrics {
     static let rowMaxWidth: CGFloat = 760
   }
 
   private var listsEmptyState: LorvexEmptyStateModel? {
-    if store.hasActiveSearch && filteredCatalogLists.isEmpty {
-      return LorvexEmptyStateModel(
-        title: String(localized: "lists.empty.search_title", defaultValue: "No List Results", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "lists.empty.search_description",
-          defaultValue: "No project list matches the current search.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "magnifyingglass",
-        tint: .secondary,
-        chips: [
-          LorvexEmptyStateChip(
-            title: store.searchText,
-            systemImage: "text.magnifyingglass",
-            tint: .accentColor
-          )
-        ],
-        action: LorvexEmptyStateAction(
-          title: String(localized: "common.clear_search", defaultValue: "Clear Search", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "xmark.circle"
-        ) {
-          store.searchText = ""
-        }
-      )
-    }
-
     if store.lists?.lists.isEmpty == true {
       return LorvexEmptyStateModel(
         title: String(localized: "lists.empty.no_lists_title", defaultValue: "No Lists", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
           localized: "lists.empty.no_lists_description",
-          defaultValue: "Lists will appear here once they're created.",
+          defaultValue: "Click ＋ to group related tasks into a list — or ask your assistant to.",
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
         systemImage: "folder",
-        tint: .accentColor,
-        chips: [],
-        action: LorvexEmptyStateAction(
-          title: String(localized: "lists.create", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "plus",
-          style: .primary
-        ) {
-          isShowingCreateList = true
-        }
+        tint: .accentColor
       )
     }
 
@@ -91,17 +58,30 @@ struct ListsWorkspaceView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ListsWorkspaceHeader(
-        summary: summary,
-        scope: $listScope,
-        create: { isShowingCreateList = true }
-      )
+      ListsWorkspaceHeader(subtitle: subtitle)
 
       Divider()
 
       listOverview
     }
     .navigationTitle(String(localized: "sidebar.item.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle))
+    .toolbar {
+      ToolbarSpacer(.flexible)
+
+      ToolbarItemGroup(placement: .primaryAction) {
+        Button {
+          isShowingCreateList = true
+        } label: {
+          Label(
+            String(localized: "lists.create.a11y", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "plus")
+        }
+        .help(String(localized: "lists.create.help", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("lists.create")
+
+        ListsViewOptionsMenu(scope: $listScope)
+      }
+    }
     .sheet(isPresented: $isShowingCreateList) {
       CreateListSheet(
         store: store,
@@ -123,10 +103,12 @@ struct ListsWorkspaceView: View {
   private var listOverview: some View {
     ScrollView {
       WorkspaceDashboardLane {
-        LazyVStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+        LazyVStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
           ForEach(Array(filteredCatalogLists.enumerated()), id: \.element.id) { index, list in
             ListCatalogRow(
               list: list,
+              previewTasks: listPreviews[list.id] ?? [],
+              openTask: { store.openTaskInListScope($0, listID: list.id) },
               select: {
                 openListScope(list.id)
               },
@@ -172,6 +154,11 @@ struct ListsWorkspaceView: View {
       }
     }
     .accessibilityIdentifier("lists.overview")
+    // The lists snapshot changes with every task change that moves a count,
+    // so the previews follow it.
+    .task(id: store.lists) {
+      listPreviews = await store.loadListPreviews(ids: store.orderedLists.map(\.id))
+    }
     .overlay {
       if let listsEmptyState {
         LorvexEmptyStatePanel(model: listsEmptyState)
@@ -194,74 +181,37 @@ struct ListsWorkspaceView: View {
   }
 
   private func openListScope(_ id: LorvexList.ID) {
-    store.selectedTaskID = nil
-    store.setTaskWorkspaceListScope(id)
-    store.selection = .tasks
+    store.openTaskListScope(id)
   }
 
-  private var summary: String {
-    let count = filteredCatalogLists.count
-    let openCount = filteredCatalogLists.reduce(0) { $0 + $1.openCount }
-    if store.hasActiveSearch {
-      return String(
-        localized: "lists.summary.search_count",
-        defaultValue: "\(count) lists matching the current search.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
-    }
-    let format: String
-    switch (count == 1, openCount == 1) {
-    case (true, true):
-      format = String(localized: "lists.summary.all.one_list_one_task", defaultValue: "%1$lld list with %2$lld open task.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case (true, false):
-      format = String(localized: "lists.summary.all.one_list_many_tasks", defaultValue: "%1$lld list with %2$lld open tasks.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case (false, true):
-      format = String(localized: "lists.summary.all.many_lists_one_task", defaultValue: "%1$lld lists with %2$lld open task.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case (false, false):
-      format = String(localized: "lists.summary.all.many_lists_many_tasks", defaultValue: "%1$lld lists with %2$lld open tasks.", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-    return String(format: format, count, openCount)
+  /// The line under the Lists title: the scope filter, or no line when the
+  /// catalog shows every list. It never counts lists or tasks, since every row
+  /// carries its own open and total counts.
+  private var subtitle: String {
+    listScope.headerCaption ?? ""
   }
 
   private var filteredCatalogLists: [LorvexList] {
-    store.filteredLists.filter(listScope.includes)
+    store.orderedLists.filter(listScope.includes)
   }
 
 }
 
+/// The Lists catalog header: the identity, plus a line naming the scope
+/// filter when it narrows the catalog. The create action and the scope menu
+/// ride in the window toolbar (`ListsWorkspaceView`).
 private struct ListsWorkspaceHeader: View {
-  let summary: String
-  @Binding var scope: ListsWorkspaceScope
-  let create: () -> Void
+  let subtitle: String
 
   var body: some View {
     WorkspacePlanHeaderChrome {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-        HStack(alignment: .center, spacing: LorvexDesign.Spacing.m) {
-          WorkspaceHeaderIdentity(
-            title: String(localized: "sidebar.item.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle),
-            subtitle: summary,
-            systemImage: SidebarSelection.lists.systemImage,
-            accessibilityIdentifier: "lists.header.identity",
-            subtitleAccessibilityIdentifier: "lists.header.summary"
-          )
-
-          Spacer(minLength: LorvexDesign.Spacing.m)
-
-          HStack(spacing: LorvexDesign.Spacing.s) {
-            Button(action: create) {
-              Image(systemName: "plus")
-            }
-            .workspaceHeaderActionStyle()
-            .help(String(localized: "lists.create.help", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle))
-            .accessibilityLabel(String(localized: "lists.create.a11y", defaultValue: "Create List", table: "Localizable", bundle: LorvexL10n.bundle))
-            .accessibilityIdentifier("lists.create")
-
-            ListsViewOptionsMenu(scope: $scope)
-          }
-          .fixedSize(horizontal: true, vertical: false)
-        }
-      }
+      WorkspaceHeaderIdentity(
+        title: String(localized: "sidebar.item.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle),
+        subtitle: subtitle,
+        icon: SidebarSelection.lists.systemImage,
+        accessibilityIdentifier: "lists.header.identity",
+        subtitleAccessibilityIdentifier: "lists.header.summary"
+      )
     }
   }
 }
@@ -270,7 +220,7 @@ private struct ListsViewOptionsMenu: View {
   @Binding var scope: ListsWorkspaceScope
 
   private var label: String {
-    String(localized: "lists.scope.picker", defaultValue: "List Scope", table: "Localizable", bundle: LorvexL10n.bundle)
+    String(localized: "lists.scope.picker", defaultValue: "Filter Lists", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   var body: some View {
@@ -280,12 +230,12 @@ private struct ListsViewOptionsMenu: View {
           Label(scope.title, systemImage: scope.systemImage).tag(scope)
         }
       }
+      .pickerStyle(.inline)
       .accessibilityIdentifier("lists.scope")
     } label: {
-      Label(String(localized: "lists.scope.menu", defaultValue: "Scope", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "slider.horizontal.3")
+      Label(String(localized: "lists.scope.menu", defaultValue: "View Options", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "slider.horizontal.3")
+        .labelStyle(.titleAndIcon)
     }
-    .menuStyle(.button)
-    .workspaceHeaderLabeledActionStyle()
     .help(label)
     .accessibilityLabel(label)
     .accessibilityIdentifier("lists.viewOptions")

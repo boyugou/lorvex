@@ -4,20 +4,25 @@ import LorvexCore
 enum SidebarMetrics {
     static let iconWidth: CGFloat = 22
     static let rowHeight: CGFloat = 44
-    static let scopeRowHeight: CGFloat = 50
     static let compactRowHeight: CGFloat = 42
     static let rowLeadingPadding: CGFloat = 8
     static let rowTrailingPadding: CGFloat = 8
     static let horizontalInset: CGFloat = 12
     static let rowSpacing: CGFloat = 2
-    static let columnMinWidth: CGFloat = 148
-    static let columnIdealWidth: CGFloat = 164
-    static let columnMaxWidth: CGFloat = 184
+    /// The sole source of truth for the sidebar column's width range;
+    /// `ContentView` passes these straight to `navigationSplitViewColumnWidth`.
+    ///
+    /// The ideal fits a list name of roughly "NeoCognition" length beside the
+    /// icon and the open-count badge without truncating — the name is the row's
+    /// primary identifier, so it must not be the first thing sacrificed. The max
+    /// leaves drag room for longer names.
+    static let columnMinWidth: CGFloat = 180
+    static let columnIdealWidth: CGFloat = 232
+    static let columnMaxWidth: CGFloat = 340
 
     /// Content insets applied to every `List` row so the icon column rides near
     /// the source-list leading edge instead of the default sidebar indent, which
-    /// would push the fixed 22pt icon column out of alignment in the narrow
-    /// (148–184pt) column. Locked by `macOSSidebarRowsKeepIconColumnInsideNarrowSourceList`.
+    /// would push the fixed 22pt icon column out of alignment.
     static let rowInsets = EdgeInsets(
         top: rowSpacing,
         leading: rowLeadingPadding,
@@ -28,9 +33,7 @@ enum SidebarMetrics {
 
 enum SidebarTypography {
     static let section = LorvexDesign.Typography.primaryText.weight(.semibold)
-    static let destinationTitle = LorvexDesign.Typography.primaryEmphasis
-    static let compactTitle = LorvexDesign.Typography.primaryEmphasis
-    static let destinationDetail = LorvexDesign.Typography.secondaryText
+    static let title = LorvexDesign.Typography.primaryEmphasis
 }
 
 /// A `List` `Section` header for the source list. Rendered inside the section's
@@ -62,28 +65,21 @@ struct SidebarListIcon: View {
 }
 
 /// A source-list row rendered inside `List(selection:)`. It draws only content —
-/// icon column, title, optional secondary detail line, optional trailing count
-/// badge — and leaves the selection highlight, hover, focus ring, and
-/// inactive-window desaturation to the native `.sidebar` list. Titles and the
-/// bare-symbol icon use hierarchical styles (`.primary` / `.secondary`) so the
-/// list inverts them against the selection fill; a colored `SidebarListIcon`
-/// keeps its own tint.
+/// icon column, a one-line title, and an optional trailing count badge — and
+/// leaves the selection highlight, hover, focus ring, and inactive-window
+/// desaturation to the native `.sidebar` list. Titles and the bare-symbol icon
+/// use hierarchical styles (`.primary` / `.secondary`) so the list inverts them
+/// against the selection fill; a colored `SidebarListIcon` keeps its own tint.
 struct SidebarListRow<Icon: View, Title: View>: View {
-    let minHeight: CGFloat
-    let detail: String?
     let badge: String?
     let icon: Icon
     let title: Title
 
     init(
-        minHeight: CGFloat = SidebarMetrics.rowHeight,
-        detail: String? = nil,
         badge: String? = nil,
         @ViewBuilder icon: () -> Icon,
         @ViewBuilder title: () -> Title
     ) {
-        self.minHeight = minHeight
-        self.detail = detail
         self.badge = badge
         self.icon = icon()
         self.title = title()
@@ -94,46 +90,44 @@ struct SidebarListRow<Icon: View, Title: View>: View {
             icon
                 .frame(width: SidebarMetrics.iconWidth, alignment: .center)
                 .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 1) {
-                title
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .layoutPriority(1)
-                if let detail {
-                    Text(detail)
-                        .font(SidebarTypography.destinationDetail)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            title
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .layoutPriority(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
             if let badge {
                 Text(badge)
                     .font(LorvexDesign.Typography.tertiaryText.monospacedDigit().weight(.medium))
                     .foregroundStyle(.secondary)
-                    .padding(.horizontal, 6)
+                    .padding(.horizontal, LorvexDesign.Spacing.sm)
                     .padding(.vertical, 1)
                     .background(.quaternary.opacity(0.75), in: Capsule())
                     .fixedSize(horizontal: true, vertical: false)
             }
         }
-        .font(detail == nil ? SidebarTypography.compactTitle : SidebarTypography.destinationTitle)
-        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .leading)
+        .font(SidebarTypography.title)
+        .frame(maxWidth: .infinity, minHeight: SidebarMetrics.rowHeight, alignment: .leading)
         .contentShape(Rectangle())
     }
 }
 
-/// The pinned Settings row below the scrolling source list. It lives outside the
-/// `List`, so it draws its own hover pill (the `List` can't) while matching the
-/// row metrics and icon column of the list rows above it.
+/// A pinned row below the scrolling source list (Memory, Settings). It lives
+/// outside the `List`, so it draws its own hover pill and, for a destination,
+/// its own selection (the `List` can't), while matching the row metrics and
+/// icon column of the list rows above it.
 struct SidebarFooterRow<Icon: View, Title: View>: View {
+    let isSelected: Bool
     let icon: Icon
     let title: Title
     @State private var isHovering = false
 
-    init(@ViewBuilder icon: () -> Icon, @ViewBuilder title: () -> Title) {
+    init(
+        isSelected: Bool = false,
+        @ViewBuilder icon: () -> Icon,
+        @ViewBuilder title: () -> Title
+    ) {
+        self.isSelected = isSelected
         self.icon = icon()
         self.title = title()
     }
@@ -149,15 +143,19 @@ struct SidebarFooterRow<Icon: View, Title: View>: View {
                 .truncationMode(.tail)
             Spacer(minLength: 0)
         }
-        .font(SidebarTypography.compactTitle)
+        .font(SidebarTypography.title)
         .padding(.leading, SidebarMetrics.rowLeadingPadding)
         .padding(.trailing, SidebarMetrics.rowTrailingPadding)
         .frame(maxWidth: .infinity, minHeight: SidebarMetrics.compactRowHeight, alignment: .leading)
         .background {
-            if isHovering {
+            if isSelected {
                 RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-                    .fill(.quaternary.opacity(0.75))
-                    .padding(.vertical, 3)
+                    .fill(LorvexDesign.Palette.sidebarSelectionFill)
+                    .padding(.vertical, LorvexDesign.Spacing.xxs)
+            } else if isHovering {
+                RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
+                    .fill(LorvexDesign.Palette.hoverFill)
+                    .padding(.vertical, LorvexDesign.Spacing.xxs)
             }
         }
         .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))

@@ -23,9 +23,9 @@ public struct LorvexIntentHandoffStore {
     try $scopedSuiteName.withValue(suiteName, operation: operation)
   }
 
-  public static func withScopedSuiteName<T>(
+  public nonisolated(nonsending) static func withScopedSuiteName<T>(
     _ suiteName: String,
-    operation: () async throws -> T
+    operation: nonisolated(nonsending) () async throws -> T
   ) async rethrows -> T {
     try await $scopedSuiteName.withValue(suiteName, operation: operation)
   }
@@ -49,7 +49,7 @@ public struct LorvexIntentHandoffStore {
       suiteName: LorvexProductMetadata.appGroupIdentifier)
     {
       // Default to the App-Group suite so an out-of-process writer (the Control
-      // Center focus control runs in the widget-extension process) lands its
+      // Center Today control runs in the widget-extension process) lands its
       // handoff where the app reads it. `.standard` there would be the
       // extension's private domain, invisible to the app.
       self.defaults = sharedDefaults

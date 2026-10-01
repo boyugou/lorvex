@@ -111,12 +111,6 @@ public enum TaskBatchCreate {
         contentsOf: completion.cancelledReminderIds)
       if let successorIdString = completion.spawnedSuccessorId {
         let successorTyped = TaskId(trusted: successorIdString)
-        syncEffects.focusRewireAudits.append(
-          BatchCreateFocusRewireAudit(
-            parentTaskId: typed,
-            successorId: successorTyped,
-            focusScheduleDates: completion.rewiredFocusScheduleDates,
-            currentFocusDates: completion.rewiredCurrentFocusDates))
         let successor = try TaskResponse.loadEnrichedTaskJSON(
           db, taskId: successorTyped)
         syncEffects.spawnedSuccessors.append(
@@ -133,10 +127,6 @@ public enum TaskBatchCreate {
         contentsOf: completion.spawnedSuccessorChecklistItemIds)
       syncEffects.spawnedSuccessorReminderIds.append(
         contentsOf: completion.spawnedSuccessorReminderIds)
-      syncEffects.rewiredFocusScheduleDates.append(
-        contentsOf: completion.rewiredFocusScheduleDates)
-      syncEffects.rewiredCurrentFocusDates.append(
-        contentsOf: completion.rewiredCurrentFocusDates)
     }
 
     let createdTasks = try TaskResponse.loadEnrichedTasksJSON(
@@ -215,24 +205,6 @@ public struct BatchCreateSpawnedSuccessor: Sendable {
   }
 }
 
-/// Per-row focus-rewire audit emitted by a pre-completed batch row.
-public struct BatchCreateFocusRewireAudit: Sendable {
-  public let parentTaskId: TaskId
-  public let successorId: TaskId
-  public let focusScheduleDates: [String]
-  public let currentFocusDates: [String]
-  public init(
-    parentTaskId: TaskId,
-    successorId: TaskId,
-    focusScheduleDates: [String],
-    currentFocusDates: [String]
-  ) {
-    self.parentTaskId = parentTaskId
-    self.successorId = successorId
-    self.focusScheduleDates = focusScheduleDates
-    self.currentFocusDates = currentFocusDates
-  }
-}
 
 /// Flattened sync-effect envelope aggregating every per-row effect a
 /// batch create produces.
@@ -249,9 +221,6 @@ public struct BatchCreateSyncEffects: Sendable {
   public var spawnedSuccessorTagEdges: [CopiedTagEdge] = []
   public var spawnedSuccessorChecklistItemIds: [String] = []
   public var spawnedSuccessorReminderIds: [String] = []
-  public var focusRewireAudits: [BatchCreateFocusRewireAudit] = []
-  public var rewiredFocusScheduleDates: [String] = []
-  public var rewiredCurrentFocusDates: [String] = []
   public init() {}
 }
 

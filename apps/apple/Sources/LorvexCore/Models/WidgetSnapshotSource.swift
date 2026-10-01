@@ -16,8 +16,8 @@ public struct WidgetSnapshotSource: Sendable, Equatable {
   /// IANA timezone that owns ``logicalDay`` and every bounded day query in this
   /// transaction. Projectors and readers must use it for freshness/midnight.
   public let timezone: String
+  /// The day's list in Today's order, with the day's briefing.
   public let today: TodaySnapshot
-  public let currentFocus: CurrentFocusPlan?
   public let habits: HabitCatalogSnapshot?
   public let lists: ListCatalogSnapshot?
   public let stats: WidgetStatsSource?
@@ -27,7 +27,6 @@ public struct WidgetSnapshotSource: Sendable, Equatable {
     logicalDay: String,
     timezone: String,
     today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
     habits: HabitCatalogSnapshot?,
     lists: ListCatalogSnapshot?,
     stats: WidgetStatsSource?
@@ -36,7 +35,6 @@ public struct WidgetSnapshotSource: Sendable, Equatable {
     self.logicalDay = logicalDay
     self.timezone = timezone
     self.today = today
-    self.currentFocus = currentFocus
     self.habits = habits
     self.lists = lists
     self.stats = stats

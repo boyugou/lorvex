@@ -3,19 +3,20 @@ import LorvexCore
 
 extension AppStore {
   /// Reload only the surfaces an inbound sync's applied entity kinds can affect,
-  /// after the refresh fan-out already loaded every surface from the PRE-apply
-  /// state. `runCloudSyncCycle` calls this inline at the tail of the in-flight
-  /// refresh (see `AppStoreRuntimeLifecycle`) instead of requesting a full
-  /// trailing rerun, so a habits-only push re-reads habits without touching the
-  /// task workspace / lists / calendar / reviews.
+  /// after the last local pass loaded every surface from the PRE-apply state.
+  /// A completed sync cycle calls this when no local pass is running (see
+  /// `reconcileSurfacesAfterCompletedCloudSyncCycle`) instead of a full reload,
+  /// so a habits-only push re-reads habits without touching the task workspace
+  /// / lists / calendar / reviews.
   ///
   /// Contracts it honors:
   /// - **Best-effort per surface.** A transient read failure keeps the value the
   ///   fan-out loaded moments ago rather than blanking it — unlike
-  ///   `performRefresh`, whose full reload owns the clear-on-failure semantics.
+  ///   `performLocalRefresh`, whose full reload owns the clear-on-failure
+  ///   semantics.
   /// - **No re-entrant cycle.** It runs INSIDE `runCloudSyncCycle`, so it must
-  ///   not itself run one (it republishes the widget via `publishWidgetSnapshot`,
-  ///   never `publishAppleSyncSurfaces`).
+  ///   not itself run or await one (it republishes the widget via
+  ///   `publishWidgetSnapshot` only).
   /// - **Single-flight task reload.** Task reloads route through
   ///   `reloadTaskWorkspaceIfLoaded()`, preserving the workspace's coalescing
   ///   guard so a concurrent local mutation's awaited reload still wins.
@@ -65,18 +66,14 @@ extension AppStore {
       case .calendar:
         // Reload whatever window is on screen at its own span (day/week/month).
         try? await refreshCurrentCalendarTimeline()
-      case .focus:
-        // do/catch, not `try?`: these return an optional whose `nil` is a legitimate
-        // remote CLEAR that must be reflected. `try?` would fold that nil into the
-        // failure case and keep a stale plan. Only a thrown read error keeps the old
-        // value.
-        do { currentFocus = try await core.loadCurrentFocus(date: date) } catch {}
-        do { focusSchedule = try await core.loadFocusSchedule(date: date) } catch {}
       case .reviews:
         // Preserve an in-progress daily-review draft: only adopt freshly-loaded
-        // values when the editor has no unsaved edits, mirroring `performRefresh`.
+        // values when the editor has no unsaved edits, mirroring `performLocalRefresh`.
         let dailyReviewWasClean = dailyReviewDraftMatchesLoaded
-        // do/catch so a remote CLEAR (nil) is reflected; see the focus block.
+        // do/catch, not `try?`: the read returns an optional whose `nil` is a
+        // legitimate remote CLEAR that must be reflected. `try?` would fold that
+        // nil into the failure case and keep a stale review. Only a thrown read
+        // error keeps the old value.
         do {
           dailyReview = try await core.loadDailyReview(date: dailyReviewEditorDate)
           if dailyReviewWasClean { syncDailyReviewDraft() }

@@ -9,8 +9,8 @@ Companion material:
 
 - Listing copy (captions can echo it): `APP_STORE_METADATA.md`.
 - App Privacy answers: `APP_STORE_PRIVACY_ANSWERS.md`.
-- Account-only submission steps: `docs/finalization/RELEASE_ACCOUNT_CHECKLIST.md`
-  (repo root) §11.
+- Account-only submission steps: `DISTRIBUTION.md`, "App Store listing
+  metadata and account-only actions".
 - Per-platform surface truth this shot list maps to: `docs/SURFACE_DESIGN.md`,
   `docs/reference/FEATURES.md`.
 
@@ -44,12 +44,12 @@ Companion material:
   <windowid>`. Note: `swift run LorvexApple --dump-snapshots <dir>` is a
   DEBUG *component* renderer for design QA (task row, metric card, habit ring),
   **not** an App Store screenshot path — it renders atoms, not whole workspaces.
-- **iOS / iPadOS / visionOS / watchOS:** build and install onto the matching
-  simulator (the `script/verify_mobile_simulator.sh`,
-  `verify_vision_simulator.sh`, `verify_watch_simulator.sh` flows already boot,
-  install, and launch the app), navigate to each surface, and capture with
-  `xcrun simctl io <udid> screenshot <file>.png`. Simulator captures are already
-  at the device's native pixel size, which is what App Store Connect expects.
+- **iOS / iPadOS / watchOS:** build and install onto the matching simulator
+  (the `script/verify_mobile_simulator.sh`, `verify_watch_simulator.sh` flows
+  already boot, install, and launch the app), navigate to each surface, and
+  capture with `xcrun simctl io <udid> screenshot <file>.png`. Simulator
+  captures are already at the device's native pixel size, which is what App
+  Store Connect expects.
 
 ## Required sizes
 
@@ -63,7 +63,6 @@ submission — **Apple changes these independently of this repo.**
 | iOS (iPhone) | 6.9" (e.g. iPhone 16 Pro Max) | 1290 × 2796 | up to 10 (min 1) |
 | iPadOS | 13" iPad Pro | 2064 × 2752 (2048 × 2732 also accepted) | up to 10 (min 1) |
 | macOS | Mac display | 2880 × 1800 (or 1280×800 / 1440×900 / 2560×1600) | up to 10 (min 1) |
-| visionOS | Apple Vision Pro | 3840 × 2160 (landscape) | up to 10 (min 1) |
 | watchOS | largest current watch (e.g. Series 10 46mm / Ultra) | ~410 × 502 (device-specific) | up to 10, optional |
 
 Notes:
@@ -83,7 +82,7 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 
 ### macOS — the command center
 
-1. **Today** — the focus plan + time-blocked schedule (the daily driver). Hero.
+1. **Today** — the day's task list, briefing, and optional time-blocked schedule (the daily driver). Hero.
 2. **Assistant / AI changelog** — Settings → Assistant (MCP client wiring) or a
    Today/Tasks view showing the AI-changelog entries. This is the honest way to
    show the "AI runs it, you review" model without faking an in-app chat.
@@ -94,14 +93,14 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 6. *(optional)* **Command Palette (⌘K)** or the **menu-bar Today HUD** to show
    keyboard-first / glanceable macOS ergonomics.
 
-### iOS (iPhone) — capture, glance, focus
+### iOS (iPhone) — capture, glance, plan
 
-1. **Today** tab — current focus + day plan. Hero.
+1. **Today** tab — the day's task list, briefing, and optional schedule. Hero.
 2. **Quick capture** sheet (the global ＋) — one-tap capture.
 3. **Tasks** tab — list with priority/tags; optionally a task detail sheet.
 4. **Calendar** tab — day/agenda with planning blocks.
 5. **Habits** tab — streaks and progress.
-6. *(optional)* A **Home Screen with widgets** (Focus / Today / Habits /
+6. *(optional)* A **Home Screen with widgets** (Today / Habits /
    progress-ring) to show the WidgetKit surfaces.
 
 ### iPadOS — the middle instrument
@@ -112,15 +111,9 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 3. **Today** with the full sidebar (NavigationSplitView) visible.
 4. *(optional)* **Habits** or **Memory** split workspace.
 
-### visionOS — spatial planner
-
-1. **Today** or **Tasks** in the main window, framed per Apple's visionOS
-   screenshot guidance (3840 × 2160). Only include if visionOS is in the
-   submission for this cut.
-
 ### watchOS — wrist glance (optional)
 
-1. **Root focus view** — current focus task + one-tap complete.
+1. **Root Today view** — the lead task + one-tap complete.
 2. *(optional)* A **complication** on a watch face.
 
 ## Localization and preview videos

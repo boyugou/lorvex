@@ -16,6 +16,8 @@ struct MobileHabitReminderList: View {
   var removeReminder: ((HabitReminderPolicy) async -> Void)? = nil
 
   @State private var timeSheet: MobileHabitReminderTimeContext?
+  /// The bell's column, grown with the body style the bell is set in.
+  @ScaledMetric(relativeTo: .body) private var bellWidth: CGFloat = 22
 
   private var isInteractive: Bool { addReminder != nil }
   private var sortedPolicies: [HabitReminderPolicy] {
@@ -54,7 +56,8 @@ struct MobileHabitReminderList: View {
       }
       .padding(LorvexDesign.Spacing.l)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+      .background(
+        .regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
       .accessibilityElement(children: .contain)
       .accessibilityIdentifier("mobileHabits.detail.reminders")
       .sheet(item: $timeSheet) { context in
@@ -68,7 +71,6 @@ struct MobileHabitReminderList: View {
             await addReminder?(newTime)
           }
         }
-        .lorvexSpatialBackground()
         .mobileCompactEditorSheetPresentation()
       }
     }
@@ -78,8 +80,8 @@ struct MobileHabitReminderList: View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Image(systemName: policy.enabled ? "bell.fill" : "bell.slash")
         .foregroundStyle(policy.enabled ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
-        .frame(width: 22)
-      Text(mobileClockTimeLabel(policy.reminderTime))
+        .frame(width: bellWidth)
+      Text(lorvexClockTimeLabel(policy.reminderTime))
         .font(LorvexDesign.Typography.primaryText.weight(.medium))
         .strikethrough(!policy.enabled)
         .foregroundStyle(policy.enabled ? Color.primary : Color.secondary)
@@ -177,11 +179,12 @@ struct MobileHabitReminderTimeSheet: View {
             }
           } label: {
             if isSaving {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(String(localized: "common.save", defaultValue: "Save", table: "Localizable", bundle: MobileL10n.bundle))
             }
           }
+          .mobileProminentToolbarButtonStyle()
           .disabled(isSaving)
           .accessibilityIdentifier("mobileHabits.reminderTime.confirm")
         }

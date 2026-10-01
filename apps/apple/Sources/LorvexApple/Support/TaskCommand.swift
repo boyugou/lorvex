@@ -4,7 +4,7 @@ import SwiftUI
 enum TaskCommand: CaseIterable {
   case showDetail
   case save
-  case toggleFocus
+  case toggleStarted
   case deferToTomorrow
   case complete
   case reopen
@@ -14,7 +14,7 @@ enum TaskCommand: CaseIterable {
     switch self {
     case .showDetail: String(localized: "task_command.show_detail", defaultValue: "Show Task Detail", table: "Localizable", bundle: LorvexL10n.bundle)
     case .save: String(localized: "task_command.save", defaultValue: "Save Task", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .toggleFocus: String(localized: "task_command.add_focus", defaultValue: "Add to Focus", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .toggleStarted: String(localized: "task_command.start", defaultValue: "Start Task", table: "Localizable", bundle: LorvexL10n.bundle)
     case .deferToTomorrow: String(localized: "task_command.defer_to_tomorrow", defaultValue: "Defer to Tomorrow", table: "Localizable", bundle: LorvexL10n.bundle)
     case .complete: String(localized: "task_command.complete", defaultValue: "Complete Task", table: "Localizable", bundle: LorvexL10n.bundle)
     case .reopen: String(localized: "task_command.reopen", defaultValue: "Reopen Task", table: "Localizable", bundle: LorvexL10n.bundle)
@@ -22,12 +22,12 @@ enum TaskCommand: CaseIterable {
     }
   }
 
-  func title(isFocused: Bool) -> String {
+  /// The menu title for the current selection: Start/Pause reads "Pause Task"
+  /// when the one selected task is already started.
+  func title(isStarted: Bool) -> String {
     switch self {
-    case .toggleFocus:
-      isFocused
-        ? String(localized: "task_command.remove_focus", defaultValue: "Remove from Focus", table: "Localizable", bundle: LorvexL10n.bundle)
-        : String(localized: "task_command.add_focus", defaultValue: "Add to Focus", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .toggleStarted where isStarted:
+      String(localized: "task_command.pause", defaultValue: "Pause Task", table: "Localizable", bundle: LorvexL10n.bundle)
     default:
       title
     }
@@ -39,10 +39,10 @@ enum TaskCommand: CaseIterable {
       KeyboardShortcut("i", modifiers: [.command, .shift])
     case .save:
       KeyboardShortcut("s", modifiers: [.command])
-    case .toggleFocus:
-      // ⌥⌘F, not ⌘F: plain ⌘F is the system Find accelerator that `.searchable`
-      // binds to focus the toolbar search field.
-      KeyboardShortcut("f", modifiers: [.command, .option])
+    case .toggleStarted:
+      // ⇧⌘S joins the other ⇧⌘ task verbs; Lorvex has no document to
+      // "Save As", so the shortcut is free.
+      KeyboardShortcut("s", modifiers: [.command, .shift])
     case .deferToTomorrow:
       KeyboardShortcut("d", modifiers: [.command, .shift])
     case .complete:
@@ -59,8 +59,10 @@ enum TaskCommand: CaseIterable {
     guard let context else { return false }
     let tasks = context.selectedTasks
     switch self {
-    case .showDetail, .toggleFocus:
+    case .showDetail:
       return tasks.count == 1
+    case .toggleStarted:
+      return tasks.count == 1 && (tasks[0].status == .open || tasks[0].status == .inProgress)
     case .deferToTomorrow:
       return tasks.contains { $0.status.isActive }
     case .save:
@@ -79,7 +81,7 @@ enum TaskCommand: CaseIterable {
     switch self {
     case .showDetail: .openTaskDetail
     case .save: .saveSelectedTaskDraft
-    case .toggleFocus: .toggleSelectedTaskFocus
+    case .toggleStarted: .toggleSelectedTaskStarted
     case .deferToTomorrow: .deferSelectedTask
     case .complete: .completeSelectedTask
     case .reopen: .reopenSelectedTask

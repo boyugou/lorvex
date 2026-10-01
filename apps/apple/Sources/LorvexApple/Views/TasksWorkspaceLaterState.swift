@@ -1,11 +1,9 @@
 import LorvexCore
 import SwiftUI
 
-/// The "Later" lane derived state for the Tasks workspace: the priority-filtered
-/// Deferred, Scheduled (defer-until / hidden), and Someday buckets that fold
-/// under the Later disclosure, plus their combined count. Split out of
-/// ``TasksWorkspaceState`` so the growing derived-state surface stays within the
-/// per-file line budget.
+/// The "Later" group's derived state for the Tasks workspace: the
+/// priority-filtered Deferred, Snoozed (hidden until a date), and Someday
+/// lanes, and the one flat run the Later fold shows.
 extension TasksView {
   var visibleDeferredTasks: [LorvexTask] {
     byPriority(store.taskWorkspaceDeferredTasks)
@@ -19,7 +17,16 @@ extension TasksView {
     byPriority(store.taskWorkspaceSomedayTasks)
   }
 
+  /// The Later group as one flat run: deferred and snoozed tasks, which carry
+  /// a date, before someday tasks, which do not. A task that sits in both
+  /// dated lanes appears once.
+  var visibleLaterTasks: [LorvexTask] {
+    var seen = Set<LorvexTask.ID>()
+    return (visibleDeferredTasks + visibleScheduledTasks + visibleSomedayTasks)
+      .filter { seen.insert($0.id).inserted }
+  }
+
   var visibleLaterTaskCount: Int {
-    visibleDeferredTasks.count + visibleScheduledTasks.count + visibleSomedayTasks.count
+    visibleLaterTasks.count
   }
 }

@@ -1,73 +1,173 @@
 import LorvexCore
 import SwiftUI
 
-/// The menu-bar quick panel (rendered as a `.window`-style `MenuBarExtra`): a
-/// compact today HUD with a date header and attention stats, an inline
-/// quick-add, the next-up task list with one-click completion, and a footer to
-/// jump into the app.
+/// The menu bar panel (a `.window`-style `MenuBarExtra`): the day at a glance
+/// and the week ahead. The date with a Today / Next 7 Days switch, one
+/// sentence of facts, and a one-line quick-add stay put; under them a
+/// scrolling body that grows with its content up to ``bodyMaxHeight``.
+///
+/// Today reads the same ``LorvexCalmToday`` as the Today workspace, without
+/// the workspace's search filter, so the two never disagree about the day:
+/// the lead task (``LorvexCalmToday/lead``) set larger, then the overdue
+/// tasks, the rest of the day's tasks, the habits (checked in from their
+/// rings), and how much is done. Next 7 Days is the agenda of the seven days
+/// after today (``LorvexAgendaDay``). The panel advances with the clock
+/// while it is open.
 struct MenuBarStatusView: View {
   @Bindable var store: AppStore
   @Environment(\.openWindow) private var openWindow
+  @Environment(\.undoManager) private var undoManager
   /// Claimed when the panel opens so the user can type a capture immediately.
   @FocusState private var quickAddFocused: Bool
-  /// The menu-bar capture's own draft, kept separate from the shared
-  /// `store.draftTitle` so half-typed text here doesn't bleed into the main
-  /// window's Quick Capture (and vice versa).
+  /// The menu-bar capture's own draft, so half-typed text here never bleeds
+  /// into a capture field in the main window.
   @State private var quickAddText = ""
+  /// The scope the panel last showed, kept across openings.
+  @AppStorage("menubar.scope") private var scope: MenuBarScope = .today
 
-  private static let maxRows = 6
+  /// The tallest the scrolling body grows before it scrolls, which keeps the
+  /// whole panel near 600pt.
+  private static let bodyMaxHeight: CGFloat = 440
 
   var body: some View {
-    VStack(spacing: 0) {
-      header
+    TimelineView(.everyMinute) { _ in
+      panel(store.calmToday, nowMinutes: store.nowMinutesInProductDay)
+    }
+    .frame(width: 340)
+    .tint(.accentColor)
+    .task {
+      quickAddFocused = false
+      await Task.yield()
+      quickAddFocused = true
+      await load()
+    }
+    .onChange(of: store.today) {
+      Task { await store.loadDoneTodayCount() }
+    }
+    .onChange(of: scope) { _, newScope in
+      guard newScope == .week else { return }
+      Task { await ensureWeekLoaded() }
+    }
+  }
+
+  private func panel(_ page: LorvexCalmToday, nowMinutes: Int?) -> some View {
+    let weekDays = LorvexAgendaDay.build(
+      todayKey: store.logicalTodayDateString,
+      events: store.calendarTimeline?.events ?? [],
+      tasks: store.calendarScheduledTasks ?? [])
+    return VStack(spacing: 0) {
+      header(page, weekDays: weekDays)
         .padding(.horizontal, LorvexDesign.Spacing.m)
         .padding(.top, LorvexDesign.Spacing.m)
         .padding(.bottom, LorvexDesign.Spacing.s)
 
+      quickAdd
+        .padding(.horizontal, LorvexDesign.Spacing.m)
+        .padding(.bottom, LorvexDesign.Spacing.m)
+
       Divider()
 
       ScrollView {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-          quickAdd
-          taskList
+        Group {
+          switch scope {
+          case .today:
+            MenuBarTodayContent(
+              page: page, nowMinutes: nowMinutes,
+              habits: store.habits?.habits.filter { !$0.archived } ?? [],
+              isOverdue: { $0.isOverdue(now: LorvexPreviewClock.now(in: .current), calendar: .current) },
+              complete: { task in
+                Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
+              },
+              open: open,
+              checkIn: checkIn)
+          case .week:
+            MenuBarAgendaList(
+              days: weekDays,
+              todayKey: store.logicalTodayDateString,
+              complete: { task in
+                Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
+              },
+              open: { task in openRoute(.task(task.id)) })
+          }
         }
         .padding(LorvexDesign.Spacing.m)
+        .animation(.snappy(duration: 0.25), value: page)
       }
-      .frame(maxHeight: 340)
+      .scrollBounceBehavior(.basedOnSize)
+      .frame(maxHeight: Self.bodyMaxHeight)
+      .fixedSize(horizontal: false, vertical: true)
 
       Divider()
 
       footer
         .padding(LorvexDesign.Spacing.s)
     }
-    .frame(width: 320)
-    .tint(.accentColor)
-    .task {
-      quickAddFocused = false
-      await Task.yield()
-      quickAddFocused = true
+  }
+
+  /// The panel reads the same loads as the Today workspace, so it is complete
+  /// even before that workspace has been opened this launch.
+  private func load() async {
+    async let todaySchedule: Void = store.loadTodaySchedule()
+    async let doneCount: Void = store.loadDoneTodayCount()
+    async let hours = store.loadWorkdayWindow()
+    _ = await (todaySchedule, doneCount, hours)
+    if scope == .week { await ensureWeekLoaded() }
+  }
+
+  /// Next 7 Days reads the calendar window the Calendar workspace shares;
+  /// when that window ends before the seventh day ahead, a today-anchored
+  /// window replaces it.
+  private func ensureWeekLoaded() async {
+    let today = store.logicalTodayDateString
+    guard let lastDay = LorvexDateFormatters.ymdUTCAddingDays(today, days: 7) else { return }
+    if let timeline = store.calendarTimeline, timeline.from <= today, lastDay <= timeline.to { return }
+    do {
+      try await store.refreshCalendarTimeline()
+    } catch {
+      await store.presentUserFacingError(error)
     }
   }
 
   // MARK: - Header
 
-  private var header: some View {
-    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-      Text(Self.dateFormatter.string(from: Date()))
-        .font(.system(.title3, design: .rounded).weight(.semibold))
-        .foregroundStyle(.primary)
-
-      Spacer(minLength: 0)
-
-      if attentionCount > 0 {
-        Text(MenuBarStatusCopy.dueText(attentionCount))
-          .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-          .foregroundStyle(.orange)
-          .padding(.horizontal, LorvexDesign.Spacing.s)
-          .padding(.vertical, 3)
-          .background(Color.orange.opacity(0.14), in: Capsule())
-          .accessibilityLabel(MenuBarStatusCopy.dueText(attentionCount))
+  /// The date, the scope switch, and a sentence about what the scope shows:
+  /// today's facts, or what the next seven days hold.
+  private func header(_ page: LorvexCalmToday, weekDays: [LorvexAgendaDay]) -> some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
+        Text(TodayCalmCopy.dateLine(logicalDay: store.logicalTodayDateString))
+          .font(LorvexDesign.Typography.pageLabel)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .accessibilityIdentifier("menubar.date")
+        Spacer(minLength: 0)
+        Picker(MenuBarScope.pickerLabel, selection: $scope) {
+          ForEach(MenuBarScope.allCases) { scope in
+            Text(scope.title).tag(scope)
+          }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.small)
+        .fixedSize()
+        .accessibilityIdentifier("menubar.scope")
       }
+      Text(headline(page, weekDays: weekDays), serifVoice: .panelSentence)
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("menubar.headline")
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  private func headline(_ page: LorvexCalmToday, weekDays: [LorvexAgendaDay]) -> String {
+    switch scope {
+    case .today:
+      return TodayCalmCopy.sentence(page.facts)
+    case .week:
+      // An event spanning several days appears under each; count it once.
+      let events = Set(weekDays.flatMap { $0.events.map(\.id) }).count
+      return TodayCalmCopy.weekSentence(tasks: weekDays.reduce(0) { $0 + $1.tasks.count }, events: events)
     }
   }
 
@@ -93,12 +193,11 @@ struct MenuBarStatusView: View {
       .accessibilityIdentifier("menubar.quickAdd")
     }
     .padding(.horizontal, LorvexDesign.Spacing.s)
-    .padding(.vertical, 6)
+    .padding(.vertical, LorvexDesign.Spacing.sm)
     .background(.quaternary.opacity(0.5), in: Capsule())
   }
 
-  /// Capture the typed title directly (like the command palette) rather than
-  /// routing through the shared `store.draftTitle` draft, then clear the field.
+  /// Capture the typed title (like the command palette), then clear the field.
   private func submitQuickAdd() {
     let title = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !title.isEmpty else { return }
@@ -106,35 +205,18 @@ struct MenuBarStatusView: View {
     Task { await store.createTask(title: title, notes: "") }
   }
 
-  // MARK: - Task list
+  // MARK: - Habits
 
-  private var nextUp: [LorvexTask] {
-    Array(store.today.tasks.filter { $0.status.isActionable }
-      .prefix(Self.maxRows))
-  }
-
-  @ViewBuilder
-  private var taskList: some View {
-    if nextUp.isEmpty {
-      MenuBarAllClear()
-    } else {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(LocalizedStringResource("menubar.section.next_up", defaultValue: "Next Up", table: "Localizable", bundle: LorvexL10n.bundle))
-          .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-          .foregroundStyle(.secondary)
-          .textCase(.uppercase)
-
-        ForEach(nextUp) { task in
-          MenuBarTaskRow(
-            task: task,
-            today: store.logicalTodayDateString,
-            complete: { Task { await store.menuBarCompleteTask(task) } },
-            open: {
-              store.selectedTaskID = task.id
-              perform(.openMain)
-            }
-          )
-        }
+  /// A ring tap: a single check-in habit toggles today; a habit counted
+  /// several times a day adds one until it meets its target, and is cleared
+  /// only from the Habits workspace, so a stray click never wipes a day.
+  private func checkIn(_ habit: LorvexHabit) {
+    Task {
+      switch LorvexHabitCheckIn.action(for: habit) {
+      case .complete: await store.completeHabit(habit)
+      case .uncomplete: await store.uncompleteHabit(habit)
+      case .addOne: await store.adjustHabitCompletion(habit, delta: 1)
+      case .none: break
       }
     }
   }
@@ -154,7 +236,6 @@ struct MenuBarStatusView: View {
 
       Spacer(minLength: 0)
 
-      footerIcon(.refresh, "arrow.clockwise")
       footerIcon(.quit, "power")
     }
   }
@@ -173,9 +254,21 @@ struct MenuBarStatusView: View {
     .accessibilityIdentifier("menubar.action.\(action)")
   }
 
-  // MARK: - Helpers
+  // MARK: - Opening the app
 
-  private var attentionCount: Int { store.menuBarAttentionCount }
+  /// Show the task in the Today workspace of the main window.
+  private func open(_ task: LorvexTask) {
+    store.selection = .today
+    store.selectOnlyTodayTask(task.id)
+    perform(.openMain)
+  }
+
+  /// Show a task that is not on today's list where it lives: the Tasks
+  /// workspace with its detail loaded.
+  private func openRoute(_ route: LorvexDeepLinkRoute) {
+    Task { await store.openDeepLinkRoute(route) }
+    perform(.openMain)
+  }
 
   private func perform(_ action: MenuBarStatusAction) {
     LorvexCommandDispatcher(
@@ -186,90 +279,26 @@ struct MenuBarStatusView: View {
     )
     .perform(action.commandAction)
   }
-
-  private static let dateFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.setLocalizedDateFormatFromTemplate("EEEEMMMd")
-    return f
-  }()
-
 }
 
-/// One task line in the menu-bar panel: a large completion circle, the title,
-/// and a quiet trailing due/priority hint. Clicking the title opens the task in
-/// the main window; clicking the circle completes it in place.
-private struct MenuBarTaskRow: View {
-  let task: LorvexTask
-  let today: String
-  let complete: () -> Void
-  let open: () -> Void
+/// What the menu bar panel's body shows: today, or the seven days after it.
+enum MenuBarScope: String, CaseIterable, Identifiable {
+  case today
+  case week
 
-  var body: some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Button(action: complete) {
-        Image(systemName: "circle")
-          .font(.system(size: 17))
-          .foregroundStyle(priorityTint)
-          .contentShape(Circle())
-      }
-      .buttonStyle(.plain)
-      .help(String(localized: "menubar.row.complete", defaultValue: "Complete", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityLabel(String(
-        format: String(localized: "menubar.row.complete_a11y", defaultValue: "Complete %@", table: "Localizable", bundle: LorvexL10n.bundle),
-        task.title))
+  var id: String { rawValue }
 
-      Button(action: open) {
-        Text(task.title)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.primary)
-          .lineLimit(1)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
-
-      if let due = dueHint {
-        Text(due.text)
-          .font(LorvexDesign.Typography.tertiaryText.weight(.medium).monospacedDigit())
-          .foregroundStyle(due.overdue ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
-          .fixedSize()
-      }
-    }
-    .accessibilityElement(children: .combine)
-  }
-
-  private var priorityTint: Color {
-    switch task.priority {
-    case .p1: return .red
-    case .p2: return .orange
-    default: return .secondary
+  var title: String {
+    switch self {
+    case .today:
+      String(localized: "menubar.scope.today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      String(
+        localized: "menubar.scope.week", defaultValue: "Next 7 Days", table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 
-  private var dueHint: (text: String, overdue: Bool)? {
-    guard let dueDate = task.dueDate else { return nil }
-    let dueYmd = LorvexDateFormatters.ymdUTC.string(from: dueDate)
-    if dueYmd < today {
-      return (String(localized: "menubar.row.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle), true)
-    }
-    if dueYmd == today {
-      return (String(localized: "menubar.row.due_today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle), false)
-    }
-    return (LorvexMonthDayFormatter.utc.string(from: dueDate), false)
-  }
-}
-
-/// Empty-state for the menu-bar panel when nothing is due.
-private struct MenuBarAllClear: View {
-  var body: some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: "checkmark.circle.fill")
-        .foregroundStyle(.green)
-      Text(LocalizedStringResource("menubar.all_clear", defaultValue: "All clear — nothing due.", table: "Localizable", bundle: LorvexL10n.bundle))
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.secondary)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.vertical, LorvexDesign.Spacing.s)
+  static var pickerLabel: String {
+    String(localized: "menubar.scope.label", defaultValue: "Show", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 }

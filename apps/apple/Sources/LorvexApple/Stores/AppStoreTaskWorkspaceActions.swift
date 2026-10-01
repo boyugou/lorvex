@@ -74,7 +74,12 @@ extension AppStore {
   }
 
   func setTaskWorkspaceListScope(_ id: LorvexList.ID?) {
-    taskWorkspaceStorage.listScopeID = id?.trimmedNilIfEmpty
+    let scopeID = id?.trimmedNilIfEmpty
+    // Picking another list shows that list, not the previous scope's search.
+    if scopeID != taskWorkspaceStorage.listScopeID {
+      searchText = ""
+    }
+    taskWorkspaceStorage.listScopeID = scopeID
     pruneTaskWorkspaceSelection()
   }
 

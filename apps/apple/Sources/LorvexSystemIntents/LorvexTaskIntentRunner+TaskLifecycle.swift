@@ -22,6 +22,20 @@ extension LorvexTaskIntentRunner {
     try await LorvexSystemIntentRunner.reopenTask(id: id, core: core)
   }
 
+  public static func startTask(
+    id: LorvexTask.ID,
+    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
+  ) async throws -> String {
+    try await LorvexSystemIntentRunner.startTask(id: id, core: core)
+  }
+
+  public static func pauseTask(
+    id: LorvexTask.ID,
+    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
+  ) async throws -> String {
+    try await LorvexSystemIntentRunner.pauseTask(id: id, core: core)
+  }
+
   public static func deferTaskUntilTomorrow(
     id: LorvexTask.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()

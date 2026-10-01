@@ -119,11 +119,10 @@ actor WidgetSnapshotWriteSerializer {
       timezone: nil,
       logicalDay: logicalDay,
       stats: .init(
-        focusCount: 0, overdueCount: 0, dueTodayCount: 0, completedTodayCount: 0),
+        todayCount: 0, overdueCount: 0, dueTodayCount: 0, completedTodayCount: 0),
       briefing: nil,
-      focusTasks: [],
+      tasks: [],
       habits: [],
-      todayTasks: [],
       lists: [],
       listStats: [])
     let encoder = JSONEncoder()
@@ -322,7 +321,7 @@ public enum WidgetSnapshotPublisherError: Error, Equatable, Sendable {
 }
 
 /// The single widget-snapshot publishing engine shared by every platform surface
-/// (the macOS host, the iOS/visionOS host, and the interactive widget-intent
+/// (the macOS host, the iOS host, and the interactive widget-intent
 /// path).
 ///
 /// Everything that differs per platform is captured by `Destination`: where to
@@ -392,14 +391,13 @@ public struct WidgetSnapshotPublisher: Sendable {
   /// `statsSource` carries the uncapped canonical actionable + completed-today
   /// task data the projector uses for the numeric stats; pass it (from
   /// ``LorvexCoreServicing/loadWidgetStatsSource()``) so the widget's counts
-  /// reflect the whole workload. When nil the stats fall back to the ≤N dashboard
-  /// pool, which under-counts past the cap.
+  /// reflect the whole workload. When nil the stats fall back to the day's list,
+  /// which cannot see undated work, future work, or completed tasks.
   @discardableResult
   public func publish(
     storageGeneration: Int = 0,
     logicalDay: String? = nil,
     today: TodaySnapshot,
-    currentFocus: CurrentFocusPlan?,
     timezone: String? = nil,
     habitCatalog: HabitCatalogSnapshot? = nil,
     lists: ListCatalogSnapshot? = nil,
@@ -411,7 +409,6 @@ public struct WidgetSnapshotPublisher: Sendable {
       focusFilterRevision: focusState.revision,
       logicalDay: logicalDay,
       today: today,
-      currentFocus: currentFocus,
       timezone: timezone ?? self.timezone(),
       hideTitles: destination.hideTitles,
       focusFilter: focusState.configuration,
@@ -436,14 +433,13 @@ public struct WidgetSnapshotPublisher: Sendable {
 
   /// Publishes one transactionally captured source. This is the only production
   /// path: it threads the storage generation into ordering and prevents the
-  /// projection from mixing Today, focus, habit, list, and stats revisions.
+  /// projection from mixing Today, habit, list, and stats revisions.
   @discardableResult
   public func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot {
     try await publish(
       storageGeneration: source.storageGeneration,
       logicalDay: source.logicalDay,
       today: source.today,
-      currentFocus: source.currentFocus,
       timezone: source.timezone,
       habitCatalog: source.habits,
       lists: source.lists,
@@ -451,10 +447,10 @@ public struct WidgetSnapshotPublisher: Sendable {
   }
 
   /// Publishes a snapshot loaded fresh from `core`, like the interactive
-  /// widget-intent path. `today` is the `YYYY-MM-DD` day whose focus plan and
-  /// habit statuses are loaded.
+  /// widget-intent path. `today` is the `YYYY-MM-DD` day whose list, times,
+  /// and habit statuses are loaded.
   ///
-  /// Habits are loaded alongside tasks/focus/lists because the Habits widget and
+  /// Habits are loaded alongside tasks/times/lists because the Habits widget and
   /// habits accessory read them from the same App-Group snapshot; omitting the
   /// catalog would rewrite the snapshot with zero habits on every interactive tap
   /// and blank the Habits widget until the app next republishes.

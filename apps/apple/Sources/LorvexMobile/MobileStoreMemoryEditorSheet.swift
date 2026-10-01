@@ -1,14 +1,34 @@
+import LorvexCore
 import SwiftUI
 
+/// Modal editor for an existing memory entry. Owns its OWN draft (seeded from the
+/// entry) rather than the store's shared new-entry draft, so opening it never
+/// clobbers text the user left half-typed in the New Memory sheet.
 @MainActor
 struct MobileStoreMemoryEditorSheet: View {
   @Bindable var store: MobileStore
-  @Binding var isPresented: Bool
+  let entry: MemoryEntry
+  @Environment(\.dismiss) private var dismiss
+  @State private var key: String
+  @State private var content: String
   @FocusState private var focusedField: Field?
 
   private enum Field {
     case key
     case content
+  }
+
+  init(store: MobileStore, entry: MemoryEntry) {
+    self.store = store
+    self.entry = entry
+    _key = State(initialValue: entry.key)
+    _content = State(initialValue: entry.content)
+  }
+
+  private var canSave: Bool {
+    !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && !store.isSavingMemory
   }
 
   var body: some View {
@@ -23,7 +43,7 @@ struct MobileStoreMemoryEditorSheet: View {
             String(
               localized: "memory.field.key", defaultValue: "Key", table: "Localizable",
               bundle: MobileL10n.bundle),
-            text: $store.memoryKeyDraft
+            text: $key
           )
           .autocorrectionDisabled()
           .focused($focusedField, equals: .key)
@@ -35,7 +55,7 @@ struct MobileStoreMemoryEditorSheet: View {
             String(
               localized: "memory.field.content", defaultValue: "Content", table: "Localizable",
               bundle: MobileL10n.bundle),
-            text: $store.memoryContentDraft,
+            text: $content,
             axis: .vertical
           )
           .lineLimit(4...12)
@@ -57,8 +77,7 @@ struct MobileStoreMemoryEditorSheet: View {
               localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",
               bundle: MobileL10n.bundle)
           ) {
-            store.clearMemoryDraft()
-            isPresented = false
+            dismiss()
           }
           .accessibilityIdentifier("mobileMemory.editor.cancel")
         }
@@ -68,7 +87,7 @@ struct MobileStoreMemoryEditorSheet: View {
             save()
           } label: {
             if store.isSavingMemory {
-              ProgressView()
+              ProgressView().tint(.white)
             } else {
               Text(
                 String(
@@ -76,23 +95,19 @@ struct MobileStoreMemoryEditorSheet: View {
                   bundle: MobileL10n.bundle))
             }
           }
-          .disabled(!store.canSaveMemoryDraft)
+          .mobileProminentToolbarButtonStyle()
+          .disabled(!canSave)
           .accessibilityIdentifier("mobileMemory.editor.save")
         }
       }
     }
     .mobileCompactEditorSheetPresentation()
-    .onDisappear {
-      if store.memoryEditingKey != nil {
-        store.clearMemoryDraft()
-      }
-    }
   }
 
   private func save() {
     Task {
-      if await store.saveMemoryDraft() {
-        isPresented = false
+      if await store.saveMemoryEntryEdit(originalKey: entry.key, newKey: key, content: content) {
+        dismiss()
       }
     }
   }

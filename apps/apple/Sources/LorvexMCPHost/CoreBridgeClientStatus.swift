@@ -3,7 +3,7 @@ import MCP
 
 extension CoreBridgeClient {
   func loadSyncStatus() async throws -> Value {
-    let sync = try await service.loadRuntimeDiagnostics().sync
+    let sync = try await service.loadSyncStatus()
     // Hoist the optional-to-Value conversions into locals: a single large
     // dictionary literal with many inline `map ?? .null` ternaries trips the
     // Swift type-checker's expression-time heuristic.

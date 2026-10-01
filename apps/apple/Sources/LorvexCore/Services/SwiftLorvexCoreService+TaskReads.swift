@@ -5,9 +5,9 @@ import LorvexStore
 import LorvexWorkflow
 
 extension SwiftLorvexCoreService {
-  /// Builds the `TodaySnapshot` from the overview's top-by-priority tasks,
-  /// enriching each so tags / checklist / reminders / lateness match the stable
-  /// MCP/UI shape.
+  /// Builds the `TodaySnapshot` from the day's pool, enriching each task so tags /
+  /// checklist / reminders / lateness match the stable MCP/UI shape. See
+  /// ``TodaySnapshot/tasks`` for what the day owns.
   public func loadToday() async throws -> TodaySnapshot {
     // The snapshot's database identity and local sequence must come from the
     // exact SQLite transaction that reads its rows. This identity-bound
@@ -69,14 +69,18 @@ extension SwiftLorvexCoreService {
     let workspaceInstanceID = try SyncCheckpoints.getOrCreateDatabaseInstanceId(db)
     let resolvedLogicalDay = try logicalDay ?? WorkflowTimezone.todayYmdForConn(db)
     let timezone = try WorkflowTimezone.anchoredTimezoneName(db)
-    let overview = try Overview.loadOverviewSnapshot(
-      db, limits: Overview.Limits.app(), logicalDay: resolvedLogicalDay)
-    let tasks = try Self.enrich(db, rows: overview.topByPriority)
-    // The "In Progress" section reads its own uncapped query, not the
-    // priority-capped `tasks` pool, so a started task ranked below the overview
-    // cap still surfaces.
+    // The day pool, NOT the overview's top-by-priority slice. The overview
+    // answers "what matters most overall" and caps itself, which is right for a
+    // summary and wrong for a day: it admits undated backlog and future-dated
+    // work, and hides whatever falls past the cap.
+    let tasks = try Self.enrich(
+      db, rows: TaskRepo.Read.getTodayPoolTasks(db, today: resolvedLogicalDay))
+    let blockedTaskIDs = try TaskRepo.Read.blockedTaskIDs(db, among: tasks.map(\.id))
     let inProgressTasks = try Self.enrich(db, rows: TaskRepo.Read.getInProgressTasks(db))
-    let openCount = Int(overview.stats.openCount)
+    // Just the count: the day surface's headline is the only thing this snapshot
+    // takes from the workspace-wide picture, so it reads that number directly
+    // instead of building the whole overview aggregate to use one field.
+    let openCount = Int(try TaskRepo.Read.countActionableTasks(db))
     let summary: String
     switch openCount {
     case 0: summary = "All clear."
@@ -84,10 +88,11 @@ extension SwiftLorvexCoreService {
     default: summary = "\(openCount) open tasks."
     }
     return TodaySnapshot(
-      focusTitle: "Today",
       summary: summary,
       tasks: tasks,
+      briefing: try Self.dayBriefing(db, date: resolvedLogicalDay),
       inProgressTasks: inProgressTasks,
+      blockedTaskIDs: blockedTaskIDs,
       workspaceInstanceID: workspaceInstanceID,
       logicalDay: resolvedLogicalDay,
       timezone: timezone,

@@ -309,7 +309,7 @@ python3 "$ROOT_DIR/script/prepare_profile_entitlements.py" \
   --team-id "$APPLE_TEAM_ID" \
   --output "$ENTITLEMENTS_DIR/helper.plist"
 python3 "$ROOT_DIR/script/prepare_profile_entitlements.py" \
-  --base "$ROOT_DIR/Config/LorvexWidgetExtension.entitlements" \
+  --base "$ROOT_DIR/Config/LorvexWidgetsMacOS.entitlements" \
   --profile "$DEVELOPER_ID_WIDGET_PROVISIONING_PROFILE" \
   --bundle-id "$WIDGET_BUNDLE_ID" \
   --team-id "$APPLE_TEAM_ID" \

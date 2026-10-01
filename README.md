@@ -8,8 +8,8 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](apps/apple)
-[![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20iPadOS%20·%20visionOS%20·%20watchOS-black?style=flat-square&logo=apple&logoColor=white)](apps/apple)
-[![MCP](https://img.shields.io/badge/MCP-118%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
+[![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20iPadOS%20·%20watchOS-black?style=flat-square&logo=apple&logoColor=white)](apps/apple)
+[![MCP](https://img.shields.io/badge/MCP-114%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
 
 [Website](https://lorvex.app) · [Getting started](#getting-started) · [MCP setup](#connect-an-ai-assistant) · [Documentation](#documentation) · [Privacy](PRIVACY.md)
 
@@ -21,7 +21,7 @@ Lorvex is a task, calendar, and habit planner built **MCP-first**: the primary
 write interface is a [Model Context Protocol](https://modelcontextprotocol.io)
 server, so any MCP-capable AI assistant (Claude, or anything else that speaks
 MCP) can manage your tasks, plan your days, schedule your calendar, and track
-your habits through 118 typed tools. The native apps are calm, fast read
+your habits through 114 typed tools. The native apps are calm, fast read
 surfaces with the human actions that matter — complete, defer, review — not a
 form-filling UI.
 
@@ -33,16 +33,15 @@ form-filling UI.
   data; there is nowhere for us to read it from.
 - **No embedded AI, no tracking.** Lorvex ships no model, no analytics, no
   ads. Intelligence comes from *your* assistant, connected on *your* terms.
-- **Native everywhere.** macOS, iPhone, iPad, Apple Vision Pro, Apple Watch,
-  CarPlay, widgets, Shortcuts, Spotlight, and two-way EventKit calendar
-  integration.
+- **Native everywhere.** macOS, iPhone, iPad, Apple Watch, CarPlay, widgets,
+  Shortcuts, Spotlight, and two-way EventKit calendar integration.
 
 ## How it works
 
 ```
 ┌──────────────┐   MCP (stdio)   ┌───────────────┐        ┌──────────────────┐
 │ AI assistant │ ◄─────────────► │ LorvexMCPHost │ ◄────► │  Pure-Swift core │
-│  (Claude, …) │    118 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
+│  (Claude, …) │    114 tools    │ (MCP server)  │        │  SQLite (GRDB)   │
 └──────────────┘                 └───────────────┘        └────────┬─────────┘
                                                                    │ encrypted
 ┌──────────────┐   read / act    ┌───────────────────────┐         │ envelopes
@@ -58,36 +57,26 @@ private CloudKit database. Other devices merge deterministically; no device is
 
 ## Repository layout
 
-This is a monorepo with **two independent implementations** of the same
-product, plus the contracts they share:
+The repository holds the Apple app plus the contracts it owns:
 
 ```
 lorvex/
 ├── apps/
-│   ├── apple/     Apple-native app — Swift 6, SwiftUI/AppKit, SwiftPM.
-│   └── tauri/     Cross-platform desktop — React + TypeScript + Tauri, Rust core.
+│   └── apple/     Apple-native app — Swift 6, SwiftUI/AppKit, SwiftPM.
 ├── schema/        SQLite schema (the Apple app's authority) + sync payload manifests.
 ├── cloudkit/      CloudKit record-type template and deploy tooling (Apple-owned).
 ├── spec/          Cross-implementation behavior contracts: docs + test-vector fixtures.
 └── docs/          Project-level documentation (see docs/INDEX.md).
 ```
 
-The two apps share **no executable code and no FFI** — they agree through
-`schema/` and `spec/`, and each builds, tests, and releases independently.
-
-| | `apps/apple` | `apps/tauri` |
-|---|---|---|
-| Language | Swift 6 | Rust + TypeScript |
-| UI | SwiftUI / AppKit | React |
-| Platforms | Apple ecosystem | Windows / Linux (macOS dev build) |
-| MCP server | `LorvexMCPHost` (Swift) | `mcp-server` (Rust) |
-| Build | SwiftPM | Cargo + npm + Tauri |
+Lorvex began as a cross-platform Tauri app. That implementation was removed on
+2026-09-17; this repository is the Apple-native app only.
 
 ## Getting started
 
 ### Apple app (macOS)
 
-Requires Xcode 16+ (Swift 6 toolchain).
+Requires Xcode 26 or newer (Swift 6 toolchain); the app targets macOS 26, iOS 26, and watchOS 26.
 
 ```bash
 cd apps/apple
@@ -97,17 +86,25 @@ swift test               # app-level test suite
 ./script/build_and_run.sh --verify   # build, verify, and launch the macOS app
 ```
 
-iOS / visionOS / watchOS build through the XcodeGen-generated project — see
+iOS / watchOS build through the XcodeGen-generated project — see
 [`apps/apple/CLAUDE.md`](apps/apple/CLAUDE.md) for the full developer manual
 and [`apps/apple/docs/release.md`](apps/apple/docs/release.md) for packaging.
 
-### Tauri app (Windows / Linux)
-
-See [`apps/tauri/README.md`](apps/tauri/README.md).
-
 ## Connect an AI assistant
 
-Build the MCP host once, then point any MCP-capable client at it:
+With Lorvex installed, open **Settings → Assistant** and copy the setup prompt
+or the config for your client. In Claude Code, the Lorvex plugin sets up the
+connection and adds skills for planning a day, capturing tasks, the weekly
+review, and tidying the assistant's memory
+([`plugins/lorvex`](plugins/lorvex/README.md)):
+
+```
+/plugin marketplace add boyugou/lorvex
+/plugin install lorvex@lorvex
+```
+
+From a source checkout, build the MCP host and point any MCP-capable client at
+it:
 
 ```bash
 cd apps/apple && swift build -c release --product LorvexMCPHost
@@ -133,7 +130,7 @@ Full client-by-client instructions (Claude Desktop, Claude Code, and others):
 |---|---|
 | Documentation index | [`docs/INDEX.md`](docs/INDEX.md) |
 | Design philosophy & non-goals | [`docs/vision/DESIGN_PHILOSOPHY.md`](docs/vision/DESIGN_PHILOSOPHY.md) |
-| AI operating model (MCP-first writes) | [`docs/design/AI_OPERATING_MODEL.md`](docs/design/AI_OPERATING_MODEL.md) |
+| Assistant operating model (instructions, skills, tool design) | [`docs/design/AI_OPERATING_MODEL.md`](docs/design/AI_OPERATING_MODEL.md) |
 | Sync semantics (HLC, LWW, idempotency) | [`docs/design/SYNC_APPLY_SEMANTICS.md`](docs/design/SYNC_APPLY_SEMANTICS.md) |
 | Schema & data-infrastructure invariants | [`docs/design/SCHEMA_OPTIMALITY.md`](docs/design/SCHEMA_OPTIMALITY.md) |
 | Export / backup format | [`spec/EXPORT_FORMAT.md`](spec/EXPORT_FORMAT.md) |
@@ -145,8 +142,8 @@ Full client-by-client instructions (Claude Desktop, Claude Code, and others):
 
 Pre-release. The Apple app is feature-complete and in App Store preparation;
 the data, schema, sync, and backup contracts are finalized and gated by
-repository verifiers (`apps/apple/script/verify_all.sh`). The Tauri app owns
-the Windows/Linux line. See [`ROADMAP.md`](ROADMAP.md).
+repository verifiers (`apps/apple/script/verify_all.sh`). See
+[`ROADMAP.md`](ROADMAP.md).
 
 ## Privacy
 
@@ -159,6 +156,7 @@ analytics, no telemetry, no third-party services.
 - Contributions: see [`apps/apple/docs/CONTRIBUTING.md`](apps/apple/docs/CONTRIBUTING.md).
 - Issues and feature requests: [GitHub Issues](https://github.com/boyugou/lorvex/issues).
 - Support: [lorvex.app/support](https://lorvex.app/support/).
+- Security issues: report them privately, as described in [`SECURITY.md`](SECURITY.md).
 
 ## License
 

@@ -19,7 +19,7 @@ struct SettingsPermissionsSection: View {
   var body: some View {
     Section(String(
       localized: "settings.permissions.status_section",
-      defaultValue: "Permission Status",
+      defaultValue: "Access",
       table: "Localizable",
       bundle: LorvexL10n.bundle
     )) {
@@ -164,9 +164,11 @@ extension SettingsPermissionsSection {
     URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars")
 
   func refresh() async {
-    let notifSettings = await UNUserNotificationCenter.current().notificationSettings()
+    // The store's provider reads the real notification center in the app and
+    // is inert in a preview or test process, where the center has no bundle
+    // to answer for and aborts on first use.
     let notif: PermissionRowStatus
-    switch notifSettings.authorizationStatus {
+    switch await store.notificationAuthorizationStatusProvider() {
     case .notDetermined: notif = .notDetermined
     case .denied: notif = .denied
     case .authorized, .provisional, .ephemeral: notif = .authorized
@@ -249,9 +251,13 @@ private struct PermissionStatusRow: View {
     HStack {
       Label(label, systemImage: systemImage)
       Spacer()
-      Text(status.displayTitle)
-        .foregroundStyle(status.color)
-        .font(LorvexDesign.Typography.secondaryText)
+      // Before the first decision the Allow button says everything a
+      // "Not Set" label would, so the status shows only once there is one.
+      if !(status == .notDetermined && requestAction != nil) {
+        Text(status.displayTitle)
+          .foregroundStyle(status.color)
+          .font(LorvexDesign.Typography.secondaryText)
+      }
       recoveryControl
     }
     .accessibilityIdentifier("permissionRow.\(id)")
@@ -310,10 +316,10 @@ extension PermissionRowStatus {
 
   fileprivate var color: Color {
     switch self {
-    case .authorized: return .green
-    case .writeOnly: return .orange
-    case .denied: return .red
-    default: return .secondary
+    case .authorized: return LorvexDesign.Palette.success
+    case .writeOnly: return LorvexDesign.Palette.warning
+    case .denied: return LorvexDesign.Palette.error
+    default: return LorvexDesign.Palette.neutral
     }
   }
 }

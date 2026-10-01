@@ -52,8 +52,7 @@ extension LorvexDataImporter {
           hasInternalDependencyData: !(payload.calendarSeriesCutovers?.isEmpty ?? true)))
     }
     add(.dailyReviews, payload.dailyReviews?.count)
-    add(.currentFocus, payload.currentFocus?.count)
-    add(.focusSchedules, payload.focusSchedules?.count)
+    add(.dailyBriefings, payload.dailyBriefings?.count)
     add(.taskCalendarEventLinks, payload.taskCalendarEventLinks?.count)
     add(.memory, payload.memory?.count)
     add(.preferences, payload.preferences?.count)

@@ -82,3 +82,22 @@ final class NewEntityIDStringTests: XCTestCase {
     XCTAssertLessThan(earlier, later, "later timestamp must sort after earlier despite random tail")
   }
 }
+
+final class SyncEntityIdCanonicalUuidTests: XCTestCase {
+  func testAcceptsLowercaseHyphenatedUUIDs() {
+    XCTAssertTrue(SyncEntityId.isCanonicalUuid("01943a6d-b5c8-7e1f-9a12-3456789abcde"))
+    XCTAssertTrue(SyncEntityId.isCanonicalUuid("550e8400-e29b-41d4-a716-446655440000"))
+    XCTAssertTrue(SyncEntityId.isCanonicalUuid("00000000-0000-0000-0000-000000000000"))
+  }
+
+  func testRejectsUppercaseProviderKeysAndMalformedShapes() {
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("550E8400-E29B-41D4-A716-446655440000"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("3A1B2C3D-4E5F-6A7B-8C9D-0E1F2A3B4C5D6E7F"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("uid-12345@example.com"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("eventkit-cal-item-123"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("550e8400-e29b-41d4"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("550e8400e29b41d4a716446655440000xxxx"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid("550e84-00e29b-41d4a-716-446655440000"))
+    XCTAssertFalse(SyncEntityId.isCanonicalUuid(""))
+  }
+}

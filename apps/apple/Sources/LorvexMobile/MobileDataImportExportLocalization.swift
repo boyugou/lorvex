@@ -28,18 +28,14 @@ extension LorvexDataExportCategory {
       String(
         localized: "data_export.category.daily_reviews", defaultValue: "Daily Reviews",
         table: "Localizable", bundle: MobileL10n.bundle)
-    case .currentFocus:
+    case .dailyBriefings:
       String(
-        localized: "data_export.category.current_focus", defaultValue: "Current Focus",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case .focusSchedules:
-      String(
-        localized: "data_export.category.focus_schedules", defaultValue: "Focus Schedules",
+        localized: "data_export.category.daily_briefings", defaultValue: "Daily Briefings",
         table: "Localizable", bundle: MobileL10n.bundle)
     case .taskCalendarEventLinks:
       String(
         localized: "data_export.category.task_calendar_event_links",
-        defaultValue: "Task Calendar Links", table: "Localizable", bundle: MobileL10n.bundle)
+        defaultValue: "Task–Event Links", table: "Localizable", bundle: MobileL10n.bundle)
     case .memory:
       String(
         localized: "data_export.category.memory", defaultValue: "Memory", table: "Localizable",
@@ -101,4 +97,15 @@ enum MobileImportSummaryText {
     }
   )
 
+}
+
+extension LorvexDataExportCategory.Group {
+  var mobileLocalizedName: String {
+    switch self {
+    case .planning: String(localized: "data_export.group.planning", defaultValue: "Planning", table: "Localizable", bundle: MobileL10n.bundle)
+    case .calendar: String(localized: "data_export.group.calendar", defaultValue: "Calendar", table: "Localizable", bundle: MobileL10n.bundle)
+    case .reflection: String(localized: "data_export.group.reflection", defaultValue: "Reviews & Assistant", table: "Localizable", bundle: MobileL10n.bundle)
+    case .settings: String(localized: "data_export.group.settings", defaultValue: "Settings", table: "Localizable", bundle: MobileL10n.bundle)
+    }
+  }
 }

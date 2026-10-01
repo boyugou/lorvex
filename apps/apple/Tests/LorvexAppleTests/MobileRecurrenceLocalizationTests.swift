@@ -3,9 +3,8 @@ import LorvexCore
 @testable import LorvexMobile
 import Testing
 
-/// The mobile recurrence surface renders through the `MobileL10n`-backed wrapper
-/// rather than the raw English core helper, and pluralizes the interval unit via
-/// CLDR categories instead of an English `+"s"`.
+/// The mobile recurrence surface renders through `MobileL10n`, and pluralizes
+/// the interval unit via CLDR categories instead of an English `+"s"`.
 @Suite("Mobile recurrence localization")
 struct MobileRecurrenceLocalizationTests {
   @Test("interval phrase is fully formatted and count-aware")
@@ -36,6 +35,18 @@ struct MobileRecurrenceLocalizationTests {
     #expect(summary.contains(Calendar.current.shortWeekdaySymbols[1]))
     #expect(summary.contains(Calendar.current.shortWeekdaySymbols[3]))
     #expect(summary.contains("·"))
+  }
+
+  @Test("cadence names the interval and weekdays but leaves the end to the summary")
+  func cadenceLeavesTheEndToTheSummary() {
+    let rule = TaskRecurrenceRule(freq: .weekly, interval: 2, byDay: ["MO", "WE"], count: 10)
+    let cadence = rule.mobileLocalizedCadence
+
+    #expect(cadence.contains("2"))
+    #expect(!cadence.contains("10"))
+    #expect(!cadence.contains("MO"))
+    #expect(cadence.contains(Calendar.current.shortWeekdaySymbols[1]))
+    #expect(rule.mobileLocalizedDisplaySummary().hasPrefix(cadence))
   }
 
   @Test("anchor labels and explanations are localized presentation strings")

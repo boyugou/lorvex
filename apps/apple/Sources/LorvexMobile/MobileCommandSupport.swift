@@ -37,9 +37,9 @@ public enum MobileCommandTitles {
       String(
         localized: "mobileCommand.habits", defaultValue: "Habits", table: "Localizable",
         bundle: MobileL10n.bundle)
-    case .more:
+    case .review:
       String(
-        localized: "mobileCommand.more", defaultValue: "More", table: "Localizable",
+        localized: "mobileCommand.review", defaultValue: "Review", table: "Localizable",
         bundle: MobileL10n.bundle)
     }
   }
@@ -81,16 +81,11 @@ public enum MobileCommandTitles {
 extension MobileStore {
   public func openPrimaryShortcutTab(_ tab: MobileTab) {
     selectedTab = tab
-    if tab != .more {
-      iPadDestination = nil
-      moreNavigationPath = []
-      pendingListRoute = nil
-    }
   }
 
+  /// Keyboard-mnemonic entry point: opens `destination` through
+  /// `openWorkspaceDestination`.
   public func openShortcutDestination(_ destination: MobileDestination) {
-    selectedTab = .more
-    moreNavigationPath = [destination]
-    iPadDestination = destination
+    openWorkspaceDestination(destination)
   }
 }

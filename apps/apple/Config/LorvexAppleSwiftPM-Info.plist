@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Embedded as __TEXT,__info_plist into the debug SwiftPM build of the
+  LorvexApple executable (see Package.swift). An unbundled executable declares
+  no localizations of its own, and Foundation then matches every resource
+  bundle in the process to the development language, so -AppleLanguages has no
+  effect on String(localized:bundle:) lookups. Declaring the shipped languages
+  makes `swift run` and the `ui_tour_macos.sh` preview tour resolve strings the
+  way the packaged app does.
+
+  It deliberately has no CFBundleIdentifier: Bundle.main.bundleIdentifier stays
+  nil, so the debug binary keeps its own UserDefaults domain.
+  verify_localization_catalog.py keeps CFBundleLocalizations in step with the
+  string catalogs.
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>zh-Hans</string>
+	</array>
+</dict>
+</plist>

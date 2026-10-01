@@ -1,5 +1,6 @@
 #if canImport(AppIntents)
 import AppIntents
+import LorvexCore
 import LorvexWidgetKitSupport
 import LorvexWidgetViews
 
@@ -57,8 +58,11 @@ public struct LorvexWidgetListEntityQuery: EntityQuery, EntityStringQuery {
     else {
       return []
     }
+    // The snapshot carries each list's stored name; the picker shows the name
+    // the app shows, so the seeded Inbox reads in the interface language.
     return snapshot.lists.map {
-      LorvexWidgetListEntity(id: $0.id, name: $0.name, icon: $0.icon)
+      LorvexWidgetListEntity(
+        id: $0.id, name: LorvexListNaming.displayName(id: $0.id, name: $0.name), icon: $0.icon)
     }
   }
 }

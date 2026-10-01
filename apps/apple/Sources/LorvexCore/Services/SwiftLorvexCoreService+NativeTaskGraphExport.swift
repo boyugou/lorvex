@@ -60,6 +60,7 @@ extension SwiftLorvexCoreService {
                lifecycle_version, archive_version, recurrence_rollover_state,
                recurrence_successor_id, version, created_at, updated_at,
                completed_at, last_deferred_at, last_defer_reason, planned_date,
+               planned_start_minutes, planned_end_minutes,
                available_from, defer_count, archived_at
         FROM tasks
         ORDER BY id ASC
@@ -248,6 +249,8 @@ extension SwiftLorvexCoreService {
       lastDeferredAt: row["last_deferred_at"],
       lastDeferReason: row["last_defer_reason"],
       plannedDate: row["planned_date"],
+      plannedStartMinutes: row["planned_start_minutes"],
+      plannedEndMinutes: row["planned_end_minutes"],
       availableFrom: row["available_from"],
       deferCount: row["defer_count"],
       archivedAt: row["archived_at"])

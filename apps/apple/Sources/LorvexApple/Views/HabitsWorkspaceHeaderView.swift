@@ -1,114 +1,60 @@
 import LorvexCore
 import SwiftUI
 
+/// The Habits board header: the identity and one line under it saying how
+/// many habits are done in each period that has any ("1 of 2 done today · 2
+/// of 3 done this week"). Each cadence counts against its own period, since a
+/// weekly habit is not today's task. An empty board shows the title alone,
+/// since the empty-state panel below already speaks for it. The create action
+/// rides in the window toolbar (`HabitsWorkspaceView`).
 struct HabitsWorkspaceHeader: View {
-  let summary: String
   let stats: HabitsWorkspaceStats
-  let create: () -> Void
 
   var body: some View {
     WorkspaceDashboardHeaderChrome {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-        HStack(alignment: .center, spacing: LorvexDesign.Spacing.m) {
-          WorkspaceHeaderIdentity(
-            title: String(localized: "sidebar.item.habits", defaultValue: "Habits", table: "Localizable", bundle: LorvexL10n.bundle),
-            subtitle: summary,
-            systemImage: SidebarSelection.habits.systemImage,
-            accessibilityIdentifier: "habits.header.identity",
-            subtitleAccessibilityIdentifier: "habits.header.summary"
-          )
-          Spacer(minLength: LorvexDesign.Spacing.m)
-          Button(action: create) {
-            Image(systemName: "plus")
-          }
-          .buttonStyle(.lorvexNeutral)
-          .help(String(localized: "habits.workspace.create_help", defaultValue: "Create Habit", table: "Localizable", bundle: LorvexL10n.bundle))
-          .accessibilityLabel(String(localized: "habits.workspace.create_a11y", defaultValue: "Create Habit", table: "Localizable", bundle: LorvexL10n.bundle))
-          .accessibilityIdentifier("habits.create")
-          .fixedSize()
-        }
+      WorkspaceHeaderIdentity(
+        title: String(localized: "sidebar.item.habits", defaultValue: "Habits", table: "Localizable", bundle: LorvexL10n.bundle),
+        subtitle: subtitle,
+        icon: SidebarSelection.habits.systemImage,
+        accessibilityIdentifier: "habits.header.identity",
+        subtitleAccessibilityIdentifier: "habits.header.summary"
+      )
+    }
+  }
 
-        if stats.hasHabits {
-          heroBand
-        }
+  private var subtitle: String {
+    stats.buckets.map(Self.progress).joined(separator: " · ")
+  }
+
+  private static func progress(_ bucket: HabitsWorkspaceStats.Bucket) -> String {
+    let format =
+      switch bucket.cadence {
+      case .daily:
+        String(
+          localized: "habits.header.done.today", defaultValue: "%1$lld of %2$lld done today",
+          table: "Localizable", bundle: LorvexL10n.bundle)
+      case .weekly:
+        String(
+          localized: "habits.header.done.week", defaultValue: "%1$lld of %2$lld done this week",
+          table: "Localizable", bundle: LorvexL10n.bundle)
+      case .monthly:
+        String(
+          localized: "habits.header.done.month", defaultValue: "%1$lld of %2$lld done this month",
+          table: "Localizable", bundle: LorvexL10n.bundle)
       }
-    }
-  }
-
-  /// A momentum band broken out by cadence: today's daily completion, this
-  /// week's weekly completion, this month's monthly completion — each shown only
-  /// when that cadence has habits, since a weekly/monthly habit isn't "today's"
-  /// task. Best streak trails.
-  private var heroBand: some View {
-    HStack(spacing: LorvexDesign.Spacing.l) {
-      ForEach(stats.buckets, id: \.cadence) { bucket in
-        heroStat(
-          value: "\(bucket.completed)/\(bucket.total)",
-          label: Self.bucketLabel(bucket.cadence),
-          systemImage: Self.bucketIcon(bucket.cadence),
-          tint: bucket.isComplete ? .green : .secondary)
-      }
-      heroStat(
-        value: lorvexDaysLabel(stats.bestStreak),
-        label: String(localized: "habits.header.stat.best_streak", defaultValue: "Best streak", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "flame.fill", tint: stats.bestStreak > 0 ? .orange : .secondary)
-
-      Spacer(minLength: 0)
-    }
-    .padding(.vertical, LorvexDesign.Spacing.s)
-    .padding(.horizontal, LorvexDesign.Spacing.m)
-    .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m))
-    .accessibilityIdentifier("habits.header.stats")
-  }
-
-  private func heroStat(value: String, label: String, systemImage: String, tint: Color) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: systemImage)
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(tint)
-        .frame(width: 16)
-      VStack(alignment: .leading, spacing: 1) {
-        Text(value)
-          .font(LorvexDesign.Typography.primaryEmphasis.monospacedDigit())
-        Text(label)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-      }
-    }
-  }
-
-  private static func bucketLabel(_ bucket: HabitCadenceBucket) -> String {
-    switch bucket {
-    case .daily:
-      String(localized: "habits.header.cadence.daily", defaultValue: "Daily · today", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .weekly:
-      String(localized: "habits.header.cadence.weekly", defaultValue: "Weekly · this week", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .monthly:
-      String(localized: "habits.header.cadence.monthly", defaultValue: "Monthly · this month", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-  }
-
-  private static func bucketIcon(_ bucket: HabitCadenceBucket) -> String {
-    switch bucket {
-    case .daily: "sun.max"
-    case .weekly: "calendar"
-    case .monthly: "calendar.badge.clock"
-    }
+    return String(format: format, bucket.completed, bucket.total)
   }
 }
 
-/// The habit board's header stats, broken out per cadence bucket so each rhythm
-/// is counted against its own period (today / this week / this month).
+/// How many of the board's habits meet their current period's plan, per
+/// cadence bucket that has any habits, each counted against its own period
+/// (today / this week / this month).
 struct HabitsWorkspaceStats: Equatable {
   struct Bucket: Equatable {
     let cadence: HabitCadenceBucket
     let completed: Int
     let total: Int
-    var isComplete: Bool { total > 0 && completed >= total }
   }
 
   let buckets: [Bucket]
-  let bestStreak: Int
-
-  var hasHabits: Bool { buckets.contains { $0.total > 0 } }
 }

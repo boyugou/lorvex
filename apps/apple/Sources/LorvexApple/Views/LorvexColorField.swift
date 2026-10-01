@@ -4,9 +4,8 @@ import SwiftUI
 /// Shared color-only picker for draft sheets whose entity has a color but no
 /// icon (calendar events). `color` is a `#RRGGBB` hex string; nil means "use
 /// the default" (the app accent), exposed as a leading "Default" swatch so the
-/// user can clear a choice. Extracted from ``LorvexIconColorField``, which
-/// composes this view for its color half — list/habit drafts also carry an
-/// icon and use that combined component instead.
+/// user can clear a choice. Lists and habits, which also carry an icon, choose
+/// both in ``LorvexAppearancePicker`` instead.
 struct LorvexColorField: View {
   @Binding var color: String?
   let idPrefix: String

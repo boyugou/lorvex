@@ -152,6 +152,7 @@ extension SwiftLorvexCoreService {
       db, hlc: hlc, deviceId: deviceId, id: task.id, title: task.title, notes: task.notes ?? "",
       aiNotes: task.aiNotes, rawInput: task.rawInput, priority: priority, status: createStatus,
       estimatedMinutes: task.estimatedMinutes, dueDate: dueDate, plannedDate: plannedDate,
+      plannedTime: try task.plannedTimeRange(),
       availableFrom: availableFrom, tags: tags, dependsOn: dependenciesToApply, listId: listId)
 
     let now = SyncTimestampFormat.syncTimestampNow()
@@ -186,7 +187,7 @@ extension SwiftLorvexCoreService {
         frequencyType: habit.frequencyType, weekdays: habit.weekdays,
         perPeriodTarget: habit.perPeriodTarget, dayOfMonth: habit.dayOfMonth,
         targetCount: habit.targetCount, milestone: milestone, archived: habit.archived,
-        position: habit.position)
+        position: habit.position, createdAt: habit.createdAt)
       for completion in habit.completions {
         try Self.validateImportedHabitCompletion(habitID: habit.id, completion: completion)
         try self.upsertImportedHabitCompletionInTx(

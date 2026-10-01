@@ -16,10 +16,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
   /// per-process instance is reused across every inbound batch.
   static let inboundRegistry = EntityApplierRegistry(
     appliers: EntityApplierRegistry.defaultEntityAppliers())
-  static let remoteFetchFailureCheckpointKey =
-    "cloudkit_per_record_fetch_failure_checkpoint"
-  static let remoteFetchFailureCountKey =
-    "cloudkit_per_record_fetch_failure_count"
 
   /// Startup maintenance: promote forward-compat payload shadows whose schema
   /// version this build now understands into the canonical tables. Runs once
@@ -70,20 +66,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
     }
   }
 
-  public func nextDeferredCloudSyncRetryAt(
-    forAccountIdentifier accountIdentifier: String,
-    zoneName: String
-  ) throws -> Date? {
-    try read { db in
-      let deadlines = [
-        try Outbox.earliestRetryAt(db),
-        try AuditRetentionFrontier.earliestPurgeRetryAt(
-          db, accountIdentifier: accountIdentifier, zoneName: zoneName),
-      ].compactMap { $0 }
-      return deadlines.min()
-    }
-  }
-
   public func runLocalRetentionMaintenance(includeActiveOutboxCap: Bool) throws {
     let syncedAt = SyncTimestampFormat.syncTimestampNow()
     try withStorageCutoverRetry {
@@ -122,59 +104,12 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
     }
   }
 
-  public func enqueueFullResyncBackfill(
-    tombstoneCompactionCutoff: String?
-  ) throws -> FullResyncBackfillReport {
-    try write { db in
-      try Outbox.enqueueAllLiveForFullResync(
-        db, tombstoneCompactionCutoff: tombstoneCompactionCutoff)
-    }
-  }
-
-  public func compactCloudConfirmedTombstones(through cutoff: String) throws -> UInt64 {
-    try write { db in try Tombstone.compactCloudConfirmed(db, through: cutoff) }
-  }
-
-  public func trustedTombstoneCompactionCutoff(
-    forAccountIdentifier accountIdentifier: String
-  ) throws -> String? {
-    try read { db in
-      try Tombstone.trustedCompactionCutoff(
-        db, accountIdentifier: accountIdentifier,
-        recoveryDays: SyncNaming.tombstoneMaxRetentionDays)
-    }
-  }
-
-  public func trustedTerminalServerTimeCovers(
-    cutoff: String, forAccountIdentifier accountIdentifier: String
-  ) throws -> Bool {
-    try read { db in
-      try Tombstone.trustedTerminalServerTimeCovers(
-        db, accountIdentifier: accountIdentifier, cutoff: cutoff)
-    }
-  }
-
   /// Whether the durable `reseed_required` checkpoint is set (see
   /// ``EnvelopeSyncServicing/isReseedRequired()``). Cleared by a complete
   /// full-resync backfill pass, never here.
   public func isReseedRequired() throws -> Bool {
     try read { db in
       try SyncCheckpoints.get(db, key: SyncCheckpoints.keyReseedRequired) == "true"
-    }
-  }
-
-  /// The account-scoped enrolled zone epoch. Returns `nil` only when absent;
-  /// malformed or negative stored state throws so recovery fails closed.
-  public func enrolledZoneEpoch(forAccountIdentifier accountIdentifier: String) throws -> Int? {
-    try read { db in
-      guard
-        let raw = try SyncCheckpoints.get(
-          db, key: SyncCheckpoints.keyEnrolledZoneEpoch(accountIdentifier: accountIdentifier))
-      else { return nil }
-      guard let epoch = Int(raw), epoch >= 0 else {
-        throw ZoneEpochCheckpointStateError.invalidEnrollment
-      }
-      return epoch
     }
   }
 
@@ -216,12 +151,8 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
 
   func applyInboundAttempt(
     _ envelopes: [SyncEnvelope], undecodable: Int,
-    traversalCommit: CloudTraversalCommitRequest? = nil,
     outboundReconciliation: OutboundReconciliationRequest? = nil,
-    deferredUnknownTypeRecords: [RawEnvelopeFields] = [],
-    cloudReceiptAccountIdentifier: String? = nil,
-    cloudReceipts: [InboundCloudRecordReceipt] = [],
-    inboundPageObservation: CloudInboundPageObservation? = nil
+    deferredUnknownTypeRecords: [RawEnvelopeFields] = []
   ) throws
     -> InboundApplyReport
   {
@@ -238,11 +169,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
       // observed or minted if a cross-process factory reset redirected this
       // apply onto a fresh database.
       try self.assertCommittingDatabaseIdentity(db, expected: deviceId)
-      if try Self.cloudTraversalPageWasAlreadyCommitted(db, request: traversalCommit) {
-        return (0, 0, 0, 0, 0, 0, [], 0, [])
-      }
-      let deletedCloudRecordNames = Set(
-        inboundPageObservation?.deletedRecordNames ?? [])
       let transactionClock = try clock.makeTransactionHandle(db)
       return try SyncHlcObserver.withTransactionObserver({ value in
         transactionClock.reserveAfterDeterministicMerge(value)
@@ -253,72 +179,21 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
         var deferred = 0
         var remapped = 0
         var invalid = 0
-        var retentionRejected = 0
         var repaired = 0
         var reconciledCollisionOutboxIds = Set<Int64>()
         var pendingRepairObligations: [PendingApplyRepair] = []
-        var futureLocalIntentReplays: [FutureRecordHold.LocalIntentReplay] = []
-        var resolvedCloudRecordNames = Set(
-          inboundPageObservation?.resolvedRecordNames ?? [])
-        var corruptCloudRecordNames = Set(
-          inboundPageObservation?.corruptRecordNames ?? [])
         // The distinct entity kinds whose local rows actually changed — every
         // `.applied` / `.remapped` envelope's kind plus the drain's replayed kinds.
         // Drives the report's `appliedEntityTypes` so a store reloads only the
         // affected surfaces.
         var changedKinds: Set<EntityKind> = []
-        var physicalDeletionChangedCanonicalState = false
-        var physicalDeletionRequiresCompleteInventory = false
-        if traversalCommit != nil {
-          let physicalDeletion =
-            try CloudInboundCompleteness.reconcilePhysicalDeletions(
-              db, deletedRecordNames: deletedCloudRecordNames)
-          changedKinds.formUnion(physicalDeletion.removedEntityTypes)
-          physicalDeletionChangedCanonicalState =
-            !physicalDeletion.removedEntityTypes.isEmpty
-          physicalDeletionRequiresCompleteInventory =
-            physicalDeletion.requiresCompleteInventory
-          for reassertion in physicalDeletion.requiredReassertions.sorted(by: {
-            if $0.entityType.rawValue != $1.entityType.rawValue {
-              return $0.entityType.rawValue < $1.entityType.rawValue
-            }
-            return $0.entityId < $1.entityId
-          }) {
-            if reassertion.entityType == .entityRedirect {
-              let outcome = try EntityRedirect.reassertCurrent(
-                db, wireEntityId: reassertion.entityId, deviceId: deviceId)
-              if outcome == .enqueued { repaired += 1 }
-            } else {
-              _ = try ConvergenceEmitter.enqueueCurrentCanonicalState(
-                db, entityType: reassertion.entityType.asString,
-                entityId: reassertion.entityId,
-                mintVersion: { floor in hlc.nextVersionString(dominating: floor) },
-                deviceId: deviceId)
-              repaired += 1
-              changedKinds.insert(reassertion.entityType)
-            }
-          }
-        }
         // Apply upserts before deletes (stable partition) so a within-batch
         // `upsert winner` + `delete loser` pair re-derives its redirect — see
         // ``orderedForApply(_:)``.
         for envelope in Self.orderedForApply(envelopes) {
-          let cloudRecordName = traversalCommit.map { _ in
-            SyncRecordName.opaque(
-              entityType: envelope.entityType.asString, entityId: envelope.entityId)
-          }
-          // CloudKit physical deletion is terminal for this record slot. It is
-          // reconciled before this envelope loop and the pending drain, and wins over a
-          // pathological same-page decoded copy, matching reconcilePage's
-          // deletion precedence without briefly materializing stale data.
-          if let cloudRecordName, deletedCloudRecordNames.contains(cloudRecordName) {
-            resolvedCloudRecordNames.insert(cloudRecordName)
-            continue
-          }
           // Validate at the wire boundary before the engine touches it; a crafted
           // oversized/empty envelope is dropped rather than aborting the batch.
           if case .failure(let validationError) = envelope.validate() {
-            if let cloudRecordName { corruptCloudRecordNames.insert(cloudRecordName) }
             invalid += 1
             ErrorLog.appendBestEffort(
               db, source: "sync.apply.inbound_invalid",
@@ -334,7 +209,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
           // static boundary continue through the detached-edit design unchanged.
           if let reason = FutureRecordHold.clockDeferralReason(for: envelope.version) {
             try PendingInboxDrain.enqueueDeferred(db, envelope: envelope, reason: reason)
-            if let cloudRecordName { resolvedCloudRecordNames.insert(cloudRecordName) }
             deferred += 1
             continue
           }
@@ -358,7 +232,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
             if Self.shouldAbortInboundBatch(for: applyError) {
               throw applyError
             }
-            if let cloudRecordName { corruptCloudRecordNames.insert(cloudRecordName) }
             invalid += 1
             ErrorLog.appendBestEffort(
               db, source: "sync.apply.inbound_invalid",
@@ -370,17 +243,13 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
               db, envelope: envelope, error: applyError, syncedAt: syncedAt)
             continue
           }
-          if let cloudRecordName { resolvedCloudRecordNames.insert(cloudRecordName) }
           switch outcome {
           case .applied:
             try PendingInboxDrain.clearQuarantineThroughResolvedEnvelope(
               db, entityType: envelope.entityType.asString,
               entityID: envelope.entityId, version: envelope.version.description)
-            if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+            try FutureRecordHold.reconcileTerminalEnvelope(
               db, envelope: envelope, outcome: outcome)
-            {
-              futureLocalIntentReplays.append(replay)
-            }
             applied += 1
             changedKinds.formUnion(
               try SyncMutationImpact.affectedEntityTypes(for: envelope))
@@ -397,32 +266,15 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
             // converge.
             try Self.reemitIfMergedRowDiverged(
               db, envelope: envelope, hlc: hlc, deviceId: deviceId)
-          case .upsertRejectedByRetention:
-            try PendingInboxDrain.clearQuarantineThroughResolvedEnvelope(
-              db, entityType: envelope.entityType.asString,
-              entityID: envelope.entityId, version: envelope.version.description)
-            if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
-              db, envelope: envelope, outcome: outcome)
-            {
-              futureLocalIntentReplays.append(replay)
-            }
-            // The applier already persisted account-scoped physical-delete work
-            // and removed every local full-content copy in this transaction.
-            retentionRejected += 1
-            changedKinds.insert(envelope.entityType)
-            skipped += 1
           case .repairRequired(let obligation):
             try PendingInboxDrain.clearQuarantineThroughResolvedEnvelope(
               db, entityType: envelope.entityType.asString,
               entityID: envelope.entityId, version: envelope.version.description)
-            if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+            try FutureRecordHold.reconcileTerminalEnvelope(
               db, envelope: envelope, outcome: outcome)
-            {
-              futureLocalIntentReplays.append(replay)
-            }
             // The permanent inbox invariant is local, but merely ignoring a
             // peer's delete would leave that delete as the current CloudKit
-            // record and poison every later authoritative snapshot. Replace it
+            // record, and every peer would converge on the delete. Replace it
             // with a dominating canonical upsert before this transaction can
             // commit and before the transport advances its checkpoint.
             // Fulfill after every ordinary apply/rehome/re-emit in this page. A
@@ -437,11 +289,8 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
             try PendingInboxDrain.clearQuarantineThroughResolvedEnvelope(
               db, entityType: envelope.entityType.asString,
               entityID: envelope.entityId, version: envelope.version.description)
-            if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+            try FutureRecordHold.reconcileTerminalEnvelope(
               db, envelope: envelope, outcome: outcome)
-            {
-              futureLocalIntentReplays.append(replay)
-            }
             skipped += 1
           case .deferred(let reason):
             do {
@@ -451,10 +300,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
               // Deterministic single-record poison: drop/log the envelope so the
               // CloudKit token can still advance. Transient DB errors are not
               // `EnqueueError` and still abort the batch for retry.
-              if let cloudRecordName {
-                resolvedCloudRecordNames.remove(cloudRecordName)
-                corruptCloudRecordNames.insert(cloudRecordName)
-              }
               invalid += 1
               ErrorLog.appendBestEffort(
                 db, source: "sync.apply.inbound_invalid",
@@ -468,11 +313,8 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
             try PendingInboxDrain.clearQuarantineThroughResolvedEnvelope(
               db, entityType: envelope.entityType.asString,
               entityID: envelope.entityId, version: envelope.version.description)
-            if let replay = try FutureRecordHold.reconcileTerminalEnvelope(
+            try FutureRecordHold.reconcileTerminalEnvelope(
               db, envelope: envelope, outcome: outcome)
-            {
-              futureLocalIntentReplays.append(replay)
-            }
             remapped += 1
             changedKinds.insert(envelope.entityType)
             // A redirect-remapped habit upsert that landed on (and changed) the merge
@@ -490,7 +332,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
           }
         }
         let summary = try PendingInboxDrain.drainPendingInbox(db, registry: Self.inboundRegistry)
-        futureLocalIntentReplays.append(contentsOf: summary.futureLocalIntentReplays)
         // Drain-replayed list deletes need the same HLC-minted rehome propagation
         // as direct applies; `reenqueueRehomed` re-checks each task still exists.
         try Self.propagateListDeleteRehome(
@@ -529,12 +370,6 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
           changedKinds.insert(pending.kind)
           changedKinds.formUnion(pending.obligation.affectedEntityTypes)
         }
-        let replayChangedKinds = try FutureRecordHold.fulfillLocalIntentReplays(
-          db, replays: futureLocalIntentReplays, registry: Self.inboundRegistry,
-          mintVersion: { floor in hlc.nextVersionString(dominating: floor) },
-          deviceId: deviceId)
-        repaired += futureLocalIntentReplays.count
-        changedKinds.formUnion(replayChangedKinds)
         changedKinds.formUnion(summary.replayedEntityTypes)
         if let outboundReconciliation {
           let collisionResolution = try Self.resolveOutboundCollisions(
@@ -557,15 +392,8 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
           repaired += timezoneReminderRepairs
           changedKinds.insert(.taskReminder)
         }
-        if summary.retentionRejected > 0 {
-          changedKinds.insert(.aiChangelog)
-        }
         // Best-effort retention sweep, in the sync runtime's finalizer order. A GC
-        // failure is logged and never aborts the apply of real inbound data. The
-        // emit hook propagates changelog prunes to the sync
-        // layer (delete envelope + tombstone) so the shared CloudKit zone stays
-        // bounded and peers converge on the prune instead of re-hydrating it — the
-        // same session clock and device identity the convergence re-emits above use.
+        // failure is logged and never aborts the apply of real inbound data.
         let auditCountBeforeGC =
           try Int64.fetchOne(db, sql: "SELECT COUNT(*) FROM ai_changelog") ?? 0
         SyncRetention.runPostApplyGC(db, syncedAt: syncedAt)
@@ -576,48 +404,23 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
           applied > 0,
           remapped > 0,
           summary.replayed > 0,
-          summary.retentionRejected > 0,
-          retentionRejected > 0,
           repaired > 0,
-          physicalDeletionChangedCanonicalState,
           auditPrunedByGC,
         ].contains(true)
         // The sequence is the cross-surface canonical-data invalidation witness,
         // not merely a local-write counter. Bump once for a mutating inbound page
-        // (including replay/repair/retention removal), never for an empty,
+        // (including replay, repair, and audit pruning), never for an empty,
         // duplicate, deferred-only, invalid-only, or LWW-skipped page.
         if canonicalStateChanged {
           try LocalChangeSeq.bump(db)
           Overview.invalidateStreakCache(db)
         }
         try transactionClock.persistHighWaters(db)
-        if !cloudReceipts.isEmpty {
-          guard let cloudReceiptAccountIdentifier else {
-            throw TombstoneConfirmationError.accountBoundaryMismatch
-          }
-          try Self.consumeInboundCloudReceipts(
-            db, accountIdentifier: cloudReceiptAccountIdentifier,
-            receipts: cloudReceipts)
-        }
         if let outboundReconciliation {
-          // The transport has already performed its final generation/account
-          // boundary check. Consume every local consequence of those exact
-          // results under this same BEGIN IMMEDIATE transaction.
+          // Consume every local consequence of the sent batch's results under
+          // this same BEGIN IMMEDIATE transaction.
           try Self.deferUnknownTypeRecords(
             db, raws: outboundReconciliation.deferredUnknownTypeRecords)
-          if !outboundReconciliation.cloudReceipts.isEmpty
-            || !outboundReconciliation.serverWinnerCloudReceipts.isEmpty
-          {
-            guard let accountIdentifier = outboundReconciliation.accountIdentifier else {
-              throw TombstoneConfirmationError.accountBoundaryMismatch
-            }
-            try Self.consumeInboundCloudReceipts(
-              db, accountIdentifier: accountIdentifier,
-              receipts: outboundReconciliation.serverWinnerCloudReceipts)
-            try Self.consumeOutboundCloudReceipts(
-              db, accountIdentifier: accountIdentifier,
-              receipts: outboundReconciliation.cloudReceipts)
-          }
           let reconciledAt = SyncTimestampFormat.syncTimestampNow()
           for failure in outboundReconciliation.failures {
             try Self.recordOutboundFailure(db, failure: failure, retriedAt: reconciledAt)
@@ -626,31 +429,9 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
             db, outboxIds: outboundReconciliation.confirmedOutboxIds,
             syncedAt: reconciledAt)
         }
-        let effectiveDeferredUnknownTypeRecords = deferredUnknownTypeRecords.filter { raw in
-          !deletedCloudRecordNames.contains(
-            SyncRecordName.opaque(entityType: raw.entityType, entityId: raw.entityId))
-        }
-        try Self.deferUnknownTypeRecords(db, raws: effectiveDeferredUnknownTypeRecords)
-        if traversalCommit != nil {
-          for raw in effectiveDeferredUnknownTypeRecords {
-            resolvedCloudRecordNames.insert(
-              SyncRecordName.opaque(entityType: raw.entityType, entityId: raw.entityId))
-          }
-        }
-        if let traversalCommit {
-          var observation = inboundPageObservation ?? CloudInboundPageObservation()
-          observation.resolvedRecordNames = Array(resolvedCloudRecordNames)
-          observation.corruptRecordNames = Array(corruptCloudRecordNames)
-          try CloudInboundCompleteness.reconcilePage(
-            db, boundary: traversalCommit.boundary, observation: observation)
-        }
-        try Self.commitCloudTraversalPageIfPresent(db, request: traversalCommit)
-        if physicalDeletionRequiresCompleteInventory, let traversalCommit {
-          try Self.beginInventorySnapshotAfterPhysicalDeletion(
-            db, boundary: traversalCommit.boundary)
-        }
+        try Self.deferUnknownTypeRecords(db, raws: deferredUnknownTypeRecords)
         let parkedFutureCount =
-          effectiveDeferredUnknownTypeRecords.count
+          deferredUnknownTypeRecords.count
           + (outboundReconciliation?.deferredUnknownTypeRecords.count ?? 0)
         return (
           applied, skipped, deferred, remapped, invalid, Int(summary.replayed), changedKinds,

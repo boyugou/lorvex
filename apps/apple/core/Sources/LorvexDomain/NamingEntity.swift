@@ -16,8 +16,7 @@ public enum EntityName {
   public static let preference = "preference"
   public static let memory = "memory"
   public static let dailyReview = "daily_review"
-  public static let currentFocus = "current_focus"
-  public static let focusSchedule = "focus_schedule"
+  public static let dailyBriefing = "daily_briefing"
   public static let taskReminder = "task_reminder"
   public static let taskChecklistItem = "task_checklist_item"
   public static let habitReminderPolicy = "habit_reminder_policy"
@@ -31,6 +30,11 @@ public enum EntityName {
   /// ``EntityKind/allSyncableTypes``: import-session records are local audit
   /// metadata, not replicated state.
   public static let importSession = "import_session"
+  /// Audit classification for saving the times of one day's tasks: one
+  /// `ai_changelog` row per save, keyed by the day, whose before and after
+  /// states list the day's times. The times themselves live on the tasks and
+  /// sync with them, so this names no table and no sync entity.
+  public static let dailySchedule = "daily_schedule"
 
   /// All entity type names in declaration order.
   public static let allEntityTypes: [String] = [
@@ -43,8 +47,7 @@ public enum EntityName {
     preference,
     memory,
     dailyReview,
-    currentFocus,
-    focusSchedule,
+    dailyBriefing,
     taskReminder,
     taskChecklistItem,
     habitReminderPolicy,
@@ -83,8 +86,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   case preference = "preference"
   case memory = "memory"
   case dailyReview = "daily_review"
-  case currentFocus = "current_focus"
-  case focusSchedule = "focus_schedule"
+  case dailyBriefing = "daily_briefing"
   // Independent children
   case taskReminder = "task_reminder"
   case taskChecklistItem = "task_checklist_item"
@@ -101,6 +103,9 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   // Local-only (not in allSyncableTypes / topologicalEntityOrder).
   case deviceState = "device_state"
   case importSession = "import_session"
+  /// The audit classification of a saved day's times (see
+  /// ``EntityName/dailySchedule``); it names changelog rows only.
+  case dailySchedule = "daily_schedule"
 
   /// Canonical string form. Identical to the matching wire-format constant.
   public var asString: String { rawValue }
@@ -142,11 +147,11 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   }
 
   /// `true` iff this kind participates in cross-device sync (i.e. is not a
-  /// local-only kind such as `device_state` or `import_session`).
-  /// Mirrors ``allSyncableTypes``.
+  /// local-only kind such as `device_state`, or an audit classification such
+  /// as `import_session` and `daily_schedule`). Mirrors ``allSyncableTypes``.
   public var isSyncableKind: Bool {
     switch self {
-    case .deviceState, .importSession: return false
+    case .deviceState, .importSession, .dailySchedule: return false
     default: return true
     }
   }
@@ -170,15 +175,15 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   /// the redirect chase must be allowed to remap.
   public var isNaturalKey: Bool {
     switch self {
-    case .dailyReview, .currentFocus, .focusSchedule, .preference, .calendarSeriesCutover:
+    case .dailyReview, .dailyBriefing, .preference, .calendarSeriesCutover:
       return true
     default: return false
     }
   }
 
   /// The SQL table that stores this kind's rows, or `nil` for kinds not
-  /// persisted as a single SQL table (`import_session` is a synthetic audit
-  /// classification with no table of its own).
+  /// persisted as a single SQL table (`import_session` and `daily_schedule`
+  /// are audit classifications with no table of their own).
   public var tableName: String? {
     switch self {
     case .task: return "tasks"
@@ -190,8 +195,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     case .preference: return "preferences"
     case .memory: return "memories"
     case .dailyReview: return "daily_reviews"
-    case .currentFocus: return "current_focus"
-    case .focusSchedule: return "focus_schedule"
+    case .dailyBriefing: return "daily_briefings"
     case .taskReminder: return "task_reminders"
     case .taskChecklistItem: return "task_checklist_items"
     case .habitReminderPolicy: return "habit_reminder_policies"
@@ -202,7 +206,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     case .entityRedirect: return "sync_entity_redirects"
     case .deviceState: return "device_state"
     case .aiChangelog: return "ai_changelog"
-    case .importSession: return nil
+    case .importSession, .dailySchedule: return nil
     }
   }
 
@@ -222,13 +226,12 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     // (which is a plain UNIQUE column), so the CloudKit `entity_id` stays opaque.
     case .memory: return ("memories", "id")
     case .dailyReview: return ("daily_reviews", "date")
-    case .currentFocus: return ("current_focus", "date")
-    case .focusSchedule: return ("focus_schedule", "date")
+    case .dailyBriefing: return ("daily_briefings", "date")
     case .taskReminder: return ("task_reminders", "id")
     case .taskChecklistItem: return ("task_checklist_items", "id")
     case .habitReminderPolicy: return ("habit_reminder_policies", "id")
     case .aiChangelog, .entityRedirect, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion, .deviceState, .importSession:
+      .habitCompletion, .deviceState, .importSession, .dailySchedule:
       return nil
     }
   }
@@ -258,8 +261,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     EntityName.preference,
     EntityName.memory,
     EntityName.dailyReview,
-    EntityName.currentFocus,
-    EntityName.focusSchedule,
+    EntityName.dailyBriefing,
     // Independent children
     EntityName.taskReminder,
     EntityName.taskChecklistItem,
@@ -280,8 +282,6 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
   /// this order to satisfy foreign-key constraints without deferral: aggregate
   /// roots first, then edges, then independent children. Permanent aliases are
   /// last because an alias is accepted only after its terminal target exists.
-  /// This is especially important for authoritative snapshots, where a deferred
-  /// record aborts the atomic adoption rather than entering the retry inbox.
   public static let topologicalEntityOrder: [String] = [
     // Aggregate roots
     EntityName.list,
@@ -293,8 +293,7 @@ public enum EntityKind: String, Sendable, Hashable, Codable, CaseIterable, Custo
     EntityName.preference,
     EntityName.memory,
     EntityName.dailyReview,
-    EntityName.currentFocus,
-    EntityName.focusSchedule,
+    EntityName.dailyBriefing,
     // Edges
     EdgeName.taskTag,
     EdgeName.taskDependency,

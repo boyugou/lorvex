@@ -61,15 +61,18 @@ final class FullResyncBackfillTests: XCTestCase {
       arguments: [taskId, tagId, Self.storedVersion])
   }
 
-  private func seedCurrentFocus(_ db: Database, date: String, taskId: String) throws {
+  private func seedDailyReview(_ db: Database, date: String, taskId: String) throws {
     try db.execute(
       sql: """
-        INSERT INTO current_focus (date, briefing, timezone, version, created_at, updated_at)
-        VALUES (?, 'Plan', 'UTC', ?, '2026-03-20T00:00:00.000Z', '2026-03-20T00:00:00.000Z')
+        INSERT INTO daily_reviews (date, summary, timezone, version, created_at, updated_at)
+        VALUES (?, 'Good day', 'UTC', ?, '2026-03-20T00:00:00.000Z', '2026-03-20T00:00:00.000Z')
         """,
       arguments: [date, Self.storedVersion])
     try db.execute(
-      sql: "INSERT INTO current_focus_items (date, position, task_id) VALUES (?, 0, ?)",
+      sql: """
+        INSERT INTO daily_review_task_links (review_date, task_id, created_at)
+        VALUES (?, ?, '2026-03-20T00:00:00.000Z')
+        """,
       arguments: [date, taskId])
   }
 
@@ -206,7 +209,7 @@ final class FullResyncBackfillTests: XCTestCase {
 
   /// Every re-enqueued envelope carries the SAME version string the row stores,
   /// across the generic reader (list/tag), the task reader, the aggregate reader
-  /// (current_focus + embedded children), and the composite-edge path (task_tag).
+  /// (daily_review + embedded links), and the composite-edge path (task_tag).
   /// The stored `version` column is never advanced.
   func testBackfillReenqueuesAtExistingStoredVersion() throws {
     try withDB { db in
@@ -217,7 +220,7 @@ final class FullResyncBackfillTests: XCTestCase {
       try seedList(db, listId, "Inbox")
       try seedTag(db, tagId, "urgent")
       try seedTaskTag(db, taskId, tagId)
-      try seedCurrentFocus(db, date: "2026-03-20", taskId: taskId)
+      try seedDailyReview(db, date: "2026-03-20", taskId: taskId)
       try seedChangelog(db, "01966a3f-7c8b-7d4e-8f3a-000000000d01")
 
       let report = try Outbox.enqueueAllLiveForFullResync(db)
@@ -241,7 +244,7 @@ final class FullResyncBackfillTests: XCTestCase {
         ("list", listId),
         ("tag", tagId),
         ("task_tag", edgeId),
-        ("current_focus", "2026-03-20"),
+        ("daily_review", "2026-03-20"),
       ]
       for (type, id) in expected {
         let entry = try XCTUnwrap(pending["\(type)/\(id)"], "missing re-enqueued \(type)/\(id)")
@@ -257,10 +260,10 @@ final class FullResyncBackfillTests: XCTestCase {
       }
 
       // The aggregate envelope embeds its materialized children.
-      let focus = try XCTUnwrap(pending["current_focus/2026-03-20"])
-      let focusPayload = try XCTUnwrap(JSONValue.parse(focus.envelope.payload))
-      guard case .object(let focusObj) = focusPayload else { return XCTFail("focus payload") }
-      XCTAssertEqual(focusObj["task_ids"], .array([.string(taskId)]))
+      let review = try XCTUnwrap(pending["daily_review/2026-03-20"])
+      let reviewPayload = try XCTUnwrap(JSONValue.parse(review.envelope.payload))
+      guard case .object(let reviewObj) = reviewPayload else { return XCTFail("review payload") }
+      XCTAssertEqual(reviewObj["linked_task_ids"], .array([.string(taskId)]))
 
       // ai_changelog is append-only (no version column, version-stamp-exempt) and
       // is never emitted through the payload-upsert path, so the backfill skips it.
@@ -274,7 +277,7 @@ final class FullResyncBackfillTests: XCTestCase {
       XCTAssertEqual(
         try storedVersionOf(db, table: "tags", pkColumn: "id", pk: tagId), Self.storedVersion)
       XCTAssertEqual(
-        try storedVersionOf(db, table: "current_focus", pkColumn: "date", pk: "2026-03-20"),
+        try storedVersionOf(db, table: "daily_reviews", pkColumn: "date", pk: "2026-03-20"),
         Self.storedVersion)
       let edgeVersion = try String.fetchOne(
         db, sql: "SELECT version FROM task_tags WHERE task_id = ? AND tag_id = ?",
@@ -430,58 +433,42 @@ final class FullResyncBackfillTests: XCTestCase {
     }
   }
 
-  func testTransitionBackfillSkipsOnlyConfirmedDeletesCoveredByGenerationCutoff() throws {
+  /// A full-resync backfill re-emits every tombstone as a delete, whatever its
+  /// age: nothing proves that every device has seen a delete, so none is
+  /// omitted from the rebuilt record set.
+  func testBackfillReEmitsEveryTombstoneRegardlessOfAge() throws {
     try withDB { db in
-      let oldID = "01966a3f-7c8b-7d4e-8f3a-0000000000e1"
+      let ancientID = "01966a3f-7c8b-7d4e-8f3a-0000000000e1"
       let recentID = "01966a3f-7c8b-7d4e-8f3a-0000000000e2"
-      let unconfirmedID = "01966a3f-7c8b-7d4e-8f3a-0000000000e3"
-      for id in [oldID, recentID, unconfirmedID] {
-        try Tombstone.createTombstone(
-          db, entityType: EntityName.task, entityId: id,
-          version: Self.deathVersion, deletedAt: "2020-01-01T00:00:00.000Z")
-      }
-      _ = try Tombstone.confirmCloudPresence(
-        db,
-        confirmation: .init(
-          entityType: EntityName.task, entityId: oldID,
-          version: Self.deathVersion,
-          confirmedAt: "2024-01-01T00:00:00.000Z"))
-      _ = try Tombstone.confirmCloudPresence(
-        db,
-        confirmation: .init(
-          entityType: EntityName.task, entityId: recentID,
-          version: Self.deathVersion,
-          confirmedAt: "2026-01-01T00:00:00.000Z"))
+      let recentDeath = try XCTUnwrap(
+        String.fetchOne(db, sql: "SELECT strftime('%Y-%m-%dT%H:%M:%fZ', 'now')"))
+      try Tombstone.createTombstone(
+        db, entityType: EntityName.task, entityId: ancientID,
+        version: Self.deathVersion, deletedAt: "2020-01-01T00:00:00.000Z")
+      try Tombstone.createTombstone(
+        db, entityType: EntityName.task, entityId: recentID,
+        version: Self.deathVersion, deletedAt: recentDeath)
 
-      _ = try Outbox.enqueueAllLiveForFullResync(
-        db, tombstoneCompactionCutoff: "2025-01-01T00:00:00.000Z")
+      _ = try Outbox.enqueueAllLiveForFullResync(db)
       let pending = try pendingByKey(db)
-      XCTAssertNil(pending["task/\(oldID)"])
+      XCTAssertEqual(pending["task/\(ancientID)"]?.envelope.operation, .delete)
       XCTAssertEqual(pending["task/\(recentID)"]?.envelope.operation, .delete)
-      XCTAssertEqual(pending["task/\(unconfirmedID)"]?.envelope.operation, .delete)
     }
   }
 
-  func testTransitionBackfillRetainsPermanentRedirectTargetDeath() throws {
+  func testBackfillRetainsPermanentRedirectTargetDeath() throws {
     try withDB { db in
       let targetID = "01966a3f-7c8b-7d4e-8f3a-0000000000a0"
       let sourceID = "01966a3f-7c8b-7d4e-8f3a-0000000000a1"
       try Tombstone.createTombstone(
         db, entityType: EntityName.tag, entityId: targetID,
         version: Self.deathVersion, deletedAt: "2020-01-01T00:00:00.000Z")
-      _ = try Tombstone.confirmCloudPresence(
-        db,
-        confirmation: .init(
-          entityType: EntityName.tag, entityId: targetID,
-          version: Self.deathVersion,
-          confirmedAt: "2024-01-01T00:00:00.000Z"))
       try SyncTestSupport.seedEntityRedirect(
         db, sourceType: .tag, sourceId: sourceID, targetId: targetID,
         version: Self.deathVersion, createdAt: "2024-01-01T00:00:00.000Z")
       try db.execute(sql: "DELETE FROM sync_outbox")
 
-      _ = try Outbox.enqueueAllLiveForFullResync(
-        db, tombstoneCompactionCutoff: "2025-01-01T00:00:00.000Z")
+      _ = try Outbox.enqueueAllLiveForFullResync(db)
       let pending = try pendingByKey(db)
       XCTAssertEqual(pending["tag/\(targetID)"]?.envelope.operation, .delete)
       XCTAssertEqual(
@@ -494,8 +481,7 @@ final class FullResyncBackfillTests: XCTestCase {
   }
 
   /// H7 delete-resurrection guard: `sync_tombstones` retains death knowledge well
-  /// past `fullResyncHorizonDays` — a plain tombstone an active peer has not yet
-  /// acknowledged survives the watermark GC's version gate. A merge loser has
+  /// past `fullResyncHorizonDays` — a plain tombstone is never reaped. A merge loser has
   /// both an ordinary tombstone and an independent permanent alias. A backfill
   /// that re-pushes only tombstones younger than the
   /// horizon leaves a zone recreated after >horizon days with NO record of those
@@ -589,13 +575,12 @@ final class FullResyncBackfillTests: XCTestCase {
     }
   }
 
-  /// The generation-managed death-ledger fix, end to end. Device B holds only a tombstone
-  /// for a deleted task whose `deleted_at` is ancient (400 days).
-  /// `gcTombstonesWatermark` retains it, so the full-resync backfill still
-  /// re-pushes the `delete` barrier into the rebuilt zone, and an over-window peer
-  /// (device A) still holding the task live converges on the deletion instead of
-  /// resurrecting it.
-  func testGcNoLongerDropsTombstoneSoRebuiltZoneStillBuriesEntity() throws {
+  /// The death-ledger guard, end to end. Device B holds only a tombstone for a
+  /// deleted task whose `deleted_at` is ancient (400 days). The retention sweep
+  /// keeps it, so the full-resync backfill still re-pushes the `delete` barrier
+  /// into the rebuilt zone, and an over-window peer (device A) still holding the
+  /// task live converges on the deletion instead of resurrecting it.
+  func testGcKeepsTombstoneSoRebuiltZoneStillBuriesEntity() throws {
     let deadTaskId = "01966a3f-7c8b-7d4e-8f3a-0000000000e2"
 
     // Device B: the row is gone; only the ancient, below-watermark tombstone remains.
@@ -607,7 +592,7 @@ final class FullResyncBackfillTests: XCTestCase {
         db, entityType: EntityName.task, entityId: deadTaskId, version: Self.deathVersion,
         deletedAt: ancientDeath)
 
-      XCTAssertEqual(try Tombstone.gcTombstonesWatermark(db), 0)
+      SyncRetention.runPostApplyGC(db, syncedAt: "2026-04-01T00:00:00.000Z")
       XCTAssertTrue(
         try Tombstone.isTombstoned(db, entityType: EntityName.task, entityId: deadTaskId),
         "ordinary GC retains the tombstone the backfill needs")
@@ -667,16 +652,17 @@ final class FullResyncBackfillTests: XCTestCase {
     }
     let upsert = try XCTUnwrap(resurrectUpsert)
 
-    // Device B: it deleted the task, but an old watermark GC reaped the tombstone.
-    // Its backfill re-pushes no delete barrier, so device A's stale upsert is not
-    // blocked and the deleted entity RESURRECTS.
+    // Device B: it deleted the task, but its tombstone was lost (a hypothetical
+    // reaper, removed from the product). Its backfill re-pushes no delete
+    // barrier, so device A's stale upsert is not blocked and the deleted entity
+    // RESURRECTS.
     try withDB { db in
       let ancientDeath = try XCTUnwrap(
         String.fetchOne(db, sql: "SELECT strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-400 days')"))
       try Tombstone.createTombstone(
         db, entityType: EntityName.task, entityId: deadTaskId, version: Self.deathVersion,
         deletedAt: ancientDeath)
-      // Simulate the removed watermark GC dropping the death knowledge.
+      // Simulate a reaper dropping the death knowledge.
       XCTAssertTrue(
         try Tombstone.removeTombstone(db, entityType: EntityName.task, entityId: deadTaskId))
 
@@ -694,7 +680,7 @@ final class FullResyncBackfillTests: XCTestCase {
         try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tasks WHERE id = ?", arguments: [deadTaskId]),
         1,
         "with no surviving tombstone, the stale upsert resurrects the deleted entity — "
-          + "the tail the generation-managed death ledger closes")
+          + "the tail the permanent death ledger closes")
     }
   }
 

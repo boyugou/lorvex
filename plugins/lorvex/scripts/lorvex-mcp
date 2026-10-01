@@ -1,0 +1,41 @@
+#!/bin/bash
+# Starts the MCP helper bundled inside the installed Lorvex app.
+#
+# The helper reads and writes the database the app shows, so it must be the
+# copy inside the installed app. Lookup order: /Applications, ~/Applications,
+# then Spotlight by bundle identifier for an app kept somewhere else. Only a
+# bundle that contains the helper qualifies. `exec` hands this process's stdio
+# to the helper, which speaks MCP over it.
+#
+# `lorvex-mcp --print-path` prints the helper it would start, without starting
+# it, for troubleshooting.
+set -uo pipefail
+
+helper="Contents/Helpers/LorvexMCPHost.app/Contents/MacOS/LorvexMCPHost"
+print_only=0
+if [[ "${1:-}" == "--print-path" ]]; then
+  print_only=1
+fi
+
+start() {
+  if [[ "$print_only" == 1 ]]; then
+    echo "$1"
+    exit 0
+  fi
+  exec "$1"
+}
+
+for app in "/Applications/Lorvex.app" "$HOME/Applications/Lorvex.app"; do
+  if [[ -x "$app/$helper" ]]; then
+    start "$app/$helper"
+  fi
+done
+
+while IFS= read -r app; do
+  if [[ -x "$app/$helper" ]]; then
+    start "$app/$helper"
+  fi
+done < <(mdfind "kMDItemCFBundleIdentifier == 'com.lorvex.apple'" 2>/dev/null)
+
+echo "lorvex-mcp: Lorvex is not installed. Install it from https://lorvex.app, open it once, then start a new Claude Code session." >&2
+exit 1

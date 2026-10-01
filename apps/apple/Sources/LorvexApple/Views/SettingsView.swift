@@ -48,7 +48,20 @@ struct SettingsView: View {
   @State var importPlan: LorvexImportPlan?
   @State var importPayload: LorvexDataImporter.DecodedImport?
   @State var importSummary: LorvexImportSummary?
-  @SceneStorage("settings.selectedCategory") private var selectedCategoryRawValue = SettingsCategory.general.rawValue
+  @SceneStorage("settings.selectedCategory") private var selectedCategoryRawValue =
+    SettingsView.initialCategoryRawValue
+
+  /// The category a new Settings window opens on: General, or under the DEBUG
+  /// preview tour the one the tour asked for.
+  private static var initialCategoryRawValue: String {
+    #if DEBUG
+      if LorvexUIPreview.toursWorkspaces,
+        let raw = LorvexUIPreview.previewDefaults.string(forKey: LorvexUIPreview.settingsCategoryKey),
+        SettingsCategory(rawValue: raw) != nil
+      { return raw }
+    #endif
+    return SettingsCategory.general.rawValue
+  }
 
   private var selectedCategory: SettingsCategory {
     get { SettingsCategory(rawValue: selectedCategoryRawValue) ?? .general }
@@ -62,6 +75,10 @@ struct SettingsView: View {
     )
   }
 
+  // The sidebar removes its toolbar toggle (it is the only way between
+  // categories). The detail's invisible spacer keeps the window's toolbar
+  // alive: with no toolbar item at all the window drops its unified toolbar
+  // and the sidebar no longer reaches the window top.
   var body: some View {
     NavigationSplitView {
       SettingsSidebar(selectedCategory: selectedCategoryBinding)
@@ -69,14 +86,26 @@ struct SettingsView: View {
       SettingsDetailPage(category: selectedCategory) {
         settingsContent(for: selectedCategory)
       }
+      .toolbar { ToolbarSpacer(.flexible) }
       .task(id: selectedCategory) {
-        if selectedCategory == .cloudSync {
+        switch selectedCategory {
+        case .cloudSync:
           await store.refreshCloudKitAccountAvailability()
+        case .diagnostics:
+          // Current on every visit, so the tab needs no refresh button.
+          await store.loadRuntimeDiagnostics()
+        default:
+          break
         }
       }
     }
     .navigationSplitViewStyle(.balanced)
     .frame(minWidth: 680, idealWidth: 860, minHeight: 560)
+    .onChange(of: store.requestedSettingsCategory, initial: true) { _, category in
+      guard let category else { return }
+      selectedCategory = category
+      store.requestedSettingsCategory = nil
+    }
     .task {
       if store.runtimeDiagnostics == nil {
         await store.loadRuntimeDiagnostics()
@@ -86,7 +115,7 @@ struct SettingsView: View {
     // the grouped Form (the Data tab's destructive buttons) does not reliably
     // present.
     .sheet(isPresented: $showResetConfirmation) {
-      SettingsTypedConfirmationSheet(
+      SettingsDestructiveConfirmationSheet(
         title: String(
           localized: "settings.reset.confirm.title", defaultValue: "Reset Lorvex on this Mac?",
           table: "Localizable",
@@ -98,10 +127,6 @@ struct SettingsView: View {
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
-        confirmationWord: String(
-          localized: "settings.reset.confirm.word", defaultValue: "RESET",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
         confirmTitle: String(
           localized: "settings.reset.confirm.action", defaultValue: "Reset This Device",
           table: "Localizable",
@@ -154,7 +179,7 @@ struct SettingsView: View {
       ))
     }
     .sheet(isPresented: $showCloudDeleteConfirmation) {
-      SettingsTypedConfirmationSheet(
+      SettingsDestructiveConfirmationSheet(
         title: String(
           localized: "settings.cloud_delete.confirm.title",
           defaultValue: "Delete Lorvex data from iCloud everywhere?",
@@ -167,10 +192,6 @@ struct SettingsView: View {
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
-        confirmationWord: String(
-          localized: "settings.cloud_delete.confirm.word", defaultValue: "DELETE",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
         confirmTitle: String(
           localized: "settings.cloud_delete.confirm.action", defaultValue: "Delete iCloud Data",
           table: "Localizable",

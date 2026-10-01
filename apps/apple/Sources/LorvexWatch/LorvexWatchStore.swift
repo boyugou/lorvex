@@ -2,11 +2,14 @@ import Foundation
 import LorvexCore
 import LorvexWidgetKitSupport
 
-/// Provides the current focus plan and task list for the watch surface.
+/// Provides Today's list and habits for the watch surface.
 ///
-/// Refresh loads the focus plan for today and resolves the first actionable task
-/// in the plan as the primary focus item. Task actions dispatch through the
-/// writable core service and refresh afterwards.
+/// Refresh reads Today's list in Today's order (started tasks first, then by
+/// priority and due date) with each task's saved time: from the phone's
+/// replica on a real watch, or from a writable core in tests. Which task leads
+/// depends on the clock (``orderedTasks(at:)``), so views resolve it as they
+/// draw. Task actions dispatch through the phone forwarder, or the core in
+/// tests.
 @MainActor
 @Observable
 public final class LorvexWatchStore {
@@ -16,17 +19,28 @@ public final class LorvexWatchStore {
     case snapshotUnavailable(WidgetSnapshotFallback)
   }
 
-  /// The resolved current focus plan for today, or `nil` when none is set.
-  public internal(set) var currentFocus: CurrentFocusPlan?
+  /// Today's tasks still to do, in Today's order: started tasks first, then by
+  /// priority and due date. On the snapshot backend this is the head of the
+  /// list the phone sent; ``moreCount`` counts the rest.
+  public internal(set) var tasks: [LorvexTask] = []
 
-  /// The first actionable task from `currentFocus.taskIDs`, resolved against today's task list.
-  public internal(set) var primaryTask: LorvexTask?
-
-  /// Actionable tasks in the current focus plan, preserving the plan order.
-  public internal(set) var focusTasks: [LorvexTask] = []
+  /// Tasks on Today beyond ``tasks``: the phone sends the head of a long list
+  /// together with the whole list's length.
+  public internal(set) var moreCount = 0
 
   /// Today's habits with completion progress, for wrist check-off.
   public internal(set) var habits: [WidgetSnapshot.HabitSummary] = []
+
+  /// Tasks completed on the logical day.
+  public internal(set) var completedTodayCount = 0
+
+  /// Each listed task's saved time today, in minutes since midnight of the
+  /// product day (in ``timezone``). A task without a time is absent.
+  public internal(set) var savedTimes: [LorvexTask.ID: Range<Int>] = [:]
+
+  /// The product day's timezone identifier; nil reads the clock in the
+  /// watch's own zone.
+  public internal(set) var timezone: String?
 
   /// Day identity carried by the core session or accepted phone snapshot.
   /// Snapshot-backed mutations reuse this exact value instead of recomputing a
@@ -44,6 +58,11 @@ public final class LorvexWatchStore {
     localized: "watch.status.not_refreshed", defaultValue: "Not refreshed",
     table: "Localizable", bundle: WatchL10n.bundle)
 
+  /// How long ago the phone built the replica on screen ("3h ago"), once it is
+  /// old enough that the list may have changed since (the widgets' warning
+  /// threshold); nil while it is recent or on the core backend.
+  public internal(set) var staleAgeLabel: String?
+
   /// Short task title entered from the watch quick-capture surface.
   public var captureTitle: String = ""
 
@@ -57,7 +76,7 @@ public final class LorvexWatchStore {
   /// the in-flight refresh reruns once when it finishes. Serializing the bodies
   /// is what prevents a slow *failing* refresh from wiping the state a faster
   /// refresh that started later already populated (the catch block resets
-  /// `currentFocus` / `focusTasks` / `habits` to nil/empty).
+  /// `tasks` / `habits` to empty).
   @ObservationIgnored private var isRefreshing = false
 
   /// Set when a refresh is requested while one is already in flight; the
@@ -109,7 +128,7 @@ public final class LorvexWatchStore {
     self.mutationForwarder = mutationForwarder
   }
 
-  /// Loads the current focus plan for today and resolves the primary task.
+  /// Loads Today's list, its saved times, and today's habits.
   ///
   /// Coalesces concurrent triggers rather than running overlapping bodies: a
   /// request arriving while a refresh is in flight sets `refreshPending` and
@@ -149,11 +168,12 @@ public final class LorvexWatchStore {
           dateString = try await core.getSessionContext().date
         }
         logicalDay = dateString
-        let focus = try await core.loadCurrentFocus(date: dateString)
-        currentFocus = focus
-        focusTasks = try await resolvedFocusTasks(
-          focus: focus, logicalDay: dateString, core: core)
-        primaryTask = focusTasks.first
+        timezone = today.timezone
+        let listed = today.tasks.filter { $0.status.isActionable }
+        savedTimes = listed.times(on: dateString)
+        tasks = listed
+        moreCount = 0
+        completedTodayCount = (try? await core.loadWidgetStatsSource().completedTodayTasks.count) ?? 0
         let habitCatalog = try await core.loadHabits(date: dateString)
         habits = habitCatalog.habits
           .filter { !$0.archived }
@@ -167,15 +187,18 @@ public final class LorvexWatchStore {
           table: "Localizable", bundle: WatchL10n.bundle)
       case .snapshot(let url):
         try refreshFromSnapshot(url: url)
+        reapplyPendingTaskCommands()
       case .snapshotUnavailable(let fallback):
         throw LorvexWatchSnapshotError.unavailable(fallback)
       }
     } catch {
-      currentFocus = nil
       logicalDay = nil
-      primaryTask = nil
-      focusTasks = []
+      staleAgeLabel = nil
+      tasks = []
+      moreCount = 0
       habits = []
+      completedTodayCount = 0
+      savedTimes = [:]
       if case LorvexWatchSnapshotError.unavailable(let fallback) = error {
         snapshotStatusText = Self.snapshotUnavailableStatusText(fallback)
       } else {
@@ -211,6 +234,23 @@ public final class LorvexWatchStore {
       return
     }
     await deliveryManager.dismissRejectedCommand(id: id)
+  }
+
+  /// Asks the paired iPhone for a fresh replica, then reloads Today. The phone
+  /// rebuilds it on request even from the background, which is what recovers a
+  /// missing replica or one left over from an earlier day.
+  public func requestReplicaAndRefresh() async {
+    if let deliveryManager = mutationForwarder as? any LorvexWatchDeliveryManaging {
+      await deliveryManager.requestReplica()
+    }
+    await refresh()
+  }
+
+  /// True when Today failed to load because the watch holds no current replica
+  /// (none yet, or one from an earlier day), which a replica request can fix.
+  public var needsReplica: Bool {
+    guard case LorvexWatchSnapshotError.unavailable(let fallback)? = error else { return false }
+    return fallback.reason == .missingFile || fallback.reason == .expiredDay
   }
 
   /// Foreground activation nudge for commands retained across a prior process

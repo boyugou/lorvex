@@ -29,7 +29,9 @@ func deferSelectedTaskSucceedsWithInMemoryCore() async throws {
   store.selectedTaskID = taskID
 
   await store.deferSelectedTask()
-  let deferred = store.today.tasks.first { $0.id == taskID }
+  // Deferral pushes the task to tomorrow, so it leaves today's pool; the stored
+  // row is what carries the planned date under test.
+  let deferred = try await store.core.loadTask(id: taskID)
 
   // No error should be set on happy path.
   #expect(store.errorMessage == nil)
@@ -37,8 +39,8 @@ func deferSelectedTaskSucceedsWithInMemoryCore() async throws {
   // deferred day must read back through the UTC formatter: tomorrow in the
   // synced product calendar, regardless of the machine timezone. Deferral
   // writes planned_date and keeps the task open.
-  #expect(deferred?.status == .open)
-  #expect(deferred?.plannedDate.map(LorvexDateFormatters.ymdUTC.string(from:)) == tomorrow)
+  #expect(deferred.status == .open)
+  #expect(deferred.plannedDate.map(LorvexDateFormatters.ymdUTC.string(from:)) == tomorrow)
 }
 
 @MainActor

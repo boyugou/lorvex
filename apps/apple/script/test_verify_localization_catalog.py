@@ -17,6 +17,7 @@ from verify_localization_catalog import (
     ROOT,
     _call_site_defaults,
     _parse_concat_string,
+    app_shortcut_phrase_failures,
     apple_native_bundle_qualification_failures,
     bare_localization_text_failures,
     default_value_equality_failures,
@@ -25,7 +26,9 @@ from verify_localization_catalog import (
     catalog_languages,
     catalog_source_language,
     catalog_structure_failures,
+    cjk_number_unit_spacing_failures,
     copied_source_translation_failures,
+    english_typographic_quote_failures,
     hardcoded_system_case_display_failures,
     hardcoded_system_intent_metadata_failures,
     info_plist_strings_failures,
@@ -227,6 +230,65 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
         self.assertIn("sidebar.item.memory en stringUnit.state mismatch: 'new'", failures)
         self.assertTrue(any("required localization key(s) missing" in failure for failure in failures))
 
+    def test_cjk_number_unit_spacing_failures_rejects_a_breaking_space_after_a_number(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "duration": entry("%lld min", extra_localizations={"zh-Hans": "%lld 分钟"}),
+                "count": entry("1 task", extra_localizations={"zh-Hans": "1 项任务"}),
+            }
+        )
+
+        self.assertEqual(
+            cjk_number_unit_spacing_failures(catalog),
+            [
+                "duration zh-Hans breaks between a number and its unit at '%lld '; "
+                "use a no-break space (U+00A0)",
+                "count zh-Hans breaks between a number and its unit at '1 '; "
+                "use a no-break space (U+00A0)",
+            ],
+        )
+
+    def test_cjk_number_unit_spacing_failures_allows_bound_units_and_other_spaces(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "duration": entry(
+                    "%1$lld hr %2$lld min",
+                    extra_localizations={"zh-Hans": "%1$lld\u00a0小时\u00a0%2$lld\u00a0分钟"},
+                ),
+                "remaining": entry("%@ left", extra_localizations={"zh-Hans": "还剩 %@"}),
+                "until": entry("Until %@", extra_localizations={"zh-Hans": "%@ 结束"}),
+                "english": entry("3 tasks"),
+            }
+        )
+
+        self.assertEqual(cjk_number_unit_spacing_failures(catalog), [])
+
+    def test_english_typographic_quote_failures_rejects_straight_marks(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "error": entry("Couldn't load tasks"),
+                "confirm": entry('Delete "%@"?'),
+            }
+        )
+
+        self.assertEqual(
+            english_typographic_quote_failures(catalog),
+            [
+                "error en uses a straight quote mark in \"Couldn't load tasks\"; use ’ or “…”",
+                "confirm en uses a straight quote mark in 'Delete \"%@\"?'; use ’ or “…”",
+            ],
+        )
+
+    def test_english_typographic_quote_failures_allows_curly_marks_and_other_languages(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "error": entry("Couldn’t load tasks", extra_localizations={"zh-Hans": "无法加载任务"}),
+                "confirm": entry("Delete “%@”?", extra_localizations={"fr": "Supprimer l'élément"}),
+            }
+        )
+
+        self.assertEqual(english_typographic_quote_failures(catalog), [])
+
     def test_copied_source_translation_failures_rejects_all_locale_prose_copy(self) -> None:
         catalog = catalog_with_strings(
             {
@@ -302,6 +364,72 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
         self.assertEqual(
             copied_source_translation_failures(catalog, ("de", "en", "fr")),
             ["count copies source-language prose into every non-source localization"],
+        )
+
+    def test_copied_source_translation_failures_rejects_plain_copy_of_a_plural_form(self) -> None:
+        def plural(forms: dict[str, str]) -> dict[str, object]:
+            return {
+                "variations": {
+                    "plural": {
+                        category: {"stringUnit": {"state": "translated", "value": value}}
+                        for category, value in forms.items()
+                    }
+                }
+            }
+
+        def plain(value: str) -> dict[str, object]:
+            return {"stringUnit": {"state": "translated", "value": value}}
+
+        english = plural({"one": "%lld day", "other": "%lld days"})
+        catalog = catalog_with_strings(
+            {
+                "copied": {
+                    "extractionState": "manual",
+                    "localizations": {"en": english, "zh-Hans": plain("%lld days")},
+                },
+                "translated": {
+                    "extractionState": "manual",
+                    "localizations": {"en": english, "zh-Hans": plain("%lld 天")},
+                },
+            }
+        )
+
+        self.assertEqual(
+            copied_source_translation_failures(catalog, ("en", "zh-Hans")),
+            ["copied copies source-language prose into every non-source localization"],
+        )
+
+    def test_app_shortcut_phrase_failures(self) -> None:
+        def phrase(translation: str | None) -> dict[str, object]:
+            if translation is None:
+                return {}
+            return {
+                "localizations": {
+                    "zh-Hans": {"stringUnit": {"state": "translated", "value": translation}}
+                }
+            }
+
+        catalog = {
+            "sourceLanguage": "en",
+            "version": "1.0",
+            "strings": {
+                "Open ${applicationName}": phrase("打开 ${applicationName}"),
+                "Search tasks in ${applicationName}": phrase("Search tasks in ${applicationName}"),
+                "List tasks in ${applicationName}": phrase("列出任务"),
+                "Show the weekly review": phrase("显示每周回顾"),
+                "Add habit in ${applicationName}": phrase(None),
+            },
+        }
+
+        self.assertEqual(
+            app_shortcut_phrase_failures(catalog, ("en", "zh-Hans")),
+            [
+                "App Shortcut phrase 'Search tasks in ${applicationName}' copies English into zh-Hans",
+                "App Shortcut phrase 'List tasks in ${applicationName}' (zh-Hans) must contain ${applicationName} exactly once",
+                "App Shortcut phrase 'Show the weekly review' must contain ${applicationName} exactly once",
+                "App Shortcut phrase 'Show the weekly review' (zh-Hans) must contain ${applicationName} exactly once",
+                "App Shortcut phrase 'Add habit in ${applicationName}' has no zh-Hans translation",
+            ],
         )
 
     def test_copied_source_translation_failures_rejects_substitution_plural_copy(self) -> None:

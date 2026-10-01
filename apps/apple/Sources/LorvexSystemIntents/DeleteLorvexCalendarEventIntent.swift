@@ -22,7 +22,7 @@ struct DeleteLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
     try await requestLorvexDestructiveConfirmation(
       IntentDialog(
         LocalizedStringResource(
-          "system.confirm.delete", defaultValue: "Delete this item? This can't be undone.",
+          "system.confirm.delete", defaultValue: "Delete this item? This can’t be undone.",
           table: "Localizable", bundle: SystemL10n.bundle)))
     // This non-scoped intent deletes the whole current series segment. Never
     // substitute the transient rendered occurrence id; this-only and

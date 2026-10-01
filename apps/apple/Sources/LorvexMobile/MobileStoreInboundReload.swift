@@ -40,27 +40,26 @@ extension MobileStore {
       case .lists:
         if let loaded = try? await core.loadLists() { lists = loaded }
       case .calendar:
-        let endDate = Self.calendarEndDateString(from: date)
-        if let loaded = try? await core.loadCalendarTimeline(from: date, to: endDate) {
+        // Preserve the window the day view is showing rather than snapping back
+        // to a today-anchored one: an inbound sync while the user browses a far
+        // week would otherwise silently empty the viewed days.
+        let from = calendarWindowToReload?.from ?? date
+        let to = calendarWindowToReload?.to ?? Self.calendarEndDateString(from: date)
+        if let loaded = try? await core.loadCalendarTimeline(from: from, to: to) {
           calendarTimeline = loaded
         }
-        if let loaded = try? await core.getScheduledTasks(from: date, to: endDate, limit: 500) {
+        if let loaded = try? await core.getScheduledTasks(from: from, to: to, limit: 500) {
           calendarScheduledTasks = loaded
         }
-      case .focus:
-        // do/catch, not `try?`: these return an optional whose `nil` is a legitimate
-        // remote CLEAR that must be reflected. `try?` would fold that nil into the
-        // failure case and keep a stale plan. Only a thrown read error keeps the old
-        // value.
-        do { snapshot.currentFocus = try await core.loadCurrentFocus(date: date) } catch {}
-        do { focusSchedule = try await core.loadFocusSchedule(date: date) } catch {}
       case .reviews:
         if let loaded = try? await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor) {
           snapshot.weeklyReview = loaded
         }
         // Preserve an in-progress daily-review draft: adopt freshly-loaded values
         // only when the editor has no unsaved edits, mirroring `loadLocalSurfaces`.
-        // do/catch so a remote CLEAR (nil) is reflected; see the focus block.
+        // do/catch, not `try?`: the read returns an optional whose nil is a
+        // legitimate remote clear that must be reflected; only a thrown read
+        // error keeps the old value.
         let dailyReviewDraftAtStart = dailyReviewDraft
         let dailyReviewWasCleanAtStart =
           dailyReviewDraftAtStart == MobileDailyReviewDraft(review: dailyReview)
@@ -112,11 +111,10 @@ extension MobileStore {
     // been reloaded so already-visible pages re-query instead of staying pinned
     // to their first `.task(id:)` result.
     if domains.contains(.tasks) { invalidateTaskViewsAfterCanonicalReload() }
-    if domains.contains(.lists), !domains.contains(.tasks) { invalidateListDetailViews() }
     if domains.contains(.habits) { invalidateHabitDetailViews() }
     // Re-seat the Today selection when a task surface reloaded, matching phase 1.
     if !domains.isDisjoint(with: [.today, .tasks]), selectedTaskID == nil {
-      selectedTaskID = snapshot.nextTask?.id
+      selectedTaskID = snapshot.today.tasks.first?.id
     }
 
     // Derived surfaces, from whichever primary domains reloaded.

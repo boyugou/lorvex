@@ -16,55 +16,6 @@ final class TaskRegisterLocalIntentReplayTests: XCTestCase {
     try Hlc(physicalMs: physical, counter: 0, deviceSuffix: suffix)
   }
 
-  private func seedTask(
-    _ db: Database, title: String, dueDate: String?, status: String,
-    archivedAt: String?, version: Hlc
-  ) throws {
-    try db.execute(
-      sql: """
-        INSERT INTO tasks (
-          id, title, status, list_id, due_date,
-          content_version, schedule_version, lifecycle_version, archive_version,
-          recurrence_rollover_state, version, created_at, updated_at, archived_at
-        ) VALUES (?, ?, ?, 'inbox', ?, ?, ?, ?, ?, 'none', ?, ?, ?, ?)
-        """,
-      arguments: [
-        taskID, title, status, dueDate,
-        version.description, version.description, version.description, version.description,
-        version.description, "2026-07-17T08:00:00.000Z",
-        "2026-07-17T09:00:00.000Z", archivedAt,
-      ])
-  }
-
-  private func taskEnvelope(
-    _ db: Database, title: String, dueDate: String?, status: String,
-    archivedAt: String?, version: Hlc
-  ) throws -> SyncEnvelope {
-    guard
-      case .object(var object) = try OutboxEnqueue.readEntityPayloadSnapshot(
-        db, entityType: EntityName.task, entityId: taskID)
-    else {
-      throw NSError(
-        domain: "TaskRegisterLocalIntentReplayTests", code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "expected task object payload"])
-    }
-    object["title"] = .string(title)
-    object["due_date"] = dueDate.map(JSONValue.string) ?? .null
-    object["status"] = .string(status)
-    object["completed_at"] = .null
-    object["archived_at"] = archivedAt.map(JSONValue.string) ?? .null
-    object["content_version"] = .string(version.description)
-    object["schedule_version"] = .string(version.description)
-    object["lifecycle_version"] = .string(version.description)
-    object["archive_version"] = .string(version.description)
-    object["version"] = .string(version.description)
-    return SyncEnvelope(
-      entityType: .task, entityId: taskID, operation: .upsert,
-      version: version, payloadSchemaVersion: LorvexVersion.payloadSchemaVersion,
-      payload: try SyncCanonicalize.canonicalizeJSON(.object(object)),
-      deviceId: deviceID)
-  }
-
   private func recurringTaskEnvelope(
     id: String, title: String, status: String, dueDate: String,
     completedAt: JSONValue, recurrenceGroupId: String,
@@ -159,130 +110,6 @@ final class TaskRegisterLocalIntentReplayTests: XCTestCase {
       [])
   }
 
-  func testTaskReplayPromotesOnlyAuthoredContentOverAdoptedBaseline() throws {
-    let store = try SyncTestSupport.freshStore()
-    let localVersion = try version(1_800_000_000_100, suffix: "bbbbbbbbbbbbbbbb")
-    let remoteVersion = try version(1_800_000_000_300, suffix: "aaaaaaaaaaaaaaaa")
-    let replayVersion = try version(1_800_000_000_500, suffix: "cccccccccccccccc")
-
-    try store.writer.write { db in
-      try seedTask(
-        db, title: "Remote title", dueDate: "2026-08-20", status: "in_progress",
-        archivedAt: nil, version: remoteVersion)
-      let staleLocal = try taskEnvelope(
-        db, title: "Local title", dueDate: "2026-01-01", status: "open",
-        archivedAt: "2026-07-01T00:00:00.000Z", version: localVersion)
-
-      let result = try PostBaselineLocalIntentReplay.applyAndEnqueue(
-        db, intent: staleLocal, registerIntent: .task(.content),
-        version: replayVersion, deviceId: deviceID, registry: registry)
-      guard case .replayed(_, let outcome, let enqueued) = result else {
-        return XCTFail("expected task replay")
-      }
-      XCTAssertEqual(outcome, .applied)
-      XCTAssertTrue(enqueued)
-
-      let row = try XCTUnwrap(
-        try Row.fetchOne(
-          db,
-          sql: """
-            SELECT title, due_date, status, archived_at,
-                   content_version, schedule_version, lifecycle_version,
-                   archive_version, version
-            FROM tasks WHERE id = ?
-            """,
-          arguments: [taskID]))
-      XCTAssertEqual(row["title"] as String, "Local title")
-      XCTAssertEqual(row["due_date"] as String?, "2026-08-20")
-      XCTAssertEqual(row["status"] as String, "in_progress")
-      XCTAssertNil(row["archived_at"] as String?)
-      XCTAssertEqual(row["content_version"] as String, replayVersion.description)
-      XCTAssertEqual(row["schedule_version"] as String, remoteVersion.description)
-      XCTAssertEqual(row["lifecycle_version"] as String, remoteVersion.description)
-      XCTAssertEqual(row["archive_version"] as String, remoteVersion.description)
-      XCTAssertEqual(row["version"] as String, replayVersion.description)
-      XCTAssertEqual(
-        try Int64.fetchOne(
-          db,
-          sql: """
-            SELECT register_intent FROM sync_outbox
-            WHERE entity_type = ? AND entity_id = ? AND synced_at IS NULL
-            """,
-          arguments: [EntityName.task, taskID]),
-        TaskRegisterIntent.content.rawValue)
-    }
-  }
-
-  func testTaskReplayPromotesEachRegisterWithoutOverwritingTheOthers() throws {
-    let localVersion = try version(1_800_000_000_100, suffix: "bbbbbbbbbbbbbbbb")
-    let remoteVersion = try version(1_800_000_000_300, suffix: "aaaaaaaaaaaaaaaa")
-    let replayVersion = try version(1_800_000_000_500, suffix: "cccccccccccccccc")
-    let cases: [(TaskRegisterIntent, String, String?, String, String?)] = [
-      (.content, "Local title", "2026-08-20", "in_progress", nil),
-      (.schedule, "Remote title", "2026-01-01", "in_progress", nil),
-      (.lifecycle, "Remote title", "2026-08-20", "open", nil),
-      (.archive, "Remote title", "2026-08-20", "in_progress", "2026-07-01T00:00:00.000Z"),
-    ]
-
-    for (intent, expectedTitle, expectedDueDate, expectedStatus, expectedArchivedAt) in cases {
-      let store = try SyncTestSupport.freshStore()
-      try store.writer.write { db in
-        try seedTask(
-          db, title: "Remote title", dueDate: "2026-08-20", status: "in_progress",
-          archivedAt: nil, version: remoteVersion)
-        let staleLocal = try taskEnvelope(
-          db, title: "Local title", dueDate: "2026-01-01", status: "open",
-          archivedAt: "2026-07-01T00:00:00.000Z", version: localVersion)
-
-        let result = try PostBaselineLocalIntentReplay.applyAndEnqueue(
-          db, intent: staleLocal, registerIntent: .task(intent),
-          version: replayVersion, deviceId: deviceID, registry: registry)
-        guard case .replayed(_, .applied, true) = result else {
-          return XCTFail("expected replay for task register \(intent.rawValue)")
-        }
-
-        let row = try XCTUnwrap(
-          try Row.fetchOne(
-            db,
-            sql: "SELECT title, due_date, status, archived_at FROM tasks WHERE id = ?",
-            arguments: [taskID]))
-        XCTAssertEqual(row["title"] as String, expectedTitle)
-        XCTAssertEqual(row["due_date"] as String?, expectedDueDate)
-        XCTAssertEqual(row["status"] as String, expectedStatus)
-        XCTAssertEqual(row["archived_at"] as String?, expectedArchivedAt)
-        XCTAssertEqual(
-          try Int64.fetchOne(db, sql: "SELECT register_intent FROM sync_outbox"),
-          intent.rawValue)
-      }
-    }
-  }
-
-  func testTaskReplayDropsZeroIntentInsteadOfResurrectingAdoptedAbsence() throws {
-    let store = try SyncTestSupport.freshStore()
-    let localVersion = try version(1_800_000_000_100)
-    let replayVersion = try version(1_800_000_000_500)
-
-    try store.writer.write { db in
-      try seedTask(
-        db, title: "Stale task", dueDate: nil, status: "open",
-        archivedAt: nil, version: localVersion)
-      let stale = try taskEnvelope(
-        db, title: "Stale task", dueDate: nil, status: "open",
-        archivedAt: nil, version: localVersion)
-      try db.execute(sql: "DELETE FROM tasks WHERE id = ?", arguments: [taskID])
-
-      let result = try PostBaselineLocalIntentReplay.applyAndEnqueue(
-        db, intent: stale, registerIntent: .none,
-        version: replayVersion, deviceId: deviceID, registry: registry)
-      guard case .discardedNoRegisterIntent = result else {
-        return XCTFail("expected zero-intent task replay to be discarded")
-      }
-      XCTAssertEqual(
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tasks WHERE id = ?", arguments: [taskID]),
-        0)
-    }
-  }
-
   func testFutureLwwTaskRepairRestagesSurvivingContentIntent() throws {
     let store = try SyncTestSupport.freshStore()
     let base = try version(1_800_000_000_100, suffix: "aaaaaaaaaaaaaaaa")
@@ -343,9 +170,8 @@ final class TaskRegisterLocalIntentReplayTests: XCTestCase {
       guard case .repairRequired(.propagateTaskRollover) = outcome else {
         return XCTFail("reopen must normalize the already-materialized successor")
       }
-      XCTAssertNil(
-        try FutureRecordHold.reconcileTerminalEnvelope(
-          db, envelope: remoteReopenedParent, outcome: outcome))
+      try FutureRecordHold.reconcileTerminalEnvelope(
+        db, envelope: remoteReopenedParent, outcome: outcome)
 
       let queued = try XCTUnwrap(
         try Row.fetchOne(

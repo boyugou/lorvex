@@ -78,7 +78,9 @@ func taskIntentRunnerHandlesListBatchAndTagActions() async throws {
   )
   #expect(result.changedIDs.sorted() == batchIDs.sorted())
   #expect(result.skipped.isEmpty)
-  #expect(result.snapshot.tasks.first { $0.id == batchTwo.id }?.status == .open)
+  // Read the row: the returned Today snapshot is the day's pool, so an undated
+  // reopened task is legitimately absent from it.
+  #expect(try await core.loadTask(id: batchTwo.id).status == .open)
   result = try await LorvexTaskIntentRunner.batchDeferTasks(
     taskIDs: batchIDs,
     until: " 2026-05-30 ",

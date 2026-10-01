@@ -1,7 +1,14 @@
+import EventKit
 import LorvexCore
 import LorvexDomain
 import SwiftUI
 
+/// The Calendar group of Settings: mirroring device calendars, what Lorvex may
+/// see of their events, and which calendars it reads. The calendar list reloads
+/// each time "Calendars to Mirror" opens and whenever the calendar database
+/// changes, so a calendar added in another app appears without a refresh
+/// action; a reload keeps the current rows on screen, and only the first load
+/// shows progress.
 struct MobileStoreSettingsCalendarSection: View {
   @Bindable var store: MobileStore
   @State private var calendars: [EventKitCalendarDescriptor] = []
@@ -13,31 +20,23 @@ struct MobileStoreSettingsCalendarSection: View {
   @State private var isSettingCalendarAccessMode = false
 
   var body: some View {
-    Section(
-      String(
-        localized: "settings.section.calendar", defaultValue: "Calendar", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    ) {
+    Section {
       Toggle(isOn: eventKitEnabledBinding) {
-        Label {
-          VStack(alignment: .leading, spacing: 2) {
-            Text(
-              String(
-                localized: "settings.calendar.mirror_device_calendars",
-                defaultValue: "Mirror Device Calendars", table: "Localizable",
-                bundle: MobileL10n.bundle))
-            Text(
-              String(
-                localized: "settings.calendar.mirror_detail",
-                defaultValue:
-                  "Read selected device calendars into Lorvex without writing to your personal calendars.",
-                table: "Localizable", bundle: MobileL10n.bundle)
-            )
-            .font(LorvexDesign.Typography.tertiaryText)
-            .foregroundStyle(.secondary)
-          }
-        } icon: {
-          Image(systemName: "calendar")
+        VStack(alignment: .leading, spacing: 2) {
+          Text(
+            String(
+              localized: "settings.calendar.mirror_device_calendars",
+              defaultValue: "Mirror Device Calendars", table: "Localizable",
+              bundle: MobileL10n.bundle))
+          Text(
+            String(
+              localized: "settings.calendar.mirror_detail",
+              defaultValue:
+                "Read selected device calendars into Lorvex without writing to your personal calendars.",
+              table: "Localizable", bundle: MobileL10n.bundle)
+          )
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(.secondary)
         }
       }
       .disabled(
@@ -61,84 +60,30 @@ struct MobileStoreSettingsCalendarSection: View {
         isSettingCalendarAccessMode || store.isSettingEventKitEnabled
           || store.isApplyingEventKitSettings)
       .accessibilityIdentifier("mobileSettings.calendar.accessMode")
-
-      Text(calendarAccessMode.mobileSettingsDetail)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-
+    } header: {
       Text(
         String(
-          localized: "settings.calendar.access.scope_detail",
-          defaultValue:
-            "Applies to what Lorvex and connected assistants can see on this device.",
-          table: "Localizable",
-          bundle: MobileL10n.bundle)
-      )
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-
-      DisclosureGroup(isExpanded: $expanded) {
-        Picker(
+          localized: "settings.section.calendar", defaultValue: "Calendar", table: "Localizable",
+          bundle: MobileL10n.bundle))
+    } footer: {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+        Text(calendarAccessMode.mobileSettingsDetail)
+        Text(
           String(
-            localized: "settings.calendar.filter.mirror", defaultValue: "Mirror",
-            table: "Localizable", bundle: MobileL10n.bundle), selection: filterModeBinding
-        ) {
-          Text(
-            String(
-              localized: "settings.calendar.filter.all_except_muted",
-              defaultValue: "All Except Muted", table: "Localizable", bundle: MobileL10n.bundle)
-          )
-          .tag(EventKitCalendarFilterMode.allExcept)
-          Text(
-            String(
-              localized: "settings.calendar.filter.only_selected", defaultValue: "Only Selected",
-              table: "Localizable", bundle: MobileL10n.bundle)
-          )
-          .tag(EventKitCalendarFilterMode.onlySelected)
-        }
-        .pickerStyle(.segmented)
-        .accessibilityIdentifier("mobileSettings.calendar.filterMode")
-
-        calendarRows
-
-        Button(
-          String(
-            localized: "settings.calendar.filter.refresh", defaultValue: "Refresh Calendars",
-            table: "Localizable", bundle: MobileL10n.bundle)
-        ) {
-          Task { await loadCalendars() }
-        }
-        .disabled(isLoading || !store.eventKitEnabled || store.isApplyingEventKitSettings)
-        .accessibilityIdentifier("mobileSettings.calendar.refresh")
-      } label: {
-        Label(
-          String(
-            localized: "settings.calendar.filter.title", defaultValue: "Calendars to Mirror",
-            table: "Localizable", bundle: MobileL10n.bundle),
-          systemImage: "calendar.badge.checkmark")
-      }
-      .disabled(
-        !store.eventKitEnabled || calendarAccessMode == .off
-          || store.isSettingEventKitEnabled
-      )
-      .accessibilityIdentifier("mobileSettings.calendar.filterToggle")
-
-      if let message = displayedErrorMessage {
-        Text(message)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.red)
-        if shouldShowOpenSettingsCTA {
-          MobileSettingsRecoveryLink(
-            label: String(
-              localized: "settings.calendar.open_settings", defaultValue: "Open Settings",
-              table: "Localizable", bundle: MobileL10n.bundle),
-            accessibilityIdentifier: "mobileSettings.calendar.openSettings")
-        }
+            localized: "settings.calendar.access.scope_detail",
+            defaultValue:
+              "Applies to what Lorvex and connected assistants can see on this device.",
+            table: "Localizable",
+            bundle: MobileL10n.bundle))
       }
     }
     .task {
       calendarAccessMode = await store.calendarAccessModeFromSettings()
       await loadCalendarsIfNeeded()
+      // The loop ends when the task is cancelled, as the section leaves the page.
+      for await _ in NotificationCenter.default.notifications(named: .EKEventStoreChanged) {
+        await loadCalendars()
+      }
     }
     .onChange(of: store.eventKitEnabled) { _, enabled in
       if enabled {
@@ -148,15 +93,78 @@ struct MobileStoreSettingsCalendarSection: View {
         errorMessage = nil
       }
     }
+
+    // The mirror filter is its own group so the access footer above stays next
+    // to the picker it explains instead of trailing the calendar list.
+    Section {
+      if store.eventKitEnabled {
+        calendarFilterGroup
+      }
+
+      if let message = displayedErrorMessage {
+        Text(message)
+          .font(LorvexDesign.Typography.tertiaryText)
+          .foregroundStyle(LorvexDesign.Palette.error)
+        if shouldShowOpenSettingsCTA {
+          MobileSettingsRecoveryLink(
+            label: String(
+              localized: "settings.calendar.open_settings", defaultValue: "Open Settings",
+              table: "Localizable", bundle: MobileL10n.bundle),
+            accessibilityIdentifier: "mobileSettings.calendar.openSettings")
+        }
+      }
+    }
     .onChange(of: expanded) { _, isExpanded in
-      if !isExpanded { flushPendingFilterRefresh() }
+      if isExpanded {
+        Task { await loadCalendars() }
+      } else {
+        flushPendingFilterRefresh()
+      }
     }
     .onDisappear { flushPendingFilterRefresh() }
   }
 
+  /// The mirrored-calendar picker. Shown only while mirroring is on: like the
+  /// rows under a system switch in iOS Settings, it has nothing to configure
+  /// while the switch is off.
+  private var calendarFilterGroup: some View {
+    DisclosureGroup(isExpanded: $expanded) {
+      Picker(
+        String(
+          localized: "settings.calendar.filter.mirror", defaultValue: "Mirror",
+          table: "Localizable", bundle: MobileL10n.bundle), selection: filterModeBinding
+      ) {
+        Text(
+          String(
+            localized: "settings.calendar.filter.all_except_muted",
+            defaultValue: "All Except Muted", table: "Localizable", bundle: MobileL10n.bundle)
+        )
+        .tag(EventKitCalendarFilterMode.allExcept)
+        Text(
+          String(
+            localized: "settings.calendar.filter.only_selected", defaultValue: "Only Selected",
+            table: "Localizable", bundle: MobileL10n.bundle)
+        )
+        .tag(EventKitCalendarFilterMode.onlySelected)
+      }
+      .pickerStyle(.segmented)
+      .accessibilityIdentifier("mobileSettings.calendar.filterMode")
+
+      calendarRows
+    } label: {
+      Label(
+        String(
+          localized: "settings.calendar.filter.title", defaultValue: "Calendars to Mirror",
+          table: "Localizable", bundle: MobileL10n.bundle),
+        systemImage: "calendar.badge.checkmark")
+    }
+    .disabled(calendarAccessMode == .off || store.isSettingEventKitEnabled)
+    .accessibilityIdentifier("mobileSettings.calendar.filterToggle")
+  }
+
   @ViewBuilder
   private var calendarRows: some View {
-    if isLoading {
+    if isLoading && calendars.isEmpty {
       ProgressView()
         .controlSize(.small)
     } else if calendars.isEmpty && displayedErrorMessage == nil {
@@ -294,7 +302,7 @@ struct MobileStoreSettingsCalendarSection: View {
       } else {
         errorMessage = String(
           localized: "settings.calendar.load_error",
-          defaultValue: "Couldn't load calendars. Check calendar access in Settings.",
+          defaultValue: "Couldn’t load calendars. Check calendar access in Settings.",
           table: "Localizable", bundle: MobileL10n.bundle)
       }
     }
@@ -311,7 +319,9 @@ struct MobileStoreSettingsCalendarSection: View {
       partial &* 31 &+ Int(scalar.value)
     }
     return Color(
-      hue: Double(abs(scalars) % 360) / 360,
+      // `.magnitude` (UInt), not `abs()`: the wrapping hash can equal Int.min,
+      // for which `abs()` is a hard runtime trap.
+      hue: Double(scalars.magnitude % 360) / 360,
       saturation: 0.62,
       brightness: 0.82)
   }

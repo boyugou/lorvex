@@ -288,46 +288,50 @@ struct MCPIdempotencyEnforcementTests {
     #expect(count == 2)
   }
 
-  @Test("keyed no-op focus mutations succeed and consume their key")
-  func keyedNoOpFocusMutationsSucceedAndConsumeTheirKey() async throws {
+  @Test("keyed no-op day-planning mutations succeed and consume their key")
+  func keyedNoOpDayPlanningMutationsSucceedAndConsumeTheirKey() async throws {
     let registry = try mcpInMemoryRegistry()
 
-    // No focus plan exists for the date, so both mutations are pure no-ops.
-    // A keyed no-op must still commit a durable claim: the host finalizes every
-    // keyed non-error result against it, and the consumed key must conflict on
-    // reuse with different arguments.
+    // The date has no timed tasks and no briefing, so both mutations are pure
+    // no-ops. A keyed no-op must still commit a durable claim: the host
+    // finalizes every keyed non-error result against it, and the consumed key
+    // must conflict on reuse with different arguments.
     let clear = try await mcpRegistryCall(
-      registry, tool: "clear_current_focus",
+      registry, tool: "save_daily_schedule",
       arguments: [
         "date": .string("2026-07-18"),
+        "times": .array([]),
         "idempotency_key": .string("key-clear-noop"),
       ])
     #expect(clear.isError != true, "a keyed no-op clear must succeed, not surface an internal error")
 
-    let remove = try await mcpRegistryCall(
-      registry, tool: "remove_from_current_focus",
+    let briefing = try await mcpRegistryCall(
+      registry, tool: "set_daily_briefing",
       arguments: [
         "date": .string("2026-07-18"),
-        "task_id": .string("00000000-0000-4000-8000-000000000001"),
-        "idempotency_key": .string("key-remove-noop"),
+        "briefing": .string(""),
+        "idempotency_key": .string("key-briefing-noop"),
       ])
     #expect(
-      remove.isError != true, "a keyed no-op removal must succeed, not surface an internal error")
+      briefing.isError != true,
+      "a keyed no-op briefing clear must succeed, not surface an internal error")
 
     // Replay with identical arguments returns the cached no-op result.
     let replay = try await mcpRegistryCall(
-      registry, tool: "clear_current_focus",
+      registry, tool: "save_daily_schedule",
       arguments: [
         "date": .string("2026-07-18"),
+        "times": .array([]),
         "idempotency_key": .string("key-clear-noop"),
       ])
     #expect(replay.isError != true)
 
     // Reuse with different arguments must conflict — the no-op consumed the key.
     let conflict = try await mcpRegistryCall(
-      registry, tool: "clear_current_focus",
+      registry, tool: "save_daily_schedule",
       arguments: [
         "date": .string("2026-07-19"),
+        "times": .array([]),
         "idempotency_key": .string("key-clear-noop"),
       ])
     #expect(conflict.isError == true, "a consumed no-op key must conflict on different arguments")

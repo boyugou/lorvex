@@ -15,7 +15,7 @@ func appShortcutsExposeSystemEntrypointsInStableOrder() {
       .readOverview,
       .completeTask,
       .deferTask,
-      .focusTask,
+      .planTaskForToday,
       .listTasks,
       .searchTasks,
       .createHabit,

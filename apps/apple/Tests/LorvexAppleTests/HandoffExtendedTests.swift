@@ -65,8 +65,8 @@ func openDestinationActivityUserInfoCarriesDestinationRawValue() {
 @Test
 func openTaskActivityBuilderRoundTrip() {
   // Verify the open-task activity builder + parser pair is symmetric.
-  let activity = makeOpenTaskActivity(taskID: "watch-task-1", title: "Watch Focus Task")
+  let activity = makeOpenTaskActivity(taskID: "watch-task-1", title: "Watch Task")
   let parsed = parseOpenTaskActivity(activity)
   #expect(parsed == "watch-task-1")
-  #expect(activity.title == "Continue task: Watch Focus Task")
+  #expect(activity.title == "Continue task: Watch Task")
 }

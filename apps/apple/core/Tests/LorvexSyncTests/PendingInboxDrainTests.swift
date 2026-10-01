@@ -545,13 +545,29 @@ final class PendingInboxDrainTests: XCTestCase {
 
   // MARK: - error_dedup_busy.rs
 
-  func testBusyOrLockedApplyFailureClassification() throws {
-    let busy = ApplyError.dbBusyOrLocked("database is locked")
-    let locked = ApplyError.dbBusyOrLocked("database table is locked")
+  /// A database suspended so the process holds no shared-container file lock
+  /// across app suspension raises `SQLITE_ABORT` / `SQLITE_INTERRUPT`. Those
+  /// must not charge an envelope's retry budget: the cap discards the envelope
+  /// permanently, and being backgrounded is not the envelope's fault.
+  func testSuspendedDatabaseErrorsLiftToTransient() {
+    for code in [ResultCode.SQLITE_ABORT, .SQLITE_INTERRUPT, .SQLITE_BUSY, .SQLITE_LOCKED] {
+      let lifted = ApplyError.lift(DatabaseError(resultCode: code, message: "suspended"))
+      XCTAssertTrue(
+        PendingInboxDrain.isTransientDatabaseFailure(lifted),
+        "\(code) must lift to a transient failure, got \(lifted)")
+    }
+    let constraint = ApplyError.lift(
+      DatabaseError(resultCode: .SQLITE_CONSTRAINT, message: "check failed"))
+    XCTAssertFalse(PendingInboxDrain.isTransientDatabaseFailure(constraint))
+  }
+
+  func testTransientDatabaseApplyFailureClassification() throws {
+    let busy = ApplyError.dbTransient("database is locked")
+    let locked = ApplyError.dbTransient("database table is locked")
     let permanent = ApplyError.invalidPayload("bad")
-    XCTAssertTrue(PendingInboxDrain.isTransientBusyOrLocked(busy))
-    XCTAssertTrue(PendingInboxDrain.isTransientBusyOrLocked(locked))
-    XCTAssertFalse(PendingInboxDrain.isTransientBusyOrLocked(permanent))
+    XCTAssertTrue(PendingInboxDrain.isTransientDatabaseFailure(busy))
+    XCTAssertTrue(PendingInboxDrain.isTransientDatabaseFailure(locked))
+    XCTAssertFalse(PendingInboxDrain.isTransientDatabaseFailure(permanent))
 
     try withDB { db in
       let env = self.makeEnvelope(EntityName.taskReminder, "reminder-busy")
@@ -564,7 +580,7 @@ final class PendingInboxDrainTests: XCTestCase {
         try String.fetchOne(db, sql: "SELECT last_attempted_at FROM sync_pending_inbox LIMIT 1") ?? ""
       Thread.sleep(forTimeInterval: 0.025)
       let entryId = try Int64.fetchOne(db, sql: "SELECT id FROM sync_pending_inbox LIMIT 1")!
-      try PendingInbox.recordReattemptBusy(db, id: entryId)
+      try PendingInbox.recordTransientReattempt(db, id: entryId)
       let after =
         try Int64.fetchOne(
           db, sql: "SELECT attempt_count FROM sync_pending_inbox WHERE id = ?", arguments: [entryId])

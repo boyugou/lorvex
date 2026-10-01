@@ -15,9 +15,9 @@ func widgetTimelineProviderBuildsFreshEntryFromSnapshotFile() async throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
+    stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1),
     briefing: "Start here.",
-    focusTasks: [
+    tasks: [
       .init(
         id: "task-widget-entry",
         title: "Render widget entry",
@@ -64,9 +64,9 @@ func widgetTimelineProviderExpiresPriorLogicalDayInsteadOfShowingYesterdayAsToda
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-23T06:59:00Z",
     timezone: "America/Los_Angeles",
-    stats: .init(focusCount: 1, overdueCount: 1, dueTodayCount: 1),
+    stats: .init(todayCount: 1, overdueCount: 1, dueTodayCount: 1),
     briefing: "Yesterday's plan",
-    focusTasks: []
+    tasks: []
   )
   try JSONEncoder().encode(snapshot).write(to: snapshotURL, options: [.atomic])
   let now = try #require(ISO8601DateFormatter().date(from: "2026-05-23T07:01:00Z"))
@@ -156,14 +156,13 @@ func widgetTimelineProviderReportsUnsupportedSnapshotVersion() throws {
     "local_change_sequence": 1,
     "timezone": "UTC",
     "stats": {
-      "focus_count": 0,
+      "today_count": 0,
       "overdue_count": 0,
       "due_today_count": 0
     },
     "briefing": null,
-    "focus_tasks": [],
+    "tasks": [],
     "habits": [],
-    "today_tasks": [],
     "lists": [],
     "list_stats": []
   }
@@ -203,7 +202,9 @@ func widgetTimelineProviderPlaceholderIsStableAndWidgetReady() {
     entry.refreshAfter
       == WidgetTimelineRefreshPolicy().nextLocalMidnight(after: now, calendar: .current))
   #expect(provider.compactStatusText(for: entry) == "Update time unavailable")
-  #expect(entry.state.snapshot?.briefing == "Lorvex is ready.")
+  // A briefing is text the assistant wrote for a day, so the placeholder has none.
+  #expect(entry.state.snapshot?.briefing == nil)
+  #expect(entry.state.snapshot?.tasks.isEmpty == true)
 }
 
 @Test
@@ -232,27 +233,27 @@ func rawSnapshotEntryExposesSmartStackRelevanceForTasks() {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
-    stats: .init(focusCount: 1, overdueCount: 0, dueTodayCount: 1),
+    stats: .init(todayCount: 2, overdueCount: 0, dueTodayCount: 1),
     briefing: nil,
-    focusTasks: [
+    tasks: [
       .init(
-        id: "task-focus",
-        title: "Focus",
+        id: "task-first",
+        title: "First",
         status: "open",
         dueDate: nil,
         priority: nil,
         listID: nil,
         estimatedMinutes: nil
-      )
-    ],
-    todayTasks: [
+      ),
       .init(
-        id: "task-today",
-        title: "Today",
+        id: "task-second",
+        title: "Second",
+        status: "open",
         dueDate: "2026-05-22",
         priority: 1,
+        listID: nil,
         estimatedMinutes: nil
-      )
+      ),
     ]
   )
   let entry = LorvexSnapshotEntry(
@@ -273,8 +274,10 @@ func todayTaskBuildsCanonicalDeepLinkURL() {
   let task = WidgetSnapshot.TodayTask(
     id: "task with/slash",
     title: "Open me",
+    status: "open",
     dueDate: "2026-05-22",
     priority: 2,
+    listID: nil,
     estimatedMinutes: 15
   )
 

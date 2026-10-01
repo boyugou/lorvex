@@ -29,13 +29,13 @@ class VerifyUserDocsTests(unittest.TestCase):
                 f"- **MCP catalog at {count} tools.** Current state.\n"
                 f"  85 reference tools against Apple's catalog (now {count}): two gaps.\n"
                 f"  across the Apple MCP catalog (currently {count} tools) checked.\n"
-                f"- **Full Tauri MCP parity + beyond.** The current Apple catalog has {count} tools.\n"
+                f"- **MCP parity with the original reference catalog, and beyond.** The current Apple catalog has {count} tools.\n"
                 f"  additions leave the current catalog at {count} tools.\n"
             ),
             FEATURES: f"MCP tool count: {count}. Scoped tools follow.\n",
             APPLE_NATIVE_ARCH: (
-                f"- It exposes {count} tools spanning tasks, focus, lists, habits, calendar, reviews,\n"
-                "  memory, and system diagnostics.\n"
+                f"- It exposes {count} tools spanning tasks, day planning, lists, habits, calendar,\n"
+                "  reviews, memory, and system diagnostics.\n"
             ),
         }
 
@@ -207,7 +207,7 @@ class VerifyUserDocsTests(unittest.TestCase):
             checks["required"],
         )
         self.assertIn(
-            "including task, calendar, list/tag, focus, habit, review, and memory reads",
+            "including task, calendar, list/tag, day-planning, habit, review, and memory reads",
             checks["required"],
         )
 
@@ -220,7 +220,7 @@ class VerifyUserDocsTests(unittest.TestCase):
             checks["stale"],
         )
         self.assertIn(
-            "| CloudKit sync (read + write) | [SHIPPED] | Live mode includes outbound record export, private database subscription, remote-change refresh, inbound record application, and atomic SQLite change-token checkpointing; distributed builds still require CloudKit entitlement/container provisioning |",
+            "| CloudKit sync (read + write) | [SHIPPED] | Live mode runs on `CKSyncEngine`: outbound record export from the local outbox, the engine's private database subscription and change fetches, inbound record application, and engine-state checkpoints in SQLite; distributed builds still require CloudKit entitlement/container provisioning |",
             checks["required"],
         )
 
@@ -271,12 +271,12 @@ class VerifyUserDocsTests(unittest.TestCase):
             checks["required"],
         )
         self.assertIn(
-            "10. [Distribution gaps and follow-up work](#10-distribution-gaps-and-follow-up-work)",
+            "9. [Distribution gaps and follow-up work](#9-distribution-gaps-and-follow-up-work)",
             checks["required"],
         )
         self.assertIn("## 4. macOS - Mac App Store", checks["required"])
         self.assertIn("## 5. iOS/iPadOS — App Store Connect", checks["required"])
-        self.assertIn("## 10. Distribution gaps and follow-up work", checks["required"])
+        self.assertIn("## 9. Distribution gaps and follow-up work", checks["required"])
         self.assertIn("./script/archive_mas.sh --preflight", checks["required"])
         self.assertIn("./script/archive_mas.sh --package", checks["required"])
         self.assertIn("com.lorvex.apple.focus-filter", checks["required"])
@@ -382,11 +382,11 @@ class VerifyUserDocsTests(unittest.TestCase):
         checks = CHECKS[user_guide]
 
         self.assertIn(
-            "outbound record export, private database subscription, remote-change refresh,\ninbound record application, and atomic SQLite change-token checkpointing are\nready",
+            "The inbound boundary applies decoded CloudKit records through the native",
             checks["required"],
         )
         self.assertIn(
-            "Core planning entities such as tasks, lists, habits, calendar events, memory,\nand focus plans route through the same native inbound sync\nengine used by the Swift core tests",
+            "Core planning entities such as tasks, lists, habits, calendar events, memory,\nand daily briefings route through the same native inbound sync\nengine used by the Swift core tests",
             checks["required"],
         )
         self.assertIn(
@@ -400,7 +400,7 @@ class VerifyUserDocsTests(unittest.TestCase):
         checks = CHECKS[apple_arch]
 
         self.assertIn(
-            "`MobileStoreFactory` centralizes the mobile/vision store bootstrap",
+            "`MobileStoreFactory` centralizes the mobile store bootstrap",
             checks["required"],
         )
         self.assertIn(

@@ -1,4 +1,5 @@
 import LorvexCore
+import LorvexWidgetKitSupport
 
 /// Finishes the derived work that follows a committed interactive-widget
 /// mutation without changing that mutation's outcome.
@@ -24,7 +25,7 @@ public struct WidgetIntentPostCommitCoordinator: Sendable {
   public static func live() -> WidgetIntentPostCommitCoordinator {
     WidgetIntentPostCommitCoordinator(
       refresh: { core in
-        _ = try await WidgetIntentSnapshotRefresher.live().refresh(core: core)
+        _ = try await WidgetSnapshotLiveRefresher.live().refresh(core: core)
       })
   }
 

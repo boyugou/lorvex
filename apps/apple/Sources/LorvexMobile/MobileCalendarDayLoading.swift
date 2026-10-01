@@ -11,6 +11,13 @@ extension MobileCalendarDayView {
       return
     }
     loadedAnchor = visibleDate
-    await store.refreshCalendarTimeline(around: visibleDate)
+    if weekMode {
+      // Mid-week anchor, ten days each way: the visible week and both weeks a
+      // swipe reveals are loaded before the finger moves.
+      let midWeek = calendar.date(byAdding: .day, value: 3, to: visibleDate) ?? visibleDate
+      await store.refreshCalendarTimeline(around: midWeek, radiusDays: 10)
+    } else {
+      await store.refreshCalendarTimeline(around: visibleDate)
+    }
   }
 }

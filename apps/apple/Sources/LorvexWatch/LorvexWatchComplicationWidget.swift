@@ -2,7 +2,8 @@ import SwiftUI
 import WidgetKit
 import LorvexCore
 
-/// The Lorvex focus complication for watchOS faces.
+/// The Lorvex Today complication for watchOS faces: how many tasks are left
+/// today and the one at the top.
 ///
 /// Supported families: `accessoryCircular`, `accessoryRectangular`,
 /// `accessoryInline`, and `accessoryCorner` (watchOS only).
@@ -20,13 +21,13 @@ public struct LorvexWatchComplicationWidget: Widget {
     }
     .configurationDisplayName(LocalizedStringResource(
       "watch.complication.name",
-      defaultValue: "Lorvex Focus",
+      defaultValue: "Lorvex Today",
       table: "Localizable",
       bundle: WatchL10n.bundle
     ))
     .description(LocalizedStringResource(
       "watch.complication.description",
-      defaultValue: "Shows your current focus task.",
+      defaultValue: "Shows how many tasks are left today and the one at the top.",
       table: "Localizable",
       bundle: WatchL10n.bundle
     ))

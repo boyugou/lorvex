@@ -335,40 +335,6 @@ enum ApplyLww {
     return true
   }
 
-  /// Reset one existing row below every canonical wire HLC before an explicitly
-  /// authoritative snapshot is replayed.
-  ///
-  /// This is deliberately NOT part of ordinary inbound apply: normal sync is
-  /// LWW and must preserve a newer local edit. An over-window device has instead
-  /// chosen the complete CloudKit snapshot as truth. Replaying that snapshot
-  /// through the same per-entity appliers still gives us all validation,
-  /// FK/cascade, merge, and payload-shadow behavior. Grouped-register entities
-  /// are removed outright because their group clocks are constrained below `version`; a
-  /// partial zeroing would either violate that invariant or let a pre-adoption
-  /// group clock defeat the authoritative row. The surrounding savepoint makes
-  /// the remove-and-rebuild atomic.
-  /// Returns false when the row is already absent or has no version column.
-  @discardableResult
-  static func resetVersionForAuthoritativeSnapshot(
-    _ db: Database, entityType: String, entityId: String
-  ) throws -> Bool {
-    guard let loc = versionRowLocation(entityType: entityType, entityId: entityId) else {
-      return false
-    }
-    do {
-      if let kind = EntityKind.parse(entityType), kind == .calendarEvent || kind == .task {
-        try db.execute(
-          sql: "DELETE FROM \(loc.table) WHERE \(loc.whereClause)",
-          arguments: StatementArguments(loc.pkValues))
-      } else {
-        try db.execute(
-          sql: "UPDATE \(loc.table) SET version = ? WHERE \(loc.whereClause)",
-          arguments: StatementArguments([zeroVersionHlc] + loc.pkValues))
-      }
-    } catch { throw ApplyError.lift(error) }
-    return db.changesCount > 0
-  }
-
   /// The `(table, whereClause, pkValues)` that locate an entity's row for version
   /// lookups / resets, or `nil` for kinds with no `version` column (append-only /
   /// local-only) or an edge whose composite `{a}:{b}` entity_id fails to split.
@@ -401,8 +367,7 @@ enum ApplyLww {
     case .preference: return single("preferences", "key")
     case .memory: return single("memories", "id")
     case .dailyReview: return single("daily_reviews", "date")
-    case .currentFocus: return single("current_focus", "date")
-    case .focusSchedule: return single("focus_schedule", "date")
+    case .dailyBriefing: return single("daily_briefings", "date")
     case .taskReminder: return single("task_reminders", "id")
     case .taskChecklistItem: return single("task_checklist_items", "id")
     case .habitReminderPolicy: return single("habit_reminder_policies", "id")
@@ -411,7 +376,7 @@ enum ApplyLww {
     case .taskCalendarEventLink:
       return edge("task_calendar_event_links", "task_id", "calendar_event_id")
     case .habitCompletion: return edge("habit_completions", "habit_id", "completed_date")
-    case .aiChangelog, .entityRedirect, .deviceState, .importSession: return nil
+    case .aiChangelog, .entityRedirect, .deviceState, .importSession, .dailySchedule: return nil
     }
   }
 }
@@ -460,11 +425,9 @@ enum ApplyFk {
     return nil
   }
 
-  /// Return every hard FK dependency encoded by one upsert. This is the shared
-  /// structural source for both inbound preflight and authoritative-snapshot
-  /// local-intent dependency closure; keeping those paths together prevents a
-  /// newly added child/edge kind from being accepted by ordinary sync but lost
-  /// during remote-authoritative adoption.
+  /// Return every hard FK dependency encoded by one upsert: the structural
+  /// source for inbound preflight, so a newly added child/edge kind declares
+  /// its parents in one place.
   static func requiredDependencies(
     entityType: String, entityId: String, payload: String
   ) throws -> [(EntityKind, String)] {
@@ -514,9 +477,9 @@ enum ApplyFk {
       }
       return []
     case .list, .tag, .habit, .calendarSeriesCutover, .preference, .memory,
-      .dailyReview, .currentFocus, .focusSchedule,
+      .dailyReview, .dailyBriefing,
       .aiChangelog, .deviceState,
-      .importSession:
+      .importSession, .dailySchedule:
       return []
     }
   }

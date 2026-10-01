@@ -42,8 +42,7 @@ byte-identical to the `schema/` authority, and `script/verify_migration_ladder.p
 plus `script/verify_schema_freeze.py` enforce the Apple-only migration ladder and
 freeze. `script/verify_sync_payload_contract.py` separately enforces the
 contiguous Apple wire-field manifest ladder and its released hashes. These are
-Apple-only integrity checks; Apple and Tauri are directionally aligned through
-`spec/`, not byte-locked, so there is no cross-runtime schema-parity gate.
+Apple-only integrity checks.
 
 ## Planned Release Workflows
 
@@ -51,7 +50,7 @@ The target release shape is:
 
 - macOS direct distribution: Developer ID signed and notarized `.dmg`
 - macOS App Store: App Store signed macOS archive/upload
-- iOS/iPadOS/visionOS/watchOS: App Store Connect archive/upload from the Swift
+- iOS/iPadOS/watchOS: App Store Connect archive/upload from the Swift
   Apple targets
 
 Planned artifact labels:

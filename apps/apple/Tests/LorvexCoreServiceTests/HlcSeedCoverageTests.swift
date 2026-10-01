@@ -38,7 +38,8 @@ final class HlcSeedCoverageTests: XCTestCase {
       .deletingLastPathComponent()  // repo root
       .appendingPathComponent("schema/schema.sql")
     let schemaSQL = try String(contentsOf: schemaURL, encoding: .utf8)
-    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(schemaSQL: schemaSQL))
+    return SwiftLorvexCoreService(store: try LorvexStore.openInMemory(
+      schemaSQL: schemaSQL, migrations: try SwiftLorvexCoreService.resolveSchemaMigrations()))
   }
 
   func testSeedCoversNonTaskTablesAndIgnoresRemoteRows() throws {
@@ -420,21 +421,6 @@ final class HlcSeedCoverageTests: XCTestCase {
     XCTAssertEqual(ceiling, try Hlc.parse(shadowVersion))
   }
 
-  func testGlobalRetryCeilingIncludesActiveAuditPolicyVersion() throws {
-    let service = try makeService()
-    let account = "future-policy-account"
-    let version = "9000000000000_0001_bbbbbbbbbbbbbbbb"
-    _ = try service.activateAuditRetentionAccount(
-      accountIdentifier: account, zoneName: "LorvexZone-g1")
-    _ = try service.adoptAuditRetentionPolicy(
-      .off, policyVersion: version, forAccountIdentifier: account)
-
-    let ceiling = try service.read { db in
-      try SwiftLorvexCoreService.HlcClock.maxAnyLocalHlc(db)
-    }
-    XCTAssertEqual(ceiling, try Hlc.parse(version))
-  }
-
   func testGlobalRetryCeilingRejectsParseableNoncanonicalStoredVersion() throws {
     let service = try makeService()
     let unpadded = "1900000000000_1_aaaaaaaaaaaaaaaa"
@@ -536,11 +522,6 @@ final class HlcSeedCoverageTests: XCTestCase {
       "sync_conflict_log.loser_version",
       "sync_outbox.future_record_version",
       "sync_pending_inbox.envelope_version",
-      // These capabilities/snapshots copy the policy HLC already retained by
-      // audit_retention_account_state or audit_retention_binding; they never
-      // mint an independent version.
-      "audit_retention_candidate_authorization.policy_version",
-      "sync_generation_snapshot_staging.retention_policy_version",
     ]
     XCTAssertEqual(scannedPairs, schemaPairs.subtracting(deliberateNonClockSeedVersionColumns))
   }

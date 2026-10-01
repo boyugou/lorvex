@@ -110,14 +110,17 @@ func calendarWeekGridEventBlocksUseCompactMetrics() throws {
     encoding: .utf8
   )
 
-  #expect(source.contains("private enum CalendarEventBlockMetrics"))
-  #expect(source.contains("static let minimumHeight: CGFloat = 16"))
+  #expect(source.contains("enum CalendarEventBlockMetrics"))
+  // No view-level height floor: the model's drawn end carries the minimum, so
+  // a short block never runs under the one that starts right after it.
+  #expect(!source.contains("minimumHeight"))
+  #expect(source.contains("LorvexDesign.CalendarMetrics.tightBlockHeight"))
   #expect(source.contains("static let compactHeightThreshold: CGFloat = 28"))
   #expect(source.contains("static let timeHeightThreshold: CGFloat = 34"))
   #expect(source.contains("static let accentRailWidth: CGFloat = 2.5"))
   #expect(source.contains("static let activeShadowRadius: CGFloat = 7"))
   #expect(source.contains("CalendarEventBlockContent("))
-  #expect(source.contains("private struct CalendarEventBlockContent: View"))
+  #expect(source.contains("struct CalendarEventBlockContent: View"))
   #expect(source.contains(".lineLimit(titleLineLimit)"))
   #expect(source.contains("renderedHeight >= CalendarEventBlockMetrics.timeHeightThreshold"))
   #expect(source.contains("renderedHeight < CalendarEventBlockMetrics.compactHeightThreshold ? 1 : 2"))
@@ -191,7 +194,7 @@ func calendarWeekGridOverflowBadgeOpensHiddenEventPopover() throws {
   #expect(source.contains("Button {"))
   #expect(source.contains("overflowPopoverDayID = day.id"))
   #expect(source.contains(".popover("))
-  #expect(source.contains("overflowPopover(blocks: hidden)"))
+  #expect(source.contains("overflowPopover(blocks: hidden, taskBlocks: hiddenTasks)"))
   #expect(source.contains("ForEach(blocks.sorted { $0.startMin < $1.startMin })"))
   // A hidden-event row now opens the detail inspector (the 3-panel selection)
   // rather than jumping straight to the edit sheet.
@@ -211,15 +214,19 @@ func calendarWeekGridShowsNowGuideAcrossEveryDayColumn() throws {
     encoding: .utf8
   )
 
-  #expect(grid.contains("nowLine(now: context.date, isToday: isToday(day.date))"))
-  #expect(!grid.contains("if isToday(day.date) {\n          TimelineView(.periodic"))
+  #expect(grid.contains("nowLine(now: LorvexPreviewClock.now(in: calendar, tick: context.date), isToday: isToday(day.date))"))
+  #expect(
+    !grid.contains(
+      "if isToday(day.date) {\n          TimelineView(.periodic(from: .now, by: 60)) { context in\n            nowLine("
+    ))
   #expect(chrome.contains("func nowLine(now: Date, isToday: Bool)"))
   #expect(chrome.contains("Color.secondary.opacity(0.22)"))
-  #expect(chrome.contains("Rectangle().fill(lineColor).frame(height: isToday ? 1.5 : 1)"))
+  #expect(chrome.contains("let thickness: CGFloat = isToday ? 1.5 : 1"))
+  #expect(chrome.contains("Rectangle().fill(lineColor).frame(height: thickness)"))
 }
 
 @Test
-func calendarWeekGridShowsCalmEmptyWeekOverlay() throws {
+func calendarWeekGridLeavesAnEmptyRangeBareUnlessAccessIsOff() throws {
   let source = try String(
     contentsOf: packageRoot()
       .appending(path: "Sources/LorvexApple/Views/CalendarWeekGridView.swift"),
@@ -232,35 +239,25 @@ func calendarWeekGridShowsCalmEmptyWeekOverlay() throws {
   )
 
   #expect(source.contains("private func isEmptyWeek(_ columns: [CalendarGridDay]) -> Bool"))
-  #expect(source.contains("$0.allDayEvents.isEmpty && $0.scheduledTasks.isEmpty && $0.timedBlocks.isEmpty"))
-  #expect(source.contains("private func emptyWeekCreateTarget(_ columns: [CalendarGridDay])"))
-  #expect(source.contains("CalendarWeekEmptyOverlay"))
-  #expect(source.contains("CalendarWeekEmptyOverlay(visibleDayCount: visibleDayCount)"))
-  #expect(components.contains("private var isSingleDay: Bool"))
-  #expect(components.contains(#".accessibilityIdentifier(isSingleDay ? "calendar.day.empty" : "calendar.week.empty")"#))
+  #expect(source.contains("columns.allSatisfy(\\.isEmpty)"))
+  // An empty day or week is a bare grid, like the month: no banner restating
+  // the empty hours, and no create button beside the toolbar's.
+  #expect(!source.contains("CalendarWeekEmptyOverlay"))
+  #expect(!components.contains("CalendarWeekEmptyOverlay"))
+  #expect(!source.contains("emptyWeekCreateTarget"))
+  #expect(!components.contains(#""calendar.week.empty.title""#))
+  #expect(!components.contains(#""calendar.day.empty.title""#))
+  #expect(!source.contains("LorvexEmptyStatePanel("))
+  // A blocked-access empty grid still says why it is empty, as a top banner
+  // across the column band.
+  #expect(source.contains("if isEmptyWeek(columns), EventKitAuthorizationHelper().needsSettingsRecovery {"))
+  #expect(source.contains("CalendarWeekAuthorizeOverlay()"))
   #expect(source.contains(#".overlay(alignment: .top)"#))
   #expect(source.contains(".padding(.leading, gutterWidth)"))
-  #expect(source.contains(".padding(.horizontal, LorvexDesign.Spacing.l)"))
-  #expect(components.contains("HStack(alignment: .center, spacing: LorvexDesign.Spacing.s)"))
-  #expect(components.contains(".lineLimit(2)"))
-  // The empty state spans the column band as a top banner, not a fixed-width
-  // island floating over the middle of the week.
-  #expect(!source.contains("emptyOverlayMaxWidth"))
+  #expect(components.contains("struct CalendarWeekAuthorizeOverlay: View"))
+  #expect(components.contains(#".accessibilityIdentifier("calendar.week.unauthorized")"#))
   #expect(components.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
   #expect(components.contains(".background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))"))
-  #expect(components.contains(".buttonBorderShape(.capsule)"))
-  #expect(!source.contains(".overlay(alignment: .center)"))
-  #expect(!source.contains(".frame(width: 520, alignment: .leading)"))
-  #expect(!source.contains(".background(.regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))"))
-  #expect(!source.contains(".shadow(color: .black.opacity(0.06)"))
-  #expect(components.contains(#""calendar.week.empty.title""#))
-  #expect(components.contains(#""calendar.week.empty.description""#))
-  #expect(components.contains(#""calendar.day.empty.title""#))
-  #expect(components.contains(#""calendar.day.empty.description""#))
-  #expect(components.contains(#"defaultValue: "Open Day""#))
-  #expect(source.contains("createAt(target.date, target.minutes, 60)"))
-  #expect(source.contains("calendar.component(.hour, from: now) + 1"))
-  #expect(!source.contains("LorvexEmptyStatePanel("))
 }
 
 @Test
@@ -298,4 +295,34 @@ private func packageRoot() -> URL {
     .deletingLastPathComponent()
     .deletingLastPathComponent()
     .deletingLastPathComponent()
+}
+
+@Test("The now line runs under the opaque blocks and its dot above them")
+func calendarNowLineRunsUnderOpaqueBlocks() throws {
+  let root = packageRoot()
+  // zIndex, not declaration order, stacks these layers: the blocks sit at 1
+  // (a selected or dragged macOS block at 2), the line stays at 0, and the dot
+  // is lifted above every block.
+  for (path, dotLayer) in [
+    ("Sources/LorvexApple/Views/CalendarWeekGridView.swift", ".zIndex(3)"),
+    ("Sources/LorvexMobile/MobileCalendarDayColumn.swift", ".zIndex(2)"),
+  ] {
+    let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+    let line = try #require(source.range(of: "nowLine(now:"))
+    #expect(!source[line.upperBound...].prefix(200).contains(".zIndex("), "\(path) lifts the now line")
+    let dot = try #require(source.range(of: "nowDot(now: LorvexPreviewClock"))
+    #expect(
+      source[dot.upperBound...].prefix(200).contains(dotLayer),
+      "\(path) leaves the now dot under the blocks")
+  }
+  for (path, opaqueFill) in [
+    ("Sources/LorvexApple/Views/CalendarWeekGridEventBlock.swift", ".lorvexOpaqueTintBackground("),
+    ("Sources/LorvexApple/Views/CalendarWeekGridTaskBlock.swift", "hidesContentBeneath: true"),
+    ("Sources/LorvexMobile/MobileCalendarEventBlock.swift", ".lorvexOpaqueTintBackground("),
+    ("Sources/LorvexMobile/MobileCalendarTaskBlock.swift", "hidesContentBeneath: true"),
+  ] {
+    let source = try String(contentsOf: root.appending(path: path), encoding: .utf8)
+    #expect(source.contains(opaqueFill), "\(path) fills its block see-through")
+    #expect(source.contains(".zIndex("), "\(path) no longer lifts its block above the now line")
+  }
 }

@@ -10,7 +10,7 @@ import Foundation
 ///
 /// Supported categories restore through ID/key-preserving primitives where
 /// possible: tasks, lists, habits, calendar events, calendar subscriptions,
-/// tags, daily reviews, focus aggregates, canonical task-calendar links, memory,
+/// tags, daily reviews, daily briefings, canonical task-calendar links, memory,
 /// and preferences.
 public enum LorvexDataImporter {
   /// A decoded, version-checked import file ready for preview and apply.
@@ -26,7 +26,7 @@ public enum LorvexDataImporter {
   /// also the apply order.
   public static let supportedCategories: [LorvexDataExportCategory] = [
     .tasks, .lists, .tags, .habits, .calendarEvents, .dailyReviews,
-    .currentFocus, .focusSchedules, .taskCalendarEventLinks, .memory, .preferences,
+    .dailyBriefings, .taskCalendarEventLinks, .memory, .preferences,
   ]
 
   public enum ImportError: LocalizedError, Equatable {

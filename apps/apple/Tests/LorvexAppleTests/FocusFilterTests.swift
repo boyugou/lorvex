@@ -5,100 +5,46 @@ import Testing
 
 // MARK: - WidgetSnapshotProjector focus-filter tests
 
-@Test
-func widgetSnapshotProjectorHidesNonFocusTasksWhenFilterActive() {
+private func focusFilterSnapshot(filter: FocusFilterConfiguration) -> WidgetSnapshot {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
   let today = TodaySnapshot(
-    focusTitle: "Today",
     summary: "",
     tasks: [
-      makeFocusFilterTask(id: "focus-a", title: "Focus task A"),
-      makeFocusFilterTask(id: "focus-b", title: "Focus task B"),
-      makeFocusFilterTask(id: "extra-c", title: "Non-focus task C"),
+      makeFocusFilterTask(id: "work-a", title: "Work A", listID: "work"),
+      makeFocusFilterTask(id: "home-b", title: "Home B", listID: "home"),
+      makeFocusFilterTask(id: "inbox-c", title: "Inbox C", listID: nil),
+      makeFocusFilterTask(id: "work-d", title: "Work D", listID: "work"),
     ],
+    briefing: "Work first, then home.",
     localChangeSequence: 1
   )
-  let currentFocus = CurrentFocusPlan(
-    date: "2026-05-22",
-    taskIDs: ["focus-a", "focus-b"],
-    briefing: "Focus time.",
-    timezone: "UTC",
-    localChangeSequence: 1
-  )
-  let filter = FocusFilterConfiguration(activeProfileID: "Lorvex Focus", showNonFocusTasks: false)
   let projector = WidgetSnapshotProjector(calendar: Calendar(identifier: .gregorian), now: { now })
-
-  let snapshot = projector.snapshot(
-    today: today,
-    currentFocus: currentFocus,
-    timezone: nil,
-    focusFilter: filter
-  )
-
-  #expect(snapshot.focusTasks.map(\.id) == ["focus-a", "focus-b"])
-  #expect(!snapshot.focusTasks.map(\.id).contains("extra-c"))
+  return projector.snapshot(today: today, timezone: nil, focusFilter: filter)
 }
 
-@Test
-func widgetSnapshotProjectorKeepsFocusOnlyWhenFilterInactive() {
-  let now = Date(timeIntervalSince1970: 1_779_465_600)
-  let today = TodaySnapshot(
-    focusTitle: "Today",
-    summary: "",
-    tasks: [
-      makeFocusFilterTask(id: "focus-a", title: "Focus task A"),
-      makeFocusFilterTask(id: "extra-c", title: "Non-focus task C"),
-    ],
-    localChangeSequence: 1
-  )
-  let currentFocus = CurrentFocusPlan(
-    date: "2026-05-22",
-    taskIDs: ["focus-a"],
-    briefing: nil,
-    timezone: "UTC",
-    localChangeSequence: 1
-  )
-  let projector = WidgetSnapshotProjector(calendar: Calendar(identifier: .gregorian), now: { now })
+@Test("an active Focus filter keeps only its lists' tasks, in Today's order")
+func widgetSnapshotProjectorKeepsOnlyFilteredListsWhenFilterActive() {
+  let snapshot = focusFilterSnapshot(filter: FocusFilterConfiguration(listIDs: ["work"]))
 
-  // Default: filter is .inactive — projector keeps the pre-existing focus-only behavior
-  // when a focus plan is set, so non-focus tasks don't surface on the widget.
-  let snapshot = projector.snapshot(today: today, currentFocus: currentFocus, timezone: nil)
-
-  #expect(snapshot.focusTasks.map(\.id) == ["focus-a"])
-  #expect(!snapshot.focusTasks.map(\.id).contains("extra-c"))
+  #expect(snapshot.tasks.map(\.id) == ["work-a", "work-d"])
+  #expect(snapshot.stats.todayCount == 2)
+  #expect(snapshot.briefing == nil, "the briefing speaks about the whole day, hidden tasks included")
 }
 
-@Test
-func widgetSnapshotProjectorShowsAllTasksWhenFilterActiveButShowFlagIsTrue() {
-  let now = Date(timeIntervalSince1970: 1_779_465_600)
-  let today = TodaySnapshot(
-    focusTitle: "Today",
-    summary: "",
-    tasks: [
-      makeFocusFilterTask(id: "focus-a", title: "Focus task A"),
-      makeFocusFilterTask(id: "extra-c", title: "Non-focus task C"),
-    ],
-    localChangeSequence: 1
-  )
-  let currentFocus = CurrentFocusPlan(
-    date: "2026-05-22",
-    taskIDs: ["focus-a"],
-    briefing: nil,
-    timezone: "UTC",
-    localChangeSequence: 1
-  )
-  let filter = FocusFilterConfiguration(activeProfileID: "Lorvex Focus", showNonFocusTasks: true)
-  let projector = WidgetSnapshotProjector(calendar: Calendar(identifier: .gregorian), now: { now })
+@Test("an inactive Focus filter keeps every task and the briefing")
+func widgetSnapshotProjectorKeepsEverythingWhenFilterInactive() {
+  let snapshot = focusFilterSnapshot(filter: .inactive)
 
-  let snapshot = projector.snapshot(
-    today: today,
-    currentFocus: currentFocus,
-    timezone: nil,
-    focusFilter: filter
-  )
+  #expect(snapshot.tasks.map(\.id) == ["work-a", "home-b", "inbox-c", "work-d"])
+  #expect(snapshot.briefing == "Work first, then home.")
+}
 
-  #expect(snapshot.focusTasks.map(\.id).contains("extra-c"))
-  #expect(snapshot.focusTasks.map(\.id).contains("focus-a"))
+@Test("a filter naming a list that no task is in leaves the glances empty, not whole")
+func widgetSnapshotProjectorHonorsFilterWithNoMatches() {
+  let snapshot = focusFilterSnapshot(filter: FocusFilterConfiguration(listIDs: ["deleted"]))
+
+  #expect(snapshot.tasks.isEmpty)
+  #expect(snapshot.stats.todayCount == 0)
 }
 
 // MARK: - FocusFilterStore round-trip tests
@@ -113,12 +59,11 @@ func focusFilterStoreRoundTrip() async throws {
   let initial = try await store.load()
   #expect(initial == .inactive)
 
-  let config = FocusFilterConfiguration(activeProfileID: "Deep Work", showNonFocusTasks: false)
+  let config = FocusFilterConfiguration(listIDs: ["work", "errands"])
   let saved = try await store.save(config)
 
   let loaded = try await store.load()
-  #expect(loaded.activeProfileID == "Deep Work")
-  #expect(loaded.showNonFocusTasks == false)
+  #expect(loaded.listIDs == ["work", "errands"])
   #expect(loaded.isActive == true)
   #expect(saved.revision == 1)
 }
@@ -130,8 +75,7 @@ func focusFilterStoreResetRestoresInactiveState() async throws {
   let store = FocusFilterStore(
     managedDatabasePath: root.appendingPathComponent("db.sqlite").path)
 
-  _ = try await store.save(
-    FocusFilterConfiguration(activeProfileID: "Work", showNonFocusTasks: true))
+  _ = try await store.save(FocusFilterConfiguration(listIDs: ["work"]))
   let reset = try await store.reset()
 
   let loaded = try await store.load()
@@ -148,17 +92,15 @@ func focusFilterRevisionMintIsSerializedAcrossStoreInstances() async throws {
   let first = FocusFilterStore(managedDatabasePath: databasePath)
   let second = FocusFilterStore(managedDatabasePath: databasePath)
 
-  async let firstSave = first.save(
-    FocusFilterConfiguration(activeProfileID: "First", showNonFocusTasks: false))
-  async let secondSave = second.save(
-    FocusFilterConfiguration(activeProfileID: "Second", showNonFocusTasks: true))
+  async let firstSave = first.save(FocusFilterConfiguration(listIDs: ["first"]))
+  async let secondSave = second.save(FocusFilterConfiguration(listIDs: ["second"]))
   let (savedFirst, savedSecond) = try await (firstSave, secondSave)
   let revisions = [savedFirst.revision, savedSecond.revision].sorted()
 
   #expect(revisions == [1, 2])
   let final = try await first.loadState()
   #expect(final.revision == 2)
-  #expect(["First", "Second"].contains(final.configuration.activeProfileID))
+  #expect([["first"], ["second"]].contains(final.configuration.listIDs))
 }
 
 @Test
@@ -188,14 +130,14 @@ func factoryResetClearsCorruptFocusStateAndRejectsPreResetStoreWriter() async th
 
   await #expect(throws: FocusFilterStoreError.supersededStorageGeneration) {
     _ = try await preResetStore.save(
-      FocusFilterConfiguration(activeProfileID: "Stale private profile"))
+      FocusFilterConfiguration(listIDs: ["stale-private-list"]))
   }
   #expect(try await freshStore.loadState() == inactive)
 }
 
 // MARK: - Helpers
 
-private func makeFocusFilterTask(id: String, title: String) -> LorvexTask {
+private func makeFocusFilterTask(id: String, title: String, listID: String?) -> LorvexTask {
   LorvexTask(
     id: id,
     title: title,
@@ -204,7 +146,8 @@ private func makeFocusFilterTask(id: String, title: String) -> LorvexTask {
     status: .open,
     dueDate: nil,
     estimatedMinutes: nil,
-    tags: []
+    tags: [],
+    listID: listID
   )
 }
 

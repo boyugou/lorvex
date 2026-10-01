@@ -30,6 +30,17 @@ extension AppStore {
     await loadWeeklyReview(weekOf: date >= today ? nil : date)
   }
 
+  /// The week review's decision: park a task that keeps getting pushed in
+  /// Someday, then reload the viewed week so it leaves the pushed list.
+  func parkReviewTaskInSomeday(_ id: LorvexTask.ID) async {
+    await perform {
+      let updated = try await core.markTaskSomeday(id: id)
+      replaceTask(updated)
+      today = try await core.loadToday()
+      weeklyReview = try await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
+    }
+  }
+
   func loadWeeklyReview(weekOf anchor: String?) async {
     await perform {
       weeklyReview = try await core.getWeeklyReviewSnapshot(weekOf: anchor)

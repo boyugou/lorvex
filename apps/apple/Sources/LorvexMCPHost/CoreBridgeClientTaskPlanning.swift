@@ -128,9 +128,6 @@ extension CoreBridgeClient {
         throw LorvexCoreError.unsupportedOperation("Every update requires an id.")
       }
       let title = try Self.optionalNonEmptyTitle(from: object, key: "title")
-      // `tags` wins over `tags_set` when both are present — the same precedence
-      // create uses, so the two aliases resolve consistently across all tools.
-      let tagsValue = object["tags"] ?? object["tags_set"]
       return TaskUpdateDraft(
         id: id,
         title: title,
@@ -141,8 +138,9 @@ extension CoreBridgeClient {
         estimatedMinutes: try Self.intPatch(from: object, key: "estimated_minutes"),
         dueDate: try Self.datePatch(from: object, key: "due_date"),
         plannedDate: try Self.datePatch(from: object, key: "planned_date"),
+        plannedTime: try Self.plannedTimePatch(from: object),
         availableFrom: try Self.datePatch(from: object, key: "available_from"),
-        tags: try StrictArgumentArray.optionalStrings(tagsValue, field: "tags"),
+        tags: try StrictArgumentArray.optionalStrings(object["tags"], field: "tags"),
         dependsOn: try StrictArgumentArray.optionalStrings(
           object["depends_on"], field: "depends_on"))
     }
@@ -241,6 +239,83 @@ extension CoreBridgeClient {
         field: key, expected: "a string or null", actual: describePatchValue(value))
     }
     return .set(string)
+  }
+
+  /// The `planned_start_time` / `planned_end_time` pair of a create: nil when
+  /// both are absent, null, or empty; otherwise the task's time on its planned
+  /// day in minutes since midnight. The rules are
+  /// ``plannedTimePatch(from:)``'s.
+  static func plannedTime(from object: [String: Value]) throws -> Range<Int>? {
+    guard case .set(let time) = try plannedTimePatch(from: object) else { return nil }
+    return time
+  }
+
+  /// Three-state patch for the `planned_start_time` / `planned_end_time` pair,
+  /// which travels together. Both keys absent → `.unset`; both null or empty →
+  /// `.clear`; both times → `.set`, where the start is `HH:MM` (24-hour), the
+  /// end is `HH:MM` or `24:00` (the midnight that ends the day), and the start
+  /// comes before the end. One key without the other, a time beside a null, a
+  /// malformed time, or a non-string value throws
+  /// ``ValidationError/invalidFormat``. Whether the task has the planned date
+  /// a time needs is the core's check, not this parser's.
+  static func plannedTimePatch(from object: [String: Value]) throws -> Patch<Range<Int>> {
+    let start = try clockTimeArgument(object, key: "planned_start_time")
+    let end = try clockTimeArgument(object, key: "planned_end_time")
+    switch (start, end) {
+    case (nil, nil):
+      return .unset
+    case (.some(nil), .some(nil)):
+      return .clear
+    case (.some(.some(let rawStart)), .some(.some(let rawEnd))):
+      return .set(
+        try clockRange(
+          start: rawStart, end: rawEnd, startField: "planned_start_time",
+          endField: "planned_end_time"))
+    default:
+      throw ValidationError.invalidFormat(
+        field: "planned_start_time",
+        expected: "planned_start_time and planned_end_time together, both times or both null",
+        actual: "only one of them set")
+    }
+  }
+
+  /// A time on a day from `rawStart` to `rawEnd`, in minutes since midnight:
+  /// the start is `HH:MM` (24-hour), the end is `HH:MM` or `24:00` (the
+  /// midnight that ends the day), and the start comes before the end. Anything
+  /// else throws ``ValidationError/invalidFormat`` naming `startField` or
+  /// `endField`.
+  static func clockRange(
+    start rawStart: String, end rawEnd: String, startField: String, endField: String
+  ) throws -> Range<Int> {
+    guard case .success(let start) = TimeOfDay.parse(rawStart) else {
+      throw ValidationError.invalidFormat(
+        field: startField, expected: "an HH:MM time (24-hour)", actual: "\"\(rawStart)\"")
+    }
+    guard case .success(let endMinutes) = TimeOfDay.parseRangeEndMinutes(rawEnd) else {
+      throw ValidationError.invalidFormat(
+        field: endField, expected: "an HH:MM time (24-hour) or 24:00", actual: "\"\(rawEnd)\"")
+    }
+    guard start.minutesOfDay < endMinutes else {
+      throw ValidationError.invalidFormat(
+        field: endField, expected: "a time after \(startField)", actual: "\"\(rawEnd)\"")
+    }
+    return start.minutesOfDay..<endMinutes
+  }
+
+  /// One half of the planned-time pair: nil when the key is absent, `.some(nil)`
+  /// when it is null or an empty string, else the trimmed string.
+  private static func clockTimeArgument(_ object: [String: Value], key: String) throws
+    -> String??
+  {
+    guard let value = object[key] else { return nil }
+    if value.isNull { return .some(nil) }
+    guard let raw = value.stringValue else {
+      throw ValidationError.invalidFormat(
+        field: key, expected: "an HH:MM time string, empty string, or null",
+        actual: describePatchValue(value))
+    }
+    let trimmed = raw.trimmingCharacters(in: .whitespaces)
+    return .some(trimmed.isEmpty ? nil : trimmed)
   }
 
   /// Render a wrong-typed patch value for a validation error's `actual` field,

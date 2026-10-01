@@ -7,8 +7,8 @@ import UserNotifications
 public struct MobileStoreFactory {
   /// Application Support subdirectory for CloudSync's account/consent safety
   /// state and reconstructible CKRecord system-fields cache. Change tokens live
-  /// transactionally in the managed SQLite database. iOS and visionOS each run
-  /// in their own sandbox, so the shared name does not collide across apps.
+  /// transactionally in the managed SQLite database. The iOS app runs in its
+  /// own sandbox, so the name does not collide with the macOS app's state.
   static let cloudSyncStateAppName = "LorvexMobile"
 
   public typealias CoreFactory = ([String: String]) -> any LorvexCoreServicing
@@ -72,8 +72,8 @@ public struct MobileStoreFactory {
     setupPreferencesFactory: @escaping SetupPreferencesFactory = { MobileSetupPreferences() },
     // Safe, inert default: "already resolved" so a factory-level test that
     // never overrides this never touches the real `UNUserNotificationCenter`
-    // (unavailable in the SwiftPM test-runner process). `LorvexMobileApp` /
-    // `LorvexVisionApp` override with the live system read.
+    // (unavailable in the SwiftPM test-runner process). `LorvexMobileApp`
+    // overrides it with the live system read.
     notificationAuthorizationStatusProvider: @escaping NotificationAuthorizationStatusProvider = {
       .authorized
     },
@@ -105,15 +105,13 @@ public struct MobileStoreFactory {
       appName: Self.cloudSyncStateAppName,
       containerIdentifier: containerID
     )
-    // One coordinator value owns the sync-state directory for the store's
-    // entire lifetime. Off-mode maintenance and later live-mode transitions
-    // reuse it instead of constructing independently gated file-store actors.
-    let cloudDataMaintenanceCoordinator = CloudSyncFactory.makeCoordinator(
-      mode: .live,
-      containerIdentifier: containerID,
-      stateDirectory: stateDirectory
-    )
     let core = coreFactory(environment)
+    // One controller owns the sync-state directory for the store's lifetime,
+    // in every mode, so "Delete iCloud Data" works with sync off.
+    let cloudSyncController = (core as? any CloudSyncEngineStore).map {
+      CloudSyncFactory.makeController(
+        store: $0, containerIdentifier: containerID, stateDirectory: stateDirectory)
+    }
     return MobileStore(
       core: core,
       feedbackProvider: feedbackProviderFactory(),
@@ -129,21 +127,7 @@ public struct MobileStoreFactory {
       now: now,
       defaults: prefs.defaults,
       cloudSyncMode: cloudSyncMode,
-      cloudSyncSubscriber: CloudSyncFactory.makeSubscriber(
-        mode: cloudSyncMode,
-        containerIdentifier: containerID
-      ),
-      cloudSyncCoordinator: cloudSyncMode == .live ? cloudDataMaintenanceCoordinator : nil,
-      cloudDataMaintenanceCoordinator: cloudDataMaintenanceCoordinator,
-      cloudSyncServiceFactory: { mode in
-        MobileCloudSyncServices(
-          subscriber: CloudSyncFactory.makeSubscriber(
-            mode: mode,
-            containerIdentifier: containerID
-          ),
-          coordinator: mode == .live ? cloudDataMaintenanceCoordinator : nil
-        )
-      },
+      cloudSyncController: cloudSyncController,
       eventKitCoordinator: Self.makeEventKitCoordinator(
         core: core,
         defaults: prefs.defaults

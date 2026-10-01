@@ -6,9 +6,9 @@ source "$ROOT_DIR/script/app_metadata.sh"
 cd "$ROOT_DIR"
 
 # The only process this gate ever launches is $APP_NAME, via
-# `build_and_run.sh --verify`'s smoke launch below; $APP_PRODUCT_NAME,
-# $MOBILE_APP_NAME, and $VISION_APP_NAME are only ever `swift build`-compiled
-# here, never executed, so there is nothing to clean up for them. A global
+# `build_and_run.sh --verify`'s smoke launch below; $APP_PRODUCT_NAME and
+# $MOBILE_APP_NAME are only ever `swift build`-compiled here, never executed,
+# so there is nothing to clean up for them. A global
 # `pkill -x "$APP_NAME"` would kill every process with that name on the
 # machine, including a real, already-running instance of the shipped app
 # (e.g. a developer's own daily-use Lorvex.app) that this run never touched —
@@ -34,9 +34,7 @@ trap cleanup EXIT
 
 swift build --product "$APP_PRODUCT_NAME"
 swift build --product "$MOBILE_APP_NAME"
-swift build --product "$VISION_APP_NAME"
 swift build --product LorvexWidgetBundle
-swift build --product "$WIDGET_EXECUTABLE"
 swift build --product LorvexWatchApp
 swift build --product LorvexWatchComplication
 swift build --product "$MCP_HOST_PRODUCT"
@@ -98,9 +96,7 @@ python3 -m py_compile \
 python3 -m unittest discover -s script -p 'test_*.py'
 # schema/ is the Apple app's own schema authority: assert the bundled LorvexCore
 # copies (schema.sql, the migration ladder, checksums.lock) are byte-identical to
-# it before anything else builds against them. This is an Apple-only integrity
-# check — Apple and Tauri are only directionally aligned (shared concepts via
-# spec/), not byte-locked, so the Tauri schema copy is never compared here.
+# it before anything else builds against them.
 ./script/verify_schema_embed.sh
 # The semantic ladder rules over the canonical schema/migrations/ (contiguous
 # numbering, checksum agreement, launch-regime gating).
@@ -123,9 +119,11 @@ python3 -m unittest discover -s script -p 'test_*.py'
 # Apple source-shape/UI-polish invariants (typography tokens, calm empty-state
 # panels, inline header controls, retired capture surfaces). These are
 # repository-hygiene scans, kept out of `swift test` so the Apple suite never
-# walks source trees; one rule spans the monorepo (incl. apps/tauri) but tolerates
-# an absent/relocated Tauri tree.
+# walks source trees; the cross-tree token scan tolerates missing roots.
 ./script/verify_source_hygiene.py
+# Every UI target composes from the LorvexDesign tokens (semantic colors, type
+# scale, radii); see docs/design/DESIGN_SYSTEM.md.
+./script/verify_design_tokens.py
 ./script/verify_app_metadata.py
 ./script/verify_apple_strategy.py
 ./script/verify_build_matrix.py
@@ -163,6 +161,15 @@ python3 ./script/verify_core_service_coverage.py
 # identity path and notarize_archive.sh --preflight need signing identities that
 # only live on the owner's machine. A local `verify_all.sh` with no flag runs
 # the full set.
+#
+# This gate never touches the operator's live Lorvex data. The one check that
+# would have to — the MCP stdio smoke against a *sandboxed* helper, which can
+# only open the real App Group container — skips itself with a printed note
+# unless the destructive-reset environment opt-in named in mcp_stdio_smoke.py is
+# set deliberately (this file must never spell that value out; a scan in
+# test_mcp_stdio_smoke.py enforces that the default gate cannot manufacture
+# consent). The unsandboxed helper is still smoke-tested on every gate against a
+# temporary database, so the MCP path is covered either way.
 # ---------------------------------------------------------------------------
 ./script/package_local.sh
 # Run codesign / Mach-O distribution checks against the packaged app bundle.

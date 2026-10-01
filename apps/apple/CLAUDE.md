@@ -5,12 +5,10 @@ This app lives at `apps/apple` inside the Lorvex monorepo; start from the root
 for app behavior, workflow rules, sync semantics, and MCP tool contracts.
 
 This is the Apple-native Lorvex app: SwiftUI/AppKit/SwiftPM, targeting macOS,
-iOS, iPadOS, visionOS, watchOS, and CarPlay, plus WidgetKit, App Intents,
-Shortcuts, Spotlight, CloudKit, and EventKit surfaces. The shared SQLite schema
-(Apple-owned authority) and the `spec/` behavior contracts remain the cross-app
-reference; the Tauri tree is no longer the behavioral oracle for Apple work, and
-cross-platform data movement is AI-reconciled best-effort, not a formal
-interchange format.
+iOS, iPadOS, watchOS, and CarPlay, plus WidgetKit, App Intents,
+Shortcuts, Spotlight, CloudKit, and EventKit surfaces. The SQLite schema
+(`schema/`) and the `spec/` behavior contracts are the app's contracts; the
+archived Tauri implementation is historical context only.
 This repo does not try to preserve the Tauri/React UI; Apple surfaces should
 feel native to their platforms.
 
@@ -40,7 +38,7 @@ Sources/
 ├── LorvexCore/             # Shared models, protocol, factory — platform-neutral
 │   ├── Models/             # Domain types (LorvexTask, TodaySnapshot, …)
 │   └── Services/           # LorvexCoreServicing protocol + SwiftLorvexCoreService
-├── LorvexCloudSync/        # CloudKit sync engine (account status, push, checkpoints)
+├── LorvexCloudSync/        # CloudKit transport: CloudSyncController (CKSyncEngine delegate), envelope records, pause state
 ├── LorvexMarkdownUI/        # swift-markdown → SwiftUI rendering
 ├── LorvexApple/            # macOS app shell (SwiftUI + AppKit)
 │   ├── App/                # Entry point, AppDelegate
@@ -48,13 +46,12 @@ Sources/
 │   ├── Views/              # SwiftUI views (one workspace/component per file)
 │   ├── Support/            # Commands, menus, routing, scheduling
 │   └── Intents/            # App Intents
-├── LorvexMobile/           # iOS/iPadOS/visionOS surface (reuses LorvexCore)
+├── LorvexMobile/           # iOS/iPadOS surface (reuses LorvexCore)
 ├── LorvexMobileApp/        # iOS @main entry
 ├── LorvexMCPHost/          # MCP stdio server (LorvexMCPHost executable)
 │   ├── *ToolCatalog.swift  # Tool schema definitions
 │   ├── *ToolHandlers.swift # Tool implementation
 │   └── *ToolDefinitions.swift # Typed schema/handler/policy registry
-├── LorvexVisionApp/        # visionOS @main entry
 ├── LorvexWatch/            # watchOS shared store + WatchConnectivity client
 ├── LorvexWatchApp/         # watchOS @main entry
 ├── LorvexWatchComplication/# watchOS complications (WidgetKit on watchOS)
@@ -62,10 +59,9 @@ Sources/
 ├── LorvexSystemIntents/    # Shared App Intents (Shortcuts, Siri, Spotlight)
 ├── LorvexWidgetKitSupport/ # Shared widget snapshot/timeline infrastructure
 ├── LorvexWidgetViews/      # Reusable SwiftUI widget views
-├── LorvexWidgetIntents/    # Interactive widget AppIntents (iOS 17+)
+├── LorvexWidgetIntents/    # Interactive widget AppIntents
 ├── LorvexWidgetExtension/  # WidgetKit TimelineProvider + container
-├── LorvexWidgetBundle/     # @main WidgetBundle entry
-└── LorvexFocusWidget/      # Standalone focus widget
+└── LorvexWidgetBundle/     # @main WidgetBundle entry (the widget extension's host)
 
 core/                       # LorvexAppleCore SwiftPM package (pure-Swift core)
                             #   LorvexDomain · LorvexStore (GRDB/SQLite) ·
@@ -157,8 +153,24 @@ device.
       shared feedback provider, subtle scale/check animations), and nothing
       should pop in/out abruptly. Loading, empty, and error states get the same
       polish as the happy path.
-    - **Always visually QA in the simulator** (`xcrun simctl io … screenshot`)
-      before considering a UI change done; the screenshot is the proof. Review it
+    - **Always visually QA headlessly** before considering a UI change done; the
+      screenshot is the proof. iOS: `script/ios_sim_build.sh`, then
+      `script/ios_sim_screenshots.sh <outdir> light today tasks …` boots the
+      simulator without Simulator.app and captures each deep-linked screen. Both
+      scripts use the named device on the newest iOS runtime and print which
+      one; `LORVEX_SIM_UDID` pins a device when several share a name.
+      macOS: `swift build -j 4 --product LorvexApple`, then
+      `script/ui_tour_macos.sh light <outdir>` captures every workspace through
+      the DEBUG `--ui-preview` tour without activating the app. watchOS:
+      `script/watch_sim_build.sh`, then
+      `script/watch_sim_screenshots.sh <outdir> today habits capture actions`
+      boots the watch simulator with its paired iPhone and captures each page
+      from the DEBUG `-lorvexUIPreview` sample day; run it on its own, since
+      the watch simulator misses launches on a loaded machine. Never open
+      Simulator.app, activate windows, or send keystrokes. Capture rounds are
+      slow, so batch several UI changes before each round and capture one
+      appearance only (light); run a single dark-mode sweep at the end of a
+      batch rather than per change. Review each capture
       **critically**, not to confirm success: is this design actually perfect?
       What are its obvious flaws, weak spots, or redundancies? Could it be better?
       Treat every screen as not-yet-good-enough until you've tried to break it.
@@ -167,13 +179,13 @@ device.
 14. **Commits are caller-controlled.** Do not commit or push unless the
     controlling session explicitly asks for it.
 15. **The main app is the sole CloudSync owner on each device.** Only the
-    macOS, iOS/iPadOS, or visionOS main app may construct or run
-    `CloudSyncEngineCoordinator`. MCP, widgets, App Intents, watchOS, CarPlay,
+    macOS or iOS/iPadOS main app may construct or run
+    `CloudSyncController`. MCP, widgets, App Intents, watchOS, CarPlay,
     and other helpers read or mutate the managed local store through
     `LorvexCoreServicing`; canonical mutations atomically enqueue outbox work
     for the main app to upload later. Those targets must not depend on
-    `LorvexCloudSync`, import CloudKit, pull/push records, delete zones, advance
-    cursors, or switch generations. A future background sync daemon is an
+    `LorvexCloudSync`, import CloudKit, fetch or send records, or delete
+    zones. A future background sync daemon is an
     explicit architecture change that requires a new ownership design, not a
     topology to support speculatively.
 
@@ -190,8 +202,8 @@ device.
   existing Combine surface.
 - No `force unwrap` (`!`) except in `#Preview` and test fixtures.
 - `guard let` / `if let` over optional chaining chains longer than two levels.
-- Use `@Observable` (iOS 17 / macOS 14) for new view models; `ObservableObject`
-  only when targeting older APIs.
+- Use `@Observable` for view models. The deployment floor is the 26 SDKs on
+  every platform, so no older-API fallbacks are needed.
 
 ### Naming
 
@@ -219,14 +231,11 @@ device.
 
 Use the narrowest condition that states the real constraint:
 
-- `#if os(iOS)` — iPhone/iPad-only behavior (e.g. the WCSession snapshot
-  publisher, which has no meaning on visionOS even though visionOS imports
-  WatchConnectivity).
-- `#if canImport(UIKit) && !os(visionOS)` — touch-only affordances that UIKit
-  vends but Vision Pro lacks (haptics via `UIImpactFeedbackGenerator`).
-- `#if os(iOS) || os(visionOS)` — surfaces that genuinely render on both
-  (the shared mobile UI). Prefer this over a bare `canImport(UIKit)` so the
-  intent (which platforms) is explicit.
+- `#if os(iOS)` — iPhone/iPad-only behavior and iOS-only SwiftUI API.
+  `LorvexMobile` also compiles for macOS under SwiftPM, so iOS-only modifiers
+  (`.keyboard` toolbars, `.navigationLink` picker style, haptics) need this
+  guard. Prefer it over a bare `canImport(UIKit)` so the intent is explicit.
+- `#if os(macOS)` — AppKit-only behavior in shared modules.
 
 ### Comments
 
@@ -267,29 +276,52 @@ implementation or fetching another file.
 
 1. Read recent git log: `git log --oneline -20`
 2. Check the root `ROADMAP.md` for lane status and open items
-3. Run `swift test` to confirm the app-suite baseline
+3. Do not run the test suite to establish a baseline; every commit on `main`
+   was verified before it landed.
 
 ### After Completing Work
 
-1. Run `swift build` — all targets must build cleanly
-2. Run `swift test` from `apps/apple` and `swift test` from
-   `apps/apple/core` — both suites must pass. Tests use explicit injected
-   fakes or temporary stores; product runtime environment variables must not
-   select preview or in-memory storage.
-3. Run `./script/verify_all.sh` for the full gate (builds, metadata, MCP
-   smoke checks, entitlements, packaging)
-4. Commit with a descriptive message
+Run the full build and test suite once per batch of changes, and filtered
+tests while iterating on one area. Always build before reading results so
+they reflect the current tree, and delete superseded products (old capture
+directories, copied databases, app installs on unused simulators) so nothing
+stale is mistaken for current behavior.
+
+1. Run the cheap gates that cover what you touched:
+   `python3 script/verify_source_hygiene.py`, `verify_design_tokens.py`,
+   `verify_localization_catalog.py`, `verify_app_metadata.py`,
+   `verify_user_docs.py`. They finish in seconds.
+2. Run `swift build -j 4` — all targets must build cleanly.
+3. Run `swift test -j 4` from `apps/apple` once per batch; while iterating on
+   one area use `swift test --skip-build -j 4 --filter <SuiteName>`. Run the
+   `apps/apple/core` suite only when `core/` changed. Tests use explicit
+   injected fakes or temporary stores; product runtime environment variables
+   must not select preview or in-memory storage.
+4. For UI changes, capture the affected screens headlessly (rule 12) and
+   review them.
+5. Run `./script/verify_all.sh` (every platform build, packaging, MCP smoke
+   checks) only before a release or when touching metadata, entitlements, or
+   packaging.
+6. Commit with a descriptive message
 
 ### Verification Commands
 
 ```bash
-# Fast check during development
- swift build && swift test
+# Build and test once per batch, at reduced parallelism
+swift build -j 4 && swift test -j 4
 
-# Core package check
-(cd core && swift test)
+# One suite while iterating (no rebuild)
+swift test --skip-build -j 4 --filter MobileHabitTests
 
-# Full gate before committing substantial work
+# Core package check (only when core/ changed)
+(cd core && swift test -j 4)
+
+# Headless screenshots: iOS simulator, then the macOS preview tour
+script/ios_sim_build.sh && script/ios_sim_screenshots.sh /tmp/shots light today tasks
+swift build -j 4 --product LorvexApple && script/ui_tour_macos.sh light /tmp/shots
+script/watch_sim_build.sh && script/watch_sim_screenshots.sh /tmp/shots today habits
+
+# Full gate before a release
 ./script/verify_all.sh
 
 # Build and run (macOS app)
@@ -313,7 +345,7 @@ python3 script/mcp_stdio_smoke.py
 - **`@Observable` vs `ObservableObject`:** do not mix in the same view graph —
   pick one per feature tree.
 - **WidgetKit:** Widget code must not import AppKit. `LorvexWidgetViews` and
-  `LorvexWidgetKitSupport` must remain platform-neutral (macOS + iOS + visionOS).
+  `LorvexWidgetKitSupport` must remain platform-neutral (macOS + iOS + watchOS).
 - **MCP tool definitions:** New tools require one entry in the matching domain's
   `*ToolDefinitions.swift`. That typed entry binds the catalog schema, handler,
   read/write + idempotency metadata, and response-fencing policy; listing and
@@ -326,14 +358,18 @@ python3 script/mcp_stdio_smoke.py
   unsandboxed dev `LORVEX_APPLE_DB_PATH` env override, resolved directly by the
   core (never persisted or bookmarked). Portability is export/import.
   `ManagedStorageInvariantTests` pins this.
-- **Settings import owns a CloudKit linearization boundary.** Shipping surfaces
-  call `AppStore.applyDataImport` / `MobileStore.applyDataImport`, never
-  `LorvexDataImporter.apply` directly. In live mode,
-  `CloudSyncDataImportBoundary` must drain and prove the exact current
-  account/generation plus all persistent pending/corrupt inbound debt while
-  holding the same coordinator gate through import. Off/record-plan imports are
-  deliberately local-only but still share the maintenance gate when available.
-  Import is atomic per semantic unit, not across the whole archive.
+- **Settings import runs beside the sync engine, not inside a sync boundary.**
+  Shipping surfaces call `AppStore.applyDataImport` /
+  `MobileStore.applyDataImport`, never `LorvexDataImporter.apply` directly.
+  With sync live, the store runs one best-effort sync pass first so the
+  importer's skip-if-present decisions see the other devices' latest rows, then
+  imports, then refreshes. SQLite transactions serialize the importer's writes
+  against the engine's inbound applies, and last-writer-wins settles any
+  overlap. Imported rows reach CloudKit through the outbox like any other
+  mutation. The only rejection is `LorvexDataImporter.BusyError`, thrown while
+  another import, factory reset, or iCloud-data deletion is running. The
+  importer commits record by record: atomic per semantic unit, not across the
+  whole archive.
 - **App Group container:** Widget and app share a group container only when
   `LORVEX_WIDGET_APP_GROUP_ID` / `LorvexWidgetAppGroupID` is explicitly set.
   Default local builds use a no-op publisher to avoid repeated permission
@@ -351,8 +387,7 @@ documentation freshness, feature ideation.
 
 - **Shared contracts:** `../../schema/schema.sql`,
   `../../docs/design/SYNC_APPLY_SEMANTICS.md`, and current specs under
-  `../../spec/`. Use Tauri as historical context only, not as the Apple
-  behavioral oracle.
+  `../../spec/`.
 - **MCP Swift SDK:** https://github.com/modelcontextprotocol/swift-sdk
 - **swift-markdown:** https://github.com/swiftlang/swift-markdown
 - **Build/verify:** `script/verify_all.sh`, `script/build_and_run.sh`
@@ -362,23 +397,21 @@ documentation freshness, feature ideation.
   `script/archive_local.sh` (development/CI ZIP). Mac App Store packaging is a
   separate `script/archive_mas.sh` channel, never the DMG input.
 - **App icon:** `Resources/AppIcon/LorvexAppIcon.icns`, regenerated from
-  `Resources/AppIcon/master_1024.png` via `script/generate_app_icon.sh`. The
-  master is the SHARED Lorvex brand mark — identical artwork to the Tauri app's
-  `apps/tauri/app/src-tauri/icons/icon-1024.png`. Refresh both together.
+  `Resources/AppIcon/master_1024.png` via `script/generate_app_icon.sh`.
 - **XcodeGen project:** `script/verify_xcodegen_project.sh`
 
 ### In-repo docs
 
 - `../../docs/vision/DESIGN_PHILOSOPHY.md` — Product philosophy and non-goals
-- `../../docs/design/AI_OPERATING_MODEL.md` — MCP-first write model
+- `../../docs/design/AI_OPERATING_MODEL.md` — Assistant operating model: server instructions, plugin skills, tool design
 - `../../docs/design/CALENDAR_BEHAVIOR.md` — EventKit + recurrence rules
 - `../../docs/design/SORT_KEYS.md` — Canonical task ordering, per-view deviations
 - `../../docs/design/SYNC_APPLY_SEMANTICS.md` — Idempotency, checksum, HLC rules
 - `docs/setup/ASSISTANT_MCP_SETUP.md` — Wiring MCP clients to LorvexMCPHost
 - `docs/execution/CI_RELEASE_TRIGGER_POLICY.md` — Release tag/dispatch rules
-- `docs/reference/FEATURES.md` — Feature inventory vs the `../tauri` reference
+- `docs/reference/FEATURES.md` — Feature inventory and status
 - `docs/SURFACE_DESIGN.md` — Per-platform surface status (macOS, iOS,
-  iPadOS, visionOS, watchOS, CarPlay, widgets, Spotlight,
+  iPadOS, watchOS, CarPlay, widgets, Spotlight,
   Shortcuts, CloudKit, EventKit, notifications, packaging)
 - `docs/architecture/` — Module boundaries and cross-target dependencies
-- `docs/plans/` — Active and deferred work plans
+- `docs/design/DESIGN_SYSTEM.md` — Color, surface, type, and component contract every surface composes from; `script/verify_design_tokens.py` enforces it

@@ -3,11 +3,6 @@ import GRDB
 import LorvexDomain
 import LorvexStore
 
-struct CalendarEventDeleteApplyResult {
-  let decision: ApplyAggregate.CascadingDeleteDecision
-  let repairTargets: [CalendarCleanupRepairTarget]
-}
-
 /// Per-entity apply handler for the `calendar_event` aggregate root.
 ///
 /// Occurrence decisions use deterministic ids and whole-row LWW. Base events
@@ -33,20 +28,11 @@ public struct CalendarEventApplier: EntityApplier {
   public func applyDelete(_ db: Database, envelope: SyncEnvelope, applyTs: String) throws
     -> EntityApplyOutcome
   {
-    let result = try ApplyCalendarEvent.applyCalendarEventDeleteWithRepairs(
+    switch try ApplyCalendarEvent.applyCalendarEventDelete(
       db, entityId: envelope.entityId, version: envelope.version.description, applyTs: applyTs)
-    switch result.decision {
+    {
     case .applied:
-      guard !result.repairTargets.isEmpty else { return .applied }
-      // Returning a repair obligation bypasses the generic delete finalizer, so
-      // author the triggering event tombstone here before the host re-emits the
-      // sanitized focus-schedule roots.
-      try Tombstone.createTombstone(
-        db, entityType: EntityName.calendarEvent, entityId: envelope.entityId,
-        version: envelope.version.description, deletedAt: applyTs)
-      return .repairRequired(
-        .propagateCalendarCleanup(
-          targets: result.repairTargets, additionalFloor: envelope.version))
+      return .applied
     case .rejected(let localVersion):
       return .lwwRejected(localVersion: localVersion)
     }
@@ -55,14 +41,12 @@ public struct CalendarEventApplier: EntityApplier {
 
 extension ApplyCalendarEvent {
 
-  /// LWW-gated parent delete with a cascade pass over synced edges and
-  /// canonical focus-schedule references. The latter are aggregate children,
-  /// so their parent roots are returned for strict-successor re-emission.
-  static func applyCalendarEventDeleteWithRepairs(
+  /// LWW-gated parent delete with a cascade pass that tombstones the synced
+  /// task–event link edges.
+  static func applyCalendarEventDelete(
     _ db: Database, entityId: String, version: String, applyTs: String
-  ) throws -> CalendarEventDeleteApplyResult {
-    var repairTargets: [CalendarCleanupRepairTarget] = []
-    let decision = try ApplyAggregate.gateThenCascade(
+  ) throws -> ApplyAggregate.CascadingDeleteDecision {
+    try ApplyAggregate.gateThenCascade(
       db, readVersionSQL: "SELECT version FROM calendar_events WHERE id = ?",
       deleteSQL: "DELETE FROM calendar_events WHERE id = :id", entityId: entityId,
       incomingVersion: version, tieBreak: .allowEqual
@@ -73,13 +57,7 @@ extension ApplyCalendarEvent {
           "SELECT task_id, version FROM task_calendar_event_links WHERE calendar_event_id = ?",
         parentId: entityId, entityType: EdgeName.taskCalendarEventLink,
         composeId: { "\($0):\(entityId)" }, version: version, deletedAt: applyTs)
-      repairTargets += try CalendarSeriesCutoverCleanup.removeFocusScheduleReferences(
-        db, eventIds: [entityId], barrierVersion: version, deletedAt: applyTs)
     }
-    if case .rejected = decision { repairTargets.removeAll() }
-    return CalendarEventDeleteApplyResult(
-      decision: decision,
-      repairTargets: CalendarSeriesCutoverCleanup.normalized(repairTargets))
   }
 
 }

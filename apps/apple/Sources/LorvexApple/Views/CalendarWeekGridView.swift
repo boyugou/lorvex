@@ -34,11 +34,12 @@ struct CalendarWeekGridView: View {
   // (including a mid-session DST shift) flows into the now-line and day
   // boundaries rather than freezing whatever `Calendar.current` was at init.
   @Environment(\.calendar) var calendar
+  @Environment(\.undoManager) var undoManager
   /// Drag-to-move and drag-to-resize snap to this granularity (matching the
   /// 15-minute increments most calendar UIs use).
   static let snapMinutes: Int = 15
-  /// Minimum drag distance before a move gesture is recognised, so taps still
-  /// fire the edit-sheet handler without being eaten.
+  /// Minimum drag distance before a move gesture is recognised, so a tap
+  /// still selects the event instead of starting a drag.
   static let dragMinimumDistance: CGFloat = 6
   /// Minimum block duration the resize handle can produce. Tied to the layout's
   /// render clamp so a resized block can't end up shorter than the height the
@@ -50,6 +51,12 @@ struct CalendarWeekGridView: View {
   /// Day column currently hovered by a dragged task pill (all-day strip),
   /// driving the drop-target highlight.
   @State var dropTargetedDay: Date? = nil
+  /// Event under the pointer. Resize grips are drawn only for it and for the
+  /// selected block, so a dense week grid is not peppered with permanent marks
+  /// that read as stray rules rather than affordances. The grips' transparent
+  /// hit area stays live either way, so the resize cursor and the drag arm the
+  /// moment the pointer reaches a block edge.
+  @State var hoveredEventID: String? = nil
   @State private var overflowPopoverDayID: CalendarGridDay.ID? = nil
   /// Day column whose all-day "+N more" popover is open. Internal (not private)
   /// so the all-day strip in `CalendarWeekGridChrome` can drive it.
@@ -83,8 +90,8 @@ struct CalendarWeekGridView: View {
       rangeStart: weekStart,
       dayCount: visibleDayCount,
       calendar: calendar,
-      events: store.filteredCalendarEvents,
-      tasks: store.filteredScheduledTasks,
+      events: store.calendarTimeline?.events ?? [],
+      tasks: store.scheduledTasks,
       dayKeyFor: { AppStore.ymdFormatter.string(from: $0) }
     )
   }
@@ -93,7 +100,7 @@ struct CalendarWeekGridView: View {
 
   var body: some View {
     let columns = days
-    let now = Date()
+    let now = LorvexPreviewClock.now(in: calendar)
     let todayKey = AppStore.ymdFormatter.string(from: now)
     let nowMinute = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
     let anchorHour = CalendarGridModel.initialScrollAnchorHour(
@@ -135,6 +142,15 @@ struct CalendarWeekGridView: View {
           }
           .frame(height: totalHeight)
         }
+        // No scroller on the time axis. While one is shown the scroll view
+        // narrows its content, so the seven day columns shrink under a header
+        // and all-day strip that are laid out above the scroll view at full
+        // width: every day number drifts right of the column it names, by the
+        // scroller's width at the last day, and an all-day pill overhangs into
+        // the next day. Suppressing it keeps one column geometry at all times,
+        // and the grid loses nothing — the hour gutter already says where the
+        // view sits in the day, which is all a scroller would report.
+        .scrollIndicators(.never)
         .onAppear {
           proxy.scrollTo(WeekGridScrollAnchor.hour(anchorHour), anchor: .top)
         }
@@ -158,40 +174,22 @@ struct CalendarWeekGridView: View {
         }
       }
       .overlay(alignment: .top) {
-        if isEmptyWeek(columns) {
-          Group {
-            // A blocked-access empty grid means "Calendar access is off," not
-            // "nothing scheduled" — say so for the recoverable states.
-            if EventKitAuthorizationHelper().needsSettingsRecovery {
-              CalendarWeekAuthorizeOverlay()
-            } else {
-              CalendarWeekEmptyOverlay(visibleDayCount: visibleDayCount) {
-                let target = emptyWeekCreateTarget(columns)
-                createAt(target.date, target.minutes, 60)
-              }
-            }
-          }
-          .padding(.top, LorvexDesign.Spacing.l)
-          .padding(.leading, gutterWidth)
-          .padding(.horizontal, LorvexDesign.Spacing.l)
+        // An empty range stays a bare grid: the empty hours already say nothing
+        // is scheduled, and the toolbar's add button creates an event. Only a
+        // blocked-access grid gets a banner, since there the emptiness means
+        // "Calendar access is off," not "nothing scheduled."
+        if isEmptyWeek(columns), EventKitAuthorizationHelper().needsSettingsRecovery {
+          CalendarWeekAuthorizeOverlay()
+            .padding(.top, LorvexDesign.Spacing.l)
+            .padding(.leading, gutterWidth)
+            .padding(.horizontal, LorvexDesign.Spacing.l)
         }
       }
     }
   }
 
   private func isEmptyWeek(_ columns: [CalendarGridDay]) -> Bool {
-    columns.allSatisfy {
-      $0.allDayEvents.isEmpty && $0.scheduledTasks.isEmpty && $0.timedBlocks.isEmpty
-    }
-  }
-
-  private func emptyWeekCreateTarget(_ columns: [CalendarGridDay]) -> (date: Date, minutes: Int) {
-    let now = Date()
-    if let today = columns.first(where: { calendar.isDate($0.date, inSameDayAs: now) }) {
-      let nextUsefulHour = min(max(calendar.component(.hour, from: now) + 1, 9), 17)
-      return (today.date, nextUsefulHour * 60)
-    }
-    return (columns.first?.date ?? weekStart, 9 * 60)
+    columns.allSatisfy(\.isEmpty)
   }
 
   // MARK: Day column
@@ -208,6 +206,18 @@ struct CalendarWeekGridView: View {
             CalendarWeekGridHourCell(hourHeight: hourHeight)
           }
         }
+
+        // The now line sits under the blocks (their zIndex lifts them above
+        // it), which are opaque, so it runs through the free time and never
+        // across a block's title. Scope the per-minute tick to just the
+        // now-guide so the rest of the grid (event blocks, grid lines,
+        // interaction overlays) is not rebuilt every 60 seconds. Today gets the
+        // red live now-line; adjacent days get a faint guide at the same
+        // time-of-day for cross-column reading.
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+          nowLine(now: LorvexPreviewClock.now(in: calendar, tick: context.date), isToday: isToday(day.date))
+        }
+        .allowsHitTesting(false)
 
         // Empty-slot interaction overlay sits BEHIND the event blocks in
         // z-order so blocks catch their own taps / drags first; empty-area
@@ -263,14 +273,21 @@ struct CalendarWeekGridView: View {
             columnWidth: width)
         }
 
+        ForEach(day.taskBlocks.filter { $0.lane < maxDisplayedLanes }) { block in
+          taskBlock(block, on: day, columnWidth: width)
+        }
+
         overflowBadge(for: day)
 
-        // Scope the per-minute tick to just the now-guide so the rest of the
-        // grid (event blocks, grid lines, interaction overlays) is not rebuilt
-        // every 60 seconds. Today gets the red live now-line; adjacent days get
-        // a faint guide at the same time-of-day for cross-column reading.
-        TimelineView(.periodic(from: .now, by: 60)) { context in
-          nowLine(now: context.date, isToday: isToday(day.date))
+        if isToday(day.date) {
+          // Today's dot draws above every block, which rise to zIndex 2 while
+          // selected or dragged, so one that spans the current time never
+          // covers it; the line itself runs under them.
+          TimelineView(.periodic(from: .now, by: 60)) { context in
+            nowDot(now: LorvexPreviewClock.now(in: calendar, tick: context.date))
+          }
+          .allowsHitTesting(false)
+          .zIndex(3)
         }
       }
     }
@@ -280,23 +297,23 @@ struct CalendarWeekGridView: View {
   @ViewBuilder
   private func overflowBadge(for day: CalendarGridDay) -> some View {
     let hidden = day.timedBlocks.filter { $0.lane >= maxDisplayedLanes }
-    if !hidden.isEmpty,
-      let earliest = hidden.min(by: { $0.startMin < $1.startMin })
-    {
-      let badgeY = CGFloat(earliest.startMin) / 60.0 * hourHeight
+    let hiddenTasks = day.taskBlocks.filter { $0.lane >= maxDisplayedLanes }
+    if !hidden.isEmpty || !hiddenTasks.isEmpty {
+      let earliestStart = (hidden.map(\.startMin) + hiddenTasks.map(\.startMin)).min() ?? 0
+      let badgeY = CGFloat(earliestStart) / 60.0 * hourHeight
       Button {
         overflowPopoverDayID = day.id
       } label: {
-        Text("+\(hidden.count)")
+        Text("+\(hidden.count + hiddenTasks.count)")
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
           .foregroundStyle(.white)
-          .padding(.horizontal, 5)
-          .padding(.vertical, 2)
+          .padding(.horizontal, LorvexDesign.Spacing.xs)
+          .padding(.vertical, LorvexDesign.Spacing.xxs)
           .background(Capsule().fill(Color.secondary.opacity(0.75)))
       }
       .buttonStyle(.borderless)
       .frame(maxWidth: .infinity, alignment: .trailing)
-      .padding(.trailing, 2)
+      .padding(.trailing, LorvexDesign.Spacing.xxs)
       .offset(y: badgeY)
       .accessibilityLabel(
         String(
@@ -305,22 +322,50 @@ struct CalendarWeekGridView: View {
             defaultValue: "%lld more events",
             table: "Localizable",
             bundle: LorvexL10n.bundle),
-          hidden.count))
+          hidden.count + hiddenTasks.count))
       .popover(
         isPresented: Binding(
           get: { overflowPopoverDayID == day.id },
           set: { if !$0 { overflowPopoverDayID = nil } }
         )
       ) {
-        overflowPopover(blocks: hidden)
+        overflowPopover(blocks: hidden, taskBlocks: hiddenTasks)
       }
     }
   }
 
-  private func overflowPopover(blocks: [CalendarGridTimedBlock]) -> some View {
+  private func overflowPopover(
+    blocks: [CalendarGridTimedBlock], taskBlocks: [CalendarGridTaskBlock]
+  ) -> some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       Text(LocalizedStringResource("calendar.overflow.title", defaultValue: "Hidden events", table: "Localizable", bundle: LorvexL10n.bundle))
         .font(LorvexDesign.Typography.primaryEmphasis)
+      ForEach(taskBlocks.sorted { $0.startMin < $1.startMin }) { block in
+        Button {
+          overflowPopoverDayID = nil
+          openTask(block.task)
+        } label: {
+          HStack(spacing: LorvexDesign.Spacing.s) {
+            Circle()
+              .fill(LorvexDesign.Palette.accent)
+              .frame(width: 8, height: 8)
+            VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+              Text(block.task.title)
+                .font(LorvexDesign.Typography.secondaryText)
+                .lineLimit(1)
+              Text(
+                "\(lorvexClockTimeLabel(minutes: block.startMin))–\(lorvexClockTimeLabel(minutes: block.endMin))"
+              )
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: LorvexDesign.Spacing.s)
+          }
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(taskBlockAccessibilityLabel(block))
+      }
       ForEach(blocks.sorted { $0.startMin < $1.startMin }) { block in
         Button {
           overflowPopoverDayID = nil
@@ -330,7 +375,7 @@ struct CalendarWeekGridView: View {
             Circle()
               .fill(eventColor(block.event))
               .frame(width: 8, height: 8)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
               Text(block.event.title)
                 .font(LorvexDesign.Typography.secondaryText)
                 .lineLimit(1)

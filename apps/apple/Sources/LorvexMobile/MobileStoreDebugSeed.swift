@@ -3,6 +3,71 @@
   import LorvexCore
   import SwiftUI
 
+  /// Dev/QA only: the `lorvex://firsttask/compose/<checklist|reminder>` screenshot
+  /// hook parks which inline composer the task detail should unfold on its next
+  /// appearance, and `lorvex://firsttask/field/<field>` which sentence word's
+  /// editor it should raise (a ``MobileTaskField`` raw value). The
+  /// detail consumes each value once, so later pushes of a task detail in the
+  /// same process start folded again.
+  enum MobileTaskDetailDebugState {
+    enum Composer: String {
+      case checklist
+      case reminder
+    }
+
+    @MainActor static var initialComposer: Composer?
+    @MainActor static var initialField: MobileTaskField?
+
+    @MainActor static func takeInitialComposer() -> Composer? {
+      defer { initialComposer = nil }
+      return initialComposer
+    }
+
+    @MainActor static func takeInitialField() -> MobileTaskField? {
+      defer { initialField = nil }
+      return initialField
+    }
+  }
+
+  /// Dev/QA only: the `lorvex://memorycomposer` screenshot hook asks the Memory
+  /// workspace to raise its New Memory sheet on its next appearance. Consumed
+  /// once, so later visits start with the sheet closed.
+  enum MobileMemoryDebugState {
+    @MainActor static var presentsComposerOnAppear = false
+
+    @MainActor static func takePresentsComposerOnAppear() -> Bool {
+      defer { presentsComposerOnAppear = false }
+      return presentsComposerOnAppear
+    }
+  }
+
+  /// Dev/QA only: the `lorvex://tab/<tab>/search/<query>` screenshot hook
+  /// pre-fills the search field of that tab's workspace, so its no-results row
+  /// can be captured without typing. The query is keyed by tab because a
+  /// workspace can appear on another tab's stack above that tab's own root:
+  /// on iPhone the Habits workspace is pushed over the Tasks home, which
+  /// appears first and must not take the query meant for Habits. Consumed once.
+  enum MobileSearchDebugState {
+    @MainActor static var initialQuery: (tab: MobileTab, query: String)?
+
+    @MainActor static func takeInitialQuery(for tab: MobileTab) -> String? {
+      guard let initialQuery, initialQuery.tab == tab else { return nil }
+      Self.initialQuery = nil
+      return initialQuery.query
+    }
+  }
+
+  /// The mode the Review tab opens in when a screenshot run asks for the week
+  /// digest (`lorvex://tab/review/week`); the Review view consumes it once.
+  enum MobileReviewDebugState {
+    @MainActor static var initialMode: MobileReviewMode?
+
+    @MainActor static func takeInitialMode() -> MobileReviewMode? {
+      defer { initialMode = nil }
+      return initialMode
+    }
+  }
+
   extension MobileStore {
     /// Dev/QA only: seed a realistic sample dataset so populated layouts can be
     /// inspected in the simulator during the UI redesign. Triggered by the
@@ -56,16 +121,51 @@
       for draft in drafts {
         if let task = try? await core.createTask(draft) { created.append(task) }
       }
-      // Put a couple of today's tasks in the current focus plan.
-      if created.count >= 3 {
-        _ = try? await core.addToCurrentFocus(
-          date: todayYMD,
-          taskIDs: [created[1].id, created[2].id],
-          briefing: "Ship the planning review and unblock sync.",
-          timezone: TimeZone.current.identifier)
+      // Write the day's briefing, give two of today's tasks times, and defer
+      // one task, all as the assistant, so the changelog under Settings has
+      // assistant rows and the schedule and the calendar have timed tasks to
+      // draw.
+      if created.count >= 4 {
+        await SwiftLorvexCoreService.$currentInitiator.withValue(
+          SwiftLorvexCoreService.ChangelogInitiator.assistant
+        ) {
+          _ = try? await (core as? any LorvexMcpMutationServicing)?.setDailyBriefingForMcp(
+            date: todayYMD,
+            briefing: "The planning review first while the doc is fresh; the sync refactor takes the long block before lunch.")
+          _ = try? await core.saveDayTimes(
+            date: todayYMD,
+            times: [
+              LorvexTaskTime(taskID: created[1].id, time: (9 * 60 + 45)..<(10 * 60 + 30)),
+              LorvexTaskTime(taskID: created[2].id, time: (11 * 60)..<(12 * 60 + 30)),
+            ])
+          _ = try? await core.deferTask(
+            id: created[3].id, until: day(1), reason: "not_today",
+            note: "Groceries can wait for the evening")
+        }
       }
       // Park one as Someday.
       if let someday = created.last { _ = try? await core.markTaskSomeday(id: someday.id) }
+      // A weekly task and a task that waits on the Someday one, so the task
+      // detail's repeat word and its Waits On section have something to show
+      // (`lorvex://findtask/<title>` opens either). Neither is planned, so
+      // neither appears on Today.
+      let timesheetDue = day(4)
+      if let timesheet = try? await core.createTask(
+        .init(
+          title: "Submit the weekly timesheet", listID: work?.id, priority: .p3,
+          dueDate: timesheetDue, tags: ["work"]))
+      {
+        let weekday = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][
+          calendar.component(.weekday, from: timesheetDue) - 1]
+        _ = try? await core.setTaskRecurrence(
+          taskID: timesheet.id, rule: TaskRecurrenceRule(freq: .weekly, byDay: [weekday]))
+      }
+      if let someday = created.last {
+        _ = try? await core.createTask(
+          .init(
+            title: "Book the offsite venue", listID: work?.id, priority: .p2,
+            tags: ["work"], dependsOn: [someday.id]))
+      }
 
       let habits: [(String, String, String, String)] = [
         ("Morning run", "figure.run", "#FF9500", "After waking up"),
@@ -97,6 +197,16 @@
         for offset in 0..<3 {
           _ = try? await core.completeHabit(id: run.id, date: ymd.string(from: day(-offset)))
         }
+      }
+      // One archived habit, so the Habits screen's archived section has a row
+      // to restore.
+      if let journal = try? await core.createHabit(
+        name: "Evening journal", cue: "After dinner", icon: "book.closed", color: "#AF52DE",
+        targetCount: 1, cadence: .daily, milestoneTarget: nil)
+      {
+        _ = try? await core.updateHabit(
+          id: journal.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
+          archived: true)
       }
 
       // Events spread across the visible week so the week grid is populated, plus
@@ -183,7 +293,33 @@
           message: record.message, details: record.details)
       }
 
-      await refreshResettingCloudSyncPacing()
+      // The feed also carries the app's own errors, which read differently from
+      // a MetricKit row: a raw `error_logs.source` eyebrow instead of a
+      // localized kind, and a long transport message that has to stay legible
+      // truncated. Seed one so a capture exercises that shape too.
+      _ = try? await core.appendDiagnosticLog(
+        source: "ios.cloud_sync.cycle", level: "error", message: "Cloud sync failed.",
+        details:
+          "CloudSyncPartialCycleFailure(underlyingError: CKError 26 zoneNotFound: "
+          + "Zone 'LorvexZone' not found in database CKDatabase(private))")
+
+      // Fail one queued row so the diagnostics summary renders its retrying
+      // depth and the transport error the row is stuck on, the pair that says a
+      // backlog is being rejected rather than merely waiting for a cycle.
+      if let sync = core as? any EnvelopeSyncServicing,
+        let stuck = try? sync.pendingOutbound().first?.outboxId
+      {
+        try? sync.recordOutboundFailure(
+          outboxId: stuck, error: "CKError 26 zoneNotFound: Zone 'LorvexZone' not found",
+          kind: .perRecord)
+      }
+
+      // A capture of one of Today's edge states moves the sample day into it.
+      if let state = LorvexPreviewDayState.requested, let service = core as? SwiftLorvexCoreService {
+        try? await state.apply(to: service)
+      }
+
+      await refresh()
     }
 
     /// Dev/QA only: when `-lorvexDebugBatchTasks` is passed, the Tasks workspace
@@ -201,38 +337,117 @@
       CommandLine.arguments.contains("-lorvexScrollSettingsToDiagnostics")
     }
 
+    /// Dev/QA only: when `-lorvexScrollSettingsToDataExport` is passed, the
+    /// Settings screen scrolls its Data Export section to the top so a
+    /// screenshot shows the export categories row and actions.
+    public static var debugScrollSettingsToDataExport: Bool {
+      CommandLine.arguments.contains("-lorvexScrollSettingsToDataExport")
+    }
+
+    /// Dev/QA only: when `-lorvexScrollHabitDetailToEnd` is passed, a habit's
+    /// detail page opens at its end, where its reminders and the Archive and
+    /// Delete buttons sit, so they can be screenshotted without a manual swipe.
+    public static var debugScrollHabitDetailToEnd: Bool {
+      CommandLine.arguments.contains("-lorvexScrollHabitDetailToEnd")
+    }
+
+    /// Dev/QA only: when `-lorvexScrollHabitDetailToMiddle` is passed, a habit's
+    /// detail page opens centered on the middle of its content, where its
+    /// Progress panels sit on a page taller than the screen (at large text
+    /// sizes), so they can be screenshotted without a manual swipe.
+    public static var debugScrollHabitDetailToMiddle: Bool {
+      CommandLine.arguments.contains("-lorvexScrollHabitDetailToMiddle")
+    }
+
+    /// Dev/QA only: when `-lorvexScrollReviewToEnd` is passed, the Day and Week
+    /// review pages open at their end, where the day rows and the task lists
+    /// sit on a page taller than the screen, so they can be screenshotted
+    /// without a manual swipe.
+    public static var debugScrollReviewToEnd: Bool {
+      CommandLine.arguments.contains("-lorvexScrollReviewToEnd")
+    }
+
     /// Dev/QA only: navigate to a `lorvex://` URL passed as the `-lorvexOpenURL`
     /// launch argument, in-process (no SpringBoard "Open in?" confirmation that a
     /// `simctl openurl` would trigger). Lets the redesign screenshot any screen.
+    /// A second URL passed as `-lorvexOpenURLLater` is applied two seconds
+    /// after the first one has drawn, so a capture can show a screen reached
+    /// from a tab that is already on screen (the way a Spotlight, Handoff, or
+    /// in-app open pushes it) rather than one set up during launch.
     public func debugApplyLaunchNavigationIfNeeded() {
       let args = CommandLine.arguments
-      guard
-        let index = args.firstIndex(of: "-lorvexOpenURL"), index + 1 < args.count,
-        let url = URL(string: args[index + 1])
-      else { return }
-      // `lorvex://tab/<name>` selects a primary tab (e.g. show the More list);
-      // anything else routes through the normal deep-link handler.
-      if url.host == "tab", let name = url.pathComponents.last,
-        let tab = MobileTab(rawValue: name)
-      {
-        selectedTab = tab
-        return
+      if let url = Self.debugLaunchURL(named: "-lorvexOpenURL", in: args) {
+        debugApplyNavigation(to: url)
+      }
+      if let later = Self.debugLaunchURL(named: "-lorvexOpenURLLater", in: args) {
+        Task { @MainActor in
+          try? await Task.sleep(for: .seconds(2))
+          debugApplyNavigation(to: later)
+        }
+      }
+    }
+
+    private static func debugLaunchURL(named name: String, in args: [String]) -> URL? {
+      guard let index = args.firstIndex(of: name), index + 1 < args.count else { return nil }
+      return URL(string: args[index + 1])
+    }
+
+    private func debugApplyNavigation(to url: URL) {
+      // `lorvex://tab/<name>` selects a primary tab; anything else routes
+      // through the normal deep-link handler. `lorvex://tab/<name>/search/<q>`
+      // also pre-fills that tab's search field so its no-results row renders,
+      // and `lorvex://tab/calendar/week` opens the calendar on its seven-day
+      // grid instead of the day grid it defaults to; `lorvex://tab/review/week`
+      // opens Review on its week digest instead of the day page.
+      if url.host == "tab" {
+        let components = Array(url.pathComponents.dropFirst())
+        if let name = components.first, let tab = MobileTab(rawValue: name) {
+          if components.count >= 3, components[1] == "search" {
+            MobileSearchDebugState.initialQuery = (tab, components[2])
+          }
+          if tab == .calendar, components.count >= 2, components[1] == "week" {
+            calendarPresentationMode = .week
+          }
+          if tab == .review, components.count >= 2, components[1] == "week" {
+            MobileReviewDebugState.initialMode = .weekly
+          }
+          selectedTab = tab
+          return
+        }
       }
       // `lorvex://sheet/capture` raises the quick-capture sheet (capture is an
-      // action, not a deep-linkable destination — this is a screenshot hook).
-      if url.host == "sheet", let name = url.pathComponents.last {
+      // action, not a deep-linkable destination — this is a screenshot hook);
+      // `lorvex://sheet/capture/<text>` also types <text> into it, so the
+      // preview of what Add will create renders.
+      if url.host == "sheet", let name = url.pathComponents.dropFirst().first {
         switch name {
-        case "capture": isPresentingCapture = true
+        case "capture":
+          if url.pathComponents.count > 2 { captureDraft.title = url.pathComponents[2] }
+          isPresentingCapture = true
         default: break
         }
         return
       }
-      // `lorvex://dest/<rawValue>` pushes a More-tab workspace (Settings, Memory,
-      // Review) that has no public deep link — a screenshot hook.
+      // `lorvex://dest/<rawValue>` opens a destination with no public deep
+      // link the way the current layout reaches it (Settings on the Today
+      // stack, Memory on the Tasks stack, or the sidebar's Workspaces group) —
+      // a screenshot hook.
       if url.host == "dest", let name = url.pathComponents.last,
         let destination = MobileDestination(rawValue: name)
       {
-        openMoreDestination(destination)
+        openWorkspaceDestination(destination)
+        return
+      }
+      // `lorvex://memorycomposer` opens Memory with its New Memory sheet raised
+      // (the sheet is otherwise tap-gated); `/filled` also seeds a draft so the
+      // enabled Save button renders — a screenshot hook.
+      if url.host == "memorycomposer" {
+        if url.pathComponents.last == "filled" {
+          memoryKeyDraft = "travel_preferences"
+          memoryContentDraft = "Prefers window seats and morning flights; avoids red-eyes."
+        }
+        MobileMemoryDebugState.presentsComposerOnAppear = true
+        openWorkspaceDestination(.memory)
         return
       }
       // `lorvex://milestonecelebration` stages a sample milestone celebration so
@@ -246,31 +461,79 @@
       }
       // `lorvex://firsttask` opens the first seeded task's detail on the Today
       // stack (we don't know seeded IDs ahead of time) — a screenshot hook.
+      // `lorvex://firsttask/compose/<checklist|reminder>` also unfolds one of the
+      // detail's inline composers, and `lorvex://firsttask/field/<field>` raises
+      // one sentence word's editor (`waitsOn`, `due`, …); both are otherwise
+      // tap-gated.
       if url.host == "firsttask",
-        let id = snapshot.nextTask?.id ?? snapshot.todayTasks.first?.id
+        let id = snapshot.today.tasks.first?.id
       {
+        let components = url.pathComponents
+        if components.count >= 3, components[1] == "compose" {
+          MobileTaskDetailDebugState.initialComposer =
+            MobileTaskDetailDebugState.Composer(rawValue: components[2])
+        }
+        if components.count >= 3, components[1] == "field" {
+          MobileTaskDetailDebugState.initialField = MobileTaskField(rawValue: components[2])
+        }
         openNavigationTarget(
           MobileNavigationTarget(selectedTab: .today, route: .task(id)))
         return
       }
-      // `lorvex://listdetail` pushes the first seeded list's detail on the Tasks
-      // stack (`/empty` targets a zero-task list) — a screenshot hook for the
-      // list-detail header + empty state.
-      if url.host == "listdetail" {
-        let wantEmpty = url.pathComponents.last == "empty"
-        let id =
-          wantEmpty
-          ? lists?.lists.first(where: { $0.openCount == 0 })?.id
-          : lists?.lists.first?.id
-        if let id {
-          selectedTab = .tasks
-          tasksRoutePath = [.list(id)]
+      // `lorvex://findtask/<title>` opens the seeded task with that title on
+      // the Today stack, for a task detail that is not first on Today (a
+      // repeating task, one with dependencies) — a screenshot hook.
+      if url.host == "findtask", let title = url.pathComponents.last {
+        Task { @MainActor in
+          guard
+            let page = try? await core.listTasks(
+              status: "all", listID: nil, priority: nil, text: title, limit: 1, offset: 0),
+            let id = page.tasks.first?.id
+          else { return }
+          openNavigationTarget(
+            MobileNavigationTarget(selectedTab: .today, route: .task(id)))
         }
         return
       }
-      // `lorvex://taskscope/<all|scheduled|priority|someday|completed|list>` drills
-      // the Tasks home into a scope (the `list` form picks the first seeded list)
-      // so the otherwise tap-gated scoped list can be screenshotted.
+      // Screenshot hooks for the first seeded habit and memory entry.
+      // `lorvex://firsthabit` opens the habit the way a habit deep link does;
+      // `lorvex://firsthabit/select` opens Habits with it selected, which the
+      // iPad split shows in its detail pane. `lorvex://firstmemory` opens
+      // Memory with the entry selected, and `lorvex://firstmemory/push` pushes
+      // its detail screen instead, the way a row tap does at compact width.
+      if url.host == "firsthabit" {
+        let selects = url.pathComponents.last == "select"
+        Task { @MainActor in
+          if habits == nil { await refresh() }
+          guard let id = habits?.habits.first?.id else { return }
+          if selects {
+            openWorkspaceDestination(.habits)
+            selectHabit(id)
+          } else {
+            navigate(to: .habit(id))
+          }
+        }
+        return
+      }
+      if url.host == "firstmemory" {
+        openWorkspaceDestination(.memory)
+        let pushes = url.pathComponents.last == "push"
+        Task { @MainActor in
+          if memory == nil { await loadMemorySnapshot() }
+          guard let id = memory?.entries.first?.id else { return }
+          if pushes {
+            tasksRoutePath.append(.memoryEntry(id))
+          } else {
+            selectMemoryEntry(id)
+          }
+        }
+        return
+      }
+      // `lorvex://taskscope/<all|scheduled|priority|someday|completed|list|describedlist|emptylist>`
+      // drills the Tasks home into a scope so the otherwise tap-gated scoped
+      // list can be screenshotted. `list` picks the first seeded list,
+      // `describedlist` the first with a description, and `emptylist` the first
+      // with no open tasks.
       if url.host == "taskscope", let name = url.pathComponents.last {
         let scope: MobileTasksScope?
         switch name {
@@ -280,6 +543,9 @@
         case "someday": scope = .someday
         case "completed": scope = .completed
         case "list": scope = lists?.lists.first.map { .list($0.id) }
+        case "describedlist":
+          scope = lists?.lists.first { !($0.description ?? "").isEmpty }.map { .list($0.id) }
+        case "emptylist": scope = lists?.lists.first { $0.openCount == 0 }.map { .list($0.id) }
         default: scope = nil
         }
         if let scope {

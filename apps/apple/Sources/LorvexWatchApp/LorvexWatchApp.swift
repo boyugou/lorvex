@@ -11,11 +11,11 @@ import Synchronization
 /// watchOS app entry point.
 ///
 /// Uses the workspace-fenced Watch replica in the shared App Group so the
-/// companion can render the latest focus payload published by the iPhone. It
+/// companion can render the latest Today list published by the iPhone. It
 /// reports a replica-unavailable state when the App Group container is
-/// unavailable. Write actions (complete, capture, focus-plan updates) are
-/// durably journaled and forwarded through WatchConnectivity; the iPhone
-/// applies them and publishes a fresh replica.
+/// unavailable. Write actions (complete, start, pause, defer, cancel, capture,
+/// habit check-off) are durably journaled and forwarded through
+/// WatchConnectivity; the iPhone applies them and publishes a fresh replica.
 @main
 struct LorvexWatchApp: App {
   private let store: LorvexWatchStore
@@ -43,7 +43,24 @@ struct LorvexWatchApp: App {
     #else
       let forwarder: (any LorvexWatchMutationForwarding)? = nil
     #endif
-    let builtStore = LorvexWatchStoreFactory(mutationForwarder: forwarder).makeStore()
+    let builtStore: LorvexWatchStore
+    #if DEBUG
+      if LorvexWatchUIPreview.isRequested {
+        // The headless capture tour's fixed sample day stands in for the App
+        // Group replica; a sample that cannot be written is a build defect.
+        guard let replicaURL = try? LorvexWatchUIPreview.writeReplica() else {
+          fatalError("The watch UI preview replica could not be written.")
+        }
+        builtStore = LorvexWatchStoreFactory(
+          snapshotURLProvider: { _ in replicaURL },
+          mutationForwarder: LorvexWatchUIPreview.forwarder
+        ).makeStore()
+      } else {
+        builtStore = LorvexWatchStoreFactory(mutationForwarder: forwarder).makeStore()
+      }
+    #else
+      builtStore = LorvexWatchStoreFactory(mutationForwarder: forwarder).makeStore()
+    #endif
     #if canImport(WatchConnectivity)
       snapshotRefreshRelay.setStore(builtStore)
       concreteForwarder.setDeliveryStatusHandler { [weak builtStore] status in
@@ -58,7 +75,13 @@ struct LorvexWatchApp: App {
 
   var body: some Scene {
     WindowGroup {
-      LorvexWatchRootView(store: store)
+      #if DEBUG
+        LorvexWatchRootView(
+          store: store, initialPage: LorvexWatchUIPreview.page,
+          opensActions: LorvexWatchUIPreview.opensActions)
+      #else
+        LorvexWatchRootView(store: store)
+      #endif
     }
     #if os(watchOS)
       .backgroundTask(.watchConnectivity) { _ in

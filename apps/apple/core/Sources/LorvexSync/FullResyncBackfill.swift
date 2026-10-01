@@ -29,12 +29,7 @@ import LorvexStore
 /// carries the `delete` barrier the gate no longer blocks it — the entity
 /// RESURRECTS (a stale merge loser can likewise reappear). Re-pushing
 /// each surviving tombstone as a `delete` re-asserts the death version so those
-/// peers converge on the delete instead. An ordinary rebuild carries every
-/// retained tombstone. A compaction transition may omit only an exact delete
-/// whose CloudKit receipt is at or before the server-derived cutoff published in
-/// that generation's seal and control record. Peers without a strictly later
-/// completed-baseline server witness adopt that generation authoritatively, so an
-/// omitted death marker cannot be defeated by stale local state.
+/// peers converge on the delete instead. Every tombstone is re-pushed.
 
 /// Outcome of one full-resync backfill pass.
 ///
@@ -85,12 +80,7 @@ extension Outbox {
   ///   coalesce LWW gate treats as stale and discards — no duplicate divergent
   ///   row, no stored-version change.
   ///
-  /// `ai_changelog` is intentionally excluded: the append-only audit stream is
-  /// not part of an ordinary union/reseed backfill, which could resurrect rows
-  /// peers retired under their frontier. Unique candidate-zone construction is
-  /// the separate exception: `AuditRetentionFrontier.generationSnapshotComponent`
-  /// stages exactly the retained account/frontier set before the prior zone is
-  /// retired. Audit has no `version` column and remains version-stamp-exempt.
+  /// `ai_changelog` is excluded: the audit trail is device-local.
   ///
   /// Per-entity failures are isolated in a SAVEPOINT and logged best-effort, so a
   /// single poison row (e.g. a tainted stored version) never blocks recovery of
@@ -98,21 +88,16 @@ extension Outbox {
   /// absorbed into a "completed" result.
   @discardableResult
   public static func enqueueAllLiveForFullResync(
-    _ db: Database, tombstoneCompactionCutoff: String? = nil
+    _ db: Database
   ) throws -> FullResyncBackfillReport {
-    if let tombstoneCompactionCutoff {
-      guard let parsed = SyncTimestamp.parse(tombstoneCompactionCutoff),
-        parsed.asString == tombstoneCompactionCutoff
-      else { throw TombstoneConfirmationError.invalidCutoff }
-    }
     let deviceId = try SyncCheckpoints.getOrCreateDeviceId(db)
     var report = FullResyncBackfillReport()
     // Topological order (lists before tasks, aggregate roots before edges and
     // children) so a backfill-repopulated zone delivers each row after the parent
     // it references — a peer applies without deferring the whole set into the
     // pending inbox. `allSyncableTypes` puts task before list, which would deliver
-    // tasks before their list. `ai_changelog` is not in the topological order
-    // (ordinary full-resync never re-pushes it); the guard below stays as defense.
+    // tasks before their list. `ai_changelog` is not in the topological order;
+    // the guard below stays as defense.
     for entityType in EntityKind.topologicalEntityOrder {
       guard let kind = EntityKind.parse(entityType) else { continue }
       if kind == .aiChangelog { continue }
@@ -129,9 +114,7 @@ extension Outbox {
     // semantic: the inbound driver establishes ordinary upserts, then ordinary
     // deaths, then explicit aliases. A page split remains safe because a missing
     // alias target defers durably until its live row or tombstone arrives.
-    try backfillTombstones(
-      db, deviceId: deviceId,
-      tombstoneCompactionCutoff: tombstoneCompactionCutoff, into: &report)
+    try backfillTombstones(db, deviceId: deviceId, into: &report)
 
     // The reseed marker is resolved last, in the caller's write transaction, so a
     // thrown backfill rolls back and leaves the prior marker state for a later
@@ -173,10 +156,7 @@ extension Outbox {
 
   // MARK: - Tombstones
 
-  /// Re-enqueue every unconfirmed, still-within-window, or permanent-alias
-  /// target delete. A cutoff is accepted only from the caller's ready-control
-  /// CKRecord server timestamp; local `deleted_at` never participates. With no
-  /// trusted cutoff, all rows are retained and emitted conservatively.
+  /// Re-enqueue every tombstone as a delete.
   ///
   /// Non-syncable / append-only tombstone rows (there should be none) are skipped
   /// defensively. If the dead identity also has a permanent alias, the narrow
@@ -184,20 +164,11 @@ extension Outbox {
   /// winner; the independent alias upsert was emitted immediately before this
   /// tombstone sweep.
   private static func backfillTombstones(
-    _ db: Database, deviceId: String, tombstoneCompactionCutoff: String?,
-    into report: inout FullResyncBackfillReport
+    _ db: Database, deviceId: String, into report: inout FullResyncBackfillReport
   ) throws {
     let rows = try Row.fetchAll(
       db,
-      sql: """
-        SELECT tombstone.entity_type, tombstone.entity_id, tombstone.version
-        FROM sync_tombstones AS tombstone
-        WHERE ? IS NULL
-          OR tombstone.cloud_confirmed_at IS NULL
-          OR tombstone.cloud_confirmed_at > ?
-          OR \(TombstoneCompactionPolicy.isPermanentRedirectTargetSQL)
-        """,
-      arguments: [tombstoneCompactionCutoff, tombstoneCompactionCutoff])
+      sql: "SELECT entity_type, entity_id, version FROM sync_tombstones")
     for row in rows {
       let entityType: String = row["entity_type"]
       let entityId: String = row["entity_id"]

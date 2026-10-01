@@ -147,8 +147,7 @@ public struct LorvexDataExportPayload: Codable, Sendable {
   public var calendarSeriesCutovers: [ExportCalendarSeriesCutover]?
   public var calendarEvents: [ExportCalendarEvent]?
   public var dailyReviews: [ExportDailyReview]?
-  public var currentFocus: [ExportCurrentFocus]?
-  public var focusSchedules: [ExportFocusSchedule]?
+  public var dailyBriefings: [ExportDailyBriefing]?
   public var taskCalendarEventLinks: [ExportTaskCalendarEventLink]?
   public var memory: [ExportMemoryEntry]?
   public var preferences: [ExportPreference]?
@@ -164,8 +163,7 @@ public struct LorvexDataExportPayload: Codable, Sendable {
     calendarSeriesCutovers: [ExportCalendarSeriesCutover]? = nil,
     calendarEvents: [ExportCalendarEvent]? = nil,
     dailyReviews: [ExportDailyReview]? = nil,
-    currentFocus: [ExportCurrentFocus]? = nil,
-    focusSchedules: [ExportFocusSchedule]? = nil,
+    dailyBriefings: [ExportDailyBriefing]? = nil,
     taskCalendarEventLinks: [ExportTaskCalendarEventLink]? = nil,
     memory: [ExportMemoryEntry]? = nil,
     preferences: [ExportPreference]? = nil
@@ -180,8 +178,7 @@ public struct LorvexDataExportPayload: Codable, Sendable {
     self.calendarSeriesCutovers = calendarSeriesCutovers
     self.calendarEvents = calendarEvents
     self.dailyReviews = dailyReviews
-    self.currentFocus = currentFocus
-    self.focusSchedules = focusSchedules
+    self.dailyBriefings = dailyBriefings
     self.taskCalendarEventLinks = taskCalendarEventLinks
     self.memory = memory
     self.preferences = preferences

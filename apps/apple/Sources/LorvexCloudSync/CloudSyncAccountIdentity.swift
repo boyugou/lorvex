@@ -20,17 +20,6 @@ public protocol CloudKitAccountIdentifying: Sendable {
   func currentAccountIdentifier() async -> String?
 }
 
-/// Test/preview-safe account identity that never touches CloudKit. Production
-/// factories inject ``CloudKitUserRecordAccountIdentifier`` explicitly;
-/// coordinator defaults must not instantiate `CKContainer` because non-entitled
-/// test hosts can trap before throwing. Because it always reports `nil`, the
-/// fail-closed account start gate halts every cycle of a coordinator left on
-/// this default — tests that exercise cycles must inject a known identity.
-public struct UnavailableCloudSyncAccountIdentifier: CloudKitAccountIdentifying {
-  public init() {}
-  public func currentAccountIdentifier() async -> String? { nil }
-}
-
 /// Production identifier backed by CloudKit's current-user record ID for the
 /// app's container. The returned identity is an opaque SHA-256 of that record
 /// name; it is never sent over the wire and only equality matters.
@@ -122,52 +111,4 @@ public actor FileCloudSyncAccountIdentityStore: CloudSyncAccountIdentityStoring 
     try CloudSyncDurableStateFile.write(
       Data(identifier.utf8), to: directory.appendingPathComponent(Self.fileName))
   }
-}
-
-/// In-memory ``CloudSyncAccountIdentityStoring`` for tests and as the coordinator
-/// init default, so a coordinator built without an explicit store never touches
-/// global or on-disk state. Production wires ``FileCloudSyncAccountIdentityStore``
-/// via the factory for the cross-launch persistence the guard actually requires.
-public actor InMemoryCloudSyncAccountIdentityStore: CloudSyncAccountIdentityStoring {
-  private var identifier: String?
-
-  public init(identifier: String? = nil) {
-    self.identifier = identifier
-  }
-
-  public func loadLastAccountIdentifier() async -> String? { identifier }
-
-  public func saveLastAccountIdentifier(_ identifier: String) async {
-    self.identifier = identifier
-  }
-}
-
-/// Outcome of ``CloudSyncEngineCoordinator/handleAccountChange()`` — whether
-/// the current account boundary is already safe for normal sync or requires a
-/// durable pause and explicit recovery.
-public enum AccountChangeBackfillDecision: Equatable, Sendable {
-  /// The signed-in account matched the durable binding, or no binding exists yet
-  /// and the normal start gate will claim it before the first CloudKit request.
-  /// No account-boundary recovery was required.
-  case backfilled
-  /// A same-account / first-run auto-backfill was allowed, but the full-resync
-  /// generation rebuild failed before exact remote-ready and local-finalization
-  /// proof. Sync is durably paused with
-  /// ``CloudSyncPauseReason/backfillFailed`` so explicit adoption can resume the
-  /// crash-safe state machine instead of treating the account as fully adopted.
-  case backfillFailed
-  /// The signed-in account differs from the last one this device backfilled into
-  /// (or its identity could not be confirmed the same): the auto-backfill was
-  /// SUPPRESSED so this device's private data is not pushed into another user's
-  /// iCloud. The app must obtain explicit consent and call
-  /// ``CloudSyncEngineCoordinator/confirmBackfillIntoCurrentAccount(sync:expectedPauseReason:)``.
-  case suppressedDifferentAccount
-  /// A ``CloudSyncPauseReason/userDeletedZone`` pause was standing: the user
-  /// deliberately deleted the Lorvex zone from iCloud. The auto-backfill was
-  /// SUPPRESSED and the pause left intact even though the signed-in account is
-  /// unchanged, because recreating the zone and re-pushing would revert that
-  /// deletion. Only an explicit re-opt-in via
-  /// ``CloudSyncEngineCoordinator/confirmDeletedZoneReenable(sync:authorization:)``
-  /// may lift it.
-  case suppressedUserDeletedZone
 }

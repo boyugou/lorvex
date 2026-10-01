@@ -266,7 +266,7 @@ func dryRunPlanSupportsTags() {
   let plan = LorvexDataImporter.plan(
     for: LorvexDataExportPayload(
       tags: [
-        ExportTag(id: "tag-1", displayName: "Focus", color: "#0EA5E9")
+        ExportTag(id: "tag-1", displayName: "Deep work", color: "#0EA5E9")
       ]))
   #expect(plan.entries.map(\.category) == [.tags])
   #expect(plan.entries.first?.isSupported == true)
@@ -274,21 +274,14 @@ func dryRunPlanSupportsTags() {
 }
 
 @Test
-func dryRunPlanSupportsFocusAggregates() {
+func dryRunPlanSupportsDailyBriefings() {
   let plan = LorvexDataImporter.plan(
     for: LorvexDataExportPayload(
-      currentFocus: [ExportCurrentFocus(date: "2026-06-02", taskIDs: ["task-1"])],
-      focusSchedules: [
-        ExportFocusSchedule(
-          date: "2026-06-02",
-          blocks: [
-            ExportFocusScheduleBlock(
-              position: 0, blockType: "buffer", startMinutes: 600, endMinutes: 630)
-          ])
-      ]))
-  #expect(plan.entries.map(\.category) == [.currentFocus, .focusSchedules])
-  #expect(plan.entries.map(\.isSupported) == [true, true])
-  #expect(plan.supportedRecordCount == 2)
+      dailyBriefings: [ExportDailyBriefing(date: "2026-06-02", briefing: "Protect the morning")]
+    ))
+  #expect(plan.entries.map(\.category) == [.dailyBriefings])
+  #expect(plan.entries.first?.isSupported == true)
+  #expect(plan.supportedRecordCount == 1)
 }
 
 @Test
@@ -826,7 +819,7 @@ func staleBackupIsNonDestructive() async throws {
   _ = try await core.importHabit(
     id: habitID, name: "Local habit", icon: nil, color: nil, cue: "keep",
     frequencyType: "daily", weekdays: [], perPeriodTarget: nil, dayOfMonth: nil,
-    targetCount: 5, milestoneTarget: nil, archived: false, position: 0)
+    targetCount: 5, milestoneTarget: nil, archived: false, position: 0, createdAt: nil)
   _ = try await core.upsertMemory(key: "profile", content: "local newer memory")
 
   let newListID = "11111111-1111-4111-8111-111111111111"
@@ -860,125 +853,59 @@ func staleBackupIsNonDestructive() async throws {
   #expect(result.results.first { $0.category == .memory }?.skipped == 1)
 }
 
-@Test(
-  "A stale backup does not overwrite a newer local daily review / current focus / focus schedule"
-)
+@Test("A stale backup does not overwrite a newer local daily review or daily briefing")
 func staleBackupDoesNotOverwriteContentCategories() async throws {
   let core = try makeInMemoryCore()
   let date = "2026-06-01"
 
-  // Newer local content across the three user-authored date-scoped singletons
-  // that import through a fresh-HLC upsert (no opaque id to presence-probe on).
-  // Preferences are intentionally excluded — they carry read-time defaults and
-  // import last-writer-wins (restore-your-settings), not skip-if-exists.
+  // Newer local content in the user-visible date-scoped singletons that import
+  // through a fresh-HLC upsert (no opaque id to presence-probe on). Preferences
+  // are intentionally excluded — they carry read-time defaults and import
+  // last-writer-wins (restore-your-settings), not skip-if-exists.
   _ = try await core.importDailyReview(
     date: date, summary: "Local newer review", mood: 5, energyLevel: 4,
     wins: "shipped", blockers: nil, learnings: nil)
-  _ = try await core.setCurrentFocus(
-    date: date, taskIDs: [], briefing: "Local newer focus", timezone: "UTC")
-  _ = try await core.saveFocusSchedule(date: date, blocks: [], rationale: "Local newer schedule")
+  _ = try await core.setDailyBriefingForMcp(date: date, briefing: "Local newer briefing")
 
-  // A stale backup carrying older content at the same dates.
+  // A stale backup carrying older content at the same date.
   let payload = LorvexDataExportPayload(
     dailyReviews: [
       ExportDailyReview(
         date: date, summary: "STALE review", mood: 1, energyLevel: 1,
         wins: "", blockers: "", learnings: "")
     ],
-    currentFocus: [
-      ExportCurrentFocus(date: date, briefing: "STALE focus", timezone: "UTC", taskIDs: [])
-    ],
-    focusSchedules: [
-      ExportFocusSchedule(date: date, rationale: "STALE schedule", timezone: "UTC", blocks: [])
-    ])
+    dailyBriefings: [ExportDailyBriefing(date: date, briefing: "STALE briefing", timezone: "UTC")])
   let plan = LorvexDataImporter.plan(for: payload)
   let result = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
 
   // Newer local content is preserved (skip-if-exists), not overwritten by the
   // stale backup — and therefore not re-propagated fleet-wide at a fresh HLC.
   #expect(try await core.loadDailyReview(date: date)?.summary == "Local newer review")
-  #expect(try await core.loadCurrentFocus(date: date)?.briefing == "Local newer focus")
-  #expect(try await core.loadFocusSchedule(date: date)?.rationale == "Local newer schedule")
+  let briefings = try await core.loadDailyBriefingsForDataExport()
+  #expect(briefings.map(\.briefing) == ["Local newer briefing"])
   // Each affected category reports the skip.
   #expect(result.results.first { $0.category == .dailyReviews }?.skipped == 1)
-  #expect(result.results.first { $0.category == .currentFocus }?.skipped == 1)
-  #expect(result.results.first { $0.category == .focusSchedules }?.skipped == 1)
+  #expect(result.results.first { $0.category == .dailyBriefings }?.skipped == 1)
 }
 
-@Test(
-  "A stale backup skips focus aggregates when task and canonical-event tombstones win"
-)
-func staleBackupDoesNotMaterializeDanglingFocusAggregates() async throws {
+@Test("A backup does not bring back a daily briefing cleared after it was taken")
+func backupDoesNotResurrectAClearedDailyBriefing() async throws {
   let core = try makeInMemoryCore()
-  let task = try await core.createTask(title: "Delete after backup", notes: "")
-  let event = try await core.createCalendarEvent(
-    title: "Delete event after backup", startDate: "2026-07-21", endDate: nil,
-    startTime: "10:00", endTime: "10:30", allDay: false,
-    location: nil, notes: nil, recurrence: nil, timezone: "UTC", url: nil,
-    color: nil, eventType: nil, personName: nil, attendees: nil)
-  let planDate = "2026-07-21"
+  let date = "2026-07-21"
+  _ = try await core.setDailyBriefingForMcp(date: date, briefing: "Briefing in the backup")
   let payload = LorvexDataExportPayload(
-    tasks: [ExportTask(from: task)],
-    calendarEvents: [ExportCalendarEvent(from: event)],
-    currentFocus: [
-      ExportCurrentFocus(date: planDate, timezone: "UTC", taskIDs: [task.id])
-    ],
-    focusSchedules: [
-      ExportFocusSchedule(
-        date: planDate,
-        blocks: [
-          ExportFocusScheduleBlock(
-            position: 0, blockType: "task", startMinutes: 540, endMinutes: 600,
-            taskID: task.id),
-          ExportFocusScheduleBlock(
-            position: 1, blockType: "event", startMinutes: 600, endMinutes: 630,
-            calendarEventID: event.id, eventSource: .canonical, title: event.title),
-        ])
-    ])
+    dailyBriefings: try await core.loadDailyBriefingsForDataExport())
 
-  // This models a valid backup decoded before apply, followed by newer local
-  // deletes while the import confirmation sheet is open. The root categories
-  // are tombstone-guarded, so the schedule must follow that outcome atomically.
-  try await core.permanentlyDeleteTask(id: task.id)
-  _ = try await core.deleteCalendarEvent(id: event.id)
+  // Clearing the briefing leaves a tombstone; importing the older backup must
+  // honour it rather than restore the text at a fresh dominating version.
+  _ = try await core.setDailyBriefingForMcp(date: date, briefing: nil)
 
   let plan = LorvexDataImporter.plan(for: payload)
   let result = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
 
   #expect(result.errors.isEmpty)
-  #expect(result.results.first { $0.category == .tasks }?.skipped == 1)
-  #expect(result.results.first { $0.category == .calendarEvents }?.skipped == 1)
-  #expect(result.results.first { $0.category == .currentFocus }?.skipped == 1)
-  #expect(result.results.first { $0.category == .focusSchedules }?.skipped == 1)
-  #expect(try await core.loadCurrentFocus(date: planDate) == nil)
-  #expect(try await core.loadFocusSchedule(date: planDate) == nil)
-}
-
-@Test("A provider hold remains importable without a local canonical event endpoint")
-func providerFocusBlockDoesNotRequireCanonicalEndpoint() async throws {
-  let core = try makeInMemoryCore()
-  let planDate = "2026-07-22"
-  let payload = LorvexDataExportPayload(
-    focusSchedules: [
-      ExportFocusSchedule(
-        date: planDate,
-        blocks: [
-          ExportFocusScheduleBlock(
-            position: 0, blockType: "event", startMinutes: 600, endMinutes: 660,
-            eventSource: .provider, title: "Private provider title")
-        ])
-    ])
-
-  let plan = LorvexDataImporter.plan(for: payload)
-  let result = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
-  let schedule = try #require(try await core.loadFocusSchedule(date: planDate))
-
-  #expect(result.errors.isEmpty)
-  #expect(result.results.first { $0.category == .focusSchedules }?.imported == 1)
-  #expect(schedule.blocks.count == 1)
-  #expect(schedule.blocks[0].eventSource == .provider)
-  #expect(schedule.blocks[0].calendarEventID == nil)
-  #expect(schedule.blocks[0].title == "Event")
+  #expect(result.results.first { $0.category == .dailyBriefings }?.skipped == 1)
+  #expect(try await core.loadDailyBriefingsForDataExport().isEmpty)
 }
 
 @Test("Import never restores ai_changelog_retention_policy (avoids the fleet-wide purge amplification)")

@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 /// The shared "collapse this detail panel" control — a consistent ✕ in the
@@ -10,16 +11,10 @@ struct InspectorCloseButton: View {
   let action: () -> Void
 
   var body: some View {
-    Button(action: action) {
-      Image(systemName: "xmark")
-        .font(.system(size: 11, weight: .bold))
-        .frame(width: 22, height: 22)
-        .contentShape(Rectangle())
-    }
-    .buttonStyle(.plain)
-    .foregroundStyle(.secondary)
-    .help(String(localized: "common.close", defaultValue: "Close", table: "Localizable", bundle: LorvexL10n.bundle))
-    .accessibilityLabel(String(localized: "common.close", defaultValue: "Close", table: "Localizable", bundle: LorvexL10n.bundle))
-    .accessibilityIdentifier(accessibilityIdentifier)
+    LorvexIconButton(
+      systemImage: "xmark",
+      label: String(localized: "common.close", defaultValue: "Close", table: "Localizable", bundle: LorvexL10n.bundle),
+      accessibilityIdentifier: accessibilityIdentifier,
+      action: action)
   }
 }

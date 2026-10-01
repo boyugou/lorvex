@@ -1,8 +1,7 @@
 import LorvexCore
 import SwiftUI
 
-private enum CalendarEventBlockMetrics {
-  static let minimumHeight: CGFloat = 16
+enum CalendarEventBlockMetrics {
   static let compactHeightThreshold: CGFloat = 28
   static let timeHeightThreshold: CGFloat = 34
   static let verticalPadding: CGFloat = 2
@@ -29,10 +28,12 @@ extension CalendarWeekGridView {
     // dead lanes sized for events that aren't shown.
     let laneWidth = columnWidth / CGFloat(min(block.laneCount, maxDisplayedLanes))
     let baseY = CGFloat(block.startMin) / 60 * hourHeight
-    let baseHeight = max(
-      CGFloat(block.endMin - block.startMin) / 60 * hourHeight,
-      CalendarEventBlockMetrics.minimumHeight
-    )
+    // The model's drawn end already holds a short block open to
+    // `CalendarGridModel.minBlockMinutes` when nothing starts within that
+    // window; when something does, the block gets its real span, so a floor
+    // here would only run it under the next block.
+    let baseHeight = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
+    let isTight = baseHeight < LorvexDesign.CalendarMetrics.tightBlockHeight
     let color = eventColor(block.event)
     let active = rescheduleDraft?.eventID == block.event.id ? rescheduleDraft : nil
     // The block whose inspector is open reads as selected: a stronger fill, a
@@ -40,29 +41,36 @@ extension CalendarWeekGridView {
     // anchor and makes the tap-again-to-close toggle discoverable.
     let isSelected = store.selectedCalendarEventID == block.event.id
     let preview = CalendarEventBlockPreview(draft: active)
-    let renderedHeight = max(
-      baseHeight + preview.resizeBottom - preview.resizeTop,
-      hourHeight / 4
-    )
+    // A resize in progress cannot shrink the block below a quarter hour.
+    let renderedHeight =
+      active == nil
+      ? baseHeight
+      : max(baseHeight + preview.resizeBottom - preview.resizeTop, hourHeight / 4)
     let isMultiDay =
       block.event.endDate != nil && block.event.endDate != block.event.startDate
     let isEditable =
       block.event.editable && !block.event.allDay && !block.event.supportsScopedMutation
       && !isMultiDay
+    let showsResizeGrips = isSelected || hoveredEventID == block.event.id
 
     return CalendarEventBlockContent(
       title: block.event.title,
       time: block.event.startTime.map(lorvexClockTimeLabel),
+      // A multi-day event's piece of one day is not its time, so it keeps its
+      // start alone.
+      timeRange: isMultiDay
+        ? nil : lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
       renderedHeight: renderedHeight
     )
     .padding(.horizontal, CalendarEventBlockMetrics.horizontalPadding)
-    .padding(.vertical, CalendarEventBlockMetrics.verticalPadding)
+    .padding(.vertical, isTight ? 0 : CalendarEventBlockMetrics.verticalPadding)
     .frame(
       width: max(laneWidth - CalendarEventBlockMetrics.laneGap, 8),
       height: renderedHeight,
       alignment: .topLeading
     )
-    .background(
+    .clipped()
+    .lorvexOpaqueTintBackground(
       color.opacity(active != nil || isSelected ? 0.24 : 0.16),
       in: RoundedRectangle(cornerRadius: CalendarEventBlockMetrics.cornerRadius)
     )
@@ -83,6 +91,13 @@ extension CalendarWeekGridView {
     // beneath the resize-handle overlays below so their resize cursor still wins
     // in the handle bands (the topmost cursor rect under the pointer wins).
     .calendarPointingHandCursor()
+    .onHover { inside in
+      if inside {
+        hoveredEventID = block.event.id
+      } else if hoveredEventID == block.event.id {
+        hoveredEventID = nil
+      }
+    }
     .overlay(alignment: .topTrailing) {
       if block.event.editable && !isEditable {
         inGridEditSheetHint(for: block)
@@ -93,6 +108,7 @@ extension CalendarWeekGridView {
         resizeHandle(
           alignment: .top,
           color: color,
+          visible: showsResizeGrips,
           gesture: resizeTopGesture(for: block),
           block: block)
       }
@@ -102,6 +118,7 @@ extension CalendarWeekGridView {
         resizeHandle(
           alignment: .bottom,
           color: color,
+          visible: showsResizeGrips,
           gesture: resizeGesture(for: block),
           block: block)
       }
@@ -186,7 +203,7 @@ extension CalendarWeekGridView {
     )
     .font(LorvexDesign.Typography.tertiaryText)
     .foregroundStyle(.secondary)
-    .padding(3)
+    .padding(LorvexDesign.Spacing.xxs)
     .background(.background.opacity(0.82), in: Circle())
     .help(
       String(
@@ -213,9 +230,13 @@ extension CalendarWeekGridView {
     .accessibilityIdentifier("calendar.weekgrid.editSheetHint")
   }
 
+  /// One edge grip. `visible` fades the mark itself; the transparent hit area
+  /// above it is always present so the resize cursor and gesture do not wait on
+  /// the grip's appearance.
   private func resizeHandle(
     alignment: VerticalAlignment,
     color: Color,
+    visible: Bool,
     gesture: some Gesture,
     block: CalendarGridTimedBlock
   ) -> some View {
@@ -228,6 +249,8 @@ extension CalendarWeekGridView {
           .frame(width: CalendarEventBlockMetrics.resizeHandleWidth, height: 2)
           .clipShape(Capsule())
           .padding(alignment == .top ? .top : .bottom, 1)
+          .opacity(visible ? 1 : 0)
+          .animation(.easeInOut(duration: 0.12), value: visible)
       }
       .calendarResizeCursor()
       .gesture(gesture)
@@ -249,29 +272,66 @@ extension CalendarWeekGridView {
   }
 }
 
-private struct CalendarEventBlockContent: View {
+/// The text inside a grid block: the title, then its time. A block tall
+/// enough for a second line shows the time range there ("1:00 – 1:30 PM"), or
+/// the start alone when the range does not fit the column's width. A block
+/// too short for a second line sets the time after the title on its one line,
+/// when both fit whole, so a 15- or 30-minute block still says when it is.
+/// A done block (a plan block whose task is completed) reads struck through
+/// and secondary.
+struct CalendarEventBlockContent: View {
   let title: String
+  /// The start time ("1:00 PM").
   let time: String?
+  /// The time range ("1:00 – 1:30 PM"), preferred where it fits; `nil` when
+  /// the block shows its start alone.
+  var timeRange: String? = nil
   let renderedHeight: CGFloat
+  var isDone = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      Text(title)
-        .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-        .foregroundStyle(.primary)
-        .lineLimit(titleLineLimit)
-        .fixedSize(horizontal: false, vertical: true)
-
-      if renderedHeight >= CalendarEventBlockMetrics.timeHeightThreshold, let time {
-        Text(time)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
+      if renderedHeight >= CalendarEventBlockMetrics.timeHeightThreshold {
+        titleText
+          .lineLimit(titleLineLimit)
+          .fixedSize(horizontal: false, vertical: true)
+        if let time {
+          ViewThatFits(in: .horizontal) {
+            if let timeRange { timeText(timeRange) }
+            timeText(time)
+          }
           .padding(.top, 1)
+        }
+      } else {
+        ViewThatFits(in: .horizontal) {
+          if let time {
+            HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.xs) {
+              titleText
+              timeText(timeRange ?? time)
+            }
+          }
+          titleText.lineLimit(titleLineLimit)
+        }
       }
 
       Spacer(minLength: 0)
     }
+  }
+
+  private var titleText: some View {
+    Text(title)
+      .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+      .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+      .strikethrough(isDone)
+  }
+
+  private func timeText(_ label: String) -> some View {
+    Text(label)
+      .font(LorvexDesign.Typography.tertiaryText)
+      .foregroundStyle(.secondary)
+      .monospacedDigit()
+      .lineLimit(1)
+      .fixedSize()
   }
 
   private var titleLineLimit: Int {

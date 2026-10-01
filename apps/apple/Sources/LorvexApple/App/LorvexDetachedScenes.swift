@@ -6,6 +6,7 @@ import SwiftUI
 func lorvexDetachedScenes(store: AppStore) -> some Scene {
   WindowGroup(LorvexWindowID.detachedListTitle, for: LorvexList.ID.self) { $listID in
     DetachedListWindow(store: store, listID: listID)
+      .lorvexClockLocale()
   }
   .lorvexDefaultWindowPosition()
 
@@ -15,6 +16,7 @@ func lorvexDetachedScenes(store: AppStore) -> some Scene {
     for: StickyTaskRef.self
   ) { $ref in
     StickyTaskWindow(store: store, ref: ref)
+      .lorvexClockLocale()
   }
   .windowStyle(.hiddenTitleBar)
   .windowResizability(.contentSize)

@@ -34,11 +34,7 @@ struct MobileStoreMemoryDetailDestination: View {
         ContentUnavailableView(
           MobileDestination.memory.title,
           systemImage: "brain",
-          description: Text(
-            String(
-              localized: "error.item_gone", defaultValue: "That item no longer exists.",
-              table: "Localizable",
-              bundle: MobileL10n.bundle))
+          description: Text(UserFacingError.Copy.standard.itemNoLongerExists)
         )
       }
     }

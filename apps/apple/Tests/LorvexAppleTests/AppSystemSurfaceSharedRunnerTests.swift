@@ -55,3 +55,40 @@ func sharedSystemIntentRunnerMutatesTasksWithoutAppleAppTargetState() async thro
   // witness a status round-trip.
   #expect(try await core.loadTask(id: lifecycleTask.id).status == .open)
 }
+
+// A Shortcuts update that names one field once rewrote every field from a
+// read-back and took the planned day from the deadline, so renaming a task
+// moved it to its due date (or cleared its day when it had no deadline) and
+// dropped its time.
+@Test
+func sharedSystemIntentUpdateWritesOnlyTheFieldsItNames() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let plannedDay = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-07-14"))
+  let dueDay = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-07-20"))
+  let task = try await core.updateTask(
+    TaskUpdateDraft(
+      id: try await core.createTask(title: "Draft the launch post", notes: "Outline first").id,
+      priority: .p1, estimatedMinutes: .set(50), dueDate: .set(dueDay),
+      plannedDate: .set(plannedDay), plannedTime: .set(600..<650), tags: ["launch"]))
+
+  let renamed = try await LorvexSystemIntentRunner.updateTask(
+    id: task.id, title: "Write the launch post", notes: nil, priority: nil,
+    estimatedMinutes: nil, plannedDate: nil, tagsText: nil, dependsOnText: nil, core: core)
+
+  #expect(renamed.title == "Write the launch post")
+  #expect(renamed.notes == "Outline first")
+  #expect(renamed.priority == .p1)
+  #expect(renamed.estimatedMinutes == 50)
+  #expect(renamed.plannedDate == plannedDay)
+  #expect(renamed.plannedTime == 600..<650)
+  #expect(renamed.dueDate == dueDay)
+  #expect(renamed.tags == ["launch"])
+
+  // A blank planned date still clears the day, and with it the time.
+  let cleared = try await LorvexSystemIntentRunner.updateTask(
+    id: task.id, title: nil, notes: nil, priority: nil, estimatedMinutes: nil,
+    plannedDate: "  ", tagsText: nil, dependsOnText: nil, core: core)
+  #expect(cleared.plannedDate == nil)
+  #expect(cleared.plannedTime == nil)
+  #expect(cleared.dueDate == dueDay)
+}

@@ -6,11 +6,13 @@ extension LorvexTaskIntentRunner {
     reminderAt: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.addTaskReminder(
-      taskID: taskID,
-      reminderAt: reminderAt,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.addTaskReminder(
+        taskID: taskID,
+        reminderAt: reminderAt,
+        core: core
+      )
+    }
   }
 
   public static func removeTaskReminder(
@@ -18,11 +20,13 @@ extension LorvexTaskIntentRunner {
     reminderID: TaskReminder.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.removeTaskReminder(
-      taskID: taskID,
-      reminderID: reminderID,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.removeTaskReminder(
+        taskID: taskID,
+        reminderID: reminderID,
+        core: core
+      )
+    }
   }
 
   public static func readDueTaskReminders(
@@ -30,11 +34,13 @@ extension LorvexTaskIntentRunner {
     limit: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [TaskReminderWithTask] {
-    try await LorvexSystemIntentRunner.readDueTaskReminders(
-      asOf: asOf,
-      limit: limit,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readDueTaskReminders(
+        asOf: asOf,
+        limit: limit,
+        core: core
+      )
+    }
   }
 
   public static func readUpcomingTaskReminders(
@@ -42,10 +48,12 @@ extension LorvexTaskIntentRunner {
     limit: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [TaskReminderWithTask] {
-    try await LorvexSystemIntentRunner.readUpcomingTaskReminders(
-      hoursAhead: hoursAhead,
-      limit: limit,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readUpcomingTaskReminders(
+        hoursAhead: hoursAhead,
+        limit: limit,
+        core: core
+      )
+    }
   }
 }

@@ -142,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
       response: response,
       completeTask: { taskID in
         do {
-          _ = try await LorvexTaskIntentRunner.completeTask(
+          _ = try await LorvexSystemIntentRunner.completeTask(
             id: taskID,
             core: LorvexCoreRuntimeFactory.makeForNotification())
         } catch {
@@ -151,7 +151,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
       },
       deferTask: { taskID in
         do {
-          _ = try await LorvexTaskIntentRunner.deferTaskUntilTomorrow(
+          _ = try await LorvexSystemIntentRunner.deferTaskUntilTomorrow(
             id: taskID,
             core: LorvexCoreRuntimeFactory.makeForNotification())
         } catch {

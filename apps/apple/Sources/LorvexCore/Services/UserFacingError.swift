@@ -101,9 +101,10 @@ public enum UserFacingError {
     }
   }
 
-  /// Localized copy for the host-supplied categories, injected by each host from
-  /// its own string catalog (the `fallbackBody` / notification-title pattern —
-  /// core stays platform-neutral and never localizes).
+  /// Localized copy for the host-supplied categories. Every Lorvex surface — the
+  /// Mac app, the iPhone and iPad app, and Siri and Shortcuts — presents
+  /// ``standard``, so a failure reads the same wherever it surfaces; a test can
+  /// build its own copy to tell the categories apart.
   public struct Copy: Sendable {
     /// Shown for ``Category/notFound`` (e.g. "That item no longer exists.").
     public let itemNoLongerExists: String
@@ -127,10 +128,37 @@ public enum UserFacingError {
       self.storageUnavailable = storageUnavailable
       self.databaseNewer = databaseNewer
     }
+
+    /// The copy in the interface language, read from the LorvexCore catalog.
+    public static var standard: Copy {
+      Copy(
+        itemNoLongerExists: String(
+          localized: "error.item_gone", defaultValue: "That item no longer exists.",
+          table: "Localizable", bundle: CoreL10n.bundle),
+        somethingWentWrong: String(
+          localized: "error.generic", defaultValue: "Something went wrong. Please try again.",
+          table: "Localizable", bundle: CoreL10n.bundle),
+        storageUnavailable: String(
+          localized: "error.storage_unavailable",
+          defaultValue:
+            "Lorvex can’t access its data storage, so this couldn’t be completed. Please restart Lorvex.",
+          table: "Localizable", bundle: CoreL10n.bundle),
+        databaseNewer: String(
+          localized: "error.database_newer",
+          defaultValue:
+            "This database was created by a newer version of Lorvex. Please update Lorvex to open it.",
+          table: "Localizable", bundle: CoreL10n.bundle))
+    }
   }
 
   /// Classify `error` into a presentation category plus the raw detail to log.
+  /// An error that carries its own classification
+  /// (``UserFacingClassifiedError``) returns it unchanged.
   public static func classify(_ error: Error) -> Classification {
+    if let classified = error as? any UserFacingClassifiedError {
+      return classified.userFacingClassification
+    }
+
     // Permanently-fatal storage failures escalate to `unrecoverable` with
     // non-retry copy, BEFORE the transient-DatabaseError branch below (fatal
     // SQLite codes are `DatabaseError`s too). `displayMessage` stays nil so only
@@ -142,10 +170,7 @@ public enum UserFacingError {
     // A failure the app words itself shows its localized sentence; the core's
     // English description stays the technical detail.
     if let reason = Reason(error) {
-      let detail = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
-      return Classification(
-        category: .validation, displayMessage: reason.localizedMessage, technicalDetail: detail,
-        reason: reason)
+      return classification(of: error, as: reason)
     }
 
     // A GRDB failure carries SQL text and, in the "database is locked" case, an
@@ -172,9 +197,8 @@ public enum UserFacingError {
           category: .notFound, displayMessage: nil,
           technicalDetail: coreError.errorDescription ?? "notFound")
       case .emptyTitle:
-        let message = coreError.errorDescription ?? "A task title is required."
-        return Classification(
-          category: .validation, displayMessage: message, technicalDetail: message)
+        // ``Reason/titleRequired``; the reason check above returns the same.
+        return classification(of: coreError, as: .titleRequired)
       case .validation(_, let message):
         // A typed validation failure carries a clean, user-appropriate sentence;
         // show it verbatim, as the string path does for a marker-free message.
@@ -207,6 +231,16 @@ public enum UserFacingError {
     // An opaque error whose `String(describing:)` we cannot vouch for.
     return Classification(
       category: .generic, displayMessage: nil, technicalDetail: String(describing: error))
+  }
+
+  /// The classification of `error`, which the app words as `reason`: its
+  /// localized sentence is the display message, and the error's own English
+  /// description stays the technical detail.
+  private static func classification(of error: Error, as reason: Reason) -> Classification {
+    let detail = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+    return Classification(
+      category: .validation, displayMessage: reason.localizedMessage, technicalDetail: detail,
+      reason: reason)
   }
 
   /// Classify a failure known only by its message — a system error's
@@ -369,4 +403,14 @@ public enum UserFacingError {
     "does not exist",
     "doesn't exist",
   ]
+}
+
+/// An error that carries the user-facing classification of the failure it
+/// stands for, made where that failure was in hand — a failure reworded for
+/// Siri and Shortcuts, for example. ``UserFacingError/classify(_:)`` returns
+/// ``userFacingClassification`` unchanged, so wrapping a failure never loses
+/// its category, reason, or technical detail.
+public protocol UserFacingClassifiedError: Error {
+  /// The classification of the failure this error stands for.
+  var userFacingClassification: UserFacingError.Classification { get }
 }

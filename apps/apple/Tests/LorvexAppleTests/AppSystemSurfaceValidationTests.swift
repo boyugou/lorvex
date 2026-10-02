@@ -200,9 +200,10 @@ func systemIntentRunnerSearchTasksAcceptsInProgressAndActionableFilters() async 
 @Test
 func taskIntentRunnerValidatesTaskIDsForOpenTaskIntents() throws {
   #expect(try LorvexTaskIntentRunner.validatedTaskID(" task-123 ") == "task-123")
-  #expect(throws: LorvexCoreError.self) {
+  let failure = try #require(throws: LorvexIntentFailure.self) {
     try LorvexTaskIntentRunner.validatedTaskID("  ")
   }
+  #expect(failure.userFacingClassification.category == .validation)
 }
 
 @Test
@@ -250,4 +251,18 @@ func taskEntityQuerySuggestionsUseFullCorpusInsteadOfTodaySnapshot() async throw
   let suggested = try await LorvexTaskEntityQuery.suggestedEntities(core: core)
 
   #expect(suggested.contains { $0.id == offscreen.id })
+}
+
+@Test
+func systemIntentRunnerAsksForAListNameNotATaskTitle() async throws {
+  let core = try makeInMemoryCore()
+  let error = try await #require(throws: LorvexCoreError.self) {
+    _ = try await LorvexSystemIntentRunner.createList(name: "  ", description: nil, core: core)
+  }
+  guard case .validation(let field, let message) = error else {
+    Issue.record("expected a validation error, got \(error)")
+    return
+  }
+  #expect(field == "name")
+  #expect(message == "A list name is required.")
 }

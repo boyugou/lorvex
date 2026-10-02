@@ -311,9 +311,8 @@ extension SwiftLorvexCoreService {
       throw LorvexCoreError.validation(field: field, message: "A memory key is required.")
     }
     guard key.unicodeScalars.count <= ValidationLimits.kvKeyMaxChars else {
-      throw LorvexCoreError.validation(
-        field: field,
-        message: "A memory key may be at most \(ValidationLimits.kvKeyMaxChars) characters.")
+      throw ValidationError.tooLong(
+        field: field, max: ValidationLimits.kvKeyMaxChars, actual: key.unicodeScalars.count)
     }
     return key
   }

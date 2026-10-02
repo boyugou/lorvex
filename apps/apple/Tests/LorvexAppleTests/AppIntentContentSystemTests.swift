@@ -11,12 +11,12 @@ import UniformTypeIdentifiers
 @Test
 func reviewIntentPerformThrowsOnInvalidInputs() async throws {
   let amend = AmendLorvexDailyReviewIntent(date: "   ", summary: "Updated")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await amend.perform()
   }
 
   let history = ReadLorvexReviewHistoryIntent(limit: 0)
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await history.perform()
   }
 }
@@ -26,7 +26,7 @@ func reviewIntentPerformThrowsOnInvalidInputs() async throws {
 @Test
 func saveMemoryIntentPerformThrowsOnBlankKey() async throws {
   let intent = SaveLorvexMemoryIntent(key: "   ", content: "Shortcut memory")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await intent.perform()
   }
 }
@@ -96,10 +96,10 @@ func exportIntentFilesCarryContentNamesAndTypes() throws {
 
 @Test
 func systemContextIntentPerformThrowsOnInvalidInputs() async throws {
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await ReadLorvexPreferenceIntent(key: "   ").perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await SetLorvexPreferenceIntent(key: "theme", value: "   ").perform()
   }
   // DeleteLorvexPreferenceIntent now confirms before validating/mutating, so a
@@ -110,7 +110,7 @@ func systemContextIntentPerformThrowsOnInvalidInputs() async throws {
 @Test
 func readMemoryIntentPerformThrowsOnBlankKey() async throws {
   let intent = ReadLorvexMemoryIntent(key: "   ")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await intent.perform()
   }
 }

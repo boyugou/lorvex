@@ -6,7 +6,9 @@ extension LorvexTaskIntentRunner {
     notes: String?,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> String {
-    try await LorvexSystemIntentRunner.captureTask(title: title, notes: notes, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.captureTask(title: title, notes: notes, core: core)
+    }
   }
 
   /// Capture variant that returns the freshly created task so a returning
@@ -16,7 +18,9 @@ extension LorvexTaskIntentRunner {
     notes: String?,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.captureTaskReturningTask(title: title, notes: notes, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.captureTaskReturningTask(title: title, notes: notes, core: core)
+    }
   }
 
   public static func createList(
@@ -24,11 +28,13 @@ extension LorvexTaskIntentRunner {
     description: String?,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexList {
-    try await LorvexSystemIntentRunner.createList(
-      name: name,
-      description: description,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.createList(
+        name: name,
+        description: description,
+        core: core
+      )
+    }
   }
 
   public static func createHabit(
@@ -37,12 +43,14 @@ extension LorvexTaskIntentRunner {
     targetCount: Int?,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexHabit {
-    try await LorvexSystemIntentRunner.createHabit(
-      name: name,
-      cue: cue,
-      targetCount: targetCount,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.createHabit(
+        name: name,
+        cue: cue,
+        targetCount: targetCount,
+        core: core
+      )
+    }
   }
 
   public static func createCalendarEvent(
@@ -55,15 +63,17 @@ extension LorvexTaskIntentRunner {
     notes: String?,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> CalendarTimelineEvent {
-    try await LorvexSystemIntentRunner.createCalendarEvent(
-      title: title,
-      startDate: startDate,
-      startTime: startTime,
-      endTime: endTime,
-      allDay: allDay,
-      location: location,
-      notes: notes,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.createCalendarEvent(
+        title: title,
+        startDate: startDate,
+        startTime: startTime,
+        endTime: endTime,
+        allDay: allDay,
+        location: location,
+        notes: notes,
+        core: core
+      )
+    }
   }
 }

@@ -12,17 +12,17 @@ import UniformTypeIdentifiers
 func checklistIntentPerformThrowsOnBlankInputs() async throws {
   let task = LorvexTaskEntity(id: "task-id", title: "", status: "")
   let add = AddLorvexChecklistItemIntent(task: task, text: "   ")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await add.perform()
   }
 
   let toggle = ToggleLorvexChecklistItemIntent(itemID: "   ", completed: true)
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await toggle.perform()
   }
 
   let update = UpdateLorvexChecklistItemIntent(itemID: "item-id", text: "   ")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await update.perform()
   }
 
@@ -40,7 +40,7 @@ func recurrenceIntentPerformThrowsOnInvalidInputs() async throws {
   let blankTask = LorvexTaskEntity(id: "   ", title: "", status: "")
 
   let setBlankTask = SetLorvexTaskRecurrenceIntent(task: blankTask, frequency: .weekly)
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await setBlankTask.perform()
   }
 
@@ -49,7 +49,7 @@ func recurrenceIntentPerformThrowsOnInvalidInputs() async throws {
     frequency: .weekly,
     interval: 0
   )
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await setBadInterval.perform()
   }
 
@@ -58,7 +58,7 @@ func recurrenceIntentPerformThrowsOnInvalidInputs() async throws {
     frequency: .weekly,
     weekdays: "XX"
   )
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await setBadWeekday.perform()
   }
 
@@ -70,7 +70,7 @@ func recurrenceIntentPerformThrowsOnInvalidInputs() async throws {
   }
 
   let addException = AddLorvexTaskRecurrenceExceptionIntent(task: task, exceptionDate: "   ")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await addException.perform()
   }
 

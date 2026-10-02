@@ -62,6 +62,7 @@ struct SaveLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let summary = try $summary.requiredText()
     let review = try await LorvexTaskIntentRunner.saveDailyReview(
       summary: summary,
       date: date,

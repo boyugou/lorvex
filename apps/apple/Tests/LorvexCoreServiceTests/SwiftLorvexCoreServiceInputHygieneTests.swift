@@ -172,10 +172,8 @@ final class SwiftLorvexCoreServiceInputHygieneTests: XCTestCase {
     do {
       _ = try await service.upsertMemory(key: overCap, content: "x")
       XCTFail("expected the over-cap key to be rejected")
-    } catch let error as LorvexCoreError {
-      XCTAssertEqual(
-        error,
-        .validation(field: "key", message: "A memory key may be at most 200 characters."))
+    } catch let error as ValidationError {
+      XCTAssertEqual(error, .tooLong(field: "key", max: 200, actual: 201))
     }
     await XCTAssertThrowsErrorAsync(
       try await service.renameMemory(oldKey: atCap, newKey: overCap, content: nil))

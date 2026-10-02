@@ -154,24 +154,28 @@ import LorvexSystemIntents
         response: response,
         completeTask: { taskID in
           do {
-            _ = try await LorvexTaskIntentRunner.completeTask(id: taskID)
+            _ = try await LorvexSystemIntentRunner.completeTask(
+              id: taskID, core: LorvexCoreRuntimeFactory.makeForNotification())
             Self.postBackgroundMutationApplied()
           } catch {
+            let failure = UserFacingError.classify(error)
             Self.log.error(
-              "Complete notification action failed for task \(taskID, privacy: .public): \(error.localizedDescription, privacy: .private)"
+              "Complete notification action failed for task \(taskID, privacy: .public): \(failure.technicalDetail, privacy: .private)"
             )
-            Self.postNotificationActionFailure(UserFacingError.classify(error))
+            Self.postNotificationActionFailure(failure)
           }
         },
         deferTask: { taskID in
           do {
-            _ = try await LorvexTaskIntentRunner.deferTaskUntilTomorrow(id: taskID)
+            _ = try await LorvexSystemIntentRunner.deferTaskUntilTomorrow(
+              id: taskID, core: LorvexCoreRuntimeFactory.makeForNotification())
             Self.postBackgroundMutationApplied()
           } catch {
+            let failure = UserFacingError.classify(error)
             Self.log.error(
-              "Defer notification action failed for task \(taskID, privacy: .public): \(error.localizedDescription, privacy: .private)"
+              "Defer notification action failed for task \(taskID, privacy: .public): \(failure.technicalDetail, privacy: .private)"
             )
-            Self.postNotificationActionFailure(UserFacingError.classify(error))
+            Self.postNotificationActionFailure(failure)
           }
         },
         snoozeTask: { taskID in

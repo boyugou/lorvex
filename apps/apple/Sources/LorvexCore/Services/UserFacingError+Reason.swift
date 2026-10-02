@@ -10,6 +10,9 @@ extension UserFacingError {
   /// The core throws each of these as a typed error, and ``init(_:)``
   /// recognizes them by case, never by message text:
   ///
+  /// - a ``LorvexCoreError/emptyTitle`` (or the workflow's
+  ///   ``ValidationError/empty(_:)`` for `title`) for a task saved without a
+  ///   title;
   /// - a ``ValidationError/tooLong(field:max:actual:)`` for a task's title,
   ///   notes (`body`), a tag, or any other text field;
   /// - a ``LorvexCoreError/conflict(message:entity:)`` whose `entity` names the
@@ -27,6 +30,8 @@ extension UserFacingError {
   /// every other surface show the same translation. The MCP boundary never sees
   /// a reason: it renders the error's own English description.
   public enum Reason: String, Sendable, Equatable, Codable, CaseIterable {
+    /// A task saved without a title.
+    case titleRequired
     /// A task title longer than its limit.
     case titleTooLong
     /// Task notes longer than their limit.
@@ -62,6 +67,14 @@ extension UserFacingError {
     /// The reason `error` carries, or `nil` when it is none of the typed
     /// failures above.
     public init?(_ error: Error) {
+      if case LorvexCoreError.emptyTitle = error {
+        self = .titleRequired
+        return
+      }
+      if case ValidationError.empty("title") = error {
+        self = .titleRequired
+        return
+      }
       if case let ValidationError.tooLong(field, _, _) = error {
         switch field {
         case "title": self = .titleTooLong
@@ -109,6 +122,11 @@ extension UserFacingError {
     /// The sentence an alert shows for this reason, in the interface language.
     public var localizedMessage: String {
       switch self {
+      case .titleRequired:
+        String(
+          localized: "error.reason.title_required",
+          defaultValue: "A task needs a title. Add one and try again.",
+          table: "Localizable", bundle: CoreL10n.bundle)
       case .titleTooLong:
         String(
           localized: "error.reason.title_too_long",

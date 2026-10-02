@@ -23,6 +23,7 @@ struct UpdateLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let text = try $text.requiredText()
     let task = try await LorvexTaskIntentRunner.updateTaskChecklistItem(
       itemID: itemID,
       text: text

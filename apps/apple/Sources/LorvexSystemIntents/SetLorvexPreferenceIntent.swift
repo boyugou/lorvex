@@ -23,6 +23,8 @@ struct SetLorvexPreferenceIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let key = try $key.requiredText()
+    let value = try $value.requiredText()
     _ = try await LorvexTaskIntentRunner.setPreference(key: key, value: value)
     return .result(
       dialog: IntentDialog(

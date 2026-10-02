@@ -36,6 +36,7 @@ struct BatchCreateLorvexTasksIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let titles = try $titles.requiredText()
     let tasks = try await LorvexTaskIntentRunner.batchCreateTasks(
       titlesText: titles,
       notes: notes,

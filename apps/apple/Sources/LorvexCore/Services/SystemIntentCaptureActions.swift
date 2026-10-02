@@ -7,7 +7,9 @@ extension LorvexSystemIntentRunner {
     core: any LorvexCoreServicing
   ) async throws -> LorvexList {
     let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmedName.isEmpty else { throw LorvexCoreError.emptyTitle }
+    guard !trimmedName.isEmpty else {
+      throw LorvexCoreError.validation(field: "name", message: "A list name is required.")
+    }
     return try await core.createList(name: trimmedName, description: description.trimmedNilIfEmpty)
   }
 

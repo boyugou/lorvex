@@ -37,6 +37,7 @@ struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let query = try $query.requiredText()
     let events = try await LorvexTaskIntentRunner.searchCalendarEvents(
       query: query,
       from: from,

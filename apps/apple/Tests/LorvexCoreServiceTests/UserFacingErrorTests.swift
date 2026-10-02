@@ -80,11 +80,19 @@ struct UserFacingErrorTests {
       UserFacingError.message(for: classification, copy: copy) == "Mood must be between 1 and 5.")
   }
 
-  @Test("emptyTitle passes through as a validation message")
-  func emptyTitleIsValidation() {
-    let classification = UserFacingError.classify(LorvexCoreError.emptyTitle)
-    #expect(classification.category == .validation)
-    #expect(UserFacingError.message(for: classification, copy: copy) == "A task title is required.")
+  @Test("an empty title reads as the title-required reason")
+  func emptyTitleIsTheTitleRequiredReason() {
+    for error: Error in [LorvexCoreError.emptyTitle, ValidationError.empty("title")] {
+      let classification = UserFacingError.classify(error)
+      #expect(classification.category == .validation)
+      #expect(classification.reason == .titleRequired)
+      #expect(
+        UserFacingError.message(for: classification, copy: copy)
+          == UserFacingError.Reason.titleRequired.localizedMessage)
+    }
+    #expect(
+      UserFacingError.classify(LorvexCoreError.emptyTitle).technicalDetail
+        == "A task title is required.")
   }
 
   @Test("an opaque non-localized error is generic")
@@ -337,6 +345,7 @@ struct UserFacingErrorTests {
     #expect(sentences.allSatisfy { !$0.hasPrefix("error.reason.") })
 
     let keys = [
+      "error.reason.title_required",
       "error.reason.title_too_long", "error.reason.notes_too_long",
       "error.reason.tag_too_long", "error.reason.text_too_long",
       "error.reason.tag_name_taken", "error.reason.memory_name_taken",
@@ -350,6 +359,25 @@ struct UserFacingErrorTests {
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))
     let chinese = try #require(Bundle(url: lproj))
     for key in keys {
+      let value = chinese.localizedString(forKey: key, value: nil, table: "Localizable")
+      #expect(value != key, "\(key) has no zh-Hans translation")
+      #expect(value.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) }, "\(key): \(value)")
+    }
+  }
+
+  @Test("the standard copy reads the LorvexCore catalog, which translates it")
+  func standardCopyIsTranslated() throws {
+    let standard = UserFacingError.Copy.standard
+    let sentences = [
+      standard.itemNoLongerExists, standard.somethingWentWrong,
+      standard.storageUnavailable, standard.databaseNewer,
+    ]
+    #expect(Set(sentences).count == 4)
+    #expect(sentences.allSatisfy { !$0.hasPrefix("error.") })
+
+    let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))
+    let chinese = try #require(Bundle(url: lproj))
+    for key in ["error.item_gone", "error.generic", "error.storage_unavailable", "error.database_newer"] {
       let value = chinese.localizedString(forKey: key, value: nil, table: "Localizable")
       #expect(value != key, "\(key) has no zh-Hans translation")
       #expect(value.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) }, "\(key): \(value)")

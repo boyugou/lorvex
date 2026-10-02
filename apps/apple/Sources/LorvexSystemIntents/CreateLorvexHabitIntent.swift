@@ -30,6 +30,7 @@ struct CreateLorvexHabitIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let name = try $name.requiredText()
     let habit = try await LorvexTaskIntentRunner.createHabit(
       name: name,
       cue: cue,

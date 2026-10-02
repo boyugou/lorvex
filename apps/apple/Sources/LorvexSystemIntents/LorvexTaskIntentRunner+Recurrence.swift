@@ -10,22 +10,26 @@ extension LorvexTaskIntentRunner {
     count: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.setTaskRecurrence(
-      taskID: taskID,
-      frequency: frequency,
-      interval: interval,
-      weekdaysText: weekdaysText,
-      until: until,
-      count: count,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.setTaskRecurrence(
+        taskID: taskID,
+        frequency: frequency,
+        interval: interval,
+        weekdaysText: weekdaysText,
+        until: until,
+        count: count,
+        core: core
+      )
+    }
   }
 
   public static func removeTaskRecurrence(
     taskID: LorvexTask.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.removeTaskRecurrence(taskID: taskID, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.removeTaskRecurrence(taskID: taskID, core: core)
+    }
   }
 
   public static func addTaskRecurrenceException(
@@ -33,11 +37,13 @@ extension LorvexTaskIntentRunner {
     exceptionDate: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.addTaskRecurrenceException(
-      taskID: taskID,
-      exceptionDate: exceptionDate,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.addTaskRecurrenceException(
+        taskID: taskID,
+        exceptionDate: exceptionDate,
+        core: core
+      )
+    }
   }
 
   public static func removeTaskRecurrenceException(
@@ -45,10 +51,12 @@ extension LorvexTaskIntentRunner {
     exceptionDate: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.removeTaskRecurrenceException(
-      taskID: taskID,
-      exceptionDate: exceptionDate,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.removeTaskRecurrenceException(
+        taskID: taskID,
+        exceptionDate: exceptionDate,
+        core: core
+      )
+    }
   }
 }

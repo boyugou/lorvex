@@ -29,6 +29,7 @@ struct SearchLorvexTasksIntent: LorvexLocalAuthIntent {
   }
 
   func perform() async throws -> some IntentResult & ReturnsValue<[LorvexTaskEntity]> & ProvidesDialog {
+    let query = try $query.requiredText()
     let result = try await LorvexTaskIntentRunner.searchTasks(
       query: query,
       status: status?.rawValue,

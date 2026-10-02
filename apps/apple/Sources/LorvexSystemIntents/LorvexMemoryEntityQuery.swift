@@ -4,15 +4,23 @@ import LorvexCore
 struct LorvexMemoryEntityQuery: EntityQuery, EntityStringQuery {
   func entities(for identifiers: [LorvexMemoryEntity.ID]) async throws -> [LorvexMemoryEntity] {
     let core = LorvexCoreRuntimeFactory.makeForAppIntent()
-    return try await Self.entities(for: identifiers, core: core)
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.entities(for: identifiers, core: core)
+    }
   }
 
   func suggestedEntities() async throws -> [LorvexMemoryEntity] {
-    try await Self.suggestedEntities(core: LorvexCoreRuntimeFactory.makeForAppIntent())
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.suggestedEntities(core: core)
+    }
   }
 
   func entities(matching string: String) async throws -> [LorvexMemoryEntity] {
-    try await Self.entities(matching: string, core: LorvexCoreRuntimeFactory.makeForAppIntent())
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.entities(matching: string, core: core)
+    }
   }
 
   static func entities(

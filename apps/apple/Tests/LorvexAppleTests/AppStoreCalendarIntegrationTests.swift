@@ -523,6 +523,46 @@ func appStoreAddTaskToCalendarBindsLinkRow() async throws {
 
 @MainActor
 @Test
+func appStoreAddsATaskToCalendarAtItsOwnTime() async throws {
+  let access = FakeEventKitAccess()
+  let provider = FakeEventKitProvider()
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(
+    core: core,
+    eventKitCoordinator: makeCoordinator(access: access, provider: provider))
+  let day = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-06-20"))
+  #expect(await store.saveWorkingHoursPreference(start: "08:30", end: "17:00"))
+
+  let timed = try await core.updateTask(
+    TaskUpdateDraft(
+      id: try await core.createTask(title: "Timed calendar task", notes: "").id,
+      plannedDate: .set(day), plannedTime: .set(870..<930)))
+  let untimed = try await core.updateTask(
+    TaskUpdateDraft(
+      id: try await core.createTask(title: "Untimed calendar task", notes: "").id,
+      estimatedMinutes: .set(45), plannedDate: .set(day)))
+  await store.addTaskToCalendar(timed)
+  await store.addTaskToCalendar(untimed)
+
+  // The timed task keeps its planned time; the untimed one starts with the
+  // working day and lasts its estimate. Both stay on the planned day.
+  var events: [String: CalendarTimelineEvent] = [:]
+  for write in await access.recordedWrites() {
+    let event = try #require(try await core.getCalendarEvent(id: write.lorvexID))
+    events[event.title] = event
+  }
+  let timedEvent = try #require(events["Timed calendar task"])
+  #expect(timedEvent.startDate == "2026-06-20")
+  #expect(timedEvent.startTime == "14:30")
+  #expect(timedEvent.endTime == "15:30")
+  let untimedEvent = try #require(events["Untimed calendar task"])
+  #expect(untimedEvent.startDate == "2026-06-20")
+  #expect(untimedEvent.startTime == "08:30")
+  #expect(untimedEvent.endTime == "09:15")
+}
+
+@MainActor
+@Test
 func appStoreDoesNotAddUndatedTaskToCalendarAsToday() async throws {
   let access = FakeEventKitAccess()
   let provider = FakeEventKitProvider()

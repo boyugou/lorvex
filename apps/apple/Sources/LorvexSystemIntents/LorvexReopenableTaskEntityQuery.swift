@@ -14,11 +14,17 @@ struct LorvexReopenableTaskEntityQuery: EntityQuery, EntityStringQuery {
   }
 
   func suggestedEntities() async throws -> [LorvexReopenableTaskEntity] {
-    try await Self.suggestedEntities(core: LorvexCoreRuntimeFactory.makeForAppIntent())
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.suggestedEntities(core: core)
+    }
   }
 
   func entities(matching string: String) async throws -> [LorvexReopenableTaskEntity] {
-    try await Self.entities(matching: string, core: LorvexCoreRuntimeFactory.makeForAppIntent())
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.entities(matching: string, core: core)
+    }
   }
 
   static func entity(

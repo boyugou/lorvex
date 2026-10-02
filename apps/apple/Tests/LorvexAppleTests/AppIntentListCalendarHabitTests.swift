@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 @Test
 func createListIntentPerformThrowsOnBlankName() async throws {
   let intent = CreateLorvexListIntent(name: "   ")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await intent.perform()
   }
 }
@@ -22,7 +22,7 @@ func updateListIntentPerformThrowsOnBlankListID() async throws {
     list: LorvexListEntity(id: "   ", name: "", openCount: 0, totalCount: 0),
     name: "Inbox"
   )
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await intent.perform()
   }
 }
@@ -32,7 +32,7 @@ func readListDetailIntentPerformThrowsOnBlankListID() async throws {
   let intent = ReadLorvexListDetailIntent(
     list: LorvexListEntity(id: "   ", name: "", openCount: 0, totalCount: 0)
   )
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await intent.perform()
   }
 }
@@ -44,7 +44,7 @@ func updateCalendarEventIntentPerformThrowsOnBlankEventID() async throws {
       id: "   ", title: "", startDate: "", startTime: nil, endTime: nil, allDay: false),
     title: "Planning"
   )
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await intent.perform()
   }
 }
@@ -54,28 +54,28 @@ func calendarExtendedIntentPerformThrowsOnInvalidInputs() async throws {
   let blankTask = LorvexTaskEntity(id: "   ", title: "", status: "")
   let blankEvent = LorvexCalendarEventEntity(
     id: "   ", title: "", startDate: "", startTime: nil, endTime: nil, allDay: false)
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexCalendarTimelineIntent(from: "   ", to: "2026-05-25").perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await SearchLorvexCalendarEventsIntent(query: "   ").perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await LinkLorvexTaskToProviderEventIntent(
       task: blankTask,
       providerEventID: "provider-1"
     ).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await UnlinkLorvexTaskFromProviderEventIntent(
       task: blankTask,
       providerEventID: "provider-1"
     ).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexLinkedEventsForTaskIntent(task: blankTask).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexLinkedTasksForEventIntent(event: blankEvent).perform()
   }
 }
@@ -97,7 +97,7 @@ func deleteCalendarEventIntentPerformThrowsOnBlankEventID() async throws {
 func completeHabitIntentPerformThrowsOnBlankHabitID() async throws {
   let intent = CompleteLorvexHabitIntent(
     habit: LorvexHabitEntity(id: "   ", name: "", completionsToday: 0, targetCount: 1))
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await intent.perform()
   }
 }
@@ -106,19 +106,19 @@ func completeHabitIntentPerformThrowsOnBlankHabitID() async throws {
 func habitExtendedIntentPerformThrowsOnInvalidInputs() async throws {
   let blankHabit = LorvexHabitEntity(
     id: "   ", name: "", completionsToday: 0, targetCount: 1)
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexHabitCompletionsIntent(habit: blankHabit).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexHabitStatsIntent(habit: blankHabit).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await BatchCompleteLorvexHabitsIntent(habits: []).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexHabitReminderPoliciesIntent(habit: blankHabit).perform()
   }
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await UpsertLorvexHabitReminderPolicyIntent(
       habit: blankHabit,
       reminderTime: "25:99",
@@ -134,7 +134,7 @@ func updateHabitIntentPerformThrowsOnBlankHabitID() async throws {
       id: "   ", name: "", completionsToday: 0, targetCount: 1),
     name: "Read"
   )
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await intent.perform()
   }
 }

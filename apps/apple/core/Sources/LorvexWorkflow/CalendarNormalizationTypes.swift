@@ -38,10 +38,21 @@ public enum CalendarEventOpError: Error, Equatable, CustomStringConvertible, Loc
   case validation(String)
   case store(StoreError)
 
+  /// A timed event's start (`time` on `date`, both as written) does not exist
+  /// in `timezone`: a daylight-saving spring-forward transition skips over it.
+  /// Typed so the app can say so in the interface language; its description
+  /// is the English sentence the MCP boundary returns.
+  case startTimeSkipped(time: String, date: String, timezone: String)
+
   public var description: String {
     switch self {
     case .validation(let m): return m
     case .store(let e): return String(describing: e)
+    case let .startTimeSkipped(time, date, timezone):
+      return "The selected time \(time) on \(date) does not exist in "
+        + "\(timezone) - a daylight-saving spring-forward transition skipped "
+        + "over it. Please pick a wall-clock time before or after the gap "
+        + "(typically one hour earlier or later)."
     }
   }
 
@@ -56,6 +67,7 @@ public enum CalendarEventOpError: Error, Equatable, CustomStringConvertible, Loc
     switch self {
     case .validation(let m): return .validation(m)
     case .store(let s): return s
+    case .startTimeSkipped: return .validation(description)
     }
   }
 }

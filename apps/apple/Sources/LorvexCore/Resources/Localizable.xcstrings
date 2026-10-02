@@ -5439,6 +5439,636 @@
         }
       }
     },
+    "error.reason.calendar_time_skipped": {
+      "comment": "Alert shown when an event starts at a time the clocks skip on the day daylight saving time begins (for example 2:30 AM when clocks jump from 2:00 to 3:00).",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الوقت غير موجود في ذلك اليوم لأن الساعات تتقدّم مع بدء التوقيت الصيفي. اختر وقتًا قبله أو بعده."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This time doesn’t exist on that day because the clocks move forward for daylight saving time. Pick an earlier or later time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta hora no existe ese día porque los relojes se adelantan por el horario de verano. Elige una hora anterior o posterior."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette heure n’existe pas ce jour-là, car les horloges avancent pour l’heure d’été. Choisissez une heure plus tôt ou plus tard."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "उस दिन यह समय मौजूद नहीं है, क्योंकि डेलाइट सेविंग टाइम के लिए घड़ियाँ आगे बढ़ जाती हैं। इससे पहले या बाद का समय चुनें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quest’ora non esiste in quel giorno perché gli orologi vanno avanti per l’ora legale. Scegli un orario precedente o successivo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この日は夏時間の開始で時計が進むため、この時刻は存在しません。前後の時刻を選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이날은 서머타임 시작으로 시계가 앞당겨져 이 시간이 없습니다. 더 이르거나 늦은 시간을 선택하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tego dnia nie ma takiej godziny, ponieważ zegary przestawia się do przodu na czas letni. Wybierz wcześniejszą lub późniejszą godzinę."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este horário não existe nesse dia porque os relógios são adiantados para o horário de verão. Escolha um horário anterior ou posterior."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В этот день такого времени нет: часы переводятся вперёд на летнее время. Выберите более раннее или более позднее время."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цього дня такого часу немає: годинники переводять уперед на літній час. Виберіть раніший або пізніший час."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这一天因夏令时开始、时钟拨快，没有这个时间。请选一个更早或更晚的时间。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這一天因夏令時間開始、時鐘撥快，沒有這個時間。請選擇更早或更晚的時間。"
+          }
+        }
+      }
+    },
+    "error.reason.memory_name_taken": {
+      "comment": "Alert shown when an entry in Memory (what the assistant remembers) is renamed to the name of another entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توجد ذاكرة بهذا الاسم بالفعل. اختر اسمًا آخر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A memory with this name already exists. Choose another name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya existe una memoria con este nombre. Elige otro nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une mémoire porte déjà ce nom. Choisissez-en un autre."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस नाम की मेमोरी पहले से मौजूद है। कोई दूसरा नाम चुनें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esiste già una memoria con questo nome. Scegli un altro nome."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同じ名前のメモリがすでにあります。別の名前を選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "같은 이름의 메모리가 이미 있습니다. 다른 이름을 선택하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpis pamięci o tej nazwie już istnieje. Wybierz inną nazwę."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já existe uma memória com esse nome. Escolha outro nome."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запись памяти с таким названием уже существует. Выберите другое название."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запис пам’яті з такою назвою вже існує. Виберіть іншу назву."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有同名记忆，请换一个名称。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有同名記憶，請換一個名稱。"
+          }
+        }
+      }
+    },
+    "error.reason.notes_too_long": {
+      "comment": "Alert shown when a task's notes are longer than the app accepts.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الملاحظات طويلة جدًا. اختصرها ثم حاول مرة أخرى."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These notes are too long. Shorten them and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas notas son demasiado largas. Acórtalas e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ces notes sont trop longues. Raccourcissez-les, puis réessayez."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ये नोट बहुत लंबे हैं। इन्हें छोटा करके फिर से कोशिश करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queste note sono troppo lunghe. Accorciale e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メモが長すぎます。短くしてからもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메모가 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te notatki są za długie. Skróć je i spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas notas são longas demais. Encurte-as e tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заметки слишком длинные. Сократите их и попробуйте ещё раз."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нотатки задовгі. Скоротіть їх та спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "备注太长了，请缩短后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "備註太長了，請縮短後再試。"
+          }
+        }
+      }
+    },
+    "error.reason.tag_name_taken": {
+      "comment": "Alert shown when a tag is renamed to the name of another tag.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد وسم بهذا الاسم بالفعل. اختر اسمًا آخر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tag with this name already exists. Choose another name."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya existe una etiqueta con este nombre. Elige otro nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un tag porte déjà ce nom. Choisissez-en un autre."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस नाम का टैग पहले से मौजूद है। कोई दूसरा नाम चुनें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esiste già un tag con questo nome. Scegli un altro nome."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同じ名前のタグがすでにあります。別の名前を選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "같은 이름의 태그가 이미 있습니다. 다른 이름을 선택하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag o tej nazwie już istnieje. Wybierz inną nazwę."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já existe uma etiqueta com esse nome. Escolha outro nome."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тег с таким названием уже существует. Выберите другое название."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тег із такою назвою вже існує. Виберіть іншу назву."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有同名标签，请换一个名称。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已有同名標籤，請換一個名稱。"
+          }
+        }
+      }
+    },
+    "error.reason.tag_too_long": {
+      "comment": "Alert shown when one of a task's tags is longer than the app accepts.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أحد الوسوم طويل جدًا. اختصره ثم حاول مرة أخرى."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tag is too long. Shorten it and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una etiqueta es demasiado larga. Acórtala e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un tag est trop long. Raccourcissez-le, puis réessayez."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एक टैग बहुत लंबा है। उसे छोटा करके फिर से कोशिश करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un tag è troppo lungo. Accorcialo e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タグが長すぎます。短くしてからもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "태그가 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeden z tagów jest za długi. Skróć go i spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma etiqueta é longa demais. Encurte-a e tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один из тегов слишком длинный. Сократите его и попробуйте ещё раз."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один із тегів задовгий. Скоротіть його та спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标签太长了，请缩短后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "標籤太長了，請縮短後再試。"
+          }
+        }
+      }
+    },
+    "error.reason.text_too_long": {
+      "comment": "Alert shown when text the person wrote (other than a title, notes, or a tag) is longer than the app accepts.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا النص طويل جدًا. اختصره ثم حاول مرة أخرى."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This text is too long. Shorten it and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este texto es demasiado largo. Acórtalo e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce texte est trop long. Raccourcissez-le, puis réessayez."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह टेक्स्ट बहुत लंबा है। इसे छोटा करके फिर से कोशिश करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo testo è troppo lungo. Accorcialo e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "テキストが長すぎます。短くしてからもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "텍스트가 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten tekst jest za długi. Skróć go i spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este texto é longo demais. Encurte-o e tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст слишком длинный. Сократите его и попробуйте ещё раз."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст задовгий. Скоротіть його та спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容太长了，请缩短后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "內容太長了，請縮短後再試。"
+          }
+        }
+      }
+    },
+    "error.reason.title_too_long": {
+      "comment": "Alert shown when a task title is longer than the app accepts.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا العنوان طويل جدًا. اختصره ثم حاول مرة أخرى."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This title is too long. Shorten it and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este título es demasiado largo. Acórtalo e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce titre est trop long. Raccourcissez-le, puis réessayez."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह शीर्षक बहुत लंबा है। इसे छोटा करके फिर से कोशिश करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo titolo è troppo lungo. Accorcialo e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タイトルが長すぎます。短くしてからもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "제목이 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten tytuł jest za długi. Skróć go i spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este título é longo demais. Encurte-o e tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название слишком длинное. Сократите его и попробуйте ещё раз."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назва задовга. Скоротіть її та спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标题太长了，请缩短后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "標題太長了，請縮短後再試。"
+          }
+        }
+      }
+    },
     "habit.streak.days": {
       "comment": "A habit streak counted in days (\"12 days\"), as a stat value.",
       "extractionState": "manual",

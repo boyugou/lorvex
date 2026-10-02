@@ -97,7 +97,8 @@ extension SwiftLorvexCoreService {
       {
         throw LorvexCoreError.conflict(
           message: "A memory named '\(new)' already exists. Combine their content under one key "
-            + "instead of renaming '\(old)' onto it.")
+            + "instead of renaming '\(old)' onto it.",
+          entity: .memory)
       }
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()

@@ -30,11 +30,16 @@ import LorvexStore
 ///   Retrying will not help, so the host shows distinct non-retry copy — and,
 ///   for a database written by a newer build, an "update Lorvex" line.
 ///
-/// Classification runs on the core's error messages, which are authored in
-/// English at the throw sites, so the marker checks are matched against a known
-/// source language rather than localized copy. The mapping is deliberately
-/// conservative: anything it cannot vouch for as a clean validation sentence is
-/// treated as ``Category/generic`` so no raw internal string can slip through.
+/// A failure the app words itself — a ``Reason``, recognized from the core's
+/// typed error — classifies as ``Category/validation`` whose display message is
+/// the reason's localized sentence, so it reads in the interface language.
+///
+/// Every other classification runs on the core's error messages, which are
+/// authored in English at the throw sites, so the marker checks are matched
+/// against a known source language rather than localized copy. The mapping is
+/// deliberately conservative: anything it cannot vouch for as a clean
+/// validation sentence is treated as ``Category/generic`` so no raw internal
+/// string can slip through.
 ///
 /// This layer is human-alert-only. The MCP tool-result envelope reads the
 /// specific `errorDescription` directly and is unaffected.
@@ -67,21 +72,29 @@ public enum UserFacingError {
 
   /// The result of classifying an error: the presentation category, the clean
   /// message to display for ``Category/validation`` (`nil` otherwise, since the
-  /// host substitutes localized copy), and the raw technical detail to route to
-  /// `error_logs` (never shown to the user).
+  /// host substitutes localized copy), the typed ``Reason`` when the app words
+  /// the failure itself, and the raw technical detail to route to `error_logs`
+  /// (never shown to the user).
   public struct Classification: Sendable, Equatable {
     public let category: Category
-    /// The user-appropriate sentence to display for ``Category/validation``;
-    /// `nil` for ``Category/notFound`` / ``Category/generic``, whose copy the
-    /// host supplies localized.
+    /// The user-appropriate sentence to display for ``Category/validation``
+    /// (the reason's localized sentence when ``reason`` is set); `nil` for
+    /// ``Category/notFound`` / ``Category/generic``, whose copy the host
+    /// supplies localized.
     public let displayMessage: String?
+    /// The typed failure behind a ``Category/validation`` classification whose
+    /// wording the app owns, or `nil` when the message is the core's own.
+    public let reason: Reason?
     /// The original message / description (may contain a raw UUID, SQL, or an
     /// internal invariant) for the diagnostics ring. Never presented.
     public let technicalDetail: String
 
-    public init(category: Category, displayMessage: String?, technicalDetail: String) {
+    public init(
+      category: Category, displayMessage: String?, technicalDetail: String, reason: Reason? = nil
+    ) {
       self.category = category
       self.displayMessage = displayMessage
+      self.reason = reason
       self.technicalDetail = technicalDetail
     }
   }
@@ -124,6 +137,15 @@ public enum UserFacingError {
       return fatal
     }
 
+    // A failure the app words itself shows its localized sentence; the core's
+    // English description stays the technical detail.
+    if let reason = Reason(error) {
+      let detail = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+      return Classification(
+        category: .validation, displayMessage: reason.localizedMessage, technicalDetail: detail,
+        reason: reason)
+    }
+
     // A GRDB failure carries SQL text and, in the "database is locked" case, an
     // on-disk file path. A non-fatal code (locked / busy / and any other code
     // not enumerated as fatal) is transient: generic "try again", regardless of
@@ -156,7 +178,7 @@ public enum UserFacingError {
         // show it verbatim, as the string path does for a marker-free message.
         return Classification(
           category: .validation, displayMessage: message, technicalDetail: message)
-      case .conflict(let message):
+      case .conflict(let message, _):
         // A uniqueness collision carries a clean, user-appropriate sentence (the
         // colliding name + recommended action, no raw id); show it verbatim, the
         // same presentation the string path gives its marker-free message.

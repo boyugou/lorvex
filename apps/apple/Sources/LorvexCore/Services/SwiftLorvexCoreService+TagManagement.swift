@@ -59,7 +59,8 @@ extension SwiftLorvexCoreService {
       {
         throw LorvexCoreError.conflict(
           message: "A tag named '\(newTag)' already exists. Re-tag those tasks onto it "
-            + "instead of renaming '\(oldTag)' into it.")
+            + "instead of renaming '\(oldTag)' into it.",
+          entity: .tag)
       }
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()

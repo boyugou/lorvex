@@ -39,7 +39,8 @@ public extension LorvexCoreServicing {
 }
 
 /// The kind of stored entity a ``LorvexCoreError/notFound(entity:id:)`` lookup
-/// missed. ``displayName`` is the exact English noun the core interpolates into
+/// missed, or that a ``LorvexCoreError/conflict(message:entity:)`` rename
+/// collided with. ``displayName`` is the exact English noun the core interpolates into
 /// the not-found sentence, so callers branch on the case while the rendered
 /// message stays a single fixed wording per entity.
 public enum LorvexEntityKind: Sendable, Equatable {
@@ -92,11 +93,14 @@ public enum LorvexCoreError: LocalizedError, Equatable {
   /// memory onto an existing name). `message` is a clean, user-appropriate
   /// sentence that names the collision and the recommended action ("… already
   /// exists. Re-tag those tasks onto it instead …"), with no raw identifier;
-  /// ``errorDescription`` returns it verbatim and surfaces show it as-is, like a
-  /// ``validation`` message. Distinct from ``validation`` (a malformed input) and
-  /// from an internal post-mutation ``unsupportedOperation`` invariant; maps to
-  /// the `conflict` MCP wire code, matching `StoreError.staleVersion`.
-  case conflict(message: String)
+  /// ``errorDescription`` returns it verbatim, the text the MCP envelope carries.
+  /// `entity` names what was being renamed when a person can cause the
+  /// collision from the app (a tag or a memory); the alert layer then shows its
+  /// own localized sentence instead of `message`, which it otherwise shows
+  /// as-is. Distinct from ``validation`` (a malformed input) and from an
+  /// internal post-mutation ``unsupportedOperation`` invariant; maps to the
+  /// `conflict` MCP wire code, matching `StoreError.staleVersion`.
+  case conflict(message: String, entity: LorvexEntityKind? = nil)
 
   case unsupportedOperation(String)
 
@@ -120,7 +124,7 @@ public enum LorvexCoreError: LocalizedError, Equatable {
     case let .notFound(entity, id):
       if let id { "\(entity.displayName) '\(id)' not found." } else { "\(entity.displayName) not found." }
     case .validation(_, let message): message
-    case .conflict(let message): message
+    case .conflict(let message, _): message
     case .unsupportedOperation(let message): message
     case let .malformedCoreData(path, reason): "Malformed data at \(path): \(reason)."
     }

@@ -295,6 +295,8 @@ private extension CalendarEventOpError {
       LorvexCoreError.validation(field: "attendees", message: message)
     case .store(let error):
       error
+    case .startTimeSkipped:
+      self
     }
   }
 }

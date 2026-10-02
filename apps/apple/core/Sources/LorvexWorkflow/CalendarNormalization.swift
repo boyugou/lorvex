@@ -486,11 +486,8 @@ public enum CalendarNormalization {
       return .ambiguous(
         wallClock: "\(startDate) \(startTime)", timezone: tzName)
     case .skipped:
-      throw CalendarEventOpError.validation(
-        "The selected time \(startTime) on \(startDate) does not exist in "
-          + "\(tzName) - a daylight-saving spring-forward transition skipped "
-          + "over it. Please pick a wall-clock time before or after the gap "
-          + "(typically one hour earlier or later).")
+      throw CalendarEventOpError.startTimeSkipped(
+        time: startTime, date: startDate, timezone: tzName)
     }
   }
 

@@ -80,8 +80,9 @@ final class SwiftLorvexCoreServiceMemoryRenameTests: XCTestCase {
     do {
       _ = try await service.renameMemory(oldKey: "a", newKey: "b", content: nil)
       XCTFail("rename onto an existing different key must be rejected")
-    } catch let LorvexCoreError.conflict(message) {
+    } catch let LorvexCoreError.conflict(message, entity) {
       XCTAssertTrue(message.contains("already exists"), "got: \(message)")
+      XCTAssertEqual(entity, .memory, "the alert layer words a memory collision itself")
     }
     // Both entries survive untouched.
     let (aExists, bContent) = try service.read { db in

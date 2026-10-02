@@ -628,7 +628,9 @@
     /// they have added anything. `AppStore(core:)` defaults every other
     /// dependency to a no-op — no CloudKit coordinator, no EventKit, no-op
     /// schedulers/publishers — which is exactly what the snapshot dump uses;
-    /// here the scene body renders the live windows instead of exiting.
+    /// here the scene body renders the live windows instead of exiting. The
+    /// sample content is written in the language the interface runs in, so a
+    /// tour launched with `-AppleLanguages (zh-Hans)` captures Chinese tasks.
     @MainActor
     static func makeUIPreviewStore() -> AppStore {
       if CommandLine.arguments.contains("-uiPreviewEmptyStore") {
@@ -638,7 +640,8 @@
         todaySchedule: true,
         plannedDay: CommandLine.arguments.contains("-uiPreviewPlannedDay"),
         untimed: CommandLine.arguments.contains("-uiPreviewUntimed"),
-        dayState: LorvexPreviewDayState.requested))
+        dayState: LorvexPreviewDayState.requested,
+        text: LorvexSampleText(language: .running)))
     }
 
     /// Ephemeral settings for `--ui-preview`: ``LorvexUIPreview/previewDefaults``

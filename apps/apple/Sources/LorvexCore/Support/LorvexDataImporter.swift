@@ -83,7 +83,38 @@ public enum LorvexDataImporter {
     /// file is not a Lorvex backup and is rejected rather than mis-decoded.
     case missingFormatVersion
 
+    /// What the person importing the file is told, in their language: that
+    /// the file is empty, is not a Lorvex backup or is damaged past
+    /// recognition, holds nothing to import, comes from a newer Lorvex, or is
+    /// a damaged backup, each with what to do next. The decoder's specific
+    /// finding is ``diagnosticDescription``.
     public var errorDescription: String? {
+      switch self {
+      case .emptyFile:
+        String(
+          localized: "import.error.empty_file", defaultValue: "The selected file is empty.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .noImportableData:
+        String(
+          localized: "import.error.no_data", defaultValue: "This backup has no data to import.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .incompatibleManifest(let found, let supported),
+        .incompatibleFormatVersion(let found, let supported),
+        .incompatibleNativeTaskGraph(let found, let supported):
+        Self.isNewerVersion(found, than: supported) ? Self.newerVersionMessage : Self.notABackupMessage
+      case .malformedJSON, .malformedZip, .missingManifest, .missingPayloadManifest,
+        .missingFormatVersion, .unexpectedArchiveEntry, .unexpectedJSONMember:
+        Self.notABackupMessage
+      case .manifestCountMismatch, .duplicateArchiveEntry, .invalidNativeTaskGraph,
+        .inconsistentTaskRepresentations, .inconsistentBackupContents:
+        Self.damagedMessage
+      }
+    }
+
+    /// The decoder's specific finding, in English ("The archive repeats the
+    /// entry \"tasks.json\" …"), for logs and tests. The interface shows
+    /// ``errorDescription`` instead.
+    public var diagnosticDescription: String {
       switch self {
       case .emptyFile:
         "The selected file is empty."
@@ -120,6 +151,40 @@ public enum LorvexDataImporter {
       case .missingFormatVersion:
         "The file has no Lorvex export format version and can't be imported as a backup."
       }
+    }
+
+    private static var notABackupMessage: String {
+      String(
+        localized: "import.error.not_a_backup",
+        defaultValue: "This file isn’t a Lorvex backup, or it’s damaged. Choose a file exported from Lorvex.",
+        table: "Localizable", bundle: CoreL10n.bundle)
+    }
+
+    private static var newerVersionMessage: String {
+      String(
+        localized: "import.error.newer_version",
+        defaultValue: "This backup was made by a newer version of Lorvex. Update Lorvex on this device, then try again.",
+        table: "Localizable", bundle: CoreL10n.bundle)
+    }
+
+    private static var damagedMessage: String {
+      String(
+        localized: "import.error.damaged",
+        defaultValue:
+          "This backup is damaged and can’t be imported. Export it again on the device it came from, then try again.",
+        table: "Localizable", bundle: CoreL10n.bundle)
+    }
+
+    /// Whether the version a file declares is later than every version this
+    /// build reads. Versions are whole numbers, and `supported` lists the
+    /// readable ones separated by commas ("1", "1, 2"); a version that is not a
+    /// whole number is never newer, since no Lorvex writes one.
+    private static func isNewerVersion(_ found: String, than supported: String) -> Bool {
+      let readable = supported.split(separator: ",").compactMap {
+        Int($0.trimmingCharacters(in: .whitespaces))
+      }
+      guard let version = Int(found), let newest = readable.max() else { return false }
+      return version > newest
     }
   }
 }

@@ -22,6 +22,7 @@ struct MobileTaskDependenciesSection: View {
 
   /// The resolved dependencies, `nil` until the first resolution lands.
   @State private var resolvedDependencies: [LorvexTask]?
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     if !task.dependsOn.isEmpty {
@@ -74,16 +75,16 @@ struct MobileTaskDependenciesSection: View {
             .accessibilityHidden(true)
         }
         VStack(alignment: .leading, spacing: 2) {
-          Text(dependency.title)
+          Text(userContent: dependency.title)
             .foregroundStyle(dependency.status.isResolved ? .secondary : .primary)
-          if let facts = MobileDependencyFacts(task: dependency) {
+          if let facts = MobileDependencyFacts(task: dependency, timeZone: productTimeZone) {
             facts
           }
         }
       }
       .padding(.top, completeDependency == nil ? 0 : LorvexDesign.Spacing.xs)
     }
-    .accessibilityValue(MobileDependencyFacts.accessibilityValue(for: dependency))
+    .accessibilityValue(taskDependencyAccessibilityValue(dependency, timeZone: productTimeZone))
     .accessibilityIdentifier("task.detail.waitsOn.row")
   }
 

@@ -59,7 +59,7 @@ extension HabitsWorkspaceView {
 
   func archivedRow(_ habit: LorvexHabit) -> some View {
     HStack(spacing: LorvexDesign.Spacing.m) {
-      Image(systemName: habit.icon ?? "repeat.circle")
+      Image(systemName: LorvexSymbol.name(for: habit.icon, fallback: "repeat.circle"))
         .foregroundStyle(.secondary)
         .frame(width: 20)
       Text(habit.name)

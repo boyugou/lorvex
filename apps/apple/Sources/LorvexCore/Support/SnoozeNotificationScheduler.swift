@@ -68,20 +68,4 @@ public struct SnoozeNotificationScheduler {
       trigger: trigger
     )
   }
-
-  /// From `pendingIdentifiers`, the snooze identifiers whose task is no longer
-  /// active — completed, cancelled, or deleted, i.e. absent from
-  /// `activeTaskIDs`. A snooze is a one-shot "remind me in 1h"; once its task is
-  /// done it must be cancelled rather than fire for a finished task. Pure so it
-  /// can be unit-tested without `UNUserNotificationCenter`; the live scheduler's
-  /// `cancelSnoozes` feeds it the center's pending identifiers.
-  public static func staleSnoozeIdentifiers(
-    pendingIdentifiers: [String],
-    activeTaskIDs: Set<LorvexTask.ID>
-  ) -> [String] {
-    let prefix = ScheduledTaskReminder.snoozeIdentifierPrefix
-    return pendingIdentifiers
-      .filter { $0.hasPrefix(prefix) }
-      .filter { !activeTaskIDs.contains(String($0.dropFirst(prefix.count))) }
-  }
 }

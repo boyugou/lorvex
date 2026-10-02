@@ -2,6 +2,7 @@
 import Foundation
 import LorvexCloudSync
 import LorvexCore
+import LorvexDomain
 import Testing
 
 @testable import LorvexApple
@@ -120,14 +121,12 @@ func appStoreCloudSyncCycleCoalescesOverlappingTriggers() async throws {
   #expect(!store.cloudSyncCycleFlight.isPendingRerun)
 }
 
-// A pass that runs outside a refresh (the post-mutation drain, or one the
-// engine ran on its own) and fetches records it cannot attribute — this
-// device's own uploads coming back, all skipped as already applied — falls
-// back to a full local reload. That reload must not wait on the pass running
-// it; if it did, the pass and the refresh would each wait for the other.
+// A pass that fetches only this device's own uploads coming back skips every
+// record as already applied. Nothing changed, so nothing reloads: an echo of
+// each local write must not cost a second read of every surface.
 @MainActor
-@Test("an unattributable inbound page outside a refresh reloads without wedging either flight")
-func appStoreUnattributableInboundOutsideRefreshDoesNotWedge() async throws {
+@Test("a pass that fetches only this device's own uploads reloads nothing")
+func appStoreOwnUploadsComingBackReloadNothing() async throws {
   let preview = try await makeSeededInMemoryCore()
   let core = StubCoreService(preview: preview)
   let sync = TestCloudSync(store: preview)
@@ -135,6 +134,34 @@ func appStoreUnattributableInboundOutsideRefreshDoesNotWedge() async throws {
   let echo = await sync.controller.nextBatch(scope: .all)
   try #require(!echo.isEmpty)
   try await sync.deliverOnFirstFetch(echo)
+  let store = AppStore(
+    core: core,
+    cloudSyncMode: .live,
+    cloudSyncController: sync.controller)
+  let loadsBefore = core.loadTodayCallCount
+
+  await store.runCloudSyncCycle()
+
+  #expect(core.loadTodayCallCount == loadsBefore)
+  #expect(!store.isRefreshing)
+  #expect(!store.cloudSyncCycleFlight.isRunning)
+}
+
+// A pass that runs outside a refresh (the post-mutation drain, or one the
+// engine ran on its own) and applies a change no domain bounds — here a peer's
+// preference edit — falls back to a full local reload. That reload must not
+// wait on the pass running it; if it did, the pass and the refresh would each
+// wait for the other.
+@MainActor
+@Test("an unattributable inbound change outside a refresh reloads without wedging either flight")
+func appStoreUnattributableInboundOutsideRefreshDoesNotWedge() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let (_, records) = try await TestCloudSync.peerRecords { peer in
+    try await peer.setPreference(key: PreferenceKeys.prefTimezone, value: "Pacific/Auckland")
+  }
+  let sync = TestCloudSync(store: preview)
+  try await sync.deliverOnFirstFetch(records)
   let store = AppStore(
     core: core,
     cloudSyncMode: .live,
@@ -191,4 +218,34 @@ func appStoreLocalRefreshDoesNotWaitOnInFlightCycle() async throws {
   await cycle.value
   await refresh.value
   #expect(!store.isCloudSyncCycleRunning)
+}
+
+// A task action must not wait on CloudKit: its feedback and its undo step
+// follow the local write, while the sync pass the write starts may still be
+// waiting on the network.
+@MainActor
+@Test(
+  "completing a task registers its undo step while its sync pass waits on the network",
+  .timeLimit(.minutes(1)))
+func appStoreTaskActionDoesNotWaitOnItsSyncPass() async throws {
+  let preview = try await makeSeededInMemoryCore()
+  let core = StubCoreService(preview: preview)
+  let accountGate = AppStoreCloudSyncAccountGate()
+  let sync = TestCloudSync(store: preview, accountChecker: accountGate)
+  let store = AppStore(
+    core: core,
+    cloudSyncMode: .live,
+    cloudSyncController: sync.controller)
+  let undoManager = UndoManager()
+
+  await store.completeTask(id: LorvexPreviewSeedID.agendaTask, undoManager: undoManager)
+
+  await accountGate.waitUntilEntered()
+  #expect(store.isCloudSyncCycleRunning, "the completion's sync pass is still waiting")
+  #expect(undoManager.canUndo, "⌘Z reopens the task before the pass ends")
+
+  await accountGate.release()
+  for _ in 0..<500 where store.isCloudSyncCycleRunning {
+    try await Task.sleep(for: .milliseconds(10))
+  }
 }

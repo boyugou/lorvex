@@ -28,17 +28,27 @@ private func makeStore(_ suiteName: String) async throws -> AppStore {
   return AppStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
 }
 
-/// The floor the enforcer actually applies for `window`: the pane-derived
-/// minimum, clamped to the screen's visible width exactly as
-/// `WindowMinWidthEnforcer.Coordinator.enforce()` clamps it. Without the clamp
-/// the three-pane floor (1000 + 320) exceeds a 13" display, and the enforcer
-/// deliberately never demands more width than the screen can give.
+/// A screen wide enough for the sidebar, the workspace, and the inspector.
+private let wideScreenWidth: CGFloat = 1920
+
+/// The visible width of a 13-inch display at a larger text size, narrower than
+/// the three columns' 1320pt.
+private let narrowScreenWidth: CGFloat = 1147
+
+/// A coordinator that sees every window on a screen `screenWidth` wide, so the
+/// tests do not depend on the displays of the machine running them.
 @MainActor
-private func enforcedFloor(for window: NSWindow, inspectorOpen: Bool) -> CGFloat {
-  var width = LorvexWindowID.main.minimumContentSize.width
-  if inspectorOpen { width += MainWindowLayoutMetrics.inspectorIdealWidth }
-  if let screen = window.screen { width = min(width, screen.visibleFrame.width) }
-  return width
+private func makeCoordinator(
+  store: AppStore, layout: MainWindowLayout = MainWindowLayout(), screenWidth: CGFloat
+) -> WindowMinWidthEnforcer.Coordinator {
+  WindowMinWidthEnforcer.Coordinator(store: store, layout: layout, screenWidth: { _ in screenWidth })
+}
+
+/// The floor with the sidebar showing: the two-column base, plus the
+/// inspector's ideal width while it is open.
+private func sidebarFloor(inspectorOpen: Bool) -> CGFloat {
+  LorvexWindowID.main.minimumContentSize.width
+    + (inspectorOpen ? MainWindowLayoutMetrics.inspectorIdealWidth : 0)
 }
 
 /// Poll until `condition` holds (the Observation onChange hop is async).
@@ -63,16 +73,16 @@ func enforcerRaisesFloorAndGrowsWindowWhenTaskSelected() async throws {
   let window = makeWindow(width: 1000)
   defer { window.close() }
 
-  let coordinator = WindowMinWidthEnforcer.Coordinator(store: store)
+  let coordinator = makeCoordinator(store: store, screenWidth: wideScreenWidth)
   coordinator.attach(to: window)
 
-  let base = enforcedFloor(for: window, inspectorOpen: false)
+  let base = sidebarFloor(inspectorOpen: false)
   #expect(window.contentMinSize.width == base)
 
   // Selecting a task raises the floor by the inspector's ideal width and
   // grows the too-narrow window on the spot.
   store.selectedTaskID = store.today.tasks.first?.id ?? "task-1"
-  let expected = enforcedFloor(for: window, inspectorOpen: true)
+  let expected = sidebarFloor(inspectorOpen: true)
   let grew = await eventually {
     window.contentMinSize.width == expected
       && window.contentRect(forFrameRect: window.frame).width >= expected
@@ -89,9 +99,9 @@ func enforcerSnapsBackAfterResizeBelowFloor() async throws {
   let window = makeWindow(width: 1400)
   defer { window.close() }
 
-  let coordinator = WindowMinWidthEnforcer.Coordinator(store: store)
+  let coordinator = makeCoordinator(store: store, screenWidth: wideScreenWidth)
   coordinator.attach(to: window)
-  let expected = enforcedFloor(for: window, inspectorOpen: true)
+  let expected = sidebarFloor(inspectorOpen: true)
   _ = await eventually { window.contentMinSize.width == expected }
 
   // Programmatic resizes bypass contentMinSize; the resize hook must snap
@@ -112,15 +122,53 @@ func enforcerLowersFloorWhenSelectionClears() async throws {
   let window = makeWindow(width: 1400)
   defer { window.close() }
 
-  let coordinator = WindowMinWidthEnforcer.Coordinator(store: store)
+  let coordinator = makeCoordinator(store: store, screenWidth: wideScreenWidth)
   coordinator.attach(to: window)
-  let raised = enforcedFloor(for: window, inspectorOpen: true)
+  let raised = sidebarFloor(inspectorOpen: true)
   _ = await eventually { window.contentMinSize.width == raised }
 
   store.selectedTaskID = nil
-  let base = enforcedFloor(for: window, inspectorOpen: false)
+  let base = sidebarFloor(inspectorOpen: false)
   let lowered = await eventually { window.contentMinSize.width == base }
   #expect(lowered, "closing the inspector returns the floor to the base minimum")
   // The window itself keeps its size — only the floor moves.
   #expect(window.contentRect(forFrameRect: window.frame).width >= raised)
+}
+
+@MainActor
+@Test
+func enforcerGivesTheSidebarsPlaceToTheInspectorOnANarrowScreen() async throws {
+  let store = try await makeStore("WindowMinWidthEnforcer.narrow.\(UUID().uuidString)")
+  await store.refresh()
+  store.selectedTaskID = nil
+  let window = makeWindow(width: 1000)
+  defer { window.close() }
+
+  let layout = MainWindowLayout()
+  let coordinator = makeCoordinator(store: store, layout: layout, screenWidth: narrowScreenWidth)
+  coordinator.attach(to: window)
+  #expect(layout.screenWidth == narrowScreenWidth)
+
+  // ContentView reports the inspector opening; on a screen without room for
+  // three columns the sidebar hides, and the floor is the workspace plus the
+  // inspector, which the screen holds.
+  store.selectedTaskID = store.today.tasks.first?.id ?? "task-1"
+  layout.inspectorDidChange(isOpen: true)
+  #expect(layout.columnVisibility == .detailOnly)
+  let expected = MainWindowLayout.columnsWidth(sidebar: false, inspector: true)
+  #expect(expected <= narrowScreenWidth)
+  let fitted = await eventually {
+    window.contentMinSize.width == expected
+      && window.contentRect(forFrameRect: window.frame).width >= expected
+  }
+  #expect(fitted, "the window must hold the workspace and the inspector")
+
+  // Closing the inspector shows the sidebar again at the two-column floor.
+  store.selectedTaskID = nil
+  layout.inspectorDidChange(isOpen: false)
+  #expect(layout.columnVisibility == .all)
+  let restored = await eventually {
+    window.contentMinSize.width == sidebarFloor(inspectorOpen: false)
+  }
+  #expect(restored)
 }

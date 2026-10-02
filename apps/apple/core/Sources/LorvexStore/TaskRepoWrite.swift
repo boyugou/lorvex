@@ -322,13 +322,16 @@ extension TaskRepo {
         appendSetValue("status", status.rawValue)
         lifecycleRegisterChanged = true
         recurrenceLifecycleCoupling = before.isTerminal != status.isTerminal
-        if status.isTerminal {
+        // The rollover columns change only when the status crosses the
+        // terminal boundary; rewriting a terminal status keeps the rollover
+        // decision and its authorized successor.
+        if status.isTerminal && !before.isTerminal {
           assignedColumns.insert("recurrence_rollover_state")
           assignedColumns.insert("recurrence_successor_id")
           setClauses.append(
             "recurrence_rollover_state = CASE WHEN recurrence IS NULL THEN 'none' ELSE 'ended' END")
           setClauses.append("recurrence_successor_id = NULL")
-        } else if before.isTerminal {
+        } else if before.isTerminal && !status.isTerminal {
           assignedColumns.insert("recurrence_rollover_state")
           assignedColumns.insert("recurrence_successor_id")
           setClauses.append(

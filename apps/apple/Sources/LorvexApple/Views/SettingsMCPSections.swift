@@ -3,17 +3,22 @@ import LorvexCore
 import SwiftUI
 
 extension SettingsView {
+  /// Connecting an assistant, the assistants that have used Lorvex here, and,
+  /// last, the manual setup most people never need.
   var mcpSection: some View {
     Group {
       SettingsAssistantConnectSection()
       SettingsAssistantSessionsSection(core: store.core)
+      SettingsMCPConnectionPanel(setup: MCPClientSetup.current())
     }
   }
 }
 
-/// How to point an external AI client at this app's MCP host. The fastest path
-/// is the setup prompt the assistant applies to its own config; the JSON snippet
-/// and raw command path cover manual and other clients.
+/// How to point an external AI client at this app's MCP host: the setup prompt
+/// the assistant applies to its own config, copied from the row's trailing
+/// button, with what the helper does and whom to trust as the footer under it.
+/// The JSON snippet and raw command path for manual setup are a group of their
+/// own at the end of the pane (``SettingsMCPConnectionPanel``).
 ///
 /// The group leads with the bundled helper's problem when its self-check finds
 /// one, and says nothing about a working helper: the assistants listed below
@@ -22,16 +27,40 @@ extension SettingsView {
 /// so it runs even while no problem shows.
 private struct SettingsAssistantConnectSection: View {
   @State private var helperStatus: MCPHelperProbeStatus = .ready
+  @State private var copied = false
 
   var body: some View {
-    Section(String(
-      localized: "settings.mcp.connect_section", defaultValue: "Connect an Assistant",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)) {
+    Section {
       if let problem = SettingsMCPHelperProblemRow(status: helperStatus) {
         problem
       }
-      SettingsMCPConnectionPanel(setup: MCPClientSetup.current())
+      LabeledContent {
+        Button {
+          copy(MCPClientSetup.current().setupPrompt)
+        } label: {
+          SettingsCopyButtonTitle(copied: copied)
+        }
+        .buttonStyle(.borderedProminent)
+        .accessibilityLabel(String(localized: "settings.mcp.copy_prompt", defaultValue: "Copy Setup Prompt", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("settings.mcp.copyPrompt")
+      } label: {
+        Label(
+          String(localized: "settings.mcp.setup_prompt", defaultValue: "Setup Prompt", table: "Localizable", bundle: LorvexL10n.bundle),
+          systemImage: "sparkles")
+      }
+    } header: {
+      Text(String(
+        localized: "settings.mcp.connect_section", defaultValue: "Connect an Assistant",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle))
+    } footer: {
+      Text(LocalizedStringResource(
+        "settings.mcp.connect_blurb",
+        defaultValue:
+          "Lorvex is built for an assistant to do most of the work: your AI client launches Lorvex’s built-in helper to read and update tasks, lists, habits, memory, reviews, and calendar entries. Copy the setup prompt only into assistants you trust.",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle
+      ))
     }
     .task {
       let status = await Self.currentStatus()
@@ -46,6 +75,16 @@ private struct SettingsAssistantConnectSection: View {
       if LorvexUIPreview.isActive { return .ready }
     #endif
     return await MCPHelperProbe.probe()
+  }
+
+  private func copy(_ value: String) {
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(value, forType: .string)
+    copied = true
+    Task { @MainActor in
+      try? await Task.sleep(for: .seconds(1.4))
+      copied = false
+    }
   }
 }
 
@@ -92,8 +131,7 @@ private struct SettingsAssistantSessionsSection: View {
     // A preview run pins its clock, so the seeded sessions read the same in
     // every capture.
     let now = LorvexPreviewClock.now(in: Calendar.current)
-    let relative = LorvexDateFormatters.namedRelative.localizedString(
-      for: session.lastActiveAt, relativeTo: now)
+    let relative = LorvexDateFormatters.relative(session.lastActiveAt, to: now)
     return String(
       format: String(
         localized: "settings.mcp.session_last_used", defaultValue: "Last used %@",
@@ -102,48 +140,45 @@ private struct SettingsAssistantSessionsSection: View {
   }
 }
 
+/// Manual setup for clients that take a JSON config or a command path, folded
+/// behind "Advanced" in a group at the end of the Assistant pane: the snippet,
+/// selectable, with its two copy buttons at the trailing edge of the line
+/// above it.
 private struct SettingsMCPConnectionPanel: View {
   let setup: MCPClientSetup
   @State private var advancedExpanded = false
   @State private var copiedKind: String?
 
   var body: some View {
-    Group {
-      Text(LocalizedStringResource(
-        "settings.mcp.connect_blurb",
-        defaultValue:
-          "Lorvex is built for an assistant to do most of the work: your AI client launches Lorvex’s built-in helper to read and update tasks, lists, habits, memory, reviews, and calendar entries. Copy the setup prompt below only into assistants you trust.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ))
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-      .fixedSize(horizontal: false, vertical: true)
-
-      Button {
-        copy(setup.setupPrompt)
-      } label: {
-        Label(
-          copiedKind == "prompt"
-            ? String(localized: "common.copied", defaultValue: "Copied", table: "Localizable", bundle: LorvexL10n.bundle)
-            : String(localized: "settings.mcp.copy_prompt", defaultValue: "Copy Setup Prompt", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: copiedKind == "prompt" ? "checkmark" : "sparkles"
-        )
-      }
-      .buttonStyle(.borderedProminent)
-      .accessibilityIdentifier("settings.mcp.copyPrompt")
-
-      // The raw JSON config and command path are manual-setup details most
-      // users never need — keep them available but collapsed.
+    Section {
       SettingsAdvancedDisclosureButton(
         isExpanded: $advancedExpanded,
         accessibilityIdentifier: "settings.mcp.advancedToggle")
 
       if advancedExpanded {
-        Text(LocalizedStringResource("settings.mcp.manual_label", defaultValue: "Manual MCP client config:", table: "Localizable", bundle: LorvexL10n.bundle))
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
+        LabeledContent {
+          HStack(spacing: LorvexDesign.Spacing.s) {
+            Button {
+              copy(setup.commandPath, kind: "command")
+            } label: {
+              SettingsCopyButtonTitle(
+                title: String(localized: "settings.mcp.copy_command", defaultValue: "Copy Command Path", table: "Localizable", bundle: LorvexL10n.bundle),
+                copied: copiedKind == "command")
+            }
+            .accessibilityIdentifier("settings.mcp.copyCommand")
+
+            Button {
+              copy(setup.jsonSnippet, kind: "config")
+            } label: {
+              SettingsCopyButtonTitle(
+                title: String(localized: "settings.mcp.copy_config", defaultValue: "Copy Config", table: "Localizable", bundle: LorvexL10n.bundle),
+                copied: copiedKind == "config")
+            }
+            .accessibilityIdentifier("settings.mcp.copyConfig")
+          }
+        } label: {
+          Text(LocalizedStringResource("settings.mcp.manual_label", defaultValue: "Manual Setup", table: "Localizable", bundle: LorvexL10n.bundle))
+        }
 
         Text(setup.jsonSnippet)
           .font(LorvexDesign.Typography.tertiaryText.monospaced())
@@ -154,35 +189,11 @@ private struct SettingsMCPConnectionPanel: View {
           .padding(.vertical, LorvexDesign.Spacing.xs)
           .background(LorvexDesign.Palette.insetFill, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
           .accessibilityIdentifier("settings.mcp.configSnippet")
-
-        Button {
-          copy(setup.jsonSnippet, kind: "config")
-        } label: {
-          Label(
-            copiedKind == "config"
-              ? String(localized: "common.copied", defaultValue: "Copied", table: "Localizable", bundle: LorvexL10n.bundle)
-              : String(localized: "settings.mcp.copy_config", defaultValue: "Copy Config", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: copiedKind == "config" ? "checkmark" : "curlybraces"
-          )
-        }
-        .accessibilityIdentifier("settings.mcp.copyConfig")
-
-        Button {
-          copy(setup.commandPath, kind: "command")
-        } label: {
-          Label(
-            copiedKind == "command"
-              ? String(localized: "common.copied", defaultValue: "Copied", table: "Localizable", bundle: LorvexL10n.bundle)
-              : String(localized: "settings.mcp.copy_command", defaultValue: "Copy Command Path", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: copiedKind == "command" ? "checkmark" : "terminal"
-          )
-        }
-        .accessibilityIdentifier("settings.mcp.copyCommand")
       }
     }
   }
 
-  private func copy(_ value: String, kind: String = "prompt") {
+  private func copy(_ value: String, kind: String) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(value, forType: .string)
     copiedKind = kind

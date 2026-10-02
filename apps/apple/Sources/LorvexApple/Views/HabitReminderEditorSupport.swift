@@ -20,9 +20,9 @@ enum HabitReminderMode: CaseIterable {
   }
 }
 
-/// Conversions between the stored "HH:mm" reminder strings and the `Date`s the
-/// `LorvexTimeChip` picker reads/writes, plus the "throughout the day" spacing
-/// math. Times are minutes-of-day on an arbitrary reference day; only the hour
+/// Conversions between the stored "HH:mm" reminder strings and the `Date`s
+/// the reminder time controls read and write, plus the "throughout the day"
+/// spacing math. Times are minutes-of-day on an arbitrary reference day; only the hour
 /// and minute matter.
 enum HabitReminderTime {
   static var calendar: Calendar { Calendar.current }
@@ -82,19 +82,22 @@ enum HabitReminderTime {
     return Int((Double(end - start) / Double(count)).rounded())
   }
 
-  /// A sensible default time for a freshly added reminder: an hour after the
-  /// latest existing "HH:mm" reminder (wrapping within the day), else 9:00.
-  static func suggestedNext(afterTimes times: [String]) -> Date {
-    guard let latest = times.compactMap({ minutesOfDay($0) }).max() else {
-      return date(fromClock: "09:00")
+  /// The "HH:mm" time a newly added reminder takes: an hour after the latest
+  /// of `times` (9:00 when there are none), wrapping within the day, moved on
+  /// an hour at a time past any time already taken, and five minutes at a
+  /// time once every such hour is. Never one of `times` unless all 288
+  /// five-minute slots of the day are.
+  static func nextFreeClock(after times: [String]) -> String {
+    let taken = Set(times.compactMap(minutesOfDay))
+    let day = 24 * 60
+    let start = taken.max().map { ($0 + 60) % day } ?? 9 * 60
+    for step in [60, 5] {
+      for index in 0..<(day / step) {
+        let minutes = (start + index * step) % day
+        if !taken.contains(minutes) { return clock(from: date(fromMinutes: minutes)) }
+      }
     }
-    return date(fromMinutes: (latest + 60) % (24 * 60))
-  }
-
-  /// A sensible default time for a freshly added reminder: an hour after the
-  /// latest existing reminder (wrapping within the day), else 9:00.
-  static func suggestedNext(after policies: [HabitReminderPolicy]) -> Date {
-    suggestedNext(afterTimes: policies.map(\.reminderTime))
+    return clock(from: date(fromMinutes: start))
   }
 }
 
@@ -110,30 +113,21 @@ enum HabitReminderHint {
     case "times_per_week":
       let n = habit.perPeriodTarget ?? habit.targetCount
       return String(
-        format: String(
-          localized: "habits.reminders.hint.times_per_week",
-          defaultValue: "Nudges on days you’re behind, until you’ve logged %lld this week.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        n)
+        localized: "habits.reminders.hint.times_per_week",
+        defaultValue: "Nudges on days you’re behind, until you’ve logged \(n) this week.",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     case "monthly":
       let day = habit.dayOfMonth ?? 1
       return String(
-        format: String(
-          localized: "habits.reminders.hint.monthly",
-          defaultValue: "Reminds on day %lld each month, and stops once it’s done.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        day)
+        localized: "habits.reminders.hint.monthly",
+        defaultValue: "Reminds on day \(day) each month, and stops once it’s done.",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     case "daily", "weekly":
       if habit.targetCount > 1 {
         return String(
-          format: String(
-            localized: "habits.reminders.hint.multi",
-            defaultValue: "Stops once you log %lld today.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          habit.targetCount)
+          localized: "habits.reminders.hint.multi",
+          defaultValue: "Stops once you log \(habit.targetCount) today.",
+          table: "Localizable", bundle: LorvexL10n.bundle)
       }
       return String(
         localized: "habits.reminders.hint.daily",
@@ -146,10 +140,10 @@ enum HabitReminderHint {
   }
 }
 
-/// The "throughout the day" window editor for a multi-count habit: a start and
-/// end `LorvexTimeChip` plus a live preview of how many reminders the window
-/// generates and their spacing. Committing rewrites the habit's whole reminder
-/// set to the evenly-spaced times via the store.
+/// The "throughout the day" window for a multi-count habit: a start and an
+/// end time in clock fields, a line saying how many reminders the window
+/// makes and how far apart, and a button that replaces the habit's reminders
+/// with those evenly spaced times.
 struct HabitReminderWindowSection: View {
   @Bindable var store: AppStore
   let habit: LorvexHabit
@@ -165,18 +159,23 @@ struct HabitReminderWindowSection: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       HStack(spacing: LorvexDesign.Spacing.s) {
-        labeledChip(
-          title: String(localized: "habits.reminders.window.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
-          date: $windowStart, identifier: "habit.reminders.window.start")
-        Image(systemName: "arrow.right")
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.tertiary)
-        labeledChip(
-          title: String(localized: "habits.reminders.window.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle),
-          date: $windowEnd, identifier: "habit.reminders.window.end")
+        Image(systemName: "clock")
+          .foregroundStyle(.secondary)
+          .frame(width: 18)
+          .accessibilityHidden(true)
+        HabitReminderClockField(
+          date: $windowStart,
+          label: String(localized: "habits.reminders.window.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle))
+          .accessibilityIdentifier("habit.reminders.window.start")
+        Text(verbatim: "–").foregroundStyle(.secondary)
+        HabitReminderClockField(
+          date: $windowEnd,
+          label: String(localized: "habits.reminders.window.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle))
+          .accessibilityIdentifier("habit.reminders.window.end")
       }
+      .font(LorvexDesign.Typography.primaryText)
 
       Text(previewText)
         .font(LorvexDesign.Typography.tertiaryText)
@@ -189,7 +188,7 @@ struct HabitReminderWindowSection: View {
         Task { await store.setHabitReminderTimes(habitID: habit.id, times: times) }
       } label: {
         Label(
-          String(localized: "habits.reminders.window.apply", defaultValue: "Set these reminders", table: "Localizable", bundle: LorvexL10n.bundle),
+          String(localized: "habits.reminders.window.apply", defaultValue: "Set These Reminders", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "bell.badge")
       }
       .buttonStyle(.bordered)
@@ -198,110 +197,14 @@ struct HabitReminderWindowSection: View {
     }
   }
 
-  private func labeledChip(title: String, date: Binding<Date>, identifier: String) -> some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      Text(title)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-      LorvexTimeChip(date: date.wrappedValue, accessibilityIdentifier: identifier) {
-        date.wrappedValue = $0
-      }
-    }
-  }
-
   private var previewText: String {
     let count = habit.targetCount
-    let interval = HabitReminderTime.intervalMinutes(
-      start: startMinutes, end: endMinutes, count: count)
+    let interval = LorvexDurationFormat.hoursAndMinutes(
+      HabitReminderTime.intervalMinutes(start: startMinutes, end: endMinutes, count: count))
     return String(
-      format: String(
-        localized: "habits.reminders.window.preview",
-        defaultValue: "%lld reminders · about every %@ · stops once you log %lld today",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      count, Self.intervalLabel(minutes: interval), count)
+      localized: "habits.reminders.window.preview",
+      defaultValue: "\(count) reminders · about every \(interval) · stops once you log \(count) today",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
-  /// "1h 43m" / "45m" / "2h" for an interval in minutes.
-  static func intervalLabel(minutes: Int) -> String {
-    let h = minutes / 60
-    let m = minutes % 60
-    if h > 0 && m > 0 { return "\(h)h \(m)m" }
-    if h > 0 { return "\(h)h" }
-    return "\(m)m"
-  }
-}
-
-/// The trailing `xmark` chip button that removes a reminder time, shared by the
-/// create-draft field and the live detail editor so the two delete affordances
-/// stay pixel-identical.
-struct HabitReminderDeleteButton: View {
-  let onDelete: () -> Void
-
-  var body: some View {
-    Button(action: onDelete) {
-      Image(systemName: "xmark")
-        .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-        .foregroundStyle(.secondary)
-        .padding(4)
-        .background(.quaternary.opacity(0.4), in: Circle())
-        .contentShape(Circle())
-    }
-    .buttonStyle(.plain)
-    .accessibilityLabel(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle))
-  }
-}
-
-/// The "Add reminder" affordance shared by the create-draft field and the live
-/// detail editor: a secondary "+" button that swaps to an inline
-/// ``LorvexTimeChip`` with confirm/cancel. `idPrefix` namespaces the
-/// accessibility identifiers per surface (`habit.reminders` /
-/// `createHabit.reminders`); `suggestedTime` seeds the picker when it opens and
-/// `onAdd` receives the confirmed "HH:mm" clock string.
-struct HabitReminderAddAffordance: View {
-  let idPrefix: String
-  let suggestedTime: () -> Date
-  let onAdd: (String) -> Void
-
-  @State private var draftTime = HabitReminderTime.date(fromClock: "09:00")
-  @State private var isAddingTime = false
-
-  var body: some View {
-    if isAddingTime {
-      HStack(spacing: LorvexDesign.Spacing.xs) {
-        LorvexTimeChip(date: draftTime, accessibilityIdentifier: "\(idPrefix).add.timeChip") {
-          draftTime = $0
-        }
-        Button {
-          onAdd(HabitReminderTime.clock(from: draftTime))
-          isAddingTime = false
-        } label: {
-          Image(systemName: "checkmark")
-        }
-        .buttonStyle(.borderedProminent)
-        .accessibilityLabel(String(
-          localized: "habits.reminders.add", defaultValue: "Add Reminder",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle))
-        .accessibilityIdentifier("\(idPrefix).add.confirm")
-        Button { isAddingTime = false } label: {
-          Image(systemName: "xmark")
-        }
-        .buttonStyle(.bordered)
-        .accessibilityLabel(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: LorvexL10n.bundle))
-      }
-    } else {
-      Button {
-        draftTime = suggestedTime()
-        isAddingTime = true
-      } label: {
-        Label(
-          String(localized: "habits.reminders.add", defaultValue: "Add Reminder", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "plus"
-        )
-      }
-      .buttonStyle(.bordered)
-      .accessibilityIdentifier("\(idPrefix).add")
-    }
-  }
 }

@@ -82,6 +82,11 @@ struct CloudSyncOutboundGroup: Equatable {
 /// changed, it is set aside at once: none of its later callbacks can apply,
 /// send, or persist anything, so no data crosses between accounts before the
 /// account is checked again.
+///
+/// **Full iCloud storage.** When CloudKit refuses a save because the
+/// account's storage is full, sends wait out a hold that grows with each
+/// consecutive refusal, while fetches go on, instead of uploading every
+/// pending record again at each local change.
 public actor CloudSyncController: CKSyncEngineDelegate {
   public static let zoneName = "Lorvex"
   /// The database subscription the engine creates for its pushes.
@@ -122,6 +127,14 @@ public actor CloudSyncController: CKSyncEngineDelegate {
   var needsEngineRebuild = false
   /// Consecutive rebuilds after failed applies, for the retry backoff.
   var engineRebuildAttempts = 0
+  /// Sends wait until this moment after CloudKit refused a save because the
+  /// account's iCloud storage is full (``holdSendsForFullStorage()``).
+  var storageFullHoldEnd: Date?
+  /// Consecutive sends CloudKit refused for full storage, for the hold's
+  /// backoff.
+  var storageFullRefusals = 0
+  /// The clock the storage-full hold reads.
+  var now: @Sendable () -> Date = { Date() }
   var pendingReport = CloudSyncCycleReport.empty
   var reportHandler: (@Sendable (CloudSyncCycleReport) async -> Void)?
   private var evaluation: Task<CloudSyncControllerState, Never>?
@@ -349,6 +362,9 @@ public actor CloudSyncController: CKSyncEngineDelegate {
     inboundApplyFailed = false
     needsEngineRebuild = false
     inFlight = [:]
+    // A new engine may sync with another account, whose storage has room.
+    storageFullHoldEnd = nil
+    storageFullRefusals = 0
     let engine = makeEngine(persisted, true, self)
     self.engine = engine
     if checkpoint != "1" { ensureZoneSaveQueued(on: engine) }
@@ -627,5 +643,11 @@ extension CloudSyncController {
   /// Test hook: simulate a fetched batch whose apply threw.
   func markInboundApplyFailedForTesting() {
     inboundApplyFailed = true
+  }
+
+  /// Test hook: read the storage-full hold from `clock` instead of the system
+  /// clock.
+  func setClockForTesting(_ clock: @escaping @Sendable () -> Date) {
+    now = clock
   }
 }

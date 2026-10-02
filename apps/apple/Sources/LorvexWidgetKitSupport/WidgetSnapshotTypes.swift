@@ -39,19 +39,26 @@ public extension WidgetSnapshot {
     public let icon: String?
     public let completedToday: Int
     public let target: Int
+    /// The habit's chosen `#RRGGBB` color, nil when it uses its automatic
+    /// hue; ``LorvexHabitPalette/baseColor(id:color:)`` resolves either.
+    public let color: String?
 
     enum CodingKeys: String, CodingKey {
       case id, name, icon
       case completedToday = "completed_today"
       case target
+      case color
     }
 
-    public init(id: String, name: String, icon: String?, completedToday: Int, target: Int) {
+    public init(
+      id: String, name: String, icon: String?, completedToday: Int, target: Int, color: String? = nil
+    ) {
       self.id = id
       self.name = name
       self.icon = icon
       self.completedToday = completedToday
       self.target = max(1, target)
+      self.color = color
     }
 
     /// True when the habit's today completions meet or exceed its target.

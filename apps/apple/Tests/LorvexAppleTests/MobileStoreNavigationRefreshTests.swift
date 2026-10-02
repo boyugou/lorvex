@@ -93,7 +93,7 @@ func mobileStoreRefreshFailureClearsStaleDashboardState() async throws {
 
   await store.refresh()
   let staleTaskID = try #require(store.snapshot.today.tasks.first?.id)
-  store.openNavigationTarget(MobileNavigationTarget(selectedTab: .today, route: .task(staleTaskID)))
+  store.openNavigationTarget(MobileNavigationTarget(route: .task(staleTaskID)))
 
   #expect(store.selectedTaskID == staleTaskID)
   #expect(!store.snapshot.today.tasks.isEmpty)
@@ -275,9 +275,11 @@ func mobileStoreDeepLinkOpensSpecificHabitEntity() async throws {
 
   store.openDeepLink(URL(string: "lorvex://habit/\(LorvexPreviewSeedID.dailyReviewHabit)")!)
 
-  #expect(store.selectedTab == .habits)
+  // Habits is a workspace on the Tasks stack, so the habit opens above it.
+  #expect(store.selectedTab == .tasks)
   #expect(store.selectedHabitID == LorvexPreviewSeedID.dailyReviewHabit)
-  #expect(store.habitsRoutePath == [.habit(LorvexPreviewSeedID.dailyReviewHabit)])
+  #expect(
+    store.tasksRoutePath == [.workspace(.habits), .habit(LorvexPreviewSeedID.dailyReviewHabit)])
 }
 
 @MainActor
@@ -332,7 +334,7 @@ func mobileStoreIgnoresMalformedDeepLinkURLs() async throws {
 
   #expect(store.selectedTab == .tasks)
   #expect(store.selectedHabitID == nil)
-  #expect(store.habitsRoutePath.isEmpty)
+  #expect(store.tasksRoutePath.isEmpty)
 }
 
 @MainActor
@@ -359,9 +361,9 @@ func mobileStoreOpensSpecificHabitFromScheduledReminderNotificationPayload() asy
 
   store.openDeepLink(route.url)
 
-  #expect(store.selectedTab == .habits)
+  #expect(store.selectedTab == .tasks)
   #expect(store.selectedHabitID == habitID)
-  #expect(store.habitsRoutePath == [.habit(habitID)])
+  #expect(store.tasksRoutePath == [.workspace(.habits), .habit(habitID)])
 }
 
 @MainActor

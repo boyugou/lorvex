@@ -7,12 +7,6 @@ enum LorvexWatchCalmCopy {
     String(localized: "watch.today.title", defaultValue: "Today", table: "Localizable", bundle: WatchL10n.bundle)
   }
 
-  static func minutes(_ minutes: Int) -> String {
-    String(
-      format: String(localized: "watch.task.minutes", defaultValue: "%lld min", table: "Localizable", bundle: WatchL10n.bundle),
-      minutes)
-  }
-
   /// "Until 10:45 AM" while a task's saved time runs.
   static func until(_ minutes: Int) -> String {
     String(

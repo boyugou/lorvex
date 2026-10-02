@@ -15,10 +15,11 @@ struct MobileTabDestinationSetTests {
     #expect(MobileTab.allCases.contains(.review))
   }
 
-  @Test("MobileTab allCases has five members")
-  func mobileTabHasFiveCases() {
-    // today, tasks, calendar, habits, review — all five are primary tabs.
-    #expect(MobileTab.allCases.count == 5)
+  @Test("MobileTab holds exactly the four tabs the bar shows")
+  func mobileTabHasFourCases() {
+    // today, calendar, tasks, review. Habits and Memory are workspaces pushed
+    // onto the Tasks stack, never tabs.
+    #expect(MobileTab.allCases.count == 4)
   }
 
   @Test("MobileDestination includes all required domains")
@@ -386,14 +387,15 @@ struct MobileStoreWorkspaceViewsTests {
     #expect(combined.nextOffset == nil)
   }
 
+  /// The pause itself is ``LorvexSearchDebounce`` (`LorvexSearchDebounceTests`);
+  /// this pins that the Tasks list loads through it and drops a superseded load.
   @Test("Mobile Tasks workspace debounces non-empty search input")
   func mobileTasksWorkspaceDebouncesNonEmptySearchInput() throws {
     let source = try appleSourceFile("Sources/LorvexMobile/MobileStoreTasksView.swift")
     let loadingSource = try appleSourceFile("Sources/LorvexMobile/MobileStoreTasksView+Loading.swift")
 
-    #expect(source.contains("await debounceSearchIfNeeded()"))
-    #expect(loadingSource.contains("Task.sleep(for: .milliseconds(250))"))
-    #expect(source.contains("guard !Task.isCancelled else { return }"))
+    #expect(source.contains("guard await LorvexSearchDebounce.shouldSearch(query) else { return }"))
+    #expect(loadingSource.contains("guard !Task.isCancelled else {"))
   }
 
   @Test("Mobile root view init does not reset store-selected tab")
@@ -456,7 +458,7 @@ struct MobileStoreWorkspaceViewsTests {
     let task = try await core.createTask(title: "Mobile offscreen deep link", notes: "")
     #expect(store.resolveTask(task.id) == nil)
 
-    store.openDeepLinkRoute(.task(task.id))
+    store.openNavigationTarget(MobileNavigationTarget(route: .task(task.id)))
     let loaded = await store.refreshTaskForRoute(task.id)
 
     #expect(loaded)
@@ -507,69 +509,6 @@ struct MobileStoreWorkspaceViewsTests {
   }
 }
 
-// MARK: - Deep link routing
-
-@Suite("MobileDeepLinkRouting with new domains")
-struct MobileDeepLinkRoutingNewDomainsTests {
-
-  @Test("Deep link to tasks resolves to the tasks tab")
-  func deepLinkTasksResolvesToTasksTab() {
-    let url = URL(string: "lorvex://open/tasks")!
-    let route = MobileDeepLinkRoute(url: url)
-    #expect(route?.navigationTarget.selectedTab == .tasks)
-  }
-
-  @Test("Deep link to tasks selects the tasks tab without a More destination")
-  func deepLinkTasksSelectsTasksTab() throws {
-    let url = try #require(URL(string: "lorvex://open/tasks"))
-    let route = try #require(MobileDeepLinkRoute(url: url))
-
-    let target = route.navigationTarget(resolvedFrom: url)
-
-    // Tasks is a primary tab after the IA restructure — it selects its own tab,
-    // not a workspace inside More.
-    #expect(target.selectedTab == .tasks)
-  }
-
-  @Test("Deep link to calendar resolves to the calendar tab")
-  func deepLinkCalendarResolvesToCalendarTab() {
-    let url = URL(string: "lorvex://open/calendar")!
-    let route = MobileDeepLinkRoute(url: url)
-    #expect(route?.navigationTarget.selectedTab == .calendar)
-  }
-
-  @Test("Deep link to calendar selects the calendar tab without a More destination")
-  func deepLinkCalendarSelectsCalendarTab() throws {
-    let url = try #require(URL(string: "lorvex://open/calendar"))
-    let route = try #require(MobileDeepLinkRoute(url: url))
-
-    let target = route.navigationTarget(resolvedFrom: url)
-
-    #expect(target.selectedTab == .calendar)
-  }
-
-  @Test("Deep link to habits resolves to the habits tab")
-  func deepLinkHabitsResolvesToHabitsTab() {
-    let url = URL(string: "lorvex://open/habits")!
-    let route = MobileDeepLinkRoute(url: url)
-    #expect(route?.navigationTarget.selectedTab == .habits)
-  }
-
-  @Test("Deep link to memory resolves to the tasks tab")
-  func deepLinkMemoryResolvesToTasks() {
-    let url = URL(string: "lorvex://open/memory")!
-    let route = MobileDeepLinkRoute(url: url)
-    #expect(route?.navigationTarget.selectedTab == .tasks)
-  }
-
-  @Test("Deep link to reviews resolves to the review tab")
-  func deepLinkReviewsResolvesToReviewTab() {
-    let url = URL(string: "lorvex://open/reviews")!
-    let route = MobileDeepLinkRoute(url: url)
-    #expect(route?.navigationTarget.selectedTab == .review)
-  }
-}
-
 private func appleSourceFile(_ relativePath: String) throws -> String {
   let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
@@ -579,16 +518,41 @@ private func appleSourceFile(_ relativePath: String) throws -> String {
   return try String(contentsOf: url, encoding: .utf8)
 }
 
+/// Every way to open Habits (the keyboard menu, a workspace link, Handoff, a
+/// habit link) selects the Tasks tab and pushes the Habits workspace there.
 @MainActor
 @Test
-func hiddenHabitsTabRedirectsToTasksStack() async throws {
+func everyHabitsEntryPointOpensTheWorkspaceOnTheTasksStack() async throws {
   let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { "2026-05-23" })
-  store.selectedTab = .habits
-  store.habitsRoutePath = [.habit("habit-1")]
 
-  store.redirectHiddenHabitsTab()
+  store.openShortcutDestination(.habits)
+  #expect(store.selectedTab == .tasks)
+  #expect(store.tasksRoutePath == [.workspace(.habits)])
 
+  store.selectedTab = .review
+  store.tasksRoutePath = []
+  store.openDeepLink(URL(string: "lorvex://open/habits")!)
+  #expect(store.selectedTab == .tasks)
+  #expect(store.tasksRoutePath == [.workspace(.habits)])
+
+  store.selectedTab = .today
+  store.continueOpenDestinationActivity(makeOpenDestinationActivity(selection: .habits))
+  #expect(store.selectedTab == .tasks)
+  #expect(store.tasksRoutePath == [.workspace(.habits)])
+
+  store.selectedTab = .calendar
+  store.openDeepLink(URL(string: "lorvex://habit/habit-1")!)
   #expect(store.selectedTab == .tasks)
   #expect(store.tasksRoutePath == [.workspace(.habits), .habit("habit-1")])
-  #expect(store.habitsRoutePath.isEmpty)
+  #expect(store.selectedHabitID == "habit-1")
+}
+
+/// iOS 27's UIKit asserts (`_UITabModel _setSelectedItem`) and aborts the app
+/// when a SwiftUI `TabView` selects a tab marked `.hidden(true)`, so the shell
+/// declares only the tabs the bar draws and reaches every other workspace by
+/// pushing it onto a tab's stack.
+@Test
+func mobileTabShellDeclaresNoHiddenTab() throws {
+  let source = try appleSourceFile("Sources/LorvexMobile/LorvexMobileStoreRootView.swift")
+  #expect(!source.contains(".hidden("))
 }

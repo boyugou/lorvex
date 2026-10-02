@@ -295,6 +295,33 @@ final class TaskCreateTests: XCTestCase {
     }
   }
 
+  func testNumericDatesAreReadOnlyWhenTheirOrderIsCertain() throws {
+    let store = try freshStore()
+    try pinUtcTimezone(store)
+    let accepted: [(String, String)] = [
+      ("05.10.2026", "2026-10-05"),  // dotted dates are day first
+      ("31/12/2026", "2026-12-31"),  // only day first is a real date
+      ("12/31/2026", "2026-12-31"),  // only month first is a real date
+      ("07-07-2026", "2026-07-07"),  // both orders give the same day
+      ("2026/10/05", "2026-10-05"),
+      ("Oct 5, 2026", "2026-10-05"),
+    ]
+    for (input, expected) in accepted {
+      let out = try store.writer.read { db in
+        try TaskCreateDateParse.normalizeDueDateInputForConn(db, value: input)
+      }
+      XCTAssertEqual(out, expected, "for \(input)")
+    }
+    // The United States reads 05/10/2026 as May 10 and most other places as
+    // October 5, so a date that is real either way is refused.
+    for ambiguous in ["05/10/2026", "05-10-2026"] {
+      XCTAssertThrowsError(
+        try store.writer.read { db in
+          try TaskCreateDateParse.normalizeDueDateInputForConn(db, value: ambiguous)
+        }, "expected \(ambiguous) to be refused")
+    }
+  }
+
   func testRfc3339DueDateAcceptsValidCalendarDays() throws {
     let store = try freshStore()
     try pinUtcTimezone(store)

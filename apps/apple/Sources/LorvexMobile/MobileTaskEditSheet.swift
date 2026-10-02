@@ -41,7 +41,7 @@ struct MobileTaskEditSheet: View {
               bundle: MobileL10n.bundle), selection: $draft.priority
           ) {
             ForEach(LorvexTask.Priority.allCases, id: \.self) { priority in
-              Text(MobileTaskDisplayText.priority(priority)).tag(priority)
+              Text(priority.localizedName).tag(priority)
             }
           }
           MobilePlainTextEditor(

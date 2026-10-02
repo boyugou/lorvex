@@ -25,7 +25,9 @@ struct CalendarWorkspaceHeader: View {
 /// slot, and Create Event as the primary action. The chip opens the month
 /// popover and picks a single day in every mode; in Week and Month mode it
 /// shows the visible range and the owning view re-anchors to the period
-/// containing the picked day. ⌘← / ⌘→ step the visible period.
+/// containing the picked day. ⌘ with the arrow key that matches each chevron
+/// steps the visible period, mirrored in a right-to-left layout
+/// (``View/lorvexStepShortcut(_:isEnabled:)``).
 struct CalendarWorkspaceToolbar: ToolbarContent {
   @Binding var anchorDate: Date
   @Binding var mode: CalendarPresentationMode
@@ -41,11 +43,11 @@ struct CalendarWorkspaceToolbar: ToolbarContent {
       Button {
         step(-1)
       } label: {
-        Label(previousLabel, systemImage: "chevron.left")
+        Label(previousLabel, systemImage: "chevron.backward")
       }
       .help(previousLabel)
       .accessibilityIdentifier("calendar.nav.prev")
-      .keyboardShortcut(.leftArrow, modifiers: [.command])
+      .lorvexStepShortcut(.backward)
 
       LorvexDateChip(
         date: anchorDate,
@@ -59,11 +61,11 @@ struct CalendarWorkspaceToolbar: ToolbarContent {
       Button {
         step(1)
       } label: {
-        Label(nextLabel, systemImage: "chevron.right")
+        Label(nextLabel, systemImage: "chevron.forward")
       }
       .help(nextLabel)
       .accessibilityIdentifier("calendar.nav.next")
-      .keyboardShortcut(.rightArrow, modifiers: [.command])
+      .lorvexStepShortcut(.forward)
 
       if !isViewingCurrent {
         Button(currentLabel, action: jumpToCurrent)

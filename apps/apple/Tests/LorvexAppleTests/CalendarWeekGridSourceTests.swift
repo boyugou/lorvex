@@ -114,16 +114,12 @@ func calendarWeekGridEventBlocksUseCompactMetrics() throws {
   // No view-level height floor: the model's drawn end carries the minimum, so
   // a short block never runs under the one that starts right after it.
   #expect(!source.contains("minimumHeight"))
-  #expect(source.contains("LorvexDesign.CalendarMetrics.tightBlockHeight"))
-  #expect(source.contains("static let compactHeightThreshold: CGFloat = 28"))
-  #expect(source.contains("static let timeHeightThreshold: CGFloat = 34"))
   #expect(source.contains("static let accentRailWidth: CGFloat = 2.5"))
   #expect(source.contains("static let activeShadowRadius: CGFloat = 7"))
-  #expect(source.contains("CalendarEventBlockContent("))
-  #expect(source.contains("struct CalendarEventBlockContent: View"))
-  #expect(source.contains(".lineLimit(titleLineLimit)"))
-  #expect(source.contains("renderedHeight >= CalendarEventBlockMetrics.timeHeightThreshold"))
-  #expect(source.contains("renderedHeight < CalendarEventBlockMetrics.compactHeightThreshold ? 1 : 2"))
+  // The block's text is arranged by the room it measures, not by height
+  // thresholds that assume Latin line heights.
+  #expect(source.contains("LorvexCalendarBlockText("))
+  #expect(!source.contains("HeightThreshold"))
   // Fill and stroke strengthen for the active (hover/drag) block and for the
   // selected block whose inspector is open.
   #expect(source.contains("color.opacity(active != nil || isSelected ? 0.24 : 0.16)"))
@@ -135,6 +131,9 @@ func calendarWeekGridEventBlocksUseCompactMetrics() throws {
   #expect(!source.contains(".background(color.opacity(0.22)"))
 }
 
+/// The previous and next buttons step with ⌘ and an arrow key, bound through
+/// `lorvexStepShortcut` so the key follows the chevron in a right-to-left
+/// layout (`LorvexLayoutDirectionTests` pins the mapping).
 @Test
 func calendarNavigationButtonsExposeCommandArrowShortcuts() throws {
   let source = try String(
@@ -143,8 +142,10 @@ func calendarNavigationButtonsExposeCommandArrowShortcuts() throws {
     encoding: .utf8
   )
 
-  #expect(source.contains(".keyboardShortcut(.leftArrow, modifiers: [.command])"))
-  #expect(source.contains(".keyboardShortcut(.rightArrow, modifiers: [.command])"))
+  #expect(source.contains(".lorvexStepShortcut(.backward)"))
+  #expect(source.contains(".lorvexStepShortcut(.forward)"))
+  #expect(!source.contains(".keyboardShortcut(.leftArrow"))
+  #expect(!source.contains(".keyboardShortcut(.rightArrow"))
 }
 
 @Test
@@ -175,7 +176,7 @@ func calendarWorkspaceOffersDayWeekAndMonthModes() throws {
   #expect(grid.contains("var visibleDayCount: Int = 7"))
   #expect(grid.contains("dayCount: visibleDayCount"))
   #expect(workspace.contains("visibleDayCount: 1"))
-  #expect(workspace.contains("fetchVisibleDay(anchorDate)"))
+  #expect(workspace.contains(".onChange(of: visiblePeriod)"))
   #expect(nav.contains(#""calendar.mode.day""#))
   #expect(nav.contains(#""calendar.mode.week""#))
   #expect(nav.contains(#""calendar.mode.month""#))

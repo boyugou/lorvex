@@ -6,10 +6,10 @@ import SwiftUI
 /// enabled reminder policy in ``AppStore/createDraftHabit()``.
 ///
 /// One row per time, retimed in place through its time chip and removed by
-/// its trailing clear button; Add Reminder appends a row an hour after the
-/// latest time (9:00 for the first). The live habit's richer reminder editor
-/// (windows through the day, per-reminder switches) needs a saved habit and
-/// lives in ``HabitReminderEditor``.
+/// its trailing clear button; Add Reminder appends a row at the next free
+/// time, an hour after the latest (9:00 for the first). Spreading reminders
+/// through the day needs a saved habit, so it lives in the habit inspector's
+/// ``HabitReminderEditor``.
 struct HabitDraftReminderField: View {
   @Bindable var store: AppStore
 
@@ -25,7 +25,7 @@ struct HabitDraftReminderField: View {
         row(time)
       }
       Button {
-        add(HabitReminderTime.clock(from: suggestedNext()))
+        add(HabitReminderTime.nextFreeClock(after: store.draftHabitReminderTimes))
       } label: {
         Label(
           String(localized: "habits.reminders.add", defaultValue: "Add Reminder", table: "Localizable", bundle: LorvexL10n.bundle),
@@ -84,17 +84,5 @@ struct HabitDraftReminderField: View {
     if let index = store.draftHabitReminderTimes.firstIndex(of: old) {
       store.draftHabitReminderTimes[index] = new
     }
-  }
-
-  /// An hour after the latest existing draft time (wrapping within the day), else
-  /// 9:00 — the same suggestion the live editor makes for a fresh reminder.
-  private func suggestedNext() -> Date {
-    guard
-      let latest = store.draftHabitReminderTimes
-        .compactMap({ HabitReminderTime.minutesOfDay($0) }).max()
-    else {
-      return HabitReminderTime.date(fromClock: "09:00")
-    }
-    return HabitReminderTime.date(fromMinutes: (latest + 60) % (24 * 60))
   }
 }

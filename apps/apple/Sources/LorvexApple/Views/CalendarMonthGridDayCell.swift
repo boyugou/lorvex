@@ -90,7 +90,7 @@ struct CalendarMonthGridDayCell: View {
   }
 
   private var dayNumber: some View {
-    Text(Self.dayNumberFormatter.string(from: day.date))
+    Text(LorvexDateFormatters.dayNumber(day.date, timeZone: calendar.timeZone))
       .font(isToday ? LorvexDesign.Typography.primaryEmphasis : LorvexDesign.Typography.secondaryText)
       .foregroundStyle(dayNumberStyle)
       .frame(
@@ -129,7 +129,7 @@ struct CalendarMonthGridDayCell: View {
       } label: {
         taskChip(
           title: task.title, isDone: task.status == .completed,
-          isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), calendar: calendar))
+          isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone))
       }
       .buttonStyle(.plain)
       .calendarPointingHandCursor()
@@ -218,11 +218,9 @@ struct CalendarMonthGridDayCell: View {
     .opacity(day.isCurrentMonth ? 1 : 0.55)
     .accessibilityLabel(
       String(
-        format: String(
-          localized: "calendar.overflow.more_events.a11y", defaultValue: "%lld more events",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        chips.overflowCount))
+        localized: "calendar.overflow.more_events.a11y",
+        defaultValue: "\(chips.overflowCount) more events",
+        table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityIdentifier("calendar.month.day.\(day.dayKey).overflow")
   }
 
@@ -269,7 +267,7 @@ struct CalendarMonthGridDayCell: View {
   }
 
   private var dayAccessibilityLabel: String {
-    let base = Self.fullDateFormatter.string(from: day.date)
+    let base = LorvexDateFormatters.string(day.date, dateStyle: .full, timeZone: calendar.timeZone)
     return isToday
       ? String(
         format: String(
@@ -279,16 +277,4 @@ struct CalendarMonthGridDayCell: View {
         base)
       : base
   }
-
-  static let dayNumberFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "d"
-    return formatter
-  }()
-
-  static let fullDateFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .full
-    return formatter
-  }()
 }

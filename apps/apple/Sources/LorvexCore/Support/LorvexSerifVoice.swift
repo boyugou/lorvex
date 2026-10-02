@@ -17,6 +17,9 @@ extension LorvexDesign.Typography {
     /// The assistant at metadata size, for one-line reasons under a row;
     /// italic in Latin text.
     case assistantSecondary
+    /// The assistant's briefing on the large Today widget, at the size of the
+    /// widget's task rows; italic in Latin text.
+    case widgetBriefing
 
     /// New York at this voice's size and weight.
     var latinFont: Font {
@@ -31,20 +34,41 @@ extension LorvexDesign.Typography {
         Font.system(.title3, design: .serif).weight(.semibold)
       case .assistantSecondary:
         Font.system(.callout, design: .serif).italic()
+      case .widgetBriefing:
+        #if os(macOS)
+          Font.system(.body, design: .serif).italic()
+        #else
+          Font.system(.subheadline, design: .serif).italic()
+        #endif
       }
     }
 
     #if os(macOS)
-      /// Songti at the size New York is set at for this voice, in the face the
-      /// system's own fallback picks for the weight (Bold for semibold).
+      /// The serif Han face for the app's language, so its characters take that
+      /// language's forms and punctuation: Songti TC for Traditional Chinese,
+      /// with punctuation centered in its box; Hiragino Mincho for Japanese,
+      /// which also draws kana; Songti SC for Simplified Chinese and every
+      /// other language. Each pair is the bold face, then the regular one.
+      static var cjkFaces: (bold: String, regular: String) {
+        switch CoreL10n.bundle.preferredLocalizations.first {
+        case "zh-Hant": ("STSongti-TC-Bold", "STSongti-TC-Regular")
+        case "ja": ("HiraMinProN-W6", "HiraMinProN-W3")
+        default: ("STSongti-SC-Bold", "STSongti-SC-Regular")
+        }
+      }
+
+      /// The app language's serif Han face (``cjkFaces``) at the size New
+      /// York is set at for this voice, bold where New York is semibold.
       var cjkFont: Font {
         switch self {
         case .pageSentence:
-          Font.custom("STSongti-SC-Bold", size: NSFont.preferredFont(forTextStyle: .largeTitle).pointSize)
+          Font.custom(Self.cjkFaces.bold, size: NSFont.preferredFont(forTextStyle: .largeTitle).pointSize)
         case .panelSentence:
-          Font.custom("STSongti-SC-Bold", size: NSFont.preferredFont(forTextStyle: .title3).pointSize)
+          Font.custom(Self.cjkFaces.bold, size: NSFont.preferredFont(forTextStyle: .title3).pointSize)
         case .assistantSecondary:
-          Font.custom("STSongti-SC-Regular", size: NSFont.preferredFont(forTextStyle: .callout).pointSize)
+          Font.custom(Self.cjkFaces.regular, size: NSFont.preferredFont(forTextStyle: .callout).pointSize)
+        case .widgetBriefing:
+          Font.custom(Self.cjkFaces.regular, size: NSFont.preferredFont(forTextStyle: .body).pointSize)
         }
       }
     #endif

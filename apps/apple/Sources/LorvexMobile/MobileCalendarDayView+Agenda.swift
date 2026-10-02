@@ -50,32 +50,18 @@ extension MobileCalendarDayView {
   }
 
   /// Events that belong on the agenda for `key` (`yyyy-MM-dd`), ordered for
-  /// display. The day filter is a span test mirroring
-  /// `CalendarGridModel.buildDays`: a multi-day event appears on every day its
-  /// `[startDate, endDate]` range covers, not only its first/last day, so the
-  /// agenda panel and the timeline grid never disagree about which day an event
-  /// belongs to. `yyyy-MM-dd` keys compare lexicographically in date order; a
-  /// missing `endDate` is a single-day event. Ordering puts events without a
-  /// start time (all-day) first, then start-time ascending, then title.
+  /// display. The day filter is ``CalendarTimelineEvent/occurs(on:)``, the
+  /// test the timeline grid uses too, so the two never disagree about which
+  /// day an event belongs to: a multi-day event appears on every day it takes
+  /// time on, which leaves out the end day of a timed event ending at exactly
+  /// midnight. Ordering puts events without a start time (all-day) first, then
+  /// start-time ascending, then title.
   nonisolated static func agendaEvents(
     from events: [CalendarTimelineEvent],
     on key: String
   ) -> [CalendarTimelineEvent] {
     events
-      .filter { event in
-        let startKey = event.startDate
-        let endKey = event.endDate ?? event.startDate
-        guard key >= startKey, key <= endKey else { return false }
-        // A timed event ending exactly at midnight occupies no time on its end
-        // day (22:00→00:00-next-day is a start-day-only event), so don't list it
-        // there — matching the day grid and Apple Calendar.
-        if key == endKey, endKey != startKey, !event.allDay,
-          CalendarGridModel.parseMinutes(event.endTime) == 0
-        {
-          return false
-        }
-        return true
-      }
+      .filter { $0.occurs(on: key) }
       .sorted { lhs, rhs in
         switch (lhs.startTime, rhs.startTime) {
         case (let left?, let right?) where left != right:

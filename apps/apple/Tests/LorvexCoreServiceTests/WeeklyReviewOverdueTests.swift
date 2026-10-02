@@ -50,20 +50,19 @@ struct WeeklyReviewOverdueTests {
     #expect(LorvexWeekReviewSentence.pastDue(review, decisionID: nil).count == 3)
   }
 
-  @Test("how long ago a task was due counts whole days in the user's calendar")
+  @Test("how long ago a task was due counts whole days in the user's time zone")
   func dueAgoCountsLocalDays() throws {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
     // 23:30 on Monday 2026-09-28 in Los Angeles is already Tuesday in UTC.
     let now = try #require(ISO8601DateFormatter().date(from: "2026-09-29T06:30:00Z"))
-    let relative = LorvexDateFormatters.namedRelative
 
     #expect(
-      LorvexWeekReviewSentence.dueAgo(dayKey: "2026-09-27", now: now, calendar: calendar)
-        == relative.localizedString(from: DateComponents(day: -1)))
+      LorvexWeekReviewSentence.dueAgo(dayKey: "2026-09-27", now: now, timeZone: calendar.timeZone)
+        == LorvexDateFormatters.relativeDays(-1))
     #expect(
-      LorvexWeekReviewSentence.dueAgo(dayKey: "2026-09-25", now: now, calendar: calendar)
+      LorvexWeekReviewSentence.dueAgo(dayKey: "2026-09-25", now: now, timeZone: calendar.timeZone)
         == "3 days ago")
-    #expect(LorvexWeekReviewSentence.dueAgo(dayKey: "Friday", now: now, calendar: calendar) == nil)
+    #expect(LorvexWeekReviewSentence.dueAgo(dayKey: "Friday", now: now, timeZone: calendar.timeZone) == nil)
   }
 }

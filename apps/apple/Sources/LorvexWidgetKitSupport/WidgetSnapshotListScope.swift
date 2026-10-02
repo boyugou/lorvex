@@ -1,9 +1,11 @@
 import Foundation
 
 extension WidgetSnapshot {
-  /// This snapshot narrowed to one list: that list's tasks and counts, and no
-  /// briefing, since the briefing speaks about the whole day and can name tasks
-  /// the narrowing removed. A nil `listID` returns the snapshot unchanged.
+  /// This snapshot narrowed to one list: that list's tasks and counts, the
+  /// list itself as ``scopeList`` (so the widget can name it), and no
+  /// briefing, since the briefing speaks about the whole day and can name
+  /// tasks the narrowing removed. A nil `listID` returns the snapshot
+  /// unchanged.
   public func scoped(toList listID: String?) -> WidgetSnapshot {
     guard let listID else { return self }
     let listTasks = tasks.filter { $0.listID == listID }
@@ -24,6 +26,7 @@ extension WidgetSnapshot {
       tasks: listTasks,
       habits: habits,
       lists: lists,
-      listStats: listStats)
+      listStats: listStats,
+      scopeList: lists.first { $0.id == listID })
   }
 }

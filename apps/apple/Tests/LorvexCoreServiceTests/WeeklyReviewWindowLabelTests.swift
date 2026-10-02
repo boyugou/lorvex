@@ -20,6 +20,14 @@ final class WeeklyReviewWindowLabelTests: XCTestCase {
     XCTAssertFalse(label.contains("2026"), label)
   }
 
+  func testWindowCarriesItsYearWhenAsked() {
+    let label = snapshot(windowTitle: "2026-09-22 - 2026-09-28").windowRangeLabel(
+      locale: english, includesYear: true)
+    XCTAssertTrue(label.hasPrefix("September 22"), label)
+    XCTAssertTrue(label.contains("28"), label)
+    XCTAssertTrue(label.hasSuffix("2026"), label)
+  }
+
   func testWindowAcrossMonthsNamesBoth() {
     let label = snapshot(windowTitle: "2026-09-29 - 2026-10-05").windowRangeLabel(locale: english)
     XCTAssertTrue(label.hasPrefix("September 29"), label)

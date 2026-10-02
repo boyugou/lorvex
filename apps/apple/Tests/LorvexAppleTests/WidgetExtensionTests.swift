@@ -199,7 +199,11 @@ func widgetGalleryPreviewUsesRepresentativeUnredactedContent() throws {
   #expect(raw.isPlaceholder == false)
   #expect(snapshot.tasks.first?.status == LorvexTask.Status.inProgress.rawValue)
   #expect(snapshot.tasks.count == 4)
-  #expect(snapshot.habits.count == 1)
+  // Four habits, one done and one part-way through a count, so the Habits
+  // widget's picker preview shows its ring grid rather than a lone tile.
+  #expect(snapshot.habits.count == 4)
+  #expect(snapshot.habits.contains { $0.isDoneToday })
+  #expect(snapshot.habits.contains { $0.target > 1 && !$0.isDoneToday && $0.completedToday > 0 })
   #expect(snapshot.stats.completedTodayCount == 2)
 
   let scoped = WidgetPreviewSnapshot.make(now: now, listID: "preview-list")
@@ -219,7 +223,7 @@ func widgetProvidersSelectGalleryPreviewWithoutReadingAppGroupState() throws {
   let raw = LorvexSnapshotTimelineProvider(configuration: configuration)
     .makeSnapshotEntry(isPreview: true)
   #expect(raw.isPlaceholder == false)
-  #expect(raw.snapshot?.habits.count == 1)
+  #expect(raw.snapshot?.habits.count == 4)
 
   // The non-preview path still reports missing App Group state honestly.
   #expect(LorvexSnapshotTimelineProvider(configuration: configuration)

@@ -1,7 +1,7 @@
 # Export / Import Format (Apple-native)
 
 Lorvex Apple has one version-1 export contract, with two deliberately different
-data representations inside it. Version 5 is the first public backup contract,
+data representations inside it. Version 1 is the first public backup contract,
 not merely the current encoder version: later formats append an explicit decoder
 while the committed v1 compatibility fixtures continue to decode unchanged.
 
@@ -38,7 +38,7 @@ categories:
   tags, dependencies, and calendar links. CloudKit confirmation receipts are
   deliberately excluded. CSV and AI/MCP export omit this member.
 - A top-level `manifest.json` carrying `schemaVersion: "1"`, the caller-supplied
-  app version and generation time, and exact per-member record counts. Version 5
+  app version and generation time, and exact per-member record counts. Version 1
   is a closed inventory: it emits no attachment/blob members, and an importer
   rejects every unrecognized or duplicate archive path.
 
@@ -141,7 +141,7 @@ The import path is defensive against hostile or malformed archives:
   bounded sizes, and every entry CRC.
 - **Retained per-version decoders.** The importer reads only the JSON/ZIP version
   envelope first and dispatches to a decoder explicitly registered for that
-  version. Version 5 is the first public JSON and ZIP contract. A future v6 adds
+  version. Version 1 is the first public JSON and ZIP contract. A future v2 adds
   a decoder and advances the exporter; it does not reinterpret or remove v1.
   A production-shaped all-category golden document (including the native graph
   and calendar cutovers) is SHA-pinned and decoded through both JSON and ZIP
@@ -195,10 +195,8 @@ The import path is defensive against hostile or malformed archives:
   Delete/upsert outbox work is reconstructed under the current device identity;
   a backup never imports another account's confirmation state.
 
-## Pre-launch v1 freeze record
+## v1 freeze record
 
-On 2026-07-21, before any public Lorvex release or user backup existed, the v1
-source lock was intentionally re-frozen after adding the whole-payload semantic
-preflight above. This was a first-release contract finalization, not a mutation
-of a shipped decoder. From the first production release onward, v1 remains
-immutable; any future wire or semantic change adds a new versioned DTO/decoder.
+The v1 source lock was finalized on 2026-07-21, after the whole-payload semantic
+preflight above was added. v1 is immutable: any future wire or semantic change
+adds a new versioned DTO/decoder.

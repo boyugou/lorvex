@@ -30,7 +30,11 @@ struct MenuBarAgendaList: View {
             .padding(.bottom, LorvexDesign.Spacing.xxs)
             .accessibilityAddTraits(.isHeader)
           ForEach(day.events) { eventRow($0) }
-          ForEach(day.tasks) { taskRow($0, dayKey: day.key) }
+          ForEach(day.tasks) { task in
+            MenuBarTaskRow(
+              task: task, time: task.time(on: day.key), identifier: "menubar.agenda.task",
+              complete: { complete(task) }, open: { open(task) })
+          }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("menubar.agenda.day")
@@ -55,46 +59,9 @@ struct MenuBarAgendaList: View {
         .monospacedDigit()
         .lineLimit(1)
     }
-    .frame(minHeight: 28)
+    .frame(minHeight: MenuBarTaskRow.minHeight)
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("menubar.agenda.event")
-  }
-
-  private func taskRow(_ task: LorvexTask, dayKey: String) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Button {
-        complete(task)
-      } label: {
-        LorvexTaskRing(progress: 0, isDone: false, diameter: 18, showsCheckHint: false)
-          .contentShape(Circle())
-      }
-      .buttonStyle(.plain)
-      .help(TodayCalmCopy.complete)
-      .accessibilityLabel(MenuBarCopy.complete(task.title))
-      Button {
-        open(task)
-      } label: {
-        HStack(spacing: LorvexDesign.Spacing.s) {
-          Text(task.title)
-            .font(LorvexDesign.Typography.primaryText)
-            .foregroundStyle(.primary)
-            .lineLimit(1)
-          Spacer(minLength: 0)
-          if let time = task.time(on: dayKey) {
-            Text(TodayCalmCopy.timeRange(start: time.lowerBound, end: time.upperBound))
-              .font(LorvexDesign.Typography.secondaryText)
-              .foregroundStyle(.secondary)
-              .monospacedDigit()
-              .lineLimit(1)
-          }
-        }
-        .frame(minHeight: 28)
-        .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
-      .help(TodayCalmCopy.openDetails)
-    }
-    .accessibilityIdentifier("menubar.agenda.task")
   }
 
   /// An event's time on the agenda: "All day", or its range.

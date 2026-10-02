@@ -16,26 +16,22 @@ extension CalendarWeekGridView {
     let y = CGFloat(block.startMin) / 60 * hourHeight
     // The drawn end carries the model's minimum; see `eventBlock`.
     let height = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
-    let isTight = height < LorvexDesign.CalendarMetrics.tightBlockHeight
     let color = LorvexDesign.Palette.accent
     let isRunning = isRunningNow(block, on: day) && !block.isDone
     let isSelected = store.selectedTaskID == block.task.id
 
-    return HStack(alignment: .top, spacing: 3) {
-      taskCompletionCircle(for: block.task, height: min(16, height))
-        .padding(.top, isTight ? 0 : 1)
+    return LorvexCalendarBlockText(
+      title: block.task.title,
+      start: lorvexClockTimeLabel(minutes: block.startMin),
+      range: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
+      isDone: block.isDone,
+      verticalPadding: CalendarEventBlockMetrics.verticalPadding
+    ) {
+      taskCompletionCircle(for: block.task)
         .accessibilityIdentifier("calendar.weekgrid.taskBlock.complete")
-      CalendarEventBlockContent(
-        title: block.task.title,
-        time: lorvexClockTimeLabel(minutes: block.startMin),
-        timeRange: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
-        renderedHeight: height,
-        isDone: block.isDone
-      )
     }
     .padding(.leading, 3)
     .padding(.trailing, CalendarEventBlockMetrics.horizontalPadding)
-    .padding(.vertical, isTight ? 0 : CalendarEventBlockMetrics.verticalPadding)
     .frame(
       width: max(laneWidth - CalendarEventBlockMetrics.laneGap, 8),
       height: height,
@@ -85,11 +81,9 @@ extension CalendarWeekGridView {
   /// The leading circle a task carries on the grid, in a timed block or an
   /// all-day pill: the same checkbox a task row carries, so completing a task
   /// from the calendar is one click. A done task shows the filled circle with
-  /// its check. `height` caps the circle's frame, so in a block shorter than
-  /// the glyph it stays centered in what is visible rather than being clipped
-  /// at the bottom; nil leaves the glyph's own height, level with a pill's
-  /// line of text.
-  func taskCompletionCircle(for task: LorvexTask, height: CGFloat? = nil) -> some View {
+  /// its check. The circle keeps its glyph's own height, so it sits on the
+  /// baseline of the title beside it.
+  func taskCompletionCircle(for task: LorvexTask) -> some View {
     let isDone = task.status == .completed
     let label = taskCompletionLabel(isDone: isDone)
     return Button {
@@ -98,7 +92,7 @@ extension CalendarWeekGridView {
       Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
         .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
         .foregroundStyle(LorvexDesign.Palette.accent.opacity(isDone ? 0.7 : 0.85))
-        .frame(width: 16, height: height)
+        .frame(width: 16)
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

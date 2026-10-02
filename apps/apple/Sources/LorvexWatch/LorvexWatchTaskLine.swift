@@ -45,7 +45,7 @@ struct LorvexWatchTaskLine: Equatable {
       return LorvexWatchTaskLine(text: LorvexWatchCalmCopy.started, tone: .started)
     }
     if let minutes = task.estimatedMinutes, minutes > 0 {
-      return LorvexWatchTaskLine(text: LorvexWatchCalmCopy.minutes(minutes), tone: .plain)
+      return LorvexWatchTaskLine(text: LorvexDurationFormat.minutes(minutes), tone: .plain)
     }
     return nil
   }

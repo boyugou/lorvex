@@ -73,7 +73,7 @@ struct TaskBatchActionMenuContent: View {
         Button {
           move(list.id)
         } label: {
-          Label(list.displayName, systemImage: list.icon ?? "list.bullet")
+          LorvexListMenuLabel(list: list)
         }
       }
     } label: {

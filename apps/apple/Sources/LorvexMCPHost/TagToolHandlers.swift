@@ -69,17 +69,10 @@ extension ToolRegistry {
   }
 
   func mergeTagsResult(arguments: [String: Value]) async throws -> CallTool.Result {
-    // Tag names are fenced when echoed back in responses (list_all_tags,
-    // rename_tag, etc.), so an AI client may pass a fenced value straight back
-    // as an argument — unfence so it round-trips to the stored tag name.
-    let source = SecurityFencing.unfence(
-      try StrictScalarArguments.optionalString(arguments["source"], field: "source") ?? ""
-    )
-    .trimmingCharacters(in: .whitespacesAndNewlines)
-    let target = SecurityFencing.unfence(
-      try StrictScalarArguments.optionalString(arguments["target"], field: "target") ?? ""
-    )
-    .trimmingCharacters(in: .whitespacesAndNewlines)
+    let source = (try StrictScalarArguments.optionalString(arguments["source"], field: "source") ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    let target = (try StrictScalarArguments.optionalString(arguments["target"], field: "target") ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
     guard !source.isEmpty, !target.isEmpty else {
       return Self.errorResult(
         code: "validation", message: "source and target are required.", toolName: "merge_tags")

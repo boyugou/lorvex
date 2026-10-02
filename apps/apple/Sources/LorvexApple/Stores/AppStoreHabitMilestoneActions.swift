@@ -8,8 +8,8 @@ extension AppStore {
   /// or nil when the field is empty or not a positive number (an optional
   /// personal goal, so a blank / invalid field simply means "no goal").
   var parsedDraftHabitMilestoneTarget: Int? {
-    let text = draftHabitMilestoneTargetText.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let value = Int(text), value > 0 else { return nil }
+    guard let value = LorvexNumberInput.integer(from: draftHabitMilestoneTargetText), value > 0
+    else { return nil }
     return value
   }
 

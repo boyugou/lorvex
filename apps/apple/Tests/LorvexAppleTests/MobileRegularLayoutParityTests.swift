@@ -50,12 +50,8 @@ struct MobileRegularLayoutParityTests {
     // Today opens with its own date line, so the bar draws no date subtitle.
     let root = try mobileSource("LorvexMobileStoreRootView.swift")
     let page = try mobileSource("MobileTodayPage.swift")
-    #expect(!root.contains(".navigationSubtitle(MobileTodayHeader.dateText())"))
+    #expect(!root.contains(".navigationSubtitle("))
     #expect(page.contains("MobileTodayCalmCopy.dateLine(logicalDay: store.logicalTodayString)"))
-
-    let header = try mobileSource("MobileTodayHeader.swift")
-    #expect(header.contains("enum MobileTodayHeader"))
-    #expect(!header.contains(": View"))
   }
 
   @Test("The first-load skeleton is shaped like Today: a header, then one untitled list")
@@ -93,6 +89,11 @@ struct MobileRegularLayoutParityTests {
       "MobileStoreEditCalendarEventSheet.swift",
     ] {
       #expect(try mobileSource(file).contains(".mobileDestructiveRowStyle()"), "\(file)")
+    }
+    // Rows that can be disabled: the export rows while no category is chosen
+    // or a file is being prepared, Resume Sync while iCloud data is deleted.
+    for file in ["MobileStoreDataExportSection.swift", "MobileSettingsSections.swift"] {
+      #expect(try mobileSource(file).contains(".mobileAccentRowStyle()"), "\(file)")
     }
 
     // The task action tiles colour icon and name with one tint, and dim as a

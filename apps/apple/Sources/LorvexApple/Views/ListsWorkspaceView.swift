@@ -156,14 +156,20 @@ struct ListsWorkspaceView: View {
     .accessibilityIdentifier("lists.overview")
     // The lists snapshot changes with every task change that moves a count,
     // so the previews follow it.
-    .task(id: store.lists) {
-      listPreviews = await store.loadListPreviews(ids: store.orderedLists.map(\.id))
-    }
+    .task(id: store.lists) { await reloadListPreviews() }
     .overlay {
       if let listsEmptyState {
         LorvexEmptyStatePanel(model: listsEmptyState)
       }
     }
+  }
+
+  /// Loads the cards' previews. A load the lists have moved past is cancelled
+  /// and throws, so it never overwrites the newer load's previews.
+  private func reloadListPreviews() async {
+    guard let previews = try? await store.loadListPreviews(ids: store.orderedLists.map(\.id))
+    else { return }
+    listPreviews = previews
   }
 
   private func moveCatalogList(_ listID: LorvexList.ID, by delta: Int) {

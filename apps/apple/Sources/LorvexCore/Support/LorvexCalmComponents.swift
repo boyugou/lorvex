@@ -60,12 +60,10 @@ public struct LorvexTaskRing: View {
         .stroke(
           LorvexDesign.Palette.accent.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)),
           lineWidth: lineWidth)
-      Circle()
-        .trim(from: 0, to: isDone ? 1 : progress)
-        .stroke(
-          isDone ? LorvexDesign.Palette.done : LorvexDesign.Palette.accent,
-          style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-        .rotationEffect(.degrees(-90))
+      LorvexProgressArc(
+        fraction: isDone ? 1 : progress,
+        style: isDone ? LorvexDesign.Palette.done : LorvexDesign.Palette.accent,
+        lineWidth: lineWidth)
       if isDone {
         Circle().fill(LorvexDesign.Palette.done).padding(lineWidth / 2)
       }

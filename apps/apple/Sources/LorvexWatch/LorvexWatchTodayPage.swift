@@ -98,7 +98,7 @@ struct LorvexWatchTodayPage: View {
         actionTask = LorvexWatchTaskReference(id: task.id)
       } label: {
         VStack(spacing: LorvexDesign.Spacing.xxs) {
-          Text(task.title)
+          Text(userContent: task.title)
             .font(LorvexDesign.Typography.primaryEmphasis)
             .multilineTextAlignment(.center)
             .lineLimit(3)

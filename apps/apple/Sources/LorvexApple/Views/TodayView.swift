@@ -12,15 +12,15 @@ struct TodayView: View {
         Divider()
       }
       TimelineView(.everyMinute) { _ in
-        let nowMinutes = store.nowMinutesInProductDay
+        let content = store.todayColumnContent
         ScrollViewReader { scroll in
           ScrollView {
-            mainColumn(page: store.calmToday, nowMinutes: nowMinutes)
+            mainColumn(content)
           }
           .workspaceTaskArrowKeyNavigation(
             store.arrowKeyTaskNavigation(on: .today), proxy: scroll)
         }
-        .background(alignment: .top) { sky(nowMinutes) }
+        .background(alignment: .top) { sky(content.nowMinutes) }
       }
       .cancelSelectedTaskOnDelete(store, on: .today)
       .dropDestination(for: LorvexTaskRef.self) { refs, _ in
@@ -56,8 +56,8 @@ struct TodayView: View {
     }
   }
 
-  private func mainColumn(page: LorvexCalmToday, nowMinutes: Int?) -> some View {
-    TodayColumn(store: store, page: page, nowMinutes: nowMinutes)
+  private func mainColumn(_ content: TodayColumnContent) -> some View {
+    TodayColumn(store: store, content: content)
       .padding(.horizontal, LorvexDesign.Spacing.xl + 16)
       .padding(.top, LorvexDesign.Spacing.xl)
       .padding(.bottom, LorvexDesign.Spacing.xl)

@@ -49,7 +49,7 @@ struct MobileHabitArchivedSection: View {
   private func row(_ habit: LorvexHabit) -> some View {
     HStack(spacing: LorvexDesign.Spacing.m) {
       MobileIconTile(symbol: habit.tileSymbol, tint: LorvexDesign.Palette.neutral, size: 30)
-      Text(habit.name)
+      Text(userContent: habit.name)
         .foregroundStyle(.secondary)
         .lineLimit(2)
         .frame(maxWidth: .infinity, alignment: .leading)

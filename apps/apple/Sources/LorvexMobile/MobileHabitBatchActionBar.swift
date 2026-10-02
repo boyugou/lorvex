@@ -17,8 +17,8 @@ struct MobileHabitBatchActionBar: View {
       HStack {
         Text(
           String(
-            format: String(localized: "habits.batch.selected_count", defaultValue: "%lld selected", table: "Localizable", bundle: MobileL10n.bundle),
-            selectedCount)
+            localized: "habits.batch.selected_count", defaultValue: "\(selectedCount) selected",
+            table: "Localizable", bundle: MobileL10n.bundle)
         )
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)

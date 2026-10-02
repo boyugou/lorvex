@@ -115,7 +115,7 @@ extension MobileStore {
   /// wipe, while the rows the schedulers key off are still readable.
   private func clearNotificationSurfacesForLocalDataReset() async {
     _ = await taskReminderScheduler.scheduleReminders([])
-    await taskReminderScheduler.cancelSnoozes(keepingActiveTaskIDs: [])
+    await taskReminderScheduler.cancelAllSnoozes()
     lastHabitReminderScheduleReport =
       await habitReminderScheduler.replaceScheduledHabitReminders(for: [])
   }

@@ -94,7 +94,7 @@ func sidebarRowsUseDistinctListSelectionTags() throws {
   #expect(source.contains("store.navigateToWorkspace(destination)"))
   // Every row is one line: a list row carries its open count in the badge
   // and nothing beneath its name.
-  #expect(source.contains(#"SidebarListRow(badge: list.openCount > 0 ? "\(list.openCount)" : nil)"#))
+  #expect(source.contains("SidebarListRow(count: list.openCount > 0 ? list.openCount : nil)"))
   #expect(!source.contains("listScopeDetail"))
   #expect(!source.contains("scopeRowHeight"))
   #expect(!source.contains(#""sidebar.lists.scope_detail""#))

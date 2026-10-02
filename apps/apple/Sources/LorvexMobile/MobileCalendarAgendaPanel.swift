@@ -143,10 +143,9 @@ struct MobileCalendarAgendaPanel: View {
   /// The day's date, without the year inside the current year: the week
   /// header above already names it.
   private func dateLine(_ date: Date) -> String {
-    let formatter =
-      calendar.isDate(date, equalTo: Date(), toGranularity: .year)
-      ? Self.monthDayFormatter : Self.fullDateFormatter
-    return formatter.string(from: date)
+    calendar.isDate(date, equalTo: Date(), toGranularity: .year)
+      ? LorvexDateFormatters.string(date, template: "MMMd", timeZone: calendar.timeZone)
+      : LorvexDateFormatters.string(date, dateStyle: .medium, timeZone: calendar.timeZone)
   }
 
   /// "Today" on the logical today, the day the week strips mark, else the
@@ -157,28 +156,6 @@ struct MobileCalendarAgendaPanel: View {
         localized: "calendar.today", defaultValue: "Today", table: "Localizable",
         bundle: MobileL10n.bundle)
     }
-    return Self.weekdayFormatter.string(from: day.date)
+    return LorvexDateFormatters.string(day.date, template: "EEEE", timeZone: calendar.timeZone)
   }
-
-  private static let weekdayFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.locale = MobileL10n.locale
-    formatter.dateFormat = "EEEE"
-    return formatter
-  }()
-
-  private static let monthDayFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.locale = MobileL10n.locale
-    formatter.setLocalizedDateFormatFromTemplate("MMMd")
-    return formatter
-  }()
-
-  private static let fullDateFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.locale = MobileL10n.locale
-    formatter.dateStyle = .medium
-    formatter.timeStyle = .none
-    return formatter
-  }()
 }

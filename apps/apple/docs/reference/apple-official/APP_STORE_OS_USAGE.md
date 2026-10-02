@@ -20,10 +20,10 @@ Apple does not publish an equivalent macOS-version percentage on this page.
 
 The figures make an iOS/iPadOS 26 minimum technically attractive but still
 commercially aggressive: it can exclude a meaningful portion of active App
-Store devices. They support building with the version-26 SDK while retaining an
-iOS/iPadOS 18 minimum for the first release.
+Store devices. Lorvex declares iOS/iPadOS 26, macOS 26, and watchOS 26 as its
+minimums, so devices on earlier releases cannot install it.
 
 Do not infer macOS 26 adoption from the iPhone figures. After release, use App
-Store Connect's platform-version dimension to decide when Lorvex can retire the
-macOS 15 / iOS 18 generation.
+Store Connect's platform-version dimension to see how many devices the
+version-26 floor excludes.
 

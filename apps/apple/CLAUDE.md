@@ -166,7 +166,11 @@ device.
       `script/watch_sim_screenshots.sh <outdir> today habits capture actions`
       boots the watch simulator with its paired iPhone and captures each page
       from the DEBUG `-lorvexUIPreview` sample day; run it on its own, since
-      the watch simulator misses launches on a loaded machine. Never open
+      the watch simulator misses launches on a loaded machine. Widgets:
+      `script/widget_gallery_macos.sh <outdir>` renders the Mac desktop
+      widgets at their desktop sizes in an offscreen window, light and dark;
+      the iOS widgets are the `widgets*` routes of `ios_sim_screenshots.sh`,
+      which pins the simulator to the default text size. Never open
       Simulator.app, activate windows, or send keystrokes. Capture rounds are
       slow, so batch several UI changes before each round and capture one
       appearance only (light); run a single dark-mode sweep at the end of a
@@ -290,7 +294,10 @@ stale is mistaken for current behavior.
 1. Run the cheap gates that cover what you touched:
    `python3 script/verify_source_hygiene.py`, `verify_design_tokens.py`,
    `verify_localization_catalog.py`, `verify_app_metadata.py`,
-   `verify_user_docs.py`. They finish in seconds.
+   `verify_user_docs.py`. They finish in seconds. When a localized string's
+   interpolations change, also run `verify_localization_arguments.py`, which
+   checks each call's arguments against its catalog text through a separate
+   incremental macOS build.
 2. Run `swift build -j 4` — all targets must build cleanly.
 3. Run `swift test -j 4` from `apps/apple` once per batch; while iterating on
    one area use `swift test --skip-build -j 4 --filter <SuiteName>`. Run the
@@ -320,6 +327,7 @@ swift test --skip-build -j 4 --filter MobileHabitTests
 script/ios_sim_build.sh && script/ios_sim_screenshots.sh /tmp/shots light today tasks
 swift build -j 4 --product LorvexApple && script/ui_tour_macos.sh light /tmp/shots
 script/watch_sim_build.sh && script/watch_sim_screenshots.sh /tmp/shots today habits
+script/widget_gallery_macos.sh /tmp/widgets
 
 # Full gate before a release
 ./script/verify_all.sh

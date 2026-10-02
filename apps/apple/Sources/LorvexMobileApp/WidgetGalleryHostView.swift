@@ -10,15 +10,17 @@
   ///
   /// Renders in-app on purpose: the rows wrap `Link`/`Button(intent:)`, which an
   /// off-screen `ImageRenderer` collapses to placeholders but the live app draws
-  /// faithfully. The Today models come from the real `WidgetRenderModelBuilder`
-  /// over a sample day read at 10:12, so the gallery shows what the builder
-  /// makes of a running time, not hand-written rows.
+  /// faithfully. The content is ``WidgetGallerySample``'s sample day, read at
+  /// 10:12 through the real `WidgetRenderModelBuilder`, so the gallery shows
+  /// what the builder makes of a running time, not hand-written rows.
   ///
   /// The gallery is taller than one screen, so `-lorvexWidgetGallerySection
   /// <section>` shows one of its sections alone: `today` (the small and medium
   /// Today families), `large`, `lock` (the Lock Screen families), or `more`
   /// (Habits and Progress). Without it every section is shown.
   struct WidgetGalleryHostView: View {
+    private typealias Sample = WidgetGallerySample
+
     enum Section: String, CaseIterable {
       case today, large, lock, more
     }
@@ -54,78 +56,89 @@
       case .today:
         group("Today · small") {
           HStack(alignment: .top, spacing: 16) {
-            cell("running", 158, 158) { LorvexWidgetView(model: Self.model(.systemSmall)) }
-            cell("next", 158, 158) { LorvexWidgetView(model: Self.model(.systemSmall, at: Self.earlyClock)) }
+            cell("running", 158, 158) { LorvexWidgetView(model: Sample.model(.systemSmall)) }
+            cell("next", 158, 158) { LorvexWidgetView(model: Sample.model(.systemSmall, at: Sample.earlyClock)) }
           }
           HStack(alignment: .top, spacing: 16) {
-            cell("open day", 158, 158) { LorvexWidgetView(model: Self.openDayModel(.systemSmall)) }
-            cell("all done", 158, 158) { LorvexWidgetView(model: Self.emptyModel(.systemSmall)) }
+            cell("open day", 158, 158) { LorvexWidgetView(model: Sample.openDayModel(.systemSmall)) }
+            cell("all done", 158, 158) { LorvexWidgetView(model: Sample.emptyModel(.systemSmall)) }
           }
         }
         group("Today · medium") {
-          cell("systemMedium", 338, 158) { LorvexWidgetView(model: Self.model(.systemMedium)) }
+          cell("systemMedium", 338, 158) { LorvexWidgetView(model: Sample.model(.systemMedium)) }
           cell("systemMedium · open day", 338, 158) {
-            LorvexWidgetView(model: Self.openDayModel(.systemMedium))
+            LorvexWidgetView(model: Sample.openDayModel(.systemMedium))
           }
         }
       case .large:
         group("Today · large") {
           HStack(alignment: .top, spacing: 16) {
-            cell("systemLarge", 338, 354) { LorvexWidgetView(model: Self.model(.systemLarge)) }
+            cell("systemLarge", 338, 354) { LorvexWidgetView(model: Sample.model(.systemLarge)) }
           }
           cell("systemLarge · open day", 338, 354) {
-            LorvexWidgetView(model: Self.openDayModel(.systemLarge))
+            LorvexWidgetView(model: Sample.openDayModel(.systemLarge))
           }
         }
       case .lock:
         group("Today · Lock Screen") {
           HStack(alignment: .top, spacing: 16) {
             accessoryCell("circular", 72, 72) {
-              LorvexWidgetView(model: Self.model(.accessoryCircular))
+              LorvexWidgetView(model: Sample.model(.accessoryCircular))
             }
             accessoryCell("circular · open day", 72, 72) {
-              LorvexWidgetView(model: Self.openDayModel(.accessoryCircular))
+              LorvexWidgetView(model: Sample.openDayModel(.accessoryCircular))
             }
             accessoryCell("circular · ahead", 72, 72) {
-              LorvexWidgetView(model: Self.model(.accessoryCircular, at: Self.earlyClock))
+              LorvexWidgetView(model: Sample.model(.accessoryCircular, at: Sample.earlyClock))
             }
           }
           HStack(alignment: .top, spacing: 16) {
             accessoryCell("rectangular", 170, 72) {
-              LorvexWidgetView(model: Self.model(.accessoryRectangular))
+              LorvexWidgetView(model: Sample.model(.accessoryRectangular))
             }
             accessoryCell("rectangular · open day", 170, 72) {
-              LorvexWidgetView(model: Self.openDayModel(.accessoryRectangular))
+              LorvexWidgetView(model: Sample.openDayModel(.accessoryRectangular))
             }
           }
           accessoryCell("inline", 300, 30) {
-            LorvexWidgetView(model: Self.model(.accessoryInline))
+            LorvexWidgetView(model: Sample.model(.accessoryInline))
           }
           accessoryCell("inline · open day", 300, 30) {
-            LorvexWidgetView(model: Self.openDayModel(.accessoryInline))
+            LorvexWidgetView(model: Sample.openDayModel(.accessoryInline))
           }
         }
       case .more:
         group("Habits") {
           HStack(alignment: .top, spacing: 16) {
             cell("habits · small", 158, 158) {
-              HabitsWidgetView(habits: Self.sampleHabits, family: .systemSmall)
+              HabitsWidgetView(habits: Sample.habits, family: .systemSmall)
+            }
+            cell("habits · small · all done", 158, 158) {
+              HabitsWidgetView(habits: Sample.allDoneHabits, family: .systemSmall)
             }
           }
           cell("habits · medium", 338, 158) {
-            HabitsWidgetView(habits: Self.sampleHabits, family: .systemMedium)
+            HabitsWidgetView(habits: Sample.habits, family: .systemMedium)
           }
           cell("habits · medium · overflow", 338, 158) {
-            HabitsWidgetView(habits: Self.sampleHabits + Self.moreSampleHabits, family: .systemMedium)
+            HabitsWidgetView(habits: Sample.habits + Sample.moreHabits, family: .systemMedium)
           }
         }
         group("Progress") {
           HStack(alignment: .top, spacing: 16) {
             cell("progress · small", 158, 158) {
-              ProgressWidgetView(snapshot: Self.progressSnapshot, family: .systemSmall)
+              ProgressWidgetView(snapshot: Sample.progressSnapshot, family: .systemSmall)
             }
+            cell("progress · small · done", 158, 158) {
+              ProgressWidgetView(snapshot: Sample.finishedSnapshot, family: .systemSmall)
+            }
+          }
+          HStack(alignment: .top, spacing: 16) {
             accessoryCell("progress · circular", 72, 72) {
-              ProgressWidgetView(snapshot: Self.progressSnapshot, family: .accessoryCircular)
+              ProgressWidgetView(snapshot: Sample.progressSnapshot, family: .accessoryCircular)
+            }
+            accessoryCell("progress · inline", 200, 30) {
+              ProgressWidgetView(snapshot: Sample.progressSnapshot, family: .accessoryInline)
             }
           }
         }
@@ -148,7 +161,10 @@
     ) -> some View {
       VStack(alignment: .leading, spacing: 6) {
         Text(title).font(.caption.weight(.medium)).foregroundStyle(.secondary)
+        // The widget views draw inside WidgetKit's content margins and add
+        // none of their own; 16pt is the system's margin on iPhone and iPad.
         content()
+          .padding(16)
           .frame(width: width, height: height, alignment: .top)
           .background(LorvexDesign.Palette.card)
           .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
@@ -168,115 +184,6 @@
           .background(Color.black, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
           .environment(\.colorScheme, .dark)
       }
-    }
-
-    // MARK: Sample day
-
-    /// The gallery's clock: 10:12, twenty-seven minutes into the first task's
-    /// time.
-    static let runningClock = 10 * 60 + 12
-    /// Before the first task's time starts.
-    static let earlyClock = 8 * 60 + 40
-
-    static var sampleSnapshot: WidgetSnapshot {
-      let day: [(String, String, String?, String?, Int?)] = [
-        ("Review the Q3 planning doc", "in_progress", "09:45", "10:30", 45),
-        ("Refactor the sync layer", "open", "11:00", "12:30", 90),
-        ("Reply to the investor update email", "open", "14:00", "14:30", 30),
-        ("Read the GRPO paper", "open", nil, nil, 40),
-        ("Renew passport", "open", nil, nil, nil),
-      ]
-      return WidgetSnapshot(
-        generatedAt: "2026-06-30T12:00:00Z",
-        timezone: TimeZone.current.identifier,
-        stats: .init(todayCount: 5, overdueCount: 1, dueTodayCount: 3, completedTodayCount: 2),
-        briefing: "The planning review first while the doc is fresh; the sync refactor takes the long block before lunch.",
-        tasks: day.enumerated().map { index, row in
-          .init(
-            id: "task-\(index)", title: row.0, status: row.1, dueDate: nil, priority: nil,
-            listID: nil, estimatedMinutes: row.4, scheduledStart: row.2, scheduledEnd: row.3)
-        })
-    }
-
-    /// Today at `clock` minutes past midnight in the device zone.
-    static func date(at clock: Int) -> Date {
-      let calendar = Calendar.autoupdatingCurrent
-      let start = calendar.startOfDay(for: Date())
-      return calendar.date(bySettingHour: clock / 60, minute: clock % 60, second: 0, of: start)
-        ?? start
-    }
-
-    static func model(_ family: WidgetFamilyKind, at clock: Int = runningClock) -> WidgetRenderModel {
-      let entry = WidgetTimelineEntry(
-        date: date(at: clock),
-        state: .snapshot(sampleSnapshot, freshness: .fresh(ageSeconds: 0)),
-        refreshAfter: date(at: clock).addingTimeInterval(3600))
-      return WidgetRenderModelBuilder().model(entry: entry, family: family, statusText: "Updated now")
-    }
-
-    /// A day with tasks left but none leading: nothing timed, nothing started.
-    static func openDayModel(_ family: WidgetFamilyKind) -> WidgetRenderModel {
-      let day: [(String, Int?)] = [
-        ("Read the GRPO paper", 40),
-        ("Renew passport", nil),
-        ("Draft the offsite agenda", 90),
-        ("Book the dentist", 10),
-        ("Clean up the photo library", 30),
-      ]
-      let open = WidgetSnapshot(
-        generatedAt: "2026-06-30T12:00:00Z", timezone: TimeZone.current.identifier,
-        stats: .init(todayCount: 5, overdueCount: 0, dueTodayCount: 2, completedTodayCount: 1),
-        briefing: "Nothing is fixed today; the paper and the agenda are the two that matter.",
-        tasks: day.enumerated().map { index, row in
-          .init(
-            id: "open-\(index)", title: row.0, status: "open", dueDate: nil, priority: nil,
-            listID: nil, estimatedMinutes: row.1, scheduledStart: nil, scheduledEnd: nil)
-        })
-      let entry = WidgetTimelineEntry(
-        date: date(at: runningClock),
-        state: .snapshot(open, freshness: .fresh(ageSeconds: 0)),
-        refreshAfter: date(at: runningClock).addingTimeInterval(3600))
-      return WidgetRenderModelBuilder().model(entry: entry, family: family, statusText: "Updated now")
-    }
-
-    static func emptyModel(_ family: WidgetFamilyKind) -> WidgetRenderModel {
-      let empty = WidgetSnapshot(
-        generatedAt: "2026-06-30T12:00:00Z", timezone: TimeZone.current.identifier,
-        stats: .init(todayCount: 0, overdueCount: 0, dueTodayCount: 0, completedTodayCount: 4),
-        briefing: nil, tasks: [])
-      let entry = WidgetTimelineEntry(
-        date: date(at: runningClock),
-        state: .snapshot(empty, freshness: .fresh(ageSeconds: 0)),
-        refreshAfter: date(at: runningClock).addingTimeInterval(3600))
-      return WidgetRenderModelBuilder().model(entry: entry, family: family, statusText: "Updated now")
-    }
-
-    /// Stats-only snapshot for the progress widget (2 done of 5 due today → 40%).
-    static var progressSnapshot: WidgetSnapshot {
-      WidgetSnapshot(
-        generatedAt: "2026-06-30T12:00:00Z", timezone: "UTC",
-        stats: .init(todayCount: 3, overdueCount: 1, dueTodayCount: 3, completedTodayCount: 2),
-        briefing: nil, tasks: [])
-    }
-
-    static var sampleHabits: [WidgetSnapshot.HabitSummary] {
-      [
-        .init(id: "h1", name: "Meditate", icon: "brain.head.profile", completedToday: 1, target: 1),
-        .init(id: "h2", name: "Read 30 minutes", icon: "book.fill", completedToday: 0, target: 1),
-        .init(id: "h3", name: "Drink water", icon: "drop.fill", completedToday: 2, target: 3),
-        .init(id: "h4", name: "Morning run", icon: "figure.run", completedToday: 1, target: 1),
-        .init(id: "h5", name: "Stretch", icon: "figure.mind.and.body", completedToday: 0, target: 2),
-      ]
-    }
-
-    /// Three more habits, so the medium overflow cell fills both columns and
-    /// shows the "+N more" footer; one name is long enough to truncate.
-    static var moreSampleHabits: [WidgetSnapshot.HabitSummary] {
-      [
-        .init(id: "h6", name: "Lights out by 11 PM", icon: "moon.zzz.fill", completedToday: 0, target: 1),
-        .init(id: "h7", name: "Vitamins", icon: "pills.fill", completedToday: 1, target: 1),
-        .init(id: "h8", name: "Journal", icon: "text.book.closed.fill", completedToday: 0, target: 1),
-      ]
     }
   }
 #endif

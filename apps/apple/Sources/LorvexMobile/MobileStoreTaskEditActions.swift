@@ -7,8 +7,9 @@ private let taskEditLog = Logger(
   category: "task-edit")
 
 extension MobileStore {
-  /// Distinct tag names already in use across loaded task pools, sorted
-  /// case-insensitively. Surfaced as suggestions in the task edit tag field.
+  /// Distinct tag names already in use across loaded task pools, in the order
+  /// the user's language sorts names (as `listAllTags()` orders them).
+  /// Surfaced as suggestions in the task edit tag field.
   public var knownTagSuggestions: [String] {
     var seen = Set<String>()
     var ordered: [String] = []
@@ -17,7 +18,7 @@ extension MobileStore {
         ordered.append(tag)
       }
     }
-    return ordered.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    return ordered.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
   }
 
   /// Candidate tasks for a dependency picker. An empty query lists open tasks;

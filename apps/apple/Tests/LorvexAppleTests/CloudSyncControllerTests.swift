@@ -90,6 +90,14 @@ private func serverRecord(
   return CloudSyncEnvelopeRecord.makeRecord(server, zoneID: lorvexZone)
 }
 
+/// A clock the test moves by hand.
+private final class HandClock: @unchecked Sendable {
+  private let lock = NSLock()
+  private var current = Date(timeIntervalSince1970: 1_800_000_000)
+  var now: Date { lock.withLock { current } }
+  func advance(by seconds: TimeInterval) { lock.withLock { current += seconds } }
+}
+
 private func conflict(client: CKRecord, server: CKRecord) -> CKError {
   CKError(
     .serverRecordChanged,
@@ -569,6 +577,56 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     #expect(await h.controller.takePendingReport().iCloudStorageFull)
   }
 
+  @Test func fullStorageHoldsSendsUntilTheHoldEnds() async throws {
+    let h = try await Harness()
+    let clock = HandClock()
+    await h.controller.setClockForTesting { clock.now }
+    let big = try await h.core.createTask(title: "Big", notes: "")
+    _ = await h.controller.start()
+    let records = await h.batch()
+    await h.controller.handleSentRecords(
+      saved: [], failed: records.map { ($0, CKError(.quotaExceeded)) })
+    _ = await h.controller.takePendingReport()
+
+    // A local edit during the hold is queued, but nothing is uploaded.
+    let another = try await h.core.createTask(title: "Another", notes: "")
+    await h.controller.noteLocalChanges()
+    #expect(await h.batch().isEmpty)
+    #expect(await h.controller.takePendingReport().iCloudStorageFull, "the report says why")
+
+    clock.advance(by: 301)
+    let sent = Set(try await h.batch().map { try envelope(of: $0).entityId })
+    #expect(sent.isSuperset(of: [big.id, another.id]), "both tasks go out once the hold ends")
+  }
+
+  @Test func consecutiveStorageRefusalsDoubleTheHoldUntilASaveEndsThem() async throws {
+    let h = try await Harness()
+    let clock = HandClock()
+    await h.controller.setClockForTesting { clock.now }
+    _ = try await h.core.createTask(title: "Big", notes: "")
+    _ = await h.controller.start()
+    func refuse(_ records: [CKRecord]) async {
+      await h.controller.handleSentRecords(
+        saved: [], failed: records.map { ($0, CKError(.quotaExceeded)) })
+    }
+    await refuse(await h.batch())
+    clock.advance(by: 301)
+    await refuse(await h.batch())
+
+    clock.advance(by: 301)
+    #expect(await h.batch().isEmpty, "a second refusal holds for ten minutes")
+    clock.advance(by: 300)
+    let records = await h.batch()
+    #expect(!records.isEmpty)
+
+    await h.controller.handleSentRecords(saved: records, failed: [])
+    _ = try await h.core.createTask(title: "Another", notes: "")
+    await h.controller.noteLocalChanges()
+    await refuse(await h.batch())
+    clock.advance(by: 301)
+    #expect(!(await h.batch().isEmpty), "the save reset the hold to five minutes")
+  }
+
   @Test func namesWithoutOutboxWorkAreDroppedFromTheEngine() async throws {
     let h = try await Harness()
     _ = await h.controller.start()
@@ -598,6 +656,28 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     let report = await h.controller.takePendingReport()
     #expect(report.fetchedRecordCount == records.count)
     #expect(report.inbound.appliedEntityTypes.contains(.task))
+    #expect(report.inbound.canonicalStateChanged)
+  }
+
+  @Test func recordsFetchedAgainChangeNothing() async throws {
+    let source = try await Harness()
+    _ = try await source.core.createTask(title: "From a peer", notes: "")
+    _ = await source.controller.start()
+    let records = await source.batch()
+    let h = try await Harness()
+    _ = await h.controller.start()
+    await h.controller.handleFetchedRecords(records)
+    _ = await h.controller.takePendingReport()
+
+    // The same records again, as a device's own pushes come back on its next
+    // fetch: all held already, so the report gives no surface a reason to
+    // reload.
+    await h.controller.handleFetchedRecords(records)
+
+    let report = await h.controller.takePendingReport()
+    #expect(report.fetchedRecordCount == records.count)
+    #expect(report.inbound.appliedEntityTypes.isEmpty)
+    #expect(!report.inbound.canonicalStateChanged)
   }
 
   @Test func recordsOutsideTheLorvexZoneAreIgnored() async throws {

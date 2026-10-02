@@ -76,7 +76,7 @@ struct TasksReviewOptionsMenu: View {
         Text(String(localized: "tasks.filter.all", defaultValue: "All", table: "Localizable", bundle: LorvexL10n.bundle))
           .tag(nil as LorvexTask.Priority?)
         ForEach(LorvexTask.Priority.allCases, id: \.self) { priority in
-          Text(TaskDisplayText.compactPriority(priority))
+          Text(priority.localizedName)
             .tag(Optional(priority))
         }
       }
@@ -140,13 +140,8 @@ struct TasksSelectionActionMenu: View {
 
   private var selectionActionsAccessibilityLabel: String {
     String(
-      format: String(
-        localized: "tasks.selection.count",
-        defaultValue: "%lld selected",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ),
-      store.taskWorkspaceSelectionCount
-    )
+      localized: "tasks.selection.count",
+      defaultValue: "\(store.taskWorkspaceSelectionCount) selected",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 }

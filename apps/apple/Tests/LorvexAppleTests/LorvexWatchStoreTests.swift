@@ -92,12 +92,14 @@ struct LorvexWatchStoreTests {
     #expect(store.savedTimes["watch-task"] == 540..<570)
     // The phone sends the head of a long list with the whole list's length.
     #expect(store.moreCount == 2)
-    #expect(store.snapshotStatusText == "Synced 3m ago")
+    // The snapshot is three minutes old; the system words the age.
+    let synced = "Synced \(LorvexDateFormatters.elapsed(seconds: 180))"
+    #expect(store.snapshotStatusText == synced)
     #expect(
       LorvexWatchStore.snapshotStatusLabel(
         snapshot,
         now: Date(timeIntervalSince1970: 1_779_624_180)
-      ) == "Synced 3m ago")
+      ) == synced)
     #expect(store.canMutateTasks == false)
     #expect(store.canCaptureTask == false)
     #expect(store.taskActionUnavailableReason == "Open Lorvex on iPhone to change tasks.")

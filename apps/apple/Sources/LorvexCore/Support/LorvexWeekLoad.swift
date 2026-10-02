@@ -202,16 +202,17 @@ public struct LorvexWeekLoad: Equatable, Sendable {
 
   /// The day's timed events as disjoint intervals inside the working window.
   /// A multi-day timed event covers midnight to its end on its last day, its
-  /// start to midnight on its first, and whole days in between.
+  /// start to midnight on its first, and whole days in between; an event that
+  /// does not occur on the day (``CalendarTimelineEvent/occurs(on:)``), such
+  /// as one ending at exactly midnight on its end day, adds nothing.
   static func mergedMeetings(
     _ events: [CalendarTimelineEvent], key: String, workStart: Int, workEnd: Int
   ) -> [(start: Int, end: Int)] {
     let intervals: [(start: Int, end: Int)] = events.compactMap { event in
-      guard !event.allDay else { return nil }
+      guard !event.allDay, event.occurs(on: key) else { return nil }
       let endKey = event.endDate ?? event.startDate
       let start = key == event.startDate ? CalendarGridModel.parseMinutes(event.startTime) ?? 0 : 0
       var end = key == endKey ? CalendarGridModel.parseMinutes(event.endTime) ?? 24 * 60 : 24 * 60
-      if end == 0, key == endKey, endKey != event.startDate { return nil }
       if end <= start { end = 24 * 60 }
       let clipped = (start: max(start, workStart), end: min(end, workEnd))
       return clipped.end > clipped.start ? clipped : nil

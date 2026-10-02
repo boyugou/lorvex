@@ -344,7 +344,7 @@ func applyRestoresSupportedEntities() async throws {
   let plan = LorvexDataImporter.plan(for: payload)
 
   let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
-  #expect(summary.errors.isEmpty)
+  #expect(summary.issues.isEmpty)
   // tasks(2) + lists(1) + habits(2) + calendar(2) + reviews(1) + memory(1) + prefs(2)
   #expect(summary.totalImported == 2 + 1 + 2 + 2 + 1 + 1 + 2)
 
@@ -504,7 +504,7 @@ func applyRestoresArchivedListAndPosition() async throws {
 
   let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
 
-  #expect(summary.errors.isEmpty)
+  #expect(summary.issues.isEmpty)
   let archived = try await core.loadArchivedLists()
   let restored = archived.lists.first { $0.id == ImportID.archivedList }
   #expect(restored?.archivedAt == "2026-06-10T00:00:00.000Z")
@@ -549,7 +549,7 @@ func reimportIsIdempotent() async throws {
   let eventsAfterFirst = try await distinctImportedSourceEventIds()
   // Second import of the same file.
   let second = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
-  #expect(second.errors.isEmpty)
+  #expect(second.issues.isEmpty)
 
   // Tasks: skipped because already present (the loadTask precheck), not errored.
   let taskResult = try #require(second.results.first { $0.category == .tasks })
@@ -606,8 +606,8 @@ func badRecordIsCollectedNotThrown() async throws {
 
   let taskResult = try #require(summary.results.first { $0.category == .tasks })
   #expect(taskResult.imported == 1)
-  #expect(summary.errors.count == 1)
-  #expect(summary.errors.first?.recordRef == ImportID.badTask)
+  #expect(summary.issues.count == 1)
+  #expect(summary.issues.first?.recordID == ImportID.badTask)
   _ = try await core.loadTask(id: ImportID.goodTask)
 }
 
@@ -632,9 +632,9 @@ func taskImportRejectsInvalidDueDateInsteadOfDroppingIt() async throws {
 
   let result = try #require(summary.results.first { $0.category == .tasks })
   #expect(result.imported == 0)
-  #expect(summary.errors.count == 1)
-  #expect(summary.errors.first?.recordRef == ImportID.badDueDateTask)
-  #expect(summary.errors.first?.message.contains("dueDate") == true)
+  #expect(summary.issues.count == 1)
+  #expect(summary.issues.first?.recordID == ImportID.badDueDateTask)
+  #expect(summary.issues.first?.detail.contains("dueDate") == true)
   await #expect(throws: LorvexCoreError.taskNotFound) {
     _ = try await core.loadTask(id: ImportID.badDueDateTask)
   }
@@ -903,7 +903,7 @@ func backupDoesNotResurrectAClearedDailyBriefing() async throws {
   let plan = LorvexDataImporter.plan(for: payload)
   let result = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
 
-  #expect(result.errors.isEmpty)
+  #expect(result.issues.isEmpty)
   #expect(result.results.first { $0.category == .dailyBriefings }?.skipped == 1)
   #expect(try await core.loadDailyBriefingsForDataExport().isEmpty)
 }
@@ -1005,7 +1005,7 @@ func contentPlanCountsFileContentsNotWriteOutcome() async throws {
   // only the one brand-new record per category, skipping the present and
   // tombstoned ones — strictly fewer than the plan's supportedRecordCount of 6.
   let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: core)
-  #expect(summary.errors.isEmpty)
+  #expect(summary.issues.isEmpty)
   let listResult = try #require(summary.results.first { $0.category == .lists })
   #expect(listResult.imported == 1)  // listNew
   #expect(listResult.skipped == 2)  // present + tombstoned

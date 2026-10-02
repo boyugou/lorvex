@@ -31,8 +31,8 @@ WidgetKit, App Intents, EventKit, and CloudKit/iCloud.
 | macOS 26+ direct distribution | `LorvexApple` | `LorvexWidgets.appex` | SwiftPM → Developer ID + notarized DMG | `package_dmg.sh` |
 | macOS 26+ local/CI | `LorvexApple` | `LorvexWidgets.appex` | SwiftPM → ad-hoc app/ZIP | `package_local.sh` / `archive_local.sh` |
 | macOS 26+ Mac App Store | `LorvexApple` | `LorvexWidgets.appex` | SwiftPM → App Store signed package | `archive_mas.sh` |
-| iOS/iPadOS 18+ | `LorvexMobileApp` | `LorvexWidgets.appex`, `LorvexFocusFilterExtension.appex` | XcodeGen → xcodebuild | `archive_ios.sh` |
-| watchOS 11+ | `LorvexWatchApp` | `LorvexWatchComplication.appex` | XcodeGen → xcodebuild | `archive_ios.sh --scheme LorvexWatchApp` |
+| iOS/iPadOS 26+ | `LorvexMobileApp` | `LorvexWidgets.appex`, `LorvexFocusFilterExtension.appex` | XcodeGen → xcodebuild | `archive_ios.sh` |
+| watchOS 26+ | `LorvexWatchApp` | `LorvexWatchComplication.appex` | XcodeGen → xcodebuild | `archive_ios.sh --scheme LorvexWatchApp` |
 
 ---
 
@@ -197,14 +197,15 @@ parity, semantic migration-ladder validation, sync-payload validation, and the
 strict release freeze check. The freeze must be ARMED and must capture every
 current migration/payload identity (`schema/migration_policy.json`
 `"launched": true`) — see
-`docs/release.md` § "First public release" for arming it. Lorvex is
-pre-launch today, so this gate is skippable for a local pre-launch build
-only via `LORVEX_ALLOW_UNFROZEN=1`; real release packaging must not set that
+`docs/release.md` § "Schema freeze" for arming it. The policy file records
+`launched: true`, so the gate passes only when the current migration and payload
+identities are captured. `LORVEX_ALLOW_UNFROZEN=1` skips the gate only while the
+freeze is unarmed (`launched: false`); real release packaging must not set that
 variable, since the whole point is to keep a pre-freeze schema from ever
 reaching a shipped MAS artifact.
 
 ```bash
-LORVEX_ALLOW_UNFROZEN=1 ./script/archive_mas.sh --preflight   # pre-launch local build only
+LORVEX_ALLOW_UNFROZEN=1 ./script/archive_mas.sh --preflight   # unarmed freeze (launched=false), local build only
 ```
 
 The preflight then runs `verify_mas_release_readiness.py`, which checks:
@@ -350,8 +351,9 @@ export APPLE_TEAM_ID="ABCDE12345"
 
 `--archive` and `--export` (but not `--build-only`, which never produces a
 distributable artifact) require the schema-freeze tripwire to be ARMED, the
-same gate `archive_mas.sh` enforces — see § 4 above. Skip it for a local
-pre-launch build only with `LORVEX_ALLOW_UNFROZEN=1`.
+same gate `archive_mas.sh` enforces — see § 4 above. While the freeze is
+unarmed (`launched: false`), `LORVEX_ALLOW_UNFROZEN=1` skips it for a local
+build.
 
 `archive_ios.sh` performs:
 

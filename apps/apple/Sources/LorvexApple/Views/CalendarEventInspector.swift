@@ -1,8 +1,9 @@
 import LorvexCore
 import SwiftUI
 
-/// The calendar workspace's trailing detail panel — the third pane that opens
-/// when an event is clicked. Imported (non-`editable`) events render read-only
+/// An event's detail panel: the Calendar workspace's third pane, which opens
+/// when an event is clicked, and the main window's inspector for an event
+/// opened from Today's schedule. Imported (non-`editable`) events render read-only
 /// with a "managed by source" note; Lorvex-owned events also offer Edit and
 /// Delete. Resolving the event by id (via the caller) keeps it live across
 /// timeline refreshes.
@@ -15,6 +16,9 @@ struct CalendarEventInspector: View {
   /// EventKit, since the timeline cache only carries the opaque `provider` /
   /// `canonical` source sentinels. Defaults to no-op for previews/tests.
   var resolveSource: (CalendarTimelineEvent) async -> EventKitEventSource? = { _ in nil }
+  /// The panel's width beside the Calendar grid. Nil fills the width it is
+  /// given, as in the main window's resizable inspector column.
+  var fixedWidth: CGFloat? = 320
 
   @State private var resolvedSource: EventKitEventSource?
 
@@ -61,7 +65,8 @@ struct CalendarEventInspector: View {
         actionBar
       }
     }
-    .frame(width: 320)
+    .frame(width: fixedWidth)
+    .frame(maxWidth: fixedWidth == nil ? .infinity : nil)
     .background(.background)
     .accessibilityIdentifier("calendar.event.inspector")
     .task(id: event.id) {
@@ -75,7 +80,7 @@ struct CalendarEventInspector: View {
       RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
         .fill(tint)
         .frame(width: 4, height: 28)
-      Text(event.title)
+      Text(userContent: event.title)
         .font(LorvexDesign.Typography.sectionHeader)
         .foregroundStyle(.primary)
         .lineLimit(3)
@@ -193,18 +198,12 @@ struct CalendarEventInspector: View {
   }
 
   private func plainText(_ value: String) -> some View {
-    Text(value)
+    Text(userContent: value)
       .font(LorvexDesign.Typography.primaryText)
       .foregroundStyle(.primary)
       .textSelection(.enabled)
       .fixedSize(horizontal: false, vertical: true)
   }
-
-  private static let displayDateFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.setLocalizedDateFormatFromTemplate("EEEEMMMMd")
-    return f
-  }()
 
   /// Render a `yyyy-MM-dd` event date as a localized weekday + month-day label,
   /// falling back to the raw key if it can't be parsed. The day key is a
@@ -212,7 +211,7 @@ struct CalendarEventInspector: View {
   /// parse it through the shared current-tz `ymd` formatter.
   static func dateLabel(_ ymd: String) -> String {
     guard let date = LorvexDateFormatters.ymd.date(from: ymd) else { return ymd }
-    return displayDateFormatter.string(from: date)
+    return LorvexDateFormatters.string(date, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent)
   }
 
   private var whenTitle: String {

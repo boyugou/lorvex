@@ -119,7 +119,8 @@ public struct WidgetSnapshotProjector: Sendable {
             name: habit.name,
             icon: habit.icon,
             completedToday: habit.completionsToday,
-            target: habit.targetCount
+            target: habit.targetCount,
+            color: habit.color
           )
         } ?? []
 

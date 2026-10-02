@@ -23,7 +23,7 @@ Lorvex to Claude Code by hand earlier, remove that entry with
 **Any client: from the app**
 
 1. Open **Lorvex** → **Settings** → **Assistant**
-2. Click **"Copy Setup Prompt"**
+2. Click **Copy** beside **Setup Prompt**
 3. Paste it into your AI assistant (Claude, Codex, etc.)
 4. The AI will configure itself automatically
 
@@ -167,6 +167,12 @@ If a host stops after the mutation commits but before its full response is store
 User-supplied string content (task titles, notes, list names, memory entry content) in MCP read responses is wrapped in `⟦user⟧…⟦/user⟧` sentinels (U+27E6 / U+27E7). These sentinels mark the boundary between system-structured content and user-controlled text so AI clients can distinguish user input from system instructions within the same JSON payload.
 
 AI clients should treat text between these sentinels as user content and apply appropriate trust levels. Lorvex-controlled fields (IDs, status enums, timestamps, counts) are never fenced.
+
+A fenced value copied back into a tool argument means its bare text: before any tool runs, the server removes the `⟦user⟧` and `⟦/user⟧` tokens from every string argument, so a title, tag, or memory key echoed from a read response is stored and matched without them.
+
+### Argument validation
+
+Every argument whose input schema declares an `enum` (including array items and the objects inside batch arrays) must use one of the declared values. Matching ignores case and surrounding whitespace. Any other value fails the call with a `validation` error that names the argument and lists the allowed values, for example `status must be one of open, in_progress, actionable, completed, cancelled, someday, all (got "done")`; the server never substitutes a default for an unrecognized value.
 
 ### Local-trust model (helper access)
 

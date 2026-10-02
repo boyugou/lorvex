@@ -23,7 +23,6 @@ struct SpotlightListDocument: Equatable, Sendable {
     let attributes = CSSearchableItemAttributeSet(contentType: .content)
     attributes.title = title
     attributes.contentURL = deepLink
-    attributes.relatedUniqueIdentifier = deepLink.absoluteString
     return CSSearchableItem(
       uniqueIdentifier: identifier,
       domainIdentifier: Self.domainIdentifier,
@@ -56,7 +55,6 @@ struct SpotlightHabitDocument: Equatable, Sendable {
     let attributes = CSSearchableItemAttributeSet(contentType: .content)
     attributes.title = title
     attributes.contentURL = deepLink
-    attributes.relatedUniqueIdentifier = deepLink.absoluteString
     return CSSearchableItem(
       uniqueIdentifier: identifier,
       domainIdentifier: Self.domainIdentifier,
@@ -71,9 +69,9 @@ struct SpotlightHabitDocument: Equatable, Sendable {
 
 /// A Spotlight searchable item for a daily review.
 ///
-/// Privacy: only the date-based title (e.g. "Daily Review 2026-05-24") is
-/// indexed. The review summary — a highly personal free-text reflection — is
-/// deliberately not written to the system index.
+/// Privacy: only the date-based title ("Daily Review Sep 29, 2026", the day in
+/// the user's language) is indexed. The review summary — a highly personal
+/// free-text reflection — is deliberately not written to the system index.
 struct SpotlightDailyReviewDocument: Equatable, Sendable {
   static let domainIdentifier = "lorvex.reviews"
   static let identifierPrefix = "lorvex-review:"
@@ -83,17 +81,21 @@ struct SpotlightDailyReviewDocument: Equatable, Sendable {
 
   init(review: DailyReviewEntry) {
     identifier = Self.identifierPrefix + review.date
+    // The review's day is a calendar day, not an instant: read and written in
+    // UTC so it never shifts across the device's time zone.
+    let day =
+      LorvexDateFormatters.ymdUTC.date(from: review.date).map {
+        LorvexDateFormatters.string($0, dateStyle: .medium, timeZone: .gmt)
+      } ?? review.date
     title = String(
-      format: String(localized: "spotlight.daily_review.title", defaultValue: "Daily Review %@", table: "Localizable", bundle: LorvexL10n.bundle),
-      review.date
-    )
+      localized: "spotlight.daily_review.title", defaultValue: "Daily Review \(day)", table: "Localizable",
+      bundle: LorvexL10n.bundle)
   }
 
   var searchableItem: CSSearchableItem {
     let attributes = CSSearchableItemAttributeSet(contentType: .content)
     attributes.title = title
     attributes.contentURL = deepLink
-    attributes.relatedUniqueIdentifier = deepLink.absoluteString
     return CSSearchableItem(
       uniqueIdentifier: identifier,
       domainIdentifier: Self.domainIdentifier,
@@ -131,7 +133,6 @@ struct SpotlightCalendarEventDocument: Equatable, Sendable {
     let attributes = CSSearchableItemAttributeSet(contentType: .content)
     attributes.title = title
     attributes.contentURL = deepLink
-    attributes.relatedUniqueIdentifier = identifier
     return CSSearchableItem(
       uniqueIdentifier: identifier,
       domainIdentifier: Self.domainIdentifier,

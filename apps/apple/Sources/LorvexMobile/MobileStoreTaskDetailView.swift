@@ -40,6 +40,7 @@ struct MobileStoreTaskDetailView: View {
       completeDependency: { dependency in _ = await store.completeTask(dependency.id) },
       isDependencyMutating: { store.taskIsMutating($0) },
       properties: MobileTaskProperties(task: task, listName: listName, logicalDay: store.logicalTodayString),
+      shareText: MobileShareText.task(task, listName: listName, logicalDay: store.logicalTodayString),
       editField: edit
     ) {
       MobileTaskActionSection(

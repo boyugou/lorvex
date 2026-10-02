@@ -9,20 +9,6 @@ import LorvexWorkflow
 /// stable model types via `SwiftLorvexTaskDeserializers`, with the
 /// `returned` / `nextOffset` / `truncated` pagination metadata derived alongside.
 extension SwiftLorvexCoreService {
-
-  public func taskIntakeAdvice(id: LorvexTask.ID) async throws -> [TaskIntakeAdviceItem] {
-    try read { db in
-      let taskJSON: JSONValue
-      do {
-        taskJSON = try TaskResponse.loadEnrichedTaskJSON(db, taskId: TaskId(trusted: id))
-      } catch {
-        return []  // unknown id → no advice rather than an error
-      }
-      return try TaskCreateAdvice.buildTaskIntakeAdvice(db, task: taskJSON)
-        .compactMap(Self.taskIntakeAdviceItem(from:))
-    }
-  }
-
   static func taskIntakeAdviceItem(from json: JSONValue) -> TaskIntakeAdviceItem? {
     guard case let .object(fields) = json,
       case let .string(code) = fields["code"] ?? .null,

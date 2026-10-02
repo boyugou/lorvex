@@ -129,10 +129,9 @@ func mobileStoreBadgeCountsTasksOutsideStaleTodaySnapshot() async throws {
 
   await store.updateBadge()
 
-  let scheduledTasks = try await core.getScheduledTasks(
-    from: "0001-01-01", to: logicalDay, limit: 500)
+  let actionableTasks = try await core.loadWidgetStatsSource().actionableTasks
   #expect(await recorder.lastCount() == BadgeCoordinator.badgeCount(
-    tasks: scheduledTasks,
+    tasks: actionableTasks,
     today: logicalDay))
   #expect((await recorder.lastCount() ?? 0) > BadgeCoordinator.badgeCount(
     tasks: store.snapshot.today.tasks,
@@ -150,9 +149,9 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
     todayString: { "2026-05-23" }
   )
 
-  // Seed 12 tasks planned today. The badge must come from the canonical
-  // scheduled/overdue query rather than from a day surface: the two answer
-  // different questions, and only the canonical one is a due-count.
+  // Seed 12 tasks planned today. The badge must come from the uncapped
+  // actionable source rather than from the Today snapshot: the snapshot is the
+  // day's plan, and only the uncapped source is a due-count of every task.
   let today = try #require(Calendar(identifier: .gregorian).date(from: DateComponents(
     timeZone: TimeZone(secondsFromGMT: 0), year: 2026, month: 5, day: 23)))
   var ids: [LorvexTask.ID] = []
@@ -177,9 +176,8 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
   // whose post-mutation badge update now routes through the canonical source.
   #expect(await store.completeTask(ids[0]))
 
-  let scheduled = try await core.getScheduledTasks(
-    from: "0001-01-01", to: "2026-05-23", limit: 500)
-  let canonical = BadgeCoordinator.badgeCount(tasks: scheduled, today: "2026-05-23")
+  let actionable = try await core.loadWidgetStatsSource().actionableTasks
+  let canonical = BadgeCoordinator.badgeCount(tasks: actionable, today: "2026-05-23")
   #expect(canonical == 11)  // 12 planned today, one now completed
   #expect(await recorder.lastCount() == canonical)
 }

@@ -116,6 +116,33 @@ func calendarMonthGridBuildDaysPlacesMultiDayEventsOnEveryDayTheySpan() throws {
 }
 
 @Test
+func calendarMonthGridBuildDaysLeavesAnEventEndingAtMidnightOffItsEndDay() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 1
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 10)))
+
+  // 10 PM to midnight takes no time on the 15th; 11 PM to 12:30 AM does.
+  let lateShow = calendarMonthGridEvent(
+    id: "late-show", title: "Late show", startDate: "2024-02-14", endDate: "2024-02-15",
+    startTime: "22:00", endTime: "00:00")
+  let redEye = calendarMonthGridEvent(
+    id: "red-eye", title: "Red-eye", startDate: "2024-02-14", endDate: "2024-02-15",
+    startTime: "23:00", endTime: "00:30")
+
+  let days = CalendarMonthGridModel.buildDays(
+    monthAnchor: monthAnchor,
+    calendar: calendar,
+    events: [lateShow, redEye],
+    tasks: [],
+    dayKeyFor: { calendarMonthGridYMD.string(from: $0) }
+  )
+
+  #expect(days.first { $0.dayKey == "2024-02-14" }?.events.map(\.id) == ["late-show", "red-eye"])
+  #expect(days.first { $0.dayKey == "2024-02-15" }?.events.map(\.id) == ["red-eye"])
+}
+
+@Test
 func calendarMonthGridBuildDaysPlacesDueDatedTasksOnlyOnTheirDueDay() throws {
   var calendar = Calendar(identifier: .gregorian)
   calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
@@ -341,9 +368,9 @@ func calendarMonthGridOrdersTimedTasksWithTimedEventsByStart() throws {
 
   let day = try #require(days.first { $0.dayKey == "2024-02-14" })
   #expect(
-    day.entries.map(\.id) == ["event#offsite", "event#standup", "timed#t2", "event#lunch", "task#t3"])
+    day.entries.map(\.id) == ["event#offsite", "task#t3", "event#standup", "timed#t2", "event#lunch"])
   let chips = CalendarMonthGridModel.chips(for: day, maxVisible: 3)
-  #expect(chips.visible.map(\.id) == ["event#offsite", "event#standup"])
+  #expect(chips.visible.map(\.id) == ["event#offsite", "task#t3"])
   #expect(chips.overflowCount == 3)
 }
 
@@ -362,6 +389,7 @@ private func calendarMonthGridEvent(
   startDate: String,
   endDate: String? = nil,
   startTime: String? = nil,
+  endTime: String? = nil,
   allDay: Bool = false
 ) -> CalendarTimelineEvent {
   CalendarTimelineEvent(
@@ -372,7 +400,7 @@ private func calendarMonthGridEvent(
     startDate: startDate,
     startTime: startTime,
     endDate: endDate,
-    endTime: nil,
+    endTime: endTime,
     allDay: allDay,
     location: nil,
     color: nil,

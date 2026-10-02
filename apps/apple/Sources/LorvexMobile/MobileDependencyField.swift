@@ -21,7 +21,7 @@ struct MobileDependencyField: View {
           Image(systemName: "arrow.triangle.branch")
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(.secondary)
-          Text(title(for: id))
+          Text(userContent: title(for: id))
             .font(LorvexDesign.Typography.primaryText)
             .lineLimit(2)
           Spacer(minLength: 8)

@@ -5,14 +5,12 @@ import SwiftUI
 /// block or an all-day pill: the same checkbox a task row carries, so a task
 /// is completed from the calendar with one tap. A done task shows the filled
 /// ring with its check. `font` sizes the glyph to its host (a block's
-/// secondary text, a pill's tertiary line), and `height` caps the frame so
-/// the glyph stays centered in a block shorter than it; nil leaves the
-/// glyph's own height.
+/// secondary text, a pill's tertiary line); the ring keeps the glyph's own
+/// height, so it sits on the baseline of the title beside it.
 struct MobileCalendarTaskRing: View {
   let isDone: Bool
   let font: Font
   let width: CGFloat
-  var height: CGFloat? = nil
   let toggle: () -> Void
 
   var body: some View {
@@ -20,7 +18,7 @@ struct MobileCalendarTaskRing: View {
       Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
         .font(font.weight(.medium))
         .foregroundStyle(LorvexDesign.Palette.accent.opacity(isDone ? 0.7 : 0.85))
-        .frame(width: width, height: height)
+        .frame(width: width)
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

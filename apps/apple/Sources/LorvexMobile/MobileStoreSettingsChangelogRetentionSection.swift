@@ -88,32 +88,18 @@ struct MobileStoreSettingsChangelogRetentionSection: View {
   private static func label(for policy: ChangelogRetentionPolicy) -> String {
     switch policy {
     case .maximum:
+      let entries = Int(SyncNaming.auditMaxEntriesSafeguard)
       return String(
-        localized: "settings.activity.retention.maximum", defaultValue: "Maximum (10,000 entries)",
+        localized: "settings.activity.retention.maximum", defaultValue: "Maximum (\(entries) entries)",
         table: "Localizable", bundle: MobileL10n.bundle)
     case .off:
       return String(
         localized: "settings.activity.retention.off", defaultValue: "Off (never store)",
         table: "Localizable", bundle: MobileL10n.bundle)
     case .days(let n):
-      switch n {
-      case 90:
-        return String(
-          localized: "settings.activity.retention.days.90", defaultValue: "90 days",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      case 30:
-        return String(
-          localized: "settings.activity.retention.days.30", defaultValue: "30 days",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      case 7:
-        return String(
-          localized: "settings.activity.retention.days.7", defaultValue: "7 days",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      default:
-        return String(
-          localized: "settings.activity.retention.days.custom", defaultValue: "\(Int(n)) days",
-          table: "Localizable", bundle: MobileL10n.bundle)
-      }
+      return String(
+        localized: "settings.activity.retention.days", defaultValue: "\(Int(n)) days",
+        table: "Localizable", bundle: MobileL10n.bundle)
     }
   }
 }

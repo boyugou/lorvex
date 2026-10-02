@@ -198,7 +198,7 @@ public struct LorvexReviewTaskList: View {
         }
       }
       if let deferral, deferral.canMove(task) {
-        Button(deferral.rowLabel, systemImage: "arrow.turn.up.right") {
+        Button(deferral.rowLabel, systemImage: "arrow.uturn.forward") {
           Task { await move([task.id], with: deferral) }
         }
       }
@@ -221,7 +221,7 @@ public struct LorvexReviewTaskList: View {
     Button {
       Task { await move([task.id], with: deferral) }
     } label: {
-      Label(deferral.rowLabel, systemImage: "arrow.turn.up.right")
+      Label(deferral.rowLabel, systemImage: "arrow.uturn.forward")
         .labelStyle(.titleAndIcon)
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(LorvexDesign.Palette.accent)
@@ -301,7 +301,7 @@ public struct LorvexReviewTaskList: View {
   }
 
   private func title(_ task: ReviewTaskSummary) -> some View {
-    Text(task.title)
+    Text(userContent: task.title)
       .font(LorvexDesign.Typography.primaryText)
       .foregroundStyle(.primary)
       .multilineTextAlignment(.leading)

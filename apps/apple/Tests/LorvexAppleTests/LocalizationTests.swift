@@ -25,6 +25,15 @@ struct LocalizationTests {
 
     // MARK: - Catalog structure
 
+    @Test("The language picker offers every shipped language, each by its own name")
+    func languagePickerOffersEveryShippedLanguage() throws {
+        let languages = try shippedCatalogLanguageIDs()
+        #expect(Set(AppLanguage.selectable.map(\.rawValue)) == Set(languages))
+        for language in AppLanguage.selectable {
+            #expect(!language.endonym.isEmpty, "\(language.rawValue) has no endonym")
+        }
+    }
+
     @Test("Every module bundle ships a compiled string table per shipped language")
     func moduleBundlesShipCompiledStringTables() throws {
         let languages = try shippedCatalogLanguageIDs()
@@ -260,31 +269,6 @@ struct LocalizationTests {
         #expect(try shippedCatalogSourceLanguages().contains(sourceLanguage))
     }
 
-    @Test("Mobile date formatters follow the selected module language")
-    func mobileDateFormattersFollowSelectedModuleLanguage() {
-        let fallback = Locale(identifier: "en_US")
-        #expect(
-            MobileL10n.resolvedLocale(preferredLocalizations: [], fallback: fallback).identifier
-                == fallback.identifier)
-        #expect(
-            MobileL10n.resolvedLocale(
-                preferredLocalizations: ["Base"], fallback: fallback
-            ).identifier == fallback.identifier)
-        #expect(
-            MobileL10n.resolvedLocale(
-                preferredLocalizations: ["zh-Hans"], fallback: fallback
-            ).identifier == "zh-Hans")
-        #expect(
-            MobileDateFormatting.weekdayAbbrev.locale?.identifier
-                == MobileL10n.locale.identifier)
-        #expect(
-            MobileDateFormatting.dayOfMonth.locale?.identifier
-                == MobileL10n.locale.identifier)
-        #expect(
-            MobileDateFormatting.makeAbbreviatedRelativeFormatter().locale?.identifier
-                == MobileL10n.locale.identifier)
-    }
-
     @Test("Every LorvexMobile key is translated into every shipped language")
     func mobileCatalogIsFullyTranslatedToShippedLanguages() throws {
         let strings = try loadStrings(Self.sourceCatalogURL("LorvexMobile"))
@@ -416,30 +400,13 @@ struct LocalizationTests {
         }
 
         let english = try languageBundle("en")
-        let oneMinute = 1
-        let twoMinutes = 2
-        #expect(
+        func retention(_ days: Int, in bundle: Bundle) -> String {
             String(
-                localized: "a11y.task.minutes_format",
-                defaultValue: "\(oneMinute) minutes",
-                table: "Localizable", bundle: english
-            ) == "1 minute"
-        )
-        #expect(
-            String(
-                localized: "a11y.task.minutes_format",
-                defaultValue: "\(twoMinutes) minutes",
-                table: "Localizable", bundle: english
-            ) == "2 minutes"
-        )
-        let retentionDays = 1
-        #expect(
-            String(
-                localized: "settings.activity.retention.days.custom",
-                defaultValue: "\(retentionDays) days",
-                table: "Localizable", bundle: english
-            ) == "1 day"
-        )
+                localized: "settings.activity.retention.days", defaultValue: "\(days) days",
+                table: "Localizable", bundle: bundle)
+        }
+        #expect(retention(1, in: english) == "1 day")
+        #expect(retention(30, in: english) == "30 days")
         let weeks = 1
         let targetMetDays = 1
         let partialDays = 2
@@ -464,14 +431,26 @@ struct LocalizationTests {
                 == "Completion heatmap covering 1 week. Target met on 1 day. 2 partial days."
         )
 
+        // Spanish verbs agree with the count, so a count string varies by plural
+        // even where English writes every form alike.
+        let spanish = try languageBundle("es")
+        func remaining(_ count: Int, in bundle: Bundle) -> String {
+            String(
+                localized: "habits.detail.period_remaining", defaultValue: "\(count) to go",
+                table: "Localizable", bundle: bundle)
+        }
+        #expect(remaining(1, in: english) == "1 to go")
+        #expect(remaining(1, in: spanish) == "Falta 1")
+        #expect(remaining(3, in: spanish) == "Faltan 3")
+
         let simplifiedChinese = try languageBundle("zh-Hans")
-        let estimate = 25
+        let finished = 3
         #expect(
             String(
-                localized: "task.estimate.compact_minutes",
-                defaultValue: "\(estimate) min",
+                localized: "review.calm.finished",
+                defaultValue: "You finished \(finished) tasks.",
                 table: "Localizable", bundle: simplifiedChinese
-            ) == "25\u{00A0}分钟"
+            ) == "你完成了 3\u{00A0}项任务。"
         )
     }
 
@@ -547,7 +526,7 @@ struct LocalizationTests {
         func archiveMessage(count: Int, name: String) -> String {
             String(
                 localized: "list_row.archive.nonempty_count_message",
-                defaultValue: "\(count) tasks remain in “\(name)”.",
+                defaultValue: "“\(name)” can’t be deleted while it still holds \(count) tasks. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
                 table: "Localizable",
                 bundle: appleEnglish)
         }
@@ -585,6 +564,20 @@ struct LocalizationTests {
         }
         #expect(dialog(count: 1) == "1 Lorvex task tagged work: Plan, ship")
         #expect(dialog(count: 2) == "2 Lorvex tasks tagged work: Plan, ship")
+    }
+
+    @Test("Siri reads a task's status as one whole sentence in the request language")
+    func readTaskDialogIsOneSentencePerStatus() {
+        func dialog(_ status: LorvexTask.Status, _ language: String) -> String {
+            var resource = ReadLorvexTaskIntent.dialog(title: "Pay rent", status: status)
+            resource.locale = Locale(identifier: language)
+            return String(localized: resource)
+        }
+        #expect(dialog(.open, "en") == "Pay rent is still open.")
+        #expect(dialog(.inProgress, "en") == "Pay rent is in progress.")
+        #expect(dialog(.completed, "en") == "Pay rent is done.")
+        #expect(dialog(.cancelled, "es") == "La tarea “Pay rent” se canceló.")
+        #expect(dialog(.someday, "zh-Hans") == "“Pay rent”放在“将来某天”里。")
     }
 
     @Test("Production plural call sites use native interpolation, not a custom runtime")
@@ -1258,36 +1251,6 @@ struct LocalizationTests {
             bundle: simplifiedChinese)
 
         #expect(progress == "今日 1/2")
-    }
-
-    @Test("macOS import summary copy routes through LorvexApple localization")
-    func appleImportSummaryTextProviderUsesAppCatalog() throws {
-        let text = LorvexImportSummaryText.provider
-
-        #expect(text.categoryName(.tags) == "Tags")
-        #expect(text.categoryName(.dailyBriefings) == "Daily Briefings")
-        #expect(text.categoryName(.taskCalendarEventLinks) == "Task–Event Links")
-        #expect(text.categoryName(.dailyReviews) == "Daily Reviews")
-        #expect(text.importedRecordSummary(1, 0) == "1 imported record")
-        #expect(text.importedRecordSummary(2, 1) == "2 imported records, 1 record already present")
-        #expect(text.categoryResultSummary(3, 2) == "3 imported, 2 skipped")
-        #expect(text.errorSummary(1) == "1 record skipped due to errors:")
-        #expect(text.hiddenErrorsSummary(4) == "and 4 more…")
-    }
-
-    @Test("Mobile import summary copy routes through LorvexMobile localization")
-    func mobileImportSummaryTextProviderUsesMobileCatalog() throws {
-        let text = MobileImportSummaryText.provider
-
-        #expect(text.categoryName(.tags) == "Tags")
-        #expect(text.categoryName(.dailyBriefings) == "Daily Briefings")
-        #expect(text.categoryName(.taskCalendarEventLinks) == "Task–Event Links")
-        #expect(text.categoryName(.dailyReviews) == "Daily Reviews")
-        #expect(text.importedRecordSummary(1, 0) == "1 imported record")
-        #expect(text.importedRecordSummary(2, 1) == "2 imported records, 1 record already present")
-        #expect(text.categoryResultSummary(3, 2) == "3 imported, 2 skipped")
-        #expect(text.errorSummary(1) == "1 record skipped due to errors:")
-        #expect(text.hiddenErrorsSummary(4) == "and 4 more…")
     }
 
     private struct ShippedCatalog {

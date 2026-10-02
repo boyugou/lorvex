@@ -7,37 +7,36 @@ extension TaskDetailView {
   }
 }
 
-/// The Repeat menu's Custom editor: "Every [2] [weeks]", the weekdays of a
-/// weekly schedule, and whether the next one follows the schedule or the
-/// completion. Opening it turns repeating on; the rule saves when the popover
-/// closes, so there is no Save button, and Never in the menu stops it.
+/// The Repeat menu's Custom editor: the frequency, how many periods apart
+/// ("Every 2 weeks"), the weekdays of a weekly schedule, and whether the next
+/// one follows the schedule or the completion. Opening it turns repeating on;
+/// the rule saves when the popover closes, so there is no Save button, and
+/// Never in the menu stops it.
 private struct TaskDetailRecurrencePanel: View {
   @Bindable var store: AppStore
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      HStack(spacing: LorvexDesign.Spacing.s) {
-        Text(String(localized: "task_detail.recurrence.every", defaultValue: "Every", table: "Localizable", bundle: LorvexL10n.bundle))
-        Text("\(interval.wrappedValue)")
-          .monospacedDigit()
-          .frame(minWidth: 20)
-        Stepper(
-          String(localized: "task_detail.recurrence.interval", defaultValue: "Interval", table: "Localizable", bundle: LorvexL10n.bundle),
-          value: interval, in: 1...TaskRecurrenceEditorDraft.maximumInterval
-        )
-        .labelsHidden()
-        Picker(selection: $store.taskDetailRecurrenceFrequency) {
-          ForEach(TaskRecurrenceRule.Frequency.allCases, id: \.self) { frequency in
-            Text(frequency.localizedIntervalUnit(count: interval.wrappedValue)).tag(frequency)
-          }
-        } label: {
-          Text(String(localized: "task_detail.recurrence.frequency", defaultValue: "Frequency", table: "Localizable", bundle: LorvexL10n.bundle))
+      Picker(selection: $store.taskDetailRecurrenceFrequency) {
+        ForEach(TaskRecurrenceRule.Frequency.allCases, id: \.self) { frequency in
+          Text(frequency.localizedDisplayName).tag(frequency)
         }
-        .labelsHidden()
-        .fixedSize()
-        .accessibilityIdentifier("task.detail.recurrence.frequency")
+      } label: {
+        Text(String(localized: "task_detail.recurrence.frequency", defaultValue: "Frequency", table: "Localizable", bundle: LorvexL10n.bundle))
       }
-      .font(LorvexDesign.Typography.primaryText)
+      .labelsHidden()
+      .fixedSize()
+      .accessibilityIdentifier("task.detail.recurrence.frequency")
+
+      // The interval is one localized phrase in the frequency's unit, so the
+      // number and its unit agree in every language ("Every week", "Every 2
+      // weeks", "每 2 周").
+      Stepper(value: interval, in: 1...TaskRecurrenceEditorDraft.maximumInterval) {
+        Text(store.taskDetailRecurrenceFrequency.localizedEveryInterval(interval.wrappedValue))
+          .font(LorvexDesign.Typography.primaryText)
+          .monospacedDigit()
+      }
+      .accessibilityIdentifier("task.detail.recurrence.interval")
 
       // Weekdays only shape a fixed weekly schedule; a completion-anchored
       // repeat counts from the day the task was finished.
@@ -80,7 +79,7 @@ private struct TaskDetailRecurrencePanel: View {
   /// the draft keeps owning validation; unparsable text reads as 1.
   private var interval: Binding<Int> {
     Binding(
-      get: { Int(store.taskDetailRecurrenceIntervalText.trimmingCharacters(in: .whitespaces)) ?? 1 },
+      get: { LorvexNumberInput.integer(from: store.taskDetailRecurrenceIntervalText) ?? 1 },
       set: { store.taskDetailRecurrenceIntervalText = String($0) })
   }
 

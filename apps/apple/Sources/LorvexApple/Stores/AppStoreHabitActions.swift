@@ -6,12 +6,12 @@ extension AppStore {
     parsedDraftHabitTargetCount != nil
   }
 
-  /// Whether an invalid per-day target count should block confirming the habit
-  /// create/edit sheet. The target field is shown — and parsed into
-  /// `target_count` — only for Daily and Weekly-specific-days cadences;
-  /// `timesPerWeek` and `monthly` hide it and pin the count to 1, so a stale
-  /// invalid value there must not silently disable Save/Create with no visible
-  /// cause.
+  /// Whether an invalid per-day target count should block creating the habit
+  /// in the New Habit sheet or saving the inspector's Repeat editor. The
+  /// target field is shown — and parsed into `target_count` — only for Daily
+  /// and Weekly-specific-days cadences; `timesPerWeek` and `monthly` hide it
+  /// and pin the count to 1, so a stale invalid value there must not silently
+  /// block the save with no visible cause.
   var draftHabitTargetCountBlocksConfirm: Bool {
     guard draftHabitCadenceMode != .timesPerWeek, draftHabitCadenceMode != .monthly else {
       return false
@@ -20,25 +20,15 @@ extension AppStore {
   }
 
   var parsedDraftHabitTargetCount: Int? {
-    let text = draftHabitTargetCountText.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let value = Int(text), value > 0 else { return nil }
+    guard let value = LorvexNumberInput.integer(from: draftHabitTargetCountText), value > 0
+    else { return nil }
     return value
   }
 
-  func prepareHabitDraft(for habit: LorvexHabit) {
-    draftHabitName = habit.name
-    draftHabitCue = habit.cue ?? ""
-    draftHabitTargetCountText = "\(habit.targetCount)"
-    draftHabitMilestoneTargetText = habit.milestoneTarget.map { "\($0)" } ?? ""
-    applyCadenceDraft(from: habit)
-    draftHabitIcon = habit.icon
-    draftHabitColor = habit.color
-  }
-
   /// Reset the shared habit draft to its defaults before presenting the create
-  /// sheet. The draft fields are reused by the edit flow
-  /// (``prepareHabitDraft(for:)``), so a create sheet opened after an edit
-  /// would otherwise inherit the edited habit's fields.
+  /// sheet. The habit inspector's Repeat editor loads a saved habit's rhythm
+  /// into the same draft (``prepareHabitRhythmDraft(for:)``), so a create
+  /// sheet opened after it would otherwise inherit that habit's cadence.
   func beginCreateHabitDraft() {
     resetHabitDraft()
   }
@@ -73,40 +63,6 @@ extension AppStore {
     }
     await loadAllHabitStats()
     if !reminderTimes.isEmpty { await rescheduleHabitReminders() }
-  }
-
-  func updateHabit(_ habit: LorvexHabit) async {
-    guard !draftHabitTargetCountBlocksConfirm, !isCreating else { return }
-    isCreating = true
-    defer { isCreating = false }
-    await perform {
-      let name = draftHabitName.trimmingCharacters(in: .whitespacesAndNewlines)
-      // The editor reflects the habit's full cadence (specific weekdays, a
-      // per-week count, or a monthly day), pre-filled by `applyCadenceDraft`, so
-      // writing it back verbatim is faithful — no clobbering of a cadence
-      // authored elsewhere.
-      let draft = draftHabitCadenceInput()
-      // Three-state cue and milestone patches: a non-empty field sets the value;
-      // an empty field clears it (blanking a cue or goal in the editor is an
-      // explicit "no value", never a silent leave-as-is).
-      _ = try await core.updateHabit(
-        id: habit.id,
-        name: name,
-        cue: draftHabitCue.trimmedNilIfEmpty.map { .set($0) } ?? .clear,
-        color: draftHabitColor,
-        icon: draftHabitIcon,
-        targetCount: draft.targetCount,
-        archived: nil,
-        cadence: draft.cadence,
-        milestoneTarget: parsedDraftHabitMilestoneTarget.map { .set($0) } ?? .clear
-      )
-      habits = try await core.loadHabits(date: logicalTodayDateString)
-      await loadAllHabitStats()
-      // Keep an open habit inspector's stats/streak in sync with the edit.
-      await refreshHabitDetailIfLoaded(id: habit.id)
-      resetHabitDraft()
-      selection = .habits
-    }
   }
 
   private func resetHabitDraft() {
@@ -306,7 +262,7 @@ extension AppStore {
     }
   }
 
-  private func refreshHabitDetailIfLoaded(id: LorvexHabit.ID) async {
+  func refreshHabitDetailIfLoaded(id: LorvexHabit.ID) async {
     guard habitsStorage.detailsByHabitID[id] != nil else { return }
     await loadHabitDetail(id: id)
   }

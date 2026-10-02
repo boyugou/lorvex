@@ -1,26 +1,20 @@
 import Foundation
 
 /// The platform/surface the runtime is resolving for. Drives DB location and
-/// capability decisions across the supported Apple platforms and non-Apple builds.
+/// capability decisions across the Apple platforms.
 public enum RuntimePlatform: Sendable, Equatable {
   case macOS
   case iOS
   case watchOS
-  case otherUnix
-  case windows
 
   /// The platform this binary was compiled for.
   public static var current: RuntimePlatform {
     #if os(macOS)
       return .macOS
-    #elseif os(iOS)
-      return .iOS
     #elseif os(watchOS)
       return .watchOS
-    #elseif os(Windows)
-      return .windows
     #else
-      return .otherUnix
+      return .iOS
     #endif
   }
 }
@@ -105,13 +99,11 @@ public protocol DbLocatorEnvironment: Sendable {
   /// Whether the ``dbPathEnvOverride`` may take effect for this build. `true` on
   /// unsandboxed dev/source builds (the only builds that honor the
   /// `LORVEX_APPLE_DB_PATH` dev override); `false` on sandboxed Apple planes,
-  /// which always open the Lorvex-managed store. Defaults to `true` so
-  /// non-Apple/test environments that model no sandbox keep honoring the
-  /// override.
+  /// which always open the Lorvex-managed store. Defaults to `true` so test
+  /// environments that model no sandbox keep honoring the override.
   var allowsDbPathOverride: Bool { get }
-  /// Platform data directory (macOS/iOS `Application Support`, Linux
-  /// `$XDG_DATA_HOME`/`~/.local/share`, Windows `%APPDATA%\Roaming`). `nil` if
-  /// the platform could not resolve one.
+  /// Platform data directory (`Application Support`). `nil` if the platform
+  /// could not resolve one.
   var dataDir: String? { get }
   /// User home directory, `nil` if unresolved.
   var homeDir: String? { get }
@@ -127,7 +119,7 @@ public protocol DbLocatorEnvironment: Sendable {
   /// Used only to name the App Group in a fail-closed
   /// ``DbLocationError/appGroupContainerUnavailable(appGroupIdentifier:)`` so a
   /// packaging/provisioning misconfiguration is diagnosable; `nil` where no App
-  /// Group applies (non-Apple builds, tests that model no App Group).
+  /// Group applies (unsandboxed dev builds, tests that model no App Group).
   var appleAppGroupIdentifier: String? { get }
 }
 
@@ -149,7 +141,7 @@ public struct InMemoryDbLocatorEnv: DbLocatorEnvironment {
 
   public init(
     dbPathEnvOverride: String? = nil, dataDir: String? = nil, homeDir: String? = nil,
-    platform: RuntimePlatform = .otherUnix, appleAppGroupContainerPath: String? = nil,
+    platform: RuntimePlatform = .macOS, appleAppGroupContainerPath: String? = nil,
     allowsDbPathOverride: Bool = true, appleAppGroupIdentifier: String? = nil
   ) {
     self.dbPathEnvOverride = dbPathEnvOverride
@@ -181,8 +173,7 @@ public struct InMemoryDbLocatorEnv: DbLocatorEnvironment {
 /// of dropping to steps 3/4. Those per-process directories differ across the
 /// app, MCP helper, and extensions, so a silent fallback there would split the
 /// store. The platform-default/home steps remain reachable only for unsandboxed
-/// dev/source and non-Apple builds, which have no App Group and no split-store
-/// risk.
+/// dev/source builds, which have no App Group and no split-store risk.
 public enum DbLocator {
   static let lorvexDir = "Lorvex"
   static let dbFile = "db.sqlite"
@@ -217,7 +208,7 @@ public enum DbLocator {
               "The LORVEX_APPLE_DB_PATH override is an unsandboxed dev/source-build feature; "
               + "this build resolves the Lorvex-managed store."
           ))
-      } else if isWindowsUncPath(raw, platform: env.platform) {
+      } else if isNetworkSharePath(raw) {
         diagnostics.append(
           .warn(
             .dbPathOverrideRejectedUnc,
@@ -267,15 +258,11 @@ public enum DbLocator {
     try resolveDetails(env).resolvedPath
   }
 
-  /// Detect Windows UNC / network share paths. The backslash arm
-  /// (`\\server\share`) is rejected on every platform; the forward-slash arm
-  /// (`//server/share`) is UNC only on Windows (on Unix `//Volumes/Data` is a
-  /// valid POSIX path).
-  static func isWindowsUncPath(_ path: String, platform: RuntimePlatform) -> Bool {
-    guard path.count >= 2 else { return false }
-    if path.hasPrefix("\\\\") { return true }
-    if platform == .windows && path.hasPrefix("//") { return true }
-    return false
+  /// Whether `path` names a network share in UNC form (`\\server\share`),
+  /// which the dev override refuses. A path that starts with two forward
+  /// slashes (`//Volumes/Data`) is an ordinary POSIX path.
+  static func isNetworkSharePath(_ path: String) -> Bool {
+    path.hasPrefix("\\\\")
   }
 
   private static func join(_ components: String...) -> String {

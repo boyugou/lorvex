@@ -48,9 +48,9 @@ struct LorvexCalendarEventEntityQuery: EntityQuery, EntityStringQuery {
     let entities = try await allCalendarEventEntities(core: core)
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
-      entity.title.localizedCaseInsensitiveContains(query)
-        || entity.id.localizedCaseInsensitiveContains(query)
-        || entity.scheduleSummary.localizedCaseInsensitiveContains(query)
+      entity.title.localizedStandardContains(query)
+        || entity.id.localizedStandardContains(query)
+        || entity.scheduleSummary.localizedStandardContains(query)
     }
   }
 

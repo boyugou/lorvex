@@ -191,7 +191,7 @@ extension CloudSyncController {
     guard !envelopes.isEmpty || !raws.isEmpty || undecodable > 0 else { return }
     do {
       let report = try store.applyFetchedRecords(envelopes, parking: raws, undecodable: undecodable)
-      pendingReport.inbound.merge(report)
+      pendingReport.inbound.accumulate(report)
       if let accountID {
         await cacheSystemFields(of: records, accountID: accountID)
       }
@@ -202,19 +202,5 @@ extension CloudSyncController {
       // which a cancelled or failed fetch may never deliver.
       Task { await self.setEngineAsideAfterInboundFailure() }
     }
-  }
-}
-
-extension InboundApplyReport {
-  mutating func merge(_ other: InboundApplyReport) {
-    applied += other.applied
-    skipped += other.skipped
-    deferred += other.deferred
-    remapped += other.remapped
-    drainReplayed += other.drainReplayed
-    undecodable += other.undecodable
-    deferredUnknownType += other.deferredUnknownType
-    appliedEntityTypes.formUnion(other.appliedEntityTypes)
-    reconciledCollisionOutboxIds.formUnion(other.reconciledCollisionOutboxIds)
   }
 }

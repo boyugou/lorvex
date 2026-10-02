@@ -28,22 +28,12 @@ struct FindLorvexTasksByTagIntent: LorvexAuthenticatedIntent {
             table: "Localizable",
             bundle: SystemL10n.bundle)))
     }
-    let titles = tasks.prefix(5).map(\.title).joined(separator: ", ")
-    let dialog: LocalizedStringResource
-    if tasks.count > 5 {
-      dialog = LocalizedStringResource(
-        "system.tag.find_tasks.dialog.more",
-        defaultValue:
-          "\(tasks.count) Lorvex tasks tagged \(tag): \(titles), and \(tasks.count - 5) more",
-        table: "Localizable",
-        bundle: SystemL10n.bundle)
-    } else {
-      dialog = LocalizedStringResource(
-        "system.tag.find_tasks.dialog",
-        defaultValue: "\(tasks.count) Lorvex tasks tagged \(tag): \(titles)",
-        table: "Localizable",
-        bundle: SystemL10n.bundle)
-    }
+    let titles = SystemIntentListSummary.names(tasks.map(\.title), total: tasks.count)
+    let dialog = LocalizedStringResource(
+      "system.tag.find_tasks.dialog",
+      defaultValue: "\(tasks.count) Lorvex tasks tagged \(tag): \(titles)",
+      table: "Localizable",
+      bundle: SystemL10n.bundle)
     return .result(
       value: tasks.map(LorvexTaskEntity.init(task:)),
       dialog: IntentDialog(dialog))

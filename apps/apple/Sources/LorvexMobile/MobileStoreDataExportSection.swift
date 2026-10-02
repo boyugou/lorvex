@@ -44,9 +44,6 @@ struct MobileStoreDataExportSection: View {
           ExportCategoryPicker(
             selection: $selectedCategories,
             idPrefix: "mobileDataExport",
-            layout: .sections,
-            categoryName: { $0.mobileLocalizedDisplayLabel },
-            groupName: { $0.mobileLocalizedName },
             selectAllLabel: String(
               localized: "data_export.select_all", defaultValue: "Select All", table: "Localizable",
               bundle: MobileL10n.bundle),
@@ -80,6 +77,7 @@ struct MobileStoreDataExportSection: View {
                 table: "Localizable", bundle: MobileL10n.bundle), format.title),
             systemImage: format.systemImage)
         }
+        .mobileAccentRowStyle()
         .disabled(store.isExportingData || selectedCategories.isEmpty)
         .accessibilityIdentifier("mobileDataExport.\(format.rawValue)")
       }
@@ -133,6 +131,7 @@ struct MobileStoreDataExportSection: View {
             table: "Localizable", bundle: MobileL10n.bundle),
           systemImage: "calendar")
       }
+      .mobileAccentRowStyle()
       .disabled(store.isExportingCalendarICS)
       .accessibilityIdentifier("mobileDataExport.calendar")
       if let calendarExportItem {

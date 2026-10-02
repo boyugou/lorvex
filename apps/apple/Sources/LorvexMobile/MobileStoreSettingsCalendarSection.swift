@@ -185,7 +185,7 @@ struct MobileStoreSettingsCalendarSection: View {
               .overlay(Circle().stroke(.secondary.opacity(0.35), lineWidth: 0.5))
               .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-              Text(calendar.title)
+              Text(userContent: calendar.title)
               if let sourceTitle = calendar.sourceTitle {
                 Text(sourceTitle)
                   .font(LorvexDesign.Typography.tertiaryText)

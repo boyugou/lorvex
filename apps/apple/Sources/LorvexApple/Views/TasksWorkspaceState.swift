@@ -36,8 +36,35 @@ extension TasksView {
     visibleTaskPool.sorted(using: tableSortOrder)
   }
 
+  /// No load has landed for the current scope yet: on first open and right
+  /// after switching lists, before the load has even started.
   var isInitialTaskWorkspaceLoad: Bool {
-    store.taskWorkspaceIsLoading && !store.taskWorkspaceHasLoaded
+    !store.taskWorkspaceHasLoaded
+  }
+
+  /// The scope's first load failed and no retry is running: the workspace
+  /// shows why, with a retry, in place of its rows. While a retry runs, the
+  /// loading row returns.
+  var taskWorkspaceLoadFailureState: LorvexEmptyStateModel? {
+    guard let message = store.taskWorkspaceLoadFailureMessage, !store.taskWorkspaceIsLoading
+    else { return nil }
+    return LorvexEmptyStateModel(
+      title: String(
+        localized: "tasks.load_failed.title", defaultValue: "Couldn’t Load Tasks",
+        table: "Localizable", bundle: LorvexL10n.bundle),
+      message: message,
+      systemImage: "exclamationmark.triangle",
+      tint: LorvexDesign.Palette.warning,
+      action: LorvexEmptyStateAction(
+        title: String(
+          localized: "common.try_again", defaultValue: "Try Again",
+          table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "arrow.clockwise",
+        style: .primary
+      ) {
+        Task { await store.loadTaskWorkspace() }
+      }
+    )
   }
 
   var visibleCurrentTaskPool: [LorvexTask] {
@@ -96,7 +123,7 @@ extension TasksView {
     // quick-add row above it, where a task for this list is typed.
     if let selectedListScope {
       let tint = Color(lorvexHex: selectedListScope.color) ?? .accentColor
-      let icon = selectedListScope.icon ?? "folder"
+      let icon = LorvexSymbol.name(for: selectedListScope.icon, fallback: "folder")
       return LorvexEmptyStateModel(
         title: String(localized: "tasks.empty.list_title", defaultValue: "No Tasks in This List", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
@@ -123,7 +150,7 @@ extension TasksView {
         tint: LorvexDesign.Palette.neutral,
         chips: [
           LorvexEmptyStateChip(
-            title: TaskDisplayText.priority(priorityFilter),
+            title: priorityFilter.localizedPhrase,
             systemImage: "flag",
             tint: priorityFilter.priorityTint
           )
@@ -194,7 +221,7 @@ extension TasksView {
       )
     }
     if let priorityFilter {
-      parts.append(TaskDisplayText.priority(priorityFilter))
+      parts.append(priorityFilter.localizedPhrase)
     }
     if !parts.isEmpty {
       return parts.joined(separator: " · ")

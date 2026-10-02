@@ -6,6 +6,9 @@ This note explains how an app adopts OS 27 APIs while remaining installable on
 iOS 18 or macOS 15. It also separates runtime availability, App Store version
 eligibility, last-compatible downloads, architecture routing, and app thinning.
 
+Status: the analysis assumes a macOS 15 / iOS 18 baseline. Lorvex's floor in
+force is macOS 26, iOS/iPadOS 26, and watchOS 26.
+
 ## Primary Apple Sources
 
 - [Running code on a specific platform or OS version](https://developer.apple.com/documentation/xcode/running-code-on-a-specific-version)
@@ -177,8 +180,9 @@ unconditional reference from code that runs on the minimum OS.
 
 ## Recommended Lorvex Shape
 
-Lorvex now declares macOS 15 and iOS 18 in both Swift packages, XcodeGen, and
-the relevant Info plists. Keep one product with layers like:
+Lorvex declares macOS 26, iOS/iPadOS 26, and watchOS 26 in both Swift packages,
+XcodeGen, and the relevant Info plists. For a lower baseline such as iOS 18 /
+macOS 15, keep one product with layers like:
 
 | Layer | Minimum-OS behavior | New-OS enhancement |
 | --- | --- | --- |

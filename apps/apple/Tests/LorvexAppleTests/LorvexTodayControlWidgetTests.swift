@@ -193,15 +193,6 @@ func widgetCompleteHabitIntentCarriesHabitForSystemDisplay() {
 }
 
 @Test
-func widgetDeferTaskIntentCarriesTaskTitleForSystemDisplay() {
-  let intent = WidgetDeferTaskIntent(taskID: "task-widget-defer", title: "Plan native widget")
-
-  #expect(intent.task.id == "task-widget-defer")
-  #expect(intent.task.title == "Plan native widget")
-  #expect(WidgetDeferTaskIntent.openAppWhenRun == false)
-}
-
-@Test
 func widgetTaskEntityDefaultsDisplayToIdentifierWhenTitleIsMissing() {
   let entity = WidgetTaskEntity(id: "task-only-id")
 

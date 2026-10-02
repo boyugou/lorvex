@@ -98,7 +98,7 @@ public struct MobileStoreReviewView: View {
       }
       if mode == .daily, let review = store.dailyReview {
         ToolbarItem(placement: .automatic) {
-          ShareLink(item: LorvexDailyReviewMarkdownExport.render(review)) {
+          ShareLink(item: MobileShareText.dailyReview(review)) {
             Label(
               String(
                 localized: "review.share_daily", defaultValue: "Share Daily", table: "Localizable",
@@ -117,7 +117,7 @@ public struct MobileStoreReviewView: View {
       }
       if mode == .weekly, let review = store.snapshot.weeklyReview {
         ToolbarItem(placement: .automatic) {
-          ShareLink(item: LorvexWeeklyReviewMarkdownExport.render(review)) {
+          ShareLink(item: MobileShareText.weeklyReview(review)) {
             Label(
               String(
                 localized: "review.share_weekly", defaultValue: "Share Weekly",

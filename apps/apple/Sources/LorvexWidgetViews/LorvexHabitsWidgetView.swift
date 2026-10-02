@@ -4,15 +4,22 @@ import LorvexWidgetIntents
 import LorvexWidgetKitSupport
 import SwiftUI
 
-/// Today's habits in the systemSmall and systemMedium families: a header with
-/// the done/total count, one row per habit, and a footer. Small shows up to
-/// three habits in one column. Medium shows up to six in two balanced columns:
-/// its 158pt height holds three rows under the header, and its width holds two
-/// columns of names. A larger text size fits fewer rows per column, so the
-/// widget shows as many as fit rather than clipping, and the footer's "+N
-/// more" counts the rest. The footer appears only when it adds something —
-/// that count, that every habit is done, or the stale-snapshot age — since the
-/// header already carries the done/total count.
+/// Today's habits in the systemSmall and systemMedium families, as a grid of
+/// rings like the habits on the phone's Today: each habit is its ring, in the
+/// habit's color and carrying its symbol, over its name
+/// (``LorvexHabitRingTile``). A habit kept several times a day draws one arc
+/// per check-in. Tapping the ring of a habit not yet done checks it in without
+/// opening the app; a done habit's ring is green with a check.
+///
+/// A header names the widget and counts the habits done today. Small's grid
+/// has two columns, medium's four, and both hold two rows, which share the
+/// height under the header. Where two rows of full-size rings do not fit (a
+/// smaller widget, a larger text size) the rings shrink, and where even those
+/// do not fit the grid keeps one row. With more habits than tiles, the last
+/// tile counts the rest and the habits not yet done take the tiles first, so
+/// what is left to do stays in view; otherwise the habits keep their order.
+///
+/// The view draws inside WidgetKit's content margins and adds none of its own.
 public struct HabitsWidgetView: View {
   public let habits: [WidgetSnapshot.HabitSummary]
   public let family: WidgetFamilyKind
@@ -28,281 +35,221 @@ public struct HabitsWidgetView: View {
 
   private var isAllDone: Bool { !habits.isEmpty && completedCount == habits.count }
 
-  private var metrics: LorvexWidgetViewMetrics { .metrics(for: family) }
+  private var columnCount: Int { HabitsWidgetLayout.columnCount(family: family) }
 
-  /// Medium has height to spare under its three rows, so its rings (the
-  /// complete buttons) and row gaps are a little larger than small's.
-  private var ringDiameter: CGFloat { family == .systemMedium ? 20 : 18 }
-
-  private var rowSpacing: CGFloat { family == .systemMedium ? 8 : 6 }
+  /// The ring's diameter, growing with the text size so a ring stays the
+  /// tile's mark next to a larger name.
+  @ScaledMetric(relativeTo: .caption) private var ringDiameter: CGFloat = 30
 
   public var body: some View {
+    // Explicit candidates, largest first; the first that fits is drawn.
     ViewThatFits(in: .vertical) {
-      ForEach(Array(stride(from: HabitsWidgetLayout.maxRows, through: 1, by: -1)), id: \.self) { rows in
-        content(rows: rows)
-      }
+      content(rows: HabitsWidgetLayout.maxRows, ringDiameter: ringDiameter)
+      content(rows: HabitsWidgetLayout.maxRows, ringDiameter: (ringDiameter * 0.85).rounded())
+      content(rows: 1, ringDiameter: ringDiameter)
     }
-    .padding(.horizontal, metrics.horizontalPadding)
-    .padding(.vertical, metrics.verticalPadding)
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
 
-  /// The widget with `rows` rows per column. Gaps are explicit paddings, so
-  /// the zero-height spacer adds none to the natural height `ViewThatFits`
-  /// measures.
-  private func content(rows: Int) -> some View {
-    let hidden = HabitsWidgetLayout.hiddenHabitCount(total: habits.count, family: family, rows: rows)
-    return VStack(alignment: .leading, spacing: 0) {
+  private func content(rows: Int, ringDiameter: CGFloat) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
       header
-      habitList(rows: rows)
-        .padding(.top, 8)
-      Spacer(minLength: 0)
-      if hidden > 0 || isAllDone || staleAgeLabel != nil {
-        footer(hidden: hidden)
-          .padding(.top, 6)
+      if habits.isEmpty {
+        Text("widget.empty.no_habits", bundle: WidgetL10n.bundle)
+          .font(WidgetType.meta)
+          .foregroundStyle(.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      } else {
+        grid(rows: rows, ringDiameter: ringDiameter)
       }
     }
   }
 
-  /// The header drops its symbol before the title would truncate, which a
-  /// large text size in small's width otherwise does.
+  /// The widget's name and how many habits are done today, with the seal
+  /// once all are; at a text size where the line cannot hold all three, the
+  /// seal gives way, since the count already says it, before the name is cut.
   private var header: some View {
     ViewThatFits(in: .horizontal) {
-      headerRow(showsSymbol: true)
-      headerRow(showsSymbol: false)
+      headerRow(showsSeal: true)
+      headerRow(showsSeal: false)
     }
   }
 
-  private func headerRow(showsSymbol: Bool) -> some View {
+  private func headerRow(showsSeal: Bool) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: 6) {
-      if showsSymbol {
-        Image(systemName: "repeat")
-          .font(.headline)
-          .foregroundStyle(LorvexDesign.Palette.accent)
-          .accessibilityHidden(true)
-      }
       Text("widget.habits.title", bundle: WidgetL10n.bundle)
-        .font(.headline)
+        .font(WidgetType.label)
+        .foregroundStyle(LorvexDesign.Palette.accent)
         .lineLimit(1)
-      Spacer(minLength: 8)
-      if !habits.isEmpty {
-        Text("\(completedCount)/\(habits.count)")
-          .font(.caption.weight(.medium))
-          .monospacedDigit()
-          .foregroundStyle(.secondary)
-      }
-    }
-  }
-
-  @ViewBuilder
-  private func habitList(rows: Int) -> some View {
-    if habits.isEmpty {
-      Text("widget.empty.no_habits", bundle: WidgetL10n.bundle)
-        .font(.callout)
-        .foregroundStyle(.secondary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    } else {
-      let shown = Array(habits.prefix(HabitsWidgetLayout.shownCount(total: habits.count, family: family, rows: rows)))
-      let columns = HabitsWidgetLayout.columns(shown, family: family, rows: rows)
-      // The small family's column is too narrow for a symbol beside the ring:
-      // it would cut "Read 30 minutes" to "Read 30 minu…". The ring already
-      // says the state, so there the name takes the width.
-      let showsSymbols = family != .systemSmall
-      let reservesSymbolSlot = showsSymbols && shown.contains { !($0.icon ?? "").isEmpty }
-      HStack(alignment: .top, spacing: 12) {
-        ForEach(columns.indices, id: \.self) { index in
-          VStack(alignment: .leading, spacing: rowSpacing) {
-            ForEach(columns[index], id: \.id) { habit in
-              HabitRowView(
-                habit: habit, ringDiameter: ringDiameter, showsSymbol: showsSymbols,
-                reservesSymbolSlot: reservesSymbolSlot)
-            }
-          }
-          .frame(maxWidth: .infinity, alignment: .leading)
-        }
-      }
-    }
-  }
-
-  private func footer(hidden: Int) -> some View {
-    HStack(spacing: 8) {
-      if hidden > 0 {
-        Text(String(
-          localized: "widget.small.more",
-          defaultValue: "+\(hidden) more",
-          table: "Localizable",
-          bundle: WidgetL10n.bundle))
-          .font(.caption2)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      } else if isAllDone {
-        Label(
-          String(
-            localized: "widget.habits.all_done",
-            defaultValue: "All habits done today",
-            table: "Localizable",
-            bundle: WidgetL10n.bundle),
-          systemImage: "checkmark.seal.fill")
-          .font(.caption2)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      }
+        .widgetAccentable()
       Spacer(minLength: 6)
       if let staleAgeLabel {
         WidgetStaleAgeLabel(staleAgeLabel)
       }
-    }
-  }
-}
-
-/// How many habits the Habits widget shows for a number of rows per column,
-/// how many that leaves out (the footer's "+N more"), and how the shown
-/// habits split into columns.
-public enum HabitsWidgetLayout {
-  /// Rows per column at the default text size; a larger size may fit fewer.
-  public static let maxRows = 3
-
-  /// Habits shown with `rows` rows per column: one column on small, and on
-  /// medium two once there are more habits than one column holds.
-  public static func shownCount(total: Int, family: WidgetFamilyKind, rows: Int = maxRows) -> Int {
-    let columnCount = family == .systemMedium && total > rows ? 2 : 1
-    return min(total, rows * columnCount)
-  }
-
-  public static func hiddenHabitCount(total: Int, family: WidgetFamilyKind, rows: Int = maxRows) -> Int {
-    total - shownCount(total: total, family: family, rows: rows)
-  }
-
-  /// The shown habits as columns, each filled top to bottom. Medium splits
-  /// habits that overflow one column of `rows` into two balanced columns, the
-  /// left one taking the extra habit of an odd count (4 → 2 + 2, 5 → 3 + 2);
-  /// fewer keep one full-width column so their names are not squeezed for
-  /// nothing. Small is always one column.
-  public static func columns<Item>(_ shown: [Item], family: WidgetFamilyKind, rows: Int = maxRows) -> [[Item]] {
-    guard family == .systemMedium, shown.count > rows else { return [shown] }
-    let leftCount = (shown.count + 1) / 2
-    return [Array(shown.prefix(leftCount)), Array(shown.dropFirst(leftCount))]
-  }
-}
-
-// MARK: - Habit row
-
-/// One habit: the progress ring (the complete button until today's target is
-/// met), the habit's symbol in a fixed slot, its name, and — for a habit
-/// counted more than once a day — its count. A once-a-day habit shows no
-/// "0/1" or "1/1", since its ring already says whether it is done.
-struct HabitRowView: View {
-  let habit: WidgetSnapshot.HabitSummary
-  let ringDiameter: CGFloat
-  /// Whether the habit's symbol sits between the ring and the name.
-  var showsSymbol: Bool = true
-  /// Keeps the symbol slot when this habit has no symbol but another shown
-  /// habit does, so every name starts at the same x.
-  let reservesSymbolSlot: Bool
-  /// The symbol slot's width, growing with the caption symbols it holds.
-  @ScaledMetric(relativeTo: .caption) var symbolSlotWidth: CGFloat = 16
-
-  /// 0–1 fraction of today's target met (a binary habit is simply 0 or 1).
-  private var progress: Double {
-    guard habit.target > 0 else { return habit.completedToday > 0 ? 1 : 0 }
-    return min(1, Double(habit.completedToday) / Double(habit.target))
-  }
-
-  var body: some View {
-    HStack(spacing: 6) {
-      ringControl
-      info
-    }
-  }
-
-  /// The progress ring — full + green check when today's target is met, a partial
-  /// accent arc otherwise. It reads as status (and shows multi-count progress like
-  /// 2/3), not a checkbox.
-  private var ring: some View {
-    ZStack {
-      Circle()
-        .stroke(Color.secondary.opacity(0.25), lineWidth: 2.5)
-      Circle()
-        .trim(from: 0, to: progress)
-        .stroke(
-          habit.isDoneToday ? LorvexDesign.Palette.done : LorvexDesign.Palette.accent,
-          style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-        .rotationEffect(.degrees(-90))
-      if habit.isDoneToday {
-        Image(systemName: "checkmark")
-          .font(.system(size: ringDiameter * 0.45, weight: .bold))  // lorvex-design-token: allow
+      if showsSeal, isAllDone {
+        Image(systemName: "checkmark.seal.fill")
+          .font(WidgetType.foot)
           .foregroundStyle(LorvexDesign.Palette.done)
+          .accessibilityLabel(
+            String(
+              localized: "widget.habits.all_done", defaultValue: "All habits done today",
+              table: "Localizable", bundle: WidgetL10n.bundle))
       }
-    }
-    .frame(width: ringDiameter, height: ringDiameter)
-  }
-
-  /// Until the target is met the ring is a real complete button (logs one
-  /// completion in-process via `WidgetCompleteHabitIntent`); once met it's just
-  /// the status ring.
-  @ViewBuilder
-  private var ringControl: some View {
-    if habit.isDoneToday {
-      ring.accessibilityHidden(true)
-    } else {
-      Button(intent: WidgetCompleteHabitIntent(habitID: habit.id, name: habit.name)) {
-        ring
-      }
-      .buttonStyle(.plain)
-      .accessibilityLabel(
-        String(
-          localized: "widget.habits.complete.a11y",
-          defaultValue: "Complete \(habit.name)",
-          table: "Localizable",
-          bundle: WidgetL10n.bundle))
-    }
-  }
-
-  private var info: some View {
-    HStack(spacing: 6) {
-      symbolSlot
-      Text(habit.name)
-        .font(.caption.weight(.medium))
-        .foregroundStyle(Color.primary)
-        .lineLimit(1)
-        // A habit name is user-authored content, and the small family renders on
-        // StandBy (visible on a locked device); redact it when the device locks,
-        // matching how task titles are treated on the same surface.
-        .privacySensitive()
-      Spacer(minLength: 0)
-      if habit.target > 1 {
-        Text("\(habit.completedToday)/\(habit.target)")
-          .font(.caption2)
+      if !habits.isEmpty {
+        Text("\(completedCount)/\(habits.count)")
+          .font(WidgetType.meta)
           .monospacedDigit()
           .foregroundStyle(.secondary)
       }
     }
-    // Announce the info as one unit ("Meditate, 1 of 2") instead of fragments.
-    .accessibilityElement(children: .combine)
-    .accessibilityLabel(habitProgressAccessibilityLabel)
   }
 
-  /// Habit icons are SF Symbol names from the icon picker. Symbols differ in
-  /// width, so each sits centered in a fixed slot rather than pushing its name.
+  /// The tiles in rows of `columnCount`, each column an equal share of the
+  /// width and each row an equal share of the height left under the header;
+  /// a short last row keeps its tiles at the leading edge.
+  ///
+  /// Static branches rather than `ForEach`, which the grid's two rows of at
+  /// most four tiles (``HabitsWidgetLayout``) allow: the grid is a
+  /// `ViewThatFits` candidate, and SwiftUI may evaluate a candidate it does
+  /// not draw off the main thread, where a `ForEach` content closure trips
+  /// Swift 6's isolation check.
+  private func grid(rows: Int, ringDiameter: CGFloat) -> some View {
+    let tiles = HabitsWidgetLayout.tiles(habits, capacity: rows * columnCount)
+    return VStack(alignment: .leading, spacing: 8) {
+      gridRow(0, tiles: tiles, ringDiameter: ringDiameter)
+      if tiles.count > columnCount {
+        gridRow(1, tiles: tiles, ringDiameter: ringDiameter)
+      }
+    }
+    .frame(maxHeight: .infinity)
+  }
+
+  private func gridRow(
+    _ row: Int, tiles: [HabitsWidgetLayout.Tile], ringDiameter: CGFloat
+  ) -> some View {
+    let first = row * columnCount
+    return HStack(alignment: .top, spacing: 6) {
+      cell(first, tiles: tiles, ringDiameter: ringDiameter)
+      cell(first + 1, tiles: tiles, ringDiameter: ringDiameter)
+      if columnCount > 2 {
+        cell(first + 2, tiles: tiles, ringDiameter: ringDiameter)
+        cell(first + 3, tiles: tiles, ringDiameter: ringDiameter)
+      }
+    }
+    .frame(maxHeight: .infinity)
+  }
+
   @ViewBuilder
-  private var symbolSlot: some View {
-    if showsSymbol, let icon = habit.icon, !icon.isEmpty {
-      Image(systemName: icon)
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .frame(width: symbolSlotWidth)
-        .accessibilityHidden(true)
-    } else if reservesSymbolSlot {
-      Color.clear
-        .frame(width: symbolSlotWidth, height: 1)
-        .accessibilityHidden(true)
+  private func cell(
+    _ index: Int, tiles: [HabitsWidgetLayout.Tile], ringDiameter: CGFloat
+  ) -> some View {
+    if index < tiles.count {
+      tileView(tiles[index], ringDiameter: ringDiameter)
+    } else {
+      Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
     }
   }
 
-  private var habitProgressAccessibilityLabel: String {
+  @ViewBuilder
+  private func tileView(_ tile: HabitsWidgetLayout.Tile, ringDiameter: CGFloat) -> some View {
+    switch tile {
+    case .habit(let habit):
+      HabitTileView(habit: habit, ringDiameter: ringDiameter)
+    case .more(let count):
+      VStack(spacing: LorvexDesign.Spacing.xs) {
+        Image(systemName: "ellipsis")
+          .font(.system(size: ringDiameter * 0.4, weight: .semibold))  // lorvex-design-token: allow
+          .foregroundStyle(.secondary)
+          .frame(width: ringDiameter, height: ringDiameter)
+          .background(Circle().stroke(.tertiary, lineWidth: max(2, (ringDiameter * 0.1).rounded())))
+        Text(
+          String(
+            localized: "widget.small.more", defaultValue: "+\(count) more", table: "Localizable",
+            bundle: WidgetL10n.bundle)
+        )
+        .font(WidgetType.tile)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+      }
+      .frame(maxWidth: .infinity, alignment: .top)
+    }
+  }
+}
+
+/// How the Habits widget lays its habits out: the columns each family's grid
+/// has, and which habits fill the tiles a number of rows holds. The grid is
+/// at most two rows of at most four tiles; the view draws exactly that shape.
+public enum HabitsWidgetLayout {
+  /// Rows at the default text size; a larger size may fit fewer.
+  public static let maxRows = 2
+
+  public static func columnCount(family: WidgetFamilyKind) -> Int {
+    family == .systemMedium ? 4 : 2
+  }
+
+  /// A tile of the grid: a habit, or the count of habits left out.
+  public enum Tile: Equatable {
+    case habit(WidgetSnapshot.HabitSummary)
+    case more(Int)
+  }
+
+  /// The tiles `capacity` holds. Every habit when they fit, in order;
+  /// otherwise the last tile counts the habits left out, and the habits not yet
+  /// done today take the other tiles first, each group in order.
+  public static func tiles(_ habits: [WidgetSnapshot.HabitSummary], capacity: Int) -> [Tile] {
+    guard habits.count > capacity else { return habits.map(Tile.habit) }
+    guard capacity > 1 else { return [.more(habits.count)] }
+    let ordered = habits.filter { !$0.isDoneToday } + habits.filter(\.isDoneToday)
+    let shown = ordered.prefix(capacity - 1)
+    return shown.map(Tile.habit) + [.more(habits.count - shown.count)]
+  }
+}
+
+/// One habit's tile: its ring over its name, a button that checks the habit in
+/// (``WidgetCompleteHabitIntent``) until today's count is met. A habit kept
+/// several times a day draws one arc of its ring per check-in; VoiceOver reads
+/// the count.
+struct HabitTileView: View {
+  let habit: WidgetSnapshot.HabitSummary
+  let ringDiameter: CGFloat
+
+  private var tile: some View {
+    LorvexHabitRingTile(
+      name: habit.name,
+      symbol: LorvexSymbol.name(for: habit.icon, fallback: "repeat"),
+      fraction: Double(habit.completedToday) / Double(habit.target),
+      tint: LorvexHabitPalette.baseColor(id: habit.id, color: habit.color),
+      diameter: ringDiameter,
+      nameFont: WidgetType.tile,
+      nameLines: 1,
+      segments: habit.target)
+      // A habit name is the user's content, and the widget shows on StandBy,
+      // visible on a locked device: redact the tile when the device locks.
+      .privacySensitive()
+  }
+
+  var body: some View {
+    if habit.isDoneToday {
+      tile
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(progressLabel)
+    } else {
+      Button(intent: WidgetCompleteHabitIntent(habitID: habit.id, name: habit.name)) {
+        tile.contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(
+        String(
+          localized: "widget.habits.complete.a11y", defaultValue: "Complete \(habit.name)",
+          table: "Localizable", bundle: WidgetL10n.bundle))
+      .accessibilityValue(progressLabel)
+    }
+  }
+
+  private var progressLabel: String {
     String(
       localized: "widget.habits.row.progress.a11y",
       defaultValue: "\(habit.name), \(habit.completedToday) of \(habit.target)",
-      table: "Localizable",
-      bundle: WidgetL10n.bundle)
+      table: "Localizable", bundle: WidgetL10n.bundle)
   }
 }

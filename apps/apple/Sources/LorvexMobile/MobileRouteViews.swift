@@ -104,6 +104,13 @@ struct MobileStoreRouteView: View {
             )
             .onAppear {
               store.selectHabit(id)
+              #if DEBUG
+                // Screenshot hook: open the editor as the Edit button does.
+                if MobileStore.debugOpenHabitEditor, editingHabit == nil {
+                  store.prepareHabitDraft(for: habit)
+                  editingHabit = habit
+                }
+              #endif
             }
             .task(id: "\(id)|\(store.habitDetailRevision)") {
               await store.loadHabitDetail(id: id)

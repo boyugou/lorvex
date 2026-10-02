@@ -83,14 +83,14 @@ struct MenuBarTodayContent: View {
   private func leadBlock(_ item: LorvexCalmToday.Item) -> some View {
     let task = item.task
     return HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
-      completeButton(item, diameter: 36)
+      leadCompleteButton(item)
         .accessibilityIdentifier("menubar.lead.complete")
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Button {
           open(task)
         } label: {
-          Text(task.title)
+          Text(userContent: task.title)
             .font(LorvexDesign.Typography.leadTitle)
             .foregroundStyle(.primary)
             .lineLimit(2)
@@ -121,46 +121,18 @@ struct MenuBarTodayContent: View {
   /// A task after the lead: its circle, which completes it, and its title,
   /// which opens it, with its time when it has one.
   private func taskRow(_ item: LorvexCalmToday.Item) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      completeButton(item, diameter: 18)
-        .accessibilityIdentifier("menubar.next.complete")
-      Button {
-        open(item.task)
-      } label: {
-        HStack(spacing: LorvexDesign.Spacing.s) {
-          Text(item.task.title)
-            .font(LorvexDesign.Typography.primaryText)
-            .foregroundStyle(.primary)
-            .lineLimit(1)
-          Spacer(minLength: 0)
-          if let time = item.time {
-            Text(TodayCalmCopy.timeRange(start: time.lowerBound, end: time.upperBound))
-              .font(LorvexDesign.Typography.secondaryText)
-              .foregroundStyle(.secondary)
-              .monospacedDigit()
-              .lineLimit(1)
-          }
-        }
-        .frame(minHeight: 30)
-        .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
-      .help(TodayCalmCopy.openDetails)
-      .accessibilityIdentifier("menubar.next.task")
-    }
+    MenuBarTaskRow(
+      task: item.task, time: item.time, identifier: "menubar.next",
+      complete: { complete(item.task) }, open: { open(item.task) })
   }
 
-  /// The circle that completes `item`'s task. It fills as a running time
-  /// passes. The lead's large ring carries the faint check hint the widgets
-  /// share; a row's small circle stays plain, like every task row in the main
-  /// window.
-  private func completeButton(_ item: LorvexCalmToday.Item, diameter: CGFloat) -> some View {
+  /// The lead's circle, which completes its task: a ring that fills as a
+  /// running time passes, with the faint check hint the widgets share.
+  private func leadCompleteButton(_ item: LorvexCalmToday.Item) -> some View {
     Button {
       complete(item.task)
     } label: {
-      LorvexTaskRing(
-        progress: item.progress(nowMinutes: nowMinutes), isDone: false, diameter: diameter,
-        showsCheckHint: diameter >= 24)
+      LorvexTaskRing(progress: item.progress(nowMinutes: nowMinutes), isDone: false, diameter: 36)
         .contentShape(Circle())
     }
     .buttonStyle(.plain)
@@ -200,7 +172,7 @@ struct MenuBarTodayContent: View {
           .monospacedDigit()
       }
     }
-    .frame(minHeight: 30)
+    .frame(minHeight: MenuBarTaskRow.minHeight)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("menubar.habit")
   }

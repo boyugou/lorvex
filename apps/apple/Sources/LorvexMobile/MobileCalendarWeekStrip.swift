@@ -51,29 +51,21 @@ struct MobileCalendarWeekStrip: View {
   private func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
 
   private func weekdaySymbol(_ date: Date) -> String {
-    MobileDateFormatting.weekdayAbbrev.string(from: date)
-      .uppercased(with: MobileL10n.locale)
+    LorvexDateFormatters.string(date, template: "EEE", timeZone: calendar.timeZone)
   }
 
   private func dayNumber(_ date: Date) -> String {
-    MobileDateFormatting.dayOfMonth.string(from: date)
+    LorvexDateFormatters.dayNumber(date, timeZone: calendar.timeZone)
   }
 
   private func accessibleDate(_ date: Date) -> String {
-    let base = Self.fullDateFormatter.string(from: date)
+    let base = LorvexDateFormatters.string(date, dateStyle: .full, timeZone: calendar.timeZone)
     guard isToday(date) else { return base }
     return String(
       format: String(
         localized: "calendar.week.today_prefix", defaultValue: "Today, %@", table: "Localizable",
         bundle: MobileL10n.bundle), base)
   }
-
-  private static let fullDateFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.locale = MobileL10n.locale
-    f.dateStyle = .full
-    return f
-  }()
 }
 
 /// The week strip as a horizontal pager of weeks. Swiping it follows the finger

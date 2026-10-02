@@ -48,21 +48,16 @@ extension ToolRegistry {
     return keys
   }
 
-  /// Strip any fence sentinels (a client may echo a fenced key verbatim), trim,
-  /// and insert when non-empty — so a fenced key resolves back to its stored form.
+  /// Trim `raw` and insert it when non-empty.
   private func insertMemoryKey(_ raw: String?, into keys: inout Set<String>) {
     guard let raw else { return }
-    let key = SecurityFencing.unfence(raw).trimmingCharacters(in: .whitespacesAndNewlines)
+    let key = raw.trimmingCharacters(in: .whitespacesAndNewlines)
     if !key.isEmpty { keys.insert(key) }
   }
 
   func writeMemoryResult(arguments: [String: Value]) async throws -> CallTool.Result {
-    // Strip fence sentinels before validating/storing so a client echoing a
-    // fenced key writes the original key, not a doubly-wrapped variant.
-    let key = SecurityFencing.unfence(
-      try StrictScalarArguments.optionalString(arguments["key"], field: "key") ?? ""
-    )
-    .trimmingCharacters(in: .whitespacesAndNewlines)
+    let key = (try StrictScalarArguments.optionalString(arguments["key"], field: "key") ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
     guard !key.isEmpty else {
       return Self.errorResult(
         code: "validation", message: "A non-empty memory key is required.",
@@ -79,16 +74,10 @@ extension ToolRegistry {
   }
 
   func renameMemoryResult(arguments: [String: Value]) async throws -> CallTool.Result {
-    // Strip fence sentinels before validating/storing so a client echoing fenced
-    // keys renames the original keys, not doubly-wrapped variants.
-    let oldKey = SecurityFencing.unfence(
-      try StrictScalarArguments.optionalString(arguments["old_key"], field: "old_key") ?? ""
-    )
-    .trimmingCharacters(in: .whitespacesAndNewlines)
-    let newKey = SecurityFencing.unfence(
-      try StrictScalarArguments.optionalString(arguments["new_key"], field: "new_key") ?? ""
-    )
-    .trimmingCharacters(in: .whitespacesAndNewlines)
+    let oldKey = (try StrictScalarArguments.optionalString(arguments["old_key"], field: "old_key") ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    let newKey = (try StrictScalarArguments.optionalString(arguments["new_key"], field: "new_key") ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
     guard !oldKey.isEmpty else {
       return Self.errorResult(
         code: "validation", message: "A non-empty old_key is required.", toolName: "rename_memory")

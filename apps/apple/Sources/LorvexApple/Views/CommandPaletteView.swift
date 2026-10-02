@@ -37,7 +37,8 @@ struct CommandPaletteView: View {
     CommandPaletteResults.groups(
       query: query, tasks: taskResults,
       lists: store.orderedLists + store.orderedArchivedLists,
-      now: LorvexPreviewClock.now(in: .current))
+      now: LorvexPreviewClock.now(in: .current),
+      timeZone: store.logicalTimeZone)
   }
 
   private var flatResults: [CommandPaletteResult] {
@@ -219,6 +220,10 @@ struct CommandPaletteView: View {
     dismiss()
   }
 
+  /// Searches tasks for the query on every keystroke: one indexed query is
+  /// quick enough that the palette needs no typing pause. A newer keystroke
+  /// cancels this run without awaiting it, so a cancelled run drops its reply
+  /// rather than replace the newer query's results.
   private func loadTaskResults() async {
     let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else {
@@ -232,9 +237,11 @@ struct CommandPaletteView: View {
         status: "all",
         limit: CommandPaletteResults.taskResultLimit,
         offset: 0)
+      guard !Task.isCancelled else { return }
       taskResults = results.tasks
       searchError = nil
     } catch {
+      guard !Task.isCancelled else { return }
       taskResults = []
       searchError = await store.userFacingBannerMessage(
         for: error, source: "macos.ui.command_palette.search_failed")

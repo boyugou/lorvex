@@ -11,10 +11,11 @@ extension SettingsView {
   }
 }
 
-/// The Calendar page's one group: two-way sync with the user's calendars and
-/// what Lorvex may see of them, led by whatever needs attention
-/// (``SettingsCalendarNotice``) and silent while all is well. Lorvex reads the
-/// calendars on every refresh, so the page offers no read-now action.
+/// The Calendar page: the two-way sync switch, led by whatever needs attention
+/// (``SettingsCalendarNotice``) and silent while all is well, then what Lorvex
+/// may see of the calendars (``SettingsCalendarControlPanel``). Each control
+/// has its own group so its explanation is the footer directly under it. Lorvex
+/// reads the calendars on every refresh, so the page offers no read-now action.
 ///
 /// The authorization status is read on appear and re-read when the app regains
 /// focus (so returning from System Settings reflects a fresh grant), never on
@@ -27,16 +28,44 @@ private struct SettingsCalendarSyncSection: View {
   @State private var needsAccessRecovery = false
 
   var body: some View {
-    Section(String(localized: "settings.calendar.apple_calendar", defaultValue: "Calendar Sync", table: "Localizable", bundle: LorvexL10n.bundle)) {
+    Section {
       ForEach(notices, id: \.self) { notice in
         noticeRow(notice)
       }
-      SettingsCalendarControlPanel(settings: settings, store: store)
+      Toggle(isOn: $settings.eventKitEnabled) {
+        Text(
+          LocalizedStringResource(
+            "settings.calendar.sync_toggle", defaultValue: "Sync with Calendar",
+            table: "Localizable", bundle: LorvexL10n.bundle))
+      }
+      .accessibilityIdentifier("settings.eventkit.enabled")
+      .onChange(of: settings.eventKitEnabled) { _, enabled in
+        Task {
+          if enabled {
+            let granted = await store.requestCalendarAccessFromSettings()
+            guard granted else {
+              settings.eventKitEnabled = false
+              return
+            }
+          }
+          await store.applyEventKitSettings(enabled: enabled)
+        }
+      }
+    } footer: {
+      Text(
+        LocalizedStringResource(
+          "settings.calendar.two_way_detail",
+          defaultValue:
+            "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar — never your personal calendars.",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle))
     }
     .task { needsAccessRecovery = EventKitAuthorizationHelper().needsSettingsRecovery }
     .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
       needsAccessRecovery = EventKitAuthorizationHelper().needsSettingsRecovery
     }
+
+    SettingsCalendarControlPanel(settings: settings, store: store)
   }
 
   private var notices: [SettingsCalendarNotice] {
@@ -51,7 +80,16 @@ private struct SettingsCalendarSyncSection: View {
   private func noticeRow(_ notice: SettingsCalendarNotice) -> some View {
     switch notice {
     case .accessDenied:
-      Group {
+      // The way out sits at the notice's trailing edge, like every settings
+      // control, rather than on a line of its own under it.
+      LabeledContent {
+        if let settingsURL = Self.calendarPrivacySettingsURL {
+          OpenSystemSettingsButton(
+            label: String(localized: "settings.calendar.open_system_settings", defaultValue: "Open System Settings", table: "Localizable", bundle: LorvexL10n.bundle),
+            settingsURL: settingsURL
+          )
+        }
+      } label: {
         noticeLabel(
           LocalizedStringResource(
             "settings.calendar.access_denied",
@@ -60,12 +98,6 @@ private struct SettingsCalendarSyncSection: View {
             bundle: LorvexL10n.bundle),
           systemImage: "calendar.badge.exclamationmark",
           tint: LorvexDesign.Palette.warning)
-        if let settingsURL = Self.calendarPrivacySettingsURL {
-          OpenSystemSettingsButton(
-            label: String(localized: "settings.calendar.open_system_settings", defaultValue: "Open System Settings", table: "Localizable", bundle: LorvexL10n.bundle),
-            settingsURL: settingsURL
-          )
-        }
       }
       .accessibilityIdentifier("settings.calendar.accessRecovery")
     case .readFailed:

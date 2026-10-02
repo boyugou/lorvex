@@ -11,6 +11,10 @@ struct BackupRestoreSafetyTests {
   private static let tagID = "22222222-2222-4222-8222-222222222222"
   private static let taskID = "33333333-3333-4333-8333-333333333333"
   private static let omittedTaskID = "44444444-4444-4444-8444-444444444444"
+  /// What the import summary tells the person about a backup that fails the
+  /// whole-backup preflight; the specific rule is in the error's diagnostic.
+  private static let damagedBackupMessage =
+    "This backup is damaged and can’t be imported. Export it again on the device it came from, then try again."
 
   @Test("production-shaped v1 fixture restores into a fresh current store")
   func restoresProductionShapedV1Fixture() async throws {
@@ -21,7 +25,7 @@ struct BackupRestoreSafetyTests {
     let summary = await LorvexDataImporter.apply(
       plan: plan, decoded: decoded, using: service)
 
-    #expect(summary.errors.isEmpty, "Golden restore errors: \(summary.errors)")
+    #expect(summary.issues.isEmpty, "Golden restore errors: \(summary.issues)")
     let restored = try await service.loadTask(id: Self.taskID)
     #expect(restored.title == "Decode every v1 shape")
     #expect(restored.plannedTime == 540..<600)
@@ -350,7 +354,7 @@ struct BackupRestoreSafetyTests {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: core)
 
-    #expect(summary.errors.isEmpty)
+    #expect(summary.issues.isEmpty)
     #expect(
       summary.results == [
         LorvexImportCategoryResult(category: .preferences, imported: 1, skipped: 4)
@@ -378,14 +382,13 @@ struct BackupRestoreSafetyTests {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: core)
 
-    #expect(
-      summary.results == [
-        LorvexImportCategoryResult(category: .lists, imported: 0, skipped: 0)
-      ])
-    #expect(summary.errors.count == 1)
-    #expect(summary.errors.first?.category == .lists)
-    #expect(summary.errors.first?.recordRef == "backup")
-    #expect(summary.errors.first?.message.contains("working_hours.end must be after") == true)
+    #expect(summary.results.isEmpty)
+    #expect(summary.issues.isEmpty)
+    #expect(summary.rejection?.localizedDescription == Self.damagedBackupMessage)
+    let rejection = #expect(throws: LorvexDataImporter.ImportError.self) {
+      try BackupV1PayloadPreflight.validate(payload)
+    }
+    #expect(rejection?.diagnosticDescription.contains("working_hours.end must be after") == true)
     #expect(try await core.loadLists().lists.contains { $0.id == listID } == false)
     #expect(try await core.getPreference(key: PreferenceKeys.prefWorkingHours) == nil)
   }
@@ -450,15 +453,13 @@ struct BackupRestoreSafetyTests {
       plan: LorvexDataImporter.plan(for: payload), payload: payload,
       using: try makeInMemoryCore())
 
-    #expect(
-      summary.results == [
-        LorvexImportCategoryResult(category: .habits, imported: 0, skipped: 0)
-      ])
-    #expect(summary.errors.count == 1)
-    #expect(summary.errors.first?.category == .habits)
-    #expect(summary.errors.first?.recordRef == "backup")
-    #expect(
-      summary.errors.first?.message.contains("duplicate active habit lookup key") == true)
+    #expect(summary.results.isEmpty)
+    #expect(summary.issues.isEmpty)
+    #expect(summary.rejection?.localizedDescription == Self.damagedBackupMessage)
+    let rejection = #expect(throws: LorvexDataImporter.ImportError.self) {
+      try BackupV1PayloadPreflight.validate(payload)
+    }
+    #expect(rejection?.diagnosticDescription.contains("duplicate active habit lookup key") == true)
   }
 
   @Test("public v1 rejects calendar segment topology before preview")

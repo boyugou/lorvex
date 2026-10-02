@@ -69,13 +69,17 @@ public struct MobileStoreTasksHomeView: View {
     .task(id: "\(searchQuery)|\(store.taskWorkspaceRevision)") {
       guard hasQuery else {
         searchResults = .empty
+        isSearching = false
         return
       }
       isSearching = true
-      defer { isSearching = false }
-      try? await Task.sleep(for: .milliseconds(250))
+      guard await LorvexSearchDebounce.shouldSearch(searchQuery) else { return }
+      let results = await store.taskWorkspacePage(scope: .all, query: searchQuery)
+      // A newer query or revision cancels this search without awaiting it; its
+      // late reply must not replace the newer results.
       guard !Task.isCancelled else { return }
-      searchResults = await store.taskWorkspacePage(scope: .all, query: searchQuery)
+      searchResults = results
+      isSearching = false
     }
     .sheet(isPresented: $isShowingCreateList) {
       MobileStoreCreateListSheet(store: store, isPresented: $isShowingCreateList)
@@ -318,11 +322,17 @@ struct MobileTaskCollectionCard: View {
       HStack(alignment: .top) {
         MobileIconTile(symbol: collection.systemImage, tint: collection.tint, size: 30)
         Spacer()
-        Text(count.map(String.init) ?? "—")
-          .font(.title2.weight(.semibold).monospacedDigit())
-          .foregroundStyle(.primary)
-          .contentTransition(.numericText())
-          .accessibilityHidden(true)
+        Group {
+          if let count {
+            Text(count, format: .number)
+          } else {
+            Text(verbatim: "—")
+          }
+        }
+        .font(.title2.weight(.semibold).monospacedDigit())
+        .foregroundStyle(.primary)
+        .contentTransition(.numericText())
+        .accessibilityHidden(true)
       }
       Text(collection.title)
         .font(LorvexDesign.Typography.secondaryText.weight(.medium))
@@ -333,6 +343,6 @@ struct MobileTaskCollectionCard: View {
     .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
-      count.map { "\(collection.title), \($0)" } ?? collection.title)
+      count.map { "\(collection.title), \($0.formatted())" } ?? collection.title)
   }
 }

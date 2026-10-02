@@ -10,7 +10,7 @@ func widgetViewMetricsMatchRenderFamilyRowBudgets() {
   #expect(LorvexWidgetViewMetrics.metrics(for: .accessoryInline).maxVisibleRows == 0)
   #expect(LorvexWidgetViewMetrics.metrics(for: .systemSmall).maxVisibleRows == 0)
   #expect(LorvexWidgetViewMetrics.metrics(for: .systemMedium).maxVisibleRows == 2)
-  #expect(LorvexWidgetViewMetrics.metrics(for: .systemLarge).maxVisibleRows == 5)
+  #expect(LorvexWidgetViewMetrics.metrics(for: .systemLarge).maxVisibleRows == 6)
   #expect(LorvexWidgetViewMetrics.metrics(for: .accessoryRectangular).maxVisibleRows == 1)
 }
 
@@ -26,30 +26,42 @@ func widgetViewMetricsShowBriefingOnlyOnLarge() {
 }
 
 @Test
-func habitsWidgetLayoutReportsHiddenHabitOverflow() {
-  // Three rows per column at the default text size: small shows 3, medium 6.
-  #expect(HabitsWidgetLayout.shownCount(total: 8, family: .systemSmall) == 3)
-  #expect(HabitsWidgetLayout.shownCount(total: 8, family: .systemMedium) == 6)
-  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemSmall) == 5)
-  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemMedium) == 2)
-  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 3, family: .systemSmall) == 0)
-  // A larger text size fits fewer rows, and the footer counts the rest.
-  #expect(HabitsWidgetLayout.shownCount(total: 8, family: .systemMedium, rows: 2) == 4)
-  #expect(HabitsWidgetLayout.hiddenHabitCount(total: 8, family: .systemMedium, rows: 1) == 6)
-  #expect(HabitsWidgetLayout.shownCount(total: 2, family: .systemMedium, rows: 1) == 2)
+func habitsWidgetGridHasTwoColumnsOnSmallAndFourOnMedium() {
+  #expect(HabitsWidgetLayout.columnCount(family: .systemSmall) == 2)
+  #expect(HabitsWidgetLayout.columnCount(family: .systemMedium) == 4)
+  #expect(HabitsWidgetLayout.maxRows == 2)
 }
 
 @Test
-func habitsWidgetMediumSplitsIntoBalancedColumns() {
-  // Habits that overflow one column go into two, the left one taking an odd
-  // extra; fewer keep a single full-width column.
-  #expect(HabitsWidgetLayout.columns([1, 2, 3], family: .systemMedium) == [[1, 2, 3]])
-  #expect(HabitsWidgetLayout.columns([1, 2, 3, 4], family: .systemMedium) == [[1, 2], [3, 4]])
-  #expect(HabitsWidgetLayout.columns([1, 2, 3, 4, 5], family: .systemMedium) == [[1, 2, 3], [4, 5]])
-  #expect(HabitsWidgetLayout.columns([1, 2, 3, 4, 5, 6], family: .systemMedium) == [[1, 2, 3], [4, 5, 6]])
-  #expect(HabitsWidgetLayout.columns([1, 2, 3], family: .systemMedium, rows: 2) == [[1, 2], [3]])
-  #expect(HabitsWidgetLayout.columns([1, 2, 3], family: .systemSmall) == [[1, 2, 3]])
-  #expect(HabitsWidgetLayout.columns([Int](), family: .systemMedium) == [[]])
+func habitsWidgetTilesKeepHabitOrderWhenEveryHabitFits() {
+  let habits = [gridHabit("a", done: true), gridHabit("b"), gridHabit("c", done: true)]
+  #expect(HabitsWidgetLayout.tiles(habits, capacity: 4) == habits.map { .habit($0) })
+  #expect(HabitsWidgetLayout.tiles(habits, capacity: 3) == habits.map { .habit($0) })
+  #expect(HabitsWidgetLayout.tiles([], capacity: 4).isEmpty)
+}
+
+@Test
+func habitsWidgetOverflowCountsTheRestAndShowsHabitsLeftFirst() {
+  // Six habits in four tiles: three habits and a tile counting the other
+  // three. The habits not yet done take the tiles first, each group in order.
+  let habits = [
+    gridHabit("a", done: true), gridHabit("b"), gridHabit("c", done: true),
+    gridHabit("d"), gridHabit("e"), gridHabit("f"),
+  ]
+  #expect(
+    HabitsWidgetLayout.tiles(habits, capacity: 4)
+      == [.habit(habits[1]), .habit(habits[3]), .habit(habits[4]), .more(3)])
+  // Every habit done: they keep their order behind the count.
+  let done = habits.map { gridHabit($0.id, done: true) }
+  #expect(
+    HabitsWidgetLayout.tiles(done, capacity: 4)
+      == [.habit(done[0]), .habit(done[1]), .habit(done[2]), .more(3)])
+  // A single tile only counts.
+  #expect(HabitsWidgetLayout.tiles(habits, capacity: 1) == [.more(6)])
+}
+
+private func gridHabit(_ id: String, done: Bool = false) -> WidgetSnapshot.HabitSummary {
+  WidgetSnapshot.HabitSummary(id: id, name: id, icon: nil, completedToday: done ? 1 : 0, target: 1)
 }
 
 @Test
@@ -65,13 +77,18 @@ func interactiveWidgetTaskActionsUseSharedHitTargetButton() throws {
   let taskRowSource = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetTaskRowView.swift")
 
   #expect(taskRowSource.contains("struct WidgetActionButton<Intent: AppIntent>: View"))
-  #expect(taskRowSource.contains(".frame(minWidth: 32, minHeight: 32)"))
+  // The hit target is a row high, growing with the row's text, and as wide as
+  // it is high unless a caller sets its width.
+  #expect(
+    taskRowSource.contains(
+      "@ScaledMetric(relativeTo: WidgetType.rowTextStyle) private var height = widgetRowHeight"))
+  #expect(taskRowSource.contains(".frame(width: width ?? height, height: height, alignment: alignment)"))
   #expect(taskRowSource.contains(".contentShape(Rectangle())"))
   // A row's complete circle flows through the shared `WidgetActionButton` hit
   // target; the lead ring is its own full-diameter target (`Button(intent:)`
   // around `LorvexTaskRing` with a circular content shape), the only raw
   // intent button in the file.
-  #expect(taskRowSource.contains("WidgetActionButton(\n          intent: WidgetCompleteTaskIntent"))
+  #expect(taskRowSource.contains("WidgetActionButton(\n        intent: WidgetCompleteTaskIntent"))
   #expect(
     taskRowSource.contains(
       "Button(intent: WidgetCompleteTaskIntent(taskID: lead.id, title: lead.title))"))

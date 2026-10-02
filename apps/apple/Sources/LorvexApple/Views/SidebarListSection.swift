@@ -13,7 +13,7 @@ extension SidebarView {
     var listScopeSection: some View {
         Section {
             ForEach(store.orderedLists) { list in
-                SidebarListRow(badge: list.openCount > 0 ? "\(list.openCount)" : nil) {
+                SidebarListRow(count: list.openCount > 0 ? list.openCount : nil) {
                     SidebarListIcon(
                         icon: list.icon,
                         tint: isSelected(.listScope(list.id))
@@ -242,7 +242,7 @@ extension SidebarView {
         // under the list's name, and it can be restored later.
         return String(
             localized: "list_row.archive.nonempty_count_message",
-            defaultValue: "\(list.totalCount) tasks remain in “\(list.displayName)”. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
+            defaultValue: "“\(list.displayName)” can’t be deleted while it still holds \(list.totalCount) tasks. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
             table: "Localizable",
             bundle: LorvexL10n.bundle)
     }

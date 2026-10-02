@@ -123,7 +123,7 @@ func watchTaskLineFollowsTodaysRowRules() {
       == LorvexWatchTaskLine(text: LorvexWatchCalmCopy.started, tone: .started))
   #expect(
     LorvexWatchTaskLine.make(task: timed, time: nil, nowMinutes: 610, logicalDay: day)
-      == LorvexWatchTaskLine(text: LorvexWatchCalmCopy.minutes(60), tone: .plain))
+      == LorvexWatchTaskLine(text: LorvexDurationFormat.minutes(60), tone: .plain))
   #expect(LorvexWatchTaskLine.make(task: task("n"), time: nil, nowMinutes: 610, logicalDay: day) == nil)
 }
 

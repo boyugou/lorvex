@@ -41,14 +41,17 @@ extension CoreBridgeClient {
     })
   }
 
+  /// The fields of `task` that contain `query`, ignoring case and accents as
+  /// the store's full-text index does, so a task the search found by an
+  /// accented word still names the field it was found in.
   static func matchReasons(task: LorvexTask, query: String) -> [String] {
     let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return [] }
     var reasons: [String] = []
-    if task.title.localizedCaseInsensitiveContains(trimmed) { reasons.append("title") }
-    if task.notes.localizedCaseInsensitiveContains(trimmed) { reasons.append("notes") }
-    if task.aiNotes?.localizedCaseInsensitiveContains(trimmed) == true { reasons.append("ai_notes") }
-    if task.tags.contains(where: { $0.localizedCaseInsensitiveContains(trimmed) }) {
+    if task.title.localizedStandardContains(trimmed) { reasons.append("title") }
+    if task.notes.localizedStandardContains(trimmed) { reasons.append("notes") }
+    if task.aiNotes?.localizedStandardContains(trimmed) == true { reasons.append("ai_notes") }
+    if task.tags.contains(where: { $0.localizedStandardContains(trimmed) }) {
       reasons.append("tags")
     }
     return reasons

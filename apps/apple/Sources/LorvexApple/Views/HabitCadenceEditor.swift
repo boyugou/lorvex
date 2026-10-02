@@ -51,7 +51,7 @@ struct HabitCadenceEditor: View {
           Stepper(value: $store.draftHabitTimesPerWeek, in: 1...7) {
             Text(String(
               localized: "habits.sheet.cadence.times_per_week_label",
-              defaultValue: "\(store.draftHabitTimesPerWeek) times per week",
+              defaultValue: "\(store.draftHabitTimesPerWeek) times a week",
               table: "Localizable",
               bundle: LorvexL10n.bundle))
               .font(LorvexDesign.Typography.primaryText)
@@ -61,12 +61,9 @@ struct HabitCadenceEditor: View {
       } else if mode == .monthly {
         Stepper(value: $store.draftHabitDayOfMonth, in: 1...31) {
           Text(String(
-            format: String(
-              localized: "habits.sheet.cadence.month_day_label",
-              defaultValue: "On day %lld",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            store.draftHabitDayOfMonth))
+            localized: "habits.sheet.cadence.month_day_label",
+            defaultValue: "On day \(store.draftHabitDayOfMonth)",
+            table: "Localizable", bundle: LorvexL10n.bundle))
             .font(LorvexDesign.Typography.primaryText)
         }
         .accessibilityIdentifier("\(idPrefix).dayOfMonth")
@@ -81,11 +78,8 @@ struct HabitCadenceEditor: View {
           store.draftHabitWeekdays = Self.evenlyDistributedWeekdays(n)
         } label: {
           Text(String(
-            format: String(
-              localized: "habits.sheet.cadence.spread_n_days", defaultValue: "%lld days",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            n))
+            localized: "habits.sheet.cadence.spread_n_days", defaultValue: "\(n) days",
+            table: "Localizable", bundle: LorvexL10n.bundle))
         }
       }
     } label: {
@@ -156,9 +150,11 @@ struct HabitCadenceEditor: View {
   }
 }
 
-/// A row of seven toggleable weekday pills (Mon … Sun, localized) bound to a set
-/// of ``WeekDay`` raw values (0 = Mon … 6 = Sun). The shared weekday control for
-/// both habit cadence and task recurrence, so the two read identically.
+/// A row of seven toggleable weekday pills, localized and starting on the
+/// first day of the user's week (``LorvexWeekdayOrder``), bound to a set of
+/// ``WeekDay`` raw values (0 = Mon … 6 = Sun). The shared weekday control for
+/// habit cadence, task recurrence, and event repeats, so they read
+/// identically.
 struct HabitWeekdayPicker: View {
   @Binding var selection: Set<Int>
   let idPrefix: String
@@ -170,7 +166,7 @@ struct HabitWeekdayPicker: View {
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.sm) {
-      ForEach(0..<7, id: \.self) { raw in
+      ForEach(LorvexWeekdayOrder.mondayFirstIndices(), id: \.self) { raw in
         let isOn = selection.contains(raw)
         Button {
           toggle(raw)

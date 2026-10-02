@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 extension MarkdownNoteView {
@@ -9,7 +10,7 @@ extension MarkdownNoteView {
                     Image(systemName: item.isChecked ? "checkmark.square.fill" : "square")
                         .foregroundStyle(item.isChecked ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                         .accessibilityHidden(true)
-                    Text(item.text)
+                    Text(userContent: item.text)
                         .strikethrough(item.isChecked, color: .secondary)
                         .foregroundStyle(item.isChecked ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
                         .fixedSize(horizontal: false, vertical: true)

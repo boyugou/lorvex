@@ -151,10 +151,7 @@ extension MobileStore {
     }
     // Republish so the new habit appears in the iOS Habits widget promptly; a
     // local write's in-process signal is self-suppressed, so nothing else does.
-    // Off the sheet's critical path: the fan-out ends with a sync cycle and the
-    // sheet closes on this return, so awaiting it here would pin the sheet on
-    // "Creating" for the cycle's duration.
-    Task { await publishMobileSyncSurfaces() }
+    await publishMobileSyncSurfaces()
     return true
   }
 
@@ -314,7 +311,7 @@ extension MobileStore {
 
   /// Authoritatively re-read the habits list for a `.habit` route whose target
   /// isn't in the currently-loaded list — the list hasn't loaded yet (a deep link
-  /// or Handoff before the Habits tab appeared) or the habit was added
+  /// or Handoff before the Habits workspace appeared) or the habit was added
   /// out-of-band (an in-process intent / MCP write) since the last load. Returns
   /// whether the read succeeded; on a transient failure it keeps the last-good
   /// list so the route can stay on its skeleton and recover on the next refresh

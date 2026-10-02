@@ -242,6 +242,25 @@ extension TaskRepo {
       return try rows.map(TaskRepo.rowToTaskRow)
     }
 
+    /// Every task the system search index carries: each task that is neither
+    /// cancelled nor in the Trash, in the canonical task order.
+    ///
+    /// Deliberately uncapped, like ``getWidgetActionableTasks(_:today:)``: the
+    /// caller replaces the whole index from this set, so a top-N page would
+    /// drop every task ranked past its cap from search.
+    public static func getSearchIndexTasks(_ db: Database) throws -> [TaskRow] {
+      let rows = try Row.fetchAll(
+        db,
+        sql: """
+          SELECT \(TaskRepo.taskColumns) FROM tasks \
+          WHERE status != :cancelled \
+          AND tasks.archived_at IS NULL \
+          ORDER BY \(TaskRepo.taskOrderBy)
+          """,
+        arguments: ["cancelled": StatusName.cancelled])
+      return try rows.map(TaskRepo.rowToTaskRow)
+    }
+
     /// Recently completed tasks in deterministic overview order.
     ///
     /// Filters `status = 'completed' AND archived_at IS NULL` and orders

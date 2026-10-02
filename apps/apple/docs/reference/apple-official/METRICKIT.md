@@ -17,8 +17,9 @@ delivers `MetricReport` and `DiagnosticReport` through asynchronous sequences.
 ## Lorvex Mapping
 
 Lorvex uses `MXMetricManagerSubscriber` and stores selected crash/hang/CPU/disk
-diagnostics in the local `error_logs` ring. This remains necessary for the iOS
-17/macOS 14 deployment floor; the new API cannot simply replace it everywhere.
+diagnostics in the local `error_logs` ring. This remains necessary because the
+iOS/macOS 26 deployment floor sits below the OS 27 that introduces the new API;
+the new API cannot simply replace it everywhere.
 
 The privacy posture remains local because Lorvex does not add an upload path.
 Product copy should describe what Lorvex itself does and avoid making guarantees

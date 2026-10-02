@@ -16,14 +16,15 @@ public enum LorvexTaskFieldChoices {
     min(max(Double(minutes) / Double(lengthRingFull), 0), 1)
   }
 
-  /// The minutes a draft's length text holds; 0 when it is empty or not a number.
+  /// The minutes a draft's length text holds, in any script's digits
+  /// (``LorvexNumberInput/integer(from:)``); 0 when it is empty or not a number.
   public static func minutes(fromText text: String) -> Int {
-    Int(text.trimmingCharacters(in: .whitespaces)) ?? 0
+    LorvexNumberInput.integer(from: text) ?? 0
   }
 
-  /// The draft text for `minutes`; empty for no length.
-  public static func text(forMinutes minutes: Int) -> String {
-    minutes > 0 ? String(minutes) : ""
+  /// The draft text for `minutes` in `locale`'s digits; empty for no length.
+  public static func text(forMinutes minutes: Int, locale: Locale = .autoupdatingCurrent) -> String {
+    minutes > 0 ? LorvexNumberInput.text(for: minutes, locale: locale) : ""
   }
 
   /// The time a task's When picker proposes when the user adds one, in

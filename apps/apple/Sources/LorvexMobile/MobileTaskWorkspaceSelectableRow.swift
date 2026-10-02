@@ -10,6 +10,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
   let actions: MobileTaskRowActions
   /// See ``MobileTaskRowContent/timeLabel``.
   var timeLabel: String? = nil
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     rowBody
@@ -33,7 +34,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
       Button(action: select) {
         HStack(spacing: LorvexDesign.Spacing.s) {
           batchSelectionCheckbox
-          MobileTaskRowContent(task: task, showsLeadingCircle: false, timeLabel: timeLabel)
+          MobileTaskRowContent(
+            task: task, showsLeadingCircle: false, timeLabel: timeLabel, timeZone: productTimeZone)
             .equatable()
         }
         .contentShape(Rectangle())
@@ -43,7 +45,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
       HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
         MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: actions.complete)
         Button(action: select) {
-          MobileTaskRowContent(task: task, showsLeadingCircle: false, timeLabel: timeLabel)
+          MobileTaskRowContent(
+            task: task, showsLeadingCircle: false, timeLabel: timeLabel, timeZone: productTimeZone)
             .equatable()
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())

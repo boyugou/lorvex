@@ -12,7 +12,15 @@ UI targets and fails when a view
 - uses a fixed point size (``.font(.system(size:``) instead of a typography
   token;
 - passes a numeric corner radius (``cornerRadius: 12``) instead of a radius
-  token.
+  token;
+- names a fixed-direction glyph (``chevron.left``, ``arrow.right.to.line``,
+  ``arrow.turn.up.right``, …) instead of its ``forward`` / ``backward`` form,
+  which mirrors in a right-to-left layout. Fold chevrons come from
+  ``LorvexDisclosureChevron``; glyphs that name both directions
+  (``arrow.left.and.right``) are symmetric and pass;
+- trims a circle into a progress arc (``.trim(from:``) instead of drawing it
+  with ``LorvexProgressArc``, which starts at twelve o'clock and fills with
+  the reading direction.
 
 ``ALLOWED`` lists whole files that legitimately hold literals: the token
 definitions themselves, the hex-color helpers, the user-facing color picker, and
@@ -59,6 +67,9 @@ ALLOWED = {
     # Icon tiles size their symbol relative to the tile, not to a text style.
     "Sources/LorvexMobile/MobileIconTile.swift",
     "Sources/LorvexApple/Views/LorvexListIconView.swift",
+    # The direction-following primitives: the fold chevron draws `chevron.right`
+    # and the progress arc trims a circle, and each mirrors itself.
+    "Sources/LorvexCore/Support/LorvexLayoutDirection.swift",
 }
 
 # A line-level exception for a glyph that scales with its container or for
@@ -83,6 +94,14 @@ RULES = [
     ),
     ("fixed point size", re.compile(r"\.font\(\s*\.system\(\s*size\s*:")),
     ("numeric corner radius", re.compile(r"cornerRadius\s*:\s*\d")),
+    (
+        "fixed-direction glyph",
+        re.compile(
+            r'"(?![^"]*left[^"]*right)(?![^"]*right[^"]*left)'
+            r'(?:chevron|arrow|arrowtriangle|arrowshape)(?:\.[a-z0-9]+)*\.(?:left|right)(?:\.[a-z0-9]+)*"'
+        ),
+    ),
+    ("hand-drawn progress arc", re.compile(r"\.trim\(\s*from\s*:")),
 ]
 
 

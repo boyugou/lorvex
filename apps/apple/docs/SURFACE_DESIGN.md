@@ -29,16 +29,22 @@ day, works through Today's list, and drives keyboard-first workflows.
   check-in, the agenda of the next seven days, and Open / Quit. ✅
 - Full command menus + keyboard shortcuts. ✅
 - Command Palette (⌘K): fuzzy command and navigation palette. ✅
-- Settings: tabbed (General, Assistant, Calendar, Cloud Sync,
-  Diagnostics, Data, Permissions). ✅
-- Habit streak metrics + calendar heatmap in the habits workspace. ✅
+- Settings: a sidebar of seven panes (General, Permissions, Calendar, Cloud
+  Sync, Assistant, Data, Diagnostics), the current one named in the window's
+  single toolbar row. Every control, action buttons included,
+  sits at its row's trailing edge, and the copy that explains a control is the
+  footer under its group. ✅
+- Habit inspector, built from the task inspector's kit: the check-in ring with
+  the name and encouragement typed in place; the period's standing (or, for a
+  habit counted several times a day, a stepper for today's count) beside a "…"
+  menu; Repeat, Reminder, and Goal rows edited in popovers; then Progress
+  (streaks, check-ins, the 30-day share, the next milestone), History (the
+  newest weeks of a year of days, filling the panel's width), and By Weekday
+  (each weekday's share of its plan over twelve weeks, with the strongest and
+  weakest day named). ✅
 - Habit milestone waypoints (streak/count auto-ladder + optional user target) with
   a progress bar, a goal picker, and a celebration when a waypoint is crossed on
   both macOS and the iPhone/iPad habit surfaces. ✅
-- Eisenhower matrix: urgency/importance quadrant view. ✗ (MCP-data-only; no
-  macOS human surface — `WorkspaceView` redirects `.eisenhower` to Today.)
-- Dependency-graph workspace: task dependency graph. ✗ (MCP-data-only; no
-  macOS human surface — `WorkspaceView` redirects `.dependencies` to Today.)
 - List and habit drag reordering with persistence. ✅
 - Global transient error toast. ✅
 - Calendar week/list navigation with Today/This Week reset. ✅
@@ -196,7 +202,8 @@ larger canvas, not stretch the phone.
   pinned beside progress metrics and completion/edit/delete controls. ✅
 - Memory uses a regular-width split workspace with save controls and a complete
   memory catalog pinned beside selected content, metadata, and delete controls. ✅
-- Hardware-keyboard shortcuts: ⌘R, ⌘N, ⌘1-⌘5, ⌘8, and mnemonic keys (⌘M/⌘E/⌘,). ✅
+- Hardware-keyboard shortcuts: ⌘R, ⌘N, ⌘1-⌘4 for the tabs in bar order, ⌘5 Habits, ⌘6 Memory,
+  and ⌘, Settings, numbered as on the Mac. ✅
 - **Bar for done:** keep tuning density, visual hierarchy, and pointer/keyboard
   ergonomics across the shipped iPad workspaces.
 
@@ -239,15 +246,21 @@ A productivity app earns its home screen with more than one widget.
 
 - Today widget (small, medium, large, and the Lock Screen families) in the
   calm page grammar. Small shows the lead task alone: its circle (the Done
-  control, a filling ring while its time runs), the widget's title, the
-  task's title and line, and one quiet line for how many follow. Medium and
-  large add the tasks after the lead in Today's order, each with its own
-  circle. When no task leads (nothing runs, is started, or is timed later
-  today), every size opens with how many tasks are left and the work they
-  hold and lists Today from its top; small names the top two; large opens with the title and the assistant's briefing in its
-  serif voice and closes with how much got done today; at larger text sizes
-  the last rows give way to a "N more today" line that counts them. The
-  timeline carries an entry at every saved time's edge and every ten minutes
+  control, a filling ring while its time runs) beside the task's line, the
+  task's title under them, and one quiet line for how many follow. Medium
+  opens with the lead's circle and title over a line naming the widget and
+  the task's time ("Today · Until 10:30 AM"), then the tasks after it in
+  Today's order, each with its own circle on the ring's axis and its time or
+  estimate at the trailing edge. Large opens with the widget's name and the
+  assistant's briefing in its serif voice, then the lead and the tasks after
+  it, and closes with how much got done today. When no task leads (nothing
+  runs, is started, or is timed later today), every size names the widget,
+  says how many tasks are left and the work they hold, and lists Today from
+  its top; small names the top two. A widget configured with a list is
+  titled with the list's name. Where a size cannot hold every row (a larger
+  text size, a long briefing), the last rows give way to an "N more today"
+  line that counts them. The Mac desktop widgets set the same layouts in
+  macOS's larger text styles (`WidgetType`). The timeline carries an entry at every saved time's edge and every ten minutes
   inside one, so the ring advances between snapshot refreshes. The Lock
   Screen accessoryCircular fills the lead's ring and holds its minutes left
   while its time runs, else holds how many tasks are left, with a checkmark
@@ -255,7 +268,7 @@ A productivity app earns its home screen with more than one widget.
   lead's title, its line, and the task after it; accessoryInline shows one
   line — the lead's short line, then its title. A snapshot that cannot be
   read shows an explicit unavailable glyph rather than stale data. ✅
-- ControlWidget (iOS 18+ / macOS 26+) names the task at the top of Today — a
+- ControlWidget (iOS and macOS) names the task at the top of Today — a
   task whose time is running, else the first task on Today — shows "All
   clear" with nothing left, and opens the app to Today when tapped. ✅
 - Today, Habits/streak, and daily-progress widgets, with `accessoryCircular`

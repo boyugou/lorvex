@@ -1,5 +1,8 @@
 import LorvexCore
 import SwiftUI
+#if os(iOS)
+  import UIKit
+#endif
 
 @MainActor
 /// The weekday and date over each column of a multi-day grid. Today's
@@ -25,7 +28,8 @@ struct MobileCalendarColumnHeaders: View {
         if let onOpenDay {
           Button { onOpenDay(day.date) } label: { label(for: day) }
             .buttonStyle(.plain)
-            .accessibilityLabel(day.date.formatted(date: .complete, time: .omitted))
+            .accessibilityLabel(
+              LorvexDateFormatters.string(day.date, dateStyle: .full, timeZone: calendar.timeZone))
             .accessibilityAddTraits(isToday(day.date) ? [.isButton, .isSelected] : .isButton)
         } else {
           label(for: day)
@@ -39,13 +43,11 @@ struct MobileCalendarColumnHeaders: View {
   private func label(for day: CalendarGridDay) -> some View {
     let isToday = isToday(day.date)
     return VStack(spacing: 2) {
-      Text(
-        MobileDateFormatting.weekdayAbbrev.string(from: day.date)
-          .uppercased(with: MobileL10n.locale)
-      )
+      Text(LorvexDateFormatters.string(day.date, template: "EEE", timeZone: calendar.timeZone))
+      .textCase(.uppercase)
       .font(LorvexDesign.Typography.tertiaryText)
       .foregroundStyle(isToday ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-      Text(MobileDateFormatting.dayOfMonth.string(from: day.date))
+      Text(LorvexDateFormatters.dayNumber(day.date, timeZone: calendar.timeZone))
         .font(LorvexDesign.Typography.secondaryText.weight(.semibold).monospacedDigit())
         .foregroundStyle(
           isToday ? (circlesToday ? AnyShapeStyle(.white) : AnyShapeStyle(.tint)) : AnyShapeStyle(.primary)
@@ -150,7 +152,7 @@ struct MobileCalendarAllDayStrip: View {
   /// context menu still completes it.
   private func allDayTaskPill(_ task: LorvexTask) -> some View {
     let isDone = task.status == .completed
-    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), calendar: calendar)
+    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
     let toggleLabel = MobileTaskActionCopy.completionToggle(isDone: isDone)
     return HStack(spacing: 2) {
       if !isCompact {
@@ -226,6 +228,32 @@ struct MobileCalendarAllDayStrip: View {
 
 @MainActor
 struct MobileCalendarHourGutter: View {
+  /// The space between an hour label and the first day column.
+  static let labelInset: CGFloat = 6
+
+  /// The gutter's width at the default text size: the widest of `calendar`'s
+  /// hour labels on one line in the footnote font, plus the inset, and never
+  /// narrower than 52pt, which fits English labels ("11 PM"). The 12-hour
+  /// labels of Chinese and Korean ("上午10時", "오전 10시") need more. Callers
+  /// scale it with the footnote style, as the labels scale.
+  static func baseWidth(calendar: Calendar) -> CGFloat {
+    #if os(iOS)
+      let labels = (0..<24).map { hourLabel($0, calendar: calendar) }
+      let key = labels.joined(separator: "\u{1F}")
+      if let cached = baseWidths[key] { return cached }
+      let font = UIFont.preferredFont(
+        forTextStyle: .footnote, compatibleWith: UITraitCollection(preferredContentSizeCategory: .large))
+      let widest = labels.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+      let width = max(52, (widest + labelInset + 2).rounded(.up))
+      baseWidths[key] = width
+      return width
+    #else
+      return 52
+    #endif
+  }
+
+  private static var baseWidths: [String: CGFloat] = [:]
+
   let calendar: Calendar
   let gutterWidth: CGFloat
   let hourHeight: CGFloat
@@ -234,16 +262,16 @@ struct MobileCalendarHourGutter: View {
   var body: some View {
     VStack(spacing: 0) {
       ForEach(0..<24, id: \.self) { hour in
-        Text(hourLabel(hour))
+        Text(Self.hourLabel(hour, calendar: calendar))
           .font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
-          .frame(width: gutterWidth - 6, height: hourHeight, alignment: .topTrailing)
+          .frame(width: gutterWidth - Self.labelInset, height: hourHeight, alignment: .topTrailing)
           .modifier(MobileDayAnchorModifier(hour: hour, anchorHour: anchorHour))
       }
     }
     .frame(width: gutterWidth)
   }
 
-  private func hourLabel(_ hour: Int) -> String {
+  static func hourLabel(_ hour: Int, calendar: Calendar) -> String {
     var components = DateComponents(calendar: calendar)
     components.year = 2001
     components.month = 1
@@ -252,9 +280,7 @@ struct MobileCalendarHourGutter: View {
     guard let date = calendar.date(from: components) else {
       return "\(hour)"
     }
-    return LorvexDateFormatters.hourLabel(
-      date, timeZone: calendar.timeZone,
-      locale: LorvexClockFormat.current.applied(to: MobileL10n.locale))
+    return LorvexDateFormatters.hourLabel(date, timeZone: calendar.timeZone)
   }
 
 }

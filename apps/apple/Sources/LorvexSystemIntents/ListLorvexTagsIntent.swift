@@ -17,7 +17,7 @@ struct ListLorvexTagsIntent: LorvexAuthenticatedIntent {
             table: "Localizable",
             bundle: SystemL10n.bundle)))
     }
-    let summary = tags.joined(separator: ", ")
+    let summary = SystemIntentListSummary.names(tags, total: tags.count, shown: tags.count)
     let dialog = LocalizedStringResource(
       "system.tag.list.dialog",
       defaultValue: "\(tags.count) Lorvex tags: \(summary)",

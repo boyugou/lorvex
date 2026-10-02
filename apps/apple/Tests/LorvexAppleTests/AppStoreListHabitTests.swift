@@ -313,20 +313,73 @@ func appStoreUpdatesPreviewHabit() async throws {
 
   await store.refresh()
   let habit = try #require(store.habits?.habits.first { $0.id == LorvexPreviewSeedID.eveningWalkHabit })
-  store.prepareHabitDraft(for: habit)
-  store.draftHabitName = "  Planning Review  "
-  store.draftHabitCue = "  After standup  "
-  store.draftHabitTargetCountText = "3"
 
-  await store.updateHabit(habit)
+  // The inspector's name and encouragement fields write only what changed.
+  await store.updateHabitFields(habit, name: "Planning Review", cue: .set("After standup"))
+  let renamed = try #require(store.habits?.habits.first { $0.id == habit.id })
+  #expect(renamed.name == "Planning Review")
+  #expect(renamed.cue == "After standup")
+  #expect(renamed.targetCount == habit.targetCount)
+  #expect(renamed.frequencyType == habit.frequencyType)
+
+  // The Repeat editor loads the rhythm into the draft and saves it back.
+  store.prepareHabitRhythmDraft(for: renamed)
+  #expect(store.draftHabitTargetCountText == "\(habit.targetCount)")
+  store.draftHabitTargetCountText = "3"
+  await store.saveHabitRhythmDraft(renamed)
 
   let updated = try #require(store.habits?.habits.first { $0.id == habit.id })
+  #expect(updated.targetCount == 3)
   #expect(updated.name == "Planning Review")
   #expect(updated.cue == "After standup")
-  #expect(updated.targetCount == 3)
-  #expect(store.draftHabitName == "")
-  #expect(store.draftHabitTargetCountText == "1")
-  #expect(store.selection == .habits)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test("Clearing a habit's icon and color restores the defaults and leaves the other fields alone")
+func appStoreClearsHabitAppearanceOnly() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let habit = try #require(store.habits?.habits.first { $0.id == LorvexPreviewSeedID.eveningWalkHabit })
+
+  await store.updateHabitFields(habit, cue: .set("After dinner"), milestoneTarget: .set(30))
+  let goaled = try #require(store.habits?.habits.first { $0.id == habit.id })
+  await store.updateHabitFields(goaled, icon: .set("figure.walk"), color: .set("#22C55E"))
+  let styled = try #require(store.habits?.habits.first { $0.id == habit.id })
+  #expect(styled.icon == "figure.walk")
+  #expect(styled.color == "#22C55E")
+
+  await store.updateHabitFields(styled, icon: .clear, color: .clear)
+  let cleared = try #require(store.habits?.habits.first { $0.id == habit.id })
+  #expect(cleared.icon == nil)
+  #expect(cleared.color == nil)
+  #expect(cleared.name == habit.name)
+  #expect(cleared.cue == "After dinner")
+  #expect(cleared.milestoneTarget == 30)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test("An unparsable per-day count blocks a rhythm counted per day, and only such a rhythm")
+func appStoreRhythmDraftWithUnparsableCount() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let habit = try #require(store.habits?.habits.first { $0.id == LorvexPreviewSeedID.eveningWalkHabit })
+
+  store.prepareHabitRhythmDraft(for: habit)
+  store.draftHabitCadenceMode = .weekly
+  store.draftHabitWeekdays = [0, 2]
+  store.draftHabitTargetCountText = "lots"
+  await store.saveHabitRhythmDraft(habit)
+  let unchanged = try #require(store.habits?.habits.first { $0.id == habit.id })
+  #expect(unchanged.frequencyType == habit.frequencyType)
+  #expect(unchanged.targetCount == habit.targetCount)
+
+  // A times-a-week rhythm hides the per-day count, so it never blocks one.
+  store.draftHabitCadenceMode = .timesPerWeek
+  await store.saveHabitRhythmDraft(unchanged)
+  let weekly = try #require(store.habits?.habits.first { $0.id == habit.id })
+  #expect(weekly.frequencyType == "times_per_week")
   #expect(store.errorMessage == nil)
 }
 
@@ -345,18 +398,18 @@ func appStoreThreadsMilestoneGoalThroughCreateEditAndClear() async throws {
   // The draft field is cleared after a create, like the other draft fields.
   #expect(store.draftHabitMilestoneTargetText == "")
 
-  // Editing seeds the field from the stored goal, then raises it.
-  store.prepareHabitDraft(for: created)
-  #expect(store.draftHabitMilestoneTargetText == "30")
-  store.draftHabitMilestoneTargetText = "66"
-  await store.updateHabit(created)
+  // The inspector's Goal editor raises the stored goal.
+  await store.updateHabitFields(created, milestoneTarget: .set(66))
   let raised = try #require(store.habits?.habits.first { $0.id == created.id })
   #expect(raised.milestoneTarget == 66)
 
-  // Clearing the field clears the goal (Patch.clear), not leaves it unchanged.
-  store.prepareHabitDraft(for: raised)
-  store.draftHabitMilestoneTargetText = ""
-  await store.updateHabit(raised)
+  // An edit that does not pass the goal leaves it as stored.
+  await store.updateHabitFields(raised, cue: .set("Before breakfast"))
+  let kept = try #require(store.habits?.habits.first { $0.id == created.id })
+  #expect(kept.milestoneTarget == 66)
+
+  // No Goal clears it (Patch.clear), rather than leaving it unchanged.
+  await store.updateHabitFields(kept, milestoneTarget: .clear)
   let cleared = try #require(store.habits?.habits.first { $0.id == created.id })
   #expect(cleared.milestoneTarget == nil)
   #expect(store.errorMessage == nil)
@@ -420,16 +473,19 @@ func appStoreCreatesWeeklyHabitWithCadence() async throws {
   #expect(created.targetCount == 3)
   #expect(store.errorMessage == nil)
 
-  // Editing reloads the habit's full cadence into the editor, then writes it
-  // back verbatim — switching to daily clears the weekday payload.
-  store.prepareHabitDraft(for: created)
+  // The Repeat editor reloads the habit's full cadence into the draft, then
+  // writes it back verbatim — switching to daily clears the weekday payload.
+  store.prepareHabitRhythmDraft(for: created)
   #expect(store.draftHabitCadenceMode == .weekly)
   #expect(store.draftHabitWeekdays == [0, 2, 4])
+  #expect(store.draftHabitTargetCountText == "3")
   store.draftHabitCadenceMode = .daily
-  await store.updateHabit(created)
+  await store.saveHabitRhythmDraft(created)
   let edited = try #require(store.habits?.habits.first { $0.id == created.id })
   #expect(edited.frequencyType == "daily")
   #expect(edited.weekdays == nil)
+  #expect(edited.targetCount == 3)
+  #expect(edited.name == "Long run")
 }
 
 /// Every ``HabitCadenceMode`` case must assemble into its matching wire
@@ -478,4 +534,36 @@ func appStoreArchivesAndRestoresHabit() async throws {
   #expect(store.orderedHabits.contains { $0.id == habit.id })
   #expect(!store.archivedHabits.contains { $0.id == habit.id })
   #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
+func listPreviewsShowEachListsOpenTasksInCanonicalOrder() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+
+  let previews = try await store.loadListPreviews(ids: [LorvexPreviewSeedID.appleNativeList])
+
+  // The list's completed task stays out of its card.
+  #expect(
+    previews[LorvexPreviewSeedID.appleNativeList]?.map(\.id) == [
+      LorvexPreviewSeedID.agendaTask,
+      LorvexPreviewSeedID.statusUpdateTask,
+    ])
+}
+
+/// The Lists catalog cancels a preview load when the lists change; the
+/// cancelled load must throw rather than overwrite the newer load's previews.
+@MainActor
+@Test
+func listPreviewsThrowOnceTheirLoadIsCancelled() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+
+  // The load cannot start before the test yields the main actor, so it starts
+  // already cancelled.
+  let load = Task { @MainActor in
+    try await store.loadListPreviews(ids: [LorvexPreviewSeedID.appleNativeList])
+  }
+  load.cancel()
+
+  await #expect(throws: CancellationError.self) { try await load.value }
 }

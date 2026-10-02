@@ -47,6 +47,17 @@ extension AppStore {
     await republishSurfacesAfterLocalMutation()
   }
 
+  /// Publishes a batch's new Today snapshot. A batch over a few tasks
+  /// animates, so its rows settle into their new places; a batch over many
+  /// replaces Today's rows at once (``TaskRowChangeAnimation``).
+  private func publishBatchToday(_ updatedToday: TodaySnapshot, taskCount: Int) {
+    if TaskRowChangeAnimation.animates(batchOf: taskCount) {
+      lorvexAnimated(TaskRowChangeAnimation.animation) { today = updatedToday }
+    } else {
+      today = updatedToday
+    }
+  }
+
   func completeBatch(on surface: AppStoreBatchCancelSurface) async {
     let ids = surface.selectedTasks(self)
       .filter { $0.status.isActive }
@@ -54,9 +65,9 @@ extension AppStore {
     guard !ids.isEmpty else { return }
     await perform {
       let updatedToday = try await core.batchCompleteTasks(ids: ids).snapshot
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
-      try await finishBatchMutation(on: surface)
       feedbackProvider.playFeedback(.taskCompleted)
+      publishBatchToday(updatedToday, taskCount: ids.count)
+      try await finishBatchMutation(on: surface)
     }
   }
 
@@ -73,7 +84,7 @@ extension AppStore {
     await perform {
       let updatedToday = try await core.batchDeferTasks(ids: ids, until: tomorrowDate())
       feedbackProvider.playFeedback(.taskDeferred)
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      publishBatchToday(updatedToday, taskCount: ids.count)
       try await finishBatchMutation(on: surface)
     }
   }
@@ -114,7 +125,7 @@ extension AppStore {
     guard !ids.isEmpty else { return }
     await perform {
       let updatedToday = try await core.batchReopenTasks(ids: ids).snapshot
-      lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+      publishBatchToday(updatedToday, taskCount: ids.count)
       try await finishBatchMutation(on: surface)
       syncSelectedTaskDraft()
     }
@@ -147,7 +158,7 @@ extension AppStore {
         recurringScope: recurringScope ?? .thisOccurrence
       )
       if let updatedToday {
-        lorvexAnimated(.snappy(duration: 0.18)) { today = updatedToday }
+        publishBatchToday(updatedToday, taskCount: ids.count)
       }
       try await finishBatchMutation(on: surface)
       syncSelectedTaskDraft()

@@ -9,8 +9,10 @@ public enum WidgetFamilyKind: Equatable, Sendable {
   case accessoryRectangular
   case accessoryCircular
 
-  /// How many tasks the family lists under the lead task. The small and
-  /// glance families say only how many more there are.
+  /// How many tasks the family lists under the lead task, at most. The small
+  /// and glance families say only how many more there are. Medium and large
+  /// draw as many of these as their height holds, so a taller widget (large
+  /// on the Mac desktop) shows more than a shorter one.
   public var maxTaskRows: Int {
     switch self {
     case .accessoryInline, .accessoryCircular, .systemSmall:
@@ -20,7 +22,7 @@ public enum WidgetFamilyKind: Equatable, Sendable {
     case .systemMedium:
       2
     case .systemLarge:
-      5
+      6
     }
   }
 
@@ -36,7 +38,7 @@ public enum WidgetFamilyKind: Equatable, Sendable {
     case .systemMedium:
       3
     case .systemLarge:
-      6
+      7
     }
   }
 }
@@ -103,22 +105,28 @@ public struct WidgetTaskRenderRow: Equatable, Sendable, Identifiable {
   public let metadata: String?
   public let tone: Tone
   public let urlString: String?
+  /// The task's priority, which tints its circle as the app's rows do; nil
+  /// draws the quiet low-priority tint.
+  public let priority: LorvexTask.Priority?
 
   public init(
-    id: String, title: String, metadata: String?, tone: Tone = .plain, urlString: String? = nil
+    id: String, title: String, metadata: String?, tone: Tone = .plain, urlString: String? = nil,
+    priority: LorvexTask.Priority? = nil
   ) {
     self.id = id
     self.title = title
     self.metadata = metadata
     self.tone = tone
     self.urlString = urlString
+    self.priority = priority
   }
 }
 
 public struct WidgetRenderModel: Equatable, Sendable {
   public let family: WidgetFamilyKind
   public let state: WidgetRenderState
-  /// The inline family's lead title, else "Today".
+  /// The inline family's lead title, else the name of the list a configured
+  /// widget shows, else "Today".
   public let headline: String
   /// Copy for a state without a lead: the empty day, stale data, or data that
   /// could not load.
@@ -182,6 +190,33 @@ public struct WidgetRenderModel: Equatable, Sendable {
   public var dayLine: String? {
     guard let dayLeft else { return nil }
     return [dayLeft, dayWork].compactMap { $0 }.joined(separator: " · ")
+  }
+
+  /// How many tasks are left without naming the day ("4 left"), for a family
+  /// that draws it under its "Today" title; nil when nothing is left.
+  public var dayLeftUnderTitle: String? {
+    remainingCount > 0 ? WidgetRenderModelBuilder.dayLeftUnderTitle(remainingCount) : nil
+  }
+
+  /// ``dayLine`` under the "Today" title: ``dayLeftUnderTitle``, then
+  /// ``dayWork``.
+  public var dayLineUnderTitle: String? {
+    guard let dayLeftUnderTitle else { return nil }
+    return [dayLeftUnderTitle, dayWork].compactMap { $0 }.joined(separator: " · ")
+  }
+
+  /// What is left of the day for a one-line slot with no "Today" title, from
+  /// the whole line to the shortest, so the slot shows the first that fits:
+  /// ``dayLine`` ("4 left today · about 3 hr"); the same without naming the
+  /// day ("4 left · about 3 hr"), which a glance at today's work implies; the
+  /// count with the day ("4 left today"); and the count alone ("4 left").
+  /// Repeats are dropped, and the list is empty when nothing is left.
+  public var dayLineChoices: [String] {
+    var choices: [String] = []
+    for choice in [dayLine, dayLineUnderTitle, dayLeft, dayLeftUnderTitle] {
+      if let choice, !choices.contains(choice) { choices.append(choice) }
+    }
+    return choices
   }
 
   /// The lead and everything after it.

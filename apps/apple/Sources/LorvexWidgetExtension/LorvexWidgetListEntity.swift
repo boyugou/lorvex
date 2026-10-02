@@ -47,8 +47,8 @@ public struct LorvexWidgetListEntityQuery: EntityQuery, EntityStringQuery {
     let query = string.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !query.isEmpty else { return Self.snapshotLists() }
     return Self.snapshotLists().filter { entity in
-      entity.name.localizedCaseInsensitiveContains(query)
-        || entity.id.localizedCaseInsensitiveContains(query)
+      entity.name.localizedStandardContains(query)
+        || entity.id.localizedStandardContains(query)
     }
   }
 

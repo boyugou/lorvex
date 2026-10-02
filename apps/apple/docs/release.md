@@ -12,24 +12,25 @@ scripts for iOS/iPadOS and watchOS; they preflight the local Xcode
 SDK/runtime installation before building, installing, and launching the app on a
 simulator.
 
-## First public release — arm the schema-freeze tripwire (one-time)
+## Schema freeze — arm before every public archive
 
-The moment the first public build reaches real devices, the version-1 baseline
-schema is pinned in the wild and must never be re-seeded. As part of the first
-App Store / Developer ID public submission:
+The version-1 baseline schema is pinned on real devices and must never be
+re-seeded: `schema/migration_policy.json` carries `launched: true`, so the
+schema-freeze tripwire is armed. Before archiving each App Store / Developer ID
+public build:
 
-- [ ] Run `./script/verify_schema_freeze.py --arm`. This flips the `launched`
-  sentinel in `schema/migration_policy.json` to `true` and atomically freezes
-  the shipped `checksums.lock` entries and sync-payload manifest hashes into the
-  policy file. Review the small `launched: true` + captured-baseline diff.
-- [ ] From this point, never regenerate a released baseline checksum
-  (`./script/verify_migration_ladder.py --seed` on an existing entry). Change the schema only
+- [ ] Run `./script/verify_schema_freeze.py --arm`. This atomically freezes the
+  shipped `checksums.lock` entries and sync-payload manifest hashes into the
+  policy file's `frozen_baseline`, so every migration and payload-contract
+  version the build ships is captured. Review and commit the small
+  captured-baseline diff; the archive gate rejects a migration or
+  payload-contract version that the release policy has not captured.
+- [ ] Never regenerate a released baseline checksum
+  (`./script/verify_migration_ladder.py --seed` on an existing entry; the script
+  refuses to run while `launched` is `true`). Change the schema only
   by appending a numbered migration to the canonical `schema/migrations/`
   directory (new `NNN_<name>.sql` + a new lock entry + a byte-copy into the Apple
-  embed; see `schema/migrations/README.md`). Re-run and
-  commit `./script/verify_schema_freeze.py --arm` before archiving each later
-  public release; the archive gate rejects a migration or payload-contract
-  version that the release policy has not captured. Never
+  embed; see `schema/migrations/README.md`). Never
   edit a released `schema/sync_payload/NNN.json`; append the next manifest and
   bump `LorvexVersion.payloadSchemaVersion` for a wire-field change.
 - [ ] Treat backup version 1 as a released compatibility contract. The exporter
@@ -39,9 +40,9 @@ App Store / Developer ID public submission:
   `Tests/Fixtures/BackupFormat/` v1 fixtures; their decode tests are the proof
   that a first-release JSON or ZIP backup remains readable by future builds.
 
-`./script/verify_schema_freeze.py` runs on every gate: dormant advisory (no-op)
-while unlaunched, then it fails any post-launch mutation of a released migration
-identity (filename plus checksum) or sync-payload contract. See
+`./script/verify_schema_freeze.py` runs on every gate and fails any mutation of a
+released migration identity (filename plus checksum) or sync-payload contract; it
+is an advisory no-op only while `launched` is `false`. See
 `../../../docs/design/SCHEMA_OPTIMALITY.md` → "Migration model".
 
 ## Production Developer ID DMG (default direct-distribution artifact)

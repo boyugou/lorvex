@@ -48,6 +48,18 @@ final class SwiftLorvexCoreServiceTagTests: XCTestCase {
     }
   }
 
+  // MARK: - listAllTags
+
+  func testListAllTagsSortsNamesAsPeopleRead() async throws {
+    let service = try makeService()
+    _ = try await service.createTask(
+      TaskCreateDraft(title: "A", tags: ["zoo", "banana", "tag10", "ñandú", "apple", "tag2"]))
+    try await service.renameTag(oldTag: "banana", newTag: "Banana")
+
+    let tags = try await service.listAllTags()
+    XCTAssertEqual(tags, ["apple", "Banana", "ñandú", "tag2", "tag10", "zoo"])
+  }
+
   // MARK: - deleteTag
 
   func testDeleteTagRemovesLinksLogsChangelogAndTombstones() async throws {

@@ -15,9 +15,11 @@ public enum ValidationIcon {
   ///   * an SF Symbol name: 1…``ValidationLimits/maxIconLength`` codepoints,
   ///     each one of `A–Z`, `a–z`, `0–9`, or `.`.
   ///
-  /// Any invisible / bidi / control codepoint (per
-  /// ``UnicodeHygiene/isDisallowedCodepoint(_:)``) is rejected outright, so a
-  /// crafted zero-width or bidi-override payload can never masquerade as an icon.
+  /// A token holding any codepoint ``UnicodeHygiene/sanitizeUserText(_:)``
+  /// would strip is rejected outright, so a crafted zero-width or
+  /// bidi-override payload can never masquerade as an icon, while an emoji
+  /// built with joiners ("👩‍💻") or a subdivision flag is one grapheme and
+  /// passes.
   public static func validateIconToken(
     _ value: String, field: String
   ) -> Result<Void, ValidationError> {
@@ -25,7 +27,7 @@ public enum ValidationIcon {
     if graphemeCount == 0 {
       return .failure(.empty(field))
     }
-    if value.unicodeScalars.contains(where: UnicodeHygiene.isDisallowedCodepoint) {
+    if UnicodeHygiene.containsStrippedCodepoint(value) {
       return .failure(invalid(field, value))
     }
     // A single visible grapheme (emoji or lone glyph) is always a valid icon.

@@ -10,7 +10,26 @@ enum CalendarWeekGridMetrics {
   /// The timeline grid's hour-row height, from the design system's calendar
   /// metrics so the grid's vertical scale is one tokenized decision.
   static let hourHeight = LorvexDesign.CalendarMetrics.hourHeight
+  /// The narrowest hour gutter, which fits English labels ("11 PM").
   static let gutterWidth: CGFloat = 50
+  /// The space between an hour label and the grid's first day column.
+  static let gutterLabelInset: CGFloat = 6
+
+  /// The hour gutter's width for `labels`: the widest label on one line in the
+  /// gutter's font, plus its inset, and never narrower than ``gutterWidth``.
+  /// The 12-hour labels of Chinese and Korean ("上午10時", "오전 10시") are wider
+  /// than English ones and would otherwise wrap onto a second line.
+  @MainActor static func gutterWidth(fitting labels: [String]) -> CGFloat {
+    let key = labels.joined(separator: "\u{1F}")
+    if let cached = fittedGutterWidths[key] { return cached }
+    let font = NSFont.preferredFont(forTextStyle: .subheadline)
+    let widest = labels.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+    let width = max(gutterWidth, (widest + gutterLabelInset + 2).rounded(.up))
+    fittedGutterWidths[key] = width
+    return width
+  }
+
+  @MainActor private static var fittedGutterWidths: [String: CGFloat] = [:]
   static let headerGutterHeight: CGFloat = 38
   static let headerVerticalPadding: CGFloat = 4
   static let dayNumberSize: CGFloat = 26

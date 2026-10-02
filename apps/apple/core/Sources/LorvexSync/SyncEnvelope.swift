@@ -344,7 +344,7 @@ private func rejectNoncanonicalEntityId(
       reason = "must not be empty"
     case .tooLong:
       reason = "exceeds canonical entity_id length"
-    case .outOfRange, .message:
+    case .outOfRange, .notOneOf, .message:
       reason = "failed canonical entity_id validation"
     }
     return .unsafeEntityId(entityId: entityId, reason: reason)

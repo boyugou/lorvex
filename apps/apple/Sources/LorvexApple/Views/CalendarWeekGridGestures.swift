@@ -26,13 +26,6 @@ extension CalendarWeekGridView {
     return (raw / snapTo) * snapTo
   }
 
-  /// Formats a minute-of-day (`0–1439`) as `"HH:mm"` for the in-flight
-  /// drag-to-create preview's time-range label.
-  static func hmLabel(minuteOfDay: Int) -> String {
-    let m = max(0, min(24 * 60 - 1, minuteOfDay))
-    return String(format: "%02d:%02d", m / 60, m % 60)
-  }
-
   /// Drag-to-create gesture: press-and-drag on empty space sketches a
   /// translucent block; release commits a new event whose start is the
   /// earlier Y (snapped to 15 min) and duration is the drag span (snapped,

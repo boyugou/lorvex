@@ -17,10 +17,10 @@ Last verified: 2026-07-10
 
 The `NSApplication` SDK header describes the old activation method as planned
 for deprecation and directs callers to `activate()`. It has no compatibility
-benefit because Lorvex's existing minimum is macOS 14.
+benefit because Lorvex's deployment floor is macOS 26.
 
 The EventKit legacy `authorized` case aliases `fullAccess` and was deprecated in
-the exact macOS 14 / iOS 17 generation Lorvex already requires. Keeping both
+macOS 14 / iOS 17, an OS generation below Lorvex's floor. Keeping both
 obscures whether write-only access is handled deliberately.
 
 Because the complete App Intent surface depends on the deprecated Boolean,

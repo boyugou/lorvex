@@ -188,12 +188,17 @@ public enum HabitRhythmStrip {
     }
   }
 
+  /// The strip's cells, oldest first: the last 7 days, 8 weeks, or 6 months,
+  /// each filled when its met days reach the habit's per-period target.
+  /// Periods are Gregorian days, ISO weeks, and months in `timeZone`, the
+  /// calendar the completion keys are written in.
   public static func cells(
     completions: Set<String>,
     habit: LorvexHabit,
     today: Date,
-    calendar: Calendar = .current
+    timeZone: TimeZone = .current
   ) -> [Cell] {
+    let calendar = habitCalendar(timeZone)
     let granularity = granularity(forFrequencyType: habit.frequencyType)
     let requiredMetDays = requiredMetDaysPerPeriod(habit: habit)
     let count: Int
@@ -209,6 +214,20 @@ public enum HabitRhythmStrip {
           completions: completions, granularity: granularity, periodsAgo: periodsAgo,
           today: today, calendar: calendar) >= requiredMetDays,
         isCurrent: periodsAgo == 0)
+    }
+  }
+
+  /// Narrow weekday names ("M", "T", "W") under a daily habit's seven cells,
+  /// oldest first, ending on the day `today` falls on in `timeZone`, so the
+  /// strip reads as this week rather than seven anonymous marks. Empty for a
+  /// weekly or monthly strip.
+  public static func dayLabels(habit: LorvexHabit, today: Date, timeZone: TimeZone = .current) -> [String] {
+    guard granularity(forFrequencyType: habit.frequencyType) == .day else { return [] }
+    let calendar = habitCalendar(timeZone)
+    var style = Date.FormatStyle().weekday(.narrow)
+    style.timeZone = timeZone
+    return (0..<7).reversed().compactMap { daysAgo in
+      calendar.date(byAdding: .day, value: -daysAgo, to: today)?.formatted(style)
     }
   }
 
@@ -274,7 +293,7 @@ public enum HabitPeriodProgress {
     }
   }
 
-  /// The period ``current(habit:recentCompletions:today:calendar:)`` counts
+  /// The period ``current(habit:recentCompletions:today:timeZone:)`` counts
   /// over: the day for a habit with a per-day target above one, whatever its
   /// cadence, otherwise the cadence's own day, week, or month.
   public static func period(for habit: LorvexHabit) -> HabitRhythmStrip.Granularity {
@@ -282,12 +301,16 @@ public enum HabitPeriodProgress {
     return HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType)
   }
 
+  /// The met days of the period `today` falls in, against the habit's target.
+  /// Weeks are ISO weeks and months Gregorian months in `timeZone`, the
+  /// calendar the completion keys are written in.
   public static func current(
     habit: LorvexHabit,
     recentCompletions: [String],
     today: Date = Date(),
-    calendar: Calendar = .current
+    timeZone: TimeZone = .current
   ) -> Value {
+    let calendar = habitCalendar(timeZone)
     let target = max(habit.targetCount, 1)
     switch period(for: habit) {
     case .day:
@@ -347,4 +370,12 @@ private func requiredMetDaysPerPeriod(habit: LorvexHabit) -> Int {
   default:
     return 1
   }
+}
+
+/// The Gregorian calendar in `timeZone`, the calendar habit completion keys
+/// (`YYYY-MM-DD`) are written in, whatever calendar the user's region uses.
+private func habitCalendar(_ timeZone: TimeZone) -> Calendar {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = timeZone
+  return calendar
 }

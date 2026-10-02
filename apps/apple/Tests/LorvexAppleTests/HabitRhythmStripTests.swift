@@ -40,11 +40,28 @@ struct HabitRhythmStripTests {
   func daily() {
     let cells = HabitRhythmStrip.cells(
       completions: ["2026-06-24", "2026-06-22"], habit: habit(frequencyType: "daily"),
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(cells.count == 7)
     #expect(cells.last == HabitRhythmStrip.Cell(filled: true, isCurrent: true))
     #expect(cells[cells.count - 3].filled)  // two days ago (06-22)
     #expect(cells.filter(\.isCurrent).count == 1)
+  }
+
+  /// 23:30 UTC on Wednesday, June 24 is already Thursday morning in Tokyo, so
+  /// the Tokyo strip is the UTC strip moved on by one day. A strip that read
+  /// the device's zone would label both the same.
+  @Test("Day labels end on the weekday today falls on in the given zone")
+  func dayLabelsFollowTheZone() throws {
+    let instant = try #require(ISO8601DateFormatter().date(from: "2026-06-24T23:30:00Z"))
+    let daily = habit(frequencyType: "daily")
+    let utc = HabitRhythmStrip.dayLabels(habit: daily, today: instant, timeZone: calendar().timeZone)
+    let tokyo = HabitRhythmStrip.dayLabels(
+      habit: daily, today: instant, timeZone: try #require(TimeZone(identifier: "Asia/Tokyo")))
+    #expect(utc.count == 7)
+    #expect(tokyo == Array(utc.dropFirst()) + [try #require(utc.first)])
+    #expect(
+      HabitRhythmStrip.dayLabels(habit: habit(frequencyType: "weekly", weekdays: [2]), today: instant)
+        .isEmpty)
   }
 
   @Test("Weekly buckets into 8 rolling weeks")
@@ -53,7 +70,7 @@ struct HabitRhythmStripTests {
     let cells = HabitRhythmStrip.cells(
       completions: ["2026-06-03"],
       habit: habit(frequencyType: "weekly", weekdays: [2]),
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(cells.count == 8)
     #expect(cells.last?.isCurrent == true)
     #expect(cells.last?.filled == false)  // current week had no completion
@@ -65,12 +82,12 @@ struct HabitRhythmStripTests {
     let habit = habit(frequencyType: "times_per_week", perPeriodTarget: 3)
     let partial = HabitRhythmStrip.cells(
       completions: ["2026-06-22", "2026-06-23"], habit: habit,
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(partial.last?.filled == false)
 
     let complete = HabitRhythmStrip.cells(
       completions: ["2026-06-22", "2026-06-23", "2026-06-24"], habit: habit,
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(complete.last?.filled == true)
   }
 
@@ -79,7 +96,7 @@ struct HabitRhythmStripTests {
     let cells = HabitRhythmStrip.cells(
       completions: ["2026-06-21"],
       habit: habit(frequencyType: "weekly", weekdays: [6]),
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(cells.last?.filled == false, "the prior Sunday is not in the current Monday-first week")
     #expect(cells[cells.count - 2].filled == true)
   }
@@ -88,7 +105,7 @@ struct HabitRhythmStripTests {
   func monthly() {
     let cells = HabitRhythmStrip.cells(
       completions: ["2026-04-10"], habit: habit(frequencyType: "monthly"),
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(cells.count == 6)
     // April is two months before June → the third-from-last cell is filled.
     #expect(cells[3] == HabitRhythmStrip.Cell(filled: true, isCurrent: false))
@@ -137,7 +154,7 @@ struct HabitPeriodProgressTests {
   func daily() {
     let value = HabitPeriodProgress.current(
       habit: habit(freq: "daily", target: 8, today: 3), recentCompletions: [],
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(value == HabitPeriodProgress.Value(completed: 3, required: 8))
     #expect(!value.isComplete)
   }
@@ -147,7 +164,7 @@ struct HabitPeriodProgressTests {
     let value = HabitPeriodProgress.current(
       habit: habit(freq: "times_per_week", perPeriodTarget: 3),
       recentCompletions: ["2026-06-22", "2026-06-23", "2026-06-15"],  // Mon, Tue this week; one last week
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(value == HabitPeriodProgress.Value(completed: 2, required: 3))
     #expect(!value.isComplete)
   }
@@ -157,7 +174,7 @@ struct HabitPeriodProgressTests {
     let value = HabitPeriodProgress.current(
       habit: habit(freq: "weekly", weekdays: [0, 2, 4]),
       recentCompletions: ["2026-06-22", "2026-06-24", "2026-06-26"],  // Mon, Wed, Fri
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(value == HabitPeriodProgress.Value(completed: 3, required: 3))
     #expect(value.isComplete)
   }
@@ -167,7 +184,7 @@ struct HabitPeriodProgressTests {
     let value = HabitPeriodProgress.current(
       habit: habit(freq: "weekly", weekdays: []),
       recentCompletions: ["2026-06-22"],
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(value == HabitPeriodProgress.Value(completed: 1, required: 7))
     #expect(!value.isComplete)
   }
@@ -177,14 +194,14 @@ struct HabitPeriodProgressTests {
     let done = HabitPeriodProgress.current(
       habit: habit(freq: "monthly", dayOfMonth: 1),
       recentCompletions: ["2026-06-01"],  // earlier this month, not today
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(done == HabitPeriodProgress.Value(completed: 1, required: 1))
     #expect(done.isComplete)
 
     let lastMonthOnly = HabitPeriodProgress.current(
       habit: habit(freq: "monthly", dayOfMonth: 1),
       recentCompletions: ["2026-05-10"],
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(!lastMonthOnly.isComplete)
   }
 
@@ -200,13 +217,13 @@ struct HabitPeriodProgressTests {
         weekdays: [0, 1, 2, 3, 4, 5, 6],
         target: 21, today: 5),
       recentCompletions: ["2026-06-22", "2026-06-23"],
-      today: date("2026-06-24"), calendar: calendar())
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(value == HabitPeriodProgress.Value(completed: 5, required: 21))
     #expect(!value.isComplete)
 
     let met = HabitPeriodProgress.current(
       habit: habit(freq: "weekly", weekdays: [0], target: 3, today: 3),
-      recentCompletions: [], today: date("2026-06-24"), calendar: calendar())
+      recentCompletions: [], today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(met == HabitPeriodProgress.Value(completed: 3, required: 3))
     #expect(met.isComplete)
   }

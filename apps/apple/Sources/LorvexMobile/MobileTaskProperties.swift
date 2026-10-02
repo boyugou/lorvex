@@ -28,13 +28,24 @@ struct MobileTaskProperties: Equatable {
 
   enum Tint: Equatable { case overdue, soon, high }
 
+  /// How the rows name a day.
+  enum DayStyle: Equatable {
+    /// Relative to today, as the detail shows it: "Tomorrow", "Sep 20 · 9
+    /// days late".
+    case relative
+    /// A date that stays true after today, for text that leaves the app:
+    /// "Tue, Sep 29, 2026".
+    case dated
+  }
+
   var rows: [Row]
   var additions: [MobileTaskField]
 
   /// - Parameters:
   ///   - listName: the task's list name, or `nil` when it has none.
   ///   - logicalDay: the product's logical today, `yyyy-MM-dd`.
-  init(task: LorvexTask, listName: String?, logicalDay: String) {
+  ///   - days: how the rows name a day.
+  init(task: LorvexTask, listName: String?, logicalDay: String, days: DayStyle = .relative) {
     typealias Copy = MobileTaskPropertyCopy
     var rows: [Row] = []
     var additions: [MobileTaskField] = []
@@ -44,25 +55,27 @@ struct MobileTaskProperties: Equatable {
     field(
       .doOn,
       task.plannedDate.map { planned in
-        let day = LorvexDayPhrase.phrase(
-          for: planned, logicalDay: logicalDay, position: .leading, locale: MobileL10n.locale)
+        let day =
+          days == .dated
+          ? Self.dated(planned) : LorvexDayPhrase.phrase(for: planned, logicalDay: logicalDay, position: .leading)
         return task.plannedTime.map { Copy.day(day, at: $0) } ?? day
       })
-    field(.estimate, task.estimatedMinutes.flatMap { $0 > 0 ? MobileTodayCalmCopy.duration($0) : nil })
+    field(.estimate, task.estimatedMinutes.flatMap { $0 > 0 ? LorvexDurationFormat.minutes($0) : nil })
     if let due = task.dueDate {
       let offset = lorvexDayOffset(from: logicalDay, to: due)
       let tint: Tint? = offset.map { $0 < 0 ? .overdue : ($0 <= 1 ? .soon : nil) } ?? nil
-      let day = LorvexDayPhrase.due(
-        due, plannedDay: nil, logicalDay: logicalDay, locale: MobileL10n.locale)
-      field(.due, Self.sentenceCased(day), tint: tint)
+      let day =
+        days == .dated
+        ? Self.dated(due) : Self.sentenceCased(LorvexDayPhrase.due(due, plannedDay: nil, logicalDay: logicalDay))
+      field(.due, day, tint: tint)
     } else {
       field(.due, nil)
     }
     field(.list, listName)
     field(
-      .priority, task.priority == .p2 ? nil : Copy.priorityValue(task.priority),
+      .priority, task.priority == .p2 ? nil : task.priority.localizedName,
       tint: task.priority == .p1 ? .high : nil)
-    field(.recurrence, task.recurrence?.mobileLocalizedCadence)
+    field(.recurrence, task.recurrence?.localizedCadence)
     field(.tags, task.tags.isEmpty ? nil : task.tags.joined(separator: " · "))
     if task.dependsOn.isEmpty { additions.append(.waitsOn) }
     let hiddenUntil = task.availableFrom.flatMap {
@@ -71,19 +84,28 @@ struct MobileTaskProperties: Equatable {
     field(
       .hideUntil,
       hiddenUntil.map {
-        Self.sentenceCased(
-          LorvexDayPhrase.phrase(for: $0, logicalDay: logicalDay, position: .inline, locale: MobileL10n.locale))
+        days == .dated
+          ? Self.dated($0)
+          : Self.sentenceCased(LorvexDayPhrase.phrase(for: $0, logicalDay: logicalDay, position: .inline))
       })
     self.rows = rows
     self.additions = additions
   }
 
+  /// A stored day as a date with its weekday and year, in the user's language
+  /// ("Tue, Sep 29, 2026", "2026年9月29日周二"). The stored day names a calendar
+  /// day, so it is written in UTC and never shifts across time zones.
+  static func dated(_ day: Date) -> String {
+    LorvexDateFormatters.string(day, template: "yMMMEd", timeZone: .gmt)
+  }
+
   /// A phrase written to follow other words ("the same day") as it reads
-  /// standing alone in a row ("The same day"). Scripts without case are
+  /// standing alone in a row ("The same day"), capitalized by the rules of
+  /// the app's language (Turkish "i" becomes "İ"). Scripts without case are
   /// unchanged.
-  static func sentenceCased(_ phrase: String) -> String {
+  static func sentenceCased(_ phrase: String, locale: Locale = LorvexClockFormat.displayLocale) -> String {
     guard let first = phrase.first else { return phrase }
-    return first.uppercased() + phrase.dropFirst()
+    return String(first).uppercased(with: locale) + phrase.dropFirst()
   }
 }
 
@@ -214,19 +236,16 @@ enum MobileTaskPropertyCopy {
     }
   }
 
-  static func priorityValue(_ priority: LorvexTask.Priority) -> String {
-    switch priority {
-    case .p1: String(localized: "task_detail.priority_value.high", defaultValue: "High", table: "Localizable", bundle: MobileL10n.bundle)
-    case .p2: String(localized: "task_detail.priority_value.normal", defaultValue: "Normal", table: "Localizable", bundle: MobileL10n.bundle)
-    case .p3: String(localized: "task_detail.priority_value.low", defaultValue: "Low", table: "Localizable", bundle: MobileL10n.bundle)
-    }
-  }
-
   static var addDetail: String {
     String(localized: "task_detail.add.menu", defaultValue: "Add Detail", table: "Localizable", bundle: MobileL10n.bundle)
   }
   static var checklist: String {
     String(localized: "task_detail.section.checklist", defaultValue: "Checklist", table: "Localizable", bundle: MobileL10n.bundle)
+  }
+  static var assistantContext: String {
+    String(
+      localized: "task_detail.section.assistant_context", defaultValue: "Assistant Context", table: "Localizable",
+      bundle: MobileL10n.bundle)
   }
   static var reminder: String {
     String(localized: "task_detail.add.reminder", defaultValue: "Reminder", table: "Localizable", bundle: MobileL10n.bundle)

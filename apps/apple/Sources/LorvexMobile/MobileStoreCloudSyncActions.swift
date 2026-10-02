@@ -308,13 +308,22 @@ extension MobileStore {
     }
   }
 
-  /// Best-effort post-write surfaces: republish the widget snapshot, run one
-  /// sync pass, then adopt any peer rows that pass committed into the primary
-  /// UI. A widget publish failure is swallowed and the pass records its own
-  /// status fields, so neither can fail the surrounding refresh or mutation.
+  /// Best-effort post-write surfaces: republish the widget snapshot, then
+  /// start one sync pass that adopts any peer rows it commits into the primary
+  /// UI. The local work is awaited and the pass is not: a pass lasts a CloudKit
+  /// round trip with no deadline, and a caller holding a busy flag, an open
+  /// sheet, or a task's mutation guard would otherwise hold it that long.
+  /// Passes started while one runs coalesce into one trailing pass. A widget
+  /// publish failure is swallowed and the pass records its own status fields,
+  /// so neither can fail the surrounding mutation.
   func publishMobileSyncSurfaces() async {
     await runLocalRetentionMaintenance()
     _ = try? await publishWidgetSnapshot()
+    Task { await self.syncAfterLocalWrite() }
+  }
+
+  /// One sync pass after a local write, then adoption of what it committed.
+  private func syncAfterLocalWrite() async {
     let syncResult = await runCloudSyncCycle()
     await reloadInboundSurfacesIfNeeded(after: syncResult)
   }

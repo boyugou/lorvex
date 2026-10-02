@@ -15,13 +15,14 @@ extension AppStore {
   /// 64-pending-notification ceiling.
   static let habitReminderHorizonDays = 14
 
-  /// Replaces the Spotlight task index with every non-cancelled task, so any task
-  /// — not just today's — is findable and deep-links back. Reads live data through
-  /// the core `listTasks(status:)` query path; the index work runs off the main
-  /// actor inside the indexer. Skips the replace when the bulk read fails so a
-  /// transient query error keeps the existing index rather than shrinking it.
+  /// Replaces the Spotlight task index with every task that is neither
+  /// cancelled nor in the Trash, so any task, not just today's, is findable and
+  /// deep-links back. The read (`loadSearchIndexTasks`) is uncapped; the index
+  /// work runs off the main actor inside the indexer. Skips the replace when the
+  /// read fails, so a transient query error keeps the existing index rather
+  /// than shrinking it.
   func reindexTasksForSpotlight() async {
-    guard let tasks = await appleSurfaceTasks() else { return }
+    guard let tasks = try? await core.loadSearchIndexTasks() else { return }
     await reindexTasksForSpotlight(tasks: tasks)
   }
 
@@ -101,13 +102,12 @@ extension AppStore {
   /// re-plans after every mutation, so a completed habit / delivered reminder
   /// drops out on the next pass.
   ///
-  /// `providedTasks` lets the refresh pass its already-loaded surface set for
-  /// snooze cleanup. Reminder candidates still come from the delivery-aware
-  /// core query: a task snapshot does not carry this device's notification
+  /// Reminder candidates come from the delivery-aware core query rather than a
+  /// task snapshot: a snapshot does not carry this device's notification
   /// receipt, so rebuilding from it could re-arm an already-delivered reminder
   /// after a timezone re-anchor. A transient read failure leaves both kinds'
   /// pending notifications untouched (never clears them on a flaky read).
-  func rescheduleReminders(tasks providedTasks: [LorvexTask]? = nil) async {
+  func rescheduleReminders() async {
     let signpost = LorvexSignpost.begin(.notificationsReplace)
     defer { LorvexSignpost.end(signpost) }
     // Mark elapsed reminders delivered before the reads, so the MCP due-queries
@@ -119,14 +119,6 @@ extension AppStore {
     _ = try? await core.markDueTaskRemindersDelivered(asOf: now())
     try? await core.reconcileDeliveredHabitReminders(asOf: now())
 
-    let surfaceTasks: [LorvexTask]
-    if let providedTasks {
-      surfaceTasks = providedTasks
-    } else if let loaded = await appleSurfaceTasks() {
-      surfaceTasks = loaded
-    } else {
-      return
-    }
     guard
       let reminderTasks = try? await core.getTasksWithUpcomingReminders(
         hoursAhead: Self.taskReminderSchedulingHorizonHours, limit: 500)
@@ -207,17 +199,19 @@ extension AppStore {
     try? await core.replaceArmedHabitReminders(
       armedThroughByPolicyID: armedThroughByPolicyID, asOf: now())
 
-    // Drop one-shot snoozes for tasks that are no longer active (completed/
-    // cancelled here or via sync) so a snoozed reminder doesn't fire for a task
-    // that's already done. The reminder reap above ignores the snooze prefix.
-    await taskReminderScheduler.cancelSnoozes(
-      keepingActiveTaskIDs: Set(
-        surfaceTasks.filter { $0.status.isActionable }.map(\.id)))
+    // Drop one-shot snoozes whose task resolved (done, parked, trashed, or
+    // deleted, here or via sync) so a snoozed reminder never fires for it. The
+    // reminder reap above ignores the snooze prefix.
+    await taskReminderScheduler.cancelSnoozesOfResolvedTasks(core: core)
   }
 
+  /// Recounts the Dock badge and the menu bar's attention count from every
+  /// actionable task the day surfaces show, read uncapped
+  /// (`loadWidgetStatsSource`), so the count stays exact however many tasks
+  /// rank ahead of an overdue one. A failed read keeps the current counts.
   func updateBadge() async {
-    guard let tasks = await appleSurfaceTasks() else { return }
-    await updateBadge(tasks: tasks)
+    guard let source = try? await core.loadWidgetStatsSource() else { return }
+    await updateBadge(tasks: source.actionableTasks)
   }
 
   func updateBadge(tasks: [LorvexTask]) async {
@@ -264,51 +258,44 @@ extension AppStore {
   /// The sync cycle ran the reminder reschedule and badge on the pre-pull state,
   /// so a task completed, cancelled, deferred, or re-timed on another device
   /// would otherwise leave its local notification armed — it fires on this Mac
-  /// (often while backgrounded) until an unrelated trigger reschedules. Reads
-  /// the schedulable pool once and feeds both surfaces. `runCloudSyncCycle`
-  /// calls this only when it fetched inbound records while no refresh was in
-  /// flight (the post-local-mutation outbox drain); an inbound arrival during a
-  /// refresh instead sets `refreshPending`, so the trailing single-flight re-run
-  /// re-reads the UI, republishes the widget, and re-plans reminders/badge in one
-  /// pass rather than recomputing them here and reloading again.
+  /// (often while backgrounded) until an unrelated trigger reschedules.
+  /// `runCloudSyncCycle` calls this only when it fetched inbound records while
+  /// no refresh was in flight (the post-local-mutation outbox drain); an
+  /// inbound arrival during a refresh instead sets `refreshPending`, so the
+  /// trailing single-flight re-run re-reads the UI, republishes the widget, and
+  /// re-plans reminders/badge in one pass rather than recomputing them here and
+  /// reloading again.
   func republishSurfacesAfterInboundSync() async {
-    guard let tasks = await appleSurfaceTasks() else { return }
-    await rescheduleReminders(tasks: tasks)
-    await updateBadge(tasks: tasks)
+    async let reminders: Void = rescheduleReminders()
+    async let badge: Void = updateBadge()
+    _ = await (reminders, badge)
   }
 
   /// Re-plan reminders, the badge, and the widget snapshot from the current DB
-  /// after any local in-app task or habit mutation, then kick the sync outbox.
+  /// after any local in-app task or habit mutation, then start a sync pass that
+  /// sends the outbox.
   ///
   /// Local mutations write to the DB but don't automatically update the reminder
   /// schedule or the dock badge, so a completed/cancelled/deferred task's
   /// notification stays armed (and can fire on this Mac while the app is still
   /// open) and the badge stays wrong until the next refresh. This mirrors
-  /// `republishSurfacesAfterInboundSync` for the local-mutation path: reads the
-  /// schedulable pool once and feeds reminders, badge, widget snapshot, and the
-  /// cloud sync cycle in a single pass. The snapshot write is best-effort so a
-  /// transient App-Group write failure doesn't surface a modal or skip the sync
-  /// outbox drain on an otherwise-successful mutation.
+  /// `republishSurfacesAfterInboundSync` for the local-mutation path. Each
+  /// surface reads its own source, so a failed read leaves only that surface as
+  /// it was, and the sync outbox drains regardless. The snapshot write is
+  /// best-effort so a transient App-Group write failure doesn't surface a modal
+  /// on an otherwise-successful mutation.
+  ///
+  /// The local work is awaited and the pass is not: a pass lasts a CloudKit
+  /// round trip with no deadline, and a caller that plays feedback, registers
+  /// an undo step, or holds a busy flag after this returns would otherwise
+  /// wait that long. Passes started while one runs coalesce into one trailing
+  /// pass (``runCloudSyncCycle()``).
   func republishSurfacesAfterLocalMutation() async {
     await runLocalRetentionMaintenance()
-    guard let tasks = await appleSurfaceTasks() else { return }
-    await rescheduleReminders(tasks: tasks)
-    await updateBadge(tasks: tasks)
+    async let reminders: Void = rescheduleReminders()
+    async let badge: Void = updateBadge()
+    _ = await (reminders, badge)
     try? await publishWidgetSnapshot()
-    await runCloudSyncCycle()
-  }
-
-  /// Every non-cancelled task for the Apple read surfaces (Spotlight index,
-  /// reminders, badge). Returns `nil` when the bulk read fails so callers keep
-  /// their existing surface rather than replacing it with a shrunken today-only
-  /// set; the hard 5000-task limit is the known ceiling for these surfaces.
-  func appleSurfaceTasks() async -> [LorvexTask]? {
-    guard
-      let page = try? await core.listTasks(
-        status: "all", listID: nil, priority: nil, text: nil, limit: 5000, offset: 0)
-    else {
-      return nil
-    }
-    return page.tasks
+    Task { await self.runCloudSyncCycle() }
   }
 }

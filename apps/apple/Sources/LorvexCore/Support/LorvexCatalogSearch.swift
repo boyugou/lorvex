@@ -19,16 +19,20 @@ import Foundation
 /// "Morning gym" habit that a contiguous-substring match would miss — while
 /// still collapsing to plain substring behavior for a single-word query. An
 /// empty or all-whitespace query matches everything.
+///
+/// **Comparison** ignores case and accents and follows the user's language
+/// (`localizedStandardContains`), so "cafe" finds "Café" and "manana" finds
+/// "Mañana", as the store's full-text index does for tasks.
 public enum LorvexCatalogSearch {
-  /// Whether every whitespace-separated term in `query` is a case-insensitive
-  /// substring of at least one non-nil entry in `fields`. An empty (or
-  /// all-whitespace) query matches everything.
+  /// Whether every whitespace-separated term in `query` is a substring of at
+  /// least one non-nil entry in `fields`, ignoring case and accents. An empty
+  /// (or all-whitespace) query matches everything.
   public static func matches(_ query: String, fields: [String?]) -> Bool {
     let terms = query.split(whereSeparator: \.isWhitespace).map(String.init)
     guard !terms.isEmpty else { return true }
     let searchable = fields.compactMap { $0 }
     return terms.allSatisfy { term in
-      searchable.contains { $0.localizedCaseInsensitiveContains(term) }
+      searchable.contains { $0.localizedStandardContains(term) }
     }
   }
 

@@ -38,7 +38,9 @@ public struct LorvexTimelineRow<Marker: View>: View {
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   /// ``LorvexDesign/TextColumn/clockTime`` scaled with the text, as in the now
   /// marker, so every time in the timeline sits in one column.
-  @ScaledMetric(relativeTo: .subheadline) private var timeWidth = LorvexDesign.TextColumn.clockTime
+  @ScaledMetric(relativeTo: .subheadline) private var timeScale: CGFloat = 1
+  /// Fits the display locale's widest clock time on one line at any text size.
+  private var timeWidth: CGFloat { LorvexDesign.TextColumn.clockTimeWidth() * timeScale }
   @ScaledMetric(relativeTo: .body) private var stackedMarkerWidth = LorvexTimelineMetrics.stackedMarkerWidth
 
   public init(
@@ -144,7 +146,7 @@ public struct LorvexTimelineRow<Marker: View>: View {
   }
 
   private var titleText: some View {
-    Text(title)
+    Text(userContent: title)
       .font(isCurrent ? LorvexDesign.Typography.primaryEmphasis : LorvexDesign.Typography.primaryText)
       .foregroundStyle(isQuiet || isPast ? Color.secondary : Color.primary)
   }
@@ -169,7 +171,9 @@ public struct LorvexTimelineNowMarker: View {
   public var label: String
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   /// The rows' time column, so the marker's time sits under theirs.
-  @ScaledMetric(relativeTo: .subheadline) private var timeWidth = LorvexDesign.TextColumn.clockTime
+  @ScaledMetric(relativeTo: .subheadline) private var timeScale: CGFloat = 1
+  /// Fits the display locale's widest clock time on one line at any text size.
+  private var timeWidth: CGFloat { LorvexDesign.TextColumn.clockTimeWidth() * timeScale }
   @ScaledMetric(relativeTo: .body) private var stackedMarkerWidth = LorvexTimelineMetrics.stackedMarkerWidth
 
   public init(minutes: Int, label: String) {

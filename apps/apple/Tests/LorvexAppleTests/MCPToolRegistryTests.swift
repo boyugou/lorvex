@@ -340,7 +340,7 @@ struct CoreValidationEnvelopeTests {
       ])
     expectMCPStructuredError(
       result, code: "validation", tool: "create_calendar_event",
-      message: "Unsupported calendar event type 'banquet'.")
+      message: "event_type must be one of event, birthday, anniversary, memorial (got \"banquet\")")
   }
 }
 

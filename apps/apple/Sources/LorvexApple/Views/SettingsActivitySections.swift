@@ -117,6 +117,8 @@ struct SettingsChangelogRetentionRow: View {
     .maximum, .days(90), .days(30), .days(7), .off,
   ]
 
+  // The picker names its setting, so its group carries no header; what the
+  // choice does is the footer directly under it.
   var body: some View {
     Section {
       Picker(
@@ -132,15 +134,8 @@ struct SettingsChangelogRetentionRow: View {
       }
       .onChange(of: selection) { _, newValue in persist(newValue) }
       .accessibilityIdentifier("settings.activity.retention.picker")
-
+    } footer: {
       Text(footnote)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
-    } header: {
-      Text(String(
-        localized: "settings.activity.retention.title", defaultValue: "Activity Log Retention",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle))
     }
     .task {
       let policy = await store.loadChangelogRetentionPolicy()
@@ -187,41 +182,19 @@ struct SettingsChangelogRetentionRow: View {
   private static func label(for policy: ChangelogRetentionPolicy) -> String {
     switch policy {
     case .maximum:
+      let entries = Int(SyncNaming.auditMaxEntriesSafeguard)
       return String(
-        localized: "settings.activity.retention.maximum",
-        defaultValue: "Maximum (10,000 entries)",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
+        localized: "settings.activity.retention.maximum", defaultValue: "Maximum (\(entries) entries)",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     case .off:
       return String(
         localized: "settings.activity.retention.off", defaultValue: "Off (never store)",
         table: "Localizable",
         bundle: LorvexL10n.bundle)
     case .days(let n):
-      switch n {
-      case 90:
-        return String(
-          localized: "settings.activity.retention.days.90", defaultValue: "90 days",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle)
-      case 30:
-        return String(
-          localized: "settings.activity.retention.days.30", defaultValue: "30 days",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle)
-      case 7:
-        return String(
-          localized: "settings.activity.retention.days.7", defaultValue: "7 days",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle)
-      default:
-        return String(
-          format: String(
-            localized: "settings.activity.retention.days.custom", defaultValue: "%lld days",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          Int(n))
-      }
+      return String(
+        localized: "settings.activity.retention.days", defaultValue: "\(Int(n)) days",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 }

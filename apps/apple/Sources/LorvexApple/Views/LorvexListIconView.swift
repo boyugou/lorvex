@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 struct LorvexListIconView: View {
@@ -71,5 +72,21 @@ struct LorvexListIconView: View {
       return nil
     }
     return icon
+  }
+}
+
+/// A list as a menu item: its symbol beside its name, or its emoji before the
+/// name, since a menu item draws only an image as its icon.
+struct LorvexListMenuLabel: View {
+  let list: LorvexList
+
+  var body: some View {
+    if let symbol = LorvexListIconView.symbolName(for: list.icon) {
+      Label(list.displayName, systemImage: symbol)
+    } else if let emoji = list.icon, !emoji.isEmpty {
+      Text(verbatim: "\(emoji) \(list.displayName)")
+    } else {
+      Label(list.displayName, systemImage: "list.bullet")
+    }
   }
 }

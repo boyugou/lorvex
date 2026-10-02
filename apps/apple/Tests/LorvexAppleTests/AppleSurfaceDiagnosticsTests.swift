@@ -67,6 +67,27 @@ func appleSurfaceDiagnosticsReportsSuccessfulCalendarImport() {
   #expect(diagnostics.reminderStatus == "1 scheduled reminder")
 }
 
+/// The Spotlight status is one sentence whose two counts each take their own
+/// plural form.
+@Test
+func appleSurfaceDiagnosticsSpotlightStatusVariesEachCountOnItsOwn() {
+  func status(tasks: Int, events: Int) -> String {
+    AppleSurfaceDiagnostics(
+      spotlightIndexedTaskCount: tasks,
+      spotlightIndexedCalendarEventCount: events,
+      scheduledReminderCount: 0,
+      taskReminderScheduleReport: .disabled,
+      widgetSnapshot: nil,
+      lastCalendarImportReport: .notStarted,
+      importedCalendarEventCount: 0
+    ).spotlightStatus
+  }
+
+  #expect(status(tasks: 1, events: 1) == "1 task, 1 calendar event")
+  #expect(status(tasks: 1, events: 2) == "1 task, 2 calendar events")
+  #expect(status(tasks: 0, events: 1) == "0 tasks, 1 calendar event")
+}
+
 @Test
 func appleSurfaceDiagnosticsReportsPublishedWidgetVersion() {
   let snapshot = WidgetSnapshot(

@@ -8,51 +8,56 @@
 two-column `NavigationSplitView`.
 **Backing state:** `AppStore.selection: SidebarSelection`,
 `AppStore.selectedTaskID`, `AppStore.selectedHabitID`,
-`AppStore.showCommandPalette`.
+`AppStore.todayInspectorEvent`, `AppStore.showCommandPalette`.
 
 ## Layout (as built)
 
 Two columns — sidebar + workspace. The workspace owns the full main area; a
-trailing `.inspector` is shown only while a task **or** a habit is selected (the
-two are mutually exclusive). There is no global toolbar search and no
-customizable toolbar.
+trailing `.inspector` is shown only while it has a subject: a selected task, a
+selected habit, or an event opened from Today's schedule. It shows one subject
+at a time. All Tasks and Memory carry a toolbar search field (`WorkspaceView`
+mounts it through `lorvexWorkspaceSearchField`; ⌘F focuses it, and from any
+other workspace opens All Tasks first); no other workspace has one. The toolbar
+is not customizable.
 
 The sidebar opens with its five fixed destinations in one section without a
 header: `SidebarSelection.sidebarGroups` holds a single group
 (`SidebarGroupKind.plan`), and `SidebarView.planSection` renders it as a
-`Section` with no header. A "Lists" section (a header row with its
-own ＋ to create one) and an "Archived" section (present only once at least
-one list has been archived) follow. Memory and Settings are not part of the
-scrolling list at all: `SidebarView.utilitiesFooter` pins them below a
-divider at the foot of the column, so they never scroll away.
+`Section` with no header. A "Lists" section (the lists, then a closing "New
+List" row that opens the create sheet) and an "Archived" section (present only
+once at least one list has been archived) follow. Memory and Settings are not
+part of the scrolling list at all: `SidebarView.utilitiesFooter` pins them
+below a divider at the foot of the column, so they never scroll away.
 
 ```
 ┌───────────────────┬──────────────────────────────────┬─────────────────────────┐
 │ SIDEBAR (column)  │ WORKSPACE (detail column)        │ INSPECTOR (trailing)    │
-│ NavigationSplitVw │   WorkspaceView fills the area    │ .inspector — present     │
-│   sidebar         │                                  │ only while a task OR a   │
-│                   │  switch store.selection          │ habit is selected        │
-│  ☀ Today          │   .today    → TodayView          │                          │
-│  ▦ Plan           │   .tasks    → TasksView          │  TaskDetailView          │
-│  ✓ All Tasks      │   .lists    → ListsWorkspaceView │    or HabitDetailInspector│
-│  ☑ Review         │   .calendar → CalendarWorkspaceV.│                          │
-│  ↻ Habits         │   .habits   → HabitsWorkspaceView│  Closes when the subject │
-│ ── Lists ──   (+) │   .reviews  → ReviewsWorkspaceV. │  is deselected (the      │
-│  🗂 <list rows>    │   .memory   → MemoryWorkspaceView│  standard inspector       │
-│ ── Archived ──    │                                  │  control clears it).     │
-│  🗂 <archived>     │  Exhaustive switch, one case per │                          │
-│ ─────────────────  │  destination.                    │  The window's minimum    │
-│  🧠 Memory         │                                  │  width grows while the   │
-│  ⚙ Settings       │                                  │  inspector is open.      │
-│                   │  The chosen view fills the full  │                          │
-│                   │  width; the inspector shares it  │                          │
-│                   │  only while a subject is open.   │                          │
+│ NavigationSplitVw │   WorkspaceView fills the area   │ .inspector — present    │
+│   sidebar         │                                  │ only while a task, a    │
+│                   │  switch store.selection          │ habit, or a Today event │
+│  ☀ Today          │   .today    → TodayView          │ is selected             │
+│  ▦ Calendar       │   .tasks    → TasksView          │  TaskDetailView         │
+│  ✓ All Tasks      │   .lists    → ListsWorkspaceView │  HabitDetailInspector   │
+│  ☑ Review         │   .calendar → CalendarWorkspaceV.│  CalendarEventInspector │
+│  ↻ Habits         │   .habits   → HabitsWorkspaceView│                         │
+│ ── Lists ──       │   .reviews  → ReviewsWorkspaceV. │ Closes when the subject │
+│  🗂 <list rows>    │   .memory   → MemoryWorkspaceView│ is deselected (the      │
+│  ＋ New List       │                                  │ standard inspector      │
+│ ── Archived ──    │  Exhaustive switch, one case per │ control clears it).     │
+│  🗂 <archived>     │  destination.                    │                         │
+│ ───────────────   │                                  │ The window's minimum    │
+│  🧠 Memory         │                                  │ width grows while the   │
+│  ⚙ Settings       │  The chosen view fills the full  │ inspector is open.      │
+│                   │  width; the inspector shares it  │                         │
+│                   │  only while a subject is open.   │                         │
 └───────────────────┴──────────────────────────────────┴─────────────────────────┘
 ```
 
-The `.calendar` destination's row reads "Plan" and the `.tasks` row reads
-"All Tasks" (`SidebarSelection.macOSLocalizedTitle`); the enum cases and
-routes are named `calendar` and `tasks`.
+The `.calendar` destination's row reads "Calendar", the `.tasks` row reads
+"All Tasks", and the `.reviews` row reads "Review"
+(`SidebarSelection.macOSLocalizedTitle`); the enum cases and routes keep the
+names `calendar`, `tasks`, and `reviews`. The Calendar workspace's own title,
+in `CalendarWorkspaceNavigationBar`, is likewise "Calendar".
 
 The main window hides its title-bar text (`.windowStyle(.hiddenTitleBar)` in
 `App/LorvexPrimaryScenes.swift`): each workspace names itself with a large
@@ -68,14 +73,15 @@ pane's own header.
 
 | Region | What it renders | Data source | View file |
 |---|---|---|---|
-| Split container | Two-column `NavigationSplitView`; detail = inspector, not a third column | `store.selectedTaskID` / `store.selectedHabitID` (inspector presentation) | `Views/ContentView.swift` |
+| Split container | Two-column `NavigationSplitView`; detail = inspector, not a third column | `store.selectedTaskID` / `store.selectedHabitID` / `store.todayInspectorEvent` (inspector presentation) | `Views/ContentView.swift` |
 | Sidebar list | `List(selection:)` styled `.sidebar`; scrolling content only — the footer below is pinned outside it | `$store.selection` (via `SidebarRowSelection`) | `Views/SidebarView.swift` |
-| Sidebar destinations | One section without a header — Today, Plan, All Tasks, Review, Habits, in that order | `SidebarSelection.sidebarGroups` (`Support/SidebarNavigation.swift`) | `Views/SidebarView.swift` |
-| Lists section | Every user list, a header ＋ to create one, each badged with its open-task count while that count is above zero; per-row context menu (Edit, Open in New Window, Move Up/Down, Archive, Delete) | `store.orderedLists` | `Views/SidebarListSection.swift` |
+| Sidebar destinations | One section without a header — Today, Calendar, All Tasks, Review, Habits, in that order | `SidebarSelection.sidebarGroups` (`Support/SidebarNavigation.swift`) | `Views/SidebarView.swift` |
+| Lists section | Every user list, each badged with its open-task count while that count is above zero, then a closing "New List" row (a plus and a secondary-style label, no selection tag) that opens the create sheet; per-row context menu (Edit, Open in New Window, Move Up/Down, Archive, Delete) | `store.orderedLists` | `Views/SidebarListSection.swift` |
 | Archived section | Archived lists, muted tint; shown only once `store.orderedArchivedLists` is non-empty; per-row context menu (Unarchive, Open in New Window, Delete) | `store.orderedArchivedLists` | `Views/SidebarListSection.swift` |
 | Sidebar footer | Memory and Settings, pinned below a divider so they never scroll with the list above; Memory is excluded from `sidebarGroups` on purpose (it is the assistant's context, not a daily workspace) | `store.selection == .memory`; `SettingsLink` | `Views/SidebarView.swift` (`utilitiesFooter`) |
 | Workspace (main) column | Workspace view chosen by selection, filling the full width; the switch is exhaustive over all seven `SidebarSelection` cases | `store.selection` (`switch`) | `Views/WorkspaceView.swift` |
-| Inspector | `TaskDetailView` while a task is selected, else `HabitDetailInspector` while a habit is | `store.selectedTaskID` / `store.selectedHabitID` | `Views/ContentView.swift`; `Views/TaskDetailView.swift`; `Views/HabitDetailInspector.swift` |
+| Inspector | `TaskDetailView` while a task is selected, else `HabitDetailInspector` while a habit is, else `CalendarEventInspector` for an event opened from Today's schedule | `store.selectedTaskID` / `store.selectedHabitID` / `store.todayInspectorEvent` | `Views/ContentView.swift`; `Views/TaskDetailView.swift`; `Views/HabitDetailInspector.swift`; `Views/CalendarEventInspector.swift` |
+| Toolbar search | A `.searchable` field in the toolbar for All Tasks ("Search All Tasks", or a list-specific prompt while a list is scoped) and Memory ("Search Memory"); the other workspaces mount none | `store.searchText`; `AppStore.searchableSelections` | `Views/WorkspaceView.swift`; `Views/WorkspaceSearchField.swift` |
 | Command palette sheet | `CommandPaletteView` (⌘K overlay) | `$store.showCommandPalette` | `Views/CommandPaletteView.swift` |
 | Setup wizard sheet | `SetupWizardSheet` on first run | `showSetupWizard` (gated on `settings.setupCompleted`) | `Onboarding/SetupWizardSheet.swift` |
 
@@ -84,10 +90,17 @@ pane's own header.
 - Per-destination ⌘ accelerators jump to a workspace via the Navigate menu
   (`Support/SidebarNavigation.swift`; `App/LorvexAppCommands.swift`).
 - ⌘K → toggles `store.showCommandPalette`.
+- ⌘F (the "Find…" item in the Edit menu) → `AppStore.beginSearch()` focuses the
+  toolbar search field of All Tasks or Memory; from any other workspace it
+  opens All Tasks across every list and focuses its field.
 - Selecting a task (incl. a Calendar grid tap via `selectTaskFromList`) presents
-  the task inspector; selecting a habit card presents the habit inspector. The
-  two are mutually exclusive (enforced in `AppStore`'s selection setters), and
-  navigating to a workspace that carries no selection clears it.
+  the task inspector; selecting a habit card presents the habit inspector;
+  opening an event from Today's schedule presents the event inspector. The
+  inspector holds one subject: opening a task closes an open habit or Today
+  event, opening a habit closes an open task (the `selectedTaskID` and
+  `selectedHabitID` observers in `AppStore`), and opening a Today event closes
+  an open task (`toggleTodayEventSelection`). Navigating to a workspace that
+  carries no selection clears it.
 - "Pin as Sticky" (task detail header or task right-click menu) opens a floating,
   always-on-top sticky note window for the task (`Views/StickyTaskWindow.swift`).
 - A list row's context menu offers Edit, Open in New Window (a detached window
@@ -101,7 +114,7 @@ pane's own header.
   must be unarchived and emptied first and offers Unarchive.
 
 ## Notes for improvement (analysis — NOT yet implemented)
-- The five fixed destination rows (Today, Plan, All Tasks, Review, Habits) are
+- The five fixed destination rows (Today, Calendar, All Tasks, Review, Habits) are
   intentionally unbadged: a destination has no honest count, and a total
   would only restate the list the destination opens. Only an active list's
   row shows a number, its open-task count, and only while that count is above

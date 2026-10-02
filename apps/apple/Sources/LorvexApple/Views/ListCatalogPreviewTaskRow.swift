@@ -9,6 +9,7 @@ struct ListCatalogPreviewTaskRow: View {
   let open: () -> Void
 
   @State private var isHovering = false
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     Button(action: open) {
@@ -47,14 +48,15 @@ struct ListCatalogPreviewTaskRow: View {
     .accessibilityIdentifier("list.preview.\(task.id)")
   }
 
-  /// "tomorrow", "3d ago": the due day relative to now, measured from the
-  /// preview clock when a capture pins it, red once overdue and orange when
-  /// due today or tomorrow.
+  /// "tomorrow", "3d ago": the due day relative to today in the product time
+  /// zone, measured from the preview clock when a capture pins it, red once
+  /// overdue and orange when due today or tomorrow.
   private var dueLabel: (text: String, tint: AnyShapeStyle)? {
     let now = LorvexPreviewClock.now(in: .current)
-    guard let text = task.cachedDueRelativeLabel(now: now) else { return nil }
-    if task.isOverdue(now: now) { return (text, AnyShapeStyle(LorvexDesign.Palette.overdue)) }
-    if task.isDueSoon(now: now) { return (text, AnyShapeStyle(LorvexDesign.Palette.dueSoon)) }
+    let zone = productTimeZone
+    guard let text = task.cachedDueRelativeLabel(now: now, timeZone: zone) else { return nil }
+    if task.isOverdue(now: now, timeZone: zone) { return (text, AnyShapeStyle(LorvexDesign.Palette.overdue)) }
+    if task.isDueSoon(now: now, timeZone: zone) { return (text, AnyShapeStyle(LorvexDesign.Palette.dueSoon)) }
     return (text, AnyShapeStyle(.secondary))
   }
 }

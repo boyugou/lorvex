@@ -11,7 +11,7 @@ import Foundation
 extension CalendarTimelineSnapshot {
   /// The events that occur on `day` (a `YYYY-MM-DD` string), ordered as a day
   /// agenda by ``Swift/Sequence/sortedForAgenda(on:)``. Multi-day events appear
-  /// on every day they span.
+  /// on every day they take time on (``CalendarTimelineEvent/occurs(on:)``).
   ///
   /// Named `eventsOccurring` rather than `events(on:)` so the base name does not
   /// collide with the stored `events` property (which would shadow the method at
@@ -22,12 +22,21 @@ extension CalendarTimelineSnapshot {
 }
 
 extension CalendarTimelineEvent {
-  /// True when this event covers `day` (`YYYY-MM-DD`), inclusive on both ends —
-  /// a single-day event covers only its `startDate`. Relies on `YYYY-MM-DD`
+  /// True when this event takes time on `day` (`YYYY-MM-DD`): every day from
+  /// its `startDate` through its `endDate`, both inclusive, except the end day
+  /// of a timed event that ends at exactly midnight on a later day. That event
+  /// takes no time on its end day, so 22:00 to 00:00 the next day occurs on
+  /// its start day only, as in Apple Calendar. An all-day event's `endDate` is
+  /// its last day, so it occurs on that day too. A single-day event occurs
+  /// only on its `startDate`. Every surface that places events on days (the
+  /// Today schedule, the day, week, and month grids, the agendas) asks this,
+  /// so they agree on which days an event belongs to. Relies on `YYYY-MM-DD`
   /// sorting lexicographically the same as chronologically.
   public func occurs(on day: String) -> Bool {
     let end = endDate ?? startDate
-    return startDate <= day && day <= end
+    guard startDate <= day, day <= end else { return false }
+    let endsAtMidnight = !allDay && CalendarGridModel.parseMinutes(endTime) == 0
+    return !(day == end && end != startDate && endsAtMidnight)
   }
 }
 

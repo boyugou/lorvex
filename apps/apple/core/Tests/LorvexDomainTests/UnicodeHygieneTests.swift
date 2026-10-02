@@ -44,6 +44,59 @@ final class UnicodeHygieneTests: XCTestCase {
     XCTAssertEqual(sanitize("a\u{200C}b\u{200D}c\u{FEFF}d"), "abcd")
   }
 
+  // MARK: - Joiners and tag characters in context
+
+  func testKeepsJoinersInEmojiSequences() {
+    for emoji in ["👩‍💻", "👨‍👩‍👧", "🏳️‍🌈", "🧑🏽‍🚀", "❤️‍🔥", "🏃‍♂️"] {
+      XCTAssertEqual(sanitize("\(emoji) Code review"), "\(emoji) Code review", emoji)
+    }
+  }
+
+  func testKeepsJoinersThatShapeAScript() {
+    XCTAssertEqual(sanitize("می\u{200C}خواهم کتاب\u{200C}ها"), "می\u{200C}خواهم کتاب\u{200C}ها")  // Persian
+    XCTAssertEqual(sanitize("ශ්\u{200D}රී ලංකා"), "ශ්\u{200D}රී ලංකා")  // Sinhala: virama, joiner
+    XCTAssertEqual(sanitize("क्\u{200D}ष"), "क्\u{200D}ष")  // Hindi half form: virama, joiner
+    XCTAssertEqual(sanitize("র\u{200D}্যাব"), "র\u{200D}্যাব")  // Bengali: joiner, virama
+  }
+
+  func testStripsJoinersWithNothingToShape() {
+    XCTAssertEqual(sanitize("ad\u{200D}min"), "admin")
+    XCTAssertEqual(sanitize("ad\u{200C}min"), "admin")
+    XCTAssertEqual(sanitize("\u{200D}👩"), "👩")
+    XCTAssertEqual(sanitize("👩\u{200D}"), "👩")
+    XCTAssertEqual(sanitize("1\u{200D}2"), "12", "ASCII keycap bases are not emoji here")
+    XCTAssertEqual(sanitize("ب\u{200C} ه"), "ب ه", "a non-joiner needs letters on both sides")
+    XCTAssertEqual(sanitize("👩\u{200B}\u{200D}💻"), "👩💻", "a stripped neighbor licenses nothing")
+  }
+
+  func testKeepsOnlyRecommendedSubdivisionFlags() {
+    let scotland = "🏴\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}"
+    XCTAssertEqual(sanitize("Trip \(scotland)"), "Trip \(scotland)")
+    // Tag characters spelling anything else are an invisible message.
+    let smuggled = "🏴\u{E0069}\u{E0067}\u{E006E}\u{E006F}\u{E0072}\u{E0065}\u{E007F}"
+    XCTAssertEqual(sanitize("Trip \(smuggled)"), "Trip 🏴")
+    XCTAssertEqual(sanitize("ok\u{E0001}\u{E0068}\u{E0069}\u{E007F}"), "ok")
+    XCTAssertEqual(sanitize("ok\u{E0068}\u{E0069}"), "ok")
+  }
+
+  func testJoinerAndTagRulesAreIdempotent() {
+    let wales = "🏴\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}"
+    let input = "👩\u{200D}💻 می\u{200C}خواهم a\u{200D}b \(wales) x\u{E0041} 👩\u{200B}\u{200D}💻"
+    let once = sanitize(input)
+    XCTAssertEqual(once, sanitize(once))
+    XCTAssertFalse(UnicodeHygiene.containsStrippedCodepoint(once))
+  }
+
+  func testLookupKeyIgnoresJoiners() {
+    XCTAssertEqual(normalizeLookupKey("کتاب\u{200C}ها"), normalizeLookupKey("کتابها"))
+    XCTAssertEqual(normalizeLookupKey("👩\u{200D}💻"), normalizeLookupKey("👩💻"))
+  }
+
+  func testInvisibleCodepointsIncludeJoinersAndTags() {
+    XCTAssertTrue(ValidationText.isVisuallyEmpty("\u{200D}\u{200C} \u{E0041}"))
+    XCTAssertFalse(ValidationText.isVisuallyEmpty("👩\u{200D}💻"))
+  }
+
   func testStripsLineParagraphSeparators() {
     XCTAssertEqual(sanitize("hello\u{2028}world\u{2029}!"), "helloworld!")
   }

@@ -1,34 +1,6 @@
 import LorvexCore
 import SwiftUI
 
-/// One detail the capture sheet recognized in a typed line, in the words the
-/// task's sentence uses ("Tomorrow", "20 min", "Offsite 2026").
-struct MobileCapturePreviewWord: Identifiable, Equatable {
-  enum Role: Equatable { case plan, due, urgent, plain }
-
-  let id: String
-  let label: String
-  let role: Role
-
-  var tint: Color {
-    switch role {
-    case .plan: LorvexDesign.Palette.accent
-    case .due: LorvexDesign.Palette.dueSoon
-    case .urgent: LorvexDesign.Palette.overdue
-    case .plain: LorvexDesign.Palette.neutral
-    }
-  }
-}
-
-/// What one capture line will create: the title left once the details are read
-/// out, and the details as words. Empty when the line carries no details.
-struct MobileCapturePreview: Equatable {
-  let title: String
-  let words: [MobileCapturePreviewWord]
-
-  static let empty = MobileCapturePreview(title: "", words: [])
-}
-
 extension MobileStore {
   /// Read one capture line against the user's lists and the logical today.
   func captureParse(_ text: String) -> LorvexCaptureParse {
@@ -83,61 +55,20 @@ extension MobileStore {
   }
 
   /// The preview the capture sheet shows under the title while the user types.
-  func capturePreview(_ text: String) -> MobileCapturePreview {
-    let parse = captureParse(text)
-    guard parse.hasDetails else { return .empty }
-    var words: [MobileCapturePreviewWord] = []
-    if let offset = parse.resolvedPlannedDayOffset {
-      words.append(.init(id: "when", label: captureDayLabel(offset, position: .leading), role: .plan))
-    }
-    // A time shows as its span, which already says the length.
-    if let time = parse.plannedTime {
-      words.append(
-        .init(
-          id: "time", label: lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound),
-          role: .plan))
-    } else if let minutes = parse.estimatedMinutes {
-      words.append(.init(id: "length", label: MobileTodayCalmCopy.duration(minutes), role: .plan))
-    }
-    if let rule = parse.recurrence {
-      words.append(.init(id: "repeats", label: rule.mobileLocalizedCadence, role: .plan))
-    }
-    if let offset = parse.resolvedDueDayOffset {
-      words.append(
-        .init(id: "due", label: MobileCaptureCopy.due(captureDayLabel(offset, position: .inline)), role: .due))
-    }
-    if let listName = parse.listName {
-      words.append(.init(id: "list", label: listName, role: .plain))
-    }
-    if let priority = parse.priority {
-      words.append(
-        .init(
-          id: "priority", label: MobileCaptureCopy.priority(priority),
-          role: priority == .p1 ? .urgent : .plain))
-    }
-    for tag in parse.tags {
-      words.append(.init(id: "tag.\(tag)", label: "#\(tag)", role: .plain))
-    }
-    return MobileCapturePreview(title: parse.title, words: words)
-  }
-
-  /// A parsed day named by ``LorvexDayPhrase`` in the storage frame the task
-  /// will carry: "Tomorrow" as a word of its own, "tomorrow" after "Due".
-  private func captureDayLabel(_ offset: Int, position: LorvexDayPhrase.Position) -> String {
-    guard let date = try? captureStorageDate(daysFromLogicalToday: offset) else { return "" }
-    return LorvexDayPhrase.phrase(
-      for: date, logicalDay: logicalTodayString, position: position, locale: MobileL10n.locale)
+  /// Empty when the line carries no details, so a plain title shows nothing.
+  func capturePreview(_ text: String) -> LorvexCapturePreview {
+    LorvexCapturePreview(parse: captureParse(text), logicalDay: logicalTodayString)
   }
 }
 
 /// The line under the capture title: "Adds “Call the caterer”" and the
 /// recognized details as tinted words, so the user sees what Add will create.
 struct MobileCapturePreviewLine: View {
-  let preview: MobileCapturePreview
+  let preview: LorvexCapturePreview
 
   var body: some View {
     LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs, fillsWidth: true) {
-      Text(MobileCaptureCopy.adds(preview.title))
+      Text(preview.addsLine)
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .lineLimit(1)
@@ -158,37 +89,8 @@ struct MobileCapturePreviewLine: View {
   }
 }
 
-/// The capture sheet's words for recognized details, sharing the macOS keys.
+/// The relative day names the task field editor offers as quick choices.
 enum MobileCaptureCopy {
-  static func adds(_ title: String) -> String {
-    String(
-      localized: "quick_add.preview.adds", defaultValue: "Adds “\(title)”", table: "Localizable",
-      bundle: MobileL10n.bundle)
-  }
-
-  static func due(_ day: String) -> String {
-    String(
-      localized: "task_detail.sentence.due_lead", defaultValue: "Due ", table: "Localizable",
-      bundle: MobileL10n.bundle) + day
-  }
-
-  static func priority(_ priority: LorvexTask.Priority) -> String {
-    switch priority {
-    case .p1:
-      String(
-        localized: "task_detail.sentence.priority_phrase.high", defaultValue: "High priority",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case .p2:
-      String(
-        localized: "task_detail.sentence.priority_phrase.normal", defaultValue: "Normal priority",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    case .p3:
-      String(
-        localized: "task_detail.sentence.priority_phrase.low", defaultValue: "Low priority",
-        table: "Localizable", bundle: MobileL10n.bundle)
-    }
-  }
-
   static var today: String {
     String(
       localized: "date.relative.today", defaultValue: "Today", table: "Localizable",

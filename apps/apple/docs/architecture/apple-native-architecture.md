@@ -155,9 +155,10 @@ desktop abstraction. The default macOS scene model is:
   category, and calendar usage descriptions required for the current Apple
   system integrations
 - `LorvexMobile` is the first iOS/iPadOS-specific product target. It is a
-  SwiftUI library target with native `TabView` and per-tab `NavigationStack`
-  structure for compact iPhone layouts, plus a `NavigationSplitView` sidebar
-  shell for regular-width iPad layouts. It consumes
+  SwiftUI library target with one native `TabView` and per-tab `NavigationStack`
+  structure for iPhone and iPad alike; regular-width layouts add a second pane
+  inside a tab (list and detail in Tasks, Habits, and Memory, a schedule pane
+  beside Today, an agenda pane beside the Calendar day grid). It consumes
   `TodaySnapshot` and `WeeklyReviewSnapshot` through a
   mobile projection layer instead of sharing macOS multi-window state. This
   keeps the mobile app free to optimize for fast capture and a glanceable
@@ -166,11 +167,12 @@ desktop abstraction. The default macOS scene model is:
   review through `LorvexCoreServicing`, tracks loading and capture
   state, and routes mobile capture through the same core `createTask` operation
   used by macOS and MCP paths. It also owns selected tab and navigation-path
-  state, while `MobileDeepLinkRoute` maps the shared `lorvex://` URL contract
-  into mobile tabs and task detail routes for widgets, Shortcuts, Spotlight,
-  and notifications. It parses shared workspace destinations through the
-  `SidebarSelection` contract in `LorvexCore`, then applies mobile-specific tab
-  mapping. `MobileIntentHandoff` consumes the shared `LorvexIntentHandoffStore`
+  state. Every external entry point (widgets, Shortcuts, Spotlight, Handoff,
+  notifications) parses through the shared `LorvexDeepLinkRoute` and lands on
+  a `MobileNavigationTarget`: one of the four tabs plus the screens to push on
+  its stack. Habits and Memory are workspaces on the Tasks stack rather than
+  tabs, so the tab bar never selects a tab it does not show.
+  `MobileIntentHandoff` consumes the shared `LorvexIntentHandoffStore`
   from `LorvexCore`, giving system intents a stable route into macOS and mobile
   navigation state without duplicating key ownership. The mobile app entry
   links `LorvexSystemIntents`, so mobile Shortcuts expose the same capture,
@@ -212,10 +214,11 @@ desktop abstraction. The default macOS scene model is:
   `dist/lorvex-apple-platform-manifest.json` so the mobile, watchOS,
   and Widget target metadata remains a machine-checked Apple platform contract.
 
-The root workspace uses native split navigation, system sidebars, toolbars,
-search, command menus, and semantic system materials. It honors the system
-light/dark appearance and follows the user's Apple accent color through native
-SwiftUI `.tint`.
+The macOS root workspace uses native split navigation, a system sidebar,
+toolbars, search, command menus, and semantic system materials; the
+iOS/iPadOS root is the system tab bar with one navigation stack per tab. Both
+honor the system light/dark appearance and follow the user's Apple accent color
+through native SwiftUI `.tint`.
 
 ### CloudSync ownership
 
@@ -375,11 +378,10 @@ can deep-link into task detail without duplicating navigation state.
 Mobile navigation starts with value routes:
 
 ```text
-LorvexMobileRootView
-  -> MobileChromeStyle
-  -> compact: TabView
-  -> regular: NavigationSplitView
-  -> Today/Capture/Review NavigationStacks
+LorvexMobileStoreRootView
+  -> TabView: Today, Calendar, Tasks, Review (+ capture button)
+  -> one NavigationStack per tab, a path of MobileRoute values
+  -> regular width: a second pane inside the tab
   -> MobileStore
   -> LorvexCore snapshots
 ```

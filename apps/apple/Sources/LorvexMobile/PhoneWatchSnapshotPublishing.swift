@@ -75,7 +75,9 @@ struct WatchReplicaSnapshotProjector: Sendable {
         // truncating it into a different symbol name.
         icon: habit.icon.flatMap { $0.utf8.count <= 128 ? $0 : nil },
         completedToday: habit.completedToday,
-        target: habit.target)
+        target: habit.target,
+        // A color is a `#RRGGBB` token; anything longer is not one.
+        color: habit.color.flatMap { $0.utf8.count <= 16 ? $0 : nil })
     }
     var taskCount = tasks.count
     var habitCount = habits.count

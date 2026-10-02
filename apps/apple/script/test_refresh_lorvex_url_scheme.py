@@ -30,15 +30,22 @@ class RefreshLorvexURLSchemeTests(unittest.TestCase):
         self.assertIn('"/Applications/$APP_NAME.app"', source)
         self.assertIn("Refreshing $URL_SCHEME:// LaunchServices registration", source)
 
-    def test_build_and_run_refreshes_launchservices_after_signing(self) -> None:
+    def test_build_and_run_registers_only_the_launching_modes_after_signing(self) -> None:
         source = BUILD_AND_RUN.read_text()
         codesign_verify = source.index('codesign --verify --deep --strict "$APP_BUNDLE"')
-        refresh_call = source.index("\nrefresh_launchservices_registration\n")
         case_statement = source.index('case "$MODE" in')
+        modes = source[case_statement:]
 
-        self.assertLess(codesign_verify, refresh_call)
-        self.assertLess(refresh_call, case_statement)
+        self.assertLess(codesign_verify, case_statement)
         self.assertIn('"$LSREGISTER" -f "$APP_BUNDLE"', source)
+        # A bundle staged for packaging is never registered: it would take
+        # this Mac's lorvex:// links and widget taps from the installed app.
+        stage_mode = modes[modes.index("--stage-only|stage)") : modes.index("run)")]
+        self.assertNotIn("refresh_launchservices_registration", stage_mode)
+        for mode in ("run)", "--debug|debug)", "--logs|logs)", "--telemetry|telemetry)", "--verify|verify)"):
+            branch = modes[modes.index(mode) :]
+            branch = branch[: branch.index(";;")]
+            self.assertIn("refresh_launchservices_registration", branch, mode)
 
 
 if __name__ == "__main__":

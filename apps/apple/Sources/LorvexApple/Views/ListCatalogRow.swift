@@ -236,22 +236,23 @@ struct ListCatalogRow: View {
       return String(localized: "list_row.no_tasks", defaultValue: "No tasks", table: "Localizable", bundle: LorvexL10n.bundle)
     }
     return String(
-      format: String(localized: "list_row.counts", defaultValue: "%lld open · %lld total", table: "Localizable", bundle: LorvexL10n.bundle),
-      list.openCount,
-      list.totalCount
-    )
+      localized: "list_row.counts",
+      defaultValue: "\(list.openCount) open · \(list.totalCount) total",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
+  /// What VoiceOver reads for the card: "Work: 4 open tasks, 10 total", or
+  /// "Work: no tasks".
   private var accessibilityLabelText: String {
     guard list.totalCount > 0 else {
-      return "\(list.displayName), \(countSummaryText)"
+      return String(
+        localized: "a11y.list.empty", defaultValue: "\(list.displayName): no tasks",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     }
-    return listAccessibilityLabel(
-      list,
-      format: String(
-        localized: "a11y.list.format", defaultValue: "%1$@: %2$lld open tasks, %3$lld total",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle))
+    return String(
+      localized: "a11y.list.format",
+      defaultValue: "\(list.displayName): \(list.openCount) open tasks, \(list.totalCount) total",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   private var deleteDialogTitle: String {
@@ -278,7 +279,7 @@ struct ListCatalogRow: View {
     }
     return String(
       localized: "list_row.archive.nonempty_count_message",
-      defaultValue: "\(list.totalCount) tasks remain in “\(list.displayName)”. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
+      defaultValue: "“\(list.displayName)” can’t be deleted while it still holds \(list.totalCount) tasks. Archive it instead to retire it while keeping its tasks and history. You can unarchive it later.",
       table: "Localizable",
       bundle: LorvexL10n.bundle)
   }

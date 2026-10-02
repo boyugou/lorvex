@@ -43,11 +43,15 @@ public enum LifecycleWriteStatus {
       args.append(version)
     }
 
-    if newStatus.isTerminal {
+    // The rollover columns change only when the status crosses the terminal
+    // boundary: entering it starts a fresh rollover decision, leaving it
+    // revokes the old one. Rewriting a terminal status keeps the decision and
+    // its authorized successor.
+    if newStatus.isTerminal && !oldStatus.isTerminal {
       setClauses.append(
         "recurrence_rollover_state = CASE WHEN recurrence IS NULL THEN 'none' ELSE 'ended' END")
       setClauses.append("recurrence_successor_id = NULL")
-    } else if oldStatus.isTerminal {
+    } else if oldStatus.isTerminal && !newStatus.isTerminal {
       setClauses.append(
         "recurrence_rollover_state = CASE "
           + "WHEN recurrence_rollover_state = 'authorized' THEN 'revoked' "

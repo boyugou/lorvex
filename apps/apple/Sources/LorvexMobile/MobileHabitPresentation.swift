@@ -21,9 +21,8 @@ extension LorvexHabit {
   /// Localized "N/M today" progress caption.
   var todayProgressText: String {
     String(
-      format: String(localized: "habits.progress_today", defaultValue: "%lld/%lld today", table: "Localizable", bundle: MobileL10n.bundle),
-      completionsToday,
-      targetCount)
+      localized: "habits.progress_today", defaultValue: "\(completionsToday)/\(targetCount) today",
+      table: "Localizable", bundle: MobileL10n.bundle)
   }
 
   /// The habit's tile / ring / icon tint: its identity color
@@ -35,7 +34,7 @@ extension LorvexHabit {
   /// The habit's tile / ring symbol: its stored icon when that names a real SF
   /// Symbol, otherwise "repeat".
   var tileSymbol: String {
-    MobileIconTile.symbol(for: icon, fallback: "repeat")
+    LorvexSymbol.name(for: icon, fallback: "repeat")
   }
 
   /// Whether the milestone strip has a real reading to show — a nonzero

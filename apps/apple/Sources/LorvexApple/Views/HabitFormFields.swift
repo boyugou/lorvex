@@ -1,9 +1,9 @@
 import LorvexCore
 import SwiftUI
 
-/// The top of the create and edit habit sheets: the habit's icon tile and
-/// name (``CreationSheetHeader``), with the encouragement typed on the line
-/// under the name.
+/// The top of the New Habit sheet: the habit's icon tile and name
+/// (``CreationSheetHeader``), with the encouragement typed on the line under
+/// the name.
 struct HabitSheetHeader: View {
   @Bindable var store: AppStore
   let idPrefix: String
@@ -41,9 +41,9 @@ struct HabitSheetHeader: View {
   }
 }
 
-/// The rhythm of a habit as grouped form sections, shared by the create and
-/// edit habit sheets: the frequency, the check-ins that complete a day (for
-/// the cadences that count per day), and the optional milestone to celebrate.
+/// The rhythm of a new habit as grouped form sections in the New Habit sheet:
+/// the frequency, the check-ins that complete a day (for the cadences that
+/// count per day), and the optional milestone to celebrate.
 struct HabitFormSections: View {
   @Bindable var store: AppStore
   let idPrefix: String
@@ -93,7 +93,11 @@ struct HabitFormSections: View {
         )
         .multilineTextAlignment(.trailing)
         .textFieldStyle(.plain)
-        .frame(maxWidth: 80)
+        .lineLimit(1)
+        // An empty field's ideal width is a few points, so the row would wrap
+        // its placeholder ("None", "कोई नहीं") into a column; the minimum keeps
+        // the placeholder on one line in every language.
+        .frame(minWidth: 80, maxWidth: 160)
         .accessibilityLabel(String(
           localized: "habits.sheet.field.milestone_goal", defaultValue: "Celebrate after",
           table: "Localizable", bundle: LorvexL10n.bundle))
@@ -112,9 +116,10 @@ struct HabitFormSections: View {
       set: { store.draftHabitTargetCountText = "\($0)" })
   }
 
-  /// A streak length for the streak cadences (daily, weekly days), a
-  /// completion count for the cumulative ones (times a week, monthly). Both
-  /// note the habit keeps going: a milestone is a celebration, not an end.
+  /// A streak length for the streak cadences, in days for a daily habit and
+  /// in weeks for one on chosen weekdays (its streak counts weeks), and a
+  /// completion count for the cumulative ones (times a week, monthly). Each
+  /// notes the habit keeps going: a milestone is a celebration, not an end.
   private var milestoneGoalHint: String {
     switch store.draftHabitCadenceMode {
     case .timesPerWeek, .monthly:
@@ -123,7 +128,13 @@ struct HabitFormSections: View {
         defaultValue: "Total completions, like 50. The habit keeps going.",
         table: "Localizable",
         bundle: LorvexL10n.bundle)
-    default:
+    case .weekly:
+      return String(
+        localized: "habits.sheet.field.milestone_goal_hint_streak_weeks",
+        defaultValue: "Streak length in weeks, like 8. The habit keeps going.",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle)
+    case .daily:
       return String(
         localized: "habits.sheet.field.milestone_goal_hint_streak",
         defaultValue: "Streak length in days, like 30. The habit keeps going.",

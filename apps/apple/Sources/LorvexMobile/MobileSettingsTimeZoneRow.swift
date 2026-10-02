@@ -2,8 +2,9 @@ import LorvexCore
 import SwiftUI
 
 /// The Time Zone rows in Settings: the synced zone every device counts
-/// Lorvex's days in, shown as its city and current offset ("Los Angeles ·
-/// GMT−7") on a row that pushes a searchable list of zones. When this device
+/// Lorvex's days in, shown as its city and current offset in the user's
+/// language ("Los Angeles · GMT-7", "洛杉矶 · GMT-7") on a row that pushes a
+/// searchable list of zones. When this device
 /// is in another zone, a second row offers to switch to it in one tap, which
 /// is what a move or a long trip needs; a short trip can keep the home zone.
 struct MobileSettingsTimeZoneRow: View {

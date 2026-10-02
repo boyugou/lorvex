@@ -92,8 +92,8 @@ private func makeTodaySnapshotWith1000Tasks() -> TodaySnapshot {
 
 // MARK: - Benchmarks
 
-@Test("AppStore.refresh reuses one all-task corpus for Apple system surfaces")
-func appStoreRefreshReusesSingleAppleSurfaceTaskCorpus() throws {
+@Test("AppStore.refresh runs the Apple system surfaces in parallel, each from its own read")
+func appStoreRefreshRunsAppleSystemSurfacesInParallel() throws {
   let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
@@ -103,16 +103,14 @@ func appStoreRefreshReusesSingleAppleSurfaceTaskCorpus() throws {
     encoding: .utf8
   )
 
-  // Content indexing is independent of the bulk task read, so it runs regardless;
-  // the three task-derived surfaces share one appleSurfaceTasks() corpus and are
-  // skipped together when that read fails (keeping the prior index/reminders).
+  // Each surface reads its own source (a capped shared page would hide every
+  // task ranked past the cap), so they run concurrently and a failed read
+  // leaves only its own surface as it was.
   #expect(source.contains("async let contentIndex: Void = reindexContentForSpotlight()"))
-  #expect(source.contains("if let surfaceTasks = await appleSurfaceTasks() {"))
-  #expect(source.contains("async let taskIndex: Void = reindexTasksForSpotlight(tasks: surfaceTasks)"))
-  #expect(source.contains("async let reminderSchedule: Void = rescheduleReminders(tasks: surfaceTasks)"))
-  #expect(source.contains("async let badge: Void = updateBadge(tasks: surfaceTasks)"))
-  #expect(source.contains("_ = await (taskIndex, reminderSchedule, badge)"))
-  #expect(source.contains("await contentIndex"))
+  #expect(source.contains("async let taskIndex: Void = reindexTasksForSpotlight()"))
+  #expect(source.contains("async let reminderSchedule: Void = rescheduleReminders()"))
+  #expect(source.contains("async let badge: Void = updateBadge()"))
+  #expect(source.contains("_ = await (contentIndex, taskIndex, reminderSchedule, badge)"))
 }
 
 @Test("AppStore.refresh parallelizes independent core loads")

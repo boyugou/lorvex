@@ -1,13 +1,6 @@
 import LorvexCore
 import SwiftUI
 
-private enum TaskDetailInspectorMetrics {
-  static let maxContentWidth: CGFloat = 500
-  static let horizontalPadding: CGFloat = LorvexDesign.Spacing.m
-  static let topPadding: CGFloat = LorvexDesign.Spacing.m
-  static let bottomPadding: CGFloat = LorvexDesign.Spacing.xl
-}
-
 struct TaskDetailView: View {
   @Bindable var store: AppStore
   @Environment(\.undoManager) var undoManager
@@ -19,7 +12,7 @@ struct TaskDetailView: View {
     Group {
       if let task = store.selectedTask {
         ScrollView {
-          TaskDetailInspectorColumn {
+          InspectorColumn {
             VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
               headerSection(task: task)
               headerActions(task: task)
@@ -33,7 +26,7 @@ struct TaskDetailView: View {
         .frame(minWidth: 0, maxWidth: .infinity)
         .background(.quaternary.opacity(0.035))
       } else {
-        TaskDetailInspectorColumn {
+        InspectorColumn {
           noTaskSelectedEmptyState
         }
         .background(.quaternary.opacity(0.035))
@@ -87,12 +80,7 @@ struct TaskDetailView: View {
     }
     .userActivity(LorvexActivityType.openTask, isActive: store.selectedTaskID != nil) { activity in
       guard let taskID = store.selectedTaskID else { return }
-      let built = makeOpenTaskActivity(taskID: taskID, title: store.selectedTask?.title)
-      activity.title = built.title
-      activity.isEligibleForHandoff = built.isEligibleForHandoff
-      activity.isEligibleForSearch = built.isEligibleForSearch
-      activity.requiredUserInfoKeys = built.requiredUserInfoKeys
-      activity.addUserInfoEntries(from: built.userInfo ?? [:])
+      configureOpenTaskActivity(activity, taskID: taskID, title: store.selectedTask?.title)
     }
   }
 
@@ -131,19 +119,20 @@ struct TaskDetailView: View {
   // MARK: - Properties
 
   /// The task's set fields as rows, with the fields it does not carry yet as
-  /// dashed additions beneath. Priority and repeat open native menus; every
-  /// other field opens its editor in a popover.
+  /// dashed additions beneath. List, priority, and repeat open native menus;
+  /// every other field opens its editor in a popover.
   func properties(task: LorvexTask) -> some View {
     let content = propertyContent(task: task)
-    return TaskDetailProperties(
-      rows: content.rows, additions: content.additions, menuFieldIDs: ["priority", "repeat"]
+    return InspectorProperties(
+      rows: content.rows, additions: content.additions, idPrefix: "task.detail",
+      menuFieldIDs: ["list", "priority", "repeat"]
     ) { id in
       wordEditor(id, task: task)
     } menuItems: { id, openEditor in
-      if id == "priority" {
-        priorityMenuItems(task: task)
-      } else {
-        repeatMenuItems(openEditor: openEditor)
+      switch id {
+      case "list": listMenuItems(task: task)
+      case "priority": priorityMenuItems(task: task)
+      default: repeatMenuItems(openEditor: openEditor)
       }
     }
   }
@@ -152,10 +141,10 @@ struct TaskDetailView: View {
   /// how long, the deadline, where it belongs and how urgent it is, then how
   /// it repeats, reminds, is tagged, waits, and hides. An unset field becomes
   /// an addition instead, in the same order.
-  func propertyContent(task: LorvexTask) -> (rows: [TaskDetailPropertyRow], additions: [TaskDetailPropertyAddition]) {
+  func propertyContent(task: LorvexTask) -> (rows: [InspectorPropertyRow], additions: [InspectorPropertyAddition]) {
     typealias Copy = TaskDetailSentenceCopy
-    var rows: [TaskDetailPropertyRow] = []
-    var additions: [TaskDetailPropertyAddition] = []
+    var rows: [InspectorPropertyRow] = []
+    var additions: [InspectorPropertyAddition] = []
     func field(_ id: String, _ systemImage: String, _ label: String, _ value: String?, tint: Color? = nil) {
       if let value {
         rows.append(.init(id: id, systemImage: systemImage, label: label, value: value, tint: tint))
@@ -166,25 +155,26 @@ struct TaskDetailView: View {
     let priority = displayPriority(for: task)
     field("doOn", "calendar", Copy.addWhen, store.taskDetailDoOnSummary)
     field("estimate", "hourglass", Copy.addLength, store.taskDetailEstimateSummary)
-    field("due", "flag", Copy.addDue, store.taskDetailDueSummary.map(Self.sentenceCased), tint: dueTint)
+    field("due", "flag", Copy.addDue, store.taskDetailDueSummary.map { Self.sentenceCased($0) }, tint: dueTint)
     field("list", "list.bullet", Copy.addList, store.taskDetailListSummary(task: task))
     field(
       "priority", "exclamationmark.circle", Copy.addPriority,
-      priority == .p2 ? nil : Copy.priorityValue(priority), tint: priorityTint(priority))
+      priority == .p2 ? nil : priority.localizedName, tint: priorityTint(priority))
     field("repeat", "repeat", Copy.addRepeat, store.taskDetailRepeatSummary)
     field("reminders", "bell", Copy.addReminder, store.taskDetailRemindersSummary(task: task))
     field("tags", "tag", Copy.addTag, store.taskDetailTagsSummary)
     field("dependencies", "arrow.triangle.branch", Copy.addWaitsOn, store.taskDetailDependencySummary)
-    field("hideUntil", "eye.slash", Copy.addHideUntil, store.taskDetailHideUntilSummary.map(Self.sentenceCased))
+    field("hideUntil", "eye.slash", Copy.addHideUntil, store.taskDetailHideUntilSummary.map { Self.sentenceCased($0) })
     return (rows, additions)
   }
 
   /// A value phrase written to follow other words ("the same day") as it
-  /// reads standing alone in a row ("The same day"). Scripts without case are
+  /// reads standing alone in a row ("The same day"), capitalized by the rules of
+  /// the app's language (Turkish "i" becomes "İ"). Scripts without case are
   /// unchanged.
-  static func sentenceCased(_ phrase: String) -> String {
+  static func sentenceCased(_ phrase: String, locale: Locale = LorvexClockFormat.displayLocale) -> String {
     guard let first = phrase.first else { return phrase }
-    return first.uppercased() + phrase.dropFirst()
+    return String(first).uppercased(with: locale) + phrase.dropFirst()
   }
 
   /// Red once the deadline has passed, orange when it is today or tomorrow.
@@ -222,7 +212,7 @@ struct TaskDetailView: View {
         onClear: { store.setTaskDetailHasPlannedDate(false) },
         time: TaskDetailDayPicker.TimeField(
           value: store.taskDetailPlannedTime,
-          defaultLength: Int(store.taskDetailEstimatedMinutesText.trimmingCharacters(in: .whitespaces)),
+          defaultLength: LorvexNumberInput.integer(from: store.taskDetailEstimatedMinutesText),
           nowMinutes: store.nowMinutesInProductDay,
           isToday: lorvexDayOffset(
             from: store.logicalTodayDateString, to: store.taskDetailPlannedDatePickerDate) == 0,
@@ -259,8 +249,31 @@ struct TaskDetailView: View {
     case "repeat": recurrenceContent
     case "reminders": remindersContent(task: task)
     case "dependencies": dependenciesContent(task: task)
-    default: organizationContent(task: task)
+    case "tags":
+      TaskDetailTagsPicker(tagsText: taskTagsBinding(for: task), loadKnownTags: { await store.loadKnownTags() })
+    default: EmptyView()
     }
+  }
+
+  /// The lists the task can move to, in the sidebar's order with the Inbox
+  /// first, each with its icon; the task's list is checked. Choosing one moves
+  /// the task at once.
+  @ViewBuilder
+  private func listMenuItems(task: LorvexTask) -> some View {
+    let lists = store.orderedLists.filter { $0.archivedAt == nil }
+    Picker(
+      selection: Binding(
+        get: { task.listID ?? "" },
+        set: { id in Task { await store.moveSelectedTaskToList(id) } })
+    ) {
+      ForEach(lists.filter(\.isInbox) + lists.filter { !$0.isInbox }) { list in
+        LorvexListMenuLabel(list: list).tag(list.id)
+      }
+    } label: {
+      Text(TaskDetailSentenceCopy.addList)
+    }
+    .pickerStyle(.inline)
+    .accessibilityIdentifier("task.detail.listControl")
   }
 
   /// The priority choices, the current one checked.
@@ -268,7 +281,7 @@ struct TaskDetailView: View {
   private func priorityMenuItems(task: LorvexTask) -> some View {
     Picker(selection: taskPriorityBinding(for: task)) {
       ForEach(LorvexTask.Priority.allCases, id: \.self) { priority in
-        Text(TaskDetailSentenceCopy.priorityValue(priority)).tag(priority)
+        Text(priority.localizedName).tag(priority)
       }
     } label: {
       Text(TaskDetailSentenceCopy.addPriority)
@@ -301,18 +314,5 @@ struct TaskDetailView: View {
     Button(String(localized: "recurrence.preset.custom", defaultValue: "Custom…", table: "Localizable", bundle: LorvexL10n.bundle)) {
       openEditor()
     }
-  }
-}
-
-private struct TaskDetailInspectorColumn<Content: View>: View {
-  @ViewBuilder let content: () -> Content
-
-  var body: some View {
-    content()
-      .frame(maxWidth: TaskDetailInspectorMetrics.maxContentWidth, alignment: .leading)
-      .frame(maxWidth: .infinity, alignment: .topLeading)
-      .padding(.horizontal, TaskDetailInspectorMetrics.horizontalPadding)
-      .padding(.top, TaskDetailInspectorMetrics.topPadding)
-      .padding(.bottom, TaskDetailInspectorMetrics.bottomPadding)
   }
 }

@@ -63,7 +63,7 @@ public enum CarPlayRowCopy {
       if let minutes = row.estimatedMinutes, minutes > 0 {
         return String(
           localized: "carplay.detail.started_about",
-          defaultValue: "Started · about \(minutes) min",
+          defaultValue: "Started · about \(LorvexDurationFormat.minutes(minutes))",
           table: "Localizable", bundle: CarPlayL10n.bundle)
       }
       return String(
@@ -72,7 +72,8 @@ public enum CarPlayRowCopy {
     }
     if let minutes = row.estimatedMinutes, minutes > 0 {
       return String(
-        localized: "carplay.detail.about", defaultValue: "About \(minutes) min",
+        localized: "carplay.detail.about",
+        defaultValue: "About \(LorvexDurationFormat.minutes(minutes))",
         table: "Localizable", bundle: CarPlayL10n.bundle)
     }
     return nil

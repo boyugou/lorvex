@@ -227,7 +227,6 @@ This is a core differentiator. On capable desktop runtimes, the MCP server gives
 But the app is not just a passive persistence viewer. The human needs tools that the AI cannot provide:
 
 - **Today** — the assistant-curated, human-adjustable day list. The assistant decides which tasks are on today (and optionally when) and writes a short briefing, but the human works the list in their own order.
-- **Eisenhower Matrix** — spatial reasoning about urgency vs. importance. Urgency is determined by deadline proximity (due within 3 days = urgent). The human benefits from seeing the quadrant layout.
 - **Calendar Grid** — temporal visualization that gives a sense of density and rhythm. The AI schedules, but the human needs to see the shape of their week.
 - **Daily Review** — reflective writing about mood, energy, wins, and blockers. The AI can analyze patterns, but the human does the reflecting.
 

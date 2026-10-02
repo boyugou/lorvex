@@ -52,7 +52,7 @@ struct MobileStoreDataImportSection: View {
       }
 
       if let summary {
-        ImportSummaryView(summary, text: MobileImportSummaryText.provider)
+        ImportSummaryView(summary)
       }
     } header: {
       Text(
@@ -223,7 +223,7 @@ private struct MobileImportPreviewSheet: View {
           } else {
             ForEach(supported) { entry in
               HStack {
-                Text(entry.category.mobileLocalizedDisplayLabel)
+                Text(entry.category.localizedDisplayName)
                 Spacer()
                 Text("\(entry.recordCount)")
                   .foregroundStyle(.secondary)
@@ -242,7 +242,7 @@ private struct MobileImportPreviewSheet: View {
           ) {
             ForEach(deferred) { entry in
               HStack {
-                Text(entry.category.mobileLocalizedDisplayLabel)
+                Text(entry.category.localizedDisplayName)
                 Spacer()
                 Text("\(entry.recordCount)")
                   .foregroundStyle(.secondary)

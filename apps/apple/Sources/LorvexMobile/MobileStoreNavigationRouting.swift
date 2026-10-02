@@ -18,8 +18,7 @@ extension MobileStore {
   /// (custom-scheme links, widgets, notification taps that ask the system to
   /// open a URL). Parses through the shared `LorvexDeepLinkRoute` resolver —
   /// the same parser Handoff and Spotlight use — so a task/list/habit/review
-  /// URL reaches ``navigate(to:)`` regardless of which surface delivered it,
-  /// rather than through the narrower tab/task-only `MobileDeepLinkRoute`.
+  /// URL reaches ``navigate(to:)`` regardless of which surface delivered it.
   public func openDeepLink(_ url: URL) {
     guard let route = LorvexDeepLinkRoute(url: url) else { return }
     navigate(to: route)
@@ -40,41 +39,39 @@ extension MobileStore {
     }
   }
 
-  public func openDeepLinkRoute(_ route: MobileDeepLinkRoute) {
-    openNavigationTarget(route.navigationTarget)
-  }
-
+  /// Lands on `target`: selects its tab and replaces every tab's stack, the
+  /// selected tab's with the target's screens and the others with their roots,
+  /// so a jump (deep link, Handoff, intent) never surfaces a stale pushed
+  /// screen. A task or habit on the path also becomes the selection, which a
+  /// regular-width workspace shows in its detail pane.
   public func openNavigationTarget(_ target: MobileNavigationTarget) {
     selectedTab = target.selectedTab
-    routePath = target.route.map { [$0] } ?? []
-    tasksRoutePath = target.tasksRoute.map { [$0] } ?? []
-    habitsRoutePath = target.habitsRoute.map { [$0] } ?? []
-    // Calendar carries no target-route field. Every jump through this entry
-    // point (deep link / Handoff / intent) clears it so it lands on a clean
-    // root rather than a stale pushed detail.
-    calendarRoutePath = []
-    if let route = target.route, case .task(let id) = route {
-      selectedTaskID = id
-    }
-    if let habitsRoute = target.habitsRoute, case .habit(let id) = habitsRoute {
-      selectedHabitID = id
+    routePath = target.selectedTab == .today ? target.path : []
+    calendarRoutePath = target.selectedTab == .calendar ? target.path : []
+    tasksRoutePath = target.selectedTab == .tasks ? target.path : []
+    reviewRoutePath = target.selectedTab == .review ? target.path : []
+    for route in target.path {
+      switch route {
+      case .task(let id): selectedTaskID = id
+      case .habit(let id): selectedHabitID = id
+      default: break
+      }
     }
   }
 
-  /// Opens a destination. Primary-tab destinations select their tab (Lists is
-  /// the Tasks home itself). Memory and Settings are secondary workspaces
-  /// pushed onto their hosting tab's stack (Memory on Tasks, Settings on Today).
+  /// Opens a destination. Tab destinations select their tab (Lists is the
+  /// Tasks home itself). Habits, Memory, and Settings are secondary workspaces
+  /// pushed onto their hosting tab's stack (Habits and Memory on Tasks, where
+  /// the Tasks home's rows lead; Settings on Today).
   public func openWorkspaceDestination(_ destination: MobileDestination) {
     switch destination {
     case .tasks, .lists:
       openPrimaryShortcutTab(.tasks)
     case .calendar:
       openPrimaryShortcutTab(.calendar)
-    case .habits:
-      openPrimaryShortcutTab(.habits)
     case .review:
       openPrimaryShortcutTab(.review)
-    case .memory:
+    case .habits, .memory:
       openSecondaryWorkspace(destination, hostTab: .tasks)
     case .settings:
       openSecondaryWorkspace(destination, hostTab: .today)
@@ -88,7 +85,6 @@ extension MobileStore {
     case .today: routePath = [route]
     case .tasks: tasksRoutePath = [route]
     case .calendar: calendarRoutePath = [route]
-    case .habits: habitsRoutePath = [route]
     case .review: reviewRoutePath = [route]
     }
   }
@@ -102,9 +98,6 @@ extension MobileStore {
       tasksRoutePath.append(.task(id))
     case .calendar:
       calendarRoutePath.append(.task(id))
-    case .habits:
-      // No programmatic task-open caller on Habits; selection above is enough.
-      break
     case .review:
       reviewRoutePath.append(.task(id))
     }
@@ -119,7 +112,7 @@ extension MobileStore {
       routePath.append(.tasksScope(.list(id)))
     case .tasks:
       tasksRoutePath.append(.tasksScope(.list(id)))
-    case .calendar, .habits, .review:
+    case .calendar, .review:
       break
     }
   }

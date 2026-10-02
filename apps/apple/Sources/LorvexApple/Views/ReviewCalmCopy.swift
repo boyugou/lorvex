@@ -14,14 +14,10 @@ enum ReviewCalmCopy {
     switch part {
     case .quiet:
       return String(localized: "review.calm.quiet", defaultValue: "A quiet day.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .finished(1):
-      return String(localized: "review.calm.finished_one", defaultValue: "You finished 1 task.", table: "Localizable", bundle: LorvexL10n.bundle)
     case .finished(let count):
       return String(localized: "review.calm.finished", defaultValue: "You finished \(count) tasks.", table: "Localizable", bundle: LorvexL10n.bundle)
     case .nothingFinished:
       return String(localized: "review.calm.nothing_finished", defaultValue: "Nothing was finished.", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .stillDue(1):
-      return String(localized: "review.calm.still_due_one", defaultValue: "1 due task is still open.", table: "Localizable", bundle: LorvexL10n.bundle)
     case .stillDue(let count):
       return String(localized: "review.calm.still_due", defaultValue: "\(count) due tasks are still open.", table: "Localizable", bundle: LorvexL10n.bundle)
     case .habitsAll:
@@ -76,7 +72,9 @@ enum ReviewCalmCopy {
   static var shapeLabel: String { String(localized: "review.calm.week_shape", defaultValue: "Finished each day", table: "Localizable", bundle: LorvexL10n.bundle) }
   /// "Monday, 2" for the week shape's VoiceOver sentence.
   static func shapeDay(_ weekday: String, _ count: Int) -> String {
-    String(format: String(localized: "review.calm.week_shape.day", defaultValue: "%@, %lld", table: "Localizable", bundle: LorvexL10n.bundle), weekday, count)
+    String(
+      localized: "review.calm.week_shape.day", defaultValue: "\(weekday), \(count)",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
   static var tomorrowEmpty: String { String(localized: "review.calm.tomorrow.empty", defaultValue: "Nothing planned yet.", table: "Localizable", bundle: LorvexL10n.bundle) }
   /// The still-open section's action over `count` tasks to move.

@@ -3,10 +3,10 @@ import Foundation
 extension LorvexDataImporter {
   static func applyLists(
     _ lists: [ExportList], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     let importer = core as? any LorvexNativeImportServicing
     for list in lists {
       do {
@@ -41,8 +41,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .lists, recordRef: list.id, message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .lists, record: .named(id: list.id, name: list.name),
+            outcome: .notImported, detail: error.localizedDescription))
       }
     }
     return (
@@ -52,12 +53,12 @@ extension LorvexDataImporter {
 
   static func applyTags(
     _ tags: [ExportTag], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     guard let importer = core as? any LorvexNativeImportServicing else {
       let errors = tags.map {
-        LorvexImportError(
-          category: .tags, recordRef: $0.id,
-          message: "Tag import is unsupported by this backend.")
+        LorvexImportIssue(
+          category: .tags, record: .named(id: $0.id, name: $0.displayName),
+          outcome: .notImported, detail: "Tag import is unsupported by this backend.")
       }
       return (
         LorvexImportCategoryResult(category: .tags, imported: 0, skipped: tags.count),
@@ -66,7 +67,7 @@ extension LorvexDataImporter {
     }
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     for tag in tags {
       do {
         // Atomic non-destructive restore, resolving by id OR name the way the
@@ -79,8 +80,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .tags, recordRef: tag.id, message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .tags, record: .named(id: tag.id, name: tag.displayName),
+            outcome: .notImported, detail: error.localizedDescription))
       }
     }
     return (
@@ -90,10 +92,10 @@ extension LorvexDataImporter {
 
   static func applyHabits(
     _ habits: [ExportHabit], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     // Restore each habit record atomically when the backend supports it: a
     // presence + tombstone guard, then upsert + completions + reminder policies,
     // all in one transaction. So the restore never overwrites a habit a concurrent
@@ -116,8 +118,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .habits, recordRef: habit.id, message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .habits, record: .named(id: habit.id, name: habit.name),
+            outcome: .notImported, detail: error.localizedDescription))
       }
     }
     return (
@@ -174,7 +177,7 @@ extension LorvexDataImporter {
   static func applyCalendarBundle(
     cutovers: [ExportCalendarSeriesCutover], events: [ExportCalendarEvent],
     using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     guard let importer = core as? any LorvexNativeImportServicing else {
       return (
         LorvexImportCategoryResult(
@@ -182,9 +185,9 @@ extension LorvexDataImporter {
         cutovers.isEmpty && events.isEmpty
           ? []
           : [
-            LorvexImportError(
-              category: .calendarEvents, recordRef: "calendar_bundle",
-              message: "Calendar event restore is not supported by this backend.")
+            LorvexImportIssue(
+              category: .calendarEvents, record: .wholeCategory, outcome: .notImported,
+              detail: "Calendar event restore is not supported by this backend.")
           ])
     }
     do {
@@ -200,9 +203,9 @@ extension LorvexDataImporter {
         LorvexImportCategoryResult(
           category: .calendarEvents, imported: 0, skipped: events.count),
         [
-          LorvexImportError(
-            category: .calendarEvents, recordRef: "calendar_bundle",
-            message: error.localizedDescription)
+          LorvexImportIssue(
+            category: .calendarEvents, record: .wholeCategory, outcome: .notImported,
+            detail: error.localizedDescription)
         ])
     }
   }

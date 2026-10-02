@@ -23,28 +23,13 @@ struct AppleSurfaceDiagnostics: Equatable, Sendable {
     if let errorMessage = spotlightTaskIndexErrorMessage ?? spotlightContentIndexErrorMessage {
       return Self.failedStatus(errorMessage)
     }
-    let taskCount = spotlightIndexedTaskCount
-    let taskLabel = String(
-      localized: "settings.diagnostics.status.spotlight_task_count",
-      defaultValue: taskCount == 1 ? "\(taskCount) task" : "\(taskCount) tasks",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
-    let eventCount = spotlightIndexedCalendarEventCount
-    let eventLabel = String(
-      localized: "settings.diagnostics.status.spotlight_event_count",
-      defaultValue: eventCount == 1
-        ? "\(eventCount) calendar event" : "\(eventCount) calendar events",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
+    let tasks = spotlightIndexedTaskCount
+    let events = spotlightIndexedCalendarEventCount
     return String(
-      format: String(
-        localized: "settings.diagnostics.status.spotlight",
-        defaultValue: "%1$@, %2$@",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      taskLabel,
-      eventLabel
-    )
+      localized: "settings.diagnostics.status.spotlight",
+      defaultValue: "\(tasks) tasks, \(events) calendar events",
+      table: "Localizable",
+      bundle: LorvexL10n.bundle)
   }
 
   var reminderStatus: String {
@@ -84,7 +69,7 @@ struct AppleSurfaceDiagnostics: Equatable, Sendable {
   }
 
   var widgetStatus: String {
-    guard let widgetSnapshot else {
+    guard widgetSnapshot != nil else {
       return String(
         localized: "settings.diagnostics.status.widget_no_snapshot",
         defaultValue: "No snapshot published",

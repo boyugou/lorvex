@@ -86,12 +86,7 @@ struct ListDetailPane: View {
       isActive: store.selectedListDetail != nil
     ) { activity in
       guard let listID = store.selectedListDetail?.list.id else { return }
-      let built = makeOpenListActivity(listID: listID, title: store.selectedListDetail?.list.displayName)
-      activity.title = built.title
-      activity.isEligibleForHandoff = built.isEligibleForHandoff
-      activity.isEligibleForSearch = built.isEligibleForSearch
-      activity.requiredUserInfoKeys = built.requiredUserInfoKeys
-      activity.addUserInfoEntries(from: built.userInfo ?? [:])
+      configureOpenListActivity(activity, listID: listID, title: store.selectedListDetail?.list.displayName)
     }
   }
 
@@ -184,9 +179,9 @@ private struct ListDetailSelectionActionMenu: View {
     .help(selectionActionsLabel)
     .accessibilityLabel(
       String(
-        format: String(localized: "tasks.selection.count", defaultValue: "%lld selected", table: "Localizable", bundle: LorvexL10n.bundle),
-        store.selectedListTaskSelectionCount
-      )
+        localized: "tasks.selection.count",
+        defaultValue: "\(store.selectedListTaskSelectionCount) selected",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     )
     .accessibilityIdentifier("listDetail.batchTaskSelection")
   }

@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex 可以把你建立的時間區塊加入 Apple 行事曆。";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex 可以讀取事件詳細資料，以建立行程與助理的背景資訊。";

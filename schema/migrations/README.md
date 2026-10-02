@@ -55,8 +55,7 @@ captures its lock identity** for a public build. From then on, never edit,
 rename, renumber, or delete it. Shipped installs verify its recorded name and
 checksum on every open; mutating either locks users out of healthy data or
 erases trustworthy provenance. To change course, append a new migration that
-alters the schema further. Before the first public arm, the documented
-pre-launch re-seed workflow may still replace the unshipped baseline identity.
+alters the schema further.
 
 Migrations are **one-way**. There are no down migrations; a database whose
 recorded max version exceeds what a binary registers refuses to open
@@ -109,14 +108,9 @@ Enforcement (Apple-only):
 
 ## Launch regimes (`../migration_policy.json`)
 
-- **Pre-launch (`launched: false`, current)**: this directory holds **no**
-  migration files. The schema evolves by editing `../schema.sql` directly and
-  regenerating the lock (`apps/apple/script/verify_migration_ladder.py --seed`,
-  which rewrites this `checksums.lock` and the Apple embed byte-identically).
-  `verify_migration_ladder.py` rejects migration files while pre-launch.
-- **Post-launch (`launched: true`)**: `../schema.sql` and every released lock
-  entry are frozen forever. A schema change is expressed **only** as a new
-  migration:
+- **Post-launch (`launched: true`, current)**: `../schema.sql` and every
+  released lock entry are frozen forever. A schema change is expressed **only**
+  as a new migration:
   1. add `NNN_<name>.sql` here (`NNN` = current max + 1);
   2. append its `NNN` entry to `checksums.lock` (normalized SHA-256; never
      touch an existing entry);
@@ -124,4 +118,10 @@ Enforcement (Apple-only):
      (`apps/apple/Sources/LorvexCore/Resources/`);
   4. re-run the Apple test suite and the verifiers above.
 
-  Direct edits to `../schema.sql` are rejected by the armed verifiers.
+  Direct edits to `../schema.sql` are rejected by the armed verifiers, and
+  `verify_migration_ladder.py --seed` refuses to run.
+- **Pre-launch (`launched: false`)**: this directory holds **no**
+  migration files. The schema evolves by editing `../schema.sql` directly and
+  regenerating the lock (`apps/apple/script/verify_migration_ladder.py --seed`,
+  which rewrites this `checksums.lock` and the Apple embed byte-identically).
+  `verify_migration_ladder.py` rejects migration files while pre-launch.

@@ -11,6 +11,7 @@ struct MobileDependencyPicker: View {
   let onSelect: (LorvexTask) -> Void
 
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
   @State private var query = ""
   @State private var candidates: [LorvexTask] = []
   @State private var isSearching = false
@@ -54,15 +55,15 @@ struct MobileDependencyPicker: View {
               dismiss()
             } label: {
               VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
+                Text(userContent: task.title)
                   .font(LorvexDesign.Typography.primaryText)
                   .foregroundStyle(.primary)
-                if let facts = MobileDependencyFacts(task: task) {
+                if let facts = MobileDependencyFacts(task: task, timeZone: productTimeZone) {
                   facts
                 }
               }
             }
-            .accessibilityValue(MobileDependencyFacts.accessibilityValue(for: task))
+            .accessibilityValue(taskDependencyAccessibilityValue(task, timeZone: productTimeZone))
           }
         }
       }
@@ -95,16 +96,10 @@ struct MobileDependencyPicker: View {
         // provider swallows errors to `[]`, so without the guard whichever read
         // resolves last wins — an out-of-order result would show stale rows under
         // the newer query.
-        if !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-          try? await Task.sleep(for: .milliseconds(250))
-          if Task.isCancelled { return }
-        }
+        guard await LorvexSearchDebounce.shouldSearch(query) else { return }
         isSearching = true
         let results = await searchCandidates(query, excludedIDs)
-        if Task.isCancelled {
-          isSearching = false
-          return
-        }
+        guard !Task.isCancelled else { return }
         candidates = results
         isSearching = false
       }

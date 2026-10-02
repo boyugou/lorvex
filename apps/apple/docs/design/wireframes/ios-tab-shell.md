@@ -13,7 +13,7 @@ and the Tasks, Habits, and Memory workspaces set a list beside its detail
 (`MobileAdaptiveListDetail`) once they are wider than 700pt.
 **Backing state:** `MobileStore.selectedTab`; one typed route path per tab
 (`routePath` for Today, `tasksRoutePath`, `calendarRoutePath`,
-`habitsRoutePath`, `reviewRoutePath`); `snapshot` (Today), `lists`, `habits`,
+`reviewRoutePath`); `snapshot` (Today), `lists`, `habits`,
 `calendarTimeline`, `todaySchedule` / `proposedDayTimes`,
 `isPresentingCapture`.
 
@@ -22,13 +22,12 @@ and the Tasks, Habits, and Memory workspaces set a list beside its detail
 Four tabs sit in the bar — Today, Calendar, Tasks, and Review — beside the round
 ＋ that raises Capture. Each wraps its root view in its own `NavigationStack`,
 bound to that tab's route path, and resolves `MobileRoute` values through
-`MobileStoreRouteView`. `MobileTab` also has a `habits` case, which deep
-links, Handoff, shortcuts, and notifications address. Its tab is hidden from
-the bar, and a hidden tab draws nothing when selected, so selecting it, or
-queuing a route on `habitsRoutePath`, redirects to the Tasks tab with
-`.workspace(.habits)` pushed onto `tasksRoutePath`, followed by the queued
-route (`MobileStore.redirectHiddenHabitsTab()` in
-`Sources/LorvexMobile/MobileStoreHiddenTabRouting.swift`).
+`MobileStoreRouteView`. `MobileTab` has exactly these four cases, and the
+`TabView` declares no hidden tab: iOS 27 aborts when a `TabView` selects a
+tab marked `.hidden(true)`. Deep links, Handoff, shortcuts, and notifications
+land through `MobileNavigationTarget` (a tab plus the screens to push on its
+stack), so a habit link opens `[.workspace(.habits), .habit(id)]` on the
+Tasks stack.
 Capture is a sheet raised by the round ＋, not a tab of its own. Habits and
 Memory are `MobileRoute.workspace(...)` pushes from rows on the Tasks home,
 and Settings is the same kind of push from the gear in Today's toolbar.
@@ -54,8 +53,6 @@ live.
 
 The Habits catalog (`MobileStoreHabitsView`: searchable, with Select and ＋ in
 the toolbar) opens as `.workspace(.habits)` on the Tasks stack or on Today's.
-The hidden Habits tab is only a routing target, redirected as described
-above.
 
 Two sheets belong to the shell itself: `MobileSetupWizard` on first run
 (full-height, not dismissible; every page is an icon badge and a title over a

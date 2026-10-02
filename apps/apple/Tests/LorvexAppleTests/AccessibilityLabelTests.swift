@@ -1,3 +1,4 @@
+import Foundation
 import LorvexCore
 import Testing
 
@@ -5,260 +6,85 @@ import Testing
 
 // MARK: - taskAccessibilityLabel
 
-@Test
-func taskAccessibilityLabelIncludesPriorityAndTitle() {
-  let task = LorvexTask(
-    id: "t1",
-    title: "Write release notes",
-    notes: "",
-    priority: .p1,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: nil,
-    tags: []
-  )
-  let label = taskAccessibilityLabel(task)
-  #expect(label.contains("P1 task"))
-  #expect(label.contains("Write release notes"))
-  #expect(label.contains("open"))
+private func task(
+  _ title: String, priority: LorvexTask.Priority = .p2, status: LorvexTask.Status = .open,
+  estimatedMinutes: Int? = nil, tags: [String] = [], recurrence: TaskRecurrenceRule? = nil
+) -> LorvexTask {
+  LorvexTask(
+    id: "a11y-\(title)", title: title, notes: "", priority: priority, status: status, dueDate: nil,
+    estimatedMinutes: estimatedMinutes, tags: tags, recurrence: recurrence)
 }
 
-/// A localized vocabulary replaces the English connectives + status word, so
-/// VoiceOver speaks the user's language. Verifies the composer honors every
-/// vocabulary slot (the wiring that makes the 10-language a11y labels work).
+/// The title leads, then a priority other than normal, named as the interface
+/// names it rather than by its storage code.
 @Test
-func taskAccessibilityLabelUsesProvidedVocabulary() {
-  let task = LorvexTask(
-    id: "t1",
-    title: "Reunión",
-    notes: "",
-    priority: .p2,
-    status: .someday,
-    dueDate: nil,
-    estimatedMinutes: 30,
-    tags: []
-  )
-  let vocab = TaskAccessibilityVocabulary(
-    priorityTaskFormat: "Tarea %@",
-    minutesFormat: "%lld minutos",
-    dueFormat: "vence %@",
-    overdueFormat: "vencida %@",
-    statusName: { _ in "algún día" }
-  )
-  let label = taskAccessibilityLabel(task, vocabulary: vocab)
-  #expect(label.contains("Tarea P2"))
-  #expect(label.contains("algún día"))
-  #expect(label.contains("30 minutos"))
-  #expect(!label.contains("someday"))
-  #expect(!label.contains("minutes"))
+func taskAccessibilityLabelLeadsWithTheTitle() {
+  #expect(taskAccessibilityLabel(task("Write release notes", priority: .p1)) == "Write release notes: High priority")
+  #expect(!taskAccessibilityLabel(task("Write release notes", priority: .p1)).contains("P1"))
+}
+
+/// Normal priority and the open status are what a task is unless it says
+/// otherwise, so a plain open task is read by its title alone.
+@Test
+func taskAccessibilityLabelLeavesTheDefaultsUnsaid() {
+  #expect(taskAccessibilityLabel(task("Water the plants")) == "Water the plants")
 }
 
 @Test
 func taskAccessibilityLabelIncludesEstimateWhenPresent() {
-  let task = LorvexTask(
-    id: "t2",
-    title: "Design sprint",
-    notes: "",
-    priority: .p2,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: 45,
-    tags: []
-  )
-  let label = taskAccessibilityLabel(task)
-  #expect(label.contains("45 minutes"))
+  #expect(
+    taskAccessibilityLabel(task("Design sprint", estimatedMinutes: 45))
+      == "Design sprint: \(LorvexDurationFormat.minutes(45, style: .spoken))")
 }
 
+/// The estimate is spoken as a duration in the display language, so a
+/// one-minute estimate takes the singular ("1 minute", not "1 minutes").
 @Test
-func taskAccessibilityLabelUsesPluralAwareMinutesProviderWhenPresent() {
-  let task = LorvexTask(
-    id: "t2-singular",
-    title: "Quick check",
-    notes: "",
-    priority: .p2,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: 1,
-    tags: []
-  )
-  let vocabulary = TaskAccessibilityVocabulary(
-    minutesFormat: "wrong fallback",
-    minutesText: { $0 == 1 ? "1 minute" : "\($0) minutes" }
-  )
-
-  let label = taskAccessibilityLabel(task, vocabulary: vocabulary)
-
-  #expect(label.contains("1 minute"))
-  #expect(!label.contains("wrong fallback"))
-}
-
-@Test
-func taskAccessibilityLabelKeepsMutableMinutesFormatAsTheFallbackSourceOfTruth() {
-  let task = LorvexTask(
-    id: "t2-mutable-format",
-    title: "Quick check",
-    notes: "",
-    priority: .p2,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: 5,
-    tags: []
-  )
-  var vocabulary = TaskAccessibilityVocabulary(minutesFormat: "%lld old units")
-  vocabulary.minutesFormat = "%lld updated units"
-
-  let label = taskAccessibilityLabel(task, vocabulary: vocabulary)
-
-  #expect(label.contains("5 updated units"))
-  #expect(!label.contains("old units"))
+func taskAccessibilityLabelSpeaksTheEstimateAsADuration() {
+  #expect(
+    taskAccessibilityLabel(task("Quick check", estimatedMinutes: 1))
+      .hasSuffix(LorvexDurationFormat.minutes(1, style: .spoken)))
+  #expect(
+    LorvexDurationFormat.minutes(1, style: .spoken, locale: Locale(identifier: "en_US"))
+      == "1 minute")
 }
 
 @Test
 func taskAccessibilityLabelIncludesTags() {
-  let task = LorvexTask(
-    id: "t3",
-    title: "Review PR",
-    notes: "",
-    priority: .p3,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: nil,
-    tags: ["eng", "review"]
-  )
-  let label = taskAccessibilityLabel(task)
-  #expect(label.contains("#eng"))
-  #expect(label.contains("#review"))
+  let label = taskAccessibilityLabel(task("Review PR", priority: .p3, tags: ["eng", "review"]))
+  #expect(label == "Review PR: Low priority, #eng, #review")
 }
 
+/// A status other than open is named the way the interface names it.
 @Test
-func taskAccessibilityLabelSpeaksStartedStatus() {
-  let task = LorvexTask(
-    id: "t4",
-    title: "Ship widget",
-    notes: "",
-    priority: .p1,
-    status: .inProgress,
-    dueDate: nil,
-    estimatedMinutes: nil,
-    tags: []
-  )
-  let label = taskAccessibilityLabel(
-    task, vocabulary: TaskAccessibilityVocabulary(statusName: { $0 == .inProgress ? "started" : "open" }))
-  #expect(label == "P1 task: Ship widget: started")
-}
-
-@Test
-func taskAccessibilityLabelReflectsSomedayStatus() {
-  let task = LorvexTask(
-    id: "t5",
-    title: "Follow up",
-    notes: "",
-    priority: .p2,
-    status: .someday,
-    dueDate: nil,
-    estimatedMinutes: nil,
-    tags: []
-  )
-  let label = taskAccessibilityLabel(task)
-  #expect(label.contains("someday"))
-}
-
-@Test
-func taskAccessibilityLabelReflectsCompletedStatus() {
-  let task = LorvexTask(
-    id: "t6",
-    title: "Sync notes",
-    notes: "",
-    priority: .p3,
-    status: .completed,
-    dueDate: nil,
-    estimatedMinutes: nil,
-    tags: []
-  )
-  let label = taskAccessibilityLabel(task)
-  #expect(label.contains("completed"))
+func taskAccessibilityLabelNamesAStatusOtherThanOpen() {
+  #expect(
+    taskAccessibilityLabel(task("Ship widget", priority: .p1, status: .inProgress))
+      == "Ship widget: High priority, In Progress")
+  #expect(taskAccessibilityLabel(task("Follow up", status: .someday)) == "Follow up: Someday")
+  #expect(
+    taskAccessibilityLabel(task("Sync notes", priority: .p3, status: .completed))
+      == "Sync notes: Low priority, Completed")
 }
 
 /// A row's time on the day and what it shows beyond the task's own fields
-/// are spoken right after the status, in the order the row gives them.
+/// are spoken after the priority and status, in the order the row gives them.
 @Test
 func taskAccessibilityLabelSpeaksTheRowsTimeAndDetails() {
-  let task = LorvexTask(
-    id: "t7",
-    title: "Review the Q3 planning doc",
-    notes: "",
-    priority: .p1,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: 45,
-    tags: ["work"]
-  )
   let label = taskAccessibilityLabel(
-    task, timeLabel: "9:45 – 10:30 AM", details: ["Until 3:00 PM", "Blocked"])
+    task("Review the Q3 planning doc", priority: .p1, estimatedMinutes: 45, tags: ["work"]),
+    timeLabel: "9:45 – 10:30 AM", details: ["Until 3:00 PM", "Blocked"])
   #expect(
     label
-      == "P1 task: Review the Q3 planning doc: open, 9:45 – 10:30 AM, Until 3:00 PM, Blocked, 45 minutes, #work"
+      == "Review the Q3 planning doc: High priority, 9:45 – 10:30 AM, Until 3:00 PM, Blocked, 45 minutes, #work"
   )
 }
 
-/// A repeating task says so, in the vocabulary's word, as its row shows a
-/// repeat glyph.
+/// A repeating task says so, as its row shows a repeat glyph.
 @Test
 func taskAccessibilityLabelSpeaksARepeatingTask() {
-  let task = LorvexTask(
-    id: "t8",
-    title: "Submit the weekly timesheet",
-    notes: "",
-    priority: .p3,
-    status: .open,
-    dueDate: nil,
-    estimatedMinutes: nil,
-    tags: [],
-    recurrence: TaskRecurrenceRule(freq: .weekly)
-  )
-  #expect(taskAccessibilityLabel(task) == "P3 task: Submit the weekly timesheet: open, repeats")
-  let label = taskAccessibilityLabel(task, vocabulary: TaskAccessibilityVocabulary(repeatsWord: "se repite"))
-  #expect(label.hasSuffix("open, se repite"))
-}
-
-// MARK: - menuBarActionAccessibilityLabel
-
-@Test
-func menuBarActionAccessibilityLabelPassesThroughTitle() {
-  #expect(menuBarActionAccessibilityLabel("Complete Task") == "Complete Task")
-  #expect(menuBarActionAccessibilityLabel("Defer to Tomorrow") == "Defer to Tomorrow")
-}
-
-// MARK: - habitAccessibilityLabel
-
-@Test
-func habitAccessibilityLabelIncludesNameAndProgress() {
-  let habit = LorvexHabit(
-    id: "h1", name: "Morning Run", icon: nil, color: nil, cue: nil,
-    frequencyType: "daily", targetCount: 3, completionsToday: 1,
-    totalCompletions: 30, completionRate30d: 0.9, archived: false
-  )
-  let label = habitAccessibilityLabel(habit)
-  #expect(label.contains("Morning Run"))
-  #expect(label.contains("1 of 3 completions today"))
-  #expect(label.contains("daily"))
-}
-
-@Test
-func habitAccessibilityLabelIncludesCueWhenPresent() {
-  let habit = LorvexHabit(
-    id: "h2", name: "Meditate", icon: nil, color: nil, cue: "After coffee",
-    frequencyType: "daily", targetCount: 1, completionsToday: 0,
-    totalCompletions: 5, completionRate30d: 0.5, archived: false
-  )
-  let label = habitAccessibilityLabel(habit)
-  #expect(label.contains("After coffee"))
-}
-
-@Test
-func habitActionAccessibilityLabelReturnsCorrectString() {
-  #expect(habitActionAccessibilityLabel(isComplete: false) == "Complete today")
-  #expect(habitActionAccessibilityLabel(isComplete: true) == "Reset today")
+  let repeating = task("Submit the weekly timesheet", priority: .p3, recurrence: TaskRecurrenceRule(freq: .weekly))
+  #expect(taskAccessibilityLabel(repeating) == "Submit the weekly timesheet: Low priority, repeats")
 }
 
 // MARK: - memoryEntryAccessibilityLabel
@@ -293,36 +119,4 @@ func calendarEventAccessibilityLabelWithTime() {
   #expect(label.contains("9:00 AM"))
   #expect(label.contains("9:30 AM"))
   #expect(label.contains("Zoom"))
-}
-
-// MARK: - listAccessibilityLabel
-
-@Test
-func listAccessibilityLabelIncludesNameAndCounts() {
-  let list = LorvexList(
-    id: "l1", name: "Work", color: nil, icon: nil, description: nil,
-    openCount: 4, totalCount: 10, updatedAt: "2026-05-01"
-  )
-  let label = listAccessibilityLabel(list)
-  #expect(label.contains("Work"))
-  #expect(label.contains("4 open tasks"))
-  #expect(label.contains("10 total"))
-}
-
-@Test
-func listAccessibilityLabelSingularOpenTask() {
-  let list = LorvexList(
-    id: "l2", name: "Personal", color: nil, icon: nil, description: nil,
-    openCount: 1, totalCount: 3, updatedAt: "2026-05-01"
-  )
-  let label = listAccessibilityLabel(list)
-  #expect(label.contains("1 open task,"))
-}
-
-// MARK: - reviewMetricAccessibilityLabel
-
-@Test
-func reviewMetricAccessibilityLabelFormatsCorrectly() {
-  #expect(reviewMetricAccessibilityLabel(title: "Completed", value: 5) == "Completed: 5")
-  #expect(reviewMetricAccessibilityLabel(title: "Overdue", value: 0) == "Overdue: 0")
 }

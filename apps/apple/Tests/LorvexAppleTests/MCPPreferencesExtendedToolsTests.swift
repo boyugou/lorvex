@@ -51,7 +51,7 @@ struct MCPPreferencesExtendedToolsTests {
       registry, tool: "get_preference", arguments: ["key": .string("setup_summary")])
     let fenced = try #require(getResult.structuredContent?.objectValue?["value"]?.stringValue)
     #expect(fenced == fencedInjected)
-    #expect(SecurityFencing.unfence(fenced) == injected)
+    #expect(ToolArgumentNormalization.stripFenceTokens(fenced) == injected)
 
     // get_all_preferences fences the same value, while an id-valued preference
     // (default_list_id) is echoed verbatim — ids must round-trip unfenced.

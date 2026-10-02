@@ -20,9 +20,25 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   background task before the database suspends, and silent-push wakes.
 - CarPlay runtime activation: entitlement approval pending from Apple.
 - watchOS / CarPlay / Widgets design audits (need on-device).
-- Claude Code plugin distribution: `/plugin marketplace add boyugou/lorvex`
-  resolves once the public repository carries `plugins/lorvex` and
-  `.claude-plugin/marketplace.json`.
+
+### Localization
+- Grow from the fourteen shipped languages to the 31 locales lorvex.app is
+  published in (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"), one
+  batch of languages at a time. Each batch is prepared on its own worktree
+  branch with `apps/apple/script/localization_transfer.py` and merges with
+  `localization_transfer.py import --from-checkout` once the catalog verifier,
+  `LocalizationTests`, and a headless capture review pass for every language
+  in it. Spanish (`es`), Hindi (`hi`), Arabic (`ar`), French (`fr`), Italian
+  (`it`), Brazilian Portuguese (`pt-BR`), Russian (`ru`), Ukrainian (`uk`),
+  Polish (`pl`), Japanese (`ja`), Korean (`ko`), and Traditional Chinese
+  (`zh-Hant`) have shipped. The rest follow in batches of related languages:
+  Persian, Urdu, and Hebrew next, then German, Dutch, and Romanian; Bengali and
+  Marathi; Telugu, Tamil, and Malayalam; Indonesian, Malay, Vietnamese, and
+  Thai; and Turkish and Greek. Persian, Urdu, and Hebrew also need a
+  right-to-left layout review.
+- The App Store listing (`apps/apple/docs/APP_STORE_METADATA.md`) is written
+  in English only; each shipped language needs its own name, subtitle,
+  description, keywords, and screenshots in App Store Connect.
 
 ### Shared
 - `schema/schema.sql` is the app's schema authority. Schema changes go through
@@ -30,6 +46,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   (`schema/migrations/README.md`, `schema/sync_payload/`).
 
 ## Done
+- **Claude Code plugin distribution.** The public repository carries
+  `plugins/lorvex` and `.claude-plugin/marketplace.json`, so
+  `/plugin marketplace add boyugou/lorvex` installs the plugin.
 - **Review pages name the tasks their sentences count.** The week page's
   **Overdue** section lists open tasks past their due date, earliest first,
   each with how long ago it was due in local days; the day page's **Still
@@ -56,10 +75,20 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   local time. Tests fail when the instructions or a skill name a tool,
   parameter, or field the tools do not define. The playbook is
   `docs/design/AI_OPERATING_MODEL.md`.
-- **Shipped languages: English and Simplified Chinese.** Every catalog, bundle
-  plist, `InfoPlist.strings` set, and the in-app language picker carry exactly
-  `en` and `zh-Hans`, so a UI string costs one translation. The eleven other
-  localizations were dropped on 2026-09-17 and remain in git history.
+- **Shipped languages: English, Arabic, Spanish, French, Hindi, Italian,
+  Japanese, Korean, Polish, Brazilian Portuguese, Russian, Ukrainian,
+  Simplified Chinese, and Traditional Chinese.**
+  Every catalog, bundle plist, `InfoPlist.strings` set, and the in-app
+  language picker carry exactly the shipped languages; the catalog verifier and
+  `LocalizationTests` reject a language that is only partly added, and the
+  verifier checks each plural entry against the CLDR categories its language
+  selects. Every count in a source text varies by plural, with one
+  substitution per count where a sentence holds several; lengths of time and
+  ages come from the system's CLDR formatters (`LorvexDurationFormat`,
+  `LorvexDateFormatters.elapsed`); and `verify_localization_arguments.py`
+  checks each call's interpolated arguments against its catalog text through
+  the compiler's own extraction. The eleven other localizations were dropped
+  on 2026-09-17 and remain in git history.
 - **Habit milestones.** Streak/count milestone waypoints (auto-ladder plus an
   optional user `milestone_target`) with a celebration when a waypoint is crossed;
   the macOS and iPhone/iPad habit surfaces ship progress, goal editing, and
@@ -85,9 +114,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   The now-decoupled Apple schema also drops the `mcp_host_authority` and
   `local_sync_owner` tables, which only ever served the Tauri consumer (Tauri
   keeps them in its own schema copy).
-- **Schema-freeze tripwire.** A dormant post-launch schema-freeze check
+- **Schema-freeze tripwire.** A schema-freeze check
   (`apps/apple/script/verify_schema_freeze.py` + `schema/migration_policy.json`,
-  armed at launch) guards the two-regime invariant in
+  armed with `launched: true`) guards the two-regime invariant in
   `docs/design/SCHEMA_OPTIMALITY.md`.
 - **MCP tool-parity audit vs the Tauri reference.** Diffed the
   85 reference tools against Apple's catalog (now 114): two real
@@ -116,16 +145,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   WatchConnectivity mutation; working hours became user-configurable on both
   Settings surfaces (shared WorkingHoursPreference helper) with the propose
   button's tooltip naming the window.
-- **Plural correctness across every surface.** The catalog facade
-  resolves strings itself, so xcstrings plural variations never engaged via
-  the platform; the reader now owns plural resolution (LorvexPluralRules:
-  CLDR categories for all 13 languages). Every manual one/many key pair —
-  macOS app (16), mobile, widgets (incl. VoiceOver labels), watch
-  complication, and all 17 Siri intent dialogs — converted to
-  plural-variation keys with authored Russian/Polish few forms;
-  mixed-placeholder dialogs normalized to positional specifiers. Zero manual
-  plural pairs remain in any catalog; verifier and completeness tests
-  validate the variation shape.
+- **Plural correctness across every surface.** Native String Catalog lookup
+  selects each language's CLDR plural form. Every manual one/many key pair —
+  macOS app, mobile, widgets (incl. VoiceOver labels), watch complication,
+  and every Siri intent dialog — is a plural-variation entry, and
+  mixed-placeholder dialogs use positional specifiers. No manual plural pairs
+  remain in any catalog; the verifier and completeness tests validate the
+  variation shape.
 - **Review/habit product wave.** Reviews: daily autosave +
   visible save state, recent-review history strip with in-window editing,
   weekly week-by-week navigation with per-week notes. Habits: reminder

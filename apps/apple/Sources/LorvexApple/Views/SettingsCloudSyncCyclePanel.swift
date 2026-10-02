@@ -49,56 +49,56 @@ struct SettingsCloudSyncCyclePanel: View {
       SettingsCloudSyncMetricRow(
         id: "pushed",
         title: String(localized: "settings.cloud_sync.pushed_records", defaultValue: "Pushed Records", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.pushedRecordCount)",
+        value: report.pushedRecordCount.formatted(),
         systemImage: "arrow.up.doc",
         tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "failed",
         title: String(localized: "settings.cloud_sync.failed_pushes", defaultValue: "Failed Pushes", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.failedPushCount)",
+        value: report.failedPushCount.formatted(),
         systemImage: "exclamationmark.triangle.fill",
         tint: report.failedPushCount > 0 ? LorvexDesign.Palette.warning : LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "fetched",
         title: String(localized: "settings.cloud_sync.fetched_records", defaultValue: "Fetched Records", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.fetchedRecordCount)",
+        value: report.fetchedRecordCount.formatted(),
         systemImage: "arrow.down.doc",
         tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "applied",
         title: String(localized: "settings.cloud_sync.applied", defaultValue: "Applied", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.inbound.applied)",
+        value: report.inbound.applied.formatted(),
         systemImage: "checkmark.circle.fill",
         tint: LorvexDesign.Palette.success
       ),
       SettingsCloudSyncMetricRow(
         id: "skipped",
         title: String(localized: "settings.cloud_sync.skipped", defaultValue: "Skipped", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.inbound.skipped)",
+        value: report.inbound.skipped.formatted(),
         systemImage: "forward.end.fill",
         tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "deferred",
         title: String(localized: "settings.cloud_sync.deferred", defaultValue: "Deferred", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.inbound.deferred)",
+        value: report.inbound.deferred.formatted(),
         systemImage: "clock.fill",
         tint: LorvexDesign.Palette.warning
       ),
       SettingsCloudSyncMetricRow(
         id: "remapped",
         title: String(localized: "settings.cloud_sync.remapped", defaultValue: "Remapped", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.inbound.remapped)",
+        value: report.inbound.remapped.formatted(),
         systemImage: "arrow.triangle.branch",
         tint: LorvexDesign.Palette.neutral
       ),
       SettingsCloudSyncMetricRow(
         id: "replayed",
         title: String(localized: "settings.cloud_sync.replayed", defaultValue: "Replayed", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.inbound.drainReplayed)",
+        value: report.inbound.drainReplayed.formatted(),
         systemImage: "arrow.counterclockwise",
         tint: LorvexDesign.Palette.neutral
       ),
@@ -109,7 +109,7 @@ struct SettingsCloudSyncCyclePanel: View {
         SettingsCloudSyncMetricRow(
           id: "undecodable",
           title: String(localized: "settings.cloud_sync.undecodable", defaultValue: "Undecodable", table: "Localizable", bundle: LorvexL10n.bundle),
-          value: "\(report.inbound.undecodable)",
+          value: report.inbound.undecodable.formatted(),
           systemImage: "xmark.octagon.fill",
           tint: LorvexDesign.Palette.error
         )

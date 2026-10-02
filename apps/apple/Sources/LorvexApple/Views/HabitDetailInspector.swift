@@ -1,17 +1,29 @@
 import LorvexCore
 import SwiftUI
 
-/// The Habits trailing inspector — the habit counterpart to ``TaskDetailView``.
-/// Selecting a habit in the catalog opens it here (instead of the old inline
-/// row expansion) so habits share the same detail-panel rhythm as tasks: a
-/// title header with the check-in action, today's progress, the frequency/total
-/// pills, reminders, and the completion heatmap.
+/// The Habits workspace's trailing inspector, built like the task inspector
+/// (``TaskDetailView``) from the shared inspector kit, so a habit reads and
+/// edits the way a task does: the header with the check-in ring, the name,
+/// and the encouragement (``HabitDetailHeader``); the period's standing and
+/// the overflow menu (``HabitDetailActions``); the fields
+/// (``HabitDetailProperties``); then the Progress, History, and By Weekday
+/// panels. By Weekday shows only for a habit planned on more than one weekday.
+///
+/// Every edit happens in place: the name and the encouragement in their
+/// fields, the rhythm, reminders, and goal in their fields' popovers, and the
+/// icon and color in a popover on the ring, which the overflow menu opens.
+///
+/// The habit's period progress comes from its stats, which the catalog loads
+/// for its cards, so the ring and the standing are right before the
+/// inspector's own detail (history and reminders) arrives; the detail's
+/// fresher stats take over once it loads.
 struct HabitDetailInspector: View {
   @Bindable var store: AppStore
   let habitID: LorvexHabit.ID
 
-  @State private var isShowingDeleteConfirmation = false
-  @State private var isEditing = false
+  /// Whether the ring's icon and color popover is open; the header shows it
+  /// and the overflow menu opens it.
+  @State private var isChoosingAppearance = false
 
   private var habit: LorvexHabit? {
     store.orderedHabits.first { $0.id == habitID }
@@ -32,209 +44,55 @@ struct HabitDetailInspector: View {
       }
     }
     .task(id: habitID) { await store.loadHabitDetail(id: habitID) }
-    .sheet(isPresented: $isEditing) {
-      if let habit {
-        EditHabitSheet(habit: habit, store: store, isPresented: $isEditing)
-      }
-    }
+    .onChange(of: habitID) { _, _ in isChoosingAppearance = false }
   }
 
-  @ViewBuilder
   private func content(habit: LorvexHabit) -> some View {
     let detail = store.habitDetail(for: habit.id)
-    let recentCompletions = detail?.stats.recentCompletions ?? []
-    ScrollView {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-        header(habit: habit, recentCompletions: recentCompletions)
-
-        HabitCatalogRowDetail(habit: habit, recentCompletions: recentCompletions)
-
-        HabitReminderEditor(
-          store: store, habit: habit, policies: detail?.reminderPolicies ?? [])
-
-        HabitHeatmapView(habit: habit, detail: detail)
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(LorvexDesign.Spacing.l)
+    let stats = detail?.stats ?? store.habitStats(for: habit.id)
+    let progress = HabitPeriodProgress.current(
+      habit: habit, recentCompletions: stats?.recentCompletions ?? [],
+      timeZone: store.logicalTimeZone)
+    let rhythm = detail.flatMap {
+      HabitWeekdayRhythm.make(
+        habit: habit, completions: $0.completions.completions, today: Date(),
+        calendar: Self.gregorian(in: store.logicalTimeZone))
     }
-    // Re-identify the whole content per habit so the reused inspector rebuilds
-    // fresh on a habit switch — otherwise per-habit `@State` in subviews
-    // (reminder-editor draft time / mode, heatmap grid cache) would leak across
-    // selections, e.g. a confirmed window-time edit writing to the wrong habit.
-    .id(habit.id)
-    // No `navigationTitle` here: as the Habits workspace's trailing inspector it
-    // would override the window's title bar with the selected habit's name
-    // instead of the active workspace, mirroring the same omission in
-    // ``TaskDetailView``.
-  }
-
-  @ViewBuilder
-  private func header(habit: LorvexHabit, recentCompletions: [String]) -> some View {
-    // Period progress (this week for weekly/custom, this month for monthly,
-    // today for daily/accumulative) — consistent with the card ring and the
-    // meter below, rather than a today-raw `completionsToday >= targetCount`.
-    let progress = HabitPeriodProgress.current(habit: habit, recentCompletions: recentCompletions)
-    let isComplete = progress.isComplete
-    let isMultiTarget = habit.targetCount > 1
-    let identity = LorvexHabitPalette.baseColor(for: habit)
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
-        Image(systemName: habit.icon ?? "repeat.circle")
-          .font(LorvexDesign.Typography.sectionHeader)
-          .foregroundStyle(isComplete ? LorvexDesign.Palette.done : identity)
-          .frame(width: 36, height: 36)
-          .background(
-            (isComplete ? LorvexDesign.Palette.done : identity).opacity(0.12),
-            in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
-
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-          Text(habit.name)
-            .font(LorvexDesign.Typography.screenTitle)
-            .lineLimit(2)
-          if let encouragement = habit.cue, !encouragement.isEmpty {
-            // The encouragement — an inspiring line (sparkle + italic), not a dry
-            // context label; matches the iOS habit detail.
-            HStack(alignment: .top, spacing: LorvexDesign.Spacing.xs) {
-              Image(systemName: "sparkles")
-                .font(LorvexDesign.Typography.tertiaryText)
-                .foregroundStyle(identity)
-              Text(encouragement)
-                .font(LorvexDesign.Typography.secondaryText)
-                .italic()
-                .foregroundStyle(.secondary)
-                .lineLimit(3)
-            }
+    return ScrollView {
+      InspectorColumn {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+          HabitDetailHeader(
+            store: store, habit: habit, progress: progress,
+            isChoosingAppearance: $isChoosingAppearance)
+          HabitDetailActions(
+            store: store, habit: habit, progress: progress,
+            isChoosingAppearance: $isChoosingAppearance)
+          HabitDetailProperties(
+            store: store, habit: habit, reminderPolicies: detail?.reminderPolicies)
+          HabitProgressPanel(habit: habit, stats: stats)
+          HabitHistoryPanel(habit: habit, detail: detail, timeZone: store.logicalTimeZone)
+          if let rhythm {
+            HabitWeekdayPanel(habit: habit, rhythm: rhythm)
           }
         }
-        Spacer(minLength: 0)
-        // The shared inspector ✕ (matches task + calendar panels); re-clicking
-        // the habit card collapses it the same way.
-        InspectorCloseButton(accessibilityIdentifier: "habit.detail.inspector.close") {
-          store.selectedHabitID = nil
-        }
-      }
-
-      HStack(spacing: LorvexDesign.Spacing.s) {
-        if isMultiTarget {
-          accumulativeStepper(habit: habit, isComplete: isComplete)
-        } else {
-          completeControl(habit: habit, isComplete: isComplete)
-        }
-
-        Button {
-          store.prepareHabitDraft(for: habit)
-          isEditing = true
-        } label: {
-          Label(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "pencil")
-            .labelStyle(.iconOnly)
-        }
-        .buttonStyle(.bordered)
-        .help(String(localized: "common.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle))
-
-        Button(role: .destructive) {
-          isShowingDeleteConfirmation = true
-        } label: {
-          Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "trash")
-            .labelStyle(.iconOnly)
-        }
-        .buttonStyle(.bordered)
-        .help(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle))
       }
     }
-    .confirmationDialog(
-      String(
-        format: String(localized: "habits.row.delete_confirm.title", defaultValue: "Delete habit “%@”?", table: "Localizable", bundle: LorvexL10n.bundle),
-        habit.name),
-      isPresented: $isShowingDeleteConfirmation,
-      titleVisibility: .visible
-    ) {
-      Button(String(localized: "habits.row.delete_confirm.delete", defaultValue: "Delete Habit", table: "Localizable", bundle: LorvexL10n.bundle), role: .destructive) {
-        Task { await store.deleteHabit(habit) }
-        store.selectedHabitID = nil
-      }
-      Button(String(localized: "common.keep", defaultValue: "Keep", table: "Localizable", bundle: LorvexL10n.bundle), role: .cancel) {}
-    } message: {
-      Text(LocalizedStringResource("habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: LorvexL10n.bundle))
-    }
+    .frame(minWidth: 0, maxWidth: .infinity)
+    .background(.quaternary.opacity(0.035))
+    // Re-identify the content per habit so the reused inspector rebuilds on a
+    // switch: the header's fields, the reminder rows, and the history cache
+    // hold per-habit state that must not carry over to the next habit.
+    .id(habit.id)
+    // No `navigationTitle`: as the workspace's trailing inspector it would
+    // replace the window title (the workspace) with the habit's name.
   }
 
-  /// Binary-habit check-in control. `isComplete` is period progress, so a
-  /// weekly/monthly habit shows "done" once its week/month plan is met. The clear
-  /// action ("Reset Today") only appears when there is an actual today check-in to
-  /// remove; a period met by earlier days shows a non-actioning "Done" so a tap
-  /// can't log or clear a phantom today completion.
-  @ViewBuilder
-  private func completeControl(habit: LorvexHabit, isComplete: Bool) -> some View {
-    let hasTodayCheckIn = habit.completionsToday > 0
-    if isComplete && !hasTodayCheckIn {
-      // Period met by earlier days: a non-actioning "Done" — there is no today
-      // check-in to reset, and adding one would over-log the period.
-      Button {} label: {
-        Label(
-          String(localized: "common.done", defaultValue: "Done", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "checkmark.circle.fill"
-        )
-      }
-      .buttonStyle(.bordered)
-      .disabled(true)
-    } else {
-      let button = Button {
-        Task {
-          if isComplete { await store.uncompleteHabit(habit) }
-          else { await store.completeHabit(habit) }
-        }
-      } label: {
-        Label(
-          isComplete
-            ? String(localized: "habits.row.reset_today.title_case", defaultValue: "Reset Today", table: "Localizable", bundle: LorvexL10n.bundle)
-            : String(localized: "habits.row.complete_today.title_case", defaultValue: "Complete Today", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: isComplete ? "arrow.counterclockwise" : "checkmark.circle"
-        )
-      }
-      if isComplete {
-        button.buttonStyle(.bordered)
-      } else {
-        button.buttonStyle(.borderedProminent)
-      }
-    }
-  }
-
-  /// `[−] n/target [+]` stepper for accumulative habits (per-day target above
-  /// one), matching the card: the ring/button only adds, so this is the way to
-  /// correct the count down. Decrement disabled at zero, increment once the
-  /// target is met.
-  private func accumulativeStepper(habit: LorvexHabit, isComplete: Bool) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Button {
-        Task { await store.adjustHabitCompletion(habit, delta: -1) }
-      } label: {
-        Image(systemName: "minus").frame(width: 22, height: 22)
-      }
-      .buttonStyle(.bordered)
-      .disabled(habit.completionsToday <= 0)
-      .help(String(localized: "habits.row.decrement", defaultValue: "Remove one", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityLabel(String(localized: "habits.row.decrement", defaultValue: "Remove one", table: "Localizable", bundle: LorvexL10n.bundle))
-
-      Text("\(habit.completionsToday)/\(habit.targetCount)")
-        .font(LorvexDesign.Typography.primaryEmphasis.monospacedDigit())
-        .foregroundStyle(isComplete ? AnyShapeStyle(LorvexDesign.Palette.done) : AnyShapeStyle(.primary))
-        .frame(minWidth: 40)
-        .accessibilityLabel(String(
-          format: String(
-            localized: "habits.row.today_progress_a11y", defaultValue: "%1$lld of %2$lld done today",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          habit.completionsToday, habit.targetCount))
-
-      Button {
-        Task { await store.adjustHabitCompletion(habit, delta: 1) }
-      } label: {
-        Image(systemName: "plus").frame(width: 22, height: 22)
-      }
-      .buttonStyle(.bordered)
-      .disabled(isComplete)
-      .help(String(localized: "habits.row.add_one", defaultValue: "Add one", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityLabel(String(localized: "habits.row.add_one", defaultValue: "Add one", table: "Localizable", bundle: LorvexL10n.bundle))
-    }
+  /// The Gregorian calendar in `timeZone`, the product time zone the
+  /// history's `yyyy-MM-dd` dates are written in, which reads them whatever
+  /// calendar the person uses.
+  private static func gregorian(in timeZone: TimeZone) -> Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = timeZone
+    return calendar
   }
 }

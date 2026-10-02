@@ -216,7 +216,7 @@ func laterFoldIncludesAndPagesSnoozedTasks() throws {
 @Test
 func listRowRendersHiddenUntilBadge() throws {
   let row = try availableFromSource("Sources/LorvexApple/Views/LorvexTaskRow.swift")
-  #expect(row.contains("task.hiddenUntilShortLabel()"))
+  #expect(row.contains("task.hiddenUntilShortLabel(timeZone: productTimeZone)"))
   #expect(row.contains(#"Image(systemName: "eye.slash")"#))
   #expect(row.contains("Text(TaskDisplayText.hiddenUntil(hiddenLabel))"))
   let displayText = try availableFromSource("Sources/LorvexApple/Support/TaskDisplayText.swift")

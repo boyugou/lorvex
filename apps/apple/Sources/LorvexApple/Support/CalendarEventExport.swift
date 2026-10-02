@@ -18,13 +18,12 @@ struct CalendarEventExport: Equatable, Sendable {
 
     let resolvedEndDate: Date
     if event.allDay {
-      // Lorvex stores an inclusive all-day span while EventKit expects an
-      // exclusive end instant. Preserve an explicit multi-day end by advancing
-      // the final Lorvex day once; a nil end remains a one-day event.
+      // Lorvex stores the last occupied day; EventKit's all-day end is that
+      // day at 23:59:59. A nil end remains a one-day event.
       let inclusiveEnd =
         event.endDate.flatMap { Self.date(from: $0, time: nil, calendar: calendar) }
         ?? startDate
-      resolvedEndDate = AllDayEventSpan.exclusiveEnd(
+      resolvedEndDate = AllDayEventSpan.eventKitEnd(
         start: startDate, inclusiveEnd: inclusiveEnd, calendar: calendar)
     } else if let endDate = event.endDate,
       let parsedEnd = Self.date(from: endDate, time: event.endTime, calendar: calendar)

@@ -125,8 +125,8 @@ struct CalendarEventValueOptions: Sendable, Equatable {
 }
 
 /// Maps the `LorvexCore` calendar model types onto the MCP `Value` JSON shapes
-/// the calendar tool handlers return. Field names and shapes define the frozen
-/// prelaunch wire contract while the implementation stays pure Swift.
+/// the calendar tool handlers return. Its field names and shapes are the
+/// calendar tools' wire contract.
 extension CoreBridgeClient {
   static func calendarEventValue(
     from event: CalendarTimelineEvent,

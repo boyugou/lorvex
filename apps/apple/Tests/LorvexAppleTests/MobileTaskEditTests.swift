@@ -83,6 +83,33 @@ func mobileTaskEditDraftRejectsBlankTitleAndInvalidEstimate() {
   }
 }
 
+/// The estimate field starts in the user's digits, and reads what any
+/// keyboard types: the Arabic number pad's Arabic-Indic digits, a Persian
+/// keyboard's, or a Chinese input method's full-width ones.
+@Test
+func mobileTaskEditDraftReadsTheEstimateInAnyScript() {
+  let task = LorvexTask(
+    id: "task-edit",
+    title: "Edit task",
+    notes: "",
+    priority: .p3,
+    status: .open,
+    dueDate: nil,
+    estimatedMinutes: 60,
+    tags: [],
+    dependsOn: []
+  )
+  var draft = MobileTaskEditDraft(task: task)
+  #expect(draft.estimatedMinutesText == LorvexNumberInput.text(for: 60))
+  #expect(draft.parsedEstimatedMinutes == 60)
+
+  for typed in ["٤٥", "۴۵", "４５", " ٤٥ "] {
+    draft.estimatedMinutesText = typed
+    #expect(draft.parsedEstimatedMinutes == 45)
+    #expect(draft.estimateIsValid)
+  }
+}
+
 @MainActor
 @Test
 func mobileStoreSavesTaskEditDraftThroughCore() async throws {

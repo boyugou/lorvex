@@ -66,12 +66,15 @@ extension ToolRegistry {
   static let maxIdempotencyKeyBytes = 256
 
   private func routeWithIdempotency(_ params: CallTool.Parameters) async throws -> CallTool.Result {
-    let arguments = params.arguments ?? [:]
     guard let definition = ToolDefinitionRegistry.byName[params.name] else {
       return ToolResponseFencing.userControlledContent.apply(
         to: unknownToolResult(named: params.name)
       )
     }
+    // The handler and the idempotency checksum both see the normalized
+    // arguments: fence tokens removed, enum values checked and canonical.
+    let arguments = try ToolArgumentNormalization.normalize(
+      params.arguments ?? [:], schema: definition.tool.inputSchema)
     // A present wrong-typed key must reject, never silently run unkeyed: the
     // caller believed the mutation was replay-protected. The length cap bounds
     // the PK column and the checksummed argument payload.

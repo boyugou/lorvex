@@ -31,6 +31,7 @@ extension SwiftLorvexCoreService {
   // MARK: - Memory writes
 
   public func upsertMemory(key: String, content: String) async throws -> MemoryEntry {
+    let key = try Self.normalizedMemoryKey(key)
     return try withWrite { db, hlc, deviceId in
       let existing = try Row.fetchOne(
         db, sql: "SELECT id, version FROM memories WHERE key = ?", arguments: [key])
@@ -77,10 +78,7 @@ extension SwiftLorvexCoreService {
     -> MemoryEntry
   {
     let old = oldKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    let new = newKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !new.isEmpty else {
-      throw LorvexCoreError.validation(field: "new_key", message: "A memory key is required.")
-    }
+    let new = try Self.normalizedMemoryKey(newKey, field: "new_key")
     return try withWrite { db, hlc, deviceId in
       guard try MemoryRepo.getMemoryEntry(db, key: old) != nil else {
         throw LorvexCoreError.notFound(entity: .memory, id: old)
@@ -135,6 +133,7 @@ extension SwiftLorvexCoreService {
     content: String,
     updatedAt: String?
   ) async throws -> MemoryEntry {
+    let key = try Self.normalizedMemoryKey(key)
     let canonicalUpdatedAt = try Self.canonicalImportTimestamp(
       updatedAt, field: "memory updatedAt", fallback: SyncTimestampFormat.syncTimestampNow())
     return try withWrite { db, hlc, deviceId in
@@ -177,7 +176,7 @@ extension SwiftLorvexCoreService {
   }
 
   public func importMemoryEntry(_ entry: ExportMemoryEntry) async throws -> MemoryEntry {
-    let key = try Self.requiredMemoryImportText(entry.key, field: "memory key")
+    let key = try Self.normalizedMemoryKey(entry.key)
     let now = try Self.canonicalImportTimestamp(
       entry.updatedAt, field: "memory updatedAt", fallback: SyncTimestampFormat.syncTimestampNow())
     let content = try Memory.normalizeContent(entry.content)
@@ -190,7 +189,7 @@ extension SwiftLorvexCoreService {
   public func importMemoryEntryIfAbsent(_ entry: ExportMemoryEntry) async throws -> (
     MemoryEntry?, Bool
   ) {
-    let key = try Self.requiredMemoryImportText(entry.key, field: "memory key")
+    let key = try Self.normalizedMemoryKey(entry.key)
     let now = try Self.canonicalImportTimestamp(
       entry.updatedAt, field: "memory updatedAt", fallback: SyncTimestampFormat.syncTimestampNow())
     let content = try Memory.normalizeContent(entry.content)
@@ -296,12 +295,26 @@ extension SwiftLorvexCoreService {
     return nil
   }
 
-  private static func requiredMemoryImportText(_ raw: String, field: String) throws -> String {
-    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else {
-      throw LorvexCoreError.unsupportedOperation("A \(field) is required.")
+  /// A memory key as it is stored: normalized by `Memory.normalizeMemoryKey`
+  /// (invisible and bidirectional controls stripped, NFC, boundary whitespace
+  /// trimmed), non-empty, and at most `ValidationLimits.kvKeyMaxChars`
+  /// codepoints. Every local memory write (upsert, rename, import) stores its
+  /// key through this: a key is shown to the assistant beside its content, so
+  /// it gets the same hygiene as the content, and the cap bounds the key at the
+  /// 1,200 escaped bytes the `PayloadByteBudget` memory arithmetic reserves
+  /// for it. Lookups by an existing key (read, delete, a rename's old key)
+  /// match the stored key as given.
+  static func normalizedMemoryKey(_ raw: String, field: String = "key") throws -> String {
+    let key = Memory.normalizeMemoryKey(raw)
+    guard !key.isEmpty else {
+      throw LorvexCoreError.validation(field: field, message: "A memory key is required.")
     }
-    return trimmed
+    guard key.unicodeScalars.count <= ValidationLimits.kvKeyMaxChars else {
+      throw LorvexCoreError.validation(
+        field: field,
+        message: "A memory key may be at most \(ValidationLimits.kvKeyMaxChars) characters.")
+    }
+    return key
   }
 
   public func deleteMemory(key: String) async throws -> Bool {
@@ -333,11 +346,5 @@ extension SwiftLorvexCoreService {
       }
       return McpDeletionReceipt(previous: result == nil ? nil : previous)
     }
-  }
-}
-
-private extension String {
-  var nilIfMemoryBlank: String? {
-    trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : self
   }
 }

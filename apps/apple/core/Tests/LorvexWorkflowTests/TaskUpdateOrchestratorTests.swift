@@ -323,6 +323,110 @@ final class TaskUpdateOrchestratorTests: XCTestCase {
       "parent recurrence must be cleared post-patch; got \(String(describing: parentRecurrence))")
   }
 
+  /// Insert a completed daily task whose authorized successor is open, and
+  /// return the successor's id.
+  private func insertCompletedRecurringPair(
+    _ store: LorvexStore, parentId: String, groupId: String
+  ) throws -> String {
+    let rule = #"{"FREQ":"DAILY","INTERVAL":1}"#
+    let successorId = TaskRecurrenceSuccessorID.make(
+      parentTaskId: parentId, recurrenceGroupId: groupId)
+    try insertTask(
+      store, id: parentId, title: "Water the plants",
+      status: StatusName.completed,
+      dueDate: "2026-04-01",
+      canonicalOccurrenceDate: "2026-04-01",
+      recurrence: rule,
+      recurrenceGroupId: groupId,
+      completedAt: "2026-04-01T08:00:00Z",
+      recurrenceSuccessorId: successorId)
+    try insertTask(
+      store, id: successorId, title: "Water the plants",
+      dueDate: "2026-04-02",
+      canonicalOccurrenceDate: "2026-04-02",
+      recurrence: rule,
+      recurrenceGroupId: groupId,
+      spawnedFrom: parentId,
+      spawnedFromVersion: "0000000000000_0000_0000000000000001",
+      version: "0000000000000_0000_0000000000000010")
+    return successorId
+  }
+
+  private func rolloverLink(_ store: LorvexStore, _ id: String) throws -> (String?, String?) {
+    try store.writer.read { db in
+      let row = try Row.fetchOne(
+        db,
+        sql: "SELECT recurrence_rollover_state, recurrence_successor_id FROM tasks WHERE id = ?",
+        arguments: [id])
+      return (row?[0], row?[1])
+    }
+  }
+
+  /// Setting a completed recurring task's status to completed again is no
+  /// transition. It must keep the authorized link to the next occurrence, so
+  /// a later reopen still cancels that occurrence instead of leaving two open
+  /// copies of the task.
+  func testRepeatedStatusKeepsTheRecurrenceSuccessorLink() throws {
+    let store = try freshStore()
+    let parentId = "01966a3f-7c8b-7d4e-8f3a-000000000020"
+    let groupId = "grp-same-status"
+    let successorId = try insertCompletedRecurringPair(
+      store, parentId: parentId, groupId: groupId)
+    let hlc = makeSession()
+
+    var again = emptyUpdate(parentId)
+    again.status = .set(StatusName.completed)
+    let repeated = try TaskUpdate.updateTask(store.writer, hlc: hlc, input: again)
+
+    XCTAssertTrue(
+      repeated.syncEffects.taskUpsertIds.isEmpty,
+      "an unchanged status changes nothing to sync; got \(repeated.syncEffects.taskUpsertIds)")
+    let link = try rolloverLink(store, parentId)
+    XCTAssertEqual(link.0, "authorized")
+    XCTAssertEqual(link.1, successorId)
+    let completedAt: String? = try store.writer.read { db in
+      try String.fetchOne(
+        db, sql: "SELECT completed_at FROM tasks WHERE id = ?", arguments: [parentId])
+    }
+    XCTAssertEqual(completedAt, "2026-04-01T08:00:00Z")
+
+    var reopen = emptyUpdate(parentId)
+    reopen.status = .set(StatusName.open)
+    let reopened = try TaskUpdate.updateTask(store.writer, hlc: hlc, input: reopen)
+
+    XCTAssertEqual(reopened.syncEffects.cancelledSuccessors.map(\.successorId), [successorId])
+    let openOccurrences: Int = try store.writer.read { db in
+      try Int.fetchOne(
+        db,
+        sql: "SELECT COUNT(*) FROM tasks WHERE recurrence_group_id = ? "
+          + "AND status IN ('open', 'in_progress')",
+        arguments: [groupId]) ?? 0
+    }
+    XCTAssertEqual(openOccurrences, 1, "only the reopened task stays open")
+  }
+
+  /// The status write itself never drops a rollover decision unless the
+  /// status crosses the terminal boundary.
+  func testRewritingATerminalStatusKeepsTheRolloverDecision() throws {
+    let store = try freshStore()
+    let parentId = "01966a3f-7c8b-7d4e-8f3a-000000000021"
+    let successorId = try insertCompletedRecurringPair(
+      store, parentId: parentId, groupId: "grp-rewrite")
+
+    let rows = try store.writer.write { db in
+      try LifecycleWriteStatus.writeStatusAndMetadata(
+        db, taskId: TaskId(trusted: parentId),
+        oldStatus: .completed, newStatus: .completed,
+        now: "2026-04-03T08:00:00Z",
+        version: "0000000000000_0000_0000000000000099")
+    }
+
+    XCTAssertEqual(rows, 1)
+    let link = try rolloverLink(store, parentId)
+    XCTAssertEqual(link.0, "authorized")
+    XCTAssertEqual(link.1, successorId)
+  }
+
   private func parseFreq(_ json: String) -> String? {
     guard let data = json.data(using: .utf8),
       let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

@@ -52,7 +52,7 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
     title = task.title
     notes = task.notes
     priority = task.priority
-    estimatedMinutesText = task.estimatedMinutes.map(String.init) ?? ""
+    estimatedMinutesText = task.estimatedMinutes.map { LorvexNumberInput.text(for: $0) } ?? ""
     // Each stored date is a UTC-midnight day anchor; the pickers are
     // local-calendar controls, so bridge every one through PlannedDayBridge.
     hasDueDate = task.dueDate != nil
@@ -108,7 +108,7 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
   public var parsedEstimatedMinutes: Int? {
     let text = estimatedMinutesText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else { return nil }
-    guard let value = Int(text),
+    guard let value = LorvexNumberInput.integer(from: text),
       (1...Int(ValidationLimits.maxEstimatedMinutes)).contains(value)
     else { return nil }
     return value

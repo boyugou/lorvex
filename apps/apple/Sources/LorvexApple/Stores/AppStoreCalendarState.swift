@@ -44,6 +44,26 @@ extension AppStore {
     calendarStorage.selectedCalendarEventID = nil
   }
 
+  /// The event shown in the main window's trailing inspector: the selected
+  /// event while Today is showing, where its schedule rows open it. Nil on
+  /// every other workspace; Calendar shows its selected event in its own
+  /// panel beside the grid.
+  var todayInspectorEvent: CalendarTimelineEvent? {
+    selection == .today ? selectedCalendarEvent : nil
+  }
+
+  /// Opens `event` in Today's inspector, or closes it when it is already
+  /// open, as re-clicking an open task row does. The inspector shows one
+  /// subject, so an open task closes first.
+  func toggleTodayEventSelection(_ event: CalendarTimelineEvent) {
+    if calendarStorage.selectedCalendarEventID == event.id {
+      clearSelectedCalendarEvent()
+      return
+    }
+    selectedTaskID = nil
+    selectCalendarEvent(event)
+  }
+
   var calendarScheduledTasks: [LorvexTask]? {
     get { calendarStorage.calendarScheduledTasks }
     set { calendarStorage.calendarScheduledTasks = newValue }

@@ -89,13 +89,6 @@ func weekLoadHeadlineLooksAhead() {
   #expect(overnight.days[0].meetingMinutes == 0)
 }
 
-@Test
-func mobileLengthsReadInHoursAndMinutes() {
-  #expect(MobileTodayCalmCopy.length(45) == "45 min")
-  #expect(MobileTodayCalmCopy.length(120) == "2 hr")
-  #expect(MobileTodayCalmCopy.length(150) == "2 hr 30 min")
-}
-
 @Test("On today, time already gone is neither free nor packed")
 func weekLoadCountsTodayFromNow() {
   let load = LorvexWeekLoad.build(

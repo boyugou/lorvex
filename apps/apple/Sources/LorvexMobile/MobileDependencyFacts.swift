@@ -5,18 +5,19 @@ import SwiftUI
 /// that the task has been started, and when it is due, in the overdue tint
 /// once that day has passed, the way a task row shows both. A completed or
 /// cancelled task shows neither, since its circle already says it is done.
-/// `init(task:)` returns nil when neither fact applies, so such a row stays a
-/// single title line. The task's priority and plain status are left to its
-/// status circle, whose glyph and tint carry them.
+/// `init(task:timeZone:)` returns nil when neither fact applies, so such a row
+/// stays a single title line. The task's priority and plain status are left to
+/// its status circle, whose glyph and tint carry them. The due day is counted
+/// from today in the product time zone the hosting row passes.
 struct MobileDependencyFacts: View {
   let isStarted: Bool
   let due: String?
   let isOverdue: Bool
 
-  init?(task: LorvexTask) {
+  init?(task: LorvexTask, timeZone: TimeZone) {
     isStarted = task.status == .inProgress
-    due = task.status.isResolved ? nil : task.cachedDueRelativeLabel()
-    isOverdue = due != nil && task.isOverdue()
+    due = task.status.isResolved ? nil : task.cachedDueRelativeLabel(timeZone: timeZone)
+    isOverdue = due != nil && task.isOverdue(timeZone: timeZone)
     guard isStarted || due != nil else { return nil }
   }
 
@@ -44,17 +45,5 @@ struct MobileDependencyFacts: View {
     .font(.footnote)
     .lineLimit(1)
     .accessibilityHidden(true)
-  }
-
-  /// What VoiceOver reads after a dependency's title: its status, then when an
-  /// unfinished one is due ("In Progress, due tomorrow"). The row's circle and
-  /// facts line are not read aloud, so the status is always named here.
-  nonisolated static func accessibilityValue(for task: LorvexTask) -> String {
-    let vocabulary = TaskAccessibilityVocabulary.mobileLocalized
-    var parts = [MobileTaskDisplayText.status(task.status)]
-    if !task.status.isResolved, let due = task.cachedDueRelativeLabel() {
-      parts.append(String(format: task.isOverdue() ? vocabulary.overdueFormat : vocabulary.dueFormat, due))
-    }
-    return parts.joined(separator: ", ")
   }
 }

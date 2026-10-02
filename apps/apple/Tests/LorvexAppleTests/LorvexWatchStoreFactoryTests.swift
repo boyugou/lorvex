@@ -20,7 +20,7 @@ struct LorvexWatchStoreFactoryTests {
     await store.refresh()
 
     #expect(store.tasks.first?.title == "Snapshot task")
-    #expect(store.snapshotStatusText == "Synced 3m ago")
+    #expect(store.snapshotStatusText == "Synced \(LorvexDateFormatters.elapsed(seconds: 180))")
   }
 
   @Test("factory does not fall back to a writable core when snapshot is unavailable")

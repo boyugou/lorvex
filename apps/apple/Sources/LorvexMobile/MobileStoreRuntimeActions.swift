@@ -59,32 +59,33 @@ extension MobileStore {
   /// `.noData`, which is a pass that moved nothing or a gate (sync off, no
   /// account, paused) that ran no work.
   ///
-  /// Surface adoption itself needs `.newData`: both the refresh path and the
-  /// drain can pull peer writes after their visible surfaces were last read. A
-  /// bounded applied-kind set gets the selective executor; a fetched but
-  /// empty/diffuse set falls back to a best-effort full local reload. A push
-  /// conflict reports the exact kinds its server winner changed, while an
-  /// ordinary confirmed push performs no local reload. Neither branch calls
-  /// CloudKit, so adoption cannot form a sync loop.
+  /// Surface adoption itself needs `.newData` and a pass that changed
+  /// canonical rows: both the refresh path and the drain can pull peer writes
+  /// after their visible surfaces were last read. A bounded applied-kind set
+  /// gets the selective executor; a change no domain bounds (a diffuse
+  /// preference, or one with no attributed kind) falls back to a best-effort
+  /// full local reload. A push conflict reports the exact kinds its server
+  /// winner changed, while an ordinary confirmed push, or a fetched batch of
+  /// records already held (this device's own pushes coming back), performs no
+  /// local reload. Neither branch calls CloudKit, so adoption cannot form a
+  /// sync loop.
   func reloadInboundSurfacesIfNeeded(after syncResult: MobileCloudSyncLifecycleResult) async {
     if syncResult != .noData { await refreshSyncStatus() }
     guard syncResult == .newData else { return }
-    guard let report = lastCloudSyncCycleReport else { return }
-    let appliedKinds = report.inbound.appliedEntityTypes
-    guard report.fetchedRecordCount > 0 || !appliedKinds.isEmpty else { return }
-    if let domains = InboundReloadScope.domains(for: appliedKinds) {
+    guard let report = lastCloudSyncCycleReport, report.inbound.canonicalStateChanged else {
+      return
+    }
+    if let domains = InboundReloadScope.domains(for: report.inbound.appliedEntityTypes) {
       await reloadInboundDomains(domains)
     } else {
       // Best-effort — preserve the already-published UI if any local read fails.
       _ = await loadLocalSurfaces(clearOnFailure: false)
     }
-    // Inbound apply bypasses the ordinary local-write funnel. Notify CarPlay and
-    // any independent same-process store only when canonical rows changed; the
-    // origin guard in the database-change observer prevents this
-    // already-reconciled store from reloading itself.
-    if !appliedKinds.isEmpty {
-      DatabaseChangeSignal.broadcastCommittedChangeInProcess(origin: self)
-    }
+    // Inbound apply bypasses the ordinary local-write funnel, so notify CarPlay
+    // and any independent same-process store here; the origin guard in the
+    // database-change observer keeps this already-reconciled store from
+    // reloading itself.
+    DatabaseChangeSignal.broadcastCommittedChangeInProcess(origin: self)
   }
 
   /// Load and publish every local surface from the on-disk store, managing

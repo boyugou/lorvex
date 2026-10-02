@@ -17,7 +17,7 @@ extension LorvexDataImporter {
     nativeTaskGraph: NativeTaskGraphSnapshot?,
     permitExactNativeRestore: Bool,
     using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     // A native backup can preserve the complete task aggregate exactly, but
     // only the concrete Apple core can prove the entire task domain is fresh
     // and materialize it atomically. Missing roots or any pre-existing task
@@ -34,10 +34,9 @@ extension LorvexDataImporter {
         return (
           LorvexImportCategoryResult(category: .tasks, imported: 0, skipped: 0),
           [
-            LorvexImportError(
-              category: .tasks,
-              recordRef: "nativeTaskGraph",
-              message: error.localizedDescription)
+            LorvexImportIssue(
+              category: .tasks, record: .wholeCategory, outcome: .notImported,
+              detail: error.localizedDescription)
           ]
         )
       }
@@ -56,17 +55,16 @@ extension LorvexDataImporter {
         return (
           LorvexImportCategoryResult(category: .tasks, imported: 0, skipped: 0),
           [
-            LorvexImportError(
-              category: .tasks,
-              recordRef: "nativeTaskGraph",
-              message: error.localizedDescription)
+            LorvexImportIssue(
+              category: .tasks, record: .wholeCategory, outcome: .notImported,
+              detail: error.localizedDescription)
           ]
         )
       }
     }
 
     var deferredWork: [DeferredTaskWork] = []
-    let created: (imported: Int, skipped: Int, errors: [LorvexImportError])
+    let created: (imported: Int, skipped: Int, errors: [LorvexImportIssue])
     // Restore each task record atomically when the backend supports it (create +
     // list + checklist + reminders + recurrence in one transaction), so a child
     // failure rolls the whole task — and its outbox envelopes — back rather than
@@ -103,10 +101,10 @@ extension LorvexDataImporter {
   private static func createTasksTransactionally(
     _ tasks: [ExportTask], tx: any LorvexNativeImportServicing,
     deferredWork: inout [DeferredTaskWork]
-  ) async -> (imported: Int, skipped: Int, errors: [LorvexImportError]) {
+  ) async -> (imported: Int, skipped: Int, errors: [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     for task in tasks {
       guard let parsed = parseTaskCreateFields(task, into: &errors) else { continue }
       do {
@@ -121,9 +119,7 @@ extension LorvexDataImporter {
           skipped += 1
         }
       } catch {
-        errors.append(
-          LorvexImportError(
-            category: .tasks, recordRef: task.id, message: error.localizedDescription))
+        errors.append(.notImported(task, error.localizedDescription))
       }
     }
     return (imported, skipped, errors)
@@ -135,10 +131,10 @@ extension LorvexDataImporter {
   private static func createTasksPerOperation(
     _ tasks: [ExportTask], using core: any LorvexCoreServicing,
     deferredWork: inout [DeferredTaskWork]
-  ) async -> (imported: Int, skipped: Int, errors: [LorvexImportError]) {
+  ) async -> (imported: Int, skipped: Int, errors: [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     for task in tasks {
       let exists: Bool
       do {
@@ -147,9 +143,7 @@ extension LorvexDataImporter {
       } catch LorvexCoreError.taskNotFound {
         exists = false
       } catch {
-        errors.append(
-          LorvexImportError(
-            category: .tasks, recordRef: task.id, message: error.localizedDescription))
+        errors.append(.notImported(task, error.localizedDescription))
         continue
       }
       if exists {
@@ -185,9 +179,9 @@ extension LorvexDataImporter {
               TaskUpdateDraft(id: task.id, plannedTime: .set(plannedTime)))
           } catch {
             errors.append(
-              LorvexImportError(
-                category: .tasks, recordRef: task.id,
-                message: "Restored without its planned time: \(error.localizedDescription)"))
+              .restored(
+                task, without: .plannedTime,
+                "Restored without its planned time: \(error.localizedDescription)"))
           }
         }
         if let listID = task.listID {
@@ -196,9 +190,9 @@ extension LorvexDataImporter {
           } catch {
             // The task itself restored; only its list membership did not.
             errors.append(
-              LorvexImportError(
-                category: .tasks, recordRef: task.id,
-                message: "Restored without list \"\(listID)\": \(error.localizedDescription)"))
+              .restored(
+                task, without: .list,
+                "Restored without list \"\(listID)\": \(error.localizedDescription)"))
           }
         }
         if let checklistError = await restoreChecklist(task, using: core) {
@@ -213,9 +207,7 @@ extension LorvexDataImporter {
         deferredWork.append(DeferredTaskWork(task: task, creationWitness: nil))
         imported += 1
       } catch {
-        errors.append(
-          LorvexImportError(
-            category: .tasks, recordRef: task.id, message: error.localizedDescription))
+        errors.append(.notImported(task, error.localizedDescription))
       }
     }
     return (imported, skipped, errors)
@@ -228,8 +220,8 @@ extension LorvexDataImporter {
   /// backup refinement cannot overwrite an edit made after create.
   private static func applyDeferredTaskWork(
     _ deferredWork: [DeferredTaskWork], using core: any LorvexCoreServicing
-  ) async -> [LorvexImportError] {
-    var errors: [LorvexImportError] = []
+  ) async -> [LorvexImportIssue] {
+    var errors: [LorvexImportIssue] = []
     for work in deferredWork {
       if let witness = work.creationWitness,
         let nativeImporter = core as? any LorvexNativeImportServicing
@@ -238,26 +230,30 @@ extension LorvexDataImporter {
           let result = try await nativeImporter.finalizeImportedTaskRecordTransactionally(
             work.task, creationWitness: witness)
           guard result.matchedCreationWitness else {
+            // The deferred pass never overwrites an edit made after create, so
+            // every detail it would have applied stays out.
             errors.append(
-              LorvexImportError(
-                category: .tasks, recordRef: work.task.id,
-                message:
+              contentsOf: deferredParts(of: work.task).map {
+                .restored(
+                  work.task, without: $0,
                   "Skipped deferred restore because the task changed after its backup row was created."
-              ))
+                )
+              })
             continue
           }
           for failure in result.failures {
             errors.append(
-              LorvexImportError(
-                category: .tasks, recordRef: work.task.id,
-                message: deferredFailureMessage(
-                  failure, status: work.task.status)))
+              .restored(
+                work.task, without: deferredPart(failure.step),
+                deferredFailureMessage(failure, status: work.task.status)))
           }
         } catch {
           errors.append(
-            LorvexImportError(
-              category: .tasks, recordRef: work.task.id,
-              message: "Could not finish the task restore: \(error.localizedDescription)"))
+            contentsOf: deferredParts(of: work.task).map {
+              .restored(
+                work.task, without: $0,
+                "Could not finish the task restore: \(error.localizedDescription)")
+            })
         }
         continue
       }
@@ -268,9 +264,9 @@ extension LorvexDataImporter {
             TaskUpdateDraft(id: work.task.id, dependsOn: dependsOn))
         } catch {
           errors.append(
-            LorvexImportError(
-              category: .tasks, recordRef: work.task.id,
-              message: "Restored without dependencies: \(error.localizedDescription)"))
+            .restored(
+              work.task, without: .dependencies,
+              "Restored without dependencies: \(error.localizedDescription)"))
         }
       }
       if work.task.status == LorvexTask.Status.cancelled.rawValue {
@@ -278,9 +274,9 @@ extension LorvexDataImporter {
           _ = try await core.cancelTask(id: work.task.id)
         } catch {
           errors.append(
-            LorvexImportError(
-              category: .tasks, recordRef: work.task.id,
-              message: "Restored without cancelled status: \(error.localizedDescription)"))
+            .restored(
+              work.task, without: .status,
+              "Restored without cancelled status: \(error.localizedDescription)"))
         }
       }
       do {
@@ -295,9 +291,9 @@ extension LorvexDataImporter {
           updatedAt: work.task.updatedAt)
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .tasks, recordRef: work.task.id,
-            message: "Restored without exact task metadata: \(error.localizedDescription)"))
+          .restored(
+            work.task, without: .history,
+            "Restored without exact task metadata: \(error.localizedDescription)"))
       }
     }
     // Apply `in_progress` last, once every identity and dependency exists. The
@@ -318,12 +314,36 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .tasks, recordRef: work.task.id,
-            message: "Restored without in_progress status: \(error.localizedDescription)"))
+          .restored(
+            work.task, without: .status,
+            "Restored without in_progress status: \(error.localizedDescription)"))
       }
     }
     return errors
+  }
+
+  /// The details the deferred pass applies to `task`: its dependencies when it
+  /// has any, a cancelled or in-progress status, and always its history.
+  private static func deferredParts(of task: ExportTask) -> [LorvexImportIssue.Part] {
+    var parts: [LorvexImportIssue.Part] = []
+    if let dependsOn = task.dependsOn, !dependsOn.isEmpty { parts.append(.dependencies) }
+    if task.status == LorvexTask.Status.cancelled.rawValue
+      || task.status == LorvexTask.Status.inProgress.rawValue
+    {
+      parts.append(.status)
+    }
+    parts.append(.history)
+    return parts
+  }
+
+  private static func deferredPart(
+    _ step: ImportedTaskRecordFinalizeStep
+  ) -> LorvexImportIssue.Part {
+    switch step {
+    case .dependencies: .dependencies
+    case .metadata: .history
+    case .lifecycle: .status
+    }
   }
 
   private static func deferredFailureMessage(
@@ -348,31 +368,28 @@ extension LorvexDataImporter {
   /// the task. Status parsing is strict: every accepted value must be a current
   /// ``LorvexTask/Status`` wire value.
   private static func parseTaskCreateFields(
-    _ task: ExportTask, into errors: inout [LorvexImportError]
+    _ task: ExportTask, into errors: inout [LorvexImportIssue]
   ) -> (
     priority: LorvexTask.Priority, status: LorvexTask.Status, dueDate: Date?, plannedDate: Date?,
     plannedTime: Range<Int>?, availableFrom: Date?, tags: [String]
   )? {
     guard let priority = LorvexTask.Priority(rawValue: task.priority) else {
-      errors.append(
-        LorvexImportError(
-          category: .tasks, recordRef: task.id,
-          message: "Unknown priority \"\(task.priority)\"."))
+      errors.append(.notImported(task, "Unknown priority \"\(task.priority)\"."))
       return nil
     }
-    let parsedDueDate = parseOptionalTaskDate(task.dueDate, id: task.id, field: "dueDate")
+    let parsedDueDate = parseOptionalTaskDate(task.dueDate, of: task, field: "dueDate")
     if let error = parsedDueDate.error {
       errors.append(error)
       return nil
     }
     let parsedPlannedDate = parseOptionalTaskDate(
-      task.plannedDate, id: task.id, field: "plannedDate")
+      task.plannedDate, of: task, field: "plannedDate")
     if let error = parsedPlannedDate.error {
       errors.append(error)
       return nil
     }
     let parsedAvailableFrom = parseOptionalTaskDate(
-      task.availableFrom, id: task.id, field: "availableFrom")
+      task.availableFrom, of: task, field: "availableFrom")
     if let error = parsedAvailableFrom.error {
       errors.append(error)
       return nil
@@ -381,16 +398,11 @@ extension LorvexDataImporter {
     do {
       plannedTime = try task.plannedTimeRange()
     } catch {
-      errors.append(
-        LorvexImportError(
-          category: .tasks, recordRef: task.id, message: error.localizedDescription))
+      errors.append(.notImported(task, error.localizedDescription))
       return nil
     }
     guard let status = LorvexTask.Status(rawValue: task.status) else {
-      errors.append(
-        LorvexImportError(
-          category: .tasks, recordRef: task.id,
-          message: "Unknown status \"\(task.status)\"."))
+      errors.append(.notImported(task, "Unknown status \"\(task.status)\"."))
       return nil
     }
     let tags = task.tags ?? []
@@ -405,12 +417,12 @@ extension LorvexDataImporter {
   /// unknown frequency.
   private static func restoreRecurrence(
     _ task: ExportTask, using core: any LorvexCoreServicing
-  ) async -> LorvexImportError? {
+  ) async -> LorvexImportIssue? {
     guard let exported = task.recurrence else { return nil }
     guard let rule = exported.rule else {
-      return LorvexImportError(
-        category: .tasks, recordRef: task.id,
-        message: "Restored without recurrence: unknown frequency \"\(exported.freq)\".")
+      return .restored(
+        task, without: .recurrence,
+        "Restored without recurrence: unknown frequency \"\(exported.freq)\".")
     }
     do {
       _ = try await core.setTaskRecurrence(taskID: task.id, rule: rule)
@@ -421,9 +433,8 @@ extension LorvexDataImporter {
       }
       return nil
     } catch {
-      return LorvexImportError(
-        category: .tasks, recordRef: task.id,
-        message: "Restored without recurrence: \(error.localizedDescription)")
+      return .restored(
+        task, without: .recurrence, "Restored without recurrence: \(error.localizedDescription)")
     }
   }
 
@@ -432,7 +443,7 @@ extension LorvexDataImporter {
   /// the first failure.
   private static func restoreChecklist(
     _ task: ExportTask, using core: any LorvexCoreServicing
-  ) async -> LorvexImportError? {
+  ) async -> LorvexImportIssue? {
     guard let checklist = task.checklist, !checklist.isEmpty else { return nil }
     do {
       if checklist.allSatisfy({ $0.id != nil }),
@@ -452,20 +463,19 @@ extension LorvexDataImporter {
       }
       return nil
     } catch {
-      return LorvexImportError(
-        category: .tasks, recordRef: task.id,
-        message: "Restored without full checklist: \(error.localizedDescription)")
+      return .restored(
+        task, without: .checklist, "Restored without full checklist: \(error.localizedDescription)")
     }
   }
 
   private static func restoreReminders(
     _ task: ExportTask, using core: any LorvexCoreServicing
-  ) async -> LorvexImportError? {
+  ) async -> LorvexImportIssue? {
     if let reminders = task.reminders, !reminders.isEmpty {
       guard let importing = core as? any LorvexNativeImportServicing else {
-        return LorvexImportError(
-          category: .tasks, recordRef: task.id,
-          message: "Restored without reminders: exact reminder import is unsupported.")
+        return .restored(
+          task, without: .reminders,
+          "Restored without reminders: exact reminder import is unsupported.")
       }
       do {
         for reminder in reminders {
@@ -473,9 +483,8 @@ extension LorvexDataImporter {
         }
         return nil
       } catch {
-        return LorvexImportError(
-          category: .tasks, recordRef: task.id,
-          message: "Restored without reminders: \(error.localizedDescription)")
+        return .restored(
+          task, without: .reminders, "Restored without reminders: \(error.localizedDescription)")
       }
     }
     return nil
@@ -483,9 +492,9 @@ extension LorvexDataImporter {
 
   private static func parseOptionalTaskDate(
     _ raw: String?,
-    id: String,
+    of task: ExportTask,
     field: String
-  ) -> (date: Date?, error: LorvexImportError?) {
+  ) -> (date: Date?, error: LorvexImportIssue?) {
     guard let raw else { return (nil, nil) }
     // Accept both the fractional-millisecond `Z` shape the exporter now emits and
     // the plain internet-date-time form, so a date round-trips regardless of
@@ -494,13 +503,26 @@ extension LorvexDataImporter {
       let date = LorvexDateFormatters.iso8601Fractional.date(from: raw)
         ?? LorvexDateFormatters.iso8601.date(from: raw)
     else {
-      return (
-        nil,
-        LorvexImportError(
-          category: .tasks, recordRef: id,
-          message: "Unparseable \(field) \"\(raw)\".")
-      )
+      return (nil, .notImported(task, "Unparseable \(field) \"\(raw)\"."))
     }
     return (date, nil)
+  }
+}
+
+extension LorvexImportIssue {
+  /// A backup task the import did not restore, named by its title.
+  fileprivate static func notImported(_ task: ExportTask, _ detail: String) -> Self {
+    LorvexImportIssue(
+      category: .tasks, record: .named(id: task.id, name: task.title), outcome: .notImported,
+      detail: detail)
+  }
+
+  /// A backup task restored without one of its details, named by its title.
+  fileprivate static func restored(
+    _ task: ExportTask, without part: Part, _ detail: String
+  ) -> Self {
+    LorvexImportIssue(
+      category: .tasks, record: .named(id: task.id, name: task.title),
+      outcome: .restoredWithout(part), detail: detail)
   }
 }

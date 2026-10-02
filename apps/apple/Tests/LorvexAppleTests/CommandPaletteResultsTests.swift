@@ -99,24 +99,24 @@ func taskSubtitleNamesTheListDueDayAndAnUnusualStatus() {
   let names = ["l1": "Apple Native"]
 
   let plain = makeTask(id: "1", title: "Write report")
-  #expect(CommandPaletteResults.taskSubtitle(plain, listNames: names, now: now, calendar: calendar) == nil)
+  #expect(CommandPaletteResults.taskSubtitle(plain, listNames: names, now: now, timeZone: calendar.timeZone) == nil)
 
   var filed = makeTask(id: "2", title: "Ship")
   filed.listID = "l1"
   filed.dueDate = now
   #expect(
-    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, calendar: calendar)
+    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, timeZone: calendar.timeZone)
       == "Apple Native · Due today")
 
   filed.status = .inProgress
   #expect(
-    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, calendar: calendar)
+    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, timeZone: calendar.timeZone)
       == "Apple Native · Due today · In Progress")
 
   // A finished task says so instead of when it was due.
   filed.status = .completed
   #expect(
-    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, calendar: calendar)
+    CommandPaletteResults.taskSubtitle(filed, listNames: names, now: now, timeZone: calendar.timeZone)
       == "Apple Native · Completed")
 }
 

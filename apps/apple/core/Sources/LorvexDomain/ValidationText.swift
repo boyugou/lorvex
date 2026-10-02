@@ -3,9 +3,10 @@
 /// All length checks count Unicode codepoints (scalars), so the domain layer
 /// agrees with every other write boundary.
 public enum ValidationText {
-  /// Returns `true` when `s` contains nothing but invisible/strippable
-  /// codepoints (zero-width joiners, bidi marks, BOM, control chars excluding
-  /// the legitimate `\t \n \r`) plus whitespace.
+  /// Returns `true` when `s` contains nothing but whitespace and codepoints
+  /// that draw nothing on their own (``UnicodeHygiene/isInvisibleCodepoint(_:)``:
+  /// zero-width characters and joiners, bidi marks, BOM, tag characters,
+  /// control chars other than `\t \n \r`).
   ///
   /// Treating "post-sanitize empty" as empty closes a gap that bare trimming
   /// leaves: trimming does not remove zero-width codepoints, so a title that
@@ -13,7 +14,7 @@ public enum ValidationText {
   /// a bare non-empty check.
   public static func isVisuallyEmpty(_ s: String) -> Bool {
     s.unicodeScalars.allSatisfy { c in
-      c.properties.isWhitespace || UnicodeHygiene.isDisallowedCodepoint(c)
+      c.properties.isWhitespace || UnicodeHygiene.isInvisibleCodepoint(c)
     }
   }
 
@@ -24,7 +25,7 @@ public enum ValidationText {
     var count = 0
     for c in s.unicodeScalars {
       count += 1
-      if !(c.properties.isWhitespace || UnicodeHygiene.isDisallowedCodepoint(c)) {
+      if !(c.properties.isWhitespace || UnicodeHygiene.isInvisibleCodepoint(c)) {
         visuallyEmpty = false
       }
     }

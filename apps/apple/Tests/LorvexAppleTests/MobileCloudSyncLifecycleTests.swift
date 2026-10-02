@@ -313,6 +313,36 @@ func mobileCycleCoalescesOverlappingTriggersAndRetainsProgress() async throws {
     "the trailing pass retains the first pass's report for post-cycle fan-out")
 }
 
+/// A task action returns once the store shows it, not once iCloud has it: the
+/// sync pass the write starts runs on its own, so the task can be acted on
+/// again, and the action's feedback plays, while the pass is still sending.
+@MainActor
+@Test(.timeLimit(.minutes(1)))
+func mobileTaskActionDoesNotWaitForItsSyncPass() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let (store, sync) = makeLiveStore(core: core)
+  _ = await sync.controller.start()
+  let gate = SyncGate()
+  let controller = sync.controller
+  let engine = try sync.engine
+  let firstSend = OnceFlag()
+  engine.onSend = {
+    if firstSend.claim() { await gate.enter() }
+    let batch = await controller.nextBatch(scope: .all)
+    await controller.handleSentRecords(saved: batch, failed: [])
+  }
+  let taskID = LorvexPreviewSeedID.agendaTask
+
+  #expect(await store.completeTask(taskID))
+  await gate.waitForEntry()
+  #expect(store.isCloudSyncCycleRunning, "the completion's sync pass is still sending")
+  #expect(!store.taskIsMutating(taskID))
+  #expect(await store.reopenTask(taskID), "the task takes its next action before the pass ends")
+
+  await gate.open()
+  await store.runCloudSyncCycle()
+}
+
 // MARK: - Factory
 
 @Test

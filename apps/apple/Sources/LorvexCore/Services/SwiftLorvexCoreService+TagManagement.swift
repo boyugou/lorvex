@@ -8,7 +8,7 @@ import LorvexWorkflow
 
 extension SwiftLorvexCoreService {
   public func listAllTags() async throws -> [String] {
-    try read { db in
+    let names = try read { db in
       // Only tags attached to at least one non-archived task — honors the
       // documented "tags attached to non-archived tasks" contract and keeps
       // tags whose tasks were all deleted or archived out of the result. Tag
@@ -22,9 +22,17 @@ extension SwiftLorvexCoreService {
           WHERE EXISTS ( \
             SELECT 1 FROM task_tags tt JOIN tasks tk ON tk.id = tt.task_id \
             WHERE tt.tag_id = t.id AND tk.archived_at IS NULL \
-          ) \
-          ORDER BY t.display_name ASC, t.id ASC
+          )
           """)
+    }
+    // SQLite orders text by code point (every capital before "a", "É" after
+    // "z"); people expect the order of their language.
+    return names.sorted { lhs, rhs in
+      switch lhs.localizedStandardCompare(rhs) {
+      case .orderedAscending: true
+      case .orderedDescending: false
+      case .orderedSame: lhs < rhs
+      }
     }
   }
 

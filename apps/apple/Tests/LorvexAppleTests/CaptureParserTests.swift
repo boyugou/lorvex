@@ -72,6 +72,24 @@ func captureParserKeepsUnknownHashWordsAsTags() {
 }
 
 @Test
+func captureParserReadsTagsInEveryScript() {
+  // Vowel signs and joiners belong to the word they are in.
+  #expect(parse("काम करना #दफ़्तर").tags == ["दफ़्तर"])
+  #expect(parse("خرید #می\u{200C}خواهم").tags == ["می\u{200C}خواهم"])
+  #expect(parse("ซื้อของ #สวัสดี").tags == ["สวัสดี"])
+  #expect(parse("Plan #tag-one, #two").tags == ["tag-one", "two"])
+}
+
+@Test
+func captureParserMatchesListsIgnoringCaseAndAccents() {
+  let options = [LorvexCaptureParser.ListOption(id: "list-tomorrow", name: "Mañana")]
+  let result = LorvexCaptureParser.parse("Call the bank #MANANA", lists: options, todayWeekday: 3)
+  #expect(result.listID == "list-tomorrow")
+  #expect(result.listName == "Mañana")
+  #expect(result.tags.isEmpty)
+}
+
+@Test
 func captureParserLeavesOrdinaryWordsInTheTitle() {
   // Words that only look like details inside a title stay put.
   let memo = parse("Read Monday Morning Memo draft")

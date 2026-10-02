@@ -51,7 +51,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
       ExportTask(
         id: id, title: "Abandoned", notes: "", priority: "P2", status: "cancelled",
         dueDate: nil, estimatedMinutes: nil, tags: []))
-    XCTAssertTrue(summary.errors.isEmpty, "Cancelled import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Cancelled import should not error: \(summary.issues)")
     let restored = try await service.loadTask(id: id)
     // `importRemoteTask` cannot express cancelled (a plain INSERT limited to
     // open/someday/completed); the importer transitions via `cancelTask` so the
@@ -71,7 +71,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let target = try makeService()
     let summary = await importTask(target, exported)
-    XCTAssertTrue(summary.errors.isEmpty, "in_progress import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "in_progress import should not error: \(summary.issues)")
     let restored = try await target.loadTask(id: created.id)
     XCTAssertEqual(restored.status, .inProgress)
   }
@@ -92,7 +92,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Dependency import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Dependency import should not error: \(summary.issues)")
     let restored = try await service.loadTask(id: taskID)
     XCTAssertEqual(restored.dependsOn, [dependencyID])
   }
@@ -110,8 +110,8 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
     // `deferred` is a derived lane, not a persisted status. Silently coercing it
     // would hide a broken or drifted export contract.
     XCTAssertTrue(
-      summary.errors.contains { $0.message.contains("Unknown status") },
-      "Expected deferred to be rejected, got \(summary.errors.map(\.message))")
+      summary.issues.contains { $0.detail.contains("Unknown status") },
+      "Expected deferred to be rejected, got \(summary.issues.map(\.detail))")
     do {
       _ = try await service.loadTask(id: id)
       XCTFail("A task with the non-status deferred label must not be imported.")
@@ -131,8 +131,8 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
     // An unrecognized status is a per-record error, not a silent coercion to open
     // (asymmetric with priority/date, which already reject).
     XCTAssertTrue(
-      summary.errors.contains { $0.message.contains("Unknown status") },
-      "Expected an 'Unknown status' per-record error, got \(summary.errors.map(\.message))")
+      summary.issues.contains { $0.detail.contains("Unknown status") },
+      "Expected an 'Unknown status' per-record error, got \(summary.issues.map(\.detail))")
     // The record was skipped, not imported as an open task.
     do {
       _ = try await service.loadTask(id: id)
@@ -229,7 +229,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
         updatedAt: "2026-06-03T11:00:00Z",
         archivedAt: "2026-06-04T12:00:00Z"))
 
-    XCTAssertTrue(summary.errors.isEmpty, "Archived metadata import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Archived metadata import should not error: \(summary.issues)")
     let restored = try await service.loadTask(id: id)
     XCTAssertEqual(restored.status, .completed)
     XCTAssertEqual(restored.archivedAt, "2026-06-04T12:00:00.000Z")
@@ -287,7 +287,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Import should not error: \(summary.issues)")
     let json = try await service.exportData(entities: ["tasks", "daily_briefings"], format: "json")
     let exported = try JSONDecoder().decode(LorvexDataExportPayload.self, from: Data(json.utf8))
     let briefing = try XCTUnwrap(exported.dailyBriefings?.first { $0.date == "2026-06-02" })
@@ -340,8 +340,8 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
     XCTAssertTrue(
-      summary.errors.isEmpty,
-      "Task-calendar event link import should not error: \(summary.errors)")
+      summary.issues.isEmpty,
+      "Task-calendar event link import should not error: \(summary.issues)")
     let json = try await service.exportData(
       entities: ["task_calendar_event_links"], format: "json")
     let exportedPayload = try JSONDecoder().decode(
@@ -381,7 +381,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
     let plan = LorvexDataImporter.plan(for: payload)
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
-    XCTAssertTrue(summary.errors.isEmpty, "Import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Import should not error: \(summary.issues)")
 
     let linkInitiatedBy = try service.read { db in
       try String.fetchOne(
@@ -415,7 +415,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Tag import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Tag import should not error: \(summary.issues)")
     let json = try await service.exportData(entities: ["tags"], format: "json")
     let exportedPayload = try JSONDecoder().decode(
       LorvexDataExportPayload.self, from: Data(json.utf8))
@@ -469,7 +469,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Daily review import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Daily review import should not error: \(summary.issues)")
     let loaded = try await service.loadDailyReview(date: "2026-06-02")
     let restored = try XCTUnwrap(loaded)
     XCTAssertEqual(restored.summary, "Restored review")
@@ -502,7 +502,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Memory import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Memory import should not error: \(summary.issues)")
     let loadedMemory = try await service.loadMemory()
     let restored = try XCTUnwrap(loadedMemory.entries.first { $0.key == "restored-memory" })
     XCTAssertEqual(restored.content, "Imported memory")
@@ -531,7 +531,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Memory import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Memory import should not error: \(summary.issues)")
     let storedId = try XCTUnwrap(
       try service.read { db in
         try String.fetchOne(db, sql: "SELECT id FROM memories WHERE key = ?", arguments: ["legacy-memory"])
@@ -675,7 +675,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Habit completion import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Habit completion import should not error: \(summary.issues)")
     let completions = try await service.getHabitCompletions(
       id: id, from: nil, to: nil, limit: 10).completions
     let restored = try XCTUnwrap(completions.first)
@@ -841,7 +841,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
       ] + decisions)
     let plan = LorvexDataImporter.plan(for: payload)
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
-    XCTAssertTrue(summary.errors.isEmpty, "Calendar import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Calendar import should not error: \(summary.issues)")
 
     let json = try await service.exportData(entities: ["calendar_events"], format: "json")
     let decoded = try JSONDecoder().decode(LorvexDataExportPayload.self, from: Data(json.utf8))
@@ -871,7 +871,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
       ])
     let plan = LorvexDataImporter.plan(for: payload)
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
-    XCTAssertTrue(summary.errors.isEmpty, "Calendar import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Calendar import should not error: \(summary.issues)")
 
     // Stored as the canonical uppercase JSON: sorted keys, INTERVAL applied.
     let timeline = try await service.loadCalendarTimeline(from: "2026-06-01", to: "2026-06-30")
@@ -931,7 +931,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
         dueDate: nil, estimatedMinutes: nil, tags: [],
         checklist: [ExportChecklistItem(id: uuid(), position: 0, text: "", completed: false)]))
     XCTAssertTrue(
-      summary.errors.contains { $0.recordRef == id },
+      summary.issues.contains { $0.recordID == id },
       "a failing child must surface a per-record error")
     do {
       _ = try await service.loadTask(id: id)
@@ -963,7 +963,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
       ])
     let plan = LorvexDataImporter.plan(for: payload)
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
-    XCTAssertTrue(summary.errors.contains { $0.recordRef == id })
+    XCTAssertTrue(summary.issues.contains { $0.recordID == id })
     let habits = try await service.loadHabits(date: "2026-06-03").habits
     XCTAssertFalse(habits.contains { $0.id == id }, "the habit must not exist after rollback")
     let outbound = try service.pendingOutbound()
@@ -1002,7 +1002,7 @@ final class SwiftLorvexCoreServiceImportTests: XCTestCase {
 
     let summary = await LorvexDataImporter.apply(plan: plan, payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "preference import should not error: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "preference import should not error: \(summary.issues)")
     let portable = try await service.getPreference(key: PreferenceKeys.prefWorkingHours)
     XCTAssertNotNil(portable, "a portable preference should be applied on import")
     let localOnly = try await service.getPreference(key: PreferenceKeys.prefTheme)

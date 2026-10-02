@@ -13,15 +13,17 @@ public enum MobileIntentHandoff {
     LorvexIntentHandoffStore().storeTask(taskID)
   }
 
+  /// The place a system intent asked the app to open, consumed once: a task's
+  /// detail, or a workspace destination matched case-insensitively. Lands
+  /// where the same `lorvex://` link would (`MobileNavigationTarget`).
   public static func consumeNavigationTarget() -> MobileNavigationTarget? {
     if let taskID = consumeTaskID() {
-      return MobileDeepLinkRoute.task(taskID).navigationTarget
+      return MobileNavigationTarget(route: .task(taskID))
     }
-    guard let rawDestination = consumeRawDestination() else { return nil }
-    guard let destination = SidebarSelection.matching(rawDestination),
-      let url = URL(string: LorvexDeepLinkContract.destinationURLString(destination))
+    guard let rawDestination = consumeRawDestination(),
+      let destination = SidebarSelection.matching(rawDestination)
     else { return nil }
-    return MobileDeepLinkRoute(url: url)?.navigationTarget(resolvedFrom: url)
+    return MobileNavigationTarget(destination: destination)
   }
 
   public static func clear() {

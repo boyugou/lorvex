@@ -131,7 +131,7 @@ func habitsCircularBodyConstructsWhenEmptyAndPopulated() {
 @Test
 func habitNameIsRedactionAwareOnStandBy() throws {
   let source = try widgetViewsSource("LorvexHabitsWidgetView.swift")
-  #expect(source.contains("Text(habit.name)"))
+  #expect(source.contains("name: habit.name"))
   #expect(source.contains(".privacySensitive()"))
 }
 

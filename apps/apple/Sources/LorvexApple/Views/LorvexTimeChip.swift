@@ -13,9 +13,16 @@ struct LorvexTimeChip: View {
 
   let date: Date
   var accessibilityIdentifier: String = "lorvex.timeChip"
+  /// What the time is ("Start"), when the chip sits beside another chip and
+  /// VoiceOver needs the name before the time; nil reads the time alone.
+  var accessibilityName: String?
   let onSet: (Date) -> Void
 
   @State private var isPresented = false
+
+  private var timeText: String {
+    TaskReminderDateTime.displayTimeString(from: date, timeZone: timeZone)
+  }
 
   var body: some View {
     Button {
@@ -25,7 +32,7 @@ struct LorvexTimeChip: View {
         Image(systemName: "clock")
           .symbolRenderingMode(.hierarchical)
           .foregroundStyle(.tint)
-        Text(TaskReminderDateTime.displayTimeString(from: date, timeZone: timeZone))
+        Text(timeText)
           .font(LorvexDesign.Typography.primaryText)
           .monospacedDigit()
           .foregroundStyle(.primary)
@@ -36,7 +43,8 @@ struct LorvexTimeChip: View {
       .contentShape(Capsule())
     }
     .buttonStyle(.plain)
-    .accessibilityLabel(TaskReminderDateTime.displayTimeString(from: date, timeZone: timeZone))
+    .accessibilityLabel(accessibilityName ?? timeText)
+    .accessibilityValue(accessibilityName == nil ? "" : timeText)
     .accessibilityAddTraits(.isButton)
     .accessibilityIdentifier(accessibilityIdentifier)
     .popover(isPresented: $isPresented, arrowEdge: .bottom) {
@@ -108,7 +116,8 @@ private struct LorvexTimeChipPopover: View {
     grid {
       ForEach(hourValues, id: \.self) { value in
         cell(
-          label: uses24Hour ? String(format: "%02d", value) : "\(value)",
+          label: uses24Hour
+            ? value.formatted(.number.precision(.integerLength(2))) : value.formatted(),
           selected: isHourSelected(value)
         ) {
           commit(hour: hour24(forDisplay: value), minute: currentMinute)
@@ -142,7 +151,10 @@ private struct LorvexTimeChipPopover: View {
   private var minuteGrid: some View {
     grid {
       ForEach(Array(stride(from: 0, to: 60, by: 5)), id: \.self) { value in
-        cell(label: String(format: ":%02d", value), selected: value == currentMinute) {
+        cell(
+          label: ":" + value.formatted(.number.precision(.integerLength(2))),
+          selected: value == currentMinute
+        ) {
           commit(hour: currentHour, minute: value)
         }
       }

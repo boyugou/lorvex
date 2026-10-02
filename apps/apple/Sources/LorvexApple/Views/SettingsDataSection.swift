@@ -16,43 +16,32 @@ extension SettingsView {
   }
 
   /// The two destructive actions sit together at the bottom, each behind a
-  /// typed confirmation, so their distinct scopes read side by side: "Delete
-  /// iCloud Data" removes the cloud copy everywhere and leaves this Mac's data
-  /// alone; "Reset This Device" erases this Mac and leaves iCloud alone.
+  /// typed confirmation and each in its own group, so its footer sits directly
+  /// under it and their distinct scopes read side by side: "Delete iCloud
+  /// Data" removes the cloud copy everywhere and leaves this Mac's data alone;
+  /// "Reset This Device" erases this Mac and leaves iCloud alone.
   var cloudDataDeleteSection: some View {
-    Section(String(
-      localized: "settings.cloud_delete.section", defaultValue: "iCloud Data",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
-    ) {
-      Text(LocalizedStringResource(
-        "settings.cloud_delete.detail",
-        defaultValue:
-          "Delete every Lorvex record from your iCloud account — for all devices that sync with it. The local data on this Mac is not touched. iCloud sync turns off and stays off until you re-enable it, which re-uploads this Mac’s data.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ))
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-
-      Button(role: .destructive) {
-        showCloudDeleteConfirmation = true
-      } label: {
-        if cloudDeleteInProgress {
-          ProgressView().controlSize(.small)
-        } else {
-          Label(
-            String(
-              localized: "settings.cloud_delete.title", defaultValue: "Delete iCloud Data…",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            systemImage: "icloud.slash")
+    Section {
+      LabeledContent {
+        Button(role: .destructive) {
+          showCloudDeleteConfirmation = true
+        } label: {
+          if cloudDeleteInProgress {
+            ProgressView().controlSize(.small)
+          } else {
+            Text(LocalizedStringResource(
+              "settings.cloud_delete.button", defaultValue: "Delete…",
+              table: "Localizable", bundle: LorvexL10n.bundle))
+          }
         }
+        .disabled(
+          cloudDeleteInProgress || resetInProgress || store.isDataImportRunning
+            || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning)
+        .accessibilityLabel(Self.cloudDeleteTitle)
+        .accessibilityIdentifier("settings.cloudDelete.button")
+      } label: {
+        Label(Self.cloudDeleteTitle, systemImage: "icloud.slash")
       }
-      .disabled(
-        cloudDeleteInProgress || resetInProgress || store.isDataImportRunning
-          || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning)
-      .accessibilityIdentifier("settings.cloudDelete.button")
 
       if let cloudDeleteErrorMessage {
         Label(cloudDeleteErrorMessage, systemImage: "exclamationmark.triangle")
@@ -74,6 +63,14 @@ extension SettingsView {
         .foregroundStyle(LorvexDesign.Palette.success)
         .accessibilityIdentifier("settings.cloudDelete.success")
       }
+    } footer: {
+      Text(LocalizedStringResource(
+        "settings.cloud_delete.detail",
+        defaultValue:
+          "Delete every Lorvex record from your iCloud account — for all devices that sync with it. The local data on this Mac is not touched. iCloud sync turns off and stays off until you re-enable it, which re-uploads this Mac’s data.",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle
+      ))
     }
   }
 
@@ -81,7 +78,28 @@ extension SettingsView {
   /// first-launch state. Local-only by design — the honest counterpart of
   /// "Delete iCloud Data" above.
   var dataResetSection: some View {
-    Section(String(localized: "settings.reset.section", defaultValue: "Reset", table: "Localizable", bundle: LorvexL10n.bundle)) {
+    Section {
+      LabeledContent {
+        Button(role: .destructive) {
+          showResetConfirmation = true
+        } label: {
+          if resetInProgress {
+            ProgressView().controlSize(.small)
+          } else {
+            Text(LocalizedStringResource(
+              "settings.reset.button", defaultValue: "Reset…",
+              table: "Localizable", bundle: LorvexL10n.bundle))
+          }
+        }
+        .disabled(
+          resetInProgress || cloudDeleteInProgress || store.isDataImportRunning
+            || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning)
+        .accessibilityLabel(Self.resetTitle)
+        .accessibilityIdentifier("settings.reset.button")
+      } label: {
+        Label(Self.resetTitle, systemImage: "trash")
+      }
+    } footer: {
       Text(LocalizedStringResource(
         "settings.reset.detail",
         defaultValue:
@@ -89,103 +107,58 @@ extension SettingsView {
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-
-      Button(role: .destructive) {
-        showResetConfirmation = true
-      } label: {
-        if resetInProgress {
-          ProgressView().controlSize(.small)
-        } else {
-          Label(
-            String(
-              localized: "settings.reset.title", defaultValue: "Reset This Device…",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            systemImage: "trash")
-        }
-      }
-      .disabled(
-        resetInProgress || cloudDeleteInProgress || store.isDataImportRunning
-          || store.isLocalFactoryResetRunning || store.isCloudDataDeletionRunning)
-      .accessibilityIdentifier("settings.reset.button")
     }
   }
 
+  private static var cloudDeleteTitle: String {
+    String(
+      localized: "settings.cloud_delete.row_title", defaultValue: "Delete iCloud Data",
+      table: "Localizable", bundle: LorvexL10n.bundle)
+  }
+
+  private static var resetTitle: String {
+    String(
+      localized: "settings.reset.row_title", defaultValue: "Reset This Device",
+      table: "Localizable", bundle: LorvexL10n.bundle)
+  }
+
+  /// Export: which categories (``SettingsExportCategoryGrid``), in which
+  /// format, and the one Export button beside the format, so the choice and
+  /// the action read as one line. Selecting every category, or none, is the
+  /// section's own action at the trailing end of its header; the footer says
+  /// what the chosen format holds and whether Lorvex can import it again.
   var dataExportSection: some View {
-    Section(String(localized: "settings.data_export.section", defaultValue: "Export", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      Text(LocalizedStringResource(
-        "settings.data_export.description",
-        defaultValue: "Save the categories you pick as a JSON file, a spreadsheet-friendly CSV, or a ZIP (one JSON per category). For backups, moving your data to another Lorvex install, or opening it in other tools.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ))
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
+    Section {
+      SettingsExportCategoryGrid(selection: $selectedExportCategories)
 
-      ExportCategoryPicker(
-        selection: $selectedExportCategories,
-        idPrefix: "dataExport",
-        layout: .grid,
-        categoryName: { $0.lorvexLocalizedDisplayLabel },
-        groupName: { $0.lorvexLocalizedName },
-        selectAllLabel: String(
-          localized: "data_export.select_all", defaultValue: "Select All",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        selectNoneLabel: String(
-          localized: "data_export.select_none", defaultValue: "Select None",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle))
+      LabeledContent {
+        HStack(spacing: LorvexDesign.Spacing.s) {
+          Picker(selection: $exportFormat) {
+            ForEach(SettingsDataExportFormat.allCases) { format in
+              Text(verbatim: format.name).tag(format)
+            }
+          } label: {
+            Text(Self.exportFormatTitle)
+          }
+          .pickerStyle(.segmented)
+          .labelsHidden()
+          .fixedSize()
+          .accessibilityIdentifier("dataExport.format")
 
-      HStack {
-        Button {
-          Task { await triggerExport(format: "json") }
-        } label: {
-          Label(
-            String(
-              localized: "settings.data_export.export_json",
-              defaultValue: "Export as JSON…",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ),
-            systemImage: "square.and.arrow.up"
-          )
+          Button {
+            Task { await exportSelectedData() }
+          } label: {
+            Text(LocalizedStringResource(
+              "settings.data_export.export", defaultValue: "Export…",
+              table: "Localizable", bundle: LorvexL10n.bundle))
+          }
+          .buttonStyle(.borderedProminent)
+          .disabled(exportInProgress || selectedExportCategories.isEmpty)
+          .accessibilityIdentifier("dataExport.export")
         }
-        .disabled(exportInProgress || selectedExportCategories.isEmpty)
-
-        Button {
-          Task { await triggerExport(format: "csv") }
-        } label: {
-          Label(
-            String(
-              localized: "settings.data_export.export_csv",
-              defaultValue: "Export as CSV…",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ),
-            systemImage: "tablecells"
-          )
-        }
-        .disabled(exportInProgress || selectedExportCategories.isEmpty)
-
-        Button {
-          Task { await triggerZipExport() }
-        } label: {
-          Label(
-            String(
-              localized: "settings.data_export.export_zip",
-              defaultValue: "Export as ZIP…",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ),
-            systemImage: "doc.zipper"
-          )
-        }
-        .disabled(exportInProgress || selectedExportCategories.isEmpty)
+      } label: {
+        Text(Self.exportFormatTitle)
       }
-      .buttonStyle(.bordered)
 
       if exportInProgress {
         ProgressView(String(
@@ -209,11 +182,31 @@ extension SettingsView {
           .foregroundStyle(LorvexDesign.Palette.success)
           .accessibilityIdentifier("dataExport.success")
       }
+    } header: {
+      HStack(alignment: .firstTextBaseline) {
+        Text(String(localized: "settings.data_export.section", defaultValue: "Export", table: "Localizable", bundle: LorvexL10n.bundle))
+        Spacer(minLength: LorvexDesign.Spacing.s)
+        Button(
+          allExportCategoriesSelected
+            ? String(localized: "data_export.select_none", defaultValue: "Select None", table: "Localizable", bundle: LorvexL10n.bundle)
+            : String(localized: "data_export.select_all", defaultValue: "Select All", table: "Localizable", bundle: LorvexL10n.bundle)
+        ) {
+          selectedExportCategories =
+            allExportCategoriesSelected ? [] : Set(LorvexDataExportCategory.allCases)
+        }
+        .buttonStyle(.plain)
+        .fontWeight(.regular)
+        .foregroundStyle(LorvexDesign.Palette.accent)
+        .accessibilityIdentifier("dataExport.selectAll")
+      }
+    } footer: {
+      Text(exportFormat.detail)
+        .accessibilityIdentifier("dataExport.formatDetail")
     }
     // A single file exporter handles JSON, CSV, and ZIP — the document, content
-    // type, filename, and status route are set by whichever export the user triggered.
-    // Stacking multiple `.fileExporter` modifiers on one view is unreliable (a
-    // later presentation modifier can shadow an earlier one).
+    // type, and filename are set by the export that ran. Stacking several
+    // `.fileExporter` modifiers on one view is unreliable (a later
+    // presentation modifier can shadow an earlier one).
     .fileExporter(
       isPresented: $isExportingFile,
       document: exportDocument,
@@ -239,52 +232,95 @@ extension SettingsView {
     }
   }
 
-  func triggerExport(format: String) async {
-    exportInProgress = true
-    exportErrorMessage = nil
-    exportSuccessMessage = nil
-    defer { exportInProgress = false }
-    do {
-      let entities = LorvexDataExportCategory.allCases
-        .filter { selectedExportCategories.contains($0) }
-        .map(\.rawValue)
-      let output = try await store.core.exportData(
-        entities: entities,
-        format: format,
-        appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
-        generatedAt: LorvexDateFormatters.iso8601.string(from: Date()))
-      let ext = format == "csv" ? "csv" : "json"
-      exportContentType = format == "csv" ? .commaSeparatedText : .json
-      exportFilename = "lorvex-export.\(ext)"
-      exportDocument = ExportDataDocument(data: Data(output.utf8))
-      isExportingFile = true
-    } catch {
-      exportErrorMessage = await store.userFacingBannerMessage(
-        for: error, source: "macos.ui.data_export_failed")
-    }
+  private static var exportFormatTitle: String {
+    String(
+      localized: "settings.data_export.format", defaultValue: "Format",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
-  func triggerZipExport() async {
+  private var allExportCategoriesSelected: Bool {
+    selectedExportCategories.count == LorvexDataExportCategory.allCases.count
+  }
+
+  /// Builds the chosen categories in the chosen format, then hands the file
+  /// to the exporter.
+  func exportSelectedData() async {
     exportInProgress = true
     exportErrorMessage = nil
     exportSuccessMessage = nil
     defer { exportInProgress = false }
+    let format = exportFormat
+    let entities = LorvexDataExportCategory.allCases
+      .filter { selectedExportCategories.contains($0) }
+      .map(\.rawValue)
+    let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    let generatedAt = LorvexDateFormatters.iso8601.string(from: Date())
     do {
-      let entities = LorvexDataExportCategory.allCases
-        .filter { selectedExportCategories.contains($0) }
-        .map(\.rawValue)
-      let data = try await store.core.exportDataZip(
-        entities: entities,
-        generatedAt: LorvexDateFormatters.iso8601.string(from: Date()),
-        appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-      )
-      exportContentType = .zip
-      exportFilename = "lorvex-export.zip"
+      let data: Data
+      switch format {
+      case .json, .csv:
+        let output = try await store.core.exportData(
+          entities: entities, format: format.rawValue, appVersion: appVersion,
+          generatedAt: generatedAt)
+        data = Data(output.utf8)
+      case .zip:
+        data = try await store.core.exportDataZip(
+          entities: entities, generatedAt: generatedAt, appVersion: appVersion)
+      }
+      exportContentType = format.contentType
+      exportFilename = "lorvex-export.\(format.rawValue)"
       exportDocument = ExportDataDocument(data: data)
       isExportingFile = true
     } catch {
       exportErrorMessage = await store.userFacingBannerMessage(
-        for: error, source: "macos.ui.data_export_zip_failed")
+        for: error,
+        source: format == .zip ? "macos.ui.data_export_zip_failed" : "macos.ui.data_export_failed")
+    }
+  }
+}
+
+/// The file format of a Settings › Data export: one JSON file, one CSV file
+/// with a section per category, or a ZIP archive of one JSON file per
+/// category. `rawValue` is both the core's `exportData` format name and the
+/// file extension.
+enum SettingsDataExportFormat: String, CaseIterable, Identifiable {
+  case json
+  case csv
+  case zip
+
+  var id: String { rawValue }
+
+  /// The format's name, written the same in every language.
+  var name: String { rawValue.uppercased() }
+
+  var contentType: UTType {
+    switch self {
+    case .json: .json
+    case .csv: .commaSeparatedText
+    case .zip: .zip
+    }
+  }
+
+  /// What the file holds and whether Lorvex can import it again.
+  var detail: String {
+    switch self {
+    case .json:
+      String(
+        localized: "settings.data_export.format.json_detail",
+        defaultValue:
+          "One JSON file Lorvex can import again: a backup, or a way to move your data to another Lorvex install.",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case .csv:
+      String(
+        localized: "settings.data_export.format.csv_detail",
+        defaultValue:
+          "One spreadsheet-friendly CSV file with a section per category, for opening in other tools. Lorvex can’t import CSV.",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case .zip:
+      String(
+        localized: "settings.data_export.format.zip_detail",
+        defaultValue: "A ZIP archive with one JSON file per category. Lorvex can import it again.",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 }

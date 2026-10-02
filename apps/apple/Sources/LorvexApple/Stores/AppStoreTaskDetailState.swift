@@ -211,7 +211,7 @@ extension AppStore {
   var parsedTaskDetailEstimate: Int? {
     let text = taskDetailEstimatedMinutesText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else { return nil }
-    guard let value = Int(text),
+    guard let value = LorvexNumberInput.integer(from: text),
       (1...Int(ValidationLimits.maxEstimatedMinutes)).contains(value)
     else { return nil }
     return value

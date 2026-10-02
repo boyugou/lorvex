@@ -105,7 +105,9 @@ private struct ProgressFallbackView: View {
     default:
       VStack(alignment: .leading, spacing: 8) {
         Text("widget.progress.title", bundle: WidgetSupportL10n.bundle)
-          .font(.headline)
+          .font(WidgetType.label)
+          .foregroundStyle(LorvexDesign.Palette.accent)
+          .widgetAccentable()
         Text(
           statusText.isEmpty
             ? String(
@@ -114,12 +116,10 @@ private struct ProgressFallbackView: View {
               table: "Localizable",
               bundle: WidgetSupportL10n.bundle)
             : statusText)
-          .font(.caption)
+          .font(WidgetType.meta)
           .foregroundStyle(.secondary)
         Spacer(minLength: 0)
       }
-      .padding(.horizontal, 14)
-      .padding(.vertical, 12)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
   }

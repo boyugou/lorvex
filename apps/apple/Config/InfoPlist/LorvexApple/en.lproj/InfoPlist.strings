@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex can add planning blocks you create to Apple Calendar.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex can read event details to build schedules and assistant context.";

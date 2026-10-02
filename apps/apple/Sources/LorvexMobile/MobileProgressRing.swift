@@ -29,10 +29,7 @@ struct MobileProgressRing: View {
     ZStack {
       Circle()
         .stroke(.tertiary, lineWidth: lineWidth)
-      Circle()
-        .trim(from: 0, to: min(1, max(0, value)))
-        .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-        .rotationEffect(.degrees(-90))
+      LorvexProgressArc(fraction: value, style: tint, lineWidth: lineWidth)
       if let center = isComplete ? "checkmark" : symbol {
         Image(systemName: center)
           .font(.system(size: size * (isComplete ? 0.42 : 0.4), weight: isComplete ? .bold : .semibold))  // lorvex-design-token: allow

@@ -9,6 +9,8 @@ struct LorvexAppleApp: App {
   @State private var store: AppStore
 
   init() {
+    // First, before anything lays out: AppKit reads the text direction once.
+    LorvexAppleTextDirection.alignWithRunningLanguage()
     #if DEBUG
       // Renders desktop design components to a PNG and exits when
       // `--dump-snapshots <dir>` is passed; must run before any CloudKit-touching

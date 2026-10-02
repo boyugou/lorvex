@@ -10,8 +10,14 @@ import SwiftUI
 /// the habit is finished; the identity color is everything else about it.
 public enum LorvexHabitPalette {
   public static func baseColor(for habit: LorvexHabit) -> Color {
-    if let custom = Color(lorvexHex: habit.color) { return custom }
-    let hash = habit.id.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7fff_ffff }
+    baseColor(id: habit.id, color: habit.color)
+  }
+
+  /// The identity color for a habit known only by its id and stored color, as
+  /// a widget or watch snapshot carries it.
+  public static func baseColor(id: String, color: String?) -> Color {
+    if let custom = Color(lorvexHex: color) { return custom }
+    let hash = id.unicodeScalars.reduce(0) { ($0 &* 31 &+ Int($1.value)) & 0x7fff_ffff }
     let hues = LorvexDesign.Palette.identityHues
     return hues[hash % hues.count]
   }

@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex आपके बनाए प्लानिंग ब्लॉक Apple कैलेंडर में जोड़ सकता है।";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex शेड्यूल बनाने और असिस्टेंट को संदर्भ देने के लिए इवेंट का ब्योरा पढ़ सकता है।";

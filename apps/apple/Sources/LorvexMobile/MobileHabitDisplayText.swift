@@ -53,14 +53,16 @@ enum MobileHabitDisplayText {
     switch frequencyType {
     case "monthly":
       return String(
-        format: String(localized: "habits.milestone.value.streak_months", defaultValue: "%lld-month streak", table: "Localizable", bundle: MobileL10n.bundle),
-        value)
+        localized: "habits.milestone.value.streak_months", defaultValue: "\(value)-month streak",
+        table: "Localizable", bundle: MobileL10n.bundle)
     case "weekly", "times_per_week", "custom":
       return String(
-        format: String(localized: "habits.milestone.value.streak_weeks", defaultValue: "%lld-week streak", table: "Localizable", bundle: MobileL10n.bundle), value)
+        localized: "habits.milestone.value.streak_weeks", defaultValue: "\(value)-week streak",
+        table: "Localizable", bundle: MobileL10n.bundle)
     default:
       return String(
-        format: String(localized: "habits.milestone.value.streak_days", defaultValue: "%lld-day streak", table: "Localizable", bundle: MobileL10n.bundle), value)
+        localized: "habits.milestone.value.streak_days", defaultValue: "\(value)-day streak",
+        table: "Localizable", bundle: MobileL10n.bundle)
     }
   }
 

@@ -6,16 +6,15 @@
 # archive/export step, so a pre-freeze schema.sql can never reach an
 # App-Store-bound artifact.
 #
-# Lorvex is currently pre-launch, so the gate is SKIPPABLE for local
-# pre-launch builds only via an explicit LORVEX_ALLOW_UNFROZEN=1. Real
-# release packaging defaults to REQUIRING the freeze to be armed — this
-# script never sets that variable itself; the caller (a human running a real
-# release) must opt in deliberately.
+# The freeze is armed, so the gate checks that the frozen schema is intact
+# and LORVEX_ALLOW_UNFROZEN has no effect. Only while the policy is dormant
+# ("launched": false) may a local build skip the gate, and only through an
+# explicit LORVEX_ALLOW_UNFROZEN=1, which this script never sets itself.
 #
 # Usage: source this file, then call:
 #   require_schema_freeze_armed "$ROOT_DIR"
 # where ROOT_DIR is the apps/apple directory (the one containing script/).
-# Returns 0 (armed-and-intact, or explicitly skipped pre-launch) or 1
+# Returns 0 (armed-and-intact, or explicitly skipped while dormant) or 1
 # (not armed and not skipped, or verify_schema_freeze.py found a violation).
 
 require_schema_freeze_armed() {

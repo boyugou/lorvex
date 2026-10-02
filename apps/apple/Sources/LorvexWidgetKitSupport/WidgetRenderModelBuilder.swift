@@ -62,7 +62,7 @@ public struct WidgetRenderModelBuilder: Sendable {
     return WidgetRenderModel(
       family: family,
       state: state,
-      headline: headline(lead: lead, family: family),
+      headline: headline(lead: lead, family: family, scope: snapshot.scopeList),
       subheadline: subheadline(state: state),
       briefing: briefing?.isEmpty == false ? briefing : nil,
       statusText: statusText,
@@ -85,32 +85,38 @@ public struct WidgetRenderModelBuilder: Sendable {
       table: "Localizable", bundle: WidgetSupportL10n.bundle)
   }
 
+  /// "4 left", under a "Today" title that already names the day.
+  static func dayLeftUnderTitle(_ remaining: Int) -> String {
+    String(
+      localized: "widget.day.left.under_title", defaultValue: "\(remaining) left",
+      table: "Localizable", bundle: WidgetSupportL10n.bundle)
+  }
+
   /// "about 3 hr", or nil when no task carries an estimate or a time. Work
   /// under an hour is counted in minutes; longer work in hours, rounded to the
   /// half hour.
   static func dayWork(_ workMinutes: Int?) -> String? {
     guard let workMinutes, workMinutes > 0 else { return nil }
-    if workMinutes < 60 {
-      return String(
-        localized: "widget.day.work_minutes", defaultValue: "about \(workMinutes) min",
-        table: "Localizable", bundle: WidgetSupportL10n.bundle)
-    } else {
-      let halfHours = Int((Double(workMinutes) / 30).rounded())
-      let hours =
-        halfHours.isMultiple(of: 2)
-        ? "\(halfHours / 2)"
-        : (Double(halfHours) / 2).formatted(.number.precision(.fractionLength(1)))
-      return String(
-        localized: "widget.day.work_hours", defaultValue: "about \(hours) hr",
-        table: "Localizable", bundle: WidgetSupportL10n.bundle)
-    }
+    let length =
+      workMinutes < 60
+      ? LorvexDurationFormat.minutes(workMinutes)
+      : LorvexDurationFormat.hours(Int((Double(workMinutes) / 30).rounded()) * 30)
+    return String(
+      localized: "widget.day.work", defaultValue: "about \(length)",
+      table: "Localizable", bundle: WidgetSupportL10n.bundle)
   }
 
   /// The inline family has one line, so its headline is the lead task's title;
-  /// every other family titles itself "Today".
-  private func headline(lead: WidgetLeadRender?, family: WidgetFamilyKind) -> String {
+  /// every other family titles itself with the list it is configured to show,
+  /// or "Today".
+  private func headline(
+    lead: WidgetLeadRender?, family: WidgetFamilyKind, scope: WidgetSnapshot.ListSummary?
+  ) -> String {
     if family == .accessoryInline, let lead {
       return lead.title
+    }
+    if let name = scope?.name.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+      return name
     }
     return String(
       localized: "widget.title.today", defaultValue: "Today",
@@ -153,7 +159,8 @@ public struct WidgetRenderModelBuilder: Sendable {
     } else if task.isStarted {
       if let minutes = task.estimatedMinutes, minutes > 0 {
         line = String(
-          localized: "widget.lead.started_about", defaultValue: "Started · about \(minutes) min",
+          localized: "widget.lead.started_about",
+          defaultValue: "Started · about \(LorvexDurationFormat.minutes(minutes))",
           table: "Localizable", bundle: WidgetSupportL10n.bundle)
       } else {
         line = Self.started
@@ -191,14 +198,15 @@ public struct WidgetRenderModelBuilder: Sendable {
       metadata = Self.started
       tone = .started
     } else if let minutes = item.task.estimatedMinutes, minutes > 0 {
-      metadata = Self.minutesLabel(minutes)
+      metadata = LorvexDurationFormat.minutes(minutes)
     }
     return WidgetTaskRenderRow(
       id: item.id,
       title: item.task.title,
       metadata: metadata,
       tone: tone,
-      urlString: Self.taskURLString(taskID: item.id))
+      urlString: Self.taskURLString(taskID: item.id),
+      priority: item.task.priority.flatMap(LorvexTask.Priority.init(tier:)))
   }
 
   /// A due date before the snapshot's day. Both are `YYYY-MM-DD` keys, so they
@@ -224,14 +232,6 @@ public struct WidgetRenderModelBuilder: Sendable {
     String(
       localized: "widget.task.started", defaultValue: "Started",
       table: "Localizable", bundle: WidgetSupportL10n.bundle)
-  }
-
-  private static func minutesLabel(_ minutes: Int) -> String {
-    String(
-      format: String(
-        localized: "widget.task.duration_minutes", defaultValue: "%lld min",
-        table: "Localizable", bundle: WidgetSupportL10n.bundle),
-      minutes)
   }
 
   private static func clock(_ minutes: Int) -> String {

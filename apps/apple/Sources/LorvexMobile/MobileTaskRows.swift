@@ -32,12 +32,14 @@ struct MobileTaskRow: View, Equatable {
   var timeIsRunning: Bool = false
   /// See ``MobileTaskRowContent/chips``.
   var chips: [LorvexTaskRowChip] = []
+  /// See ``MobileTaskRowContent/timeZone``.
+  var timeZone: TimeZone = .autoupdatingCurrent
 
   var body: some View {
     NavigationLink(value: MobileRoute.task(task.id)) {
       MobileTaskRowContent(
         task: task, isBlocked: isBlocked, showsLeadingCircle: showsLeadingCircle,
-        timeLabel: timeLabel, timeIsRunning: timeIsRunning, chips: chips
+        timeLabel: timeLabel, timeIsRunning: timeIsRunning, chips: chips, timeZone: timeZone
       )
       .equatable()
     }
@@ -47,8 +49,9 @@ struct MobileTaskRow: View, Equatable {
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
       taskAccessibilityLabel(
-        task, vocabulary: .mobileLocalized, timeLabel: timeLabel,
-        details: chips.map(\.title) + (isBlocked ? [MobileTaskDisplayText.blocked] : [])))
+        task, timeLabel: timeLabel,
+        details: chips.map(\.title) + (isBlocked ? [MobileTaskDisplayText.blocked] : []),
+        timeZone: timeZone))
     .accessibilityIdentifier("mobile.task.row.\(task.id)")
   }
 }
@@ -72,6 +75,12 @@ struct MobileTaskRowContent: View, Equatable {
   /// Status chips the host supplies ("Until 3:00 PM", "Pushed 4 times"), drawn
   /// beside the Started and Blocked badges. Display only.
   var chips: [LorvexTaskRowChip] = []
+  /// The zone the due facts count days in: the product time zone the host
+  /// reads from the environment (`lorvexProductTimeZone`), so they agree with
+  /// the lists the product's logical day builds. A stored
+  /// value rather than an environment read, so the synthesized equality that
+  /// lets the row skip redraws also notices a change of zone.
+  var timeZone: TimeZone = .autoupdatingCurrent
 
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }
@@ -91,7 +100,7 @@ struct MobileTaskRowContent: View, Equatable {
       }
 
       VStack(alignment: .leading, spacing: 3) {
-        Text(task.title)
+        Text(userContent: task.title)
           .font(.body)
           .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .strikethrough(isInactive, color: .secondary)
@@ -171,7 +180,7 @@ struct MobileTaskRowContent: View, Equatable {
   private var calmMetadata: [String] {
     var parts: [String] = []
     if timeLabel == nil, let minutes = task.estimatedMinutes {
-      parts.append(MobileTaskDisplayText.compactEstimateMinutes(minutes))
+      parts.append(LorvexDurationFormat.minutes(minutes))
     }
     parts.append(contentsOf: task.tags.prefix(2))
     return parts
@@ -179,12 +188,12 @@ struct MobileTaskRowContent: View, Equatable {
 
   @ViewBuilder
   private var metadataLine: some View {
-    let dueLabel = task.cachedDueRelativeLabel()
+    let dueLabel = task.cachedDueRelativeLabel(timeZone: timeZone)
     let calm = calmMetadata
     if timeLabel != nil || dueLabel != nil || task.recurrence != nil || !calm.isEmpty {
       MobileTaskMetadataLine(
         timeLabel: timeLabel, timeIsRunning: timeIsRunning, dueLabel: dueLabel,
-        isOverdue: task.isOverdue(), isDueSoon: task.isDueSoon(),
+        isOverdue: task.isOverdue(timeZone: timeZone), isDueSoon: task.isDueSoon(timeZone: timeZone),
         repeats: task.recurrence != nil, calmLabels: calm)
     }
   }
@@ -205,6 +214,7 @@ struct MobileActionTaskRow: View {
   var timeIsRunning: Bool = false
   /// See ``MobileTaskRowContent/chips``.
   var chips: [LorvexTaskRowChip] = []
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
@@ -218,7 +228,7 @@ struct MobileActionTaskRow: View {
       // `List(selection:)` row instead.
       MobileTaskRow(
         task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
-        timeIsRunning: timeIsRunning, chips: chips
+        timeIsRunning: timeIsRunning, chips: chips, timeZone: productTimeZone
       )
       .equatable()
     }
@@ -272,7 +282,7 @@ struct MobileTaskCompletionCircle: View {
         localized: "task.row.completed.a11y", defaultValue: "Completed", table: "Localizable",
         bundle: MobileL10n.bundle)
     case .cancelled:
-      MobileTaskDisplayText.status(.cancelled)
+      LorvexTask.Status.cancelled.localizedName
     case .open, .inProgress, .someday:
       MobileTaskActionCopy.complete
     }

@@ -1,12 +1,15 @@
 import LorvexCore
+import LorvexWidgetIntents
 import LorvexWidgetKitSupport
 import SwiftUI
 
 /// The `systemSmall` Today widget: the lead task alone — its circle (the Done
-/// control, a filling ring while its time runs), the widget's title, the task's
-/// title and line — and one quiet line saying how many tasks follow. With tasks
-/// left but no lead, it says what is left of the day and names the top two.
-/// Tapping anywhere else opens Today through the entry view's `widgetURL`.
+/// control, a filling ring while its time runs) beside the line that says
+/// when it is, its title under them, and one quiet line saying how many tasks
+/// follow. The ring and its line lead because the ring draws the task's time
+/// and the line names it. With tasks left but no lead, the widget's title,
+/// what is left of the day, and the top tasks with their circles. Tapping
+/// anywhere else opens Today through the entry view's `widgetURL`.
 struct SmallSystemWidgetView: View {
   let model: WidgetRenderModel
 
@@ -25,83 +28,128 @@ struct SmallSystemWidgetView: View {
         allClear
       }
     }
-    .padding(14)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    // No opaque fill here: the entry view's `.containerBackground` already
-    // supplies the widget's backing material.
+    // No padding and no opaque fill: the view draws inside WidgetKit's content
+    // margins, and the entry view's `.containerBackground` supplies the
+    // widget's backing material.
   }
 
+  /// The lead's page, with the foot line where the title keeps its lines
+  /// beside it; at a text size where it does not, the foot line gives way
+  /// before the title does.
   private func content(_ lead: WidgetLeadRender) -> some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack(spacing: 10) {
-        WidgetLeadRing(lead: lead, diameter: 40)
-        Text(model.headline)
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(LorvexDesign.Palette.accent)
-        Spacer(minLength: 0)
-      }
-      Text(lead.title)
-        .font(.subheadline.weight(.semibold))
-        .foregroundStyle(Color.primary)
-        .lineLimit(2)
-        // The title is the user's private content on a Home Screen / StandBy
-        // surface; redact it when the device locks.
-        .privacySensitive()
-      if let line = lead.line {
-        WidgetLeadLine(line: line, isOverdue: lead.isOverdue)
-      }
-      Spacer(minLength: 0)
-      WidgetFootLine(model: model)
+    ViewThatFits(in: .vertical) {
+      leadPage(lead, showsFoot: true)
+      leadPage(lead, showsFoot: false)
     }
   }
 
-  /// Tasks left, none leading: the title, how many are left and the work
-  /// they hold, then the top titles. The rows drop their metadata column; the
-  /// small tile is too narrow for two columns.
+  /// The ring and its line, the title under them, then the foot line pinned
+  /// to the bottom. The spacer sits outside the spaced stack so it adds no
+  /// gaps of its own: the title needs that room for its third line. The ring's
+  /// row has no trailing spacer, whose stack spacing would cost the line the
+  /// width a time range needs to stay on one line.
+  private func leadPage(_ lead: WidgetLeadRender, showsFoot: Bool) -> some View {
+    VStack(alignment: .leading, spacing: 0) {
+      VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 8) {
+          WidgetLeadRing(lead: lead, diameter: 36)
+          if let line = lead.line {
+            WidgetLeadLine(lead: lead, line: line, wraps: true)
+          }
+        }
+        Text(userContent: lead.title)
+          .font(WidgetType.title)
+          .foregroundStyle(Color.primary)
+          .lineLimit(3)
+          // The title is the user's private content on a Home Screen / StandBy
+          // surface; redact it when the device locks.
+          .privacySensitive()
+      }
+      Spacer(minLength: 0)
+      if showsFoot {
+        WidgetFootLine(model: model)
+      }
+    }
+  }
+
+  /// Tasks left, none leading: the widget's name with the work left at its
+  /// trailing edge, as the Habits widget carries its count, how many tasks
+  /// are left under them, then the top tasks, each with its circle; the rows
+  /// drop their metadata column, which the small tile is too narrow for. The
+  /// work shares the name's line so an iPhone's small tile keeps two rows,
+  /// and gives way where the two do not fit on it (a long list name, a larger
+  /// text size), since the name says which widget this is. Where both rows do
+  /// not fit one is shown, and the foot line counts the other.
   private var dayContent: some View {
-    VStack(alignment: .leading, spacing: 4) {
-      Text(model.headline)
-        .font(.caption.weight(.semibold))
-        .foregroundStyle(LorvexDesign.Palette.accent)
-      if let dayLeft = model.dayLeft {
+    VStack(alignment: .leading, spacing: 0) {
+      ViewThatFits(in: .horizontal) {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+          nameLabel
+          Spacer(minLength: 0)
+          if let dayWork = model.dayWork {
+            Text(dayWork)
+              .font(WidgetType.meta)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+          }
+        }
+        nameLabel
+      }
+      if let dayLeft = model.dayLeftUnderTitle {
         Text(dayLeft)
-          .font(.subheadline.weight(.semibold))
+          .font(WidgetType.title)
           .foregroundStyle(Color.primary)
           .lineLimit(1)
-          .minimumScaleFactor(0.85)
+          .padding(.top, 2)
       }
-      if let dayWork = model.dayWork {
-        Text(dayWork)
-          .font(.caption)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-      }
-      VStack(alignment: .leading, spacing: 2) {
-        ForEach(model.taskRows) { row in
-          Text(row.title)
-            .font(.caption)
-            .foregroundStyle(Color.primary)
-            .lineLimit(1)
-            .privacySensitive()
-        }
+      ViewThatFits(in: .vertical) {
+        rowsAndFoot(showing: min(2, model.taskRows.count))
+        rowsAndFoot(showing: min(1, model.taskRows.count))
+        rowsAndFoot(showing: 0)
       }
       .padding(.top, 4)
-      Spacer(minLength: 0)
-      WidgetFootLine(model: model)
     }
   }
 
+  /// The widget's name: "Today", or the list a configured widget shows.
+  private var nameLabel: some View {
+    Text(model.headline)
+      .font(WidgetType.label)
+      .foregroundStyle(LorvexDesign.Palette.accent)
+      .lineLimit(1)
+      .widgetAccentable()
+  }
+
+  /// Static branches rather than `ForEach`: each candidate of the
+  /// `ViewThatFits` above may be evaluated off the main thread, where a
+  /// `ForEach` content closure trips Swift 6's isolation check.
+  private func rowsAndFoot(showing count: Int) -> some View {
+    VStack(alignment: .leading, spacing: 0) {
+      if count > 0, let first = model.taskRows.first {
+        SmallTaskRow(row: first)
+      }
+      if count > 1, model.taskRows.count > 1 {
+        SmallTaskRow(row: model.taskRows[1])
+      }
+      Spacer(minLength: 0)
+      WidgetFootLine(model: model, shownRowCount: count)
+    }
+  }
+
+  /// Nothing left: the seal where the lead's ring stands, "All clear" where
+  /// its title does, and at the foot how many tasks got done today.
   private var allClear: some View {
     VStack(alignment: .leading, spacing: 6) {
       Image(systemName: "checkmark.seal.fill")
         .font(.title)
         .foregroundStyle(LorvexDesign.Palette.done)
+        .widgetAccentable()
       Text("widget.small.all_clear", bundle: WidgetL10n.bundle)
-        .font(.headline)
+        .font(WidgetType.title)
         .foregroundStyle(Color.primary)
-      Text("widget.small.all_clear.subtitle", bundle: WidgetL10n.bundle)
-        .font(.caption)
-        .foregroundStyle(Color.secondary)
+      Spacer(minLength: 0)
+      WidgetFootLine(model: model, showsDone: true)
     }
   }
 
@@ -116,10 +164,46 @@ struct SmallSystemWidgetView: View {
         .font(.title2)
         .foregroundStyle(Color.secondary)
       Text(model.subheadline)
-        .font(.caption)
+        .font(WidgetType.meta)
         .foregroundStyle(Color.secondary)
         .lineLimit(3)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+  }
+}
+
+/// A row of the small widget: the task's circle, which completes it, and its
+/// title, a link into the task. No metadata column; the tile is too narrow.
+private struct SmallTaskRow: View {
+  let row: WidgetTaskRenderRow
+
+  var body: some View {
+    HStack(spacing: 0) {
+      WidgetActionButton(
+        intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
+        systemName: "circle",
+        accessibilityLabel: String(
+          localized: "widget.action.complete.a11y",
+          defaultValue: "Complete \(row.title)",
+          table: "Localizable",
+          bundle: WidgetL10n.bundle),
+        tint: (row.priority ?? .p3).priorityTint,
+        alignment: .leading)
+      title
+    }
+  }
+
+  @ViewBuilder
+  private var title: some View {
+    let text = Text(row.title)
+      .font(WidgetType.row)
+      .foregroundStyle(Color.primary)
+      .lineLimit(1)
+      .privacySensitive()
+    if let url = row.url {
+      Link(destination: url) { text }
+    } else {
+      text
     }
   }
 }

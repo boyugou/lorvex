@@ -72,7 +72,7 @@ enum CalendarWeekDayLoadCaption: Equatable {
     guard case .over(let minutes) = self else { return nil }
     return String(
       localized: "calendar.week.load.over",
-      defaultValue: "\(CalendarWeekLoadCopy.length(minutes)) over",
+      defaultValue: "\(LorvexDurationFormat.hoursAndMinutes(minutes)) over",
       table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
@@ -82,12 +82,12 @@ enum CalendarWeekDayLoadCaption: Equatable {
     case .busy(let minutes, let free):
       return String(
         localized: "calendar.week.load.sentence",
-        defaultValue: "\(CalendarWeekLoadCopy.length(minutes)) planned, \(CalendarWeekLoadCopy.length(free)) free",
+        defaultValue: "\(LorvexDurationFormat.hoursAndMinutes(minutes)) planned, \(LorvexDurationFormat.hoursAndMinutes(free)) free",
         table: "Localizable", bundle: LorvexL10n.bundle)
     case .over(let minutes):
       return String(
         localized: "calendar.week.load.over_sentence",
-        defaultValue: "\(CalendarWeekLoadCopy.length(minutes)) more than your day hours hold",
+        defaultValue: "\(LorvexDurationFormat.hoursAndMinutes(minutes)) more than your day hours hold",
         table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
@@ -136,22 +136,5 @@ struct CalendarWeekDayLoadLine: View {
         }
       }
       .help(caption?.sentence ?? "")
-  }
-}
-
-enum CalendarWeekLoadCopy {
-  /// "45 min", "2 hr", "2 hr 30 min".
-  static func length(_ minutes: Int) -> String {
-    let hours = minutes / 60
-    let rest = minutes % 60
-    if hours == 0 { return TodayCalmCopy.duration(rest) }
-    if rest == 0 {
-      return String(
-        localized: "calendar.week.length.hours", defaultValue: "\(hours) hr", table: "Localizable",
-        bundle: LorvexL10n.bundle)
-    }
-    return String(
-      localized: "calendar.week.length.hours_minutes", defaultValue: "\(hours) hr \(rest) min",
-      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 }

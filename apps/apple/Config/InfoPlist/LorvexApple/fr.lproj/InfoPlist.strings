@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex peut ajouter à l’app Calendrier les créneaux que vous planifiez.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex peut lire les détails des événements pour établir des plannings et donner du contexte à l’assistant.";

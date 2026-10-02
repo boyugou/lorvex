@@ -102,13 +102,9 @@ struct LorvexDateChip: View {
   private var chipTitle: String {
     if let displayTextOverride { return displayTextOverride }
     guard let date else { return placeholder }
-    var style = Date.FormatStyle(
-      date: .abbreviated,
-      time: includesTime ? .shortened : .omitted
-    )
-    style.calendar = LorvexDateFormatters.gregorianCalendar(timeZone: timeZone)
-    style.timeZone = timeZone
-    return style.format(date)
+    return includesTime
+      ? LorvexDateFormatters.dayAndClockTime(date, timeZone: timeZone)
+      : LorvexDateFormatters.string(date, dateStyle: .medium, timeZone: timeZone)
   }
 }
 
@@ -211,6 +207,8 @@ private struct LorvexDateChipPopover: View {
 /// quiet weekday header, muted out-of-month days, today as an accent numeral,
 /// the selected day as a filled accent disc. Replaces the stock graphical
 /// `DatePicker`, which reads as a generic system control in a calendar context.
+/// Like that picker, it lays out days in the user's own calendar
+/// (``LorvexDateFormatters/displayCalendar(timeZone:locale:)``).
 private struct LorvexMiniMonth: View {
   @Environment(\.timeZone) private var timeZone
 
@@ -230,7 +228,7 @@ private struct LorvexMiniMonth: View {
   private static let cellSize: CGFloat = 34
 
   private var calendar: Calendar {
-    LorvexDateFormatters.gregorianCalendar(timeZone: timeZone)
+    LorvexDateFormatters.displayCalendar(timeZone: timeZone)
   }
 
   var body: some View {
@@ -261,7 +259,7 @@ private struct LorvexMiniMonth: View {
         .font(LorvexDesign.Typography.primaryEmphasis)
         .foregroundStyle(.primary)
       Spacer(minLength: LorvexDesign.Spacing.s)
-      monthButton(systemImage: "chevron.left", delta: -1, label: String(
+      monthButton(systemImage: "chevron.backward", delta: -1, label: String(
         localized: "mini_month.previous", defaultValue: "Previous month",
         table: "Localizable",
         bundle: LorvexL10n.bundle))
@@ -270,7 +268,7 @@ private struct LorvexMiniMonth: View {
         table: "Localizable",
         bundle: LorvexL10n.bundle))
         .font(LorvexDesign.Typography.tertiaryText)
-      monthButton(systemImage: "chevron.right", delta: 1, label: String(
+      monthButton(systemImage: "chevron.forward", delta: 1, label: String(
         localized: "mini_month.next", defaultValue: "Next month",
         table: "Localizable",
         bundle: LorvexL10n.bundle))
@@ -282,7 +280,7 @@ private struct LorvexMiniMonth: View {
       if let delta {
         visibleMonth = calendar.date(byAdding: .month, value: delta, to: visibleMonth) ?? visibleMonth
       } else {
-        visibleMonth = Self.startOfMonth(Date())
+        visibleMonth = Self.startOfMonth(Date(), calendar: calendar)
       }
     } label: {
       Image(systemName: systemImage)
@@ -327,7 +325,7 @@ private struct LorvexMiniMonth: View {
     Button {
       onPick(calendar.startOfDay(for: day))
     } label: {
-      Text("\(calendar.component(.day, from: day))")
+      Text(LorvexDateFormatters.dayNumber(day, timeZone: timeZone))
         .font(LorvexDesign.Typography.secondaryText.weight(isSelected || isToday ? .semibold : .regular))
         .monospacedDigit()
         .foregroundStyle(dayForeground(inMonth: inMonth, isSelected: isSelected, isToday: isToday, disabled: disabled))
@@ -380,16 +378,10 @@ private struct LorvexMiniMonth: View {
   }
 
   private var monthTitle: String {
-    var style = Date.FormatStyle().year().month(.wide)
-    style.calendar = calendar
-    style.timeZone = timeZone
-    return style.format(visibleMonth)
+    LorvexDateFormatters.string(visibleMonth, template: "yMMMM", timeZone: timeZone)
   }
 
   private func accessibilityLabel(for day: Date) -> String {
-    var style = Date.FormatStyle(date: .complete, time: .omitted)
-    style.calendar = calendar
-    style.timeZone = timeZone
-    return style.format(day)
+    LorvexDateFormatters.string(day, dateStyle: .full, timeZone: timeZone)
   }
 }

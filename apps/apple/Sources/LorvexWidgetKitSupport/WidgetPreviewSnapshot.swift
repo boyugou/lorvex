@@ -6,7 +6,8 @@ import LorvexCore
 /// Gallery previews must not depend on an App Group file already existing: a
 /// person often sees the gallery before launching Lorvex for the first time.
 /// This sample exercises the Today, progress, and habit layouts while remaining
-/// visibly separate from the redacted loading placeholder. The lead task's
+/// visibly separate from the redacted loading placeholder: four habits, one
+/// met, one part-way through a count of three, and two not yet started. The lead task's
 /// saved time is placed around `now` — it started twenty minutes ago and has
 /// twenty-five to go — so the gallery shows its ring mid-fill; the rows after
 /// it show a started task, an estimate, and an overdue task.
@@ -72,17 +73,29 @@ public enum WidgetPreviewSnapshot {
       tasks: tasks,
       habits: [
         .init(
-          id: "widget-preview-habit",
+          id: "widget-preview-habit-meditate",
           name: String(
-            localized: "widget.habits.name",
-            defaultValue: "Habits",
-            table: "Localizable",
-            bundle: WidgetSupportL10n.bundle
-          ),
-          icon: "checkmark.circle",
-          completedToday: 1,
-          target: 2
-        )
+            localized: "widget.preview.habit.meditate", defaultValue: "Meditate",
+            table: "Localizable", bundle: WidgetSupportL10n.bundle),
+          icon: "brain.head.profile", completedToday: 1, target: 1),
+        .init(
+          id: "widget-preview-habit-read",
+          name: String(
+            localized: "widget.preview.habit.read", defaultValue: "Read",
+            table: "Localizable", bundle: WidgetSupportL10n.bundle),
+          icon: "book.fill", completedToday: 0, target: 1),
+        .init(
+          id: "widget-preview-habit-water",
+          name: String(
+            localized: "widget.preview.habit.water", defaultValue: "Drink water",
+            table: "Localizable", bundle: WidgetSupportL10n.bundle),
+          icon: "drop.fill", completedToday: 2, target: 3, color: "#3B82F6"),
+        .init(
+          id: "widget-preview-habit-walk",
+          name: String(
+            localized: "widget.preview.habit.walk", defaultValue: "Walk",
+            table: "Localizable", bundle: WidgetSupportL10n.bundle),
+          icon: "figure.walk", completedToday: 0, target: 1),
       ],
       listStats: listID.map { [.init(id: $0, stats: stats)] } ?? []
     )

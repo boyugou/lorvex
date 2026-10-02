@@ -132,9 +132,9 @@ func inlineAddWithoutDetailsKeepsTheDestinationDefaults() async throws {
   #expect(created.priority == .p2)
 }
 
-/// Store state observed from inside the stub core's `listTasks` gate, i.e.
-/// during the bulk surface reads of the post-create fan-out (Spotlight,
-/// reminders, badge) and, when the task workspace is loaded, its reload.
+/// Store state observed from inside the stub core's gates: the badge's read
+/// in the post-create fan-out (`widgetStatsGate`) and, when the task
+/// workspace is loaded, its reload through `listTasks` (`listTasksGate`).
 @MainActor
 private final class CaptureFanOutProbe {
   var busyFlags: [Bool] = []
@@ -150,7 +150,7 @@ func quickCaptureReleasesBusyFlagBeforeFanOut() async throws {
   let store = AppStore(core: core, feedbackProvider: feedback)
   await store.refresh()
   let probe = CaptureFanOutProbe()
-  core.listTasksGate = {
+  core.widgetStatsGate = {
     await MainActor.run {
       probe.busyFlags.append(store.isCreating)
       probe.feedbackSeen.append(feedback.recorded.contains(.captureSubmitted))
@@ -162,8 +162,7 @@ func quickCaptureReleasesBusyFlagBeforeFanOut() async throws {
 
   // The fan-out ends with a sync cycle that can run for as long as CloudKit
   // takes, so the capture must already be released and confirmed by the time the
-  // fan-out's first bulk read runs (the workspace is not loaded here, so every
-  // `listTasks` call belongs to the fan-out).
+  // fan-out's badge read runs.
   #expect(!probe.busyFlags.isEmpty)
   #expect(probe.busyFlags.allSatisfy { !$0 })
   #expect(probe.feedbackSeen.allSatisfy { $0 })
@@ -178,14 +177,16 @@ func inlineAddsTypedBackToBackAllLand() async throws {
   let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = AppStore(core: core)
   await store.refresh()
-  // A loaded workspace makes each commit's reconcile read through `listTasks`
-  // too, so the gate observes the flag during the commit as well as the fan-out.
+  // A loaded workspace makes each commit's reconcile read through `listTasks`,
+  // so the gates observe the flag during the commit as well as the fan-out.
   await store.loadTaskWorkspace()
   #expect(store.taskWorkspaceHasLoaded)
   let probe = CaptureFanOutProbe()
-  core.listTasksGate = {
+  let recordFlag: @Sendable () async -> Void = {
     await MainActor.run { probe.busyFlags.append(store.isCreating) }
   }
+  core.listTasksGate = recordFlag
+  core.widgetStatsGate = recordFlag
 
   // Two Returns before the first line has finished committing: the row stays
   // enabled (the flag never rises) and neither line is dropped. Main-actor

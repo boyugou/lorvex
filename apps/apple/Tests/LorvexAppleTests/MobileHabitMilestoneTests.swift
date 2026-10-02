@@ -23,7 +23,7 @@ func mobileStoreThreadsMilestoneGoalThroughCreateEditAndClear() async throws {
 
   // Editing seeds the field from the stored goal, then raises it.
   store.prepareHabitDraft(for: created)
-  #expect(store.habitDraft.milestoneTargetText == "30")
+  #expect(store.habitDraft.milestoneTargetText == LorvexNumberInput.text(for: 30))
   store.habitDraft.milestoneTargetText = "66"
   #expect(await store.updateHabit(created))
   let raised = try #require(store.habits?.habits.first { $0.id == created.id })
@@ -100,4 +100,22 @@ func mobileStoreStagesMilestoneCelebrationOnBatchCrossing() async throws {
   let plain = try #require(store.habits?.habits.first { $0.id == LorvexPreviewSeedID.eveningWalkHabit })
   #expect(await store.completeHabits([plain.id]))
   #expect(store.milestoneCelebration == nil)
+}
+
+/// The Arabic number pad types Arabic-Indic digits and a Chinese input method
+/// may type full-width ones; the habit's number fields read them as numbers.
+@MainActor
+@Test
+func mobileStoreReadsHabitNumbersTypedInAnyScript() async throws {
+  let store = MobileStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+
+  store.habitDraft.name = "Drink water"
+  store.habitDraft.targetCountText = "٣"
+  store.habitDraft.milestoneTargetText = "３０"
+  #expect(store.habitDraft.canSubmit)
+  #expect(await store.createDraftHabit())
+  let created = try #require(store.habits?.habits.first { $0.name == "Drink water" })
+  #expect(created.targetCount == 3)
+  #expect(created.milestoneTarget == 30)
 }

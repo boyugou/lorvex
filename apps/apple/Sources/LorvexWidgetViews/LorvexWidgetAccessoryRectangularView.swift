@@ -5,8 +5,8 @@ import WidgetKit
 
 /// The `accessoryRectangular` Lock Screen family: a small ring beside the lead
 /// task's title, its line, and the one task after it. With tasks left but no
-/// lead, what is left of the day and the top two tasks. The ~72pt tile has
-/// room for exactly three lines.
+/// lead, what is left of the day, worded as long as its line allows, and the
+/// top two tasks. The ~72pt tile has room for exactly three lines.
 struct AccessoryRectangularWidgetView: View {
   let model: WidgetRenderModel
 
@@ -47,9 +47,13 @@ struct AccessoryRectangularWidgetView: View {
           }
         }
       } else if model.state != .fallback, model.remainingCount > 0 {
-        Text(model.dayLine ?? model.headline)
-          .font(.caption.weight(.semibold))
-          .lineLimit(1)
+        LorvexFirstFittingLine(
+          model.dayLineChoices.isEmpty ? [model.headline] : model.dayLineChoices
+        ) {
+          Text($0)
+            .font(.caption.weight(.semibold))
+            .lineLimit(1)
+        }
         ForEach(model.taskRows) { row in
           link(row.urlString ?? "") {
             Text([row.metadata, row.title].compactMap { $0 }.joined(separator: "  "))
@@ -86,10 +90,7 @@ struct AccessoryRectangularWidgetView: View {
   private func ring(progress: Double) -> some View {
     ZStack {
       Circle().stroke(.tertiary, lineWidth: 2)
-      Circle()
-        .trim(from: 0, to: progress)
-        .stroke(.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-        .rotationEffect(.degrees(-90))
+      LorvexProgressArc(fraction: progress, style: .primary, lineWidth: 2)
         .widgetAccentable()
     }
     .frame(width: 14, height: 14)

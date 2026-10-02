@@ -44,7 +44,7 @@ extension AppStore {
     taskDetailTitle = task.title
     taskDetailNotes = task.notes
     taskDetailPriority = task.priority
-    taskDetailEstimatedMinutesText = task.estimatedMinutes.map(String.init) ?? ""
+    taskDetailEstimatedMinutesText = task.estimatedMinutes.map { LorvexNumberInput.text(for: $0) } ?? ""
     // The stored planned date is a UTC-midnight day anchor; the picker is a
     // local-calendar control, so re-anchor to local midnight or the picker
     // shows the previous day west of UTC.

@@ -114,6 +114,20 @@ public enum LorvexDeepLinkRoute: Equatable, Sendable {
     } else { return nil }
   }
 
+  /// The Spotlight `CSSearchableItem.uniqueIdentifier` of the entity this
+  /// route opens (`lorvex-task:<id>`, `lorvex-list:<id>`, `lorvex-habit:<id>`,
+  /// `lorvex-review:<date>`), the inverse of ``init(spotlightIdentifier:)``.
+  /// `nil` for a destination, which is not an indexed entity.
+  public var spotlightIdentifier: String? {
+    switch self {
+    case .destination: nil
+    case .task(let id): "lorvex-task:\(id)"
+    case .list(let id): "lorvex-list:\(id)"
+    case .habit(let id): "lorvex-habit:\(id)"
+    case .review(let date): "lorvex-review:\(date)"
+    }
+  }
+
   public var url: URL {
     switch self {
     case .destination(let destination):

@@ -13,29 +13,23 @@ extension SettingsView {
   /// not duplicate. The sheet lists what the file *contains* (a decode + count),
   /// not a target-DB diff, so it never promises how many records a restore writes.
   var dataImportSection: some View {
-    Section(String(localized: "settings.data_import.section", defaultValue: "Import", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      Text(LocalizedStringResource(
-        "settings.data_import.description",
-        defaultValue: "Load data from a JSON or ZIP file you made with Export above. You’ll see what the file contains first; importing never duplicates data you already have.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ))
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-
-      Button {
-        importErrorMessage = nil
-        importSummary = nil
-        isChoosingImportFile = true
+    Section {
+      LabeledContent {
+        Button {
+          importErrorMessage = nil
+          importSummary = nil
+          isChoosingImportFile = true
+        } label: {
+          Text(LocalizedStringResource(
+            "settings.data_import.choose_file", defaultValue: "Choose File…",
+            table: "Localizable", bundle: LorvexL10n.bundle))
+        }
+        .disabled(dataImportInteractionBlocked)
+        .accessibilityLabel(Self.importTitle)
+        .accessibilityIdentifier("dataImport.pick")
       } label: {
-        Label(
-          String(localized: "settings.data_import.import", defaultValue: "Import…", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "square.and.arrow.down"
-        )
+        Label(Self.importTitle, systemImage: "square.and.arrow.down")
       }
-      .disabled(
-        dataImportInteractionBlocked)
-      .accessibilityIdentifier("dataImport.pick")
 
       if importInProgress {
         ProgressView(String(localized: "settings.data_import.reading_file", defaultValue: "Reading file…", table: "Localizable", bundle: LorvexL10n.bundle))
@@ -49,8 +43,15 @@ extension SettingsView {
       }
 
       if let importSummary {
-        ImportSummaryView(importSummary, text: LorvexImportSummaryText.provider)
+        ImportSummaryView(importSummary)
       }
+    } footer: {
+      Text(LocalizedStringResource(
+        "settings.data_import.description",
+        defaultValue: "Load data from a JSON or ZIP file you made with Export above. You’ll see what the file contains first; importing never duplicates data you already have.",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle
+      ))
     }
     .fileImporter(
       isPresented: $isChoosingImportFile,
@@ -77,6 +78,12 @@ extension SettingsView {
         .interactiveDismissDisabled(dataImportInteractionBlocked)
       }
     }
+  }
+
+  private static var importTitle: String {
+    String(
+      localized: "settings.data_import.row_title", defaultValue: "Import Data",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   private var dataImportInteractionBlocked: Bool {
@@ -300,7 +307,7 @@ private struct ImportPreviewEntryRow: View {
         .frame(width: 7, height: 7)
         .accessibilityHidden(true)
 
-      Text(entry.category.lorvexLocalizedDisplayLabel)
+      Text(entry.category.localizedDisplayName)
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.primary)
         .lineLimit(1)

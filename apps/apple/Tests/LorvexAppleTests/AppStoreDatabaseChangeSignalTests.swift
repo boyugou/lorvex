@@ -35,10 +35,9 @@ struct AppStoreDatabaseChangeSignalTests {
     #expect(core.loadHabitsCallCount == 1)
     #expect(core.loadTodayCallCount == 0)
 
-    // Empty/fetched-but-skipped and pure-outbound reports do not claim a
-    // canonical mutation, so they must not wake detached stores. The fetched
-    // empty report may conservatively request a full local read, but it cannot
-    // create another notification/sync loop.
+    // Fetched-but-skipped (this device's own pushes coming back) and
+    // pure-outbound reports changed no canonical row, so they neither wake
+    // detached stores nor reload this one.
     let skipped = CloudSyncCycleReport(
       pushedRecordCount: 0, failedPushCount: 0, fetchedRecordCount: 1,
       inbound: InboundApplyReport(skipped: 1))
@@ -49,5 +48,7 @@ struct AppStoreDatabaseChangeSignalTests {
     await store.reconcileSurfacesAfterCompletedCloudSyncCycle(outbound)
 
     #expect(deliveries.withLock { $0 } == 1)
+    #expect(core.loadHabitsCallCount == 1)
+    #expect(core.loadTodayCallCount == 0)
   }
 }

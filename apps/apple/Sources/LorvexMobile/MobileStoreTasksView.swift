@@ -27,6 +27,10 @@ public struct MobileStoreTasksView: View {
   /// load reads it to fetch the next page without waiting for another scroll.
   @State var isLoadedEndVisible = false
   @State var selectedTaskID: LorvexTask.ID?
+  /// The row an arrow key or Return just selected, which the list scrolls
+  /// into view. A tap selects without setting it, so the row the person
+  /// touched stays where it is.
+  @State var keyboardScrollTarget: LorvexTask.ID?
   @State var isBatchSelecting = false
   @State var batchSelectedTaskIDs = Set<LorvexTask.ID>()
   @FocusState var isTaskListFocused: Bool
@@ -97,8 +101,7 @@ public struct MobileStoreTasksView: View {
         bundle: MobileL10n.bundle)
     )
     .task(id: loadKey) {
-      await debounceSearchIfNeeded()
-      guard !Task.isCancelled else { return }
+      guard await LorvexSearchDebounce.shouldSearch(query) else { return }
       await load()
       #if DEBUG
         if MobileStore.debugAutoBatchSelectTasks, !isBatchSelecting, !page.tasks.isEmpty {
@@ -134,10 +137,9 @@ public struct MobileStoreTasksView: View {
         localized: "tasks.batch.title.empty", defaultValue: "Select Tasks", table: "Localizable",
         bundle: MobileL10n.bundle)
       : String(
-        format: String(
-          localized: "tasks.batch.title.count", defaultValue: "%lld selected", table: "Localizable",
-          bundle: MobileL10n.bundle),
-        batchSelectedTaskIDs.count)
+        localized: "tasks.batch.title.count",
+        defaultValue: "\(batchSelectedTaskIDs.count) selected",
+        table: "Localizable", bundle: MobileL10n.bundle)
   }
 
   /// Selection binding for the regular-width path. Reads/writes
@@ -220,9 +222,12 @@ public struct MobileStoreTasksView: View {
       .focusable()
       .focused($isTaskListFocused)
       .onAppear(perform: seedTaskListFocusIfNeeded)
-      .onChange(of: keyboardSelectedTaskID) { _, taskID in
+      .onChange(of: keyboardScrollTarget) { _, taskID in
         guard let taskID else { return }
-        withAnimation { proxy.scrollTo(taskID, anchor: .center) }
+        keyboardScrollTarget = nil
+        // The least scroll that shows the row, as the Mac list moves with the
+        // keyboard.
+        withAnimation(.snappy(duration: 0.16)) { proxy.scrollTo(taskID, anchor: nil) }
       }
       .onKeyPress(.upArrow) {
         moveTaskSelection(by: -1) ? .handled : .ignored

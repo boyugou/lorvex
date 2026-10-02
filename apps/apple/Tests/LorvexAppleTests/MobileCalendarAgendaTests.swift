@@ -253,7 +253,7 @@ func agendaTaskFactsBreakOnlyBetweenFacts() {
     MobileCalendarAgendaTaskRow.subtitle(for: task, dayKey: key)
   }
   let span = lorvexUnbreakable(lorvexClockRangeLabel(startMinutes: 585, endMinutes: 630))
-  let estimate = lorvexUnbreakable(MobileTaskDisplayText.compactEstimateMinutes(45))
+  let estimate = lorvexUnbreakable(LorvexDurationFormat.minutes(45))
 
   #expect(facts(task(time: 585..<630, estimate: 45, due: midnight)) == "\(span)\u{00A0}· Due")
   #expect(facts(task(estimate: 45)) == estimate)

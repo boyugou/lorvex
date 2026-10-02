@@ -91,7 +91,7 @@ struct MemoryToolTests {
     )
 
     // A client that echoes the fenced key verbatim still targets the same entry:
-    // the input path unfences it before lookup, so no duplicate is created.
+    // the dispatcher strips the fence tokens before lookup.
     let echoRead = try await mcpRegistryCall(
       registry, tool: "read_memory", arguments: ["key": .string(fencedKey)])
     let echoEntries = echoRead.structuredContent?.objectValue?["entries"]?.arrayValue ?? []

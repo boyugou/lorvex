@@ -236,6 +236,7 @@ struct MobileStoreSettingsCloudSyncSection: View {
           systemImage: "arrow.clockwise.icloud")
       }
     }
+    .mobileAccentRowStyle()
     .disabled(resumeInProgress || store.isCloudDataDeletionRunning)
     .accessibilityIdentifier("mobileSettings.sync.resume")
     .confirmationDialog(
@@ -462,6 +463,7 @@ struct MobileStoreSettingsCloudSyncSection: View {
 
   private var syncLastSuccessValue: String? {
     guard let date = store.lastCloudSyncRemoteChangeSucceededAt else { return nil }
-    return MobileDateFormatting.abbreviatedRelativeString(for: date, relativeTo: store.now())
+    return LorvexDateFormatters.relative(
+      date, to: store.now(), unitsStyle: .abbreviated, dateTimeStyle: .numeric)
   }
 }

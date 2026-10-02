@@ -481,7 +481,7 @@ final class CalendarSeriesCutoverServiceTests: XCTestCase {
     let target = try makeService()
     let summary = await LorvexDataImporter.apply(
       plan: plan, payload: payload, using: target)
-    XCTAssertTrue(summary.errors.isEmpty)
+    XCTAssertTrue(summary.issues.isEmpty)
     XCTAssertEqual(summary.results.first?.imported, 0)
     let state: String? = try target.read { db in
       try String.fetchOne(
@@ -624,7 +624,7 @@ final class CalendarSeriesCutoverServiceTests: XCTestCase {
     let target = try makeService()
     let summary = await LorvexDataImporter.apply(
       plan: plan, payload: payload, using: target)
-    XCTAssertTrue(summary.errors.isEmpty, "restore failed: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "restore failed: \(summary.issues)")
     let restored = try target.read { db in
       try Row.fetchAll(
         db,

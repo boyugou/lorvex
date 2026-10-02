@@ -29,7 +29,6 @@ struct SpotlightTaskDocument: Equatable, Sendable {
     attributes.title = title
     attributes.dueDate = dueDate
     attributes.contentURL = deepLink
-    attributes.relatedUniqueIdentifier = deepLink.absoluteString
     return CSSearchableItem(
       uniqueIdentifier: identifier,
       domainIdentifier: Self.domainIdentifier,

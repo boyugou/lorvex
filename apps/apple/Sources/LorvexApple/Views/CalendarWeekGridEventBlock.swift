@@ -2,8 +2,6 @@ import LorvexCore
 import SwiftUI
 
 enum CalendarEventBlockMetrics {
-  static let compactHeightThreshold: CGFloat = 28
-  static let timeHeightThreshold: CGFloat = 34
   static let verticalPadding: CGFloat = 2
   static let horizontalPadding: CGFloat = 4
   static let laneGap: CGFloat = 2
@@ -33,7 +31,6 @@ extension CalendarWeekGridView {
     // window; when something does, the block gets its real span, so a floor
     // here would only run it under the next block.
     let baseHeight = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
-    let isTight = baseHeight < LorvexDesign.CalendarMetrics.tightBlockHeight
     let color = eventColor(block.event)
     let active = rescheduleDraft?.eventID == block.event.id ? rescheduleDraft : nil
     // The block whose inspector is open reads as selected: a stronger fill, a
@@ -53,17 +50,16 @@ extension CalendarWeekGridView {
       && !isMultiDay
     let showsResizeGrips = isSelected || hoveredEventID == block.event.id
 
-    return CalendarEventBlockContent(
+    return LorvexCalendarBlockText(
       title: block.event.title,
-      time: block.event.startTime.map(lorvexClockTimeLabel),
+      start: block.event.startTime.map(lorvexClockTimeLabel),
       // A multi-day event's piece of one day is not its time, so it keeps its
       // start alone.
-      timeRange: isMultiDay
+      range: isMultiDay
         ? nil : lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
-      renderedHeight: renderedHeight
+      verticalPadding: CalendarEventBlockMetrics.verticalPadding
     )
     .padding(.horizontal, CalendarEventBlockMetrics.horizontalPadding)
-    .padding(.vertical, isTight ? 0 : CalendarEventBlockMetrics.verticalPadding)
     .frame(
       width: max(laneWidth - CalendarEventBlockMetrics.laneGap, 8),
       height: renderedHeight,
@@ -269,73 +265,6 @@ extension CalendarWeekGridView {
       location: block.event.location,
       source: block.event.source
     )
-  }
-}
-
-/// The text inside a grid block: the title, then its time. A block tall
-/// enough for a second line shows the time range there ("1:00 – 1:30 PM"), or
-/// the start alone when the range does not fit the column's width. A block
-/// too short for a second line sets the time after the title on its one line,
-/// when both fit whole, so a 15- or 30-minute block still says when it is.
-/// A done block (a plan block whose task is completed) reads struck through
-/// and secondary.
-struct CalendarEventBlockContent: View {
-  let title: String
-  /// The start time ("1:00 PM").
-  let time: String?
-  /// The time range ("1:00 – 1:30 PM"), preferred where it fits; `nil` when
-  /// the block shows its start alone.
-  var timeRange: String? = nil
-  let renderedHeight: CGFloat
-  var isDone = false
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if renderedHeight >= CalendarEventBlockMetrics.timeHeightThreshold {
-        titleText
-          .lineLimit(titleLineLimit)
-          .fixedSize(horizontal: false, vertical: true)
-        if let time {
-          ViewThatFits(in: .horizontal) {
-            if let timeRange { timeText(timeRange) }
-            timeText(time)
-          }
-          .padding(.top, 1)
-        }
-      } else {
-        ViewThatFits(in: .horizontal) {
-          if let time {
-            HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.xs) {
-              titleText
-              timeText(timeRange ?? time)
-            }
-          }
-          titleText.lineLimit(titleLineLimit)
-        }
-      }
-
-      Spacer(minLength: 0)
-    }
-  }
-
-  private var titleText: some View {
-    Text(title)
-      .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-      .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-      .strikethrough(isDone)
-  }
-
-  private func timeText(_ label: String) -> some View {
-    Text(label)
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-      .monospacedDigit()
-      .lineLimit(1)
-      .fixedSize()
-  }
-
-  private var titleLineLimit: Int {
-    renderedHeight < CalendarEventBlockMetrics.compactHeightThreshold ? 1 : 2
   }
 }
 

@@ -1,24 +1,17 @@
 import LorvexCore
 import SwiftUI
 
-enum MainWindowLayoutMetrics {
-  // The task detail's content (priority chips, action row, checklist rows with
-  // trailing menus) needs ~300pt to render without its trailing controls
-  // clipping, so the inspector must not be squeezed below that.
-  static let inspectorMinWidth: CGFloat = 300
-  static let inspectorIdealWidth: CGFloat = 320
-  static let inspectorMaxWidth: CGFloat = 380
-}
-
 struct ContentView: View {
   @Bindable var store: AppStore
   var settings: AppSettingsStore
 
-  @State private var navigationColumnVisibility: NavigationSplitViewVisibility = .all
+  @State private var layout = MainWindowLayout()
   @State private var showSetupWizard: Bool = false
+  /// The edit sheet and delete confirmations for an event opened from Today.
+  @State private var todayEventActions = CalendarEventActions()
 
   var body: some View {
-    NavigationSplitView(columnVisibility: $navigationColumnVisibility) {
+    NavigationSplitView(columnVisibility: $layout.columnVisibility) {
       SidebarView(store: store)
         .navigationSplitViewColumnWidth(
           min: SidebarMetrics.columnMinWidth,
@@ -28,16 +21,29 @@ struct ContentView: View {
     } detail: {
       // The workspace owns the full main area, so the calendar grid, Habits, and
       // every other workspace render edge-to-edge rather than in a middle
-      // column. A task's or habit's detail rides in a trailing inspector that
-      // appears only while one is selected, so nothing heavy shows by default.
+      // column. A task's, habit's, or Today event's detail rides in a trailing
+      // inspector that appears only while one is selected, so nothing heavy
+      // shows by default.
       WorkspaceView(store: store)
         .environment(settings)
+        // Mounted here rather than in the inspector, so an edit sheet or a
+        // delete confirmation outlives the inspector closing under it.
+        .calendarEventActions(todayEventActions, store: store)
         .inspector(isPresented: inspectorPresented) {
           Group {
             if store.selectedTaskID != nil {
               TaskDetailView(store: store)
             } else if let habitID = store.selectedHabitID {
               HabitDetailInspector(store: store, habitID: habitID)
+            } else if let event = store.todayInspectorEvent {
+              CalendarEventInspector(
+                event: event,
+                edit: { todayEventActions.beginEditing(event, store: store) },
+                requestDelete: { todayEventActions.requestDelete(event) },
+                close: { store.clearSelectedCalendarEvent() },
+                resolveSource: { await store.calendarEventSource(for: $0) },
+                fixedWidth: nil
+              )
             }
           }
           .inspectorColumnWidth(
@@ -52,22 +58,28 @@ struct ContentView: View {
     // re-click-to-close gesture. A focused text field consumes Escape first
     // (cancelling its edit), so this only fires once nothing else claims it.
     .onExitCommand { store.dismissOpenInspector() }
-    // The window's minimum content width must equal the sum of the VISIBLE
-    // panes' minimums. The inspector lives inside the detail column, so with a
-    // fixed window minimum the three-pane case over-constrains the split view
-    // and it resolves by sliding the sidebar off (the half-clipped sidebar).
-    // Raising the minimum only while a task is selected keeps the two-pane
-    // minimum compact and makes the three-pane layout a hard stop instead:
-    // `.windowResizability(.contentMinSize)` re-clamps the window live, growing
-    // it automatically when the inspector opens at the minimum width.
+    // The inspector lives inside the detail column, so a fixed window minimum
+    // would over-constrain the split view whenever it opens, and the split
+    // view would slide the sidebar half off the window. The minimum follows
+    // the visible columns instead, capped at the screen's width, and on a
+    // screen too narrow for all three columns the inspector takes the
+    // sidebar's place (`MainWindowLayout`).
     .frame(minWidth: minimumWindowWidth)
     // `.contentMinSize` resizability only reads the content minimum at window
     // creation; this enforcer re-clamps the live window whenever the minimum
-    // changes (inspector opens → wider floor, closes → back to the base).
-    .background(WindowMinWidthEnforcer(store: store))
+    // changes and reports the screen's width to the layout.
+    .background(WindowMinWidthEnforcer(store: store, layout: layout))
+    .onChange(of: store.isMainInspectorOpen) { _, isOpen in
+      lorvexAnimated(.snappy) { layout.inspectorDidChange(isOpen: isOpen) }
+    }
+    .onChange(of: layout.columnVisibility) {
+      if layout.sidebarVisibilityDidChange(inspectorOpen: store.isMainInspectorOpen) {
+        store.dismissOpenInspector()
+      }
+    }
     // Publish the live column visibility so the View-menu "Show/Hide Sidebar"
     // command (⌃⌘S) drives the same state as the toolbar's sidebar toggle.
-    .focusedSceneValue(\.sidebarVisibility, $navigationColumnVisibility)
+    .focusedSceneValue(\.sidebarVisibility, $layout.columnVisibility)
     .focusedSceneValue(\.lorvexTaskCommandContext, taskCommandContext)
     .sheet(isPresented: $showSetupWizard) {
       SetupWizardSheet(store: store, settings: settings) {
@@ -136,15 +148,10 @@ struct ContentView: View {
     .lorvexPermanentDeleteDialog(store)
   }
 
-  /// The window's minimum content width as a function of the visible panes:
-  /// the two-pane base (`LorvexWindowID.main.minimumContentSize`) plus, while
-  /// the task inspector is open, its ideal width — so sidebar + workspace keep
-  /// their full two-pane budget and the split view never has to collapse the
-  /// sidebar to satisfy the inspector.
+  /// The window's minimum content width: the sum of the visible columns,
+  /// capped at the screen's width, as ``MainWindowLayout`` defines it.
   private var minimumWindowWidth: CGFloat {
-    let base = LorvexWindowID.main.minimumContentSize.width
-    guard store.selectedTaskID != nil || store.selectedHabitID != nil else { return base }
-    return base + MainWindowLayoutMetrics.inspectorIdealWidth
+    layout.minimumContentWidth(inspectorOpen: store.isMainInspectorOpen)
   }
 
   private var taskCommandContext: LorvexTaskCommandContext? {
@@ -174,19 +181,19 @@ struct ContentView: View {
     }
   }
 
-  /// The task detail inspector is shown whenever a task is selected. The
-  /// selection is cleared on navigation into workspaces that don't surface a
-  /// task detail (see `AppStore.selection`'s didSet), so this stays empty by
-  /// default; tapping a scheduled task in the Calendar — which sets the
-  /// selection itself — now opens the inspector too. Dismissing it clears the
-  /// selection so it doesn't silently reopen.
+  /// The inspector is shown whenever a task, a habit, or an event opened from
+  /// Today's schedule is selected (``AppStore/isMainInspectorOpen``). The
+  /// selection is cleared on navigation into workspaces that don't surface
+  /// it (see `AppStore.selection`'s didSet), so this stays empty by default;
+  /// tapping a scheduled task in the Calendar, which sets the selection
+  /// itself, opens the inspector too. Dismissing it clears the selection so
+  /// it doesn't silently reopen.
   private var inspectorPresented: Binding<Bool> {
     Binding(
-      get: { store.selectedTaskID != nil || store.selectedHabitID != nil },
+      get: { store.isMainInspectorOpen },
       set: { presented in
         if !presented {
-          store.selectedTaskID = nil
-          store.selectedHabitID = nil
+          store.dismissOpenInspector()
         }
       }
     )

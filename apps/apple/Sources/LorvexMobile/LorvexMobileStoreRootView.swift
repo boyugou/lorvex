@@ -20,17 +20,17 @@ public struct LorvexMobileStoreRootView: View {
 
   public var body: some View {
     tabBarBody
-    .onAppear { store.redirectHiddenHabitsTab() }
-    .onChange(of: store.selectedTab) { _, _ in store.redirectHiddenHabitsTab() }
-    .onChange(of: store.habitsRoutePath) { _, _ in store.redirectHiddenHabitsTab() }
     .tint(.accentColor)
     // A crossing staged by a habit completion floats a celebratory badge above
-    // the whole shell, wherever the completion was logged (Today / Habits tab).
+    // the whole shell, wherever the completion was logged (Today, the Habits
+    // workspace, a habit's detail).
     .lorvexMobileMilestoneCelebration(store.milestoneCelebration) {
       withAnimation(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
     }
     .preferredColorScheme(AppAppearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
     .lorvexClockLocale()
+    // Task rows count their due days in the synced product zone.
+    .environment(\.lorvexProductTimeZone, store.logicalTimeZone)
     // Surface mutation failures (capture/complete/calendar/etc.) — the store
     // sets `errorMessage` but without this the failure was invisible.
     .alert(
@@ -134,10 +134,11 @@ public struct LorvexMobileStoreRootView: View {
       })
   }
 
-  /// iPhone navigation: Today, Plan, Tasks, and Review in the bar, and the
-  /// round + beside it on every tab. Habits stays a selectable tab so deep
-  /// links, Handoff, and shortcuts still reach it, but it is hidden from the
-  /// bar; Today's habit rings and the Tasks home lead there.
+  /// iPhone and iPad navigation: Today, Calendar, Tasks, and Review in the bar,
+  /// and the round + beside it on every tab. The bar holds only the tabs it
+  /// shows: Habits and Memory open as workspaces on the Tasks stack, Settings
+  /// on Today's, so a link that names one pushes it rather than selecting a
+  /// tab the bar does not draw.
   private var tabBarBody: some View {
     TabView(selection: tabBarSelection) {
       tab(.today) {
@@ -166,7 +167,7 @@ public struct LorvexMobileStoreRootView: View {
       }
 
       tab(.calendar) {
-        // Bound (like Tasks/Habits) so tapping a scheduled task pushes its
+        // Bound (like Tasks) so tapping a scheduled task pushes its
         // detail onto the Calendar stack in place — see
         // `MobileStore.calendarRoutePath`.
         // No readable-width cap here: the day grid and its agenda pane use the
@@ -198,17 +199,6 @@ public struct LorvexMobileStoreRootView: View {
             }
         }
       }
-      tab(.habits, hidden: true) {
-        // Bound (unlike Calendar's) so a deep link / Handoff / Spotlight route to
-        // a specific habit can push its detail — see `MobileStore.habitsRoutePath`.
-        NavigationStack(path: $store.habitsRoutePath) {
-          MobileStoreHabitsView(store: store)
-            .mobileReadableWidth(inlineTitleAtRegularWidth: true)
-            .navigationDestination(for: MobileRoute.self) { route in
-              MobileStoreRouteView(route: route, store: store)
-            }
-        }
-      }
 
       Tab(value: MobileTabBarItem.capture, role: .search) {
         Color.clear
@@ -224,13 +214,11 @@ public struct LorvexMobileStoreRootView: View {
 
   private func tab<Content: View>(
     _ tab: MobileTab,
-    hidden: Bool = false,
     @ViewBuilder content: @escaping () -> Content
   ) -> some TabContent<MobileTabBarItem> {
     Tab(tab.title, systemImage: tab.systemImage, value: MobileTabBarItem.tab(tab)) {
       content()
     }
-    .hidden(hidden)
   }
 }
 

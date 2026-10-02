@@ -50,6 +50,54 @@ class DesignTokenVerifierTests(unittest.TestCase):
         )
         self.assertEqual(failures, [])
 
+    def test_fixed_direction_glyphs_are_flagged(self) -> None:
+        failures = self.scan(
+            "\n".join(
+                [
+                    'Image(systemName: "chevron.right")',
+                    'Label(previous, systemImage: "chevron.left")',
+                    'Button(title, systemImage: "arrow.right.to.line") {}',
+                    'Label(defer, systemImage: "arrow.turn.up.right")',
+                    'Image(systemName: "arrow.uturn.left.circle")',
+                    'Image(systemName: "arrowtriangle.right.fill")',
+                ]
+            )
+        )
+        self.assertEqual(len(failures), 6, failures)
+        self.assertTrue(all("fixed-direction glyph" in f for f in failures))
+
+    def test_mirroring_and_symmetric_glyphs_pass(self) -> None:
+        failures = self.scan(
+            "\n".join(
+                [
+                    'Image(systemName: "chevron.forward")',
+                    'Label(previous, systemImage: "chevron.backward")',
+                    'Button(title, systemImage: "arrow.forward.to.line") {}',
+                    'Image(systemName: "arrow.uturn.backward.circle")',
+                    'Image(systemName: "arrow.left.and.right")',
+                    'Image(systemName: "arrow.up.left.and.arrow.down.right")',
+                    'Image(systemName: "chevron.down")',
+                    'Image(systemName: "text.alignleft")',
+                    'LorvexDisclosureChevron(isExpanded: isOpen)',
+                ]
+            )
+        )
+        self.assertEqual(failures, [])
+
+    def test_hand_drawn_progress_arcs_are_flagged(self) -> None:
+        failures = self.scan(
+            "\n".join(
+                [
+                    "Circle().trim(from: 0, to: fraction)",
+                    "  .trim( from: start, to: end)",
+                    "LorvexProgressArc(fraction: fraction, style: tint, lineWidth: 6)",
+                    "Circle().stroke(.tertiary, lineWidth: 2)",
+                ]
+            )
+        )
+        self.assertEqual(len(failures), 2, failures)
+        self.assertTrue(all("hand-drawn progress arc" in f for f in failures))
+
     def test_fixed_sizes_and_numeric_radii_are_flagged(self) -> None:
         failures = self.scan(
             "\n".join(

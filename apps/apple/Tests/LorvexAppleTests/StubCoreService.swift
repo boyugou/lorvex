@@ -82,9 +82,13 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   var loadSyncStatusError: LorvexCoreError?
   var listTasksError: LorvexCoreError?
   /// Optional async barrier invoked inside `listTasks` before the delegated
-  /// read, so a test can observe store state while a bulk surface read (the
-  /// Spotlight / reminder / badge fan-out after a mutation) is in flight.
+  /// read, so a test can observe store state while a task-list read (a loaded
+  /// Tasks workspace reloading after a mutation) is in flight.
   var listTasksGate: (@Sendable () async -> Void)?
+  /// Optional async barrier invoked inside `loadWidgetStatsSource` before the
+  /// delegated read, so a test can observe store state while the badge's read
+  /// in the fan-out after a mutation is in flight.
+  var widgetStatsGate: (@Sendable () async -> Void)?
   /// Titles of the tasks created through the single-create entry points, in
   /// the order the core received them.
   var createdTaskTitles: [String] = []
@@ -117,7 +121,11 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
     try await preview.unarchiveTask(id: id)
   }
   func loadWidgetStatsSource() async throws -> WidgetStatsSource {
-    try await preview.loadWidgetStatsSource()
+    await widgetStatsGate?()
+    return try await preview.loadWidgetStatsSource()
+  }
+  func loadSearchIndexTasks() async throws -> [LorvexTask] {
+    try await preview.loadSearchIndexTasks()
   }
   func loadWidgetSnapshotSource(date: String?) async throws -> WidgetSnapshotSource {
     try await preview.loadWidgetSnapshotSource(date: date)

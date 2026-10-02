@@ -6,6 +6,7 @@ struct LorvexMenuBarExtraView: View {
   var body: some View {
     MenuBarStatusView(store: store)
       .tint(.accentColor)
+      .background(MenuBarPanelTopAnchor())
   }
 }
 

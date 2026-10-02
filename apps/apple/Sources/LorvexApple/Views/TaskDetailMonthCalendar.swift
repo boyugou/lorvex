@@ -64,14 +64,14 @@ struct TaskDetailMonthCalendar: View {
         .accessibilityAddTraits(.isHeader)
       Spacer(minLength: LorvexDesign.Spacing.s)
       LorvexIconButton(
-        systemImage: "chevron.left",
+        systemImage: "chevron.backward",
         label: String(
           localized: "task_detail.picker.previous_month_a11y", defaultValue: "Previous Month",
           table: "Localizable", bundle: LorvexL10n.bundle),
         accessibilityIdentifier: "task.detail.calendar.previous"
       ) { page(by: -1) }
       LorvexIconButton(
-        systemImage: "chevron.right",
+        systemImage: "chevron.forward",
         label: String(
           localized: "task_detail.picker.following_month_a11y", defaultValue: "Following Month",
           table: "Localizable", bundle: LorvexL10n.bundle),

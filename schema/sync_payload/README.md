@@ -2,7 +2,7 @@
 
 Each `NNN.json` file is the Apple sync wire contract for payload schema version
 `NNN`. `contract_format` is the manifest-file grammar (currently `3`), distinct
-from that wire version. From the initial, still-unreleased `001.json`, every
+from that wire version. From the initial `001.json` onward, every
 entity declares operation-specific shapes and a typed field registry:
 
 - `operations.upsert.required_keys` are present in every canonical upsert
@@ -100,12 +100,8 @@ final envelope is compared to both the operation shape and recursive field
 contract. Payload-shadow owned keys are checked separately; they are not treated
 as proof of outbound emission.
 
-Before the first public release, `001.json` is the single draft contract and may
-be corrected in place because no shipped client consumes it. Keep
-`LorvexVersion.payloadSchemaVersion` at `1` and do not manufacture a compatibility
-ladder for unshipped drafts.
-
-After the first schema-freeze arm, wire evolution is additive. An existing
+`001.json` is a released contract and is frozen; `LorvexVersion.payloadSchemaVersion`
+is `1`. Wire evolution is additive. An existing
 entity, field specification, required/optional classification, delete semantic,
 or historical metadata entry cannot be removed or reinterpreted. To add a new
 entity or an optional top-level field:
@@ -127,16 +123,16 @@ entity or an optional top-level field:
    `swift test --filter SyncPayloadEvolutionRuntimeContractTests` and
    `swift test --filter SyncFieldRoundTripProbeTests`.
 
-Any additional pre-release field should be added to its precise upsert or delete
-shape in `001.json` rather than widening every delete.
+A new field belongs in its precise upsert or delete shape in the next manifest
+rather than widening every delete.
 
-Do not edit or delete a released manifest. At the first public release,
+Do not edit or delete a released manifest.
 `apps/apple/script/verify_schema_freeze.py --arm` atomically captures the SHA-256
 of every current manifest in
-`schema/migration_policy.json:frozen_baseline.sync_payload_contracts`. Later
-releases may append a new manifest, but the verification gate rejects any
+`schema/migration_policy.json:frozen_baseline.sync_payload_contracts`. A release
+may append a new manifest, but the verification gate rejects any
 mutation of a previously frozen version. Re-run and commit `--arm` before each
-later public archive; the release gate rejects an appended current manifest
+public archive; the release gate rejects an appended current manifest
 that has not yet been captured.
 
 These manifests govern the Apple implementation only. They do not impose schema

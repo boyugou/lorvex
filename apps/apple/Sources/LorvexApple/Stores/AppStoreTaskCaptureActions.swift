@@ -188,11 +188,11 @@ extension AppStore {
 
   /// The fan-out a durable task create owes the rest of the system: the
   /// Spotlight index, reminders, the badge, the widget snapshot, and one sync
-  /// cycle. Awaiting it means a pass that saw the caller's write has finished.
-  /// A create that lands while a pass is in flight coalesces into one trailing
-  /// pass rather than running a second reminder re-plan against the same
-  /// notification center. Never awaited while `isCreating` is held: the pass
-  /// can take as long as a CloudKit cycle.
+  /// cycle. Awaiting it means the local surfaces reflect the caller's write;
+  /// the sync cycle it starts runs on without being awaited
+  /// (``republishSurfacesAfterLocalMutation()``). A create that lands while a
+  /// pass is in flight coalesces into one trailing pass rather than running a
+  /// second reminder re-plan against the same notification center.
   func publishAfterTaskCreate() async {
     await taskCreateFanOutFlight.run {
       await reindexTasksForSpotlight()

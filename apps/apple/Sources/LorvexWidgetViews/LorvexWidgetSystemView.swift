@@ -6,17 +6,19 @@ enum SystemWidgetLayout {
   case medium
   case large
 
+  /// As tall as the lead's title and line together on medium, so the block
+  /// is no taller than its text and two rows fit under it.
   var ringDiameter: CGFloat {
     switch self {
     case .medium: 40
-    case .large: 56
+    case .large: 52
     }
   }
 
   var titleFont: Font {
     switch self {
-    case .medium: .subheadline.weight(.semibold)
-    case .large: .title3.weight(.semibold)
+    case .medium: WidgetType.title
+    case .large: WidgetType.display
     }
   }
 
@@ -30,16 +32,22 @@ enum SystemWidgetLayout {
 
 /// The `systemMedium` and `systemLarge` Today widgets: the lead task with its
 /// circle, then the tasks after it in Today's order, each with its own circle
-/// to complete it. With tasks left but no lead, a line saying what is left of
-/// the day takes the lead's place and the list starts at its top. Large opens with the title and the assistant's briefing in
-/// its serif voice, and closes with how much got done today. The briefing gets
-/// two lines, or three when every row still fits under it. The rows are as
-/// many as the height holds: at a larger text size the last rows give way (the
-/// foot line's "N more today" counts them) instead of the foot line being
-/// clipped.
+/// to complete it on the lead ring's axis. With tasks left but no lead, the
+/// widget's title and a line saying what is left of the day take the lead's
+/// place and the list starts at its top. Large opens with the title and the
+/// assistant's briefing in its serif voice, and closes with how much got done
+/// today. The briefing keeps up to three lines, whole where it fits them; the
+/// rows are as many as the height left holds, and the ones that give way (to
+/// the briefing or to a larger text size) are counted by the foot line's "N
+/// more today" instead of the foot line being clipped.
 struct SystemWidgetView: View {
   let model: WidgetRenderModel
   let layout: SystemWidgetLayout
+
+  /// The most rows the view draws: the largest row budget of a family it
+  /// draws (``WidgetFamilyKind/maxTaskRowsWithoutLead`` of `systemLarge`).
+  /// The rows are static branches up to this count, never a `ForEach`.
+  static let rowCapacity = 7
 
   var body: some View {
     let metrics = LorvexWidgetViewMetrics.metrics(for: model.family)
@@ -47,47 +55,37 @@ struct SystemWidgetView: View {
       if model.state == .fallback {
         unavailable
       } else if model.lead != nil || model.remainingCount > 0 {
-        let lead = model.lead
-        let fittingRowCounts = Array(stride(from: model.taskRows.count, through: 0, by: -1))
-        if metrics.showsBriefing, let briefing = model.briefing {
-          // The briefing takes a third line only when every row still fits
-          // under it; otherwise it keeps two lines and the rows keep their room.
-          ViewThatFits(in: .vertical) {
-            leadContent(
-              lead, briefing: briefing, briefingLines: 3, rowCounts: [model.taskRows.count])
-            leadContent(lead, briefing: briefing, briefingLines: 2, rowCounts: fittingRowCounts)
-          }
-        } else {
-          leadContent(lead, briefing: nil, briefingLines: 0, rowCounts: fittingRowCounts)
-        }
+        leadContent(model.lead, briefing: metrics.showsBriefing ? model.briefing : nil)
       } else {
         allClear
       }
     }
-    .padding(.horizontal, metrics.horizontalPadding)
-    .padding(.vertical, metrics.verticalPadding)
-    // No opaque fill here: the entry view's `.containerBackground` already
-    // supplies the widget's backing material.
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    // No padding and no opaque fill: the view draws inside WidgetKit's content
+    // margins, and the entry view's `.containerBackground` supplies the
+    // widget's backing material.
   }
 
   /// The lead task's page: on large the title and the briefing, when there is
-  /// one, in at most `briefingLines` lines; then the lead block and, under it,
-  /// the first of `rowCounts` whose rows and foot line fit.
-  private func leadContent(
-    _ lead: WidgetLeadRender?, briefing: String?, briefingLines: Int, rowCounts: [Int]
-  ) -> some View {
-    VStack(alignment: .leading, spacing: 6) {
+  /// one; then the lead block (or, with no lead, what is left of the day) and,
+  /// under it, as many rows as fit with the foot line.
+  private func leadContent(_ lead: WidgetLeadRender?, briefing: String?) -> some View {
+    // 4pt between the blocks on large, whose height decides whether its last
+    // row fits; the rows' own height already sets them off the lead.
+    VStack(alignment: .leading, spacing: layout == .large ? 4 : 6) {
       if layout == .large {
-        Text(model.headline)
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(LorvexDesign.Palette.accent)
-        if let briefing {
-          // The assistant's note on the day is the user's private content;
-          // redact it when the device locks.
-          Text(briefing, serifVoice: .assistantSecondary)
-            .foregroundStyle(.secondary)
-            .lineLimit(briefingLines)
-            .privacySensitive()
+        VStack(alignment: .leading, spacing: 2) {
+          label
+          if let briefing {
+            // The assistant's note on the day is the user's private content;
+            // redact it when the device locks.
+            Text(briefing, serifVoice: .widgetBriefing)
+              .userContentTypesetting(briefing)
+              .foregroundStyle(.secondary)
+              .lineLimit(3)
+              .fixedSize(horizontal: false, vertical: true)
+              .privacySensitive()
+          }
         }
       }
       if let lead {
@@ -98,42 +96,72 @@ struct SystemWidgetView: View {
       } else {
         dayHeader
       }
+      // The candidates, most rows first, are static, as the rows in each
+      // are: SwiftUI may evaluate a candidate it does not draw off the main
+      // thread, where a `ForEach` content closure trips Swift 6's isolation
+      // check. Counts below zero draw no rows, so the last candidates repeat.
+      let rowCount = model.taskRows.count
       ViewThatFits(in: .vertical) {
-        ForEach(rowCounts, id: \.self) { count in
-          nextRowsAndFoot(showing: count)
-        }
+        nextRowsAndFoot(showing: rowCount)
+        nextRowsAndFoot(showing: rowCount - 1)
+        nextRowsAndFoot(showing: rowCount - 2)
+        nextRowsAndFoot(showing: rowCount - 3)
+        nextRowsAndFoot(showing: rowCount - 4)
+        nextRowsAndFoot(showing: rowCount - 5)
+        nextRowsAndFoot(showing: rowCount - 6)
+        nextRowsAndFoot(showing: rowCount - 7)
       }
     }
   }
 
-  /// The first `count` rows and the foot line under them. Gaps are
-  /// explicit paddings rather than stack spacing, so the zero-height spacer
-  /// adds none: `ViewThatFits` measures this at its natural height, and on
-  /// medium two rows fit with only a few points to spare. The rows need no
-  /// gap between them; each is as tall as its 32pt complete button.
-  private func nextRowsAndFoot(showing count: Int) -> some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if count > 0 {
-        ForEach(model.taskRows.prefix(count)) { row in
-          WidgetTaskRowView(row: row, interactive: true)
-        }
-      }
+  /// The widget's name: "Today", or the list a configured widget shows.
+  private var label: some View {
+    Text(model.headline)
+      .font(WidgetType.label)
+      .foregroundStyle(LorvexDesign.Palette.accent)
+      .lineLimit(1)
+      .widgetAccentable()
+  }
+
+  /// The first `requested` rows (none when it is zero or less) and the foot
+  /// line under them. Gaps are explicit paddings rather than stack spacing,
+  /// so the zero-height spacer adds none: `ViewThatFits` measures this at its
+  /// natural height, and on medium two rows fit with only a few points to
+  /// spare. The rows need no gap between them; each is as tall as its
+  /// complete button.
+  private func nextRowsAndFoot(showing requested: Int) -> some View {
+    let count = max(0, min(requested, model.taskRows.count, Self.rowCapacity))
+    return VStack(alignment: .leading, spacing: 0) {
+      taskRow(0, shownRowCount: count)
+      taskRow(1, shownRowCount: count)
+      taskRow(2, shownRowCount: count)
+      taskRow(3, shownRowCount: count)
+      taskRow(4, shownRowCount: count)
+      taskRow(5, shownRowCount: count)
+      taskRow(6, shownRowCount: count)
       Spacer(minLength: 0)
       WidgetFootLine(model: model, showsDone: layout == .large, shownRowCount: count)
-        .padding(.top, 4)
+        .padding(.top, 2)
+    }
+  }
+
+  @ViewBuilder
+  private func taskRow(_ index: Int, shownRowCount: Int) -> some View {
+    if index < shownRowCount {
+      WidgetTaskRowView(
+        row: model.taskRows[index],
+        leadRingDiameter: model.lead == nil ? nil : layout.ringDiameter)
     }
   }
 
   /// The lead's place when no task leads: on medium the title, then what is
-  /// left of the day.
+  /// left of the day (large shows its title above the briefing).
   private var dayHeader: some View {
     VStack(alignment: .leading, spacing: 2) {
       if layout == .medium {
-        Text(model.headline)
-          .font(.caption.weight(.semibold))
-          .foregroundStyle(LorvexDesign.Palette.accent)
+        label
       }
-      if let dayLine = model.dayLine {
+      if let dayLine = model.dayLineUnderTitle {
         Text(dayLine)
           .font(layout.titleFont)
           .foregroundStyle(Color.primary)
@@ -147,14 +175,16 @@ struct SystemWidgetView: View {
     VStack(alignment: .leading, spacing: 6) {
       HStack(spacing: 6) {
         Image(systemName: "checkmark.seal.fill")
+          .font(WidgetType.title)
           .foregroundStyle(LorvexDesign.Palette.done)
+          .widgetAccentable()
           .accessibilityHidden(true)
         Text("widget.small.all_clear", bundle: WidgetL10n.bundle)
-          .font(.headline)
+          .font(WidgetType.title)
           .foregroundStyle(Color.primary)
       }
       Text(model.subheadline)
-        .font(.callout)
+        .font(WidgetType.row)
         .foregroundStyle(.secondary)
         .lineLimit(3)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -169,13 +199,13 @@ struct SystemWidgetView: View {
         .font(.title2)
         .foregroundStyle(Color.secondary)
       Text(model.subheadline)
-        .font(.caption)
+        .font(WidgetType.meta)
         .foregroundStyle(Color.secondary)
         .lineLimit(3)
         .frame(maxWidth: .infinity, alignment: .leading)
       Spacer(minLength: 0)
       Text(model.statusText)
-        .font(.caption2)
+        .font(WidgetType.foot)
         .foregroundStyle(.tertiary)
         .lineLimit(1)
     }

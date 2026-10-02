@@ -2,7 +2,7 @@ import Foundation
 import LorvexCore
 import LorvexWidgetExtension
 import LorvexWidgetKitSupport
-import LorvexWidgetViews
+@testable import LorvexWidgetViews
 import Testing
 
 // MARK: - WidgetSnapshot habit/task codable round-trip
@@ -202,7 +202,8 @@ func widgetSnapshotProjectorNarrowsTasksToTheFocusFilterLists() {
 
 @Test
 func progressWidgetRatioComputationIsCorrect() {
-  let p = ProgressWidgetView.todayProgress(completedDueToday: 2, openDueToday: 3)
+  // Two tasks done today and three still on Today's list: two of five.
+  let p = ProgressWidgetView.todayProgress(completedToday: 2, leftToday: 3)
   #expect(p.total == 5)
   #expect(p.completed == 2)
   #expect(abs(p.ratio - 0.4) < 0.001)
@@ -210,25 +211,31 @@ func progressWidgetRatioComputationIsCorrect() {
 
 @Test
 func progressWidgetRatioIsZeroWhenNoTasks() {
-  let p = ProgressWidgetView.todayProgress(completedDueToday: 0, openDueToday: 0)
+  let p = ProgressWidgetView.todayProgress(completedToday: 0, leftToday: 0)
   #expect(p.total == 0)
   #expect(p.ratio == 0)
 }
 
-// The gauge must be internally consistent: completing an overdue task (which is
-// not part of either term) must not move it, and finishing every due-today task
-// must reach 100% even while overdue work remains.
+// Completing a task on Today's list moves it from left to done: the total
+// holds and the ring advances. Clearing the list fills the ring.
 @Test
-func progressWidgetExcludesOverdueAndReachesFull() {
-  // Two due-today completed, none open due today -> 100% regardless of overdue.
-  let full = ProgressWidgetView.todayProgress(completedDueToday: 2, openDueToday: 0)
-  #expect(full.total == 2)
-  #expect(abs(full.ratio - 1.0) < 0.001)
+func progressWidgetAdvancesOnCompletionAndReachesFull() {
+  let before = ProgressWidgetView.todayProgress(completedToday: 1, leftToday: 2)
+  let after = ProgressWidgetView.todayProgress(completedToday: 2, leftToday: 1)
+  #expect(before.total == after.total)
+  #expect(after.ratio > before.ratio)
 
-  // Completing an overdue task changes neither term, so the ratio is stable.
-  let before = ProgressWidgetView.todayProgress(completedDueToday: 1, openDueToday: 2)
-  let afterOverdueDone = ProgressWidgetView.todayProgress(completedDueToday: 1, openDueToday: 2)
-  #expect(before.ratio == afterOverdueDone.ratio)
+  let full = ProgressWidgetView.todayProgress(completedToday: 3, leftToday: 0)
+  #expect(full.total == 3)
+  #expect(abs(full.ratio - 1.0) < 0.001)
+}
+
+@Test
+func progressWidgetClampsNegativeCounts() {
+  let p = ProgressWidgetView.todayProgress(completedToday: -1, leftToday: -4)
+  #expect(p.completed == 0)
+  #expect(p.total == 0)
+  #expect(p.ratio == 0)
 }
 
 // MARK: - Habit isDoneToday logic
@@ -249,6 +256,16 @@ func habitSummaryIsDoneTodayRequiresMeetingTarget() {
 func widgetFamilyKindCoversAccessoryCircular() {
   // The circular accessory shows a count or a running time, never task rows.
   #expect(WidgetFamilyKind.accessoryCircular.maxTaskRows == 0)
+}
+
+@Test
+func systemWidgetDrawsEveryRowItsFamiliesBudget() {
+  // The medium and large views draw their rows as static branches up to a
+  // fixed capacity; a larger budget would silently drop rows past it.
+  for family in [WidgetFamilyKind.systemMedium, .systemLarge] {
+    #expect(family.maxTaskRows <= SystemWidgetView.rowCapacity)
+    #expect(family.maxTaskRowsWithoutLead <= SystemWidgetView.rowCapacity)
+  }
 }
 
 @Test

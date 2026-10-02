@@ -141,7 +141,7 @@ struct MobileTaskFieldEditor: View {
   private var priorityEditor: some View {
     Picker(MobileTaskFieldCopy.title(field), selection: $draft.priority) {
       ForEach([LorvexTask.Priority.p1, .p2, .p3], id: \.self) { priority in
-        Label(MobileCaptureCopy.priority(priority), systemImage: priority.prioritySymbolName)
+        Label(priority.localizedPhrase, systemImage: priority.prioritySymbolName)
           .tag(priority)
       }
     }
@@ -253,11 +253,9 @@ struct MobileTaskLengthEditor: View {
         ZStack {
           Circle().stroke(
             LorvexDesign.Palette.accent.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)), lineWidth: 7)
-          Circle()
-            .trim(from: 0, to: Choices.lengthFraction(minutes))
-            .stroke(LorvexDesign.Palette.accent, style: StrokeStyle(lineWidth: 7, lineCap: .round))
-            .rotationEffect(.degrees(-90))
-          Text(minutes > 0 ? MobileTodayCalmCopy.duration(minutes) : "–")
+          LorvexProgressArc(
+            fraction: Choices.lengthFraction(minutes), style: LorvexDesign.Palette.accent, lineWidth: 7)
+          Text(minutes > 0 ? LorvexDurationFormat.minutes(minutes) : "–")
             .font(LorvexDesign.Typography.sectionHeader.monospacedDigit())
         }
         .frame(width: 112, height: 112)
@@ -269,7 +267,7 @@ struct MobileTaskLengthEditor: View {
       .padding(.vertical, LorvexDesign.Spacing.s)
       LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
         ForEach(Choices.lengthPresets, id: \.self) { preset in
-          Button(MobileTodayCalmCopy.duration(preset)) { set(preset) }
+          Button(LorvexDurationFormat.minutes(preset)) { set(preset) }
             .buttonStyle(.bordered)
             .buttonBorderShape(.capsule)
             .tint(minutes == preset ? LorvexDesign.Palette.accent : .secondary)

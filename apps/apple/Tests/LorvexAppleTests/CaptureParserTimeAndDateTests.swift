@@ -72,6 +72,53 @@ struct CaptureParserTimeAndDateTests {
     #expect(parse("tonight 8am flight check").startMinutes == 8 * 60)
   }
 
+  @Test("The night runs past midnight: 12 o'clock and the small hours are the next day")
+  func nightTimes() {
+    let line = parse("晚上12点睡觉")
+    #expect(line.title == "睡觉")
+    #expect(line.startMinutes == 0)
+    #expect(line.plannedDayOffset == 1)
+    #expect(line.plannedTime == 0..<30)
+
+    #expect(parse("今晚12点上线").plannedDayOffset == 1)
+    #expect(parse("今晚12点上线").startMinutes == 0)
+    #expect(parse("今晚0点上线").plannedDayOffset == 1)
+    #expect(parse("明晚12点上线").plannedDayOffset == 2)
+    #expect(parse("明天晚上12点上线").plannedDayOffset == 2)
+    // Friday night's midnight opens Saturday.
+    #expect(parse("周五晚上12点交").plannedDayOffset == 4)
+    #expect(parse("晚上12点半吃宵夜").startMinutes == 30)
+    #expect(parse("半夜12点抢票").plannedDayOffset == 1)
+    #expect(parse("午夜12点发布").startMinutes == 0)
+    #expect(parse("晚上1点改稿").startMinutes == 60)
+    #expect(parse("晚上1点改稿").plannedDayOffset == 1)
+    #expect(parse("今晚1点改稿").startMinutes == 60)
+    #expect(parse("今晚1点改稿").plannedDayOffset == 1)
+    #expect(parse("半夜3点看流星").startMinutes == 3 * 60)
+    #expect(parse("半夜3点看流星").plannedDayOffset == 1)
+    // The evening itself stays on the day.
+    #expect(parse("晚上11点睡觉").startMinutes == 23 * 60)
+    #expect(parse("晚上11点睡觉").plannedDayOffset == nil)
+    #expect(parse("中午12点吃饭").plannedDayOffset == nil)
+  }
+
+  @Test("At midnight ends the day it is named with; an explicit AM stays as written")
+  func englishMidnight() {
+    let line = parse("Submit the report at midnight")
+    #expect(line.title == "Submit the report")
+    #expect(line.startMinutes == 0)
+    #expect(line.plannedDayOffset == 1)
+    #expect(line.phrases.map(\.kind) == [.time])
+
+    #expect(parse("Deploy tomorrow at midnight").plannedDayOffset == 2)
+    #expect(parse("tonight 12:00 launch").startMinutes == 0)
+    #expect(parse("tonight 12:00 launch").plannedDayOffset == 1)
+    // "Midnight" without "at" is as often a name.
+    #expect(parse("Midnight snack").startMinutes == nil)
+    #expect(parse("Midnight snack").title == "Midnight snack")
+    #expect(parse("Pick up 12am delivery").plannedDayOffset == nil)
+  }
+
   @Test("A time alone plans today, for the parsed length or half an hour")
   func plannedTime() {
     let line = parse("Dentist 4pm")

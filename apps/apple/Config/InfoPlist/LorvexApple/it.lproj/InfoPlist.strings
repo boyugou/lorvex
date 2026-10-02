@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex può aggiungere all’app Calendario i blocchi di tempo che pianifichi.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex può leggere i dettagli degli eventi per creare agende e dare contesto all’assistente.";

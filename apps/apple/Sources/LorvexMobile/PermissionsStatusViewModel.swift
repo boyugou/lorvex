@@ -21,10 +21,6 @@ public final class PermissionsStatusViewModel {
 
   public private(set) var notificationsStatus: PermissionStatus = .unknown
 
-  public var notificationsNeedsSettings: Bool {
-    notificationsStatus == .denied
-  }
-
   public init() {}
 
   /// Refreshes all permission statuses from the system.

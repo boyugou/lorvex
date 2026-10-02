@@ -15,11 +15,11 @@ struct MobileListCatalogRow: View {
     HStack(spacing: LorvexDesign.Spacing.m) {
       MobileIconTile(icon: list.icon, fallback: "tray.fill", tint: tileTint, size: 30)
       VStack(alignment: .leading, spacing: 2) {
-        Text(list.displayName)
+        Text(userContent: list.displayName)
           .font(.body)
           .lineLimit(2)
         if let description = list.description, !description.isEmpty {
-          Text(description)
+          Text(userContent: description)
             .font(.footnote)
             .foregroundStyle(.secondary)
             .lineLimit(2)

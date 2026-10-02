@@ -33,9 +33,9 @@ extension AppStore {
       taskSearchIndexer: taskSearchIndexer,
       contentSearchIndexer: contentSearchIndexer,
       taskReminderScheduler: taskReminderScheduler,
-      // A detached window's mutations reschedule reminders from the full core
-      // task set (appleSurfaceTasks reads the DB, not this store's partial
-      // surfaces), so the task + habit reschedule share one notification budget.
+      // A detached window's mutations re-plan reminders from the database (the
+      // core reminder queries, not this store's partial surfaces), so the
+      // task + habit reschedule share one notification budget.
       // Carry the real habit scheduler too — a Noop here would let the budget
       // plan habit slots that never arm while task reminders take the cap.
       habitReminderScheduler: habitReminderScheduler,

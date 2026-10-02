@@ -128,9 +128,17 @@ public enum TaskCreateDateParse {
   /// same day. A slash or dash date that is real either way ("05/10/2026") is
   /// refused, since the United States puts the month first and most other
   /// places the day; the caller then asks for `YYYY-MM-DD`.
+  ///
+  /// The separators the person wrote pick the reading: `DateFormatter` matches
+  /// "/", "-", and "." interchangeably even when it is not lenient, so the
+  /// day-first dotted pattern applies only to a date written with dots alone.
   private static func parseAlternateDateFormat(_ value: String) -> String? {
-    for format in ["yyyy/MM/dd", "yyyy.MM.dd", "dd.MM.yyyy", "MMM d, yyyy", "MMMM d, yyyy"] {
+    for format in ["yyyy/MM/dd", "yyyy.MM.dd", "MMM d, yyyy", "MMMM d, yyyy"] {
       if let ymd = ymd(value, format: format) { return ymd }
+    }
+    let separators = Set(value.filter { $0 == "/" || $0 == "-" || $0 == "." })
+    if separators == ["."] {
+      return ymd(value, format: "dd.MM.yyyy")
     }
     let dayFirst = ["dd/MM/yyyy", "dd-MM-yyyy"].lazy.compactMap { ymd(value, format: $0) }.first
     let monthFirst = ["MM/dd/yyyy", "MM-dd-yyyy"].lazy.compactMap { ymd(value, format: $0) }.first

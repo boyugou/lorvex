@@ -74,7 +74,9 @@
     /// `-lorvexSeedSampleData` launch argument and no-ops unless the store is
     /// empty, so relaunching never duplicates. Compiled out of release builds.
     /// Writes through the normal core path (valid HLC / changelog), never a
-    /// preview/in-memory backend.
+    /// preview/in-memory backend. The content is written in the language the
+    /// interface runs in (``LorvexSampleText``), so a capture run launched with
+    /// `-AppleLanguages (zh-Hans)` shows Chinese tasks under a Chinese interface.
     public func debugSeedSampleDataIfNeeded() async {
       guard CommandLine.arguments.contains("-lorvexSeedSampleData") else { return }
       guard
@@ -82,6 +84,7 @@
           status: "all", listID: nil, priority: nil, text: nil, limit: 1, offset: 0),
         existing.tasks.isEmpty
       else { return }
+      let text = LorvexSampleText(language: .running)
 
       let calendar = Calendar.current
       func day(_ offset: Int) -> Date {
@@ -94,28 +97,30 @@
 
       // A few lists with distinct icons + colors so catalog tiles show variety.
       let work = try? await core.createList(
-        name: "Work", description: "Day job & deep work", color: "#0A84FF", icon: "briefcase.fill")
+        name: text("Work"), description: text("Day job & deep work"), color: "#0A84FF",
+        icon: "briefcase.fill")
       let personal = try? await core.createList(
-        name: "Personal", description: nil, color: "#34C759", icon: "house.fill")
+        name: text("Personal"), description: nil, color: "#34C759", icon: "house.fill")
       _ = try? await core.createList(
-        name: "Reading", description: "Papers & books", color: "#AF52DE", icon: "book.fill")
+        name: text("Reading"), description: text("Papers & books"), color: "#AF52DE",
+        icon: "book.fill")
 
       let drafts: [TaskCreateDraft] = [
         .init(
-          title: "Reply to the investor update email", priority: .p1,
-          dueDate: day(-1), plannedDate: day(-1), tags: ["work", "urgent"]),
+          title: text("Reply to the investor update email"), priority: .p1,
+          dueDate: day(-1), plannedDate: day(-1), tags: text(["work", "urgent"])),
         .init(
-          title: "Review the Q3 planning doc", listID: work?.id, priority: .p1,
-          estimatedMinutes: 45, dueDate: day(0), plannedDate: day(0), tags: ["work"]),
+          title: text("Review the Q3 planning doc"), listID: work?.id, priority: .p1,
+          estimatedMinutes: 45, dueDate: day(0), plannedDate: day(0), tags: text(["work"])),
         .init(
-          title: "Refactor the sync layer", listID: work?.id, priority: .p2,
-          estimatedMinutes: 90, plannedDate: day(0), tags: ["engineering"]),
+          title: text("Refactor the sync layer"), listID: work?.id, priority: .p2,
+          estimatedMinutes: 90, plannedDate: day(0), tags: text(["engineering"])),
         .init(
-          title: "Buy groceries for the week", listID: personal?.id, priority: .p2,
-          plannedDate: day(0), tags: ["home"]),
-        .init(title: "Read the GRPO paper", priority: .p2, tags: ["research"]),
-        .init(title: "Renew passport", priority: .p3, dueDate: day(5)),
-        .init(title: "Plan the spring offsite", priority: .p3, tags: ["someday"]),
+          title: text("Buy groceries for the week"), listID: personal?.id, priority: .p2,
+          plannedDate: day(0), tags: text(["home"])),
+        .init(title: text("Read the GRPO paper"), priority: .p2, tags: text(["research"])),
+        .init(title: text("Renew passport"), priority: .p3, dueDate: day(5)),
+        .init(title: text("Plan the spring offsite"), priority: .p3, tags: text(["someday"])),
       ]
       var created: [LorvexTask] = []
       for draft in drafts {
@@ -131,7 +136,9 @@
         ) {
           _ = try? await (core as? any LorvexMcpMutationServicing)?.setDailyBriefingForMcp(
             date: todayYMD,
-            briefing: "The planning review first while the doc is fresh; the sync refactor takes the long block before lunch.")
+            briefing: text(
+              "The planning review first while the doc is fresh; the sync refactor takes the long block before lunch."
+            ))
           _ = try? await core.saveDayTimes(
             date: todayYMD,
             times: [
@@ -140,7 +147,7 @@
             ])
           _ = try? await core.deferTask(
             id: created[3].id, until: day(1), reason: "not_today",
-            note: "Groceries can wait for the evening")
+            note: text("Groceries can wait for the evening"))
         }
       }
       // Park one as Someday.
@@ -152,8 +159,8 @@
       let timesheetDue = day(4)
       if let timesheet = try? await core.createTask(
         .init(
-          title: "Submit the weekly timesheet", listID: work?.id, priority: .p3,
-          dueDate: timesheetDue, tags: ["work"]))
+          title: text("Submit the weekly timesheet"), listID: work?.id, priority: .p3,
+          dueDate: timesheetDue, tags: text(["work"])))
       {
         let weekday = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][
           calendar.component(.weekday, from: timesheetDue) - 1]
@@ -163,8 +170,8 @@
       if let someday = created.last {
         _ = try? await core.createTask(
           .init(
-            title: "Book the offsite venue", listID: work?.id, priority: .p2,
-            tags: ["work"], dependsOn: [someday.id]))
+            title: text("Book the offsite venue"), listID: work?.id, priority: .p2,
+            tags: text(["work"]), dependsOn: [someday.id]))
       }
 
       let habits: [(String, String, String, String)] = [
@@ -179,7 +186,7 @@
         // surface have a set value to show.
         let milestoneTarget: Int? = (name == "Read 30 minutes") ? 30 : nil
         if let created = try? await core.createHabit(
-          name: name, cue: cue, icon: icon, color: color, targetCount: 1,
+          name: text(name), cue: text(cue), icon: icon, color: color, targetCount: 1,
           cadence: .daily, milestoneTarget: milestoneTarget)
         {
           createdHabits[name] = created
@@ -201,7 +208,7 @@
       // One archived habit, so the Habits screen's archived section has a row
       // to restore.
       if let journal = try? await core.createHabit(
-        name: "Evening journal", cue: "After dinner", icon: "book.closed", color: "#AF52DE",
+        name: text("Evening journal"), cue: text("After dinner"), icon: "book.closed", color: "#AF52DE",
         targetCount: 1, cadence: .daily, milestoneTarget: nil)
       {
         _ = try? await core.updateHabit(
@@ -225,21 +232,21 @@
       ]
       for (offset, title, start, end) in events {
         _ = try? await core.createCalendarEvent(
-          title: title, startDate: ymd.string(from: day(offset)), endDate: nil,
+          title: text(title), startDate: ymd.string(from: day(offset)), endDate: nil,
           startTime: start, endTime: end, allDay: false, location: nil, notes: nil,
           recurrence: nil, timezone: TimeZone.current.identifier, url: nil, color: nil,
           eventType: nil, personName: nil, attendees: nil)
       }
       _ = try? await core.createCalendarEvent(
-        title: "Team offsite", startDate: ymd.string(from: day(3)), endDate: nil,
+        title: text("Team offsite"), startDate: ymd.string(from: day(3)), endDate: nil,
         startTime: nil, endTime: nil, allDay: true, location: nil, notes: nil,
         recurrence: nil, timezone: TimeZone.current.identifier, url: nil, color: nil,
         eventType: nil, personName: nil, attendees: nil)
 
       // Completed tasks so the Tasks "Completed" filter and done history aren't empty.
       let doneDrafts: [TaskCreateDraft] = [
-        .init(title: "Send the weekly status update", priority: .p2, tags: ["work"]),
-        .init(title: "Book the dentist appointment", priority: .p3, tags: ["home"]),
+        .init(title: text("Send the weekly status update"), priority: .p2, tags: text(["work"])),
+        .init(title: text("Book the dentist appointment"), priority: .p3, tags: text(["home"])),
       ]
       for draft in doneDrafts {
         if let done = try? await core.createTask(draft) {
@@ -254,21 +261,23 @@
         ("writing_style", "Prefers concise, direct updates — no filler."),
         ("current_focus", "Shipping the Apple-native rewrite this quarter."),
       ]
-      for (key, content) in memories { _ = try? await core.upsertMemory(key: key, content: content) }
+      for (key, content) in memories {
+        _ = try? await core.upsertMemory(key: key, content: text(content))
+      }
 
       // Daily reviews — today (editable) plus prior days so the weekly digest has history.
       _ = try? await core.upsertDailyReviewPreservingLinks(
         date: todayYMD,
-        summary: "Solid morning of deep work; shipped the planning review.",
+        summary: text("Solid morning of deep work; shipped the planning review."),
         mood: 4, energyLevel: 4,
-        wins: "Unblocked the sync layer; cleared the investor email.",
-        blockers: "Waiting on design sign-off for the calendar grid.",
-        learnings: "Batching reviews before noon keeps the afternoon open.")
+        wins: text("Unblocked the sync layer; cleared the investor email."),
+        blockers: text("Waiting on design sign-off for the calendar grid."),
+        learnings: text("Batching reviews before noon keeps the afternoon open."))
       for offset in 1...3 {
         _ = try? await core.upsertDailyReviewPreservingLinks(
           date: ymd.string(from: day(-offset)),
-          summary: "Steady progress across tasks.", mood: 3, energyLevel: 3,
-          wins: "Closed a few items.", blockers: nil, learnings: nil)
+          summary: text("Steady progress across tasks."), mood: 3, energyLevel: 3,
+          wins: text("Closed a few items."), blockers: nil, learnings: nil)
       }
 
       // MetricKit-style diagnostics so the Settings "Recent Diagnostics" feed
@@ -316,7 +325,7 @@
 
       // A capture of one of Today's edge states moves the sample day into it.
       if let state = LorvexPreviewDayState.requested, let service = core as? SwiftLorvexCoreService {
-        try? await state.apply(to: service)
+        try? await state.apply(to: service, text: text)
       }
 
       await refresh()
@@ -496,12 +505,14 @@
       }
       // `lorvex://findtask/<title>` opens the seeded task with that title on
       // the Today stack, for a task detail that is not first on Today (a
-      // repeating task, one with dependencies) — a screenshot hook.
+      // repeating task, one with dependencies) — a screenshot hook. The title
+      // is the seed's English one and is translated the way the seed wrote it.
       if url.host == "findtask", let title = url.pathComponents.last {
+        let seededTitle = LorvexSampleText(language: .running)(title)
         Task { @MainActor in
           guard
             let page = try? await core.listTasks(
-              status: "all", listID: nil, priority: nil, text: title, limit: 1, offset: 0),
+              status: "all", listID: nil, priority: nil, text: seededTitle, limit: 1, offset: 0),
             let id = page.tasks.first?.id
           else { return }
           navigate(to: .task(id))

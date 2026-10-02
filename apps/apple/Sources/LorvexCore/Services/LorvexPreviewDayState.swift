@@ -30,8 +30,9 @@
     /// lists, what was done today (archiving each first, as the store's
     /// two-step delete requires), today's events, and the day's briefing, which
     /// was written about the deleted work; `allDone` completes what Today
-    /// lists; `overbooked` plans two long tasks for today.
-    public func apply(to core: SwiftLorvexCoreService) async throws {
+    /// lists; `overbooked` plans two long tasks for today, titled and tagged
+    /// through `text` like the rest of the sample day.
+    public func apply(to core: SwiftLorvexCoreService, text: LorvexSampleText = .english) async throws {
       let today = try await core.loadToday()
       let listed = Self.unique(today.inProgressTasks + today.tasks)
       switch self {
@@ -57,8 +58,8 @@
         for (title, minutes) in [("Outline the board deck", 150), ("Draft the hiring plan", 120)] {
           _ = try await core.createTask(
             TaskCreateDraft(
-              title: title, priority: .p3, estimatedMinutes: minutes, plannedDate: date,
-              tags: ["work"]))
+              title: text(title), priority: .p3, estimatedMinutes: minutes, plannedDate: date,
+              tags: text(["work"])))
         }
       }
     }

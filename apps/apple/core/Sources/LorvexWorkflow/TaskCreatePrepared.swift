@@ -314,11 +314,13 @@ public enum TaskCreatePrepared {
     return out
   }
 
+  /// Throws a failed check's typed ``ValidationError`` itself, so a caller can
+  /// tell which field broke which limit (the app shows a localized "title is
+  /// too long" from it); the MCP boundary renders it with the same code and
+  /// message a `StoreError.validation` carrying its description would get.
   private static func throwOnValidationFailure(
     _ result: Result<Void, ValidationError>
   ) throws {
-    if case .failure(let error) = result {
-      throw StoreError.validation(error.description)
-    }
+    try result.get()
   }
 }

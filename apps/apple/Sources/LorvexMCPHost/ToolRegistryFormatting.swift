@@ -96,16 +96,15 @@ extension ToolRegistry {
 
   /// Extracts the user-facing message for a thrown error, preferring a domain
   /// type's own wording. `localizedDescription` alone yields a generic Cocoa
-  /// string for plain `Error`/`CustomStringConvertible` types (e.g.
-  /// `ValidationError`), so route through `errorDescription` / `description`
-  /// first.
+  /// string for a plain `Error` that is only `CustomStringConvertible`, so route
+  /// through `errorDescription` / `description` first.
   static func errorMessage(for error: Error) -> String {
     if let localized = error as? LocalizedError, let description = localized.errorDescription {
       return description
     }
     // `String(describing:)` surfaces a `CustomStringConvertible` domain type's
-    // own wording (e.g. `ValidationError`) rather than the generic Cocoa string
-    // that `localizedDescription` yields for a plain `Error`.
+    // own wording rather than the generic Cocoa string that
+    // `localizedDescription` yields for a plain `Error`.
     return String(describing: error)
   }
 

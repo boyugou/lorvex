@@ -71,6 +71,36 @@ final class SwiftLorvexCoreServiceInputHygieneTests: XCTestCase {
         name: tooLong, description: nil, color: nil, icon: nil, aiNotes: nil))
   }
 
+  func testCreateTaskRejectsOverLengthTitleWithATypedFieldError() async throws {
+    let service = try makeService()
+    let length = ValidationLimits.maxTitleLength + 1
+    do {
+      _ = try await service.createTask(TaskCreateDraft(title: String(repeating: "a", count: length)))
+      XCTFail("an over-length title must be rejected")
+    } catch {
+      XCTAssertEqual(
+        error as? ValidationError,
+        .tooLong(field: "title", max: ValidationLimits.maxTitleLength, actual: length))
+      XCTAssertEqual(UserFacingError.Reason(error), .titleTooLong)
+    }
+  }
+
+  func testUpdateTaskRejectsOverLengthNotesWithATypedFieldError() async throws {
+    let service = try makeService()
+    let task = try await service.createTask(TaskCreateDraft(title: "Write the report"))
+    let length = ValidationLimits.maxBodyLength + 1
+    do {
+      _ = try await service.updateTask(
+        TaskUpdateDraft(id: task.id, notes: String(repeating: "a", count: length)))
+      XCTFail("over-length notes must be rejected")
+    } catch {
+      XCTAssertEqual(
+        error as? ValidationError,
+        .tooLong(field: "body", max: ValidationLimits.maxBodyLength, actual: length))
+      XCTAssertEqual(UserFacingError.Reason(error), .notesTooLong)
+    }
+  }
+
   func testCreateListRejectsNonHexColor() async throws {
     let service = try makeService()
     await XCTAssertThrowsErrorAsync(

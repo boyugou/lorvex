@@ -183,10 +183,13 @@ final class CalendarEventTests: XCTestCase {
     input.endTime = "03:30"
     XCTAssertThrowsError(try CalendarNormalization.normalizeCalendarCreate(input)) {
       error in
-      guard case CalendarEventOpError.validation(let msg) = error else {
-        return XCTFail("expected validation error, got \(error)")
+      guard case let CalendarEventOpError.startTimeSkipped(time, date, timezone) = error else {
+        return XCTFail("expected a skipped start time, got \(error)")
       }
-      XCTAssertTrue(msg.contains("does not exist"), msg)
+      XCTAssertEqual(time, "02:30")
+      XCTAssertEqual(date, "2026-03-08")
+      XCTAssertEqual(timezone, "America/New_York")
+      XCTAssertTrue(String(describing: error).contains("does not exist"))
     }
   }
 
@@ -239,10 +242,13 @@ final class CalendarEventTests: XCTestCase {
     XCTAssertThrowsError(
       try CalendarNormalization.normalizeCalendarUpdate(input, existing: existingFixture())
     ) { error in
-      guard case CalendarEventOpError.validation(let msg) = error else {
-        return XCTFail("expected validation error, got \(error)")
+      guard case let CalendarEventOpError.startTimeSkipped(time, date, timezone) = error else {
+        return XCTFail("expected a skipped start time, got \(error)")
       }
-      XCTAssertTrue(msg.contains("does not exist"), msg)
+      XCTAssertEqual(time, "02:30")
+      XCTAssertEqual(date, "2026-03-08")
+      XCTAssertEqual(timezone, "America/New_York")
+      XCTAssertTrue(String(describing: error).contains("does not exist"))
     }
   }
 

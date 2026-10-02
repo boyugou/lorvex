@@ -1,7 +1,9 @@
 import Foundation
 import GRDB
+import LorvexDomain
 import LorvexRuntime
 import LorvexStore
+import LorvexWorkflow
 import Testing
 
 @testable import LorvexCore
@@ -189,6 +191,97 @@ struct UserFacingErrorTests {
     #expect(typed == stringPath)
     #expect(typed.category == .validation)
     #expect(UserFacingError.message(for: typed, copy: copy) == message)
+  }
+
+  // MARK: - Reasons the app words itself
+
+  @Test("an over-long field shows the app's own sentence for that field")
+  func tooLongFieldClassifiesToItsReason() {
+    let cases: [(field: String, reason: UserFacingError.Reason)] = [
+      ("title", .titleTooLong), ("body", .notesTooLong), ("tag", .tagTooLong),
+      ("tags", .tagTooLong), ("raw_input", .textTooLong), ("ai_notes", .textTooLong),
+    ]
+    for (field, reason) in cases {
+      let error = ValidationError.tooLong(field: field, max: 10, actual: 12)
+      let classification = UserFacingError.classify(error)
+      #expect(classification.reason == reason, "field \(field)")
+      #expect(classification.category == .validation)
+      #expect(UserFacingError.message(for: classification, copy: copy) == reason.localizedMessage)
+      // The core's English sentence stays the detail `error_logs` records.
+      #expect(classification.technicalDetail == error.description)
+    }
+  }
+
+  @Test("a tag or memory rename collision shows the app's own sentence")
+  func renameCollisionClassifiesToItsReason() {
+    let tagMessage = "A tag named 'errands' already exists."
+    let tag = UserFacingError.classify(LorvexCoreError.conflict(message: tagMessage, entity: .tag))
+    #expect(tag.reason == .tagNameTaken)
+    #expect(tag.category == .validation)
+    #expect(
+      UserFacingError.message(for: tag, copy: copy)
+        == UserFacingError.Reason.tagNameTaken.localizedMessage)
+    #expect(tag.technicalDetail == tagMessage)
+
+    let memory = UserFacingError.classify(
+      LorvexCoreError.conflict(message: "Memory 'b' already exists.", entity: .memory))
+    #expect(memory.reason == .memoryNameTaken)
+
+    // A collision on an entity the app has no sentence for keeps the verbatim
+    // message, exactly as an untagged collision does.
+    let list = UserFacingError.classify(
+      LorvexCoreError.conflict(message: "That list already exists.", entity: .list))
+    #expect(list.reason == nil)
+    #expect(UserFacingError.message(for: list, copy: copy) == "That list already exists.")
+  }
+
+  @Test("an event starting inside a daylight-saving gap shows the app's own sentence")
+  func skippedStartTimeClassifiesToItsReason() {
+    let error = CalendarEventOpError.startTimeSkipped(
+      time: "02:30", date: "2027-03-14", timezone: "America/New_York")
+    let classification = UserFacingError.classify(error)
+    #expect(classification.reason == .calendarTimeSkipped)
+    #expect(classification.category == .validation)
+    #expect(classification.technicalDetail == error.description)
+    // The MCP boundary keeps the core's sentence, which names the gap.
+    #expect(error.description.contains("02:30 on 2027-03-14 does not exist in America/New_York"))
+  }
+
+  @Test("other validation failures keep their own sentence, as when the core wrapped them")
+  func otherValidationFailuresKeepTheirSentence() {
+    let error = ValidationError.outOfRange(field: "estimated_minutes", min: 1, max: 1440, actual: 0)
+    let bare = UserFacingError.classify(error)
+    let wrapped = UserFacingError.classify(StoreError.validation(error.description))
+    #expect(bare == wrapped)
+    #expect(bare.reason == nil)
+    #expect(UserFacingError.message(for: bare, copy: copy) == error.description)
+    // `localizedDescription` reads the same sentence, never Cocoa's generic one.
+    #expect(error.localizedDescription == error.description)
+  }
+
+  @Test("every reason has its own sentence, translated in the LorvexCore bundle")
+  func reasonSentencesShipTranslated() throws {
+    let reasons: [UserFacingError.Reason] = [
+      .titleTooLong, .notesTooLong, .tagTooLong, .textTooLong, .tagNameTaken,
+      .memoryNameTaken, .calendarTimeSkipped,
+    ]
+    let sentences = reasons.map(\.localizedMessage)
+    #expect(Set(sentences).count == reasons.count, "two reasons share a sentence")
+    #expect(sentences.allSatisfy { !$0.hasPrefix("error.reason.") })
+
+    let keys = [
+      "error.reason.title_too_long", "error.reason.notes_too_long",
+      "error.reason.tag_too_long", "error.reason.text_too_long",
+      "error.reason.tag_name_taken", "error.reason.memory_name_taken",
+      "error.reason.calendar_time_skipped",
+    ]
+    let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))
+    let chinese = try #require(Bundle(url: lproj))
+    for key in keys {
+      let value = chinese.localizedString(forKey: key, value: nil, table: "Localizable")
+      #expect(value != key, "\(key) has no zh-Hans translation")
+      #expect(value.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) }, "\(key): \(value)")
+    }
   }
 
   // MARK: - Fatal-storage classification (unrecoverable)

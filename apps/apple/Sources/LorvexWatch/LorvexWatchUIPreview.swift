@@ -33,7 +33,8 @@
     /// Writes the sample replica and returns its URL. The day is built around
     /// `now`: a started task whose saved time runs from 20 minutes ago to 25
     /// minutes ahead (the running lead), a started task without a time, an
-    /// overdue task, a task timed later today, and one with only an estimate.
+    /// overdue task, a task timed later today, and one with only an estimate,
+    /// written in the language the interface runs in (``LorvexSampleText``).
     public static func writeReplica(now: Date = Date()) throws -> URL {
       let directory = FileManager.default.temporaryDirectory
         .appendingPathComponent("lorvex-watch-ui-preview", isDirectory: true)
@@ -62,6 +63,7 @@
       let open = LorvexTask.Status.open.rawValue
       let started = LorvexTask.Status.inProgress.rawValue
       let yesterday = LorvexDateFormatters.ymdUTCAddingDays(logicalDay, days: -1)
+      let text = LorvexSampleText(language: .running)
       return WidgetSnapshot(
         generatedAt: LorvexDateFormatters.iso8601.string(from: now),
         workspaceInstanceID: workspaceInstanceID,
@@ -69,31 +71,31 @@
         timezone: TimeZone.current.identifier,
         logicalDay: logicalDay,
         stats: .init(todayCount: 5, overdueCount: 1, dueTodayCount: 2, completedTodayCount: 2),
-        briefing: "The launch checklist first; the status update after the design review.",
+        briefing: text("The launch checklist first; the status update after the design review."),
         tasks: [
           .init(
-            id: "preview-checklist", title: "Review the launch checklist", status: started,
+            id: "preview-checklist", title: text("Review the launch checklist"), status: started,
             dueDate: logicalDay, priority: 1, listID: nil, estimatedMinutes: 45,
             scheduledStart: clock(nowMinutes - 20), scheduledEnd: clock(nowMinutes + 25)),
           .init(
-            id: "preview-agenda", title: "Draft the team offsite agenda", status: started,
+            id: "preview-agenda", title: text("Draft the team offsite agenda"), status: started,
             dueDate: nil, priority: 2, listID: nil, estimatedMinutes: 30),
           .init(
-            id: "preview-passport", title: "Renew passport", status: open,
+            id: "preview-passport", title: text("Renew passport"), status: open,
             dueDate: yesterday, priority: 1, listID: nil, estimatedMinutes: nil),
           .init(
-            id: "preview-status", title: "Send the weekly status update", status: open,
+            id: "preview-status", title: text("Send the weekly status update"), status: open,
             dueDate: logicalDay, priority: 2, listID: nil, estimatedMinutes: 30,
             scheduledStart: clock(nowMinutes + 45), scheduledEnd: clock(nowMinutes + 75)),
           .init(
-            id: "preview-venue", title: "Book the offsite venue", status: open,
+            id: "preview-venue", title: text("Book the offsite venue"), status: open,
             dueDate: nil, priority: 2, listID: nil, estimatedMinutes: 20),
         ],
         habits: [
-          .init(id: "preview-meditate", name: "Meditate", icon: "brain.head.profile", completedToday: 0, target: 1),
-          .init(id: "preview-run", name: "Morning run", icon: "figure.run", completedToday: 1, target: 1),
-          .init(id: "preview-read", name: "Read 30 min", icon: "book.fill", completedToday: 1, target: 1),
-          .init(id: "preview-review", name: "Review the day", icon: "checklist", completedToday: 0, target: 1),
+          .init(id: "preview-meditate", name: text("Meditate"), icon: "brain.head.profile", completedToday: 0, target: 1),
+          .init(id: "preview-run", name: text("Morning run"), icon: "figure.run", completedToday: 1, target: 1),
+          .init(id: "preview-read", name: text("Read 30 min"), icon: "book.fill", completedToday: 1, target: 1),
+          .init(id: "preview-review", name: text("Review the day"), icon: "checklist", completedToday: 0, target: 1),
         ])
     }
   }

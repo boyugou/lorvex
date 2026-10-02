@@ -62,6 +62,21 @@ final class SwiftLorvexCoreServiceTagTests: XCTestCase {
 
   // MARK: - deleteTag
 
+  func testRenameOntoAnotherTagsNameIsATypedTagConflict() async throws {
+    let service = try makeService()
+    _ = try await service.createTask(TaskCreateDraft(title: "A", tags: ["chores", "errands"]))
+    do {
+      try await service.renameTag(oldTag: "chores", newTag: "errands")
+      XCTFail("renaming a tag onto another tag's name must be rejected")
+    } catch let LorvexCoreError.conflict(message, entity) {
+      XCTAssertTrue(message.contains("already exists"), "got: \(message)")
+      XCTAssertEqual(entity, .tag, "the alert layer words a tag collision itself")
+      XCTAssertEqual(
+        UserFacingError.Reason(LorvexCoreError.conflict(message: message, entity: entity)),
+        .tagNameTaken)
+    }
+  }
+
   func testDeleteTagRemovesLinksLogsChangelogAndTombstones() async throws {
     let service = try makeService()
     let a = try await service.createTask(TaskCreateDraft(title: "A", tags: ["work", "urgent"]))

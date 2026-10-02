@@ -1,11 +1,17 @@
+import Foundation
+
 /// A single domain validation failure.
 ///
 /// Domain-side validators return `Result<Void, ValidationError>` so caller
 /// surfaces (the MCP host, platform surfaces, and sync apply) can format
 /// domain-aware error messages without recreating the discriminant set. The
 /// ``description`` strings are the wire wording surfaced to AI clients and
-/// must stay byte-identical across surfaces.
-public enum ValidationError: Error, Equatable, Sendable, CustomStringConvertible {
+/// must stay byte-identical across surfaces; ``errorDescription`` returns the
+/// same sentence, so `localizedDescription` never degrades to Cocoa's generic
+/// "The operation couldn't be completed" for a failure that has real wording.
+public enum ValidationError: Error, Equatable, Sendable, CustomStringConvertible,
+  LocalizedError
+{
   /// A required string field is empty (or whitespace-only). The associated
   /// value is the field label.
   case empty(String)
@@ -48,6 +54,8 @@ public enum ValidationError: Error, Equatable, Sendable, CustomStringConvertible
       return message
     }
   }
+
+  public var errorDescription: String? { description }
 }
 
 extension ValidationError {

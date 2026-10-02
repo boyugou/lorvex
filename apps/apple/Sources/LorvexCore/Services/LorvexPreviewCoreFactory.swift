@@ -17,12 +17,15 @@ public enum LorvexPreviewCoreFactory {
   /// A seeded real core over an in-memory store. Deterministic fixed-date seed
   /// (2026-05-22) except habit completions, which are seeded relative to today
   /// so `completionsToday` / streaks render as the fixed seed described them.
-  /// `wallClock` is the instant time-of-day reads treat as now.
+  /// `wallClock` is the instant time-of-day reads treat as now. `text`
+  /// translates the dataset's user content (titles, notes, names, reviews,
+  /// memory); the default seeds it in English, as every test expects.
   public static func makeSeeded(
-    wallClock: @escaping @Sendable () -> Date = { Date() }
+    wallClock: @escaping @Sendable () -> Date = { Date() },
+    text: LorvexSampleText = .english
   ) async throws -> SwiftLorvexCoreService {
     let core = try SwiftLorvexCoreService.inMemory(wallClock: wallClock)
-    try await seed(core)
+    try await seed(core, text: text)
     return core
   }
 
@@ -47,18 +50,20 @@ public enum LorvexPreviewCoreFactory {
     /// tasks (``seedTodayPool(_:)``), and, unless `untimed` is set, the times of
     /// two of them. `untimed` leaves the day without times, the state of anyone
     /// who never schedules. `dayState` then moves the seeded day into one of the
-    /// states it never reaches by itself (``LorvexPreviewDayState``).
+    /// states it never reaches by itself (``LorvexPreviewDayState``). `text`
+    /// translates everything the seed writes as the user's or the assistant's
+    /// words, so a run in another interface language shows sample content in it.
     public static func makeUIPreviewSeeded(
       todaySchedule: Bool, plannedDay: Bool = false, untimed: Bool = false,
-      dayState: LorvexPreviewDayState? = nil
+      dayState: LorvexPreviewDayState? = nil, text: LorvexSampleText = .english
     ) async throws -> SwiftLorvexCoreService {
-      let core = try await makeSeeded(wallClock: previewWallClock)
+      let core = try await makeSeeded(wallClock: previewWallClock, text: text)
       if todaySchedule {
         for event in LorvexPreviewSeedData.todayPreviewEvents() {
           _ = try await core.importCalendarEvent(
-            id: event.id, title: event.title, startDate: event.startDate,
+            id: event.id, title: text(event.title), startDate: event.startDate,
             startTime: event.startTime, endDate: event.endDate, endTime: event.endTime,
-            allDay: event.allDay, location: event.location, notes: nil, url: nil,
+            allDay: event.allDay, location: event.location.map { text($0) }, notes: nil, url: nil,
             color: event.color, eventType: event.eventType, personName: nil,
             attendees: nil, timezone: event.timezone, recurrence: nil,
             seriesId: nil, recurrenceInstanceDate: nil)
@@ -71,7 +76,7 @@ public enum LorvexPreviewCoreFactory {
         try await SwiftLorvexCoreService.$currentInitiator.withValue(
           SwiftLorvexCoreService.ChangelogInitiator.assistant
         ) {
-          _ = try await core.setDailyBriefingForMcp(date: date, briefing: briefing)
+          _ = try await core.setDailyBriefingForMcp(date: date, briefing: text(briefing))
           if !untimed {
             _ = try await core.saveDayTimes(date: date, times: times)
           }
@@ -80,36 +85,36 @@ public enum LorvexPreviewCoreFactory {
           {
             _ = try await core.deferTask(
               id: LorvexPreviewSeedID.venueTask, until: tomorrowDate,
-              reason: "blocked", note: "The agenda comes first")
+              reason: "blocked", note: text("The agenda comes first"))
           }
           _ = try await core.upsertMemory(
             key: "work_rhythm",
-            content: "Does deep work before lunch and keeps afternoons for meetings and email.")
+            content: text("Does deep work before lunch and keeps afternoons for meetings and email."))
         }
-        try await seedTodayPool(core)
+        try await seedTodayPool(core, text: text)
       }
       try seedAssistantSessions(core, now: previewWallClock())
-      try await dayState?.apply(to: core)
+      try await dayState?.apply(to: core, text: text)
       return core
     }
 
     /// More of the user's own tasks for today: one three days past its
     /// deadline, one due today, and one pushed to today three times, which is
     /// the count at which Today marks a task as pushed often.
-    private static func seedTodayPool(_ core: SwiftLorvexCoreService) async throws {
+    private static func seedTodayPool(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
       let anchor = logicalDayAnchor()
       _ = try await core.createTask(
         TaskCreateDraft(
-          title: "Renew the car registration", priority: .p2, estimatedMinutes: 20,
-          dueDate: day(anchor, daysAgo: 3), tags: ["home"]))
+          title: text("Renew the car registration"), priority: .p2, estimatedMinutes: 20,
+          dueDate: day(anchor, daysAgo: 3), tags: text(["home"])))
       _ = try await core.createTask(
         TaskCreateDraft(
-          title: "Reply to Maya about the catering quote", priority: .p2, estimatedMinutes: 15,
-          dueDate: day(anchor, daysAgo: 0), tags: ["work"]))
+          title: text("Reply to Maya about the catering quote"), priority: .p2, estimatedMinutes: 15,
+          dueDate: day(anchor, daysAgo: 0), tags: text(["work"])))
       let budget = try await core.createTask(
         TaskCreateDraft(
-          title: "Review the Q3 budget draft", priority: .p3, estimatedMinutes: 45,
-          tags: ["work"]))
+          title: text("Review the Q3 budget draft"), priority: .p3, estimatedMinutes: 45,
+          tags: text(["work"])))
       guard let today = day(anchor, daysAgo: 0) else { return }
       for _ in 0..<3 {
         _ = try await core.deferTask(id: budget.id, until: today, reason: "not_today", note: nil)
@@ -134,24 +139,24 @@ public enum LorvexPreviewCoreFactory {
       }
     }
 
-    /// Synchronous form of ``makeUIPreviewSeeded(todaySchedule:plannedDay:untimed:dayState:)``
+    /// Synchronous form of ``makeUIPreviewSeeded(todaySchedule:plannedDay:untimed:dayState:text:)``
     /// for launch-time construction (`--ui-preview` builds its `AppStore`
     /// inside the synchronous SwiftUI `App` init). Traps on a seed failure — a
     /// broken preview dataset is a build defect, not a runtime condition to
     /// recover from.
     public static func makeUIPreviewSeededBlocking(
       todaySchedule: Bool, plannedDay: Bool = false, untimed: Bool = false,
-      dayState: LorvexPreviewDayState? = nil
+      dayState: LorvexPreviewDayState? = nil, text: LorvexSampleText = .english
     ) -> SwiftLorvexCoreService {
       waitForPreviewCore {
         try await makeUIPreviewSeeded(
           todaySchedule: todaySchedule, plannedDay: plannedDay, untimed: untimed,
-          dayState: dayState)
+          dayState: dayState, text: text)
       }
     }
 
     /// `--ui-preview -uiPreviewEmptyStore` core, built synchronously like
-    /// ``makeUIPreviewSeededBlocking(todaySchedule:plannedDay:untimed:dayState:)``:
+    /// ``makeUIPreviewSeededBlocking(todaySchedule:plannedDay:untimed:dayState:text:)``:
     /// the store of someone who has not added anything yet. It holds only
     /// what a new store holds (the schema's Inbox) plus the preview
     /// environment's preferences, whose timezone keeps the pinned preview
@@ -202,7 +207,7 @@ public enum LorvexPreviewCoreFactory {
     }
   #endif
 
-  private static func seed(_ core: SwiftLorvexCoreService) async throws {
+  private static func seed(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     // The preview dataset is a synthetic bulk load, not a live user/assistant
     // session, so bind `import` provenance around the whole seed — the same
     // ambient the id-preserving importers inherit under `LorvexDataImporter`.
@@ -212,12 +217,12 @@ public enum LorvexPreviewCoreFactory {
       SwiftLorvexCoreService.ChangelogInitiator.importAttribution
     ) {
       try await seedPreferences(core)
-      try await seedLists(core)
-      try await seedTasks(core)
-      try await seedHabits(core)
-      try await seedCalendar(core)
-      try await seedMemory(core)
-      try await seedReview(core)
+      try await seedLists(core, text: text)
+      try await seedTasks(core, text: text)
+      try await seedHabits(core, text: text)
+      try await seedCalendar(core, text: text)
+      try await seedMemory(core, text: text)
+      try await seedReview(core, text: text)
     }
   }
 
@@ -244,10 +249,10 @@ public enum LorvexPreviewCoreFactory {
     }
   }
 
-  private static func seedLists(_ core: SwiftLorvexCoreService) async throws {
+  private static func seedLists(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     for list in LorvexPreviewSeedData.lists.lists {
       _ = try await core.importList(
-        id: list.id, name: list.name, description: list.description,
+        id: list.id, name: text(list.name), description: list.description.map { text($0) },
         color: list.color, icon: list.icon)
     }
   }
@@ -279,16 +284,16 @@ public enum LorvexPreviewCoreFactory {
     LorvexPreviewSeedID.statusUpdateTask: 1,
   ]
 
-  private static func seedTasks(_ core: SwiftLorvexCoreService) async throws {
+  private static func seedTasks(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     let dayAnchor = logicalDayAnchor()
     for task in LorvexPreviewSeedData.tasks {
       _ = try await core.importRemoteTask(
-        id: task.id, title: task.title, notes: task.notes, aiNotes: nil, rawInput: nil,
-        priority: task.priority, status: task.status,
+        id: task.id, title: text(task.title), notes: text(task.notes), aiNotes: nil,
+        rawInput: nil, priority: task.priority, status: task.status,
         estimatedMinutes: task.estimatedMinutes,
         dueDate: taskDayOffsets[task.id].flatMap { day(dayAnchor, daysAgo: $0) },
         plannedDate: nil, availableFrom: nil,
-        tags: task.tags, dependsOn: task.dependsOn)
+        tags: text(task.tags), dependsOn: task.dependsOn)
       if let listID = taskListIDs[task.id] {
         _ = try await core.moveTask(id: task.id, toListID: listID)
       }
@@ -298,7 +303,8 @@ public enum LorvexPreviewCoreFactory {
       if task.status == .cancelled {
         _ = try await core.cancelTask(id: task.id)
       }
-      for item in task.checklistItems {
+      for var item in task.checklistItems {
+        item.text = text(item.text)
         try await core.importTaskChecklistItem(
           taskID: task.id, item: ExportChecklistItem(from: item))
       }
@@ -327,13 +333,13 @@ public enum LorvexPreviewCoreFactory {
   /// makes the preview's rates the real trailing-30-day figures.
   private static let habitCreatedDaysAgo = 40
 
-  private static func seedHabits(_ core: SwiftLorvexCoreService) async throws {
+  private static func seedHabits(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     let habitCreatedAt = SyncTimestampFormat.formatSyncTimestamp(
       Date().addingTimeInterval(TimeInterval(-habitCreatedDaysAgo) * 86_400))
     for (index, habit) in LorvexPreviewSeedData.habits.habits.enumerated() {
       _ = try await core.importHabit(
-        id: habit.id, name: habit.name, icon: habit.icon, color: habit.color,
-        cue: habit.cue, frequencyType: habit.frequencyType, weekdays: [],
+        id: habit.id, name: text(habit.name), icon: habit.icon, color: habit.color,
+        cue: habit.cue.map { text($0) }, frequencyType: habit.frequencyType, weekdays: [],
         perPeriodTarget: nil, dayOfMonth: nil, targetCount: habit.targetCount,
         milestoneTarget: nil, archived: habit.archived, position: Int64(index),
         createdAt: habitCreatedAt)
@@ -347,31 +353,31 @@ public enum LorvexPreviewCoreFactory {
     }
   }
 
-  private static func seedCalendar(_ core: SwiftLorvexCoreService) async throws {
+  private static func seedCalendar(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     for event in LorvexPreviewSeedData.calendarEvents.events {
       _ = try await core.importCalendarEvent(
-        id: event.id, title: event.title, startDate: event.startDate,
+        id: event.id, title: text(event.title), startDate: event.startDate,
         startTime: event.startTime, endDate: event.endDate, endTime: event.endTime,
-        allDay: event.allDay, location: event.location, notes: nil, url: nil,
+        allDay: event.allDay, location: event.location.map { text($0) }, notes: nil, url: nil,
         color: event.color, eventType: event.eventType, personName: nil,
         attendees: nil, timezone: event.timezone, recurrence: nil,
         seriesId: nil, recurrenceInstanceDate: nil)
     }
   }
 
-  private static func seedMemory(_ core: SwiftLorvexCoreService) async throws {
+  private static func seedMemory(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     for entry in LorvexPreviewSeedData.memory.entries {
       _ = try await core.importMemoryEntry(
-        key: entry.key, content: entry.content, updatedAt: entry.updatedAt)
+        key: entry.key, content: text(entry.content), updatedAt: entry.updatedAt)
     }
   }
 
-  private static func seedReview(_ core: SwiftLorvexCoreService) async throws {
+  private static func seedReview(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     for review in LorvexPreviewSeedData.dailyReviews.values {
       _ = try await core.importDailyReview(
-        date: review.date, summary: review.summary, mood: review.mood,
-        energyLevel: review.energyLevel, wins: review.wins, blockers: review.blockers,
-        learnings: review.learnings,
+        date: review.date, summary: text(review.summary), mood: review.mood,
+        energyLevel: review.energyLevel, wins: review.wins.map { text($0) },
+        blockers: review.blockers.map { text($0) }, learnings: review.learnings.map { text($0) },
         timezone: review.timezone, updatedAt: review.updatedAt,
         linkedTaskIDs: review.linkedTaskIDs, linkedListIDs: review.linkedListIDs)
     }

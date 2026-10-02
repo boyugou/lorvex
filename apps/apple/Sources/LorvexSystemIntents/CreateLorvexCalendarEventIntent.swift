@@ -65,6 +65,7 @@ struct CreateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let title = try $title.requiredText()
     let event = try await LorvexTaskIntentRunner.createCalendarEvent(
       title: title,
       startDate: startDate,

@@ -11,16 +11,18 @@ extension LorvexTaskIntentRunner {
     learnings: String? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> DailyReviewEntry {
-    try await LorvexSystemIntentRunner.saveDailyReview(
-      summary: summary,
-      date: date,
-      mood: mood,
-      energyLevel: energyLevel,
-      wins: wins,
-      blockers: blockers,
-      learnings: learnings,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.saveDailyReview(
+        summary: summary,
+        date: date,
+        mood: mood,
+        energyLevel: energyLevel,
+        wins: wins,
+        blockers: blockers,
+        learnings: learnings,
+        core: core
+      )
+    }
   }
 
   public static func amendDailyReview(
@@ -33,16 +35,18 @@ extension LorvexTaskIntentRunner {
     learnings: String? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> DailyReviewEntry {
-    try await LorvexSystemIntentRunner.amendDailyReview(
-      date: date,
-      summary: summary,
-      mood: mood,
-      energyLevel: energyLevel,
-      wins: wins,
-      blockers: blockers,
-      learnings: learnings,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.amendDailyReview(
+        date: date,
+        summary: summary,
+        mood: mood,
+        energyLevel: energyLevel,
+        wins: wins,
+        blockers: blockers,
+        learnings: learnings,
+        core: core
+      )
+    }
   }
 
   public static func readReviewHistory(
@@ -51,18 +55,22 @@ extension LorvexTaskIntentRunner {
     limit: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [DailyReviewEntry] {
-    try await LorvexSystemIntentRunner.readReviewHistory(
-      from: from,
-      to: to,
-      limit: limit,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readReviewHistory(
+        from: from,
+        to: to,
+        limit: limit,
+        core: core
+      )
+    }
   }
 
   public static func readWeeklyReview(
     weekOf: String? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> WeeklyReviewSnapshot {
-    try await LorvexSystemIntentRunner.readWeeklyReview(weekOf: weekOf, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readWeeklyReview(weekOf: weekOf, core: core)
+    }
   }
 }

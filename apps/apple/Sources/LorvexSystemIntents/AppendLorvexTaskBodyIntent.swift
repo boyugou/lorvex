@@ -23,6 +23,7 @@ struct AppendLorvexTaskBodyIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let text = try $text.requiredText()
     let updated = try await LorvexTaskIntentRunner.appendToTaskBody(id: task.id, text: text)
     return .result(
       dialog: IntentDialog(

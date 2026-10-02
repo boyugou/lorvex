@@ -24,11 +24,8 @@ struct CaptureLorvexTaskIntent: LorvexUnauthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ReturnsValue<LorvexTaskEntity> & ProvidesDialog {
-    let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else {
-      throw LorvexCoreError.emptyTitle
-    }
-    let task = try await LorvexTaskIntentRunner.captureTaskReturningTask(title: trimmed, notes: notes)
+    let title = try $title.requiredText()
+    let task = try await LorvexTaskIntentRunner.captureTaskReturningTask(title: title, notes: notes)
     return .result(
       value: LorvexTaskEntity(task: task),
       dialog: IntentDialog(

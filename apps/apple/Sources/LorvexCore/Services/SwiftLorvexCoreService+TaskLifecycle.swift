@@ -103,10 +103,9 @@ extension SwiftLorvexCoreService {
     guard let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty
     else { return nil }
     guard trimmed.unicodeScalars.count <= ValidationLimits.maxShortTextLength else {
-      throw LorvexCoreError.validation(
-        field: field,
-        message:
-          "\(field) may be at most \(ValidationLimits.maxShortTextLength) characters.")
+      throw ValidationError.tooLong(
+        field: field, max: ValidationLimits.maxShortTextLength,
+        actual: trimmed.unicodeScalars.count)
     }
     return trimmed
   }

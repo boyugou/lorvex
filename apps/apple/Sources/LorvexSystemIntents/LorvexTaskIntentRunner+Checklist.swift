@@ -6,11 +6,13 @@ extension LorvexTaskIntentRunner {
     text: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.addTaskChecklistItem(
-      taskID: taskID,
-      text: text,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.addTaskChecklistItem(
+        taskID: taskID,
+        text: text,
+        core: core
+      )
+    }
   }
 
   public static func toggleTaskChecklistItem(
@@ -18,11 +20,13 @@ extension LorvexTaskIntentRunner {
     completed: Bool,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.toggleTaskChecklistItem(
-      itemID: itemID,
-      completed: completed,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.toggleTaskChecklistItem(
+        itemID: itemID,
+        completed: completed,
+        core: core
+      )
+    }
   }
 
   public static func updateTaskChecklistItem(
@@ -30,17 +34,21 @@ extension LorvexTaskIntentRunner {
     text: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.updateTaskChecklistItem(
-      itemID: itemID,
-      text: text,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.updateTaskChecklistItem(
+        itemID: itemID,
+        text: text,
+        core: core
+      )
+    }
   }
 
   public static func removeTaskChecklistItem(
     itemID: TaskChecklistItem.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.removeTaskChecklistItem(itemID: itemID, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.removeTaskChecklistItem(itemID: itemID, core: core)
+    }
   }
 }

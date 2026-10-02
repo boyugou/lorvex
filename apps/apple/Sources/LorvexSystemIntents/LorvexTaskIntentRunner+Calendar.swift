@@ -13,23 +13,27 @@ extension LorvexTaskIntentRunner {
     notes: String?,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> CalendarTimelineEvent {
-    try await LorvexSystemIntentRunner.updateCalendarEvent(
-      id: id,
-      title: title,
-      startDate: startDate,
-      startTime: startTime,
-      endTime: endTime,
-      allDay: allDay,
-      location: location,
-      notes: notes,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.updateCalendarEvent(
+        id: id,
+        title: title,
+        startDate: startDate,
+        startTime: startTime,
+        endTime: endTime,
+        allDay: allDay,
+        location: location,
+        notes: notes,
+        core: core
+      )
+    }
   }
 
   public static func deleteCalendarEvent(
     id: CalendarTimelineEvent.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> CalendarTimelineEvent.ID {
-    try await LorvexSystemIntentRunner.deleteCalendarEvent(id: id, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.deleteCalendarEvent(id: id, core: core)
+    }
   }
 }

@@ -2,6 +2,17 @@ import Foundation
 import LorvexDomain
 
 extension LorvexSystemIntentRunner {
+  /// Write the fields a Siri or Shortcuts update supplies and leave every
+  /// other field as stored.
+  ///
+  /// A nil argument leaves its field alone; a blank planned date clears the
+  /// planned day, a blank tag or dependency list clears that list, and a
+  /// blank title is refused as ``LorvexCoreError/emptyTitle``. The
+  /// write is one ``TaskUpdateDraft`` patch, so fields this action has no
+  /// parameter for — the deadline, the hide-until date, the time on an
+  /// unchanged planned day — are never rewritten from an earlier read. Moving
+  /// the task to another planned day clears its time, as every planned-day
+  /// move does.
   public static func updateTask(
     id: LorvexTask.ID,
     title: String?,
@@ -14,36 +25,20 @@ extension LorvexSystemIntentRunner {
     core: any LorvexCoreServicing
   ) async throws -> LorvexTask {
     let taskID = try validatedTaskID(id)
-    let current = try await core.loadTask(id: taskID)
     return try await core.updateTask(
-      id: taskID,
-      title: try updatedTaskTitle(title, fallback: current.title),
-      notes: updatedTaskText(notes, fallback: current.notes),
-      priority: try parsedTaskPriority(priority, fallback: current.priority),
-      estimatedMinutes: try parsedEstimatedMinutes(
-        estimatedMinutes,
-        fallback: current.estimatedMinutes
-      ),
-      plannedDate: try parsedOptionalIntentDate(plannedDate, fallback: current.dueDate),
-      tags: parsedOptionalTextList(tagsText, fallback: current.tags),
-      dependsOn: parsedOptionalTextList(dependsOnText, fallback: current.dependsOn)
-    )
+      TaskUpdateDraft(
+        id: taskID,
+        title: title.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) },
+        notes: notes.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) },
+        priority: try priority.map(parsedTaskPriority),
+        estimatedMinutes: try estimatedMinutes.map { .set(try validatedEstimatedMinutes($0)) }
+          ?? .unset,
+        plannedDate: try plannedDatePatch(plannedDate),
+        tags: tagsText.map(parsedTextList),
+        dependsOn: dependsOnText.map(parsedTextList)))
   }
 
-  static func updatedTaskTitle(_ value: String?, fallback: String) throws -> String {
-    guard let value else { return fallback }
-    return try validatedTaskText(value, label: "title")
-  }
-
-  static func updatedTaskText(_ value: String?, fallback: String) -> String {
-    guard let value else { return fallback }
-    return value.trimmingCharacters(in: .whitespacesAndNewlines)
-  }
-
-  static func parsedTaskPriority(_ value: Int?, fallback: LorvexTask.Priority) throws
-    -> LorvexTask.Priority
-  {
-    guard let value else { return fallback }
+  static func parsedTaskPriority(_ value: Int) throws -> LorvexTask.Priority {
     switch value {
     case 1: return .p1
     case 2: return .p2
@@ -54,8 +49,7 @@ extension LorvexSystemIntentRunner {
     }
   }
 
-  static func parsedEstimatedMinutes(_ value: Int?, fallback: Int?) throws -> Int? {
-    guard let value else { return fallback }
+  static func validatedEstimatedMinutes(_ value: Int) throws -> Int {
     guard (1...Int(ValidationLimits.maxEstimatedMinutes)).contains(value) else {
       throw LorvexCoreError.validation(
         field: "estimated_minutes",

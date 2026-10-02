@@ -24,6 +24,7 @@ struct CreateLorvexListIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let name = try $name.requiredText()
     let list = try await LorvexTaskIntentRunner.createList(
       name: name,
       description: listDescription

@@ -34,7 +34,7 @@ func captureIntentRunnerCreatesTaskForValidTitle() async throws {
 @Test
 func captureIntentPerformThrowsOnBlankTitle() async throws {
   let intent = CaptureLorvexTaskIntent(title: "   ")
-  await #expect(throws: LorvexCoreError.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await intent.perform()
   }
 }

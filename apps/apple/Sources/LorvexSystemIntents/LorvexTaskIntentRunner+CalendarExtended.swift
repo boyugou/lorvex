@@ -6,7 +6,9 @@ extension LorvexTaskIntentRunner {
     to: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> CalendarTimelineSnapshot {
-    try await LorvexSystemIntentRunner.readCalendarTimeline(from: from, to: to, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readCalendarTimeline(from: from, to: to, core: core)
+    }
   }
 
   public static func searchCalendarEvents(
@@ -16,13 +18,15 @@ extension LorvexTaskIntentRunner {
     limit: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [CalendarTimelineEvent] {
-    try await LorvexSystemIntentRunner.searchCalendarEvents(
-      query: query,
-      from: from,
-      to: to,
-      limit: limit,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.searchCalendarEvents(
+        query: query,
+        from: from,
+        to: to,
+        limit: limit,
+        core: core
+      )
+    }
   }
 
   public static func linkTaskToProviderEvent(
@@ -31,12 +35,14 @@ extension LorvexTaskIntentRunner {
     providerSource: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> TaskCalendarEventLink {
-    try await LorvexSystemIntentRunner.linkTaskToProviderEvent(
-      taskID: taskID,
-      providerEventID: providerEventID,
-      providerSource: providerSource,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.linkTaskToProviderEvent(
+        taskID: taskID,
+        providerEventID: providerEventID,
+        providerSource: providerSource,
+        core: core
+      )
+    }
   }
 
   public static func unlinkTaskFromProviderEvent(
@@ -44,24 +50,30 @@ extension LorvexTaskIntentRunner {
     providerEventID: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws {
-    try await LorvexSystemIntentRunner.unlinkTaskFromProviderEvent(
-      taskID: taskID,
-      providerEventID: providerEventID,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.unlinkTaskFromProviderEvent(
+        taskID: taskID,
+        providerEventID: providerEventID,
+        core: core
+      )
+    }
   }
 
   public static func readLinkedEventsForTask(
     taskID: LorvexTask.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [CalendarTimelineEvent] {
-    try await LorvexSystemIntentRunner.readLinkedEventsForTask(taskID: taskID, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readLinkedEventsForTask(taskID: taskID, core: core)
+    }
   }
 
   public static func readLinkedTasksForEvent(
     eventID: CalendarTimelineEvent.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [LorvexTask] {
-    try await LorvexSystemIntentRunner.readLinkedTasksForEvent(eventID: eventID, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readLinkedTasksForEvent(eventID: eventID, core: core)
+    }
   }
 }

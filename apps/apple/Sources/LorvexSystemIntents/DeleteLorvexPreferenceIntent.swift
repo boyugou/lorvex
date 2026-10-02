@@ -17,6 +17,7 @@ struct DeleteLorvexPreferenceIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let key = try $key.requiredText()
     try await requestLorvexDestructiveConfirmation(
       IntentDialog(
         LocalizedStringResource(

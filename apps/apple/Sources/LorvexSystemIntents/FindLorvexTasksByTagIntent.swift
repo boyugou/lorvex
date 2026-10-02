@@ -17,6 +17,7 @@ struct FindLorvexTasksByTagIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ReturnsValue<[LorvexTaskEntity]> & ProvidesDialog {
+    let tag = try $tag.requiredText()
     let tasks = try await LorvexTaskIntentRunner.getTasksByTag(tag: tag)
     guard !tasks.isEmpty else {
       return .result(

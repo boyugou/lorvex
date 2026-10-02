@@ -5,14 +5,18 @@ extension LorvexTaskIntentRunner {
     taskIDs: [LorvexTask.ID],
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> TaskBatchLifecycleResult {
-    try await LorvexSystemIntentRunner.batchCompleteTasks(taskIDs: taskIDs, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.batchCompleteTasks(taskIDs: taskIDs, core: core)
+    }
   }
 
   public static func batchReopenTasks(
     taskIDs: [LorvexTask.ID],
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> TaskBatchLifecycleResult {
-    try await LorvexSystemIntentRunner.batchReopenTasks(taskIDs: taskIDs, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.batchReopenTasks(taskIDs: taskIDs, core: core)
+    }
   }
 
   public static func batchCreateTasks(
@@ -22,13 +26,15 @@ extension LorvexTaskIntentRunner {
     priority: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [LorvexTask] {
-    try await LorvexSystemIntentRunner.batchCreateTasks(
-      titlesText: titlesText,
-      notes: notes,
-      listID: listID,
-      priority: priority,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.batchCreateTasks(
+        titlesText: titlesText,
+        notes: notes,
+        listID: listID,
+        priority: priority,
+        core: core
+      )
+    }
   }
 
   public static func batchDeferTasks(
@@ -36,11 +42,13 @@ extension LorvexTaskIntentRunner {
     until: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> TaskBatchLifecycleResult {
-    try await LorvexSystemIntentRunner.batchDeferTasks(
-      taskIDs: taskIDs,
-      until: until,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.batchDeferTasks(
+        taskIDs: taskIDs,
+        until: until,
+        core: core
+      )
+    }
   }
 
   public static func batchMoveTasks(
@@ -48,10 +56,12 @@ extension LorvexTaskIntentRunner {
     listID: LorvexList.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [LorvexTask] {
-    try await LorvexSystemIntentRunner.batchMoveTasks(
-      taskIDs: taskIDs,
-      listID: listID,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.batchMoveTasks(
+        taskIDs: taskIDs,
+        listID: listID,
+        core: core
+      )
+    }
   }
 }

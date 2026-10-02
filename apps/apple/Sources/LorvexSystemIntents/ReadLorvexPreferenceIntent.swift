@@ -17,6 +17,7 @@ struct ReadLorvexPreferenceIntent: LorvexLocalAuthIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let key = try $key.requiredText()
     let value = try await LorvexTaskIntentRunner.readPreference(key: key)
     if value == nil {
       return .result(

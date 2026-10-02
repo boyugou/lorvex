@@ -5,17 +5,25 @@ import LorvexCore
 struct LorvexHabitEntityQuery: EntityQuery, EntityStringQuery {
   func entities(for identifiers: [LorvexHabitEntity.ID]) async throws -> [LorvexHabitEntity] {
     let core = LorvexCoreRuntimeFactory.makeForAppIntent()
-    let habits = try await Self.allHabitEntities(core: core)
-    let requested = Set(identifiers)
-    return habits.filter { requested.contains($0.id) }
+    return try await LorvexIntentFailure.rewording(core: core) {
+      let habits = try await Self.allHabitEntities(core: core)
+      let requested = Set(identifiers)
+      return habits.filter { requested.contains($0.id) }
+    }
   }
 
   func suggestedEntities() async throws -> [LorvexHabitEntity] {
-    try await Self.suggestedEntities(core: LorvexCoreRuntimeFactory.makeForAppIntent())
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.suggestedEntities(core: core)
+    }
   }
 
   func entities(matching string: String) async throws -> [LorvexHabitEntity] {
-    try await Self.entities(matching: string, core: LorvexCoreRuntimeFactory.makeForAppIntent())
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
+    return try await LorvexIntentFailure.rewording(core: core) {
+      try await Self.entities(matching: string, core: core)
+    }
   }
 
   static func suggestedEntities(core: any LorvexCoreServicing) async throws -> [LorvexHabitEntity] {

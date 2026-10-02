@@ -24,6 +24,8 @@ struct SaveLorvexMemoryIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let key = try $key.requiredText()
+    let content = try $content.requiredText()
     let entry = try await LorvexTaskIntentRunner.saveMemory(key: key, content: content)
     return .result(
       dialog: IntentDialog(

@@ -8,20 +8,24 @@ extension LorvexTaskIntentRunner {
     limit: Int = 500,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> HabitCompletionsSnapshot {
-    try await LorvexSystemIntentRunner.readHabitCompletions(
-      id: id,
-      from: from,
-      to: to,
-      limit: limit,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readHabitCompletions(
+        id: id,
+        from: from,
+        to: to,
+        limit: limit,
+        core: core
+      )
+    }
   }
 
   public static func readHabitStats(
     id: LorvexHabit.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> HabitStats {
-    try await LorvexSystemIntentRunner.readHabitStats(id: id, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readHabitStats(id: id, core: core)
+    }
   }
 
   public static func batchCompleteHabits(
@@ -29,18 +33,22 @@ extension LorvexTaskIntentRunner {
     date: String? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> HabitCatalogSnapshot {
-    try await LorvexSystemIntentRunner.batchCompleteHabits(
-      habitIDs: habitIDs,
-      date: date,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.batchCompleteHabits(
+        habitIDs: habitIDs,
+        date: date,
+        core: core
+      )
+    }
   }
 
   public static func readHabitReminderPolicies(
     id: LorvexHabit.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> [HabitReminderPolicy] {
-    try await LorvexSystemIntentRunner.readHabitReminderPolicies(id: id, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.readHabitReminderPolicies(id: id, core: core)
+    }
   }
 
   public static func upsertHabitReminderPolicy(
@@ -50,19 +58,23 @@ extension LorvexTaskIntentRunner {
     enabled: Bool,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> HabitReminderPolicy {
-    try await LorvexSystemIntentRunner.upsertHabitReminderPolicy(
-      id: id,
-      policyID: policyID,
-      reminderTime: reminderTime,
-      enabled: enabled,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.upsertHabitReminderPolicy(
+        id: id,
+        policyID: policyID,
+        reminderTime: reminderTime,
+        enabled: enabled,
+        core: core
+      )
+    }
   }
 
   public static func deleteHabitReminderPolicy(
     policyID: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> HabitReminderPolicy? {
-    try await LorvexSystemIntentRunner.deleteHabitReminderPolicy(policyID: policyID, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.deleteHabitReminderPolicy(policyID: policyID, core: core)
+    }
   }
 }

@@ -6,7 +6,9 @@ extension LorvexTaskIntentRunner {
     text: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.appendToTaskBody(id: id, text: text, core: core)
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.appendToTaskBody(id: id, text: text, core: core)
+    }
   }
 
   public static func setTaskReminders(
@@ -14,10 +16,12 @@ extension LorvexTaskIntentRunner {
     remindersText: String,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.setTaskReminders(
-      id: id,
-      remindersText: remindersText,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.setTaskReminders(
+        id: id,
+        remindersText: remindersText,
+        core: core
+      )
+    }
   }
 }

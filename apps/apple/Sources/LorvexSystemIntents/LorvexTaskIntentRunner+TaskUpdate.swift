@@ -12,16 +12,18 @@ extension LorvexTaskIntentRunner {
     dependsOnText: String? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
-    try await LorvexSystemIntentRunner.updateTask(
-      id: id,
-      title: title,
-      notes: notes,
-      priority: priority,
-      estimatedMinutes: estimatedMinutes,
-      plannedDate: plannedDate,
-      tagsText: tagsText,
-      dependsOnText: dependsOnText,
-      core: core
-    )
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.updateTask(
+        id: id,
+        title: title,
+        notes: notes,
+        priority: priority,
+        estimatedMinutes: estimatedMinutes,
+        plannedDate: plannedDate,
+        tagsText: tagsText,
+        dependsOnText: dependsOnText,
+        core: core
+      )
+    }
   }
 }

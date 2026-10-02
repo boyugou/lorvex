@@ -68,7 +68,9 @@ extension AppStore {
   }
 
   /// Schedule a task into the dedicated Lorvex calendar and bind the resulting
-  /// EKEvent to the task via `task_provider_event_links`.
+  /// EKEvent to the task via `task_provider_event_links`. The event falls on
+  /// the task's planned day, at its planned time or from the start of the
+  /// working day, as ``TaskCalendarEventSpan`` lays out.
   func addTaskToCalendar(_ task: LorvexTask) async {
     guard let coordinator = eventKitCoordinator else { return }
     guard await coordinator.integrationEnabled() else {
@@ -95,18 +97,17 @@ extension AppStore {
       await presentUserFacingError(error)
       return
     }
-    let startHour =
-      Calendar.current.date(
-        bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
-    let minutes = max(15, task.estimatedMinutes ?? 60)
-    let end = startHour.addingTimeInterval(TimeInterval(minutes * 60))
+    let workingHours = await loadWorkingHoursPreference()
+    let span = TaskCalendarEventSpan(
+      task: task, plannedDay: day,
+      workdayStartMinutes: lorvexMinutesSinceMidnight(workingHours.start) ?? 9 * 60)
     await perform {
       let event = try await core.createCalendarEvent(
         title: task.title,
-        startDate: Self.ymdFormatter.string(from: startHour),
-        endDate: nil,
-        startTime: Self.hmFormatter.string(from: startHour),
-        endTime: Self.hmFormatter.string(from: end),
+        startDate: span.startDate,
+        endDate: span.endDate,
+        startTime: span.startTime,
+        endTime: span.endTime,
         allDay: false,
         location: nil,
         notes: nil)

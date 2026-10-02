@@ -23,6 +23,8 @@ struct RenameLorvexTagIntent: LorvexAuthenticatedIntent {
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let oldTag = try $oldTag.requiredText()
+    let newTag = try $newTag.requiredText()
     let renamed = try await LorvexTaskIntentRunner.renameTag(oldTag: oldTag, newTag: newTag)
     return .result(
       dialog: IntentDialog(

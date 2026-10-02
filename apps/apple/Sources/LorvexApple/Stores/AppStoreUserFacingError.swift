@@ -2,38 +2,10 @@ import Foundation
 import LorvexCore
 
 extension AppStore {
-  /// Localized copy for the generic error categories, resolved from the
-  /// LorvexApple string catalog. The core classifier stays platform-neutral;
-  /// the host supplies the human wording (the `fallbackBody` pattern).
-  var userFacingErrorCopy: UserFacingError.Copy {
-    UserFacingError.Copy(
-      itemNoLongerExists: String(
-        localized:
-          "error.item_gone", defaultValue: "That item no longer exists.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-      somethingWentWrong: String(
-        localized:
-          "error.generic", defaultValue: "Something went wrong. Please try again.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-      storageUnavailable: String(
-        localized:
-          "error.storage_unavailable",
-          defaultValue:
-            "Lorvex can’t access its data storage, so this couldn’t be completed. Please restart Lorvex.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-      databaseNewer: String(
-        localized:
-          "error.database_newer",
-          defaultValue:
-            "This database was created by a newer version of Lorvex. Please update Lorvex to open it.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ))
-  }
+  /// The copy for the host-supplied error categories: the shared LorvexCore
+  /// wording, which the Mac app, the iPhone and iPad app, and Siri and
+  /// Shortcuts all present.
+  var userFacingErrorCopy: UserFacingError.Copy { .standard }
 
   /// Present `error` in the modal error alert, mapped through
   /// ``UserFacingError`` so a raw UUID, SQL string, or internal invariant never

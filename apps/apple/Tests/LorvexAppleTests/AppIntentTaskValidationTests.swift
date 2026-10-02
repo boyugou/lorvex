@@ -66,7 +66,10 @@ func reminderIntentPerformThrowsOnInvalidInputs() async throws {
 
   // Destructive: confirms before validating, so perform() surfaces the
   // confirmation gate rather than a core error in a unit test.
-  let removeBlankReminder = RemoveLorvexTaskReminderIntent(task: task, reminderID: "   ")
+  let removeBlankReminder = RemoveLorvexTaskReminderIntent(
+    reminder: LorvexTaskReminderEntity(
+      taskID: task.id, reminderID: "   ", reminderAt: "", taskTitle: task.title,
+      timeZoneIdentifier: "UTC"))
   await #expect(throws: (any Error).self) {
     _ = try await removeBlankReminder.perform()
   }

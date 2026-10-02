@@ -19,10 +19,13 @@ struct ReadLorvexDayTimesIntent: LorvexLocalAuthIntent {
     self.date = date
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns the day's timed tasks in time order.
+  func perform() async throws -> some IntentResult & ReturnsValue<[LorvexTaskEntity]> & ProvidesDialog {
     let day = try await LorvexTaskIntentRunner.readDayTimes(date: date.map(IntentDateText.day))
+    let tasks = day.tasks.map(LorvexTaskEntity.init(task:))
     guard let first = day.tasks.first, let time = first.plannedTime else {
       return .result(
+        value: tasks,
         dialog: IntentDialog(
           LocalizedStringResource(
             "system.day_times.read.none_dialog", defaultValue: "No tasks have a time on \(lorvexDayLine(logicalDay: day.date)).",
@@ -31,6 +34,7 @@ struct ReadLorvexDayTimesIntent: LorvexLocalAuthIntent {
     let count = day.tasks.count
     let start = lorvexClockTimeLabel(minutes: time.lowerBound)
     return .result(
+      value: tasks,
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.day_times.read.dialog",

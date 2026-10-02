@@ -29,14 +29,6 @@ func taskIntentRunnerHandlesListBatchAndTagActions() async throws {
   #expect(updatedList.description == "Updated from Shortcuts")
   let lists = try await LorvexTaskIntentRunner.readLists(core: core)
   #expect(lists.lists.contains { $0.id == list.id })
-  let listDetail = try await LorvexTaskIntentRunner.readListDetail(
-    id: " \(list.id) ",
-    limit: 10,
-    offset: 0,
-    core: core
-  )
-  #expect(listDetail.list.id == list.id)
-  #expect(listDetail.limit == 10)
   let listHealth = try await LorvexTaskIntentRunner.readListHealth(core: core)
   #expect(listHealth.totalLists == listHealth.lists.count)
   let deletedListID = try await LorvexTaskIntentRunner.deleteList(

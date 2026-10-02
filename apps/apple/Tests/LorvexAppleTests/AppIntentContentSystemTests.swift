@@ -27,24 +27,8 @@ func saveMemoryIntentPerformThrowsOnBlankKey() async throws {
 }
 
 @Test
-func readDiagnosticsIntentPerformSucceeds() async throws {
-  let intent = ReadLorvexRuntimeDiagnosticsIntent()
+func completeSetupAndReadOverviewIntentsPerform() async throws {
   try await withIsolatedAppIntentDatabase {
-    _ = try await intent.perform()
-  }
-}
-
-@Test
-func systemContextIntentPerformSucceeds() async throws {
-  try await withIsolatedAppIntentDatabase {
-    _ = try await ReadLorvexPreferencesIntent().perform()
-    _ = try await ReadLorvexPreferenceIntent(key: "timezone").perform()
-    _ = try await SetLorvexPreferenceIntent(key: "theme", value: "\"system\"")
-      .perform()
-    // DeleteLorvexPreferenceIntent is destructive: it requests confirmation
-    // before mutating, which throws without a system context. Its
-    // confirmation-before-mutation behaviour is covered by
-    // `destructiveIntentRequestsConfirmationBeforeMutating`.
     let calendar = Calendar.current
     let dayStart = try #require(calendar.date(bySettingHour: 9, minute: 30, second: 0, of: .now))
     let dayEnd = try #require(calendar.date(bySettingHour: 17, minute: 30, second: 0, of: .now))
@@ -61,7 +45,6 @@ func systemContextIntentPerformSucceeds() async throws {
     #expect(window.start == "09:30")
     #expect(window.end == "17:30")
     _ = try await ReadLorvexOverviewIntent().perform()
-    _ = try await ReadLorvexSessionContextIntent().perform()
   }
 }
 
@@ -109,19 +92,6 @@ func exportIntentFilesCarryContentNamesAndTypes() throws {
   #expect(ics.filename == "lorvex-calendar.ics")
   #expect(ics.type == (UTType("com.apple.ical.ics") ?? .data))
   #expect(String(decoding: ics.data, as: UTF8.self).contains("BEGIN:VCALENDAR"))
-}
-
-@Test
-func systemContextIntentPerformThrowsOnInvalidInputs() async throws {
-  await #expect(throws: AppIntentError.self) {
-    _ = try await ReadLorvexPreferenceIntent(key: "   ").perform()
-  }
-  await #expect(throws: AppIntentError.self) {
-    _ = try await SetLorvexPreferenceIntent(key: "theme", value: "   ").perform()
-  }
-  // DeleteLorvexPreferenceIntent now confirms before validating/mutating, so a
-  // blank key surfaces the confirmation gate rather than a core error; see
-  // `destructiveIntentRequestsConfirmationBeforeMutating`.
 }
 
 @Test

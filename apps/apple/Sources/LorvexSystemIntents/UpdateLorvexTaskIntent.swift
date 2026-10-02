@@ -42,8 +42,13 @@ struct UpdateLorvexTaskIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.depends_on", defaultValue: "Depends On", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.batch.parameter.task_ids_description", defaultValue: "Comma, space, or newline separated task IDs.", table: "Localizable", bundle: SystemL10n.bundle))
-  var dependsOn: String?
+    description: LocalizedStringResource("system.task.parameter.depends_on.description", defaultValue: "The tasks to finish first. Replaces the task’s current dependencies.", table: "Localizable", bundle: SystemL10n.bundle))
+  var dependsOn: [LorvexTaskEntity]?
+
+  @Parameter(
+    title: LocalizedStringResource("system.task.parameter.remove_dependencies", defaultValue: "Remove Dependencies", table: "Localizable", bundle: SystemL10n.bundle),
+    default: false)
+  var removesDependencies: Bool
 
   init() {
     task = LorvexTaskEntity(id: "", title: "", status: "")
@@ -58,7 +63,8 @@ struct UpdateLorvexTaskIntent: LorvexAuthenticatedIntent {
     plannedDate: Date? = nil,
     removesPlannedDate: Bool = false,
     tags: String? = nil,
-    dependsOn: String? = nil
+    dependsOn: [LorvexTaskEntity]? = nil,
+    removesDependencies: Bool = false
   ) {
     self.task = task
     self.title = title
@@ -69,6 +75,7 @@ struct UpdateLorvexTaskIntent: LorvexAuthenticatedIntent {
     self.removesPlannedDate = removesPlannedDate
     self.tags = tags
     self.dependsOn = dependsOn
+    self.removesDependencies = removesDependencies
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -81,7 +88,8 @@ struct UpdateLorvexTaskIntent: LorvexAuthenticatedIntent {
       // An empty planned date is the runner's "clear the day".
       plannedDate: removesPlannedDate ? "" : plannedDate.map(IntentDateText.day),
       tagsText: tags,
-      dependsOnText: dependsOn
+      // An empty list is the runner's "no dependencies".
+      dependsOn: removesDependencies ? [] : dependsOn?.map(\.id)
     )
     return .result(
       dialog: IntentDialog(

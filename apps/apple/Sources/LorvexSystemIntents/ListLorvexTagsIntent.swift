@@ -6,10 +6,11 @@ struct ListLorvexTagsIntent: LorvexAuthenticatedIntent {
 
   init() {}
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  func perform() async throws -> some IntentResult & ReturnsValue<[String]> & ProvidesDialog {
     let tags = try await LorvexTaskIntentRunner.listAllTags()
     guard !tags.isEmpty else {
       return .result(
+        value: [],
         dialog: IntentDialog(
           LocalizedStringResource(
             "system.tag.list.empty_summary",
@@ -23,6 +24,6 @@ struct ListLorvexTagsIntent: LorvexAuthenticatedIntent {
       defaultValue: "\(tags.count) Lorvex tags: \(summary)",
       table: "Localizable",
       bundle: SystemL10n.bundle)
-    return .result(dialog: IntentDialog(dialog))
+    return .result(value: tags, dialog: IntentDialog(dialog))
   }
 }

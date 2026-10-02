@@ -36,7 +36,9 @@ struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
     self.limit = limit
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns the matching events, including events mirrored from the system
+  /// calendars, which Lorvex shows but does not edit.
+  func perform() async throws -> some IntentResult & ReturnsValue<[LorvexCalendarEventEntity]> & ProvidesDialog {
     let query = try $query.requiredText()
     let range = IntentDateText.dayRange(from: from, to: to)
     let events = try await LorvexTaskIntentRunner.searchCalendarEvents(
@@ -46,6 +48,7 @@ struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
       limit: limit
     )
     return .result(
+      value: events.map(LorvexCalendarEventEntity.init(event:)),
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.calendar.search.dialog_count",

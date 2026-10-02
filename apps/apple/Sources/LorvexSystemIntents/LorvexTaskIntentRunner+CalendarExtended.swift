@@ -29,36 +29,6 @@ extension LorvexTaskIntentRunner {
     }
   }
 
-  public static func linkTaskToProviderEvent(
-    taskID: LorvexTask.ID,
-    providerEventID: String,
-    providerSource: String,
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> TaskCalendarEventLink {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.linkTaskToProviderEvent(
-        taskID: taskID,
-        providerEventID: providerEventID,
-        providerSource: providerSource,
-        core: core
-      )
-    }
-  }
-
-  public static func unlinkTaskFromProviderEvent(
-    taskID: LorvexTask.ID,
-    providerEventID: String,
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.unlinkTaskFromProviderEvent(
-        taskID: taskID,
-        providerEventID: providerEventID,
-        core: core
-      )
-    }
-  }
-
   public static func readLinkedEventsForTask(
     taskID: LorvexTask.ID,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()

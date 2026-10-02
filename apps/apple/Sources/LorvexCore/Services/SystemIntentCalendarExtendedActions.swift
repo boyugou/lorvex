@@ -32,30 +32,6 @@ extension LorvexSystemIntentRunner {
     )
   }
 
-  public static func linkTaskToProviderEvent(
-    taskID: LorvexTask.ID,
-    providerEventID: String,
-    providerSource: String,
-    core: any LorvexCoreServicing
-  ) async throws -> TaskCalendarEventLink {
-    try await core.linkTaskToProviderEvent(
-      taskID: validatedTaskID(taskID),
-      providerEventID: try validatedProviderEventID(providerEventID),
-      providerSource: try validatedProviderSource(providerSource)
-    )
-  }
-
-  public static func unlinkTaskFromProviderEvent(
-    taskID: LorvexTask.ID,
-    providerEventID: String,
-    core: any LorvexCoreServicing
-  ) async throws {
-    try await core.unlinkTaskFromProviderEvent(
-      taskID: validatedTaskID(taskID),
-      providerEventID: try validatedProviderEventID(providerEventID)
-    )
-  }
-
   public static func readLinkedEventsForTask(
     taskID: LorvexTask.ID,
     core: any LorvexCoreServicing
@@ -74,24 +50,6 @@ extension LorvexSystemIntentRunner {
     let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else {
       throw LorvexCoreError.validation(field: nil, message: "A calendar \(label) is required.")
-    }
-    return trimmed
-  }
-
-  private static func validatedProviderEventID(_ value: String) throws -> String {
-    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else {
-      throw LorvexCoreError.validation(
-        field: "provider_event_id", message: "A provider event ID is required.")
-    }
-    return trimmed
-  }
-
-  private static func validatedProviderSource(_ value: String) throws -> String {
-    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else {
-      throw LorvexCoreError.validation(
-        field: "provider_source", message: "A provider source is required.")
     }
     return trimmed
   }

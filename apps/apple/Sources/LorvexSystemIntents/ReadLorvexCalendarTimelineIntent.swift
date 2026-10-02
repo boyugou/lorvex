@@ -24,11 +24,14 @@ struct ReadLorvexCalendarTimelineIntent: LorvexLocalAuthIntent {
     self.to = to
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns the range's events in time order, including events mirrored
+  /// from the system calendars, which Lorvex shows but does not edit.
+  func perform() async throws -> some IntentResult & ReturnsValue<[LorvexCalendarEventEntity]> & ProvidesDialog {
     let range = IntentDateText.dayRange(from: from, to: to)
     let timeline = try await LorvexTaskIntentRunner.readCalendarTimeline(
       from: range.from, to: range.to)
     return .result(
+      value: timeline.events.map(LorvexCalendarEventEntity.init(event:)),
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.calendar.timeline.read.dialog_count",

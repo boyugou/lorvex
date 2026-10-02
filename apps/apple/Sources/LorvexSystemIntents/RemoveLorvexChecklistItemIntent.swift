@@ -5,15 +5,15 @@ struct RemoveLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
   static let description = IntentDescription(LocalizedStringResource("system.task.checklist.remove.description", defaultValue: "Remove a checklist item from a Lorvex task.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.checklist_item_id", defaultValue: "Checklist Item ID", table: "Localizable", bundle: SystemL10n.bundle))
-  var itemID: String
+    title: LocalizedStringResource("system.task.parameter.checklist_item", defaultValue: "Checklist Item", table: "Localizable", bundle: SystemL10n.bundle))
+  var item: LorvexChecklistItemEntity
 
   init() {
-    itemID = ""
+    item = LorvexChecklistItemEntity(taskID: "", itemID: "", text: "", taskTitle: "", completed: false)
   }
 
-  init(itemID: String) {
-    self.itemID = itemID
+  init(item: LorvexChecklistItemEntity) {
+    self.item = item
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
@@ -22,7 +22,7 @@ struct RemoveLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
         LocalizedStringResource(
           "system.confirm.remove", defaultValue: "Remove this item?",
           table: "Localizable", bundle: SystemL10n.bundle)))
-    let task = try await LorvexTaskIntentRunner.removeTaskChecklistItem(itemID: itemID)
+    let task = try await LorvexTaskIntentRunner.removeTaskChecklistItem(itemID: item.itemID)
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(

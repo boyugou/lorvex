@@ -1,4 +1,5 @@
 import AppIntents
+import LorvexCore
 
 struct ReadLorvexDueTaskRemindersIntent: LorvexAuthenticatedIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.task.reminders.due.read.title", defaultValue: "Read Lorvex Due Task Reminders", table: "Localizable", bundle: SystemL10n.bundle)
@@ -20,16 +21,32 @@ struct ReadLorvexDueTaskRemindersIntent: LorvexAuthenticatedIntent {
     self.limit = limit
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns the due reminders, each titled by its time with its task
+  /// underneath; Siri names their tasks.
+  func perform() async throws -> some IntentResult & ReturnsValue<[LorvexTaskReminderEntity]> & ProvidesDialog {
+    let core = LorvexCoreRuntimeFactory.makeForAppIntent()
     let reminders = try await LorvexTaskIntentRunner.readDueTaskReminders(
       asOf: asOf.map(IntentDateText.timestamp),
-      limit: limit
+      limit: limit,
+      core: core
     )
+    let entities = try await LorvexTaskReminderEntityQuery.entities(from: reminders, core: core)
+    guard !entities.isEmpty else {
+      return .result(
+        value: [],
+        dialog: IntentDialog(
+          LocalizedStringResource(
+            "system.task.reminders.due.read.none_dialog",
+            defaultValue: "No reminders are due.",
+            table: "Localizable", bundle: SystemL10n.bundle)))
+    }
+    let titles = SystemIntentListSummary.names(entities.map(\.taskTitle), total: entities.count)
     return .result(
+      value: entities,
       dialog: IntentDialog(
         LocalizedStringResource(
-          "system.task.reminders.due.read.dialog_count",
-          defaultValue: "\(reminders.count) due reminders.",
+          "system.task.reminders.due.read.names_dialog",
+          defaultValue: "\(entities.count) due reminders: \(titles)",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

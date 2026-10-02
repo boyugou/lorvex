@@ -34,7 +34,7 @@ func taskIntentRunnerHandlesTaskReadWriteAndLifecycleActions() async throws {
     estimatedMinutes: 45,
     plannedDate: " \(plannedDate) ",
     tagsText: " shortcut, apple ",
-    dependsOnText: nil,
+    dependsOn: nil,
     core: core
   )
   #expect(detailUpdated.id == created.id)
@@ -114,7 +114,7 @@ func taskIntentRunnerHandlesTaskReadWriteAndLifecycleActions() async throws {
     estimatedMinutes: nil,
     plannedDate: nil,
     tagsText: nil,
-    dependsOnText: blocker.id,
+    dependsOn: [blocker.id],
     core: core
   )
   let graph = try await LorvexTaskIntentRunner.readDependencyGraph(

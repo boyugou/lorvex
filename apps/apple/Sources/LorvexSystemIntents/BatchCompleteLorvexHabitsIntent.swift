@@ -10,15 +10,16 @@ struct BatchCompleteLorvexHabitsIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.date.optional_today.description", defaultValue: "Optional date in YYYY-MM-DD format. Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle))
-  var date: String?
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var date: Date?
 
   init() {
     habits = []
     date = nil
   }
 
-  init(habits: [LorvexHabitEntity], date: String? = nil) {
+  init(habits: [LorvexHabitEntity], date: Date? = nil) {
     self.habits = habits
     self.date = date
   }
@@ -26,7 +27,7 @@ struct BatchCompleteLorvexHabitsIntent: LorvexAuthenticatedIntent {
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let snapshot = try await LorvexTaskIntentRunner.batchCompleteHabits(
       habitIDs: habits.map(\.id),
-      date: date
+      date: date.map(IntentDateText.day)
     )
     return .result(
       dialog: IntentDialog(

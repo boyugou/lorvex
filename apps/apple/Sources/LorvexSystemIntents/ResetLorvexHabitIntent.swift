@@ -11,15 +11,16 @@ struct ResetLorvexHabitIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.date.optional_today.description", defaultValue: "Optional date in YYYY-MM-DD format. Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle))
-  var date: String?
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var date: Date?
 
   init() {
     habit = LorvexHabitEntity(id: "", name: "", completionsToday: 0, targetCount: 0)
     date = nil
   }
 
-  init(habit: LorvexHabitEntity, date: String? = nil) {
+  init(habit: LorvexHabitEntity, date: Date? = nil) {
     self.habit = habit
     self.date = date
   }
@@ -31,7 +32,8 @@ struct ResetLorvexHabitIntent: LorvexAuthenticatedIntent {
           "system.confirm.reset_habit",
           defaultValue: "Reset this habit? Logged completions will be cleared.",
           table: "Localizable", bundle: SystemL10n.bundle)))
-    let reset = try await LorvexTaskIntentRunner.uncompleteHabit(id: habit.id, date: date)
+    let reset = try await LorvexTaskIntentRunner.uncompleteHabit(
+      id: habit.id, date: date.map(IntentDateText.day))
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(

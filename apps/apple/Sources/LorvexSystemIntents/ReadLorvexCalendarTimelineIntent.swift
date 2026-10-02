@@ -6,26 +6,28 @@ struct ReadLorvexCalendarTimelineIntent: LorvexLocalAuthIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.from", defaultValue: "From", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.from.required_date.description", defaultValue: "Start date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var from: String
+    kind: .date)
+  var from: Date
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.to", defaultValue: "To", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.to.required_date.description", defaultValue: "End date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var to: String
+    kind: .date)
+  var to: Date
 
   init() {
-    from = ""
-    to = ""
+    from = .now
+    to = .now
   }
 
-  init(from: String, to: String) {
+  init(from: Date, to: Date) {
     self.from = from
     self.to = to
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
-    let timeline = try await LorvexTaskIntentRunner.readCalendarTimeline(from: from, to: to)
+    let range = IntentDateText.dayRange(from: from, to: to)
+    let timeline = try await LorvexTaskIntentRunner.readCalendarTimeline(
+      from: range.from, to: range.to)
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(

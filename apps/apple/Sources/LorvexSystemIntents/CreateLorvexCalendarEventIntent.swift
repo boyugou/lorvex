@@ -11,18 +11,19 @@ struct CreateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.start_date", defaultValue: "Start Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.start_date.optional_today.description", defaultValue: "Optional date in YYYY-MM-DD format. Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle))
-  var startDate: String?
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var startDate: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.start_time", defaultValue: "Start Time", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.start_time.optional.description", defaultValue: "Optional time in HH:MM format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var startTime: String?
+    kind: .time)
+  var startTime: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.end_time", defaultValue: "End Time", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.end_time.optional.description", defaultValue: "Optional time in HH:MM format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var endTime: String?
+    kind: .time)
+  var endTime: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.all_day", defaultValue: "All Day", table: "Localizable", bundle: SystemL10n.bundle))
@@ -48,9 +49,9 @@ struct CreateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
 
   init(
     title: String,
-    startDate: String? = nil,
-    startTime: String? = nil,
-    endTime: String? = nil,
+    startDate: Date? = nil,
+    startTime: Date? = nil,
+    endTime: Date? = nil,
     allDay: Bool = true,
     location: String? = nil,
     notes: String? = nil
@@ -66,11 +67,13 @@ struct CreateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let title = try $title.requiredText()
+    // A start time makes the event timed; one that is not all-day needs it.
+    if !allDay, startTime == nil { throw $startTime.needsValueError() }
     let event = try await LorvexTaskIntentRunner.createCalendarEvent(
       title: title,
-      startDate: startDate,
-      startTime: startTime,
-      endTime: endTime,
+      startDate: startDate.map(IntentDateText.day),
+      startTime: startTime.map(IntentDateText.time),
+      endTime: endTime.map(IntentDateText.time),
       allDay: allDay,
       location: location,
       notes: notes
@@ -79,7 +82,7 @@ struct CreateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.calendar.create.dialog",
-          defaultValue: "Created calendar event \(event.title) for \(event.startDate).",
+          defaultValue: "Created calendar event \(event.title) for \(lorvexDayLine(logicalDay: event.startDate)).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

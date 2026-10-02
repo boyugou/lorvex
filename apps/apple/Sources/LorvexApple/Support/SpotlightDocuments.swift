@@ -16,12 +16,14 @@ struct SpotlightTaskDocument: Equatable, Sendable {
 
   var identifier: String
   var title: String
+  /// Midnight, in the device's time zone, of the task's stored due day, so
+  /// Spotlight shows the day the task is due wherever the device is.
   var dueDate: Date?
 
   init(task: LorvexTask) {
     identifier = Self.identifierPrefix + task.id
     title = task.title
-    dueDate = task.dueDate
+    dueDate = task.dueDate.map { PlannedDayBridge.displayDate(forStorageDate: $0) }
   }
 
   var searchableItem: CSSearchableItem {

@@ -11,21 +11,23 @@ struct CompleteLorvexHabitIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.date.optional_today.description", defaultValue: "Optional date in YYYY-MM-DD format. Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle))
-  var date: String?
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var date: Date?
 
   init() {
     habit = LorvexHabitEntity(id: "", name: "", completionsToday: 0, targetCount: 0)
     date = nil
   }
 
-  init(habit: LorvexHabitEntity, date: String? = nil) {
+  init(habit: LorvexHabitEntity, date: Date? = nil) {
     self.habit = habit
     self.date = date
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
-    let completed = try await LorvexTaskIntentRunner.completeHabit(id: habit.id, date: date)
+    let completed = try await LorvexTaskIntentRunner.completeHabit(
+      id: habit.id, date: date.map(IntentDateText.day))
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(

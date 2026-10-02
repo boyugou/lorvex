@@ -5,7 +5,7 @@ extension LorvexSystemIntentRunner {
     taskID: LorvexTask.ID,
     frequency: TaskRecurrenceRule.Frequency,
     interval: Int?,
-    weekdaysText: String?,
+    weekdays: [String]?,
     until: String?,
     count: Int?,
     core: any LorvexCoreServicing
@@ -15,7 +15,7 @@ extension LorvexSystemIntentRunner {
       rule: TaskRecurrenceRule(
         freq: frequency,
         interval: validatedRecurrenceInterval(interval),
-        byDay: parsedRecurrenceWeekdays(weekdaysText),
+        byDay: validatedRecurrenceWeekdays(weekdays),
         until: until.trimmedNilIfEmpty,
         count: validatedRecurrenceCount(count)
       )

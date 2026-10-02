@@ -5,7 +5,7 @@ extension LorvexTaskIntentRunner {
     taskID: LorvexTask.ID,
     frequency: TaskRecurrenceRule.Frequency,
     interval: Int? = nil,
-    weekdaysText: String? = nil,
+    weekdays: [String]? = nil,
     until: String? = nil,
     count: Int? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
@@ -15,7 +15,7 @@ extension LorvexTaskIntentRunner {
         taskID: taskID,
         frequency: frequency,
         interval: interval,
-        weekdaysText: weekdaysText,
+        weekdays: weekdays,
         until: until,
         count: count,
         core: core

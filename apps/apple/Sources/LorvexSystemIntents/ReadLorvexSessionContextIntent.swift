@@ -1,4 +1,5 @@
 import AppIntents
+import LorvexCore
 
 struct ReadLorvexSessionContextIntent: LorvexLocalAuthIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.status.session_context.read.title", defaultValue: "Read Lorvex Session Context", table: "Localizable", bundle: SystemL10n.bundle)
@@ -12,7 +13,7 @@ struct ReadLorvexSessionContextIntent: LorvexLocalAuthIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.status.session_context.read.dialog",
-          defaultValue: "\(context.date), sync backend \(context.syncBackend).",
+          defaultValue: "\(lorvexDayLine(logicalDay: context.date)), sync backend \(context.syncBackend).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

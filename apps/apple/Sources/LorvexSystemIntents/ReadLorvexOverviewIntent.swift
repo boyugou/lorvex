@@ -1,4 +1,5 @@
 import AppIntents
+import LorvexCore
 
 struct ReadLorvexOverviewIntent: LorvexLocalAuthIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.status.overview.read.title", defaultValue: "Read Lorvex Overview", table: "Localizable", bundle: SystemL10n.bundle)
@@ -12,7 +13,7 @@ struct ReadLorvexOverviewIntent: LorvexLocalAuthIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.status.overview.read.dialog",
-          defaultValue: "\(overview.stats.openCount) open tasks for \(overview.date).",
+          defaultValue: "\(overview.stats.openCount) open tasks for \(lorvexDayLine(logicalDay: overview.date)).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

@@ -10,13 +10,13 @@ struct ReadLorvexHabitCompletionsIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.from", defaultValue: "From", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.from.optional_date.description", defaultValue: "Optional start date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var from: String?
+    kind: .date)
+  var from: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.to", defaultValue: "To", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.to.optional_date.description", defaultValue: "Optional end date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var to: String?
+    kind: .date)
+  var to: Date?
 
   init() {
     habit = LorvexHabitEntity(id: "", name: "", completionsToday: 0, targetCount: 0)
@@ -24,17 +24,18 @@ struct ReadLorvexHabitCompletionsIntent: LorvexAuthenticatedIntent {
     to = nil
   }
 
-  init(habit: LorvexHabitEntity, from: String? = nil, to: String? = nil) {
+  init(habit: LorvexHabitEntity, from: Date? = nil, to: Date? = nil) {
     self.habit = habit
     self.from = from
     self.to = to
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let range = IntentDateText.dayRange(from: from, to: to)
     let snapshot = try await LorvexTaskIntentRunner.readHabitCompletions(
       id: habit.id,
-      from: from,
-      to: to
+      from: range.from,
+      to: range.to
     )
     let count = snapshot.completions.count
     return .result(

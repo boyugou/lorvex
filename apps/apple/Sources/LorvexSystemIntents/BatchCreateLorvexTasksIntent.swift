@@ -19,7 +19,7 @@ struct BatchCreateLorvexTasksIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.priority", defaultValue: "Priority", table: "Localizable", bundle: SystemL10n.bundle))
-  var priority: Int?
+  var priority: LorvexPriorityOption?
 
   init() {
     titles = ""
@@ -28,7 +28,7 @@ struct BatchCreateLorvexTasksIntent: LorvexAuthenticatedIntent {
     priority = nil
   }
 
-  init(titles: String, notes: String? = nil, list: LorvexListEntity? = nil, priority: Int? = nil) {
+  init(titles: String, notes: String? = nil, list: LorvexListEntity? = nil, priority: LorvexPriorityOption? = nil) {
     self.titles = titles
     self.notes = notes
     self.list = list
@@ -41,7 +41,7 @@ struct BatchCreateLorvexTasksIntent: LorvexAuthenticatedIntent {
       titlesText: titles,
       notes: notes,
       listID: list?.id,
-      priority: priority
+      priority: priority?.level
     )
     return .result(
       dialog: IntentDialog(

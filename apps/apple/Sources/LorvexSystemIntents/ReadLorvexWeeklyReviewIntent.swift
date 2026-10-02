@@ -5,17 +5,18 @@ struct ReadLorvexWeeklyReviewIntent: LorvexLocalAuthIntent {
   static let description = IntentDescription(LocalizedStringResource("system.review.weekly.read.description", defaultValue: "Read the Lorvex weekly review snapshot.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.review.parameter.week_of", defaultValue: "Week Of", table: "Localizable", bundle: SystemL10n.bundle))
-  var weekOf: String?
+    title: LocalizedStringResource("system.review.parameter.week_of", defaultValue: "Week Of", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var weekOf: Date?
 
   init() {}
 
-  init(weekOf: String? = nil) {
+  init(weekOf: Date? = nil) {
     self.weekOf = weekOf
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
-    let review = try await LorvexTaskIntentRunner.readWeeklyReview(weekOf: weekOf)
+    let review = try await LorvexTaskIntentRunner.readWeeklyReview(weekOf: weekOf.map(IntentDateText.day))
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(

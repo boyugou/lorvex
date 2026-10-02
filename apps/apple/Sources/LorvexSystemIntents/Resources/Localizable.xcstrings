@@ -2549,186 +2549,6 @@
         }
       }
     },
-    "system.calendar.parameter.end_time.optional.description": {
-      "comment": "Description for optional end time parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "وقت اختياري بصيغة HH:MM."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional time in HH:MM format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hora opcional en formato HH:MM."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heure facultative au format HH:MM."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM रूप में समय (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ora facoltativa nel formato HH:MM."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "時刻（HH:MM形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM 형식의 시간(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna godzina w formacie GG:MM."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horário opcional no formato HH:MM."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательное время в формате ЧЧ:ММ."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язковий час у форматі ГГ:ХХ."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选时间，格式为 HH:MM。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM 格式的時間（選填）"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.end_time.optional_replacement.description": {
-      "comment": "Description for optional replacement end time parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "وقت بديل اختياري بصيغة HH:MM."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional replacement time in HH:MM format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hora de reemplazo opcional en formato HH:MM."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nouvelle heure facultative au format HH:MM."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM रूप में नया समय (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nuova ora facoltativa nel formato HH:MM."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "置き換え後の時刻（HH:MM形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "바꿀 시간, HH:MM 형식(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna nowa godzina w formacie GG:MM."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Novo horário opcional no formato HH:MM."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательное новое время в формате ЧЧ:ММ."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язковий новий час у форматі ГГ:ХХ."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选替换时间，格式为 HH:MM。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要取代的時間，HH:MM 格式（選填）"
-          }
-        }
-      }
-    },
     "system.calendar.parameter.event": {
       "comment": "Generic calendar event parameter title in calendar App Intents",
       "extractionState": "manual",
@@ -2905,186 +2725,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "開始日期"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.from.optional_date.description": {
-      "comment": "Description for optional start date parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ بدء اختياري بصيغة YYYY-MM-DD."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional start date in YYYY-MM-DD format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha de inicio opcional en formato AAAA-MM-DD."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date de début facultative au format AAAA-MM-JJ."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में शुरू होने की तारीख़ (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data di inizio facoltativa nel formato AAAA-MM-GG."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "開始日（YYYY-MM-DD形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 시작일(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna data rozpoczęcia w formacie RRRR-MM-DD."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data de início opcional no formato AAAA-MM-DD."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательная дата начала в формате ГГГГ-ММ-ДД."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язкова дата початку у форматі РРРР-ММ-ДД."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选开始日期，格式为 YYYY-MM-DD。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的開始日期（選填）"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.from.required_date.description": {
-      "comment": "Description for required start date parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ البدء بصيغة YYYY-MM-DD."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start date in YYYY-MM-DD format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha de inicio en formato AAAA-MM-DD."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date de début au format AAAA-MM-JJ."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में शुरू होने की तारीख़।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data di inizio nel formato AAAA-MM-GG."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "開始日（YYYY-MM-DD形式）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 시작일"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data rozpoczęcia w formacie RRRR-MM-DD."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data de início no formato AAAA-MM-DD."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата начала в формате ГГГГ-ММ-ДД."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата початку у форматі РРРР-ММ-ДД."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开始日期，格式为 YYYY-MM-DD。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的開始日期"
           }
         }
       }
@@ -3539,186 +3179,6 @@
         }
       }
     },
-    "system.calendar.parameter.start_date.optional_replacement.description": {
-      "comment": "Description for optional replacement start date parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ بديل اختياري بصيغة YYYY-MM-DD."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional replacement date in YYYY-MM-DD format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha de reemplazo opcional en formato AAAA-MM-DD."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nouvelle date facultative au format AAAA-MM-JJ."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में नई तारीख़ (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nuova data facoltativa nel formato AAAA-MM-GG."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "置き換え後の日付（YYYY-MM-DD形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "바꿀 날짜, YYYY-MM-DD 형식(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna nowa data w formacie RRRR-MM-DD."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nova data opcional no formato AAAA-MM-DD."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательная новая дата в формате ГГГГ-ММ-ДД."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язкова нова дата у форматі РРРР-ММ-ДД."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选替换日期，格式为 YYYY-MM-DD。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要取代的日期，YYYY-MM-DD 格式（選填）"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.start_date.optional_today.description": {
-      "comment": "Description for optional start date parameters that default to today",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ اختياري بصيغة YYYY-MM-DD. اتركه فارغًا لاستخدام اليوم."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional date in YYYY-MM-DD format. Leave blank for today."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha opcional en formato AAAA-MM-DD. Déjala en blanco para usar hoy."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date facultative au format AAAA-MM-JJ. Laissez vide pour aujourd’hui."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में तारीख़ (वैकल्पिक)। आज के लिए खाली छोड़ें।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data facoltativa nel formato AAAA-MM-GG. Lascia vuoto per oggi."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日付（YYYY-MM-DD形式、省略可）。空欄の場合は今日になります。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 날짜(선택 사항). 비워 두면 오늘입니다."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna data w formacie RRRR-MM-DD. Zostaw puste, aby użyć dzisiejszej daty."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data opcional no formato AAAA-MM-DD. Deixe em branco para usar hoje."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательная дата в формате ГГГГ-ММ-ДД. Оставьте поле пустым, чтобы использовать сегодняшнюю дату."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язкова дата у форматі РРРР-ММ-ДД. Залиште поле порожнім, щоб використати сьогоднішню дату."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选日期，格式为 YYYY-MM-DD。留空表示今天。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的日期（選填）。留空則為今天。"
-          }
-        }
-      }
-    },
     "system.calendar.parameter.start_time": {
       "comment": "Generic start time parameter title in calendar App Intents",
       "extractionState": "manual",
@@ -3805,186 +3265,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "開始時間"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.start_time.optional.description": {
-      "comment": "Description for optional start time parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "وقت اختياري بصيغة HH:MM."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional time in HH:MM format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hora opcional en formato HH:MM."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heure facultative au format HH:MM."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM रूप में समय (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ora facoltativa nel formato HH:MM."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "時刻（HH:MM形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM 형식의 시간(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna godzina w formacie GG:MM."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horário opcional no formato HH:MM."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательное время в формате ЧЧ:ММ."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язковий час у форматі ГГ:ХХ."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选时间，格式为 HH:MM。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM 格式的時間（選填）"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.start_time.optional_replacement.description": {
-      "comment": "Description for optional replacement start time parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "وقت بديل اختياري بصيغة HH:MM."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional replacement time in HH:MM format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hora de reemplazo opcional en formato HH:MM."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nouvelle heure facultative au format HH:MM."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:MM रूप में नया समय (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nuova ora facoltativa nel formato HH:MM."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "置き換え後の時刻（HH:MM形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "바꿀 시간, HH:MM 형식(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna nowa godzina w formacie GG:MM."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Novo horário opcional no formato HH:MM."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательное новое время в формате ЧЧ:ММ."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язковий новий час у форматі ГГ:ХХ."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选替换时间，格式为 HH:MM。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要取代的時間，HH:MM 格式（選填）"
           }
         }
       }
@@ -4165,186 +3445,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "結束日期"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.to.optional_date.description": {
-      "comment": "Description for optional end date parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ انتهاء اختياري بصيغة YYYY-MM-DD."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional end date in YYYY-MM-DD format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha de fin opcional en formato AAAA-MM-DD."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date de fin facultative au format AAAA-MM-JJ."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में समाप्ति की तारीख़ (वैकल्पिक)।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data di fine facoltativa nel formato AAAA-MM-GG."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "終了日（YYYY-MM-DD形式、省略可）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 종료일(선택 사항)"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna data zakończenia w formacie RRRR-MM-DD."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data de término opcional no formato AAAA-MM-DD."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательная дата окончания в формате ГГГГ-ММ-ДД."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язкова дата завершення у форматі РРРР-ММ-ДД."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选结束日期，格式为 YYYY-MM-DD。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的結束日期（選填）"
-          }
-        }
-      }
-    },
-    "system.calendar.parameter.to.required_date.description": {
-      "comment": "Description for required end date parameters in calendar App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ الانتهاء بصيغة YYYY-MM-DD."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "End date in YYYY-MM-DD format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha de fin en formato AAAA-MM-DD."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date de fin au format AAAA-MM-JJ."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में समाप्ति की तारीख़।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data di fine nel formato AAAA-MM-GG."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "終了日（YYYY-MM-DD形式）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 종료일"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data zakończenia w formacie RRRR-MM-DD."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data de término no formato AAAA-MM-DD."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата окончания в формате ГГГГ-ММ-ДД."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата завершення у форматі РРРР-ММ-ДД."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "结束日期，格式为 YYYY-MM-DD。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的結束日期"
           }
         }
       }
@@ -14044,96 +13144,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "提醒時間"
-          }
-        }
-      }
-    },
-    "system.habit.parameter.reminder_time.description": {
-      "comment": "Description for habit reminder time parameters",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الوقت بصيغة HH:mm."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Time in HH:mm format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hora en formato HH:mm."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Heure au format HH:mm."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:mm रूप में समय।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ora nel formato HH:mm."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:mm形式の時刻"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:mm 형식의 시간"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Godzina w formacie GG:MM."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horário no formato HH:mm."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Время в формате ЧЧ:ММ."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Час у форматі ГГ:ХХ."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "时间，格式为 HH:mm。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HH:mm 格式的時間"
           }
         }
       }
@@ -24882,6 +23892,366 @@
         }
       }
     },
+    "system.option.priority.high": {
+      "comment": "Task priority choice in Shortcuts: high, named as in the task detail",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عالية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haute"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "उच्च"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "높음"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysoki"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высокий"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Високий"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高"
+          }
+        }
+      }
+    },
+    "system.option.priority.low": {
+      "comment": "Task priority choice in Shortcuts: low, named as in the task detail",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منخفضة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baja"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basse"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कम"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bassa"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "낮음"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niski"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baixa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Низкий"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Низький"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低"
+          }
+        }
+      }
+    },
+    "system.option.priority.normal": {
+      "comment": "Task priority choice in Shortcuts: normal, named as in the task detail",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normale"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सामान्य"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通常"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보통"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalny"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычный"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звичайний"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "普通"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "普通"
+          }
+        }
+      }
+    },
+    "system.option.priority.type": {
+      "comment": "Type name of the task priority choice in Shortcuts",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأولوية"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioridad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priorité"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्राथमिकता"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priorità"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "優先度"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "우선순위"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priorytet"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioridade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приоритет"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пріоритет"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "优先级"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "優先順序"
+          }
+        }
+      }
+    },
     "system.option.provider_source.eventkit": {
       "comment": "EventKit calendar provider source option",
       "extractionState": "manual",
@@ -26138,6 +25508,816 @@
           "stringUnit": {
             "state": "translated",
             "value": "任務狀態"
+          }
+        }
+      }
+    },
+    "system.option.weekday.friday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Friday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجمعة"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viernes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vendredi"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शुक्रवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Venerdì"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "金曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "금요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Piątek"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sexta-feira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пятница"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пʼятниця"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期五"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期五"
+          }
+        }
+      }
+    },
+    "system.option.weekday.monday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Monday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاثنين"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lundi"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सोमवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunedì"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "월요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poniedziałek"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segunda-feira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Понедельник"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Понеділок"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期一"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期一"
+          }
+        }
+      }
+    },
+    "system.option.weekday.saturday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Saturday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السبت"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saturday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sábado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samedi"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शनिवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "土曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "토요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobota"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sábado"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Суббота"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Субота"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期六"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期六"
+          }
+        }
+      }
+    },
+    "system.option.weekday.sunday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Sunday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأحد"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domingo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dimanche"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रविवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domenica"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niedziela"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domingo"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Воскресенье"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неділя"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期日"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期日"
+          }
+        }
+      }
+    },
+    "system.option.weekday.thursday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Thursday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخميس"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thursday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jueves"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeudi"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "गुरुवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giovedì"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "木曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czwartek"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quinta-feira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Четверг"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Четвер"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期四"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期四"
+          }
+        }
+      }
+    },
+    "system.option.weekday.tuesday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Tuesday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الثلاثاء"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tuesday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Martes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mardi"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मंगलवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Martedì"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "火曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "화요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wtorek"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terça-feira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вторник"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вівторок"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期二"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期二"
+          }
+        }
+      }
+    },
+    "system.option.weekday.type": {
+      "comment": "Type name of the weekday choice in Shortcuts, for the days a repeating task falls on",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم الأسبوع"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Día de la semana"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jour de la semaine"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सप्ताह का दिन"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giorno della settimana"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dzień tygodnia"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dia da semana"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "День недели"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "День тижня"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期"
+          }
+        }
+      }
+    },
+    "system.option.weekday.wednesday": {
+      "comment": "Weekday choice in Shortcuts for a repeating task: Wednesday",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأربعاء"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wednesday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miércoles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mercredi"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बुधवार"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mercoledì"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水曜日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "수요일"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Środa"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quarta-feira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Среда"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Середа"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期三"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星期三"
+          }
+        }
+      }
+    },
+    "system.parameter.date.today_when_blank.description": {
+      "comment": "Description of an optional date parameter in Shortcuts that means today when left empty",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتركه فارغًا لاستخدام اليوم."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave blank for today."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déjala en blanco para usar hoy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laissez vide pour aujourd’hui."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज के लिए खाली छोड़ें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lascia vuoto per oggi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空欄の場合は今日になります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비워 두면 오늘입니다."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw puste, aby użyć dzisiejszej daty."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deixe em branco para hoje."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставьте поле пустым, чтобы использовать сегодняшнюю дату."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залиште поле порожнім, щоб використати сьогоднішню дату."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "留空表示今天。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "留空則為今天。"
           }
         }
       }
@@ -30131,96 +30311,6 @@
         }
       }
     },
-    "system.setup.complete.dialog": {
-      "comment": "Dialog after completing setup; %@ is the setup_completed preference value",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اكتمل الإعداد: %@."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Setup completed: %@."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuración completada: %@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuration terminée : %@."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सेटअप पूरा: %@।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configurazione completata: %@."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "セットアップが完了しました：%@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "초기 설정을 완료했습니다: %@"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konfiguracja zakończona: %@."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuração concluída: %@."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройка завершена: %@."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Налаштування завершено: %@."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "设置已完成：%@。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "初始設定已完成：%@"
-          }
-        }
-      }
-    },
     "system.setup.complete.title": {
       "comment": "Title for the Complete Lorvex Setup App Intent",
       "extractionState": "manual",
@@ -30311,6 +30401,276 @@
         }
       }
     },
+    "system.setup.finished.dialog": {
+      "comment": "Siri and Shortcuts reply after Complete Lorvex Setup succeeds",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتمل إعداد Lorvex."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex is set up."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex está configurado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex est configuré."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex सेट अप हो गया है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex è configurato."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexのセットアップが完了しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 초기 설정을 마쳤습니다."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex jest skonfigurowany."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Lorvex está configurado."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex настроен."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex налаштовано."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 已设置完成。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 初始設定已完成。"
+          }
+        }
+      }
+    },
+    "system.setup.parameter.day_end": {
+      "comment": "Time parameter of Complete Lorvex Setup: when the day hours Lorvex plans tasks into end",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نهاية ساعات اليوم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day Hours End"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin del horario del día"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin des horaires de la journée"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दिन के घंटों का अंत"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fine degli orari della giornata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "予定に使う時間帯の終了"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일정 가능 시간 종료"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koniec godzin dnia"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fim do horário do dia"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Конец часов дня"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кінець годин дня"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可安排时段结束"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可安排時段結束"
+          }
+        }
+      }
+    },
+    "system.setup.parameter.day_start": {
+      "comment": "Time parameter of Complete Lorvex Setup: when the day hours Lorvex plans tasks into begin",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بداية ساعات اليوم"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day Hours Start"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio del horario del día"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Début des horaires de la journée"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दिन के घंटों की शुरुआत"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inizio degli orari della giornata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "予定に使う時間帯の開始"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일정 가능 시간 시작"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Początek godzin dnia"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Início do horário do dia"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начало часов дня"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Початок годин дня"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可安排时段开始"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可安排時段開始"
+          }
+        }
+      }
+    },
     "system.setup.parameter.timezone": {
       "comment": "Timezone parameter title for setup App Intents",
       "extractionState": "manual",
@@ -30397,96 +30757,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "時區"
-          }
-        }
-      }
-    },
-    "system.setup.parameter.working_hours": {
-      "comment": "Working hours parameter title for setup App Intents",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ساعات اليوم"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Day Hours"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horario del día"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horaires de la journée"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "दिन के घंटे"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Orari della giornata"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "予定に使う時間帯"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "일정 가능 시간"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Godziny dnia"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horário do dia"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Часы дня"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Години дня"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可安排时段"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可安排時段"
           }
         }
       }
@@ -42466,186 +42736,6 @@
         }
       }
     },
-    "system.task.parameter.date.optional_today.description": {
-      "comment": "Date parameter description for optional YYYY-MM-DD values that default to today",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تاريخ اختياري بصيغة YYYY-MM-DD. اتركه فارغًا لاستخدام اليوم."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional date in YYYY-MM-DD format. Leave blank for today."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha opcional en formato AAAA-MM-DD. Déjala en blanco para usar hoy."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date facultative au format AAAA-MM-JJ. Laissez vide pour aujourd’hui."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में तारीख़ (वैकल्पिक)। आज के लिए खाली छोड़ें।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data facoltativa nel formato AAAA-MM-GG. Lascia vuoto per oggi."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日付（YYYY-MM-DD形式、省略可）。空欄の場合は今日になります。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 날짜(선택 사항). 비워 두면 오늘입니다."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalna data w formacie RRRR-MM-DD. Zostaw puste, aby użyć dzisiejszej daty."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data opcional no formato AAAA-MM-DD. Deixe em branco para hoje."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательная дата в формате ГГГГ-ММ-ДД. Оставьте поле пустым, чтобы использовать сегодняшнюю дату."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язкова дата у форматі РРРР-ММ-ДД. Залиште поле порожнім, щоб використати сьогоднішню дату."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选日期，格式为 YYYY-MM-DD。留空表示今天。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的日期（選填）。留空則為今天。"
-          }
-        }
-      }
-    },
-    "system.task.parameter.date_description": {
-      "comment": "Description for yyyy-MM-dd date parameters",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التاريخ بصيغة YYYY-MM-DD."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date in YYYY-MM-DD format."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha en formato AAAA-MM-DD."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date au format AAAA-MM-JJ."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में तारीख़।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data nel formato AAAA-MM-GG."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD形式の日付。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 날짜."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data w formacie RRRR-MM-DD."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data no formato AAAA-MM-DD."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата в формате ГГГГ-ММ-ДД."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата у форматі РРРР-ММ-ДД."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的日期。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的日期。"
-          }
-        }
-      }
-    },
     "system.task.parameter.days_ahead": {
       "comment": "Generic days-ahead parameter title in task App Intents",
       "extractionState": "manual",
@@ -43636,96 +43726,6 @@
         }
       }
     },
-    "system.task.parameter.planned_date_description": {
-      "comment": "Description for planned date parameter that can clear the value",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التاريخ بصيغة YYYY-MM-DD. اتركه فارغًا لمسحه."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date in YYYY-MM-DD format. Leave blank to clear."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha en formato AAAA-MM-DD. Déjala en blanco para borrarla."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date au format AAAA-MM-JJ. Laissez vide pour l’effacer."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD रूप में तारीख़। हटाने के लिए खाली छोड़ें।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data nel formato AAAA-MM-GG. Lascia vuoto per rimuoverla."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD形式の日付。空欄にするとクリアされます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 형식의 날짜. 비워 두면 지워집니다."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data w formacie RRRR-MM-DD. Zostaw puste, aby wyczyścić."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data no formato AAAA-MM-DD. Deixe em branco para limpar."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата в формате ГГГГ-ММ-ДД. Оставьте поле пустым, чтобы очистить значение."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата у форматі РРРР-ММ-ДД. Залиште поле порожнім, щоб очистити значення."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的日期。留空可清除。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "YYYY-MM-DD 格式的日期。留空即可清除。"
-          }
-        }
-      }
-    },
     "system.task.parameter.priority": {
       "comment": "Generic task priority parameter title in task App Intents",
       "extractionState": "manual",
@@ -43812,96 +43812,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "優先順序"
-          }
-        }
-      }
-    },
-    "system.task.parameter.priority_description": {
-      "comment": "Description for task priority parameter",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 أو 2 أو 3."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2, or 3."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 o 3."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 ou 3."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 या 3।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 o 3."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1、2、または3。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 또는 3."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 lub 3."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 ou 3."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 или 3."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1, 2 або 3."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1、2 或 3。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1、2 或 3。"
           }
         }
       }
@@ -44266,26 +44176,26 @@
         }
       }
     },
-    "system.task.parameter.reminder_timestamp": {
-      "comment": "Generic reminder timestamp parameter title in task App Intents",
+    "system.task.parameter.reminder_time": {
+      "comment": "Date-and-time parameter of Add Lorvex Task Reminder: when the reminder fires",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الطابع الزمني للتذكير"
+            "value": "موعد التذكير"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reminder Timestamp"
+            "value": "Reminder Time"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Marca de tiempo del recordatorio"
+            "value": "Fecha y hora del recordatorio"
           }
         },
         "fr": {
@@ -44297,7 +44207,7 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "रिमाइंडर टाइमस्टैम्प"
+            "value": "रिमाइंडर का समय"
           }
         },
         "it": {
@@ -44345,37 +44255,37 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "提醒时间戳"
+            "value": "提醒时间"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "提醒時間戳記"
+            "value": "提醒時間"
           }
         }
       }
     },
-    "system.task.parameter.reminder_timestamps": {
-      "comment": "Generic reminder timestamps parameter title in task App Intents",
+    "system.task.parameter.reminder_times": {
+      "comment": "List of dates and times on Set Lorvex Task Reminders: when each reminder fires",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الطوابع الزمنية للتذكيرات"
+            "value": "مواعيد التذكيرات"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reminder Timestamps"
+            "value": "Reminder Times"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Marcas de tiempo de los recordatorios"
+            "value": "Fechas y horas de los recordatorios"
           }
         },
         "fr": {
@@ -44387,7 +44297,7 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "रिमाइंडर टाइमस्टैम्प"
+            "value": "रिमाइंडर के समय"
           }
         },
         "it": {
@@ -44435,103 +44345,103 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "提醒时间戳"
+            "value": "提醒时间"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "提醒時間戳記（多個）"
+            "value": "提醒時間（多個）"
           }
         }
       }
     },
-    "system.task.parameter.reminder_timestamps.iso_list.description": {
-      "comment": "Reminder timestamps parameter description for comma or newline separated ISO timestamps",
+    "system.task.parameter.remove_planned_date": {
+      "comment": "Shortcuts toggle on Update Lorvex Task that clears the task's planned date",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "طوابع زمنية بصيغة ISO مفصولة بفواصل أو أسطر جديدة."
+            "value": "إزالة تاريخ التخطيط"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comma or newline separated ISO timestamps."
+            "value": "Remove Planned Date"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Marcas de tiempo ISO separadas por comas o saltos de línea."
+            "value": "Quitar fecha planificada"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dates et heures au format ISO, séparées par des virgules ou des retours à la ligne."
+            "value": "Supprimer la date planifiée"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "कॉमा या नई पंक्ति से अलग किए गए ISO टाइमस्टैम्प।"
+            "value": "प्लान की तारीख़ हटाएँ"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Date e ore in formato ISO, separate da virgole o a capo."
+            "value": "Rimuovi data pianificata"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "カンマまたは改行で区切ったISO形式の日時。"
+            "value": "予定日を削除"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "쉼표 또는 줄 바꿈으로 구분한 ISO 형식 일시."
+            "value": "예정일 제거"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Daty i godziny w formacie ISO rozdzielone przecinkiem lub nową linią."
+            "value": "Usuń zaplanowaną datę"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datas e horas no formato ISO, separadas por vírgulas ou quebras de linha."
+            "value": "Remover data planejada"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Даты и время в формате ISO через запятую или перенос строки."
+            "value": "Удалить запланированную дату"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дати й час у форматі ISO через кому або новий рядок."
+            "value": "Видалити заплановану дату"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "用逗号或换行分隔的 ISO 时间戳。"
+            "value": "移除计划日期"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "以逗號或換行分隔的 ISO 時間戳記。"
+            "value": "移除預定日期"
           }
         }
       }
@@ -45252,96 +45162,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "星期"
-          }
-        }
-      }
-    },
-    "system.task.parameter.weekdays.optional_codes.description": {
-      "comment": "Weekdays parameter description for optional recurrence weekday codes",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رموز اختيارية لأيام الأسبوع مثل MO وWE وFR."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Optional weekday codes such as MO, WE, FR."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Códigos opcionales de día de la semana, como MO, WE, FR."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Codes facultatifs des jours de la semaine, comme MO, WE, FR."
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "सप्ताह के दिनों के कोड (वैकल्पिक), जैसे MO, WE, FR।"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Codici facoltativi dei giorni della settimana, come MO, WE, FR."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MO、WE、FRなどの曜日コード（省略可）。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MO, WE, FR 같은 요일 코드(선택 사항)."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcjonalne kody dni tygodnia, na przykład MO, WE, FR."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Códigos opcionais de dias da semana, como MO, WE, FR."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необязательные коды дней недели, например MO, WE, FR."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Необов’язкові коди днів тижня, наприклад MO, WE, FR."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "可选星期代码，例如 MO、WE、FR。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MO、WE、FR 等星期代碼（選填）。"
           }
         }
       }
@@ -48228,85 +48048,85 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إضافة طابع زمني واحد لتذكير إلى مهمة في Lorvex."
+            "value": "إضافة تذكير إلى مهمة في Lorvex."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add one reminder timestamp to a Lorvex task."
+            "value": "Add a reminder to a Lorvex task."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Añade una marca de tiempo de recordatorio a una tarea de Lorvex."
+            "value": "Añade un recordatorio a una tarea de Lorvex."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajoute un rappel à une tâche de Lorvex à une date et une heure données."
+            "value": "Ajoute un rappel à une tâche de Lorvex."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex कार्य में एक रिमाइंडर टाइमस्टैम्प जोड़ें।"
+            "value": "Lorvex कार्य में एक रिमाइंडर जोड़ें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aggiunge un promemoria a un’attività di Lorvex a una data e ora specifiche."
+            "value": "Aggiunge un promemoria a un’attività di Lorvex."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvexのタスクにリマインダーの日時を1つ追加します。"
+            "value": "Lorvexのタスクにリマインダーを追加します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lorvex 할 일에 알림 일시를 하나 추가합니다."
+            "value": "Lorvex 할 일에 알림을 추가합니다."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dodaje jedno przypomnienie do zadania Lorvex."
+            "value": "Dodaje przypomnienie do zadania Lorvex."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adiciona um lembrete a uma tarefa do Lorvex em uma data e hora específicas."
+            "value": "Adiciona um lembrete a uma tarefa do Lorvex."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Добавляет одно напоминание к задаче Lorvex."
+            "value": "Добавляет напоминание к задаче Lorvex."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Додає одне нагадування до завдання Lorvex."
+            "value": "Додає нагадування до завдання Lorvex."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "向一个 Lorvex 任务添加一个提醒时间戳。"
+            "value": "为 Lorvex 任务添加一个提醒。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "為 Lorvex 任務新增一個提醒時間戳記。"
+            "value": "為 Lorvex 任務新增一個提醒。"
           }
         }
       }
@@ -49223,19 +49043,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "استبدال الطوابع الزمنية لتذكيرات مهمة في Lorvex من الاختصارات أو Siri."
+            "value": "استبدال تذكيرات مهمة في Lorvex من الاختصارات أو Siri."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Replace a Lorvex task’s reminder timestamps from Shortcuts or Siri."
+            "value": "Replace a Lorvex task’s reminders from Shortcuts or Siri."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reemplaza las marcas de tiempo de recordatorio de una tarea de Lorvex desde Atajos o Siri."
+            "value": "Reemplaza los recordatorios de una tarea de Lorvex desde Atajos o Siri."
           }
         },
         "fr": {
@@ -49247,7 +49067,7 @@
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "शॉर्टकट्स या Siri से Lorvex कार्य के रिमाइंडर टाइमस्टैम्प बदल दें।"
+            "value": "शॉर्टकट्स या Siri से Lorvex कार्य के रिमाइंडर बदल दें।"
           }
         },
         "it": {
@@ -49259,13 +49079,13 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ショートカットまたはSiriでLorvexのタスクのリマインダー日時を置き換えます。"
+            "value": "ショートカットまたはSiriでLorvexのタスクのリマインダーを置き換えます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "단축어 또는 Siri에서 Lorvex 할 일의 알림 일시를 바꿉니다."
+            "value": "단축어 또는 Siri에서 Lorvex 할 일의 알림을 바꿉니다."
           }
         },
         "pl": {
@@ -49295,13 +49115,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "从“快捷指令”或 Siri 替换一个 Lorvex 任务的提醒时间戳。"
+            "value": "通过“快捷指令”或 Siri 替换 Lorvex 任务的提醒。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "透過捷徑或 Siri 取代 Lorvex 任務的提醒時間戳記。"
+            "value": "透過捷徑或 Siri 取代 Lorvex 任務的提醒。"
           }
         }
       }

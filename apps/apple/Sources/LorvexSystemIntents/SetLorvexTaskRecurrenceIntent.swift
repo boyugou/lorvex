@@ -13,20 +13,22 @@ struct SetLorvexTaskRecurrenceIntent: LorvexAuthenticatedIntent {
   var frequency: LorvexRecurrenceFrequencyOption
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.interval", defaultValue: "Interval", table: "Localizable", bundle: SystemL10n.bundle))
+    title: LocalizedStringResource("system.task.parameter.interval", defaultValue: "Interval", table: "Localizable", bundle: SystemL10n.bundle),
+    inclusiveRange: (1, 10_000))
   var interval: Int?
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.weekdays", defaultValue: "Weekdays", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.weekdays.optional_codes.description", defaultValue: "Optional weekday codes such as MO, WE, FR.", table: "Localizable", bundle: SystemL10n.bundle))
-  var weekdays: String?
+    title: LocalizedStringResource("system.task.parameter.weekdays", defaultValue: "Weekdays", table: "Localizable", bundle: SystemL10n.bundle))
+  var weekdays: [LorvexWeekdayOption]?
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.until", defaultValue: "Until", table: "Localizable", bundle: SystemL10n.bundle))
-  var until: String?
+    title: LocalizedStringResource("system.task.parameter.until", defaultValue: "Until", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var until: Date?
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.count", defaultValue: "Count", table: "Localizable", bundle: SystemL10n.bundle))
+    title: LocalizedStringResource("system.task.parameter.count", defaultValue: "Count", table: "Localizable", bundle: SystemL10n.bundle),
+    inclusiveRange: (1, 1_000))
   var count: Int?
 
   init() {
@@ -38,8 +40,8 @@ struct SetLorvexTaskRecurrenceIntent: LorvexAuthenticatedIntent {
     task: LorvexTaskEntity,
     frequency: LorvexRecurrenceFrequencyOption,
     interval: Int? = nil,
-    weekdays: String? = nil,
-    until: String? = nil,
+    weekdays: [LorvexWeekdayOption]? = nil,
+    until: Date? = nil,
     count: Int? = nil
   ) {
     self.task = task
@@ -55,8 +57,8 @@ struct SetLorvexTaskRecurrenceIntent: LorvexAuthenticatedIntent {
       taskID: task.id,
       frequency: frequency.ruleFrequency,
       interval: interval,
-      weekdaysText: weekdays,
-      until: until,
+      weekdays: weekdays?.map(\.ruleCode),
+      until: until.map(IntentDateText.day),
       count: count
     )
     return .result(

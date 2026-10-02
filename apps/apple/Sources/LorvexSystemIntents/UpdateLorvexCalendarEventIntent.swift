@@ -16,18 +16,18 @@ struct UpdateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.start_date", defaultValue: "Start Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.start_date.optional_replacement.description", defaultValue: "Optional replacement date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var startDate: String?
+    kind: .date)
+  var startDate: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.start_time", defaultValue: "Start Time", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.start_time.optional_replacement.description", defaultValue: "Optional replacement time in HH:MM format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var startTime: String?
+    kind: .time)
+  var startTime: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.end_time", defaultValue: "End Time", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.end_time.optional_replacement.description", defaultValue: "Optional replacement time in HH:MM format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var endTime: String?
+    kind: .time)
+  var endTime: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.all_day", defaultValue: "All Day", table: "Localizable", bundle: SystemL10n.bundle),
@@ -59,9 +59,9 @@ struct UpdateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
   init(
     event: LorvexCalendarEventEntity,
     title: String? = nil,
-    startDate: String? = nil,
-    startTime: String? = nil,
-    endTime: String? = nil,
+    startDate: Date? = nil,
+    startTime: Date? = nil,
+    endTime: Date? = nil,
     allDay: Bool? = nil,
     location: String? = nil,
     notes: String? = nil
@@ -84,9 +84,9 @@ struct UpdateLorvexCalendarEventIntent: LorvexAuthenticatedIntent {
     let updated = try await LorvexTaskIntentRunner.updateCalendarEvent(
       id: event.eventID,
       title: title,
-      startDate: startDate,
-      startTime: startTime,
-      endTime: endTime,
+      startDate: startDate.map(IntentDateText.day),
+      startTime: startTime.map(IntentDateText.time),
+      endTime: endTime.map(IntentDateText.time),
       allDay: allDay,
       location: location,
       notes: notes

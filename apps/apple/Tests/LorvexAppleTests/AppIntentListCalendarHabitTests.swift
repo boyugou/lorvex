@@ -54,9 +54,6 @@ func calendarExtendedIntentPerformThrowsOnInvalidInputs() async throws {
   let blankTask = LorvexTaskEntity(id: "   ", title: "", status: "")
   let blankEvent = LorvexCalendarEventEntity(
     id: "   ", title: "", startDate: "", startTime: nil, endTime: nil, allDay: false)
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await ReadLorvexCalendarTimelineIntent(from: "   ", to: "2026-05-25").perform()
-  }
   await #expect(throws: AppIntentError.self) {
     _ = try await SearchLorvexCalendarEventsIntent(query: "   ").perform()
   }
@@ -121,7 +118,7 @@ func habitExtendedIntentPerformThrowsOnInvalidInputs() async throws {
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await UpsertLorvexHabitReminderPolicyIntent(
       habit: blankHabit,
-      reminderTime: "25:99",
+      reminderTime: .now,
       enabled: true
     ).perform()
   }

@@ -1,4 +1,5 @@
 import AppIntents
+import LorvexCore
 
 struct ReadLorvexListHealthIntent: LorvexAuthenticatedIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.list.health.read.title", defaultValue: "Read Lorvex List Health", table: "Localizable", bundle: SystemL10n.bundle)
@@ -13,7 +14,7 @@ struct ReadLorvexListHealthIntent: LorvexAuthenticatedIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.list.health.read.dialog",
-          defaultValue: "Lists: \(health.totalLists) on \(health.date), overdue tasks: \(overdue).",
+          defaultValue: "Lists: \(health.totalLists) on \(lorvexDayLine(logicalDay: health.date)), overdue tasks: \(overdue).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

@@ -5,33 +5,38 @@ struct ToggleLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
   static let description = IntentDescription(LocalizedStringResource("system.task.checklist.toggle.description", defaultValue: "Set a Lorvex checklist item complete or incomplete.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.checklist_item_id", defaultValue: "Checklist Item ID", table: "Localizable", bundle: SystemL10n.bundle))
-  var itemID: String
+    title: LocalizedStringResource("system.task.parameter.checklist_item", defaultValue: "Checklist Item", table: "Localizable", bundle: SystemL10n.bundle))
+  var item: LorvexChecklistItemEntity
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.completed", defaultValue: "Completed", table: "Localizable", bundle: SystemL10n.bundle))
   var completed: Bool
 
   init() {
-    itemID = ""
+    item = LorvexChecklistItemEntity(taskID: "", itemID: "", text: "", taskTitle: "", completed: false)
     completed = true
   }
 
-  init(itemID: String, completed: Bool) {
-    self.itemID = itemID
+  init(item: LorvexChecklistItemEntity, completed: Bool) {
+    self.item = item
     self.completed = completed
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
-    let task = try await LorvexTaskIntentRunner.toggleTaskChecklistItem(
-      itemID: itemID,
+    _ = try await LorvexTaskIntentRunner.toggleTaskChecklistItem(
+      itemID: item.itemID,
       completed: completed
     )
-    return .result(
-      dialog: IntentDialog(
-        LocalizedStringResource(
-          "system.task.checklist.update.dialog",
-          defaultValue: "Updated checklist item in \(task.title).",
-          table: "Localizable", bundle: SystemL10n.bundle)))
+    let dialog =
+      completed
+      ? LocalizedStringResource(
+        "system.task.checklist.toggle.done_dialog",
+        defaultValue: "Checked off \(item.text).",
+        table: "Localizable", bundle: SystemL10n.bundle)
+      : LocalizedStringResource(
+        "system.task.checklist.toggle.undone_dialog",
+        defaultValue: "Unchecked \(item.text).",
+        table: "Localizable", bundle: SystemL10n.bundle)
+    return .result(dialog: IntentDialog(dialog))
   }
 }

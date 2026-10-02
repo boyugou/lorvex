@@ -238,14 +238,18 @@ struct LocalizationTests {
         }
 
         let systemDialogKeys = [
-            "system.status.overview.read.dialog",
-            "system.list.detail.read.dialog",
-            "system.ai_changelog.read.dialog",
-            "system.logs.recent.read.dialog",
-            "system.preference.read_all.dialog",
+            "system.status.overview.read.summary_dialog",
+            "system.list.read.names_dialog",
             "system.task.upcoming.read.dialog",
             "system.task.deferred.read.dialog",
             "system.task.reminders.set.dialog",
+            "system.habit.reminders.read.dialog_count",
+            "system.task.reminders.due.read.names_dialog",
+            "system.task.reminders.upcoming.read.names_dialog",
+            "system.review.weekly.read.week_of_dialog",
+            "system.task.dependency.read.waiting_dialog",
+            "system.task.dependency.read.waits_on_dialog",
+            "system.list.health.read.overdue_dialog",
         ]
         for key in systemDialogKeys {
             let forms = try englishPluralForms(Self.sourceCatalogURL("LorvexSystemIntents"), key)

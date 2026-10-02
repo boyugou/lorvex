@@ -21,9 +21,11 @@ struct ReadLorvexMemoryIntent: LorvexLocalAuthIntent {
     self.memory = memory
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns the memory's content.
+  func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
     let entry = try await LorvexTaskIntentRunner.readMemory(key: memory.key)
     return .result(
+      value: entry.content,
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.memory.read.dialog", defaultValue: "\(entry.key): \(entry.content)",

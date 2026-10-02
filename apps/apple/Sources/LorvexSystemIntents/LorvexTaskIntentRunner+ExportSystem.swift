@@ -20,12 +20,4 @@ extension LorvexTaskIntentRunner {
       try await LorvexSystemIntentRunner.exportCalendarICS(from: from, to: to, core: core)
     }
   }
-
-  public static func readRuntimeDiagnostics(
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> RuntimeDiagnosticsSnapshot {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.readRuntimeDiagnostics(core: core)
-    }
-  }
 }

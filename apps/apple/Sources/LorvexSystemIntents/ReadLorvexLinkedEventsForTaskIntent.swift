@@ -16,9 +16,10 @@ struct ReadLorvexLinkedEventsForTaskIntent: LorvexAuthenticatedIntent {
     self.task = task
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  func perform() async throws -> some IntentResult & ReturnsValue<[LorvexCalendarEventEntity]> & ProvidesDialog {
     let events = try await LorvexTaskIntentRunner.readLinkedEventsForTask(taskID: task.id)
     return .result(
+      value: events.map(LorvexCalendarEventEntity.init(event:)),
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.calendar.linked_events_for_task.read.dialog_count",

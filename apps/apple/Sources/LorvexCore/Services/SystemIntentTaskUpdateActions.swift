@@ -6,8 +6,9 @@ extension LorvexSystemIntentRunner {
   /// other field as stored.
   ///
   /// A nil argument leaves its field alone; a blank planned date clears the
-  /// planned day, a blank tag or dependency list clears that list, and a
-  /// blank title is refused as ``LorvexCoreError/emptyTitle``. The
+  /// planned day, a blank tag list or an empty dependency list clears that
+  /// list, and a blank title is refused as ``LorvexCoreError/emptyTitle``.
+  /// `dependsOn` replaces the task's dependencies with those task IDs. The
   /// write is one ``TaskUpdateDraft`` patch, so fields this action has no
   /// parameter for — the deadline, the hide-until date, the time on an
   /// unchanged planned day — are never rewritten from an earlier read. Moving
@@ -21,7 +22,7 @@ extension LorvexSystemIntentRunner {
     estimatedMinutes: Int?,
     plannedDate: String?,
     tagsText: String?,
-    dependsOnText: String?,
+    dependsOn: [LorvexTask.ID]?,
     core: any LorvexCoreServicing
   ) async throws -> LorvexTask {
     let taskID = try validatedTaskID(id)
@@ -35,7 +36,9 @@ extension LorvexSystemIntentRunner {
           ?? .unset,
         plannedDate: try plannedDatePatch(plannedDate),
         tags: tagsText.map(parsedTextList),
-        dependsOn: dependsOnText.map(parsedTextList)))
+        dependsOn: dependsOn.map { ids in
+          ids.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        }))
   }
 
   static func parsedTaskPriority(_ value: Int) throws -> LorvexTask.Priority {

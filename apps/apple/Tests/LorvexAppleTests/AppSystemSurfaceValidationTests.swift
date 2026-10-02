@@ -1,6 +1,5 @@
 import Foundation
 import LorvexCore
-import LorvexDomain
 import LorvexSystemIntents
 import Testing
 
@@ -45,61 +44,6 @@ func systemIntentRunnerRejectsInvalidReviewQueries() async {
       core: try await makeSeededInMemoryCore()
     )
   }
-}
-
-@Test
-func systemIntentRunnerRejectsInvalidPreferences() async {
-  await #expect(throws: LorvexCoreError.self) {
-    _ = try await LorvexSystemIntentRunner.readPreference(
-      key: "   ",
-      core: try await makeSeededInMemoryCore()
-    )
-  }
-  await #expect(throws: LorvexCoreError.self) {
-    _ = try await LorvexSystemIntentRunner.setPreference(
-      key: "theme",
-      value: "   ",
-      core: try await makeSeededInMemoryCore()
-    )
-  }
-}
-
-/// FIX 2: the App-Intents `set_preference` / `delete_preference` surface must
-/// mirror the MCP host's allowlist. An arbitrary key is rejected before any DB
-/// work — it would otherwise persist a `preferences` row and enqueue a sync
-/// envelope every peer rejects (`SyncEntityId.validatePreference`), permanently
-/// diverging devices.
-@Test
-func systemIntentRunnerRejectsUnknownWritablePreferenceKey() async throws {
-  let core = try await makeSeededInMemoryCore()
-  await #expect(throws: LorvexCoreError.self) {
-    _ = try await LorvexSystemIntentRunner.setPreference(
-      key: "totally_unknown_key", value: "malicious", core: core)
-  }
-  await #expect(throws: LorvexCoreError.self) {
-    try await LorvexSystemIntentRunner.deletePreference(
-      key: "totally_unknown_key", core: core)
-  }
-  // Rejected before reaching the core: nothing was written.
-  let stored = try await LorvexSystemIntentRunner.readPreference(
-    key: "totally_unknown_key", core: core)
-  #expect(stored == nil)
-}
-
-/// The device-local calendar AI-access tier is the allowlist's special case
-/// (it is not one of the synced `pref*` keys) and must still be writable /
-/// deletable — that is the App-Intents path by which a privacy downgrade
-/// reaches the core purge.
-@Test
-func systemIntentRunnerAllowsCalendarAccessModeWriteAndDelete() async throws {
-  let core = try await makeSeededInMemoryCore()
-  let value = try await LorvexSystemIntentRunner.setPreference(
-    key: PreferenceKeys.devCalendarAiAccessMode,
-    value: CalendarAiAccessMode.busyOnly.asString,
-    core: core)
-  #expect(value == CalendarAiAccessMode.busyOnly.asString)
-  try await LorvexSystemIntentRunner.deletePreference(
-    key: PreferenceKeys.devCalendarAiAccessMode, core: core)
 }
 
 @Test

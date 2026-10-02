@@ -1,42 +1,6 @@
 import LorvexCore
 
 extension LorvexTaskIntentRunner {
-  public static func readPreferences(
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> PreferencesSnapshot {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.readPreferences(core: core)
-    }
-  }
-
-  public static func readPreference(
-    key: String,
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> String? {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.readPreference(key: key, core: core)
-    }
-  }
-
-  public static func setPreference(
-    key: String,
-    value: String,
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> String {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.setPreference(key: key, value: value, core: core)
-    }
-  }
-
-  public static func deletePreference(
-    key: String,
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.deletePreference(key: key, core: core)
-    }
-  }
-
   public static func completeSetup(
     workingHours: String? = nil,
     defaultListID: String? = nil,
@@ -58,14 +22,6 @@ extension LorvexTaskIntentRunner {
   ) async throws -> OverviewCompactSnapshot {
     try await LorvexIntentFailure.rewording(core: core) {
       try await LorvexSystemIntentRunner.readOverview(core: core)
-    }
-  }
-
-  public static func readSessionContext(
-    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
-  ) async throws -> SessionContextSnapshot {
-    try await LorvexIntentFailure.rewording(core: core) {
-      try await LorvexSystemIntentRunner.readSessionContext(core: core)
     }
   }
 }

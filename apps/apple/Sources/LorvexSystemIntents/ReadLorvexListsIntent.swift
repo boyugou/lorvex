@@ -6,14 +6,15 @@ struct ReadLorvexListsIntent: LorvexAuthenticatedIntent {
 
   init() {}
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
-    let snapshot = try await LorvexTaskIntentRunner.readLists()
-    let openCount = snapshot.lists.reduce(0) { $0 + $1.openCount }
+  func perform() async throws -> some IntentResult & ReturnsValue<[LorvexListEntity]> & ProvidesDialog {
+    let lists = try await LorvexTaskIntentRunner.readLists().lists
+    let names = SystemIntentListSummary.names(lists.map(\.displayName), total: lists.count)
     return .result(
+      value: lists.map(LorvexListEntity.init(list:)),
       dialog: IntentDialog(
         LocalizedStringResource(
-          "system.list.read.dialog",
-          defaultValue: "Lists: \(snapshot.lists.count), open tasks: \(openCount).",
+          "system.list.read.names_dialog",
+          defaultValue: "\(lists.count) Lorvex lists: \(names)",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

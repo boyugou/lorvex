@@ -149,14 +149,8 @@ func taskIntentRunnerHandlesHabitAndCalendarActions() async throws {
     builtAtMode: .fullDetails, windowStart: "2026-05-25", windowEnd: "2026-05-25")
   let providerEventID = "ek-shortcut-1"
   let linkedEventTimelineID = "eventkit:device:ek-shortcut-1"
-  let eventLink = try await LorvexTaskIntentRunner.linkTaskToProviderEvent(
-    taskID: " \(created.id) ",
-    providerEventID: " \(providerEventID) ",
-    providerSource: " eventkit ",
-    core: core
-  )
-  #expect(eventLink.taskID == created.id)
-  #expect(eventLink.providerEventID == providerEventID)
+  _ = try await core.linkTaskToProviderEvent(
+    taskID: created.id, providerEventID: providerEventID, providerSource: "eventkit")
   let linkedEvents = try await LorvexTaskIntentRunner.readLinkedEventsForTask(
     taskID: " \(created.id) ",
     core: core
@@ -167,11 +161,8 @@ func taskIntentRunnerHandlesHabitAndCalendarActions() async throws {
     core: core
   )
   #expect(linkedTasks.map(\.id).contains(created.id))
-  try await LorvexTaskIntentRunner.unlinkTaskFromProviderEvent(
-    taskID: " \(created.id) ",
-    providerEventID: " \(providerEventID) ",
-    core: core
-  )
+  try await core.unlinkTaskFromProviderEvent(
+    taskID: created.id, providerEventID: providerEventID)
   #expect(
     try await LorvexTaskIntentRunner.readLinkedTasksForEvent(
       eventID: linkedEventTimelineID, core: core

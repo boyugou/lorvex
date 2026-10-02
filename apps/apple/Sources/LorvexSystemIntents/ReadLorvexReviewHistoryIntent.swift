@@ -26,7 +26,8 @@ struct ReadLorvexReviewHistoryIntent: LorvexLocalAuthIntent {
     self.limit = limit
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns each review's summary, newest first.
+  func perform() async throws -> some IntentResult & ReturnsValue<[String]> & ProvidesDialog {
     let range = IntentDateText.dayRange(from: from, to: to)
     let reviews = try await LorvexTaskIntentRunner.readReviewHistory(
       from: range.from,
@@ -34,6 +35,7 @@ struct ReadLorvexReviewHistoryIntent: LorvexLocalAuthIntent {
       limit: limit
     )
     return .result(
+      value: reviews.map(\.summary),
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.review.history.read.dialog_count", defaultValue: "\(reviews.count) reviews.",

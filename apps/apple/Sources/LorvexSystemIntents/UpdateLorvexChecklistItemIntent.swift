@@ -5,27 +5,27 @@ struct UpdateLorvexChecklistItemIntent: LorvexAuthenticatedIntent {
   static let description = IntentDescription(LocalizedStringResource("system.task.checklist.update.description", defaultValue: "Update the text of a Lorvex checklist item.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.checklist_item_id", defaultValue: "Checklist Item ID", table: "Localizable", bundle: SystemL10n.bundle))
-  var itemID: String
+    title: LocalizedStringResource("system.task.parameter.checklist_item", defaultValue: "Checklist Item", table: "Localizable", bundle: SystemL10n.bundle))
+  var item: LorvexChecklistItemEntity
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.text", defaultValue: "Text", table: "Localizable", bundle: SystemL10n.bundle))
   var text: String
 
   init() {
-    itemID = ""
+    item = LorvexChecklistItemEntity(taskID: "", itemID: "", text: "", taskTitle: "", completed: false)
     text = ""
   }
 
-  init(itemID: String, text: String) {
-    self.itemID = itemID
+  init(item: LorvexChecklistItemEntity, text: String) {
+    self.item = item
     self.text = text
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let text = try $text.requiredText()
     let task = try await LorvexTaskIntentRunner.updateTaskChecklistItem(
-      itemID: itemID,
+      itemID: item.itemID,
       text: text
     )
     return .result(

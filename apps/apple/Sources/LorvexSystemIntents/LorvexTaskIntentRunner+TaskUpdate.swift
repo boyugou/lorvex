@@ -9,7 +9,7 @@ extension LorvexTaskIntentRunner {
     estimatedMinutes: Int? = nil,
     plannedDate: String? = nil,
     tagsText: String? = nil,
-    dependsOnText: String? = nil,
+    dependsOn: [LorvexTask.ID]? = nil,
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
     try await LorvexIntentFailure.rewording(core: core) {
@@ -21,7 +21,7 @@ extension LorvexTaskIntentRunner {
         estimatedMinutes: estimatedMinutes,
         plannedDate: plannedDate,
         tagsText: tagsText,
-        dependsOnText: dependsOnText,
+        dependsOn: dependsOn,
         core: core
       )
     }

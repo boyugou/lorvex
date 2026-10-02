@@ -193,9 +193,17 @@ iPhone, iPad, Mac, or Siri to create, rename, update, or delete empty lists,
 create/update/delete habits, create/update/delete Lorvex-owned calendar events,
 complete, cancel, reopen, or defer tasks, complete or reset today's habit progress, save a review summary,
 start or pause a task, plan a task for today, read the day's times, suggest
-times for today's tasks, save the times you accept back to Lorvex, write, read,
-or delete a memory key, or clear the working context through the same
-Lorvex-managed storage used by the native app and MCP tools.
+times for today's tasks, save the times you accept back to Lorvex, or write,
+read, or delete a memory key, through the same Lorvex-managed storage used by
+the native app and MCP tools.
+
+The read actions return what they read, so a shortcut can pass it to its next
+step: **Read Overview** returns the most important open tasks, **Read Lists**
+the lists, **Read Schedule** the day's timed tasks, **Read Weekly Review** the
+week's latest completed tasks, the reminder reads their reminders, and the
+calendar reads their events. **Read Task Dependencies** returns the unfinished
+tasks a task waits on, or every task still waiting on another, and **Find Lists
+with Overdue Tasks** returns the lists that need attention.
 
 The **Open Lorvex** shortcut can jump directly to Today, Tasks, Lists, Calendar,
 Habits, Reviews, or Memory. On iPhone and iPad, destinations

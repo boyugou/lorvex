@@ -17,9 +17,11 @@ struct ReadLorvexHabitStatsIntent: LorvexAuthenticatedIntent {
     self.habit = habit
   }
 
-  func perform() async throws -> some IntentResult & ProvidesDialog {
+  /// Returns the current streak, counted in the habit's cadence.
+  func perform() async throws -> some IntentResult & ReturnsValue<Int> & ProvidesDialog {
     let stats = try await LorvexTaskIntentRunner.readHabitStats(id: habit.id)
     return .result(
+      value: stats.currentStreak,
       dialog: IntentDialog(
         Self.dialog(name: habit.name, frequencyType: habit.frequencyType, stats: stats)))
   }

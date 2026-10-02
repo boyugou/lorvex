@@ -28,16 +28,6 @@ func updateListIntentPerformThrowsOnBlankListID() async throws {
 }
 
 @Test
-func readListDetailIntentPerformThrowsOnBlankListID() async throws {
-  let intent = ReadLorvexListDetailIntent(
-    list: LorvexListEntity(id: "   ", name: "", openCount: 0, totalCount: 0)
-  )
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await intent.perform()
-  }
-}
-
-@Test
 func updateCalendarEventIntentPerformThrowsOnBlankEventID() async throws {
   let intent = UpdateLorvexCalendarEventIntent(
     event: LorvexCalendarEventEntity(
@@ -56,18 +46,6 @@ func calendarExtendedIntentPerformThrowsOnInvalidInputs() async throws {
     id: "   ", title: "", startDate: "", startTime: nil, endTime: nil, allDay: false)
   await #expect(throws: AppIntentError.self) {
     _ = try await SearchLorvexCalendarEventsIntent(query: "   ").perform()
-  }
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await LinkLorvexTaskToProviderEventIntent(
-      task: blankTask,
-      providerEventID: "provider-1"
-    ).perform()
-  }
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await UnlinkLorvexTaskFromProviderEventIntent(
-      task: blankTask,
-      providerEventID: "provider-1"
-    ).perform()
   }
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await ReadLorvexLinkedEventsForTaskIntent(task: blankTask).perform()
@@ -113,14 +91,18 @@ func habitExtendedIntentPerformThrowsOnInvalidInputs() async throws {
     _ = try await BatchCompleteLorvexHabitsIntent(habits: []).perform()
   }
   await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await ReadLorvexHabitReminderPoliciesIntent(habit: blankHabit).perform()
+    _ = try await ReadLorvexHabitRemindersIntent(habit: blankHabit).perform()
   }
   await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await UpsertLorvexHabitReminderPolicyIntent(
-      habit: blankHabit,
-      reminderTime: .now,
-      enabled: true
-    ).perform()
+    _ = try await AddLorvexHabitReminderIntent(habit: blankHabit, reminderTime: .now).perform()
+  }
+  let blankReminder = LorvexHabitReminderEntity(
+    id: "   ", habitID: "   ", habitName: "", reminderTime: "09:00", enabled: true)
+  await #expect(throws: AppIntentError.self) {
+    _ = try await UpdateLorvexHabitReminderIntent(reminder: blankReminder).perform()
+  }
+  await #expect(throws: LorvexIntentFailure.self) {
+    _ = try await UpdateLorvexHabitReminderIntent(reminder: blankReminder, enabled: false).perform()
   }
 }
 

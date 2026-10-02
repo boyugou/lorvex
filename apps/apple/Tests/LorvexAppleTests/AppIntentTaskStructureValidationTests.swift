@@ -16,19 +16,23 @@ func checklistIntentPerformThrowsOnBlankInputs() async throws {
     _ = try await add.perform()
   }
 
-  let toggle = ToggleLorvexChecklistItemIntent(itemID: "   ", completed: true)
+  let blankItem = LorvexChecklistItemEntity(
+    taskID: "task-id", itemID: "   ", text: "", taskTitle: "", completed: false)
+  let toggle = ToggleLorvexChecklistItemIntent(item: blankItem, completed: true)
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await toggle.perform()
   }
 
-  let update = UpdateLorvexChecklistItemIntent(itemID: "item-id", text: "   ")
+  let item = LorvexChecklistItemEntity(
+    taskID: "task-id", itemID: "item-id", text: "Item", taskTitle: "Task", completed: false)
+  let update = UpdateLorvexChecklistItemIntent(item: item, text: "   ")
   await #expect(throws: AppIntentError.self) {
     _ = try await update.perform()
   }
 
   // Destructive: confirms before validating, so perform() surfaces the
   // confirmation gate rather than a core error in a unit test.
-  let remove = RemoveLorvexChecklistItemIntent(itemID: "   ")
+  let remove = RemoveLorvexChecklistItemIntent(item: blankItem)
   await #expect(throws: (any Error).self) {
     _ = try await remove.perform()
   }

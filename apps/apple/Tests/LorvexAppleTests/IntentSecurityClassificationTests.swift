@@ -34,22 +34,16 @@ func contentReadAndExportIntentsRequireLocalDeviceAuthentication() {
     ReadLorvexMemoryIntent.self,
     ReadLorvexReviewHistoryIntent.self,
     ReadLorvexWeeklyReviewIntent.self,
-    ReadLorvexRecentLogsIntent.self,
-    ReadLorvexRuntimeDiagnosticsIntent.self,
-    ReadLorvexSessionContextIntent.self,
     ReadLorvexTaskIntent.self,
     ReadLorvexOverviewIntent.self,
-    ReadLorvexPreferenceIntent.self,
-    ReadLorvexPreferencesIntent.self,
     ReadLorvexCalendarTimelineIntent.self,
     ReadLorvexUpcomingTasksIntent.self,
-    ReadLorvexAIChangelogIntent.self,
     SearchLorvexTasksIntent.self,
     SearchLorvexCalendarEventsIntent.self,
     // Speaks the first timed task's title.
     ReadLorvexDayTimesIntent.self,
   ]
-  #expect(localAuth.count == 18)
+  #expect(localAuth.count == 12)
   for type in localAuth {
     #expect(type.authenticationPolicy == .requiresLocalDeviceAuthentication, "\(type)")
   }
@@ -62,9 +56,8 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
     DeleteLorvexMemoryIntent.self,
     DeleteLorvexListIntent.self,
     DeleteLorvexHabitIntent.self,
-    DeleteLorvexHabitReminderPolicyIntent.self,
+    DeleteLorvexHabitReminderIntent.self,
     DeleteLorvexCalendarEventIntent.self,
-    DeleteLorvexPreferenceIntent.self,
     CancelLorvexTaskIntent.self,
     ResetLorvexHabitIntent.self,
     RemoveLorvexChecklistItemIntent.self,
@@ -83,7 +76,6 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
     UpdateLorvexCalendarEventIntent.self,
     SetLorvexTaskRecurrenceIntent.self,
     SetLorvexTaskRemindersIntent.self,
-    SetLorvexPreferenceIntent.self,
     // Replaces the day's times for every unfinished task.
     SaveLorvexDayTimesIntent.self,
     // Non-destructive writes
@@ -95,10 +87,11 @@ func destructiveAndMutatingIntentsRequireAuthentication() {
     DeferLorvexTaskIntent.self,
     SaveLorvexMemoryIntent.self,
     PlanLorvexTaskForTodayIntent.self,
+    AddLorvexHabitReminderIntent.self,
+    UpdateLorvexHabitReminderIntent.self,
     // Metadata / non-content reads
     ReadLorvexListsIntent.self,
     ListLorvexTasksIntent.self,
-    ReadLorvexSyncStatusIntent.self,
     // Speaks only a count; nothing is saved.
     ProposeLorvexDayTimesIntent.self,
   ]
@@ -140,18 +133,18 @@ func classifiedIntentsRouteThroughCentralSecurityMarkers() {
 func destructiveIntentRequestsConfirmationBeforeMutating() async throws {
   try await withIsolatedAppIntentDatabase {
     let core = LorvexCoreRuntimeFactory.makeForAppIntent()
-    _ = try await core.setPreference(key: "theme", value: "\"system\"")
+    _ = try await core.upsertMemory(key: "packing_list", content: "Passport, charger")
 
     // No system context supplies confirmation in a unit test, so `perform()`
     // throws at the confirmation request — which only fires if it precedes the
     // runner mutation.
     await #expect(throws: (any Error).self) {
-      _ = try await DeleteLorvexPreferenceIntent(key: "theme").perform()
+      _ = try await DeleteLorvexMemoryIntent(key: "packing_list").perform()
     }
 
-    // The mutation never ran: the seeded preference survives the aborted delete.
-    let survivor = try await core.getPreference(key: "theme")
-    #expect(survivor != nil)
+    // The mutation never ran: the saved memory survives the aborted delete.
+    let survivor = try await core.loadMemory()
+    #expect(survivor.entries.contains { $0.key == "packing_list" })
   }
 }
 

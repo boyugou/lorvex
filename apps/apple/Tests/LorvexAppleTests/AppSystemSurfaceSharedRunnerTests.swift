@@ -28,7 +28,7 @@ func sharedSystemIntentRunnerMutatesTasksWithoutAppleAppTargetState() async thro
     estimatedMinutes: 20,
     plannedDate: " 2026-05-28 ",
     tagsText: " system apple ",
-    dependsOnText: nil,
+    dependsOn: nil,
     core: core
   )
   #expect(detailUpdated.id == created.id)
@@ -73,7 +73,7 @@ func sharedSystemIntentUpdateWritesOnlyTheFieldsItNames() async throws {
 
   let renamed = try await LorvexSystemIntentRunner.updateTask(
     id: task.id, title: "Write the launch post", notes: nil, priority: nil,
-    estimatedMinutes: nil, plannedDate: nil, tagsText: nil, dependsOnText: nil, core: core)
+    estimatedMinutes: nil, plannedDate: nil, tagsText: nil, dependsOn: nil, core: core)
 
   #expect(renamed.title == "Write the launch post")
   #expect(renamed.notes == "Outline first")
@@ -87,7 +87,7 @@ func sharedSystemIntentUpdateWritesOnlyTheFieldsItNames() async throws {
   // A blank planned date still clears the day, and with it the time.
   let cleared = try await LorvexSystemIntentRunner.updateTask(
     id: task.id, title: nil, notes: nil, priority: nil, estimatedMinutes: nil,
-    plannedDate: "  ", tagsText: nil, dependsOnText: nil, core: core)
+    plannedDate: "  ", tagsText: nil, dependsOn: nil, core: core)
   #expect(cleared.plannedDate == nil)
   #expect(cleared.plannedTime == nil)
   #expect(cleared.dueDate == dueDay)

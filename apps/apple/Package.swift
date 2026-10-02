@@ -230,6 +230,7 @@ let package = Package(
                 .product(name: "LorvexSync", package: "core"),
                 .product(name: "LorvexDomain", package: "core"),
                 .product(name: "LorvexStore", package: "core"),
+                .product(name: "LorvexWorkflow", package: "core"),
                 .product(name: "MCP", package: "swift-sdk")
             ]
         ),

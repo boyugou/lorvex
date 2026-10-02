@@ -5529,6 +5529,276 @@
         }
       }
     },
+    "error.reason.canceling_done_task": {
+      "comment": "Alert shown when a person cancels a task that is already done.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المهمة مكتملة بالفعل. أعِد فتحها قبل إلغائها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task is already done. Reopen it before canceling it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea ya está completada. Reábrela antes de cancelarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche est déjà terminée. Rouvrez-la avant de l’annuler."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कार्य पहले ही पूरा हो चुका है। रद्द करने से पहले इसे फिर से खोलें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività è già completata. Riaprila prima di annullarla."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このタスクはすでに完了しています。キャンセルする前に未完了に戻してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 할 일은 이미 완료되었습니다. 취소하려면 먼저 다시 여세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie jest już ukończone. Otwórz je ponownie, zanim je anulujesz."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa já foi concluída. Reabra-a antes de cancelá-la."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта задача уже выполнена. Чтобы отменить её, сначала откройте её снова."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це завдання вже виконано. Щоб скасувати його, спершу відкрийте його знову."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务已经完成，请先重新打开再取消。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個任務已經完成，請先重新開啟再取消。"
+          }
+        }
+      }
+    },
+    "error.reason.completing_canceled_task": {
+      "comment": "Alert shown when a person completes a task that was canceled, for example from a reminder's Complete button.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إلغاء هذه المهمة. أعِد فتحها قبل إكمالها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task was canceled. Reopen it before completing it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea se canceló. Reábrela antes de completarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche a été annulée. Rouvrez-la avant de la terminer."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कार्य रद्द कर दिया गया है। पूरा करने से पहले इसे फिर से खोलें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività è stata annullata. Riaprila prima di completarla."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このタスクはキャンセルされています。完了にする前に未完了に戻してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 할 일은 취소되었습니다. 완료하려면 먼저 다시 여세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie zostało anulowane. Otwórz je ponownie, zanim je ukończysz."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa foi cancelada. Reabra-a antes de concluí-la."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта задача отменена. Чтобы выполнить её, сначала откройте её снова."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це завдання скасовано. Щоб виконати його, спершу відкрийте його знову."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务已取消，请先重新打开再完成。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個任務已取消，請先重新開啟再完成。"
+          }
+        }
+      }
+    },
+    "error.reason.habit_reminder_time_taken": {
+      "comment": "Alert shown when a habit reminder is set to a time the habit already has a reminder at.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لهذه العادة تذكير في هذا الوقت بالفعل. اختر وقتًا آخر."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This habit already has a reminder at that time. Choose another time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este hábito ya tiene un recordatorio a esa hora. Elige otra hora."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette habitude a déjà un rappel à cette heure. Choisissez une autre heure."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस आदत के लिए उस समय पहले से एक रिमाइंडर है। कोई दूसरा समय चुनें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa abitudine ha già un promemoria a quell’ora. Scegli un altro orario."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この習慣にはその時刻のリマインダーがすでにあります。別の時刻を選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 습관에는 그 시간에 이미 알림이 있습니다. 다른 시간을 선택하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten nawyk ma już przypomnienie o tej godzinie. Wybierz inną godzinę."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este hábito já tem um lembrete nesse horário. Escolha outro horário."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У этой привычки уже есть напоминание на это время. Выберите другое время."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ця звичка вже має нагадування на цей час. Виберіть інший час."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个习惯在这个时间已有提醒，请换一个时间。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個習慣在這個時間已有提醒，請換一個時間。"
+          }
+        }
+      }
+    },
     "error.reason.memory_name_taken": {
       "comment": "Alert shown when an entry in Memory (what the assistant remembers) is renamed to the name of another entry.",
       "extractionState": "manual",
@@ -5709,6 +5979,366 @@
         }
       }
     },
+    "error.reason.pausing_unstarted_task": {
+      "comment": "Alert shown when a person pauses a task that is not in progress.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن الإيقاف المؤقت إلا لمهمة قيد التنفيذ."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only a task in progress can be paused."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se puede pausar una tarea en curso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seule une tâche en cours peut être mise en pause."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "केवल प्रगति में चल रहे कार्य को ही रोका जा सकता है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo un’attività in corso può essere messa in pausa."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止できるのは進行中のタスクだけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 중인 할 일만 일시 정지할 수 있습니다."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wstrzymać można tylko zadanie w toku."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só é possível pausar uma tarefa em andamento."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приостановить можно только задачу в работе."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Призупинити можна лише завдання, що в роботі."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有进行中的任务才能暂停。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只有進行中的任務才能暫停。"
+          }
+        }
+      }
+    },
+    "error.reason.starting_canceled_task": {
+      "comment": "Alert shown when a person starts a task that was canceled.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم إلغاء هذه المهمة. أعِد فتحها قبل بدئها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task was canceled. Reopen it before starting it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea se canceló. Reábrela antes de iniciarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche a été annulée. Rouvrez-la avant de la démarrer."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कार्य रद्द कर दिया गया है। शुरू करने से पहले इसे फिर से खोलें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività è stata annullata. Riaprila prima di iniziarla."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このタスクはキャンセルされています。開始する前に未完了に戻してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 할 일은 취소되었습니다. 시작하려면 먼저 다시 여세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie zostało anulowane. Otwórz je ponownie, zanim je rozpoczniesz."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa foi cancelada. Reabra-a antes de iniciá-la."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта задача отменена. Чтобы начать её, сначала откройте её снова."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це завдання скасовано. Щоб почати його, спершу відкрийте його знову."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务已取消，请先重新打开再开始。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個任務已取消，請先重新開啟再開始。"
+          }
+        }
+      }
+    },
+    "error.reason.starting_done_task": {
+      "comment": "Alert shown when a person starts a task that is already done.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المهمة مكتملة بالفعل. أعِد فتحها قبل بدئها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task is already done. Reopen it before starting it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea ya está completada. Reábrela antes de iniciarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche est déjà terminée. Rouvrez-la avant de la démarrer."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कार्य पहले ही पूरा हो चुका है। शुरू करने से पहले इसे फिर से खोलें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività è già completata. Riaprila prima di iniziarla."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このタスクはすでに完了しています。開始する前に未完了に戻してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 할 일은 이미 완료되었습니다. 시작하려면 먼저 다시 여세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie jest już ukończone. Otwórz je ponownie, zanim je rozpoczniesz."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa já foi concluída. Reabra-a antes de iniciá-la."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта задача уже выполнена. Чтобы начать её, сначала откройте её снова."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це завдання вже виконано. Щоб почати його, спершу відкрийте його знову."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务已经完成，请先重新打开再开始。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個任務已經完成，請先重新開啟再開始。"
+          }
+        }
+      }
+    },
+    "error.reason.starting_someday_task": {
+      "comment": "Alert shown when a person starts a task parked in Someday. Use the app's name for the Someday status.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المهمة في \"يومًا ما\". أعِد فتحها قبل بدئها."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task is in Someday. Reopen it before starting it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea está en “Algún día”. Reábrela antes de iniciarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche est dans « Un jour ». Rouvrez-la avant de la démarrer."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कार्य “किसी दिन” में है। शुरू करने से पहले इसे फिर से खोलें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività è in “Prima o poi”. Riaprila prima di iniziarla."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このタスクは「いつか」にあります。開始する前に未完了に戻してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 할 일은 ‘언젠가’에 있습니다. 시작하려면 먼저 다시 여세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie jest w sekcji „Kiedyś”. Otwórz je ponownie, zanim je rozpoczniesz."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa está em “Algum dia”. Reabra-a antes de iniciá-la."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта задача в разделе «Когда-нибудь». Чтобы начать её, сначала откройте её снова."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це завдання в розділі «Колись». Щоб почати його, спершу відкрийте його знову."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务在“将来某天”里，请先重新打开再开始。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個任務在「將來某天」裡，請先重新開啟再開始。"
+          }
+        }
+      }
+    },
     "error.reason.tag_name_taken": {
       "comment": "Alert shown when a tag is renamed to the name of another tag.",
       "extractionState": "manual",
@@ -5885,6 +6515,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "標籤太長了，請縮短後再試。"
+          }
+        }
+      }
+    },
+    "error.reason.task_start_blocked": {
+      "comment": "Alert shown when a person starts a task whose dependencies are not finished.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعتمد هذه المهمة على مهام لم تكتمل بعد. أكمِلها أو ألغِها أولًا."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This task depends on tasks that aren’t done yet. Finish or cancel them first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea depende de tareas que aún no están terminadas. Termínalas o cancélalas primero."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche dépend de tâches qui ne sont pas encore terminées. Terminez-les ou annulez-les d’abord."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह कार्य उन कार्यों पर निर्भर है जो अभी पूरे नहीं हुए हैं। पहले उन्हें पूरा या रद्द करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività dipende da attività non ancora completate. Completale o annullale prima."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このタスクの依存先のタスクがまだ完了していません。先に完了するか、キャンセルしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 할 일이 의존하는 할 일이 아직 완료되지 않았습니다. 먼저 완료하거나 취소하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie zależy od zadań, które nie są jeszcze ukończone. Najpierw je ukończ lub anuluj."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa depende de tarefas que ainda não foram concluídas. Conclua ou cancele essas tarefas primeiro."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта задача зависит от незавершённых задач. Сначала завершите или отмените их."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це завдання залежить від незавершених завдань. Спершу завершіть або скасуйте їх."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个任务依赖的任务还没完成，请先完成或取消它们。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個任務相依的任務還沒完成，請先完成或取消它們。"
           }
         }
       }

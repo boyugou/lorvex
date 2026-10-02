@@ -47,7 +47,7 @@ public enum UserFacingError {
   /// The four presentation buckets an alert surface distinguishes. `notFound`,
   /// `generic`, and `unrecoverable` are shown as host-supplied localized copy;
   /// `validation` shows the bound message verbatim.
-  public enum Category: Sendable, Equatable {
+  public enum Category: Sendable, Equatable, Codable {
     case validation
     case notFound
     /// A transient / retryable failure — the "please try again" copy.
@@ -60,7 +60,7 @@ public enum UserFacingError {
   /// Which fatal-storage copy an ``Category/unrecoverable`` classification maps
   /// to. Never carries the raw error detail — that stays in
   /// ``Classification/technicalDetail`` for the diagnostics ring.
-  public enum Fatal: Sendable, Equatable {
+  public enum Fatal: Sendable, Equatable, Codable {
     /// A generic fatal storage failure (a schema mismatch / failed migration, an
     /// unresolvable managed location, or a fatal SQLite code — out of space,
     /// I/O error, can't-open, not-a-database, corrupt, or read-only).
@@ -74,8 +74,10 @@ public enum UserFacingError {
   /// message to display for ``Category/validation`` (`nil` otherwise, since the
   /// host substitutes localized copy), the typed ``Reason`` when the app words
   /// the failure itself, and the raw technical detail to route to `error_logs`
-  /// (never shown to the user).
-  public struct Classification: Sendable, Equatable {
+  /// (never shown to the user). It is `Codable` so a failure classified where
+  /// its typed error is in hand (a notification action the app delegate runs)
+  /// can travel to the store that presents it, across a relaunch included.
+  public struct Classification: Sendable, Equatable, Codable {
     public let category: Category
     /// The user-appropriate sentence to display for ``Category/validation``
     /// (the reason's localized sentence when ``reason`` is set); `nil` for
@@ -205,6 +207,15 @@ public enum UserFacingError {
     // An opaque error whose `String(describing:)` we cannot vouch for.
     return Classification(
       category: .generic, displayMessage: nil, technicalDetail: String(describing: error))
+  }
+
+  /// Classify a failure known only by its message — a system error's
+  /// already-localized wording, or text that was never a thrown error — with
+  /// the same marker checks ``classify(_:)`` applies to a `LocalizedError`: a
+  /// clean sentence is shown as written, and one carrying a raw id, SQL, or an
+  /// internal invariant is genericized.
+  public static func classify(message: String) -> Classification {
+    classifyMessage(message)
   }
 
   /// Resolve a classification to the string an alert should present, using

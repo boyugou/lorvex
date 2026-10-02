@@ -19,14 +19,14 @@ import LorvexStore
 /// of these primitives.
 public enum LifecycleStatus {
   /// Reject the impossible terminal→terminal transition path
-  /// (`completed → cancelled`, `cancelled → completed`).
+  /// (`completed → cancelled`, `cancelled → completed`) with
+  /// ``TaskLifecycleError/finishedTaskTransition(taskId:from:to:)``.
   static func rejectTerminalToTerminal(
     taskId: TaskId, oldStatus: TaskStatus, newStatus: TaskStatus
   ) throws {
     if oldStatus != newStatus && oldStatus.isTerminal && newStatus.isTerminal {
-      throw StoreError.validation(
-        "Cannot transition task \(taskId.asString) from \(oldStatus) to \(newStatus); reopen it first"
-      )
+      throw TaskLifecycleError.finishedTaskTransition(
+        taskId: taskId.asString, from: oldStatus, to: newStatus)
     }
   }
 
@@ -35,10 +35,11 @@ public enum LifecycleStatus {
   ///
   /// A task is start-blocked when it `depends_on` at least one non-archived
   /// blocker still active (`open` / `in_progress` / `someday`); a `completed`
-  /// or `cancelled` blocker no longer blocks. Throws ``StoreError/validation(_:)``
-  /// naming the blocker ids — the same error taxonomy the other lifecycle
-  /// guards use — so `start_task`, the create-path status route, and any
-  /// status-update path reject a blocked start identically. No force-override.
+  /// or `cancelled` blocker no longer blocks. Throws
+  /// ``TaskLifecycleError/startBlockedByDependencies(taskId:blockerIds:)``
+  /// naming the blocker ids, so `start_task`, the create-path status route, and
+  /// any status-update path reject a blocked start identically, and the app can
+  /// say why in the interface language. No force-override.
   static func rejectStartWhenDependencyBlocked(
     _ db: Database, taskId: TaskId
   ) throws {
@@ -53,10 +54,8 @@ public enum LifecycleStatus {
         + "ORDER BY td.depends_on_task_id ASC",
       arguments: [taskId.asString])
     guard blockers.isEmpty else {
-      throw StoreError.validation(
-        "Cannot start task \(taskId.asString): blocked by unfinished "
-          + "dependencies [\(blockers.joined(separator: ", "))]. "
-          + "Complete or cancel them first.")
+      throw TaskLifecycleError.startBlockedByDependencies(
+        taskId: taskId.asString, blockerIds: blockers)
     }
   }
 

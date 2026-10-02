@@ -401,7 +401,9 @@ documentation freshness, feature ideation.
 - **Build/verify:** `script/verify_all.sh`, `script/build_and_run.sh`
 - **Packaging:** `script/package_dmg.sh` (fail-closed Release, Developer ID,
   profile-authorized, notarized arm64 DMG — the direct-distribution build;
-  Apple Silicon only), `script/package_local.sh` (development/CI `.app`),
+  Apple Silicon only; its default verification erases the Mac's Lorvex data,
+  so a Mac that holds real data passes `--skip-runtime-verification`),
+  `script/package_local.sh` (development/CI `.app`),
   `script/archive_local.sh` (development/CI ZIP). Mac App Store packaging is a
   separate `script/archive_mas.sh` channel, never the DMG input.
 - **App icon:** `Resources/AppIcon/LorvexAppIcon.icns`, regenerated from

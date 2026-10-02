@@ -237,8 +237,7 @@ extension SwiftLorvexCoreService {
       taskId: typedId, raw: row.core.status)
     guard oldStatus != .inProgress else { return false }
     guard oldStatus == .open else {
-      throw StoreError.validation(
-        "Cannot start a \(oldStatus.asString) task; reopen it to open first.")
+      throw TaskLifecycleError.startRequiresOpenTask(status: oldStatus)
     }
     let result = try LifecycleTransitions.applyLifecycleTransition(
       db, taskId: typedId, oldStatus: .open, newStatus: .inProgress,
@@ -265,8 +264,7 @@ extension SwiftLorvexCoreService {
       taskId: typedId, raw: row.core.status)
     guard oldStatus != .open else { return false }
     guard oldStatus == .inProgress else {
-      throw StoreError.validation(
-        "Cannot pause a \(oldStatus.asString) task; only an in-progress task can be paused.")
+      throw TaskLifecycleError.pauseRequiresStartedTask(status: oldStatus)
     }
     let result = try LifecycleTransitions.applyLifecycleTransition(
       db, taskId: typedId, oldStatus: .inProgress, newStatus: .open,

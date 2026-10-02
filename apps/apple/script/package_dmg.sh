@@ -6,8 +6,11 @@
 # a Developer ID Application identity, the expected team, three Developer ID
 # provisioning profiles, a notarytool keychain profile, and explicit consent to
 # erase the real Lorvex App Group while exercising the sandboxed MCP helper.
-# package_local.sh remains the ad-hoc/dev/CI path. archive_mas.sh remains the
-# separate Mac App Store submission path.
+# --skip-runtime-verification produces the same signed, notarized, stapled, and
+# statically verified DMG on a Mac that holds real Lorvex data: it stops after
+# the read-only checks of the mounted image and never installs, launches,
+# quiesces, or resets anything. package_local.sh remains the ad-hoc/dev/CI path.
+# archive_mas.sh remains the separate Mac App Store submission path.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,7 +35,7 @@ PACKAGE_SUCCEEDED=0
 
 usage() {
   cat <<USAGE
-usage: ./script/package_dmg.sh
+usage: ./script/package_dmg.sh [--skip-runtime-verification]
 
 Required environment:
   APPLE_TEAM_ID
@@ -52,6 +55,14 @@ the App Group store, app/shared preferences, private CloudSync state, and the
 derived Spotlight corpus cleared by the exact installed app's empty-state
 refresh. It never moves, backs up, or restores prior data. It also replaces the
 app at the production install path without preserving the previous bundle.
+
+--skip-runtime-verification
+  Stop after the read-only verification of the mounted final DMG. Nothing is
+  installed, launched, quiesced, or reset, so LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET
+  and the install path are not used; use it on a Mac that holds real Lorvex
+  data. The DMG is still signed, notarized, stapled, and statically verified.
+  It writes the .sha256 and runtime-verification-skipped.txt instead of
+  release-evidence.json, which requires the runtime proof.
 USAGE
 }
 
@@ -229,13 +240,18 @@ capture_bundle_evidence() {
   plutil -lint "$EVIDENCE_DIR/$label-provisioning-profile.plist" >/dev/null
 }
 
+SKIP_RUNTIME_VERIFICATION=0
 if [[ $# -ne 0 ]]; then
   if [[ $# -eq 1 && ( "$1" == "--help" || "$1" == "-h" || "$1" == "help" ) ]]; then
     usage
     exit 0
   fi
-  usage >&2
-  exit 2
+  if [[ $# -eq 1 && "$1" == "--skip-runtime-verification" ]]; then
+    SKIP_RUNTIME_VERIFICATION=1
+  else
+    usage >&2
+    exit 2
+  fi
 fi
 
 for name in APPLE_TEAM_ID CODE_SIGN_IDENTITY NOTARY_KEYCHAIN_PROFILE; do
@@ -258,7 +274,8 @@ if [[ "$CODE_SIGN_IDENTITY" == "-" ]]; then
   echo "production DMG packaging forbids ad-hoc signing" >&2
   exit 2
 fi
-if [[ "${LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET:-0}" != "1" ]]; then
+if [[ "$SKIP_RUNTIME_VERIFICATION" != "1" \
+    && "${LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET:-0}" != "1" ]]; then
   echo "production DMG verification irreversibly erases all local Lorvex state" >&2
   echo "set LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET=1 to acknowledge it" >&2
   exit 2
@@ -281,7 +298,9 @@ xcrun --find notarytool >/dev/null
 xcrun --find stapler >/dev/null
 verify_identity_available "$CODE_SIGN_IDENTITY"
 require_clean_worktree
-validate_install_path
+if [[ "$SKIP_RUNTIME_VERIFICATION" != "1" ]]; then
+  validate_install_path
+fi
 reject_ambiguous_dmg_artifacts
 reject_existing_release_outputs
 
@@ -420,6 +439,25 @@ diff -qr "$DMG_APP" "$MOUNTED_APP" >/dev/null
 xcrun stapler validate "$MOUNTED_APP"
 spctl -a -vv "$MOUNTED_APP" 2>&1 | tee "$EVIDENCE_DIR/mounted-app-gatekeeper.txt"
 verify_final_app "$MOUNTED_APP" 2>&1 | tee "$EVIDENCE_DIR/mounted-app-verification.txt"
+
+if [[ "$SKIP_RUNTIME_VERIFICATION" == "1" ]]; then
+  hdiutil detach "$MOUNT_POINT" >/dev/null
+  MOUNT_POINT=""
+  (cd "$DIST" && shasum -a 256 "$(basename "$DMG_OUT")") >"$DMG_OUT.sha256"
+  cat >"$EVIDENCE_DIR/runtime-verification-skipped.txt" <<SKIPPED
+Packaged with --skip-runtime-verification. The final DMG was signed,
+notarized, stapled, and verified read-only (signatures, entitlements, embedded
+profiles, Gatekeeper, and the mounted image), but its app was never installed,
+launched, or exercised against the App Group, so release-evidence.json was not
+written.
+SKIPPED
+  PACKAGE_SUCCEEDED=1
+  echo
+  echo "Notarized DMG ready (runtime verification skipped): $DMG_OUT"
+  echo "Checksum: $DMG_OUT.sha256"
+  ls -lh "$DMG_OUT" "$DMG_OUT.sha256"
+  exit 0
+fi
 
 echo "==> Installing exact final-DMG app at $INSTALL_APP_PATH"
 python3 "$ROOT_DIR/script/verify_production_app_runtime.py" \

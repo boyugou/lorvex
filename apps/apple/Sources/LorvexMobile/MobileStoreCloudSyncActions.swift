@@ -206,14 +206,17 @@ extension MobileStore {
   /// Surfaces a failed notification action (Complete / Defer / Snooze from a
   /// reminder's own buttons) as a user-visible `errorMessage`, mirroring macOS
   /// `AppStore.observeNotificationActionErrors`. The app delegate posts
-  /// `.lorvexNotificationActionError` on failure; without this the write failed,
-  /// the notification was consumed, and the task silently stayed open with
-  /// nothing shown. A post without a message (e.g. a snooze failure whose system
-  /// error carried none) falls back to a localized generic string.
+  /// `.lorvexNotificationActionError` with the failure's classification
+  /// (``LorvexNotificationActionFailure``); without this the write failed, the
+  /// notification was consumed, and the task silently stayed open with nothing
+  /// shown. A post without a classification (e.g. a snooze failure whose system
+  /// error carried no message) falls back to a localized generic string.
   func observeNotificationActionErrors() async {
     let stream = NotificationCenter.default.notifications(named: .lorvexNotificationActionError)
     for await note in stream {
-      await surfaceNotificationActionError(note.userInfo?["errorMessage"] as? String)
+      await surfaceNotificationActionFailure(
+        note.userInfo?[LorvexNotificationActionFailure.classificationKey]
+          as? UserFacingError.Classification)
       // The delegate also recorded a durable breadcrumb (for the cold-launch
       // case with no live observer); we've surfaced this warm failure, so clear
       // it and don't re-show it on the next foreground.
@@ -223,20 +226,23 @@ extension MobileStore {
 
   /// Drain a notification-action failure recorded while no observer was live
   /// (a cold background launch ran the action, then the process exited before the
-  /// UI attached). Called on the next foreground; a nil/empty message uses the
-  /// localized fallback. Public: invoked from the `LorvexMobileApp` @main module.
+  /// UI attached). Called on the next foreground; a failure without a
+  /// classification uses the localized fallback. Public: invoked from the
+  /// `LorvexMobileApp` @main module.
   public func consumePendingNotificationActionError() async {
     let handoff = MobileNotificationActionErrorHandoff(defaults: defaults)
     guard handoff.hasPendingError else { return }
-    let message = handoff.pendingMessage
+    let classification = handoff.pendingClassification
     handoff.clear()
-    await surfaceNotificationActionError(message)
+    await surfaceNotificationActionFailure(classification)
   }
 
-  private func surfaceNotificationActionError(_ raw: String?) async {
-    if let raw {
+  private func surfaceNotificationActionFailure(
+    _ classification: UserFacingError.Classification?
+  ) async {
+    if let classification {
       errorMessage = await userFacingBannerMessage(
-        forMessage: raw, source: "ios.notification.action_failed")
+        for: classification, source: "ios.notification.action_failed")
     } else {
       errorMessage = String(
         localized: "notification.action.failed", defaultValue: "Couldn’t perform that action.",

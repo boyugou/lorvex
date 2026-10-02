@@ -32,20 +32,25 @@ import LorvexSystemIntents
       NotificationCenter.default.post(name: .lorvexBackgroundMutationApplied, object: nil)
     }
 
-    /// Posts `.lorvexNotificationActionError` so `MobileStore` surfaces a failed
+    /// Posts `.lorvexNotificationActionError` with the failure's classification
+    /// (``LorvexNotificationActionFailure``) so `MobileStore` surfaces a failed
     /// Complete / Defer / Snooze notification action as a user-visible alert,
-    /// mirroring macOS `AppDelegate.postNotificationActionError(_:)`. Without
+    /// mirroring macOS `AppDelegate.postNotificationActionFailure(_:)`. Without
     /// this the write failed, the notification was consumed, and the task stayed
-    /// open with nothing shown. A `nil` message lets the store apply its own
-    /// localized fallback.
-    nonisolated private static func postNotificationActionError(_ message: String?) {
+    /// open with nothing shown. A `nil` classification lets the store apply its
+    /// own localized fallback.
+    nonisolated private static func postNotificationActionFailure(
+      _ classification: UserFacingError.Classification?
+    ) {
       // Record the durable breadcrumb BEFORE the in-process post: at a cold
       // background launch no observer is live, so the post vanishes and the store
       // drains this on the next foreground. Recording first means a live observer
       // (warm case) can safely clear it after surfacing, showing it exactly once.
-      MobileNotificationActionErrorHandoff().record(message: message)
+      MobileNotificationActionErrorHandoff().record(classification)
       var userInfo: [AnyHashable: Any] = [:]
-      if let message { userInfo["errorMessage"] = message }
+      if let classification {
+        userInfo[LorvexNotificationActionFailure.classificationKey] = classification
+      }
       NotificationCenter.default.post(
         name: .lorvexNotificationActionError, object: nil, userInfo: userInfo)
     }
@@ -155,7 +160,7 @@ import LorvexSystemIntents
             Self.log.error(
               "Complete notification action failed for task \(taskID, privacy: .public): \(error.localizedDescription, privacy: .private)"
             )
-            Self.postNotificationActionError(error.localizedDescription)
+            Self.postNotificationActionFailure(UserFacingError.classify(error))
           }
         },
         deferTask: { taskID in
@@ -166,7 +171,7 @@ import LorvexSystemIntents
             Self.log.error(
               "Defer notification action failed for task \(taskID, privacy: .public): \(error.localizedDescription, privacy: .private)"
             )
-            Self.postNotificationActionError(error.localizedDescription)
+            Self.postNotificationActionFailure(UserFacingError.classify(error))
           }
         },
         snoozeTask: { taskID in
@@ -179,7 +184,8 @@ import LorvexSystemIntents
           // A failed snooze must not vanish silently: the user tapped "Snooze"
           // and would otherwise get no reminder in an hour and see nothing.
           if report.status == .failed {
-            Self.postNotificationActionError(report.errorMessage)
+            Self.postNotificationActionFailure(
+              report.errorMessage.map { UserFacingError.classify(message: $0) })
           }
         }
       )

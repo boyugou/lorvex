@@ -111,7 +111,17 @@ extension AppStore {
   /// user while the diagnostic detail is still captured for support. `source`
   /// tags the diagnostic-log origin.
   func userFacingBannerMessage(for error: Error, source: String) async -> String {
-    let classification = UserFacingError.classify(error)
+    await userFacingBannerMessage(for: UserFacingError.classify(error), source: source)
+  }
+
+  /// Present a failure classified elsewhere — a notification action the app
+  /// delegate classified while its typed error was in hand — the same way
+  /// ``userFacingBannerMessage(for:source:)`` presents an error: return the
+  /// user-safe message and route the technical detail of anything but a
+  /// validation failure to `error_logs`.
+  func userFacingBannerMessage(
+    for classification: UserFacingError.Classification, source: String
+  ) async -> String {
     if classification.category != .validation {
       try? await core.appendDiagnosticLog(
         source: source,
@@ -120,18 +130,6 @@ extension AppStore {
         details: classification.technicalDetail)
     }
     return UserFacingError.message(for: classification, copy: userFacingErrorCopy)
-  }
-
-  /// Classify a raw failure *message string* for an inline banner, mirroring
-  /// ``userFacingBannerMessage(for:source:)``. Used where the originating `Error`
-  /// was flattened to text before it reached the store (e.g. a notification-action
-  /// failure delivered across a `NotificationCenter` boundary): the string is
-  /// re-wrapped so the shared classifier — which keys off a bound English
-  /// message — can genericize a raw UUID / SQL / invariant before it is shown,
-  /// with the raw detail still routed to `error_logs`.
-  func userFacingBannerMessage(forMessage message: String, source: String) async -> String {
-    await userFacingBannerMessage(
-      for: MessageBackedError(message: message), source: source)
   }
 
   /// Return safe copy for a background CloudKit failure while retaining the

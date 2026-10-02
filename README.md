@@ -11,7 +11,7 @@
 [![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20iPadOS%20·%20watchOS-black?style=flat-square&logo=apple&logoColor=white)](apps/apple)
 [![MCP](https://img.shields.io/badge/MCP-114%20tools-6B57D2?style=flat-square)](apps/apple/docs/setup/ASSISTANT_MCP_SETUP.md)
 
-[Website](https://lorvex.app) · [Getting started](#getting-started) · [MCP setup](#connect-an-ai-assistant) · [Documentation](#documentation) · [Privacy](PRIVACY.md)
+[Website](https://lorvex.app) · [Download for Mac](https://github.com/boyugou/lorvex/releases/latest) · [Getting started](#getting-started) · [MCP setup](#connect-an-ai-assistant) · [Documentation](#documentation) · [Privacy](PRIVACY.md)
 
 </div>
 
@@ -71,6 +71,15 @@ lorvex/
 
 Lorvex began as a cross-platform Tauri app. That implementation was removed on
 2026-09-17; this repository is the Apple-native app only.
+
+## Install
+
+**Mac:** download `Lorvex-macOS-arm64.dmg` from the
+[latest release](https://github.com/boyugou/lorvex/releases/latest), open it,
+and drag Lorvex to Applications. It needs a Mac with Apple silicon and macOS 26
+or later, is notarized by Apple, and syncs with Lorvex on your other devices
+through your iCloud account. The DMG does not update itself; each new version
+is posted on the same releases page.
 
 ## Getting started
 
@@ -140,8 +149,10 @@ Full client-by-client instructions (Claude Desktop, Claude Code, and others):
 
 ## Status
 
-Pre-release. The Apple app is feature-complete and in App Store preparation;
-the data, schema, sync, and backup contracts are finalized and gated by
+Pre-release. The Apple app is feature-complete and in App Store review, and a
+notarized Mac build is on the
+[releases page](https://github.com/boyugou/lorvex/releases/latest); the data,
+schema, sync, and backup contracts are finalized and gated by
 repository verifiers (`apps/apple/script/verify_all.sh`). See
 [`ROADMAP.md`](ROADMAP.md).
 

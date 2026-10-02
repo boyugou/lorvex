@@ -2,6 +2,7 @@ import Foundation
 import GRDB
 import LorvexDomain
 import LorvexStore
+import LorvexWorkflow
 
 extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
   /// Resolve the physical-database identity through the same cutover-guarded
@@ -154,7 +155,7 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
       (code, message) = ("validation_failed", "The command is no longer valid.")
     case LorvexCoreError.conflict:
       (code, message) = ("conflict", "The command conflicts with current data.")
-    case is ValidationError:
+    case is ValidationError, is TaskLifecycleError, is HabitReminderError:
       (code, message) = ("validation_failed", "The command is no longer valid.")
     case StoreError.notFound:
       (code, message) = ("not_found", "The target no longer exists.")

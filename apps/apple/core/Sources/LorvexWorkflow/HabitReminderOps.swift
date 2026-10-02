@@ -108,8 +108,9 @@ public enum HabitReminderOps {
   ///
   /// Validates that `habit_id` is non-empty and references an existing habit,
   /// `reminder_time` is valid `HH:MM`, no other slot exists at the same time
-  /// for the same habit, and (on update) the slot belongs to the named habit.
-  /// Returns the fully loaded policy row.
+  /// for the same habit (a duplicate throws ``HabitReminderError/timeTaken(habitId:time:)``),
+  /// and (on update) the slot belongs to the named habit. Returns the fully
+  /// loaded policy row.
   public static func upsertHabitReminderPolicy(_ db: Database, params: UpsertParams) throws
     -> HabitReminderPolicyRow
   {
@@ -151,8 +152,7 @@ public enum HabitReminderOps {
       if try loadConflictingSlotId(
         db, habitId: habitId, reminderTime: params.reminderTime, excludingId: id) != nil
       {
-        throw StoreError.validation(
-          "habit '\(habitId)' already has a reminder slot at \(params.reminderTime)")
+        throw HabitReminderError.timeTaken(habitId: habitId, time: params.reminderTime)
       }
       try db.execute(
         sql: "UPDATE habit_reminder_policies "
@@ -178,8 +178,7 @@ public enum HabitReminderOps {
       if try loadConflictingSlotId(
         db, habitId: habitId, reminderTime: params.reminderTime, excludingId: nil) != nil
       {
-        throw StoreError.validation(
-          "habit '\(habitId)' already has a reminder slot at \(params.reminderTime)")
+        throw HabitReminderError.timeTaken(habitId: habitId, time: params.reminderTime)
       }
       let id = EntityID.newEntityIDString()
       try db.execute(

@@ -142,15 +142,18 @@ extension AppStore {
   }
 
   /// Listens for `.lorvexNotificationActionError` posted by AppDelegate when a
-  /// notification action handler fails, and routes the message into `toastMessage`.
+  /// notification action handler fails, and shows the failure's classification
+  /// (``LorvexNotificationActionFailure``) in `toastMessage`.
   ///
   /// Call once at app startup alongside `observeRemoteChanges()`.
   func observeNotificationActionErrors() async {
     let stream = NotificationCenter.default.notifications(named: .lorvexNotificationActionError)
     for await note in stream {
-      if let raw = note.userInfo?["errorMessage"] as? String {
+      if let classification = note.userInfo?[LorvexNotificationActionFailure.classificationKey]
+        as? UserFacingError.Classification
+      {
         toastMessage = await userFacingBannerMessage(
-          forMessage: raw, source: "macos.notification.action_failed")
+          for: classification, source: "macos.notification.action_failed")
       } else {
         toastMessage = String(
           localized:

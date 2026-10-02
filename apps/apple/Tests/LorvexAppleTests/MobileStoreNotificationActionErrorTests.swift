@@ -1,14 +1,16 @@
 import Foundation
 import LorvexCloudSync
 import LorvexCore
+import LorvexWorkflow
 import Testing
 
 @testable import LorvexMobile
 
 /// C-9: a failed notification action (Complete / Defer / Snooze from a
-/// reminder's buttons) must reach the user. The iOS app delegate posts
-/// `.lorvexNotificationActionError` on failure; `MobileStore` observes it and
-/// routes the message into `errorMessage`, which drives the shell's alert.
+/// reminder's buttons) must reach the user. The iOS app delegate classifies the
+/// failure and posts `.lorvexNotificationActionError` with the classification;
+/// `MobileStore` observes it and shows the classification's message in
+/// `errorMessage`, which drives the shell's alert.
 ///
 /// Serialized because both tests drive the process-wide `NotificationCenter.default`
 /// (the observer subscribes there): running them concurrently would let one
@@ -16,25 +18,32 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct MobileStoreNotificationActionErrorTests {
-  @Test("surfaces a posted notification-action error as errorMessage")
-  func surfacesNotificationActionError() async throws {
+  @Test("shows a posted failure's own sentence, never the core's English", arguments: [
+    TaskLifecycleError.finishedTaskTransition(
+      taskId: "0192f3a1-7c4b-7def-9abc-1234567890ab", from: .cancelled, to: .completed) as any Error,
+    LorvexCoreError.taskNotFound as any Error,
+  ])
+  func surfacesNotificationActionError(failure: any Error) async throws {
     let store = MobileStore(core: try await makeSeededInMemoryCore())
     let observer = Task { await store.observeNotificationActionErrors() }
     defer { observer.cancel() }
 
-    let expected = "Complete failed: task not found"
+    let classification = UserFacingError.classify(failure)
+    let expected = UserFacingError.message(for: classification, copy: store.userFacingErrorCopy)
     // The async notification stream subscribes only once iteration begins, so a
     // post can race ahead of the subscription; repost until it lands.
     for _ in 0..<200 where store.errorMessage == nil {
       NotificationCenter.default.post(
         name: .lorvexNotificationActionError,
         object: nil,
-        userInfo: ["errorMessage": expected]
+        userInfo: [LorvexNotificationActionFailure.classificationKey: classification]
       )
       try? await Task.sleep(for: .milliseconds(5))
     }
 
     #expect(store.errorMessage == expected)
+    let coreSentence = (failure as? LocalizedError)?.errorDescription
+    #expect(store.errorMessage != coreSentence)
   }
 
   @Test("falls back to a generic message when the post carries none")
@@ -64,13 +73,14 @@ struct MobileStoreNotificationActionErrorTests {
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
 
-    let expected = "Defer failed: task not found"
-    MobileNotificationActionErrorHandoff(defaults: defaults).record(message: expected)
+    let classification = UserFacingError.classify(
+      TaskLifecycleError.startRequiresOpenTask(status: .completed))
+    MobileNotificationActionErrorHandoff(defaults: defaults).record(classification)
     let store = MobileStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
 
     await store.consumePendingNotificationActionError()
 
-    #expect(store.errorMessage == expected)
+    #expect(store.errorMessage == UserFacingError.Reason.startingDoneTask.localizedMessage)
     #expect(MobileNotificationActionErrorHandoff(defaults: defaults).hasPendingError == false)
   }
 
@@ -80,13 +90,32 @@ struct MobileStoreNotificationActionErrorTests {
     let defaults = try #require(UserDefaults(suiteName: suiteName))
     defer { defaults.removePersistentDomain(forName: suiteName) }
 
-    MobileNotificationActionErrorHandoff(defaults: defaults).record(message: nil)
+    MobileNotificationActionErrorHandoff(defaults: defaults).record(nil)
     let store = MobileStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
 
     await store.consumePendingNotificationActionError()
 
     #expect(store.errorMessage?.isEmpty == false)
     #expect(MobileNotificationActionErrorHandoff(defaults: defaults).hasPendingError == false)
+  }
+
+  @Test("drains a breadcrumb that is not a classification to the generic fallback")
+  func consumesUndecodableBreadcrumbWithFallback() async throws {
+    let suiteName = "test.notifActionError.\(UUID().uuidString)"
+    let defaults = try #require(UserDefaults(suiteName: suiteName))
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+
+    defaults.set("Complete failed", forKey: MobileNotificationActionErrorHandoff.pendingErrorKey)
+    let handoff = MobileNotificationActionErrorHandoff(defaults: defaults)
+    #expect(handoff.hasPendingError)
+    #expect(handoff.pendingClassification == nil)
+    let store = MobileStore(core: try await makeSeededInMemoryCore(), defaults: defaults)
+
+    await store.consumePendingNotificationActionError()
+
+    #expect(store.errorMessage?.isEmpty == false)
+    #expect(store.errorMessage != "Complete failed")
+    #expect(handoff.hasPendingError == false)
   }
 
   @Test("does nothing when no breadcrumb is pending")

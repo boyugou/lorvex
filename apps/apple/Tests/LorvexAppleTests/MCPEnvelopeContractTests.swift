@@ -3,6 +3,7 @@ import LorvexCore
 import LorvexDomain
 import LorvexStore
 import LorvexSync
+import LorvexWorkflow
 import MCP
 import Testing
 
@@ -164,6 +165,15 @@ struct MCPEnvelopeContractTests {
     #expect(ToolRegistry.errorCode(for: StoreError.validation("bad")) == "validation")
     #expect(ToolRegistry.errorCode(for: StoreError.serialization("x")) == "tool_error")
     #expect(ToolRegistry.errorCode(for: ValidationError.message("bad")) == "validation")
+    // Refusals by the current data keep the `validation` code they had as
+    // `StoreError.validation`.
+    #expect(
+      ToolRegistry.errorCode(
+        for: TaskLifecycleError.startBlockedByDependencies(taskId: "a", blockerIds: ["b"]))
+        == "validation")
+    #expect(
+      ToolRegistry.errorCode(for: HabitReminderError.timeTaken(habitId: "h", time: "08:00"))
+        == "validation")
     #expect(ToolRegistry.errorCode(for: LorvexCoreError.taskNotFound) == "not_found")
     #expect(ToolRegistry.errorCode(for: LorvexCoreError.emptyTitle) == "validation")
     #expect(

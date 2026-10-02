@@ -247,6 +247,76 @@ struct UserFacingErrorTests {
     #expect(error.description.contains("02:30 on 2027-03-14 does not exist in America/New_York"))
   }
 
+  @Test("a blocked start and a duplicate reminder time show the app's own sentences")
+  func dataRefusalsClassifyToTheirReasons() {
+    let blocked = TaskLifecycleError.startBlockedByDependencies(
+      taskId: "0192f3a1-7c4b-7def-9abc-1234567890ab",
+      blockerIds: ["0192f3a1-7c4b-7def-9abc-1234567890ac"])
+    let start = UserFacingError.classify(blocked)
+    #expect(start.reason == .taskStartBlocked)
+    #expect(start.category == .validation)
+    #expect(
+      UserFacingError.message(for: start, copy: copy)
+        == UserFacingError.Reason.taskStartBlocked.localizedMessage)
+    // The id-bearing sentence stays out of the alert but reaches error_logs.
+    #expect(start.technicalDetail == blocked.description)
+
+    let duplicate = HabitReminderError.timeTaken(
+      habitId: "0192f3a1-7c4b-7def-9abc-1234567890ad", time: "08:00")
+    let reminder = UserFacingError.classify(duplicate)
+    #expect(reminder.reason == .habitReminderTimeTaken)
+    #expect(
+      UserFacingError.message(for: reminder, copy: copy)
+        == UserFacingError.Reason.habitReminderTimeTaken.localizedMessage)
+  }
+
+  @Test("a refused status change shows the app's own sentence for that change")
+  func refusedStatusChangesClassifyToTheirReasons() {
+    let id = "0192f3a1-7c4b-7def-9abc-1234567890ab"
+    let cases: [(TaskLifecycleError, UserFacingError.Reason)] = [
+      (.startRequiresOpenTask(status: .completed), .startingDoneTask),
+      (.startRequiresOpenTask(status: .cancelled), .startingCanceledTask),
+      (.startRequiresOpenTask(status: .someday), .startingSomedayTask),
+      (.finishedTaskTransition(taskId: id, from: .cancelled, to: .completed), .completingCanceledTask),
+      (.finishedTaskTransition(taskId: id, from: .completed, to: .cancelled), .cancelingDoneTask),
+      (.pauseRequiresStartedTask(status: .completed), .pausingUnstartedTask),
+      (.pauseRequiresStartedTask(status: .someday), .pausingUnstartedTask),
+    ]
+    for (error, reason) in cases {
+      let classification = UserFacingError.classify(error)
+      #expect(classification.reason == reason, "\(error)")
+      #expect(classification.category == .validation)
+      #expect(UserFacingError.message(for: classification, copy: copy) == reason.localizedMessage)
+      // The core's sentence (which may carry the task id) stays the logged detail.
+      #expect(classification.technicalDetail == error.description)
+    }
+
+    // The MCP boundary keeps the core's English sentences unchanged.
+    #expect(
+      TaskLifecycleError.startRequiresOpenTask(status: .completed).description
+        == "Cannot start a completed task; reopen it to open first.")
+    #expect(
+      TaskLifecycleError.pauseRequiresStartedTask(status: .open).description
+        == "Cannot pause a open task; only an in-progress task can be paused.")
+    #expect(
+      TaskLifecycleError.finishedTaskTransition(taskId: id, from: .cancelled, to: .completed)
+        .description == "Cannot transition task \(id) from cancelled to completed; reopen it first")
+  }
+
+  @Test("a classification survives an encode and decode unchanged")
+  func classificationRoundTripsThroughJSON() throws {
+    let samples = [
+      UserFacingError.classify(TaskLifecycleError.startRequiresOpenTask(status: .someday)),
+      UserFacingError.classify(LorvexCoreError.taskNotFound),
+      UserFacingError.classify(LorvexStore.SchemaDowngrade(binaryMaxVersion: 3, dbMaxVersion: 9)),
+      UserFacingError.classify(message: "Notifications are not allowed for this app."),
+    ]
+    for classification in samples {
+      let data = try JSONEncoder().encode(classification)
+      #expect(try JSONDecoder().decode(UserFacingError.Classification.self, from: data) == classification)
+    }
+  }
+
   @Test("other validation failures keep their own sentence, as when the core wrapped them")
   func otherValidationFailuresKeepTheirSentence() {
     let error = ValidationError.outOfRange(field: "estimated_minutes", min: 1, max: 1440, actual: 0)
@@ -261,10 +331,7 @@ struct UserFacingErrorTests {
 
   @Test("every reason has its own sentence, translated in the LorvexCore bundle")
   func reasonSentencesShipTranslated() throws {
-    let reasons: [UserFacingError.Reason] = [
-      .titleTooLong, .notesTooLong, .tagTooLong, .textTooLong, .tagNameTaken,
-      .memoryNameTaken, .calendarTimeSkipped,
-    ]
+    let reasons = UserFacingError.Reason.allCases
     let sentences = reasons.map(\.localizedMessage)
     #expect(Set(sentences).count == reasons.count, "two reasons share a sentence")
     #expect(sentences.allSatisfy { !$0.hasPrefix("error.reason.") })
@@ -273,8 +340,13 @@ struct UserFacingErrorTests {
       "error.reason.title_too_long", "error.reason.notes_too_long",
       "error.reason.tag_too_long", "error.reason.text_too_long",
       "error.reason.tag_name_taken", "error.reason.memory_name_taken",
-      "error.reason.calendar_time_skipped",
+      "error.reason.calendar_time_skipped", "error.reason.task_start_blocked",
+      "error.reason.habit_reminder_time_taken", "error.reason.starting_done_task",
+      "error.reason.starting_canceled_task", "error.reason.starting_someday_task",
+      "error.reason.completing_canceled_task", "error.reason.canceling_done_task",
+      "error.reason.pausing_unstarted_task",
     ]
+    #expect(keys.count == reasons.count, "a reason is missing from this key list")
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))
     let chinese = try #require(Bundle(url: lproj))
     for key in keys {

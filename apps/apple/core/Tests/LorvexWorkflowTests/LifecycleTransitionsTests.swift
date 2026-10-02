@@ -44,10 +44,9 @@ final class LifecycleTransitionsTests: XCTestCase {
           reminderVersion: "0000000000001_0000_a0a0a0a0a0a0a0a0")
       }
     ) { error in
-      guard case StoreError.validation = error else {
-        XCTFail("expected validation, got \(error)")
-        return
-      }
+      XCTAssertEqual(
+        error as? TaskLifecycleError,
+        .finishedTaskTransition(taskId: "cancelled-to-completed", from: .cancelled, to: .completed))
     }
     let status: String? = try store.writer.read { db in
       try String.fetchOne(
@@ -68,10 +67,9 @@ final class LifecycleTransitionsTests: XCTestCase {
           cancelSeries: false, seriesClearVersion: nil)
       }
     ) { error in
-      guard case StoreError.validation = error else {
-        XCTFail("expected validation, got \(error)")
-        return
-      }
+      XCTAssertEqual(
+        error as? TaskLifecycleError,
+        .finishedTaskTransition(taskId: "completed-to-cancelled", from: .completed, to: .cancelled))
     }
     let status: String? = try store.writer.read { db in
       try String.fetchOne(
@@ -94,10 +92,9 @@ final class LifecycleTransitionsTests: XCTestCase {
           reminderVersion: "0000000000001_0000_a0a0a0a0a0a0a0a0")
       }
     ) { error in
-      guard case StoreError.validation = error else {
-        XCTFail("expected validation, got \(error)")
-        return
-      }
+      XCTAssertEqual(
+        error as? TaskLifecycleError,
+        .finishedTaskTransition(taskId: "generic-terminal-drift", from: .completed, to: .cancelled))
     }
   }
 

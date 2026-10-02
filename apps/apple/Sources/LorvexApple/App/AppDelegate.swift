@@ -146,7 +146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             id: taskID,
             core: LorvexCoreRuntimeFactory.makeForNotification())
         } catch {
-          postNotificationActionError(error)
+          postNotificationActionFailure(UserFacingError.classify(error))
         }
       },
       deferTask: { taskID in
@@ -155,7 +155,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             id: taskID,
             core: LorvexCoreRuntimeFactory.makeForNotification())
         } catch {
-          postNotificationActionError(error)
+          postNotificationActionFailure(UserFacingError.classify(error))
         }
         await MainActor.run {
           NSApp.activate()
@@ -229,8 +229,8 @@ private func scheduleSnoozeNotification(taskID: String, title: String? = nil) as
   // Surface a failed snooze the same way Complete/Defer surface theirs — without
   // this the user taps "Snooze", gets no reminder in an hour, and sees nothing.
   if report.status == .failed {
-    postNotificationActionError(
-      NotificationActionError(
+    postNotificationActionFailure(
+      UserFacingError.classify(
         message: report.errorMessage
           ?? String(
             localized: "notification.snooze.failed", defaultValue: "Couldn’t snooze the reminder.",
@@ -238,19 +238,13 @@ private func scheduleSnoozeNotification(taskID: String, title: String? = nil) as
   }
 }
 
-/// Minimal `Error` wrapper so a `TaskReminderScheduleReport` failure message can
-/// flow through `postNotificationActionError`.
-private struct NotificationActionError: LocalizedError {
-  let message: String
-  var errorDescription: String? { message }
-}
-
-/// Posts `.lorvexNotificationActionError` so AppStore can surface the failure
-/// as a toast without creating a direct dependency between AppDelegate and AppStore.
-private func postNotificationActionError(_ error: Error) {
+/// Posts `.lorvexNotificationActionError` with the failure's classification
+/// (``LorvexNotificationActionFailure``) so AppStore can surface it as a toast
+/// without a direct dependency between AppDelegate and AppStore.
+private func postNotificationActionFailure(_ classification: UserFacingError.Classification) {
   NotificationCenter.default.post(
     name: .lorvexNotificationActionError,
     object: nil,
-    userInfo: ["errorMessage": error.localizedDescription]
+    userInfo: [LorvexNotificationActionFailure.classificationKey: classification]
   )
 }

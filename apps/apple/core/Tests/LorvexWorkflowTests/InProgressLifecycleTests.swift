@@ -162,17 +162,21 @@ final class InProgressLifecycleTests: XCTestCase {
   }
 
   /// Starting a task with an unfinished dependency is rejected with a typed
-  /// validation error naming the blocker id; no force-override exists.
+  /// error naming the blocker id; no force-override exists.
   func testStartRejectedWhenDependencyUnfinished() throws {
     let store = try WorkflowTestSupport.freshStore()
     try insertTask(store.writer, id: "t1", status: "open")
     try insertTask(store.writer, id: "blocker2", status: "open")
     try addDependency(store.writer, task: "t1", dependsOn: "blocker2")
     XCTAssertThrowsError(try transition(store, "t1", .open, .inProgress)) { error in
-      guard case StoreError.validation(let message) = error else {
-        return XCTFail("expected StoreError.validation, got \(error)")
-      }
-      XCTAssertTrue(message.contains("blocker2"), "error names the blocker: \(message)")
+      XCTAssertEqual(
+        error as? TaskLifecycleError,
+        .startBlockedByDependencies(taskId: "t1", blockerIds: ["blocker2"]))
+      // The MCP boundary returns this sentence, which names the blocker.
+      XCTAssertEqual(
+        String(describing: error),
+        "Cannot start task t1: blocked by unfinished dependencies [blocker2]. "
+          + "Complete or cancel them first.")
     }
     XCTAssertEqual(try statusRow(store, "t1")[0] as String?, "open", "start did not apply")
   }

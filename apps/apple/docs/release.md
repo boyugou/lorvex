@@ -76,6 +76,16 @@ the exact smoke task, habit, and list rows are absent. Set
 release machine needs a different existing, writable, absolute `Lorvex.app`
 destination; the script is noninteractive and never invokes `sudo`.
 
+On a Mac that holds real Lorvex data, run
+`./script/package_dmg.sh --skip-runtime-verification` instead. It builds,
+signs, notarizes, staples, and verifies the final DMG exactly as above,
+including the read-only checks of the mounted image, then stops: nothing is
+installed, launched, quiesced, or reset, so
+`LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET` and the install path are not used.
+It writes the `.sha256` beside the DMG and `runtime-verification-skipped.txt`
+in the evidence directory in place of `release-evidence.json`, which requires
+the runtime proof.
+
 The artifact is
 `dist/Lorvex-macOS-<version>+<build>-arm64.dmg`; its sibling `.sha256` and
 `dist/release-evidence/<artifact>/release-evidence.json` are part of the

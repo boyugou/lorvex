@@ -3,6 +3,7 @@ import LorvexCore
 import LorvexDomain
 import LorvexStore
 import LorvexSync
+import LorvexWorkflow
 import MCP
 
 extension ToolRegistry {
@@ -68,7 +69,7 @@ extension ToolRegistry {
       case .validation: return "validation"
       case .serialization, .invariant: return "tool_error"
       }
-    case is ValidationError:
+    case is ValidationError, is TaskLifecycleError, is HabitReminderError:
       return "validation"
     case let applyError as ApplyError:
       if case .dependencyCycleRejected = applyError { return "dependency_cycle" }

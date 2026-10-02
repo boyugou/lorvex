@@ -146,6 +146,7 @@ final class HabitReminderOpsTests: XCTestCase {
           db, habitId: "h1", time: "08:00", enabled: false, version: Self.v2,
           now: "2026-03-29T09:05:00Z")
       ) {
+        XCTAssertEqual($0 as? HabitReminderError, .timeTaken(habitId: "h1", time: "08:00"))
         XCTAssertTrue("\($0)".contains("already has a reminder slot at 08:00"))
       }
     }
@@ -180,6 +181,7 @@ final class HabitReminderOpsTests: XCTestCase {
           db, policyId: second.id, habitId: "h1", time: "08:00", enabled: false,
           version: Self.v3, now: "2026-03-29T10:00:00Z")
       ) {
+        XCTAssertEqual($0 as? HabitReminderError, .timeTaken(habitId: "h1", time: "08:00"))
         XCTAssertTrue("\($0)".contains("already has a reminder slot at 08:00"))
       }
     }

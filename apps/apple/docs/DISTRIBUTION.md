@@ -67,6 +67,13 @@ export LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET=1
 ./script/package_dmg.sh
 ```
 
+On a Mac that holds real Lorvex data, pass `--skip-runtime-verification` and
+leave `LORVEX_ALLOW_DESTRUCTIVE_APP_GROUP_RESET` unset. The command then stops
+after the read-only verification of the mounted final DMG: the DMG is signed,
+notarized, stapled, and statically verified as below, but nothing is
+installed, launched, quiesced, or reset. It writes the `.sha256` and
+`runtime-verification-skipped.txt` in place of `release-evidence.json`.
+
 The final verification installs the app at `/Applications/Lorvex.app`. The
 calling user must be able to write `/Applications`; the script is intentionally
 noninteractive and never invokes `sudo`. A release-only machine may instead set

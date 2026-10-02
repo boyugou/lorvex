@@ -152,6 +152,20 @@ def developer_id_signature_failures(
     return failures
 
 
+def profile_authorizes_icloud_service(profile_services: object, service: str) -> bool:
+    """Whether a profile's `com.apple.developer.icloud-services` value allows `service`.
+
+    The developer portal writes the wildcard string `*` (every iCloud service)
+    into a profile whose App ID has iCloud enabled; an explicit array names
+    each authorized service, and a `*` element inside it is the same wildcard.
+    """
+    if profile_services == "*":
+        return True
+    if isinstance(profile_services, list):
+        return "*" in profile_services or service in profile_services
+    return False
+
+
 def profile_contract_failures(
     label: str,
     profile: dict,
@@ -191,7 +205,9 @@ def profile_contract_failures(
         "com.apple.developer.icloud-services", []
     )
     missing_services = [
-        service for service in required_services if service not in profile_services
+        service
+        for service in required_services
+        if not profile_authorizes_icloud_service(profile_services, service)
     ]
     if missing_services:
         failures.append(

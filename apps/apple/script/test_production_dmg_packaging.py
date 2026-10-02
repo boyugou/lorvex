@@ -167,6 +167,42 @@ class DeveloperIDVerifierDecisionTests(unittest.TestCase):
 
         self.assertEqual(failures, [])
 
+    def test_accepts_portal_wildcard_icloud_services(self) -> None:
+        # Developer-portal profiles authorize iCloud services with the string
+        # "*", which covers the signed ["CloudKit"].
+        profile = developer_id_profile()
+        profile["Entitlements"]["com.apple.developer.icloud-services"] = "*"
+
+        failures = profile_contract_failures(
+            "macOS app",
+            profile,
+            signed_entitlements(),
+            BUNDLE_ID,
+            TEAM_ID,
+            cert_subjects=["CN=Developer ID Application: Example (ABCDE12345)"],
+        )
+
+        self.assertEqual(failures, [])
+
+    def test_rejects_profile_listing_a_different_icloud_service(self) -> None:
+        profile = developer_id_profile()
+        profile["Entitlements"]["com.apple.developer.icloud-services"] = [
+            "CloudDocuments"
+        ]
+
+        failures = profile_contract_failures(
+            "macOS app",
+            profile,
+            signed_entitlements(),
+            BUNDLE_ID,
+            TEAM_ID,
+            cert_subjects=["CN=Developer ID Application: Example (ABCDE12345)"],
+        )
+
+        self.assertTrue(
+            any("missing iCloud service(s) ['CloudKit']" in item for item in failures)
+        )
+
     def test_rejects_profile_without_developer_id_certificate(self) -> None:
         failures = profile_contract_failures(
             "macOS app",
@@ -440,6 +476,55 @@ class ProductionDMGScriptContractTests(unittest.TestCase):
             source,
             "stale-DMG refusal must include symlinks and other ambiguous nodes",
         )
+
+    def test_skip_runtime_verification_stops_after_the_read_only_checks(self) -> None:
+        source = PACKAGE_DMG.read_text(encoding="utf-8")
+        mounted_index = source.index('verify_final_app "$MOUNTED_APP"')
+        skip_index = source.index('if [[ "$SKIP_RUNTIME_VERIFICATION" == "1" ]]; then')
+        install_index = source.index('echo "==> Installing exact final-DMG app')
+        self.assertLess(mounted_index, skip_index)
+        self.assertLess(skip_index, install_index)
+
+        skip_block = source[skip_index:install_index]
+        self.assertIn("exit 0", skip_block)
+        self.assertIn('>"$DMG_OUT.sha256"', skip_block)
+        self.assertIn("runtime-verification-skipped.txt", skip_block)
+        self.assertNotIn("rm -rf", skip_block)
+        # Everything a skipped run can reach precedes the install step; none of
+        # it may quiesce, launch, reset, or write through the App Group.
+        reachable_when_skipping = source[:install_index]
+        for destructive in (
+            "reset_production_app_group.py",
+            "verify_production_app_runtime.py",
+            "--quiesce-only",
+            "mcp_stdio_smoke.py",
+        ):
+            self.assertNotIn(destructive, reachable_when_skipping)
+
+    def test_skip_runtime_verification_still_requires_production_credentials(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as home:
+            result = subprocess.run(
+                [str(PACKAGE_DMG), "--skip-runtime-verification"],
+                capture_output=True,
+                text=True,
+                check=False,
+                env={"HOME": home, "PATH": os.environ.get("PATH", "")},
+            )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("missing required production environment variable", result.stderr)
+        self.assertNotIn("Building Release bundle", result.stdout + result.stderr)
+
+    def test_unknown_argument_is_rejected_before_any_work(self) -> None:
+        result = subprocess.run(
+            [str(PACKAGE_DMG), "--install-anyway"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("usage: ./script/package_dmg.sh", result.stderr)
 
     def test_no_credentials_help_path_is_nonmutating(self) -> None:
         result = subprocess.run(

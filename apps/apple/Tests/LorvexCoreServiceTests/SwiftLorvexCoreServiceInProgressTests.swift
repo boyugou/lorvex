@@ -1,6 +1,7 @@
 import Foundation
 import LorvexDomain
 import LorvexStore
+import LorvexWorkflow
 import Testing
 
 @testable import LorvexCore
@@ -39,13 +40,51 @@ struct SwiftLorvexCoreServiceInProgressTests {
     #expect(try await service.loadTask(id: task.id).status == .inProgress)
   }
 
-  @Test("startTask rejects a resolved task (reopen first)")
+  @Test("startTask rejects a resolved or parked task (reopen first)")
   func startRejectsCompleted() async throws {
+    let service = try makeService()
+    let done = try await service.createTask(title: "Done thing", notes: "")
+    _ = try await service.completeTask(id: done.id)
+    await #expect(throws: TaskLifecycleError.startRequiresOpenTask(status: .completed)) {
+      _ = try await service.startTask(id: done.id)
+    }
+
+    let parked = try await service.createTask(title: "Parked thing", notes: "")
+    _ = try await service.markTaskSomeday(id: parked.id)
+    await #expect(throws: TaskLifecycleError.startRequiresOpenTask(status: .someday)) {
+      _ = try await service.startTask(id: parked.id)
+    }
+  }
+
+  @Test("pauseTask rejects a task that is not in progress")
+  func pauseRejectsResolved() async throws {
     let service = try makeService()
     let task = try await service.createTask(title: "Done thing", notes: "")
     _ = try await service.completeTask(id: task.id)
-    await #expect(throws: (any Error).self) {
-      _ = try await service.startTask(id: task.id)
+    await #expect(throws: TaskLifecycleError.pauseRequiresStartedTask(status: .completed)) {
+      _ = try await service.pauseTask(id: task.id)
+    }
+  }
+
+  @Test("completing a canceled task and canceling a completed one ask for a reopen")
+  func finishedTaskTransitionsAreTyped() async throws {
+    let service = try makeService()
+    let canceled = try await service.createTask(title: "Dropped", notes: "")
+    _ = try await service.cancelTask(id: canceled.id)
+    await #expect(
+      throws: TaskLifecycleError.finishedTaskTransition(
+        taskId: canceled.id, from: .cancelled, to: .completed)
+    ) {
+      _ = try await service.completeTask(id: canceled.id)
+    }
+
+    let done = try await service.createTask(title: "Finished", notes: "")
+    _ = try await service.completeTask(id: done.id)
+    await #expect(
+      throws: TaskLifecycleError.finishedTaskTransition(
+        taskId: done.id, from: .completed, to: .cancelled)
+    ) {
+      _ = try await service.cancelTask(id: done.id)
     }
   }
 

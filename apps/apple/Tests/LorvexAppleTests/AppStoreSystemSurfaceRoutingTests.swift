@@ -32,14 +32,16 @@ func spotlightTaskDocumentIndexesTitleAndDueDateOnly() {
 
   #expect(document.identifier == "lorvex-task:task-spotlight")
   #expect(document.title == "Index native Lorvex tasks")
-  #expect(document.dueDate == task.dueDate)
+  // The stored due day is 2026-05-23; Spotlight reads the attribute in the
+  // device's time zone, where it must still be that day.
+  #expect(document.dueDate.map { LorvexDateFormatters.ymd.string(from: $0) } == "2026-05-23")
   #expect(document.deepLink.absoluteString == "lorvex://task/task-spotlight")
 
   // Only the title and structured due date are indexed; notes, ai_notes,
   // checklist text, and tags never reach the system index.
   let attributes = document.searchableItem.attributeSet
   #expect(attributes.title == "Index native Lorvex tasks")
-  #expect(attributes.dueDate == task.dueDate)
+  #expect(attributes.dueDate == document.dueDate)
   #expect(attributes.contentDescription == nil)
   #expect(attributes.keywords == nil)
 }

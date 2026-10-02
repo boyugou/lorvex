@@ -9,15 +9,16 @@ struct AddLorvexTaskRecurrenceExceptionIntent: LorvexAuthenticatedIntent {
   var task: LorvexTaskEntity
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.exception_date", defaultValue: "Exception Date", table: "Localizable", bundle: SystemL10n.bundle))
-  var exceptionDate: String
+    title: LocalizedStringResource("system.task.parameter.exception_date", defaultValue: "Exception Date", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var exceptionDate: Date
 
   init() {
     task = LorvexTaskEntity(id: "", title: "", status: "")
-    exceptionDate = ""
+    exceptionDate = .now
   }
 
-  init(task: LorvexTaskEntity, exceptionDate: String) {
+  init(task: LorvexTaskEntity, exceptionDate: Date) {
     self.task = task
     self.exceptionDate = exceptionDate
   }
@@ -25,7 +26,7 @@ struct AddLorvexTaskRecurrenceExceptionIntent: LorvexAuthenticatedIntent {
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let updated = try await LorvexTaskIntentRunner.addTaskRecurrenceException(
       taskID: task.id,
-      exceptionDate: exceptionDate
+      exceptionDate: IntentDateText.day(exceptionDate)
     )
     return .result(
       dialog: IntentDialog(

@@ -5,8 +5,9 @@ struct ReadLorvexDueTaskRemindersIntent: LorvexAuthenticatedIntent {
   static let description = IntentDescription(LocalizedStringResource("system.task.reminders.due.read.description", defaultValue: "Read pending Lorvex task reminders that are due.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.task.parameter.as_of", defaultValue: "As Of", table: "Localizable", bundle: SystemL10n.bundle))
-  var asOf: String?
+    title: LocalizedStringResource("system.task.parameter.as_of", defaultValue: "As Of", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .dateTime)
+  var asOf: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.limit", defaultValue: "Limit", table: "Localizable", bundle: SystemL10n.bundle))
@@ -14,14 +15,14 @@ struct ReadLorvexDueTaskRemindersIntent: LorvexAuthenticatedIntent {
 
   init() {}
 
-  init(asOf: String? = nil, limit: Int? = nil) {
+  init(asOf: Date? = nil, limit: Int? = nil) {
     self.asOf = asOf
     self.limit = limit
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let reminders = try await LorvexTaskIntentRunner.readDueTaskReminders(
-      asOf: asOf,
+      asOf: asOf.map(IntentDateText.timestamp),
       limit: limit
     )
     return .result(

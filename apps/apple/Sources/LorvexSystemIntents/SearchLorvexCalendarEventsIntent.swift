@@ -10,13 +10,13 @@ struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.from", defaultValue: "From", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.from.optional_date.description", defaultValue: "Optional start date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var from: String?
+    kind: .date)
+  var from: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.calendar.parameter.to", defaultValue: "To", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.calendar.parameter.to.optional_date.description", defaultValue: "Optional end date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var to: String?
+    kind: .date)
+  var to: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.limit", defaultValue: "Limit", table: "Localizable", bundle: SystemL10n.bundle))
@@ -29,7 +29,7 @@ struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
     limit = nil
   }
 
-  init(query: String, from: String? = nil, to: String? = nil, limit: Int? = nil) {
+  init(query: String, from: Date? = nil, to: Date? = nil, limit: Int? = nil) {
     self.query = query
     self.from = from
     self.to = to
@@ -38,10 +38,11 @@ struct SearchLorvexCalendarEventsIntent: LorvexLocalAuthIntent {
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let query = try $query.requiredText()
+    let range = IntentDateText.dayRange(from: from, to: to)
     let events = try await LorvexTaskIntentRunner.searchCalendarEvents(
       query: query,
-      from: from,
-      to: to,
+      from: range.from,
+      to: range.to,
       limit: limit
     )
     return .result(

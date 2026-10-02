@@ -14,7 +14,7 @@ struct ListLorvexTasksIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.priority", defaultValue: "Priority", table: "Localizable", bundle: SystemL10n.bundle))
-  var priority: Int?
+  var priority: LorvexPriorityOption?
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.text", defaultValue: "Text", table: "Localizable", bundle: SystemL10n.bundle))
@@ -35,7 +35,7 @@ struct ListLorvexTasksIntent: LorvexAuthenticatedIntent {
   init(
     status: LorvexTaskStatusOption? = nil,
     list: LorvexListEntity? = nil,
-    priority: Int? = nil,
+    priority: LorvexPriorityOption? = nil,
     text: String? = nil,
     limit: Int? = nil
   ) {
@@ -50,7 +50,7 @@ struct ListLorvexTasksIntent: LorvexAuthenticatedIntent {
     let result = try await LorvexTaskIntentRunner.listTasks(
       status: status?.rawValue,
       listID: list?.id,
-      priority: priority,
+      priority: priority?.level,
       text: text,
       limit: limit
     )

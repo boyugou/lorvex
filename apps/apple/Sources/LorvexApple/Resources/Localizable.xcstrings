@@ -64455,85 +64455,85 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يجب أن تكون ساعات اليوم بالصيغة HH:MM على أن يكون الانتهاء بعد البدء."
+            "value": "اختر وقت نهاية بعد وقت البداية."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Day hours must be HH:MM with the end after the start."
+            "value": "Pick an end time after the start time."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El horario del día debe tener el formato HH:MM, y el fin debe ser posterior al inicio."
+            "value": "Elige una hora de fin posterior a la de inicio."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les heures de la journée doivent être au format HH:MM, la fin étant postérieure au début."
+            "value": "Choisissez une heure de fin postérieure à l’heure de début."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "दिन के घंटे HH:MM रूप में होने चाहिए, और समाप्ति शुरुआत के बाद होनी चाहिए।"
+            "value": "शुरू होने के समय के बाद का खत्म होने का समय चुनें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli orari della giornata devono essere nel formato HH:MM, con la fine successiva all’inizio."
+            "value": "Scegli un’ora di fine successiva a quella di inizio."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "予定に使う時間帯は、HH:MM形式で、終了を開始より後にしてください。"
+            "value": "終了時刻は開始時刻より後にしてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "일정 가능 시간은 HH:MM 형식이어야 하며 종료 시간이 시작 시간보다 늦어야 합니다."
+            "value": "종료 시간을 시작 시간 이후로 선택하세요."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Godziny dnia muszą mieć format GG:MM, a koniec musi być późniejszy niż początek."
+            "value": "Wybierz godzinę zakończenia późniejszą niż godzina rozpoczęcia."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O horário do dia deve estar no formato HH:MM, com o término depois do início."
+            "value": "Escolha um horário de término depois do horário de início."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Часы дня должны быть в формате ЧЧ:ММ, при этом конец должен быть позже начала."
+            "value": "Выберите время окончания позже времени начала."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Години дня мають бути у форматі ГГ:ХХ, а кінець має бути пізніше за початок."
+            "value": "Виберіть час завершення пізніше за час початку."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "可安排时段须为 HH:MM 格式，且结束晚于开始。"
+            "value": "请选择晚于开始时间的结束时间。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "可安排時段必須使用 HH:MM 格式，且結束時間要晚於開始時間。"
+            "value": "請選擇晚於開始時間的結束時間。"
           }
         }
       }

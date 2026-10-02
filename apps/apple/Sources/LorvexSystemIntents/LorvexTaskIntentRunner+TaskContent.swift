@@ -13,13 +13,13 @@ extension LorvexTaskIntentRunner {
 
   public static func setTaskReminders(
     id: LorvexTask.ID,
-    remindersText: String,
+    reminderAts: [String],
     core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
   ) async throws -> LorvexTask {
     try await LorvexIntentFailure.rewording(core: core) {
       try await LorvexSystemIntentRunner.setTaskReminders(
         id: id,
-        remindersText: remindersText,
+        reminderAts: reminderAts,
         core: core
       )
     }

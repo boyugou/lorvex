@@ -1,11 +1,12 @@
 import Foundation
 
 extension LorvexSystemIntentRunner {
-  public static func parsedRecurrenceWeekdays(_ value: String?) throws -> [String]? {
-    guard let value else { return nil }
-    let days = value
-      .split(whereSeparator: { $0 == "," || $0 == "\n" || $0 == " " })
-      .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+  /// The RRULE weekday codes (MO through SU) a recurrence repeats on,
+  /// upper-cased; nil or an empty list means the rule names no weekdays.
+  public static func validatedRecurrenceWeekdays(_ codes: [String]?) throws -> [String]? {
+    guard let codes else { return nil }
+    let days = codes
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
       .filter { !$0.isEmpty }
     guard !days.isEmpty else { return nil }
     let allowed = Set(["MO", "TU", "WE", "TH", "FR", "SA", "SU"])

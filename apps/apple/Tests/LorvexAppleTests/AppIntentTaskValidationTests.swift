@@ -39,26 +39,17 @@ func taskContentIntentPerformThrowsOnBlankInputs() async throws {
     }
   }
 
-  let updateBadPriority = UpdateLorvexTaskIntent(
-    task: LorvexTaskEntity(id: "task-id", title: "", status: ""),
-    priority: 4
-  )
-  await #expect(throws: LorvexIntentFailure.self) {
-    try await withIsolatedAppIntentDatabase {
-      _ = try await updateBadPriority.perform()
-    }
-  }
-
   let append = AppendLorvexTaskBodyIntent(task: task, text: "Notes")
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await append.perform()
   }
 
+  // No reminder times: Siri and Shortcuts ask for them.
   let reminders = SetLorvexTaskRemindersIntent(
     task: LorvexTaskEntity(id: "task-id", title: "", status: ""),
-    reminders: " , \n "
+    reminders: []
   )
-  await #expect(throws: LorvexIntentFailure.self) {
+  await #expect(throws: AppIntentError.self) {
     _ = try await reminders.perform()
   }
 }
@@ -68,14 +59,9 @@ func reminderIntentPerformThrowsOnInvalidInputs() async throws {
   let task = LorvexTaskEntity(id: "task-id", title: "Task", status: "open")
   let blankTask = LorvexTaskEntity(id: "   ", title: "", status: "")
 
-  let addBlankTask = AddLorvexTaskReminderIntent(task: blankTask, reminderAt: "2026-06-01T09:00:00Z")
+  let addBlankTask = AddLorvexTaskReminderIntent(task: blankTask, reminderAt: .now)
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await addBlankTask.perform()
-  }
-
-  let addBlankTimestamp = AddLorvexTaskReminderIntent(task: task, reminderAt: "   ")
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await addBlankTimestamp.perform()
   }
 
   // Destructive: confirms before validating, so perform() surfaces the
@@ -102,19 +88,10 @@ func batchTaskIntentPerformThrowsOnInvalidInputs() async throws {
     _ = try await BatchCreateLorvexTasksIntent(titles: "   ").perform()
   }
   await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await BatchCreateLorvexTasksIntent(titles: "task", priority: 9).perform()
-  }
-  await #expect(throws: LorvexIntentFailure.self) {
     _ = try await BatchCompleteLorvexTasksIntent(tasks: []).perform()
   }
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await BatchReopenLorvexTasksIntent(tasks: []).perform()
-  }
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await BatchDeferLorvexTasksIntent(
-      tasks: [LorvexTaskEntity(id: "task-id", title: "", status: "")],
-      until: "bad-date"
-    ).perform()
   }
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await BatchMoveLorvexTasksIntent(

@@ -10,11 +10,6 @@ import UniformTypeIdentifiers
 
 @Test
 func reviewIntentPerformThrowsOnInvalidInputs() async throws {
-  let amend = AmendLorvexDailyReviewIntent(date: "   ", summary: "Updated")
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await amend.perform()
-  }
-
   let history = ReadLorvexReviewHistoryIntent(limit: 0)
   await #expect(throws: LorvexIntentFailure.self) {
     _ = try await history.perform()
@@ -50,13 +45,35 @@ func systemContextIntentPerformSucceeds() async throws {
     // before mutating, which throws without a system context. Its
     // confirmation-before-mutation behaviour is covered by
     // `destructiveIntentRequestsConfirmationBeforeMutating`.
+    let calendar = Calendar.current
+    let dayStart = try #require(calendar.date(bySettingHour: 9, minute: 30, second: 0, of: .now))
+    let dayEnd = try #require(calendar.date(bySettingHour: 17, minute: 30, second: 0, of: .now))
     _ = try await CompleteLorvexSetupIntent(
-      workingHours: #"{"start":"09:30","end":"17:30"}"#,
+      dayStart: dayStart,
+      dayEnd: dayEnd,
       defaultList: LorvexListEntity(id: "inbox", name: "", openCount: 0, totalCount: 0),
       timezone: "America/Los_Angeles"
     ).perform()
+    // The two picked times become the day-hours window, read on the clock.
+    let workingHours = try await LorvexCoreRuntimeFactory.makeForAppIntent()
+      .getPreference(key: "working_hours")
+    let window = try #require(WorkingHoursPreference.parse(workingHours))
+    #expect(window.start == "09:30")
+    #expect(window.end == "17:30")
     _ = try await ReadLorvexOverviewIntent().perform()
     _ = try await ReadLorvexSessionContextIntent().perform()
+  }
+}
+
+@Test
+func completeSetupIntentAsksForTheOtherEndOfTheDayHours() async throws {
+  // Day hours are one window: an action given only its start asks for the
+  // end before it writes anything, and the reverse.
+  await #expect(throws: AppIntentError.self) {
+    _ = try await CompleteLorvexSetupIntent(dayStart: .now).perform()
+  }
+  await #expect(throws: AppIntentError.self) {
+    _ = try await CompleteLorvexSetupIntent(dayEnd: .now).perform()
   }
 }
 

@@ -30,6 +30,11 @@ extension LorvexSystemIntentRunner {
     )
   }
 
+  /// Create a calendar event on `startDate` (the logical today when nil).
+  ///
+  /// A start time makes the event timed even when `allDay` is true, since an
+  /// all-day event would drop the time the person gave. A timed event whose
+  /// end time is earlier than its start time ends on the following day.
   public static func createCalendarEvent(
     title: String,
     startDate: String?,
@@ -46,13 +51,22 @@ extension LorvexSystemIntentRunner {
         field: "title", message: "A calendar event title is required.")
     }
     let eventDate = try await logicalDay(startDate, core: core)
+    let start = startTime.trimmedNilIfEmpty
+    let end = endTime.trimmedNilIfEmpty
+    let isAllDay = allDay && start == nil
+    var endDate: String?
+    if !isAllDay, let startMinutes = lorvexMinutesSinceMidnight(start),
+      let endMinutes = lorvexMinutesSinceMidnight(end), endMinutes < startMinutes
+    {
+      endDate = LorvexDateFormatters.ymdUTCAddingDays(eventDate, days: 1)
+    }
     return try await core.createCalendarEvent(
       title: trimmedTitle,
       startDate: eventDate,
-      endDate: nil,
-      startTime: startTime.trimmedNilIfEmpty,
-      endTime: endTime.trimmedNilIfEmpty,
-      allDay: allDay,
+      endDate: endDate,
+      startTime: start,
+      endTime: end,
+      allDay: isAllDay,
       location: location.trimmedNilIfEmpty,
       notes: notes.trimmedNilIfEmpty
     )

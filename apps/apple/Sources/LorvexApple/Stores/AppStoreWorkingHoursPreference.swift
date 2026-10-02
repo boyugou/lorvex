@@ -21,7 +21,7 @@ extension AppStore {
     guard let encoded = WorkingHoursPreference.encode(start: start, end: end) else {
       errorMessage = String(
         localized: "settings.working_hours.invalid",
-        defaultValue: "Day hours must be HH:MM with the end after the start.",
+        defaultValue: "Pick an end time after the start time.",
         table: "Localizable",
         bundle: LorvexL10n.bundle)
       return false

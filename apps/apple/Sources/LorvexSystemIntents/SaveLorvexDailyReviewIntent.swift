@@ -10,15 +10,19 @@ struct SaveLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
   var summary: String
 
   @Parameter(
-    title: LocalizedStringResource("system.review.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle))
-  var date: String?
+    title: LocalizedStringResource("system.review.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle),
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var date: Date?
 
   @Parameter(
-    title: LocalizedStringResource("system.review.parameter.mood", defaultValue: "Mood", table: "Localizable", bundle: SystemL10n.bundle))
+    title: LocalizedStringResource("system.review.parameter.mood", defaultValue: "Mood", table: "Localizable", bundle: SystemL10n.bundle),
+    inclusiveRange: (1, 5))
   var mood: Int?
 
   @Parameter(
-    title: LocalizedStringResource("system.review.parameter.energy", defaultValue: "Energy", table: "Localizable", bundle: SystemL10n.bundle))
+    title: LocalizedStringResource("system.review.parameter.energy", defaultValue: "Energy", table: "Localizable", bundle: SystemL10n.bundle),
+    inclusiveRange: (1, 5))
   var energy: Int?
 
   @Parameter(
@@ -45,7 +49,7 @@ struct SaveLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
 
   init(
     summary: String,
-    date: String? = nil,
+    date: Date? = nil,
     mood: Int? = nil,
     energy: Int? = nil,
     wins: String? = nil,
@@ -65,7 +69,7 @@ struct SaveLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
     let summary = try $summary.requiredText()
     let review = try await LorvexTaskIntentRunner.saveDailyReview(
       summary: summary,
-      date: date,
+      date: date.map(IntentDateText.day),
       mood: mood,
       energyLevel: energy,
       wins: wins,
@@ -75,7 +79,7 @@ struct SaveLorvexDailyReviewIntent: LorvexAuthenticatedIntent {
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(
-          "system.review.daily.save.dialog", defaultValue: "Saved daily review for \(review.date).",
+          "system.review.daily.save.dialog", defaultValue: "Saved daily review for \(lorvexDayLine(logicalDay: review.date)).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

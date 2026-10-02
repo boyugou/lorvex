@@ -53,15 +53,6 @@ func recurrenceIntentPerformThrowsOnInvalidInputs() async throws {
     _ = try await setBadInterval.perform()
   }
 
-  let setBadWeekday = SetLorvexTaskRecurrenceIntent(
-    task: task,
-    frequency: .weekly,
-    weekdays: "XX"
-  )
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await setBadWeekday.perform()
-  }
-
   // Destructive: confirms before validating, so perform() surfaces the
   // confirmation gate rather than a core error in a unit test.
   let remove = RemoveLorvexTaskRecurrenceIntent(task: blankTask)
@@ -69,14 +60,9 @@ func recurrenceIntentPerformThrowsOnInvalidInputs() async throws {
     _ = try await remove.perform()
   }
 
-  let addException = AddLorvexTaskRecurrenceExceptionIntent(task: task, exceptionDate: "   ")
-  await #expect(throws: LorvexIntentFailure.self) {
-    _ = try await addException.perform()
-  }
-
   // Destructive: confirms before validating, so perform() surfaces the
   // confirmation gate rather than a core error in a unit test.
-  let removeException = RemoveLorvexTaskRecurrenceExceptionIntent(task: blankTask, exceptionDate: "2026-06-01")
+  let removeException = RemoveLorvexTaskRecurrenceExceptionIntent(task: blankTask, exceptionDate: .now)
   await #expect(throws: (any Error).self) {
     _ = try await removeException.perform()
   }

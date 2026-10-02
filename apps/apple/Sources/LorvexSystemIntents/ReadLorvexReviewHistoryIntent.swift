@@ -5,12 +5,14 @@ struct ReadLorvexReviewHistoryIntent: LorvexLocalAuthIntent {
   static let description = IntentDescription(LocalizedStringResource("system.review.history.read.description", defaultValue: "Read recent Lorvex daily reviews.", table: "Localizable", bundle: SystemL10n.bundle))
 
   @Parameter(
-    title: LocalizedStringResource("system.review.parameter.from", defaultValue: "From", table: "Localizable", bundle: SystemL10n.bundle))
-  var from: String?
+    title: LocalizedStringResource("system.review.parameter.from", defaultValue: "From", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var from: Date?
 
   @Parameter(
-    title: LocalizedStringResource("system.review.parameter.to", defaultValue: "To", table: "Localizable", bundle: SystemL10n.bundle))
-  var to: String?
+    title: LocalizedStringResource("system.review.parameter.to", defaultValue: "To", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var to: Date?
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.limit", defaultValue: "Limit", table: "Localizable", bundle: SystemL10n.bundle))
@@ -18,16 +20,17 @@ struct ReadLorvexReviewHistoryIntent: LorvexLocalAuthIntent {
 
   init() {}
 
-  init(from: String? = nil, to: String? = nil, limit: Int? = nil) {
+  init(from: Date? = nil, to: Date? = nil, limit: Int? = nil) {
     self.from = from
     self.to = to
     self.limit = limit
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    let range = IntentDateText.dayRange(from: from, to: to)
     let reviews = try await LorvexTaskIntentRunner.readReviewHistory(
-      from: from,
-      to: to,
+      from: range.from,
+      to: range.to,
       limit: limit
     )
     return .result(

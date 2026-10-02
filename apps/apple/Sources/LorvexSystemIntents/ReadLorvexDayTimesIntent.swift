@@ -7,24 +7,25 @@ struct ReadLorvexDayTimesIntent: LorvexLocalAuthIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.date.optional_today.description", defaultValue: "Optional date in YYYY-MM-DD format. Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle))
-  var date: String?
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var date: Date?
 
   init() {
     date = nil
   }
 
-  init(date: String?) {
+  init(date: Date?) {
     self.date = date
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
-    let day = try await LorvexTaskIntentRunner.readDayTimes(date: date)
+    let day = try await LorvexTaskIntentRunner.readDayTimes(date: date.map(IntentDateText.day))
     guard let first = day.tasks.first, let time = first.plannedTime else {
       return .result(
         dialog: IntentDialog(
           LocalizedStringResource(
-            "system.day_times.read.none_dialog", defaultValue: "No tasks have a time on \(day.date).",
+            "system.day_times.read.none_dialog", defaultValue: "No tasks have a time on \(lorvexDayLine(logicalDay: day.date)).",
             table: "Localizable", bundle: SystemL10n.bundle)))
     }
     let count = day.tasks.count
@@ -33,7 +34,7 @@ struct ReadLorvexDayTimesIntent: LorvexLocalAuthIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.day_times.read.dialog",
-          defaultValue: "\(count) tasks have a time on \(day.date), starting with \(first.title) at \(start).",
+          defaultValue: "\(count) tasks have a time on \(lorvexDayLine(logicalDay: day.date)), starting with \(first.title) at \(start).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

@@ -14,7 +14,8 @@ func sharedSystemIntentRunnerMutatesTaskContentRemindersRecurrenceAndHierarchy()
     id: " \(task.id) ", text: " Shared system body append ", core: core)
   #expect(appended.notes.contains("Shared system body append"))
   let reminded = try await LorvexSystemIntentRunner.setTaskReminders(
-    id: task.id, remindersText: "2026-05-23T09:00:00Z\n2026-05-24T10:00:00Z", core: core)
+    id: task.id, reminderAts: ["2026-05-23T09:00:00Z", " 2026-05-24T10:00:00Z ", "  "],
+    core: core)
   #expect(reminded.reminders.count == 2)
   let reminderProbe = try await core.createTask(title: "Shared system reminder probe", notes: "")
   let singleReminderAdded = try await LorvexSystemIntentRunner.addTaskReminder(
@@ -29,7 +30,7 @@ func sharedSystemIntentRunnerMutatesTaskContentRemindersRecurrenceAndHierarchy()
     taskID: reminderProbe.id, reminderID: " \(singleReminder.id) ", core: core)
   #expect(!removedSingleReminder.reminders.contains { $0.id == singleReminder.id })
   let recurrenceSet = try await LorvexSystemIntentRunner.setTaskRecurrence(
-    taskID: task.id, frequency: .daily, interval: 1, weekdaysText: nil, until: " 2026-07-01 ",
+    taskID: task.id, frequency: .daily, interval: 1, weekdays: nil, until: " 2026-07-01 ",
     count: nil, core: core)
   #expect(
     recurrenceSet.recurrence == TaskRecurrenceRule(freq: .daily, interval: 1, until: "2026-07-01"))

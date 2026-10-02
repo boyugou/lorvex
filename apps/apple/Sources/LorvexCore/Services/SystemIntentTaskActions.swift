@@ -87,13 +87,21 @@ extension LorvexSystemIntentRunner {
     return try await core.appendToTaskBody(taskID: taskID, additionalNotes: trimmed)
   }
 
+  /// Replace the task's reminders with `reminderAts`, ISO-8601 timestamps.
+  /// Blank entries are dropped; at least one reminder must remain.
   public static func setTaskReminders(
     id: LorvexTask.ID,
-    remindersText: String,
+    reminderAts: [String],
     core: any LorvexCoreServicing
   ) async throws -> LorvexTask {
     let taskID = try validatedTaskID(id)
-    let reminders = try parsedReminderList(remindersText)
+    let reminders = reminderAts
+      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+      .filter { !$0.isEmpty }
+    guard !reminders.isEmpty else {
+      throw LorvexCoreError.validation(
+        field: "reminders", message: "At least one reminder timestamp is required.")
+    }
     return try await core.setTaskReminders(taskID: taskID, reminderAts: reminders)
   }
 
@@ -126,17 +134,5 @@ extension LorvexSystemIntentRunner {
       throw LorvexCoreError.validation(field: nil, message: "Task \(label) is required.")
     }
     return trimmed
-  }
-
-  private static func parsedReminderList(_ value: String) throws -> [String] {
-    let reminders = value
-      .split(whereSeparator: { $0 == "," || $0 == "\n" })
-      .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
-      .filter { !$0.isEmpty }
-    guard !reminders.isEmpty else {
-      throw LorvexCoreError.validation(
-        field: "reminders", message: "At least one reminder timestamp is required.")
-    }
-    return reminders
   }
 }

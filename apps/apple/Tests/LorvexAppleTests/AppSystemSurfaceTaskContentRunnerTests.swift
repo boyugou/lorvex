@@ -19,7 +19,7 @@ func taskIntentRunnerHandlesTaskContentReminderRecurrenceAndHierarchyActions() a
 
   let remindersSet = try await LorvexTaskIntentRunner.setTaskReminders(
     id: created.id,
-    remindersText: "2026-05-23T09:00:00Z,\n2026-05-24T10:00:00Z",
+    reminderAts: ["2026-05-23T09:00:00Z", "2026-05-24T10:00:00Z"],
     core: core
   )
   // Stored reminder instants carry millisecond precision.
@@ -51,7 +51,7 @@ func taskIntentRunnerHandlesTaskContentReminderRecurrenceAndHierarchyActions() a
     taskID: created.id,
     frequency: .weekly,
     interval: 2,
-    weekdaysText: "MO, WE",
+    weekdays: ["MO", "we"],
     until: nil,
     count: nil,
     core: core

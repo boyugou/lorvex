@@ -7,25 +7,26 @@ struct ProposeLorvexDayTimesIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.date", defaultValue: "Date", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.date.optional_today.description", defaultValue: "Optional date in YYYY-MM-DD format. Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle))
-  var date: String?
+    description: LocalizedStringResource("system.parameter.date.today_when_blank.description", defaultValue: "Leave blank for today.", table: "Localizable", bundle: SystemL10n.bundle),
+    kind: .date)
+  var date: Date?
 
   init() {
     date = nil
   }
 
-  init(date: String?) {
+  init(date: Date?) {
     self.date = date
   }
 
   func perform() async throws -> some IntentResult & ProvidesDialog {
-    let proposal = try await LorvexTaskIntentRunner.proposeDayTimes(date: date)
+    let proposal = try await LorvexTaskIntentRunner.proposeDayTimes(date: date.map(IntentDateText.day))
     if proposal.placements.isEmpty, proposal.unscheduled.isEmpty {
       return .result(
         dialog: IntentDialog(
           LocalizedStringResource(
             "system.day_times.nothing_to_place_dialog",
-            defaultValue: "Nothing on \(proposal.date) needs a time.",
+            defaultValue: "Nothing on \(lorvexDayLine(logicalDay: proposal.date)) needs a time.",
             table: "Localizable", bundle: SystemL10n.bundle)))
     }
     guard !proposal.placements.isEmpty else {
@@ -33,7 +34,7 @@ struct ProposeLorvexDayTimesIntent: LorvexAuthenticatedIntent {
         dialog: IntentDialog(
           LocalizedStringResource(
             "system.day_times.none_fit_dialog",
-            defaultValue: "No task fits the time left on \(proposal.date).",
+            defaultValue: "No task fits the time left on \(lorvexDayLine(logicalDay: proposal.date)).",
             table: "Localizable", bundle: SystemL10n.bundle)))
     }
     let count = proposal.placements.count
@@ -41,7 +42,7 @@ struct ProposeLorvexDayTimesIntent: LorvexAuthenticatedIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.day_times.propose.dialog",
-          defaultValue: "Suggested times for \(count) tasks on \(proposal.date).",
+          defaultValue: "Suggested times for \(count) tasks on \(lorvexDayLine(logicalDay: proposal.date)).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

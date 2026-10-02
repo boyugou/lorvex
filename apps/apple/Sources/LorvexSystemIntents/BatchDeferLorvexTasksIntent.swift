@@ -10,15 +10,15 @@ struct BatchDeferLorvexTasksIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.task.parameter.until", defaultValue: "Until", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.task.parameter.date_description", defaultValue: "Date in YYYY-MM-DD format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var until: String
+    kind: .date)
+  var until: Date
 
   init() {
     tasks = []
-    until = ""
+    until = .now
   }
 
-  init(tasks: [LorvexTaskEntity], until: String) {
+  init(tasks: [LorvexTaskEntity], until: Date) {
     self.tasks = tasks
     self.until = until
   }
@@ -26,7 +26,7 @@ struct BatchDeferLorvexTasksIntent: LorvexAuthenticatedIntent {
   func perform() async throws -> some IntentResult & ProvidesDialog {
     let result = try await LorvexTaskIntentRunner.batchDeferTasks(
       taskIDs: tasks.map(\.id),
-      until: until
+      until: IntentDateText.day(until)
     )
     return .result(
       dialog: IntentDialog(

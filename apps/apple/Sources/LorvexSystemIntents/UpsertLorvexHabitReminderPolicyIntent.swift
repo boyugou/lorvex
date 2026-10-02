@@ -1,4 +1,5 @@
 import AppIntents
+import LorvexCore
 
 struct UpsertLorvexHabitReminderPolicyIntent: LorvexAuthenticatedIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.reminder_policy.upsert.title", defaultValue: "Create or Update Lorvex Habit Reminder Policy", table: "Localizable", bundle: SystemL10n.bundle)
@@ -15,8 +16,8 @@ struct UpsertLorvexHabitReminderPolicyIntent: LorvexAuthenticatedIntent {
 
   @Parameter(
     title: LocalizedStringResource("system.habit.parameter.reminder_time", defaultValue: "Reminder Time", table: "Localizable", bundle: SystemL10n.bundle),
-    description: LocalizedStringResource("system.habit.parameter.reminder_time.description", defaultValue: "Time in HH:mm format.", table: "Localizable", bundle: SystemL10n.bundle))
-  var reminderTime: String
+    kind: .time)
+  var reminderTime: Date
 
   @Parameter(
     title: LocalizedStringResource("system.habit.parameter.enabled", defaultValue: "Enabled", table: "Localizable", bundle: SystemL10n.bundle))
@@ -25,11 +26,11 @@ struct UpsertLorvexHabitReminderPolicyIntent: LorvexAuthenticatedIntent {
   init() {
     habit = LorvexHabitEntity(id: "", name: "", completionsToday: 0, targetCount: 0)
     policyID = nil
-    reminderTime = "09:00"
+    reminderTime = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: .now) ?? .now
     enabled = true
   }
 
-  init(habit: LorvexHabitEntity, policyID: String? = nil, reminderTime: String, enabled: Bool) {
+  init(habit: LorvexHabitEntity, policyID: String? = nil, reminderTime: Date, enabled: Bool) {
     self.habit = habit
     self.policyID = policyID
     self.reminderTime = reminderTime
@@ -40,14 +41,14 @@ struct UpsertLorvexHabitReminderPolicyIntent: LorvexAuthenticatedIntent {
     let policy = try await LorvexTaskIntentRunner.upsertHabitReminderPolicy(
       id: habit.id,
       policyID: policyID,
-      reminderTime: reminderTime,
+      reminderTime: IntentDateText.time(reminderTime),
       enabled: enabled
     )
     return .result(
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.habit.reminder_policy.upsert.dialog",
-          defaultValue: "Set \(habit.name) reminder at \(policy.reminderTime).",
+          defaultValue: "Set \(habit.name) reminder at \(lorvexClockTimeLabel(policy.reminderTime)).",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

@@ -22,7 +22,7 @@ struct MobileHabitSummary: View {
     HStack(spacing: LorvexDesign.Spacing.m) {
       MobileIconTile(symbol: habit.tileSymbol, tint: habit.tileTint, size: 30)
       VStack(alignment: .leading, spacing: 3) {
-        Text(habit.name)
+        Text(userContent: habit.name)
           .font(.body)
           .lineLimit(2)
         if let caption = Self.caption(for: habit) {

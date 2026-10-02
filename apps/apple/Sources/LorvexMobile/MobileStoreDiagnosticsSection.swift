@@ -32,11 +32,11 @@ struct MobileStoreDiagnosticsSection: View {
         LabeledContent(
           String(
             localized: "diagnostics.tasks", defaultValue: "Tasks", table: "Localizable",
-            bundle: MobileL10n.bundle), value: "\(diagnostics.setup.taskCount)")
+            bundle: MobileL10n.bundle), value: diagnostics.setup.taskCount, format: .number)
         LabeledContent(
           String(
             localized: "diagnostics.lists", defaultValue: "Lists", table: "Localizable",
-            bundle: MobileL10n.bundle), value: "\(diagnostics.setup.listCount)")
+            bundle: MobileL10n.bundle), value: diagnostics.setup.listCount, format: .number)
         LabeledContent(
           String(
             localized: "diagnostics.sync", defaultValue: "Sync", table: "Localizable",
@@ -48,7 +48,7 @@ struct MobileStoreDiagnosticsSection: View {
           String(
             localized: "diagnostics.pending_rows", defaultValue: "Pending Sync Rows",
             table: "Localizable", bundle: MobileL10n.bundle),
-          value: "\(store.syncPendingRowCount)")
+          value: store.syncPendingRowCount, format: .number)
         // Only meaningful while something is queued, and a constant zero next
         // to an empty queue is noise.
         if store.syncPendingRowCount > 0 {
@@ -56,7 +56,7 @@ struct MobileStoreDiagnosticsSection: View {
             String(
               localized: "diagnostics.retrying_rows", defaultValue: "Retrying Sync Rows",
               table: "Localizable", bundle: MobileL10n.bundle),
-            value: "\(store.syncRetryingRowCount)")
+            value: store.syncRetryingRowCount, format: .number)
         }
         if let lastError = store.syncStatus?.lastError {
           // The transport's own words for why a row did not upload, so it wraps

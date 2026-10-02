@@ -308,7 +308,7 @@ final class SwiftLorvexCoreServiceHabitMilestoneTests: XCTestCase {
     let plan = LorvexDataImporter.plan(for: payload)
     let summary = await LorvexDataImporter.apply(
       plan: plan, payload: payload, using: destination)
-    XCTAssertTrue(summary.errors.isEmpty, "Import errors: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Import errors: \(summary.issues)")
     let restored = try await destination.loadHabits(date: "2026-06-30").habits
       .first { $0.id == created.id }
     XCTAssertEqual(restored?.milestoneTarget, 21)

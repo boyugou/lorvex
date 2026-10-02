@@ -54,7 +54,7 @@ public struct LorvexFocusFilterListQuery: EntityQuery, EntityStringQuery {
     let query = string.trimmingCharacters(in: .whitespacesAndNewlines)
     let lists = try await Self.lists()
     guard !query.isEmpty else { return lists }
-    return lists.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    return lists.filter { $0.name.localizedStandardContains(query) }
   }
 
   private static func lists() async throws -> [LorvexFocusFilterListEntity] {

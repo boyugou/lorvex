@@ -33,10 +33,6 @@ public enum MobileCommandTitles {
       String(
         localized: "mobileCommand.calendar", defaultValue: "Calendar", table: "Localizable",
         bundle: MobileL10n.bundle)
-    case .habits:
-      String(
-        localized: "mobileCommand.habits", defaultValue: "Habits", table: "Localizable",
-        bundle: MobileL10n.bundle)
     case .review:
       String(
         localized: "mobileCommand.review", defaultValue: "Review", table: "Localizable",

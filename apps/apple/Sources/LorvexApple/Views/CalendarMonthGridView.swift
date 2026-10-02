@@ -71,6 +71,7 @@ struct CalendarMonthGridView: View {
     HStack(spacing: 0) {
       ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, symbol in
         Text(symbol)
+          .textCase(.uppercase)
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .frame(maxWidth: .infinity)
@@ -81,13 +82,14 @@ struct CalendarMonthGridView: View {
   }
 
   /// Localized weekday abbreviations, rotated to start at
-  /// `calendar.firstWeekday` and uppercased to match the week grid's
-  /// day-of-week header labels.
+  /// `calendar.firstWeekday`. The header sets them in capitals with
+  /// `.textCase(.uppercase)`, which follows the environment's locale, as the
+  /// week grid's day-of-week labels do.
   private var weekdaySymbols: [String] {
     let symbols = calendar.shortWeekdaySymbols
-    guard symbols.count == 7 else { return symbols.map { $0.uppercased() } }
+    guard symbols.count == 7 else { return symbols }
     let firstIndex = max(0, min(6, calendar.firstWeekday - 1))
-    return (Array(symbols[firstIndex...]) + Array(symbols[..<firstIndex])).map { $0.uppercased() }
+    return Array(symbols[firstIndex...]) + Array(symbols[..<firstIndex])
   }
 
   private func weekRow(_ week: [CalendarMonthGridDay], maxVisibleChips: Int) -> some View {

@@ -8,22 +8,40 @@ import XCTest
 /// not safe to exercise concurrently across multiple `EKEventStore` instances.
 /// XCTest runs this bridge probe outside Swift Testing's parallel test phase.
 final class MobileEventKitMappingTests: XCTestCase {
-  func testExclusiveAllDayEndMapsToInclusiveLorvexDate() throws {
-    let event = EKEvent(eventStore: EKEventStore())
-    event.isAllDay = true
+  /// EventKit reports an all-day end as the last day at 23:59:59, and turns
+  /// a timed event with a next-midnight end into the same shape when it is
+  /// flagged all-day. Both read as May 24 through May 26; a one-day event
+  /// reads as its one day.
+  func testAllDayEndMapsToTheLastOccupiedDay() throws {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = .current
-    event.startDate = try XCTUnwrap(
-      calendar.date(from: DateComponents(year: 2030, month: 5, day: 24)))
-    event.endDate = try XCTUnwrap(
-      calendar.date(from: DateComponents(year: 2030, month: 5, day: 27)))
+    func day(_ day: Int, _ hour: Int = 0, _ minute: Int = 0, _ second: Int = 0) throws -> Date {
+      try XCTUnwrap(
+        calendar.date(
+          from: DateComponents(
+            year: 2030, month: 5, day: day, hour: hour, minute: minute, second: second)))
+    }
+    let stored = EKEvent(eventStore: EKEventStore())
+    stored.isAllDay = true
+    stored.startDate = try day(24)
+    stored.endDate = try day(26, 23, 59, 59)
+    let flaggedLater = EKEvent(eventStore: EKEventStore())
+    flaggedLater.startDate = try day(24)
+    flaggedLater.endDate = try day(27)
+    flaggedLater.isAllDay = true
+    let oneDay = EKEvent(eventStore: EKEventStore())
+    oneDay.isAllDay = true
+    oneDay.startDate = try day(24)
+    oneDay.endDate = try day(24)
 
-    let fetched = MobileLiveEventKitAccess.fetchedEvent(from: event)
-
-    XCTAssertEqual(fetched.startDate, "2030-05-24")
-    XCTAssertEqual(fetched.endDate, "2030-05-26")
-    XCTAssertNil(fetched.startTime)
-    XCTAssertNil(fetched.endTime)
+    for event in [stored, flaggedLater] {
+      let fetched = MobileLiveEventKitAccess.fetchedEvent(from: event)
+      XCTAssertEqual(fetched.startDate, "2030-05-24")
+      XCTAssertEqual(fetched.endDate, "2030-05-26")
+      XCTAssertNil(fetched.startTime)
+      XCTAssertNil(fetched.endTime)
+    }
+    XCTAssertEqual(MobileLiveEventKitAccess.fetchedEvent(from: oneDay).endDate, "2030-05-24")
   }
 
   func testTimedEventMapsInItsOwnTimezoneAcrossMidnight() throws {

@@ -101,10 +101,28 @@ LOCALIZATION_PLIST_ENTRIES="$(printf "%s\n" "$LOCALIZATION_METADATA" | sed '1d')
 # started under dist/.
 pkill -f "$APP_BINARY" >/dev/null 2>&1 || true
 
-swift build -c "$BUILD_CONFIGURATION" --product "$APP_PRODUCT_NAME"
-swift build -c "$BUILD_CONFIGURATION" --product "LorvexWidgetBundle"
-swift build -c "$BUILD_CONFIGURATION" --product "$MCP_HOST_PRODUCT"
-SWIFT_BIN_PATH="$(swift build -c "$BUILD_CONFIGURATION" --show-bin-path)"
+# App Intents metadata. Shortcuts actions, App Shortcuts, widget configuration,
+# interactive widget buttons, and controls all find a bundle's intents through
+# its Metadata.appintents, which Xcode writes and `swift build` does not.
+# Release staging has the compiler record each App Intents conformance's
+# constant values, and extract_app_intents_metadata.py (below) turns them into
+# the app's and the widget's metadata. Every product shares the flags so the
+# modules they share build once. Debug staging leaves them off so its build
+# matches plain `swift build` / `swift test` and keeps their build cache.
+SWIFT_BUILD_FLAGS=()
+if [[ "$BUILD_CONFIGURATION" == release ]]; then
+  SWIFT_BUILD_FLAGS=(
+    -Xswiftc -emit-const-values
+    -Xswiftc -const-gather-protocols-list
+    -Xswiftc "$ROOT_DIR/Config/AppIntentsConstValueProtocols.json"
+  )
+fi
+
+# `${array[@]+...}` expands an empty array under `set -u` on bash 3.2 too.
+swift build -c "$BUILD_CONFIGURATION" --product "$APP_PRODUCT_NAME" ${SWIFT_BUILD_FLAGS[@]+"${SWIFT_BUILD_FLAGS[@]}"}
+swift build -c "$BUILD_CONFIGURATION" --product "LorvexWidgetBundle" ${SWIFT_BUILD_FLAGS[@]+"${SWIFT_BUILD_FLAGS[@]}"}
+swift build -c "$BUILD_CONFIGURATION" --product "$MCP_HOST_PRODUCT" ${SWIFT_BUILD_FLAGS[@]+"${SWIFT_BUILD_FLAGS[@]}"}
+SWIFT_BIN_PATH="$(swift build -c "$BUILD_CONFIGURATION" --show-bin-path ${SWIFT_BUILD_FLAGS[@]+"${SWIFT_BUILD_FLAGS[@]}"})"
 BUILD_BINARY="$SWIFT_BIN_PATH/$APP_PRODUCT_NAME"
 WIDGET_BUILD_BINARY="$SWIFT_BIN_PATH/LorvexWidgetBundle"
 MCP_BUILD_BINARY="$SWIFT_BIN_PATH/$MCP_HOST_PRODUCT"
@@ -124,6 +142,25 @@ chmod +x "$WIDGET_BINARY"
 cp "$ROOT_DIR/Config/LorvexWidgets-Info.plist" "$WIDGET_INFO_PLIST"
 cp "$ROOT_DIR/Config/PrivacyInfo.xcprivacy" "$APP_CONTENTS/Resources/PrivacyInfo.xcprivacy"
 cp "$ROOT_DIR/Config/PrivacyInfo.xcprivacy" "$WIDGET_RESOURCES/PrivacyInfo.xcprivacy"
+# Localized Info.plist values (bundle names, the calendar permission prompts),
+# one `<language>.lproj/InfoPlist.strings` per shipped language. The system
+# reads them from the bundle that owns the Info.plist, so the app and the
+# widget extension each carry their own; verify_localization_catalog.py keeps
+# every Config/InfoPlist target complete in every shipped language.
+stage_info_plist_strings() {
+  local source_dir="$1" resources="$2" strings language_dir
+  for strings in "$source_dir"/*.lproj/InfoPlist.strings; do
+    if [[ ! -f "$strings" ]]; then
+      echo "missing localized InfoPlist.strings under $source_dir" >&2
+      exit 1
+    fi
+    language_dir="$resources/$(basename "$(dirname "$strings")")"
+    mkdir -p "$language_dir"
+    cp "$strings" "$language_dir/InfoPlist.strings"
+  done
+}
+stage_info_plist_strings "$ROOT_DIR/Config/InfoPlist/LorvexApple" "$APP_CONTENTS/Resources"
+stage_info_plist_strings "$ROOT_DIR/Config/InfoPlist/LorvexWidgets" "$WIDGET_RESOURCES"
 cp "$ROOT_DIR/Resources/AppIcon/LorvexAppIcon.icns" "$APP_CONTENTS/Resources/LorvexAppIcon.icns"
 # Compile a macOS asset catalog carrying the app icon. App Store requires a
 # compiled Assets.car with a named app-icon set (reject ITMS-90546); the .icns
@@ -201,19 +238,37 @@ do
   done
 done
 
-# Compile String Catalogs (`*.xcstrings`) into per-language `.lproj/*.strings`
-# inside each resource bundle. `swift build` copies the raw `.xcstrings` but does
-# NOT compile it, so `NSLocalizedString(bundle:)` finds no string tables and the
-# app shows the English source for every locale — the in-app language switch
-# (and every non-English language) silently has no effect.
+# Make sure each resource bundle holds compiled per-language `.lproj/*.strings`.
+# Swift Build compiles the String Catalogs itself; the native build system only
+# copies the raw `.xcstrings`, which leaves `NSLocalizedString(bundle:)` with no
+# string tables, so the app would show the English source for every locale.
 #
-# Compile both the staged app's catalogs and the SwiftPM build-directory bundles:
+# Check both the staged app's bundles and the SwiftPM build-directory bundles:
 # `Bundle.module` resolves to the build-directory bundle whenever it exists — i.e.
 # on the developer's machine — so compiling only the staged copy leaves a locally
 # run app showing English for every locale. `--best-effort` keeps this dev/packaging
 # loop going with a warning if `xcstringstool` is unavailable, rather than failing
 # the build (verify_all.sh runs the same script strictly, where tests depend on it).
 "$ROOT_DIR/script/compile_xcstrings.sh" --best-effort "$APP_CONTENTS/Resources" "$BUILD_BIN_DIR"
+
+# The App Intents metadata the release build's const values describe (see
+# SWIFT_BUILD_FLAGS above): the app's Shortcuts actions and App Shortcuts, and
+# the widget's configuration intent, buttons, and control. The expected types
+# are the ones whose absence breaks a surface outright — without the widget
+# configuration intent, the Today widget never leaves its placeholder.
+if [[ "$BUILD_CONFIGURATION" == release ]]; then
+  "$ROOT_DIR/script/extract_app_intents_metadata.py" \
+    --target "$APP_PRODUCT_NAME" --binary "$APP_BINARY" --bundle-id "$BUNDLE_ID" \
+    --resources "$APP_CONTENTS/Resources" --bin-path "$SWIFT_BIN_PATH" \
+    --deployment-target "$MIN_SYSTEM_VERSION" \
+    --expect CaptureLorvexTaskIntent --expect CompleteLorvexTaskIntent
+  "$ROOT_DIR/script/extract_app_intents_metadata.py" \
+    --target LorvexWidgetBundle --binary "$WIDGET_BINARY" --bundle-id "$WIDGET_BUNDLE_ID" \
+    --resources "$WIDGET_RESOURCES" --bin-path "$SWIFT_BIN_PATH" \
+    --deployment-target "$MIN_SYSTEM_VERSION" \
+    --expect LorvexTodayWidgetConfigurationIntent --expect WidgetCompleteTaskIntent \
+    --expect WidgetCompleteHabitIntent --expect OpenLorvexTodayIntent
+fi
 
 # Toolchain provenance (DT*/BuildMachineOSBuild), which Xcode stamps into every
 # bundle it builds and this SwiftPM staging path must supply itself. App Store
@@ -481,6 +536,11 @@ open_app() {
   /usr/bin/open -n "$APP_BUNDLE"
 }
 
+# Registers the staged bundle so lorvex:// resolves to this build while it
+# runs. Only the modes that launch it register it: a bundle staged for
+# packaging is signed and shipped, never run here, and registering it would
+# hand this Mac's lorvex:// links and widget taps to the staged copy instead
+# of the installed app.
 refresh_launchservices_registration() {
   if [[ -x "$LSREGISTER" ]]; then
     "$LSREGISTER" -f "$APP_BUNDLE"
@@ -489,26 +549,29 @@ refresh_launchservices_registration() {
   fi
 }
 
-refresh_launchservices_registration
-
 case "$MODE" in
   --stage-only|stage)
     ;;
   run)
+    refresh_launchservices_registration
     open_app
     ;;
   --debug|debug)
+    refresh_launchservices_registration
     lldb -- "$APP_BINARY"
     ;;
   --logs|logs)
+    refresh_launchservices_registration
     open_app
     /usr/bin/log stream --info --style compact --predicate "process == \"$APP_NAME\""
     ;;
   --telemetry|telemetry)
+    refresh_launchservices_registration
     open_app
     /usr/bin/log stream --info --style compact --predicate "subsystem == \"$BUNDLE_ID\""
     ;;
   --verify|verify)
+    refresh_launchservices_registration
     open_app
     wait_for_app_launch "$APP_NAME"
     ;;

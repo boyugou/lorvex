@@ -101,7 +101,6 @@ struct WidgetSnapshotLiveRefresherTests {
   func widgetWriteIntentsRefreshSnapshotsAndBroadcastCommittedChanges() throws {
     let files = [
       "Sources/LorvexWidgetIntents/WidgetCompleteTaskIntent.swift",
-      "Sources/LorvexWidgetIntents/WidgetDeferTaskIntent.swift",
       "Sources/LorvexWidgetIntents/WidgetCompleteHabitIntent.swift",
     ]
 

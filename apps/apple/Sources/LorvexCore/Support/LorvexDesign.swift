@@ -1,4 +1,9 @@
 import SwiftUI
+#if os(macOS)
+  import AppKit
+#elseif os(iOS)
+  import UIKit
+#endif
 
 /// Shared design tokens for every Lorvex Apple surface (macOS, iOS, iPadOS,
 /// watchOS).
@@ -99,6 +104,36 @@ public enum LorvexDesign {
     public static let clockTime: CGFloat = 72
     #endif
 
+    /// The clock column's width at the default text size for the display
+    /// locale: the widest hour's time ("10:40 AM", "上午 11:40", "오전 11:40")
+    /// on one line in the secondary text font with monospaced digits, plus a
+    /// little room, and never narrower than ``clockTime``. Callers scale it
+    /// with the text style, as the times scale.
+    @MainActor public static func clockTimeWidth() -> CGFloat {
+      let labels = (0..<24).map { lorvexClockTimeLabel(minutes: $0 * 60 + 40) }
+      let key = labels.joined(separator: "\u{1F}")
+      if let cached = clockTimeWidths[key] { return cached }
+      #if os(macOS)
+        let size = NSFont.preferredFont(forTextStyle: .callout).pointSize
+        let font = NSFont.monospacedDigitSystemFont(ofSize: size, weight: .regular)
+      #elseif os(iOS)
+        let size = UIFont.preferredFont(
+          forTextStyle: .subheadline, compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
+        ).pointSize
+        let font = UIFont.monospacedDigitSystemFont(ofSize: size, weight: .regular)
+      #endif
+      #if os(macOS) || os(iOS)
+        let widest = labels.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+        let width = max(clockTime, (widest + 4).rounded(.up))
+      #else
+        let width = clockTime
+      #endif
+      clockTimeWidths[key] = width
+      return width
+    }
+
+    @MainActor private static var clockTimeWidths: [String: CGFloat] = [:]
+
     /// Holds the widest review day ("Wed, May 20", "10月30日 周五") in
     /// `Typography.secondaryText` semibold at every size from the smallest up
     /// to xLarge: 84 for the callout style on macOS, 104 for the subheadline
@@ -122,11 +157,13 @@ public enum LorvexDesign {
     /// comfortable pointer drag target without making a full day scroll too far.
     public static let hourHeight: CGFloat = 48
 
-    /// Height below which a timed block drops its vertical padding and clips
-    /// its text, so the one title line it can hold stays inside it. A block
-    /// only gets this short when another block starts right after it: otherwise
-    /// `CalendarGridModel.minBlockMinutes` holds it open to 20 minutes, which
-    /// is at least 16pt on every grid.
+    /// Height below which a compact block (``compactLaneWidth``) drops the
+    /// vertical padding around its title, so the line it can hold stays
+    /// inside it. A block only gets this short when another block starts
+    /// right after it: otherwise `CalendarGridModel.minBlockMinutes` holds it
+    /// open to 20 minutes, which is at least 16pt on every grid. A full-width
+    /// block arranges its text by measurement instead
+    /// (`LorvexCalendarBlockText`).
     public static let tightBlockHeight: CGFloat = 16
 
     /// Lane width below which a timed block on the phone grid goes compact:

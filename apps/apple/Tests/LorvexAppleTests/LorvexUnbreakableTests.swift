@@ -23,6 +23,16 @@ struct LorvexUnbreakableTests {
     #expect(lorvexUnbreakable("9:45 AM – 10:30 AM") == "9:45\u{00A0}AM\u{00A0}– 10:30\u{00A0}AM")
   }
 
+  @Test("a time span beside other words never breaks inside itself")
+  func timeSpansStayWhole() {
+    #expect(
+      lorvexWholeSpan("9:45\u{2009}–\u{2009}10:30\u{202F}AM")
+        == "9:45\u{202F}\u{2060}–\u{2060}\u{202F}10:30\u{202F}AM")
+    #expect(lorvexWholeSpan("09:45—10:45") == "09:45\u{2060}—\u{2060}10:45")
+    #expect(lorvexWholeSpan("9:45～10:30") == "9:45\u{2060}～\u{2060}10:30")
+    #expect(lorvexWholeSpan("9:45 AM – 10:30 AM") == "9:45\u{00A0}AM\u{00A0}\u{2060}–\u{2060}\u{00A0}10:30\u{00A0}AM")
+  }
+
   @Test("a dot stays with the fact before it")
   func dotsStayWithTheFactBeforeThem() {
     #expect(lorvexDotJoined(["9:45 AM", "Due"]) == "9:45 AM\u{00A0}· Due")

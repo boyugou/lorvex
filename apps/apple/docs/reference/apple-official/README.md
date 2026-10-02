@@ -7,6 +7,12 @@ live documentation before a release.
 
 - Last source verification: 2026-07-10
 - Code snapshot used for the latest Lorvex mapping pass: `605c8a6231605227334ab0f222a925b7f38a5aa5`
+- Statements about the repository itself (deployment floors, file layout, script
+  names, catalog and language counts) describe that snapshot. The deployment
+  floor in force is macOS 26, iOS/iPadOS 26, and watchOS 26, and the shipped
+  languages are English, Arabic, Spanish, French, Hindi, Italian, Japanese,
+  Korean, Polish, Brazilian Portuguese, Russian, Ukrainian, Simplified Chinese,
+  and Traditional Chinese.
 - Source policy: Apple Developer Documentation, App Store Review Guidelines,
   App Store Connect Help, and Apple Support security/privacy documentation only
 - Copyright policy: paraphrases and short facts only; follow the source link for
@@ -24,6 +30,7 @@ live documentation before a release.
 | App crash reports | [APP_CRASH_REPORTS.md](APP_CRASH_REPORTS.md) | OS/App Store diagnostic channel versus Lorvex upload |
 | Apple analytics sharing | [APPLE_ANALYTICS_SHARING.md](APPLE_ANALYTICS_SHARING.md) | User-controlled Apple diagnostic sharing |
 | App Store Support URL | [APP_STORE_SUPPORT_URL.md](APP_STORE_SUPPORT_URL.md) | Public support page versus private review / DSA contact fields |
+| App Store OS usage | [APP_STORE_OS_USAGE.md](APP_STORE_OS_USAGE.md) | Device OS adoption figures weighed against the version-26 floor |
 | Creating a widget extension | [WIDGET_SENSITIVE_CONTENT.md](WIDGET_SENSITIVE_CONTENT.md) | Lock Screen/Always-On sensitive-content redaction |
 | App Intent authentication | [APP_INTENT_AUTHENTICATION.md](APP_INTENT_AUTHENTICATION.md) | Locked-device authorization for Siri/Shortcuts/widgets |
 | App Intent confirmation | [APP_INTENT_CONFIRMATION.md](APP_INTENT_CONFIRMATION.md) | Confirmation before destructive/unsafe actions |

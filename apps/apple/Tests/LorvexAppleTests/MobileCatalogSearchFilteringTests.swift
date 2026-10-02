@@ -97,4 +97,12 @@ struct MobileCatalogSearchFilteringTests {
     // A blank query matches everything.
     #expect(LorvexCatalogSearch.matches("   ", fields: [nil]))
   }
+
+  @Test("terms match regardless of case and accents")
+  func caseAndAccentInsensitive() {
+    #expect(LorvexCatalogSearch.matches("cafe", fields: ["Café con leche"]))
+    #expect(LorvexCatalogSearch.matches("MANANA", fields: ["Llamar mañana"]))
+    #expect(LorvexCatalogSearch.matches("café", fields: ["CAFE"]))
+    #expect(!LorvexCatalogSearch.matches("cafe", fields: ["Caffè"]))
+  }
 }

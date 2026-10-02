@@ -125,7 +125,7 @@ struct MobileDiagnosticLogRow: View {
 
   private var relativeTimestamp: String? {
     guard let timestamp = entry.timestamp, let date = Self.parse(timestamp) else { return nil }
-    return MobileDateFormatting.abbreviatedRelativeString(for: date, relativeTo: now)
+    return LorvexDateFormatters.relative(date, to: now, unitsStyle: .abbreviated, dateTimeStyle: .numeric)
   }
 
   /// Parse the merged feed's ISO-8601 timestamps, tolerating both the core's

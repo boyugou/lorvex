@@ -11,7 +11,7 @@ memory.
   once. The plugin starts the MCP helper that ships inside the app, and that
   helper reads and writes the same database the app shows.
 - Claude Code. In Claude Desktop and other MCP clients, connect Lorvex through
-  the app instead: Settings → Assistant → Copy Setup Prompt.
+  the app instead: Settings → Assistant → Setup Prompt → Copy.
 
 ## Install
 

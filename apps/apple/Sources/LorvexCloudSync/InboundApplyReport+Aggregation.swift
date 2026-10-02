@@ -4,7 +4,9 @@ extension InboundApplyReport {
   /// Accumulate independently committed inbound work into one cycle report.
   /// Counts are additive because each source batch is applied exactly once;
   /// changed entity kinds form a set because surface reload routing only needs
-  /// to know which canonical domains changed during the whole cycle.
+  /// to know which canonical domains changed during the whole cycle, and the
+  /// cycle changed canonical state when any of its batches did. Collision
+  /// receipts stay with the reconciliation that produced them.
   mutating func accumulate(_ report: InboundApplyReport) {
     applied += report.applied
     skipped += report.skipped
@@ -14,5 +16,6 @@ extension InboundApplyReport {
     undecodable += report.undecodable
     deferredUnknownType += report.deferredUnknownType
     appliedEntityTypes.formUnion(report.appliedEntityTypes)
+    canonicalStateChanged = canonicalStateChanged || report.canonicalStateChanged
   }
 }

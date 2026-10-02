@@ -46,6 +46,10 @@ struct LorvexTaskRow: View {
   /// (e.g. previews, or surfaces that don't own a completion action).
   var onToggleComplete: (() -> Void)?
 
+  /// The zone the due facts count days in, so they agree with the lists the
+  /// product's logical day builds.
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
+
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }
   /// Started work carries a restrained "Started" marker; the leading circle is
@@ -64,7 +68,7 @@ struct LorvexTaskRow: View {
       completionCircle
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        Text(task.title)
+        Text(userContent: task.title)
           .font(LorvexDesign.Typography.primaryText)
           .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .strikethrough(isInactive, color: .secondary)
@@ -93,7 +97,8 @@ struct LorvexTaskRow: View {
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
       taskAccessibilityLabel(
-        task, vocabulary: .lorvexLocalized, timeLabel: timeLabel, details: accessibilityDetails))
+        task, timeLabel: timeLabel, details: accessibilityDetails,
+        timeZone: productTimeZone))
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
     // The leading completion circle is `accessibilityHidden`, so expose its
@@ -172,7 +177,7 @@ struct LorvexTaskRow: View {
     var details = chips.map(\.title)
     if isBlocked { details.append(TaskDisplayText.blocked) }
     if let owningList { details.append(owningList.name) }
-    if let hiddenLabel = task.hiddenUntilShortLabel() {
+    if let hiddenLabel = task.hiddenUntilShortLabel(timeZone: productTimeZone) {
       details.append(TaskDisplayText.hiddenUntil(hiddenLabel))
     }
     return details
@@ -185,7 +190,7 @@ struct LorvexTaskRow: View {
   private var calmMetadata: [String] {
     var parts: [String] = []
     if timeLabel == nil, let minutes = task.estimatedMinutes {
-      parts.append(lorvexMinutesLabel(minutes))
+      parts.append(LorvexDurationFormat.minutes(minutes))
     }
     parts.append(contentsOf: task.tags.prefix(3))
     return parts
@@ -196,12 +201,12 @@ struct LorvexTaskRow: View {
   /// exists, so an empty row stays a clean title.
   @ViewBuilder
   private var metadataLine: some View {
-    let dueLabel = task.cachedDueRelativeLabel()
-    let isDueOverdue = task.isOverdue()
-    let isDueSoon = !isDueOverdue && task.isDueSoon()
+    let dueLabel = task.cachedDueRelativeLabel(timeZone: productTimeZone)
+    let isDueOverdue = task.isOverdue(timeZone: productTimeZone)
+    let isDueSoon = !isDueOverdue && task.isDueSoon(timeZone: productTimeZone)
     // Hidden-until only surfaces on rows that reach a list at all (Scheduled
     // section, search); on the day surfaces the task is filtered out entirely.
-    let hiddenLabel = task.hiddenUntilShortLabel()
+    let hiddenLabel = task.hiddenUntilShortLabel(timeZone: productTimeZone)
     let calm = calmMetadata
     if timeLabel != nil || owningList != nil || hiddenLabel != nil || dueLabel != nil
       || !calm.isEmpty

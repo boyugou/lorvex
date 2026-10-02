@@ -24,6 +24,8 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   /// The task's fields, whose rows and Add menu open one field each through
   /// `editField`.
   let properties: MobileTaskProperties
+  /// What the Share button sends (``MobileShareText/task(_:listName:logicalDay:)``).
+  let shareText: String
   let editField: (MobileTaskField) -> Void
   @ViewBuilder let actions: () -> Actions
   @ViewBuilder let paneActions: () -> PaneActions
@@ -47,6 +49,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     completeDependency: ((LorvexTask) async -> Void)? = nil,
     isDependencyMutating: @escaping (LorvexTask.ID) -> Bool = { _ in false },
     properties: MobileTaskProperties,
+    shareText: String,
     editField: @escaping (MobileTaskField) -> Void,
     @ViewBuilder actions: @escaping () -> Actions,
     @ViewBuilder paneActions: @escaping () -> PaneActions
@@ -62,6 +65,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     self.completeDependency = completeDependency
     self.isDependencyMutating = isDependencyMutating
     self.properties = properties
+    self.shareText = shareText
     self.editField = editField
     self.actions = actions
     self.paneActions = paneActions
@@ -71,14 +75,14 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     List {
       Section {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-          Text(task.title)
+          Text(userContent: task.title)
             .font(LorvexDesign.Typography.detailTitle)
             .fixedSize(horizontal: false, vertical: true)
           if let statusChip {
             detailChip(statusChip.text, systemImage: statusChip.icon, tint: statusChip.tint)
           }
           if !task.notes.isEmpty {
-            Text(task.notes)
+            Text(userContent: task.notes)
               .font(LorvexDesign.Typography.primaryText)
               .textSelection(.enabled)
               .foregroundStyle(.secondary)
@@ -108,11 +112,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
         completeDependency: completeDependency,
         isDependencyMutating: isDependencyMutating)
       if let aiNotes = task.aiNotes, !aiNotes.isEmpty {
-        Section(
-          String(
-            localized: "task_detail.section.assistant_context", defaultValue: "Assistant Context",
-            table: "Localizable", bundle: MobileL10n.bundle)
-        ) {
+        Section(MobileTaskPropertyCopy.assistantContext) {
           MarkdownNoteView(aiNotes,
             taskItemAccessibility: .init(
               completedFormat: String(
@@ -126,11 +126,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
         }
       }
       if showsChecklist {
-        Section(
-          String(
-            localized: "task_detail.section.checklist", defaultValue: "Checklist",
-            table: "Localizable", bundle: MobileL10n.bundle)
-        ) {
+        Section(MobileTaskPropertyCopy.checklist) {
           ForEach(task.checklistItems.sorted { $0.position < $1.position }) { item in
             MobileChecklistItemRow(
               item: item,
@@ -238,7 +234,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   }
 
   private var shareButton: some View {
-    ShareLink(item: LorvexTaskMarkdownExport.render(task)) {
+    ShareLink(item: shareText) {
       Label(
         String(
           localized: "common.share", defaultValue: "Share", table: "Localizable",
@@ -289,13 +285,13 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     case .open:
       return nil
     case .inProgress:
-      return (MobileTaskDisplayText.status(.inProgress), "play.fill", Color.accentColor)
+      return (LorvexTask.Status.inProgress.localizedName, "play.fill", Color.accentColor)
     case .completed:
-      return (MobileTaskDisplayText.status(.completed), "checkmark.circle.fill", LorvexDesign.Palette.done)
+      return (LorvexTask.Status.completed.localizedName, "checkmark.circle.fill", LorvexDesign.Palette.done)
     case .cancelled:
-      return (MobileTaskDisplayText.status(.cancelled), "xmark.circle.fill", Color.secondary)
+      return (LorvexTask.Status.cancelled.localizedName, "xmark.circle.fill", Color.secondary)
     case .someday:
-      return (MobileTaskDisplayText.status(.someday), "moon.zzz.fill", LorvexDesign.Palette.someday)
+      return (LorvexTask.Status.someday.localizedName, "moon.zzz.fill", LorvexDesign.Palette.someday)
     }
   }
 }

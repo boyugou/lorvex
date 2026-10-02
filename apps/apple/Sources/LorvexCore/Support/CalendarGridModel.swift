@@ -73,7 +73,7 @@ public enum CalendarGridModel {
 
       if event.allDay {
         // Spread across each day in the span that falls in this range.
-        for key in dayKeys where key >= startKey && key <= endKey {
+        for key in dayKeys where event.occurs(on: key) {
           allDayByKey[key, default: []].append(event)
         }
         continue
@@ -98,12 +98,10 @@ public enum CalendarGridModel {
         continue
       }
 
-      // Multi-day timed event: clip per day across the span.
-      for key in dayKeys where key >= startKey && key <= endKey {
-        // An event ending exactly at midnight occupies zero time on its end day
-        // (22:00→00:00-next-day is a start-day-only block). Skip that cell so it
-        // doesn't render a spurious minimum-height (20-min) sliver at 00:00.
-        if key == endKey, endMinRaw == 0 { continue }
+      // Multi-day timed event: clip per day across the days it takes time on,
+      // which leaves out the end day of an event ending at exactly midnight
+      // rather than drawing a minimum-height sliver at 00:00 there.
+      for key in dayKeys where event.occurs(on: key) {
         let startMin = key == startKey ? startMinRaw : 0
         let endMin = key == endKey ? max(endMinRaw, 1) : 1440
         let blockID = "\(event.id)#\(key)"

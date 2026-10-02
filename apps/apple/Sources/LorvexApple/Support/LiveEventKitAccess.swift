@@ -243,9 +243,12 @@ actor LiveEventKitAccess: EventKitAccessing {
     let calendar = try await resolveWriteCalendar(target, reusing: writeEvent)
     let ekEvent = writeEvent ?? store.makeEvent()
     ekEvent.title = title
+    // The all-day flag goes first: EventKit normalizes dates against the flag
+    // already set, so a reused all-day event would floor new times to
+    // midnight and stretch a new end to 23:59:59 of its day.
+    ekEvent.isAllDay = isAllDay
     ekEvent.startDate = start
     ekEvent.endDate = end
-    ekEvent.isAllDay = isAllDay
     ekEvent.location = location
     let userNotes: String?
     switch notesPatch {
@@ -283,9 +286,10 @@ actor LiveEventKitAccess: EventKitAccessing {
     let recurrenceRules = try EventKitRecurrenceBridge.rules(from: replacement.recurrence)
     let calendar = try await resolveWriteCalendar(target, reusing: occurrence)
     occurrence.title = replacement.title
+    // The all-day flag before the dates, as in `upsertLorvexEvent`.
+    occurrence.isAllDay = replacement.isAllDay
     occurrence.startDate = replacement.startDate
     occurrence.endDate = replacement.endDate
-    occurrence.isAllDay = replacement.isAllDay
     occurrence.location = replacement.location
     occurrence.notes = Self.notesWithMarker(
       userNotes: replacement.notes, lorvexID: replacementLorvexEventID)

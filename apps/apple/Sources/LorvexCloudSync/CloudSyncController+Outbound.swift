@@ -17,6 +17,10 @@ extension CloudSyncController {
   /// Device-local `ai_changelog` rows found on the way are confirmed without
   /// being sent, and pending names that no longer have outbox work are
   /// dropped from the engine.
+  ///
+  /// Nothing is sent while a storage-full hold lasts
+  /// (``holdSendsForFullStorage()``); the pending names stay pending, and the
+  /// report says why nothing went out.
   func nextBatch(scope: CKSyncEngine.SendChangesOptions.Scope) async -> [CKRecord] {
     guard state == .running, !isDeletingCloudData, let engine, let accountID else { return [] }
     var pendingNames = Set<String>()
@@ -26,6 +30,10 @@ extension CloudSyncController {
       }
     }
     guard !pendingNames.isEmpty else { return [] }
+    if isHoldingSendsForFullStorage {
+      pendingReport.iCloudStorageFull = true
+      return []
+    }
 
     var groups: [String: CloudSyncOutboundGroup] = [:]
     var order: [String] = []
@@ -222,7 +230,7 @@ extension CloudSyncController {
     if request != OutboundReconciliationRequest() {
       do {
         let report = try store.reconcileOutbound(request)
-        pendingReport.inbound.merge(report.inbound)
+        pendingReport.inbound.accumulate(report.inbound)
         // A reconciled collision queued a successor row, sent against the
         // server's system fields. One Core could not reconcile, or held for a
         // server record it cannot apply yet, waits for the retry policy like
@@ -250,7 +258,14 @@ extension CloudSyncController {
       }
     }
     if !cacheAfterCommit.isEmpty { await cacheSystemFields(of: cacheAfterCommit, accountID: accountID) }
-    if storageFull { pendingReport.iCloudStorageFull = true }
+    if storageFull {
+      pendingReport.iCloudStorageFull = true
+      holdSendsForFullStorage()
+    } else if !saved.isEmpty {
+      // CloudKit took records, so the account has room again.
+      storageFullHoldEnd = nil
+      storageFullRefusals = 0
+    }
     if !requeue.isEmpty, engineUnchanged(), let engine {
       if !forget.isEmpty, (try? store.cloudSyncEngineCheckpoint(.zoneEstablished)) != "1" {
         ensureZoneSaveQueued(on: engine)
@@ -266,5 +281,31 @@ extension CloudSyncController {
     }
     await systemFieldsStore.storeAll(
       entries, accountIdentifier: accountID, zoneName: zoneID.zoneName)
+  }
+
+  // MARK: - Full iCloud storage
+
+  /// How long sends wait after CloudKit refuses a save for full iCloud
+  /// storage, given how many refusals came before this one: 5 minutes,
+  /// doubling with each consecutive refusal, up to an hour.
+  static func storageFullHold(afterRefusals refusals: Int) -> TimeInterval {
+    min(300 * pow(2, Double(refusals)), 3600)
+  }
+
+  /// CloudKit refused a save because the account's iCloud storage is full.
+  /// Until the user frees space, every send would upload all the pending
+  /// records only to be refused the same way, so sends wait out a hold that
+  /// grows with each consecutive refusal (``storageFullHold(afterRefusals:)``).
+  /// Fetches go on. The first send after the hold ends tries again; a send
+  /// CloudKit takes, or a new engine, ends the backoff.
+  func holdSendsForFullStorage() {
+    storageFullHoldEnd = now().addingTimeInterval(
+      Self.storageFullHold(afterRefusals: storageFullRefusals))
+    storageFullRefusals += 1
+  }
+
+  /// Whether sends are waiting out a storage-full hold.
+  var isHoldingSendsForFullStorage: Bool {
+    storageFullHoldEnd.map { now() < $0 } ?? false
   }
 }

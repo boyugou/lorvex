@@ -3,16 +3,15 @@ import LorvexCore
 import SwiftUI
 
 extension SettingsView {
+  /// Appearance and language as one group with no header: each row names what
+  /// it sets, and the appearance swatches sit at the row's trailing edge like
+  /// every other row's control.
   var appearanceSection: some View {
-    Section(String(localized: "settings.section.appearance", defaultValue: "Appearance", table: "Localizable", bundle: LorvexL10n.bundle)) {
-      AppearanceThumbnailPicker(selection: $settings.appearance)
-    }
-  }
-
-  /// The language and clock pickers as a group of their own, with no header:
-  /// each row already names what it sets.
-  var languageSection: some View {
     Section {
+      LabeledContent(String(localized: "settings.section.appearance", defaultValue: "Appearance", table: "Localizable", bundle: LorvexL10n.bundle)) {
+        AppearanceThumbnailPicker(selection: $settings.appearance)
+      }
+
       Picker(
         String(localized: "settings.language", defaultValue: "Language", table: "Localizable", bundle: LorvexL10n.bundle),
         selection: $selectedLanguage
@@ -29,10 +28,10 @@ extension SettingsView {
       }
       .onChange(of: selectedLanguage) { _, newValue in
         newValue.apply()
-        languageNeedsRelaunch = newValue != launchLanguage
       }
 
-      if languageNeedsRelaunch {
+      // Until the app relaunches, it keeps the language it launched in.
+      if selectedLanguage.needsRelaunch {
         HStack {
           Text(LocalizedStringResource(
             "settings.language.relaunch_note",
@@ -52,9 +51,17 @@ extension SettingsView {
           }
         }
       }
+    }
+  }
 
+  /// The clock and the synced time zone as a group with no header, with the
+  /// zone's footnote under it.
+  var timeSection: some View {
+    Section {
       SettingsClockFormatRow()
       SettingsTimeZoneRow(store: store)
+    } footer: {
+      Text(SettingsTimeZoneRow.caption)
     }
   }
 
@@ -97,7 +104,6 @@ struct AppearanceThumbnailPicker: View {
         }
       }
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier("settings.appearance.picker")

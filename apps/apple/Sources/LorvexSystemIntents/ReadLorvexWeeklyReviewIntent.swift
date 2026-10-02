@@ -20,7 +20,7 @@ struct ReadLorvexWeeklyReviewIntent: LorvexLocalAuthIntent {
       dialog: IntentDialog(
         LocalizedStringResource(
           "system.review.weekly.read.dialog",
-          defaultValue: "\(review.completedThisWeek) completed this week.",
+          defaultValue: "\(review.completedThisWeek) tasks completed this week.",
           table: "Localizable", bundle: SystemL10n.bundle)))
   }
 }

@@ -24,10 +24,12 @@
 # adding anything (stops that need a task, habit, or list are skipped).
 # Requires a debug build first: `swift build -j 4 --product LorvexApple`.
 # Output: <outdir>/<workspace>-<appearance>.png for today, today-suggestion
-# (Today with suggested times waiting in the schedule pane), tasks,
+# (Today with suggested times waiting in the schedule pane), today-event (a
+# timed event from Today's schedule open in the inspector), tasks,
 # tasks-inspector, tasks-list (Tasks scoped to the first list that is not the
 # Inbox), lists, calendar, calendar-day, calendar-month, habits,
-# habits-inspector, reviews, reviews-weekly, memory, settings-<category> for
+# habits-inspector and habits-inspector-open (a habit done today and one
+# still open), reviews, reviews-weekly, memory, settings-<category> for
 # each Settings category (general, permissions, calendar, cloudSync, mcpHost,
 # data, diagnostics; the Settings window in its own window), and, each in a
 # window of its own: menubar and menubar-week (the menu bar panel on Today
@@ -35,10 +37,14 @@
 # list window, on the list tasks-list scopes to), palette-jump and
 # palette-search (the command palette on a list's name and on a word that
 # names no destination), task-editor-doOn, task-editor-due,
-# task-editor-estimate, task-editor-repeat, task-editor-reminders, and
-# task-editor-dependencies (the task detail's field popovers, on a task that
-# waits on another), sheet-createList, sheet-editList, sheet-createHabit,
-# and sheet-editHabit (the list and habit create and edit sheets), and setup-welcome, setup-cloudSync,
+# task-editor-estimate, task-editor-repeat, task-editor-reminders,
+# task-editor-tags, and task-editor-dependencies (the task detail's field popovers, on a task that
+# waits on another), habits-inspector-fields (a habit with ten weeks of
+# history, reminders, and a goal), habit-editor-repeat, habit-editor-reminder,
+# and habit-editor-goal
+# (that habit's field popovers), sheet-createList, sheet-editList, and
+# sheet-createHabit (the list and habit create sheets and the list edit
+# sheet), and setup-welcome, setup-cloudSync,
 # setup-permissions, setup-permissions-answered (Calendar allowed and
 # Notifications denied, the page's tallest state), and setup-done (the
 # first-run wizard's pages); plus tour-<appearance>.log.

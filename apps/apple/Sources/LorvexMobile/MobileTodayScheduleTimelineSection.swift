@@ -116,7 +116,7 @@ struct MobileTodayScheduleTimelineSection: View {
   nonisolated static func accessibilityState(
     isDone: Bool, isCurrent: Bool, isBlocked: Bool
   ) -> String {
-    guard !isDone else { return MobileTaskDisplayText.status(.completed) }
+    guard !isDone else { return LorvexTask.Status.completed.localizedName }
     var states: [String] = []
     if isCurrent {
       states.append(
@@ -143,7 +143,7 @@ struct MobileTodayScheduleTimelineSection: View {
       minutes = task?.estimatedMinutes
     }
     guard let minutes, minutes > 0 else { return nil }
-    return MobileTodayCalmCopy.duration(minutes)
+    return LorvexDurationFormat.minutes(minutes)
   }
 
   private var allDayLabel: String {
@@ -157,15 +157,12 @@ struct MobileTodayScheduleTimelineSection: View {
       withAnimation(.snappy(duration: 0.18)) { showsPast.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.xs) {
-        Image(systemName: "chevron.right")
+        LorvexDisclosureChevron(isExpanded: showsPast)
           .imageScale(.small)
-          .rotationEffect(.degrees(showsPast ? 90 : 0))
         Text(
           String(
-            format: String(
-              localized: "today.schedule.earlier_count", defaultValue: "%lld earlier",
-              table: "Localizable", bundle: MobileL10n.bundle),
-            count))
+            localized: "today.schedule.earlier_count", defaultValue: "\(count) earlier",
+            table: "Localizable", bundle: MobileL10n.bundle))
       }
       .font(LorvexDesign.Typography.tertiaryText)
       .foregroundStyle(.secondary)

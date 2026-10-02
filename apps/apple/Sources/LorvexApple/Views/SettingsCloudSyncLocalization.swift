@@ -139,5 +139,5 @@ extension CloudSyncStatusReport {
 /// Abbreviated relative-time string ("3m", "2h") for the CloudSync settings
 /// surface, relative to now. Shared by both CloudSync settings views.
 func cloudSyncRelativeDateString(for date: Date) -> String {
-  LorvexDateFormatters.abbreviatedRelative.localizedString(for: date, relativeTo: Date())
+  LorvexDateFormatters.relative(date, to: Date(), unitsStyle: .abbreviated, dateTimeStyle: .numeric)
 }

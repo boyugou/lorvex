@@ -23,6 +23,10 @@ public enum ValidationError: Error, Equatable, Sendable, CustomStringConvertible
   /// A string field does not match the expected format.
   case invalidFormat(field: String, expected: String, actual: String)
 
+  /// A field holds a value outside the closed set it accepts. `allowed` lists
+  /// every accepted value, in declaration order.
+  case notOneOf(field: String, allowed: [String], actual: String)
+
   /// A free-form ad-hoc validation message without a structured discriminant.
   /// New code should prefer the structured variants whenever the
   /// field/limit/value are known.
@@ -38,6 +42,8 @@ public enum ValidationError: Error, Equatable, Sendable, CustomStringConvertible
       return "\(field) is out of range (\(actual), must be \(min)..=\(max))"
     case let .invalidFormat(field, expected, actual):
       return "\(field) has invalid format (got \"\(actual)\", expected \(expected))"
+    case let .notOneOf(field, allowed, actual):
+      return "\(field) must be one of \(allowed.joined(separator: ", ")) (got \"\(actual)\")"
     case let .message(message):
       return message
     }

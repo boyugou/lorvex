@@ -92,8 +92,12 @@ struct TasksView: View {
 
       Group {
         if isInitialTaskWorkspaceLoad {
-          WorkspaceReviewList {
-            TasksInitialLoadingState()
+          if let taskWorkspaceLoadFailureState {
+            LorvexEmptyStatePanel(model: taskWorkspaceLoadFailureState)
+          } else {
+            WorkspaceReviewList {
+              TasksInitialLoadingState()
+            }
           }
         } else if isTableMode {
           VStack(spacing: 0) {
@@ -147,15 +151,11 @@ struct TasksView: View {
       }
     }
     .task(id: store.taskWorkspaceLoadSignature) {
-      // Debounce non-empty queries so a keystroke doesn't fire a five-query
-      // workspace load each time. SwiftUI cancels the prior task on every
-      // searchText change, and `loadTaskWorkspace` discards results for a
-      // superseded query, so stale results can't overwrite the current view.
-      // The empty/initial load runs immediately (no debounce).
-      if !store.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        try? await Task.sleep(for: .milliseconds(250))
-        guard !Task.isCancelled else { return }
-      }
+      // A typed query waits for a typing pause, so a keystroke doesn't fire a
+      // six-query workspace load each time; `loadTaskWorkspace` discards the
+      // results of a superseded query, so they can't overwrite the current
+      // view.
+      guard await LorvexSearchDebounce.shouldSearch(store.searchText) else { return }
       await store.loadTaskWorkspace()
     }
     .onChange(of: isTableMode) { _, tableMode in

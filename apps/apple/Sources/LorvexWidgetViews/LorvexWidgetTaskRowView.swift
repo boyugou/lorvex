@@ -5,21 +5,41 @@ import LorvexWidgetIntents
 import LorvexWidgetKitSupport
 import SwiftUI
 
+/// A task row's height at the default text size: the height of its circle's
+/// hit target, so rows stack with no gap between them.
+let widgetRowHeight: CGFloat = 30
+
+/// A glyph that runs `intent` when tapped, in a hit target a row high and
+/// `width` wide (as wide as it is high when `width` is nil), with the glyph
+/// placed by `alignment`. The glyph is drawn one image scale up from the
+/// row's text, so a task's circle reads as its checkbox. The row's height
+/// grows with the row's text, as the glyph does, so at a larger text size the
+/// circles keep clear of each other and of the titles beside them.
+///
+/// The button is `.plain`: on macOS the borderless style is an AppKit control,
+/// which WidgetKit cannot draw, so the widget would show its unsupported-view
+/// placeholder (a yellow box with a red prohibition sign) in its place.
 struct WidgetActionButton<Intent: AppIntent>: View {
   let intent: Intent
   let systemName: String
   let accessibilityLabel: String
   var tint: Color = .secondary
+  var width: CGFloat?
+  var alignment: Alignment = .center
+
+  @ScaledMetric(relativeTo: WidgetType.rowTextStyle) private var height = widgetRowHeight
 
   var body: some View {
     Button(intent: intent) {
       Image(systemName: systemName)
-        .imageScale(.medium)
-        .frame(minWidth: 32, minHeight: 32)
+        .font(WidgetType.row)
+        .imageScale(.large)
+        .frame(width: width ?? height, height: height, alignment: alignment)
         .contentShape(Rectangle())
     }
-    .buttonStyle(.borderless)
+    .buttonStyle(.plain)
     .foregroundStyle(tint)
+    .widgetAccentable()
     .accessibilityLabel(accessibilityLabel)
   }
 }
@@ -39,6 +59,7 @@ struct WidgetLeadRing: View {
         .contentShape(Circle())
     }
     .buttonStyle(.plain)
+    .widgetAccentable()
     .accessibilityLabel(
       String(
         localized: "widget.action.complete.a11y",
@@ -48,43 +69,52 @@ struct WidgetLeadRing: View {
   }
 }
 
-/// The line under the lead task's title, red when it reports a missed
-/// deadline.
+/// The lead task's line ("Until 10:30 AM", "9:45 – 10:30 AM", "Overdue"): in
+/// the accent while the task's time runs, as its ring is, red when it reports
+/// a missed deadline, and secondary otherwise, the colors a row's time takes.
+/// One line, or with `wraps` up to two, the second starting at a space
+/// (``WidgetSpaceWrappedText``).
 struct WidgetLeadLine: View {
+  let lead: WidgetLeadRender
   let line: String
-  let isOverdue: Bool
+  var wraps = false
 
   var body: some View {
-    Text(line)
-      .font(.caption2)
-      .foregroundStyle(isOverdue ? LorvexDesign.Palette.overdue : Color.secondary)
-      .monospacedDigit()
-      .lineLimit(1)
-      .minimumScaleFactor(0.8)
+    Group {
+      if wraps {
+        WidgetSpaceWrappedText(line)
+      } else {
+        Text(line).lineLimit(1)
+      }
+    }
+    .font(WidgetType.meta)
+    .foregroundStyle(color)
+    .monospacedDigit()
+  }
+
+  private var color: Color {
+    if lead.isOverdue { return LorvexDesign.Palette.overdue }
+    return lead.isRunning ? LorvexDesign.Palette.accent : Color.secondary
   }
 }
 
-/// The lead task as the medium and large families draw it: the circle, an
-/// optional label over the title, the title (a link into the task), and its
-/// line.
+/// The lead task as the medium and large families draw it: the circle, the
+/// title (a link into the task), and under it the task's line, led by `label`
+/// when one is given ("Today · Until 10:30 AM"), so the title reads first and
+/// the label costs no line of its own.
 struct WidgetLeadBlock: View {
   let lead: WidgetLeadRender
   var label: String?
   var ringDiameter: CGFloat = 40
-  var titleFont: Font = .subheadline.weight(.semibold)
+  var titleFont: Font = WidgetType.title
   var titleLines: Int = 1
 
   var body: some View {
     HStack(alignment: .center, spacing: 12) {
       WidgetLeadRing(lead: lead, diameter: ringDiameter)
       VStack(alignment: .leading, spacing: 2) {
-        if let label {
-          Text(label)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(LorvexDesign.Palette.accent)
-        }
         link(lead.urlString) {
-          Text(lead.title)
+          Text(userContent: lead.title)
             .font(titleFont)
             .foregroundStyle(Color.primary)
             .lineLimit(titleLines)
@@ -93,11 +123,30 @@ struct WidgetLeadBlock: View {
             // StandBy surface; redact it when the device locks.
             .privacySensitive()
         }
-        if let line = lead.line {
-          WidgetLeadLine(line: line, isOverdue: lead.isOverdue)
+        if label != nil || lead.line != nil {
+          HStack(alignment: .firstTextBaseline, spacing: 4) {
+            if let label {
+              Text(label)
+                .font(WidgetType.label)
+                .foregroundStyle(LorvexDesign.Palette.accent)
+                .lineLimit(1)
+                .fixedSize()
+                .widgetAccentable()
+            }
+            if label != nil, lead.line != nil {
+              Text(verbatim: "·")
+                .font(WidgetType.meta)
+                .foregroundStyle(.tertiary)
+            }
+            if let line = lead.line {
+              WidgetLeadLine(lead: lead, line: line)
+            }
+          }
         }
       }
-      Spacer(minLength: 0)
+      // A frame rather than a trailing spacer, whose stack spacing would
+      // truncate the title 12 points early.
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 
@@ -111,31 +160,35 @@ struct WidgetLeadBlock: View {
   }
 }
 
-/// One task under the lead: its time, state, or estimate, its title (a link
-/// into the task), and, when `interactive`, a circle that completes it.
+/// One task under the lead: a circle that completes it, tinted by the task's
+/// priority, its title (a link into the task), and its time, state, or
+/// estimate at the trailing edge, as the app's task rows read.
+///
+/// Under a lead task the circle sits centered in a column as wide as the lead
+/// ring (`leadRingDiameter`), so the circles share the ring's axis and the
+/// titles start where the lead's title does. Without a lead the circle sits
+/// at the leading edge, in line with the header's text, and its hit target
+/// spans the gap to the title.
 struct WidgetTaskRowView: View {
   let row: WidgetTaskRenderRow
-  var interactive = false
-  /// The clock column: wide enough for "11:00 AM" in caption2, and growing
-  /// with the text size so a larger size does not cut the time to "11:0…".
-  @ScaledMetric(relativeTo: .caption2) var clockColumnWidth: CGFloat = 58
+  var leadRingDiameter: CGFloat?
 
   var body: some View {
-    HStack(spacing: 8) {
+    // 12pt after a lead-width column is the lead block's ring-to-title gap.
+    HStack(spacing: leadRingDiameter == nil ? 0 : 12) {
+      WidgetActionButton(
+        intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
+        systemName: "circle",
+        accessibilityLabel: String(
+          localized: "widget.action.complete.a11y",
+          defaultValue: "Complete \(row.title)",
+          table: "Localizable",
+          bundle: WidgetL10n.bundle),
+        tint: (row.priority ?? .p3).priorityTint,
+        width: leadRingDiameter,
+        alignment: leadRingDiameter == nil ? .leading : .center
+      )
       rowContent
-      if interactive {
-        Spacer(minLength: 0)
-        WidgetActionButton(
-          intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
-          systemName: "circle",
-          accessibilityLabel: String(
-            localized: "widget.action.complete.a11y",
-            defaultValue: "Complete \(row.title)",
-            table: "Localizable",
-            bundle: WidgetL10n.bundle),
-          tint: LorvexDesign.Palette.accent
-        )
-      }
     }
   }
 
@@ -153,21 +206,23 @@ struct WidgetTaskRowView: View {
     // the foreground to the accent, so a hierarchical level would resolve to
     // a shade of blue instead of the label colors.
     HStack(alignment: .firstTextBaseline, spacing: 8) {
-      Text(row.metadata ?? "")
-        .font(.caption2)
-        .foregroundStyle(metadataColor)
-        .monospacedDigit()
-        .lineLimit(1)
-        .frame(width: clockColumnWidth, alignment: .leading)
       Text(row.title)
-        .font(.caption.weight(.medium))
+        .font(WidgetType.row)
         .foregroundStyle(Color.primary)
         .lineLimit(1)
         .privacySensitive()
       Spacer(minLength: 0)
+      if let metadata = row.metadata {
+        Text(metadata)
+          .font(WidgetType.meta)
+          .foregroundStyle(metadataColor)
+          .monospacedDigit()
+          .lineLimit(1)
+          .fixedSize()
+      }
     }
     .accessibilityElement(children: .combine)
-    .accessibilityLabel([row.metadata, row.title].compactMap { $0 }.joined(separator: ", "))
+    .accessibilityLabel([row.title, row.metadata].compactMap { $0 }.joined(separator: ", "))
   }
 }
 
@@ -189,8 +244,9 @@ extension WidgetTaskRenderRow {
 }
 
 /// The foot every Home Screen family shares: how many tasks follow the ones
-/// on screen, how many got done today, and the stale capsule once the list is
-/// old. Says each fact once and stays silent when there is nothing to say.
+/// on screen and how many got done today, as one line of facts, and the stale
+/// capsule once the list is old. Says each fact once and stays silent when
+/// there is nothing to say.
 struct WidgetFootLine: View {
   let model: WidgetRenderModel
   var showsDone = false
@@ -199,29 +255,11 @@ struct WidgetFootLine: View {
   var shownRowCount: Int?
 
   var body: some View {
-    let hidden = model.upcomingCount - (shownRowCount ?? model.taskRows.count)
     HStack(spacing: 8) {
-      if hidden > 0 {
-        Text(
-          String(
-            localized: "widget.foot.more_today",
-            defaultValue: "\(hidden) more today",
-            table: "Localizable",
-            bundle: WidgetL10n.bundle)
-        )
-        .font(.caption2)
-        .foregroundStyle(.tertiary)
-      }
-      if showsDone, model.completedCount > 0 {
-        Text(
-          String(
-            localized: "widget.foot.done_today",
-            defaultValue: "\(model.completedCount) done today",
-            table: "Localizable",
-            bundle: WidgetL10n.bundle)
-        )
-        .font(.caption2)
-        .foregroundStyle(.tertiary)
+      if let facts {
+        Text(facts)
+          .font(WidgetType.foot)
+          .foregroundStyle(.tertiary)
       }
       Spacer(minLength: 0)
       if let staleAgeLabel = model.staleAgeLabel {
@@ -229,5 +267,28 @@ struct WidgetFootLine: View {
       }
     }
     .lineLimit(1)
+  }
+
+  /// "4 more today · 2 done today", either fact alone, or nil.
+  private var facts: String? {
+    let hidden = model.upcomingCount - (shownRowCount ?? model.taskRows.count)
+    var facts: [String] = []
+    if hidden > 0 {
+      facts.append(
+        String(
+          localized: "widget.foot.more_today",
+          defaultValue: "\(hidden) more today",
+          table: "Localizable",
+          bundle: WidgetL10n.bundle))
+    }
+    if showsDone, model.completedCount > 0 {
+      facts.append(
+        String(
+          localized: "widget.foot.done_today",
+          defaultValue: "\(model.completedCount) done today",
+          table: "Localizable",
+          bundle: WidgetL10n.bundle))
+    }
+    return facts.isEmpty ? nil : facts.joined(separator: " · ")
   }
 }

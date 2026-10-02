@@ -10,43 +10,40 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 
 | Surface | Status | Notes |
 |---|---|---|
-| macOS — sidebar + all workspaces | [SHIPPED] | Plan: Today, Calendar, Tasks; Reflect: Habits, Reviews, Memory (Memory has no detached-window scene). Lists have no sidebar row — they are managed inline, with the catalog reached via ⌘K |
+| macOS — sidebar + all workspaces | [SHIPPED] | Today, Calendar, All Tasks, Review, Habits (⌘1–⌘5), then the user's lists as task scopes and an Archived section; Memory (⌘6, no detached-window scene) and Settings sit in a pinned footer. Lists have no sidebar row — they are managed inline, with the catalog reached via ⌘K |
 | macOS — multi-window | [SHIPPED] | Detached list/workspace windows + floating task stickies |
-| macOS — menu bar extra | [SHIPPED] | Today HUD: date + due-count, quick-add, next-up list with one-click complete |
+| macOS — menu bar extra | [SHIPPED] | Today / Next 7 Days panel: date, quick-add, today's tasks with one-click complete, habit check-in rings, the seven-day agenda, Open Lorvex and Quit; the icon carries the due-today/overdue count |
 | macOS — full command menus + keyboard shortcuts | [SHIPPED] | |
 | macOS — settings (General/Assistant/Calendar/CloudSync/Diagnostics/Data/Permissions) | [SHIPPED] | |
 | macOS — workspace loading states | [SHIPPED] | Primary async workspaces show a native loading overlay |
 | macOS — global error toast | [SHIPPED] | `ContentView.lorvexToast` handles transient app/notification-action failures |
 | macOS — list reordering | [SHIPPED] | Lists and habits support persisted drag reordering |
 | macOS — calendar date navigation | [SHIPPED] | Week/list navigation with previous, next, Today/This Week, and date picker controls |
-| macOS — habit streak/heatmap | [SHIPPED] | Streak metrics + calendar heatmap in the habits workspace |
+| macOS — habit inspector | [SHIPPED] | In-place editing (name, encouragement, and Repeat / Reminder / Goal popovers), streak metrics, a history grid, and the by-weekday pattern |
 | macOS — habit milestones | [SHIPPED] | Streak/count milestone waypoints (auto-ladder + optional user target), a progress bar, and a celebration when a waypoint is crossed |
-| macOS — Eisenhower matrix | [PARTIAL] | MCP-data-only (urgency/importance quadrant data the AI can read via MCP) — no macOS human surface; `WorkspaceView` redirects `.eisenhower` to Today |
-| macOS — dependency-graph workspace | [PARTIAL] | MCP-data-only (task dependency data the AI can read/write via MCP) — no macOS human surface; `WorkspaceView` redirects `.dependencies` to Today |
 | macOS — Command Palette (⌘K) | [SHIPPED] | Fuzzy command/navigation palette |
 | macOS — Data export/import | [SHIPPED] | Settings → Data writes the version-1 Apple export: portable category JSON plus an independently versioned exact native task graph for same-app restore, including task-domain deletion high-waters and opaque future-field state. CloudKit account/transport state is never restored; JSON may carry the producing device ID only as non-applied provenance. ZIP v1 requires an exact closed manifest inventory and has no blob members. Exact task restore is used only for a fresh task domain with its list/tag roots; otherwise tasks use the portable merge path. With sync live, import runs one best-effort sync pass first and the imported rows upload through the outbox like any other change; with sync off, import is local-only. MCP/AI export stays portable, and cross-platform movement is AI-reconciled best-effort rather than a lossless interchange contract |
-| iPhone — Today, Tasks, Calendar, Habits, Review tabs | [SHIPPED] | Daily-driver surfaces are first-class tabs; Today is one ordered list of what's planned for today or earlier, due today or overdue, or already started, with optional planned times; there is no separate Focus tab |
-| iPhone — global quick-capture sheet | [SHIPPED] | Capture is an action (a ＋ sheet) raised from Today/Tasks toolbars, the task empty-state, and ⌘N — not a tab |
+| iPhone — Today, Calendar, Tasks, Review tabs | [SHIPPED] | Daily-driver surfaces are first-class tabs; Today is one ordered list of what's planned for today or earlier, due today or overdue, or already started, with optional planned times; there is no separate Focus tab |
+| iPhone — global quick-capture sheet | [SHIPPED] | Capture is an action, not a place: the round ＋ beside the tab bar (on every tab), ⌘N with a keyboard, and the Home Screen Quick Capture action raise one capture sheet and leave the current tab selected |
 | iPhone — task detail + edit sheet | [SHIPPED] | |
 | iPhone — create sheets (task/list/habit/event) | [SHIPPED] | |
-| iPhone — secondary workspace reach (Memory, Settings) | [SHIPPED] | Memory is a row on the Tasks tab home and Settings a toolbar button on Today, both pushed as typed routes; Lists is merged into the Tasks tab home |
+| iPhone — secondary workspace reach (Habits, Memory, Settings) | [SHIPPED] | Habits and Memory are rows at the bottom of the Tasks tab home and Settings a toolbar button on Today, all pushed as typed routes; Lists is merged into the Tasks tab home |
 | iPhone — Settings screen | [SHIPPED] | Settings, diagnostics (incl. a read-only recent crash/hang diagnostics feed), privacy and acknowledgments, data export/import, notification/reminder toggles |
 | iPhone — habit milestones | [SHIPPED] | Habit detail shows milestone progress and target editing; completion and batch completion surface milestone celebrations |
-| iPad — NavigationSplitView (regular width) | [SHIPPED] | Full sidebar shell with primary tabs and all secondary workspaces |
-| iPad — full sidebar (like macOS) | [SHIPPED] | Today, Tasks, Calendar, Habits, Memory, Review, Settings; Lists is merged into the Tasks home |
+| iPad — tab shell (regular width) | [SHIPPED] | The iPhone shell at full width: one tab bar with Today, Calendar, Tasks, and Review plus the round ＋ capture button, each tab with its own navigation stack. Habits and Memory open from the Tasks tab home and Settings from Today; Lists is merged into the Tasks home. There is no sidebar — wide layouts add a second pane inside a tab |
+| iPad — Today schedule pane | [SHIPPED] | At regular width the day's schedule stands in a 380pt pane beside the Today list; on iPhone it opens from the day strip |
 | iPad — Tasks split workspace | [SHIPPED] | Query-backed status/search browser with persistent list + detail panes on regular width |
-| iPad — Calendar agenda workspace | [SHIPPED] | 3-day time grid with pinned visible-event agenda and quick create/edit affordances on regular width |
-| iPad — Lists split workspace | [SHIPPED] | List catalog pinned beside selected list task/progress detail on regular width |
+| iPad — Calendar agenda workspace | [SHIPPED] | Time grid of one, two, or three day columns by width, with the agenda pane beside it from 860pt wide and quick create/edit affordances |
 | iPad — Habits split workspace | [SHIPPED] | Active habit catalog pinned beside progress metrics and completion/edit/delete controls on regular width |
 | iPad — Memory split workspace | [SHIPPED] | Save controls and full memory catalog pinned beside selected content, metadata, and delete controls on regular width |
-| iPad — hardware keyboard shortcuts | [SHIPPED] | ⌘R, ⌘N, ⌘1-⌘5, ⌘8, and mnemonic workspace shortcuts (⌘M/⌘E/⌘,) |
+| iPad — hardware keyboard shortcuts | [SHIPPED] | ⌘R, ⌘N, ⌘1-⌘4 for the tabs in bar order, ⌘5 Habits, ⌘6 Memory, ⌘, Settings (the Mac's numbering) |
 | Apple Watch — root view (Today lead task + list, habits, capture) | [SHIPPED] | Snapshot-backed on device with WatchConnectivity write forwarding to iPhone |
 | Apple Watch — Digital Crown page navigation | [SHIPPED] | Crown moves through the watch's pages (Today, habits, capture) and scrolls each page's list |
 | Apple Watch — complications | [SHIPPED] | |
 | Apple Watch — WCSession write forwarding | [SHIPPED] | The snapshot-backed watch forwards complete/cancel/defer/capture to the iPhone over WCSession; the phone applies the write and pushes back a fresh snapshot. Read-only only without a forwarder (previews) |
 | Apple Watch — background complication refresh | [SHIPPED] | Phone-pushed snapshots reload watch WidgetKit timelines; providers also use periodic refresh policies |
-| WidgetKit — Today widget (small/medium/large + accessory) | [SHIPPED] | Interactive complete on medium/large |
-| WidgetKit — ControlWidget (iOS 18) | [SHIPPED] | Shows the task at the top of Today and opens the app to Today when tapped |
+| WidgetKit — Today widget (small/medium/large + accessory) | [SHIPPED] | Tapping the lead task's ring or a row's circle completes the task in place on the Home Screen families (small, medium, large); the Lock Screen accessory families draw the ring without the button |
+| WidgetKit — ControlWidget (iOS, macOS) | [SHIPPED] | Shows the task at the top of Today and opens the app to Today when tapped |
 | WidgetKit — Today tasks widget | [SHIPPED] | |
 | WidgetKit — Habits/streak widget | [SHIPPED] | |
 | WidgetKit — daily-progress ring widget | [SHIPPED] | |
@@ -117,6 +114,7 @@ All tools are implemented in `LorvexMCPHost`. The host runs `SwiftLorvexCoreServ
 | HLC conflict resolution | [SHIPPED] | Typed HLC generation/receive, parse-first LWW gates, conflict logging, merge HLCs, and device-suffix collision detection |
 | Idempotency cache (MCP write retry) | [SHIPPED] | In-memory 24h TTL + durable mcp_idempotency DB table backing for cross-restart replay |
 | Prompt-injection fencing on MCP read responses | [SHIPPED] | Structured read payloads carrying user-controlled text are key-aware fenced through `SecurityFencing.fenceValue`, including task, calendar, list/tag, day-planning, habit, review, and memory reads |
+| MCP argument normalization | [SHIPPED] | Before a tool runs, the dispatcher removes fence tokens from every string argument and checks each `enum`-declared argument (top level, array items, nested batch objects) against the tool's input schema; any other value fails with a `validation` error listing the allowed values |
 | App Group widget snapshot sharing | [SHIPPED] | Requires LORVEX_WIDGET_APP_GROUP_ID |
 | Managed App Group storage | [SHIPPED] | Every surface (app, MCP helper, widgets, App Intents, notifications) resolves the single Lorvex-managed App Group database via `DbLocator` — no external-DB picker or security-scoped bookmark. The only override is the dev `LORVEX_APPLE_DB_PATH`, honored on unsandboxed builds only; portability is export/import. `ManagedStorageInvariantTests` pins this |
 | App Intents (Shortcuts, Spotlight) | [SHIPPED] | |

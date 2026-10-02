@@ -185,39 +185,3 @@ private func packageRoot() -> URL {
   }
   return url.appending(path: "apple")
 }
-
-// MARK: - Stale snooze reaping
-
-// A snooze is a one-shot "remind me in 1h"; once its task is completed/cancelled
-// it must be cancelled, not fired. `staleSnoozeIdentifiers` selects the snoozes
-// whose task is no longer in the active set, and ignores reminder-prefix IDs.
-@Test
-func staleSnoozeIdentifiersSelectsOnlyInactiveTaskSnoozes() {
-  let prefix = ScheduledTaskReminder.snoozeIdentifierPrefix
-  let reminderPrefix = ScheduledTaskReminder.identifierPrefix
-  let pending = [
-    prefix + "active-1",
-    prefix + "completed-2",
-    prefix + "deleted-3",
-    reminderPrefix + "active-1",  // a real reminder, never reaped here
-  ]
-
-  let stale = SnoozeNotificationScheduler.staleSnoozeIdentifiers(
-    pendingIdentifiers: pending,
-    activeTaskIDs: ["active-1"]
-  )
-
-  #expect(Set(stale) == [prefix + "completed-2", prefix + "deleted-3"])
-  #expect(!stale.contains(prefix + "active-1"))
-  #expect(!stale.contains { $0.hasPrefix(reminderPrefix) })
-}
-
-@Test
-func staleSnoozeIdentifiersEmptyWhenAllTasksActive() {
-  let prefix = ScheduledTaskReminder.snoozeIdentifierPrefix
-  let stale = SnoozeNotificationScheduler.staleSnoozeIdentifiers(
-    pendingIdentifiers: [prefix + "a", prefix + "b"],
-    activeTaskIDs: ["a", "b"]
-  )
-  #expect(stale.isEmpty)
-}

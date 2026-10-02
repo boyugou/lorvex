@@ -28,8 +28,6 @@ extension MobileCalendarDayColumn {
     let isReschedulable =
       onReschedule != nil && block.event.editable && !block.event.allDay
       && !block.event.supportsScopedMutation && !isMultiDay
-    let title = Text(block.event.title)
-      .font(LorvexDesign.Typography.tertiaryText.weight(.medium)).lineLimit(2)
     let start = block.event.startTime.map(lorvexClockTimeLabel)
     // A multi-day event's piece of one day is not its time, so it keeps its
     // start alone.
@@ -41,12 +39,10 @@ extension MobileCalendarDayColumn {
     // every point of the narrow lane.
     let leadingPadding: CGFloat = 5
     let trailingPadding: CGFloat = isCompact ? 1 : 5
-    let verticalPadding: CGFloat = isTight ? 0 : 3
     return blockContent(
-      isCompact: isCompact, eventTitle: block.event.title, title: title, start: start, range: range
+      isCompact: isCompact, isTight: isTight, title: block.event.title, start: start, range: range
     )
     .padding(.leading, leadingPadding).padding(.trailing, trailingPadding)
-    .padding(.vertical, verticalPadding)
     .frame(width: max(laneWidth - 2, 10), height: height, alignment: .topLeading)
     .clipped()
     .lorvexOpaqueTintBackground(
@@ -98,43 +94,18 @@ extension MobileCalendarDayColumn {
     .lorvexSensoryFeedback(.impact(weight: .medium), trigger: active) { _, isActive in isActive }
   }
 
-
-  /// A compact block's title alone, or the title with its time.
+  /// A compact block's title alone, wrapping as far as the block is tall; any
+  /// other block's title with its time, arranged to fit the block
+  /// (``LorvexCalendarBlockText``).
   @ViewBuilder
   private func blockContent(
-    isCompact: Bool, eventTitle: String, title: some View, start: String?, range: String?
+    isCompact: Bool, isTight: Bool, title: String, start: String?, range: String?
   ) -> some View {
     if isCompact {
-      MobileCalendarCompactBlockTitle(eventTitle)
+      MobileCalendarCompactBlockTitle(title)
+        .padding(.vertical, isTight ? 0 : 3)
     } else {
-      fullContent(title: title, start: start, range: range)
-    }
-  }
-
-  /// A block's title with its time: under the title where both fit (the
-  /// range, or the start when the range is too wide); in a block too short for
-  /// that, after the title on one line when both fit whole, and otherwise the
-  /// title alone rather than half a line of time.
-  @ViewBuilder
-  private func fullContent(title: some View, start: String?, range: String?) -> some View {
-    ViewThatFits(in: .vertical) {
-      if let start {
-        VStack(alignment: .leading, spacing: 1) {
-          title
-          ViewThatFits(in: .horizontal) {
-            if let range { MobileCalendarBlockTime(range) }
-            MobileCalendarBlockTime(start)
-          }
-        }
-        ViewThatFits(in: .horizontal) {
-          HStack(alignment: .firstTextBaseline, spacing: 4) {
-            title.lineLimit(1)
-            MobileCalendarBlockTime(range ?? start)
-          }
-          title
-        }
-      }
-      title
+      LorvexCalendarBlockText(title: title, start: start, range: range, verticalPadding: 3)
     }
   }
 

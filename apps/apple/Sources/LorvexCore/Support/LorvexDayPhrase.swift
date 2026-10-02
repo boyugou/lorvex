@@ -48,10 +48,21 @@ public enum LorvexDayPhrase {
         return date.formatted(style.weekday(.wide))
       }
       style = style.month(.abbreviated).day()
-      let sameYear =
-        logicalDay.count == 10 && LorvexDateFormatters.ymdUTC.string(from: date).prefix(4) == logicalDay.prefix(4)
+      let sameYear = sharesYear(date, withLogicalDay: logicalDay, in: locale.calendar)
       return date.formatted(sameYear ? style : style.year())
     }
+  }
+
+  /// Whether the stored day `date` falls in the logical today's year as
+  /// `calendar` counts years: a Persian year turns at Nowruz in March, not on
+  /// January 1. False when `logicalDay` is not a day key.
+  private static func sharesYear(
+    _ date: Date, withLogicalDay logicalDay: String, in calendar: Calendar
+  ) -> Bool {
+    guard let today = LorvexDateFormatters.ymdUTC.date(from: logicalDay) else { return false }
+    var calendar = calendar
+    calendar.timeZone = .gmt
+    return calendar.isDate(date, equalTo: today, toGranularity: .year)
   }
 
   /// The due day as the word after "due" in a task's sentence, which opens

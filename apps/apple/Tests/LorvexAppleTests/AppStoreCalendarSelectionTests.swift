@@ -84,3 +84,50 @@ func recurringOccurrencesWithOneCanonicalEventSelectIndependently() async throws
   #expect(store.selectedCalendarEvent?.eventID == "series")
   #expect(store.selectedCalendarEvent?.occurrenceDate == "2026-06-17")
 }
+
+@MainActor
+@Test
+func todayEventOpensInTheInspectorInPlaceOfATask() async throws {
+  let owned = event(id: "owned", editable: true)
+  let store = try await makeStore(events: [owned])
+  store.selection = .today
+  store.selectedTaskID = "some-task"
+
+  store.toggleTodayEventSelection(owned)
+  #expect(store.selectedTaskID == nil)
+  #expect(store.todayInspectorEvent?.id == "owned")
+  #expect(store.isMainInspectorOpen)
+
+  // Clicking the open event again closes it, as re-clicking a task row does.
+  store.toggleTodayEventSelection(owned)
+  #expect(store.todayInspectorEvent == nil)
+  #expect(!store.isMainInspectorOpen)
+
+  // A task opened on Today replaces the open event.
+  store.toggleTodayEventSelection(owned)
+  store.selectedTaskID = "some-task"
+  #expect(store.selectedCalendarEventID == nil)
+  #expect(store.isMainInspectorOpen)
+}
+
+@MainActor
+@Test
+func todayEventInspectorClosesOnEscapeAndOnNavigation() async throws {
+  let owned = event(id: "owned", editable: true)
+  let store = try await makeStore(events: [owned])
+  store.selection = .today
+
+  store.toggleTodayEventSelection(owned)
+  #expect(store.dismissOpenInspector())
+  #expect(store.selectedCalendarEventID == nil)
+  #expect(!store.dismissOpenInspector())
+
+  // The event's detail belongs to Today: another workspace drops it, and
+  // the main inspector never shows an event outside Today.
+  store.toggleTodayEventSelection(owned)
+  store.navigateToWorkspace(.calendar)
+  #expect(store.selectedCalendarEventID == nil)
+  store.selectCalendarEvent(owned)
+  #expect(store.todayInspectorEvent == nil)
+  #expect(!store.isMainInspectorOpen)
+}

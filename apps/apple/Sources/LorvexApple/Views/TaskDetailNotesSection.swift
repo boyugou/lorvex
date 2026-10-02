@@ -12,10 +12,6 @@ extension TaskDetailView {
     return TaskDetailNotesPanel(notes: notes, characterCount: notes.wrappedValue.count)
   }
 
-  func organizationContent(task: LorvexTask) -> some View {
-    TaskDetailOrganizationPanel(store: store, tagsText: taskTagsBinding(for: task), taskID: task.id)
-  }
-
   func aiNotesContent(task: LorvexTask) -> some View {
     TaskDetailAINotesPanel(
       aiNotes: task.aiNotes,
@@ -30,7 +26,7 @@ private struct TaskDetailAINotesPanel: View {
   @State private var confirmClear = false
 
   var body: some View {
-    TaskDetailPanel(accessibilityIdentifier: "task.detail.aiNotes.panel") {
+    InspectorPanel(accessibilityIdentifier: "task.detail.aiNotes.panel") {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         if let aiNotes, !aiNotes.isEmpty {
           VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
@@ -127,190 +123,6 @@ private struct TaskDetailAINotesPanel: View {
   }
 }
 
-/// Tags as removable capsule chips over a comma-separated `tagsText` binding.
-///
-/// `tagsText` stays the single source of truth (the draft binding the rest of
-/// the detail view edits and saves); the chips are a presentation of its parsed
-/// values, and every edit — remove, add, dedup — rewrites the same binding.
-/// Each tag reads as a discrete `#tag` chip with its own remove control, and a
-/// trailing inline field commits new tags on Return/comma.
-private struct TaskDetailOrganizationPanel: View {
-  @Bindable var store: AppStore
-  @Binding var tagsText: String
-  /// The selected task's id — the draft resets when this changes (a task
-  /// switch), not on every `tagsText` mutation (which also fires on add/remove
-  /// chip and would wipe a half-typed tag).
-  let taskID: String
-  @State private var draft: String = ""
-
-  /// Trimmed, non-empty tags parsed from the comma-separated binding, in order.
-  private var tags: [String] {
-    tagsText
-      .split(separator: ",", omittingEmptySubsequences: true)
-      .map { $0.trimmingCharacters(in: .whitespaces) }
-      .filter { !$0.isEmpty }
-  }
-
-  private var currentList: LorvexList? {
-    guard let listID = store.selectedTask?.listID else { return nil }
-    return store.lists?.lists.first { $0.id == listID }
-  }
-
-  var body: some View {
-    TaskDetailPanel(accessibilityIdentifier: "task.detail.organization.panel") {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      TaskDetailInlineField(
-        title: String(localized: "task_detail.organization.list", defaultValue: "List", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "checklist"
-      ) {
-        Menu {
-          ForEach(store.lists?.lists.filter { $0.archivedAt == nil } ?? []) { list in
-            Button {
-              Task { await store.moveSelectedTaskToList(list.id) }
-            } label: {
-              Label(list.displayName, systemImage: list.icon ?? "list.bullet")
-            }
-          }
-        } label: {
-          HStack(spacing: LorvexDesign.Spacing.xs) {
-            LorvexListIconView(
-              icon: currentList?.icon,
-              tint: Color(lorvexHex: currentList?.color) ?? .accentColor,
-              size: 16,
-              font: .system(size: 10, weight: .medium),
-              background: .none
-            )
-            Text(currentList?.displayName ?? String(
-              localized: "task_detail.organization.no_list", defaultValue: "No List",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle))
-              .font(LorvexDesign.Typography.primaryText)
-              .foregroundStyle(.primary)
-              .lineLimit(1)
-            Image(systemName: "chevron.up.chevron.down")
-              .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-              .foregroundStyle(.tertiary)
-          }
-        }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
-        .accessibilityIdentifier("task.detail.organization.list")
-        .accessibilityLabel(String(
-          localized: "task_detail.organization.list_a11y", defaultValue: "Task’s list",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle))
-        .accessibilityValue(currentList?.displayName ?? String(
-          localized: "task_detail.organization.no_list", defaultValue: "No List",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle))
-      }
-
-      TaskDetailInlineField(
-        title: String(localized: "task_detail.organization.tags", defaultValue: "Tags", table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "number"
-      ) {
-        LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
-          ForEach(tags, id: \.self) { tag in
-            tagChip(tag)
-          }
-          addField
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        // Drop any half-typed tag when the inspector switches tasks, so it never
-        // lingers as stray text under a different task. Keyed on the task id, not
-        // tagsText, so adding/removing a chip doesn't wipe an in-progress tag.
-        .onChange(of: taskID) { _, _ in draft = "" }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(String(localized: "task_detail.organization.tags_a11y", defaultValue: "Task tags", table: "Localizable", bundle: LorvexL10n.bundle))
-        .accessibilityIdentifier("task.detail.organization.tags")
-      }
-      }
-    }
-  }
-
-  private func tagChip(_ tag: String) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.xs) {
-      Text("#\(tag)")
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.primary)
-        .lineLimit(1)
-      Button {
-        removeTag(tag)
-      } label: {
-        Image(systemName: "xmark")
-          .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-          .foregroundStyle(.secondary)
-      }
-      .buttonStyle(.plain)
-      .contentShape(Rectangle())
-      .help(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityLabel(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle) + " #\(tag)")
-      .accessibilityIdentifier("task.detail.organization.tagRemove")
-    }
-    .padding(.leading, LorvexDesign.Spacing.s)
-    .padding(.trailing, LorvexDesign.Spacing.xs)
-    .padding(.vertical, LorvexDesign.Spacing.xs)
-    .background(.tint.opacity(0.10), in: Capsule())
-    .overlay {
-      Capsule().strokeBorder(.tint.opacity(0.18), lineWidth: 0.5)
-    }
-    .accessibilityElement(children: .combine)
-  }
-
-  /// Inline new-tag field, shaped as a subtle (untinted) capsule with a leading
-  /// "#" so half-typed text reads as a tag being entered — not stray text beside
-  /// the committed chips. Return or a typed comma commits it.
-  private var addField: some View {
-    HStack(spacing: 1) {
-      Text("#")
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.tertiary)
-      TextField(
-        String(localized: "task_detail.organization.add_tag", defaultValue: "Add tag", table: "Localizable", bundle: LorvexL10n.bundle),
-        text: $draft
-      )
-      .font(LorvexDesign.Typography.secondaryText)
-      .textFieldStyle(.plain)
-      .frame(minWidth: 60)
-      .fixedSize()
-      .accessibilityLabel(String(localized: "task_detail.organization.tags_a11y", defaultValue: "Task tags", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityIdentifier("task.detail.organization.tagsAdd")
-      .onChange(of: draft) { _, newValue in
-        // A typed comma is the same "commit this tag" gesture as Return.
-        guard newValue.contains(",") else { return }
-        for piece in newValue.split(separator: ",") { commitTag(String(piece)) }
-        draft = ""
-      }
-      .onSubmit { commitDraft() }
-    }
-    .padding(.leading, LorvexDesign.Spacing.s)
-    .padding(.trailing, LorvexDesign.Spacing.s)
-    .padding(.vertical, LorvexDesign.Spacing.xs)
-    .background(.quaternary.opacity(0.45), in: Capsule())
-    .overlay {
-      Capsule().strokeBorder(.quaternary.opacity(0.6), lineWidth: 0.5)
-    }
-  }
-
-  private func commitDraft() {
-    commitTag(draft)
-    draft = ""
-  }
-
-  /// Append `raw` (trimmed) to the binding, skipping blanks and case-insensitive
-  /// duplicates of an existing tag.
-  private func commitTag(_ raw: String) {
-    let tag = raw.trimmingCharacters(in: .whitespaces)
-    guard !tag.isEmpty else { return }
-    guard !tags.contains(where: { $0.caseInsensitiveCompare(tag) == .orderedSame }) else { return }
-    tagsText = (tags + [tag]).joined(separator: ", ")
-  }
-
-  private func removeTag(_ tag: String) {
-    tagsText = tags.filter { $0 != tag }.joined(separator: ", ")
-  }
-}
-
 private struct TaskDetailNotesPanel: View {
   @Binding var notes: String
   let characterCount: Int
@@ -326,7 +138,7 @@ private struct TaskDetailNotesPanel: View {
   }
 
   var body: some View {
-    TaskDetailPanel(accessibilityIdentifier: "task.detail.notes.panel") {
+    InspectorPanel(accessibilityIdentifier: "task.detail.notes.panel") {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
         HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
           Label(
@@ -343,15 +155,9 @@ private struct TaskDetailNotesPanel: View {
           if isApproachingLimit {
             Text(
               String(
-                format: String(
-                  localized: "task_detail.notes.character_limit",
-                  defaultValue: "%1$lld / %2$lld characters",
-                  table: "Localizable",
-                  bundle: LorvexL10n.bundle
-                ),
-                characterCount,
-                ValidationLimits.maxBodyLength
-              )
+                localized: "task_detail.notes.character_limit",
+                defaultValue: "\(characterCount) / \(ValidationLimits.maxBodyLength) characters",
+                table: "Localizable", bundle: LorvexL10n.bundle)
             )
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(

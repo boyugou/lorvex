@@ -57,6 +57,16 @@ public struct InboundApplyReport: Sendable, Equatable {
   /// the union of direct `.applied` / `.remapped` envelopes and pending-inbox
   /// replays. Skipped and deferred envelopes contribute nothing.
   public var appliedEntityTypes: Set<EntityKind>
+  /// Whether this apply changed any canonical row: a direct apply or remap, a
+  /// pending-inbox replay, a repair, or retention pruning of the assistant
+  /// changelog. The core sets it exactly when the apply bumped the local change
+  /// sequence, and every change it attributes to a kind is one of these, so a
+  /// non-empty ``appliedEntityTypes`` always implies it (the initializer
+  /// enforces that for hand-built reports too). A batch whose records were all
+  /// skipped as already held (typically this device's own pushes coming back),
+  /// deferred, or parked leaves it false: no surface needs reloading and no
+  /// other store needs notifying.
+  public var canonicalStateChanged: Bool
   /// Internal transport capability receipts produced only by outbound
   /// reconciliation. Ordinary inbound reports leave this empty.
   public var reconciledCollisionOutboxIds: Set<Int64>
@@ -65,6 +75,7 @@ public struct InboundApplyReport: Sendable, Equatable {
     applied: Int = 0, skipped: Int = 0, deferred: Int = 0, remapped: Int = 0,
     drainReplayed: Int = 0, undecodable: Int = 0, deferredUnknownType: Int = 0,
     appliedEntityTypes: Set<EntityKind> = [],
+    canonicalStateChanged: Bool = false,
     reconciledCollisionOutboxIds: Set<Int64> = []
   ) {
     self.applied = applied
@@ -75,6 +86,7 @@ public struct InboundApplyReport: Sendable, Equatable {
     self.undecodable = undecodable
     self.deferredUnknownType = deferredUnknownType
     self.appliedEntityTypes = appliedEntityTypes
+    self.canonicalStateChanged = canonicalStateChanged || !appliedEntityTypes.isEmpty
     self.reconciledCollisionOutboxIds = reconciledCollisionOutboxIds
   }
 }

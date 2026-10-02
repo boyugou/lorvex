@@ -48,6 +48,40 @@ final class CalendarTimelineAgendaTests: XCTestCase {
     XCTAssertTrue(snap.eventsOccurring(on: "2026-06-17").isEmpty)
   }
 
+  func testTimedEventEndingAtMidnightOccursOnlyOnItsStartDay() {
+    // 10 PM to midnight takes no time on the 15th; 11 PM to 12:30 AM does.
+    let snap = snapshot([
+      event(
+        id: "late-show", startDate: "2026-06-14", startTime: "22:00", endDate: "2026-06-15",
+        endTime: "00:00"),
+      event(
+        id: "red-eye", startDate: "2026-06-14", startTime: "23:00", endDate: "2026-06-15",
+        endTime: "00:30"),
+    ])
+    XCTAssertEqual(snap.eventsOccurring(on: "2026-06-14").map(\.id), ["late-show", "red-eye"])
+    XCTAssertEqual(snap.eventsOccurring(on: "2026-06-15").map(\.id), ["red-eye"])
+  }
+
+  func testMidnightEndKeepsTheDaysBeforeTheEndDay() {
+    let snap = snapshot([
+      event(
+        id: "retreat", startDate: "2026-06-13", startTime: "09:00", endDate: "2026-06-15",
+        endTime: "00:00")
+    ])
+    XCTAssertEqual(snap.eventsOccurring(on: "2026-06-13").map(\.id), ["retreat"])
+    XCTAssertEqual(snap.eventsOccurring(on: "2026-06-14").map(\.id), ["retreat"])
+    XCTAssertTrue(snap.eventsOccurring(on: "2026-06-15").isEmpty)
+  }
+
+  func testAllDayEventOccursOnItsEndDayWhateverItsEndTime() {
+    let snap = snapshot([
+      event(
+        id: "offsite", startDate: "2026-06-14", endDate: "2026-06-15", endTime: "00:00",
+        allDay: true)
+    ])
+    XCTAssertEqual(snap.eventsOccurring(on: "2026-06-15").map(\.id), ["offsite"])
+  }
+
   func testAgendaOrdersAllDayThenTimedAscending() {
     let snap = snapshot([
       event(id: "late", startDate: "2026-06-15", startTime: "16:00"),

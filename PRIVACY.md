@@ -135,7 +135,7 @@ not use a push-notification service to deliver reminder content.
 ## Your control over your data
 
 - **On Mac**, you can reset or delete this Mac's local Lorvex data at any time
-  from within the app (Settings → Data → Reset → "Reset This Device…"). This
+  from within the app (Settings → Data → "Reset This Device"). This
   is local to that Mac; a copy already synced to iCloud is not affected.
 - **On iPhone/iPad**, Lorvex does not currently offer an in-app local-reset
   action; uninstalling the app (see below) is how you remove its local data

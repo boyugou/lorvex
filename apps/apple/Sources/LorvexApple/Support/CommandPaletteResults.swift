@@ -10,7 +10,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
   /// Select an existing task and jump to it in the Tasks workspace.
   ///
   /// `subtitle` is the dimmed line under the title
-  /// (``CommandPaletteResults/taskSubtitle(_:listNames:now:calendar:)``);
+  /// (``CommandPaletteResults/taskSubtitle(_:listNames:now:timeZone:)``);
   /// `nil` when the task has nothing worth surfacing. `isDone` marks a
   /// completed or cancelled task, whose row leads with a check instead of an
   /// empty circle.
@@ -133,12 +133,14 @@ enum CommandPaletteResults {
   /// query that begins a destination's or a list's name, or one of its words,
   /// is a jump, and those groups lead; any other query leads with capture.
   /// Task matches never lead, so capturing a title an existing task shares
-  /// still creates the new task.
+  /// still creates the new task. A task's due day is counted from the day
+  /// `now` falls on in `timeZone`, the product time zone.
   static func groups(
     query rawQuery: String,
     tasks: [LorvexTask],
     lists: [LorvexList] = [],
     now: Date = Date(),
+    timeZone: TimeZone = .current,
     destinations: [SidebarSelection] = SidebarSelection.mainNavigationItems,
     actions: [AppCommand] = AppCommand.allCases
   ) -> [CommandPaletteGroup] {
@@ -146,11 +148,11 @@ enum CommandPaletteResults {
     let matchedDestinations =
       query.isEmpty
       ? destinations
-      : destinations.filter { names(of: $0).contains { $0.localizedCaseInsensitiveContains(query) } }
+      : destinations.filter { names(of: $0).contains { $0.localizedStandardContains(query) } }
     let matchedLists =
       query.isEmpty
       ? []
-      : lists.filter { !$0.isArchived && $0.displayName.localizedCaseInsensitiveContains(query) }
+      : lists.filter { !$0.isArchived && $0.displayName.localizedStandardContains(query) }
 
     var jumps: [CommandPaletteGroup] = []
     if !matchedDestinations.isEmpty {
@@ -184,7 +186,7 @@ enum CommandPaletteResults {
         .prefix(taskResultLimit)
         .map {
           CommandPaletteResult.openTask(
-            id: $0.id, title: $0.title, subtitle: taskSubtitle($0, listNames: listNames, now: now),
+            id: $0.id, title: $0.title, subtitle: taskSubtitle($0, listNames: listNames, now: now, timeZone: timeZone),
             isDone: $0.status.isResolved)
         }
       if !taskResults.isEmpty {
@@ -196,7 +198,7 @@ enum CommandPaletteResults {
       query.isEmpty
       ? actions.map { CommandPaletteResult.action($0) }
       : actions
-        .filter { $0.title.localizedCaseInsensitiveContains(query) }
+        .filter { $0.title.localizedStandardContains(query) }
         .map { CommandPaletteResult.action($0) }
     if !actionResults.isEmpty {
       groups.append(CommandPaletteGroup(title: "Actions", results: actionResults))
@@ -206,7 +208,8 @@ enum CommandPaletteResults {
   }
 
   /// The names a destination answers to: its stable English title and the
-  /// title the sidebar shows in the current language ("Calendar" and "Plan").
+  /// title the sidebar shows in the current language ("Reviews" and "Review",
+  /// or "Calendar" and "日历").
   private static func names(of destination: SidebarSelection) -> [String] {
     [destination.macOSDisplayTitle, String(localized: destination.macOSLocalizedTitle)]
   }
@@ -234,7 +237,7 @@ enum CommandPaletteResults {
   /// when it was due. `nil` when none of these applies.
   static func taskSubtitle(
     _ task: LorvexTask, listNames: [LorvexList.ID: String] = [:], now: Date = Date(),
-    calendar: Calendar = .current
+    timeZone: TimeZone = .current
   ) -> String? {
     var parts: [String] = []
     if let listID = task.listID, let name = listNames[listID] {
@@ -242,9 +245,9 @@ enum CommandPaletteResults {
     }
     switch task.status {
     case .completed, .cancelled:
-      parts.append(TaskDisplayText.status(task.status))
+      parts.append(task.status.localizedName)
     case .open, .inProgress, .someday:
-      if let due = task.cachedDueRelativeLabel(now: now, calendar: calendar) {
+      if let due = task.cachedDueRelativeLabel(now: now, timeZone: timeZone) {
         parts.append(
           String(
             format: String(
@@ -253,7 +256,7 @@ enum CommandPaletteResults {
             due))
       }
       if task.status != .open {
-        parts.append(TaskDisplayText.status(task.status))
+        parts.append(task.status.localizedName)
       }
     }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")

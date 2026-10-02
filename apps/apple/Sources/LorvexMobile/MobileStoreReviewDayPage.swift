@@ -110,7 +110,7 @@ struct MobileStoreReviewDayPage: View {
           HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
             Image(systemName: "checkmark.circle.fill")
               .foregroundStyle(LorvexDesign.Palette.done)
-            Text(task.title)
+            Text(userContent: task.title)
               .lineLimitUnlessAccessibilitySize(2)
           }
           .font(LorvexDesign.Typography.primaryText)

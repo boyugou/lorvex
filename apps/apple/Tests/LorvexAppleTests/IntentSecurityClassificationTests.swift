@@ -181,7 +181,6 @@ func widgetActionIntentsAreUndiscoverableAndAlwaysAllowed() {
   let widgetActions: [any AppIntent.Type] = [
     WidgetCompleteTaskIntent.self,
     WidgetCompleteHabitIntent.self,
-    WidgetDeferTaskIntent.self,
   ]
   for type in widgetActions {
     #expect(type.isDiscoverable == false, "\(type)")

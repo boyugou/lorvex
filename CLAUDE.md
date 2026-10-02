@@ -25,16 +25,19 @@ context only, never a dependency or a behavioral oracle.
    pure-Swift `LorvexAppleCore` package (`apps/apple/core`) behind
    `SwiftLorvexCoreService`. Never add a Rust or web runtime, an FFI bridge, or
    cross-platform shims.
-2. **`schema/schema.sql` is the schema authority.** The app realizes it
-   byte-for-byte through its embedded copy
-   (`apps/apple/Sources/LorvexCore/Resources/schema.sql`), governed by the embed
-   check, migration ladder, and schema-freeze gate
+2. **`schema/` is the schema authority.** `schema/schema.sql` is the version-1
+   baseline and `schema/migrations/` the numbered ladder after it. The app
+   realizes both byte-for-byte through its embedded copies
+   (`apps/apple/Sources/LorvexCore/Resources/schema.sql` and `Migrations/`),
+   governed by the embed check, migration ladder, and schema-freeze gate
    (`apps/apple/script/verify_schema_embed.sh`, `verify_migration_ladder.py`,
-   `verify_schema_freeze.py`). Fix the schema here if it is genuinely wrong, then
-   mirror the change into the embedded copy. The sync wire's field inventory is
-   versioned independently in `schema/sync_payload/`: changing a known entity or
-   field requires an explicit `payloadSchemaVersion` bump and the next
-   contiguous manifest; released manifests are immutable.
+   `verify_schema_freeze.py`). The freeze is armed
+   (`schema/migration_policy.json` has `launched: true`): a schema change is a
+   new numbered migration in `schema/migrations/`, mirrored into the embedded
+   copy, and `schema.sql` and released migrations are never edited. The sync
+   wire's field inventory is versioned independently in `schema/sync_payload/`:
+   changing a known entity or field requires an explicit `payloadSchemaVersion`
+   bump and the next contiguous manifest; released manifests are immutable.
 3. **Contact routes through the lorvex.app support/privacy pages.** No email
    addresses anywhere.
 

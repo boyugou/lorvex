@@ -30,49 +30,30 @@ extension MobileCalendarDayColumn {
     let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
     let isRunning = isRunningNow(block, day) && !block.isDone
     let toggleLabel = MobileTaskActionCopy.completionToggle(isDone: block.isDone)
-    let title = Text(block.task.title)
-      .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-      .strikethrough(block.isDone)
-      .foregroundStyle(block.isDone ? .secondary : .primary)
-      .lineLimit(2)
-    return HStack(alignment: .top, spacing: 2) {
+    return Group {
       if isCompact {
         MobileCalendarCompactBlockTitle(block.task.title, isDone: block.isDone)
-          .padding(.leading, 1).padding(.top, isTight ? 0 : 2)
+          .padding(.leading, 1)
+          .padding(.vertical, isTight ? 0 : 3)
       } else {
-        MobileCalendarTaskRing(
+        LorvexCalendarBlockText(
+          title: block.task.title,
+          start: lorvexClockTimeLabel(minutes: block.startMin),
+          range: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
           isDone: block.isDone,
-          font: LorvexDesign.Typography.secondaryText,
-          width: 20,
-          height: min(20, height)
+          verticalPadding: 3,
+          accessorySpacing: 2
         ) {
-          onToggleTask(block.task)
-        }
-        // The time goes under the title where both fit; see `eventBlock`.
-        let start = lorvexClockTimeLabel(minutes: block.startMin)
-        let range = lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin)
-        ViewThatFits(in: .vertical) {
-          VStack(alignment: .leading, spacing: 1) {
-            title
-            ViewThatFits(in: .horizontal) {
-              MobileCalendarBlockTime(range)
-              MobileCalendarBlockTime(start)
-            }
-          }
-          ViewThatFits(in: .horizontal) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-              title.lineLimit(1)
-              MobileCalendarBlockTime(range)
-            }
-            title
+          MobileCalendarTaskRing(
+            isDone: block.isDone, font: LorvexDesign.Typography.secondaryText, width: 20
+          ) {
+            onToggleTask(block.task)
           }
         }
-        .padding(.top, isTight ? 0 : 2)
       }
     }
     .padding(.leading, 2)
     .padding(.trailing, isCompact ? 2 : 5)
-    .padding(.vertical, isTight ? 0 : 1)
     .frame(width: max(laneWidth - 2, 10), height: height, alignment: .topLeading)
     .clipped()
     .lorvexCalendarTaskSurface(
@@ -143,7 +124,7 @@ struct MobileCalendarCompactBlockTitle: View {
   }
 
   var body: some View {
-    Text(title)
+    Text(userContent: title)
       // Scaled with the text through baseSize, then fitted to the block.
       .font(.system(size: fittedSize, weight: .medium).width(.condensed))  // lorvex-design-token: allow
       .strikethrough(isDone)
@@ -190,24 +171,5 @@ enum MobileCalendarCompactTitleFit {
       let font = NSFont.systemFont(ofSize: size, weight: .medium, width: .condensed)
     #endif
     return ceil((word as NSString).size(withAttributes: [.font: font]).width)
-  }
-}
-
-/// A grid block's time ("1:00 – 1:30 PM" or "1:00 PM"), whole on one line so
-/// a `ViewThatFits` can tell whether it fits.
-struct MobileCalendarBlockTime: View {
-  private let label: String
-
-  init(_ label: String) {
-    self.label = label
-  }
-
-  var body: some View {
-    Text(label)
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-      .monospacedDigit()
-      .lineLimit(1)
-      .fixedSize()
   }
 }

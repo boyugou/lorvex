@@ -2,11 +2,12 @@ import LorvexCore
 import SwiftUI
 
 /// The Time Zone rows in Settings › General: the synced zone every device
-/// counts Lorvex's days in, shown as its city and current offset ("Los
-/// Angeles · GMT−7") on a button that opens a searchable list of zones. When
-/// this Mac is in another zone, a second row offers to switch to it in one
-/// click, which is what a move or a long trip needs; a short trip can keep the
-/// home zone. A caption says the zone applies on every device.
+/// counts Lorvex's days in, shown as its city and current offset in the
+/// user's language ("Los Angeles · GMT-7", "洛杉矶 · GMT-7") on a button that
+/// opens a searchable list of zones. When this Mac is in another zone, a
+/// second row offers to switch to it in one click, which is what a move or a
+/// long trip needs; a short trip can keep the home zone. The enclosing group's
+/// footer carries ``caption``, which says the zone applies on every device.
 struct SettingsTimeZoneRow: View {
   @Bindable var store: AppStore
 
@@ -52,9 +53,11 @@ struct SettingsTimeZoneRow: View {
       .accessibilityIdentifier("settings.timeZone.useDevice")
     }
 
-    Text(Copy.caption)
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
+  }
+
+  /// The footnote for the group holding these rows.
+  static var caption: String {
+    String(localized: "settings.time_zone.caption", defaultValue: "Lorvex counts days in this time zone on all your devices.", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   private var current: LorvexTimeZoneChoice? {
@@ -68,9 +71,6 @@ struct SettingsTimeZoneRow: View {
   fileprivate enum Copy {
     static var title: String {
       String(localized: "settings.time_zone", defaultValue: "Time Zone", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-    static var caption: String {
-      String(localized: "settings.time_zone.caption", defaultValue: "Lorvex counts days in this time zone on all your devices.", table: "Localizable", bundle: LorvexL10n.bundle)
     }
     static func useDevice(_ zone: String) -> String {
       String(localized: "settings.time_zone.use_device", defaultValue: "Use This Device’s Time Zone (\(zone))", table: "Localizable", bundle: LorvexL10n.bundle)

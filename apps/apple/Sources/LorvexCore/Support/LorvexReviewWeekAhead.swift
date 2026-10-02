@@ -149,7 +149,7 @@ public struct LorvexReviewWeekAhead: View {
           .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
           .frame(width: 3, height: 14)
       }
-      Text(event.title)
+      Text(userContent: event.title)
         .font(LorvexDesign.Typography.primaryText)
         .lineLimitUnlessAccessibilitySize(2)
       Spacer(minLength: LorvexDesign.Spacing.s)
@@ -167,7 +167,7 @@ public struct LorvexReviewWeekAhead: View {
             .strokeBorder(.secondary, lineWidth: 1.5)
             .frame(width: 7, height: 7)
         }
-        Text(task.title)
+        Text(userContent: task.title)
           .font(LorvexDesign.Typography.primaryText)
           .foregroundStyle(.primary)
           .multilineTextAlignment(.leading)

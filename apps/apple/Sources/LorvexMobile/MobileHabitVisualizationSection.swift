@@ -4,6 +4,9 @@ import SwiftUI
 struct MobileHabitVisualizationSection: View {
   let habit: LorvexHabit
   let detail: MobileStore.HabitDetail?
+  /// The product time zone, which the completion keys are written in and
+  /// which places today's cell in each panel.
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
@@ -11,9 +14,9 @@ struct MobileHabitVisualizationSection: View {
         .font(LorvexDesign.Typography.sectionHeader)
 
       if let detail {
-        MobileHabitMomentumPanel(habit: habit, stats: detail.stats)
-        MobileHabitRhythmPanel(habit: habit, stats: detail.stats)
-        MobileHabitHeatmapPanel(habit: habit, detail: detail)
+        MobileHabitMomentumPanel(habit: habit, stats: detail.stats, timeZone: productTimeZone)
+        MobileHabitRhythmPanel(habit: habit, stats: detail.stats, timeZone: productTimeZone)
+        MobileHabitHeatmapPanel(habit: habit, detail: detail, timeZone: productTimeZone)
       } else {
         MobileSkeletonRows(count: 3, showsTrailingDetail: true)
         .padding(LorvexDesign.Spacing.l)
@@ -34,11 +37,13 @@ struct MobileHabitVisualizationSection: View {
 private struct MobileHabitMomentumPanel: View {
   let habit: LorvexHabit
   let stats: HabitStats
+  let timeZone: TimeZone
 
   private enum StatLayout { case column, row }
 
   private var progress: HabitPeriodProgress.Value {
-    HabitPeriodProgress.current(habit: habit, recentCompletions: stats.recentCompletions)
+    HabitPeriodProgress.current(
+      habit: habit, recentCompletions: stats.recentCompletions, timeZone: timeZone)
   }
 
   var body: some View {
@@ -208,20 +213,17 @@ private struct MobileHabitMomentumPanel: View {
     if progress.isComplete {
       return String(localized: "habits.detail.period_done", defaultValue: "Done", table: "Localizable", bundle: MobileL10n.bundle)
     }
+    let remaining = max(progress.required - progress.completed, 1)
     return String(
-      format: String(localized: "habits.detail.period_remaining", defaultValue: "%lld to go", table: "Localizable", bundle: MobileL10n.bundle),
-      max(progress.required - progress.completed, 1)
-    )
+      localized: "habits.detail.period_remaining", defaultValue: "\(remaining) to go",
+      table: "Localizable", bundle: MobileL10n.bundle)
   }
 
   private var momentumAccessibilityLabel: String {
     String(
-      format: String(localized: "habits.detail.momentum.a11y", defaultValue: "Period progress %1$lld of %2$lld, current streak %3$lld, best streak %4$lld", table: "Localizable", bundle: MobileL10n.bundle),
-      progress.completed,
-      progress.required,
-      stats.currentStreak,
-      stats.bestStreak
-    )
+      localized: "habits.detail.momentum.a11y",
+      defaultValue: "Period progress \(progress.completed) of \(progress.required), current streak \(stats.currentStreak), best streak \(stats.bestStreak)",
+      table: "Localizable", bundle: MobileL10n.bundle)
   }
 }
 
@@ -244,10 +246,7 @@ private struct MobileHabitMomentumDial: View {
         .stroke(
           tint.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)),
           lineWidth: lineWidth)
-      Circle()
-        .trim(from: 0, to: fraction)
-        .stroke(tint.gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-        .rotationEffect(.degrees(-90))
+      LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
         .animation(.easeInOut(duration: 0.25), value: fraction)
       VStack(spacing: 1) {
         Text("\(completed)")
@@ -270,12 +269,14 @@ private struct MobileHabitMomentumDial: View {
 private struct MobileHabitRhythmPanel: View {
   let habit: LorvexHabit
   let stats: HabitStats
+  let timeZone: TimeZone
 
   private var cells: [HabitRhythmStrip.Cell] {
     HabitRhythmStrip.cells(
       completions: Set(stats.recentCompletions),
       habit: habit,
-      today: Date()
+      today: Date(),
+      timeZone: timeZone
     )
   }
 
@@ -314,25 +315,16 @@ private struct MobileHabitRhythmPanel: View {
 
   private var tint: Color { habit.tileTint }
 
-  /// Narrow weekdays under a daily habit's seven cells, oldest first, so the
-  /// strip reads as this week rather than seven anonymous marks; empty for a
-  /// weekly or monthly strip.
   private var dayLabels: [String] {
-    guard HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType) == .day else { return [] }
-    let calendar = Calendar.current
-    let today = Date()
-    return (0..<cells.count).reversed().compactMap { daysAgo in
-      calendar.date(byAdding: .day, value: -daysAgo, to: today)?.formatted(.dateTime.weekday(.narrow))
-    }
+    HabitRhythmStrip.dayLabels(habit: habit, today: Date(), timeZone: timeZone)
   }
 
   private var rhythmAccessibilityLabel: String {
     let filled = cells.filter(\.filled).count
     return String(
-      format: String(localized: "habits.detail.rhythm.a11y", defaultValue: "Rhythm strip: %1$lld of %2$lld periods completed", table: "Localizable", bundle: MobileL10n.bundle),
-      filled,
-      cells.count
-    )
+      localized: "habits.detail.rhythm.a11y",
+      defaultValue: "Rhythm strip: \(filled) of \(cells.count) periods completed",
+      table: "Localizable", bundle: MobileL10n.bundle)
   }
 }
 
@@ -390,17 +382,23 @@ private struct MobileHabitHeatmapPanel: View {
 
   private let calendar: Calendar
 
-  init(habit: LorvexHabit, detail: MobileStore.HabitDetail) {
+  init(habit: LorvexHabit, detail: MobileStore.HabitDetail, timeZone: TimeZone) {
     self.habit = habit
     self.detail = detail
-    let calendar = Self.makeCalendar()
+    let calendar = Self.makeCalendar(timeZone)
     self.calendar = calendar
     _cachedGrid = State(initialValue: Self.makeGrid(habit: habit, detail: detail, calendar: calendar))
   }
 
-  private static func makeCalendar() -> Calendar {
+  /// The grid's calendar: Gregorian in `timeZone`, the product time zone the
+  /// completion keys are written in, with ISO weeks (Monday first), the weeks
+  /// a habit's progress counts, so a column of a weekly habit is one of its
+  /// periods, as in the Mac's History panel.
+  private static func makeCalendar(_ timeZone: TimeZone) -> Calendar {
     var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = .current
+    calendar.timeZone = timeZone
+    calendar.firstWeekday = 2
+    calendar.minimumDaysInFirstWeek = 4
     return calendar
   }
 
@@ -442,6 +440,9 @@ private struct MobileHabitHeatmapPanel: View {
       refreshCachedGrid()
     }
     .onChange(of: habit.targetCount) { _, _ in
+      refreshCachedGrid()
+    }
+    .onChange(of: calendar.timeZone) { _, _ in
       refreshCachedGrid()
     }
   }

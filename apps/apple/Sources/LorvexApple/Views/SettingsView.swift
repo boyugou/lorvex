@@ -10,20 +10,19 @@ enum SettingsLayoutMetrics {
   static let detailMinWidth: CGFloat = 420
   static let detailIdealWidth: CGFloat = 620
   static let detailMaxWidth: CGFloat = 760
-  static let detailHorizontalPadding: CGFloat = 24
+  /// The width of the glyph column in a settings row's label
+  /// (``SettingsRowLabelStyle``).
+  static let rowIconWidth: CGFloat = 20
 }
 
 struct SettingsView: View {
   @Bindable var settings: AppSettingsStore
   @Bindable var store: AppStore
-  // Language override (General tab). `launchLanguage` captures the language the
-  // app started in so the "relaunch to apply" hint only shows once the choice
-  // actually diverges from what's running.
-  @State var launchLanguage: AppLanguage = .current
+  // The app's language (General tab), as the app's own preference stores it.
   @State var selectedLanguage: AppLanguage = .current
-  @State var languageNeedsRelaunch = false
   @State var showingAcknowledgments = false
   @State var showingPrivacyPolicy = false
+  @State var diagnosticsCopied = false
   @State var showResetConfirmation = false
   @State var resetInProgress = false
   @State var showCloudDeleteConfirmation = false
@@ -42,6 +41,7 @@ struct SettingsView: View {
   @State var exportFilename = "lorvex-export.json"
   @State var selectedExportCategories: Set<LorvexDataExportCategory> = Set(
     LorvexDataExportCategory.allCases)
+  @State var exportFormat: SettingsDataExportFormat = .json
   @State var isChoosingImportFile = false
   @State var importInProgress = false
   @State var importErrorMessage: String?
@@ -76,9 +76,10 @@ struct SettingsView: View {
   }
 
   // The sidebar removes its toolbar toggle (it is the only way between
-  // categories). The detail's invisible spacer keeps the window's toolbar
-  // alive: with no toolbar item at all the window drops its unified toolbar
-  // and the sidebar no longer reaches the window top.
+  // categories), and the toolbar's one row shows the page's title
+  // (``SettingsWindowToolbarStyle``). The detail's invisible spacer keeps the
+  // window's toolbar alive: with no toolbar item at all the window drops its
+  // unified toolbar and the sidebar no longer reaches the window top.
   var body: some View {
     NavigationSplitView {
       SettingsSidebar(selectedCategory: selectedCategoryBinding)
@@ -101,6 +102,7 @@ struct SettingsView: View {
     }
     .navigationSplitViewStyle(.balanced)
     .frame(minWidth: 680, idealWidth: 860, minHeight: 560)
+    .background(SettingsWindowToolbarStyle())
     .onChange(of: store.requestedSettingsCategory, initial: true) { _, category in
       guard let category else { return }
       selectedCategory = category
@@ -226,7 +228,7 @@ struct SettingsView: View {
     switch category {
     case .general:
       appearanceSection
-      languageSection
+      timeSection
       SettingsWorkingHoursRow(store: store)
     case .permissions:
       SettingsPermissionsSection(store: store, settings: settings)

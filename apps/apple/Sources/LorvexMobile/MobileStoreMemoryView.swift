@@ -104,10 +104,9 @@ public struct MobileStoreMemoryView: View {
         MobileBatchActionBar(
           selectedCount: batchSelectedMemoryKeys.count,
           countText: String(
-            format: String(
-              localized: "memory.batch.selected_count", defaultValue: "%lld selected",
-              table: "Localizable", bundle: MobileL10n.bundle),
-            batchSelectedMemoryKeys.count),
+            localized: "memory.batch.selected_count",
+            defaultValue: "\(batchSelectedMemoryKeys.count) selected",
+            table: "Localizable", bundle: MobileL10n.bundle),
           deleteLabel: String(
             localized: "common.delete", defaultValue: "Delete", table: "Localizable",
             bundle: MobileL10n.bundle),

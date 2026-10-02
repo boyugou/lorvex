@@ -4,7 +4,6 @@ import SwiftUI
 struct HabitsWorkspaceView: View {
   @Bindable var store: AppStore
   @State private var isShowingCreateHabit = false
-  @State private var editingHabit: LorvexHabit?
   // Non-private so the archived-section view, split into
   // `HabitsWorkspaceArchivedSection.swift`, can drive the same confirmation.
   @State var archivedHabitPendingDeletion: LorvexHabit?
@@ -95,16 +94,6 @@ struct HabitsWorkspaceView: View {
     .sheet(isPresented: $isShowingCreateHabit) {
       CreateHabitSheet(store: store, isPresented: $isShowingCreateHabit)
     }
-    .sheet(item: $editingHabit) { habit in
-      EditHabitSheet(
-        habit: habit,
-        store: store,
-        isPresented: Binding(
-          get: { editingHabit != nil },
-          set: { if !$0 { editingHabit = nil } }
-        )
-      )
-    }
   }
 
   /// Whether each visible habit meets its current period's plan, keyed by id.
@@ -120,7 +109,8 @@ struct HabitsWorkspaceView: View {
         habit.id,
         HabitPeriodProgress.current(
           habit: habit,
-          recentCompletions: store.habitStats(for: habit.id)?.recentCompletions ?? []
+          recentCompletions: store.habitStats(for: habit.id)?.recentCompletions ?? [],
+          timeZone: store.logicalTimeZone
         ).isComplete
       )
     })
@@ -143,9 +133,11 @@ struct HabitsWorkspaceView: View {
           // Re-clicking the open habit collapses its detail (toggle), matching
           // the inspector's ✕.
           select: { store.selectedHabitID = store.selectedHabitID == habit.id ? nil : habit.id },
+          // A habit is edited in its inspector; Edit opens it with the
+          // name ready to type.
           edit: {
-            store.prepareHabitDraft(for: habit)
-            editingHabit = habit
+            store.selectedHabitID = habit.id
+            store.habitNameFocusRequest = habit.id
           },
           archive: { Task { await store.setHabitArchived(habit, archived: true) } },
           delete: { Task { await store.deleteHabit(habit) } },

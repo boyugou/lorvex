@@ -1,9 +1,6 @@
 import LorvexCore
 import LorvexWidgetKitSupport
 import SwiftUI
-#if canImport(UIKit)
-  import UIKit
-#endif
 #if os(watchOS)
   import WatchKit
 #endif
@@ -60,13 +57,13 @@ struct LorvexWatchHabitsPage: View {
           isDone: habit.isDoneToday, diameter: 40, showsCheckHint: false)
           .overlay {
             if !habit.isDoneToday {
-              Image(systemName: Self.symbol(for: habit.icon))
+              Image(systemName: LorvexSymbol.name(for: habit.icon, fallback: "repeat"))
                 .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
                 .foregroundStyle(LorvexDesign.Palette.accent)
                 .accessibilityHidden(true)
             }
           }
-        Text(habit.name)
+        Text(userContent: habit.name)
           .font(LorvexDesign.Typography.tertiaryText)
           .lineLimit(2)
           .multilineTextAlignment(.center)
@@ -77,17 +74,5 @@ struct LorvexWatchHabitsPage: View {
     .accessibilityLabel(habit.name)
     .accessibilityValue(habit.isDoneToday ? LorvexWatchCalmCopy.done : "\(habit.completedToday)/\(habit.target)")
     .accessibilityIdentifier("watch.habit.\(habit.id)")
-  }
-
-  /// The habit's own SF Symbol when it names a real one, else a repeat mark:
-  /// the icon is free text an assistant or the user sets, and an unknown name
-  /// would draw an empty box.
-  static func symbol(for icon: String?) -> String {
-    guard let icon, !icon.isEmpty, icon.unicodeScalars.allSatisfy(\.isASCII) else { return "repeat" }
-    #if canImport(UIKit)
-      return UIImage(systemName: icon) == nil ? "repeat" : icon
-    #else
-      return icon
-    #endif
   }
 }

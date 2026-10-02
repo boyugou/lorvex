@@ -19,7 +19,7 @@
 # Routes: today today-suggestion tasks calendar calendar-week habits review
 #         review-week setup-welcome setup-cloudSync setup-notifications setup-done
 #         settings settings-bottom settings-export memory lists task-detail habit-detail
-#         habit-detail-middle habit-detail-end review-end review-week-end
+#         habit-detail-middle habit-detail-end habit-editor review-end review-week-end
 #         memory-detail task-detail-checklist task-detail-reminder capture
 #         capture-filled capture-repeat
 #         task-detail-repeat task-detail-depends memory-composer
@@ -57,6 +57,8 @@
 #         and the Archive and Delete buttons sit; habit-detail-middle opens it
 #         on the middle of its content (-lorvexScrollHabitDetailToMiddle),
 #         where the Progress panels sit on a page taller than the screen.
+#         habit-editor opens that habit's editor over its detail
+#         (-lorvexOpenHabitEditor), where its cadence and weekdays are set.
 #         review-end and review-week-end open the Day and Week reviews at
 #         their end (-lorvexScrollReviewToEnd), where the day rows and the
 #         task lists sit on a page taller than the screen.
@@ -111,7 +113,7 @@ url_for() {
     tasks-search-empty) echo "lorvex://tab/tasks/search/quokka" ;;
     habits-search-empty) echo "lorvex://tab/habits/search/quokka" ;;
     task-detail) echo "lorvex://firsttask" ;;
-    habit-detail|habit-detail-end|habit-detail-middle) echo "lorvex://firsthabit" ;;
+    habit-detail|habit-detail-end|habit-detail-middle|habit-editor) echo "lorvex://firsthabit" ;;
     memory-detail) echo "lorvex://firstmemory/push" ;;
     task-detail-checklist) echo "lorvex://firsttask/compose/checklist" ;;
     task-detail-reminder) echo "lorvex://firsttask/compose/reminder" ;;
@@ -132,6 +134,7 @@ extra_args_for() {
     settings-export) echo "-lorvexScrollSettingsToDataExport" ;;
     habit-detail-end) echo "-lorvexScrollHabitDetailToEnd" ;;
     habit-detail-middle) echo "-lorvexScrollHabitDetailToMiddle" ;;
+    habit-editor) echo "-lorvexOpenHabitEditor" ;;
     review-end|review-week-end) echo "-lorvexScrollReviewToEnd" ;;
     today-suggestion) echo "-lorvexUIPreviewSuggestedTimes" ;;
     widgets) echo "-lorvexWidgetGallery -lorvexWidgetGallerySection today" ;;
@@ -161,6 +164,10 @@ SEED_ARG="-lorvexSeedSampleData"
 [[ "${LORVEX_SIM_FRESH:-}" == 1 ]] && SEED_ARG=""
 xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 >/dev/null 2>&1
 xcrun simctl ui "$UDID" appearance "$APPEARANCE" >/dev/null 2>&1
+# A device keeps the text size it was last given, so pin the default (Large)
+# for captures to show what a new iPhone shows; a launch argument
+# (-UIPreferredContentSizeCategoryName) still picks another size for the app.
+xcrun simctl ui "$UDID" content_size large >/dev/null 2>&1
 for ROUTE in "${ROUTES[@]}"; do
   LATER=""
   if [[ "$ROUTE" == *+* ]]; then

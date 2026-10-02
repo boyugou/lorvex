@@ -67,32 +67,47 @@ struct LorvexCalendarEventEntity: AppEntity, Identifiable {
     )
   }
 
+  /// The schedule as the system shows it under the event's title, in the
+  /// user's locale: the day in the medium date style ("Oct 1, 2026") and the
+  /// times on the user's clock ("9:00 AM", or "09:00" on a 24-hour clock).
   private var localizedScheduleSummary: LocalizedStringResource {
+    let day = displayDay
     if allDay {
       return LocalizedStringResource(
         "system.entity.calendar_event.schedule.all_day",
-        defaultValue: "\(startDate) all day",
+        defaultValue: "\(day) all day",
         table: "Localizable",
         bundle: SystemL10n.bundle)
     }
     guard let startTime else {
       return LocalizedStringResource(
         "system.entity.calendar_event.schedule.unscheduled",
-        defaultValue: "\(startDate) unscheduled",
+        defaultValue: "\(day) unscheduled",
         table: "Localizable",
         bundle: SystemL10n.bundle)
     }
-    guard let endTime else {
+    let start = lorvexClockTimeLabel(startTime)
+    // An end of 24:00 is the midnight that closes the day.
+    guard let endTime, let endMinutes = lorvexEndMinutesSinceMidnight(endTime) else {
       return LocalizedStringResource(
         "system.entity.calendar_event.schedule.start",
-        defaultValue: "\(startDate) \(startTime)",
+        defaultValue: "\(day) \(start)",
         table: "Localizable",
         bundle: SystemL10n.bundle)
     }
+    let end = lorvexClockTimeLabel(minutes: endMinutes)
     return LocalizedStringResource(
       "system.entity.calendar_event.schedule.range",
-      defaultValue: "\(startDate) \(startTime)-\(endTime)",
+      defaultValue: "\(day) \(start)-\(end)",
       table: "Localizable",
       bundle: SystemL10n.bundle)
+  }
+
+  /// The event's `yyyy-MM-dd` day in the locale's medium date style, or the
+  /// stored day when it does not parse. A day key names a calendar day, not
+  /// an instant, so it is read and written in UTC.
+  private var displayDay: String {
+    guard let date = LorvexDateFormatters.ymdUTC.date(from: startDate) else { return startDate }
+    return LorvexDateFormatters.string(date, dateStyle: .medium, timeZone: .gmt)
   }
 }

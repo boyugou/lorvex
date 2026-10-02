@@ -1,0 +1,5 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "LorvexMobileApp";
+"Quick Capture" = "Быстрое добавление";
+"Open Today" = "Открыть «Сегодня»";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex может читать подробности событий, чтобы строить расписания и формировать контекст для ассистента.";

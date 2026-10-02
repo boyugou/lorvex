@@ -113,6 +113,7 @@ private struct TaskDetailDependencyRow: View {
   let open: (LorvexTask) -> Void
   let toggleCompletion: (LorvexTask) -> Void
   let remove: () -> Void
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   @State private var isHovering = false
 
@@ -145,7 +146,7 @@ private struct TaskDetailDependencyRow: View {
             task.title))
           .accessibilityElement(children: .ignore)
           .accessibilityLabel(task.title)
-          .accessibilityValue(TaskDependencyFacts.accessibilityValue(for: task))
+          .accessibilityValue(taskDependencyAccessibilityValue(task, timeZone: productTimeZone))
           .accessibilityHint(String(
             localized: "task_detail.dependencies.open.a11y_hint", defaultValue: "Opens the task.",
             table: "Localizable",
@@ -191,11 +192,11 @@ private struct TaskDetailDependencyRow: View {
 
   private func summary(_ task: LorvexTask) -> some View {
     VStack(alignment: .leading, spacing: 1) {
-      Text(task.title)
+      Text(userContent: task.title)
         .font(LorvexDesign.Typography.primaryText)
         .foregroundStyle(task.status.isResolved ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
         .lineLimit(2)
-      if let facts = TaskDependencyFacts(task: task) {
+      if let facts = TaskDependencyFacts(task: task, timeZone: productTimeZone) {
         facts
       }
     }
@@ -246,12 +247,18 @@ private struct TaskDetailDependencyPicker: View {
   let onSelect: (LorvexTask) -> Void
 
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
   @State private var query = ""
   @State private var candidates: [LorvexTask] = []
   @State private var isSearching = false
   @State private var cycleSet: Set<LorvexTask.ID> = []
   @State private var didLoadCycleSet = false
   @State private var highlightedIndex = 0
+  /// Keyboard moves and new results scroll the highlighted row into view;
+  /// pointer hover must not. A scroll slides rows under a resting pointer and
+  /// each hover moves the highlight, so a hover-driven scroll would recenter
+  /// the list against the scroll that caused it, over and over.
+  @State private var scrollsToHighlight = false
   @FocusState private var fieldFocused: Bool
 
   var body: some View {
@@ -320,6 +327,8 @@ private struct TaskDetailDependencyPicker: View {
         .padding(LorvexDesign.Spacing.xs)
       }
       .onChange(of: highlightedIndex) { _, index in
+        guard scrollsToHighlight else { return }
+        scrollsToHighlight = false
         guard candidates.indices.contains(index) else { return }
         proxy.scrollTo(candidates[index].id, anchor: .center)
       }
@@ -353,7 +362,7 @@ private struct TaskDetailDependencyPicker: View {
           .font(LorvexDesign.Typography.primaryText)
           .foregroundStyle(.primary)
           .lineLimit(1)
-        if let facts = TaskDependencyFacts(task: task) {
+        if let facts = TaskDependencyFacts(task: task, timeZone: productTimeZone) {
           facts
         }
       }
@@ -369,26 +378,36 @@ private struct TaskDetailDependencyPicker: View {
     }
     .buttonStyle(.plain)
     .onHover { hovering in
-      if hovering { highlightedIndex = index }
+      guard hovering else { return }
+      scrollsToHighlight = false
+      highlightedIndex = index
     }
-    .accessibilityValue(TaskDependencyFacts.accessibilityValue(for: task))
+    .accessibilityValue(taskDependencyAccessibilityValue(task, timeZone: productTimeZone))
     .accessibilityIdentifier("task.detail.dependencies.candidate")
   }
 
+  /// Searches for `query` once typing pauses. A newer query cancels this
+  /// run without awaiting it, so a cancelled run drops its result and leaves
+  /// `isSearching` to the run that replaced it.
   private func reload() async {
+    guard await LorvexSearchDebounce.shouldSearch(query) else { return }
     if !didLoadCycleSet {
       cycleSet = await cycleExclusions()
       didLoadCycleSet = true
     }
     isSearching = true
     let all = excludedIDs.union(cycleSet)
-    candidates = await searchCandidates(query, all)
+    let results = await searchCandidates(query, all)
+    guard !Task.isCancelled else { return }
+    candidates = results
+    scrollsToHighlight = true
     highlightedIndex = 0
     isSearching = false
   }
 
   private func moveHighlight(_ delta: Int) {
     guard !candidates.isEmpty else { return }
+    scrollsToHighlight = true
     highlightedIndex = (highlightedIndex + delta + candidates.count) % candidates.count
   }
 
@@ -403,18 +422,19 @@ private struct TaskDetailDependencyPicker: View {
 /// that the task has been started, and when it is due, in the overdue tint
 /// once that day has passed, the way a task row shows both. A completed or
 /// cancelled task shows neither, since its circle already says it is done.
-/// `init(task:)` returns nil when neither fact applies, so such a row stays a
-/// single title line. The task's priority and plain status are left to its
-/// status circle, whose glyph and tint carry them.
+/// `init(task:timeZone:)` returns nil when neither fact applies, so such a row
+/// stays a single title line. The task's priority and plain status are left to
+/// its status circle, whose glyph and tint carry them. The due day is counted
+/// from today in the product time zone the hosting row passes.
 private struct TaskDependencyFacts: View {
   let isStarted: Bool
   let due: String?
   let isOverdue: Bool
 
-  init?(task: LorvexTask) {
+  init?(task: LorvexTask, timeZone: TimeZone) {
     isStarted = task.status == .inProgress
-    due = task.status.isResolved ? nil : task.cachedDueRelativeLabel()
-    isOverdue = due != nil && task.isOverdue()
+    due = task.status.isResolved ? nil : task.cachedDueRelativeLabel(timeZone: timeZone)
+    isOverdue = due != nil && task.isOverdue(timeZone: timeZone)
     guard isStarted || due != nil else { return nil }
   }
 
@@ -443,18 +463,6 @@ private struct TaskDependencyFacts: View {
 
   private static var startedText: String {
     String(localized: "task.row.started", defaultValue: "Started", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  /// What VoiceOver reads after a dependency's title: its status, then when an
-  /// unfinished one is due ("In Progress, due tomorrow"). The row's circle and
-  /// facts line are not read aloud, so the status is always named here.
-  static func accessibilityValue(for task: LorvexTask) -> String {
-    let vocabulary = TaskAccessibilityVocabulary.lorvexLocalized
-    var parts = [TaskDisplayText.status(task.status)]
-    if !task.status.isResolved, let due = task.cachedDueRelativeLabel() {
-      parts.append(String(format: task.isOverdue() ? vocabulary.overdueFormat : vocabulary.dueFormat, due))
-    }
-    return parts.joined(separator: ", ")
   }
 }
 

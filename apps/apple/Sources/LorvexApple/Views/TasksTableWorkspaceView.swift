@@ -142,11 +142,11 @@ private struct TaskTableStatusCell: View {
   let status: LorvexTask.Status
 
   var body: some View {
-    Label(TaskDisplayText.status(status), systemImage: status.statusSymbolName)
+    Label(status.localizedName, systemImage: status.statusSymbolName)
       .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
       .foregroundStyle(status.statusTint)
       .lineLimit(1)
-      .accessibilityLabel(TaskDisplayText.status(status))
+      .accessibilityLabel(status.localizedName)
   }
 }
 
@@ -154,13 +154,13 @@ private struct TaskTablePriorityCell: View {
   let priority: LorvexTask.Priority
 
   var body: some View {
-    Text(TaskDisplayText.compactPriority(priority))
+    Text(priority.localizedName)
       .font(LorvexDesign.Typography.tertiaryText.monospaced().weight(.semibold))
       .foregroundStyle(priority.priorityTint)
       .padding(.horizontal, LorvexDesign.Spacing.sm)
       .padding(.vertical, LorvexDesign.Spacing.xxs)
       .background(priority.priorityTint.opacity(0.10), in: Capsule())
-      .accessibilityLabel(TaskDisplayText.priority(priority))
+      .accessibilityLabel(priority.localizedPhrase)
   }
 }
 
@@ -173,7 +173,7 @@ private struct TaskTableTitleCell: View {
 
   private var secondaryText: String? {
     var parts: [String] = []
-    if let minutes = task.estimatedMinutes { parts.append(lorvexMinutesLabel(minutes)) }
+    if let minutes = task.estimatedMinutes { parts.append(LorvexDurationFormat.minutes(minutes)) }
     parts.append(contentsOf: task.tags.prefix(3))
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
@@ -197,12 +197,13 @@ private struct TaskTableTitleCell: View {
 
 private struct TaskTableDueCell: View {
   let task: LorvexTask
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     // Equivalent display to task.dueRelativeLabel(), but backed by the cached
     // core formatter and computed once for this cell body.
-    let label = task.cachedDueRelativeLabel()
-    let isOverdue = task.isOverdue()
+    let label = task.cachedDueRelativeLabel(timeZone: productTimeZone)
+    let isOverdue = task.isOverdue(timeZone: productTimeZone)
     if let label {
       HStack(spacing: 4) {
         if isOverdue {

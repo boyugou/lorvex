@@ -31,8 +31,8 @@ Swift-native MCP host.
    what's on today, proposes time-blocked schedules, and keeps a plain-English
    audit trail. Every write returns the full updated object.
 3. **Stay in flow everywhere** — Today follows you to your watch,
-   your widgets, and CarPlay. (The menu-bar HUD keeps you on today's due count
-   and next-up tasks.)
+   your widgets, and CarPlay. (The menu bar panel shows today and the week
+   ahead, and its icon carries the count of tasks due today or overdue.)
 
 The pure-Swift `LorvexAppleCore` package owns the SQLite database (GRDB),
 workflow rules, and sync; Swift owns the product and every surface.
@@ -43,12 +43,12 @@ workflow rules, and sync; Swift owns the product and every surface.
 |---|---|
 | **macOS** | The command center — sidebar, multi-window, menu bar extra, full keyboard commands, tabbed Settings. |
 | **iPhone** | Capture, glance, and plan — tab-first with quick capture, Today, reviews, and reach into every domain. |
-| **iPadOS** | A `NavigationSplitView` sidebar with the full workspace set; keyboard- and pointer-aware. |
+| **iPadOS** | The iPhone tab shell at full width — Today, Calendar, Tasks, and Review tabs plus a round capture button — with a second pane where the width allows: the schedule beside Today, the agenda beside the Calendar, and list/detail panes in Tasks, Habits, and Memory; keyboard- and pointer-aware. |
 | **Apple Watch** | Wrist-glance Today and habits, one-tap complete, start/pause, defer, cancel, and capture, plus face complications. Forwards actions to the phone over WatchConnectivity. |
 | **Widgets** | Today, Habits, and daily-progress widgets across system + accessory families, with interactive complete buttons. |
-| **Control Center** | A Lorvex Control Center widget (iOS 18+) that shows the task at the top of Today and opens Lorvex to Today when tapped. |
+| **Control Center** | A Lorvex control for Control Center on iPhone, iPad, and Mac that shows the task at the top of Today and opens Lorvex to Today when tapped. |
 | **CarPlay** | Hands-free Today list read against the clock, each row with its time detail; row tap opens a Done / Tomorrow instead / Open on iPhone / Cancel action sheet. Code wired; Apple Developer entitlement approval pending. See [`docs/SURFACE_DESIGN.md`](docs/SURFACE_DESIGN.md#carplay--hands-free-today) for provisioning steps. |
-| **Menu bar** | A Today HUD: date header, due-count chip (and a count on the menu-bar glyph), one-line quick-add, the next-up task list with one-click complete, plus Open / Refresh / Quit. |
+| **Menu bar** | Today and the week ahead: the date with a Today / Next 7 Days switch, a one-line quick-add, today's tasks and habits with one-click complete and check-in, the agenda of the next seven days, and Open Lorvex / Quit. The icon carries the count of tasks due today or overdue. |
 
 See [`docs/SURFACE_DESIGN.md`](docs/SURFACE_DESIGN.md) for the design intent and
 honest status of each surface.
@@ -85,9 +85,8 @@ honest status of each surface.
   applied app-wide through SwiftUI `.tint`
 - Markdown rendering via [swift-markdown](https://github.com/swiftlang/swift-markdown),
   wrapped in the `LorvexMarkdownUI` target
-- TipKit onboarding, drag-and-drop, value-typed multi-window, haptic
-  feedback, rich notification actions, opt-in local diagnostics with MetricKit
-  crash/hang capture
+- Drag-and-drop, value-typed multi-window, haptic feedback, rich notification
+  actions, opt-in local diagnostics with MetricKit crash/hang capture
 - Cross-device sync via iCloud / CloudKit (export, subscription, and ingestion
   paths)
 

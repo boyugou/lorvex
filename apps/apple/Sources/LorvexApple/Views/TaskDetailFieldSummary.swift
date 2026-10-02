@@ -15,13 +15,15 @@ import SwiftUI
 extension AppStore {
   /// When the task is to be worked on: the planned day, and the task's time
   /// on it when it has one ("Today, 9:45 – 10:30 AM"). It opens the sentence.
-  /// Without a planned day the field is unset.
+  /// Without a planned day the field is unset. The time stays whole, so a
+  /// value too wide for the inspector wraps after the day.
   var taskDetailDoOnSummary: String? {
     guard taskDetailHasPlannedDate else { return nil }
     let day = LorvexDayPhrase.phrase(
       for: taskDetailPlannedDatePickerDate, logicalDay: logicalTodayDateString, position: .leading)
     guard let time = taskDetailPlannedTime else { return day }
-    let range = lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound)
+    let range = lorvexWholeSpan(
+      lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound))
     return String(
       localized: "task_detail.do_on.day_time", defaultValue: "\(day), \(range)",
       table: "Localizable", bundle: LorvexL10n.bundle)
@@ -57,15 +59,15 @@ extension AppStore {
   }
 
   var taskDetailEstimateSummary: String? {
-    guard let minutes = Int(taskDetailEstimatedMinutesText.trimmingCharacters(in: .whitespaces)),
+    guard let minutes = LorvexNumberInput.integer(from: taskDetailEstimatedMinutesText),
       minutes > 0
     else { return nil }
-    return lorvexMinutesLabel(minutes)
+    return LorvexDurationFormat.minutes(minutes)
   }
 
   var taskDetailRepeatSummary: String? {
     guard taskDetailHasRecurrence, let rule = taskDetailDraftRecurrenceRule else { return nil }
-    return lorvexRecurrenceLabel(rule)
+    return rule.localizedCadence
   }
 
   func taskDetailRemindersSummary(task: LorvexTask) -> String? {
@@ -108,47 +110,4 @@ func lorvexWaitsOnLabel(count: Int) -> String {
   String(
     localized: "task_detail.dependencies.waits_on", defaultValue: "Waits on \(count)",
     table: "Localizable", bundle: LorvexL10n.bundle)
-}
-
-/// Short phrase for a recurrence rule — "Every week · Mon", "Every 3 months".
-/// Long enough to be unambiguous, short enough to stay on one row; the editor
-/// behind the row carries the full rule.
-func lorvexRecurrenceLabel(_ rule: TaskRecurrenceRule) -> String {
-  let interval = rule.interval ?? 1
-  let unit: String
-  switch rule.freq {
-  case .daily:
-    unit =
-      interval == 1
-      ? String(localized: "recurrence.every_day", defaultValue: "Every day", table: "Localizable", bundle: LorvexL10n.bundle)
-      : String(localized: "recurrence.every_n_days", defaultValue: "Every \(interval) days", table: "Localizable", bundle: LorvexL10n.bundle)
-  case .weekly:
-    unit =
-      interval == 1
-      ? String(localized: "recurrence.every_week", defaultValue: "Every week", table: "Localizable", bundle: LorvexL10n.bundle)
-      : String(localized: "recurrence.every_n_weeks", defaultValue: "Every \(interval) weeks", table: "Localizable", bundle: LorvexL10n.bundle)
-  case .monthly:
-    unit =
-      interval == 1
-      ? String(localized: "recurrence.every_month", defaultValue: "Every month", table: "Localizable", bundle: LorvexL10n.bundle)
-      : String(localized: "recurrence.every_n_months", defaultValue: "Every \(interval) months", table: "Localizable", bundle: LorvexL10n.bundle)
-  case .yearly:
-    unit =
-      interval == 1
-      ? String(localized: "recurrence.every_year", defaultValue: "Every year", table: "Localizable", bundle: LorvexL10n.bundle)
-      : String(localized: "recurrence.every_n_years", defaultValue: "Every \(interval) years", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-  guard let byDay = rule.byDay, !byDay.isEmpty else { return unit }
-  return "\(unit) · \(byDay.map(lorvexWeekdayShortLabel).joined(separator: " "))"
-}
-
-/// Two-letter RFC-5545 weekday code to the platform's own short weekday name, so
-/// a recurrence reads in the user's language rather than in the wire format.
-func lorvexWeekdayShortLabel(_ code: String) -> String {
-  let order = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]
-  guard let index = order.firstIndex(of: code.uppercased()) else { return code }
-  var calendar = Calendar(identifier: .gregorian)
-  calendar.locale = .autoupdatingCurrent
-  let symbols = calendar.shortWeekdaySymbols
-  return index < symbols.count ? symbols[index] : code
 }

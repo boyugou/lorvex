@@ -105,8 +105,9 @@ private struct StickyTaskWindowContent: View {
 
 /// The immersive sticky body: a chromeless rounded card whose hero is a
 /// free-form notes pad. The title sits quietly at the top; sub-items appear only
-/// when they exist; and the window controls (close, open-in-app, add sub-item)
-/// fade in on hover, like Apple Music's mini player. No standard title bar.
+/// when they exist; and the window controls (close, open in app) and the
+/// add-sub-item field fade in on hover or keyboard focus, like Apple Music's
+/// mini player. No standard title bar.
 private struct StickyTaskView: View {
   @Bindable var store: AppStore
   /// The main-window store. "Open in Lorvex" must select the task there — the
@@ -117,7 +118,6 @@ private struct StickyTaskView: View {
   @Environment(\.dismissWindow) private var dismissWindow
 
   @State private var hovering = false
-  @State private var addingSubitem = false
   @FocusState private var subitemFocused: Bool
   /// Keyboard focus reveals the chromeless window's controls so they are
   /// reachable without a pointer hover (the window hides its traffic lights).
@@ -156,9 +156,11 @@ private struct StickyTaskView: View {
         checklist
       }
 
-      if hovering || addingSubitem {
-        addSubitemRow
-      }
+      // Always in the layout and the accessibility tree, only faded out, so
+      // keyboard focus and VoiceOver reach it without a hover, showing it
+      // moves nothing, and it stays while it is being typed in.
+      addSubitemRow
+        .opacity(showsAddSubitemRow ? 1 : 0)
     }
     .padding(LorvexDesign.Spacing.m)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -193,7 +195,7 @@ private struct StickyTaskView: View {
           HStack(spacing: LorvexDesign.Spacing.s) {
             Image(systemName: item.completedAt != nil ? "checkmark.circle.fill" : "circle")
               .foregroundStyle(item.completedAt != nil ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-            Text(item.text)
+            Text(userContent: item.text)
               .font(LorvexDesign.Typography.secondaryText)
               .strikethrough(item.completedAt != nil)
               .foregroundStyle(item.completedAt != nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
@@ -204,6 +206,10 @@ private struct StickyTaskView: View {
         .buttonStyle(.plain)
       }
     }
+  }
+
+  private var showsAddSubitemRow: Bool {
+    hovering || subitemFocused || !store.taskDetailNewChecklistText.isEmpty
   }
 
   private var addSubitemRow: some View {
@@ -221,7 +227,7 @@ private struct StickyTaskView: View {
         Task { await store.addChecklistItemToSelectedTask() }
       }
     }
-    .transition(.opacity)
+    .accessibilityIdentifier("sticky.addSubitem")
   }
 
   private var hoverControls: some View {

@@ -42,9 +42,11 @@ final class AppStore {
       if selection != .habits {
         selectedHabitID = nil
       }
-      // A query narrows only the workspace it was typed in.
       if selection != oldValue {
+        // A query narrows only the workspace it was typed in.
         searchText = ""
+        // An event's detail belongs to the workspace it was opened in.
+        clearSelectedCalendarEvent()
       }
     }
   }
@@ -65,8 +67,15 @@ final class AppStore {
       persistSelectedTaskID()
       if selectedTaskID == nil {
         clearSelectedTaskDraft()
-      } else if selectedHabitID != nil {
-        selectedHabitID = nil
+      } else {
+        if selectedHabitID != nil {
+          selectedHabitID = nil
+        }
+        // Today's inspector shows one subject: a task opened there replaces
+        // an open event.
+        if selection == .today, selectedCalendarEventID != nil {
+          clearSelectedCalendarEvent()
+        }
       }
     }
   }
@@ -78,15 +87,25 @@ final class AppStore {
     didSet { defaults.set(isTodayDoneCollapsed, forKey: Key.todayDoneCollapsed) }
   }
 
-  /// Collapse whichever right-hand inspector is open (task or habit), the same
-  /// effect as its ✕ or re-clicking the open row. Returns whether anything was
-  /// dismissed so an Escape handler can let the key fall through when no
-  /// inspector is open.
+  /// Whether the main window's trailing inspector is open: for a selected
+  /// task, a selected habit, or an event opened from Today's schedule
+  /// (``todayInspectorEvent``).
+  var isMainInspectorOpen: Bool {
+    selectedTaskID != nil || selectedHabitID != nil || todayInspectorEvent != nil
+  }
+
+  /// Collapse whichever right-hand inspector is open (task, habit, or Today's
+  /// event), the same effect as its ✕ or re-clicking the open row. Returns
+  /// whether anything was dismissed so an Escape handler can let the key fall
+  /// through when no inspector is open.
   @discardableResult
   func dismissOpenInspector() -> Bool {
-    guard selectedTaskID != nil || selectedHabitID != nil else { return false }
+    guard isMainInspectorOpen else { return false }
     selectedTaskID = nil
     selectedHabitID = nil
+    if todayInspectorEvent != nil {
+      clearSelectedCalendarEvent()
+    }
     return true
   }
 

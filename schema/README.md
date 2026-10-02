@@ -11,13 +11,15 @@ triggers, FTS5) and the **Apple app's schema authority**:
 byte-identical to this authoritative `schema/schema.sql`. Drift there is a red
 Apple build, not silent rot.
 
-The schema is authoritative, not frozen: real defects (missing index, wrong
-constraint) may be fixed here — conservatively, then mirrored into the Apple
-embedded copy and re-validated. This free-edit-plus-`--seed` workflow is
-the **pre-launch** regime. `migration_policy.json` (the `launched` sentinel) marks
-the split: at first public release the baseline and every released `checksums.lock`
-entry freeze forever and schema changes become appended numbered migrations.
-`apps/apple/script/verify_schema_freeze.py` enforces it (dormant until launched).
+The baseline is frozen: `migration_policy.json` carries `launched: true` and a
+`frozen_baseline` holding every released `checksums.lock` entry and sync-payload
+contract hash. `schema.sql` (migration version `001`) and those entries never
+change; a schema change is an appended numbered migration, mirrored into the
+Apple embedded copy and re-validated. The `launched` sentinel selects the
+regime: with `launched: false` the baseline is edited in place and the lock
+regenerated with `apps/apple/script/verify_migration_ladder.py --seed`, which
+refuses to run once `launched` is `true`.
+`apps/apple/script/verify_schema_freeze.py` enforces the armed regime.
 See `../docs/design/SCHEMA_OPTIMALITY.md` → "Migration model".
 
 The sibling `sync_payload/` directory versions the Apple sync wire's exact JSON
@@ -26,9 +28,8 @@ field or delete-marker change can be a compatibility change even when
 `schema.sql` is unchanged. `apps/apple/script/verify_sync_payload_contract.py`
 checks the canonical numbered manifest ladder, while Swift core tests execute
 the real builders/loaders and final outbox transform before comparing emitted
-upsert/delete envelopes with the current contract. The same first-release
-`--arm` operation freezes both the SQLite baseline and every shipped
-payload-contract manifest.
+upsert/delete envelopes with the current contract. The same `--arm` operation
+freezes both the SQLite baseline and every shipped payload-contract manifest.
 
 Post-launch migrations have a single canonical source too: `migrations/` in this
 directory holds the numbered `NNN_<name>.sql` ladder plus its

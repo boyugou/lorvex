@@ -6,7 +6,7 @@ struct MobileCaptureSections: View {
   let isCapturing: Bool
   /// Reads the details out of a single typed line for the preview under the
   /// title; several lines are previewed only by the footer hint.
-  let preview: (String) -> MobileCapturePreview
+  let preview: (String) -> LorvexCapturePreview
   let onSubmit: (() async -> Void)?
   @FocusState private var focusedField: Field?
 

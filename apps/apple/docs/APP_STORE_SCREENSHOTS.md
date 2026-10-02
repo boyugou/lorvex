@@ -18,10 +18,8 @@ Companion material:
 
 - **Truthful.** Every shot is a real Lorvex surface listed in
   `docs/reference/FEATURES.md` as `[SHIPPED]`. Do not stage a screen the app does
-  not render. In particular, do **not** screenshot CarPlay, the Eisenhower
-  matrix, or the dependency-graph "workspaces": CarPlay is provisioning-gated and
-  not active in the shipped build, and the latter two are MCP-data-only with no
-  human surface (they redirect to Today).
+  not render. In particular, do **not** screenshot CarPlay: it is
+  provisioning-gated and not active in the shipped build.
 - **No personal data.** Capture against seeded demo content, not a real user's
   planner. `LorvexPreviewCoreFactory.makeSeeded()` produces clean sample data;
   the iOS surface has `MobileStoreDebugSeed` for the simulator. Use neutral,
@@ -90,7 +88,7 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 4. **Calendar** — week view with Lorvex planning blocks interleaved with
    EventKit events.
 5. **Habits** — streak metrics + calendar heatmap + a milestone progress bar.
-6. *(optional)* **Command Palette (⌘K)** or the **menu-bar Today HUD** to show
+6. *(optional)* **Command Palette (⌘K)** or the **menu bar panel** to show
    keyboard-first / glanceable macOS ergonomics.
 
 ### iOS (iPhone) — capture, glance, plan
@@ -99,7 +97,7 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 2. **Quick capture** sheet (the global ＋) — one-tap capture.
 3. **Tasks** tab — list with priority/tags; optionally a task detail sheet.
 4. **Calendar** tab — day/agenda with planning blocks.
-5. **Habits** tab — streaks and progress.
+5. **Habits** — streaks and progress (opened from the Tasks tab).
 6. *(optional)* A **Home Screen with widgets** (Today / Habits /
    progress-ring) to show the WidgetKit surfaces.
 
@@ -107,8 +105,9 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 
 1. **Tasks split** workspace — persistent list + detail panes at regular width.
    Hero (this is the surface that reads as "more than a big phone").
-2. **Calendar agenda** — 3-day time grid with the pinned agenda inspector.
-3. **Today** with the full sidebar (NavigationSplitView) visible.
+2. **Calendar agenda** — the 3-day time grid with the agenda pane beside it (at
+   full width on a 13" iPad).
+3. **Today** with the schedule pane beside the list.
 4. *(optional)* **Habits** or **Memory** split workspace.
 
 ### watchOS — wrist glance (optional)
@@ -118,7 +117,11 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 
 ## Localization and preview videos
 
-- Screenshots are per-localization. Lorvex ships English first; add localized
-  sets only for locales whose listing you localize.
+- Screenshots are per-localization. Lorvex ships fourteen languages (English,
+  Arabic, Spanish, French, Hindi, Italian, Japanese, Korean, Polish, Brazilian
+  Portuguese, Russian, Ukrainian, Simplified Chinese, and Traditional Chinese);
+  add localized sets only for locales whose listing you localize. The iOS and
+  watchOS capture scripts take `-AppleLanguages` launch arguments through
+  `LORVEX_SIM_EXTRA_ARGS` and `LORVEX_WATCH_SIM_EXTRA_ARGS`.
 - App preview videos are optional. If added, they follow the same truthfulness
   bar and Apple's per-device video specs (confirm in App Store Connect).

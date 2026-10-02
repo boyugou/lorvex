@@ -5,9 +5,10 @@ import Testing
 @testable import LorvexApple
 @testable import LorvexMobile
 
-// `beginCreate*Draft()` exists because create and edit share one draft. Opening
-// a create sheet after an edit (or a prior cancelled create) must start clean,
-// not inherit the edited entity's fields.
+// `beginCreate*Draft()` exists because a create sheet's draft outlives the
+// sheet: an edit that shares the draft (a list edit, an iOS habit edit, the
+// Mac habit inspector's Repeat editor) or a cancelled create leaves fields
+// behind, and the next create sheet must start clean rather than inherit them.
 
 @MainActor
 @Test
@@ -31,13 +32,22 @@ func appStoreBeginCreateHabitDraftResetsToDefaults() async throws {
   await store.refresh()
   let habit = try #require(store.habits?.habits.first)
 
-  store.prepareHabitDraft(for: habit)
-  #expect(!store.draftHabitName.isEmpty)
+  // A cancelled create leaves its name and encouragement behind; the Repeat
+  // editor leaves the habit's rhythm behind.
+  store.draftHabitName = "Abandoned"
+  store.draftHabitCue = "Never mind"
+  store.draftHabitMilestoneTargetText = "30"
+  store.prepareHabitRhythmDraft(for: habit)
+  store.draftHabitCadenceMode = .weekly
+  store.draftHabitWeekdays = [1, 3]
+  store.draftHabitTargetCountText = "4"
 
   store.beginCreateHabitDraft()
   #expect(store.draftHabitName.isEmpty)
   #expect(store.draftHabitCue.isEmpty)
+  #expect(store.draftHabitMilestoneTargetText.isEmpty)
   #expect(store.draftHabitTargetCountText == "1")
+  #expect(store.draftHabitCadenceMode == .daily)
 }
 
 @MainActor

@@ -164,7 +164,7 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
     Self.afterWriteStateBarrierForTesting?()
     let syncedAt = SyncTimestampFormat.syncTimestampNow()
     let counts = try withStoreCutoverImmediateTransaction {
-      db -> (Int, Int, Int, Int, Int, Int, Set<EntityKind>, Int, Set<Int64>) in
+      db -> (Int, Int, Int, Int, Int, Int, Set<EntityKind>, Int, Set<Int64>, Bool) in
       // First statement in the transaction: abort before any peer state is
       // observed or minted if a cross-process factory reset redirected this
       // apply onto a fresh database.
@@ -435,7 +435,7 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
           + (outboundReconciliation?.deferredUnknownTypeRecords.count ?? 0)
         return (
           applied, skipped, deferred, remapped, invalid, Int(summary.replayed), changedKinds,
-          parkedFutureCount, reconciledCollisionOutboxIds
+          parkedFutureCount, reconciledCollisionOutboxIds, canonicalStateChanged
         )
       }
     }
@@ -444,6 +444,7 @@ extension SwiftLorvexCoreService: EnvelopeSyncServicing {
       drainReplayed: counts.5, undecodable: undecodable + counts.4,
       deferredUnknownType: counts.7,
       appliedEntityTypes: counts.6,
+      canonicalStateChanged: counts.9,
       reconciledCollisionOutboxIds: counts.8)
   }
 

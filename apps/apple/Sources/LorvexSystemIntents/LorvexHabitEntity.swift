@@ -10,6 +10,9 @@ struct LorvexHabitEntity: AppEntity, Identifiable {
   var name: String
   var completionsToday: Int
   var targetCount: Int
+  /// The habit's cadence (`daily`, `weekly`, `times_per_week`, `monthly`,
+  /// `custom`), which names the unit its streak counts in.
+  var frequencyType: String
 
   var displayRepresentation: DisplayRepresentation {
     DisplayRepresentation(
@@ -23,11 +26,15 @@ struct LorvexHabitEntity: AppEntity, Identifiable {
     )
   }
 
-  init(id: LorvexHabit.ID, name: String, completionsToday: Int, targetCount: Int) {
+  init(
+    id: LorvexHabit.ID, name: String, completionsToday: Int, targetCount: Int,
+    frequencyType: String = "daily"
+  ) {
     self.id = id
     self.name = name
     self.completionsToday = completionsToday
     self.targetCount = targetCount
+    self.frequencyType = frequencyType
   }
 
   init(habit: LorvexHabit) {
@@ -35,7 +42,8 @@ struct LorvexHabitEntity: AppEntity, Identifiable {
       id: habit.id,
       name: habit.name,
       completionsToday: habit.completionsToday,
-      targetCount: habit.targetCount
+      targetCount: habit.targetCount,
+      frequencyType: habit.frequencyType
     )
   }
 }

@@ -19,7 +19,7 @@ struct LorvexWatchTaskActionsSheet: View {
   var body: some View {
     if let task = store.tasks.first(where: { $0.id == taskID }) {
       List {
-        Text(task.title)
+        Text(userContent: task.title)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(4)
           .listRowBackground(Color.clear)

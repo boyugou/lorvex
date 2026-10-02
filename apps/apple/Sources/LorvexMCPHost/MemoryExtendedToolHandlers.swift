@@ -22,18 +22,13 @@ extension ToolRegistry {
     return .value(value)
   }
 
-  /// Resolve a required memory `key` argument, stripping any fence sentinels an
-  /// AI client copied from a fenced response so the value round-trips to the
-  /// stored key.
+  /// Resolve a required memory `key` argument: the trimmed key, or the
+  /// validation error to return when it is missing or blank.
   func resolvedMemoryKey(
     from arguments: [String: Value], toolName: String
   ) -> ToolStringValidationResult {
-    switch requiredTrimmedString(
-      "key", from: arguments, message: "A non-empty memory key is required.", toolName: toolName
-    ) {
-    case .value(let value): return .value(SecurityFencing.unfence(value))
-    case .error(let result): return .error(result)
-    }
+    requiredTrimmedString(
+      "key", from: arguments, message: "A non-empty memory key is required.", toolName: toolName)
   }
 }
 

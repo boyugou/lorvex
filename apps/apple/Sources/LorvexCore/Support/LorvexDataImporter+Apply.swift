@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 extension LorvexDataImporter {
   /// Thrown by a host's import action when another import, factory reset, or
@@ -18,7 +19,10 @@ extension LorvexDataImporter {
 
   /// Restore the supported categories of `payload`. The `plan` is accepted so
   /// apply matches exactly what the user confirmed; only supported categories
-  /// are written. Per-record failures are collected in the returned summary.
+  /// are written. Records that do not come back whole are collected as issues
+  /// in the returned summary, each logged privately with its English finding;
+  /// a backup that fails the whole-backup preflight is refused before anything
+  /// is written, and the summary carries only the reason.
   public static func apply(
     plan: LorvexImportPlan,
     payload: LorvexDataExportPayload,
@@ -27,25 +31,11 @@ extension LorvexDataImporter {
     do {
       try BackupV1PayloadPreflight.validate(payload)
     } catch {
-      // Semantic preflight validates the artifact as a whole and can report a
-      // relationship spanning multiple categories. The summary model requires
-      // a category, so anchor the artifact-level failure to the first supported
-      // category the user actually confirmed instead of falsely labelling every
-      // failure as a native-task-graph or calendar-cutover error.
-      let category =
-        plan.entries.first(where: { $0.isSupported })?.category
-        ?? self.plan(for: payload).entries.first(where: { $0.isSupported })?.category
-        ?? .tasks
-      return LorvexImportSummary(
-        results: [
-          LorvexImportCategoryResult(category: category, imported: 0, skipped: 0)
-        ],
-        errors: [
-          LorvexImportError(
-            category: category,
-            recordRef: "backup",
-            message: error.localizedDescription)
-        ])
+      // The preflight judges the backup as a whole, and its findings can span
+      // several categories, so a refusal belongs to no single category.
+      let rejection = (error as? ImportError) ?? .inconsistentBackupContents("\(error)")
+      importLog.error("Import rejected: \(rejection.diagnosticDescription, privacy: .private)")
+      return LorvexImportSummary(rejection: rejection)
     }
     // Bind `import` provenance for the whole restore. The id-preserving core
     // importers this fans out to carry no explicit initiator and inherit the
@@ -57,18 +47,18 @@ extension LorvexDataImporter {
       SwiftLorvexCoreService.ChangelogInitiator.importAttribution
     ) {
       var results: [LorvexImportCategoryResult] = []
-      var errors: [LorvexImportError] = []
+      var issues: [LorvexImportIssue] = []
 
       func run(
         _ category: LorvexDataExportCategory,
-        _ apply: () async -> (LorvexImportCategoryResult, [LorvexImportError])
+        _ apply: () async -> (LorvexImportCategoryResult, [LorvexImportIssue])
       ) async {
         guard plan.entries.contains(where: { $0.category == category && $0.isSupported }) else {
           return
         }
-        let (result, recordErrors) = await apply()
+        let (result, categoryIssues) = await apply()
         results.append(result)
-        errors.append(contentsOf: recordErrors)
+        issues.append(contentsOf: categoryIssues)
       }
 
       // Lists before tasks: a restored task's `listID` must reference a list
@@ -97,12 +87,25 @@ extension LorvexDataImporter {
         await applyDailyBriefings(payload.dailyBriefings ?? [], using: core)
       }
       await run(.taskCalendarEventLinks) {
-        await applyTaskCalendarEventLinks(payload.taskCalendarEventLinks ?? [], using: core)
+        await applyTaskCalendarEventLinks(
+          payload.taskCalendarEventLinks ?? [],
+          taskTitles: Dictionary(
+            (payload.tasks ?? []).map { ($0.id, $0.title) },
+            uniquingKeysWith: { first, _ in first }),
+          using: core)
       }
       await run(.memory) { await applyMemory(payload.memory ?? [], using: core) }
       await run(.preferences) { await applyPreferences(payload.preferences ?? [], using: core) }
 
-      return LorvexImportSummary(results: results, errors: errors)
+      for issue in issues {
+        let record = issue.recordID ?? "whole category"
+        importLog.error(
+          """
+          Import issue in \(issue.category.rawValue, privacy: .public): \
+          \(record, privacy: .private): \(issue.detail, privacy: .private)
+          """)
+      }
+      return LorvexImportSummary(results: results, issues: issues)
     }
   }
 }

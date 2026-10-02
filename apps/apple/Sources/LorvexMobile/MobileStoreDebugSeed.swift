@@ -41,17 +41,17 @@
     }
   }
 
-  /// Dev/QA only: the `lorvex://tab/<tab>/search/<query>` screenshot hook
-  /// pre-fills the search field of that tab's workspace, so its no-results row
-  /// can be captured without typing. The query is keyed by tab because a
-  /// workspace can appear on another tab's stack above that tab's own root:
-  /// on iPhone the Habits workspace is pushed over the Tasks home, which
-  /// appears first and must not take the query meant for Habits. Consumed once.
+  /// Dev/QA only: the `lorvex://tab/<name>/search/<query>` screenshot hook
+  /// pre-fills the search field of that workspace, so its no-results row can
+  /// be captured without typing. The query is keyed by workspace because one
+  /// workspace can sit on another's stack: the Habits workspace is pushed over
+  /// the Tasks home, which appears first and must not take the query meant for
+  /// Habits. Consumed once.
   enum MobileSearchDebugState {
-    @MainActor static var initialQuery: (tab: MobileTab, query: String)?
+    @MainActor static var initialQuery: (workspace: MobileDestination, query: String)?
 
-    @MainActor static func takeInitialQuery(for tab: MobileTab) -> String? {
-      guard let initialQuery, initialQuery.tab == tab else { return nil }
+    @MainActor static func takeInitialQuery(for workspace: MobileDestination) -> String? {
+      guard let initialQuery, initialQuery.workspace == workspace else { return nil }
       Self.initialQuery = nil
       return initialQuery.query
     }
@@ -351,6 +351,13 @@
       CommandLine.arguments.contains("-lorvexScrollHabitDetailToEnd")
     }
 
+    /// Dev/QA only: when `-lorvexOpenHabitEditor` is passed, a habit's detail
+    /// page opens its editor as the Edit button does, so the cadence and
+    /// weekday controls can be screenshotted without a tap.
+    public static var debugOpenHabitEditor: Bool {
+      CommandLine.arguments.contains("-lorvexOpenHabitEditor")
+    }
+
     /// Dev/QA only: when `-lorvexScrollHabitDetailToMiddle` is passed, a habit's
     /// detail page opens centered on the middle of its content, where its
     /// Progress panels sit on a page taller than the screen (at large text
@@ -393,18 +400,26 @@
     }
 
     private func debugApplyNavigation(to url: URL) {
-      // `lorvex://tab/<name>` selects a primary tab; anything else routes
-      // through the normal deep-link handler. `lorvex://tab/<name>/search/<q>`
-      // also pre-fills that tab's search field so its no-results row renders,
-      // and `lorvex://tab/calendar/week` opens the calendar on its seven-day
-      // grid instead of the day grid it defaults to; `lorvex://tab/review/week`
-      // opens Review on its week digest instead of the day page.
-      if url.host == "tab" {
+      // `lorvex://tab/<name>` selects a tab, and `lorvex://tab/habits` opens
+      // the Habits workspace on the Tasks stack, where the Tasks home's row
+      // leads; anything else routes through the normal deep-link handler.
+      // `lorvex://tab/<name>/search/<q>` also pre-fills that workspace's search
+      // field so its no-results row renders, and `lorvex://tab/calendar/week`
+      // opens the calendar on its seven-day grid instead of the day grid it
+      // defaults to; `lorvex://tab/review/week` opens Review on its week digest
+      // instead of the day page.
+      if url.host == "tab", let name = url.pathComponents.dropFirst().first {
         let components = Array(url.pathComponents.dropFirst())
-        if let name = components.first, let tab = MobileTab(rawValue: name) {
-          if components.count >= 3, components[1] == "search" {
-            MobileSearchDebugState.initialQuery = (tab, components[2])
-          }
+        if components.count >= 3, components[1] == "search",
+          let workspace = MobileDestination(rawValue: name)
+        {
+          MobileSearchDebugState.initialQuery = (workspace, components[2])
+        }
+        if name == MobileDestination.habits.rawValue {
+          openWorkspaceDestination(.habits)
+          return
+        }
+        if let tab = MobileTab(rawValue: name) {
           if tab == .calendar, components.count >= 2, components[1] == "week" {
             calendarPresentationMode = .week
           }
@@ -476,8 +491,7 @@
         if components.count >= 3, components[1] == "field" {
           MobileTaskDetailDebugState.initialField = MobileTaskField(rawValue: components[2])
         }
-        openNavigationTarget(
-          MobileNavigationTarget(selectedTab: .today, route: .task(id)))
+        navigate(to: .task(id))
         return
       }
       // `lorvex://findtask/<title>` opens the seeded task with that title on
@@ -490,8 +504,7 @@
               status: "all", listID: nil, priority: nil, text: title, limit: 1, offset: 0),
             let id = page.tasks.first?.id
           else { return }
-          openNavigationTarget(
-            MobileNavigationTarget(selectedTab: .today, route: .task(id)))
+          navigate(to: .task(id))
         }
         return
       }

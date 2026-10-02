@@ -120,6 +120,42 @@ final class SwiftLorvexCoreServiceInputHygieneTests: XCTestCase {
       try await service.upsertMemory(key: "big", content: overCap))
   }
 
+  func testMemoryWritesStoreTheNormalizedKey() async throws {
+    let service = try makeService()
+    let written = try await service.upsertMemory(key: "  pre\u{200B}fs\u{202E}\n", content: "x")
+    XCTAssertEqual(written.key, "prefs")
+    let renamed = try await service.renameMemory(
+      oldKey: "prefs", newKey: " hab\u{202E}its\u{200B} ", content: nil)
+    XCTAssertEqual(renamed.key, "habits")
+    let keys = try service.read { db in try String.fetchAll(db, sql: "SELECT key FROM memories") }
+    XCTAssertEqual(keys, ["habits"])
+  }
+
+  /// The key cap bounds a key at the escaped bytes `PayloadByteBudget` reserves
+  /// for it in a memory's sync payload, so every local write path enforces it.
+  func testMemoryKeyIsCappedOnEveryWrite() async throws {
+    let service = try makeService()
+    let atCap = String(repeating: "k", count: ValidationLimits.kvKeyMaxChars)
+    let overCap = atCap + "k"
+    _ = try await service.upsertMemory(key: atCap, content: "fits")
+
+    do {
+      _ = try await service.upsertMemory(key: overCap, content: "x")
+      XCTFail("expected the over-cap key to be rejected")
+    } catch let error as LorvexCoreError {
+      XCTAssertEqual(
+        error,
+        .validation(field: "key", message: "A memory key may be at most 200 characters."))
+    }
+    await XCTAssertThrowsErrorAsync(
+      try await service.renameMemory(oldKey: atCap, newKey: overCap, content: nil))
+    await XCTAssertThrowsErrorAsync(
+      try await service.importMemoryEntry(key: overCap, content: "x", updatedAt: nil))
+
+    let keys = try service.read { db in try String.fetchAll(db, sql: "SELECT key FROM memories") }
+    XCTAssertEqual(keys, [atCap])
+  }
+
   // MARK: - sec-8: changelog provenance attribution
 
   /// The id-preserving importers carry no explicit provenance; they inherit the

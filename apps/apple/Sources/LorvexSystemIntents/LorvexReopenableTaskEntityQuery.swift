@@ -61,9 +61,9 @@ struct LorvexReopenableTaskEntityQuery: EntityQuery, EntityStringQuery {
       .filter(\.status.isReopenable)
       .map(LorvexReopenableTaskEntity.init(task:))
     let entityMatches = try await suggestedEntities(core: core).filter { entity in
-      entity.title.localizedCaseInsensitiveContains(query)
-        || entity.id.localizedCaseInsensitiveContains(query)
-        || entity.status.localizedCaseInsensitiveContains(query)
+      entity.title.localizedStandardContains(query)
+        || entity.id.localizedStandardContains(query)
+        || entity.status.localizedStandardContains(query)
     }
     return deduplicatedReopenableEntities(matches + entityMatches)
   }

@@ -68,6 +68,9 @@ public protocol LorvexListTagServicing: Sendable {
   /// `orderedIDs` are left untouched. Returns the refreshed active catalog.
   func reorderLists(orderedIDs: [LorvexList.ID]) async throws -> ListCatalogSnapshot
 
+  /// The names of the tags on at least one non-archived task, in the order
+  /// the user's language sorts names: letter case ignored, accented letters
+  /// beside their base letter, and numbers by value ("tag2" before "tag10").
   func listAllTags() async throws -> [String]
 
   func renameTag(oldTag: String, newTag: String) async throws

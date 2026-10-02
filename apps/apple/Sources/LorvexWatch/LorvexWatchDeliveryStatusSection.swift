@@ -13,10 +13,9 @@ struct LorvexWatchDeliveryStatusSection: View {
         if store.deliveryStatus.pendingCount > 0 {
           Label(
             String(
-              format: String(
-                localized: "watch.delivery.pending", defaultValue: "%lld pending",
-                table: "Localizable", bundle: WatchL10n.bundle),
-              Int64(store.deliveryStatus.pendingCount)),
+              localized: "watch.delivery.pending",
+              defaultValue: "\(store.deliveryStatus.pendingCount) pending",
+              table: "Localizable", bundle: WatchL10n.bundle),
             systemImage: "clock.arrow.circlepath"
           )
           .font(.caption)
@@ -27,10 +26,9 @@ struct LorvexWatchDeliveryStatusSection: View {
           VStack(alignment: .leading, spacing: 5) {
             Label(
               String(
-                format: String(
-                  localized: "watch.delivery.rejected", defaultValue: "Action %lld wasn’t applied",
-                  table: "Localizable", bundle: WatchL10n.bundle),
-                Int64(command.sequence)),
+                localized: "watch.delivery.rejected",
+                defaultValue: "Action \(command.sequence) wasn’t applied",
+                table: "Localizable", bundle: WatchL10n.bundle),
               systemImage: "exclamationmark.circle"
             )
             .font(.caption.weight(.medium))

@@ -30,10 +30,9 @@ struct EventKitCalendarFilterPicker: View {
       HStack(spacing: LorvexDesign.Spacing.s) {
         Text(String(localized: "settings.calendar.filter.title", defaultValue: "Calendars to Mirror", table: "Localizable", bundle: LorvexL10n.bundle))
         Spacer(minLength: 0)
-        Image(systemName: "chevron.right")
+        LorvexDisclosureChevron(isExpanded: expanded)
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
           .foregroundStyle(.tertiary)
-          .rotationEffect(.degrees(expanded ? 90 : 0))
       }
       .contentShape(Rectangle())
     }

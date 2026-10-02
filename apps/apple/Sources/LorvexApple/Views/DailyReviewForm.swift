@@ -120,7 +120,7 @@ struct DailyReviewForm: View {
           HStack(spacing: LorvexDesign.Spacing.s) {
             Image(systemName: "checkmark.circle.fill")
               .foregroundStyle(LorvexDesign.Palette.done)
-            Text(task.title)
+            Text(userContent: task.title)
               .lineLimit(2)
           }
           .font(LorvexDesign.Typography.primaryText)

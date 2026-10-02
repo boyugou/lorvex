@@ -35,6 +35,12 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  public func loadSearchIndexTasks() async throws -> [LorvexTask] {
+    try read { db in
+      try Self.enrich(db, rows: TaskRepo.Read.getSearchIndexTasks(db))
+    }
+  }
+
   public func deferHistory(taskID: LorvexTask.ID, limit: Int) async throws
     -> [TaskDeferHistoryEntry]
   {

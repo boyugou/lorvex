@@ -164,12 +164,8 @@ func habitReminderWindowRoundsToFiveMinuteGrain() throws {
 }
 
 @Test
-@MainActor
-func habitReminderWindowIntervalAndLabel() {
+func habitReminderWindowInterval() {
   #expect(HabitReminderTime.intervalMinutes(start: 9 * 60, end: 21 * 60, count: 7) == 103)
-  #expect(HabitReminderWindowSection.intervalLabel(minutes: 103) == "1h 43m")
-  #expect(HabitReminderWindowSection.intervalLabel(minutes: 120) == "2h")
-  #expect(HabitReminderWindowSection.intervalLabel(minutes: 45) == "45m")
 }
 
 @Test

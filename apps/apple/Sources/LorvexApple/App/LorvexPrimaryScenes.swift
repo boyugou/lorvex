@@ -24,6 +24,7 @@ private func mainWindowScene(
       openMainWindow: openMainWindow
     )
     .lorvexClockLocale()
+    .lorvexProductTimeZone(from: store)
   }
   .commands {
     LorvexAppCommands(store: store)

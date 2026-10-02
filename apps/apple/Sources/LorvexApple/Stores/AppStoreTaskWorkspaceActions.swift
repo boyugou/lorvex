@@ -10,6 +10,10 @@ extension AppStore {
     taskWorkspaceStorage.hasLoaded
   }
 
+  var taskWorkspaceLoadFailureMessage: String? {
+    taskWorkspaceStorage.loadFailureMessage
+  }
+
   var taskWorkspaceOpenTasks: [LorvexTask] {
     taskWorkspaceStorage.openTasks
   }
@@ -75,12 +79,40 @@ extension AppStore {
 
   func setTaskWorkspaceListScope(_ id: LorvexList.ID?) {
     let scopeID = id?.trimmedNilIfEmpty
-    // Picking another list shows that list, not the previous scope's search.
     if scopeID != taskWorkspaceStorage.listScopeID {
+      // Picking another list shows that list, not the previous scope's search.
       searchText = ""
+      clearTaskWorkspaceBuckets()
     }
     taskWorkspaceStorage.listScopeID = scopeID
     pruneTaskWorkspaceSelection()
+  }
+
+  /// Empties the workspace before a scope change's load lands. The previous
+  /// scope's rows never show under the new scope's header; the workspace shows
+  /// its loading state instead, and the new rows arrive without animation, in
+  /// a fresh scroll view at the top. Animating one scope's rows into
+  /// another's in a scrolled lazy stack can leave SwiftUI re-measuring the
+  /// stack without end.
+  private func clearTaskWorkspaceBuckets() {
+    taskWorkspaceStorage.openTasks = []
+    taskWorkspaceStorage.deferredTasks = []
+    taskWorkspaceStorage.scheduledTasks = []
+    taskWorkspaceStorage.completedTasks = []
+    taskWorkspaceStorage.cancelledTasks = []
+    taskWorkspaceStorage.somedayTasks = []
+    taskWorkspaceStorage.openNextOffset = nil
+    taskWorkspaceStorage.deferredNextOffset = nil
+    taskWorkspaceStorage.scheduledNextOffset = nil
+    taskWorkspaceStorage.completedNextOffset = nil
+    taskWorkspaceStorage.cancelledNextOffset = nil
+    taskWorkspaceStorage.somedayNextOffset = nil
+    taskWorkspaceStorage.visibleOrderedTaskIDs = nil
+    taskWorkspaceStorage.hasLoaded = false
+    taskWorkspaceStorage.loadedQuery = nil
+    taskWorkspaceStorage.loadFailureMessage = nil
+    // A page append still in flight belongs to the previous scope.
+    taskWorkspaceStorage.loadGeneration &+= 1
   }
 
   /// Single-flights the full workspace reload: at most one runs at a time, and a
@@ -91,12 +123,32 @@ extension AppStore {
   /// snapshot. On `@MainActor` this is race-free: the in-flight task clears
   /// `reloadTask` synchronously right after its final `reloadPending` check (no
   /// `await` between), so no request can slip into the gap and be dropped.
+  ///
+  /// A failure while the workspace already shows rows raises the error alert
+  /// over them. A failure before the scope's first load lands is shown by the
+  /// workspace itself, in place of its rows and with a retry, since an alert
+  /// would leave a loading row behind it that never ends.
   func loadTaskWorkspace() async {
     do {
       try await loadTaskWorkspaceReportingFailure()
     } catch {
-      await presentUserFacingError(error)
+      if taskWorkspaceStorage.hasLoaded {
+        await presentUserFacingError(error)
+      } else {
+        await recordTaskWorkspaceLoadFailure(error)
+      }
     }
+  }
+
+  private func recordTaskWorkspaceLoadFailure(_ error: Error) async {
+    let classification = UserFacingError.classify(error)
+    taskWorkspaceStorage.loadFailureMessage = UserFacingError.message(
+      for: classification, copy: userFacingErrorCopy)
+    try? await core.appendDiagnosticLog(
+      source: "macos.ui.task_workspace_load_failed",
+      level: "error",
+      message: "The task workspace failed to load.",
+      details: classification.technicalDetail)
   }
 
   /// Throwing core of the coalesced workspace load. Post-commit mutation paths
@@ -170,28 +222,28 @@ extension AppStore {
     // correct even against a backend that doesn't (e.g. the in-memory fake) by
     // subtracting them from open here, mirroring the deferred treatment.
     let scheduledIDs = Set(pages.2.tasks.map(\.id))
-    // Animate the row-level diff on a REFRESH (a mutation's reload, or a
-    // debounced search-query change — the debounce in
-    // `TasksWorkspaceView`'s `.task(id:)` already caps this to at most one
-    // reload per ~250ms while typing, so this never fires per-keystroke) so
-    // a completed/deferred/moved task's row settles out of the queue
-    // instead of vanishing. The FIRST population of an empty workspace
-    // stays unanimated — nothing to settle from.
+    let openTasks = pages.0.tasks.filter {
+      !deferredIDs.contains($0.id) && !scheduledIDs.contains($0.id)
+    }
     func applyBuckets() {
-      taskWorkspaceStorage.openTasks = pages.0.tasks.filter {
-        !deferredIDs.contains($0.id) && !scheduledIDs.contains($0.id)
-      }
+      taskWorkspaceStorage.openTasks = openTasks
       taskWorkspaceStorage.deferredTasks = pages.1.tasks
       taskWorkspaceStorage.scheduledTasks = pages.2.tasks
       taskWorkspaceStorage.completedTasks = pages.3.tasks
       taskWorkspaceStorage.cancelledTasks = pages.4.tasks
       taskWorkspaceStorage.somedayTasks = pages.5.tasks
     }
-    if taskWorkspaceStorage.hasLoaded {
-      lorvexAnimated(.snappy(duration: 0.18)) { applyBuckets() }
+    // A refresh of the same search that changes a few rows (a completed,
+    // deferred, or moved task) animates, so the row settles out of the queue
+    // instead of vanishing; a first load, a new search, or a change over many
+    // rows replaces the rows at once.
+    let sections = [openTasks, pages.1.tasks, pages.2.tasks, pages.3.tasks, pages.4.tasks, pages.5.tasks]
+    if taskWorkspaceStorage.animatesReplacingSections(with: sections, query: query) {
+      lorvexAnimated(TaskRowChangeAnimation.animation) { applyBuckets() }
     } else {
       applyBuckets()
     }
+    taskWorkspaceStorage.loadedQuery = query
     taskWorkspaceStorage.openNextOffset = pages.0.nextOffset
     taskWorkspaceStorage.deferredNextOffset = pages.1.nextOffset
     taskWorkspaceStorage.scheduledNextOffset = pages.2.nextOffset
@@ -199,17 +251,23 @@ extension AppStore {
     taskWorkspaceStorage.cancelledNextOffset = pages.4.nextOffset
     taskWorkspaceStorage.somedayNextOffset = pages.5.nextOffset
     taskWorkspaceStorage.hasLoaded = true
+    taskWorkspaceStorage.loadFailureMessage = nil
     pruneTaskWorkspaceSelection()
     errorMessage = nil
   }
 
+  /// Reloads the workspace once it has loaded, or retries a first load that
+  /// failed, so a refresh after a sync or a change elsewhere also recovers a
+  /// workspace showing its load failure.
   func reloadTaskWorkspaceIfLoaded() async {
-    guard taskWorkspaceStorage.hasLoaded else { return }
+    guard taskWorkspaceStorage.hasLoaded || taskWorkspaceStorage.loadFailureMessage != nil
+    else { return }
     await loadTaskWorkspace()
   }
 
   func reloadTaskWorkspaceIfLoadedReportingFailure() async throws {
-    guard taskWorkspaceStorage.hasLoaded else { return }
+    guard taskWorkspaceStorage.hasLoaded || taskWorkspaceStorage.loadFailureMessage != nil
+    else { return }
     try await loadTaskWorkspaceReportingFailure()
   }
 

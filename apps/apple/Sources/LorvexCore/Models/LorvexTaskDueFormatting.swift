@@ -4,51 +4,39 @@ import Foundation
 /// LorvexCore so macOS, iOS, widgets, and the accessibility helpers all format a
 /// due date the same way. Foundation-localized (`RelativeDateTimeFormatter`), so
 /// it needs no string-catalog keys.
+///
+/// Stored due, planned, and available-from dates are timezone-naive days
+/// materialized at UTC midnight (`LorvexDateFormatters.ymdUTC`). Each predicate
+/// reads the stored day back through ``PlannedDayBridge`` and compares it with
+/// the day `now` falls on in `timeZone`, counting whole Gregorian days. Taking
+/// the local `startOfDay` of the stored instant instead would shift every
+/// date-only due one day early west of UTC ("today" rendering as "yesterday"
+/// and instantly overdue).
 extension LorvexTask {
-  /// The stored planned date is a timezone-naive calendar day materialized at
-  /// UTC midnight (`LorvexDateFormatters.ymdUTC`), so the day it names must be
-  /// read back in UTC. Taking the user-calendar `startOfDay` of that instant
-  /// instead would shift every date-only due one day early for any timezone
-  /// west of UTC ("today" rendering as "yesterday" and instantly overdue).
-  static let utcCalendar: Calendar = {
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = .gmt
-    return calendar
-  }()
-
-  /// The due date's calendar day, re-anchored to midnight in `calendar` so it
-  /// compares against the user's local "today" on equal footing. Shared by the
-  /// due-relative label and the overdue/hidden-until predicates.
-  func dueDayStart(of dueDate: Date, in calendar: Calendar) -> Date {
-    let day = Self.utcCalendar.dateComponents([.year, .month, .day], from: dueDate)
-    return calendar.date(from: day) ?? dueDate
-  }
-
   /// Whether the task is overdue: it is unresolved (open, started, or parked
   /// for someday) and its due day falls before today (day-granular). A
   /// completed or cancelled task is never overdue, whatever its due date, so a
   /// finished row never carries the missed-deadline warning. `false` when
   /// there is no due date.
-  public func isOverdue(now: Date = Date(), calendar: Calendar = .current) -> Bool {
-    status.isActive && isPastDue(now: now, calendar: calendar)
+  public func isOverdue(now: Date = Date(), timeZone: TimeZone = .current) -> Bool {
+    status.isActive && isPastDue(now: now, timeZone: timeZone)
   }
 
   /// Whether the task is due soon: it is unresolved and its due day is today
   /// or tomorrow (day-granular). Surfaces tint such a due date orange, the
   /// same rule the task inspector's Due row follows; an overdue task is not
   /// due soon. `false` when there is no due date.
-  public func isDueSoon(now: Date = Date(), calendar: Calendar = .current) -> Bool {
+  public func isDueSoon(now: Date = Date(), timeZone: TimeZone = .current) -> Bool {
     guard status.isActive, let dueDate else { return false }
-    let today = calendar.startOfDay(for: now)
-    let days = calendar.dateComponents([.day], from: today, to: dueDayStart(of: dueDate, in: calendar)).day ?? -1
+    let days = PlannedDayBridge.dayOffset(from: now, toStorageDate: dueDate, timeZone: timeZone)
     return days == 0 || days == 1
   }
 
   /// Whether the due day falls before today (day-granular), whatever the
   /// task's status. `false` when there is no due date.
-  func isPastDue(now: Date, calendar: Calendar) -> Bool {
+  func isPastDue(now: Date, timeZone: TimeZone) -> Bool {
     guard let dueDate else { return false }
-    return dueDayStart(of: dueDate, in: calendar) < calendar.startOfDay(for: now)
+    return PlannedDayBridge.dayOffset(from: now, toStorageDate: dueDate, timeZone: timeZone) < 0
   }
 
   /// Whether the task is hidden by a future defer-until date: `available_from`
@@ -57,18 +45,19 @@ extension LorvexTask {
   /// surfaces, so an overdue-but-hidden task never reads as "hidden." Matches
   /// the day-surface filter's residual conjunct, so this bool answers exactly
   /// "is this row currently suppressed from the day surfaces by `available_from`."
-  public func isHiddenUntilFuture(now: Date = Date(), calendar: Calendar = .current) -> Bool {
-    guard let availableFrom, !isPastDue(now: now, calendar: calendar) else { return false }
-    return dueDayStart(of: availableFrom, in: calendar) > calendar.startOfDay(for: now)
+  public func isHiddenUntilFuture(now: Date = Date(), timeZone: TimeZone = .current) -> Bool {
+    guard let availableFrom, !isPastDue(now: now, timeZone: timeZone) else { return false }
+    return PlannedDayBridge.dayOffset(from: now, toStorageDate: availableFrom, timeZone: timeZone) > 0
   }
 
   /// A short, absolute day label for the `available_from` (defer-until) date —
   /// e.g. "Jun 14" — when the task is hidden by a future defer-until date, else
-  /// `nil`. The stored date is a UTC-midnight day anchor, so it is re-anchored
-  /// to the local day before formatting (mirroring `dueDayStart`).
-  public func hiddenUntilShortLabel(now: Date = Date(), calendar: Calendar = .current) -> String? {
-    guard isHiddenUntilFuture(now: now, calendar: calendar), let availableFrom else { return nil }
-    return dueDayStart(of: availableFrom, in: calendar)
-      .formatted(date: .abbreviated, time: .omitted)
+  /// `nil`. The label names the stored day itself, so it is formatted in UTC,
+  /// the zone the day is anchored in.
+  public func hiddenUntilShortLabel(now: Date = Date(), timeZone: TimeZone = .current) -> String? {
+    guard isHiddenUntilFuture(now: now, timeZone: timeZone), let availableFrom else { return nil }
+    var style = Date.FormatStyle(date: .abbreviated, time: .omitted)
+    style.timeZone = .gmt
+    return availableFrom.formatted(style)
   }
 }

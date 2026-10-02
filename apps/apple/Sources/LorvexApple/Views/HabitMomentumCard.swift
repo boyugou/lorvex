@@ -2,21 +2,26 @@ import LorvexCore
 import SwiftUI
 
 /// A circular progress ring with the habit's icon (or a check when met) at its
-/// center. Clicking it toggles today's completion — the primary check-in target.
-/// The track is the neutral tertiary style, not a wash of `tint`: until
-/// something is logged the track outlines the whole control, and a hue at low
-/// alpha all but vanishes on the card for deep hues in dark mode and for every
-/// hue in light mode.
+/// center. Clicking it checks the habit in (``HabitRingAction``) — the primary
+/// check-in target on a habit's card and in its inspector's header. The track
+/// is the neutral tertiary style, not a wash of `tint`: until something is
+/// logged the track outlines the whole control, and a hue at low alpha all but
+/// vanishes on the card for deep hues in dark mode and for every hue in light
+/// mode. The stroke and the center glyphs scale with `diameter`, so the ring
+/// reads the same at the card's 46 pt and the header's smaller size.
 struct HabitProgressRing: View {
   let completed: Int
   let target: Int
   let tint: Color
   let icon: String
+  var diameter: CGFloat = 46
   let action: () -> Void
 
   @State private var hovering = false
 
   private var isComplete: Bool { completed >= max(target, 1) }
+  /// 4 pt on the card's 46 pt ring.
+  private var lineWidth: CGFloat { (diameter * 0.087).rounded(.toNearestOrEven) }
   private var fraction: Double {
     guard target > 0 else { return isComplete ? 1 : 0 }
     return min(1, Double(completed) / Double(target))
@@ -26,22 +31,19 @@ struct HabitProgressRing: View {
     Button(action: action) {
       ZStack {
         Circle()
-          .stroke(.tertiary, lineWidth: 4)
-        Circle()
-          .trim(from: 0, to: fraction)
-          .stroke(tint.gradient, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-          .rotationEffect(.degrees(-90))
+          .stroke(.tertiary, lineWidth: lineWidth)
+        LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
         if isComplete {
           Image(systemName: "checkmark")
-            .font(.system(size: 16, weight: .bold))  // lorvex-design-token: allow
+            .font(.system(size: diameter * 0.35, weight: .bold))  // lorvex-design-token: allow
             .foregroundStyle(tint)
         } else {
           Image(systemName: icon)
-            .font(.system(size: 15, weight: .medium))  // lorvex-design-token: allow
+            .font(.system(size: diameter * 0.33, weight: .medium))  // lorvex-design-token: allow
             .foregroundStyle(hovering ? AnyShapeStyle(tint) : AnyShapeStyle(.secondary))
         }
       }
-      .frame(width: 46, height: 46)
+      .frame(width: diameter, height: diameter)
       .contentShape(Circle())
       .scaleEffect(hovering ? 1.06 : 1)
     }
@@ -78,13 +80,16 @@ struct HabitMomentumCard: View {
   @State private var hovering = false
   @State private var isShowingDeleteConfirmation = false
   @State private var isShowingResetConfirmation = false
+  /// The zone the completion keys are written in, which places today's cell.
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   /// Progress toward the *current period's* plan — today for daily, this week
   /// for weekly/custom, this month for monthly — so the ring fills and checks
   /// off by period (persisting across days) rather than because the habit was
   /// logged once today.
   private var progress: HabitPeriodProgress.Value {
-    HabitPeriodProgress.current(habit: habit, recentCompletions: stats?.recentCompletions ?? [])
+    HabitPeriodProgress.current(
+      habit: habit, recentCompletions: stats?.recentCompletions ?? [], timeZone: productTimeZone)
   }
   private var isComplete: Bool { progress.isComplete }
   /// A habit whose per-day target is more than one check-in (e.g. "8 glasses of
@@ -101,7 +106,8 @@ struct HabitMomentumCard: View {
     HabitRhythmStrip.cells(
       completions: Set(stats?.recentCompletions ?? []),
       habit: habit,
-      today: Date())
+      today: Date(),
+      timeZone: productTimeZone)
   }
 
   var body: some View {
@@ -164,12 +170,12 @@ struct HabitMomentumCard: View {
   private var header: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        Text(habit.name)
+        Text(userContent: habit.name)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .foregroundStyle(.primary)
           .lineLimit(2)
         if let cue = habit.cue, !cue.isEmpty {
-          Text(cue)
+          Text(userContent: cue)
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(.secondary)
             .lineLimit(1)
@@ -180,55 +186,25 @@ struct HabitMomentumCard: View {
         completed: progress.completed,
         target: progress.required,
         tint: tint,
-        icon: habit.icon ?? "repeat.circle",
+        icon: LorvexSymbol.name(for: habit.icon, fallback: "repeat.circle"),
         action: ringTapped
       )
-      .help(ringActionLabel)
-      .accessibilityLabel(ringActionLabel)
-      .accessibilityIdentifier(ringActionIdentifier)
+      .help(ringAction.label(for: habit))
+      .accessibilityLabel(ringAction.label(for: habit))
+      .accessibilityIdentifier(ringAction.cardIdentifier)
     }
   }
 
-  /// Ring tap. A multi-target habit adds one check-in (`adjust(1)`, which the
-  /// core clamps at the target, so a tap on a met habit is a safe no-op). A
-  /// binary habit toggles today (`adjust(0)`) — except when its period is met
-  /// only by earlier days (nothing logged today, as a weekly/monthly habit can
-  /// be): there is no today check-in to clear, so the tap is a no-op rather than
-  /// logging a spurious completion. Clearing an accumulated count is the explicit
-  /// "Reset today" menu action.
+  private var ringAction: HabitRingAction { HabitRingAction.action(habit: habit, progress: progress) }
+
+  /// Ring tap, by the shared rule (``HabitRingAction``): `adjust(1)` adds a
+  /// check-in and `adjust(0)` toggles the day.
   private func ringTapped() {
-    if isMultiTarget {
-      adjust(1)
-    } else if isComplete {
-      if habit.completionsToday > 0 { adjust(0) }
-    } else {
-      adjust(0)
+    switch ringAction {
+    case .addOne: adjust(1)
+    case .checkIn, .undoToday: adjust(0)
+    case .none: break
     }
-  }
-
-  private var ringActionLabel: String {
-    if isComplete {
-      if isMultiTarget {
-        return String(localized: "habits.row.completed_today", defaultValue: "Completed today", table: "Localizable", bundle: LorvexL10n.bundle)
-      }
-      // A binary habit whose period is met only by earlier days has no today
-      // check-in to clear, so it reads as done rather than a misleading "Reset
-      // today" that would otherwise log a spurious completion on tap.
-      return habit.completionsToday > 0
-        ? String(localized: "habits.row.reset_today", defaultValue: "Reset today", table: "Localizable", bundle: LorvexL10n.bundle)
-        : String(localized: "common.done", defaultValue: "Done", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-    return isMultiTarget
-      ? String(localized: "habits.row.add_one", defaultValue: "Add one", table: "Localizable", bundle: LorvexL10n.bundle)
-      : String(localized: "habits.row.complete_today", defaultValue: "Complete today", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  private var ringActionIdentifier: String {
-    if isComplete {
-      if isMultiTarget { return "habit.action.done" }
-      return habit.completionsToday > 0 ? "habit.action.reset" : "habit.action.done"
-    }
-    return isMultiTarget ? "habit.action.increment" : "habit.action.complete"
   }
 
   /// The recent periods as capsules, the current one ringed. A daily habit's
@@ -263,12 +239,7 @@ struct HabitMomentumCard: View {
   /// Narrow weekdays for a daily habit's seven cells, oldest first; empty for
   /// a weekly or monthly strip.
   private var rhythmDayLabels: [String] {
-    guard HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType) == .day else { return [] }
-    let calendar = Calendar.current
-    let today = Date()
-    return (0..<rhythmCells.count).reversed().compactMap { daysAgo in
-      calendar.date(byAdding: .day, value: -daysAgo, to: today)?.formatted(.dateTime.weekday(.narrow))
-    }
+    HabitRhythmStrip.dayLabels(habit: habit, today: Date(), timeZone: productTimeZone)
   }
 
   /// The streak as a reading ("12-day streak", "No streak yet"), the stepper
@@ -332,11 +303,9 @@ struct HabitMomentumCard: View {
         .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
         .foregroundStyle(isComplete ? AnyShapeStyle(tint) : AnyShapeStyle(.secondary))
         .accessibilityLabel(String(
-          format: String(
-            localized: "habits.row.today_progress_a11y", defaultValue: "%1$lld of %2$lld done today",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          habit.completionsToday, habit.targetCount))
+          localized: "habits.row.today_progress_a11y",
+          defaultValue: "\(habit.completionsToday) of \(habit.targetCount) done today",
+          table: "Localizable", bundle: LorvexL10n.bundle))
 
       Button { adjust(1) } label: {
         Image(systemName: "plus")

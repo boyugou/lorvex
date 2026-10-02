@@ -199,12 +199,13 @@ func weekdayInitialsFollowTheLocaleLanguage() {
 }
 
 @Test
-func heatmapViewCachesGridOutsideBody() throws {
-  let source = try appleSourceFile("Sources/LorvexApple/Views/HabitHeatmapView.swift")
+func historyPanelCachesGridOutsideBody() throws {
+  let source = try appleSourceFile("Sources/LorvexApple/Views/HabitHistoryPanel.swift")
 
-  #expect(source.contains("@State private var cachedGrid: HabitHeatmapModel.Grid"))
-  #expect(source.contains("heatmap(grid: cachedGrid)"))
+  #expect(source.contains("@State private var cache: HistoryCache"))
   #expect(source.contains(".onChange(of: detail)"))
-  #expect(source.contains("private static func makeGrid("))
-  #expect(!source.contains("heatmap(grid: grid(for: detail))"))
+  #expect(source.contains("private static func makeCache("))
+  #expect(source.contains("cache.grid.columns"))
+  // The grid is built in one place, the cache builder, never per body pass.
+  #expect(source.components(separatedBy: "HabitHeatmapModel.makeGrid(").count == 2)
 }

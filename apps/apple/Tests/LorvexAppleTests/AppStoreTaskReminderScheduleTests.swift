@@ -5,10 +5,10 @@ import Testing
 @testable import LorvexApple
 @testable import LorvexCore
 
-// Task-reminder scheduling and the Dock badge read the full schedulable task
-// pool (`appleSurfaceTasks`), not the possibly-stale Today snapshot, so a task
-// created or scheduled after the last refresh still gets a reminder and is
-// counted in the badge.
+// Task-reminder scheduling and the Dock badge read the database (the reminder
+// query and the uncapped actionable task source), not the possibly-stale Today
+// snapshot, so a task created or scheduled after the last refresh still gets a
+// reminder and is counted in the badge.
 
 @MainActor
 @Test
@@ -87,7 +87,7 @@ func appStoreBadgeCountsTasksOutsideStaleTodaySnapshot() async throws {
   await store.updateBadge()
 
   #expect(await recorder.lastCount() == BadgeCoordinator.badgeCount(
-    tasks: await store.appleSurfaceTasks() ?? [],
+    tasks: try await core.loadWidgetStatsSource().actionableTasks,
     today: AppStore.todayDateString()))
   #expect((await recorder.lastCount() ?? 0) > BadgeCoordinator.badgeCount(
     tasks: store.today.tasks,

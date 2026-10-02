@@ -23,7 +23,7 @@ struct MobileCalendarAgendaRow: View {
         .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(event.title)
+        Text(userContent: event.title)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .foregroundStyle(isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .lineLimitUnlessAccessibilitySize(2)
@@ -100,7 +100,7 @@ struct MobileCalendarAgendaTaskRow: View {
       Button(action: open) {
         HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
           VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-            Text(task.title)
+            Text(userContent: task.title)
               .font(LorvexDesign.Typography.primaryEmphasis)
               .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
               .strikethrough(task.status.isResolved, color: .secondary)
@@ -143,7 +143,7 @@ struct MobileCalendarAgendaTaskRow: View {
     if let time = task.time(on: dayKey) {
       facts.append(lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound))
     } else if let minutes = task.estimatedMinutes, minutes > 0 {
-      facts.append(MobileTaskDisplayText.compactEstimateMinutes(minutes))
+      facts.append(LorvexDurationFormat.minutes(minutes))
     }
     if let due = task.dueDate, LorvexDateFormatters.ymdUTC.string(from: due) == dayKey {
       facts.append(

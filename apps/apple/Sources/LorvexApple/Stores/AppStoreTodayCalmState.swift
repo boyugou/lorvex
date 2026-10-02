@@ -50,7 +50,7 @@ extension AppStore {
   /// Recomputed on every read so a view inside a per-minute `TimelineView`
   /// advances a running time without a reload.
   var calmToday: LorvexCalmToday {
-    calmToday(tasks: today.tasks)
+    calmToday(nowMinutes: nowMinutesInProductDay)
   }
 
   /// Each of today's timed tasks' time range ("9:45 – 10:45 AM"), keyed by
@@ -66,12 +66,14 @@ extension AppStore {
     return labels
   }
 
-  private func calmToday(tasks: [LorvexTask]) -> LorvexCalmToday {
+  /// ``calmToday`` with the clock at `nowMinutes`, so a caller that reads the
+  /// clock once builds the page and the rest of the day at the same minute.
+  func calmToday(nowMinutes: Int?) -> LorvexCalmToday {
     LorvexCalmToday.build(
-      tasks: tasks,
+      tasks: today.tasks,
       events: todayScheduleEvents,
       doneToday: doneTodayCount,
-      nowMinutes: nowMinutesInProductDay,
+      nowMinutes: nowMinutes,
       logicalDay: logicalTodayDateString,
       workingHours: workdayWindow)
   }

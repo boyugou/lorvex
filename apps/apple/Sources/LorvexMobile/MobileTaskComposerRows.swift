@@ -193,7 +193,7 @@ struct MobileReminderComposerRow: View {
   private var presetTimeStyle: Date.FormatStyle {
     var style = Date.FormatStyle().weekday(.abbreviated).hour().minute()
     style.timeZone = timeZone
-    style.locale = LorvexClockFormat.current.applied(to: MobileL10n.locale)
+    style.locale = LorvexClockFormat.displayLocale
     return style
   }
 

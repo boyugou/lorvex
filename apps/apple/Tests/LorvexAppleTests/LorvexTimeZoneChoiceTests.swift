@@ -7,22 +7,52 @@ import Testing
 struct LorvexTimeZoneChoiceTests {
   private let winter: Date = Date(timeIntervalSince1970: 1_767_225_600)  // 2026-01-01T00:00:00Z
 
-  @Test func offsetLabelsUseATrueMinusAndMinutesOnlyWhenNeeded() {
-    #expect(LorvexTimeZoneChoice.offsetLabel(seconds: 0) == "GMT")
-    #expect(LorvexTimeZoneChoice.offsetLabel(seconds: 8 * 3600) == "GMT+8")
-    #expect(LorvexTimeZoneChoice.offsetLabel(seconds: -8 * 3600) == "GMT\u{2212}8")
-    #expect(LorvexTimeZoneChoice.offsetLabel(seconds: 5 * 3600 + 1800) == "GMT+5:30")
+  @Test func offsetsTakeTheLocalesOwnForm() throws {
+    let english = Locale(identifier: "en_US")
+    let losAngeles = try #require(
+      LorvexTimeZoneChoice(identifier: "America/Los_Angeles", now: winter, locale: english))
+    let kolkata = try #require(
+      LorvexTimeZoneChoice(identifier: "Asia/Kolkata", now: winter, locale: english))
+    let french = try #require(
+      LorvexTimeZoneChoice(
+        identifier: "America/Los_Angeles", now: winter, locale: Locale(identifier: "fr_FR")))
+    #expect(losAngeles.offsetLabel == "GMT-8")
+    #expect(kolkata.offsetLabel == "GMT+5:30")
+    #expect(french.offsetLabel == "UTC\u{2212}8")
   }
 
   @Test func aChoiceNamesItsCityRegionAndOffset() throws {
     let choice = try #require(
       LorvexTimeZoneChoice(identifier: "America/Los_Angeles", now: winter, locale: Locale(identifier: "en_US")))
     #expect(choice.city == "Los Angeles")
+    #expect(choice.identifierCity == "Los Angeles")
     #expect(choice.region == "America")
-    #expect(choice.offsetLabel == "GMT\u{2212}8")
-    #expect(choice.summary == "Los Angeles · GMT\u{2212}8")
+    #expect(choice.summary == "Los Angeles · GMT-8")
     #expect(choice.genericName == "Pacific Time")
     #expect(LorvexTimeZoneChoice(identifier: "Nowhere/Atlantis") == nil)
+  }
+
+  @Test func theCityIsNamedInTheUsersLanguage() throws {
+    let chinese = try #require(
+      LorvexTimeZoneChoice(
+        identifier: "America/Los_Angeles", now: winter, locale: Locale(identifier: "zh-Hans")))
+    let spanish = try #require(
+      LorvexTimeZoneChoice(
+        identifier: "America/Los_Angeles", now: winter, locale: Locale(identifier: "es")))
+    #expect(chinese.city == "洛杉矶")
+    #expect(chinese.genericName == "北美太平洋时间")
+    #expect(chinese.identifierCity == "Los Angeles")
+    #expect(spanish.city == "Los Ángeles")
+    let utc = try #require(
+      LorvexTimeZoneChoice(identifier: "UTC", now: winter, locale: Locale(identifier: "zh-Hans")))
+    #expect(utc.city == "UTC")
+    // CLDR names no city for a fixed-offset zone; it keeps the identifier's
+    // spelling rather than CLDR's "unknown location" placeholder.
+    if TimeZone(identifier: "Etc/GMT+5") != nil {
+      let fixed = try #require(
+        LorvexTimeZoneChoice(identifier: "Etc/GMT+5", now: winter, locale: Locale(identifier: "zh-Hans")))
+      #expect(fixed.city == "GMT+5")
+    }
   }
 
   @Test func searchMatchesCityRegionAndNameIgnoringCaseAndAccents() throws {
@@ -33,6 +63,15 @@ struct LorvexTimeZoneChoiceTests {
     #expect(choice.matches("SAO PAULO"))
     #expect(choice.matches("america"))
     #expect(!choice.matches("Tokyo"))
+  }
+
+  @Test func searchFindsAZoneByItsEnglishCityInAnyLanguage() throws {
+    let choice = try #require(
+      LorvexTimeZoneChoice(
+        identifier: "America/Los_Angeles", now: winter, locale: Locale(identifier: "zh-Hans")))
+    #expect(choice.matches("洛杉矶"))
+    #expect(choice.matches("los angeles"))
+    #expect(choice.matches("太平洋"))
   }
 
   @Test func theListHoldsGeographicZonesWestToEast() {

@@ -94,11 +94,11 @@ struct MobileTagTokenField: View {
 
   private var filteredSuggestions: [String] {
     let existing = Set(tags.map { $0.lowercased() })
-    let query = entry.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    let query = entry.trimmingCharacters(in: .whitespacesAndNewlines)
     return suggestions.filter { suggestion in
       guard !existing.contains(suggestion.lowercased()) else { return false }
       guard !query.isEmpty else { return true }
-      return suggestion.lowercased().contains(query)
+      return suggestion.localizedStandardContains(query)
     }
   }
 

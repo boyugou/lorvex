@@ -117,6 +117,14 @@
             await emitStop("today-suggestion")
             store.dismissSuggestedDayTimes()
             try? await Task.sleep(for: .seconds(0.5))
+            // An event opened from the schedule, in the inspector.
+            if let event = store.todayScheduleEvents.last(where: { !$0.allDay }) {
+              store.toggleTodayEventSelection(event)
+              try? await Task.sleep(for: .seconds(2))
+              await emitStop("today-event")
+              store.clearSelectedCalendarEvent()
+              try? await Task.sleep(for: .seconds(0.5))
+            }
           }
           if selection == .tasks, let first = store.today.tasks.first {
             store.selectedTaskID = first.id
@@ -146,10 +154,15 @@
             }
             previewDefaults.set(CalendarPresentationMode.week.rawValue, forKey: "calendar.workspace.mode")
           }
-          if selection == .habits, let first = store.habits?.habits.first {
-            store.selectedHabitID = first.id
-            try? await Task.sleep(for: .seconds(2.5))
-            await emitStop("habits-inspector")
+          if selection == .habits {
+            // The seeded habits' inspectors: the first is done today, the
+            // second still open.
+            let stops = ["habits-inspector", "habits-inspector-open"]
+            for (habit, stop) in zip(store.habits?.habits ?? [], stops) {
+              store.selectedHabitID = habit.id
+              try? await Task.sleep(for: .seconds(2.5))
+              await emitStop(stop)
+            }
             store.selectedHabitID = nil
           }
         }
@@ -209,7 +222,7 @@
         // no loaded list holds it.
         if let load = store.applyRouteNavigation(.task(LorvexPreviewSeedID.venueTask)) { await load() }
         if let waiting = store.selectedTask, !waiting.dependsOn.isEmpty {
-          for field in ["doOn", "due", "estimate", "repeat", "reminders", "dependencies"] {
+          for field in ["doOn", "due", "estimate", "repeat", "reminders", "tags", "dependencies"] {
             let editor = makeTaskEditorWindow(store: store, task: waiting, field: field, beside: window)
             editor.orderFrontRegardless()
             try? await Task.sleep(for: .seconds(2))
@@ -218,10 +231,38 @@
             editor.orderOut(nil)
           }
         }
+        // A habit with every field set and a history to read: ten weeks of
+        // earlier check-ins, two reminders, and a goal, added to the first
+        // seeded habit in the preview store. Its inspector, then each
+        // field's editor as its popover shows it.
+        if let seeded = store.habits?.habits.first {
+          await seedPreviewHabitHistory(store: store, habitID: seeded.id)
+          await store.addHabitReminder(habitID: seeded.id, time: "08:00")
+          await store.addHabitReminder(habitID: seeded.id, time: "21:00")
+          await store.updateHabitFields(seeded, milestoneTarget: .set(30))
+          store.selectedTaskID = nil
+          store.selection = .habits
+          store.selectedHabitID = seeded.id
+          try? await Task.sleep(for: .seconds(2.5))
+          emit("LORVEX_UI_PREVIEW_WINDOW=\(window.windowNumber)")
+          await emitStop("habits-inspector-fields")
+          if let habit = store.orderedHabits.first(where: { $0.id == seeded.id }) {
+            for field in ["repeat", "reminder", "goal"] {
+              let editor = makeHabitEditorWindow(store: store, habit: habit, field: field, beside: window)
+              editor.orderFrontRegardless()
+              try? await Task.sleep(for: .seconds(2))
+              emit("LORVEX_UI_PREVIEW_WINDOW=\(editor.windowNumber)")
+              await emitStop("habit-editor-\(field)")
+              editor.orderOut(nil)
+            }
+          }
+          store.selectedHabitID = nil
+        }
         store.selectedTaskID = nil
         store.selection = .today
-        // The create and edit sheets of lists and habits, each in a window of
-        // its own sized like the sheet. An edit sheet opens on a seeded record.
+        // The create sheets of lists and habits and the list edit sheet, each
+        // in a window of its own sized like the sheet. The edit sheet opens on
+        // a seeded list; a habit is edited in its inspector.
         var sheetStops: [(String, AnyView)] = []
         let closed = Binding.constant(false)
         sheetStops.append(("sheet-createList", AnyView(CreateListSheet(store: store, isPresented: closed))))
@@ -230,10 +271,6 @@
             .onAppear { store.prepareListDraft(for: list) })))
         }
         sheetStops.append(("sheet-createHabit", AnyView(CreateHabitSheet(store: store, isPresented: closed))))
-        if let habit = store.habits?.habits.first {
-          sheetStops.append(("sheet-editHabit", AnyView(EditHabitSheet(habit: habit, store: store, isPresented: closed)
-            .onAppear { store.prepareHabitDraft(for: habit) })))
-        }
         for (stop, sheet) in sheetStops {
           let sheetWindow = makeSheetWindow(sheet, beside: window)
           sheetWindow.orderFrontRegardless()
@@ -271,11 +308,10 @@
     private static func makeTourWindow(store: AppStore, settings: AppSettingsStore) -> NSWindow {
       // Place the tour on the roomiest display, not `NSScreen.main`: the app
       // never activates, so "main" is whichever screen happens to hold the key
-      // window, and on a narrow secondary display AppKit clamps the window
-      // below the three-pane floor (sidebar + workspace + inspector). The
-      // split view then resolves the over-constraint by sliding the sidebar
-      // off the left edge — a capture artifact no user with a normal display
-      // would ever see.
+      // window. On a display narrower than the three columns (sidebar,
+      // workspace, and inspector), the inspector captures show the inspector
+      // in the sidebar's place, as the app does for anyone on that display
+      // (`MainWindowLayout`); the roomiest display shows all three when it can.
       let preferred = NSSize(width: 1440, height: 900)
       let screen =
         NSScreen.screens
@@ -303,6 +339,7 @@
       window.toolbarStyle = .unified
       let hostingView = NSHostingView(
         rootView: LorvexMainWindowView(store: store, settings: settings, openMainWindow: {}).lorvexClockLocale()
+          .lorvexProductTimeZone(from: store)
           .defaultAppStorage(previewDefaults))
       // Let the workspaces' `.toolbar` items drive this AppKit-owned window's
       // toolbar exactly as they drive the `Window` scene, so the capture shows
@@ -322,7 +359,8 @@
     @MainActor
     private static func makeMenuBarPanelWindow(store: AppStore, beside main: NSWindow) -> NSWindow {
       let hostingView = NSHostingView(
-        rootView: MenuBarStatusView(store: store).defaultAppStorage(previewDefaults).lorvexClockLocale())
+        rootView: MenuBarStatusView(store: store).defaultAppStorage(previewDefaults).lorvexClockLocale()
+          .lorvexProductTimeZone(from: store))
       hostingView.sizingOptions = []
       let size = hostingView.fittingSize
       let screen = main.screen?.visibleFrame ?? main.frame
@@ -345,7 +383,10 @@
     static let settingsCategoryKey = "settings.preview.category"
 
     /// The Settings window at its ideal size, centered on the main window's
-    /// screen, hosting the same view the Settings scene shows.
+    /// screen, hosting the same view the Settings scene shows in the chrome
+    /// the scene opens its window with: the preference toolbar style, and the
+    /// title and toolbar bridged from the view. Whatever the view changes in
+    /// that chrome shows in the capture as it does in the real window.
     @MainActor
     private static func makeSettingsWindow(
       store: AppStore, settings: AppSettingsStore, beside main: NSWindow
@@ -359,12 +400,12 @@
         backing: .buffered,
         defer: false)
       settingsWindow.isReleasedWhenClosed = false
-      settingsWindow.titlebarAppearsTransparent = true
-      settingsWindow.titleVisibility = .hidden
+      settingsWindow.toolbarStyle = .preference
       let hostingView = NSHostingView(
         rootView: LorvexSettingsWindowView(settings: settings, store: store).lorvexClockLocale()
+          .lorvexProductTimeZone(from: store)
           .defaultAppStorage(previewDefaults))
-      hostingView.sceneBridgingOptions = [.toolbars]
+      hostingView.sceneBridgingOptions = [.toolbars, .title]
       settingsWindow.contentView = hostingView
       return settingsWindow
     }
@@ -388,6 +429,7 @@
       listWindow.toolbarStyle = .unified
       let hostingView = NSHostingView(
         rootView: DetachedListWindow(store: store, listID: listID).lorvexClockLocale()
+          .lorvexProductTimeZone(from: store)
           .defaultAppStorage(previewDefaults))
       hostingView.sceneBridgingOptions = [.toolbars, .title]
       listWindow.contentView = hostingView
@@ -414,6 +456,7 @@
       palette.hasShadow = true
       palette.contentView = NSHostingView(
         rootView: CommandPaletteView(store: store, initialQuery: query).lorvexClockLocale()
+          .lorvexProductTimeZone(from: store)
           .defaultAppStorage(previewDefaults))
       return palette
     }
@@ -455,8 +498,70 @@
           .frame(minWidth: 280)
           .fixedSize()
           .background(.windowBackground)
-          .environment(\.taskDetailPanelInPopover, true)
+          .environment(\.inspectorPanelInPopover, true)
           .defaultAppStorage(previewDefaults))
+      let size = hostingView.fittingSize
+      let screen = main.screen?.visibleFrame ?? main.frame
+      let origin = NSPoint(x: screen.midX - size.width / 2, y: screen.midY - size.height / 2)
+      let editor = NSWindow(
+        contentRect: NSRect(origin: origin, size: size),
+        styleMask: [.borderless],
+        backing: .buffered,
+        defer: false)
+      editor.isReleasedWhenClosed = false
+      editor.hasShadow = true
+      editor.contentView = hostingView
+      return editor
+    }
+
+    /// Check-ins for the habit `habitID` from 13 to 76 days before the
+    /// store's today, after a missed day that ends its seeded streak: nearly
+    /// every weekday, a third of the Sundays, and no Saturday, so the
+    /// inspector's History fills and By Weekday names a strongest and a
+    /// weakest day.
+    @MainActor
+    private static func seedPreviewHabitHistory(store: AppStore, habitID: LorvexHabit.ID) async {
+      var calendar = Calendar(identifier: .gregorian)
+      calendar.timeZone = .current
+      let parts = store.logicalTodayDateString.split(separator: "-").compactMap { Int($0) }
+      guard parts.count == 3,
+        let today = calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
+      else { return }
+      for offset in 13...76 {
+        guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+        let kept =
+          switch calendar.component(.weekday, from: day) {
+          case 7: false
+          case 1: offset.isMultiple(of: 3)
+          default: !offset.isMultiple(of: 9)
+          }
+        guard kept else { continue }
+        let date = calendar.dateComponents([.year, .month, .day], from: day)
+        _ = try? await store.core.completeHabit(
+          id: habitID,
+          date: String(format: "%04d-%02d-%02d", date.year ?? 0, date.month ?? 0, date.day ?? 0))
+      }
+    }
+
+    /// One habit inspector field editor (`field` is a property row id) for
+    /// `habit`, padded and backed as its popover shows it, in a borderless
+    /// window centered on the main window's screen.
+    @MainActor
+    private static func makeHabitEditorWindow(
+      store: AppStore, habit: LorvexHabit, field: String, beside main: NSWindow
+    ) -> NSWindow {
+      let hostingView = NSHostingView(
+        rootView: HabitDetailProperties.editor(
+          field, store: store, habit: habit,
+          reminderPolicies: store.habitDetail(for: habit.id)?.reminderPolicies ?? [],
+          rhythmPreview: .constant(nil), goalDraft: .constant(nil), saveGoal: { _ in }
+        )
+        .padding(LorvexDesign.Spacing.m)
+        .frame(minWidth: 280)
+        .fixedSize()
+        .background(.windowBackground)
+        .environment(\.inspectorPanelInPopover, true)
+        .defaultAppStorage(previewDefaults))
       let size = hostingView.fittingSize
       let screen = main.screen?.visibleFrame ?? main.frame
       let origin = NSPoint(x: screen.midX - size.width / 2, y: screen.midY - size.height / 2)

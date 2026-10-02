@@ -104,7 +104,7 @@ public struct MobileHabitDraft: Equatable, Sendable {
   public var dayOfMonth: Int
 
   public init(
-    name: String = "", cue: String = "", targetCountText: String = "1",
+    name: String = "", cue: String = "", targetCountText: String = LorvexNumberInput.text(for: 1),
     milestoneTargetText: String = "", color: String? = nil, icon: String? = nil,
     cadenceMode: MobileHabitCadenceMode = .daily,
     weeklyStyle: MobileHabitWeeklyStyle = .specificDays,
@@ -128,8 +128,8 @@ public struct MobileHabitDraft: Equatable, Sendable {
   public init(habit: LorvexHabit) {
     self.name = habit.name
     self.cue = habit.cue ?? ""
-    self.targetCountText = "\(habit.targetCount)"
-    self.milestoneTargetText = habit.milestoneTarget.map { "\($0)" } ?? ""
+    self.targetCountText = LorvexNumberInput.text(for: habit.targetCount)
+    self.milestoneTargetText = habit.milestoneTarget.map { LorvexNumberInput.text(for: $0) } ?? ""
     self.color = habit.color
     self.icon = habit.icon
     // Map the stored cadence back onto the editor. A weekly habit with no pinned
@@ -224,15 +224,14 @@ public struct MobileHabitDraft: Equatable, Sendable {
   }
 
   public var targetCount: Int? {
-    Int(targetCountText.trimmingCharacters(in: .whitespacesAndNewlines))
+    LorvexNumberInput.integer(from: targetCountText)
   }
 
   /// The parsed milestone goal: a positive integer, or nil when the field is
   /// empty or not a positive number (an optional personal goal, so a blank or
   /// invalid field simply means "no goal").
   public var milestoneTarget: Int? {
-    let text = milestoneTargetText.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard let value = Int(text), value > 0 else { return nil }
+    guard let value = LorvexNumberInput.integer(from: milestoneTargetText), value > 0 else { return nil }
     return value
   }
 

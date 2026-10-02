@@ -226,7 +226,7 @@ struct MobileTodaySuggestedTimesRows: View {
 
     LorvexProposedScheduleRows(
       proposal: proposal, dayRows: dayRows, wontFitLabel: MobileTodayCalmCopy.wontFit,
-      busyLabel: MobileTodayCalmCopy.busy, durationLabel: MobileTodayCalmCopy.duration)
+      busyLabel: MobileTodayCalmCopy.busy, durationLabel: { LorvexDurationFormat.minutes($0) })
 
     controls
       .padding(.horizontal, LorvexTimelineMetrics.horizontalPadding)

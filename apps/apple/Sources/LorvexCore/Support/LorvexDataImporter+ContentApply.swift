@@ -4,10 +4,10 @@ import LorvexDomain
 extension LorvexDataImporter {
   static func applyMemory(
     _ entries: [ExportMemoryEntry], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     let importer = core as? any LorvexNativeImportServicing
     for entry in entries {
       do {
@@ -26,8 +26,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .memory, recordRef: entry.key, message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .memory, record: .named(id: entry.key, name: entry.key),
+            outcome: .notImported, detail: error.localizedDescription))
       }
     }
     return (
@@ -37,10 +38,10 @@ extension LorvexDataImporter {
 
   static func applyDailyReviews(
     _ reviews: [ExportDailyReview], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     let importer = core as? any LorvexNativeImportServicing
     for review in reviews {
       do {
@@ -81,9 +82,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .dailyReviews, recordRef: review.date,
-            message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .dailyReviews, record: .day(review.date), outcome: .notImported,
+            detail: error.localizedDescription))
       }
     }
     return (
@@ -94,10 +95,10 @@ extension LorvexDataImporter {
 
   static func applyPreferences(
     _ preferences: [ExportPreference], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     for preference in preferences {
       // Device-local preferences encode one device's private/config state, and
       // control-plane preferences have dedicated account metadata. An import
@@ -117,9 +118,9 @@ extension LorvexDataImporter {
         imported += 1
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .preferences, recordRef: preference.key,
-            message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .preferences, record: .named(id: preference.key, name: preference.key),
+            outcome: .notImported, detail: error.localizedDescription))
       }
     }
     return (
@@ -130,12 +131,12 @@ extension LorvexDataImporter {
 
   static func applyDailyBriefings(
     _ briefings: [ExportDailyBriefing], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
     guard let importer = core as? any LorvexNativeImportServicing else {
       let errors = briefings.map {
-        LorvexImportError(
-          category: .dailyBriefings, recordRef: $0.date,
-          message: "Daily briefing import is unsupported by this backend.")
+        LorvexImportIssue(
+          category: .dailyBriefings, record: .day($0.date), outcome: .notImported,
+          detail: "Daily briefing import is unsupported by this backend.")
       }
       return (
         LorvexImportCategoryResult(
@@ -145,7 +146,7 @@ extension LorvexDataImporter {
     }
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     for briefing in briefings {
       do {
         // Atomic non-destructive restore: skip a date a concurrent write already
@@ -159,9 +160,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .dailyBriefings, recordRef: briefing.date,
-            message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .dailyBriefings, record: .day(briefing.date), outcome: .notImported,
+            detail: error.localizedDescription))
       }
     }
     return (
@@ -170,15 +171,20 @@ extension LorvexDataImporter {
     )
   }
 
+  /// Restore task–event links. `taskTitles` maps the backup's task ids to their
+  /// titles, so a link that fails is named by its task.
   static func applyTaskCalendarEventLinks(
-    _ links: [ExportTaskCalendarEventLink], using core: any LorvexCoreServicing
-  ) async -> (LorvexImportCategoryResult, [LorvexImportError]) {
+    _ links: [ExportTaskCalendarEventLink], taskTitles: [String: String],
+    using core: any LorvexCoreServicing
+  ) async -> (LorvexImportCategoryResult, [LorvexImportIssue]) {
+    func record(_ link: ExportTaskCalendarEventLink) -> LorvexImportIssue.Record {
+      .named(id: "\(link.taskID):\(link.calendarEventID)", name: taskTitles[link.taskID])
+    }
     guard let importer = core as? any LorvexNativeImportServicing else {
       let errors = links.map {
-        LorvexImportError(
-          category: .taskCalendarEventLinks,
-          recordRef: "\($0.taskID):\($0.calendarEventID)",
-          message: "Task-calendar link import is unsupported by this backend.")
+        LorvexImportIssue(
+          category: .taskCalendarEventLinks, record: record($0), outcome: .notImported,
+          detail: "Task-calendar link import is unsupported by this backend.")
       }
       return (
         LorvexImportCategoryResult(
@@ -188,7 +194,7 @@ extension LorvexDataImporter {
     }
     var imported = 0
     var skipped = 0
-    var errors: [LorvexImportError] = []
+    var errors: [LorvexImportIssue] = []
     for link in links {
       do {
         // The restore runs under `import` provenance, so `importTaskCalendarEventLink`
@@ -201,10 +207,9 @@ extension LorvexDataImporter {
         }
       } catch {
         errors.append(
-          LorvexImportError(
-            category: .taskCalendarEventLinks,
-            recordRef: "\(link.taskID):\(link.calendarEventID)",
-            message: error.localizedDescription))
+          LorvexImportIssue(
+            category: .taskCalendarEventLinks, record: record(link), outcome: .notImported,
+            detail: error.localizedDescription))
       }
     }
     return (

@@ -47,8 +47,11 @@ struct LorvexTaskFieldChoicesTests {
   func lengthTextAndRing() {
     #expect(LorvexTaskFieldChoices.minutes(fromText: " 45 ") == 45)
     #expect(LorvexTaskFieldChoices.minutes(fromText: "soon") == 0)
-    #expect(LorvexTaskFieldChoices.text(forMinutes: 30) == "30")
+    #expect(LorvexTaskFieldChoices.text(forMinutes: 30, locale: Locale(identifier: "en_US")) == "30")
+    #expect(LorvexTaskFieldChoices.text(forMinutes: 30, locale: Locale(identifier: "ar_SA")) == "٣٠")
     #expect(LorvexTaskFieldChoices.text(forMinutes: 0) == "")
+    // The Arabic number pad types Arabic-Indic digits.
+    #expect(LorvexTaskFieldChoices.minutes(fromText: "٤٥") == 45)
     #expect(LorvexTaskFieldChoices.lengthFraction(60) == 0.5)
     #expect(LorvexTaskFieldChoices.lengthFraction(-5) == 0)
     #expect(LorvexTaskFieldChoices.lengthFraction(500) == 1)

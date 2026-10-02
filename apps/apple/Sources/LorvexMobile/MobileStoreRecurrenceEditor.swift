@@ -27,7 +27,7 @@ struct MobileStoreRecurrenceEditor: View {
                 format: String(
                   localized: "recurrence.currently", defaultValue: "Currently %@",
                   table: "Localizable", bundle: MobileL10n.bundle),
-                recurrence.mobileLocalizedDisplaySummary(
+                recurrence.localizedDisplaySummary(
                   exceptions: store.selectedTask?.recurrenceExceptions ?? [])))
           }
         }
@@ -45,10 +45,10 @@ struct MobileStoreRecurrenceEditor: View {
               selection: $store.taskDetailRecurrenceAnchor
             ) {
               ForEach(TaskRecurrenceRule.Anchor.allCases, id: \.self) { anchor in
-                Text(anchor.mobileLocalizedDisplayName).tag(anchor)
+                Text(anchor.localizedDisplayName).tag(anchor)
               }
             }
-            Text(store.taskDetailRecurrenceAnchor.mobileLocalizedHint)
+            Text(store.taskDetailRecurrenceAnchor.localizedHint)
               .font(LorvexDesign.Typography.tertiaryText)
               .foregroundStyle(.secondary)
 
@@ -58,7 +58,7 @@ struct MobileStoreRecurrenceEditor: View {
                 bundle: MobileL10n.bundle), selection: frequencyBinding
             ) {
               ForEach(TaskRecurrenceRule.Frequency.allCases, id: \.self) { frequency in
-                Text(frequency.mobileLocalizedDisplayName).tag(frequency)
+                Text(frequency.localizedDisplayName).tag(frequency)
               }
             }
             .pickerStyle(.menu)
@@ -67,7 +67,7 @@ struct MobileStoreRecurrenceEditor: View {
               value: intervalBinding,
               in: 1...TaskRecurrenceEditorDraft.maximumInterval
             ) {
-              Text(store.taskDetailRecurrenceFrequency.mobileLocalizedEveryInterval(intervalBinding.wrappedValue))
+              Text(store.taskDetailRecurrenceFrequency.localizedEveryInterval(intervalBinding.wrappedValue))
             }
           }
 

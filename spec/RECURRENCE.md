@@ -14,9 +14,9 @@ contract.
 ## Canonical shape
 
 A JSON object whose keys are a subset of the RFC 5545-aligned set plus the Lorvex
-`ANCHOR` extension. Keys are emitted in UTF-8 byte-sorted order (matching
-serde_json's `BTreeMap` serialization), defaults are applied, and unknown keys are
-rejected at normalization time.
+`ANCHOR` extension. Keys are emitted in UTF-8 byte-sorted order (the order
+`LorvexDomain.canonicalizeJSON` produces), defaults are applied, and unknown keys
+are rejected at normalization time.
 
 | Key          | Type            | Notes |
 |--------------|-----------------|-------|
@@ -59,14 +59,14 @@ Rules:
 
 ## Companion-implementation alignment (not a byte-lock)
 
-`ANCHOR` is an Apple concept; the Swift core (`apps/apple`) is its canonical
-implementation. A companion implementation that wants completion-anchored
-recurrence maps these *semantics* — add `ANCHOR` to its known-key set with the
-`schedule`→omitted / `completion` normalization, and branch its successor's
-next-due computation on the completion anchor. There is no parity *obligation*
-and nothing enforces cross-runtime schema equality: the apps are directionally
-aligned through this behavior contract, not byte-locked, and cross-platform data
-movement is AI-reconciled best-effort.
+`ANCHOR` is an Apple concept; the pure-Swift `LorvexAppleCore` package
+(`apps/apple/core`) is its canonical implementation. A companion implementation
+that wants completion-anchored recurrence maps these *semantics* — add `ANCHOR`
+to its known-key set with the `schedule`→omitted / `completion` normalization,
+and branch its successor's next-due computation on the completion anchor. There
+is no parity *obligation* and nothing enforces cross-runtime schema equality: the
+apps are directionally aligned through this behavior contract, not byte-locked,
+and cross-platform data movement is AI-reconciled best-effort.
 
 An `ANCHOR=completion` rule read by an implementation that does not model the
 extension degrades gracefully — the unknown key is ignored on read, so the rule

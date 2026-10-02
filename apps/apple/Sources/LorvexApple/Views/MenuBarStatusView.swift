@@ -31,7 +31,8 @@ struct MenuBarStatusView: View {
 
   var body: some View {
     TimelineView(.everyMinute) { _ in
-      panel(store.calmToday, nowMinutes: store.nowMinutesInProductDay)
+      let nowMinutes = store.nowMinutesInProductDay
+      panel(store.calmToday(nowMinutes: nowMinutes), nowMinutes: nowMinutes)
     }
     .frame(width: 340)
     .tint(.accentColor)
@@ -74,7 +75,7 @@ struct MenuBarStatusView: View {
             MenuBarTodayContent(
               page: page, nowMinutes: nowMinutes,
               habits: store.habits?.habits.filter { !$0.archived } ?? [],
-              isOverdue: { $0.isOverdue(now: LorvexPreviewClock.now(in: .current), calendar: .current) },
+              isOverdue: { store.isOverdue($0) },
               complete: { task in
                 Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
               },

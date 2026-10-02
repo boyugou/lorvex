@@ -102,21 +102,16 @@ extension AppStore {
         preservingDirtyTaskID: dirtyTaskIDToPreserve(after: taskDetailReload))
     }
 
-    // Derived surfaces. Read the task pool once (when needed) and feed both the
-    // task Spotlight index and the shared reminder/badge re-plan, mirroring the
-    // fan-out's single-read reuse.
-    if domains.contains(.tasks) || InboundReloadScope.recomputesReminders(domains) {
-      if let surfaceTasks = await appleSurfaceTasks() {
-        if domains.contains(.tasks) {
-          await reindexTasksForSpotlight(tasks: surfaceTasks)
-        }
-        if InboundReloadScope.recomputesReminders(domains) {
-          await rescheduleReminders(tasks: surfaceTasks)
-        }
-        if InboundReloadScope.recomputesBadge(domains) {
-          await updateBadge(tasks: surfaceTasks)
-        }
-      }
+    // Derived surfaces, each from its own read as in the refresh fan-out, so a
+    // failed read leaves only that surface as it was.
+    if domains.contains(.tasks) {
+      await reindexTasksForSpotlight()
+    }
+    if InboundReloadScope.recomputesReminders(domains) {
+      await rescheduleReminders()
+    }
+    if InboundReloadScope.recomputesBadge(domains) {
+      await updateBadge()
     }
     if InboundReloadScope.republishesWidget(domains) {
       try? await publishWidgetSnapshot()

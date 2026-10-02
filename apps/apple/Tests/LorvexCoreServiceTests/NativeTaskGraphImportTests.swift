@@ -15,6 +15,10 @@ final class NativeTaskGraphImportTests: XCTestCase {
   private static let recurrence = "{\"FREQ\":\"DAILY\",\"INTERVAL\":1}"
   private static let listID = "11111111-1111-4111-8111-111111111111"
   private static let tagID = "22222222-2222-4222-8222-222222222222"
+  /// What the import summary tells the person about a backup that fails the
+  /// whole-backup preflight; the specific finding is in the error's diagnostic.
+  private static let damagedBackupMessage =
+    "This backup is damaged and can’t be imported. Export it again on the device it came from, then try again."
 
   private func makeService() throws -> SwiftLorvexCoreService {
     let schemaURL = URL(fileURLWithPath: #filePath)
@@ -140,6 +144,21 @@ final class NativeTaskGraphImportTests: XCTestCase {
       reminders: reminders,
       tombstones: tombstones,
       payloadShadows: payloadShadows)
+  }
+
+  /// Asserts that the whole-backup preflight rejects `payload` with a
+  /// diagnostic containing `finding`: the decoder-level detail that is logged
+  /// but never shown to the person importing.
+  private func assertPreflightRejects(
+    _ payload: LorvexDataExportPayload, finding: String,
+    file: StaticString = #filePath, line: UInt = #line
+  ) {
+    XCTAssertThrowsError(try BackupV1PayloadPreflight.validate(payload), file: file, line: line) {
+      error in
+      let diagnostic =
+        (error as? LorvexDataImporter.ImportError)?.diagnosticDescription ?? "\(error)"
+      XCTAssertTrue(diagnostic.contains(finding), diagnostic, file: file, line: line)
+    }
   }
 
   private func portableTask(
@@ -612,7 +631,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Portable fallback failed: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Portable fallback failed: \(summary.issues)")
     XCTAssertEqual(summary.results.first { $0.category == .tasks }?.imported, 1)
     let restored = try await service.loadTask(id: importedID)
     XCTAssertEqual(restored.title, "Shared title")
@@ -651,7 +670,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Exact import failed: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Exact import failed: \(summary.issues)")
     XCTAssertEqual(summary.totalImported, 3)
     let restored = try await service.loadTask(id: taskID)
     XCTAssertEqual(restored.title, "Shared exact title")
@@ -686,7 +705,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Missing roots should fall back: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Missing roots should fall back: \(summary.issues)")
     XCTAssertEqual(summary.totalImported, 1)
     let restored = try await service.loadTask(id: importedID)
     XCTAssertEqual(restored.title, "Shared missing-root title")
@@ -705,8 +724,8 @@ final class NativeTaskGraphImportTests: XCTestCase {
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
     XCTAssertEqual(summary.totalImported, 0)
-    XCTAssertTrue(
-      summary.errors.contains { $0.message.contains("identity sets differ") })
+    XCTAssertEqual(summary.rejection?.localizedDescription, Self.damagedBackupMessage)
+    assertPreflightRejects(payload, finding: "identity sets differ")
     let counts = try service.read { db -> (Int, Int, Int) in
       (
         try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tasks") ?? -1,
@@ -733,7 +752,8 @@ final class NativeTaskGraphImportTests: XCTestCase {
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
     XCTAssertEqual(summary.totalImported, 0)
-    XCTAssertTrue(summary.errors.contains { $0.message.contains("contradictory") })
+    XCTAssertEqual(summary.rejection?.localizedDescription, Self.damagedBackupMessage)
+    assertPreflightRejects(payload, finding: "contradictory task representations")
     XCTAssertEqual(
       try service.read { db in
         try Int.fetchOne(
@@ -760,7 +780,8 @@ final class NativeTaskGraphImportTests: XCTestCase {
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
     XCTAssertEqual(summary.totalImported, 0)
-    XCTAssertTrue(summary.errors.contains { $0.message.contains("invalid native task graph") })
+    XCTAssertEqual(summary.rejection?.localizedDescription, Self.damagedBackupMessage)
+    assertPreflightRejects(payload, finding: "invalid native task graph")
     XCTAssertEqual(
       try service.read { db in
         try Int.fetchOne(
@@ -793,7 +814,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Portable restore failed: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Portable restore failed: \(summary.issues)")
     XCTAssertEqual(summary.totalImported, 1)
     let restoredTag = try service.read { db in
       try Row.fetchOne(

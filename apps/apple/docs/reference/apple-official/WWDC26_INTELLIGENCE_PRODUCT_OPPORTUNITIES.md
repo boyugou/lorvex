@@ -9,6 +9,10 @@ assessment, not an implementation request. The OS 27 SDKs and several APIs are
 beta, and Siri AI is announced for a user beta later in 2026, initially in
 English. None of these capabilities should become a 1.0 data-schema dependency.
 
+Status: the recommendations below that keep an iOS 18 / macOS 15 floor assume
+that lower baseline. Lorvex's floor in force is macOS 26, iOS/iPadOS 26, and
+watchOS 26.
+
 ## Primary Apple Sources
 
 - [WWDC26 Apple Intelligence guide](https://developer.apple.com/wwdc26/guides/apple-intelligence/)
@@ -125,8 +129,8 @@ base will remain materially broader than the model-eligible subset.
 
 The repository already has unusually strong prerequisites:
 
-- current platform declarations are macOS 15, iOS 18, and watchOS 11, so OS 27
-  can be an availability-gated enhancement;
+- current platform declarations are macOS 26, iOS/iPadOS 26, and watchOS 26, so
+  OS 27 can be an availability-gated enhancement;
 - tasks, lists, habits, calendar events, and memory already have stable App
   Entity identities;
 - the system-intent package exposes a broad set of reads and mutations;

@@ -25,7 +25,7 @@ extension LorvexWatchStore {
       let current = habits[index]
       habits[index] = WidgetSnapshot.HabitSummary(
         id: current.id, name: current.name, icon: current.icon,
-        completedToday: current.completedToday + 1, target: current.target)
+        completedToday: current.completedToday + 1, target: current.target, color: current.color)
     case .captureTask:
       break
     }

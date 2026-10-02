@@ -39,6 +39,9 @@ struct AppStoreHabitsStorage {
   /// Real per-habit stats (streak, rate, recent completions) for the cards —
   /// loaded from the core so cards never show estimated/fabricated values.
   var habitStatsByID: [LorvexHabit.ID: HabitStats] = [:]
+  /// The habit whose inspector should put the cursor in its name field: set
+  /// by a habit card's Edit command, cleared by the inspector once focused.
+  var habitNameFocusRequest: LorvexHabit.ID?
 
   mutating func reset() {
     habits = nil
@@ -56,5 +59,6 @@ struct AppStoreHabitsStorage {
     draftHabitReminderTimes = []
     detailsByHabitID = [:]
     habitStatsByID = [:]
+    habitNameFocusRequest = nil
   }
 }

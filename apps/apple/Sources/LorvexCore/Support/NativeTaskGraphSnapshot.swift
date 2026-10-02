@@ -104,7 +104,6 @@ enum NativeTaskGraphContract {
     .taskCalendarEventLink,
   ]
 
-  static let syncedEntityKindSet = Set(syncedEntityKinds)
   static let syncedEntityTypes = syncedEntityKinds.map(\.asString)
 }
 

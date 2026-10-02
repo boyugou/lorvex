@@ -7,7 +7,7 @@ extension TaskDetailView {
     let totalCount = task.checklistItems.count
     let completionFraction = totalCount == 0 ? 0 : Double(completedCount) / Double(totalCount)
 
-    return TaskDetailPanel(accessibilityIdentifier: "task.detail.checklist.panel") {
+    return InspectorPanel(accessibilityIdentifier: "task.detail.checklist.panel") {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
           Label(

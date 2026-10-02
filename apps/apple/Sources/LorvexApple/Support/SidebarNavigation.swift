@@ -3,8 +3,9 @@ import SwiftUI
 
 extension SidebarSelection {
   /// The shared enum's English name ("Calendar", "Tasks", "Reviews"). The command
-  /// palette matches it alongside ``macOSLocalizedTitle``, so a search for the
-  /// data's plain name still finds the destination the sidebar calls Plan.
+  /// palette matches it alongside ``macOSLocalizedTitle``, so the plain English
+  /// name finds a destination in every language, including the ones the sidebar
+  /// names differently in English ("Tasks" finds All Tasks).
   var macOSDisplayTitle: String {
     title
   }

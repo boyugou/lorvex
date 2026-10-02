@@ -2,27 +2,88 @@ import Foundation
 import LorvexCore
 
 enum HabitDisplayText {
-  /// One-line cadence + requirement summary for the inspector's lead chip, e.g.
-  /// "Daily · 6×/day", "Mon · Wed · Fri", "3×/week", or "Day 1". Unlike
-  /// ``frequency(_:)`` (which names only the rhythm) this folds in the weekday
-  /// set / per-week count / monthly day and the per-day `targetCount`, so the
-  /// chip states exactly what completing the habit requires. Reads the typed
-  /// cadence fields directly (weekdays Monday-first 0=Mon … 6=Sun).
-  static func requirementSummary(_ habit: LorvexHabit) -> String {
+  /// How a habit repeats, as the habit inspector's Repeat row reads it:
+  /// "Daily", "6 times a day", "Mon, Wed, Fri", "Mon, Wed, Fri · 2 times a
+  /// day", "3 times a week", or "Monthly on day 15". A weekly habit on all
+  /// seven days, or on none, reads as daily. Weekdays are stored Monday-first
+  /// (0 = Mon … 6 = Sun) and listed from the first day of the user's week.
+  static func repeatSummary(_ habit: LorvexHabit) -> String {
     let count = max(habit.targetCount, 1)
     switch habit.frequencyType {
+    case "times_per_week":
+      return String(
+        localized: "habit_detail.repeat.times_per_week",
+        defaultValue: "\(habit.perPeriodTarget ?? count) times a week",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case "monthly":
+      return String(
+        localized: "habit_detail.repeat.monthly",
+        defaultValue: "Monthly on day \(habit.dayOfMonth ?? 1)",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     case "weekly":
       if let days = weekdaySummary(habit.weekdays) {
-        return count > 1 ? "\(days) · \(perDay(count))" : days
+        guard count > 1 else { return days }
+        return String(
+          localized: "habit_detail.repeat.days_count",
+          defaultValue: "\(days) · \(count) times a day",
+          table: "Localizable", bundle: LorvexL10n.bundle)
       }
-      return count > 1 ? "\(everyDay()) · \(perDay(count))" : everyDay()
-    case "times_per_week":
-      return perWeek(habit.perPeriodTarget ?? count)
-    case "monthly":
-      let base = habit.dayOfMonth.map(monthDay) ?? monthlyLabel()
-      return count > 1 ? "\(base) · \(perMonth(count))" : base
+      return dailySummary(count: count)
     default:
-      return count > 1 ? "\(everyDay()) · \(perDay(count))" : everyDay()
+      return dailySummary(count: count)
+    }
+  }
+
+  // MARK: - Period progress
+
+  /// A habit's current period once its plan is met: "Done today", "Done this
+  /// week", or "Done this month".
+  static func periodDoneLabel(_ period: HabitRhythmStrip.Granularity) -> String {
+    switch period {
+    case .day:
+      String(localized: "habits.meter.done.day", defaultValue: "Done today", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      String(localized: "habits.meter.done.week", defaultValue: "Done this week", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .month:
+      String(localized: "habits.meter.done.month", defaultValue: "Done this month", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
+
+  /// A habit's current period before its plan is met, for a plan of one
+  /// check-in: "Not done yet today", "Not done yet this week", or "Not done
+  /// yet this month".
+  static func periodNotYetLabel(_ period: HabitRhythmStrip.Granularity) -> String {
+    switch period {
+    case .day:
+      String(localized: "habit_detail.status.not_yet.day", defaultValue: "Not done yet today", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      String(localized: "habit_detail.status.not_yet.week", defaultValue: "Not done yet this week", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .month:
+      String(localized: "habit_detail.status.not_yet.month", defaultValue: "Not done yet this month", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
+
+  /// A habit's progress through its current period's plan: "3 of 8 today",
+  /// "1 of 3 this week", or "2 of 4 this month".
+  static func periodCountLabel(completed: Int, required: Int, period: HabitRhythmStrip.Granularity)
+    -> String
+  {
+    switch period {
+    case .day:
+      String(
+        localized: "habit_detail.status.count.day",
+        defaultValue: "\(completed) of \(required) today",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      String(
+        localized: "habit_detail.status.count.week",
+        defaultValue: "\(completed) of \(required) this week",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case .month:
+      String(
+        localized: "habit_detail.status.count.month",
+        defaultValue: "\(completed) of \(required) this month",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 
@@ -91,25 +152,16 @@ enum HabitDisplayText {
     switch frequencyType {
     case "monthly":
       return String(
-        format: String(
-          localized: "habits.milestone.value.streak_months", defaultValue: "%lld-month streak",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        value)
+        localized: "habits.milestone.value.streak_months", defaultValue: "\(value)-month streak",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     case "weekly", "times_per_week", "custom":
       return String(
-        format: String(
-          localized: "habits.milestone.value.streak_weeks", defaultValue: "%lld-week streak",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        value)
+        localized: "habits.milestone.value.streak_weeks", defaultValue: "\(value)-week streak",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     default:
       return String(
-        format: String(
-          localized: "habits.milestone.value.streak_days", defaultValue: "%lld-day streak",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        value)
+        localized: "habits.milestone.value.streak_days", defaultValue: "\(value)-day streak",
+        table: "Localizable", bundle: LorvexL10n.bundle)
     }
   }
 
@@ -129,56 +181,26 @@ enum HabitDisplayText {
       phrase, habitName)
   }
 
-  // MARK: - Requirement summary helpers
+  // MARK: - Repeat summary helpers
 
-  private static func everyDay() -> String {
-    String(localized: "habits.frequency.daily", defaultValue: "Daily", table: "Localizable", bundle: LorvexL10n.bundle)
+  private static func dailySummary(count: Int) -> String {
+    guard count > 1 else {
+      return String(localized: "habits.frequency.daily", defaultValue: "Daily", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+    return String(
+      localized: "habit_detail.repeat.daily_count", defaultValue: "\(count) times a day",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
-  private static func monthlyLabel() -> String {
-    String(localized: "habits.frequency.monthly", defaultValue: "Monthly", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  private static func perDay(_ n: Int) -> String {
-    String(format: String(
-      localized: "habits.requirement.per_day", defaultValue: "%lld×/day",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle), n)
-  }
-
-  private static func perWeek(_ n: Int) -> String {
-    String(format: String(
-      localized: "habits.requirement.per_week", defaultValue: "%lld×/week",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle), n)
-  }
-
-  private static func perMonth(_ n: Int) -> String {
-    String(format: String(
-      localized: "habits.requirement.per_month", defaultValue: "%lld×/month",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle), n)
-  }
-
-  private static func monthDay(_ day: Int) -> String {
-    String(format: String(
-      localized: "habits.requirement.month_day", defaultValue: "Day %lld",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle), day)
-  }
-
-  /// Localized "Mon · Wed · Fri" for a weekday set (Monday-first 0=Mon … 6=Sun);
-  /// "Daily" when all seven are present; `nil` when the set is empty/absent.
+  /// A weekday set (Monday-first 0=Mon … 6=Sun) named as a task's repeat
+  /// names its weekdays ("Mon, Wed, Fri", from the first day of the user's
+  /// week); `nil` when the set is empty, absent, or all seven days.
   private static func weekdaySummary(_ weekdays: [Int]?) -> String? {
-    guard let indices = weekdays?.filter({ (0...6).contains($0) }).sorted(), !indices.isEmpty else {
+    guard let indices = weekdays.map({ Set($0.filter { (0...6).contains($0) }) }), !indices.isEmpty,
+      indices.count < 7
+    else {
       return nil
     }
-    if indices.count == 7 { return everyDay() }
-    let symbols = Calendar.current.shortWeekdaySymbols
-    let names = indices.compactMap { idx -> String? in
-      let i = (idx + 1) % 7
-      return symbols.indices.contains(i) ? symbols[i] : nil
-    }
-    return names.joined(separator: " · ")
+    return LorvexRecurrenceWeekdays.summary(mondayFirst: Array(indices))
   }
 }

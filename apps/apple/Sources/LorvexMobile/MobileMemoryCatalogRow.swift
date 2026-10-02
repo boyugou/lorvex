@@ -11,10 +11,10 @@ struct MobileMemoryCatalogRow: View {
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.m) {
       VStack(alignment: .leading, spacing: 2) {
-        Text(entry.displayTitle)
+        Text(userContent: entry.displayTitle)
           .font(LorvexDesign.Typography.primaryText)
           .lineLimit(2)
-        Text(entry.content)
+        Text(userContent: entry.content)
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .lineLimit(2)

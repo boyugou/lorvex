@@ -17,8 +17,10 @@ Last verified: 2026-07-10
 - Keep OS 26 features behind a small, centralized availability layer until the
   version-15/18 generation is retired.
 
-The repository now declares macOS 15, iOS 18, and watchOS 11 in its
-Swift packages, XcodeGen deployment settings, and relevant static Info plists.
+The repository declares macOS 26, iOS/iPadOS 26, and watchOS 26 in its
+Swift packages, XcodeGen deployment settings, and relevant static Info plists;
+that is the floor in force. The analysis below weighs the macOS 15 / iOS 18 /
+watchOS 11 baseline recommended above.
 
 ## SDK Versus Minimum OS
 

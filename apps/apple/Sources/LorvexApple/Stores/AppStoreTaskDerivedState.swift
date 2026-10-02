@@ -76,13 +76,6 @@ extension AppStore {
     return selectedTask.status.isActive
   }
 
-  /// Defer is offered for the same non-terminal tasks as completion (never a
-  /// completed or cancelled task). Shared by the Task menu (⇧⌘D) and the
-  /// menu-bar action so the two enablement checks can't disagree.
-  var selectedTaskCanDefer: Bool {
-    selectedTaskCanComplete
-  }
-
   var selectedTaskCanReopen: Bool {
     guard let selectedTask else { return false }
     return selectedTask.status.isResolved

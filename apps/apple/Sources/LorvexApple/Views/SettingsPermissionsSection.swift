@@ -62,7 +62,9 @@ struct SettingsPermissionsSection: View {
       Task { await refresh() }
     }
 
-    Section(String(localized: "settings.permissions.badge_section", defaultValue: "Badge", table: "Localizable", bundle: LorvexL10n.bundle)) {
+    // Each switch names its setting, so its group carries no header, and the
+    // explanation is the footer directly under it.
+    Section {
       Toggle(isOn: badgeBinding) {
         Text(LocalizedStringResource(
           "settings.permissions.badge_due_tasks",
@@ -72,21 +74,16 @@ struct SettingsPermissionsSection: View {
         ))
       }
       .accessibilityIdentifier("macSettings.badgeEnabled")
+    } footer: {
       Text(LocalizedStringResource(
         "settings.permissions.badge_footer",
         defaultValue: "Shows the number of overdue and due-today open tasks on the Dock icon.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
     }
 
-    Section(String(
-      localized: "settings.permissions.notification_content_section", defaultValue: "Notification Content",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle
-    )) {
+    Section {
       Toggle(isOn: showTaskNotesBinding) {
         Text(LocalizedStringResource(
           "settings.permissions.show_task_notes",
@@ -96,14 +93,13 @@ struct SettingsPermissionsSection: View {
         ))
       }
       .accessibilityIdentifier("macSettings.showTaskNotesInNotifications")
+    } footer: {
       Text(LocalizedStringResource(
         "settings.permissions.show_task_notes_footer",
         defaultValue: "When off, reminders show only the task title — never your notes — on the lock screen and banners.",
         table: "Localizable",
         bundle: LorvexL10n.bundle
       ))
-        .font(LorvexDesign.Typography.tertiaryText)
-        .foregroundStyle(.secondary)
     }
     .task { showTaskNotesInNotifications = await store.loadShowTaskNotesInNotificationsPreference() }
   }

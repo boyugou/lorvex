@@ -108,13 +108,18 @@ struct MobileTaskActionSection: View {
 }
 
 /// One action tile: the symbol over its name in the tile's tint, on the card
-/// surface, the full width of its grid cell.
+/// surface, the full width of its grid cell. A name of several words wraps
+/// between them onto a second line; a name of one word, hyphenated or not
+/// ("Когда-нибудь"), stays on one line and shrinks to fit rather than
+/// breaking inside the word.
 struct MobileTaskActionTile: View {
   let title: String
   let systemImage: String
   var tint: Color = LorvexDesign.Palette.accent
 
   @Environment(\.isEnabled) private var isEnabled
+
+  private var isOneWord: Bool { !title.contains(where: \.isWhitespace) }
 
   var body: some View {
     VStack(spacing: LorvexDesign.Spacing.xs) {
@@ -123,7 +128,8 @@ struct MobileTaskActionTile: View {
         .frame(height: 22)
       Text(title)
         .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-        .lineLimit(2)
+        .lineLimit(isOneWord ? 1 : 2)
+        .minimumScaleFactor(isOneWord ? 0.7 : 1)
         .multilineTextAlignment(.center)
     }
     .foregroundStyle(tint)

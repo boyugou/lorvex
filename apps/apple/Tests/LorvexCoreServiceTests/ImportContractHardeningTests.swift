@@ -96,7 +96,7 @@ final class ImportContractHardeningTests: XCTestCase {
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
     XCTAssertEqual(summary.totalImported, 0)
-    XCTAssertTrue(summary.errors.contains { $0.recordRef == taskID })
+    XCTAssertTrue(summary.issues.contains { $0.recordID == taskID })
     XCTAssertEqual(
       try service.read { db in try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM tasks") },
       0)
@@ -120,7 +120,7 @@ final class ImportContractHardeningTests: XCTestCase {
     let summary = await LorvexDataImporter.apply(
       plan: LorvexDataImporter.plan(for: payload), payload: payload, using: service)
 
-    XCTAssertTrue(summary.errors.isEmpty, "Exact lifecycle restore failed: \(summary.errors)")
+    XCTAssertTrue(summary.issues.isEmpty, "Exact lifecycle restore failed: \(summary.issues)")
     let restored = try await service.loadTask(id: startedID)
     XCTAssertEqual(restored.status, .inProgress)
     XCTAssertEqual(restored.dependsOn, [blockerID])

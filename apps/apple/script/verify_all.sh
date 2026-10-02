@@ -44,13 +44,13 @@ swift build --product "$MCP_HOST_PRODUCT"
 # test dependency closure and its `<Package>_<Target>.bundle` set. `swift test`
 # below reuses this build incrementally.
 swift build --build-tests
-# Compile the String Catalogs (`*.xcstrings`) into per-language `.lproj/*.strings`
-# tables inside the freshly built resource bundles. `swift build` copies the raw
-# catalog but never compiles it, so without this step the LocalizationTests below
-# load no compiled tables on a cold checkout (`.lproj` lookup → nil, plurals render
-# raw `%lld`, non-English falls back to English). Strict (no `--best-effort`): a
-# missing `xcstringstool` or zero catalogs fails the gate rather than shipping an
-# untested localization path.
+# Make sure the freshly built resource bundles hold compiled per-language
+# `.lproj/*.strings` tables. Swift Build compiles the String Catalogs itself; the
+# native build system only copies the raw `*.xcstrings`, and without compiled tables
+# the LocalizationTests below would load nothing (`.lproj` lookup → nil, plurals
+# render raw `%lld`, non-English falls back to English). Strict (no `--best-effort`):
+# bundles with neither compiled tables nor catalogs, or catalogs with no
+# `xcstringstool`, fail the gate rather than ship an untested localization path.
 ./script/compile_xcstrings.sh
 swift test
 # The Swift core package is the parity oracle for the app backend; its tests
@@ -75,6 +75,7 @@ python3 -m py_compile \
   script/verify_hotspots.py \
   script/verify_ios_ipa.py \
   script/verify_localization_catalog.py \
+  script/verify_localization_arguments.py \
   script/verify_sqlite_portability.py \
   script/verify_macho_closure.py \
   script/verify_macho_distribution.py \
@@ -134,6 +135,9 @@ python3 -m unittest discover -s script -p 'test_*.py'
 ./script/verify_mcp_tool_catalog.py
 ./script/verify_mcp_tool_manifest.py
 ./script/verify_localization_catalog.py
+# Each localized string's interpolated arguments against its catalog text, read
+# from the compiler's own extraction (a separate, incremental macOS build).
+./script/verify_localization_arguments.py
 ./script/verify_acknowledgments.py
 ./script/verify_privacy_manifests.py
 ./script/verify_system_entrypoints.py

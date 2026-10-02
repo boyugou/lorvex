@@ -13,6 +13,32 @@ public func lorvexUnbreakable(_ text: String) -> String {
     .replacingOccurrences(of: "\u{2009}–", with: "\u{202F}–")
 }
 
+/// `text` kept on one line wherever it is set: its spaces made no-break and
+/// each dash or tilde joined to both neighbours with a word joiner (U+2060),
+/// so a time span beside other words ("Today, 9:45 – 10:30 AM",
+/// "Сегодня, 09:45—10:45") moves to the next line whole instead of breaking
+/// after its dash. Only for spans short enough to always fit a line on their
+/// own; a span of days goes through ``lorvexUnbreakable(_:)``, which still
+/// lets it break after its dash.
+public func lorvexWholeSpan(_ text: String) -> String {
+  var result = ""
+  for character in text {
+    switch character {
+    case " ":
+      result.append("\u{00A0}")
+    case "\u{2009}":
+      result.append("\u{202F}")
+    case "-", "–", "—", "~", "〜", "～":
+      result.append("\u{2060}")
+      result.append(character)
+      result.append("\u{2060}")
+    default:
+      result.append(character)
+    }
+  }
+  return result
+}
+
 /// `facts` joined by dots, with a no-break space tying each dot to the fact
 /// before it, so a line that wraps breaks after a dot and never starts with
 /// one. Facts passed through ``lorvexUnbreakable(_:)`` first stay whole as

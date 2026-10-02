@@ -36,7 +36,7 @@ same managed store, and cross-device sync is handled entirely by iCloud
 (CloudKit). There is no storage picker or external-file option.
 
 To move your data between installs or keep a backup, use **Settings → Data →
-Export** to write a file and **Settings → Data → Import** to bring it back.
+Export** to write a file and **Settings → Data → Import Data** to bring it back.
 Export/import is the supported way to carry your data to another machine — live
 SQLite files must not be shared through a sync folder.
 
@@ -143,7 +143,7 @@ Chinese both work, and Chinese needs no spaces ("明天开会30分钟").
 | Day | today, tonight, tomorrow, Friday, this Friday, next Friday, next week, weekend, in 3 days | 今天, 明天, 后天, 大后天, 周三 / 星期三 / 礼拜三, 这周三, 下周三, 下周, 周末, 3天后 |
 | Date | Oct 5, October 5th, 5 Oct, 2026-10-05 | 10月5日, 10月5号, 5号 |
 | Due day | by Friday, due tomorrow, by Oct 5 | 周五前, 明天之前, 10月5日前 |
-| Time | 3pm, 3:30 pm, at 15:30, noon | 下午3点, 晚上8点半, 三点一刻, 9点20分, 15:30 |
+| Time | 3pm, 3:30 pm, at 15:30, noon, at midnight | 下午3点, 晚上8点半, 晚上12点, 三点一刻, 9点20分, 15:30 |
 | Repeat | every day, every weekday, every other week, every 3 days, every Monday, every Mon and Thu, every month, every year; daily, weekly, monthly, yearly at the end | 每天, 每隔一天, 每3天, 每周, 每两周, 每周一, 每周一三五, 每个工作日, 每月, 每月5号, 每年 |
 | Length | 20 min, 1.5h, 20m, 1h30m, half an hour | 30分钟, 2小时, 半小时, 一个半小时 |
 | Priority | !, !!, !!!, p1–p3, high priority, low priority, urgent (at the end, or "Urgent:" at the start) | 紧急 |
@@ -157,7 +157,13 @@ A date without a year that has already passed means next year's, and "5号"
 means the coming 5th. A time plans the task at that time for its length, or
 for half an hour, on the day you wrote or today when you wrote none. A time
 from 1 to 6 o'clock with no AM, PM, or part of the day (下午, 晚上) is in the
-afternoon, and a time after "tonight" or 今晚 is in the evening.
+afternoon.
+
+A day's night runs past midnight. After 晚上, 半夜, "tonight", or 今晚, 6 to 11
+o'clock is that evening, while 12 o'clock and 1 to 5 o'clock come after
+midnight, on the next day: 今晚12点 and "at midnight" mean 00:00 tomorrow,
+周五晚上12点 means Saturday at 00:00, and 今晚1点 means 1:00 tomorrow. A
+repeat moves with its time, so 每周五晚上12点 repeats on Saturdays at 00:00.
 
 A repeating task is due on its first occurrence: the next of the weekdays or
 the day of the month it names (today counts), else the day you wrote, else
@@ -221,16 +227,19 @@ The **Today** workspace is your day in one list, read top to bottom:
 
 On Mac a quick-add field sits under the tasks; on iPhone and iPad the day's
 habits follow as rings. Nothing you or the assistant put on today is hidden.
-Beside the list on Mac and iPad stands the day's schedule: your calendar events
-and the day's timed tasks. On iPhone, tap the day strip under the briefing to
-open it.
+On Mac the day's schedule leads the page, under the briefing: your calendar
+events and the day's timed tasks in time order, above the tasks without a
+time. Click an event to see its details in the inspector, where an event you
+made in Lorvex can also be edited or deleted. On iPad the schedule stands
+beside the list; on iPhone, tap the day strip under the briefing to open it.
 
 Open Today from the sidebar, by pressing **⌘1**, or by tapping the Today tab
 on iPhone/iPad.
 
 On iPad, Lorvex supports hardware-keyboard navigation: **⌘R** refreshes,
-**⌘N** opens Capture, and **⌘1**-**⌘5** switch the tabs (Today, Tasks, Calendar,
-Habits, Review). **⌘8** opens Lists, **⌘M** Memory, and **⌘,** Settings.
+**⌘N** opens Capture, and **⌘1**-**⌘4** switch the tabs in the order the tab bar
+shows them (Today, Calendar, Tasks, Review). **⌘5** opens Habits, **⌘6** Memory,
+and **⌘,** Settings, the same numbers the Mac uses.
 
 ### Suggested Times
 
@@ -268,16 +277,35 @@ list.
 
 ### Habits
 
-Open **Habits** from the sidebar or press ⌘4. The macOS workspace can create,
-edit, delete, complete, and reset habits against the shared Lorvex core. Use
-the row buttons or context menu to change an existing habit without leaving the
-native workspace.
+Open **Habits** from the sidebar or press ⌘5. The macOS workspace can create,
+edit, delete, complete, and reset habits against the shared Lorvex core.
 
 Each habit is a card. A daily habit's card shows the last seven days as
 marks over their weekdays, today's in the habit's color, then the current
 streak ("12-day streak"), the share of the last 30 days you kept it, and, when
 the habit has milestones, how close it is to the next one ("Next at 14 days").
-Click the ring to check it in; click the card to open its history.
+Click the ring to check it in; click the card to open the habit in the
+inspector. A card's **Edit** opens the inspector with the name ready to type.
+
+The inspector edits a habit in place, the way the task inspector edits a task:
+
+- **Header:** the check-in ring, the name, and an encouragement line. Click the
+  name or the line to type; changes save as you go.
+- **Standing:** whether this day, week, or month is done ("1 of 3 this
+  week"). A habit counted several times a day shows a stepper for today's
+  count instead. The **…** menu holds the check-in commands, Icon and Color,
+  Archive Habit, and Delete Habit.
+- **Repeat, Reminder, and Goal:** click a row to change it in a popover, or a
+  dashed **+ Reminder** or **+ Goal** to add one. A goal is a streak length
+  (days or weeks) or a number of completions, depending on how the habit
+  repeats.
+- **Progress:** the current and best streaks, the check-ins logged in all,
+  the share of the last 30 days kept, and the next milestone.
+- **History:** recent weeks as a grid of days, Monday to Sunday, shaded by how
+  much of the day's count you did. Hover a day for its date and count.
+- **By Weekday:** how much of each weekday's plan you kept over the last
+  twelve weeks, naming your strongest and weakest day. It appears for a habit
+  planned on more than one weekday and fills in after two weeks of check-ins.
 
 ### Lists
 
@@ -299,13 +327,21 @@ list to move them; lists with assigned tasks must be emptied before deletion.
   same inline quick-add — there is no separate new-task sheet. To set notes, due
   date, tags, recurrence, and checklist items, open the task and edit it in Task
   Detail (**⌘⇧I**).
+- **Task Detail on a small Mac display:** Task Detail opens beside the task
+  list. On a display too narrow for the sidebar, the list, and Task Detail side
+  by side, Task Detail takes the sidebar's place while it is open, and the
+  sidebar returns when you close it. Showing the sidebar (**⌃⌘S**) while Task
+  Detail is open closes Task Detail instead. Habit and event details work the
+  same way.
 - **Mobile Task Detail:** On iPhone and iPad, a task's set fields are rows —
-  When, How long, Due, List, Priority, Repeat, Tag, Hide until — each with its
+  When, How long, Due, List, Priority, Repeat, Tags, Hide until — each with its
   value; tap a row to change only that field. **Add Detail** lists the fields
   the task does not have yet, plus a checklist and a reminder when it has
   none. Tap **Edit** to change the title and notes. Swipe a checklist item or
   a reminder to delete it, or tap a checklist item's circle to mark it
-  complete.
+  complete. **Share** sends the task as plain text in your language: its
+  title, its status unless it is open, the notes, one line per field with
+  days written as dates, the assistant context, and the checklist.
 - **Mobile Task Rows:** A task row's circle is tinted by priority and
   completes the task. Under the title, capsules mark a task that is started or
   waiting on another task, and Today adds its own ("Until 3:00 PM",
@@ -323,8 +359,9 @@ list to move them; lists with assigned tasks must be emptied before deletion.
   Only an empty list can be deleted, and the Inbox never can. Tap **New List**
   (the row after your lists) to create one; its screen opens right away. On
   the Mac, **New List** is the last row of the sidebar's Lists section. Links, Handoff, and system `openList` activities open the same screen.
-- **Mobile Habit Creation:** Tap the **+** in the **Habits** tab toolbar to
-  create a core-backed daily habit with a cue and target count.
+- **Mobile Habit Creation:** Open **Habits** from its row on the **Tasks** tab,
+  below the lists, then tap the **+** in its toolbar to create a core-backed
+  daily habit with a cue and target count.
 - **Mobile Calendar Creation:** Tap **New Event** in the **Calendar** tab to
   create a canonical Lorvex event; swipe an editable event row to edit or delete
   it. Today's schedule has no New Event footer.
@@ -354,8 +391,11 @@ available through MCP recurrence tools.
 
 ### Tags
 
-Tags are free-form labels you attach to tasks. Create a tag inline while
-editing a task. Use tags to filter and organize your task lists. The MCP host
+Tags are free-form labels you attach to tasks. On the Mac, the task detail's
+Tags row opens a picker over every tag in use: type to find a tag or to name a
+new one, and click a tag to put it on the task or take it off. The List row
+beside it is a menu of your lists. Use tags to filter and organize your task
+lists. The MCP host
 exposes tag management tools so your AI client can tag tasks during capture or
 triage.
 
@@ -435,7 +475,7 @@ The AI client can also trigger ICS export via the `export_calendar_ics` MCP tool
 
 ### Daily Review
 
-The **Reviews** workspace opens on today's review, one page per day:
+The **Review** workspace opens on today's review, one page per day:
 
 - One sentence reading the day: how many tasks you finished, how many due
   tasks are still open, and how many habits you kept.
@@ -488,6 +528,12 @@ Each task appears once on the page, and an overdue or pushed task opens when
 you tap it. Your AI client can read a summary of the week through the
 `get_weekly_brief` tool.
 
+On iPhone and iPad, **Share Daily** and **Share Weekly** in the Review toolbar
+send the page as plain text in your language. A day sends its date, how it felt
+and its energy, and what you wrote; a week sends its dates, its sentence, what
+moved forward, the overdue tasks, the tasks that kept getting pushed, and the
+Someday line. Dates are written out, so the text still reads right later.
+
 ### Memory
 
 Lorvex keeps a memory store — AI-managed notes, observations, and context
@@ -496,10 +542,9 @@ semantics. On macOS, open **Memory** from the sidebar's footer, beside
 Settings, or press **⌘6**. You can browse, search, write, and delete entries; edits
 are synced across your devices.
 
-On iPhone, Memory is its own row on the **Tasks** tab, below the lists. On
-iPad, it is its own row in the sidebar's Workspaces section. Use it to review
-recent context entries or write a compact key/content memory update through the
-same core path used by macOS and MCP tools.
+On iPhone and iPad, Memory is its own row on the **Tasks** tab, below the
+lists. Use it to review recent context entries or write a compact key/content
+memory update through the same core path used by macOS and MCP tools.
 
 ## MCP & AI Integration
 
@@ -557,31 +602,43 @@ retrying the mutation under a new key.
 
 ## Widgets & Watch
 
-### Home Screen Widget (iOS/iPadOS)
+### Widgets
 
-1. Long-press the Home Screen and tap **+**.
-2. Search for **Lorvex**.
-3. Choose a widget: **Today** (Small, Medium, Large, plus Lock Screen accessory
-   families), **Habits** (Small, Medium, and Lock Screen circular), or
-   **Daily Progress** (Small, and Lock Screen circular and inline).
-4. Tap **Add Widget**.
+Lorvex widgets live on the iPhone and iPad Home Screen and Lock Screen, and on
+the Mac desktop and in Notification Center. On iPhone or iPad, long-press the
+Home Screen, tap **Edit**, then **Add Widget**, and search for **Lorvex**. On a
+Mac, Control-click the desktop and choose **Edit Widgets**.
+
+- **Today** (Small, Medium, Large, and the Lock Screen families) leads with the
+  task at the top of Today and its ring, which fills while the task's saved
+  time runs. The tasks after it follow in Today's order, each with its circle
+  and its time or estimate. Large opens with the assistant's briefing.
+- **Habits** (Small, Medium, and Lock Screen circular) shows today's habits as
+  a grid of rings in each habit's color, with its symbol inside. A habit
+  counted several times a day draws one arc per check-in. With more habits
+  than the grid holds, the ones not yet done come first and the last tile
+  counts the rest.
+- **Daily Progress** (Small, and Lock Screen circular and inline) fills a ring
+  with the tasks done today against those plus the tasks still on Today.
+
+Tapping a task's circle completes it, and tapping a habit's ring checks the
+habit in, without opening the app. Those are the only controls on a widget,
+which deliberately leaves out destructive actions. Tapping a task's title
+opens that task; tapping anywhere else opens Today, or Habits from the Habits
+widget.
 
 Widgets refresh from a shared App Group snapshot the main app publishes. If the
 App Group entitlement is not configured for your build, widgets show preview
 data.
 
-Widget rows and the whole-widget tap area carry `lorvex://` deep links that
-open Today or the tapped task detail in the app. On the Today widget, Medium
-task rows add a one-tap **Complete** button and Large rows add both **Complete**
-and **Defer**. Those are the only interactive controls — a glanceable widget
-deliberately omits destructive actions.
+### Control Center
 
-### ControlWidget (iOS 18+)
-
-Lorvex provides a Control Widget for the iOS Control Center. It shows the task
-at the top of Today and opens Lorvex directly to Today when tapped. Add it
-from Control Center itself: swipe down to open it, long-press to enter edit
-mode, tap **＋ Add a Control**, and search for **Lorvex Today**.
+Lorvex provides a control for Control Center on iPhone, iPad, and Mac. It shows
+the task at the top of Today and opens Lorvex directly to Today when tapped.
+On iPhone or iPad, swipe down to open Control Center, long-press to enter edit
+mode, tap **＋ Add a Control**, and search for **Lorvex Today**. On a Mac, open
+Control Center from the menu bar, click **Edit Controls**, and search for
+**Lorvex Today**.
 
 ### Watch App
 
@@ -655,8 +712,11 @@ Categories** on iPhone and iPad, choose the categories you want. They are
 grouped as **Planning** (tasks, lists, tags, habits), **Calendar** (events and
 the links between tasks and events), **Reviews & Assistant** (daily reviews,
 daily briefings, memory), and **Settings** (preferences); one button selects
-every category, or clears them once all are selected. Then pick **JSON**,
-**CSV**, or **ZIP** (one JSON file per category).
+every category, or clears them once all are selected (on the Mac it sits at the
+end of the Export header). On the Mac, pick **JSON**, **CSV**, or **ZIP** (one
+JSON file per category) under **Format** and click **Export…**; the note under
+the group says what the chosen format holds and whether Lorvex can import it
+again. On iPhone and iPad, tap the format's export button.
 
 Human JSON/ZIP task exports include an Apple-native task-state graph for the most
 faithful same-app import, alongside portable task JSON. The native graph includes
@@ -674,6 +734,20 @@ import still proceeds against local data. Imported records then upload to
 iCloud like any other change. When sync is off, import compares only with local
 data; enable sync first when current iCloud state must participate in collision
 decisions.
+
+A file Lorvex can't import is turned away before anything is written, with one
+sentence saying why: the file is empty, isn't a Lorvex backup (or is damaged
+past recognition), was made by a newer version of Lorvex (update this device,
+then try again), is a damaged backup (export it again on the device it came
+from), or is larger than a backup can be.
+
+Once an import has run, the summary under Import Data says what came back: how
+many records were imported and how many were already present, and a line for
+each category. When some records did not come back whole, two short lists name
+them the way you know them (a task's title, a list's name, a review's date):
+the records that were not imported, and the tasks that were restored without
+some of their details, such as their reminders or repeat rule. A long list
+ends with a count of the rest.
 
 The AI client can request portable exports via the `export_data` MCP tool.
 
@@ -699,6 +773,7 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 |---|---|
 | ⌘N | New task (focuses the quick-add field) |
 | ⌘K | Command Palette: find a task, go somewhere, or capture |
+| ⌘F | Find: focus the search field in All Tasks or Memory; from any other workspace, open All Tasks and focus its search field |
 | ⌘1 | Today |
 | ⌘2 | Calendar |
 | ⌘3 | All Tasks |
@@ -706,7 +781,7 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 | ⌘5 | Habits |
 | ⌘6 | Memory |
 | ⇧⌘1–⇧⌘5 | Open Today, Calendar, All Tasks, Review, or Habits in its own window |
-| ⌘← / ⌘→ | Previous / next day or week in Calendar and Review |
+| ⌘← / ⌘→ | Previous / next day, week, or month in Calendar, and day or week in Review (the keys swap in right-to-left languages) |
 | ⌃⌘S | Show or hide the sidebar |
 | ⌘R | Refresh data |
 | ⌘, | Settings |
@@ -717,11 +792,7 @@ its footer (⌘1–⌘6). Adding ⇧ opens the same destination in its own windo
 type the start of a destination's or a list's name and press Return to go
 there; any other text becomes a new task on Return, with matching tasks listed
 below it to open instead. In Review, ⌘← and ⌘→ move the cursor instead while
-you type a note. The Eisenhower matrix and the dependency graph are MCP-data-only
-— the AI can
-read and write them, but there is no macOS human view, so they have no
-numeric shortcut and are absent from the sidebar, Navigate menu, and Command
-Palette (⌘K). Lists has no numeric shortcut either, and no sidebar row of its
+you type a note. Lists has no numeric shortcut and no sidebar row of its
 own — the sidebar's list rows scope the Tasks workspace. The Lists catalog is
 reached from the Navigate menu or the Command Palette (⌘K), and the Workspace
 menu opens it in its own window.
@@ -788,7 +859,7 @@ installed or the database is unavailable, the link cannot resolve.
 
 If `Lorvex.app` quits immediately after opening:
 
-1. Check that the macOS version is 15 or later (Lorvex requires macOS 15+).
+1. Check that the macOS version is 26 or later (Lorvex requires macOS 26+).
 2. If you built from source, confirm `swift build` completed without errors.
 3. Open Console.app, filter by process name `Lorvex`, and look for crash
    reports or permission errors immediately after the launch timestamp.

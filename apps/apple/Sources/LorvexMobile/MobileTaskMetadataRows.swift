@@ -48,7 +48,7 @@ struct MobileChecklistItemRow: View {
 
   private var rowLabel: some View {
     Label {
-      Text(item.text)
+      Text(userContent: item.text)
         .font(LorvexDesign.Typography.primaryText)
         .strikethrough(item.completedAt != nil)
         .foregroundStyle(item.completedAt == nil ? Color.primary : Color.secondary)

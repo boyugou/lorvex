@@ -1,4 +1,5 @@
 import AppIntents
+import LorvexCore
 
 struct ReadLorvexHabitStatsIntent: LorvexAuthenticatedIntent {
   static let title: LocalizedStringResource = LocalizedStringResource("system.habit.stats.read.title", defaultValue: "Read Lorvex Habit Stats", table: "Localizable", bundle: SystemL10n.bundle)
@@ -20,11 +21,38 @@ struct ReadLorvexHabitStatsIntent: LorvexAuthenticatedIntent {
     let stats = try await LorvexTaskIntentRunner.readHabitStats(id: habit.id)
     return .result(
       dialog: IntentDialog(
-        LocalizedStringResource(
-          "system.habit.stats.read.dialog",
-          defaultValue:
-            "\(habit.name): \(stats.currentStreak) current streak, \(stats.totalCompletions) total.",
-          table: "Localizable", bundle: SystemL10n.bundle))
-    )
+        Self.dialog(name: habit.name, frequencyType: habit.frequencyType, stats: stats)))
+  }
+
+  /// What Siri says: "Meditate: 12-day streak, 40 completions in all." The
+  /// streak counts in the habit's cadence, the way the app labels it: months
+  /// for a monthly habit, weeks for a weekly, times-per-week, or custom one,
+  /// days otherwise.
+  static func dialog(name: String, frequencyType: String, stats: HabitStats) -> LocalizedStringResource {
+    let streak = stats.currentStreak
+    let total = stats.totalCompletions
+    guard streak > 0 else {
+      return LocalizedStringResource(
+        "system.habit.stats.read.dialog.no_streak",
+        defaultValue: "\(name): no current streak, \(total) completions in all.",
+        table: "Localizable", bundle: SystemL10n.bundle)
+    }
+    switch frequencyType {
+    case "monthly":
+      return LocalizedStringResource(
+        "system.habit.stats.read.dialog.months",
+        defaultValue: "\(name): \(streak)-month streak, \(total) completions in all.",
+        table: "Localizable", bundle: SystemL10n.bundle)
+    case "weekly", "times_per_week", "custom":
+      return LocalizedStringResource(
+        "system.habit.stats.read.dialog.weeks",
+        defaultValue: "\(name): \(streak)-week streak, \(total) completions in all.",
+        table: "Localizable", bundle: SystemL10n.bundle)
+    default:
+      return LocalizedStringResource(
+        "system.habit.stats.read.dialog.days",
+        defaultValue: "\(name): \(streak)-day streak, \(total) completions in all.",
+        table: "Localizable", bundle: SystemL10n.bundle)
+    }
   }
 }

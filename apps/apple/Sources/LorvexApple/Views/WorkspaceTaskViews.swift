@@ -63,10 +63,13 @@ struct WorkspaceTaskSectionHeader: View {
 /// row count shows while the section is folded (an open section's rows are
 /// their own count); VoiceOver hears it either way. Place it at
 /// ``WorkspaceTaskColumns/markerLeading`` from the lane's edge.
+/// `accessibilityIdentifier` names the fold it opens, such as
+/// `tasks.later.disclosure`.
 struct WorkspaceTaskDisclosureHeader: View {
   @Binding var isExpanded: Bool
   let title: String
   let countText: String
+  let accessibilityIdentifier: String
 
   var body: some View {
     Button {
@@ -75,10 +78,9 @@ struct WorkspaceTaskDisclosureHeader: View {
       }
     } label: {
       HStack(spacing: WorkspaceTaskColumns.markerSpacing) {
-        Image(systemName: "chevron.right")
+        LorvexDisclosureChevron(isExpanded: isExpanded)
           .font(WorkspaceTaskSectionTypography.icon)
           .foregroundStyle(.tertiary)
-          .rotationEffect(.degrees(isExpanded ? 90 : 0))
           .frame(width: WorkspaceTaskColumns.markerWidth)
 
         HStack(spacing: LorvexDesign.Spacing.s) {
@@ -105,7 +107,7 @@ struct WorkspaceTaskDisclosureHeader: View {
         : Text(LocalizedStringResource("common.collapsed", defaultValue: "Collapsed", table: "Localizable", bundle: LorvexL10n.bundle))
     )
     .accessibilityAddTraits(.isHeader)
-    .accessibilityIdentifier("workspace.task.disclosureHeader")
+    .accessibilityIdentifier(accessibilityIdentifier)
   }
 }
 

@@ -5,17 +5,18 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import re
-
+import verify_localization_catalog
 from verify_localization_catalog import (
     CATALOG_PATH,
+    INTERPOLATION_MARK,
     MODULE_CATALOGS,
     MODULE_RESOURCE_BUNDLE_TOKENS,
+    NON_LITERAL_MARK,
     ROOT,
-    _call_site_defaults,
     _parse_concat_string,
     app_shortcut_phrase_failures,
     apple_native_bundle_qualification_failures,
@@ -31,11 +32,15 @@ from verify_localization_catalog import (
     english_typographic_quote_failures,
     hardcoded_system_case_display_failures,
     hardcoded_system_intent_metadata_failures,
+    generated_app_info_plist_values,
+    generated_info_plist_strings_failures,
     info_plist_strings_failures,
     implicit_localized_string_resource_failures,
     localized_info_plist_keys,
     native_localized_string_bundle_keys,
     native_localized_text_bundle_keys,
+    non_count_allowlist_failures,
+    orphan_info_plist_target_failures,
     parse_info_plist_strings,
     referenced_module_keys,
     localized_string_resource_bundle_keys,
@@ -44,8 +49,8 @@ from verify_localization_catalog import (
     module_resource_reference_failures,
     module_reference_failures,
     module_reference_presence_failures,
-    plain_helper_plural_reference_failures,
     plist_localization_failures,
+    plural_rules_for,
     referenced_app_keys,
     required_languages,
     required_source_language,
@@ -54,6 +59,7 @@ from verify_localization_catalog import (
     swift_source_without_comments,
     system_intent_bundle_qualification_failures,
     sync_plist_localizations,
+    undeclared_plural_language_failures,
     unreferenced_module_key_failures,
 )
 
@@ -93,6 +99,26 @@ def entry(
         "extractionState": "manual",
         "localizations": localizations,
     }
+
+
+def string_unit(text: str) -> dict[str, object]:
+    """A translated text: a plain localization, or one plural form."""
+    return {"stringUnit": {"state": "translated", "value": text}}
+
+
+def plural_substitution(argument: int, forms: dict[str, str]) -> dict[str, object]:
+    """A substitution that varies the integer argument `argument` by plural."""
+    return {
+        "argNum": argument,
+        "formatSpecifier": "lld",
+        "variations": {"plural": {category: string_unit(text) for category, text in forms.items()}},
+    }
+
+
+def substitution_localization(
+    value: str, substitutions: dict[str, dict[str, object]]
+) -> dict[str, object]:
+    return {**string_unit(value), "substitutions": substitutions}
 
 
 def bad_entry(value: str = "Today", state: str = "translated") -> dict[str, object]:
@@ -262,6 +288,31 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
         )
 
         self.assertEqual(cjk_number_unit_spacing_failures(catalog), [])
+
+    def test_cjk_number_unit_spacing_failures_checks_substitution_forms(self) -> None:
+        value = entry("%lld tasks", extra_localizations={"zh-Hans": "placeholder replaced below"})
+        value["localizations"]["zh-Hans"] = {
+            "stringUnit": {"state": "translated", "value": "%#@tasks@"},
+            "substitutions": {
+                "tasks": {
+                    "argNum": 1,
+                    "formatSpecifier": "lld",
+                    "variations": {
+                        "plural": {
+                            "other": {"stringUnit": {"state": "translated", "value": "%arg 项任务"}}
+                        }
+                    },
+                }
+            },
+        }
+
+        self.assertEqual(
+            cjk_number_unit_spacing_failures(catalog_with_strings({"tasks": value})),
+            [
+                "tasks zh-Hans breaks between a number and its unit at '%arg '; "
+                "use a no-break space (U+00A0)"
+            ],
+        )
 
     def test_english_typographic_quote_failures_rejects_straight_marks(self) -> None:
         catalog = catalog_with_strings(
@@ -565,10 +616,242 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
             failures,
         )
 
+    @staticmethod
+    def _plural_localization(forms: dict[str, str]) -> dict[str, object]:
+        return {
+            "variations": {
+                "plural": {
+                    category: {"stringUnit": {"state": "translated", "value": value}}
+                    for category, value in forms.items()
+                }
+            }
+        }
+
+    def _plural_entry(self, forms_by_language: dict[str, dict[str, str]]) -> dict[str, object]:
+        return {
+            "extractionState": "manual",
+            "localizations": {
+                language: self._plural_localization(forms)
+                for language, forms in forms_by_language.items()
+            },
+        }
+
+    def test_catalog_entry_failures_requires_each_languages_cldr_plural_categories(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "tasks.count": self._plural_entry(
+                    {
+                        "en": {"one": "%lld task", "other": "%lld tasks"},
+                        # Russian counts select one, few, and many; `other`
+                        # alone would render "5 задачи" for every count.
+                        "ru": {"one": "%lld задача", "other": "%lld задачи"},
+                    }
+                )
+            }
+        )
+
+        self.assertIn(
+            "tasks.count ru plural variations missing CLDR categories ['few', 'many']",
+            catalog_entry_failures(catalog, languages=("en", "ru")),
+        )
+
+    def test_catalog_entry_failures_rejects_plural_categories_a_language_never_selects(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "tasks.count": self._plural_entry(
+                    {
+                        "en": {"one": "%lld task", "other": "%lld tasks"},
+                        "zh-Hans": {"one": "%lld 项任务", "other": "%lld 项任务"},
+                    }
+                )
+            }
+        )
+
+        self.assertIn(
+            "tasks.count zh-Hans plural variations carry ['one'], which zh-Hans never selects",
+            catalog_entry_failures(catalog, languages=("en", "zh-Hans")),
+        )
+
+    def test_catalog_entry_failures_accepts_optional_and_zero_plural_categories(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "tasks.count": self._plural_entry(
+                    {
+                        "en": {"zero": "No tasks", "one": "%lld task", "other": "%lld tasks"},
+                        "es": {
+                            "one": "%lld tarea",
+                            "many": "%lld de tareas",
+                            "other": "%lld tareas",
+                        },
+                    }
+                )
+            }
+        )
+
+        self.assertEqual(catalog_entry_failures(catalog, languages=("en", "es")), [])
+
+    def test_catalog_entry_failures_checks_substitution_plural_categories(self) -> None:
+        value = entry("%lld open", extra_localizations={"es": "placeholder replaced below"})
+        value["localizations"]["es"] = {
+            "stringUnit": {"state": "translated", "value": "%#@open@"},
+            "substitutions": {
+                "open": {
+                    "argNum": 1,
+                    "formatSpecifier": "lld",
+                    "variations": {
+                        "plural": {
+                            "other": {
+                                "stringUnit": {"state": "translated", "value": "%arg abiertas"}
+                            }
+                        }
+                    },
+                }
+            },
+        }
+
+        self.assertIn(
+            "widget.open substitution 'open' es plural variations missing CLDR categories ['one']",
+            catalog_entry_failures(
+                catalog_with_strings({"widget.open": value}), languages=("en", "es")
+            ),
+        )
+
+    def test_a_one_form_shows_the_number_where_one_also_counts_other_numbers(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "weekly": self._plural_entry(
+                    {
+                        # English `one` is 1 alone, so it may read "Once a week".
+                        "en": {"one": "Once a week", "other": "%lld times a week"},
+                        # French `one` also covers 0; Russian `one` also covers 21.
+                        "fr": {"one": "Une fois par semaine", "other": "%lld fois par semaine"},
+                        "ru": {
+                            "one": "Раз в неделю",
+                            "few": "%lld раза в неделю",
+                            "many": "%lld раз в неделю",
+                            "other": "%lld раза в неделю",
+                        },
+                    }
+                )
+            }
+        )
+
+        failures = catalog_entry_failures(catalog, languages=("en", "fr", "ru"))
+
+        self.assertIn(
+            "weekly fr plural 'one' leaves out the number, but fr also uses 'one' for 0; "
+            "show the count",
+            failures,
+        )
+        self.assertIn(
+            "weekly ru plural 'one' leaves out the number, but ru also uses 'one' for "
+            "21, 31, 101, …; show the count",
+            failures,
+        )
+        self.assertFalse(any(failure.startswith("weekly en") for failure in failures))
+
+    def test_a_count_stays_with_its_word_in_russian_ukrainian_and_polish(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "added": self._plural_entry(
+                    {
+                        "en": {"one": "%lld task added", "other": "%lld tasks added"},
+                        "ru": {
+                            "one": "Добавлена %lld\u00a0задача",
+                            "few": "Добавлено %lld\u00a0задачи",
+                            "many": "Добавлено %lld задач",
+                            "other": "Добавлено %lld\u00a0задачи",
+                        },
+                    }
+                )
+            }
+        )
+
+        failures = catalog_entry_failures(catalog, languages=("en", "ru"))
+
+        self.assertIn(
+            "added ru keeps a plain space after a count in 'Добавлено %lld задач'; "
+            "use a no-break space (U+00A0) so the number stays with its word",
+            failures,
+        )
+        self.assertFalse(any(failure.startswith("added en") for failure in failures))
+
+    def test_a_zero_form_takes_0_over_from_one(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "weekly": self._plural_entry(
+                    {
+                        "en": {"one": "Once a week", "other": "%lld times a week"},
+                        "fr": {
+                            "zero": "Jamais",
+                            "one": "Une fois par semaine",
+                            "other": "%lld fois par semaine",
+                        },
+                    }
+                )
+            }
+        )
+
+        self.assertEqual(catalog_entry_failures(catalog, languages=("en", "fr")), [])
+
+    def test_the_one_form_rule_covers_substitutions(self) -> None:
+        value = entry("%lld open", extra_localizations={"ru": "placeholder replaced below"})
+
+        def form(text: str) -> dict[str, object]:
+            return {"stringUnit": {"state": "translated", "value": text}}
+
+        value["localizations"]["ru"] = {
+            "stringUnit": {"state": "translated", "value": "%#@open@"},
+            "substitutions": {
+                "open": {
+                    "argNum": 1,
+                    "formatSpecifier": "lld",
+                    "variations": {
+                        "plural": {
+                            "one": form("открыта"),
+                            "few": form("%arg открыты"),
+                            "many": form("%arg открыто"),
+                            "other": form("%arg открыто"),
+                        }
+                    },
+                }
+            },
+        }
+
+        self.assertIn(
+            "widget.open substitution 'open' ru plural 'one' leaves out the number, but ru "
+            "also uses 'one' for 21, 31, 101, …; show the count",
+            catalog_entry_failures(
+                catalog_with_strings({"widget.open": value}), languages=("en", "ru")
+            ),
+        )
+
+    def test_every_shipped_language_must_declare_its_plural_rules(self) -> None:
+        self.assertEqual(undeclared_plural_language_failures(("en", "pt-BR", "zh-Hant")), [])
+        self.assertEqual(
+            undeclared_plural_language_failures(("en", "xx")),
+            [
+                "shipped language 'xx' has no CLDR plural categories in PLURAL_CATEGORIES; "
+                "declare them before shipping its translations"
+            ],
+        )
+        required, allowed = plural_rules_for("zh-Hans") or (frozenset(), frozenset())
+        self.assertEqual(required, {"other"})
+        self.assertEqual(allowed, {"zero", "other"})
+
     def test_catalog_entry_failures_understands_locale_specific_plural_substitutions(self) -> None:
+        # Each language names and words its own substitutions; only the
+        # arguments they stand for must agree.
         value = entry(
-            "%1$lld completed · %2$lld open",
+            "placeholder replaced below",
             extra_localizations={"es": "placeholder replaced below"},
+        )
+        value["localizations"]["en"] = substitution_localization(
+            "%#@done@ · %#@open@",
+            {
+                "done": plural_substitution(1, {"one": "%arg completed", "other": "%arg completed"}),
+                "open": plural_substitution(2, {"one": "%arg open", "other": "%arg open"}),
+            },
         )
         value["localizations"]["es"] = {
             "stringUnit": {
@@ -698,9 +981,8 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
         self.assertTrue(any("format placeholder mismatch" in failure for failure in failures))
 
     def test_catalog_entry_failures_allows_reusing_one_substitution_marker(self) -> None:
-        value = entry(
-            "%1$lld tasks, %1$lld total",
-            extra_localizations={"es": "placeholder replaced below"},
+        value = self._plural_entry(
+            {"en": {"one": "%1$lld task, %1$lld total", "other": "%1$lld tasks, %1$lld total"}}
         )
         value["localizations"]["es"] = {
             "stringUnit": {
@@ -713,12 +995,18 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                     "formatSpecifier": "lld",
                     "variations": {
                         "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "%arg",
+                                }
+                            },
                             "other": {
                                 "stringUnit": {
                                     "state": "translated",
                                     "value": "%arg",
                                 }
-                            }
+                            },
                         }
                     },
                 }
@@ -731,6 +1019,202 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 languages=("en", "es"),
             ),
             [],
+        )
+
+    def test_a_count_in_the_source_text_varies_by_plural(self) -> None:
+        # English writes "1 completed" and "5 completed" alike, but the source's
+        # plural forms are the ones every translator fills in for their language.
+        plain = catalog_with_strings({"tasks.completed": entry("%lld completed")})
+        varied = catalog_with_strings(
+            {
+                "tasks.completed": self._plural_entry(
+                    {"en": {"one": "%lld completed", "other": "%lld completed"}}
+                )
+            }
+        )
+
+        self.assertEqual(
+            catalog_entry_failures(plain),
+            [
+                "tasks.completed en argument 1 is a count (%lld) with no plural forms; vary it by "
+                "plural, or list it in NON_COUNT_INTEGER_ARGUMENTS with the reason it counts nothing"
+            ],
+        )
+        self.assertEqual(catalog_entry_failures(varied), [])
+
+    def test_a_top_level_plural_varies_by_one_count_only(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "habits.done": self._plural_entry(
+                    {"en": {"one": "%1$lld of %2$lld habit", "other": "%1$lld of %2$lld habits"}}
+                )
+            }
+        )
+
+        self.assertEqual(
+            catalog_entry_failures(catalog),
+            [
+                "habits.done en varies by plural at the top level but formats the integer "
+                "arguments [1, 2]; vary each count with its own substitution"
+            ],
+        )
+
+    def test_a_listed_non_count_argument_needs_no_plural_forms(self) -> None:
+        catalog = catalog_with_strings({"tasks.pending": entry("Pending: %lld")})
+
+        with mock.patch.dict(
+            verify_localization_catalog.NON_COUNT_INTEGER_ARGUMENTS,
+            {"tasks.pending": {1: "a value after its label"}},
+            clear=True,
+        ):
+            self.assertEqual(catalog_entry_failures(catalog), [])
+            self.assertEqual(non_count_allowlist_failures([catalog]), [])
+        with mock.patch.dict(
+            verify_localization_catalog.NON_COUNT_INTEGER_ARGUMENTS, {}, clear=True
+        ):
+            self.assertEqual(
+                catalog_entry_failures(catalog),
+                [
+                    "tasks.pending en argument 1 is a count (%lld) with no plural forms; vary it by "
+                    "plural, or list it in NON_COUNT_INTEGER_ARGUMENTS with the reason it counts nothing"
+                ],
+            )
+
+    def test_a_non_count_listing_that_exempts_nothing_fails(self) -> None:
+        catalog = catalog_with_strings(
+            {
+                "greeting": entry("Hello, %@"),
+                "tasks.count": self._plural_entry({"en": {"one": "%lld task", "other": "%lld tasks"}}),
+                "tasks.pending": entry("Pending: %lld"),
+            }
+        )
+        listing = {
+            "greeting": {1: "a name"},
+            "missing.key": {1: "a ratio"},
+            "tasks.count": {1: "a ratio"},
+            "tasks.pending": {1: "a value after its label"},
+        }
+
+        with mock.patch.dict(
+            verify_localization_catalog.NON_COUNT_INTEGER_ARGUMENTS, listing, clear=True
+        ):
+            failures = non_count_allowlist_failures([catalog])
+
+        self.assertEqual(
+            failures,
+            [
+                "NON_COUNT_INTEGER_ARGUMENTS exempts 'greeting' argument 1, which is not an "
+                "integer argument without plural forms",
+                "NON_COUNT_INTEGER_ARGUMENTS names 'missing.key', which no catalog has",
+                "NON_COUNT_INTEGER_ARGUMENTS exempts 'tasks.count' argument 1, which is not an "
+                "integer argument without plural forms",
+            ],
+        )
+
+    def test_a_translation_varies_every_count_the_source_varies(self) -> None:
+        value = self._plural_entry({"en": {"one": "%lld task", "other": "%lld tasks"}})
+        # Spanish selects `one` and `other`; Chinese writes every count alike.
+        value["localizations"]["es"] = string_unit("%lld tareas")
+        value["localizations"]["zh-Hans"] = string_unit("%lld\u00a0项任务")
+
+        self.assertEqual(
+            catalog_entry_failures(
+                catalog_with_strings({"tasks.count": value}), languages=("en", "es", "zh-Hans")
+            ),
+            [
+                "tasks.count es does not vary argument 1 by plural; en does, and es has the "
+                "plural categories ['one', 'other']"
+            ],
+        )
+
+    def test_a_substitution_source_sets_the_arguments_every_translation_reads(self) -> None:
+        value = entry("placeholder replaced below")
+        value["localizations"]["en"] = substitution_localization(
+            "%1$@: %#@count@",
+            {"count": plural_substitution(2, {"one": "%arg task", "other": "%arg tasks"})},
+        )
+        value["localizations"]["es"] = self._plural_localization(
+            {"one": "%1$@: %2$@ tarea", "other": "%1$@: %2$lld tareas"}
+        )
+
+        self.assertEqual(
+            catalog_entry_failures(
+                catalog_with_strings({"list.count": value}), languages=("en", "es")
+            ),
+            ["list.count es plural 'one' argument 2 type mismatch: '@'; expected 'lld'"],
+        )
+
+    def test_a_translation_may_vary_a_count_the_source_does_not(self) -> None:
+        # Russian agrees the verb with the first number of "1 of 3"; English
+        # leaves that number alone.
+        value = entry("placeholder replaced below")
+        value["localizations"]["en"] = substitution_localization(
+            "%1$lld of %#@habits@ kept.",
+            {"habits": plural_substitution(2, {"one": "%arg habit", "other": "%arg habits"})},
+        )
+        value["localizations"]["ru"] = substitution_localization(
+            "%#@kept@ %#@habits@.",
+            {
+                "kept": plural_substitution(
+                    1,
+                    {
+                        "one": "Выполнена %arg из",
+                        "few": "Выполнены %arg из",
+                        "many": "Выполнено %arg из",
+                        "other": "Выполнено %arg из",
+                    },
+                ),
+                "habits": plural_substitution(
+                    2,
+                    {
+                        "one": "%arg привычки",
+                        "few": "%arg привычек",
+                        "many": "%arg привычек",
+                        "other": "%arg привычки",
+                    },
+                ),
+            },
+        )
+
+        with mock.patch.dict(
+            verify_localization_catalog.NON_COUNT_INTEGER_ARGUMENTS,
+            {"review.habits_kept": {1: "the first number of an “N of M …” ratio"}},
+            clear=True,
+        ):
+            failures = catalog_entry_failures(
+                catalog_with_strings({"review.habits_kept": value}), languages=("en", "ru")
+            )
+
+        self.assertEqual(failures, [])
+
+    def test_a_unit_word_beside_a_separate_number_leaves_the_number_out_everywhere(self) -> None:
+        # The goal ring shows "30" large with the unit word under it; the number
+        # only selects the word's form.
+        def unit_word(forms: dict[str, str]) -> dict[str, object]:
+            return substitution_localization("%#@unit@", {"unit": plural_substitution(1, forms)})
+
+        value = entry("placeholder replaced below")
+        value["localizations"] = {
+            "en": unit_word({"one": "day", "other": "days"}),
+            "es": unit_word({"one": "día", "other": "días"}),
+            # Russian `one` also covers 21, yet the word may still stand alone.
+            "ru": unit_word({"one": "день", "few": "дня", "many": "дней", "other": "дня"}),
+            "zh-Hans": unit_word({"other": "天"}),
+        }
+        catalog = catalog_with_strings({"goal.unit": value})
+        languages = ("en", "es", "ru", "zh-Hans")
+
+        self.assertEqual(catalog_entry_failures(catalog, languages=languages), [])
+
+        value["localizations"]["es"] = unit_word({"one": "%arg día", "other": "%arg días"})
+        self.assertEqual(
+            catalog_entry_failures(catalog, languages=languages),
+            [
+                "goal.unit es substitution 'unit' plural 'one' shows the number, but the "
+                "source's forms for this argument leave it out",
+                "goal.unit es substitution 'unit' plural 'other' shows the number, but the "
+                "source's forms for this argument leave it out",
+            ],
         )
 
     def test_discovered_language_set_drives_catalog_and_bundle_requirements(self) -> None:
@@ -942,6 +1426,99 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
             self.assertIn("<string>$(DEVELOPMENT_LANGUAGE)</string>", text)
             self.assertEqual(plist_localization_failures(plist, ("en", "fr")), [])
 
+    def test_sync_plist_localizations_keeps_comments_and_layout(self) -> None:
+        original = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Why this bundle declares what it declares.
+-->
+<plist version="1.0">
+<dict>
+\t<key>CFBundleIdentifier</key>
+\t<string>com.example.app</string>
+\t<key>CFBundleDevelopmentRegion</key>
+\t<string>en</string>
+\t<key>CFBundleLocalizations</key>
+\t<array>
+\t\t<string>en</string>
+\t\t<string>zh-Hans</string>
+\t</array>
+\t<!-- A note on the next key. -->
+\t<key>CFBundleName</key>
+\t<string>App</string>
+</dict>
+</plist>
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            plist = Path(directory) / "Info.plist"
+            plist.write_text(original, encoding="utf-8")
+
+            self.assertTrue(sync_plist_localizations(plist, ("en", "es", "zh-Hans")))
+            self.assertEqual(
+                plist.read_text(encoding="utf-8"),
+                original.replace(
+                    "\t\t<string>en</string>\n",
+                    "\t\t<string>en</string>\n\t\t<string>es</string>\n",
+                ),
+            )
+
+    def test_sync_plist_localizations_adds_a_missing_array_after_the_development_region(
+        self,
+    ) -> None:
+        original = """<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+\t<key>CFBundleDevelopmentRegion</key>
+\t<string>en</string>
+\t<key>CFBundleName</key>
+\t<string>App</string>
+</dict>
+</plist>
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            plist = Path(directory) / "Info.plist"
+            plist.write_text(original, encoding="utf-8")
+
+            self.assertTrue(sync_plist_localizations(plist, ("en", "es")))
+            self.assertEqual(
+                plist.read_text(encoding="utf-8"),
+                original.replace(
+                    "\t<string>en</string>\n",
+                    "\t<string>en</string>\n\t<key>CFBundleLocalizations</key>\n"
+                    "\t<array>\n\t\t<string>en</string>\n\t\t<string>es</string>\n\t</array>\n",
+                ),
+            )
+
+    def test_sync_plist_localizations_writes_nothing_when_the_edit_misses(self) -> None:
+        # A nested dict names the key first, so a text edit would land there;
+        # parsing the edit back catches it before anything is written.
+        original = """<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+\t<key>Nested</key>
+\t<dict>
+\t\t<key>CFBundleLocalizations</key>
+\t\t<array>
+\t\t\t<string>en</string>
+\t\t</array>
+\t</dict>
+\t<key>CFBundleDevelopmentRegion</key>
+\t<string>en</string>
+\t<key>CFBundleLocalizations</key>
+\t<array>
+\t\t<string>en</string>
+\t</array>
+</dict>
+</plist>
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            plist = Path(directory) / "Info.plist"
+            plist.write_text(original, encoding="utf-8")
+
+            with self.assertRaises(ValueError):
+                sync_plist_localizations(plist, ("en", "es"))
+            self.assertEqual(plist.read_text(encoding="utf-8"), original)
+
     def test_shipping_bundle_plists_are_discovered_from_config_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1053,6 +1630,127 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 ],
             )
 
+    def test_generated_app_info_plist_values_resolve_metadata_variables(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            script = Path(directory) / "build_and_run.sh"
+            script.write_text(
+                'echo staging\n'
+                'cat >"$INFO_PLIST" <<PLIST\n'
+                "<dict>\n"
+                "  <key>CFBundleName</key>\n"
+                "  <string>$APP_DISPLAY_NAME</string>\n"
+                "  <key>CFBundleVersion</key>\n"
+                "  <string>$BUILD_VERSION</string>\n"
+                "  <key>NSCalendarsFullAccessUsageDescription</key>\n"
+                "  <string>${READ_TEXT}</string>\n"
+                "</dict>\n"
+                "PLIST\n",
+                encoding="utf-8",
+            )
+            values, failures = generated_app_info_plist_values(
+                script, {"APP_DISPLAY_NAME": "Lorvex", "BUILD_VERSION": "7", "READ_TEXT": "Read events."})
+
+        self.assertEqual(failures, [])
+        self.assertEqual(
+            values,
+            {"CFBundleName": "Lorvex", "NSCalendarsFullAccessUsageDescription": "Read events."},
+        )
+
+    def test_generated_app_info_plist_values_reject_unknown_metadata_and_missing_heredoc(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            script = Path(directory) / "build_and_run.sh"
+            script.write_text(
+                'cat >"$INFO_PLIST" <<PLIST\n'
+                "  <key>CFBundleName</key>\n  <string>$MISSING_NAME</string>\n"
+                "PLIST\n",
+                encoding="utf-8",
+            )
+            values, failures = generated_app_info_plist_values(script, {})
+            self.assertEqual(values, {})
+            self.assertTrue(any("unknown metadata ['MISSING_NAME']" in f for f in failures))
+
+            script.write_text("echo no plist here\n", encoding="utf-8")
+            values, failures = generated_app_info_plist_values(script, {})
+            self.assertEqual(values, {})
+            self.assertTrue(any("has no Info.plist heredoc" in f for f in failures))
+
+    def test_generated_info_plist_strings_failures_check_every_language_and_the_english_text(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            script = root / "build_and_run.sh"
+            script.write_text(
+                'cat >"$INFO_PLIST" <<PLIST\n'
+                "  <key>NSCalendarsFullAccessUsageDescription</key>\n"
+                "  <string>$READ_TEXT</string>\n"
+                "PLIST\n",
+                encoding="utf-8",
+            )
+            en = root / "InfoPlist" / "LorvexApple" / "en.lproj"
+            fr = root / "InfoPlist" / "LorvexApple" / "fr.lproj"
+            en.mkdir(parents=True)
+            fr.mkdir(parents=True)
+            en.joinpath("InfoPlist.strings").write_text(
+                '"NSCalendarsFullAccessUsageDescription" = "Reads events.";\n', encoding="utf-8")
+            fr.joinpath("InfoPlist.strings").write_text('"CFBundleName" = "Lorvex";\n', encoding="utf-8")
+
+            failures = generated_info_plist_strings_failures(
+                ("en", "fr"), "en", script_path=script, config_root=root,
+                metadata={"READ_TEXT": "Read events."})
+
+        self.assertEqual(
+            failures,
+            [
+                f"{en / 'InfoPlist.strings'} NSCalendarsFullAccessUsageDescription differs from "
+                "the Info.plist text: 'Reads events.'; expected 'Read events.'",
+                f"{fr / 'InfoPlist.strings'} missing non-empty localization for "
+                "NSCalendarsFullAccessUsageDescription",
+            ],
+        )
+
+    def test_info_plist_strings_failures_resolve_product_name_and_reject_unshipped_language(self) -> None:
+        import plistlib
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            plist = root / "LorvexWatchApp-Info.plist"
+            plist.write_bytes(plistlib.dumps({
+                "CFBundleName": "$(PRODUCT_NAME)",
+                "CFBundleDisplayName": "$(LORVEX_DISPLAY_NAME)",
+            }))
+            target = root / "InfoPlist" / "LorvexWatchApp"
+            for language, name in [("en", "LorvexWatchApp"), ("de", "LorvexWatchApp"), ("fr", "x")]:
+                (target / f"{language}.lproj").mkdir(parents=True)
+                (target / f"{language}.lproj" / "InfoPlist.strings").write_text(
+                    f'"CFBundleName" = "{name}";\n"CFBundleDisplayName" = "Lorvex";\n',
+                    encoding="utf-8",
+                )
+
+            # The display name is a build setting only the build resolves, so
+            # its English text is not compared; fr is not a shipped language.
+            self.assertEqual(
+                info_plist_strings_failures(plist, ("de", "en"), root),
+                [f"{target / 'fr.lproj'} is not a shipped language"],
+            )
+
+            (target / "en.lproj" / "InfoPlist.strings").write_text(
+                '"CFBundleName" = "Watch";\n"CFBundleDisplayName" = "Lorvex";\n', encoding="utf-8")
+            self.assertIn(
+                f"{target / 'en.lproj' / 'InfoPlist.strings'} CFBundleName differs from the "
+                "Info.plist text: 'Watch'; expected 'LorvexWatchApp'",
+                info_plist_strings_failures(plist, ("de", "en", "fr"), root),
+            )
+
+    def test_orphan_info_plist_target_failures_flag_a_directory_no_bundle_stages(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "InfoPlist" / "LorvexApple").mkdir(parents=True)
+            (root / "InfoPlist" / "LorvexMobileApp").mkdir(parents=True)
+            (root / "InfoPlist" / "RetiredTarget").mkdir(parents=True)
+
+            self.assertEqual(
+                orphan_info_plist_target_failures(root),
+                [f"{root / 'InfoPlist' / 'RetiredTarget'} belongs to no shipping bundle"],
+            )
+
     def test_referenced_app_keys_scans_native_bundle_qualified_calls(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1076,27 +1774,6 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 },
             )
 
-    def test_referenced_module_keys_scans_localized_string_resource_literals(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            source = root / "Intent.swift"
-            source.write_text(
-                "\n".join(
-                    [
-                        'LocalizedStringResource(stringLiteral: WidgetL10n.string("widget.list.parameter.title", "List"))',
-                        'SystemL10n.resource("system.entity.task.type", "Lorvex Task")',
-                    ]
-                ),
-                encoding="utf-8",
-            )
-
-            self.assertEqual(
-                referenced_module_keys("WidgetL10n", [root]), {"widget.list.parameter.title"}
-            )
-            self.assertEqual(
-                referenced_module_keys("SystemL10n", [root]), {"system.entity.task.type"}
-            )
-
     def test_localized_string_resource_bundle_keys_maps_tokens_to_keys(self) -> None:
         # The App-Intent form: a raw LocalizedStringResource with a trailing
         # bundle: token, including an interpolated defaultValue whose `\\(…)`
@@ -1115,7 +1792,7 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                         'LocalizedStringResource("widget.intent.parameter.task",',
                         '  defaultValue: "Task", table: "Localizable", bundle: WidgetSupportL10n.bundle)',
                         # stringLiteral form carries no literal key nor bundle token.
-                        'LocalizedStringResource(stringLiteral: SystemL10n.string("x", "y"))',
+                        'LocalizedStringResource(stringLiteral: title)',
                     ]
                 ),
                 encoding="utf-8",
@@ -1267,7 +1944,7 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 unreferenced_module_key_failures("WidgetL10n", catalog, [root]),
                 [
                     "WidgetL10n catalog has unreferenced key(s) (not used via a "
-                    "helper/native lookup or bundle-owned resource): ['shared.name']"
+                    "native lookup or bundle-owned resource): ['shared.name']"
                 ],
             )
 
@@ -1282,7 +1959,7 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 module_reference_presence_failures("WidgetL10n", [root]),
                 [
                     "WidgetL10n reference scan returned zero keys; update the "
-                    "helper/native/resource scanner before accepting this catalog"
+                    "native/resource scanner before accepting this catalog"
                 ],
             )
             (root / "Intent.swift").write_text(
@@ -1294,7 +1971,7 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 module_reference_presence_failures("WidgetL10n", [root]),
                 [
                     "WidgetL10n reference scan returned zero keys; update the "
-                    "helper/native/resource scanner before accepting this catalog"
+                    "native/resource scanner before accepting this catalog"
                 ],
             )
             (root / "Intent.swift").write_text(
@@ -1331,38 +2008,6 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
                 ],
             )
 
-    def test_plural_catalog_keys_cannot_use_eager_plain_helpers(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / "View.swift").write_text(
-                'String(format: WidgetL10n.string("widget.remaining", "%lld remaining"), count)',
-                encoding="utf-8",
-            )
-            catalog = catalog_with_strings(
-                {
-                    "widget.remaining": {
-                        "extractionState": "manual",
-                        "localizations": {
-                            "en": {
-                                "variations": {
-                                    "plural": {
-                                        "one": {"stringUnit": {"state": "translated", "value": "%lld remaining"}},
-                                        "other": {"stringUnit": {"state": "translated", "value": "%lld remaining"}},
-                                    }
-                                }
-                            }
-                        },
-                    }
-                }
-            )
-
-            self.assertEqual(
-                plain_helper_plural_reference_failures("WidgetL10n", catalog, [root]),
-                [
-                    "WidgetL10n routes plural catalog key(s) through an eager plain "
-                    "helper; use native integer interpolation: ['widget.remaining']"
-                ],
-            )
     def test_module_resource_reference_failures_flags_missing_bundle_key(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1618,8 +2263,10 @@ struct CompleteIntent: AppIntent {
         self.assertEqual(value, "Hello world.")
         self.assertFalse(interp)
 
-        concat = 'MobileL10n.text("k", "A " + "B.")'
-        value, interp, _ = _parse_concat_string(concat, concat.index(",") + 1)
+        concat = 'x(key: "k", defaultValue: "A " + "B.")'
+        value, interp, _ = _parse_concat_string(
+            concat, concat.index("defaultValue:") + len("defaultValue:")
+        )
         self.assertEqual(value, "A B.")
         self.assertFalse(interp)
 
@@ -1629,18 +2276,25 @@ struct CompleteIntent: AppIntent {
         )
         self.assertTrue(interp)
 
-    def test_call_site_defaults_extracts_key_and_decoded_default(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / "View.swift").write_text(
-                'MobileL10n.text("settings.tab.general", "General")',
-                encoding="utf-8",
+    def test_decoded_literals_mark_interpolations_and_computed_operands(self) -> None:
+        def default_of(call: str) -> tuple[str, bool]:
+            value, interp, _ = _parse_concat_string(
+                call, call.index("defaultValue:") + len("defaultValue:")
             )
-            sites = _call_site_defaults(root, re.compile(r"MobileL10n\.text\s*\("), "")
-            self.assertEqual(
-                [(key, default) for key, default, _, _ in sites],
-                [("settings.tab.general", "General")],
-            )
+            return value, interp
+
+        self.assertEqual(
+            default_of('x(key: "k", defaultValue: "\\(done) of \\(total(in: list)) done")'),
+            (f"{INTERPOLATION_MARK} of {INTERPOLATION_MARK} done", True),
+        )
+        self.assertEqual(
+            default_of('x(key: "k", defaultValue: """\n      \\(count) left\n      """)'),
+            (f"{INTERPOLATION_MARK} left", True),
+        )
+        self.assertEqual(
+            default_of('x(key: "k", defaultValue: "Total: " + label)'),
+            (f"Total: {NON_LITERAL_MARK}", True),
+        )
 
     def test_default_value_equality_gate_flags_drift(self) -> None:
         app = catalog_with_strings({"settings.tab.general": entry("General")})
@@ -1713,6 +2367,68 @@ struct CompleteIntent: AppIntent {
         )
         self.assertFalse(any("widget.config.legacy" in failure for failure in failures))
         self.assertFalse(any("widget.config.subtitle" in failure for failure in failures))
+
+    def test_default_value_equality_gate_compares_interpolated_defaults(self) -> None:
+        app = catalog_with_strings(
+            {
+                "tasks.count": self._plural_entry({"en": {"one": "%lld task", "other": "%lld tasks"}}),
+                "list.count": {
+                    "extractionState": "manual",
+                    "localizations": {
+                        "en": substitution_localization(
+                            "%1$@: %#@count@",
+                            {"count": plural_substitution(2, {"one": "%arg task", "other": "%arg tasks"})},
+                        )
+                    },
+                },
+                "goal.unit": {
+                    "extractionState": "manual",
+                    "localizations": {
+                        "en": substitution_localization(
+                            "%#@unit@", {"unit": plural_substitution(1, {"one": "day", "other": "days"})}
+                        )
+                    },
+                },
+                "tasks.share": entry("%@ (100%%)"),
+                "tasks.label": entry("Total: %@"),
+            }
+        )
+        # Each entry shape is called once with its catalog text and once drifted.
+        calls = (
+            ("tasks.count", '"\\(count) tasks"'),
+            ("tasks.count", '"\\(count) items"'),
+            ("list.count", '"\\(list): \\(count) tasks"'),
+            ("list.count", '"\\(list): \\(count) items"'),
+            ("tasks.share", '"\\(label) (100%)"'),
+            ("tasks.share", '"\\(label) (50%)"'),
+            # The ring shows the number apart; the catalog's forms leave it out.
+            ("goal.unit", '"\\(value) days"'),
+            # A computed operand makes the text unknown, so it is not compared.
+            ("tasks.label", '"Total " + label'),
+        )
+        source = "\n".join(
+            f'String(localized: "{key}", defaultValue: {default}, table: "Localizable", '
+            "bundle: LorvexL10n.bundle)"
+            for key, default in calls
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "View.swift").write_text(source, encoding="utf-8")
+            failures = default_value_equality_failures(app, [], source_roots=[root])
+
+        drifts = [failure.split(" for ", 1)[1] for failure in failures]
+        self.assertEqual(
+            drifts,
+            [
+                "'tasks.count' (each placeholder and interpolation shown as \u25c6): "
+                "catalog='\u25c6 tasks' default='\u25c6 items'",
+                "'list.count' (each placeholder and interpolation shown as \u25c6): "
+                "catalog='\u25c6: \u25c6 tasks' default='\u25c6: \u25c6 items'",
+                "'tasks.share' (each placeholder and interpolation shown as \u25c6): "
+                "catalog='\u25c6 (100%)' default='\u25c6 (50%)'",
+            ],
+        )
 
     def test_default_value_equality_gate_passes_on_shipped_catalogs(self) -> None:
         app, app_failures = load_catalog(CATALOG_PATH)

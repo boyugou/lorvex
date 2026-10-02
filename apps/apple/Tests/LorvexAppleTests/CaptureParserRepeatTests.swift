@@ -108,4 +108,24 @@ struct CaptureParserRepeatTests {
     #expect(line.resolvedDueDayOffset == 6)
     #expect(parse("每天早上8点吃药").resolvedPlannedDayOffset == 0)
   }
+
+  @Test("A repeat at midnight moves the days it names along with the time")
+  func midnightRepeats() {
+    let weekly = parse("每周五晚上12点倒垃圾")
+    #expect(weekly.title == "倒垃圾")
+    #expect(weekly.startMinutes == 0)
+    #expect(weekly.recurrence == TaskRecurrenceRule(freq: .weekly, byDay: ["SA"]))
+    #expect(weekly.recurrenceStartOffset == 4)
+    #expect(weekly.resolvedPlannedDayOffset == 4)
+
+    let daily = parse("每天晚上12点备份")
+    #expect(daily.recurrence == TaskRecurrenceRule(freq: .daily))
+    #expect(daily.resolvedPlannedDayOffset == 1)
+    #expect(daily.resolvedDueDayOffset == 1)
+
+    #expect(
+      parse("每月5号晚上12点对账").recurrence == TaskRecurrenceRule(freq: .monthly, byMonthDay: [6]))
+    #expect(
+      parse("每月31号晚上12点结账").recurrence == TaskRecurrenceRule(freq: .monthly, byMonthDay: [1]))
+  }
 }

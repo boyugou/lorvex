@@ -29,8 +29,8 @@ struct LorvexListEntityQuery: EntityQuery, EntityStringQuery {
     let entities = try await allListEntities(core: core)
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
-      entity.name.localizedCaseInsensitiveContains(query)
-        || entity.id.localizedCaseInsensitiveContains(query)
+      entity.name.localizedStandardContains(query)
+        || entity.id.localizedStandardContains(query)
     }
   }
 

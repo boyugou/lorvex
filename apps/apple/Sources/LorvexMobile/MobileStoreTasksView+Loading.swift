@@ -7,11 +7,6 @@ extension MobileStoreTasksView {
       + "|\(store.taskWorkspaceRevision)"
   }
 
-  func debounceSearchIfNeeded() async {
-    guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-    try? await Task.sleep(for: .milliseconds(250))
-  }
-
   func load() async {
     // A concurrent `load`/`loadMore` would race on `page`; defer this reload
     // rather than dropping it, and drain it when the in-flight one settles.
@@ -232,5 +227,6 @@ extension MobileStoreTasksView {
   private func selectTaskForKeyboard(_ taskID: LorvexTask.ID) {
     selectedTaskID = taskID
     store.selectTask(taskID)
+    keyboardScrollTarget = taskID
   }
 }

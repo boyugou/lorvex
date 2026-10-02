@@ -97,6 +97,33 @@ do
   test -d "$MCP_HELPER_APP/Contents/Resources/$required_bundle"
   test -d "$WIDGET_APPEX/Contents/Resources/$required_bundle"
 done
+# App Intents metadata, which release staging extracts (build_and_run.sh): the
+# app's Shortcuts actions and App Shortcuts, and the widget's configuration
+# intent, buttons, and control. A bundle without it ships intents the system
+# never sees, and an AppIntentConfiguration widget never leaves its placeholder.
+for intents_resources in "$APP_BUNDLE/Contents/Resources" "$WIDGET_APPEX/Contents/Resources"; do
+  test -s "$intents_resources/Metadata.appintents/extract.actionsdata"
+  test -s "$intents_resources/en.lproj/Localizable.strings"
+done
+test -s "$APP_BUNDLE/Contents/Resources/en.lproj/AppShortcuts.strings"
+# Localized Info.plist values: every language a bundle declares carries its
+# InfoPlist.strings, so the bundle name and the calendar permission prompts
+# follow the system language, and the English prompts match app_metadata.sh.
+for staged_plist in "$INFO_PLIST" "$WIDGET_INFO_PLIST"; do
+  staged_resources="$(dirname "$staged_plist")/Resources"
+  staged_languages="$(plutil -extract CFBundleLocalizations json -o - "$staged_plist" \
+    | python3 -c 'import json, sys; print("\n".join(json.load(sys.stdin)))')"
+  test -n "$staged_languages"
+  while IFS= read -r staged_language; do
+    plutil -lint "$staged_resources/$staged_language.lproj/InfoPlist.strings" >/dev/null
+  done <<<"$staged_languages"
+done
+plutil -extract NSCalendarsWriteOnlyAccessUsageDescription raw -o - \
+  "$APP_BUNDLE/Contents/Resources/en.lproj/InfoPlist.strings" \
+  | grep -qx "$CALENDAR_WRITE_USAGE_DESCRIPTION"
+plutil -extract NSCalendarsFullAccessUsageDescription raw -o - \
+  "$APP_BUNDLE/Contents/Resources/en.lproj/InfoPlist.strings" \
+  | grep -qx "$CALENDAR_FULL_ACCESS_USAGE_DESCRIPTION"
 "$ROOT_DIR/script/verify_macho_distribution.py" "$APP_BUNDLE"
 "$ROOT_DIR/script/verify_macho_closure.py" "$APP_BUNDLE"
 "$ROOT_DIR/script/verify_swiftpm_resource_bundles.py" "$APP_BUNDLE"

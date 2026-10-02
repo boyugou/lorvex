@@ -4,17 +4,20 @@ import Testing
 
 @Test
 func mobileTabsPromotePrimaryDailySurfaces() {
-  #expect(MobileTab.allCases == [.today, .tasks, .calendar, .habits, .review])
+  #expect(MobileTab.allCases == [.today, .calendar, .tasks, .review])
   #expect(MobileTab.tasks.systemImage == "checklist")
   #expect(MobileTab.today.title == "Today")
 }
 
+/// The four tabs take ⌘1–⌘4 in bar order, so the secondary workspaces follow
+/// at ⌘5 and ⌘6, the numbers the Mac sidebar gives Habits and Memory; the
+/// destinations a tab's own key opens have none of their own.
 @Test
-func mobileDestinationKeyboardShortcutsCoverEveryExtendedWorkspace() {
-  #expect(MobileDestination.tasks.keyboardShortcutKey == "6")
-  #expect(MobileDestination.calendar.keyboardShortcutKey == "7")
-  #expect(MobileDestination.lists.keyboardShortcutKey == "8")
-  #expect(MobileDestination.habits.keyboardShortcutKey == "9")
-  #expect(MobileDestination.memory.keyboardShortcutKey == "m")
+func mobileDestinationKeyboardShortcutsFollowTheTabs() {
+  #expect(MobileDestination.habits.keyboardShortcutKey == "5")
+  #expect(MobileDestination.memory.keyboardShortcutKey == "6")
   #expect(MobileDestination.settings.keyboardShortcutKey == ",")
+  for destination in [MobileDestination.tasks, .calendar, .lists, .review] {
+    #expect(destination.keyboardShortcutKey == nil, "\(destination)")
+  }
 }

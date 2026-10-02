@@ -62,6 +62,13 @@ extension AppStore {
     set { habitsStorage.draftHabitColor = newValue }
   }
 
+  /// The habit whose inspector should put the cursor in its name field: set
+  /// by a habit card's Edit command, cleared by the inspector once focused.
+  var habitNameFocusRequest: LorvexHabit.ID? {
+    get { habitsStorage.habitNameFocusRequest }
+    set { habitsStorage.habitNameFocusRequest = newValue }
+  }
+
   /// Reminder times ("HH:mm") to arm when the drafted habit is created.
   var draftHabitReminderTimes: [String] {
     get { habitsStorage.draftHabitReminderTimes }

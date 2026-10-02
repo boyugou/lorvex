@@ -29,10 +29,12 @@ iPad differs from a Mac in ways the layout has to honor:
   detail — while landscape can afford more columns. Verify both orientations
   rather than assuming a fixed column count.
 - **Size class is not device.** Split View, Slide Over, and Stage Manager set
-  `horizontalSizeClass` to `.compact` at runtime even on a large iPad. The shell
-  switches between the tab bar (compact) and the sidebar (regular) on the size
-  class, so a half-screen iPad window degrades gracefully. Keep every iPad
-  layout driven by size class, never by device idiom.
+  `horizontalSizeClass` to `.compact` at runtime even on a large iPad. Today
+  switches between a schedule sheet (compact) and a standing schedule pane
+  (regular) on the size class, and the list-and-detail workspaces and the
+  Calendar measure the actual width, so a half-screen iPad window degrades
+  gracefully to the phone layout. Keep every iPad layout driven by size class or
+  width, never by device idiom.
 - **Dual input.** Touch targets stay at least 44 points while pointer
   affordances (hover highlights, `.pointerStyle`, context menus) and hardware
   keyboard shortcuts coexist. Density gained by dropping touch ergonomics is not
@@ -47,12 +49,12 @@ iPad differs from a Mac in ways the layout has to honor:
 
 ### Regular width mirrors the phone, laid out for the width
 
-The sidebar shell shows the same Today sections as the tab-bar shell (the
-briefing, the schedule strip, the task list, Habits) as a capped column of
-cards, under the same title and date subtitle. Two different decompositions of the same day made the
-product feel like two apps. Where a destination is reachable from the sidebar,
-the detail column does not repeat it: the Tasks home drops its Memory row on
-iPad because Memory is a sidebar workspace there.
+At regular width the Today page keeps the phone's decomposition of the day (the
+briefing, the task list, Habits) as a capped column under the same title and
+date subtitle, and stands the schedule beside it instead of behind the day
+strip. The iPad also uses the phone's tab bar, so a destination is reached the
+same way on both. Two different decompositions of the same day made the
+product feel like two apps.
 
 ### Blocking spinners are for the first load only
 

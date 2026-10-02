@@ -18,7 +18,7 @@ import SwiftUI
 struct QuickAddRow: View {
   let placeholder: String
   var focusToken: Int? = nil
-  let preview: (String) -> QuickAddPreview
+  let preview: (String) -> LorvexCapturePreview
   let submit: (String) async -> Void
 
   @State private var title = ""

@@ -740,7 +740,8 @@ func calendarEventExportMapsAllDayAndTimedEvents() throws {
   #expect(allDayExport.isAllDay)
   #expect(allDayExport.location == nil)
   #expect(allDayExport.notes == nil)
-  #expect(allDayExport.endDate.timeIntervalSince(allDayExport.startDate) == 24 * 60 * 60)
+  // EventKit's all-day end: the last occupied day at 23:59:59.
+  #expect(allDayExport.endDate.timeIntervalSince(allDayExport.startDate) == 24 * 60 * 60 - 1)
 
   let multiDay = CalendarTimelineEvent(
     id: "event-all-day-span", title: "Conference", source: "lorvex", editable: true,
@@ -748,7 +749,7 @@ func calendarEventExportMapsAllDayAndTimedEvents() throws {
     allDay: true, location: nil, color: nil, eventType: "event", timezone: nil,
     isRecurring: false)
   let multiDayExport = try #require(CalendarEventExport(event: multiDay, notes: nil))
-  #expect(multiDayExport.endDate.timeIntervalSince(multiDayExport.startDate) == 3 * 24 * 60 * 60)
+  #expect(multiDayExport.endDate.timeIntervalSince(multiDayExport.startDate) == 3 * 24 * 60 * 60 - 1)
 }
 
 @Test

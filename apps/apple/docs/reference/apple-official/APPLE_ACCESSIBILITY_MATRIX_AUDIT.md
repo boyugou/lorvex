@@ -203,7 +203,7 @@ functionally equivalent.
 
 Evidence:
 
-- `Sources/LorvexApple/Views/HabitHeatmapView.swift`
+- `Sources/LorvexApple/Views/HabitHistoryPanel.swift`
 - `Sources/LorvexMobile/MobileHabitVisualizationSection.swift`
 
 Release condition: expose added/removed semantics in the accessibility value or

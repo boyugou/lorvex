@@ -81,8 +81,10 @@ final class CalendarIDBox: @unchecked Sendable {
   func set(_ v: String) { lock.withLock { value = v } }
 }
 
+/// A May 24–26 all-day event as EventKit stores it: its end is the last day
+/// at 23:59:59, which Lorvex reads as that last day.
 @Test
-func liveAccessMapsExclusiveAllDayEndToLorvexInclusiveEnd() throws {
+func liveAccessMapsAllDayEndToTheLastOccupiedDay() throws {
   let store = FakeEKEventStore()
   let event = store.makeEvent()
   event.isAllDay = true
@@ -94,7 +96,10 @@ func liveAccessMapsExclusiveAllDayEndToLorvexInclusiveEnd() throws {
   components.month = 5
   components.day = 24
   event.startDate = calendar.date(from: components)
-  components.day = 27
+  components.day = 26
+  components.hour = 23
+  components.minute = 59
+  components.second = 59
   event.endDate = calendar.date(from: components)
 
   let fetched = LiveEventKitAccess.fetchedEvent(from: event)

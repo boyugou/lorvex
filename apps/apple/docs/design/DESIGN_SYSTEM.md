@@ -243,6 +243,41 @@ share a line (a milestone and its rung, a stat and its reading, a review task
 and its due date) move onto two lines, or become rows, before either breaks
 inside a word.
 
+Text the user or the assistant wrote (a task's title and notes, a checklist
+item, a list, habit, or memory, an event, a briefing, a review summary) enters
+through `Text(userContent:)`, or through `userContentTypesetting(_:)` when the
+text is built another way, such as in the serif voice. SwiftUI typesets by the
+interface language's rules, and Japanese line breaking splits Latin text
+between a letter and a digit ("Review the Q" / "3 planning doc") and, at
+narrow widths, inside a word. So under a Japanese interface written text with
+no Chinese, Japanese, or Korean characters is typeset as English. Text with
+those characters, and the app's own copy, keep the interface's typesetting.
+
+The Home Screen and desktop widgets set their text in their own scale,
+`WidgetType` in `LorvexWidgetViews`. A Mac desktop widget gets about an
+iPhone widget's canvas, but macOS text styles run smaller (caption, caption2,
+and footnote are all 10 points), so each role names a style per platform, a
+step or two apart, and a widget keeps the same proportions on both:
+
+| Role | iOS | macOS |
+|---|---|---|
+| `label`: the widget's name | `.footnote` semibold | `.callout` semibold |
+| `title`: the lead task, what is left of the day | `.headline` | `.title3` semibold |
+| `display`: the large widget's lead task | `.title3` semibold | `.title2` semibold |
+| `row`: a task row's title | `.subheadline` | `.body` |
+| `meta`: a time, state, or estimate | `.footnote` | `.subheadline` |
+| `foot`: the foot line and the stale capsule | `.caption` | `.subheadline` |
+| `tile`: a habit tile's name | `.caption` medium | `.subheadline` medium |
+
+The large widget's briefing is the assistant's serif voice
+(`widgetBriefing`). A task row is as high as its circle's hit target, 30pt at
+the default size and growing with the row's text, so the circles stack with no
+gap. Where a family cannot hold every row, it shows fewer and its foot line
+counts the rest ("4 more today"); on the small family the foot line, and then a
+secondary fact such as the work left, gives way before a title loses a line or
+the widget's name is cut. The Lock Screen families keep the system's accessory
+styles.
+
 ## 5. Components
 
 Shared components live in `Sources/LorvexCore/Support` when both platforms use
@@ -258,7 +293,8 @@ them and in the platform module otherwise.
 | `LorvexTaskRow` (macOS) / `MobileTaskRow` (mobile) | the single task row: completion circle, title, metadata line, status chips |
 | `.lorvexCalendarTaskSurface(...)` | the one shape a task wears on a calendar — a timed block, an all-day pill, a month chip — on every platform: a faint accent wash inside a hollow dashed outline, where an event wears its calendar's solid fill and leading rail; running or selected firms the outline, done fades it. Blocks and pills also lead with the task's completion circle |
 | `LorvexIconButton` (macOS) | the one icon-only button: a semibold secondary glyph in a 28 pt circular hit area that fills faintly on hover, with its label as tooltip and VoiceOver name; inspector pin and close (`InspectorCloseButton`), pager arrows, and remove buttons in editors |
-| `TaskDetailProperties` (macOS) | a task's set fields as rows (icon, field name, value) with dashed "+ Field" additions; a row opens its field's popover editor, or a native menu for short fixed choices |
+| `InspectorColumn` + `InspectorPanel` (macOS) | the trailing inspector's content column (top-leading, at most 500 pt wide, shared insets) and the faint grouped card each of its sections sits in; the header's panel draws no card, and inside a popover no panel does. The task and habit inspectors are both built from them |
+| `InspectorProperties` (macOS) | a task's or a habit's set fields as rows (icon, field name, value) with dashed "+ Field" additions; a row opens its field's popover editor, or a native menu for short fixed choices |
 | `TaskDetailChoiceRow` (macOS) | a one-click choice in an editor: a title, an optional trailing detail, a hover fill, and an accent title with a checkmark when it is the current value |
 | `TaskDetailMonthCalendar` (macOS) | the month grid of every day field: round 32 pt day cells, the chosen day filled with the accent, today's number accent-colored, neighbouring months dimmed, `LorvexIconButton` arrows |
 | `CreationSheetLayout` + `CreationSheetHeader` (macOS) | the create and edit sheet: a small centered action title, the thing being made as a live preview (icon tile in its color, opening the icon and color picker; the name typed beside it), the remaining fields as a grouped form, then Cancel and the confirm button |
@@ -298,6 +334,23 @@ performs an action or leaves the app (Delete iCloud Data, the About links)
 leads with a glyph. The macOS settings panes keep their sidebar icons, which
 name panes rather than rows.
 
+Every settings control sits at its row's trailing edge, action buttons
+included. An action row names what it acts on with its glyph and title, and
+its button ("Choose File…", "Delete…", "Copy") ends the row; a button never
+takes a row of its own at the leading edge, where it leaves the rest of the
+card empty. An action that belongs to the rows above it (Open iCloud Settings
+under the account) is a row holding only that button, at the trailing edge. A
+row that opens a sheet (Acknowledgments) ends in a chevron, and the whole row
+takes the click. A set of choices that needs more than one line (the export
+categories) is a grid spanning the card, a column per group with the group's
+name on top, rather than a flow from the leading edge. A row's glyph is
+centered in a column of one width (`SettingsRowLabelStyle`), so the titles of
+a group start on one edge whatever their glyphs' widths.
+
+The macOS Settings window has one toolbar row, which holds the traffic lights
+and names the current pane, as System Settings does; the pane's form starts
+directly under it, with no header of its own.
+
 A glyph that labels a fact (a task row's due date, estimate, or repeat, a
 dependency's start or due day) sits `Spacing.xs` (4 pt) from its text. Glyphs
 that fill their box, such as a badge or a calendar, look attached to the
@@ -318,7 +371,7 @@ that hides two items behind an extra hover.
 
 - **macOS.** The sidebar names destinations by what the user does there:
   Today, Calendar, All Tasks, Review, Habits, then the user's lists. The
-  shared English names (Plan, Tasks, Reviews) stay as command-palette aliases.
+  shared English names (Tasks, Reviews) stay as command-palette aliases.
   Memory sits in the sidebar footer beside Settings, and on ⌘6. The title bar
   text is hidden; each workspace names itself with a large in-content title
   (subtitle and digest beneath it) while its date navigation, mode pickers,
@@ -340,21 +393,67 @@ that hides two items behind an extra hover.
   schedule as a sheet, and at regular width (iPad) the page keeps a readable
   column with the schedule standing beside it as a pane. Other screens lay
   the same components out for the width, never a stretched phone.
-- **watchOS, widgets, CarPlay.** The same status colors and tiles at glance
-  scale; no new tokens.
+- **Right-to-left languages and numbers.** Every surface lays out mirrored
+  under Arabic, so anything that points uses the semantic `forward` /
+  `backward` SF Symbols (`chevron.forward`, `arrow.forward.to.line`,
+  `arrow.uturn.forward`), which mirror with the layout. A fold header's
+  chevron is `LorvexDisclosureChevron`: it points along the reading direction
+  while folded and down while open. Paging controls bind their shortcut with
+  `lorvexStepShortcut`, so ⌘ plus the arrow key always points the way its
+  chevron does, mirrored in a right-to-left layout. A progress ring's arc is
+  `LorvexProgressArc`: it starts at twelve o'clock and fills with the reading
+  direction, counterclockwise in a right-to-left layout, as the system's
+  circular gauges do. A fraction or a count set beside
+  other text is one `Text`, never pieces in an `HStack`, which a right-to-left
+  layout reverses ("8/3" for three of eight).
+  Numbers shown to people render through the locale, which picks the digits
+  (Arabic (Saudi Arabia) writes "١٢", Persian "۱۲"): `Text(value, format:
+  .number)`, `LabeledContent(_:value:format:)`, or `value.formatted()` where a
+  view takes a `String`. `"\(value)"` built into a plain `String` and
+  `Text(verbatim:)` always write ASCII digits. Stored forms (day keys, `HH:mm`,
+  identifiers, export files) stay ASCII. Typed numbers go through
+  `LorvexNumberInput`: a number field starts with `text(for:)` and reads
+  with `integer(from:)`, which accepts the digits of every script, since the
+  Arabic number pad types Arabic-Indic digits and Chinese and Japanese input
+  methods often type full-width ones.
+- **watchOS and CarPlay.** The same status colors and tiles at glance scale;
+  no new tokens.
+- **Widgets.** The same colors and tiles, with the widgets' own type scale
+  (§4). A widget opens with its name in the accent ("Today", the list a
+  configured Today widget shows, "Habits", "Progress"), except where the lead
+  task's ring or the all-clear seal stands at the top-left of the small Today
+  widget. A task's circle completes it in place and takes its priority's
+  tint; the lead's ring fills while its time runs. Widget buttons are
+  `.plain`: on macOS the borderless style is an AppKit control, which WidgetKit
+  cannot draw, so a widget would show its unsupported-view placeholder.
 
 ## 7. Enforcement and QA
 
 - `script/verify_design_tokens.py` fails the gate when a view under
   `Sources/LorvexApple`, `Sources/LorvexMobile`, `Sources/LorvexWatch`,
-  `Sources/LorvexWidgetViews`, or `Sources/LorvexWidgetKitSupport` names a raw
-  system hue in a color position, uses `.font(.system(size:` outside the
-  documented exceptions, or passes a numeric corner radius. The exception list
-  is in the script and is the complete inventory of intentional literals.
+  `Sources/LorvexWidgetViews`, `Sources/LorvexWidgetKitSupport`, or
+  `Sources/LorvexCore` (`Models`, `Support`) names a raw system hue in a color
+  position, uses `.font(.system(size:` outside the documented exceptions,
+  passes a numeric corner radius, names a fixed-direction glyph
+  (`chevron.left`, `arrow.right.to.line`) where a mirroring `forward` /
+  `backward` form belongs, or trims a circle into a progress arc instead of
+  using `LorvexProgressArc` (§6). The exception list is in the script and is
+  the complete inventory of intentional literals.
 - Visual verification is part of every UI change. iOS runs headlessly in the
   simulator (`-lorvexSeedSampleData -lorvexOpenURL lorvex://tab/<tab>` plus
   `simctl io screenshot`); macOS uses the DEBUG `--ui-preview` mode, which
   renders the real windows over a seeded in-memory core.
+- Widgets render headlessly too. `script/widget_gallery_macos.sh <outdir>`
+  draws the Mac desktop widgets at their desktop sizes (small 162pt, medium
+  342×162pt, large 342pt square, inside 16pt margins), light and dark, from the
+  DEBUG widget gallery's sample day, in an offscreen window. The iOS gallery is
+  the `widgets`, `widgets-large`, `widgets-lock`, and `widgets-more` routes of
+  `script/ios_sim_screenshots.sh`, which pins the simulator to the default text
+  size; a launch argument picks another size to check a widget still fits.
+  Both galleries render through SwiftUI, so neither can show WidgetKit's
+  unsupported-view placeholder; `script/verify_source_hygiene.py` keeps the
+  AppKit-backed button style, and text styles outside `WidgetType`, out of the
+  widget views.
 - Reading a macOS tour capture: the tour never activates the app, and an
   inactive window draws its toolbar controls and its sidebar selection in grey.
   Those controls are enabled and the selection is tinted in use; grey in a

@@ -45,7 +45,10 @@ struct MobileCalendarDayColumn: View {
   let hourHeight: CGFloat = 56
   /// Widens with the footnote style of the hour labels, so "10 AM" and the
   /// all-day label stay on one line at every size the grid draws.
-  @ScaledMetric(relativeTo: .footnote) private var gutterWidth: CGFloat = 52
+  /// Scales the hour gutter with the footnote style, as its labels scale.
+  @ScaledMetric(relativeTo: .footnote) private var gutterScale: CGFloat = 1
+  /// Wide enough for the widest hour label on one line at any text size.
+  private var gutterWidth: CGFloat { MobileCalendarHourGutter.baseWidth(calendar: calendar) * gutterScale }
   static let snapMinutes: Int = 15
 
   /// Tracks an in-flight drag on a block: the event being moved + its

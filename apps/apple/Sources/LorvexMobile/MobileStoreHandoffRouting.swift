@@ -6,7 +6,7 @@ extension MobileStore {
   /// Applies the navigation state described by an `openTask` activity.
   public func continueOpenTaskActivity(_ activity: NSUserActivity) {
     guard let taskID = parseOpenTaskActivity(activity) else { return }
-    openDeepLinkRoute(.task(taskID))
+    navigate(to: .task(taskID))
   }
 
   /// Applies the navigation state described by an `openDestination` activity.
@@ -19,52 +19,21 @@ extension MobileStore {
   /// Navigates to the Tasks tab and pushes the list's screen.
   public func continueOpenListActivity(_ activity: NSUserActivity) {
     guard let listID = parseOpenListActivity(activity) else { return }
-    openNavigationTarget(
-      MobileNavigationTarget(selectedTab: .tasks, route: nil, tasksRoute: .tasksScope(.list(listID)))
-    )
+    navigate(to: .list(listID))
   }
 
-  /// Sets synchronous mobile navigation state for `route` and returns an async
-  /// detail-load closure when the route needs one loaded (currently only a
-  /// review-day switch, which awaits the daily-review read), or nil otherwise.
-  /// The single mapping from the shared `LorvexDeepLinkRoute` to mobile
-  /// navigation — used by ``navigate(to:)``, so URL (`openDeepLink`) and
-  /// Handoff/Siri all land on the identical entity, not just its workspace:
-  /// lists push the list's screen on the Tasks tab, habits select the
-  /// habit and push its detail on the Habits tab, reviews select the Review tab
-  /// and switch to the requested day, and tasks push the today-tab detail.
+  /// Sets the synchronous navigation state for `route` and returns the async
+  /// load the route still needs, or nil. Only a review day needs one: Review is
+  /// selected at once, and switching to the requested day awaits the
+  /// daily-review read. Where each route lands is
+  /// `MobileNavigationTarget.init(route:)`, so a URL (`openDeepLink`),
+  /// Handoff, and Siri all open the identical entity, not just its workspace.
   /// Mirrors `AppStore.applyRouteNavigation` on macOS.
   @discardableResult
   func applyRouteNavigation(_ route: LorvexDeepLinkRoute) -> (() async -> Void)? {
-    switch route {
-    case .task(let id):
-      openDeepLinkRoute(.task(id))
-      return nil
-    case .list(let id):
-      openNavigationTarget(
-        MobileNavigationTarget(selectedTab: .tasks, route: nil, tasksRoute: .tasksScope(.list(id)))
-      )
-      return nil
-    case .habit(let id):
-      openNavigationTarget(
-        MobileNavigationTarget(selectedTab: .habits, route: nil, habitsRoute: .habit(id))
-      )
-      return nil
-    case .review(let date):
-      openNavigationTarget(MobileNavigationTarget(selectedTab: .review, route: nil))
-      return { [weak self] in await self?.selectReviewDay(date) }
-    case .destination(let destination):
-      // Memory is a secondary workspace: open it the way the current layout
-      // reaches it rather than landing on the Tasks home that hosts it.
-      if destination == .memory {
-        openWorkspaceDestination(.memory)
-        return nil
-      }
-      guard let tab = MobileDeepLinkRoute.tabAndDestination(forDestination: destination.rawValue)
-      else { return nil }
-      openNavigationTarget(MobileNavigationTarget(selectedTab: tab, route: nil))
-      return nil
-    }
+    openNavigationTarget(MobileNavigationTarget(route: route))
+    guard case .review(let date) = route else { return nil }
+    return { [weak self] in await self?.selectReviewDay(date) }
   }
 
   /// Routes any shared `LorvexDeepLinkRoute` — URL or Handoff/Siri — through

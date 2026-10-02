@@ -200,7 +200,7 @@ extension AppStore {
     guard taskReport.status == .scheduled || taskReport.status == .disabled else {
       throw FactoryResetDerivedSurfaceError.reminderCleanupFailed("task reminders")
     }
-    await taskReminderScheduler.cancelSnoozes(keepingActiveTaskIDs: [])
+    await taskReminderScheduler.cancelAllSnoozes()
     let habitReport = await habitReminderScheduler.replaceScheduledHabitReminders(for: [])
     guard habitReport.status == .scheduled || habitReport.status == .disabled else {
       throw FactoryResetDerivedSurfaceError.reminderCleanupFailed("habit reminders")

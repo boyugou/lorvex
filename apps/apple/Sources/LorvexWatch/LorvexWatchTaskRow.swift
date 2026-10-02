@@ -18,7 +18,7 @@ struct LorvexWatchTaskRow: View {
         complete: complete)
       Button(action: openActions) {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-          Text(task.title)
+          Text(userContent: task.title)
             .font(LorvexDesign.Typography.primaryText)
             .lineLimit(2)
           if let line {

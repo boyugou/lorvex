@@ -67,7 +67,7 @@ public struct TaskRecurrenceEditorDraft: Equatable, Sendable {
   public var validatedInterval: Int? {
     let text = intervalText.trimmingCharacters(in: .whitespacesAndNewlines)
     if text.isEmpty { return 1 }
-    guard let value = Int(text), value >= 1,
+    guard let value = LorvexNumberInput.integer(from: text), value >= 1,
       value <= Self.maximumInterval
     else {
       return nil

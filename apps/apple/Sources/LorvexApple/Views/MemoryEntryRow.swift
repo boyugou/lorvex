@@ -19,7 +19,7 @@ struct MemoryEntryRow: View {
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
       headerLine
-      Text(entry.content)
+      Text(userContent: entry.content)
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)

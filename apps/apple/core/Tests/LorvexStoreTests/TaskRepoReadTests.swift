@@ -196,6 +196,29 @@ final class TaskRepoReadTests: XCTestCase {
     XCTAssertEqual(rows.map(\.core.id), ["b", "bb", "c", "a"])
   }
 
+  // MARK: - getSearchIndexTasks
+
+  func testGetSearchIndexTasksIsUncappedAndSkipsCancelledAndTrashedTasks() throws {
+    let store = try TestSupport.freshStore()
+    let rows = try store.writer.write { db -> [TaskRow] in
+      for index in 0..<600 {
+        try self.insertTask(db, id: String(format: "open-%03d", index), priority: 1)
+      }
+      try self.insertTask(db, id: "done", status: StatusName.completed, priority: 3)
+      try self.insertTask(db, id: "parked", status: StatusName.someday, priority: 3)
+      try self.insertTask(db, id: "started", status: StatusName.inProgress, priority: 3)
+      try self.insertTask(db, id: "dropped", status: StatusName.cancelled, priority: 1)
+      try self.insertTask(db, id: "trashed", priority: 1, archivedAt: "2026-01-02T00:00:00.000Z")
+      return try TaskRepo.Read.getSearchIndexTasks(db)
+    }
+    let ids = rows.map(\.core.id)
+    XCTAssertEqual(ids.count, 603)
+    XCTAssertFalse(ids.contains("dropped"))
+    XCTAssertFalse(ids.contains("trashed"))
+    // Canonical order: every P1 task, then the P3 tasks by id.
+    XCTAssertEqual(Array(ids.suffix(3)), ["done", "parked", "started"])
+  }
+
   // MARK: - getTasksByTag
 
   private func insertTag(

@@ -252,21 +252,19 @@ extension AppStore {
   /// completed sync report. Kept as one testable seam so notification gating and
   /// primary-surface reconciliation cannot drift apart.
   func reconcileSurfacesAfterCompletedCloudSyncCycle(_ report: CloudSyncCycleReport) async {
-    // Inbound apply commits through its dedicated transactional path rather than
-    // the ordinary local-write funnel. Notify independent same-process stores
-    // only when canonical rows actually changed. Outbound-only and LWW-skipped
-    // reports emit nothing; the origin ignores its own already-reconciled signal.
-    if !report.inbound.appliedEntityTypes.isEmpty {
-      DatabaseChangeSignal.broadcastCommittedChangeInProcess(origin: self)
-    }
+    // Inbound work changed local rows after the calling surface last read
+    // them. A server winner can arrive through the outbound conflict path, so
+    // adoption follows what the apply changed, not whether CloudKit fetched a
+    // page. Outbound-only reports, and fetched batches whose records were all
+    // held already (typically this device's own pushes coming back), changed
+    // nothing: they neither notify nor reload.
+    guard report.inbound.canonicalStateChanged else { return }
 
-    // Inbound records were applied after the calling surface last read local
-    // state. A server winner can arrive through the outbound conflict path, so
-    // canonical changes must trigger adoption even when CloudKit fetched no
-    // page. Fetched-but-unattributable pages conservatively request a full read.
-    guard report.fetchedRecordCount > 0 || !report.inbound.appliedEntityTypes.isEmpty else {
-      return
-    }
+    // Inbound apply commits through its dedicated transactional path rather than
+    // the ordinary local-write funnel, so notify independent same-process
+    // stores here; the origin ignores its own already-reconciled signal.
+    DatabaseChangeSignal.broadcastCommittedChangeInProcess(origin: self)
+
     if isRefreshing {
       // A local pass is running beside this cycle and may already have read
       // some surfaces from the pre-apply state. Reloading next to it could let
@@ -279,9 +277,9 @@ extension AppStore {
       // The selective executor republishes every affected derived surface.
       await performSelectiveInboundReload(domains)
     } else {
-      // Records fetched but not cleanly attributable (typically this device's
-      // own pushed records coming back, all skipped as already applied) or a
-      // diffuse `preference` change: re-read every local surface. This runs
+      // A change no domain bounds (a diffuse `preference` change, or one with
+      // no attributed kind, such as retention pruning of the assistant
+      // changelog): re-read every local surface. This runs
       // inside the cycle, so it must be the local-only reload. `refresh()` ends
       // by waiting on the sync cycle, and waiting on the cycle that is running
       // this code would leave both single-flights waiting on each other.
@@ -452,21 +450,18 @@ extension AppStore {
       await reloadTaskWorkspaceIfLoaded()
       let dirtyTaskDraftIDToPreserve = dirtyTaskIDToPreserve(after: taskDetailReload)
       reconcileSelectedTaskAfterRefresh(preservingDirtyTaskID: dirtyTaskDraftIDToPreserve)
-      // The content surfaces (lists/habits/review/calendar) don't depend on the
-      // bulk task read, so index them regardless. When that read fails the task
-      // index, reminders, and badge are left intact rather than shrunk to
-      // today's tasks only. Task + habit reminders share one budgeted re-plan
-      // (`rescheduleReminders`) so they compete for the OS notification cap by
-      // earliest-due instead of racing two independent passes — so it rides the
-      // task read alongside the index and badge.
+      // The Apple system surfaces run in parallel, each from its own read, so a
+      // failed read leaves only that surface as it was: the content index
+      // (lists, habits, review, calendar), the task index (every searchable
+      // task), the badge (every actionable task the day surfaces show), and the
+      // reminder re-plan (the delivery-aware reminder query). Task and habit
+      // reminders share that one budgeted re-plan so they compete for the OS
+      // notification cap by earliest-due instead of racing two passes.
       async let contentIndex: Void = reindexContentForSpotlight()
-      if let surfaceTasks = await appleSurfaceTasks() {
-        async let taskIndex: Void = reindexTasksForSpotlight(tasks: surfaceTasks)
-        async let reminderSchedule: Void = rescheduleReminders(tasks: surfaceTasks)
-        async let badge: Void = updateBadge(tasks: surfaceTasks)
-        _ = await (taskIndex, reminderSchedule, badge)
-      }
-      await contentIndex
+      async let taskIndex: Void = reindexTasksForSpotlight()
+      async let reminderSchedule: Void = rescheduleReminders()
+      async let badge: Void = updateBadge()
+      _ = await (contentIndex, taskIndex, reminderSchedule, badge)
       // The widget snapshot is a derived, best-effort surface: a missing or
       // corrupt App-Group sidecar or a transient file-lock failure must never
       // wipe the freshly loaded primary UI or raise a modal on launch.

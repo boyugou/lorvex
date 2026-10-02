@@ -54,7 +54,10 @@ struct ReviewsWorkspaceToolbar: ToolbarContent {
   let store: AppStore
   let state: ReviewsNavigationState
   @Binding var mode: ReviewMode
-  /// ⌘← / ⌘→ step the period unless the daily editor holds keyboard focus.
+  /// ⌘ with the arrow key that matches each chevron steps the period,
+  /// mirrored in a right-to-left layout
+  /// (``View/lorvexStepShortcut(_:isEnabled:)``), unless the daily editor
+  /// holds keyboard focus.
   var dayStepShortcutsEnabled = true
 
   var body: some ToolbarContent {
@@ -62,11 +65,11 @@ struct ReviewsWorkspaceToolbar: ToolbarContent {
       Button {
         Task { await step(-1) }
       } label: {
-        Label(previousLabel, systemImage: "chevron.left")
+        Label(previousLabel, systemImage: "chevron.backward")
       }
       .help(previousLabel)
       .accessibilityIdentifier("reviews.nav.prev")
-      .reviewNavigationShortcut(.leftArrow, enabled: dayStepShortcutsEnabled)
+      .lorvexStepShortcut(.backward, isEnabled: dayStepShortcutsEnabled)
 
       LorvexDateChip(
         date: state.chipDate,
@@ -88,13 +91,14 @@ struct ReviewsWorkspaceToolbar: ToolbarContent {
       Button {
         Task { await step(1) }
       } label: {
-        Label(nextLabel, systemImage: "chevron.right")
+        Label(nextLabel, systemImage: "chevron.forward")
       }
       .help(nextLabel)
       .accessibilityIdentifier("reviews.nav.next")
-      .reviewNavigationShortcut(.rightArrow, enabled: dayStepShortcutsEnabled)
+      .lorvexStepShortcut(.forward, isEnabled: dayStepShortcutsEnabled)
       // Both scopes clamp forward at the current period: Daily can't step past
-      // today, Weekly can't step past the current week (also disables ⌘→).
+      // today, Weekly can't step past the current week (this also disables the
+      // forward shortcut).
       .disabled(state.isViewingCurrent)
 
       if !state.isViewingCurrent {
@@ -161,17 +165,6 @@ struct ReviewModePicker: View {
   }
 }
 
-private extension View {
-  @ViewBuilder
-  func reviewNavigationShortcut(_ key: KeyEquivalent, enabled: Bool) -> some View {
-    if enabled {
-      keyboardShortcut(key, modifiers: [.command])
-    } else {
-      self
-    }
-  }
-}
-
 /// Renders the core's `"YYYY-MM-DD - YYYY-MM-DD"` weekly window as a localized
 /// month/day range (e.g. "Jun 18 – Jun 24"), falling back to the raw title when
 /// it can't be parsed.
@@ -182,6 +175,7 @@ enum ReviewsWeekRangeFormatter {
       let start = LorvexDateFormatters.ymd.date(from: parts[0]),
       let end = LorvexDateFormatters.ymd.date(from: parts[1])
     else { return windowTitle }
-    return LorvexMonthDayFormatter.localRange(from: start, to: end)
+    return LorvexDateFormatters.range(
+      from: start, to: end, template: "MMMd", timeZone: .autoupdatingCurrent)
   }
 }

@@ -9,7 +9,7 @@ extension TaskDetailView {
   /// started state in the Start toggle under the header, so this block does
   /// not repeat them. Nothing here reports save state: the panel autosaves.
   func headerSection(task: LorvexTask) -> some View {
-    TaskDetailPanel(accessibilityIdentifier: "task.detail.header.panel", chrome: .header) {
+    InspectorPanel(accessibilityIdentifier: "task.detail.header.panel", chrome: .header) {
       HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
         completionCircle(task: task)
 

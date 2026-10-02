@@ -28,19 +28,7 @@ extension MobileStore {
   /// loaded snapshot is not for the current day, where a clock position would
   /// be meaningless.
   var nowMinutesInProductDay: Int? {
-    if let pinned = LorvexPreviewClock.pinnedMinutes { return pinned }
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = logicalTimeZone
-    let now = Date()
-    let dayFormatter = DateFormatter()
-    dayFormatter.calendar = calendar
-    dayFormatter.locale = Locale(identifier: "en_US_POSIX")
-    dayFormatter.dateFormat = "yyyy-MM-dd"
-    dayFormatter.timeZone = calendar.timeZone
-    guard dayFormatter.string(from: now) == logicalTodayString else { return nil }
-    let parts = calendar.dateComponents([.hour, .minute], from: now)
-    guard let hour = parts.hour, let minute = parts.minute else { return nil }
-    return hour * 60 + minute
+    LorvexProductDayClock.nowMinutes(on: logicalTodayString, in: logicalTimeZone)
   }
 
   /// The working window in minutes since midnight, or nil until the

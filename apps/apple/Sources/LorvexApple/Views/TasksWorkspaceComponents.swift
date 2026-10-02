@@ -23,6 +23,11 @@ struct TasksInitialLoadingState: View {
 /// The open tasks at the top of the Tasks workspace, straight under the
 /// quick-add field. They carry no header: the field above them already says
 /// this is the list being worked, and a title would only add an indent level.
+///
+/// The body emits the rows themselves rather than a stack holding them, so in
+/// ``WorkspaceReviewList``'s lazy stack each row is a lazy child of its own
+/// and a long list builds only the rows on screen. The gap above the rows is a
+/// child of its own for the same reason.
 struct TaskOpenRows: View {
   let tasks: [LorvexTask]
   @Bindable var store: AppStore
@@ -32,19 +37,17 @@ struct TaskOpenRows: View {
 
   var body: some View {
     let timeLabels = store.todayTimeLabels
-    VStack(alignment: .leading, spacing: 0) {
-      ForEach(tasks) { task in
-        TaskRowDropTarget(task: task, store: store, timeLabel: timeLabels[task.id])
-          .padding(.horizontal, LorvexDesign.Spacing.m)
-      }
-      if showsLoadMore && store.taskWorkspaceHasMore(status: .open) {
-        WorkspaceTaskLoadMoreButton(isLoading: store.taskWorkspaceIsLoadingMore(status: .open)) {
-          Task { await store.loadMoreTaskWorkspace(status: .open) }
-        }
+    Color.clear
+      .frame(height: LorvexDesign.Spacing.xs)
+    ForEach(tasks) { task in
+      TaskRowDropTarget(task: task, store: store, timeLabel: timeLabels[task.id])
+        .padding(.horizontal, LorvexDesign.Spacing.m)
+    }
+    if showsLoadMore && store.taskWorkspaceHasMore(status: .open) {
+      WorkspaceTaskLoadMoreButton(isLoading: store.taskWorkspaceIsLoadingMore(status: .open)) {
+        Task { await store.loadMoreTaskWorkspace(status: .open) }
       }
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.top, LorvexDesign.Spacing.xs)
   }
 }
 
@@ -56,12 +59,17 @@ struct TaskOpenRows: View {
 /// `pagedSections` are the workspace sections whose pages feed `tasks`. Load
 /// More appears while any of them has another page, and fetches the next page
 /// of each one that does.
+///
+/// Like ``TaskOpenRows``, the body emits the fold row and the task rows
+/// themselves rather than a stack holding them, so an unfolded group of
+/// hundreds of rows builds only the rows on screen.
 struct TaskFoldSection: View {
   @Binding var isExpanded: Bool
   let title: String
   let tasks: [LorvexTask]
   let pagedSections: [TaskWorkspaceSection]
   @Bindable var store: AppStore
+  /// The fold row's accessibility identifier.
   let accessibilityIdentifier: String
 
   private var sectionsWithMore: [TaskWorkspaceSection] {
@@ -71,35 +79,34 @@ struct TaskFoldSection: View {
   var body: some View {
     let sectionsWithMore = sectionsWithMore
     if !tasks.isEmpty || !sectionsWithMore.isEmpty {
-      VStack(alignment: .leading, spacing: 0) {
-        WorkspaceTaskDisclosureHeader(
-          isExpanded: $isExpanded,
-          title: title,
-          countText: sectionsWithMore.isEmpty ? "\(tasks.count)" : "\(tasks.count)+"
-        )
-        .padding(.horizontal, WorkspaceTaskColumns.markerLeading)
-        .padding(.top, LorvexDesign.Spacing.m)
-        .padding(.bottom, LorvexDesign.Spacing.xs)
+      WorkspaceTaskDisclosureHeader(
+        isExpanded: $isExpanded,
+        title: title,
+        countText: sectionsWithMore.isEmpty
+          ? tasks.count.formatted() : "\(tasks.count.formatted())+",
+        accessibilityIdentifier: accessibilityIdentifier
+      )
+      .padding(.horizontal, WorkspaceTaskColumns.markerLeading)
+      .padding(.top, LorvexDesign.Spacing.m)
+      .padding(.bottom, LorvexDesign.Spacing.xs)
 
-        if isExpanded {
-          ForEach(tasks) { task in
-            TaskRowDropTarget(task: task, store: store)
-              .padding(.horizontal, LorvexDesign.Spacing.m)
-          }
-          if !sectionsWithMore.isEmpty {
-            WorkspaceTaskLoadMoreButton(
-              isLoading: sectionsWithMore.contains { store.taskWorkspaceIsLoadingMore(status: $0) }
-            ) {
-              Task {
-                for section in sectionsWithMore {
-                  await store.loadMoreTaskWorkspace(status: section)
-                }
+      if isExpanded {
+        ForEach(tasks) { task in
+          TaskRowDropTarget(task: task, store: store)
+            .padding(.horizontal, LorvexDesign.Spacing.m)
+        }
+        if !sectionsWithMore.isEmpty {
+          WorkspaceTaskLoadMoreButton(
+            isLoading: sectionsWithMore.contains { store.taskWorkspaceIsLoadingMore(status: $0) }
+          ) {
+            Task {
+              for section in sectionsWithMore {
+                await store.loadMoreTaskWorkspace(status: section)
               }
             }
           }
         }
       }
-      .accessibilityIdentifier(accessibilityIdentifier)
     }
   }
 }

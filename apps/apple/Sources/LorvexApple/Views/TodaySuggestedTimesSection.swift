@@ -41,7 +41,7 @@ struct TodaySuggestedTimesSection: View {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         LorvexProposedScheduleRows(
           proposal: proposal, dayRows: dayRows, wontFitLabel: TodayCalmCopy.wontFit,
-          busyLabel: TodayCalmCopy.busy, durationLabel: TodayCalmCopy.duration)
+          busyLabel: TodayCalmCopy.busy, durationLabel: { LorvexDurationFormat.minutes($0) })
       }
       .padding(.vertical, LorvexDesign.Spacing.xs)
       .lorvexInsetPanel(padding: 0)

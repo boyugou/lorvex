@@ -27,7 +27,8 @@ struct CalendarWeekGridView: View {
   let createAt: (Date, Int, Int) -> Void
 
   let hourHeight: CGFloat = CalendarWeekGridMetrics.hourHeight
-  let gutterWidth: CGFloat = CalendarWeekGridMetrics.gutterWidth
+  /// Wide enough for the display locale's widest hour label on one line.
+  var gutterWidth: CGFloat { CalendarWeekGridMetrics.gutterWidth(fitting: (0..<24).map(hourLabel)) }
   /// Maximum simultaneous lanes shown per day column before the "+N more" overflow badge appears.
   let maxDisplayedLanes = 3
   // Read the calendar from the environment so a timezone / first-weekday change
@@ -250,9 +251,7 @@ struct CalendarWeekGridView: View {
                   .strokeBorder(.tint.opacity(0.55), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
               )
             if max(bounds.bottom - bounds.top, 4) > 18 {
-              Text(
-                "\(Self.hmLabel(minuteOfDay: startMin))–\(Self.hmLabel(minuteOfDay: startMin + span))"
-              )
+              Text(lorvexClockRangeLabel(startMinutes: startMin, endMinutes: startMin + span))
               .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
               .foregroundStyle(.tint)
               .padding(.horizontal, 4)
@@ -317,12 +316,9 @@ struct CalendarWeekGridView: View {
       .offset(y: badgeY)
       .accessibilityLabel(
         String(
-          format: String(
-            localized: "calendar.overflow.more_events.a11y",
-            defaultValue: "%lld more events",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          hidden.count + hiddenTasks.count))
+          localized: "calendar.overflow.more_events.a11y",
+          defaultValue: "\(hidden.count + hiddenTasks.count) more events",
+          table: "Localizable", bundle: LorvexL10n.bundle))
       .popover(
         isPresented: Binding(
           get: { overflowPopoverDayID == day.id },
@@ -353,9 +349,7 @@ struct CalendarWeekGridView: View {
               Text(block.task.title)
                 .font(LorvexDesign.Typography.secondaryText)
                 .lineLimit(1)
-              Text(
-                "\(lorvexClockTimeLabel(minutes: block.startMin))–\(lorvexClockTimeLabel(minutes: block.endMin))"
-              )
+              Text(lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin))
               .font(LorvexDesign.Typography.tertiaryText)
               .foregroundStyle(.secondary)
             }

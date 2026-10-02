@@ -73,6 +73,13 @@ public enum TaskUpdatePreparation {
         "Invalid status '\(beforeStatus)'. "
           + "Expected one of: open, completed, cancelled, someday")
     }
+    // A status equal to the current one is no transition. Running one would
+    // rewrite the lifecycle columns, and for a completed recurring task it
+    // would drop the authorized link to its next occurrence, so a later
+    // reopen could no longer cancel that occurrence.
+    let changedStatus = normalizedStatus.flatMap { status in
+      TaskStatus.parse(status) == beforeStatusTyped ? nil : status
+    }
 
     try validateCount(
       update.tagsSet?.count ?? 0, max: ValidationLimits.maxTaskTags, fieldName: "tags")
@@ -209,7 +216,7 @@ public enum TaskUpdatePreparation {
 
     let plannedTime = try preparePlannedTime(
       db, update: update, plannedDate: plannedDate,
-      newStatus: normalizedStatus.flatMap(TaskStatus.parse), beforeStatus: beforeStatusTyped)
+      newStatus: changedStatus.flatMap(TaskStatus.parse), beforeStatus: beforeStatusTyped)
 
     let changedTags =
       update.tagsSet != nil || update.tagsAdd != nil || update.tagsRemove != nil
@@ -230,7 +237,7 @@ public enum TaskUpdatePreparation {
     }
 
     return PreparedTaskUpdate(
-      newStatus: normalizedStatus,
+      newStatus: changedStatus,
       newDependsOn: newDependsOn,
       changedDeps: changedDeps,
       newTags: newTags,

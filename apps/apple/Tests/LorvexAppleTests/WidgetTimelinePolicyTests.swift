@@ -1,4 +1,5 @@
 import Foundation
+import LorvexCore
 import LorvexWidgetKitSupport
 import Testing
 
@@ -15,9 +16,7 @@ func widgetFreshnessPolicyClassifiesAgeAndLabelsCompactly() {
   )
 
   #expect(policy.classify(snapshot: snapshot, now: now) == .warning(ageSeconds: 9_000))
-  #expect(policy.compactAgeLabel(ageSeconds: 5 * 60) == "5m ago")
-  #expect(policy.compactAgeLabel(ageSeconds: 3 * 60 * 60) == "3h ago")
-  #expect(policy.compactAgeLabel(ageSeconds: 2 * 24 * 60 * 60) == "2d ago")
+  #expect(policy.compactAgeLabel(ageSeconds: 9_000) == LorvexDateFormatters.elapsed(seconds: 9_000))
 }
 
 @Test

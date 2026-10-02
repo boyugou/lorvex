@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "يمكن لـ Lorvex إضافة فترات التخطيط التي تنشئها إلى تقويم Apple.";
+"NSCalendarsFullAccessUsageDescription" = "يمكن لـ Lorvex قراءة تفاصيل الأحداث لإنشاء الجداول وتزويد المساعد بالسياق.";

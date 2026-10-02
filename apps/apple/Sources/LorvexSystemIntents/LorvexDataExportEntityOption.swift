@@ -42,7 +42,7 @@ enum LorvexDataExportEntityOption: String, AppEnum {
     name: LocalizedStringResource("system.option.data_entity.type", defaultValue: "Data Entity", table: "Localizable", bundle: SystemL10n.bundle))
   // Must be a compile-time static literal — the AppIntents `ExtractAppIntentsMetadata`
   // build phase parses this at build time and rejects a computed/closure form.
-  // Labels mirror `LorvexDataExportCategory.displayLabel`.
+  // The titles name each category as `LorvexDataExportCategory.localizedDisplayName` does.
   static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
     .all: .init(title: LocalizedStringResource("system.option.data_entity.all", defaultValue: "All", table: "Localizable", bundle: SystemL10n.bundle)),
     .tasks: .init(title: LocalizedStringResource("system.option.data_entity.tasks", defaultValue: "Tasks", table: "Localizable", bundle: SystemL10n.bundle)),

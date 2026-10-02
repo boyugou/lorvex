@@ -9,12 +9,13 @@ extension AppStore {
   /// page hides or skips one it shows. Finished timed tasks stay out: the
   /// schedule may fold them behind its "earlier" line.
   var todayOrderedTasks: [LorvexTask] {
-    let timed = todaySchedule.compactMap { row -> LorvexTask? in
+    let content = todayColumnContent
+    let timed = content.schedule.compactMap { row -> LorvexTask? in
       guard case .task(let task) = row.kind, task.status.isActionable else { return nil }
       return task
     }
-    let untimed = todayUntimedItems.map(\.task)
-    let done = isTodayDoneCollapsed ? [] : todayDoneListTasks
+    let untimed = content.untimedItems.map(\.task)
+    let done = isTodayDoneCollapsed ? [] : content.doneListTasks
     var seen = Set<LorvexTask.ID>()
     return (timed + untimed + done).filter { seen.insert($0.id).inserted }
   }

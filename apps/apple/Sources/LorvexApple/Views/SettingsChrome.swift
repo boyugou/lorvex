@@ -1,3 +1,4 @@
+import AppKit
 import LorvexCore
 import SwiftUI
 
@@ -31,60 +32,6 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
       String(localized: "settings.tab.data", defaultValue: "Data", table: "Localizable", bundle: LorvexL10n.bundle)
     case .diagnostics:
       String(localized: "settings.tab.diagnostics", defaultValue: "Diagnostics", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-  }
-
-  var subtitle: String {
-    switch self {
-    case .general:
-      String(
-        localized: "settings.tab.general.subtitle",
-        defaultValue: "Appearance, language, time, and day hours.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .permissions:
-      String(
-        localized: "settings.tab.permissions.subtitle",
-        defaultValue: "System access and Dock badge behavior.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .calendar:
-      String(
-        localized: "settings.tab.calendar_reminders.subtitle",
-        defaultValue: "Calendar import and write-back.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .cloudSync:
-      String(
-        localized: "settings.tab.cloud_sync.subtitle",
-        defaultValue: "The same tasks on every device.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .mcpHost:
-      String(
-        localized: "settings.tab.mcp_host.subtitle",
-        defaultValue: "Connection, assistants on this Mac, and memory.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .data:
-      String(
-        localized: "settings.tab.data.subtitle",
-        defaultValue: "Database, export, import, and backups.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
-    case .diagnostics:
-      String(
-        localized: "settings.tab.diagnostics.subtitle",
-        defaultValue: "Runtime checks, changelog, and recent logs.",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      )
     }
   }
 
@@ -158,8 +105,8 @@ struct SettingsSidebar: View {
   }
 }
 
-/// One line per category, named exactly like its detail page's header; the
-/// header's own description says what the page holds.
+/// One line per category, named exactly like its page's title in the window's
+/// toolbar.
 private struct SettingsSidebarRow: View {
   let category: SettingsCategory
 
@@ -178,56 +125,115 @@ private struct SettingsSidebarRow: View {
   }
 }
 
+/// One category's page: its grouped form, named by the window's toolbar title
+/// as System Settings names its panes, so the form starts right under the
+/// toolbar.
 struct SettingsDetailPage<Content: View>: View {
   let category: SettingsCategory
   @ViewBuilder let content: Content
 
   var body: some View {
-    VStack(spacing: 0) {
-      SettingsDetailHeader(category: category)
-      Divider()
-      Form {
-        content
-      }
-      .formStyle(.grouped)
-      .accessibilityIdentifier("settings.detail.content")
+    Form {
+      content
     }
-    .background(.background)
+    .formStyle(.grouped)
+    .labelStyle(SettingsRowLabelStyle())
+    .navigationTitle(category.title)
     .navigationSplitViewColumnWidth(
       min: SettingsLayoutMetrics.detailMinWidth,
       ideal: SettingsLayoutMetrics.detailIdealWidth,
       max: SettingsLayoutMetrics.detailMaxWidth
     )
-    .accessibilityIdentifier("settings.detail.page")
+    .accessibilityIdentifier("settings.detail.content")
   }
 }
 
-private struct SettingsDetailHeader: View {
-  let category: SettingsCategory
+/// The labels of settings rows: the glyph centered in a column of one fixed
+/// width, so every row's title starts on the same edge whatever its glyph's
+/// width, as System Settings' uniform icon tiles keep its titles aligned. The
+/// glyph sits on the title's first baseline, so a message that wraps keeps its
+/// glyph beside the first line.
+struct SettingsRowLabelStyle: LabelStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+      configuration.icon
+        .frame(width: SettingsLayoutMetrics.rowIconWidth)
+      configuration.title
+    }
+  }
+}
+
+/// Gives the Settings window a single-row unified toolbar, the row that holds
+/// the traffic lights and the page's title. The Settings scene opens its
+/// window in the preference style, which centers the window's title on a row
+/// of its own above a second row meant for tab icons; with a sidebar instead
+/// of tabs that second row stays empty and pushes every page down. Applied
+/// when the view joins its window.
+struct SettingsWindowToolbarStyle: NSViewRepresentable {
+  func makeNSView(context: Context) -> NSView { WindowObservingView() }
+
+  func updateNSView(_ nsView: NSView, context: Context) {}
+
+  private final class WindowObservingView: NSView {
+    override func viewDidMoveToWindow() {
+      super.viewDidMoveToWindow()
+      window?.toolbarStyle = .unified
+    }
+  }
+}
+
+/// A settings row holding one action that belongs to the rows above it (open
+/// iCloud settings under the account, resume under the pause), at the row's
+/// trailing edge, where a grouped form puts every other control.
+struct SettingsTrailingActionRow<Content: View>: View {
+  @ViewBuilder let content: Content
 
   var body: some View {
-    HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: category.systemImage)
-        .font(LorvexDesign.Typography.primaryText.weight(.semibold))
-        .foregroundStyle(Color.accentColor)
-        .frame(width: 22, alignment: .center)
-        .accessibilityHidden(true)
-
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        Text(category.title)
-          .font(LorvexDesign.Typography.sectionHeader)
-        Text(category.subtitle)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-      }
-
-      Spacer()
+    HStack {
+      Spacer(minLength: 0)
+      content
     }
-    .padding(.horizontal, SettingsLayoutMetrics.detailHorizontalPadding)
-    .padding(.vertical, LorvexDesign.Spacing.s)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(.bar)
-    .accessibilityIdentifier("settings.detail.header")
+  }
+}
+
+/// A settings row that opens a sheet (the About pane's Acknowledgments and
+/// Privacy Policy): its glyph and title, and a chevron at the trailing edge.
+/// The whole row takes the click.
+struct SettingsSheetLinkRow: View {
+  let title: String
+  let systemImage: String
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        Label(title, systemImage: systemImage)
+        Spacer(minLength: 0)
+        Image(systemName: "chevron.forward")
+          .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+          .foregroundStyle(.tertiary)
+          .accessibilityHidden(true)
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+/// A copy button's title: `title`, or "Copied" for a moment after a copy, in
+/// the width of the wider of the two, so the button keeps its size at the
+/// row's trailing edge while its title changes.
+struct SettingsCopyButtonTitle: View {
+  var title = String(localized: "common.copy", defaultValue: "Copy", table: "Localizable", bundle: LorvexL10n.bundle)
+  let copied: Bool
+
+  var body: some View {
+    let copiedTitle = String(localized: "common.copied", defaultValue: "Copied", table: "Localizable", bundle: LorvexL10n.bundle)
+    ZStack {
+      Text(title).hidden()
+      Text(copiedTitle).hidden()
+      Text(copied ? copiedTitle : title)
+    }
   }
 }
 
@@ -251,10 +257,9 @@ struct SettingsAdvancedDisclosureButton: View {
       HStack(spacing: LorvexDesign.Spacing.s) {
         Text(title)
         Spacer(minLength: 0)
-        Image(systemName: "chevron.right")
+        LorvexDisclosureChevron(isExpanded: isExpanded)
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
           .foregroundStyle(.tertiary)
-          .rotationEffect(.degrees(isExpanded ? 90 : 0))
       }
       .contentShape(Rectangle())
     }

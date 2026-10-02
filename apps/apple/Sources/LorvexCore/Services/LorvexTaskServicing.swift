@@ -54,6 +54,13 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// that claim today. See ``WidgetStatsSource``.
   func loadWidgetStatsSource() async throws -> WidgetStatsSource
 
+  /// Every task the system search index (Spotlight) carries: each task that is
+  /// neither cancelled nor in the Trash, in the canonical task order. Uncapped,
+  /// unlike the paged list reads, because the caller replaces the whole index
+  /// from this set; a capped page would drop every task ranked past the cap
+  /// from search.
+  func loadSearchIndexTasks() async throws -> [LorvexTask]
+
   /// Returns tasks with a scheduled due date inside the inclusive calendar
   /// window, ordered by the canonical task order.
   func getScheduledTasks(from: String, to: String, limit: Int) async throws -> [LorvexTask]
@@ -103,12 +110,6 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// Returns open tasks that have at least one pending future reminder within
   /// the next `hoursAhead` hours, ordered by the first matching reminder time.
   func getTasksWithUpcomingReminders(hoursAhead: Int, limit: Int) async throws -> [LorvexTask]
-
-  /// Deterministic intake nudges for a task that already exists (missing
-  /// estimate, missing planned date, likely-duplicate title). Read-only. The
-  /// extension default returns no advice so conformers that don't compute it
-  /// (test stubs) need no change.
-  func taskIntakeAdvice(id: LorvexTask.ID) async throws -> [TaskIntakeAdviceItem]
 
   // MARK: - Mutations
   //
@@ -363,8 +364,6 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
 }
 
 extension LorvexTaskServicing {
-  public func taskIntakeAdvice(id: LorvexTask.ID) async throws -> [TaskIntakeAdviceItem] { [] }
-
   public func deferHistory(taskID: LorvexTask.ID, limit: Int) async throws
     -> [TaskDeferHistoryEntry]
   { [] }

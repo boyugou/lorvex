@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 /// Renders a markdown string as native SwiftUI, the single rendered-markdown
@@ -60,10 +61,10 @@ public struct MarkdownNoteView: View {
     private func blockView(_ block: MarkdownNote.RenderedBlock) -> some View {
         switch block {
         case let .heading(level, text):
-            Text(text)
+            Text(userContent: text)
                 .font(headingFont(level: level))
         case let .paragraph(text):
-            Text(text)
+            Text(userContent: text)
                 .fixedSize(horizontal: false, vertical: true)
         case let .unorderedList(items):
             VStack(alignment: .leading, spacing: 6) {
@@ -102,14 +103,14 @@ public struct MarkdownNoteView: View {
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
-                Text(text)
+                Text(userContent: text)
                     .font(.system(.body, design: .monospaced))
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
         case let .quote(text):
-            Text(text)
+            Text(userContent: text)
                 .padding(.leading, 10)
                 .overlay(alignment: .leading) {
                     Rectangle()

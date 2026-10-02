@@ -180,7 +180,7 @@ public final class LorvexWatchStore {
           .map {
             WidgetSnapshot.HabitSummary(
               id: $0.id, name: $0.name, icon: $0.icon,
-              completedToday: $0.completionsToday, target: $0.targetCount)
+              completedToday: $0.completionsToday, target: $0.targetCount, color: $0.color)
           }
         snapshotStatusText = String(
           localized: "watch.status.live", defaultValue: "Live from Lorvex",

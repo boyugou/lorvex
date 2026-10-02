@@ -1,10 +1,6 @@
 import LorvexCore
 import SwiftUI
 
-#if canImport(UIKit)
-  import UIKit
-#endif
-
 /// A colored, rounded-square icon tile — the single highest-leverage atom for a
 /// "designed, not bare" look. A tinted fill behind a hierarchical SF Symbol, used
 /// as the leading element of catalog rows, Settings/More rows, and section
@@ -30,26 +26,7 @@ struct MobileIconTile: View {
   /// the canonical Inbox's "📥" → a clean tray) rather than mixing emoji into the
   /// tinted tiles or rendering the "?" missing-glyph box.
   init(icon: String?, fallback: String, tint: Color = LorvexDesign.Palette.accent, size: CGFloat = 30) {
-    self.init(symbol: Self.symbol(for: icon, fallback: fallback), tint: tint, size: size)
-  }
-
-  /// The SF Symbol a stored icon string renders as: the string itself when it
-  /// names a real SF Symbol, otherwise `fallback` (an emoji, an empty string, or
-  /// an unknown name).
-  nonisolated static func symbol(for icon: String?, fallback: String) -> String {
-    if let icon, !icon.isEmpty, icon.unicodeScalars.allSatisfy(\.isASCII), isValidSymbol(icon) {
-      return icon
-    }
-    return fallback
-  }
-
-  /// Whether `name` is a real SF Symbol (so we never render the "?" box).
-  nonisolated static func isValidSymbol(_ name: String) -> Bool {
-    #if canImport(UIKit)
-      return UIImage(systemName: name) != nil
-    #else
-      return true
-    #endif
+    self.init(symbol: LorvexSymbol.name(for: icon, fallback: fallback), tint: tint, size: size)
   }
 
   init(symbol: String, tint: Color = LorvexDesign.Palette.accent, size: CGFloat = 30) {

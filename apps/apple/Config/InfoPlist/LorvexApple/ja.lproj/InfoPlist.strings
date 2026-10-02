@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvexで作成した時間ブロックをAppleのカレンダーに追加できます。";
+"NSCalendarsFullAccessUsageDescription" = "Lorvexは、イベントの詳細を読み取って、スケジュールとアシスタント用のコンテキストを作成できます。";

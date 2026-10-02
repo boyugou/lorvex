@@ -15,11 +15,11 @@ extension TaskToolCatalog {
         "status": .object([
           "type": .string("string"),
           "enum": .array([
-            .string("open"), .string("in_progress"), .string("completed"),
+            .string("open"), .string("in_progress"), .string("actionable"), .string("completed"),
             .string("cancelled"), .string("someday"), .string("all"),
           ]),
           "description": .string(
-            "open, in_progress, completed, cancelled, someday, or all. Defaults to all."),
+            "open, in_progress, actionable (open and in_progress together), completed, cancelled, someday, or all. Defaults to all."),
         ]),
         "limit": .object([
           "type": .string("integer"),

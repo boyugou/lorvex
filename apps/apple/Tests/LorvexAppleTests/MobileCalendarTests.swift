@@ -302,7 +302,7 @@ private func localDate(on logicalDay: String, hour: Int, minute: Int) throws -> 
   var calendar = Calendar(identifier: .gregorian)
   calendar.timeZone = .autoupdatingCurrent
   let day = try #require(
-    PlannedDayBridge.displayDate(forLogicalDay: logicalDay, calendar: calendar))
+    PlannedDayBridge.displayDate(forLogicalDay: logicalDay, timeZone: calendar.timeZone))
   return try #require(
     calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day))
 }

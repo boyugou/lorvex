@@ -4,7 +4,6 @@ import SwiftUI
 private enum CreationSheetHeaderMetrics {
   static let tileSize: CGFloat = 52
   static let tileCornerRadius: CGFloat = 14
-  static let popoverWidth: CGFloat = 340
 }
 
 /// The top of a create or edit sheet: the thing being made, as it will look.
@@ -40,7 +39,7 @@ struct CreationSheetHeader<Subtitle: View>: View {
       Button {
         isChoosingAppearance = true
       } label: {
-        Image(systemName: icon ?? defaultIcon)
+        Image(systemName: LorvexSymbol.name(for: icon, fallback: defaultIcon))
           .font(LorvexDesign.Typography.screenTitle)
           .foregroundStyle(tint)
           .frame(width: CreationSheetHeaderMetrics.tileSize, height: CreationSheetHeaderMetrics.tileSize)
@@ -65,7 +64,7 @@ struct CreationSheetHeader<Subtitle: View>: View {
       .popover(isPresented: $isChoosingAppearance, arrowEdge: .bottom) {
         LorvexAppearancePicker(icon: $icon, color: $color, idPrefix: idPrefix)
           .padding(LorvexDesign.Spacing.m)
-          .frame(width: CreationSheetHeaderMetrics.popoverWidth)
+          .frame(width: LorvexAppearancePicker.popoverWidth)
       }
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {

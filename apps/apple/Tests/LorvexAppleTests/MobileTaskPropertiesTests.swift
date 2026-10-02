@@ -46,7 +46,7 @@ struct MobileTaskPropertiesTests {
       dueDate: nil, estimatedMinutes: nil, tags: ["home", "weekly"], recurrence: rule)
     let properties = MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-09-22")
     #expect(properties.rows.map(\.field) == [.recurrence, .tags])
-    #expect(properties.rows.first?.value == rule.mobileLocalizedCadence)
+    #expect(properties.rows.first?.value == rule.localizedCadence)
     #expect(properties.rows.last?.value == "home · weekly")
   }
 

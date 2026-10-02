@@ -2,16 +2,16 @@ import LorvexCore
 import SwiftUI
 
 /// Language, clock, and time zone rows for the mobile Settings screen. The language
-/// picker writes the standard `AppleLanguages` override (via `AppLanguage`),
-/// which the bundle reads when it loads its localizations — so the change
-/// applies the next time the app is reopened (iOS apps can't relaunch
-/// themselves). "System Default" clears the override and follows the OS
-/// language. The clock picker (``MobileSettingsClockFormatRow``) and the
-/// time zone rows (``MobileSettingsTimeZoneRow``) apply at once.
+/// picker sets the app's own language preference (``AppLanguage``), the same
+/// one iOS Settings offers on Lorvex's page, which the bundle reads at launch,
+/// so a change applies the next time the app is opened (iOS apps can't
+/// relaunch themselves) and the footer says so until then. "System Default"
+/// removes the preference and follows the iPhone's language. The clock picker
+/// (``MobileSettingsClockFormatRow``) and the time zone rows
+/// (``MobileSettingsTimeZoneRow``) apply at once.
 struct MobileSettingsLanguageSection: View {
   @Bindable var store: MobileStore
   @State private var selection = AppLanguage.current
-  @State private var changed = false
 
   var body: some View {
     // No header: each row already names what it sets, and a header would
@@ -41,15 +41,14 @@ struct MobileSettingsLanguageSection: View {
       .accessibilityIdentifier("mobileSettings.language")
       .onChange(of: selection) { _, newValue in
         newValue.apply()
-        changed = true
       }
       MobileSettingsClockFormatRow()
       MobileSettingsTimeZoneRow(store: store)
     } footer: {
-      // The time zone caption always; the reopen note above it after a
-      // language change.
+      // The time zone caption always; the reopen note above it while the
+      // chosen language differs from the one the app is showing.
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        if changed {
+        if selection.needsRelaunch {
           Text(
             String(
               localized: "settings.language.reopen_note",

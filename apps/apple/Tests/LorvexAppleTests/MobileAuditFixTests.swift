@@ -89,48 +89,13 @@ func mobileTaskStatusMutationPublishesWidgetSnapshot() async throws {
   #expect(try await core.loadTask(id: task.id).status == .completed)
 }
 
-// MARK: - Item 6: Deep-link to a shared destination resolves to its primary tab
-
-@Test
-func mobileDeepLinkToCalendarDestinationSetsMobileNavigationTarget() {
-  let url = URL(string: "lorvex://calendar")!
-  let route = MobileDeepLinkRoute(url: url)
-  let target = route?.navigationTarget(resolvedFrom: url)
-
-  #expect(target?.selectedTab == .calendar)
-  #expect(target?.route == nil)
-}
-
-@Test
-func mobileDeepLinkToListsDestinationSetsMobileNavigationTarget() {
-  let url = URL(string: "lorvex://lists")!
-  let route = MobileDeepLinkRoute(url: url)
-  let target = route?.navigationTarget(resolvedFrom: url)
-
-  // Lists is merged into the Tasks tab, so it selects that tab.
-  #expect(target?.selectedTab == .tasks)
-}
-
-@Test
-func mobileDeepLinkToTasksDestinationSetsMobileNavigationTarget() {
-  let url = URL(string: "lorvex://tasks")!
-  let route = MobileDeepLinkRoute(url: url)
-  let target = route?.navigationTarget(resolvedFrom: url)
-
-  #expect(target?.selectedTab == .tasks)
-}
-
 // MARK: - Item 7: openListActivity routes to the Tasks tab with the list pushed
 
 @MainActor
 @Test
 func mobileStoreOpenNavigationTargetWithTasksRoutePushesTasksRoutePath() async throws {
   let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { "2026-05-23" })
-  let target = MobileNavigationTarget(
-    selectedTab: .tasks,
-    route: nil,
-    tasksRoute: .tasksScope(.list("list-42"))
-  )
+  let target = MobileNavigationTarget(selectedTab: .tasks, path: [.tasksScope(.list("list-42"))])
   store.openNavigationTarget(target)
 
   #expect(store.selectedTab == .tasks)

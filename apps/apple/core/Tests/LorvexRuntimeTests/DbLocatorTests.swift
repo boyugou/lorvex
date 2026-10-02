@@ -131,22 +131,18 @@ final class DbLocatorTests: XCTestCase {
     XCTAssertFalse(details.diagnostics[0].details?.contains("fileserver") ?? true)
   }
 
-  func testIsWindowsUncPathClassifiesBothForms() {
-    XCTAssertTrue(DbLocator.isWindowsUncPath("\\\\server\\share", platform: .windows))
-    XCTAssertTrue(DbLocator.isWindowsUncPath("\\\\server\\share", platform: .macOS))
-    // Forward-slash `//` is UNC only on Windows.
-    XCTAssertTrue(DbLocator.isWindowsUncPath("//server/share", platform: .windows))
-    XCTAssertFalse(DbLocator.isWindowsUncPath("//server/share", platform: .macOS))
-    XCTAssertFalse(DbLocator.isWindowsUncPath("C:\\Users\\me\\db.sqlite", platform: .windows))
-    XCTAssertFalse(DbLocator.isWindowsUncPath("/home/me/db.sqlite", platform: .macOS))
-    XCTAssertFalse(DbLocator.isWindowsUncPath("", platform: .windows))
-    XCTAssertFalse(DbLocator.isWindowsUncPath("\\", platform: .windows))
+  func testIsNetworkSharePathMatchesOnlyBackslashUncPaths() {
+    XCTAssertTrue(DbLocator.isNetworkSharePath("\\\\server\\share"))
+    XCTAssertFalse(DbLocator.isNetworkSharePath("//server/share"))
+    XCTAssertFalse(DbLocator.isNetworkSharePath("/Users/me/db.sqlite"))
+    XCTAssertFalse(DbLocator.isNetworkSharePath(""))
+    XCTAssertFalse(DbLocator.isNetworkSharePath("\\"))
   }
 
-  func testForwardSlashPathIsNotTreatedAsUncOnUnix() throws {
+  func testForwardSlashPathIsNotTreatedAsNetworkShare() throws {
     let env = InMemoryDbLocatorEnv(
       dbPathEnvOverride: "//Volumes/Data/db.sqlite", dataDir: "/data", homeDir: "/Users/tester",
-      platform: .otherUnix)
+      platform: .macOS)
     let details = try DbLocator.resolveDetails(env)
     XCTAssertEqual(details.resolvedPath, "//Volumes/Data/db.sqlite")
     XCTAssertEqual(details.source, .envOverride)

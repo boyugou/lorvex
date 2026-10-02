@@ -71,14 +71,8 @@ struct TodaySelectionActionMenu: View {
     } label: {
       Label(
         String(
-          format: String(
-            localized: "today.selection.count",
-            defaultValue: "%lld selected",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ),
-          store.todaySelectionCount
-        ),
+          localized: "today.selection.count", defaultValue: "\(store.todaySelectionCount) selected",
+          table: "Localizable", bundle: LorvexL10n.bundle),
         systemImage: "checklist.checked"
       )
     }

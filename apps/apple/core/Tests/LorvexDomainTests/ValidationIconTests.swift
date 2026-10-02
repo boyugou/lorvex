@@ -35,9 +35,20 @@ final class ValidationIconTests: XCTestCase {
     XCTAssertFalse(isValid("book/fill"))  // '/' not in the token set
   }
 
+  func testAcceptsEmojiBuiltWithJoinersAndSubdivisionFlags() {
+    XCTAssertTrue(isValid("👩‍💻"))
+    XCTAssertTrue(isValid("🏃‍♂️"))
+    XCTAssertTrue(isValid("🏳️‍🌈"))
+    XCTAssertTrue(isValid("🏴\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}"))  // Scotland
+  }
+
   func testRejectsInvisibleAndBidiPayloads() {
-    // Zero-width joiner smuggled into an otherwise ASCII token.
+    // Zero-width space smuggled into an otherwise ASCII token.
     XCTAssertFalse(isValid("st\u{200B}ar"))
+    // A joiner with nothing to join: one grapheme by count, but invisible cargo.
+    XCTAssertFalse(isValid("a\u{200D}"))
+    // Tag characters that spell no recommended flag carry a hidden message.
+    XCTAssertFalse(isValid("🏴\u{E0068}\u{E0069}\u{E007F}"))
     // Bidi override wrapping a single glyph — a single grapheme by count, but the
     // disallowed-codepoint gate rejects it before the single-grapheme allowance.
     XCTAssertFalse(isValid("\u{202E}a"))

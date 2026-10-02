@@ -7,7 +7,9 @@ import LorvexCloudSync
 extension SettingsView {
   @ViewBuilder
   var cloudSyncSection: some View {
-    Section(String(localized: "settings.cloud_sync.section", defaultValue: "iCloud Sync", table: "Localizable", bundle: LorvexL10n.bundle)) {
+    // The switch names its setting, so its group carries no header; what the
+    // current mode means is the footer directly under it.
+    Section {
       SettingsCloudSyncModePanel(mode: $settings.cloudSyncMode)
         .disabled(
           cloudDeleteInProgress || store.isDataImportRunning || store.isLocalFactoryResetRunning)
@@ -22,6 +24,8 @@ extension SettingsView {
             store.turnOnCloudSync(settings: settings)
           }
         }
+    } footer: {
+      Text(settings.cloudSyncMode.localizedSettingsDetail)
     }
 
     let statusReport = store.cloudSyncStatusReport
@@ -30,10 +34,10 @@ extension SettingsView {
       if statusReport.accountAvailability == .noAccount
         || statusReport.accountAvailability == .restricted
       {
-        openICloudSettingsButton
+        SettingsTrailingActionRow { openICloudSettingsButton }
       }
       if showsCloudSyncPausedNotice {
-        resumeCloudSyncButton
+        SettingsTrailingActionRow { resumeCloudSyncButton }
       }
     }
 
@@ -152,7 +156,7 @@ extension SettingsView {
       SettingsCloudSyncOverviewRow(
         id: "pending",
         title: String(localized: "settings.cloud_sync.pending_changes", defaultValue: "Pending Changes", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(report.pendingCount)",
+        value: report.pendingCount.formatted(),
         detail: cloudSyncPendingDetail(report),
         systemImage: "tray.and.arrow.up",
         level: cloudSyncPushError(report) == nil ? .neutral : .warning
@@ -279,22 +283,17 @@ extension SettingsView {
   }
 }
 
+/// The iCloud sync switch; the enclosing group's footer says what the
+/// current mode means.
 private struct SettingsCloudSyncModePanel: View {
   @Binding var mode: CloudSyncMode
 
   var body: some View {
-    Group {
-      Toggle(
-        CloudSyncMode.localizedSettingsToggle,
-        isOn: Binding(get: { mode == .live }, set: { mode = $0 ? .live : .off })
-      )
-      .accessibilityIdentifier("settings.cloudSync.modePanel")
-
-      Text(mode.localizedSettingsDetail)
-        .foregroundStyle(.secondary)
-        .font(LorvexDesign.Typography.tertiaryText)
-        .fixedSize(horizontal: false, vertical: true)
-    }
+    Toggle(
+      CloudSyncMode.localizedSettingsToggle,
+      isOn: Binding(get: { mode == .live }, set: { mode = $0 ? .live : .off })
+    )
+    .accessibilityIdentifier("settings.cloudSync.modePanel")
   }
 }
 
@@ -318,26 +317,40 @@ private struct SettingsCloudSyncOverviewPanel: View {
   }
 }
 
+/// One Status row: its glyph and title with the sentence that explains it
+/// underneath, and its value at the trailing edge. As in the Diagnostics
+/// rows, the status color marks the glyph, and the value too when it needs
+/// attention, so a row's title never reads as a link.
 private struct SettingsCloudSyncOverviewItem: View {
   let row: SettingsCloudSyncOverviewRow
 
   var body: some View {
     LabeledContent {
-      VStack(alignment: .trailing, spacing: LorvexDesign.Spacing.xxs) {
-        Text(row.value)
-          .foregroundStyle(.primary)
-          .monospacedDigit()
-        Text(row.detail)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .multilineTextAlignment(.trailing)
-          .fixedSize(horizontal: false, vertical: true)
-      }
+      Text(row.value)
+        .foregroundStyle(valueColor)
+        .monospacedDigit()
     } label: {
-      Label(row.title, systemImage: row.systemImage)
-        .foregroundStyle(row.level == .neutral ? AnyShapeStyle(.primary) : AnyShapeStyle(row.level.color))
+      Label {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          Text(row.title)
+          Text(row.detail)
+            .font(LorvexDesign.Typography.tertiaryText)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+      } icon: {
+        Image(systemName: row.systemImage)
+          .foregroundStyle(row.level == .neutral ? AnyShapeStyle(.primary) : AnyShapeStyle(row.level.color))
+      }
     }
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("settings.cloudSync.overview.\(row.id)")
+  }
+
+  private var valueColor: Color {
+    switch row.level {
+    case .warning, .error: row.level.color
+    case .neutral, .success: .primary
+    }
   }
 }

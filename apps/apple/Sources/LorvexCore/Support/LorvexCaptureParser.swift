@@ -95,16 +95,25 @@ public struct LorvexCaptureParse: Equatable, Sendable {
 ///   line ("Weekly review" stays a title); 每天, 每日, 每隔一天, 每3天, 每周,
 ///   每两周, 每周一, 每周一三五, 每个工作日, 每月, 每月5号, 每年.
 /// - Due: "by" / "due" before a day; a Chinese day before 前 / 之前 ("周五前").
-/// - Time: "3pm", "3:30 pm", "at 15:30", "noon"; 下午3点, 晚上8点半, 三点一刻,
-///   9点20分, 15:30. A time with no AM, PM, or part of day from 1 to 6 o'clock
-///   is the afternoon, and any time after tonight / 今晚 / 明晚 is the
-///   evening, since tasks are seldom planned before dawn.
+/// - Time: "3pm", "3:30 pm", "at 15:30", "noon", "at midnight"; 下午3点,
+///   晚上8点半, 三点一刻, 9点20分, 15:30. A time with no AM, PM, or part of
+///   day from 1 to 6 o'clock is the afternoon, since tasks are seldom planned
+///   before dawn. The night of a day (晚上, 半夜, 午夜, or a time with no AM
+///   or PM after tonight / 今晚 / 明晚) runs past midnight: 6 to 11 o'clock
+///   is that evening, while 12 o'clock is the midnight that ends the day and
+///   1 to 5 o'clock the small hours after it, both on the next day.
+///   "Midnight" also ends the day it is named with. A time on the next day
+///   moves the planned day one day on, and with it the days a repeat names
+///   ("每周五晚上12点" repeats on Saturdays at 00:00).
 /// - Length: "20 min", "1.5h", "20m", "1h30m", "half an hour"; 30分钟,
 ///   2小时, 2个小时, 半小时, 一个半小时.
 /// - Priority: "!" to "!!!", p1 to p3, "high priority", "low priority",
 ///   "urgent" at the end of the line or opening it before a colon or comma,
 ///   and 紧急 (not after 不).
-/// - List or tag: `#word`.
+/// - List or tag: `#word`, in any script. The word names a list when it
+///   matches a list's name or alias by its letters and digits, ignoring
+///   case and accents ("#offsite2026", "#manana" for "Mañana"); any
+///   other `#word` is a tag.
 public enum LorvexCaptureParser {
   /// A list the parser can match a `#word` against.
   public struct ListOption: Sendable {
@@ -149,7 +158,7 @@ public enum LorvexCaptureParser {
       startMinutes: nil, recurrence: nil, recurrenceStartOffset: nil, listID: nil, listName: nil,
       priority: nil, tags: [], phrases: [])
     let todayDate = today.flatMap(dayDate)
-    var timeIsBare = false
+    var clockTime: ClockTime?
     var remaining = text
     var found: [(range: Range<String.Index>, phrase: LorvexCaptureParse.Phrase)] = []
 
@@ -179,7 +188,9 @@ public enum LorvexCaptureParser {
 
     // Tags, priority, and length go first, so the day rules below judge a
     // weekday against the title words alone.
-    take(#"(?<![\p{L}\p{N}])#([\p{L}\p{N}_-]+)"#) { match, source in
+    // A word's combining marks (Devanagari and Thai vowel signs, Arabic
+    // harakat) and joiners (Persian, Indic) are part of it.
+    take(#"(?<![\p{L}\p{M}\p{N}])#([\p{L}\p{M}\p{N}_\u200C\u200D-]+)"#) { match, source in
       guard let name = group(match, 1, in: source) else { return nil }
       let key = normalized(name)
       if result.listID == nil,
@@ -214,13 +225,13 @@ public enum LorvexCaptureParser {
     take(hanTimePattern) { match, source in
       guard result.startMinutes == nil, let time = hanTime(match, in: source) else { return nil }
       result.startMinutes = time.minutes
-      timeIsBare = time.isBare
+      clockTime = time
       return .time
     }
     take(latinTimePattern) { match, source in
       guard result.startMinutes == nil, let time = latinTime(match, in: source) else { return nil }
       result.startMinutes = time.minutes
-      timeIsBare = time.isBare
+      clockTime = time
       return .time
     }
 
@@ -246,7 +257,7 @@ public enum LorvexCaptureParser {
         }
       }
       guard let unit = group(match, 3, in: source)?.lowercased() else { return nil }
-      var interval = group(match, 2, in: source).flatMap(Int.init) ?? 1
+      var interval = group(match, 2, in: source).flatMap(number) ?? 1
       if group(match, 1, in: source) != nil { interval *= 2 }
       guard (1...99).contains(interval) else { return nil }
       let every = interval == 1 ? nil : interval
@@ -279,7 +290,7 @@ public enum LorvexCaptureParser {
     }
     take(#"每(隔)?(\d{1,2}|[一两二三四五六七八九十]{1,2})?个?月(?:(\d{1,2})[日号])?"#) { match, source in
       guard let interval = hanInterval(match, in: source) else { return nil }
-      let day = group(match, 3, in: source).flatMap(Int.init)
+      let day = group(match, 3, in: source).flatMap(number)
       if let day, !(1...31).contains(day) { return nil }
       return repeats(
         TaskRecurrenceRule(freq: .monthly, interval: interval, byMonthDay: day.map { [$0] }), monthDay: day)
@@ -331,13 +342,19 @@ public enum LorvexCaptureParser {
       return .when
     }
 
-    // "Tonight 8:00" and "今晚8点" mean the evening.
-    if timeIsBare, let minutes = result.startMinutes, minutes < 12 * 60,
+    // "Tonight 8:00" and "今晚8点" mean that evening, and "今晚12点" the
+    // midnight that ends it.
+    if let time = clockTime, let hour = time.writtenHour,
       found.contains(where: { entry in
         entry.phrase.kind == .when && eveningWords.contains { entry.phrase.text.lowercased().hasSuffix($0) }
-      })
+      }),
+      let night = nightTime(hour: hour, minute: time.minutes % 60)
     {
-      result.startMinutes = minutes + 12 * 60
+      clockTime = night
+      result.startMinutes = night.minutes
+    }
+    if clockTime?.isAfterMidnight == true {
+      moveToNextDay(&result)
     }
 
     result.phrases = found.sorted { $0.range.lowerBound < $1.range.lowerBound }.map(\.phrase)
@@ -391,7 +408,7 @@ public enum LorvexCaptureParser {
     var count = 1
     if match.range(at: 2).location != NSNotFound, let range = Range(match.range(at: 2), in: source) {
       let text = String(source[range])
-      guard let value = Int(text) ?? hanNumber(text), value > 0 else { return nil }
+      guard let value = number(text) ?? hanNumber(text), value > 0 else { return nil }
       count = value
     }
     if match.range(at: 1).location != NSNotFound { count += 1 }
@@ -422,9 +439,13 @@ public enum LorvexCaptureParser {
     #"(?:\d{4}年)?\d{1,2}月\d{1,2}[日号]|\d{1,2}月\d{1,2}(?![\d点:：])|(?<!\d)\d{1,2}号|大后天|后天|今天|今晚|明天|明晚|下下周|(?<!每)(?:这|本|下)?(?:周|星期|礼拜)[一二三四五六日天]|下周|周末|\d{1,3}天后"#
 
   /// "3pm", "3:30 pm", "at 15:30", "noon", each optionally after "at" or
-  /// "@". Groups: 1 hour, 2 minute, 3 meridiem, 4 noon.
+  /// "@", and "at midnight" ("Midnight" alone is as often a name). Groups: 1
+  /// hour, 2 minute, 3 meridiem; 4 and 5 a colon time's hour and minute; 6
+  /// noon; 7 midnight. `\d` matches the digits of every script, where a digit
+  /// range such as `[0-5]` would match only ASCII, so the minute's range is
+  /// checked in code.
   private static let latinTimePattern =
-    #"(?<![\p{Latin}\p{N}:])(?:(?:at|@)\s*)?(?:(\d{1,2})(?::([0-5]\d))?\s*([ap]\.?m\.?)|(?<!\d)(\d{1,2}):([0-5]\d)|(noon))(?![\p{Latin}\p{N}:])"#
+    #"(?<![\p{Latin}\p{N}:])(?:(?:(?:at|@)\s*)?(?:(\d{1,2})(?::(\d\d))?\s*([ap]\.?m\.?)|(?<!\d)(\d{1,2}):(\d\d)|(noon))|(?:at|@)\s*(midnight))(?![\p{Latin}\p{N}:])"#
 
   /// 下午3点, 晚上8点半, 三点一刻, 9点20分, 下午3:30, 15：30. Groups: 1 part of
   /// day, 2 hour, 3 half, 4 quarter, 5 minute; 6, 7, and 8 the part of day,
@@ -433,12 +454,18 @@ public enum LorvexCaptureParser {
   private static let hanTimePattern =
     #"\#(hanDayPart)?(?<![第\d一二两三四五六七八九十])(\d{1,2}|[一二两三四五六七八九十]{1,3})[点點]钟?(?:(半)|(一刻|三刻)|(\d{1,2}|[零一二三四五六七八九十]{1,3})分?)?|\#(hanDayPart)(?<![\d:：])(\d{1,2})[:：](\d{2})(?![\d:：])|(?<![\d:：])()(\d{1,2})[：](\d{2})(?![\d:：])"#
 
-  private static let hanDayPart = "(凌晨|早上|早晨|上午|中午|下午|傍晚|晚上)"
+  private static let hanDayPart = "(凌晨|早上|早晨|上午|中午|下午|傍晚|晚上|半夜|午夜)"
 
-  /// A clock time and whether it named no AM, PM, or part of day.
+  /// A clock time a line named.
   private struct ClockTime {
+    /// Minutes since midnight on the day the time falls on.
     var minutes: Int
-    var isBare: Bool
+    /// For a time written with no AM, PM, or part of day, the hour as
+    /// written, before a 1 to 6 o'clock moves to the afternoon; nil otherwise.
+    var writtenHour: Int?
+    /// True when the time falls after the midnight that ends the named day
+    /// ("晚上12点", "半夜1点", "at midnight"), so it is on the next day.
+    var isAfterMidnight = false
   }
 
   private static func latinTime(_ match: NSTextCheckingResult, in source: String) -> ClockTime? {
@@ -447,15 +474,16 @@ public enum LorvexCaptureParser {
       else { return nil }
       return String(source[range])
     }
-    if group(6) != nil { return ClockTime(minutes: 12 * 60, isBare: false) }
-    if let hour = group(1).flatMap(Int.init), let meridiem = group(3)?.lowercased() {
-      guard (1...12).contains(hour) else { return nil }
-      let minute = group(2).flatMap(Int.init) ?? 0
+    if group(6) != nil { return ClockTime(minutes: 12 * 60) }
+    if group(7) != nil { return ClockTime(minutes: 0, isAfterMidnight: true) }
+    if let hour = group(1).flatMap(number), let meridiem = group(3)?.lowercased() {
+      let minute = group(2).flatMap(number) ?? 0
+      guard (1...12).contains(hour), (0...59).contains(minute) else { return nil }
       let isPM = meridiem.hasPrefix("p")
-      return ClockTime(minutes: ((hour % 12) + (isPM ? 12 : 0)) * 60 + minute, isBare: false)
+      return ClockTime(minutes: ((hour % 12) + (isPM ? 12 : 0)) * 60 + minute)
     }
-    guard let hourText = group(4), let hour = Int(hourText), let minute = group(5).flatMap(Int.init) else { return nil }
-    return bareTime(hour: hour, minute: minute, hasLeadingZero: hourText.hasPrefix("0"))
+    guard let hourText = group(4), let hour = number(hourText), let minute = group(5).flatMap(number) else { return nil }
+    return bareTime(hour: hour, minute: minute, hasLeadingZero: startsWithZero(hourText))
   }
 
   private static func hanTime(_ match: NSTextCheckingResult, in source: String) -> ClockTime? {
@@ -468,15 +496,15 @@ public enum LorvexCaptureParser {
     var hour: Int
     var minute = 0
     let part: String?
-    if let colonHour = group(7) ?? group(10), let value = Int(colonHour),
-      let minuteValue = (group(8) ?? group(11)).flatMap(Int.init)
+    if let colonHour = group(7) ?? group(10), let value = number(colonHour),
+      let minuteValue = (group(8) ?? group(11)).flatMap(number)
     {
       hourText = colonHour
       hour = value
       minute = minuteValue
       part = group(6)
     } else {
-      guard let text = group(2), let value = Int(text) ?? hanNumber(text) else { return nil }
+      guard let text = group(2), let value = number(text) ?? hanNumber(text) else { return nil }
       hourText = text
       hour = value
       part = group(1)
@@ -485,7 +513,7 @@ public enum LorvexCaptureParser {
       } else if let quarter = group(4) {
         minute = quarter == "一刻" ? 15 : 45
       } else if let text = group(5) {
-        guard let value = Int(text) ?? hanNumber(text) else { return nil }
+        guard let value = number(text) ?? hanNumber(text) else { return nil }
         minute = value
       } else if part == nil, text == "一" {
         return nil
@@ -493,16 +521,43 @@ public enum LorvexCaptureParser {
     }
     guard (0...24).contains(hour), (0...59).contains(minute) else { return nil }
     guard let part, !part.isEmpty else {
-      return bareTime(hour: hour, minute: minute, hasLeadingZero: hourText.hasPrefix("0"))
+      return bareTime(hour: hour, minute: minute, hasLeadingZero: startsWithZero(hourText))
     }
     switch part {
-    case "凌晨": if hour == 12 { hour = 0 }
-    case "早上", "早晨", "上午": if hour == 12 { hour = 0 }
+    case "凌晨", "早上", "早晨", "上午": if hour == 12 { hour = 0 }
     case "中午": if hour < 11 { hour += 12 }
+    case "晚上", "半夜", "午夜": return nightTime(hour: hour, minute: minute)
     default: if hour < 12 { hour += 12 }
     }
     guard hour < 24 else { return nil }
-    return ClockTime(minutes: hour * 60 + minute, isBare: false)
+    return ClockTime(minutes: hour * 60 + minute)
+  }
+
+  /// A time in the night of the named day, which runs past midnight: 12
+  /// o'clock (or 0 or 24) is the midnight that ends the day and 1 to 5
+  /// o'clock the small hours after it, both on the next day; 6 to 11 o'clock
+  /// is the evening; a 24-hour time from 13:00 stays as written.
+  private static func nightTime(hour: Int, minute: Int) -> ClockTime? {
+    switch hour {
+    case 0, 12, 24: ClockTime(minutes: minute, isAfterMidnight: true)
+    case 1...5: ClockTime(minutes: hour * 60 + minute, isAfterMidnight: true)
+    case 6...11: ClockTime(minutes: (hour + 12) * 60 + minute)
+    case 13...23: ClockTime(minutes: hour * 60 + minute)
+    default: nil
+    }
+  }
+
+  /// The whole number a matched run of digits spells. The patterns' `\d`
+  /// matches the decimal digits of every script (a full-width "３" from a
+  /// Chinese input method, an Arabic-Indic "٣"), which `Int(_:)` cannot read.
+  private static func number(_ text: some StringProtocol) -> Int? {
+    LorvexNumberInput.integer(from: text)
+  }
+
+  /// Whether a written hour starts with a zero digit in any script ("09",
+  /// "０９"), which marks it as a 24-hour time.
+  private static func startsWithZero(_ hourText: String) -> Bool {
+    hourText.first.flatMap { number(String($0)) } == 0
   }
 
   /// A time written without AM, PM, or a part of day: from 1 to 6 o'clock it
@@ -510,7 +565,26 @@ public enum LorvexCaptureParser {
   private static func bareTime(hour: Int, minute: Int, hasLeadingZero: Bool) -> ClockTime? {
     guard (0...23).contains(hour), (0...59).contains(minute) else { return nil }
     let shifted = !hasLeadingZero && (1...6).contains(hour) ? hour + 12 : hour
-    return ClockTime(minutes: shifted * 60 + minute, isBare: true)
+    return ClockTime(minutes: shifted * 60 + minute, writtenHour: hour)
+  }
+
+  /// Moves a line whose time falls after the midnight ending its day onto the
+  /// next day: the planned day (today when the line named none), or, for a
+  /// repeat that names its weekdays or its day of the month, those days and
+  /// its first occurrence, so the rule and the time agree.
+  private static func moveToNextDay(_ result: inout LorvexCaptureParse) {
+    guard var rule = result.recurrence, rule.byDay != nil || rule.byMonthDay != nil else {
+      result.plannedDayOffset = (result.plannedDayOffset ?? 0) + 1
+      return
+    }
+    rule.byDay = rule.byDay?.map { code in
+      weekdayCodes.firstIndex(of: code).map { weekdayCodes[($0 + 1) % 7] } ?? code
+    }
+    // The midnight after the 31st opens the next month.
+    rule.byMonthDay = rule.byMonthDay?.map { $0 % 31 + 1 }
+    result.recurrence = rule
+    result.recurrenceStartOffset = result.recurrenceStartOffset.map { $0 + 1 }
+    result.plannedDayOffset = result.plannedDayOffset.map { $0 + 1 }
   }
 
   /// The value of a Chinese numeral from 0 to 59: 三, 十, 十二, 二十, 四十五, 两.
@@ -542,11 +616,11 @@ public enum LorvexCaptureParser {
       return String(source[range])
     }
     let minutes: Int
-    if let hours = group(1).flatMap(Int.init), let rest = group(2).flatMap(Int.init) {
+    if let hours = group(1).flatMap(number), let rest = group(2).flatMap(number) {
       minutes = hours * 60 + rest
-    } else if let number = group(3).flatMap(Double.init), let unit = (group(4) ?? group(5))?.lowercased() {
+    } else if let amount = group(3).flatMap(LorvexNumberInput.decimal(from:)), let unit = (group(4) ?? group(5))?.lowercased() {
       let isHours = unit.hasPrefix("h") || unit.hasSuffix("小时")
-      minutes = Int((isHours ? number * 60 : number).rounded())
+      minutes = Int((isHours ? amount * 60 : amount).rounded())
     } else if let word = group(6) {
       switch word {
       case "一个半小时": minutes = 90
@@ -595,7 +669,7 @@ public enum LorvexCaptureParser {
       return todayWeekday == 7 || todayWeekday == 1 ? 0 : 7 - todayWeekday
     default: break
     }
-    if let days = lower.firstMatch(of: /(?:in\s+)?(\d{1,3})(?:\s+days?|天后)/)?.output.1, let count = Int(days) {
+    if let days = lower.firstMatch(of: /(?:in\s+)?(\d{1,3})(?:\s+days?|天后)/)?.output.1, let count = number(days) {
       return count
     }
     if let last = word.last, let weekday = hanWeekday(last), word.count >= 2 {
@@ -626,17 +700,17 @@ public enum LorvexCaptureParser {
 
   private static func explicitDate(_ word: String) -> ExplicitDate? {
     if let match = word.wholeMatch(of: /(\d{4})-(\d{2})-(\d{2})/) {
-      return ExplicitDate(year: Int(match.output.1), month: Int(match.output.2), day: Int(match.output.3) ?? 0)
+      return ExplicitDate(year: number(match.output.1), month: number(match.output.2), day: number(match.output.3) ?? 0)
     }
     if let match = word.wholeMatch(of: /(?:(\d{4})年)?(\d{1,2})月(\d{1,2})[日号]?/) {
       return ExplicitDate(
-        year: match.output.1.flatMap { Int($0) }, month: Int(match.output.2), day: Int(match.output.3) ?? 0)
+        year: match.output.1.flatMap(number), month: number(match.output.2), day: number(match.output.3) ?? 0)
     }
     if let match = word.wholeMatch(of: /(\d{1,2})号/) {
-      return ExplicitDate(year: nil, month: nil, day: Int(match.output.1) ?? 0)
+      return ExplicitDate(year: nil, month: nil, day: number(match.output.1) ?? 0)
     }
     let words = word.split { !$0.isLetter }.map(String.init)
-    let numbers = word.matches(of: /\d+/).compactMap { Int($0.output) }
+    let numbers = word.matches(of: /\d+/).compactMap { number($0.output) }
     guard let month = months.firstIndex(where: { names in words.contains { names.contains($0) } }),
       let day = numbers.first
     else { return nil }
@@ -647,7 +721,7 @@ public enum LorvexCaptureParser {
   private static func dayDate(_ text: String) -> Date? {
     guard let match = text.wholeMatch(of: /(\d{4})-(\d{2})-(\d{2})/) else { return nil }
     return utcCalendar.date(
-      from: DateComponents(year: Int(match.output.1), month: Int(match.output.2), day: Int(match.output.3)))
+      from: DateComponents(year: number(match.output.1), month: number(match.output.2), day: number(match.output.3)))
   }
 
   private static var utcCalendar: Calendar {
@@ -693,8 +767,12 @@ public enum LorvexCaptureParser {
     character.unicodeScalars.contains { $0.properties.isIdeographic }
   }
 
+  /// A list name or `#word` reduced to what a match compares: its letters and
+  /// digits, with case and accents folded in the user's language, so "#manana"
+  /// finds the list "Mañana".
   private static func normalized(_ name: String) -> String {
-    name.lowercased().filter { $0.isLetter || $0.isNumber }
+    name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+      .filter { $0.isLetter || $0.isNumber }
   }
 
   /// Collapses the gaps removed phrases leave behind: repeated spaces, commas

@@ -2,8 +2,10 @@ import LorvexCore
 import LorvexDomain
 import SwiftUI
 
-// MARK: - Calendar Sync control panel
-
+/// What Lorvex may see of the calendars: how much of each imported event it
+/// mirrors, with what that level means as the footer directly under it, then
+/// which calendars it reads (``EventKitCalendarFilterPicker``), in a group of
+/// its own since its rows unfold below it.
 struct SettingsCalendarControlPanel: View {
   @Bindable var settings: AppSettingsStore
   @Bindable var store: AppStore
@@ -11,43 +13,7 @@ struct SettingsCalendarControlPanel: View {
   @State private var isSettingCalendarAccessMode = false
 
   var body: some View {
-    Group {
-      // Plain text, like every settings row that holds a switch or a value:
-      // the control at the trailing edge already says what the row is.
-      Toggle(isOn: $settings.eventKitEnabled) {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-          Text(
-            LocalizedStringResource(
-              "settings.calendar.sync_toggle", defaultValue: "Sync with Calendar",
-              table: "Localizable", bundle: LorvexL10n.bundle))
-          Text(
-            LocalizedStringResource(
-              "settings.calendar.two_way_detail",
-              defaultValue:
-                "Read your calendar events into Lorvex and write the events you add in Lorvex into a dedicated “Lorvex” calendar — never your personal calendars.",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            )
-          )
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-        }
-      }
-      .accessibilityIdentifier("settings.eventkit.enabled")
-      .onChange(of: settings.eventKitEnabled) { _, enabled in
-        Task {
-          if enabled {
-            let granted = await store.requestCalendarAccessFromSettings()
-            guard granted else {
-              settings.eventKitEnabled = false
-              return
-            }
-          }
-          await store.applyEventKitSettings(enabled: enabled)
-        }
-      }
-
+    Section {
       Picker(selection: calendarAccessModeBinding) {
         ForEach(CalendarAiAccessMode.allCases, id: \.self) { mode in
           Text(mode.macSettingsTitle).tag(mode)
@@ -62,32 +28,29 @@ struct SettingsCalendarControlPanel: View {
       }
       .disabled(isSettingCalendarAccessMode)
       .accessibilityIdentifier("settings.eventkit.accessMode")
-
-      // One footnote row: what the chosen level mirrors, then whom it applies
-      // to. Two rows would put a divider between two halves of one thought.
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        Text(calendarAccessMode.macSettingsDetail)
-          .accessibilityIdentifier("settings.calendar.accessDetail")
-        Text(
-          String(
-            localized: "settings.calendar.access.scope_detail",
-            defaultValue:
-              "Applies to what Lorvex and connected assistants can see on this device.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle)
-        )
-      }
-      .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
-      .fixedSize(horizontal: false, vertical: true)
-
-      EventKitCalendarFilterPicker(settings: settings, store: store)
-        .disabled(!settings.eventKitEnabled || calendarAccessMode == .off)
-        .accessibilityIdentifier("settings.calendar.filterPanel")
+    } footer: {
+      // What the chosen level mirrors, then whom it applies to, as one
+      // paragraph.
+      Text(verbatim: "\(calendarAccessMode.macSettingsDetail) \(Self.scopeDetail)")
+        .accessibilityIdentifier("settings.calendar.accessDetail")
     }
     .task {
       calendarAccessMode = await store.calendarAccessModeFromSettings()
     }
+
+    Section {
+      EventKitCalendarFilterPicker(settings: settings, store: store)
+        .disabled(!settings.eventKitEnabled || calendarAccessMode == .off)
+        .accessibilityIdentifier("settings.calendar.filterPanel")
+    }
+  }
+
+  private static var scopeDetail: String {
+    String(
+      localized: "settings.calendar.access.scope_detail",
+      defaultValue: "Applies to what Lorvex and connected assistants can see on this device.",
+      table: "Localizable",
+      bundle: LorvexL10n.bundle)
   }
 
   private var calendarAccessModeBinding: Binding<CalendarAiAccessMode> {

@@ -52,22 +52,19 @@ public enum LorvexWeekReviewSentence {
     return review.frequentlyDeferred.filter { $0.id != decisionID && !overdueIDs.contains($0.id) }
   }
 
-  /// How long ago a due day was, in whole days of `calendar` counted from
-  /// `now` ("yesterday", "3 days ago"). A named day comes from Foundation; a
-  /// count of two or more days comes from LorvexCore's catalog, so Chinese
-  /// writes it "3 天前" with the space every other count in the app carries.
-  /// `nil` for a key that is not a `YYYY-MM-DD` day.
-  public static func dueAgo(dayKey: String, now: Date, calendar: Calendar) -> String? {
-    guard let utcMidnight = LorvexDateFormatters.ymdUTC.date(from: dayKey),
-      let due = calendar.date(
-        from: LorvexTask.utcCalendar.dateComponents([.year, .month, .day], from: utcMidnight))
-    else { return nil }
-    let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: due).day ?? 0
+  /// How long ago a due day was, in whole days counted from the day `now`
+  /// falls on in `timeZone` ("yesterday", "3 days ago"). A named day comes
+  /// from Foundation; a count of two or more days comes from LorvexCore's
+  /// catalog, so Chinese writes it "3 天前" with the space every other count in
+  /// the app carries. `nil` for a key that is not a `YYYY-MM-DD` day.
+  public static func dueAgo(dayKey: String, now: Date, timeZone: TimeZone) -> String? {
+    guard let due = LorvexDateFormatters.ymdUTC.date(from: dayKey) else { return nil }
+    let days = PlannedDayBridge.dayOffset(from: now, toStorageDate: due, timeZone: timeZone)
     if days <= -2 {
       let count = -days
       return String(localized: "day_phrase.days_ago", defaultValue: "\(count) days ago", table: "Localizable", bundle: CoreL10n.bundle)
     }
-    return LorvexDateFormatters.namedRelative.localizedString(from: DateComponents(day: days))
+    return LorvexDateFormatters.relativeDays(days)
   }
 }
 
@@ -152,6 +149,7 @@ public struct LorvexWeekReviewPage: View {
   public var shape: (shape: LorvexWeekShape, words: LorvexWeekShapeStrip.Words)?
 
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
   /// ``LorvexDesign/TextColumn/reviewDay`` scaled with the text.
   @ScaledMetric(relativeTo: .subheadline) private var dayColumnWidth = LorvexDesign.TextColumn.reviewDay
 
@@ -198,7 +196,7 @@ public struct LorvexWeekReviewPage: View {
             HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
               Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(LorvexDesign.Palette.done)
-              Text(task.title)
+              Text(userContent: task.title)
                 .lineLimitUnlessAccessibilitySize(2)
             }
             .font(LorvexDesign.Typography.primaryText)
@@ -259,11 +257,12 @@ public struct LorvexWeekReviewPage: View {
     LorvexWeekReviewSentence.otherPushed(review, decisionID: words.decision?.taskID)
   }
 
-  /// "Due 3 days ago", measured from the preview clock when a capture pins it.
+  /// "Due 3 days ago", counted from today in the product time zone and
+  /// measured from the preview clock when a capture pins it.
   private func dueDetail(_ task: ReviewTaskSummary) -> String? {
     guard let dueDate = task.dueDate,
       let ago = LorvexWeekReviewSentence.dueAgo(
-        dayKey: dueDate, now: LorvexPreviewClock.now(in: .current), calendar: .current)
+        dayKey: dueDate, now: LorvexPreviewClock.now(in: .current), timeZone: productTimeZone)
     else { return nil }
     return words.dueLine(ago)
   }
@@ -318,6 +317,7 @@ public struct LorvexWeekReviewPage: View {
 
   private func daySummary(_ entry: DailyReviewEntry) -> some View {
     Text(entry.summary, serifVoice: .assistantSecondary)
+      .userContentTypesetting(entry.summary)
       .foregroundStyle(.primary)
   }
 }

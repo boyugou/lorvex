@@ -70,6 +70,33 @@ func taskWorkspaceListScopeQueriesSelectedListBuckets() async throws {
   #expect(Set(store.taskWorkspaceOpenTasks.map(\.id)) == [scopedTask.id])
 }
 
+/// Switching lists once showed the previous scope's rows under the new list's
+/// header until the new load landed, and animating those rows away in a
+/// scrolled lazy stack hung the Mac app; the switch now empties the workspace.
+@MainActor
+@Test
+func taskWorkspaceListScopeChangeDropsThePreviousScopesRows() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let scopedList = try await core.createList(name: "Empty Project", description: nil)
+
+  let store = AppStore(core: core)
+  await store.refresh()
+  await store.loadTaskWorkspace()
+  #expect(!store.taskWorkspaceOpenTasks.isEmpty)
+
+  store.setTaskWorkspaceListScope(scopedList.id)
+  #expect(!store.taskWorkspaceHasLoaded)
+  #expect(store.taskWorkspaceAllTasks.isEmpty)
+
+  await store.loadTaskWorkspace()
+  #expect(store.taskWorkspaceHasLoaded)
+  #expect(store.taskWorkspaceAllTasks.isEmpty)
+
+  // Re-selecting the same scope keeps what is loaded.
+  store.setTaskWorkspaceListScope(scopedList.id)
+  #expect(store.taskWorkspaceHasLoaded)
+}
+
 @MainActor
 @Test
 func taskWorkspaceListScopeKeepsDeferredBucketScopedToList() async throws {
@@ -371,4 +398,53 @@ func missingSelectedTaskDetailClearsStaleSelection() async throws {
 
   #expect(store.selectedTaskID == nil)
   #expect(store.taskDetailTitle.isEmpty)
+}
+
+@MainActor
+@Test("A failed first load shows in place of the rows instead of an alert, and a later refresh recovers")
+func taskWorkspaceFirstLoadFailureShowsInPlaceAndRecovers() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  core.listTasksError = .unsupportedOperation("Injected workspace read failure.")
+  let store = AppStore(core: core)
+
+  await store.loadTaskWorkspace()
+  #expect(!store.taskWorkspaceHasLoaded)
+  #expect(store.taskWorkspaceLoadFailureMessage != nil)
+  #expect(store.errorMessage == nil)
+
+  // A refresh after a sync or an outside change retries the failed load.
+  core.listTasksError = nil
+  await store.reloadTaskWorkspaceIfLoaded()
+  #expect(store.taskWorkspaceHasLoaded)
+  #expect(store.taskWorkspaceLoadFailureMessage == nil)
+}
+
+@MainActor
+@Test("A failed reload over loaded rows keeps them and raises the alert")
+func taskWorkspaceReloadFailureOverLoadedRowsRaisesTheAlert() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.loadTaskWorkspace()
+  let rows = store.taskWorkspaceOpenTasks.map(\.id)
+  #expect(!rows.isEmpty)
+
+  core.listTasksError = .unsupportedOperation("Injected workspace read failure.")
+  await store.loadTaskWorkspace()
+  #expect(store.errorMessage != nil)
+  #expect(store.taskWorkspaceLoadFailureMessage == nil)
+  #expect(store.taskWorkspaceOpenTasks.map(\.id) == rows)
+}
+
+@MainActor
+@Test("Picking another list clears a load failure, so that list starts loading afresh")
+func taskWorkspaceScopeChangeClearsTheLoadFailure() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  core.listTasksError = .unsupportedOperation("Injected workspace read failure.")
+  let store = AppStore(core: core)
+  await store.loadTaskWorkspace()
+  #expect(store.taskWorkspaceLoadFailureMessage != nil)
+
+  store.setTaskWorkspaceListScope("some-list")
+  #expect(store.taskWorkspaceLoadFailureMessage == nil)
+  #expect(!store.taskWorkspaceHasLoaded)
 }

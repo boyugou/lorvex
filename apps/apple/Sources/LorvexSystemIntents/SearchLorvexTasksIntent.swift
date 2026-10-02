@@ -44,22 +44,13 @@ struct SearchLorvexTasksIntent: LorvexLocalAuthIntent {
             table: "Localizable",
             bundle: SystemL10n.bundle)))
     }
-    let titles = result.tasks.prefix(5).map(\.title).joined(separator: ", ")
-    let dialog: LocalizedStringResource
-    if result.totalMatching > 5 {
-      dialog = LocalizedStringResource(
-        "system.task.search.dialog.more",
-        defaultValue:
-          "\(result.totalMatching) matching Lorvex tasks: \(titles), and \(result.totalMatching - 5) more",
-        table: "Localizable",
-        bundle: SystemL10n.bundle)
-    } else {
-      dialog = LocalizedStringResource(
-        "system.task.search.dialog",
-        defaultValue: "\(result.totalMatching) matching Lorvex tasks: \(titles)",
-        table: "Localizable",
-        bundle: SystemL10n.bundle)
-    }
+    let titles = SystemIntentListSummary.names(
+      result.tasks.map(\.title), total: result.totalMatching)
+    let dialog = LocalizedStringResource(
+      "system.task.search.dialog",
+      defaultValue: "\(result.totalMatching) matching Lorvex tasks: \(titles)",
+      table: "Localizable",
+      bundle: SystemL10n.bundle)
     return .result(
       value: result.tasks.map(LorvexTaskEntity.init(task:)),
       dialog: IntentDialog(dialog))

@@ -266,9 +266,7 @@ struct AppStoreFactoryResetTests {
     #expect(await contentIndexer.reviewReplacementCount == 1)
     #expect(await contentIndexer.calendarReplacements == [[]])
     #expect(await taskReminders.replacements == [[]])
-    let snoozeKeepSets = await taskReminders.snoozeKeepSets
-    #expect(snoozeKeepSets.count == 1)
-    #expect(snoozeKeepSets.first?.isEmpty == true)
+    #expect(await taskReminders.cancelAllSnoozesCount == 1)
     #expect(await habitReminders.replacements == [[]])
     #expect(await deliveredNotifications.clearCount == 1)
     #expect(await badge.values == [0])
@@ -425,7 +423,7 @@ private actor FactoryResetFailingContentIndexer: ContentSearchIndexing {
 
 private actor FactoryResetTaskReminderScheduler: TaskReminderScheduling {
   private(set) var replacements: [[String]] = []
-  private(set) var snoozeKeepSets: [Set<String>] = []
+  private(set) var cancelAllSnoozesCount = 0
 
   func scheduleReminders(_ reminders: [ScheduledTaskReminder]) async
     -> TaskReminderScheduleReport
@@ -434,8 +432,8 @@ private actor FactoryResetTaskReminderScheduler: TaskReminderScheduling {
     return .scheduled(reminders.count)
   }
 
-  func cancelSnoozes(keepingActiveTaskIDs activeTaskIDs: Set<LorvexTask.ID>) async {
-    snoozeKeepSets.append(activeTaskIDs)
+  func cancelAllSnoozes() async {
+    cancelAllSnoozesCount += 1
   }
 }
 

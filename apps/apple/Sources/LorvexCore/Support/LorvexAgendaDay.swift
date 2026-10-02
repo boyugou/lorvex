@@ -34,7 +34,7 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
   ) -> [LorvexAgendaDay] {
     (1...dayCount).compactMap { offset in
       guard let key = LorvexDateFormatters.ymdUTCAddingDays(todayKey, days: offset) else { return nil }
-      let dayEvents = events.filter { covers($0, key) }.sorted(by: eventOrder)
+      let dayEvents = events.filter { $0.occurs(on: key) }.sorted(by: eventOrder)
       let dayTasks = tasks.enumerated()
         .filter { $0.element.status.isActionable && CalendarGridModel.scheduledTaskDayKey($0.element) == key }
         .sorted { lhs, rhs in
@@ -46,17 +46,6 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
       guard !dayEvents.isEmpty || !dayTasks.isEmpty else { return nil }
       return LorvexAgendaDay(key: key, events: dayEvents, tasks: dayTasks)
     }
-  }
-
-  private static func covers(_ event: CalendarTimelineEvent, _ key: String) -> Bool {
-    let endKey = event.endDate ?? event.startDate
-    guard event.startDate <= key, key <= endKey else { return false }
-    if key == endKey, endKey != event.startDate, !event.allDay,
-      CalendarGridModel.parseMinutes(event.endTime) == 0
-    {
-      return false
-    }
-    return true
   }
 
   private static func eventOrder(_ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent) -> Bool {

@@ -76,7 +76,8 @@ public struct LorvexWatchComplicationView: View {
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(
         String(
-          localized: "watch.complication.running.a11y", defaultValue: "\(minutesLeft) min left",
+          localized: "watch.complication.running.a11y",
+          defaultValue: "\(LorvexDurationFormat.minutes(minutesLeft, style: .spoken)) left",
           table: "Localizable", bundle: WatchL10n.bundle))
     case .remaining(let count):
       ring(progress: 0) {
@@ -136,10 +137,14 @@ public struct LorvexWatchComplicationView: View {
       .frame(maxWidth: .infinity, alignment: .leading)
     } else if model.remainingCount > 0 {
       VStack(alignment: .leading, spacing: 1) {
-        Text(model.dayLine ?? model.headline)
-          .font(.headline)
-          .lineLimit(1)
-          .minimumScaleFactor(0.8)
+        LorvexFirstFittingLine(
+          model.dayLineChoices.isEmpty ? [model.headline] : model.dayLineChoices
+        ) {
+          Text($0)
+            .font(.headline)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
         ForEach(model.taskRows) { row in
           Text([row.metadata, row.title].compactMap { $0 }.joined(separator: "  "))
             .font(.caption)
@@ -175,8 +180,10 @@ public struct LorvexWatchComplicationView: View {
         systemImage: lead.isOverdue ? "exclamationmark.circle" : "circle"
       )
       .privacySensitive()
-    } else if model.remainingCount > 0, let dayLine = model.dayLine {
-      Label(dayLine, systemImage: "list.bullet")
+    } else if model.remainingCount > 0, !model.dayLineChoices.isEmpty {
+      LorvexFirstFittingLine(model.dayLineChoices) {
+        Label($0, systemImage: "list.bullet")
+      }
     } else {
       Label(Self.allClear, systemImage: "checkmark.circle")
     }
@@ -220,10 +227,7 @@ public struct LorvexWatchComplicationView: View {
     ZStack {
       Circle()
         .stroke(.tertiary, lineWidth: lineWidth)
-      Circle()
-        .trim(from: 0, to: progress)
-        .stroke(.primary, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-        .rotationEffect(.degrees(-90))
+      LorvexProgressArc(fraction: progress, style: .primary, lineWidth: lineWidth)
         .widgetAccentable()
       center()
         .widgetAccentable()

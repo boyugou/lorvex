@@ -180,11 +180,14 @@ private extension Scene {
 
         Divider()
 
+        // ⌘1–⌘4 follow the tab bar left to right, and Habits and Memory take
+        // ⌘5 and ⌘6, the numbers the Mac sidebar gives every destination.
         primaryTabButton(.today, key: "1")
-        primaryTabButton(.tasks, key: "2")
-        primaryTabButton(.calendar, key: "3")
-        primaryTabButton(.habits, key: "4")
-        primaryTabButton(.review, key: "5")
+        primaryTabButton(.calendar, key: "2")
+        primaryTabButton(.tasks, key: "3")
+        primaryTabButton(.review, key: "4")
+        destinationButton(.habits)
+        destinationButton(.memory)
 
         Divider()
 
@@ -192,11 +195,6 @@ private extension Scene {
           store.isPresentingCapture = true
         }
         .keyboardShortcut("n", modifiers: .command)
-
-        Divider()
-
-        destinationButton(.lists)
-        destinationButton(.memory)
       }
 
       // The system inserts its own "Settings…" (⌘,) app command; replacing that
@@ -213,14 +211,16 @@ private extension Scene {
       .keyboardShortcut(KeyEquivalent(key), modifiers: .command)
     }
 
+    @ViewBuilder
     private func destinationButton(_ destination: MobileDestination) -> some View {
-      Button(MobileCommandTitles.title(for: destination)) {
+      let button = Button(MobileCommandTitles.title(for: destination)) {
         store.openShortcutDestination(destination)
       }
-      .keyboardShortcut(
-        KeyEquivalent(Character(destination.keyboardShortcutKey)),
-        modifiers: .command
-      )
+      if let key = destination.keyboardShortcutKey {
+        button.keyboardShortcut(KeyEquivalent(key), modifiers: .command)
+      } else {
+        button
+      }
     }
   }
 #endif

@@ -1,3 +1,4 @@
+import LorvexCore
 import LorvexWidgetKitSupport
 import SwiftUI
 import WidgetKit
@@ -42,7 +43,7 @@ struct AccessoryCircularWidgetView: View {
       .accessibilityLabel(
         String(
           localized: "widget.circular.running.a11y",
-          defaultValue: "\(minutesLeft) min left",
+          defaultValue: "\(LorvexDurationFormat.minutes(minutesLeft, style: .spoken)) left",
           table: "Localizable", bundle: WidgetL10n.bundle))
     case .remaining(let remaining):
       ring {
@@ -68,10 +69,7 @@ struct AccessoryCircularWidgetView: View {
     ZStack {
       Circle()
         .stroke(.tertiary, lineWidth: 3)
-      Circle()
-        .trim(from: 0, to: model.lead?.progress ?? 0)
-        .stroke(.primary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-        .rotationEffect(.degrees(-90))
+      LorvexProgressArc(fraction: model.lead?.progress ?? 0, style: .primary, lineWidth: 3)
         .widgetAccentable()
       center()
         .widgetAccentable()

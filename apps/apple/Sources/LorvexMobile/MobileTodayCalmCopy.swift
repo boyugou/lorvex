@@ -21,7 +21,7 @@ enum MobileTodayCalmCopy {
     case .day(let tasks, let workMinutes, let meetings):
       var parts = [tasksLeft(tasks)]
       if let workMinutes, workMinutes > 0 {
-        let length = lorvexUnbreakable(length(roundedWork(workMinutes)))
+        let length = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(workMinutes)))
         parts.append(
           String(
             localized: "today.list.work", defaultValue: "about \(length) of work",
@@ -73,14 +73,14 @@ enum MobileTodayCalmCopy {
   /// The overbooked well's title: the estimated work against the free working
   /// time left ("About 6 hr of work, 4 hr free").
   static func overbookedTitle(_ overbooked: LorvexCalmToday.Overbooked) -> String {
-    let work = lorvexUnbreakable(length(roundedWork(overbooked.workMinutes)))
+    let work = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(overbooked.workMinutes)))
     guard overbooked.freeMinutes > 0 else {
       return String(
         localized: "today.overbooked.title.no_free",
         defaultValue: "About \(work) of work and no free time left",
         table: "Localizable", bundle: MobileL10n.bundle)
     }
-    let free = lorvexUnbreakable(length(roundedWork(overbooked.freeMinutes)))
+    let free = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(overbooked.freeMinutes)))
     return String(
       localized: "today.overbooked.title", defaultValue: "About \(work) of work, \(free) free",
       table: "Localizable", bundle: MobileL10n.bundle)
@@ -97,7 +97,7 @@ enum MobileTodayCalmCopy {
         table: "Localizable", bundle: MobileL10n.bundle)
     }
     let minutes = candidates.reduce(0) { $0 + max($1.estimatedMinutes ?? 0, 0) }
-    let freed = lorvexUnbreakable(length(roundedWork(minutes)))
+    let freed = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(minutes)))
     switch candidates.count {
     case 1:
       return String(
@@ -154,28 +154,6 @@ enum MobileTodayCalmCopy {
     String(
       localized: "today.calm.now.open", defaultValue: "Open Details", table: "Localizable",
       bundle: MobileL10n.bundle)
-  }
-
-  /// A length or estimate ("90 min").
-  static func duration(_ minutes: Int) -> String {
-    String(
-      localized: "today.calm.duration", defaultValue: "\(minutes) min", table: "Localizable",
-      bundle: MobileL10n.bundle)
-  }
-
-  /// A longer length in hours and minutes: "45 min", "2 hr", "2 hr 30 min".
-  static func length(_ minutes: Int) -> String {
-    let hours = minutes / 60
-    let rest = minutes % 60
-    if hours == 0 { return duration(rest) }
-    if rest == 0 {
-      return String(
-        localized: "plan.week.length.hours", defaultValue: "\(hours) hr", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    }
-    return String(
-      localized: "plan.week.length.hours_minutes", defaultValue: "\(hours) hr \(rest) min",
-      table: "Localizable", bundle: MobileL10n.bundle)
   }
 
   static var sunStart: String { clockLabel(7 * 60) }

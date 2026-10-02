@@ -27,22 +27,21 @@ struct HabitsWorkspaceHeader: View {
   }
 
   private static func progress(_ bucket: HabitsWorkspaceStats.Bucket) -> String {
-    let format =
-      switch bucket.cadence {
-      case .daily:
-        String(
-          localized: "habits.header.done.today", defaultValue: "%1$lld of %2$lld done today",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .weekly:
-        String(
-          localized: "habits.header.done.week", defaultValue: "%1$lld of %2$lld done this week",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      case .monthly:
-        String(
-          localized: "habits.header.done.month", defaultValue: "%1$lld of %2$lld done this month",
-          table: "Localizable", bundle: LorvexL10n.bundle)
-      }
-    return String(format: format, bucket.completed, bucket.total)
+    let (done, total) = (bucket.completed, bucket.total)
+    return switch bucket.cadence {
+    case .daily:
+      String(
+        localized: "habits.header.done.today", defaultValue: "\(done) of \(total) done today",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case .weekly:
+      String(
+        localized: "habits.header.done.week", defaultValue: "\(done) of \(total) done this week",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    case .monthly:
+      String(
+        localized: "habits.header.done.month", defaultValue: "\(done) of \(total) done this month",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    }
   }
 }
 

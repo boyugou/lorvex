@@ -24,8 +24,10 @@ import AppIntents
 ///   them through a separate, specially-named `AppShortcuts.xcstrings`
 ///   (`Resources/AppShortcuts.xcstrings`), keyed by the English phrase with the
 ///   literal `${applicationName}` token — never through `Localizable.xcstrings`.
-///   That catalog is consumed by the Xcode `ExtractAppIntentsMetadata` build
-///   phase (`swift build` does not run it). No Swift code references its keys,
+///   The catalog compiles to `AppShortcuts.strings` beside the metadata: Xcode's
+///   `ExtractAppIntentsMetadata` phase writes both on iOS, and macOS release
+///   staging (`script/extract_app_intents_metadata.py`) writes both into the
+///   app bundle. No Swift code references its keys,
 ///   so `script/verify_localization_catalog.py` checks it on its own: every
 ///   phrase and translation names the app exactly once, and every shipped
 ///   language translates every phrase.

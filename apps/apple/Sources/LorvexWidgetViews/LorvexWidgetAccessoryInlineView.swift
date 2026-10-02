@@ -1,3 +1,4 @@
+import LorvexCore
 import LorvexWidgetKitSupport
 import SwiftUI
 
@@ -21,11 +22,14 @@ struct AccessoryInlineWidgetView: View {
         systemImage: "exclamationmark.circle"
       )
       .lineLimit(1)
-    } else if model.lead == nil, model.remainingCount > 0, let dayLine = model.dayLine {
-      // Tasks left, none leading: how much is left, which names no task, so
-      // it stays legible on a locked Lock Screen.
-      Label(dayLine, systemImage: "list.bullet")
-        .lineLimit(1)
+    } else if model.lead == nil, model.remainingCount > 0, !model.dayLineChoices.isEmpty {
+      // Tasks left, none leading: how much is left, worded as long as the
+      // line allows. It names no task, so it stays legible on a locked Lock
+      // Screen.
+      LorvexFirstFittingLine(model.dayLineChoices) {
+        Label($0, systemImage: "list.bullet")
+          .lineLimit(1)
+      }
     } else if model.lead == nil {
       // Nothing left today: a non-sensitive glance that stays legible on a
       // locked Lock Screen (nothing to redact). "All clear" mirrors the small

@@ -16,9 +16,6 @@ public enum CanonicalCalendarEventType: String, Sendable, Equatable, Hashable, C
   case anniversary
   case memorial
 
-  /// Allowed wire values in declaration order.
-  public static let allowedValues: [String] = ["event", "birthday", "anniversary", "memorial"]
-
   /// Human-readable list of the allowed values, used in validation messages.
   public static let allowedValuesDisplay: String = "event, birthday, anniversary, memorial"
 

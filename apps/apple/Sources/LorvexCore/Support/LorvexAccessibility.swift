@@ -1,127 +1,79 @@
+import Foundation
+
 // MARK: - Task accessibility helpers
 
-/// Localized vocabulary for `taskAccessibilityLabel`. Each rendering surface
-/// supplies these from its own string catalog (LorvexApple via native,
-/// bundle-qualified localization calls,
-/// LorvexMobile via `MobileL10n`) so VoiceOver speaks the user's language; the
-/// composition stays shared here. The defaults reproduce the original English
-/// exactly, so callers that don't localize (and tests) are unaffected.
+/// Returns a VoiceOver-ready label for a task row, in the app's language: its
+/// title, then the facts the row shows — a priority other than normal, a
+/// status other than open, its time on the day, what the row adds beyond the
+/// task's own fields, the estimate, the due day, whether it repeats, and its
+/// tags.
 ///
-/// Format strings carry a single placeholder: `priorityTaskFormat` / `dueFormat`
-/// / `overdueFormat` take a `%@` (the priority code or relative due label) and
-/// `minutesFormat` takes a `%lld` (the estimate). A surface that uses native
-/// String Catalog pluralization can instead provide `minutesText`; the format
-/// remains as a compatibility fallback for callers and tests. `repeatsWord` is
-/// spoken for a repeating task, and `statusName` maps a status to its
-/// localized display word.
-public struct TaskAccessibilityVocabulary: Sendable {
-  public var priorityTaskFormat: String
-  public var minutesFormat: String
-  public var minutesText: (@Sendable (Int) -> String)?
-  public var dueFormat: String
-  public var overdueFormat: String
-  public var repeatsWord: String
-  public var statusName: @Sendable (LorvexTask.Status) -> String
-
-  public init(
-    priorityTaskFormat: String = "%@ task",
-    minutesFormat: String = "%lld minutes",
-    minutesText: (@Sendable (Int) -> String)? = nil,
-    dueFormat: String = "due %@",
-    overdueFormat: String = "overdue %@",
-    repeatsWord: String = "repeats",
-    statusName: @escaping @Sendable (LorvexTask.Status) -> String = { $0.rawValue }
-  ) {
-    self.priorityTaskFormat = priorityTaskFormat
-    self.minutesFormat = minutesFormat
-    self.minutesText = minutesText
-    self.dueFormat = dueFormat
-    self.overdueFormat = overdueFormat
-    self.repeatsWord = repeatsWord
-    self.statusName = statusName
-  }
-}
-
-/// Returns a VoiceOver-ready label for a task row: its priority, title, and
-/// status, then the facts the row shows — its time on the day, what the row
-/// adds beyond the task's own fields, the estimate, the due date, whether it
-/// repeats, and its tags.
+/// Example (English): "Write release notes: High priority, In Progress,
+/// 9:45 – 10:30 AM, 30 minutes, due tomorrow, repeats, #writing"
 ///
-/// Example (English): "P1 task: Write release notes: open, 9:45 – 10:30 AM,
-/// 30 minutes, due tomorrow, repeats, #writing"
-///
+/// Normal priority and the open status are what a task is unless it says
+/// otherwise, so they are not read, just as the row does not mark them.
 /// `timeLabel` is the task's time on the surface's day, which leads the row's
 /// metadata on Today. `details` are what the row shows beyond the task's own
 /// fields — its status chips, a blocked badge, its list on a cross-list
-/// surface — already localized and in the row's order. Pass a localized
-/// `vocabulary` to have the connective words spoken in the user's language;
-/// the default reproduces English.
+/// surface — already localized and in the row's order. The due day is counted
+/// from today in `timeZone`, the product time zone a row's other facts are
+/// counted in.
 public func taskAccessibilityLabel(
   _ task: LorvexTask,
-  vocabulary: TaskAccessibilityVocabulary = TaskAccessibilityVocabulary(),
   timeLabel: String? = nil,
-  details: [String] = []
+  details: [String] = [],
+  timeZone: TimeZone = .current
 ) -> String {
-  var parts: [String] = []
-  parts.append(String(format: vocabulary.priorityTaskFormat, task.priority.rawValue))
-
-  parts.append(task.title)
-
-  var attributes: [String] = [vocabulary.statusName(task.status)]
+  var facts: [String] = []
+  if task.priority != .p2 {
+    facts.append(task.priority.localizedPhrase)
+  }
+  if task.status != .open {
+    facts.append(task.status.localizedName)
+  }
   if let timeLabel {
-    attributes.append(timeLabel)
+    facts.append(timeLabel)
   }
-  attributes.append(contentsOf: details)
+  facts.append(contentsOf: details)
   if let minutes = task.estimatedMinutes {
-    attributes.append(
-      vocabulary.minutesText?(minutes) ?? String(format: vocabulary.minutesFormat, minutes))
+    facts.append(LorvexDurationFormat.minutes(minutes, style: .spoken))
   }
-  if let dueLabel = task.cachedDueRelativeLabel() {
-    attributes.append(
-      String(format: task.isOverdue() ? vocabulary.overdueFormat : vocabulary.dueFormat, dueLabel))
+  if let due = taskDueAccessibilityPhrase(task, timeZone: timeZone) {
+    facts.append(due)
   }
   if task.recurrence != nil {
-    attributes.append(vocabulary.repeatsWord)
+    facts.append(
+      String(localized: "a11y.task.repeats", defaultValue: "repeats", table: "Localizable", bundle: CoreL10n.bundle))
   }
   for tag in task.tags {
-    attributes.append("#\(tag)")
+    facts.append("#\(tag)")
   }
-  parts.append(attributes.joined(separator: ", "))
-
-  return parts.joined(separator: ": ")
+  return facts.isEmpty ? task.title : "\(task.title): \(facts.joined(separator: ", "))"
 }
 
-/// Returns a VoiceOver-ready accessibility label for a menu-bar icon-only action button.
-///
-/// Converts the action title into a consistent spoken label for VoiceOver,
-/// since the button body contains only an SF Symbol image.
-public func menuBarActionAccessibilityLabel(_ title: String) -> String {
-  title
-}
-
-// MARK: - Habit accessibility helpers
-
-/// Returns a VoiceOver-ready label for a habit row combining name, progress, and cue.
-///
-/// Example: "Morning Run, 1 of 3 completions today, every day"
-/// VoiceOver label for a habit row. `progressFormat` is a localized positional
-/// template taking `%1$lld` (completions today, capped) and `%2$lld` (target);
-/// nil reproduces the English "N of M completions today".
-public func habitAccessibilityLabel(_ habit: LorvexHabit, progressFormat: String? = nil) -> String {
-  let done = min(habit.completionsToday, habit.targetCount)
-  let progress =
-    progressFormat.map { String(format: $0, done, habit.targetCount) }
-    ?? "\(done) of \(habit.targetCount) completions today"
-  var parts = [habit.name, progress, habit.frequencyType]
-  if let cue = habit.cue, !cue.isEmpty { parts.append(cue) }
+/// What VoiceOver reads after a dependency's title in a task's Waits On
+/// section, in the app's language: its status, then when an unfinished one is
+/// due ("In Progress, due tomorrow"). A dependency row's circle and facts line
+/// are not read aloud, so the status is always named, open included.
+public func taskDependencyAccessibilityValue(_ task: LorvexTask, timeZone: TimeZone) -> String {
+  var parts = [task.status.localizedName]
+  if !task.status.isResolved, let due = taskDueAccessibilityPhrase(task, timeZone: timeZone) {
+    parts.append(due)
+  }
   return parts.joined(separator: ", ")
 }
 
-/// Returns a VoiceOver-ready label for the habit completion toggle button.
-///
-/// Example: "Complete today" or "Reset today"
-public func habitActionAccessibilityLabel(isComplete: Bool) -> String {
-  isComplete ? "Reset today" : "Complete today"
+/// The due day as VoiceOver reads it ("due tomorrow", "overdue 2 days ago"),
+/// counted from today in `timeZone`; `nil` for a task without a due day.
+private func taskDueAccessibilityPhrase(_ task: LorvexTask, timeZone: TimeZone) -> String? {
+  guard let day = task.cachedDueRelativeLabel(timeZone: timeZone) else { return nil }
+  return task.isOverdue(timeZone: timeZone)
+    ? String(
+      localized: "a11y.task.overdue_format", defaultValue: "overdue \(day)", table: "Localizable",
+      bundle: CoreL10n.bundle)
+    : String(
+      localized: "a11y.task.due_format", defaultValue: "due \(day)", table: "Localizable", bundle: CoreL10n.bundle)
 }
 
 // MARK: - Memory entry accessibility helpers
@@ -149,27 +101,4 @@ public func calendarEventAccessibilityLabel(
     : [startTime, endTime].compactMap { $0 }.joined(separator: "-")
   let place = location.flatMap { $0.isEmpty ? nil : $0 } ?? source
   return "\(title), \(timeText), \(place)"
-}
-
-// MARK: - List accessibility helpers
-
-/// A VoiceOver label for a list catalog row: the list's shown name
-/// (``LorvexList/displayName``) and its task counts, e.g. "Work: 4 open tasks,
-/// 10 total". `format` is a localized positional template taking `%1$@`
-/// (name), `%2$lld` (open count), and `%3$lld` (total); nil reproduces the
-/// English label with the English singular/plural of "task".
-public func listAccessibilityLabel(_ list: LorvexList, format: String? = nil) -> String {
-  if let format {
-    return String(format: format, list.displayName, list.openCount, list.totalCount)
-  }
-  return "\(list.displayName): \(list.openCount) open task\(list.openCount == 1 ? "" : "s"), \(list.totalCount) total"
-}
-
-// MARK: - Review accessibility helpers
-
-/// Returns a VoiceOver-ready label for a review metric row.
-///
-/// Example: "Completed: 5"
-public func reviewMetricAccessibilityLabel(title: String, value: Int) -> String {
-  "\(title): \(value)"
 }

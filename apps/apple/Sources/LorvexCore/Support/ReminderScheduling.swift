@@ -17,23 +17,20 @@ public protocol TaskReminderScheduling: Sendable {
   /// this to arm only the earliest-due subset that fits the shared OS cap.
   func scheduleReminders(_ reminders: [ScheduledTaskReminder]) async -> TaskReminderScheduleReport
 
-  /// Cancel pending one-shot snooze notifications whose task is no longer active
-  /// (not in `activeTaskIDs`). `scheduleReminders` deliberately leaves snoozes
-  /// alone — they are not stored reminders — so this is the only path that clears
-  /// a snooze once its task is completed, cancelled, or deleted (here or via
-  /// sync). The reminder re-plan calls it with the current active task set.
-  func cancelSnoozes(keepingActiveTaskIDs activeTaskIDs: Set<LorvexTask.ID>) async
-
-  /// Task IDs that currently have a pending one-shot snooze notification. Lets a
-  /// caller reap only the snoozes whose task actually resolved — checking just
-  /// these IDs — instead of building a broad active-task keep-set. Default: none.
+  /// Task IDs that currently have a pending one-shot snooze notification.
+  /// `scheduleReminders` deliberately leaves snoozes alone (they are not stored
+  /// reminders), so ``cancelSnoozesOfResolvedTasks(core:)`` reads these to find
+  /// the snoozes whose task has resolved. Default: none.
   func pendingSnoozeTaskIDs() async -> Set<LorvexTask.ID>
 
-  /// Cancel the pending one-shot snooze for each resolved task in `taskIDs`.
-  /// Unlike ``cancelSnoozes(keepingActiveTaskIDs:)`` this targets an explicit
-  /// drop-set, so a snooze added concurrently for a still-active task is never
-  /// swept. Default: no-op.
+  /// Cancel the pending one-shot snooze for each task in `taskIDs`. The set is
+  /// an explicit drop-set, so a snooze added concurrently for another task is
+  /// never swept. Default: no-op.
   func cancelSnoozes(forResolvedTaskIDs taskIDs: Set<LorvexTask.ID>) async
+
+  /// Cancel every pending one-shot snooze, for a reset that removes every
+  /// task. Default: no-op.
+  func cancelAllSnoozes() async
 }
 
 extension TaskReminderScheduling {
@@ -43,15 +40,42 @@ extension TaskReminderScheduling {
     ScheduledTaskReminder.reminders(for: tasks, includeNotes: includeNotes)
   }
 
-  /// Default no-op: preview/test/no-op schedulers manage no real notifications.
-  /// The live `UserNotificationTaskReminderScheduler` overrides this.
-  public func cancelSnoozes(keepingActiveTaskIDs activeTaskIDs: Set<LorvexTask.ID>) async {}
-
   /// Default: no scheduler-managed notifications, so no pending snoozes.
   public func pendingSnoozeTaskIDs() async -> Set<LorvexTask.ID> { [] }
 
   /// Default no-op; the live scheduler overrides it.
   public func cancelSnoozes(forResolvedTaskIDs taskIDs: Set<LorvexTask.ID>) async {}
+
+  /// Default no-op: preview/test/no-op schedulers manage no real notifications.
+  /// The live `UserNotificationTaskReminderScheduler` overrides this.
+  public func cancelAllSnoozes() async {}
+
+  /// Cancel the pending one-shot snoozes whose task no longer wants one: a task
+  /// that is not actionable (completed, cancelled, or parked as someday), one
+  /// in the Trash, or one deleted outright, here or on another device.
+  ///
+  /// Only the tasks that have a pending snooze are read, one at a time, so the
+  /// cost follows the (usually zero) number of snoozes rather than the size of
+  /// the task list, and no task is judged by its absence from a capped page. A
+  /// read that fails for any reason other than a missing task (for example
+  /// SQLITE_BUSY under a concurrent sync write) keeps that snooze for the next
+  /// pass instead of cancelling a reminder the user still wants.
+  public func cancelSnoozesOfResolvedTasks(core: any LorvexTaskServicing) async {
+    let snoozeTaskIDs = await pendingSnoozeTaskIDs()
+    guard !snoozeTaskIDs.isEmpty else { return }
+    var resolved: Set<LorvexTask.ID> = []
+    for id in snoozeTaskIDs {
+      do {
+        let task = try await core.loadTask(id: id)
+        if !task.status.isActionable || task.archivedAt != nil { resolved.insert(id) }
+      } catch LorvexCoreError.taskNotFound {
+        resolved.insert(id)
+      } catch {
+        continue
+      }
+    }
+    await cancelSnoozes(forResolvedTaskIDs: resolved)
+  }
 }
 
 /// A scheduler that performs no work. Used as the default in non-production contexts.
@@ -265,15 +289,6 @@ public struct UserNotificationTaskReminderScheduler: TaskReminderScheduling {
     return .scheduled(scheduledCount)
   }
 
-  public func cancelSnoozes(keepingActiveTaskIDs activeTaskIDs: Set<LorvexTask.ID>) async {
-    let center = UNUserNotificationCenter.current()
-    let pending = await center.pendingNotificationRequests()
-    let stale = SnoozeNotificationScheduler.staleSnoozeIdentifiers(
-      pendingIdentifiers: pending.map(\.identifier), activeTaskIDs: activeTaskIDs)
-    guard !stale.isEmpty else { return }
-    center.removePendingNotificationRequests(withIdentifiers: stale)
-  }
-
   public func pendingSnoozeTaskIDs() async -> Set<LorvexTask.ID> {
     let center = UNUserNotificationCenter.current()
     let pending = await center.pendingNotificationRequests()
@@ -290,5 +305,9 @@ public struct UserNotificationTaskReminderScheduler: TaskReminderScheduling {
     let prefix = ScheduledTaskReminder.snoozeIdentifierPrefix
     center.removePendingNotificationRequests(
       withIdentifiers: taskIDs.map { prefix + $0 })
+  }
+
+  public func cancelAllSnoozes() async {
+    await cancelSnoozes(forResolvedTaskIDs: pendingSnoozeTaskIDs())
   }
 }

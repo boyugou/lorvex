@@ -96,7 +96,7 @@ struct LorvexWatchTodayListTests {
     #expect(store.tasks.map(\.id) == ["watch-started", "watch-open"])
     #expect(store.tasks.first?.status == .inProgress)
     #expect(store.moreCount == 0)
-    #expect(store.snapshotStatusText == "Synced 3m ago")
+    #expect(store.snapshotStatusText == "Synced \(LorvexDateFormatters.elapsed(seconds: 180))")
     #expect(store.error == nil)
   }
 }

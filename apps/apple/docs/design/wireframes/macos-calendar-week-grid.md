@@ -35,7 +35,7 @@ block's right-click menu.
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │ [‹] Jun 1 – Jun 7 [›]  [This Week]        Day | Week | Month              [ + ]  │  window toolbar
 ├──────────────────────────────────────────────────────────────────────────────────┤  (navigation · principal · primary action)
-│ 📅 Plan                                                                           │  CalendarWorkspaceHeader (title only)
+│ 📅 Calendar                                                                       │  CalendarWorkspaceHeader (title only)
 ├──────────────────────────────────────────────────────────────────────────────────┤  Divider
 │                                                                                    │
 │  ── grid (CalendarWeekGridView) ──────────────────────────────────────────────    │
@@ -71,7 +71,7 @@ the empty grid; see "Empty / unauthorized banner" below.
 
 | Region | What it renders | Data source (model field / store prop) | View file |
 |---|---|---|---|
-| Workspace header | The title "Plan" with a calendar icon. The header only names the surface: the grid shows every event and planned task itself, so a count would restate it | — | `CalendarWorkspaceHeader` in `CalendarWorkspaceNavigationBar.swift` |
+| Workspace header | The title "Calendar" with a calendar icon. The header only names the surface: the grid shows every event and planned task itself, so a count would restate it | — | `CalendarWorkspaceHeader` in `CalendarWorkspaceNavigationBar.swift` |
 | Toolbar navigation group | `chevron.left` · range chip · `chevron.right`, plus a "Today / This Week / This Month" jump shown only while not viewing the current period | `anchorDate`, `weekRangeTitle`, `monthRangeTitle`, `isViewingCurrent`, `step(_:)`, `jumpToCurrent()` (`CalendarWorkspaceView.swift`) | `CalendarWorkspaceToolbar` in `CalendarWorkspaceNavigationBar.swift` |
 | Range chip | Week/Month mode: the visible range; Day mode: the anchor date. Opens the month popover; picking a day re-anchors to its period | `LorvexDateChip(style: .toolbar)` | `LorvexDateChip.swift` |
 | Toolbar principal slot | Segmented Day / Week / Month toggle | `mode: CalendarPresentationMode` | `CalendarModePicker` in `CalendarWorkspaceNavigationBar.swift` |

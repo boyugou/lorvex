@@ -52,8 +52,11 @@ public enum ValidationLimits {
   /// Maximum length of the optional habit `cue` field, in Unicode codepoints.
   public static let maxHabitCueLength = 200
 
-  /// Maximum length of a preference / device_state / memory key, in Unicode
-  /// codepoints. Single source of truth for every key-shaped KV column.
+  /// Maximum length of a memory key, in Unicode codepoints, checked on every
+  /// local memory write. `PayloadByteBudget` reserves 1,200 escaped bytes for
+  /// a key: six per codepoint, more than any codepoint takes once escaped.
+  /// Preference and device-state keys come from fixed registries and stay far
+  /// shorter.
   public static let kvKeyMaxChars = 200
 
   /// Maximum recurrence `INTERVAL` ("every N days/weeks/months/years").

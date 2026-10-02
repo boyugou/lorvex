@@ -67,20 +67,14 @@ enum TaskDetailRecurrencePreset: CaseIterable, Identifiable {
     self == .weekdays ? ["MO", "TU", "WE", "TH", "FR"] : []
   }
 
+  /// The menu item's name. Every preset but Weekdays is a plain interval, named
+  /// by the same phrase the rule summaries use ("Every week", "Every 2 weeks").
   var title: String {
     switch self {
-    case .daily:
-      String(localized: "recurrence.every_day", defaultValue: "Every day", table: "Localizable", bundle: LorvexL10n.bundle)
     case .weekdays:
       String(localized: "recurrence.preset.weekdays", defaultValue: "Weekdays", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .weekly:
-      String(localized: "recurrence.every_week", defaultValue: "Every week", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .biweekly:
-      String(localized: "recurrence.every_n_weeks", defaultValue: "Every \(2) weeks", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .monthly:
-      String(localized: "recurrence.every_month", defaultValue: "Every month", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .yearly:
-      String(localized: "recurrence.every_year", defaultValue: "Every year", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .daily, .weekly, .biweekly, .monthly, .yearly:
+      frequency.localizedEveryInterval(interval)
     }
   }
 }
@@ -89,7 +83,7 @@ extension AppStore {
   /// The preset the selected task's repeat draft matches, if any.
   var taskDetailRecurrencePreset: TaskDetailRecurrencePreset? {
     guard taskDetailHasRecurrence, taskDetailRecurrenceAnchor == .schedule else { return nil }
-    let interval = Int(taskDetailRecurrenceIntervalText.trimmingCharacters(in: .whitespaces)) ?? 1
+    let interval = LorvexNumberInput.integer(from: taskDetailRecurrenceIntervalText) ?? 1
     return TaskDetailRecurrencePreset.allCases.first {
       $0.frequency == taskDetailRecurrenceFrequency && $0.interval == interval
         && $0.weekdays == taskDetailRecurrenceByDay

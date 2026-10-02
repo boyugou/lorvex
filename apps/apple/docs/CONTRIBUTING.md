@@ -27,8 +27,7 @@ apps/apple/
 │   ├── LorvexWidgetViews/      # Reusable SwiftUI widget views
 │   ├── LorvexWidgetIntents/    # Interactive widget AppIntents
 │   ├── LorvexWidgetExtension/  # WidgetKit TimelineProvider + container
-│   ├── LorvexWidgetBundle/     # @main WidgetBundle entry
-│   └── LorvexCoreSmoke/        # Executable smoke check for the on-disk Swift core
+│   └── LorvexWidgetBundle/     # @main WidgetBundle entry
 ├── Tests/                      # Swift Testing test targets
 ├── core/                       # Native Swift core package (canonical behavior)
 ├── script/                     # Build, verify, packaging scripts
@@ -54,7 +53,8 @@ focused extension files per concern (`AppStoreBatchTaskActions.swift`,
 
 **`LorvexMobile`** — iOS/iPadOS SwiftUI library. `MobileStore` is the
 root state owner for mobile; it wraps the same `LorvexCoreServicing` boundary.
-Compact layouts use `TabView`; regular-width layouts use `NavigationSplitView`.
+One `TabView` (Today, Calendar, Tasks, Review, plus the capture button) is the
+root at every width; regular-width layouts add a second pane inside a tab.
 
 **`LorvexCloudSync`** — CloudKit transport. `CloudSyncController` is an actor
 that wraps one `CKSyncEngine` on the private database and is the engine's
@@ -237,7 +237,12 @@ func handleMyNewTool(
 Bind the schema and handler in the matching domain's `*ToolDefinitions.swift`.
 Choose `.read` or `.write` deliberately; `.write` participates in the optional
 idempotency-key contract. The definition's response-fencing policy is applied
-by the common dispatcher:
+by the common dispatcher. The dispatcher also normalizes every call's arguments
+against the tool's `inputSchema` before the handler runs
+(`ToolArgumentNormalization`): fence tokens leave every string, and each
+`enum`-declared property must hold one of its values, rewritten to the declared
+spelling. A handler therefore never re-checks enum membership or unfences its
+input; declaring the `enum` in the schema is the validation:
 
 ```swift
 // Sources/LorvexMCPHost/MyDomainToolDefinitions.swift

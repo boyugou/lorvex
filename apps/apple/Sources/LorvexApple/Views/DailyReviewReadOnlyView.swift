@@ -76,7 +76,7 @@ struct DailyReviewReadOnlyView: View {
     if let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
         LorvexPageLabel(label)
-        Text(text)
+        Text(userContent: text)
           .font(LorvexDesign.Typography.primaryText)
           .frame(maxWidth: .infinity, alignment: .leading)
           .textSelection(.enabled)

@@ -30,8 +30,15 @@ public enum LorvexImportLimits {
       self.limit = limit
     }
 
+    /// "The selected file is 412.3 MB. A Lorvex backup can be at most 67.1 MB.",
+    /// in the user's language, with sizes in the units Finder and Files show.
     public var errorDescription: String? {
-      "The selected file is \(size) bytes, larger than the \(limit)-byte import limit."
+      let size = Int64(size).formatted(.byteCount(style: .file))
+      let limit = Int64(limit).formatted(.byteCount(style: .file))
+      return String(
+        localized: "import.error.too_large",
+        defaultValue: "The selected file is \(size). A Lorvex backup can be at most \(limit).",
+        table: "Localizable", bundle: CoreL10n.bundle)
     }
   }
 

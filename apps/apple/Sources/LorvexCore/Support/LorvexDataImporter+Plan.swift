@@ -1,16 +1,31 @@
 import Foundation
+import os
 
 extension LorvexDataImporter {
-  /// Build the content plan from already-decoded bytes (JSON or ZIP). Pure: a
-  /// decode plus per-category count, no service calls and no target-DB diff, so
+  /// Build the content plan from already-decoded bytes (JSON or ZIP): a decode
+  /// plus per-category count, with no service calls and no target-DB diff, so
   /// the counts are what the file contains, not what a restore will write.
   /// Returns the decoded import so confirm applies exactly what the user saw.
+  /// A rejected file's ``ImportError/diagnosticDescription`` is written to the
+  /// unified log before the error is rethrown.
   public static func plan(from data: Data) throws -> (LorvexImportPlan, DecodedImport) {
-    let decoded = try decodeFull(data)
-    let plan = self.plan(for: decoded.payload)
-    guard !plan.entries.isEmpty else { throw ImportError.noImportableData }
-    return (plan, decoded)
+    do {
+      let decoded = try decodeFull(data)
+      let plan = self.plan(for: decoded.payload)
+      guard !plan.entries.isEmpty else { throw ImportError.noImportableData }
+      return (plan, decoded)
+    } catch let error as ImportError {
+      // The interface shows the localized outcome; the decoder's finding goes to
+      // the unified log. It can quote record identities and names, so it is
+      // private there.
+      importLog.error("Import rejected: \(error.diagnosticDescription, privacy: .private)")
+      throw error
+    }
   }
+
+  /// Where a rejected import file's ``ImportError/diagnosticDescription`` is
+  /// written, privately, while the interface shows the localized outcome.
+  static let importLog = Logger(subsystem: "com.lorvex.apple", category: "import")
 
   /// Build the content plan for a decoded payload: for each category the file
   /// carries, the count of records it holds (not a target-DB diff). Lists only

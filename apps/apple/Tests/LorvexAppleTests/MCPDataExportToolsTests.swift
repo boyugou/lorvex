@@ -101,7 +101,8 @@ struct MCPDataExportToolsTests {
       if case .text(let value, _, _) = $0 { return value }
       return nil
     }.joined(separator: "\n")
-    #expect(text.contains("Unknown entity"))
+    #expect(text.contains("entities[0] must be one of tasks, lists,"))
+    #expect(text.contains("(got \"not_a_category\")"))
   }
 
   @Test("export_data rejects a present-but-unsupported format")
@@ -116,7 +117,7 @@ struct MCPDataExportToolsTests {
       if case .text(let value, _, _) = $0 { return value }
       return nil
     }.joined(separator: "\n")
-    #expect(text.contains("Unsupported format"))
+    #expect(text.contains("format must be one of json, csv (got \"xml\")"))
   }
 
   @Test("export_calendar_ics exposes file metadata")

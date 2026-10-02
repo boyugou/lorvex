@@ -7,9 +7,6 @@ import LorvexCore
 /// field preserves every AI-authored advanced modifier and resolves against the
 /// latest loaded rule before entering the write funnel.
 extension MobileStore {
-  /// Weekday codes for the recurrence editor's `BYDAY` chips, in week order.
-  public static let recurrenceWeekdayCodes = TaskRecurrenceWeekday.allCases.map(\.rawValue)
-
   public var taskDetailHasRecurrence: Bool {
     get { taskDetailRecurrenceDraft.isEnabled }
     set { taskDetailRecurrenceDraft.isEnabled = newValue }

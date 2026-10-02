@@ -74,12 +74,12 @@ func spotlightDailyReviewDocumentIndexesDateTitleOnly() {
   let doc = SpotlightDailyReviewDocument(review: review)
 
   #expect(doc.identifier == "lorvex-review:2026-05-24")
-  #expect(doc.title == "Daily Review 2026-05-24")
+  #expect(doc.title == "Daily Review May 24, 2026")
   #expect(doc.deepLink == URL(string: "lorvex://review/2026-05-24")!)
 
   // The personal review summary must not reach the system index.
   let attributes = doc.searchableItem.attributeSet
-  #expect(attributes.title == "Daily Review 2026-05-24")
+  #expect(attributes.title == "Daily Review May 24, 2026")
   #expect(attributes.contentDescription == nil)
 }
 

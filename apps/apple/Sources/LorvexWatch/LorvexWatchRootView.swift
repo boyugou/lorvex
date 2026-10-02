@@ -44,11 +44,7 @@ public struct LorvexWatchRootView: View {
           isActive: store.lead(at: Date()) != nil
         ) { activity in
           guard let task = store.lead(at: Date()) else { return }
-          let built = makeOpenTaskActivity(taskID: task.id, title: task.title)
-          activity.title = built.title
-          activity.isEligibleForHandoff = built.isEligibleForHandoff
-          activity.requiredUserInfoKeys = built.requiredUserInfoKeys
-          activity.addUserInfoEntries(from: built.userInfo ?? [:])
+          configureOpenTaskActivity(activity, taskID: task.id, title: task.title)
         }
     }
   }

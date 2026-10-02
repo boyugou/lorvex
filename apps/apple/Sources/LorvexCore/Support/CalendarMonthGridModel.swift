@@ -54,9 +54,11 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
     self.timedTasks = timedTasks
   }
 
-  /// The day's entries in reading order: all-day events, then timed events and
-  /// timed tasks together by start time (title on a tie), then the tasks
-  /// planned or due on the day without a time.
+  /// The day's entries in reading order: all-day events, then the tasks
+  /// planned or due on the day without a time, then timed events and timed
+  /// tasks together by start time (title on a tie). The untimed tasks sit with
+  /// the all-day events, as they do in the week grid's all-day strip, so a busy
+  /// day's meetings never push the day's tasks into its "+N" overflow.
   public var entries: [CalendarMonthGridEntry] {
     let allDay = events.filter(\.allDay).map(CalendarMonthGridEntry.event)
     let timed: [(minute: Int, title: String, entry: CalendarMonthGridEntry)] =
@@ -72,7 +74,7 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
       if lhs.minute != rhs.minute { return lhs.minute < rhs.minute }
       return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
     }
-    return allDay + ordered.map(\.entry) + scheduledTasks.map(CalendarMonthGridEntry.task)
+    return allDay + scheduledTasks.map(CalendarMonthGridEntry.task) + ordered.map(\.entry)
   }
 }
 
@@ -97,10 +99,6 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
 ///   planned day (falling back to its due day). A cancelled task is not drawn,
 ///   and a task passed twice is drawn once.
 public enum CalendarMonthGridModel {
-  /// Cells shown per row before the rest of a busy day folds into a "+N"
-  /// overflow chip (see ``chips(for:maxVisible:)``).
-  public static let defaultMaxChipsPerDay = 3
-
   /// The first moment (start of day) of the month containing `date`.
   public static func startOfMonth(containing date: Date, calendar: Calendar) -> Date {
     let components = calendar.dateComponents([.year, .month], from: date)
@@ -144,9 +142,7 @@ public enum CalendarMonthGridModel {
 
     var eventsByKey: [String: [CalendarTimelineEvent]] = [:]
     for event in events {
-      let startKey = event.startDate
-      let endKey = event.endDate ?? event.startDate
-      for key in dayKeys where key >= startKey && key <= endKey {
+      for key in dayKeys where event.occurs(on: key) {
         eventsByKey[key, default: []].append(event)
       }
     }

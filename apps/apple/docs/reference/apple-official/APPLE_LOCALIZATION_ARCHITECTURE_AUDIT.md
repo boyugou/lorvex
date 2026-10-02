@@ -22,7 +22,11 @@ including one confirmed bundle bug on system-facing App Intent metadata.
 
 No database or CloudKit schema change is required to correct this architecture.
 
-## Current Shipping Surface
+## Shipping Surface at the Audited Snapshot
+
+The figures in this section describe code snapshot `77e2b5f76b`. The languages
+in force are listed in [`../../LOCALIZATION.md`](../../LOCALIZATION.md) under
+"Language coverage".
 
 - Seven module-owned `Localizable.xcstrings` catalogs.
 - 2,281 keys and 30,440 translated string units, including 59 keys with plural

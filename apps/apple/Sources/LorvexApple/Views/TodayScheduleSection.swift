@@ -76,7 +76,9 @@ struct TodayScheduleSection: View {
         event: event,
         timeLabel: row.startMinutes == nil
           ? TodayCalmCopy.allDay : TodayCalmCopy.timeRange(start: row.startMinutes ?? 0, end: row.endMinutes),
-        isPast: row.isPast)
+        isPast: row.isPast,
+        isSelected: store.selectedCalendarEventID == event.id,
+        open: { store.toggleTodayEventSelection(event) })
     case .now:
       TodayNowLine(minutes: row.startMinutes ?? 0)
     }
@@ -100,16 +102,13 @@ struct TodayScheduleSection: View {
       withAnimation(.snappy(duration: 0.18)) { showsPast.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.m) {
-        Image(systemName: "chevron.right")
+        LorvexDisclosureChevron(isExpanded: showsPast)
           .imageScale(.small)
-          .rotationEffect(.degrees(showsPast ? 90 : 0))
           .frame(width: 24)
         Text(
           String(
-            format: String(
-              localized: "today.schedule.earlier_count", defaultValue: "%lld earlier",
-              table: "Localizable", bundle: LorvexL10n.bundle),
-            count))
+            localized: "today.schedule.earlier_count", defaultValue: "\(count) earlier",
+            table: "Localizable", bundle: LorvexL10n.bundle))
         Spacer(minLength: 0)
       }
       .font(LorvexDesign.Typography.secondaryText)
@@ -127,10 +126,17 @@ struct TodayScheduleSection: View {
 /// the calendar's color where a task has its circle, the title, and the time
 /// with the location under it. A past event quiets its title and fades its
 /// bar.
+///
+/// Clicking the row opens the event's detail in the inspector, as clicking a
+/// task row opens the task's; clicking it again, or Return or Space while it
+/// has focus, toggles it the same way. The open event's row carries the
+/// selection fill a selected task row does.
 struct TodayEventRow: View {
   let event: CalendarTimelineEvent
   let timeLabel: String
   let isPast: Bool
+  var isSelected = false
+  var open: () -> Void = {}
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
@@ -141,7 +147,7 @@ struct TodayEventRow: View {
         .frame(width: 24, height: 24)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        Text(event.title)
+        Text(userContent: event.title)
           .font(LorvexDesign.Typography.primaryText)
           .foregroundStyle(isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .lineLimit(2)
@@ -164,7 +170,28 @@ struct TodayEventRow: View {
     }
     .padding(.vertical, LorvexDesign.Spacing.s)
     .padding(.horizontal, LorvexDesign.Spacing.s)
+    .background {
+      if isSelected {
+        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
+          .fill(LorvexDesign.Palette.selectionFill)
+      }
+    }
+    .contentShape(Rectangle())
+    .onTapGesture(perform: open)
+    .focusable(true)
+    .onKeyPress(.return) {
+      open()
+      return .handled
+    }
+    .onKeyPress(.space) {
+      open()
+      return .handled
+    }
+    .reduceMotionAnimation(.snappy(duration: 0.16), value: isSelected)
     .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(.isButton)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
+    .accessibilityAction(.default, open)
     .accessibilityIdentifier("today.schedule.event.\(event.id)")
   }
 }

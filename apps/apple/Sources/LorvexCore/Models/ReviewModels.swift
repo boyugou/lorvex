@@ -49,15 +49,18 @@ extension WeeklyReviewSnapshot {
   /// The window as a localized month-and-day range for a page's date line
   /// ("September 22 – 28", "September 29 – October 5"), read from the
   /// `"YYYY-MM-DD - YYYY-MM-DD"` form the core writes into `windowTitle`.
-  /// A `windowTitle` in any other form is returned unchanged.
-  public func windowRangeLabel(locale: Locale = .autoupdatingCurrent) -> String {
+  /// With `includesYear`, the range carries its year ("September 22 – 28,
+  /// 2026") for text read outside the week. A `windowTitle` in any other form
+  /// is returned unchanged.
+  public func windowRangeLabel(locale: Locale = .autoupdatingCurrent, includesYear: Bool = false) -> String {
     let parts = windowTitle.components(separatedBy: " - ")
     guard parts.count == 2,
       let start = LorvexDateFormatters.ymd.date(from: parts[0]),
       let end = LorvexDateFormatters.ymd.date(from: parts[1]),
       start <= end
     else { return windowTitle }
-    return (start..<end).formatted(.interval.month(.wide).day().locale(locale))
+    let style = Date.IntervalFormatStyle.interval.month(.wide).day().locale(locale)
+    return (start..<end).formatted(includesYear ? style.year() : style)
   }
 }
 

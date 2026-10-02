@@ -80,7 +80,7 @@ extension SettingsView {
       SettingsDiagnosticsRow(
         id: "lists",
         title: String(localized: "settings.diagnostics.lists", defaultValue: "Lists", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(diagnostics.setup.listCount)",
+        value: diagnostics.setup.listCount.formatted(),
         detail: nil,
         systemImage: "folder",
         level: .neutral
@@ -88,7 +88,7 @@ extension SettingsView {
       SettingsDiagnosticsRow(
         id: "tasks",
         title: String(localized: "settings.diagnostics.tasks", defaultValue: "Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(diagnostics.setup.taskCount)",
+        value: diagnostics.setup.taskCount.formatted(),
         detail: nil,
         systemImage: "checklist",
         level: .neutral
@@ -126,14 +126,9 @@ extension SettingsView {
         value: surfaces.reminderStatus,
         detail: store.lastTaskReminderScheduleReport.requestedCount > 0
           ? String(
-            format: String(
-              localized: "settings.diagnostics.reminder_requests.detail",
-              defaultValue: "%lld requested",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ),
-            store.lastTaskReminderScheduleReport.requestedCount
-          )
+            localized: "settings.diagnostics.reminder_requests.detail",
+            defaultValue: "\(store.lastTaskReminderScheduleReport.requestedCount) requested",
+            table: "Localizable", bundle: LorvexL10n.bundle)
           : nil,
         systemImage: "bell",
         level: .warning
@@ -144,14 +139,9 @@ extension SettingsView {
         value: surfaces.habitReminderStatus,
         detail: store.lastHabitReminderScheduleReport.requestedCount > 0
           ? String(
-            format: String(
-              localized: "settings.diagnostics.reminder_requests.detail",
-              defaultValue: "%lld requested",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ),
-            store.lastHabitReminderScheduleReport.requestedCount
-          )
+            localized: "settings.diagnostics.reminder_requests.detail",
+            defaultValue: "\(store.lastHabitReminderScheduleReport.requestedCount) requested",
+            table: "Localizable", bundle: LorvexL10n.bundle)
           : nil,
         systemImage: "bell.badge",
         level: .warning
@@ -175,7 +165,7 @@ extension SettingsView {
       SettingsDiagnosticsRow(
         id: "widget-today",
         title: String(localized: "settings.diagnostics.widget_today_tasks", defaultValue: "Widget Today Tasks", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: "\(surfaces.widgetTodayTaskCount)",
+        value: surfaces.widgetTodayTaskCount.formatted(),
         detail: nil,
         systemImage: "sun.max",
         level: .neutral
@@ -223,8 +213,10 @@ extension SettingsView {
   }
 
   /// App version, a plaintext diagnostics summary to copy into a bug report,
-  /// and the acknowledgments and privacy policy. There is no refresh action:
-  /// the diagnostics reload whenever this tab opens and on every app refresh.
+  /// and the acknowledgments and privacy policy. Each row names its content
+  /// on the leading side with the action or a chevron at the trailing edge.
+  /// There is no refresh action: the diagnostics reload whenever this tab
+  /// opens and on every app refresh.
   var aboutSection: some View {
     Section(String(localized: "settings.section.about", defaultValue: "About", table: "Localizable", bundle: LorvexL10n.bundle)) {
       LabeledContent(
@@ -234,35 +226,40 @@ extension SettingsView {
       .textSelection(.enabled)
       .accessibilityIdentifier("settings.runtime.overview.version")
 
-      Button {
-        let text = diagnosticsClipboardText()
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
+      LabeledContent {
+        Button {
+          let text = diagnosticsClipboardText()
+          NSPasteboard.general.clearContents()
+          NSPasteboard.general.setString(text, forType: .string)
+          diagnosticsCopied = true
+          Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.4))
+            diagnosticsCopied = false
+          }
+        } label: {
+          SettingsCopyButtonTitle(copied: diagnosticsCopied)
+        }
+        .accessibilityLabel(String(localized: "settings.diagnostics.copy", defaultValue: "Copy Diagnostics", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityIdentifier("settings.diagnostics.copy")
       } label: {
         Label(
-          String(localized: "settings.diagnostics.copy", defaultValue: "Copy Diagnostics", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "doc.on.doc"
-        )
+          String(localized: "settings.diagnostics.summary", defaultValue: "Diagnostics Summary", table: "Localizable", bundle: LorvexL10n.bundle),
+          systemImage: "doc.on.doc")
       }
-      .accessibilityIdentifier("settings.diagnostics.copy")
 
-      Button {
+      SettingsSheetLinkRow(
+        title: String(localized: "settings.acknowledgments.open", defaultValue: "Acknowledgments", table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "doc.text"
+      ) {
         showingAcknowledgments = true
-      } label: {
-        Label(
-          String(localized: "settings.acknowledgments.open", defaultValue: "Acknowledgments", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "doc.text"
-        )
       }
       .accessibilityIdentifier("settings.acknowledgments.open")
 
-      Button {
+      SettingsSheetLinkRow(
+        title: String(localized: "settings.privacy.open", defaultValue: "Privacy Policy", table: "Localizable", bundle: LorvexL10n.bundle),
+        systemImage: "hand.raised"
+      ) {
         showingPrivacyPolicy = true
-      } label: {
-        Label(
-          String(localized: "settings.privacy.open", defaultValue: "Privacy Policy", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "hand.raised"
-        )
       }
       .accessibilityIdentifier("settings.privacy.open")
     }

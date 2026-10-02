@@ -94,12 +94,9 @@
           card(read, stats(id: "read", streak: 5, completions: recentISODays(5)))
           VStack(alignment: .leading, spacing: 8) {
             Text("Inspector detail").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
-            HabitCatalogRowDetail(habit: walk, recentCompletions: recentISODays(24))
+            HabitProgressPanel(
+              habit: walk, stats: stats(id: "walk", streak: 4, completions: recentISODays(24)))
               .frame(width: 320)
-              .padding(12)
-              .background(
-                Color(nsColor: .controlBackgroundColor),
-                in: RoundedRectangle(cornerRadius: 10))
           }
         }
       }

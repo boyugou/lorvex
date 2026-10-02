@@ -51,7 +51,7 @@ struct TaskDetailDayPicker: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      TaskDetailPickerHeader(title: title, hint: hint)
+      InspectorEditorHeader(title: title, hint: hint)
       VStack(spacing: 0) {
         ForEach(presetDays, id: \.date) { day in
           TaskDetailChoiceRow(
@@ -210,7 +210,7 @@ struct TaskDetailLengthPicker: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      TaskDetailPickerHeader(
+      InspectorEditorHeader(
         title: String(
           localized: "task_detail.picker.length", defaultValue: "How Long", table: "Localizable",
           bundle: LorvexL10n.bundle),
@@ -222,13 +222,11 @@ struct TaskDetailLengthPicker: View {
             .stroke(
               LorvexDesign.Palette.accent.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)),
               lineWidth: 6)
-          Circle()
-            .trim(from: 0, to: Choices.lengthFraction(minutes))
-            .stroke(LorvexDesign.Palette.accent, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-            .rotationEffect(.degrees(-90))
+          LorvexProgressArc(
+            fraction: Choices.lengthFraction(minutes), style: LorvexDesign.Palette.accent, lineWidth: 6)
           if minutes > 0 {
             VStack(spacing: 0) {
-              Text(verbatim: "\(minutes)")
+              Text(minutes, format: .number)
                 .font(LorvexDesign.Typography.screenTitle.monospacedDigit())
               Text(
                 LocalizedStringResource(
@@ -255,7 +253,7 @@ struct TaskDetailLengthPicker: View {
       .frame(maxWidth: .infinity)
       LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
         ForEach(Choices.lengthPresets, id: \.self) { preset in
-          TaskDetailPickerPill(label: lorvexMinutesLabel(preset), isOn: minutes == preset) {
+          InspectorEditorPill(label: LorvexDurationFormat.minutes(preset), isOn: minutes == preset) {
             set(preset)
           }
         }
@@ -282,48 +280,5 @@ struct TaskDetailLengthPicker: View {
     }
     .buttonStyle(.bordered)
     .buttonBorderShape(.circle)
-  }
-}
-
-/// The title of a word picker and, when the word is easy to confuse with
-/// another (Do on and Due), a one-line hint saying what it means.
-struct TaskDetailPickerHeader: View {
-  let title: String
-  let hint: String?
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-      Text(title).font(LorvexDesign.Typography.primaryEmphasis)
-      if let hint {
-        Text(hint)
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-    }
-  }
-}
-
-/// A one-click choice inside a word picker. The chosen one is tinted, not
-/// filled: the only solid control in the app is the new-task button.
-struct TaskDetailPickerPill: View {
-  let label: String
-  let isOn: Bool
-  let action: () -> Void
-
-  var body: some View {
-    Button(action: action) {
-      Text(label)
-        .font(LorvexDesign.Typography.secondaryText)
-        .fixedSize()
-        .foregroundStyle(isOn ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.primary))
-        .padding(.horizontal, LorvexDesign.Spacing.s + 2)
-        .padding(.vertical, LorvexDesign.Spacing.xs + 1)
-        .background(
-          Capsule().fill(isOn ? LorvexDesign.Palette.selectionFill : LorvexDesign.Palette.insetFill))
-        .contentShape(Capsule())
-    }
-    .buttonStyle(.plain)
-    .accessibilityAddTraits(isOn ? .isSelected : [])
   }
 }

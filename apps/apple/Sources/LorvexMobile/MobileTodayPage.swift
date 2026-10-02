@@ -126,7 +126,7 @@ struct MobileTodayPage: View {
         .foregroundStyle(LorvexDesign.Palette.accent)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(text)
+        Text(userContent: text)
           .font(LorvexDesign.Typography.briefing)
           .foregroundStyle(.primary)
           .lineLimit(folds && !showsFullBriefing ? 4 : nil)
@@ -176,7 +176,7 @@ struct MobileTodayPage: View {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           HStack(spacing: LorvexDesign.Spacing.xxs) {
             LorvexPageLabel(MobileTodayCalmCopy.scheduleTitle)
-            Image(systemName: "chevron.right")
+            Image(systemName: "chevron.forward")
               .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
               .foregroundStyle(.tertiary)
           }
@@ -306,7 +306,7 @@ struct MobileTodayPage: View {
       Button { store.routePath.append(.workspace(.habits)) } label: {
         HStack(spacing: LorvexDesign.Spacing.xxs) {
           Text(MobileTodayCalmCopy.habitsLabel)
-          Image(systemName: "chevron.right")
+          Image(systemName: "chevron.forward")
             .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
         }
         .textCase(nil)
@@ -356,7 +356,7 @@ struct MobileTodayPage: View {
   }
 
   private func habitName(_ habit: LorvexHabit) -> some View {
-    Text(habit.name)
+    Text(userContent: habit.name)
       .font(LorvexDesign.Typography.tertiaryText)
       .foregroundStyle(.secondary)
       .fixedSize(horizontal: false, vertical: true)
@@ -421,6 +421,7 @@ struct MobileTodayDoneRow: View {
   let task: LorvexTask
   let isMutating: Bool
   let reopen: () async -> Void
+  @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
@@ -437,7 +438,7 @@ struct MobileTodayDoneRow: View {
       .buttonStyle(.borderless)
       .disabled(isMutating)
       .accessibilityLabel(MobileTodayCalmCopy.reopen)
-      MobileTaskRow(task: task, showsLeadingCircle: false)
+      MobileTaskRow(task: task, showsLeadingCircle: false, timeZone: productTimeZone)
         .equatable()
     }
     .accessibilityIdentifier("today.done.row")

@@ -35,6 +35,7 @@ struct TodayWidgetConfigurationTests {
     stats: .init(todayCount: 2, overdueCount: 1, dueTodayCount: 1),
     briefing: "Do Work, then Home.",
     tasks: [work, home],
+    lists: [.init(id: "work", name: "Work", icon: nil), .init(id: "home", name: "Home", icon: nil)],
     listStats: [
       .init(id: "work", stats: .init(todayCount: 1, overdueCount: 0, dueTodayCount: 1))
     ])
@@ -47,7 +48,26 @@ struct TodayWidgetConfigurationTests {
     #expect(scoped.stats.todayCount == 1)
     #expect(scoped.stats.dueTodayCount == 1)
     #expect(scoped.briefing == nil, "the briefing speaks about the whole day, hidden tasks included")
+    #expect(scoped.scopeList?.name == "Work")
     #expect(Self.snapshot.scoped(toList: nil) == Self.snapshot)
+  }
+
+  @Test("a widget configured with a list is titled with the list's name")
+  func listScopedWidgetIsTitledWithTheList() {
+    func headline(_ snapshot: WidgetSnapshot, _ family: WidgetFamilyKind) -> String {
+      let now = Date(timeIntervalSince1970: 1_780_142_400)  // 2026-05-30T12:00:00Z
+      return WidgetRenderModelBuilder().model(
+        entry: WidgetTimelineEntry(
+          date: now, state: .snapshot(snapshot, freshness: .fresh(ageSeconds: 0)),
+          refreshAfter: now.addingTimeInterval(1800)),
+        family: family, statusText: "Updated now"
+      ).headline
+    }
+    #expect(headline(Self.snapshot.scoped(toList: "work"), .systemMedium) == "Work")
+    #expect(headline(Self.snapshot.scoped(toList: "work"), .systemSmall) == "Work")
+    #expect(headline(Self.snapshot, .systemMedium) == "Today")
+    // A list no longer in the snapshot leaves the widget titled "Today".
+    #expect(headline(Self.snapshot.scoped(toList: "gone"), .systemMedium) == "Today")
   }
 
   @Test("a list without stored counts falls back to counting its tasks")

@@ -126,7 +126,7 @@ extension AppStore {
       try await afterSelectedTaskMutation()
       feedbackProvider.playFeedback(.taskCompleted)
       errorMessage = nil
-      registerReopenUndo(id: id, undoManager: undoManager, actionName: "Complete Task")
+      registerReopenUndo(id: id, undoManager: undoManager, actionName: TaskCommand.complete.title)
     } catch {
       await presentUserFacingError(error)
     }
@@ -148,7 +148,7 @@ extension AppStore {
       } else {
         updatedToday = try await core.completeTask(id: task.id)
         feedbackProvider.playFeedback(.taskCompleted)
-        registerReopenUndo(id: task.id, undoManager: undoManager, actionName: "Complete Task")
+        registerReopenUndo(id: task.id, undoManager: undoManager, actionName: TaskCommand.complete.title)
       }
       lorvexAnimated(.snappy(duration: 0.18)) {
         today = updatedToday
@@ -230,7 +230,7 @@ extension AppStore {
       await republishSurfacesAfterLocalMutation()
       syncSelectedTaskDraft()
       errorMessage = nil
-      registerReopenUndo(id: id, undoManager: undoManager, actionName: "Cancel Task")
+      registerReopenUndo(id: id, undoManager: undoManager, actionName: TaskCommand.cancel.title)
     } catch {
       await presentUserFacingError(error)
     }

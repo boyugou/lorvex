@@ -16,33 +16,70 @@ extension TaskDetailView {
     )
   }
 
+  /// The one-click reminder times for the task in the detail draft, from its
+  /// planned time and due day (``TaskDetailReminderPreset/presets(plannedDay:plannedTime:dueDay:now:timeZone:pickerTimeZone:)``).
+  func reminderPresets(now: Date = Date()) -> [TaskDetailReminderPreset] {
+    TaskDetailReminderPreset.presets(
+      plannedDay: store.taskDetailHasPlannedDate ? store.taskDetailPlannedDatePickerDate : nil,
+      plannedTime: store.taskDetailPlannedTime,
+      dueDay: store.taskDetailHasDueDate ? store.taskDetailDueDatePickerDate : nil,
+      now: now,
+      timeZone: store.logicalTimeZone)
+  }
+}
+
+/// A one-click reminder time offered in the reminders editor.
+struct TaskDetailReminderPreset: Identifiable {
+  let id: String
+  let title: String
+  let date: Date
+
   /// One-click reminder times, each only while it is still ahead: when the
   /// task's planned time starts, 9 AM on its due day, an hour from now, and
   /// 9 AM tomorrow. Times repeat across presets only once. A preset's name
   /// says the day ("Tomorrow morning") and its detail the time, written in the
   /// chosen clock.
-  func reminderPresets(now: Date = Date()) -> [TaskDetailReminderPreset] {
+  ///
+  /// Clock times are wall-clock times in `timeZone`, the product zone
+  /// reminders are composed in, and "tomorrow" is the day after `now` there.
+  /// `plannedDay` and `dueDay` are day pickers' values: midnights in
+  /// `pickerTimeZone`, this device's zone. Each is read as the day it names in
+  /// that zone, and the time is set on the same day in `timeZone`; setting the
+  /// hour on the picker's instant directly would land a day early whenever the
+  /// product zone is west of the device's.
+  static func presets(
+    plannedDay: Date?,
+    plannedTime: Range<Int>?,
+    dueDay: Date?,
+    now: Date,
+    timeZone: TimeZone,
+    pickerTimeZone: TimeZone = .current
+  ) -> [TaskDetailReminderPreset] {
     var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = store.logicalTimeZone
+    calendar.timeZone = timeZone
     func at(_ day: Date, minutes: Int) -> Date? {
       calendar.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: day)
+    }
+    func at(pickerDay: Date, minutes: Int) -> Date? {
+      let label = PlannedDayBridge.storageDate(forLocalInstant: pickerDay, timeZone: pickerTimeZone)
+      return at(PlannedDayBridge.displayDate(forStorageDate: label, timeZone: timeZone), minutes: minutes)
     }
     var presets: [TaskDetailReminderPreset] = []
     func offer(_ id: String, _ title: String, _ date: Date?) {
       guard let date, date > now, !presets.contains(where: { $0.date == date }) else { return }
       presets.append(.init(id: id, title: title, date: date))
     }
-    if store.taskDetailHasPlannedDate, let time = store.taskDetailPlannedTime {
+    if let plannedDay, let plannedTime {
       offer(
         "start",
         String(localized: "task_detail.reminders.preset.start", defaultValue: "When it starts", table: "Localizable", bundle: LorvexL10n.bundle),
-        at(store.taskDetailPlannedDatePickerDate, minutes: time.lowerBound))
+        at(pickerDay: plannedDay, minutes: plannedTime.lowerBound))
     }
-    if store.taskDetailHasDueDate {
+    if let dueDay {
       offer(
         "due",
         String(localized: "task_detail.reminders.preset.due_morning", defaultValue: "Due day morning", table: "Localizable", bundle: LorvexL10n.bundle),
-        at(store.taskDetailDueDatePickerDate, minutes: 9 * 60))
+        at(pickerDay: dueDay, minutes: 9 * 60))
     }
     offer(
       "hour",
@@ -56,13 +93,6 @@ extension TaskDetailView {
     }
     return presets
   }
-}
-
-/// A one-click reminder time offered in the reminders editor.
-struct TaskDetailReminderPreset: Identifiable {
-  let id: String
-  let title: String
-  let date: Date
 }
 
 /// The reminders editor: the task's reminders, each with a remove button, then
@@ -152,8 +182,13 @@ private struct TaskDetailRemindersPanel: View {
 struct TaskDetailChoiceRow: View {
   let title: String
   var detail: String? = nil
+  /// A glyph before the title, in the secondary style.
+  var systemImage: String? = nil
   /// Marks the row as the field's current value: accent title and a checkmark.
   var isOn = false
+  /// Fills the row as the pointer does, for a picker that moves a highlight
+  /// with the arrow keys.
+  var isHighlighted = false
   var accessibilityIdentifier: String? = nil
   let action: () -> Void
 
@@ -162,6 +197,11 @@ struct TaskDetailChoiceRow: View {
   var body: some View {
     Button(action: action) {
       HStack(spacing: LorvexDesign.Spacing.s) {
+        if let systemImage {
+          Image(systemName: systemImage)
+            .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
+        }
         Text(title)
           .foregroundStyle(isOn ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.primary))
         if isOn {
@@ -182,7 +222,7 @@ struct TaskDetailChoiceRow: View {
       .padding(.vertical, 6)
       .background(
         RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
-          .fill(.quaternary.opacity(isHovering ? 1 : 0)))
+          .fill(.quaternary.opacity(isHovering || isHighlighted ? 1 : 0)))
       .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous))
     }
     .buttonStyle(.plain)

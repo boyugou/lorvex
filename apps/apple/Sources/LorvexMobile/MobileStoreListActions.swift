@@ -104,7 +104,6 @@ extension MobileStore {
     routePath.removeAll { $0 == route }
     tasksRoutePath.removeAll { $0 == route }
     calendarRoutePath.removeAll { $0 == route }
-    habitsRoutePath.removeAll { $0 == route }
     reviewRoutePath.removeAll { $0 == route }
   }
 

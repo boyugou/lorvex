@@ -105,9 +105,10 @@ extension MobileStore {
         armedThroughByPolicyID: armedThroughByPolicyID, asOf: now())
     }
 
-    // Drop one-shot snoozes for tasks no longer active (completed/cancelled here
-    // or via sync); the reminder reap above leaves the snooze prefix untouched.
-    await reapResolvedTaskSnoozes()
+    // Drop one-shot snoozes whose task resolved (done, parked, trashed, or
+    // deleted, here or via sync); the reminder reap above leaves the snooze
+    // prefix untouched.
+    await taskReminderScheduler.cancelSnoozesOfResolvedTasks(core: core)
 
     // Surface a failed/denied schedule into the diagnostics ring so a silent
     // reap-and-fail (or a permission loss) leaves an observable trace.
@@ -172,41 +173,13 @@ extension MobileStore {
     return snapshot.today.tasks
   }
 
-  /// Cancel one-shot snoozes whose task has resolved (completed/cancelled here or
-  /// via sync) or been deleted. A snooze exists only after its reminder fired, so
-  /// that task has dropped out of the upcoming-reminder query — keying a keep-set
-  /// on `schedulableTasks` would wrongly cancel essentially every live snooze on
-  /// the next re-plan. Instead this checks only the (usually zero) tasks that
-  /// actually have a pending snooze, avoiding the broad task query the reminder
-  /// hot path is required to stay clear of, and cancels an explicit drop-set so a
-  /// snooze added concurrently for a still-active task is never swept.
-  private func reapResolvedTaskSnoozes() async {
-    let snoozeTaskIDs = await taskReminderScheduler.pendingSnoozeTaskIDs()
-    guard !snoozeTaskIDs.isEmpty else { return }
-    var resolved: Set<LorvexTask.ID> = []
-    for id in snoozeTaskIDs {
-      do {
-        let task = try await core.loadTask(id: id)
-        if !task.status.isActionable { resolved.insert(id) }
-      } catch LorvexCoreError.taskNotFound {
-        // Genuinely deleted (here or via sync) — cancel its stale snooze.
-        resolved.insert(id)
-      } catch {
-        // Transient read failure (e.g. SQLITE_BUSY under a concurrent sync
-        // write). Keep the snooze and retry on the next re-plan rather than
-        // cancelling a still-live reminder on a momentary error.
-      }
-    }
-    await taskReminderScheduler.cancelSnoozes(forResolvedTaskIDs: resolved)
-  }
-
+  /// The tasks the badge counts from: every actionable task the day surfaces
+  /// show, read uncapped so the count stays exact however many tasks rank
+  /// ahead of an overdue one. Falls back to the Today snapshot, which holds the
+  /// day's due and overdue tasks, when the read fails.
   private func mobileBadgeTasks() async -> [LorvexTask] {
-    if let tasks = try? await core.getScheduledTasks(
-      from: "0001-01-01",
-      to: logicalTodayString,
-      limit: 500)
-    {
-      return tasks
+    if let source = try? await core.loadWidgetStatsSource() {
+      return source.actionableTasks
     }
     return snapshot.today.tasks
   }

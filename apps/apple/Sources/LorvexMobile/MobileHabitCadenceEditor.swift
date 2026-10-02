@@ -32,8 +32,9 @@ struct MobileHabitCadenceSection: View {
         Stepper(value: $draft.dayOfMonth, in: 1...31) {
           Text(
             String(
-              format: String(localized: "habits.cadence.day_of_month_value", defaultValue: "Day %lld", table: "Localizable", bundle: MobileL10n.bundle),
-              draft.dayOfMonth))
+              localized: "habits.cadence.day_of_month_value",
+              defaultValue: "Day \(draft.dayOfMonth)",
+              table: "Localizable", bundle: MobileL10n.bundle))
         }
         .accessibilityIdentifier("\(idPrefix).cadence.dayOfMonth")
       }
@@ -63,16 +64,18 @@ struct MobileHabitCadenceSection: View {
       Stepper(value: $draft.timesPerWeek, in: 1...7) {
         Text(
           String(
-            format: String(localized: "habits.cadence.times_per_week_value", defaultValue: "%lld× per week", table: "Localizable", bundle: MobileL10n.bundle),
-            draft.timesPerWeek))
+            localized: "habits.cadence.times_per_week_value",
+            defaultValue: "\(draft.timesPerWeek) times a week",
+            table: "Localizable", bundle: MobileL10n.bundle))
       }
       .accessibilityIdentifier("\(idPrefix).cadence.timesPerWeek")
     }
   }
 }
 
-/// A Monday-first row of seven toggleable weekday pills. `selection` holds the
-/// selected weekdays as Monday-first ints (0=Mon … 6=Sun). Habit cadence passes
+/// A row of seven toggleable weekday pills, starting on the first day of the
+/// user's week (``LorvexWeekdayOrder``). `selection` holds the selected
+/// weekdays as Monday-first ints (0=Mon … 6=Sun). Habit cadence passes
 /// `allowsEmpty: false` so its last day stays selected; task recurrence permits
 /// an empty set because the core can infer the weekday from the task's anchor.
 struct MobileWeekdayPicker: View {
@@ -82,7 +85,7 @@ struct MobileWeekdayPicker: View {
 
   var body: some View {
     HStack(spacing: 6) {
-      ForEach(0..<7, id: \.self) { day in
+      ForEach(LorvexWeekdayOrder.mondayFirstIndices(), id: \.self) { day in
         pill(for: day)
       }
     }

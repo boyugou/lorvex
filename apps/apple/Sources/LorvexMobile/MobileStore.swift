@@ -141,15 +141,11 @@ public final class MobileStore {
   public var taskDetailRecurrenceDraft = TaskRecurrenceEditorDraft()
   public var selectedTab: MobileTab
   public var routePath: [MobileRoute]
-  /// Navigation path for the Tasks tab's `NavigationStack` on iPhone, so a
-  /// programmatic open (e.g. keyboard-driven) pushes detail without teleporting
-  /// to the Today stack. The Tasks tab is its own first-class surface now.
+  /// Navigation path for the Tasks tab's `NavigationStack`, so a programmatic
+  /// open (e.g. keyboard-driven) pushes detail here without teleporting to the
+  /// Today stack. The Habits and Memory workspaces open on this stack too, with
+  /// the habit or memory detail a deep link names pushed above them.
   public var tasksRoutePath: [MobileRoute] = []
-  /// Routes queued for the Habits stack by a deep link / Handoff / Spotlight
-  /// route to a specific habit. The Habits tab is hidden from the bar, so
-  /// `redirectHiddenHabitsTab` moves them onto the Tasks stack after the
-  /// Habits workspace.
-  public var habitsRoutePath: [MobileRoute] = []
   /// Navigation path for the Calendar tab's `NavigationStack`, so tapping a
   /// scheduled task/event pushes its detail onto the Calendar stack in place
   /// instead of switching the user to the Today tab.

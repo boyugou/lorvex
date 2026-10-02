@@ -97,12 +97,41 @@ func widgetRenderModelPhrasesALeadWhoseTimeIsNotRunning() {
   #expect(after.state == .content)
   #expect(after.taskRows.map(\.id) == ["timed", "loose"])
   #expect(after.dayLine == "2 left today · about 40 min")
+  // Under the Home Screen families' "Today" title the line names no day.
+  #expect(after.dayLeftUnderTitle == "2 left")
+  #expect(after.dayLineUnderTitle == "2 left · about 40 min")
+  // A one-line slot without the title falls back through shorter wordings.
+  #expect(
+    after.dayLineChoices == [
+      "2 left today · about 40 min", "2 left · about 40 min", "2 left today", "2 left",
+    ])
 
   let inline = renderModel(tasks, family: .accessoryInline)
   #expect(inline.headline == "Timed")
   #expect(inline.urlString == "lorvex://task/timed")
   #expect(inline.taskRows.isEmpty)
   #expect(inline.upcomingCount == 1)
+}
+
+@Test
+func widgetRenderModelSaysNothingIsLeftWithoutADayLine() {
+  let model = renderModel([], family: .systemMedium)
+  #expect(model.state == .empty)
+  #expect(model.dayLine == nil)
+  #expect(model.dayLeftUnderTitle == nil)
+  #expect(model.dayLineUnderTitle == nil)
+  #expect(model.dayLineChoices.isEmpty)
+}
+
+@Test
+func widgetRenderModelDropsRepeatedDayLineChoicesWithoutWork() {
+  // No task carries an estimate or a time, so the line has no work part and
+  // the choices with and without it would repeat each other.
+  let model = renderModel(
+    [widgetTodayTask(id: "loose", title: "Loose", priority: nil, estimatedMinutes: nil)],
+    family: .accessoryRectangular)
+  #expect(model.lead == nil)
+  #expect(model.dayLineChoices == ["1 left today", "1 left"])
 }
 
 @Test
@@ -180,7 +209,7 @@ func widgetRenderModelCarriesStaleAgeLabel() {
     freshness: .stale(ageSeconds: 2 * 60 * 60))
 
   #expect(model.state == .stale)
-  #expect(model.staleAgeLabel == "2h ago")
+  #expect(model.staleAgeLabel == LorvexDateFormatters.elapsed(seconds: 2 * 60 * 60))
 }
 
 @Test

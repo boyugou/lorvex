@@ -42,14 +42,14 @@ struct MobileMemoryDetailPanel: View {
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
         .accessibilityHidden(true)
 
-      Text(entry.displayTitle)
+      Text(userContent: entry.displayTitle)
         .font(LorvexDesign.Typography.detailTitle)
         .textSelection(.enabled)
     }
   }
 
   private var content: some View {
-    Text(entry.content)
+    Text(userContent: entry.content)
       .font(LorvexDesign.Typography.primaryText)
       .textSelection(.enabled)
       .frame(maxWidth: .infinity, alignment: .leading)

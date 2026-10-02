@@ -65,22 +65,23 @@ struct SidebarListIcon: View {
 }
 
 /// A source-list row rendered inside `List(selection:)`. It draws only content —
-/// icon column, a one-line title, and an optional trailing count badge — and
+/// icon column, a one-line title, and an optional trailing count badge in the
+/// locale's digits — and
 /// leaves the selection highlight, hover, focus ring, and inactive-window
 /// desaturation to the native `.sidebar` list. Titles and the bare-symbol icon
 /// use hierarchical styles (`.primary` / `.secondary`) so the list inverts them
 /// against the selection fill; a colored `SidebarListIcon` keeps its own tint.
 struct SidebarListRow<Icon: View, Title: View>: View {
-    let badge: String?
+    let count: Int?
     let icon: Icon
     let title: Title
 
     init(
-        badge: String? = nil,
+        count: Int? = nil,
         @ViewBuilder icon: () -> Icon,
         @ViewBuilder title: () -> Title
     ) {
-        self.badge = badge
+        self.count = count
         self.icon = icon()
         self.title = title()
     }
@@ -96,8 +97,8 @@ struct SidebarListRow<Icon: View, Title: View>: View {
                 .truncationMode(.tail)
                 .layoutPriority(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            if let badge {
-                Text(badge)
+            if let count {
+                Text(count, format: .number)
                     .font(LorvexDesign.Typography.tertiaryText.monospacedDigit().weight(.medium))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, LorvexDesign.Spacing.sm)

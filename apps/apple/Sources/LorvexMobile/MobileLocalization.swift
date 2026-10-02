@@ -25,22 +25,4 @@ enum MobileL10n {
             return Bundle(for: BundleAnchor.self)
         #endif
     }()
-
-    /// The locale selected for this module's localized resources. App-specific
-    /// language selection does not necessarily change `Locale.current`, so
-    /// user-facing formatters must follow the bundle's preferred localization
-    /// rather than the device-wide locale.
-    static let locale = resolvedLocale(
-        preferredLocalizations: bundle.preferredLocalizations,
-        fallback: .current)
-
-    static func resolvedLocale(
-        preferredLocalizations: [String],
-        fallback: Locale
-    ) -> Locale {
-        guard let identifier = preferredLocalizations.first, identifier != "Base" else {
-            return fallback
-        }
-        return Locale(identifier: identifier)
-    }
 }

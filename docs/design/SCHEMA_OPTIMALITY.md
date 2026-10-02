@@ -94,7 +94,7 @@ needs.
    assistant) is untrusted proposal state until the user confirms it. Only a
    confirmed write enters the schema, and it writes ordinary existing domain
    fields through the typed core ops — never a new AI-specific *synced* column
-   or a new enum value an iOS 18 / macOS 15 build cannot parse. Raw transcripts,
+   or a new enum value an older build cannot parse. Raw transcripts,
    prompts, hidden reasoning, embeddings, and provider response objects never
    enter CloudKit or `schema.sql`; provenance, if kept, is a local-only record
    (feature, model family/version, prompt/eval version, timestamp, acceptance),
@@ -145,17 +145,16 @@ multi-device rolling upgrades. `apps/apple/script/verify_schema_freeze.py`,
 `apps/apple/script/verify_migration_ladder.py`, and
 `apps/apple/script/verify_sync_payload_contract.py` enforce the split on every
 gate: dormant (advisory) while `launched: false`, armed once `launched: true`.
-SQLite and sync-payload versions are independent. While the app is pre-launch,
-the sole `schema/sync_payload/001.json` contract is edited in place and
-`LorvexVersion.payloadSchemaVersion` remains `1`; there are no installed older
-clients to justify manufacturing a compatibility generation. After the first
-public release, a wire-contract change requires an explicit payload-schema bump
-and the next contiguous `schema/sync_payload/NNN.json`, even when it needs no DDL
-migration.
+SQLite and sync-payload versions are independent. With `launched: false`, the
+sole `schema/sync_payload/001.json` contract is edited in place and
+`LorvexVersion.payloadSchemaVersion` remains `1`, since no installed older client
+needs a compatibility generation. With `launched: true` (the current value), a
+wire-contract change requires an explicit payload-schema bump and the next
+contiguous `schema/sync_payload/NNN.json`, even when it needs no DDL migration.
 
 ### Pre-launch (`launched: false`)
 
-No installed device carries a Lorvex database yet, so the baseline is free to
+While no installed device carries a Lorvex database, the baseline is free to
 change. There is one consolidated schema and no incremental migrations:
 
 - `schema/schema.sql` (and the Apple embedded copy) is edited directly.
@@ -204,12 +203,11 @@ verification (they quarantine healthy data) or drift silently, so:
    copies automatically. `apps/apple/script/verify_schema_embed.sh` and the Apple
    test suite verify the embed.
 
-At first public release, arm the guard once with
-`apps/apple/script/verify_schema_freeze.py --arm`: it flips `launched` to `true`
-and atomically freezes the shipped `checksums.lock` plus every current
-sync-payload manifest hash into `migration_policy.json`. For every later public
-release, re-run and commit `--arm` **before archiving** so every migration and
-payload contract that build can ship is captured. Ordinary development gates
-allow append-only candidates; the distributable archive gate rejects a current
-identity that has not yet been re-armed. Frozen entries may never change or be
-removed.
+The guard is armed with `apps/apple/script/verify_schema_freeze.py --arm`: it
+sets `launched` to `true` and atomically freezes the shipped `checksums.lock`
+plus every current sync-payload manifest hash into `migration_policy.json`.
+Before archiving each public release, re-run and commit `--arm` so every
+migration and payload contract that build can ship is captured. Ordinary
+development gates allow append-only candidates; the distributable archive gate
+rejects a current identity that has not yet been re-armed. Frozen entries may
+never change or be removed.

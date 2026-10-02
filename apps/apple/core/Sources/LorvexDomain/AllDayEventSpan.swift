@@ -1,9 +1,12 @@
 import Foundation
 
-/// Converts between Lorvex's inclusive all-day date span and calendar-provider
-/// APIs whose end is the first excluded day. Calendar arithmetic is required so
-/// daylight-saving transitions never turn a civil-day conversion into a fixed
-/// 24-hour offset.
+/// Converts between Lorvex's all-day date span and EventKit's. Lorvex stores an
+/// all-day event's first and last occupied days. EventKit reports an all-day
+/// `endDate` as the last occupied day at 23:59:59, and while `isAllDay` is set
+/// it normalizes any end it is given to 23:59:59 of the day that end falls on,
+/// so a next-midnight end silently adds a day. Calendar arithmetic is required
+/// so daylight-saving transitions never turn a civil-day conversion into a
+/// fixed 24-hour offset.
 public enum AllDayEventSpan {
   /// The calendar used to interpret an EventKit all-day event's civil dates.
   /// Lorvex's stored day keys are always proleptic Gregorian, independent of
@@ -30,19 +33,29 @@ public enum AllDayEventSpan {
     ).canonicalString
   }
 
-  public static func exclusiveEnd(
+  /// The `endDate` to give EventKit for an all-day event that starts on
+  /// `start` and last occupies the day of `inclusiveEnd` (`nil` for a one-day
+  /// event): that day at 23:59:59 in `calendar`, EventKit's own
+  /// representation, so it is stored and read back unchanged. A last day
+  /// before the start day is treated as the start day.
+  public static func eventKitEnd(
     start: Date, inclusiveEnd: Date?, calendar: Calendar
   ) -> Date {
-    let finalOccupiedDay = max(inclusiveEnd ?? start, start)
-    return calendar.date(byAdding: .day, value: 1, to: finalOccupiedDay)
-      ?? finalOccupiedDay.addingTimeInterval(24 * 60 * 60)
+    let lastDay = calendar.startOfDay(for: max(inclusiveEnd ?? start, start))
+    let nextDay =
+      calendar.date(byAdding: .day, value: 1, to: lastDay)
+      ?? lastDay.addingTimeInterval(24 * 60 * 60)
+    return nextDay.addingTimeInterval(-1)
   }
 
+  /// The last occupied day, as its midnight in `calendar`, of an EventKit
+  /// all-day event that starts on `start` and ends at `eventKitEnd`: the day
+  /// holding the instant just before that end. EventKit's 23:59:59 names its
+  /// own day and a next-midnight end names the day before, so either shape
+  /// reads correctly. Never earlier than the start day.
   public static func inclusiveEnd(
-    start: Date, exclusiveEnd: Date, calendar: Calendar
+    start: Date, eventKitEnd: Date, calendar: Calendar
   ) -> Date {
-    calendar.date(byAdding: .day, value: -1, to: exclusiveEnd)
-      .map { max($0, start) }
-      ?? start
+    calendar.startOfDay(for: max(eventKitEnd.addingTimeInterval(-1), start))
   }
 }

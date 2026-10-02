@@ -97,7 +97,7 @@ struct MobileHabitDetailPanel: View {
       MobileIconTile(symbol: habit.tileSymbol, tint: habit.tileTint, size: 56)
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-        Text(habit.name)
+        Text(userContent: habit.name)
           .font(LorvexDesign.Typography.detailTitle)
         if let encouragement = habit.cue, !encouragement.isEmpty {
           // The encouragement — a motivating line, set as an inspiring callout
@@ -106,7 +106,7 @@ struct MobileHabitDetailPanel: View {
             Image(systemName: "sparkles")
               .font(.footnote)
               .foregroundStyle(habit.tileTint)
-            Text(encouragement)
+            Text(userContent: encouragement)
               .font(LorvexDesign.Typography.primaryText)
               .italic()
               .foregroundStyle(.secondary)

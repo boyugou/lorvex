@@ -21,7 +21,7 @@ enum TodayCalmCopy {
     case .day(let tasks, let workMinutes, let meetings):
       var parts = [tasksLeft(tasks)]
       if let workMinutes, workMinutes > 0 {
-        let length = lorvexUnbreakable(CalendarWeekLoadCopy.length(roundedWork(workMinutes)))
+        let length = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(workMinutes)))
         parts.append(
           String(
             localized: "today.list.work", defaultValue: "about \(length) of work",
@@ -128,14 +128,14 @@ enum TodayCalmCopy {
   /// The overbooked well's title: the estimated work against the free working
   /// time left ("About 6 hr of work, 4 hr free").
   static func overbookedTitle(_ overbooked: LorvexCalmToday.Overbooked) -> String {
-    let work = lorvexUnbreakable(CalendarWeekLoadCopy.length(roundedWork(overbooked.workMinutes)))
+    let work = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(overbooked.workMinutes)))
     guard overbooked.freeMinutes > 0 else {
       return String(
         localized: "today.overbooked.title.no_free",
         defaultValue: "About \(work) of work and no free time left",
         table: "Localizable", bundle: LorvexL10n.bundle)
     }
-    let free = lorvexUnbreakable(CalendarWeekLoadCopy.length(roundedWork(overbooked.freeMinutes)))
+    let free = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(overbooked.freeMinutes)))
     return String(
       localized: "today.overbooked.title", defaultValue: "About \(work) of work, \(free) free",
       table: "Localizable", bundle: LorvexL10n.bundle)
@@ -152,7 +152,7 @@ enum TodayCalmCopy {
         table: "Localizable", bundle: LorvexL10n.bundle)
     }
     let minutes = candidates.reduce(0) { $0 + max($1.estimatedMinutes ?? 0, 0) }
-    let freed = lorvexUnbreakable(CalendarWeekLoadCopy.length(roundedWork(minutes)))
+    let freed = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(minutes)))
     switch candidates.count {
     case 1:
       return String(
@@ -221,7 +221,8 @@ enum TodayCalmCopy {
     }
     if let minutes = item.task.estimatedMinutes, minutes > 0 {
       return String(
-        localized: "today.calm.estimate", defaultValue: "About \(minutes) min",
+        localized: "today.calm.estimate",
+        defaultValue: "About \(LorvexDurationFormat.minutes(minutes))",
         table: "Localizable", bundle: LorvexL10n.bundle)
     }
     return nil
@@ -242,13 +243,6 @@ enum TodayCalmCopy {
   static var openDetails: String {
     String(
       localized: "today.calm.now.open", defaultValue: "Open Details", table: "Localizable",
-      bundle: LorvexL10n.bundle)
-  }
-
-  /// A length or estimate ("90 min").
-  static func duration(_ minutes: Int) -> String {
-    String(
-      localized: "today.calm.duration", defaultValue: "\(minutes) min", table: "Localizable",
       bundle: LorvexL10n.bundle)
   }
 
@@ -352,11 +346,9 @@ enum TodayCalmCopy {
   /// The tooltip of the suggestion's Move to Tomorrow button.
   static func moveUnscheduledHelp(_ count: Int) -> String {
     String(
-      format: String(
-        localized: "today.suggestion.move_unscheduled.help",
-        defaultValue: "Move the %lld tasks that don’t fit today to tomorrow", table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      count)
+      localized: "today.suggestion.move_unscheduled.help",
+      defaultValue: "Move the \(count) tasks that don’t fit today to tomorrow",
+      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   static var wontFit: String {

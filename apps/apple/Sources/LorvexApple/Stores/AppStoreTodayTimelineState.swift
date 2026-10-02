@@ -1,65 +1,70 @@
 import Foundation
 import LorvexCore
 
-extension AppStore {
-  /// Today on the clock for the schedule at the top of the Today column: the day's calendar events and
-  /// its timed tasks in one reading order, with a "now" row among them. The
-  /// finished tasks keep their times, so the day reads as it ran.
-  ///
-  /// Suggested times are left out: a suggestion is a draft the user is still
-  /// deciding on, so it keeps its own reviewable rows.
-  var todaySchedule: [LorvexTodayTimelineItem] {
-    let tasks = today.tasks.filter(\.status.isActionable) + doneTodayTasks
-    return LorvexTodayTimeline.build(
-      events: todayScheduleEvents,
-      tasks: tasks,
-      times: tasks.times(on: logicalTodayDateString),
-      nowMinutes: nowMinutesInProductDay)
-  }
-
-  /// The ids of the tasks the schedule draws, so the column's other lists
-  /// leave them out and every task appears once.
-  var todayScheduledTaskIDs: Set<LorvexTask.ID> {
-    Set(todaySchedule.compactMap { row in
-      if case .task(let task) = row.kind { return task.id }
-      return nil
-    })
-  }
-
+/// Today's main column for one moment, built from one read of the clock and
+/// the day: the page, the schedule, and what the lists around the schedule
+/// show, so every task appears once. A Today render builds it once and reads
+/// every part from it, rather than rebuilding the day for each part it draws.
+struct TodayColumnContent {
+  /// Minutes since midnight in the product day, or nil on a day that is not
+  /// today (``AppStore/nowMinutesInProductDay``).
+  let nowMinutes: Int?
+  /// The day's list with its lead, facts line, and overbooked decision.
+  let page: LorvexCalmToday
+  /// Today on the clock, for the schedule at the top of the column: the day's
+  /// calendar events and its timed tasks in one reading order, with a "now"
+  /// row among them. Finished tasks keep their times, so the day reads as it
+  /// ran. Suggested times are left out: a suggestion is a draft the person is
+  /// still deciding on, so it keeps its own reviewable rows.
+  let schedule: [LorvexTodayTimelineItem]
   /// Today's list entries the schedule does not show: the tasks without a
-  /// time today, started ones first as ``calmToday`` orders them.
-  var todayUntimedItems: [LorvexCalmToday.Item] {
-    let scheduled = todayScheduledTaskIDs
-    return calmToday.items.filter { !scheduled.contains($0.id) }
-  }
-
+  /// time today, started ones first as ``page`` orders them.
+  let untimedItems: [LorvexCalmToday.Item]
   /// What the Done section lists: today's finished tasks without a time,
   /// since a finished timed task keeps its place in the schedule.
-  var todayDoneListTasks: [LorvexTask] {
-    let scheduled = todayScheduledTaskIDs
-    return doneTodayTasks.filter { !scheduled.contains($0.id) }
+  let doneListTasks: [LorvexTask]
+
+  init(
+    nowMinutes: Int?, page: LorvexCalmToday, schedule: [LorvexTodayTimelineItem],
+    doneToday: [LorvexTask]
+  ) {
+    self.nowMinutes = nowMinutes
+    self.page = page
+    self.schedule = schedule
+    let scheduled = Set(
+      schedule.compactMap { row -> LorvexTask.ID? in
+        if case .task(let task) = row.kind { return task.id }
+        return nil
+      })
+    untimedItems = page.items.filter { !scheduled.contains($0.id) }
+    doneListTasks = doneToday.filter { !scheduled.contains($0.id) }
+  }
+}
+
+extension AppStore {
+  /// ``TodayColumnContent`` for the current clock.
+  var todayColumnContent: TodayColumnContent {
+    let nowMinutes = nowMinutesInProductDay
+    let tasks = today.tasks.filter(\.status.isActionable) + doneTodayTasks
+    return TodayColumnContent(
+      nowMinutes: nowMinutes,
+      page: calmToday(nowMinutes: nowMinutes),
+      schedule: LorvexTodayTimeline.build(
+        events: todayScheduleEvents,
+        tasks: tasks,
+        times: tasks.times(on: logicalTodayDateString),
+        nowMinutes: nowMinutes),
+      doneToday: doneTodayTasks)
   }
 
   /// Minutes since midnight in the product day's own timezone, or `nil` when the
   /// loaded snapshot is not for the current day.
   ///
-  /// Anchored to ``logicalTimezoneName`` rather than this Mac's zone so the marker
+  /// Anchored to ``logicalTimeZone`` rather than this Mac's zone so the marker
   /// sits where the *product day* says the clock is — the same day boundary every
   /// other Today read uses. Returns `nil` on a day that is not today, where a
   /// "now" row would be meaningless.
   var nowMinutesInProductDay: Int? {
-    if let pinned = LorvexPreviewClock.pinnedMinutes { return pinned }
-    var calendar = Calendar(identifier: .gregorian)
-    if let zone = TimeZone(identifier: logicalTimezoneName) { calendar.timeZone = zone }
-    let now = Date()
-    let dayFormatter = DateFormatter()
-    dayFormatter.calendar = Calendar(identifier: .gregorian)
-    dayFormatter.locale = Locale(identifier: "en_US_POSIX")
-    dayFormatter.dateFormat = "yyyy-MM-dd"
-    dayFormatter.timeZone = calendar.timeZone
-    guard dayFormatter.string(from: now) == logicalTodayDateString else { return nil }
-    let parts = calendar.dateComponents([.hour, .minute], from: now)
-    guard let hour = parts.hour, let minute = parts.minute else { return nil }
-    return hour * 60 + minute
+    LorvexProductDayClock.nowMinutes(on: logicalTodayDateString, in: logicalTimeZone)
   }
 }

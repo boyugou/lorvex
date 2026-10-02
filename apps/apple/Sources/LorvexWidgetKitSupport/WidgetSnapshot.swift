@@ -49,6 +49,11 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
   public let lists: [ListSummary]
   /// Per-list stats for configurable widgets (empty when none).
   public let listStats: [ListStats]
+  /// The list this snapshot was narrowed to by ``scoped(toList:)``, so a
+  /// widget configured with a list can name it; nil for the whole day, and
+  /// when the configured list is no longer in ``lists``. Not encoded: a
+  /// widget narrows the shared snapshot as it reads it.
+  public private(set) var scopeList: ListSummary? = nil
 
   enum CodingKeys: String, CodingKey {
     case version
@@ -81,7 +86,8 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     tasks: [TodayTask],
     habits: [HabitSummary] = [],
     lists: [ListSummary] = [],
-    listStats: [ListStats] = []
+    listStats: [ListStats] = [],
+    scopeList: ListSummary? = nil
   ) {
     self.version = version
     self.generatedAt = generatedAt
@@ -97,6 +103,7 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     self.habits = habits
     self.lists = lists
     self.listStats = listStats
+    self.scopeList = scopeList
   }
 
   /// The `version` of an encoded snapshot, read without decoding the rest. A

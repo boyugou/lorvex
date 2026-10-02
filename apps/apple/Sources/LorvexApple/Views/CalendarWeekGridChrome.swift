@@ -21,10 +21,11 @@ extension CalendarWeekGridView {
         // never fades as a whole, which would put its words under 2.5:1.
         let isPast = loadDay?.isPast == true
         VStack(spacing: LorvexDesign.Spacing.xxs) {
-          Text(Self.weekdayFormatter.string(from: day.date).uppercased())
+          Text(LorvexDateFormatters.string(day.date, template: "EEE", timeZone: calendar.timeZone))
+            .textCase(.uppercase)
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(.secondary)
-          Text(Self.dayNumberFormatter.string(from: day.date))
+          Text(LorvexDateFormatters.dayNumber(day.date, timeZone: calendar.timeZone))
             .font(LorvexDesign.Typography.primaryEmphasis)
             .foregroundStyle(
               isToday(day.date) ? AnyShapeStyle(.tint) : isPast ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
@@ -152,7 +153,7 @@ extension CalendarWeekGridView {
   /// for priority. The pill opens the task.
   private func allDayTaskPill(_ task: LorvexTask, on day: CalendarGridDay) -> some View {
     let isDone = task.status == .completed
-    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), calendar: calendar)
+    let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
     return HStack(spacing: 3) {
       taskCompletionCircle(for: task)
         .accessibilityIdentifier("calendar.allDay.task.complete")
@@ -195,7 +196,7 @@ extension CalendarWeekGridView {
           localized: "calendar.task.plan_day_later", defaultValue: "Plan a Day Later",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
-        systemImage: "arrow.right"
+        systemImage: "arrow.forward"
       ) {
         reschedule(task, byDays: 1, from: day.date)
       }
@@ -204,7 +205,7 @@ extension CalendarWeekGridView {
           localized: "calendar.task.plan_week_later", defaultValue: "Plan a Week Later",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
-        systemImage: "arrow.right.to.line"
+        systemImage: "arrow.forward.to.line"
       ) {
         reschedule(task, byDays: 7, from: day.date)
       }
@@ -244,11 +245,8 @@ extension CalendarWeekGridView {
     .buttonStyle(.plain)
     .accessibilityLabel(
       String(
-        format: String(
-          localized: "calendar.all_day.more.a11y", defaultValue: "%lld more all-day items",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        count))
+        localized: "calendar.all_day.more.a11y", defaultValue: "\(count) more all-day items",
+        table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityIdentifier("calendar.allDay.overflow")
     .popover(
       isPresented: Binding(
@@ -324,7 +322,9 @@ extension CalendarWeekGridView {
         Text(hourLabel(hour))
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
-          .frame(width: gutterWidth - 6, height: hourHeight, alignment: .topTrailing)
+          .frame(
+            width: gutterWidth - CalendarWeekGridMetrics.gutterLabelInset, height: hourHeight,
+            alignment: .topTrailing)
           .modifier(WeekGridAnchorModifier(hour: hour))
       }
     }
@@ -376,7 +376,7 @@ extension CalendarWeekGridView {
   }
 
   func headerAccessibilityLabel(_ date: Date) -> String {
-    let base = Self.fullDateFormatter.string(from: date)
+    let base = LorvexDateFormatters.string(date, dateStyle: .full, timeZone: calendar.timeZone)
     return isToday(date)
       ? String(
         format: String(
@@ -387,23 +387,4 @@ extension CalendarWeekGridView {
         base)
       : base
   }
-
-  // `static` so the SwiftUI View struct (rebuilt frequently) doesn't
-  // re-allocate DateFormatters per render. These are display formatters,
-  // intentionally locale-dependent unlike the POSIX data formatters.
-  static let weekdayFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateFormat = "EEE"
-    return f
-  }()
-  static let dayNumberFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateFormat = "d"
-    return f
-  }()
-  static let fullDateFormatter: DateFormatter = {
-    let f = DateFormatter()
-    f.dateStyle = .full
-    return f
-  }()
 }

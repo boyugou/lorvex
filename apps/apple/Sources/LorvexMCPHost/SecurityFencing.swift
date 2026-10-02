@@ -63,25 +63,6 @@ enum SecurityFencing {
     return userContent.filter { $0 != openSentinel && $0 != closeSentinel }
   }
 
-  /// Reverses `fence(_:)`: if `value` is wrapped in ⟦user⟧…⟦/user⟧ sentinels,
-  /// returns the inner content; otherwise returns `value` unchanged.
-  ///
-  /// Used on input paths (e.g. a memory `key` an AI client copied verbatim from
-  /// a fenced response and passed back as an argument) so a fenced value
-  /// round-trips to the original stored key. Whitespace surrounding the
-  /// sentinels is ignored when detecting the wrapper.
-  static func unfence(_ value: String) -> String {
-    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-    let prefix = "\(openSentinel)user\(closeSentinel)"
-    let suffix = "\(openSentinel)/user\(closeSentinel)"
-    guard trimmed.hasPrefix(prefix), trimmed.hasSuffix(suffix),
-      trimmed.count >= prefix.count + suffix.count
-    else {
-      return value
-    }
-    return String(trimmed.dropFirst(prefix.count).dropLast(suffix.count))
-  }
-
   /// Fences the top-level `key` string of a memory entry/response object.
   ///
   /// Memory keys are AI-supplied free text — not a constrained slug — so a

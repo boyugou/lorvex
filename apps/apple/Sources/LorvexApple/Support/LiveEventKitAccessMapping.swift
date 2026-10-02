@@ -40,18 +40,17 @@ extension LiveEventKitAccess {
       attendees: fetchedAttendees(from: event.attendees))
   }
 
-  /// EventKit stores an all-day end as an exclusive boundary while Lorvex
-  /// stores the final occupied day inclusively. Timed events already share
-  /// instant semantics and pass through unchanged.
+  /// EventKit reports an all-day end as the last occupied day at 23:59:59,
+  /// and Lorvex stores that day itself (``AllDayEventSpan``). Timed events
+  /// already share instant semantics and pass through unchanged.
   private static func lorvexEndDate(from event: EKEvent, timeZone: TimeZone) -> String? {
     guard let endDate = event.endDate else { return nil }
     guard event.isAllDay else {
       return AllDayEventSpan.dayKey(for: endDate, timeZone: timeZone)
     }
-    let startDate = event.startDate ?? endDate
     let inclusiveEnd = AllDayEventSpan.inclusiveEnd(
-      start: startDate,
-      exclusiveEnd: endDate,
+      start: event.startDate ?? endDate,
+      eventKitEnd: endDate,
       calendar: AllDayEventSpan.gregorianCalendar(timeZone: timeZone))
     return AllDayEventSpan.dayKey(for: inclusiveEnd, timeZone: timeZone)
   }

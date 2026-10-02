@@ -27,6 +27,10 @@ public struct MobileCalendarDayView: View {
   /// Narrows the visible events to those matching title / location / notes.
   var searchQuery: String = ""
   @State var dayOffset = 0
+  /// In week mode, the day of the visible week a switch to Day mode opens, in
+  /// days from the week's first day. It starts on today, or on the day Day
+  /// mode handed over, and keeps its weekday as the weeks page.
+  @State var weekDayIndex = 0
   @State var loadedAnchor: Date?
   @State var isShowingCreateEvent = false
   @State var editingEvent: CalendarTimelineEvent?
@@ -48,12 +52,13 @@ public struct MobileCalendarDayView: View {
     self.store = store
     self.weekMode = weekMode
     self.searchQuery = searchQuery
+    _weekDayIndex = State(initialValue: Self.dayIndexInWeek(of: today, calendar: calendar))
   }
 
   var today: Date {
     PlannedDayBridge.displayDate(
       forLogicalDay: store.logicalTodayString,
-      calendar: calendar)
+      timeZone: calendar.timeZone)
       ?? calendar.startOfDay(for: store.now())
   }
 
@@ -150,9 +155,11 @@ public struct MobileCalendarDayView: View {
       if store.workdayEndMinutes == nil { await store.loadWorkdayWindow() }
     }
     .onAppear {
-      guard !weekMode, let key = store.calendarPendingDayKey else { return }
+      // A mode switch, or a week header opening its day, hands this view the
+      // day to open on.
+      guard let key = store.calendarPendingDayKey else { return }
       store.calendarPendingDayKey = nil
-      if let day = Self.keyFormatter.date(from: key) { jump(to: day) }
+      if let day = Self.keyFormatter.date(from: key) { showWithoutPaging(day) }
     }
     .sheet(isPresented: $isShowingCreateEvent) {
       MobileStoreCreateCalendarEventSheet(store: store, isPresented: $isShowingCreateEvent)
@@ -227,7 +234,7 @@ public struct MobileCalendarDayView: View {
         String(
           localized: "calendar.today", defaultValue: "Today", table: "Localizable",
           bundle: MobileL10n.bundle)
-      ) { withAnimation { dayOffset = 0 } }
+      ) { jump(to: today) }
       .buttonStyle(.bordered)
       .controlSize(.small)
       .opacity(isOnToday ? 0 : 1)
@@ -247,12 +254,9 @@ public struct MobileCalendarDayView: View {
   private var headerTitle: String {
     if weekMode {
       return Self.weekRangeLabel(
-        from: visibleDate, calendar: calendar, now: LorvexPreviewClock.now(in: calendar),
-        locale: MobileL10n.locale)
+        from: visibleDate, calendar: calendar, now: LorvexPreviewClock.now(in: calendar))
     }
-    var style = Date.FormatStyle().month(.wide).year().locale(MobileL10n.locale)
-    style.timeZone = calendar.timeZone
-    return visibleDate.formatted(style)
+    return LorvexDateFormatters.string(visibleDate, template: "yMMMM", timeZone: calendar.timeZone)
   }
 
   /// The week that starts on `start` as a locale-aware range: "Sep 27 –
@@ -262,17 +266,17 @@ public struct MobileCalendarDayView: View {
   /// writes a Chinese interval in numerals ("2026/6/28 – 2026/7/4"). Where it
   /// wraps, it breaks only after its dash.
   nonisolated static func weekRangeLabel(
-    from start: Date, calendar: Calendar, now: Date, locale: Locale
+    from start: Date, calendar: Calendar, now: Date,
+    locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
     let end = calendar.date(byAdding: .day, value: 6, to: start) ?? start
     let isThisYear =
       calendar.isDate(start, equalTo: now, toGranularity: .year)
       && calendar.isDate(end, equalTo: now, toGranularity: .year)
-    let formatter = DateIntervalFormatter()
-    formatter.locale = locale
-    formatter.timeZone = calendar.timeZone
-    formatter.dateTemplate = isThisYear ? "MMMd" : "yMMMd"
-    return lorvexUnbreakable(formatter.string(from: start, to: end))
+    return lorvexUnbreakable(
+      LorvexDateFormatters.range(
+        from: start, to: end, template: isThisYear ? "MMMd" : "yMMMd",
+        timeZone: calendar.timeZone, locale: locale))
   }
 
   /// Regular-width iPad can mean anything from a narrow Stage Manager tile to a
@@ -307,7 +311,10 @@ public struct MobileCalendarDayView: View {
       Picker(
         String(
           localized: "calendar.view_picker", defaultValue: "View", table: "Localizable",
-          bundle: MobileL10n.bundle), selection: $store.calendarPresentationMode
+          bundle: MobileL10n.bundle),
+        selection: Binding(
+          get: { store.calendarPresentationMode },
+          set: { switchMode(to: $0) })
       ) {
         ForEach(MobileCalendarPresentationMode.allCases) { mode in
           Text(mode.title(gridDayCount: dayCount(for: calendarWidth))).tag(mode)
@@ -411,11 +418,24 @@ public struct MobileCalendarDayView: View {
 
   static var keyFormatter: DateFormatter { LorvexDateFormatters.ymd }
 
-  /// Switches to Day mode on `day`; the day view that replaces this one
-  /// opens on it through `calendarPendingDayKey`.
+  /// Switches to Day mode on `day`.
   private func openInDayMode(_ day: Date) {
+    switchMode(to: .grid, on: day)
+  }
+
+  /// Switches the calendar to `mode` on the day this view is showing, so the
+  /// other mode opens where the person was: Day mode hands over its first
+  /// visible day, Week mode the focused day of its visible week.
+  private func switchMode(to mode: MobileCalendarPresentationMode) {
+    switchMode(to: mode, on: modeSwitchDay)
+  }
+
+  /// Switches the calendar to `mode` on `day`. The view that replaces this one
+  /// opens on it through `calendarPendingDayKey`.
+  private func switchMode(to mode: MobileCalendarPresentationMode, on day: Date) {
+    guard mode != store.calendarPresentationMode else { return }
     store.calendarPendingDayKey = Self.keyFormatter.string(from: day)
-    store.calendarPresentationMode = .grid
+    store.calendarPresentationMode = mode
   }
 
 }

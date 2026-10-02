@@ -1,4 +1,5 @@
 import Foundation
+import LorvexCore
 
 public enum WidgetSnapshotFreshness: Equatable, Sendable {
   case fresh(ageSeconds: Int)
@@ -57,23 +58,10 @@ public struct WidgetSnapshotFreshnessPolicy: Equatable, Sendable {
     return .fresh(ageSeconds: age)
   }
 
+  /// How long ago the snapshot was written, in its largest whole unit, as the
+  /// system words it in the display language: "5 min. ago", "hace 2 h", "3天前".
   public func compactAgeLabel(ageSeconds: Int) -> String {
-    if ageSeconds >= 24 * 60 * 60 {
-      let days = ageSeconds / (24 * 60 * 60)
-      return String(
-        localized: "widget.age.days", defaultValue: "\(days)d ago",
-        table: "Localizable", bundle: WidgetSupportL10n.bundle)
-    }
-    if ageSeconds >= 60 * 60 {
-      let hours = ageSeconds / (60 * 60)
-      return String(
-        localized: "widget.age.hours", defaultValue: "\(hours)h ago",
-        table: "Localizable", bundle: WidgetSupportL10n.bundle)
-    }
-    let minutes = max(1, ageSeconds / 60)
-    return String(
-      localized: "widget.age.minutes", defaultValue: "\(minutes)m ago",
-      table: "Localizable", bundle: WidgetSupportL10n.bundle)
+    LorvexDateFormatters.elapsed(seconds: ageSeconds)
   }
 
   /// Product calendar carried by the snapshot. It owns both the materialized

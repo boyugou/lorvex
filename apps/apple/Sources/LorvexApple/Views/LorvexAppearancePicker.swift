@@ -35,6 +35,9 @@ struct LorvexAppearancePicker: View {
     "chart.line.uptrend.xyaxis",
   ]
 
+  /// The width of the popover the picker fills, padded by `Spacing.m`.
+  static let popoverWidth: CGFloat = 340
+
   private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 8)
 
   @State private var iconQuery = ""
@@ -104,21 +107,28 @@ struct LorvexAppearancePicker: View {
     }
   }
 
+  /// The Default swatch, the preset swatches, and the color well, spread
+  /// across the popover's width with equal gaps, so the row spans the same
+  /// edges as the search field and the icon grid under it. The well is the
+  /// bare control at its own size; its name is its help tag and VoiceOver
+  /// label.
   private var colorRow: some View {
-    HStack(spacing: 8) {
+    HStack(spacing: 0) {
       colorSwatch(hex: nil)
       ForEach(LorvexColorField.colorChoices, id: \.self) { hex in
+        Spacer(minLength: LorvexDesign.Spacing.xs)
         colorSwatch(hex: hex)
       }
-      Spacer(minLength: 0)
-      ColorPicker(selection: customColorBinding, supportsOpacity: false) {
-        Text(LocalizedStringResource("appearance.color.custom_short", defaultValue: "Custom", table: "Localizable", bundle: LorvexL10n.bundle))
-          .font(LorvexDesign.Typography.tertiaryText)
-          .foregroundStyle(.secondary)
-      }
+      Spacer(minLength: LorvexDesign.Spacing.xs)
+      ColorPicker(
+        String(localized: "appearance.color.custom", defaultValue: "Custom color", table: "Localizable", bundle: LorvexL10n.bundle),
+        selection: customColorBinding,
+        supportsOpacity: false
+      )
+      .labelsHidden()
       .controlSize(.small)
+      .fixedSize()
       .help(String(localized: "appearance.color.custom", defaultValue: "Custom color", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityLabel(String(localized: "appearance.color.custom", defaultValue: "Custom color", table: "Localizable", bundle: LorvexL10n.bundle))
       .accessibilityIdentifier("\(idPrefix).color.custom")
     }
   }

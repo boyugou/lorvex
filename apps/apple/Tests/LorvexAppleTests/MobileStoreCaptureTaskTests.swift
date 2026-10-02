@@ -237,7 +237,7 @@ func mobileStoreTogglesChecklistItemFromDetailRoute() async throws {
   let task = try #require(store.snapshot.today.tasks.first)
   _ = try await core.addTaskChecklistItem(taskID: task.id, text: "Confirm mobile checklist")
   await store.refresh()
-  store.openNavigationTarget(MobileNavigationTarget(selectedTab: .today, route: .task(task.id)))
+  store.openNavigationTarget(MobileNavigationTarget(route: .task(task.id)))
 
   #expect(store.selectedTask?.id == task.id)
 
@@ -323,7 +323,7 @@ func mobileCaptureOfSeveralLinesKeepsTimesAndRepeats() async throws {
   let firstOccurrence = try #require(store.captureParse("Standup every mon and thu 9:30am").resolvedDueDayOffset)
 
   #expect(
-    store.capturePreview("Standup every mon and thu 9:30am").words.map(\.id) == ["when", "time", "repeats", "due"])
+    store.capturePreview("Standup every mon and thu 9:30am").words.map(\.id) == ["when", "time", "repeats"])
 
   store.captureDraft = MobileCaptureDraft(title: "Standup every mon and thu 9:30am\nDentist 4pm")
   await store.submitCaptureDraft()

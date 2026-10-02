@@ -11,7 +11,10 @@ import Foundation
 /// lowercasing elsewhere in the codebase.
 ///
 /// Rules (in order):
-/// 1. Strip bidi / zero-width / invisible controls via ``UnicodeHygiene/sanitizeUserText(_:)``
+/// 1. Strip bidi / zero-width / invisible controls via ``UnicodeHygiene/sanitizeUserText(_:)``,
+///    then the joiners it keeps (``UnicodeHygiene/removingJoiners(_:)``): they
+///    shape the glyphs, not the word, so a name typed with or without them is
+///    one tag
 /// 2. Unicode NFKC normalization
 /// 3. Trim leading / trailing whitespace
 /// 4. Unicode default casefold (UTS #18 R3 — `ß`→`ss`, Greek capital sigma
@@ -29,7 +32,7 @@ import Foundation
 /// for UNIQUE constraint enforcement and case-insensitive tag deduplication
 /// across sync boundaries.
 public func normalizeLookupKey(_ displayName: String) -> String {
-  let scrubbed = UnicodeHygiene.sanitizeUserText(displayName)
+  let scrubbed = UnicodeHygiene.removingJoiners(UnicodeHygiene.sanitizeUserText(displayName))
   // NFKC normalization.
   let nfkc = scrubbed.precomposedStringWithCompatibilityMapping
   let trimmed = nfkc.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -14,9 +14,12 @@ import SwiftUI
 /// finished timed tasks, which keep their place in the schedule.
 struct TodayColumn: View {
   @Bindable var store: AppStore
-  let page: LorvexCalmToday
-  let nowMinutes: Int?
+  /// The day as of this render, built once (``AppStore/todayColumnContent``).
+  let content: TodayColumnContent
   @State private var showsFullBriefing = false
+
+  private var page: LorvexCalmToday { content.page }
+  private var nowMinutes: Int? { content.nowMinutes }
 
   /// Briefings longer than this open on three lines with a "Show more" toggle.
   private static let briefingFoldLength = 150
@@ -30,7 +33,7 @@ struct TodayColumn: View {
       }
       if showsSchedule {
         TodayScheduleSection(
-          store: store, rows: store.todaySchedule, nowMinutes: nowMinutes,
+          store: store, rows: content.schedule, nowMinutes: nowMinutes,
           items: Dictionary(page.items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first }))
           .padding(.top, LorvexDesign.Spacing.l)
       }
@@ -61,7 +64,7 @@ struct TodayColumn: View {
         await store.createInlineTask(text, destination: .today)
       }
       .padding(.top, LorvexDesign.Spacing.m)
-      if !store.todayDoneListTasks.isEmpty {
+      if !content.doneListTasks.isEmpty {
         doneSection
           .padding(.top, LorvexDesign.Spacing.l)
       }
@@ -99,7 +102,7 @@ struct TodayColumn: View {
         .foregroundStyle(LorvexDesign.Palette.accent)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(text)
+        Text(userContent: text)
           .font(LorvexDesign.Typography.briefing)
           .foregroundStyle(.primary)
           .lineLimit(folds && !showsFullBriefing ? 3 : nil)
@@ -128,11 +131,12 @@ struct TodayColumn: View {
   /// The schedule stands when the day has anything on the clock (an event or
   /// a timed task) or suggested times are waiting for an answer.
   private var showsSchedule: Bool {
-    store.proposedDayTimes != nil || store.todaySchedule.contains { $0.kind != .now }
+    store.proposedDayTimes != nil || content.schedule.contains { $0.kind != .now }
   }
 
-  /// Today's tasks the schedule does not already show (``AppStore/todayUntimedItems``).
-  private var untimedItems: [LorvexCalmToday.Item] { store.todayUntimedItems }
+  /// Today's tasks the schedule does not already show
+  /// (``TodayColumnContent/untimedItems``).
+  private var untimedItems: [LorvexCalmToday.Item] { content.untimedItems }
 
   /// The tasks without a time, started tasks first.
   private var taskList: some View {
@@ -199,13 +203,12 @@ struct TodayColumn: View {
         HStack(spacing: LorvexDesign.Spacing.xs) {
           Text(TodayCalmCopy.doneTitle)
           if store.isTodayDoneCollapsed {
-            Text("\(store.todayDoneListTasks.count)")
+            Text("\(content.doneListTasks.count)")
               .monospacedDigit()
               .transition(.opacity)
           }
-          Image(systemName: "chevron.right")
+          LorvexDisclosureChevron(isExpanded: !store.isTodayDoneCollapsed)
             .imageScale(.small)
-            .rotationEffect(.degrees(store.isTodayDoneCollapsed ? 0 : 90))
             .foregroundStyle(.tertiary)
           Spacer(minLength: 0)
         }
@@ -219,7 +222,7 @@ struct TodayColumn: View {
       .accessibilityAddTraits(.isHeader)
       .accessibilityIdentifier("today.done.toggle")
       if !store.isTodayDoneCollapsed {
-        ForEach(store.todayDoneListTasks) { task in
+        ForEach(content.doneListTasks) { task in
           TodayTaskRow(task: task, store: store)
         }
       }

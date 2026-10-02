@@ -120,21 +120,36 @@ public enum TaskCreateDateParse {
     return nil
   }
 
+  /// A date written another common way, as `YYYY-MM-DD`: year first with
+  /// slashes or dots, day first with dots ("05.10.2026" is 5 October, the
+  /// order every locale that writes dotted dates uses), a month name
+  /// ("Oct 5, 2026"), or day and month around slashes or dashes when only one
+  /// order is a real date ("31/12/2026", "12/31/2026") or both orders give the
+  /// same day. A slash or dash date that is real either way ("05/10/2026") is
+  /// refused, since the United States puts the month first and most other
+  /// places the day; the caller then asks for `YYYY-MM-DD`.
   private static func parseAlternateDateFormat(_ value: String) -> String? {
-    for fmt in [
-      "yyyy/MM/dd", "yyyy.MM.dd",
-      "MM/dd/yyyy", "MM-dd-yyyy", "MM.dd.yyyy",
-      "MMM d, yyyy", "MMMM d, yyyy",
-    ] {
-      let df = DateFormatter()
-      df.locale = Locale(identifier: "en_US_POSIX")
-      df.timeZone = TimeZone(identifier: "UTC")!
-      df.dateFormat = fmt
-      if let d = df.date(from: value) {
-        let c = IsoDate.calendar.dateComponents([.year, .month, .day], from: d)
-        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
-      }
+    for format in ["yyyy/MM/dd", "yyyy.MM.dd", "dd.MM.yyyy", "MMM d, yyyy", "MMMM d, yyyy"] {
+      if let ymd = ymd(value, format: format) { return ymd }
     }
-    return nil
+    let dayFirst = ["dd/MM/yyyy", "dd-MM-yyyy"].lazy.compactMap { ymd(value, format: $0) }.first
+    let monthFirst = ["MM/dd/yyyy", "MM-dd-yyyy"].lazy.compactMap { ymd(value, format: $0) }.first
+    switch (dayFirst, monthFirst) {
+    case (let day?, nil): return day
+    case (nil, let month?): return month
+    case (let day?, let month?): return day == month ? day : nil
+    case (nil, nil): return nil
+    }
+  }
+
+  private static func ymd(_ value: String, format: String) -> String? {
+    let df = DateFormatter()
+    df.locale = Locale(identifier: "en_US_POSIX")
+    df.timeZone = TimeZone(identifier: "UTC")!
+    df.dateFormat = format
+    df.isLenient = false
+    guard let d = df.date(from: value) else { return nil }
+    let c = IsoDate.calendar.dateComponents([.year, .month, .day], from: d)
+    return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
   }
 }

@@ -55,6 +55,13 @@ struct AppStoreTaskWorkspaceStorage {
   var selectedTaskIDs = Set<LorvexTask.ID>()
   var listScopeID: LorvexList.ID?
   var hasLoaded = false
+  /// The search text of the load whose rows the sections hold, so a reload
+  /// can tell a refresh of the same results from a new search.
+  var loadedQuery: String?
+  /// Why the current scope's first load failed, in user-facing words, while no
+  /// load has landed for it. The workspace shows it with a retry in place of
+  /// its rows; a later load that succeeds, or a change of scope, clears it.
+  var loadFailureMessage: String?
   var openNextOffset: Int?
   var deferredNextOffset: Int?
   var scheduledNextOffset: Int?
@@ -87,4 +94,23 @@ struct AppStoreTaskWorkspaceStorage {
   /// task drains it with one more read+apply, so the latest requester observes the
   /// freshest committed state instead of an already-superseded snapshot.
   var reloadPending = false
+}
+
+extension AppStoreTaskWorkspaceStorage {
+  /// The sections in ``TaskWorkspaceSection`` order.
+  var sections: [[LorvexTask]] {
+    [openTasks, deferredTasks, scheduledTasks, completedTasks, cancelledTasks, somedayTasks]
+  }
+
+  /// Whether replacing the sections with `newSections`, in ``sections`` order
+  /// and loaded for `query`, animates. Only a refresh of the loaded search
+  /// animates, such as the reload after a task is completed, deferred, or
+  /// edited, and only while it adds or removes few rows
+  /// (``TaskRowChangeAnimation``). A first load, a new search, and a change
+  /// over many rows replace the rows at once, the way search results replace
+  /// each other in Mail and Finder.
+  func animatesReplacingSections(with newSections: [[LorvexTask]], query: String) -> Bool {
+    guard hasLoaded, query == loadedQuery else { return false }
+    return TaskRowChangeAnimation.animates(from: sections, to: newSections)
+  }
 }

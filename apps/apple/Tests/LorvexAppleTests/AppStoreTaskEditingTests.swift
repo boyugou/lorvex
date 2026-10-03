@@ -392,6 +392,30 @@ func appStoreEditsSelectedPreviewTaskRecurrence() async throws {
 
 @MainActor
 @Test
+func appStoreRepeatRowNamesTheWeekdayAPlainWeeklyRepeatFallsOn() async throws {
+  let store = try await makeTaskEditingStore()
+  await store.refresh()
+  let task = try #require(store.today.tasks.first)
+  store.selectedTaskID = task.id
+  store.syncSelectedTaskDraft()
+
+  await store.applyTaskDetailRecurrencePreset(.weekly)
+
+  let selected = try #require(store.selectedTask)
+  #expect(selected.recurrence?.byDay?.isEmpty ?? true)
+  // Starting the repeat anchors it on the deadline, giving a task without one
+  // today as both.
+  let anchor = try #require(selected.canonicalOccurrenceDate)
+  #expect(selected.dueDate == anchor)
+  #expect(store.taskDetailRecurrenceAnchorDay == anchor)
+  let weekday = TaskRecurrenceWeekday(storedDay: anchor)
+  #expect(store.taskDetailRepeatSummary == "Every week · " + LorvexRecurrenceWeekdays.summary([weekday.rawValue]))
+  #expect(store.taskDetailRecurrenceDraft.shownWeeklyDays(anchorDay: store.taskDetailRecurrenceAnchorDay) == [weekday])
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
 func appStoreRecurrenceIntervalEditPreservesAdvancedFields() async throws {
   let store = try await makeTaskEditingStore()
   let core = store.core

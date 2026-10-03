@@ -137,6 +137,12 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
   public var latenessState: String?
   public var recurrence: TaskRecurrenceRule?
   public var recurrenceExceptions: [String]
+  /// The stored day a repeat counts its schedule from (the
+  /// `tasks.canonical_occurrence_date` column, a UTC midnight like
+  /// ``dueDate``): set to the deadline, or today without one, when the task
+  /// starts repeating, moved by a new deadline, and kept by a deferral. Nil
+  /// when the task does not repeat.
+  public var canonicalOccurrenceDate: Date?
   public var listID: LorvexList.ID?
   /// How many times the task has been deferred (the `tasks.defer_count`
   /// column), incremented by every `defer_task`. Surfaced for pattern tracking.
@@ -178,6 +184,7 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     latenessState: String? = nil,
     recurrence: TaskRecurrenceRule? = nil,
     recurrenceExceptions: [String] = [],
+    canonicalOccurrenceDate: Date? = nil,
     listID: LorvexList.ID? = nil,
     deferCount: Int = 0,
     lastDeferReason: String? = nil,
@@ -206,6 +213,7 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     self.latenessState = latenessState
     self.recurrence = recurrence
     self.recurrenceExceptions = recurrenceExceptions
+    self.canonicalOccurrenceDate = canonicalOccurrenceDate
     self.listID = listID
     self.deferCount = deferCount
     self.lastDeferReason = lastDeferReason
@@ -226,6 +234,16 @@ extension LorvexTask {
       LorvexDateFormatters.ymdUTC.string(from: plannedDate) == logicalDay
     else { return nil }
     return plannedTime
+  }
+
+  /// The stored day a schedule-anchored repeat of this task counts from:
+  /// ``canonicalOccurrenceDate`` while the task repeats, else the day turning
+  /// repeating on would anchor it to, which is the deadline, or `logicalDay`
+  /// (the product's today, `yyyy-MM-dd`) when there is none. A weekly repeat
+  /// without chosen weekdays falls on this day's weekday.
+  public func recurrenceAnchorDay(logicalDay: String) -> Date? {
+    if recurrence != nil, let canonicalOccurrenceDate { return canonicalOccurrenceDate }
+    return dueDate ?? LorvexDateFormatters.ymdUTC.date(from: logicalDay)
   }
 }
 

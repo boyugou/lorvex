@@ -109,3 +109,42 @@ func taskDetailWaitsOnRowNamesTheTaskItWaitsOn() async throws {
   store.taskDetailDependencies = []
   #expect(store.taskDetailDependencyCountSummary == nil)
 }
+
+/// The Reminder row names a lone reminder's day and time the way the When row
+/// names a day and a time, in the product time zone, and counts several.
+@Test
+func reminderDayTimeNamesTheDayAndTheTimeInTheProductZone() throws {
+  let tokyo = try #require(TimeZone(identifier: "Asia/Tokyo"))
+  // 00:30 UTC on October 4 is 9:30 that morning in Tokyo.
+  let reminder = TaskReminder(id: "r", reminderAt: "2026-10-04T00:30:00Z", status: "pending")
+  let instant = try #require(TaskReminderDateTime.instant(from: reminder.reminderAt))
+  let time = TaskReminderDateTime.displayTimeString(from: instant, timeZone: tokyo)
+
+  #expect(lorvexReminderDayTime(reminder, logicalDay: "2026-10-03", timeZone: tokyo) == "Tomorrow, \(time)")
+  #expect(lorvexReminderDayTime(reminder, logicalDay: "2026-10-04", timeZone: tokyo) == "Today, \(time)")
+  #expect(lorvexReminderDayTime(reminder, logicalDay: "2026-08-01", timeZone: tokyo) == "Oct 4, \(time)")
+  #expect(
+    lorvexReminderDayTime(
+      TaskReminder(id: "x", reminderAt: "not a time", status: nil), logicalDay: "2026-10-03", timeZone: tokyo)
+      == nil)
+}
+
+@MainActor
+@Test
+func taskDetailRemindersSummaryNamesOneReminderAndCountsSeveral() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let first = TaskReminder(id: "a", reminderAt: "2026-10-04T16:30:00Z", status: "pending")
+  let second = TaskReminder(id: "b", reminderAt: "2026-10-05T16:30:00Z", status: "pending")
+  func task(_ reminders: [TaskReminder]) -> LorvexTask {
+    LorvexTask(
+      id: "t", title: "Book the venue", notes: "", priority: .p2, status: .open, dueDate: nil,
+      estimatedMinutes: nil, tags: [], reminders: reminders)
+  }
+
+  #expect(store.taskDetailRemindersSummary(task: task([])) == nil)
+  #expect(
+    store.taskDetailRemindersSummary(task: task([first]))
+      == lorvexReminderDayTime(first, logicalDay: store.logicalTodayDateString, timeZone: store.logicalTimeZone))
+  #expect(store.taskDetailRemindersSummary(task: task([first, second])) == "2 reminders")
+}

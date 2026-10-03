@@ -31,6 +31,7 @@ struct MobileStoreTaskDetailView: View {
     MobileTaskDetailContent(
       task: task,
       timeZone: store.logicalTimeZone,
+      logicalDay: store.logicalTodayString,
       toggleChecklistItem: toggleChecklistItem,
       addChecklistItem: { text in _ = await addChecklistItem(text) },
       removeChecklistItem: { item in _ = await removeChecklistItem(item) },
@@ -129,8 +130,10 @@ struct MobileStoreTaskDetailView: View {
         isSaving: isMutating,
         dismiss: { isEditingRecurrence = false }
       )
-      // Recurrence editor detents: medium + large for rule tweaks without losing context.
-      .mobileCompactEditorSheetPresentation()
+      // The recurrence editor is a dense form (frequency, interval, weekdays,
+      // end), so it opens at full height, where a weekly rule's weekdays show
+      // without dragging the sheet up.
+      .mobileFullEditorSheetPresentation()
     }
   }
 

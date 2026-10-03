@@ -5,8 +5,9 @@
 
   /// Dev/QA only: the `lorvex://firsttask/compose/<checklist|reminder>` screenshot
   /// hook parks which inline composer the task detail should unfold on its next
-  /// appearance, and `lorvex://firsttask/field/<field>` which sentence word's
-  /// editor it should raise (a ``MobileTaskField`` raw value). The
+  /// appearance, and `lorvex://firsttask/field/<field>` (or
+  /// `lorvex://findtask/<title>/field/<field>`) which field's editor it should
+  /// raise (a ``MobileTaskField`` raw value). The
   /// detail consumes each value once, so later pushes of a task detail in the
   /// same process start folded again.
   enum MobileTaskDetailDebugState {
@@ -166,18 +167,15 @@
       if let someday = created.last { _ = try? await core.markTaskSomeday(id: someday.id) }
       // A weekly task and a task that waits on the Someday one, so the task
       // detail's repeat word and its Waits On section have something to show
-      // (`lorvex://findtask/<title>` opens either). Neither is planned, so
-      // neither appears on Today.
-      let timesheetDue = day(4)
+      // (`lorvex://findtask/<title>` opens either). The weekly task carries the
+      // plain rule "Every week" stores, which falls on its deadline's weekday.
+      // Neither is planned, so neither appears on Today.
       if let timesheet = try? await core.createTask(
         .init(
           title: text("Submit the weekly timesheet"), listID: work?.id, priority: .p3,
-          dueDate: timesheetDue, tags: text(["work"])))
+          dueDate: day(4), tags: text(["work"])))
       {
-        let weekday = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"][
-          calendar.component(.weekday, from: timesheetDue) - 1]
-        _ = try? await core.setTaskRecurrence(
-          taskID: timesheet.id, rule: TaskRecurrenceRule(freq: .weekly, byDay: [weekday]))
+        _ = try? await core.setTaskRecurrence(taskID: timesheet.id, rule: TaskRecurrenceRule(freq: .weekly))
       }
       if let someday = created.last {
         _ = try? await core.createTask(
@@ -558,10 +556,16 @@
       }
       // `lorvex://findtask/<title>` opens the seeded task with that title on
       // the Today stack, for a task detail that is not first on Today (a
-      // repeating task, one with dependencies) — a screenshot hook. The title
-      // is the seed's English one and is translated the way the seed wrote it.
-      if url.host == "findtask", let title = url.pathComponents.last {
-        let seededTitle = LorvexSampleText(language: .running)(title)
+      // repeating task, one with dependencies) — a screenshot hook;
+      // `lorvex://findtask/<title>/field/<field>` also raises one field's
+      // editor, as `firsttask` does. The title is the seed's English one and
+      // is translated the way the seed wrote it.
+      if url.host == "findtask", url.pathComponents.count >= 2 {
+        let components = url.pathComponents
+        if components.count >= 4, components[2] == "field" {
+          MobileTaskDetailDebugState.initialField = MobileTaskField(rawValue: components[3])
+        }
+        let seededTitle = LorvexSampleText(language: .running)(components[1])
         Task { @MainActor in
           guard
             let page = try? await core.listTasks(

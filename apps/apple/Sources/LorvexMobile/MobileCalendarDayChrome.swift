@@ -98,7 +98,7 @@ struct MobileCalendarAllDayStrip: View {
         VStack(spacing: 3) {
           ForEach(day.allDayEvents) { event in
             allDayPill(
-              title: event.title, time: isCompact ? nil : event.allDayStripTimeLabel(on: day.dayKey),
+              title: event.title, time: isCompact ? nil : event.pillTimeLabel(on: day.dayKey),
               color: eventColor(event))
               .onTapGesture { if event.editable { onTapEvent(event) } }
               .contextMenu {

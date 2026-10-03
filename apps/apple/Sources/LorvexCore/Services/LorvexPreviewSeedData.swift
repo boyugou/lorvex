@@ -229,10 +229,7 @@ enum LorvexPreviewSeedData {
       dueDate: nil,
       estimatedMinutes: 60,
       tags: ["work"],
-      dependsOn: [LorvexPreviewSeedID.agendaTask],
-      reminders: [
-        TaskReminder(id: LorvexPreviewSeedID.venueReminder, reminderAt: "2099-12-31T09:00:00Z", status: "pending")
-      ]
+      dependsOn: [LorvexPreviewSeedID.agendaTask]
     ),
     LorvexTask(
       id: LorvexPreviewSeedID.statusUpdateTask,

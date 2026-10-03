@@ -1331,10 +1331,12 @@ thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   panel's Next 7 Days switch, "Nie zdąży" for Won’t fit, "zost." as the caption
   under the remaining-tasks ring, "Zapisz zadanie" as a short title).
   Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads no Polish words; for a
-  Polish reader it reads English and Chinese only. The Polish capture hint
-  therefore keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
-  them "(po angielsku)".
+- The capture parser (`LorvexCaptureParser`) reads Polish day, date, time,
+  duration, repeat, and priority words for a user who reads Polish, so the
+  Polish capture hint gives Polish examples ("jutro", "o 15:00", "co
+  poniedziałek", "20 min"). Polish says a clock time with "o", so the time
+  example says "o". The parser reads ą, ć, ę, ń, ó, ś, ź, and ż as the letter
+  without its mark and ł as l, and the title keeps the letters that were typed.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are singular imperatives
   that name the app exactly once, leave it undeclined, and put it at the end
   ("Dodaj zadanie w ${applicationName}").

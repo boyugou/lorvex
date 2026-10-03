@@ -125,6 +125,13 @@ extension AppStore {
     set { taskDetailStorage.taskDetailRecurrenceDraft.anchor = newValue }
   }
 
+  /// The stored day the selected task's repeat counts from
+  /// (``LorvexTask/recurrenceAnchorDay(logicalDay:)``), which names the day a
+  /// weekly repeat without chosen weekdays falls on.
+  var taskDetailRecurrenceAnchorDay: Date? {
+    selectedTask?.recurrenceAnchorDay(logicalDay: logicalTodayDateString)
+  }
+
   var taskDetailRecurrenceDraft: TaskRecurrenceEditorDraft {
     get { taskDetailStorage.taskDetailRecurrenceDraft }
     set { taskDetailStorage.taskDetailRecurrenceDraft = newValue }

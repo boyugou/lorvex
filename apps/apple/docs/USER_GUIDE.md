@@ -396,6 +396,78 @@ interval, not a length ("через 2 часа", "по 2 часа"), "2 часа
 the title, "в 2 часа" is a time, and "час" or "година" alone is no length
 ("Час пик").
 
+Polish words are read when Polish is among your device's preferred languages,
+in any regional variant. The Polish letters are optional: ą, ć, ę, ń, ó, ś, ź,
+and ż are read as the plain letter and ł as l ("środa" and "sroda", "łączność"
+and "lacznosc"), and the title keeps the letters you typed. Polish says a clock
+time with "o": "o 15:00", "o 15", "o 15-tej", "o godz. 15", "o 3 po południu".
+An hour from 1 to 6 with no part of the day is in the afternoon ("o 3" is 3 PM)
+unless it is written with a zero ("06:30"), and a part of the day sets the hour:
+"rano" is the morning, "po południu" is noon at 12 and the afternoon from 1 to
+6, "wieczorem" is the evening, and "w nocy" runs past midnight, so "o 2 w nocy"
+is 02:00 on the next day and "o 11 w nocy" is 23:00. A bare hour counts only at
+the end of the line or before a word that can follow a time ("o 3 z Anią"), so
+"o 3 osoby" stays in the title, and so does a clock time that names a deadline
+("do 18:00", "przed 18:00", "po 18:00", "najpóźniej o 18:00"). A time written
+without a Polish word ("3pm", "14:00-16:30") is read by English, which also
+takes an English "at" or "from" in front of it.
+
+| Detail | Polish |
+|---|---|
+| Day | dziś, dziś wieczorem, jutro, jutro rano, pojutrze, na jutro, od jutra, w piątek, w ten piątek, w przyszły piątek, w przyszłym tygodniu, w weekend, za 3 dni, za tydzień |
+| Date | 5 maja, 5. maja, 5-go maja, dnia 5 maja, 5 sty., w poniedziałek, 5 października, 5 maja 2027 r. |
+| Date range | od 3 do 5 maja, od 30 maja do 2 czerwca, między 3 a 5 maja, 3–5 maja, 3-5 maja, od poniedziałku do środy |
+| Due day | do piątku, do 5 maja, do jutra, najpóźniej w piątek, nie później niż do piątku, termin: 5 maja, deadline 5 maja |
+| Time | o 15:00, o 15, o 15-tej, o 3 po południu, o 9 rano, o 7 wieczorem, o 2 w nocy, w południe, o północy, około 15:00; od 14 do 16, od 14:00 do 16:00, od 9 rano do 6 wieczorem, od 9-tej do 17-tej, godz. 14-16, między 14:00 a 16:00 |
+| Repeat | co tydzień, co poniedziałek, co poniedziałek i czwartek, w poniedziałki, w dni robocze, w weekendy, co 2 dni, co drugi tydzień, raz w tygodniu, 5. każdego miesiąca; codziennie at the end |
+| Length | 30 minut, 30 min, 2 godziny, 2 godz., 2 h, 1,5 godziny, półtorej godziny, pół godziny, kwadrans, na 30 minut, przez 2 godziny |
+| Priority | wysoki priorytet, niski priorytet, pilne (at the end, or "Pilne:" at the start) |
+
+A date range plans the task on its first day and makes it due on its last:
+"od 3 do 5 maja" and "między 3 a 5 maja" run from May 3 to May 5, and a month
+written once serves both days. A span of weekdays does the same: "od
+poniedziałku do środy" plans the task on the coming Monday and makes it due on
+the Wednesday after it, while "od poniedziałku do piątku" is the working week,
+which repeats. The end must come after the start ("od 5 do 3
+maja" stays in the title), and the end names a month, so "od 3 do 5" is never a
+range of days. "Do" joins the two days only after "od", and "a" or "i" only
+after "między". As in English, a number alone before a spaced dash belongs to
+the title ("Sprint 12 - 20 maja" is planned for May 20), while "12-20 maja" is
+a range. "Od 14 do 16" is a time range, but two bare hours count only at the
+end of the line or before a word that can follow a time, so "od 14 do 16
+stron" stays in the title. They also stay after a word that names an amount or
+numbered items ("Cena od 10 do 20", "Przeczytać rozdziały od 3 do 5"), and a
+number before a percent sign, a currency sign, or "zł" is never a time ("od 10
+do 20 zł", "o 15%"). "Między 14 a 16" is a time range only with a colon, a
+part of the day, or "godz." ("między 14:00 a 16:00"). A date written in digits
+("5.10") stays in the title, since the order of its day and month depends on
+the region, and so does a month name without a day number ("Majówka", "Raport
+za maj"). A month abbreviation needs its dot ("5 sty."), since several are
+ordinary words too. Easter and Christmas ("Wielkanoc", "Boże Narodzenie") are
+not dates.
+
+A weekday is a day only with a word before it: "w", "we", or "na", or the "od"
+that starts a day ("od poniedziałku"). A weekday after "na" plans the task for
+that day ("bilety na piątek"). Alone, it stays in the title ("raport z
+poniedziałku"), and so does a capitalized weekday in the middle of a line, which
+is a name ("Zadzwonić do Soboty"). So does a month with a capital letter after a
+day number there: "Spotkanie na ul. 3 Maja" names a street, while "3 maja" is a
+date. A weekday that names today means a week ahead, "w ten piątek" is this
+week's, and "w przyszły piątek" is next week's. A weekday in the plural repeats
+("w poniedziałki", "w poniedziałki i czwartki"), except Sunday: without its
+ogonek, "w niedziele" is the same word as "w niedzielę" (on Sunday), so it
+names the coming Sunday, and it repeats only in a list with another weekday in
+the plural ("w soboty i niedziele").
+
+"Codziennie", "cotygodniowo", "comiesięcznie", and "corocznie" repeat only at
+the end of the line, so "Codziennie sprawdzać pocztę" and the adjectives
+"Codzienny raport" and "Raport cotygodniowy" stay in the title, as do "2 razy w
+tygodniu" and "na co dzień" (day to day). A length says that it is one: an
+amount after "za", "co", "po", "o", "w", or "do" names a moment, an interval, or
+a bound, not a length ("za 2 godziny", "co 2h", "za 15 min"), "2 godziny
+dziennie" and "30 minut temu" stay in the title, and "godzina" alone is no
+length ("Godzina szczytu").
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline
@@ -694,7 +766,10 @@ from that list onto the day.
 
 An event that lasts 24 hours or more appears in the all-day row of each day it
 covers. A shorter event that runs past midnight appears on both days: the
-first shows when it starts, and the second shows when it ends.
+first shows when it starts, and the second shows when it ends. Month view reads
+the same way: a chip names its time after the title where the width allows, and
+an event that ends on a day sits first among that day's timed items, since it
+runs from midnight.
 
 Calendar permission is required to display EventKit events. If permission is
 denied, Lorvex shows only its own planning blocks with a permission prompt in

@@ -17,7 +17,9 @@
 # UICTContentSizeCategoryXXXL` to check a larger text size (the widgets* routes
 # show whether a fixed-size widget still fits), or
 # `-lorvexPreviewOrientation landscape` to lay the app out in landscape (the
-# screenshot comes out in landscape too).
+# screenshot comes out in landscape too). LORVEX_SIM_SETTLE sets the seconds
+# to wait after each launch before the screenshot (default 4.5); raise it when
+# a loaded machine draws a screen late.
 # Routes: today today-suggestion tasks calendar calendar-week calendar-month
 #         habits review
 #         review-week setup-welcome setup-cloudSync setup-notifications setup-done
@@ -25,7 +27,7 @@
 #         habit-detail-middle habit-detail-end habit-editor review-end review-week-end
 #         memory-detail task-detail-checklist task-detail-reminder capture
 #         capture-filled capture-repeat
-#         task-detail-repeat task-detail-depends memory-composer
+#         task-detail-repeat task-detail-repeat-editor task-detail-depends memory-composer
 #         memory-composer-filled tasks-search-empty habits-search-empty
 #         widgets widgets-large widgets-lock widgets-more, or any raw
 #         lorvex:// URL. A route written as <first>+<second> launches on
@@ -54,7 +56,9 @@
 #         its week digest (lorvex://tab/review/week).
 #         task-detail-repeat and task-detail-depends open the seeded weekly
 #         task and the task with a dependency (the DEBUG
-#         lorvex://findtask/<title> hook). The raw URL
+#         lorvex://findtask/<title> hook); task-detail-repeat-editor opens the
+#         weekly task's repeat editor (lorvex://findtask/<title>/field/repeat),
+#         where the day a plain weekly rule falls on shows chosen. The raw URL
 #         lorvex://firsttask/field/<field> raises the editor behind one
 #         sentence word of Today's first task (waitsOn, due, tags, …).
 #         habit-detail-end opens the first habit's detail scrolled to its end
@@ -124,6 +128,7 @@ url_for() {
     task-detail-checklist) echo "lorvex://firsttask/compose/checklist" ;;
     task-detail-reminder) echo "lorvex://firsttask/compose/reminder" ;;
     task-detail-repeat) echo "lorvex://findtask/Submit%20the%20weekly%20timesheet" ;;
+    task-detail-repeat-editor) echo "lorvex://findtask/Submit%20the%20weekly%20timesheet/field/repeat" ;;
     task-detail-depends) echo "lorvex://findtask/Book%20the%20offsite%20venue" ;;
     capture) echo "lorvex://sheet/capture" ;;
     capture-filled) echo "lorvex://sheet/capture/Call%20the%20caterer%20about%20the%20offsite%20menu%20tomorrow%2020%20min%20by%20friday%20urgent%20%23work" ;;
@@ -195,7 +200,7 @@ for ROUTE in "${ROUTES[@]}"; do
   # shellcheck disable=SC2086  # SEED_ARG, EXTRA_ARGS, and LORVEX_SIM_EXTRA_ARGS are space-separated argument lists.
   xcrun simctl launch "$UDID" "$BUNDLE" $SEED_ARG -lorvexOpenURL "$(url_for "$ROUTE")" \
     -lorvexPreviewNow "${LORVEX_PREVIEW_NOW:-11:20}" $EXTRA_ARGS ${LORVEX_SIM_EXTRA_ARGS:-} >/dev/null 2>&1
-  sleep 4.5
+  sleep "${LORVEX_SIM_SETTLE:-4.5}"
   # The scroll hooks settle over a few runloop turns after the data loads.
   [[ -n "$EXTRA_ARGS" ]] && sleep 3
   xcrun simctl io "$UDID" screenshot "$OUT/$NAME-$APPEARANCE.png" >/dev/null 2>&1 && echo "captured $NAME $APPEARANCE"

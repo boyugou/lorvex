@@ -1,8 +1,9 @@
 import Foundation
 
 // What the Russian and Ukrainian vocabularies share: word boundaries and
-// endings for Cyrillic text, the clock times a part of the day names, and the
-// readers of text that two languages judge the same way.
+// endings for Cyrillic text and the clock times a part of the day names. The
+// readers of text that the Slavic vocabularies judge the same way (a
+// capitalized name, the words of a list, a date range) serve Polish too.
 
 extension LorvexCaptureVocabulary {
   /// What may follow a clock time: no Cyrillic letter, digit, colon, or
@@ -90,11 +91,12 @@ extension LorvexCaptureVocabulary {
     text.lowercased().split(whereSeparator: { !$0.isLetter && $0 != "'" }).map(String.init)
   }
 
-  /// The date range a match of a Cyrillic-script range pattern names. Groups:
-  /// 1 the opening word, if any ("с", "з"), 2 the start, 3 a dash between the
-  /// sides, 4 the word that means "to" between them ("по", "до"), 5 the end.
-  /// `side` reads one side's text as a date, with a month for a date and with
-  /// none for a day alone.
+  /// The date range a match of a Slavic-language range pattern names, as
+  /// Russian, Ukrainian, and Polish write one ("с 3 по 5 мая", "з 3 до 5
+  /// травня", "od 3 do 5 maja"). Groups: 1 the opening word, if any ("с", "з",
+  /// "od"), 2 the start, 3 a dash between the sides, 4 the word that means "to"
+  /// between them ("по", "до", "do"), 5 the end. `side` reads one side's text
+  /// as a date, with a month for a date and with none for a day alone.
   ///
   /// A word that means "to" joins the sides only after the opening word, so
   /// "3 по 5 мая" stays in the title. A start that is a day alone, with a dash
@@ -103,7 +105,7 @@ extension LorvexCaptureVocabulary {
   /// The end must name a month, so days of the month with none ("с 3 по 5")
   /// are no range, and it must be after the start
   /// (``dayRangeReading(from:to:today:)``).
-  static func cyrillicDateRange(_ match: Match, side: (String) -> ExplicitDate?) -> DayRangeReading? {
+  static func slavicDateRange(_ match: Match, side: (String) -> ExplicitDate?) -> DayRangeReading? {
     guard let startText = match.group(2), let endText = match.group(5),
       let start = side(startText), let end = side(endText)
     else { return nil }

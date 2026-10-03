@@ -206,6 +206,45 @@ struct TaskRecurrenceEditorDraftTests {
       try rebased.saveIntent(liveRule: persisted)
         == .set(TaskRecurrenceRule(freq: .daily, interval: 3)))
   }
+
+  @Test("a weekly picker shows the anchor's weekday while no weekday is chosen")
+  func shownWeeklyDaysFallBackToTheAnchorWeekday() throws {
+    // October 5, 2026 is a Monday; October 11 a Sunday.
+    let monday = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-10-05"))
+    let sunday = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-10-11"))
+    #expect(TaskRecurrenceWeekday(storedDay: monday) == .monday)
+    #expect(TaskRecurrenceWeekday(storedDay: sunday) == .sunday)
+
+    var draft = TaskRecurrenceEditorDraft(rule: TaskRecurrenceRule(freq: .weekly))
+    #expect(draft.shownWeeklyDays(anchorDay: monday) == [.monday])
+    #expect(draft.shownWeeklyDays(anchorDay: nil).isEmpty)
+    #expect(!draft.hasChanges, "showing the anchor's day changes nothing")
+
+    draft.weeklyDays = [.monday, .wednesday]
+    #expect(draft.shownWeeklyDays(anchorDay: monday) == [.monday, .wednesday])
+    draft.weeklyDays = [.friday]
+    #expect(draft.shownWeeklyDays(anchorDay: monday) == [.friday])
+  }
+
+  @Test("the anchor day is the series anchor while repeating, else the deadline, else today")
+  func recurrenceAnchorDayResolution() throws {
+    let today = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-10-03"))
+    let due = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-10-08"))
+    let seriesAnchor = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-10-05"))
+    var task = LorvexTask(
+      id: "t", title: "Water the plants", notes: "", priority: .p2, status: .open,
+      dueDate: nil, estimatedMinutes: nil, tags: [])
+    #expect(task.recurrenceAnchorDay(logicalDay: "2026-10-03") == today)
+    task.dueDate = due
+    #expect(task.recurrenceAnchorDay(logicalDay: "2026-10-03") == due)
+    task.recurrence = TaskRecurrenceRule(freq: .weekly)
+    task.canonicalOccurrenceDate = seriesAnchor
+    #expect(task.recurrenceAnchorDay(logicalDay: "2026-10-03") == seriesAnchor)
+    task.recurrence = nil
+    #expect(
+      task.recurrenceAnchorDay(logicalDay: "2026-10-03") == due,
+      "an anchor left on a task that no longer repeats is ignored")
+  }
 }
 
 private extension TaskRecurrenceEditorSaveIntent {

@@ -138,16 +138,16 @@ func calendarGridModelPlacesEventsAcrossDaysByTheirLength() throws {
   // In the strip a timed event of a day or more shows its start on its first
   // day and its end on its last; a day in between shows no time.
   let retreat = try #require(try column("2026-06-19").allDayEvents.first)
-  #expect(retreat.allDayStripTimeLabel(on: "2026-06-19") == lorvexClockTimeLabel("22:00"))
-  #expect(retreat.allDayStripTimeLabel(on: "2026-06-20") == nil)
-  let retreatEnd = try #require(retreat.allDayStripTimeLabel(on: "2026-06-21"))
+  #expect(retreat.pillTimeLabel(on: "2026-06-19") == lorvexClockTimeLabel("22:00"))
+  #expect(retreat.pillTimeLabel(on: "2026-06-20") == nil)
+  let retreatEnd = try #require(retreat.pillTimeLabel(on: "2026-06-21"))
   #expect(retreatEnd.contains(lorvexClockTimeLabel("01:00")))
   #expect(retreatEnd != lorvexClockTimeLabel("01:00"))
   let offsite = CalendarTimelineEvent(
     id: "offsite", title: "Offsite", source: "lorvex", editable: true, startDate: "2026-06-19",
     startTime: nil, endDate: "2026-06-20", endTime: nil, allDay: true, location: nil, color: nil,
     eventType: "event", timezone: nil, isRecurring: false)
-  #expect(offsite.allDayStripTimeLabel(on: "2026-06-19") == nil)
+  #expect(offsite.pillTimeLabel(on: "2026-06-19") == nil)
 
   let first = try block("flight", on: "2026-06-19")
   let last = try block("flight", on: "2026-06-20")

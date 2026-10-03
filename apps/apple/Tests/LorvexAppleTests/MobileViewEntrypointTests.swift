@@ -23,11 +23,13 @@ func mobileSystemEntrypointModifierReturnsView() async throws {
 func mobileTaskDetailSheetsUseNativePresentationChrome() throws {
   let source = try mobileSourceFile("Sources/LorvexMobile/MobileStoreTaskDetailView.swift")
 
-  #expect(source.contains(".mobileCompactEditorSheetPresentation()"))
+  // The recurrence editor is a dense form, so it opens at full height.
+  #expect(source.contains(".mobileFullEditorSheetPresentation()"))
 
-  // Detents + drag indicator are standardized in the shared editor-presentation modifier.
+  // Detents + drag indicator are standardized in the shared editor-presentation modifiers.
   let presentation = try mobileSourceFile("Sources/LorvexMobile/MobileEditorSheetPresentation.swift")
   #expect(presentation.contains(".presentationDetents([.medium, .large])"))
+  #expect(presentation.contains(".presentationDetents([.large])"))
   #expect(presentation.contains(".presentationDragIndicator(.visible)"))
 }
 

@@ -16,6 +16,23 @@ public extension TaskReminder {
   var displaySummary: String {
     displaySummary(timeZone: .autoupdatingCurrent)
   }
+
+  /// The reminder's day and clock time in `timeZone`, the product zone
+  /// reminders are composed in, the way a task's rows name a day: the day as
+  /// a sentence opens with it, relative to `logicalDay` (``LorvexDayPhrase``:
+  /// "Tomorrow", "Thursday", "Oct 12", "Jan 4, 2027"), and the time ("9:30
+  /// AM"). Each surface joins the two with its catalog's day-and-time format
+  /// ("Tomorrow, 9:30 AM"). Nil when `reminderAt` is not a time.
+  ///
+  /// The phrase is relative to today, so text that outlives the screen (a
+  /// spoken or shared reminder) uses ``displaySummary(timeZone:locale:)``.
+  func dayAndTime(logicalDay: String, timeZone: TimeZone) -> (day: String, time: String)? {
+    guard let instant = TaskReminderDateTime.instant(from: reminderAt) else { return nil }
+    let day = LorvexDayPhrase.phrase(
+      for: PlannedDayBridge.storageDate(forLocalInstant: instant, timeZone: timeZone),
+      logicalDay: logicalDay, position: .leading)
+    return (day, TaskReminderDateTime.displayTimeString(from: instant, timeZone: timeZone))
+  }
 }
 
 /// Shared wall-clock and display policy for task-reminder UI on every Apple
@@ -68,7 +85,7 @@ public enum TaskReminderDateTime {
     timeZone: TimeZone,
     locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
-    guard let date = date(from: reminderAt) else { return reminderAt }
+    guard let date = instant(from: reminderAt) else { return reminderAt }
     return displayString(from: date, timeZone: timeZone, locale: locale)
   }
 
@@ -92,11 +109,13 @@ public enum TaskReminderDateTime {
     LorvexDateFormatters.gregorianCalendar(timeZone: timeZone)
   }
 
-  private static func date(from string: String) -> Date? {
-    if let date = LorvexDateFormatters.iso8601Fractional.date(from: string) {
+  /// The instant a stored `reminder_at` names (ISO 8601, with or without
+  /// fractional seconds), or nil when the string is not one.
+  public static func instant(from reminderAt: String) -> Date? {
+    if let date = LorvexDateFormatters.iso8601Fractional.date(from: reminderAt) {
       return date
     }
-    return LorvexDateFormatters.iso8601.date(from: string)
+    return LorvexDateFormatters.iso8601.date(from: reminderAt)
   }
 
   private static func date(

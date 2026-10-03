@@ -27,6 +27,16 @@ struct LorvexPreviewCoreFactoryTests {
     #expect(venue.listID == LorvexPreviewSeedID.inboxList)
     #expect(venue.dependsOn == [LorvexPreviewSeedID.agendaTask])
     #expect(venue.reminders.map(\.id) == [LorvexPreviewSeedID.venueReminder])
+    // The reminder reads as coming up, 9:30 two days ahead on the seed's
+    // clock, and is always more than a day away: one-day look-ahead tests
+    // over the seed expect nothing.
+    let reminderAt = try #require(venue.reminders.first.flatMap { TaskReminderDateTime.instant(from: $0.reminderAt) })
+    var seedClock = Calendar(identifier: .gregorian)
+    seedClock.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+    #expect(seedClock.component(.hour, from: reminderAt) == 9)
+    #expect(seedClock.component(.minute, from: reminderAt) == 30)
+    #expect(reminderAt.timeIntervalSinceNow > 86_400)
+    #expect(reminderAt.timeIntervalSinceNow < 3 * 86_400)
 
     let status = try await core.loadTask(id: LorvexPreviewSeedID.statusUpdateTask)
     #expect(status.recurrence?.freq == .weekly)

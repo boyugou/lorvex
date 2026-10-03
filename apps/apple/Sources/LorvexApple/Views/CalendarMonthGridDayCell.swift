@@ -12,10 +12,13 @@ private enum CalendarMonthGridDayCellMetrics {
 }
 
 /// One month-grid day cell: the day number, a bounded stack of event and task
-/// chips (a timed item leads with its start time; a task wears the calendar
-/// task surface rather than an event's fill and rail), and a "+N" overflow
-/// when the day has more items than `maxVisibleChips`, which the grid sizes to
-/// the row (``chipsFitting(in:)``).
+/// chips, and a "+N" overflow when the day has more items than
+/// `maxVisibleChips`, which the grid sizes to the row (``chipsFitting(in:)``).
+/// A chip names its title, then its time in the secondary color where the
+/// width allows (``LorvexCalendarStripLabel``): an event's start on the day it
+/// starts and "Until 6:00 AM" on a later day it ends, a timed task's start. A
+/// task wears the calendar task surface rather than an event's fill and rail.
+/// The "+N" chip opens a popover listing the whole day under its date.
 ///
 /// Clicking anywhere in the cell background (including the day number) opens
 /// that day (`onOpenDay`) — the whole cell is one Tab-focusable, Return/Space-
@@ -118,17 +121,18 @@ struct CalendarMonthGridDayCell: View {
       Button {
         onSelectEvent(event)
       } label: {
-        chip(title: chipTitle(for: event), color: eventColor(event))
+        chip(title: event.title, time: event.pillTimeLabel(on: day.dayKey), color: eventColor(event))
       }
       .buttonStyle(.plain)
       .calendarPointingHandCursor()
       .opacity(day.isCurrentMonth ? 1 : 0.55)
+      .accessibilityLabel(calendarPillAccessibilityLabel(event))
     case .task(let task):
       Button {
         onOpenTask(task)
       } label: {
         taskChip(
-          title: task.title, isDone: task.status == .completed,
+          title: task.title, time: nil, isDone: task.status == .completed,
           isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone))
       }
       .buttonStyle(.plain)
@@ -139,28 +143,31 @@ struct CalendarMonthGridDayCell: View {
         onOpenTask(task)
       } label: {
         taskChip(
-          title: chipTitle(for: task, at: time), isDone: task.status == .completed, isOverdue: false)
+          title: task.title, time: lorvexClockTimeLabel(minutes: time.lowerBound),
+          isDone: task.status == .completed, isOverdue: false)
       }
       .buttonStyle(.plain)
       .calendarPointingHandCursor()
       .opacity(day.isCurrentMonth ? 1 : 0.55)
+      .accessibilityLabel(
+        calendarTimedTaskAccessibilityLabel(
+          title: task.title, startMinutes: time.lowerBound, endMinutes: time.upperBound))
     }
   }
 
   /// A task's chip, timed or not, wears the calendar task surface: a hollow
   /// dashed outline in the accent tint rather than an event's solid fill and
   /// rail, so time set aside for the user's own work never reads like a
-  /// meeting. A finished task is struck through and faded.
-  /// A task's chip. `isOverdue` ends it with the overdue clock, as the
-  /// week's all-day strip does for a task past its due day; a timed task's
-  /// chip, like its week block, leaves it off.
-  private func taskChip(title: String, isDone: Bool, isOverdue: Bool) -> some View {
+  /// meeting. A finished task is struck through and faded. `time` follows the
+  /// title where the width allows. `isOverdue` ends the chip with the overdue
+  /// clock, as the week's all-day strip does for a task past its due day; a
+  /// timed task's chip, like its week block, leaves it off.
+  private func taskChip(title: String, time: String?, isDone: Bool, isOverdue: Bool) -> some View {
     HStack(spacing: 2) {
-      Text(title)
+      LorvexCalendarStripLabel(title: title, time: time)
         .font(LorvexDesign.Typography.tertiaryText)
         .strikethrough(isDone)
         .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-        .lineLimit(1)
         .frame(maxWidth: .infinity, alignment: .leading)
       if isOverdue {
         Image(systemName: "clock.badge.exclamationmark")
@@ -177,15 +184,11 @@ struct CalendarMonthGridDayCell: View {
         isDone: isDone, cornerRadius: CalendarMonthGridDayCellMetrics.chipCornerRadius)
   }
 
-  /// A timed task's chip leads with its start time like a timed event's.
-  private func chipTitle(for task: LorvexTask, at time: Range<Int>) -> String {
-    "\(lorvexClockTimeLabel(minutes: time.lowerBound)) \(task.title)"
-  }
-
-  private func chip(title: String, color: Color) -> some View {
-    Text(title)
+  /// An event's chip: its title and `time` (``LorvexCalendarStripLabel``) on
+  /// the event's color, with a rail at its leading edge.
+  private func chip(title: String, time: String?, color: Color) -> some View {
+    LorvexCalendarStripLabel(title: title, time: time)
       .font(LorvexDesign.Typography.tertiaryText)
-      .lineLimit(1)
       .padding(.horizontal, 4)
       .padding(.vertical, 1)
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -198,17 +201,9 @@ struct CalendarMonthGridDayCell: View {
       }
   }
 
-  /// A timed event's chip leads with its start time (matching Apple Calendar's
-  /// month view); an all-day event just shows its title, matching the week
-  /// grid's all-day pills.
-  private func chipTitle(for event: CalendarTimelineEvent) -> String {
-    guard !event.allDay, let start = event.startTime else { return event.title }
-    return "\(lorvexClockTimeLabel(start)) \(event.title)"
-  }
-
   private var overflowChip: some View {
     Button(action: onShowOverflow) {
-      Text("+\(chips.overflowCount)")
+      Text(verbatim: "+" + chips.overflowCount.formatted(.number.locale(LorvexClockFormat.displayLocale)))
         .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
         .foregroundStyle(.secondary)
         .padding(.horizontal, 4)
@@ -224,24 +219,36 @@ struct CalendarMonthGridDayCell: View {
     .accessibilityIdentifier("calendar.month.day.\(day.dayKey).overflow")
   }
 
+  /// The whole day under its date, each entry with its time on the day's
+  /// clock: an event's span ("9:30 – 10:00 AM"), its start or "Until 6:00 AM"
+  /// on one day of an event that runs past midnight, or "All day"; a timed
+  /// task's span. An untimed task has no time line.
   private var overflowPopover: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      Text(LocalizedStringResource("calendar.overflow.title", defaultValue: "Hidden events", table: "Localizable", bundle: LorvexL10n.bundle))
+      Text(LorvexDateFormatters.string(day.date, template: "EEEEMMMMd", timeZone: calendar.timeZone))
         .font(LorvexDesign.Typography.primaryEmphasis)
       ForEach(day.entries) { entry in
         switch entry {
         case .event(let event):
-          overflowRow(title: chipTitle(for: event), color: eventColor(event)) {
+          overflowRow(
+            title: event.title,
+            time: event.listTimeLabel(on: day.dayKey, range: TodayCalmCopy.timeRange(start:end:))
+              ?? TodayCalmCopy.allDay,
+            color: eventColor(event)
+          ) {
             isOverflowPresented = false
             onSelectEvent(event)
           }
         case .task(let task):
-          overflowRow(title: task.title, color: LorvexDesign.Palette.accent) {
+          overflowRow(title: task.title, time: nil, color: LorvexDesign.Palette.accent) {
             isOverflowPresented = false
             onOpenTask(task)
           }
         case .timedTask(let task, let time):
-          overflowRow(title: chipTitle(for: task, at: time), color: LorvexDesign.Palette.accent) {
+          overflowRow(
+            title: task.title, time: TodayCalmCopy.timeRange(start: time.lowerBound, end: time.upperBound),
+            color: LorvexDesign.Palette.accent
+          ) {
             isOverflowPresented = false
             onOpenTask(task)
           }
@@ -252,13 +259,22 @@ struct CalendarMonthGridDayCell: View {
     .frame(width: 260, alignment: .leading)
   }
 
-  private func overflowRow(title: String, color: Color, action: @escaping () -> Void) -> some View {
+  /// One popover row: a dot in the entry's color, its title, and `time` on a
+  /// second line, as the week grid's hidden-items popover lays a row out.
+  private func overflowRow(title: String, time: String?, color: Color, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       HStack(spacing: LorvexDesign.Spacing.s) {
         Circle().fill(color).frame(width: 8, height: 8)
-        Text(title)
-          .font(LorvexDesign.Typography.secondaryText)
-          .lineLimit(1)
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          Text(userContent: title)
+            .font(LorvexDesign.Typography.secondaryText)
+            .lineLimit(1)
+          if let time {
+            Text(time)
+              .font(LorvexDesign.Typography.tertiaryText)
+              .foregroundStyle(.secondary)
+          }
+        }
         Spacer(minLength: 0)
       }
       .contentShape(Rectangle())

@@ -83,23 +83,23 @@ private struct TaskDetailRecurrencePanel: View {
       set: { store.taskDetailRecurrenceIntervalText = String($0) })
   }
 
-  /// Bridges the recurrence's RRULE BYDAY codes ("MO"…"SU") to the shared
-  /// ``HabitWeekdayPicker``'s `Set<Int>` (0 = Mon … 6 = Sun) via `weekdayCodes`,
-  /// so task recurrence and habit cadence use the same localized weekday control.
+  /// Bridges the draft's weekdays to the shared ``HabitWeekdayPicker``'s
+  /// `Set<Int>` (0 = Mon … 6 = Sun, the order of
+  /// ``TaskRecurrenceWeekday/allCases``), so task recurrence and habit cadence
+  /// use the same localized weekday control. With no weekday chosen it shows
+  /// the anchor's weekday, the day the rule falls on
+  /// (``TaskRecurrenceEditorDraft/shownWeeklyDays(anchorDay:)``).
   private var recurrenceWeekdays: Binding<Set<Int>> {
     Binding(
       get: {
-        Set(store.taskDetailRecurrenceByDay.compactMap { TaskDetailView.weekdayCodes.firstIndex(of: $0) })
+        let shown = store.taskDetailRecurrenceDraft.shownWeeklyDays(anchorDay: store.taskDetailRecurrenceAnchorDay)
+        return Set(shown.compactMap { TaskRecurrenceWeekday.allCases.firstIndex(of: $0) })
       },
       set: { indices in
-        store.taskDetailRecurrenceByDay = Set(indices.compactMap { index in
-          TaskDetailView.weekdayCodes.indices.contains(index) ? TaskDetailView.weekdayCodes[index] : nil
+        store.taskDetailRecurrenceDraft.weeklyDays = Set(indices.compactMap { index in
+          TaskRecurrenceWeekday.allCases.indices.contains(index) ? TaskRecurrenceWeekday.allCases[index] : nil
         })
       }
     )
   }
-}
-
-private extension TaskDetailView {
-  static let weekdayCodes = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
 }

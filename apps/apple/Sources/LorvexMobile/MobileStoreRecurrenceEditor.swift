@@ -28,7 +28,8 @@ struct MobileStoreRecurrenceEditor: View {
                   localized: "recurrence.currently", defaultValue: "Currently %@",
                   table: "Localizable", bundle: MobileL10n.bundle),
                 recurrence.localizedDisplaySummary(
-                  exceptions: store.selectedTask?.recurrenceExceptions ?? [])))
+                  exceptions: store.selectedTask?.recurrenceExceptions ?? [],
+                  anchorDay: anchorDay)))
           }
         }
 
@@ -141,10 +142,20 @@ struct MobileStoreRecurrenceEditor: View {
     )
   }
 
+  /// The stored day the task's repeat counts from
+  /// (``LorvexTask/recurrenceAnchorDay(logicalDay:)``), which names the day a
+  /// weekly repeat without chosen weekdays falls on.
+  private var anchorDay: Date? {
+    store.selectedTask?.recurrenceAnchorDay(logicalDay: store.logicalTodayString)
+  }
+
+  /// The draft's weekdays as the picker's `Set<Int>` (0 = Mon … 6 = Sun); with
+  /// no weekday chosen it shows the anchor's weekday, the day the rule falls
+  /// on (``TaskRecurrenceEditorDraft/shownWeeklyDays(anchorDay:)``).
   private var weekdaySelection: Binding<Set<Int>> {
     Binding(
       get: {
-        Set(store.taskDetailRecurrenceDraft.weeklyDays.compactMap {
+        Set(store.taskDetailRecurrenceDraft.shownWeeklyDays(anchorDay: anchorDay).compactMap {
           TaskRecurrenceWeekday.allCases.firstIndex(of: $0)
         })
       },

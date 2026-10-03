@@ -92711,6 +92711,7 @@
       }
     },
     "task_detail.do_on.day_time": {
+      "comment": "Task detail: joins a day phrase and a time, in the When row (\"Today, 9:45 – 10:30 AM\") and the Reminder row (\"Tomorrow, 9:30 AM\")",
       "extractionState": "manual",
       "localizations": {
         "ar": {

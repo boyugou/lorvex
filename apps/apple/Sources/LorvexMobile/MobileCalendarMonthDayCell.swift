@@ -11,9 +11,9 @@ import SwiftUI
 /// marks: a dot in the event's color for an event, a ring in the accent for a
 /// task, faded once the task is done. The `.titled` style draws chips that
 /// name their entries and open them: an event's chip in its color with a
-/// rail and its start time where the width allows, a task's on the dashed
-/// task surface, struck through once done, and "+N" for the entries that do
-/// not fit.
+/// rail and its time where the width allows (its start, or "Until 6:00 AM"
+/// on the day a longer event ends), a task's on the dashed task surface,
+/// struck through once done, and "+N" for the entries that do not fit.
 ///
 /// Tapping the cell chooses the day. Its context menu creates an event on
 /// the day, and a task dropped on it is planned on it; a task chip drags to
@@ -189,7 +189,7 @@ struct MobileCalendarMonthDayCell: View {
 
   private func eventChip(_ event: CalendarTimelineEvent) -> some View {
     let color = eventColor(event)
-    return LorvexCalendarStripLabel(title: event.title, time: chipTime(for: event))
+    return LorvexCalendarStripLabel(title: event.title, time: event.pillTimeLabel(on: day.dayKey))
       .font(LorvexDesign.CalendarMetrics.compactBlockText)
       .padding(.leading, 5)
       .padding(.trailing, 3)
@@ -218,15 +218,6 @@ struct MobileCalendarMonthDayCell: View {
     }
     .buttonStyle(.plain)
     .draggable(LorvexTaskRef(id: task.id, title: task.title))
-  }
-
-  /// A timed event's start on the day it starts; nothing for an all-day
-  /// event, or on the days a longer event runs on into.
-  private func chipTime(for event: CalendarTimelineEvent) -> String? {
-    guard !event.allDay, event.startDate == day.dayKey, let start = event.startTime else {
-      return nil
-    }
-    return lorvexClockTimeLabel(start)
   }
 
   private func eventColor(_ event: CalendarTimelineEvent) -> Color {

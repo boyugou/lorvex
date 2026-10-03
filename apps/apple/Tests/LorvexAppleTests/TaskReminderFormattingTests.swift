@@ -138,8 +138,9 @@ func taskReminderSurfacesWireTheProductTimezoneAndNoDateOnlyDuePreset() throws {
   #expect(!mobileComposer.contains("oneHourBeforeDue"))
   #expect(!mobileComposer.contains("let dueDate:"))
   #expect(mobileDetail.contains("MobileReminderComposerRow(\n                timeZone: timeZone,"))
-  #expect(mobileDetail.contains("reminder: reminder,\n              timeZone: timeZone"))
+  #expect(mobileDetail.contains("reminder: reminder,\n              logicalDay: logicalDay,\n              timeZone: timeZone"))
   #expect(macReminder.contains("timeZone: store.logicalTimeZone"))
   #expect(macReminder.contains(".environment(\\.timeZone, timeZone)"))
+  #expect(macReminder.contains("lorvexReminderDayTime(reminder, logicalDay: logicalDay, timeZone: timeZone)"))
   #expect(macReminder.contains("reminder.displaySummary(timeZone: timeZone)"))
 }

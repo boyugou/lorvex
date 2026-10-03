@@ -374,6 +374,48 @@ func calendarMonthGridOrdersTimedTasksWithTimedEventsByStart() throws {
   #expect(chips.overflowCount == 3)
 }
 
+@Test
+func calendarMonthGridOrdersAnEventByTheTimeItTakesOnEachDayItTouches() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 1
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2024, month: 2, day: 10)))
+  let redEye = calendarMonthGridEvent(
+    id: "redeye", title: "Red-eye to Berlin", startDate: "2024-02-14", endDate: "2024-02-15",
+    startTime: "22:00", endTime: "06:00")
+  let conference = calendarMonthGridEvent(
+    id: "conference", title: "Conference", startDate: "2024-02-14", endDate: "2024-02-16",
+    startTime: "09:00", endTime: "17:00")
+  let standups = ["14", "15", "16"].map {
+    calendarMonthGridEvent(
+      id: "standup-\($0)", title: "Standup", startDate: "2024-02-\($0)", startTime: "09:30")
+  }
+  let offsite = calendarMonthGridEvent(
+    id: "offsite", title: "Offsite", startDate: "2024-02-15", allDay: true)
+
+  let days = CalendarMonthGridModel.buildDays(
+    monthAnchor: monthAnchor,
+    calendar: calendar,
+    events: [redEye, conference, offsite] + standups,
+    tasks: [],
+    dayKeyFor: { calendarMonthGridYMD.string(from: $0) }
+  )
+  func entryIDs(_ dayKey: String) throws -> [String] {
+    try #require(days.first { $0.dayKey == dayKey }).entries.map(\.id)
+  }
+
+  // The conference opens before the standup on the 14th and the red-eye
+  // leaves that night. On the 15th the conference fills the day beside the
+  // all-day offsite, and the red-eye, in the air since midnight, leads the
+  // timed entries. On the 16th the conference ends before the standup.
+  let first = try entryIDs("2024-02-14")
+  let second = try entryIDs("2024-02-15")
+  let third = try entryIDs("2024-02-16")
+  #expect(first == ["event#conference", "event#standup-14", "event#redeye"])
+  #expect(second == ["event#conference", "event#offsite", "event#redeye", "event#standup-15"])
+  #expect(third == ["event#conference", "event#standup-16"])
+}
+
 private let calendarMonthGridYMD: DateFormatter = {
   let formatter = DateFormatter()
   formatter.calendar = Calendar(identifier: .gregorian)

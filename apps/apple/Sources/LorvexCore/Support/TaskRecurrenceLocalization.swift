@@ -100,16 +100,31 @@ public extension TaskRecurrenceRule {
   /// ``localizedDisplaySummary(exceptions:)``. A stored interval below one
   /// reads as one period.
   var localizedCadence: String {
-    let every = freq.localizedEveryInterval(max(1, interval ?? 1))
-    guard let byDay, !byDay.isEmpty else { return every }
-    return "\(every) · \(LorvexRecurrenceWeekdays.summary(byDay))"
+    localizedCadence(anchorDay: nil)
   }
 
-  /// The full one-line rule the repeat editors show: the cadence, then how the
-  /// rule ends, its anchor, and how many dates were skipped ("Every 2 weeks ·
-  /// Mon, Wed · 10 times · 1 skipped"). `exceptions` are the skipped dates.
-  func localizedDisplaySummary(exceptions: [String] = []) -> String {
-    var parts = [localizedCadence]
+  /// ``localizedCadence``, naming the day a weekly rule without chosen
+  /// weekdays falls on: the weekday of `anchorDay`, the stored day its
+  /// schedule counts from (``LorvexTask/recurrenceAnchorDay(logicalDay:)``),
+  /// so "Every week" reads "Every week · Mon" as a rule with chosen weekdays
+  /// does. A rule that counts from completion, or repeats by another unit,
+  /// reads as ``localizedCadence``.
+  func localizedCadence(anchorDay: Date?) -> String {
+    let every = freq.localizedEveryInterval(max(1, interval ?? 1))
+    if let byDay, !byDay.isEmpty {
+      return "\(every) · \(LorvexRecurrenceWeekdays.summary(byDay))"
+    }
+    guard freq == .weekly, anchor == .schedule, let anchorDay else { return every }
+    return "\(every) · \(LorvexRecurrenceWeekdays.summary([TaskRecurrenceWeekday(storedDay: anchorDay).rawValue]))"
+  }
+
+  /// The full one-line rule the repeat editors show: the cadence (naming a
+  /// plain weekly rule's day from `anchorDay`, as
+  /// ``localizedCadence(anchorDay:)`` does), then how the rule ends, its
+  /// anchor, and how many dates were skipped ("Every 2 weeks · Mon, Wed · 10
+  /// times · 1 skipped"). `exceptions` are the skipped dates.
+  func localizedDisplaySummary(exceptions: [String] = [], anchorDay: Date? = nil) -> String {
+    var parts = [localizedCadence(anchorDay: anchorDay)]
     if let count {
       parts.append(
         String(

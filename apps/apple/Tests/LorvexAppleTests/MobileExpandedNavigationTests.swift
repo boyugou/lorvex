@@ -466,6 +466,47 @@ struct MobileStoreWorkspaceViewsTests {
     #expect(store.resolveTask(task.id)?.title == "Mobile offscreen deep link")
   }
 
+  @Test("A full reload keeps the open detail's task cached and drops the others")
+  func mobileFullReloadKeepsTheOpenTasksCacheEntry() async throws {
+    let core = try await makeSeededInMemoryCore()
+    let store = MobileStore(core: core)
+    await store.refresh()
+
+    let open = try await core.createTask(title: "Mobile open detail", notes: "")
+    let other = try await core.createTask(title: "Mobile closed detail", notes: "")
+    store.openNavigationTarget(MobileNavigationTarget(route: .task(open.id)))
+    #expect(await store.refreshTaskForRoute(open.id))
+    #expect(await store.refreshTaskForRoute(other.id))
+
+    await store.refresh()
+
+    // The open detail would otherwise drop to its skeleton until the route's
+    // re-query returns, taking a sheet over it down.
+    #expect(store.resolveTask(open.id)?.title == "Mobile open detail")
+    #expect(store.resolveTask(other.id) == nil)
+  }
+
+  @Test("A task deleted behind an open detail is evicted by the route's re-query")
+  func mobileRouteRequeryEvictsTheKeptTaskOnConfirmedDeletion() async throws {
+    let core = try await makeSeededInMemoryCore()
+    let store = MobileStore(core: core)
+    await store.refresh()
+
+    let task = try await core.createTask(title: "Mobile deleted behind detail", notes: "")
+    store.openNavigationTarget(MobileNavigationTarget(route: .task(task.id)))
+    #expect(await store.refreshTaskForRoute(task.id))
+    try await core.permanentlyDeleteTask(id: task.id)
+
+    await store.refresh()
+    #expect(store.resolveTask(task.id) != nil)
+
+    let stillThere = await store.refreshTaskForRoute(task.id)
+
+    #expect(!stillThere)
+    #expect(store.resolveTask(task.id) == nil)
+    #expect(store.selectedTaskID == nil)
+  }
+
   @Test("Mobile task route retries loading from every visible state")
   func mobileTaskRouteReloadModifierWrapsNotFoundState() throws {
     let source = try appleSourceFile("Sources/LorvexMobile/MobileRouteViews.swift")

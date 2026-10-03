@@ -82,7 +82,7 @@ struct MobileTaskProperties: Equatable {
     field(
       .priority, task.priority == .p2 ? nil : task.priority.localizedName,
       tint: task.priority == .p1 ? .high : nil)
-    field(.recurrence, task.recurrence?.localizedCadence)
+    field(.recurrence, task.recurrence?.localizedCadence(anchorDay: task.recurrenceAnchorDay(logicalDay: logicalDay)))
     field(.tags, task.tags.isEmpty ? nil : task.tags.joined(separator: " · "))
     if task.dependsOn.isEmpty { additions.append(.waitsOn) }
     let hiddenUntil = task.availableFrom.flatMap {

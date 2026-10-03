@@ -358,7 +358,9 @@ struct CalendarWeekGridView: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(taskBlockAccessibilityLabel(block))
+        .accessibilityLabel(
+          calendarTimedTaskAccessibilityLabel(
+            title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin))
       }
       ForEach(blocks.sorted { $0.startMin < $1.startMin }) { block in
         Button {

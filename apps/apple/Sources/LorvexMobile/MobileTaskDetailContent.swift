@@ -17,6 +17,9 @@ import SwiftUI
 struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   let task: LorvexTask
   let timeZone: TimeZone
+  /// The product's logical today, `yyyy-MM-dd`, which the reminders' days
+  /// are named relative to.
+  let logicalDay: String
   let toggleChecklistItem: ((TaskChecklistItem) async -> Void)?
   let addChecklistItem: ((String) async -> Void)?
   let removeChecklistItem: ((TaskChecklistItem) async -> Void)?
@@ -49,6 +52,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   init(
     task: LorvexTask,
     timeZone: TimeZone = .autoupdatingCurrent,
+    logicalDay: String,
     toggleChecklistItem: ((TaskChecklistItem) async -> Void)? = nil,
     addChecklistItem: ((String) async -> Void)? = nil,
     removeChecklistItem: ((TaskChecklistItem) async -> Void)? = nil,
@@ -66,6 +70,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   ) {
     self.task = task
     self.timeZone = timeZone
+    self.logicalDay = logicalDay
     self.toggleChecklistItem = toggleChecklistItem
     self.addChecklistItem = addChecklistItem
     self.removeChecklistItem = removeChecklistItem
@@ -168,6 +173,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
           ForEach(task.reminders) { reminder in
             MobileReminderRow(
               reminder: reminder,
+              logicalDay: logicalDay,
               timeZone: timeZone,
               removeReminder: removeReminder)
           }

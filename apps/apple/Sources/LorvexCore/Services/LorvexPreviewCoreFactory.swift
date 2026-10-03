@@ -284,6 +284,17 @@ public enum LorvexPreviewCoreFactory {
     LorvexPreviewSeedID.statusUpdateTask: 1,
   ]
 
+  /// The seeded tasks' reminders: when each fires, as days after the store's
+  /// logical day and minutes past midnight on ``previewTimezone``'s clock, so
+  /// a reminder always reads as coming up ("Monday, 9:30 AM"). Two days ahead
+  /// keeps every seeded reminder more than 24 hours away at any hour, so a
+  /// one-day look-ahead over the seed is empty by design. The `--ui-preview`
+  /// planned day defers the venue task by a day, which carries its reminder a
+  /// day further, as every deferral does.
+  private static let taskReminders: [LorvexTask.ID: [(id: String, daysAhead: Int, minutes: Int)]] = [
+    LorvexPreviewSeedID.venueTask: [(id: LorvexPreviewSeedID.venueReminder, daysAhead: 2, minutes: 9 * 60 + 30)]
+  ]
+
   private static func seedTasks(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     let dayAnchor = logicalDayAnchor()
     for task in LorvexPreviewSeedData.tasks {
@@ -308,9 +319,14 @@ public enum LorvexPreviewCoreFactory {
         try await core.importTaskChecklistItem(
           taskID: task.id, item: ExportChecklistItem(from: item))
       }
-      for reminder in task.reminders {
+      for reminder in taskReminders[task.id] ?? [] {
+        guard let at = wallClockInstant(dayAnchor, daysAhead: reminder.daysAhead, minutes: reminder.minutes)
+        else { continue }
         try await core.importTaskReminder(
-          taskID: task.id, reminder: ExportTaskReminder(from: reminder))
+          taskID: task.id,
+          reminder: ExportTaskReminder(
+            from: TaskReminder(
+              id: reminder.id, reminderAt: LorvexDateFormatters.iso8601.string(from: at), status: "pending")))
       }
       if let rule = task.recurrence {
         _ = try await core.setTaskRecurrence(taskID: task.id, rule: rule)
@@ -393,6 +409,22 @@ public enum LorvexPreviewCoreFactory {
   /// exactly the intended calendar day.
   private static func day(_ anchor: Date?, daysAgo: Int) -> Date? {
     anchor?.addingTimeInterval(TimeInterval(-daysAgo) * 86_400)
+  }
+
+  /// The instant `minutes` past midnight on the day `daysAhead` days after
+  /// `anchor` (the UTC midnight of the seed's logical day), on
+  /// ``previewTimezone``'s wall clock.
+  private static func wallClockInstant(_ anchor: Date?, daysAhead: Int, minutes: Int) -> Date? {
+    guard let anchor else { return nil }
+    var utc = Calendar(identifier: .gregorian)
+    utc.timeZone = .gmt
+    var local = Calendar(identifier: .gregorian)
+    local.timeZone = TimeZone(identifier: previewTimezone) ?? .current
+    guard let day = utc.date(byAdding: .day, value: daysAhead, to: anchor) else { return nil }
+    var parts = utc.dateComponents([.year, .month, .day], from: day)
+    parts.hour = minutes / 60
+    parts.minute = minutes % 60
+    return local.date(from: parts)
   }
 
   /// UTC midnight of the seed's logical day.

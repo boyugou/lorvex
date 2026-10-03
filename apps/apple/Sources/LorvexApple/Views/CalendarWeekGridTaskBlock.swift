@@ -74,7 +74,9 @@ extension CalendarWeekGridView {
     }
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
-    .accessibilityLabel(taskBlockAccessibilityLabel(block))
+    .accessibilityLabel(
+      calendarTimedTaskAccessibilityLabel(
+        title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin))
     .accessibilityIdentifier("calendar.weekgrid.taskBlock")
   }
 
@@ -117,17 +119,5 @@ extension CalendarWeekGridView {
     guard day.dayKey == store.logicalTodayDateString, let now = store.nowMinutesInProductDay
     else { return false }
     return block.startMin <= now && now < block.endMin
-  }
-
-  func taskBlockAccessibilityLabel(_ block: CalendarGridTaskBlock) -> String {
-    String(
-      format: String(
-        localized: "calendar.task_block.a11y",
-        defaultValue: "Task %@, %@ to %@",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      block.task.title,
-      lorvexClockTimeLabel(minutes: block.startMin),
-      lorvexClockTimeLabel(minutes: block.endMin))
   }
 }

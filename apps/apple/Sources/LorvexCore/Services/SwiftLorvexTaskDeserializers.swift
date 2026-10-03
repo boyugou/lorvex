@@ -88,6 +88,7 @@ enum SwiftLorvexTaskDeserializers {
       recurrence: TaskRecurrenceRule.bridgeRule(from: object["recurrence"]),
       recurrenceExceptions: TaskRecurrenceRule.bridgeExceptionDates(
         from: object["recurrence_exceptions"]),
+      canonicalOccurrenceDate: date(from: object, column: "canonical_occurrence_date"),
       listID: object["list_id"] as? String,
       deferCount: object["defer_count"] as? Int ?? 0,
       lastDeferReason: object["last_defer_reason"] as? String,
@@ -246,10 +247,11 @@ enum SwiftLorvexTaskDeserializers {
     value is NSNull ? "null" : String(describing: type(of: value))
   }
 
-  /// Parse a `YYYY-MM-DD` (UTC) date column (`due_date` or `planned_date`)
-  /// into a `Date`. Returns nil when the column is absent or empty. The two
-  /// columns are independent: `due_date` is the external deadline,
-  /// `planned_date` the intended work day.
+  /// Parse a `YYYY-MM-DD` (UTC) day column (`due_date`, `planned_date`,
+  /// `available_from`, `canonical_occurrence_date`) into a `Date`. Returns nil
+  /// when the column is absent or empty. The columns are independent:
+  /// `due_date` is the external deadline, `planned_date` the intended work
+  /// day.
   static func date(from object: [String: Any], column: String) -> Date? {
     guard let raw = object[column] as? String, !raw.isEmpty else { return nil }
     return plannedDateFormatter.date(from: raw)

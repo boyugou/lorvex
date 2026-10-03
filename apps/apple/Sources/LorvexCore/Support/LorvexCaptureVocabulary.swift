@@ -18,9 +18,10 @@ struct LorvexCaptureVocabulary: Sendable {
   /// (``unaccentedForMatching(_:)``); for Russian the line with ё read as е
   /// (``russianForMatching(_:)``); for Ukrainian the line with the curly and
   /// the modifier-letter apostrophe read as the straight one
-  /// (``ukrainianForMatching(_:)``). It must keep every character at its
-  /// UTF-16 offset, so a match range in it is the same range in the typed
-  /// line.
+  /// (``ukrainianForMatching(_:)``); for Polish the line without its accents
+  /// and with ł read as l (``polishForMatching(_:)``). It must keep every
+  /// character at its UTF-16 offset, so a match range in it is the same range
+  /// in the typed line.
   var readingForm: @Sendable (String) -> String = { $0 }
   /// High (p1), medium (p2), or low (p3) priority.
   var priority: [Rule<LorvexTask.Priority>] = []
@@ -52,22 +53,22 @@ struct LorvexCaptureVocabulary: Sendable {
 
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
-  /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian, and
-  /// Ukrainian when `languages` includes them (any region of a language:
-  /// "es-MX", "es-419", "it-CH", "uk-UA"), then Chinese and English, which
-  /// every line is read with.
+  /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian,
+  /// Ukrainian, and Polish when `languages` includes them (any region of a
+  /// language: "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL"), then Chinese and
+  /// English, which every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
   /// Japanese particle ("10月5日に"). Every other language goes before
   /// English, so a part of the day or a word written before a clock time
-  /// ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00") is read with the time
-  /// instead of being left in the title when the English pattern takes
-  /// "3:30" or "15:00". Beside a language that writes a clock time with the
-  /// letter h (French and Portuguese), English leaves hour counts written
+  /// ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00", "o 15:00") is read with
+  /// the time instead of being left in the title when the English pattern
+  /// takes "3:30" or "15:00". Beside a language that writes a clock time with
+  /// the letter h (French and Portuguese), English leaves hour counts written
   /// with h to it (``englishBesideHourClock``), so "15h" is never read as
-  /// fifteen hours. Spanish, Italian, Russian, and Ukrainian do not write a
-  /// clock time that way, so "2h" beside them stays a length.
+  /// fifteen hours. Spanish, Italian, Russian, Ukrainian, and Polish do not
+  /// write a clock time that way, so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -79,6 +80,7 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("it") { vocabularies.append(.italian) }
     if codes.contains("ru") { vocabularies.append(.russian) }
     if codes.contains("uk") { vocabularies.append(.ukrainian) }
+    if codes.contains("pl") { vocabularies.append(.polish) }
     let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
     return vocabularies + [.chinese, english]
   }

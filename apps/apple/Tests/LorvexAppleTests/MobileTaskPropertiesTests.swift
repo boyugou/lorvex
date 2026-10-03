@@ -69,6 +69,20 @@ struct MobileTaskPropertiesTests {
     #expect(properties.rows.last?.value == "home · weekly")
   }
 
+  @Test("A weekly repeat without chosen weekdays names the day its series counts from")
+  func plainWeeklyRepeatNamesItsDay() throws {
+    // October 5, 2026 is a Monday.
+    let anchor = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-10-05"))
+    let task = LorvexTask(
+      id: "t", title: "Water the plants", notes: "", priority: .p2, status: .open,
+      dueDate: anchor, estimatedMinutes: nil, tags: [],
+      recurrence: TaskRecurrenceRule(freq: .weekly), canonicalOccurrenceDate: anchor)
+    let properties = MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-10-03")
+    #expect(
+      properties.rows.first { $0.field == .recurrence }?.value
+        == "Every week · " + LorvexRecurrenceWeekdays.summary(["MO"]))
+  }
+
   @Test("Waits on is offered only while the task waits on nothing")
   func waitsOn() {
     let task = LorvexTask(

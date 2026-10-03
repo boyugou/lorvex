@@ -16,6 +16,15 @@ public enum TaskRecurrenceWeekday: String, CaseIterable, Sendable {
   public static func orderedCodes(_ weekdays: Set<Self>) -> [String] {
     allCases.filter(weekdays.contains).map(\.rawValue)
   }
+
+  /// The weekday of a stored day (a UTC midnight, the shape of `due_date`).
+  public init(storedDay: Date) {
+    var utc = Calendar(identifier: .gregorian)
+    utc.timeZone = .gmt
+    // Gregorian weekday numbers run from 1 (Sunday) to 7 (Saturday).
+    let sundayFirst: [Self] = [.sunday, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday]
+    self = sundayFirst[utc.component(.weekday, from: storedDay) - 1]
+  }
 }
 
 /// A recurrence mutation resolved at the editor boundary. `.none` is a real
@@ -89,6 +98,17 @@ public struct TaskRecurrenceEditorDraft: Equatable, Sendable {
 
   public var canSave: Bool {
     isEnabled ? validatedInterval != nil && hasChanges : hasChanges
+  }
+
+  /// The weekdays a weekly picker shows as chosen: ``weeklyDays``, or, while
+  /// none are chosen, the weekday of `anchorDay` (the stored day the schedule
+  /// counts from, ``LorvexTask/recurrenceAnchorDay(logicalDay:)``), the one
+  /// day such a rule falls on. A picker bound through this always shows the
+  /// days the rule falls on: choosing another day stores both, and clearing
+  /// every choice shows the anchor's day again.
+  public func shownWeeklyDays(anchorDay: Date?) -> Set<TaskRecurrenceWeekday> {
+    guard weeklyDays.isEmpty, let anchorDay else { return weeklyDays }
+    return [TaskRecurrenceWeekday(storedDay: anchorDay)]
   }
 
   /// Stable editor-only fingerprint used to detect recurrence typing that

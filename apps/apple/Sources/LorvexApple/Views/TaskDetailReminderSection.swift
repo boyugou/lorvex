@@ -7,6 +7,7 @@ extension TaskDetailView {
       reminderDate: $store.taskDetailReminderDate,
       reminders: task.reminders,
       presets: reminderPresets(now: LorvexPreviewClock.now(in: .current)),
+      logicalDay: store.logicalTodayDateString,
       timeZone: store.logicalTimeZone,
       add: { date in
         store.taskDetailReminderDate = date
@@ -95,13 +96,17 @@ struct TaskDetailReminderPreset: Identifiable {
   }
 }
 
-/// The reminders editor: the task's reminders, each with a remove button, then
-/// the one-click times, then a custom date and time with Add. It never shows
-/// an empty-state panel; with no reminders it opens straight on the choices.
+/// The reminders editor: the task's reminders, each named as the inspector's
+/// Reminder row names it ("Tuesday, 9:30 AM") with a remove button, then the
+/// one-click times, then a custom date and time with Add. It never shows an
+/// empty-state panel; with no reminders it opens straight on the choices.
 private struct TaskDetailRemindersPanel: View {
   @Binding var reminderDate: Date
   let reminders: [TaskReminder]
   let presets: [TaskDetailReminderPreset]
+  /// The product's logical today, `yyyy-MM-dd`, which the reminders' days
+  /// are named relative to.
+  let logicalDay: String
   let timeZone: TimeZone
   let add: (Date) -> Void
   let removeReminder: (TaskReminder) -> Void
@@ -115,8 +120,11 @@ private struct TaskDetailRemindersPanel: View {
               Image(systemName: "bell.fill")
                 .foregroundStyle(LorvexDesign.Palette.accent)
                 .frame(width: 18)
-              Text(reminder.displaySummary(timeZone: timeZone))
-                .frame(maxWidth: .infinity, alignment: .leading)
+              Text(
+                lorvexReminderDayTime(reminder, logicalDay: logicalDay, timeZone: timeZone)
+                  ?? reminder.displaySummary(timeZone: timeZone)
+              )
+              .frame(maxWidth: .infinity, alignment: .leading)
               LorvexIconButton(
                 systemImage: "xmark",
                 label: String(localized: "task_detail.reminders.remove", defaultValue: "Remove Reminder", table: "Localizable", bundle: LorvexL10n.bundle),

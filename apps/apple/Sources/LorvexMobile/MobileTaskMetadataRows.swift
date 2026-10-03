@@ -61,22 +61,21 @@ struct MobileChecklistItemRow: View {
   }
 }
 
+/// One of the task's reminders in the task detail, named the way the task's
+/// rows name a day ("Tomorrow, 9:30 AM", "Thursday, 8:00 AM"); swiping it
+/// away removes it.
 struct MobileReminderRow: View {
   let reminder: TaskReminder
+  /// The product's logical today, `yyyy-MM-dd`, which the reminder's day is
+  /// named relative to.
+  let logicalDay: String
   let timeZone: TimeZone
   let removeReminder: ((TaskReminder) async -> Void)?
 
   var body: some View {
     Label {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-        Text(reminder.displaySummary(timeZone: timeZone))
-          .font(LorvexDesign.Typography.primaryText)
-        if let status = reminder.status, !status.isEmpty {
-          Text(MobileTaskDisplayText.reminderStatus(status))
-            .font(LorvexDesign.Typography.secondaryText)
-            .foregroundStyle(.secondary)
-        }
-      }
+      Text(Self.title(reminder, logicalDay: logicalDay, timeZone: timeZone))
+        .font(LorvexDesign.Typography.primaryText)
     } icon: {
       Image(systemName: "bell")
         .font(LorvexDesign.Typography.primaryText)
@@ -95,5 +94,18 @@ struct MobileReminderRow: View {
         }
       }
     }
+  }
+
+  /// The reminder's day and time in `timeZone`
+  /// (``TaskReminder/dayAndTime(logicalDay:timeZone:)``), joined as the When
+  /// row joins a day and a time ("Tomorrow, 9:30 AM"), or its full date and
+  /// time when the stored time is unreadable.
+  static func title(_ reminder: TaskReminder, logicalDay: String, timeZone: TimeZone) -> String {
+    guard let when = reminder.dayAndTime(logicalDay: logicalDay, timeZone: timeZone) else {
+      return reminder.displaySummary(timeZone: timeZone)
+    }
+    return String(
+      localized: "task_detail.do_on.day_time", defaultValue: "\(when.day), \(when.time)",
+      table: "Localizable", bundle: MobileL10n.bundle)
   }
 }

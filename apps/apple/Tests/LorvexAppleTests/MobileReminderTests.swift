@@ -181,3 +181,20 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
   #expect(canonical == 11)  // 12 planned today, one now completed
   #expect(await recorder.lastCount() == canonical)
 }
+
+/// A reminder in the iPhone task detail is named the way the task's rows name
+/// a day, in the product time zone; an unreadable stored time shows as stored.
+@Test
+func mobileReminderRowNamesTheDayAndTheTimeInTheProductZone() throws {
+  let tokyo = try #require(TimeZone(identifier: "Asia/Tokyo"))
+  // 00:30 UTC on Sunday, October 4 is 9:30 that morning in Tokyo.
+  let reminder = TaskReminder(id: "r", reminderAt: "2026-10-04T00:30:00Z", status: nil)
+  let instant = try #require(TaskReminderDateTime.instant(from: reminder.reminderAt))
+  let time = TaskReminderDateTime.displayTimeString(from: instant, timeZone: tokyo)
+
+  #expect(MobileReminderRow.title(reminder, logicalDay: "2026-10-03", timeZone: tokyo) == "Tomorrow, \(time)")
+  #expect(MobileReminderRow.title(reminder, logicalDay: "2026-09-30", timeZone: tokyo) == "Sunday, \(time)")
+  #expect(MobileReminderRow.title(reminder, logicalDay: "2026-08-01", timeZone: tokyo) == "Oct 4, \(time)")
+  let unreadable = TaskReminder(id: "x", reminderAt: "not a time", status: nil)
+  #expect(MobileReminderRow.title(unreadable, logicalDay: "2026-10-03", timeZone: tokyo) == "not a time")
+}

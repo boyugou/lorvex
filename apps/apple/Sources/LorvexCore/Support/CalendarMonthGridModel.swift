@@ -27,10 +27,12 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
   /// `yyyy-MM-dd` key matching `CalendarTimelineEvent.startDate`.
   public let dayKey: String
   public let isCurrentMonth: Bool
-  /// All-day entries first (sorted by title), then timed entries in start-time
-  /// order — the order a reader scans a day: full-day context before the
-  /// clock-ordered agenda. Unbounded; callers cap the visible count with
-  /// ``CalendarMonthGridModel/chips(for:maxVisible:)``.
+  /// The day's events in the order a reader scans a day, full-day context
+  /// before the clock-ordered agenda: the events that fill the day first (all
+  /// day, or a day in between of a longer timed event), by title, then the
+  /// rest by the minute each takes its place at on the day
+  /// (``CalendarTimelineEvent/monthCellMinute(on:)``). Unbounded; callers cap
+  /// the visible count with ``CalendarMonthGridModel/chips(for:maxVisible:)``.
   public let events: [CalendarTimelineEvent]
   /// Tasks planned or due on the day without a time on it.
   public let scheduledTasks: [LorvexTask]
@@ -54,16 +56,20 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
     self.timedTasks = timedTasks
   }
 
-  /// The day's entries in reading order: all-day events, then the tasks
-  /// planned or due on the day without a time, then timed events and timed
-  /// tasks together by start time (title on a tie). The untimed tasks sit with
-  /// the all-day events, as they do in the week grid's all-day strip, so a busy
-  /// day's meetings never push the day's tasks into its "+N" overflow.
+  /// The day's entries in reading order: the events that fill the day (all
+  /// day, or a day in between of a longer timed event), then the tasks planned
+  /// or due on the day without a time, then timed events and timed tasks
+  /// together by the minute each takes its place at on the day (title on a
+  /// tie). A timed event takes its place at its start on the day it starts and
+  /// at midnight on a later day it ends, so an overnight flight leads the
+  /// morning it lands on. The untimed tasks sit with the all-day events, as
+  /// they do in the week grid's all-day strip, so a busy day's meetings never
+  /// push the day's tasks into its "+N" overflow.
   public var entries: [CalendarMonthGridEntry] {
-    let allDay = events.filter(\.allDay).map(CalendarMonthGridEntry.event)
+    let fillsDay = events.filter { $0.monthCellMinute(on: dayKey) == nil }.map(CalendarMonthGridEntry.event)
     let timed: [(minute: Int, title: String, entry: CalendarMonthGridEntry)] =
-      events.filter { !$0.allDay }.map {
-        (CalendarGridModel.parseMinutes($0.startTime) ?? -1, $0.title, .event($0))
+      events.compactMap { event in
+        event.monthCellMinute(on: dayKey).map { ($0, event.title, CalendarMonthGridEntry.event(event)) }
       }
       + timedTasks.compactMap { task in
         task.plannedTime.map { time in
@@ -74,7 +80,24 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
       if lhs.minute != rhs.minute { return lhs.minute < rhs.minute }
       return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
     }
-    return allDay + scheduledTasks.map(CalendarMonthGridEntry.task) + ordered.map(\.entry)
+    return fillsDay + scheduledTasks.map(CalendarMonthGridEntry.task) + ordered.map(\.entry)
+  }
+}
+
+extension CalendarTimelineEvent {
+  /// The minute this event takes its place at on `day`'s clock, which orders a
+  /// month cell's timed entries: its start on the day it starts, and midnight
+  /// on a later day it ends, where it runs from the start of the day. Nil when
+  /// the event fills the day, all day or on a day in between of a longer timed
+  /// event, so it reads with the all-day entries. An unreadable start sorts
+  /// before every time.
+  func monthCellMinute(on day: String) -> Int? {
+    if allDay { return nil }
+    switch dayPart(on: day) {
+    case .whole, .firstDay: return CalendarGridModel.parseMinutes(startTime) ?? -1
+    case .middleDay: return nil
+    case .lastDay: return 0
+    }
   }
 }
 
@@ -94,7 +117,8 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
 /// - An event occupies every day cell its `[startDate, endDate]` span
 ///   intersects within the grid range, regardless of `allDay` — unlike the
 ///   week/day timeline, the month grid has no intra-day axis to clip a timed
-///   event to, so it is shown as a whole-day entry on each day it touches.
+///   event to, so it is one entry on each day it touches, placed by the time
+///   it takes on that day (``CalendarMonthGridDay/entries``).
 /// - A task with a time renders as a timed chip on its planned day, the way the
 ///   week grid draws it; a task without one renders as a plain chip on its
 ///   planned day (falling back to its due day). A cancelled task is not drawn,
@@ -169,7 +193,7 @@ public enum CalendarMonthGridModel {
     }
 
     return zip(dayDates, dayKeys).map { date, key in
-      let dayEvents = (eventsByKey[key] ?? []).sorted(by: orderedBefore)
+      let dayEvents = (eventsByKey[key] ?? []).sorted(by: orderedBefore(on: key))
       let dayTimed = (timedByKey[key] ?? []).sorted {
         ($0.plannedTime?.lowerBound ?? 0) < ($1.plannedTime?.lowerBound ?? 0)
       }
@@ -197,14 +221,15 @@ public enum CalendarMonthGridModel {
     return (Array(all.prefix(cap)), all.count - cap)
   }
 
-  /// All-day events sort first (by title), then timed events by start minute
-  /// (by title on a tie) — full-day context before the clock-ordered agenda.
-  private static func orderedBefore(_ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent)
-    -> Bool
-  {
-    let lhsMinute = lhs.allDay ? -1 : (CalendarGridModel.parseMinutes(lhs.startTime) ?? -1)
-    let rhsMinute = rhs.allDay ? -1 : (CalendarGridModel.parseMinutes(rhs.startTime) ?? -1)
-    if lhsMinute != rhsMinute { return lhsMinute < rhsMinute }
-    return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+  /// The order of `day`'s events: those that fill the day first (by title),
+  /// then the rest by the minute each takes its place at on the day (by title
+  /// on a tie) — full-day context before the clock-ordered agenda.
+  private static func orderedBefore(on day: String) -> (CalendarTimelineEvent, CalendarTimelineEvent) -> Bool {
+    { lhs, rhs in
+      let lhsMinute = lhs.monthCellMinute(on: day) ?? Int.min
+      let rhsMinute = rhs.monthCellMinute(on: day) ?? Int.min
+      if lhsMinute != rhsMinute { return lhsMinute < rhsMinute }
+      return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
+    }
   }
 }

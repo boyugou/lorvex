@@ -242,7 +242,7 @@ struct CaptureParserDateRangeTests {
     let alone: [(text: String, languages: [String])] = [
       ("Sprint 12 - 20 May", ["en"]), ("Sprint 12 - 20 mai", ["fr"]), ("Sprint 12 - 20 de maio", ["pt"]),
       ("Sprint 12 - 20 de mayo", ["es"]), ("Sprint 12 - 20 maggio", ["it"]), ("Sprint 12 - 20 мая", ["ru"]),
-      ("Sprint 12 - 20 травня", ["uk"]),
+      ("Sprint 12 - 20 травня", ["uk"]), ("Sprint 12 - 20 maja", ["pl"]),
     ]
     for line in alone {
       let parsed = LorvexCaptureParser.parse(
@@ -268,6 +268,9 @@ struct CaptureParserDateRangeTests {
     expectDateRanges(
       [("Поїздка", "12-20 травня", "2027-05-12", "2027-05-20"), ("Поїздка", "з 12 - 20 травня", "2027-05-12", "2027-05-20")],
       languages: ["uk"])
+    expectDateRanges(
+      [("Wyjazd", "12-20 maja", "2027-05-12", "2027-05-20"), ("Wyjazd", "od 12 - 20 maja", "2027-05-12", "2027-05-20")],
+      languages: ["pl"])
   }
 
   @Test("A range takes the planned day and the due day, so another day phrase stays in the title")

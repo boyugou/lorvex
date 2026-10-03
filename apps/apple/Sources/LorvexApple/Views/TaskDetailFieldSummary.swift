@@ -82,13 +82,25 @@ extension AppStore {
     return LorvexDurationFormat.minutes(minutes)
   }
 
+  /// The Repeat row's value: the draft rule's cadence, naming the day a
+  /// weekly repeat without chosen weekdays falls on ("Every week · Mon").
   var taskDetailRepeatSummary: String? {
     guard taskDetailHasRecurrence, let rule = taskDetailDraftRecurrenceRule else { return nil }
-    return rule.localizedCadence
+    return rule.localizedCadence(anchorDay: taskDetailRecurrenceAnchorDay)
   }
 
+  /// The Reminder row's value: the one reminder's day and time in the
+  /// product time zone, worded like the When row ("Tomorrow, 9:30 AM",
+  /// "Thursday, 8:00 AM", "Oct 12, 9:00 AM"), or how many reminders the task
+  /// carries when it has several ("3 reminders"), as the Waits on row names
+  /// one task and counts several. Nil without a reminder.
   func taskDetailRemindersSummary(task: LorvexTask) -> String? {
-    task.reminders.isEmpty ? nil : lorvexReminderCountLabel(task.reminders.count)
+    guard !task.reminders.isEmpty else { return nil }
+    guard task.reminders.count == 1,
+      let dayTime = lorvexReminderDayTime(
+        task.reminders[0], logicalDay: logicalTodayDateString, timeZone: logicalTimeZone)
+    else { return lorvexReminderCountLabel(task.reminders.count) }
+    return dayTime
   }
 
   func taskDetailListSummary(task: LorvexTask) -> String? {
@@ -133,6 +145,17 @@ extension AppStore {
 func lorvexReminderCountLabel(_ count: Int) -> String {
   String(
     localized: "task_detail.reminders.count", defaultValue: "\(count) reminders",
+    table: "Localizable", bundle: LorvexL10n.bundle)
+}
+
+/// A reminder's day and clock time in `timeZone`, the product zone reminders
+/// are composed in (``TaskReminder/dayAndTime(logicalDay:timeZone:)``),
+/// joined as the When row joins a day and a time ("Tomorrow, 9:30 AM"). Nil
+/// when the stored time is unreadable.
+func lorvexReminderDayTime(_ reminder: TaskReminder, logicalDay: String, timeZone: TimeZone) -> String? {
+  guard let when = reminder.dayAndTime(logicalDay: logicalDay, timeZone: timeZone) else { return nil }
+  return String(
+    localized: "task_detail.do_on.day_time", defaultValue: "\(when.day), \(when.time)",
     table: "Localizable", bundle: LorvexL10n.bundle)
 }
 

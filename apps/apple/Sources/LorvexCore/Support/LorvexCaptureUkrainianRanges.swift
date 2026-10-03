@@ -17,7 +17,7 @@ extension LorvexCaptureVocabulary {
   }
 
   static func ukrainianDateRange(_ match: Match) -> DayRangeReading? {
-    cyrillicDateRange(match, side: ukrainianRangeDate)
+    slavicDateRange(match, side: ukrainianRangeDate)
   }
 
   /// A side of a date range: a date ("5 травня") or a day alone ("5"), which

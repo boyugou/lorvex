@@ -18,14 +18,14 @@
       "टीम स्टैंडअप बैठक",
       "शुक्रवार से पहले टीम ऑफ़साइट का एजेंडा तैयार करें",
     ]
-    let times: [(start: String?, range: String?)] = [
+    let times: [(time: String?, range: String?)] = [
       ("9:30 AM", "9:30 – 9:45 AM"), ("पू 9:30", "पू 9:30–9:45"), (nil, nil),
     ]
     for height in [CGFloat(12), 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60] {
       for title in titles {
-        for time in times {
-          let event = LorvexCalendarBlockText(title: title, start: time.start, range: time.range)
-          let task = LorvexCalendarBlockText(title: title, start: time.start, range: time.range) {
+        for sample in times {
+          let event = LorvexCalendarBlockText(title: title, time: sample.time, range: sample.range)
+          let task = LorvexCalendarBlockText(title: title, time: sample.time, range: sample.range) {
             Image(systemName: "circle").font(LorvexDesign.Typography.tertiaryText).frame(width: 16)
           }
           let proposal = CGSize(width: width, height: height)
@@ -33,10 +33,10 @@
           let taskHeight = NSHostingController(rootView: task).sizeThatFits(in: proposal).height
           #expect(
             eventHeight <= height,
-            "\(title) / \(time.start ?? "no time") in \(width)×\(height) asks for \(eventHeight)")
+            "\(title) / \(sample.time ?? "no time") in \(width)×\(height) asks for \(eventHeight)")
           #expect(
             taskHeight <= height,
-            "\(title) / \(time.start ?? "no time") beside a circle in \(width)×\(height) asks for \(taskHeight)")
+            "\(title) / \(sample.time ?? "no time") beside a circle in \(width)×\(height) asks for \(taskHeight)")
         }
       }
     }

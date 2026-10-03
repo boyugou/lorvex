@@ -22,7 +22,7 @@ extension CalendarWeekGridView {
 
     return LorvexCalendarBlockText(
       title: block.task.title,
-      start: lorvexClockTimeLabel(minutes: block.startMin),
+      time: lorvexClockTimeLabel(minutes: block.startMin),
       range: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
       isDone: block.isDone,
       verticalPadding: CalendarEventBlockMetrics.verticalPadding

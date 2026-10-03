@@ -21,13 +21,11 @@ extension MobileStore {
       let event = await performCanonicalMutation({
         try await core.createCalendarEvent(
           title: calendarDraft.trimmedTitle,
-          startDate: Self.ymdFormatter.string(from: calendarDraft.date),
-          endDate: nil,
-          startTime: calendarDraft.allDay
-            ? nil : Self.hmFormatter.string(from: calendarDraft.startTime),
-          endTime: calendarDraft.allDay
-            ? nil : Self.hmFormatter.string(from: calendarDraft.endTime),
-          allDay: calendarDraft.allDay,
+          startDate: calendarDraft.timing.startDate,
+          endDate: calendarDraft.timing.endDate,
+          startTime: calendarDraft.timing.startTime,
+          endTime: calendarDraft.timing.endTime,
+          allDay: calendarDraft.timing.allDay,
           location: calendarDraft.trimmedLocation.trimmedNilIfEmpty,
           notes: calendarDraft.trimmedNotes.trimmedNilIfEmpty
         )
@@ -64,34 +62,14 @@ extension MobileStore {
   }
 
   /// Seed a fresh default draft before presenting the create-event sheet from a
-  /// generic "New Event" affordance: a timed one-hour block starting now, to
-  /// match the macOS toolbar default and the day-grid tap. `calendarDraft` is
-  /// reused by the edit flow (``prepareCalendarDraft(for:)``) and by day-grid
-  /// taps, so a create sheet opened from the toolbar would otherwise inherit
-  /// the last edited or tapped-slot draft. Day-grid taps seed their own time
-  /// slot and bypass this.
+  /// generic "New Event" affordance: an untitled one-hour event from the next
+  /// full hour, matching the macOS toolbar default. `calendarDraft` is reused by
+  /// the edit flow (``prepareCalendarDraft(for:)``) and by day-grid taps, so a
+  /// create sheet opened from the toolbar would otherwise inherit the last
+  /// edited or tapped-slot draft. Day-grid taps seed their own time slot and
+  /// bypass this.
   public func beginCreateCalendarDraft() {
-    calendarDraft = MobileCalendarDraft.timedDefault(start: now())
-  }
-
-  /// The stored end date shifted to preserve the event's day-span when the
-  /// single-day edit form moves the start day. `MobileCalendarDraft` has one
-  /// `date` and no end-day field, so the whole event moves to the new start day
-  /// and the end must move by the same offset. A single-day event (nil end) stays
-  /// nil. Passing the core's `nil` (preserve) instead would strand the original
-  /// end — which then fails "end before start" moving the day forward, or
-  /// silently rewrites the event as multi-day moving it back, syncing that
-  /// corruption to peers.
-  func shiftedCalendarEndDate(for event: CalendarTimelineEvent, newStartDate: Date) -> String? {
-    guard let originalEnd = event.endDate else { return nil }
-    let newStartYmd = Self.ymdFormatter.string(from: newStartDate)
-    guard
-      let start = Self.ymdFormatter.date(from: event.startDate),
-      let end = Self.ymdFormatter.date(from: originalEnd)
-    else { return originalEnd }
-    // Rounding absorbs any ±1h DST offset in the raw seconds difference.
-    let spanDays = Int((end.timeIntervalSince(start) / 86_400).rounded())
-    return LorvexDateFormatters.ymdUTCAddingDays(newStartYmd, days: spanDays) ?? originalEnd
+    calendarDraft = MobileCalendarDraft(timing: .nextHourBlock(after: now()))
   }
 
   @discardableResult
@@ -105,12 +83,11 @@ extension MobileStore {
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
         title: calendarDraft.trimmedTitle,
-        startDate: Self.ymdFormatter.string(from: calendarDraft.date),
-        endDate: shiftedCalendarEndDate(for: event, newStartDate: calendarDraft.date),
-        startTime: calendarDraft.allDay
-          ? nil : Self.hmFormatter.string(from: calendarDraft.startTime),
-        endTime: calendarDraft.allDay ? nil : Self.hmFormatter.string(from: calendarDraft.endTime),
-        allDay: calendarDraft.allDay,
+        startDate: calendarDraft.timing.startDate,
+        endDate: calendarDraft.timing.endDate(updating: event.endDate),
+        startTime: calendarDraft.timing.startTime,
+        endTime: calendarDraft.timing.endTime,
+        allDay: calendarDraft.timing.allDay,
         // The edit form is a full-object editor: pass the trimmed values directly
         // (not `trimmedNilIfEmpty`) so clearing the field actually clears it. With
         // `trimmedNilIfEmpty`, an emptied field became nil → `.unset` → no change, so
@@ -141,31 +118,29 @@ extension MobileStore {
     newStart: Date,
     newEnd: Date
   ) async -> Bool {
-    // Same multi-day guard as the macOS path. The iPhone duration calculation
-    // is also brittle when the event crosses midnight (start 23:00 / end
-    // 01:00 yields a negative `(end - start)` in same-day minutes), so this
-    // check is doubly load-bearing here.
-    let isMultiDay = event.endDate != nil && event.endDate != event.startDate
+    // Same multi-day guard as the macOS path: a multi-day event shows one
+    // piece per day, which a drag cannot move as a whole. An event that ends
+    // at midnight is a one-day event and does move.
     guard event.editable, !event.allDay, !event.supportsScopedMutation,
-      !isMultiDay, !isMutatingCalendarEvent
+      !event.isMultiDay, !isMutatingCalendarEvent
     else { return false }
     isMutatingCalendarEvent = true
     defer { isMutatingCalendarEvent = false }
+    let timing = CalendarEventTiming(start: newStart, end: newEnd, allDay: false)
     do {
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
         title: event.title,
-        startDate: Self.ymdFormatter.string(from: newStart),
-        // Move the end date to the dropped day too. Passing `nil` (preserve)
-        // strands the stored end on the ORIGINAL day when a drag crosses day
-        // columns (iPad multi-day layout), which for an event with an explicit
-        // same-day end throws "end before start" moving forward or silently
-        // creates a multi-day span moving back. `newEnd` already carries the
-        // preserved duration, so its day is correct — including a legitimate
-        // cross-midnight span.
-        endDate: Self.ymdFormatter.string(from: newEnd),
-        startTime: Self.hmFormatter.string(from: newStart),
-        endTime: Self.hmFormatter.string(from: newEnd),
+        startDate: timing.startDate,
+        // The end date moves with the drop: the dropped day, or the next one
+        // for a drop that runs past midnight. An event that had an end date
+        // and now fits in one day sends its start date, since nil keeps the
+        // stored end on the original day, which throws "end before start" when
+        // a drag across day columns (iPad) moves forward and stretches the
+        // event when it moves back.
+        endDate: timing.endDate(updating: event.endDate),
+        startTime: timing.startTime,
+        endTime: timing.endTime,
         allDay: event.allDay,
         location: event.location,
         notes: nil

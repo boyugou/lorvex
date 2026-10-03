@@ -68,7 +68,5 @@ extension AppStore {
 
   nonisolated static var ymdFormatter: DateFormatter { LorvexDateFormatters.ymd }
 
-  nonisolated static var hmFormatter: DateFormatter { LorvexDateFormatters.hourMinute }
-
   nonisolated static var isoDateTimeFormatter: ISO8601DateFormatter { LorvexDateFormatters.iso8601 }
 }

@@ -5,7 +5,8 @@ import SwiftUI
 /// events (a bar in the calendar's color, the title, the time) and then its
 /// scheduled tasks (a small dot, the title, its time), each task opening when
 /// tapped. Each item shows only its start time, which is what a look across a
-/// week needs, so the titles keep the row's width. A day shows its first
+/// week needs, so the titles keep the row's width; an event that began on an
+/// earlier day shows when it ends ("Until 1:30 AM"). A day shows its first
 /// ``itemsPerDay`` items and counts the rest. An empty week reads one quiet
 /// line saying so.
 ///
@@ -103,7 +104,7 @@ public struct LorvexReviewWeekAhead: View {
     let content = VStack(alignment: .leading, spacing: 0) {
       ForEach(Array(shown)) { item in
         switch item {
-        case .event(let event): eventRow(event)
+        case .event(let event): eventRow(event, dayKey: day.key)
         case .task(let task): taskRow(task, dayKey: day.key)
         }
       }
@@ -142,7 +143,7 @@ public struct LorvexReviewWeekAhead: View {
       .padding(.vertical, LorvexDesign.Spacing.xxs)
   }
 
-  private func eventRow(_ event: CalendarTimelineEvent) -> some View {
+  private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       marker {
         Capsule()
@@ -153,7 +154,7 @@ public struct LorvexReviewWeekAhead: View {
         .font(LorvexDesign.Typography.primaryText)
         .lineLimitUnlessAccessibilitySize(2)
       Spacer(minLength: LorvexDesign.Spacing.s)
-      timeText(eventTime(event))
+      timeText(eventTime(event, dayKey: dayKey))
     }
     .padding(.vertical, LorvexDesign.Spacing.xxs)
     .accessibilityElement(children: .combine)
@@ -222,10 +223,7 @@ public struct LorvexReviewWeekAhead: View {
       .fixedSize()
   }
 
-  private func eventTime(_ event: CalendarTimelineEvent) -> String {
-    guard !event.allDay, let start = CalendarGridModel.parseMinutes(event.startTime) else {
-      return words.allDay
-    }
-    return words.timeRange(start, nil)
+  private func eventTime(_ event: CalendarTimelineEvent, dayKey: String) -> String {
+    event.listTimeLabel(on: dayKey) { start, _ in words.timeRange(start, nil) } ?? words.allDay
   }
 }

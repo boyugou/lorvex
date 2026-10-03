@@ -29,49 +29,8 @@ struct MobileStoreCreateCalendarEventSheet: View {
           .submitLabel(.next)
           .onSubmit { focusedField = .location }
           .accessibilityIdentifier("mobileCreateCalendarEvent.title")
-          DatePicker(
-            String(
-              localized: "calendar.field.date", defaultValue: "Date", table: "Localizable",
-              bundle: MobileL10n.bundle), selection: $store.calendarDraft.date,
-            displayedComponents: .date
-          )
-          .accessibilityIdentifier("mobileCreateCalendarEvent.date")
-          Toggle(
-            String(
-              localized: "calendar.field.all_day", defaultValue: "All Day", table: "Localizable",
-              bundle: MobileL10n.bundle), isOn: $store.calendarDraft.allDay
-          )
-          .accessibilityIdentifier("mobileCreateCalendarEvent.allDay")
-          if !store.calendarDraft.allDay {
-            DatePicker(
-              String(
-                localized: "calendar.field.start", defaultValue: "Start", table: "Localizable",
-                bundle: MobileL10n.bundle),
-              selection: $store.calendarDraft.startTime,
-              displayedComponents: .hourAndMinute
-            )
-            .accessibilityIdentifier("mobileCreateCalendarEvent.startTime")
-            DatePicker(
-              String(
-                localized: "calendar.field.end", defaultValue: "End", table: "Localizable",
-                bundle: MobileL10n.bundle),
-              selection: $store.calendarDraft.endTime,
-              displayedComponents: .hourAndMinute
-            )
-            .accessibilityIdentifier("mobileCreateCalendarEvent.endTime")
-            if !store.calendarDraft.timesValid {
-              Label(
-                String(
-                  localized: "calendar.event.end_after_start.help",
-                  defaultValue: "The end time must be after the start time", table: "Localizable",
-                  bundle: MobileL10n.bundle),
-                systemImage: "exclamationmark.triangle"
-              )
-              .font(.footnote)
-              .foregroundStyle(LorvexDesign.Palette.warning)
-              .accessibilityIdentifier("mobileCreateCalendarEvent.timesInvalid")
-            }
-          }
+          MobileCalendarEventTimingRows(
+            timing: $store.calendarDraft.timing, idPrefix: "mobileCreateCalendarEvent")
           TextField(
             String(
               localized: "calendar.field.location", defaultValue: "Location", table: "Localizable",

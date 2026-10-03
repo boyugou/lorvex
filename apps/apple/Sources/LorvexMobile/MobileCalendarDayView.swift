@@ -161,6 +161,16 @@ public struct MobileCalendarDayView: View {
       store.calendarPendingDayKey = nil
       if let day = Self.keyFormatter.date(from: key) { showWithoutPaging(day) }
     }
+    #if DEBUG
+      .onAppear {
+        // Dev/QA only: the `lorvex://sheet/event` screenshot hook raises the
+        // New Event sheet on a staged draft so it can be captured without a tap.
+        if let draft = MobileCalendarDebugState.takeInitialCreateDraft() {
+          store.calendarDraft = draft
+          isShowingCreateEvent = true
+        }
+      }
+    #endif
     .sheet(isPresented: $isShowingCreateEvent) {
       MobileStoreCreateCalendarEventSheet(store: store, isPresented: $isShowingCreateEvent)
     }

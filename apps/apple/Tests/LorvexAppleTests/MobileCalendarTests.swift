@@ -13,10 +13,10 @@ func mobileStoreCreatesCalendarEventThroughCore() async throws {
   await store.refresh()
   store.calendarDraft = MobileCalendarDraft(
     title: "  Product Review  ",
-    date: date,
-    startTime: Date(timeIntervalSince1970: 1_779_530_400),
-    endTime: Date(timeIntervalSince1970: 1_779_534_000),
-    allDay: false,
+    timing: CalendarEventTiming(
+      start: Date(timeIntervalSince1970: 1_779_530_400),
+      end: Date(timeIntervalSince1970: 1_779_534_000),
+      allDay: false),
     location: "  Studio  ",
     notes: "  Bring notes  "
   )
@@ -32,6 +32,63 @@ func mobileStoreCreatesCalendarEventThroughCore() async throws {
   #expect(store.calendarDraft == MobileCalendarDraft(now: { date }))
   #expect(store.errorMessage == nil)
   #expect(store.isMutatingCalendarEvent == false)
+}
+
+// A new event can run past midnight: an end time before the start time lands
+// on the next day, which the create stores as the end date.
+@MainActor
+@Test
+func mobileStoreCreatesAnOvernightCalendarEvent() async throws {
+  let calendar = CalendarEventTiming.deviceCalendar
+  let now = try #require(calendar.date(
+    from: DateComponents(year: 2026, month: 5, day: 23, hour: 21, minute: 10)))
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" }, now: { now })
+  await store.refresh()
+
+  store.beginCreateCalendarDraft()
+  store.calendarDraft.title = "Night flight"
+  store.calendarDraft.timing.setEndTime(try #require(calendar.date(
+    from: DateComponents(year: 2026, month: 5, day: 23, hour: 1, minute: 0))))
+  #expect(store.calendarDraft.canSubmit)
+
+  let created = await store.createDraftCalendarEvent()
+
+  #expect(created)
+  #expect(store.errorMessage == nil)
+  let timeline = try await core.loadCalendarTimeline(from: "2026-05-23", to: "2026-05-25")
+  let event = try #require(timeline.events.first { $0.title == "Night flight" })
+  #expect(event.startDate == "2026-05-23")
+  #expect(event.startTime == "22:00")
+  #expect(event.endDate == "2026-05-24")
+  #expect(event.endTime == "01:00")
+}
+
+// Ending a multi-day event on its first day stores a one-day event. The update
+// contract reads a nil end date as "keep the stored one", so the edit sends the
+// start date rather than leaving the old end behind.
+@MainActor
+@Test
+func mobileStoreShortensAMultiDayEventToOneDay() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-23" })
+  let event = try await core.createCalendarEvent(
+    title: "Offsite", startDate: "2026-06-01", endDate: "2026-06-03",
+    startTime: nil, endTime: nil, allDay: true, location: nil, notes: nil)
+  await store.refresh()
+  store.prepareCalendarDraft(for: event)
+  store.calendarDraft.timing.setEndDay(
+    try #require(LorvexDateFormatters.ymd.date(from: "2026-06-01")))
+
+  let updated = await store.updateCalendarEvent(event)
+
+  #expect(updated)
+  #expect(store.errorMessage == nil)
+  let timeline = try await core.loadCalendarTimeline(from: "2026-06-01", to: "2026-06-05")
+  let shortened = try #require(timeline.events.first { $0.eventID == event.eventID })
+  #expect(shortened.startDate == "2026-06-01")
+  #expect(
+    CalendarEventTiming.daySpan(startDate: shortened.startDate, endDate: shortened.endDate) == 0)
 }
 
 @MainActor
@@ -310,9 +367,8 @@ private func localDate(on logicalDay: String, hour: Int, minute: Int) throws -> 
 @MainActor
 @Test
 func mobileStoreRescheduleSkipsMultiDayEvent() async throws {
-  // Mobile path is doubly load-bearing here — the duration calculation
-  // (end-minute - start-minute in same-day minutes) goes negative for an
-  // event spanning midnight, which would produce newEnd < newStart.
+  // An overnight event shows one piece per day, which a drag cannot move as a
+  // whole, so the store skips it as the macOS store does.
   let core = try await makeSeededInMemoryCore()
   let store = MobileStore(core: core, todayString: { "2026-05-22" })
   await store.refresh()
@@ -331,6 +387,32 @@ func mobileStoreRescheduleSkipsMultiDayEvent() async throws {
   let ok = await store.rescheduleCalendarEvent(multiDay, newStart: newStart, newEnd: newEnd)
   #expect(ok == false)
   #expect(store.errorMessage == nil)
+}
+
+// An event that ends at midnight is a one-day block, so a drag moves it, and
+// moving it up within its day ends it on that day rather than keeping the
+// stored next-day end, which would stretch it to 23:00 the following day.
+@MainActor
+@Test
+func mobileStoreReschedulesAnEventThatEndsAtMidnight() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { "2026-05-22" })
+  let event = try await core.createCalendarEvent(
+    title: "Late session", startDate: "2026-05-22", endDate: "2026-05-23",
+    startTime: "21:00", endTime: "00:00", allDay: false, location: nil, notes: nil)
+  await store.refresh()
+  let newStart = try localDate(on: "2026-05-22", hour: 20, minute: 0)
+  let newEnd = try localDate(on: "2026-05-22", hour: 23, minute: 0)
+
+  let ok = await store.rescheduleCalendarEvent(event, newStart: newStart, newEnd: newEnd)
+
+  #expect(ok)
+  #expect(store.errorMessage == nil)
+  let moved = try #require(await core.getCalendarEvent(id: event.id))
+  #expect(moved.startDate == "2026-05-22")
+  #expect(moved.endDate == nil)
+  #expect(moved.startTime == "20:00")
+  #expect(moved.endTime == "23:00")
 }
 
 @MainActor

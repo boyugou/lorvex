@@ -11,12 +11,10 @@ extension CalendarWorkspaceView {
     store.stashCalendarDraftForCreate()
     let start = calendar.date(
       bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: date) ?? date
-    let safeDuration = max(15, durationMinutes)
     store.draftCalendarTitle = ""
-    store.draftCalendarDate = date
-    store.draftCalendarStartTime = start
-    store.draftCalendarEndTime = start.addingTimeInterval(TimeInterval(safeDuration * 60))
-    store.draftCalendarAllDay = false
+    // A drag to the bottom of the grid ends the event at midnight, the start
+    // of the next day.
+    store.draftCalendarTiming = .timed(startingAt: start, minutes: max(15, durationMinutes))
     store.draftCalendarLocation = ""
     store.draftCalendarNotes = ""
     store.draftCalendarColor = nil

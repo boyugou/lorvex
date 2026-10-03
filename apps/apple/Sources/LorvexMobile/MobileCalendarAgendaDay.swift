@@ -27,9 +27,10 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
     }
   }
 
-  /// The day's rows in reading order: all-day events, then the timed events
-  /// and the tasks with a time that day by start, then the tasks without one.
-  /// An event that began on an earlier day starts this day at midnight. Rows
+  /// The day's rows in reading order: all-day events and the days that longer
+  /// events fill, then the timed events and the tasks with a time that day by
+  /// start, then the tasks without one. An event that began on an earlier day
+  /// starts this day at midnight (``CalendarTimelineEvent/clockSpan(on:)``). Rows
   /// that start together keep their arrival order, events ahead of tasks, the
   /// way Today's schedule reads; `events` and `tasks` arrive in their own
   /// display order, which each kind keeps.
@@ -38,11 +39,10 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
     var timed: [(start: Int, entry: Entry)] = []
     var untimed: [Entry] = []
     for event in events {
-      if event.allDay || event.startTime == nil {
-        allDay.append(.event(event))
+      if let span = event.clockSpan(on: key) {
+        timed.append((span.start, .event(event)))
       } else {
-        let start = event.startDate == key ? lorvexMinutesSinceMidnight(event.startTime) ?? 0 : 0
-        timed.append((start, .event(event)))
+        allDay.append(.event(event))
       }
     }
     for task in tasks {
@@ -62,8 +62,10 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
   }
 
   /// Whether the clock has passed `event` on this day: every event of a day
-  /// before today, and on today a timed event that has ended by `nowMinutes`.
-  /// An event that runs on past today, or has no end time, has not passed.
+  /// before today, and on today a timed event whose time on the day
+  /// (``CalendarTimelineEvent/clockSpan(on:)``) has ended by `nowMinutes`. An
+  /// event that runs on past today, fills the day, or has no end time has not
+  /// passed.
   ///
   /// - Parameters:
   ///   - todayKey: the logical today as `yyyy-MM-dd`.
@@ -71,9 +73,9 @@ struct MobileCalendarAgendaDay: Identifiable, Equatable {
   ///     when it is unknown.
   func hasPassed(_ event: CalendarTimelineEvent, todayKey: String, nowMinutes: Int?) -> Bool {
     if key < todayKey { return true }
-    guard key == todayKey, let nowMinutes, !event.allDay else { return false }
-    if let endDate = event.endDate, endDate > key { return false }
-    guard let end = lorvexMinutesSinceMidnight(event.endTime) else { return false }
+    guard key == todayKey, let nowMinutes, let end = event.clockSpan(on: key)?.end else {
+      return false
+    }
     return end <= nowMinutes
   }
 

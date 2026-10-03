@@ -34,47 +34,8 @@ struct MobileStoreEditCalendarEventSheet: View {
           .submitLabel(.next)
           .onSubmit { focusedField = .location }
           .accessibilityIdentifier("mobileEditCalendarEvent.title")
-          DatePicker(
-            String(
-              localized: "calendar.field.date", defaultValue: "Date", table: "Localizable",
-              bundle: MobileL10n.bundle), selection: $store.calendarDraft.date,
-            displayedComponents: .date
-          )
-          .accessibilityIdentifier("mobileEditCalendarEvent.date")
-          Toggle(
-            String(
-              localized: "calendar.field.all_day", defaultValue: "All Day", table: "Localizable",
-              bundle: MobileL10n.bundle), isOn: $store.calendarDraft.allDay
-          )
-          .accessibilityIdentifier("mobileEditCalendarEvent.allDay")
-          if !store.calendarDraft.allDay {
-            DatePicker(
-              String(
-                localized: "calendar.field.start", defaultValue: "Start", table: "Localizable",
-                bundle: MobileL10n.bundle), selection: $store.calendarDraft.startTime,
-              displayedComponents: .hourAndMinute
-            )
-            .accessibilityIdentifier("mobileEditCalendarEvent.startTime")
-            DatePicker(
-              String(
-                localized: "calendar.field.end", defaultValue: "End", table: "Localizable",
-                bundle: MobileL10n.bundle), selection: $store.calendarDraft.endTime,
-              displayedComponents: .hourAndMinute
-            )
-            .accessibilityIdentifier("mobileEditCalendarEvent.endTime")
-            if !store.calendarDraft.timesValid {
-              Label(
-                String(
-                  localized: "calendar.event.end_after_start.help",
-                  defaultValue: "The end time must be after the start time", table: "Localizable",
-                  bundle: MobileL10n.bundle),
-                systemImage: "exclamationmark.triangle"
-              )
-              .font(.footnote)
-              .foregroundStyle(LorvexDesign.Palette.warning)
-              .accessibilityIdentifier("mobileEditCalendarEvent.timesInvalid")
-            }
-          }
+          MobileCalendarEventTimingRows(
+            timing: $store.calendarDraft.timing, idPrefix: "mobileEditCalendarEvent")
           TextField(
             String(
               localized: "calendar.field.location", defaultValue: "Location", table: "Localizable",
@@ -246,19 +207,23 @@ struct MobileStoreEditCalendarEventSheet: View {
       run(scope: .thisAndFollowing, isDelete: isDelete)
     }
     .accessibilityIdentifier("mobileEditCalendarEvent.\(intent).scope.thisAndFollowing")
-    Button(
-      isDelete
-        ? String(
-          localized: "calendar.recurring_scope.delete_all_events",
-          defaultValue: "Delete All Events", table: "Localizable", bundle: MobileL10n.bundle)
-        : String(
-          localized: "calendar.recurring_scope.all_events", defaultValue: "All Events",
-          table: "Localizable", bundle: MobileL10n.bundle),
-      role: isDelete ? .destructive : nil
-    ) {
-      run(scope: .allEvents, isDelete: isDelete)
+    // A new length in days applies from this occurrence on: an all-events
+    // edit would write it onto the series' own first day.
+    if isDelete || store.calendarDraft.timing.keepsDaySpan(of: event) {
+      Button(
+        isDelete
+          ? String(
+            localized: "calendar.recurring_scope.delete_all_events",
+            defaultValue: "Delete All Events", table: "Localizable", bundle: MobileL10n.bundle)
+          : String(
+            localized: "calendar.recurring_scope.all_events", defaultValue: "All Events",
+            table: "Localizable", bundle: MobileL10n.bundle),
+        role: isDelete ? .destructive : nil
+      ) {
+        run(scope: .allEvents, isDelete: isDelete)
+      }
+      .accessibilityIdentifier("mobileEditCalendarEvent.\(intent).scope.allEvents")
     }
-    .accessibilityIdentifier("mobileEditCalendarEvent.\(intent).scope.allEvents")
     Button(
       String(
         localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",

@@ -27,6 +27,9 @@ struct LorvexDateChip: View {
   var includesTime = false
   /// Earliest selectable instant (reminders refuse the past).
   var minDate: Date? = nil
+  /// What the date is ("Start date"), when the chip sits beside another chip
+  /// and VoiceOver needs the name before the date; nil reads the date alone.
+  var accessibilityName: String? = nil
   /// Nil hides the Clear action (the field is required once set).
   var onClear: (() -> Void)? = nil
   let onSet: (Date) -> Void
@@ -47,7 +50,8 @@ struct LorvexDateChip: View {
         chipButton
       }
     }
-    .accessibilityLabel(chipTitle)
+    .accessibilityLabel(accessibilityName ?? chipTitle)
+    .accessibilityValue(accessibilityName == nil ? "" : chipTitle)
     .accessibilityAddTraits(.isButton)
     .accessibilityIdentifier("lorvex.dateChip")
     .popover(isPresented: $isPresented, arrowEdge: .bottom) {

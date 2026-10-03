@@ -15,21 +15,17 @@ extension AppStore {
           message: "Recurring calendar occurrence is missing its identity.")
       }
       let notes = draftCalendarNotes.trimmingCharacters(in: .whitespacesAndNewlines)
-      // Send the day only when the user actually changed it: the draft is seeded
-      // with THIS occurrence's date, so sending it unchanged would re-anchor the
-      // whole series (for `.allEvents`/segment scopes) on a metadata-only edit.
-      // When it did change, the end shifts with it so it never strands.
-      let newStartYmd = Self.ymdFormatter.string(from: draftCalendarDate)
-      let dateChanged = newStartYmd != event.startDate
+      // The draft is seeded with THIS occurrence's days, so its dates go out
+      // only when the day or the length in days changed: sending them on a
+      // time-only or detail-only edit would re-anchor the whole series.
+      let dates = draftCalendarTiming.scopedDates(for: event)
       let updates = ScopedCalendarEventUpdates(
         title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
-        startDate: dateChanged ? newStartYmd : nil,
-        endDate: dateChanged
-          ? shiftedCalendarEndDate(for: event, newStartDate: draftCalendarDate) : nil,
-        startTime: draftCalendarAllDay
-          ? nil : Self.hmFormatter.string(from: draftCalendarStartTime),
-        endTime: draftCalendarAllDay ? nil : Self.hmFormatter.string(from: draftCalendarEndTime),
-        allDay: draftCalendarAllDay,
+        startDate: dates.startDate,
+        endDate: dates.endDate,
+        startTime: draftCalendarTiming.startTime,
+        endTime: draftCalendarTiming.endTime,
+        allDay: draftCalendarTiming.allDay,
         location: draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines),
         notes: notes,
         recurrence: draftCalendarRecurrencePatch,

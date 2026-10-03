@@ -148,9 +148,9 @@ func appStoreThisEventEditMirrorsOccurrenceRemoval() async throws {
     seriesId: nil, recurrenceInstanceDate: nil, occurrenceState: nil,
     recurrenceGeneration: nil, seriesCutoverId: nil)
   store.draftCalendarTitle = "Moved planning"
-  store.draftCalendarDate = try scopedMirrorDate(2026, 6, 24)
-  store.draftCalendarStartTime = try scopedMirrorDate(2026, 6, 24, 11)
-  store.draftCalendarEndTime = try scopedMirrorDate(2026, 6, 24, 11, 30)
+  store.draftCalendarTiming = CalendarEventTiming(
+    start: try scopedMirrorDate(2026, 6, 24, 11), end: try scopedMirrorDate(2026, 6, 24, 11, 30),
+    allDay: false)
 
   await store.saveScopedCalendarEvent(event, scope: .thisEvent)
 

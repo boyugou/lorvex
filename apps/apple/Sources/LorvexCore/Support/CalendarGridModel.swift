@@ -7,10 +7,12 @@ import Foundation
 ///
 /// Layout rules:
 /// - All-day events (`startTime == nil`) go to the all-day strip on each day
-///   their `[startDate, endDate]` span intersects within the range.
-/// - Timed events are clipped per day: an event spanning Mon 22:00 → Tue 01:00
-///   yields a Mon 22:00–24:00 block and a Tue 00:00–01:00 block. A timed event
-///   missing `endTime` is given a default 60-minute duration.
+///   their `[startDate, endDate]` span intersects within the range, and so do
+///   timed events that last 24 hours or more, on each day they take time on.
+/// - Shorter timed events are clipped per day: an event spanning Mon 22:00 →
+///   Tue 01:00 yields a Mon 22:00–24:00 block and a Tue 00:00–01:00 block, each
+///   marked with the part of the event it draws (``CalendarEventDayPart``). A
+///   timed event missing `endTime` is given a default 60-minute duration.
 /// - Overlap lanes are packed from the real times, so touching neighbours
 ///   stack. A block shorter than `minBlockMinutes` is drawn to that height
 ///   (`drawnEndMin`) only when nothing starts within that window below it.
@@ -88,6 +90,19 @@ public enum CalendarGridModel {
       }
       let endMinRaw = parseMinutes(event.endTime) ?? (startMinRaw + defaultEventDurationMinutes)
 
+      // An event of a day or more reads as days, as on Apple's calendars: it
+      // joins the all-day strip on each day it takes time on rather than
+      // filling those days' time axes and narrowing everything beside it.
+      let wallMinutes =
+        CalendarEventTiming.daySpan(startDate: startKey, endDate: event.endDate) * 1440
+        + endMinRaw - startMinRaw
+      if wallMinutes >= 1440 {
+        for key in dayKeys where event.occurs(on: key) {
+          allDayByKey[key, default: []].append(event)
+        }
+        continue
+      }
+
       if startKey == endKey {
         guard keySet.contains(startKey) else { continue }
         let blockID = "\(event.id)#\(startKey)"
@@ -98,9 +113,10 @@ public enum CalendarGridModel {
         continue
       }
 
-      // Multi-day timed event: clip per day across the days it takes time on,
-      // which leaves out the end day of an event ending at exactly midnight
-      // rather than drawing a minimum-height sliver at 00:00 there.
+      // A timed event shorter than a day that runs into the next day: clip it
+      // to each day it takes time on, which leaves out the end day of an event
+      // ending at exactly midnight rather than drawing a minimum-height sliver
+      // at 00:00 there.
       for key in dayKeys where event.occurs(on: key) {
         let startMin = key == startKey ? startMinRaw : 0
         let endMin = key == endKey ? max(endMinRaw, 1) : 1440
@@ -148,7 +164,8 @@ public enum CalendarGridModel {
               drawnEndMin: drawnEnds[p.id] ?? p.endMin,
               lane: p.lane,
               laneCount: p.laneCount,
-              id: p.id
+              id: p.id,
+              part: event.dayPart(on: key)
             ))
         } else if let task = taskByBlockID[p.id] {
           taskBlocks.append(

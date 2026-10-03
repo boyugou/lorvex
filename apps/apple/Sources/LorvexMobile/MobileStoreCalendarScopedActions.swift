@@ -60,28 +60,24 @@ extension MobileStore {
   }
 
   /// The draft's editable fields as a scoped-edit patch. `startDate`/`endDate`
-  /// are sent only when the user actually changed the day: the draft is seeded
-  /// with THIS occurrence's date, and for `.allEvents`/segment scopes sending it
-  /// unchanged would re-anchor the whole series to this occurrence's day on a
-  /// metadata-only edit (dropping earlier occurrences). When the day did change,
-  /// the end shifts with it (``shiftedCalendarEndDate(for:newStartDate:)``) so it
-  /// never strands. Empty location / notes strings clear those fields, matching
-  /// the whole-object `updateCalendarEvent` contract.
+  /// are sent only when the day or the length in days changed: the draft is
+  /// seeded with THIS occurrence's days, and for `.allEvents`/segment scopes
+  /// sending them unchanged would re-anchor the whole series to this
+  /// occurrence's day on a time-only or detail-only edit (dropping earlier
+  /// occurrences); see ``CalendarEventTiming/scopedDates(for:)``. Empty location
+  /// / notes strings clear those fields, matching the whole-object
+  /// `updateCalendarEvent` contract.
   private func scopedUpdatesFromDraft(for event: CalendarTimelineEvent)
     -> ScopedCalendarEventUpdates
   {
-    let newStartYmd = Self.ymdFormatter.string(from: calendarDraft.date)
-    let dateChanged = newStartYmd != event.startDate
+    let dates = calendarDraft.timing.scopedDates(for: event)
     return ScopedCalendarEventUpdates(
       title: calendarDraft.trimmedTitle,
-      startDate: dateChanged ? newStartYmd : nil,
-      endDate: dateChanged
-        ? shiftedCalendarEndDate(for: event, newStartDate: calendarDraft.date) : nil,
-      startTime: calendarDraft.allDay
-        ? nil : Self.hmFormatter.string(from: calendarDraft.startTime),
-      endTime: calendarDraft.allDay
-        ? nil : Self.hmFormatter.string(from: calendarDraft.endTime),
-      allDay: calendarDraft.allDay,
+      startDate: dates.startDate,
+      endDate: dates.endDate,
+      startTime: calendarDraft.timing.startTime,
+      endTime: calendarDraft.timing.endTime,
+      allDay: calendarDraft.timing.allDay,
       location: calendarDraft.trimmedLocation,
       notes: calendarDraft.trimmedNotes
     )

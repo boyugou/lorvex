@@ -116,12 +116,7 @@ struct MobileCalendarAllDayStrip: View {
                 }
               }
               .accessibilityAddTraits(.isButton)
-              .accessibilityLabel(
-                String(
-                  format: String(
-                    localized: "calendar.all_day_event.a11y", defaultValue: "All day event %@",
-                    table: "Localizable", bundle: MobileL10n.bundle),
-                  event.title))
+              .accessibilityLabel(allDayEventAccessibilityLabel(event))
           }
           ForEach(day.scheduledTasks) { task in
             allDayTaskPill(task)
@@ -223,6 +218,17 @@ struct MobileCalendarAllDayStrip: View {
         Rectangle().fill(color).frame(width: 2).clipShape(
           RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
       }
+  }
+
+  /// An all-day event reads as one ("All day event Offsite"); a timed event of
+  /// a day or more, which the strip also holds, reads with its span.
+  private func allDayEventAccessibilityLabel(_ event: CalendarTimelineEvent) -> String {
+    guard event.allDay else { return calendarEventAccessibilityLabel(event) }
+    return String(
+      format: String(
+        localized: "calendar.all_day_event.a11y", defaultValue: "All day event %@",
+        table: "Localizable", bundle: MobileL10n.bundle),
+      event.title)
   }
 }
 

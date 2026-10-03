@@ -43,20 +43,15 @@ extension CalendarWeekGridView {
       active == nil
       ? baseHeight
       : max(baseHeight + preview.resizeBottom - preview.resizeTop, hourHeight / 4)
-    let isMultiDay =
-      block.event.endDate != nil && block.event.endDate != block.event.startDate
     let isEditable =
       block.event.editable && !block.event.allDay && !block.event.supportsScopedMutation
-      && !isMultiDay
+      && !block.event.isMultiDay
     let showsResizeGrips = isSelected || hoveredEventID == block.event.id
 
     return LorvexCalendarBlockText(
       title: block.event.title,
-      start: block.event.startTime.map(lorvexClockTimeLabel),
-      // A multi-day event's piece of one day is not its time, so it keeps its
-      // start alone.
-      range: isMultiDay
-        ? nil : lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
+      time: block.timeLabel,
+      range: block.rangeLabel,
       verticalPadding: CalendarEventBlockMetrics.verticalPadding
     )
     .padding(.horizontal, CalendarEventBlockMetrics.horizontalPadding)
@@ -154,7 +149,7 @@ extension CalendarWeekGridView {
     }
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
-    .accessibilityLabel(blockAccessibilityLabel(block))
+    .accessibilityLabel(calendarEventAccessibilityLabel(block.event))
     .contextMenu { eventBlockContextMenu(block.event) }
   }
 
@@ -254,17 +249,6 @@ extension CalendarWeekGridView {
         TapGesture().onEnded { selectEvent(block.event) }
       )
       .accessibilityHidden(true)
-  }
-
-  private func blockAccessibilityLabel(_ block: CalendarGridTimedBlock) -> String {
-    calendarEventAccessibilityLabel(
-      title: block.event.title,
-      allDay: false,
-      startTime: block.event.startTime.map(lorvexClockTimeLabel),
-      endTime: block.event.endTime.map(lorvexClockTimeLabel),
-      location: block.event.location,
-      source: block.event.source
-    )
   }
 }
 

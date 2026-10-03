@@ -88,17 +88,16 @@ public func memoryEntryAccessibilityLabel(_ entry: MemoryEntry) -> String {
 
 // MARK: - Calendar event accessibility helpers
 
-/// Returns a VoiceOver-ready label for a calendar event row combining title, time, and location.
+/// A VoiceOver label for a timed calendar event: its title, its time, and its
+/// location when it has one. An event that runs into a later day reads as one
+/// span from its start day and time to its end day and time
+/// (``CalendarTimelineEvent/timedSpanLabel``), one within a day as its clock
+/// times.
 ///
-/// Example: "Team Standup, All day, Work · External calendar"
-public func calendarEventAccessibilityLabel(
-  title: String, allDay: Bool, startTime: String?, endTime: String?, location: String?,
-  source: String, allDayText: String = "All day"
-) -> String {
-  let timeText =
-    allDay
-    ? allDayText
-    : [startTime, endTime].compactMap { $0 }.joined(separator: "-")
-  let place = location.flatMap { $0.isEmpty ? nil : $0 } ?? source
-  return "\(title), \(timeText), \(place)"
+/// Example: "Standup, 9:00 – 9:30 AM, Zoom"
+public func calendarEventAccessibilityLabel(_ event: CalendarTimelineEvent) -> String {
+  let time =
+    event.timedSpanLabel ?? event.startTime.map { lorvexClockRangeLabel(start: $0, end: event.endTime) }
+  let location = event.location.flatMap { $0.isEmpty ? nil : $0 }
+  return [event.title, time, location].compactMap { $0 }.joined(separator: ", ")
 }

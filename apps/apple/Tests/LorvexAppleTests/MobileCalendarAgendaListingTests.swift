@@ -114,4 +114,25 @@ struct MobileCalendarAgendaListingTests {
       date: Date(timeIntervalSince1970: 0), key: "2026-09-30", events: [], tasks: [])
     #expect(!tomorrow.hasPassed(Self.event(on: "2026-09-30", "09:00", "09:30"), todayKey: today, nowMinutes: now))
   }
+
+  @Test("An overnight event passes by its end on its last day; a day a longer event fills reads as all day")
+  func overnightEventsReadByTheirPartOfTheDay() {
+    let today = "2026-09-29"
+    let redEye = Self.event("Red-eye", on: today, "22:30", "01:30", from: "2026-09-28")
+    let trip = Self.event("Trip", on: today, "19:00", "09:00", from: "2026-09-28", until: "2026-09-30")
+    let lateShow = Self.event("Late show", on: today, "21:00", "00:00", until: "2026-09-30")
+    let day = MobileCalendarAgendaDay(
+      date: Date(timeIntervalSince1970: 0), key: today,
+      events: [redEye, trip, Self.event("Standup", on: today, "09:00", "09:30"), lateShow], tasks: [])
+
+    let titles = day.entries.map { entry -> String in
+      if case .event(let event) = entry { return event.title }
+      return ""
+    }
+    #expect(titles == ["Trip", "Red-eye", "Standup", "Late show"])
+    #expect(!day.hasPassed(redEye, todayKey: today, nowMinutes: 60), "still on at 1:00 AM")
+    #expect(day.hasPassed(redEye, todayKey: today, nowMinutes: 2 * 60), "over by 2:00 AM")
+    #expect(!day.hasPassed(trip, todayKey: today, nowMinutes: 23 * 60), "the trip fills the day")
+    #expect(!day.hasPassed(lateShow, todayKey: today, nowMinutes: 23 * 60 + 59), "it ends at midnight")
+  }
 }

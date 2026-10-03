@@ -135,14 +135,20 @@ extension CalendarWeekGridView {
       .onTapGesture { selectEvent(event) }
       .calendarPointingHandCursor()
       .accessibilityAddTraits(.isButton)
-      .accessibilityLabel(
-        String(
-          format: String(
-            localized: "calendar.all_day_event.a11y",
-            defaultValue: "All day event %@",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle),
-          event.title))
+      .accessibilityLabel(allDayEventAccessibilityLabel(event))
+  }
+
+  /// An all-day event reads as one ("All day event Offsite"); a timed event of
+  /// a day or more, which the strip also holds, reads with its span.
+  private func allDayEventAccessibilityLabel(_ event: CalendarTimelineEvent) -> String {
+    guard event.allDay else { return calendarEventAccessibilityLabel(event) }
+    return String(
+      format: String(
+        localized: "calendar.all_day_event.a11y",
+        defaultValue: "All day event %@",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      event.title)
   }
 
   /// A task in the all-day strip speaks the timed blocks' task vocabulary,

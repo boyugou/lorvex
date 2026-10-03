@@ -50,6 +50,7 @@ extension AppStore {
       nowMinutes: nowMinutes,
       page: calmToday(nowMinutes: nowMinutes),
       schedule: LorvexTodayTimeline.build(
+        day: logicalTodayDateString,
         events: todayScheduleEvents,
         tasks: tasks,
         times: tasks.times(on: logicalTodayDateString),

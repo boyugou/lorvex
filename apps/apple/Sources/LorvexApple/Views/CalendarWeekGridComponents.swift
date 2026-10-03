@@ -51,21 +51,6 @@ enum CalendarWeekGridMetrics {
   static let eventCornerRadius: CGFloat = 4
 }
 
-func calendarWeekOverflowTimeText(for event: CalendarTimelineEvent) -> String {
-  event.startTime.map { lorvexClockRangeLabel(start: $0, end: event.endTime) } ?? ""
-}
-
-func calendarWeekOverflowBlockAccessibilityLabel(_ block: CalendarGridTimedBlock) -> String {
-  calendarEventAccessibilityLabel(
-    title: block.event.title,
-    allDay: false,
-    startTime: block.event.startTime.map(lorvexClockTimeLabel),
-    endTime: block.event.endTime.map(lorvexClockTimeLabel),
-    location: block.event.location,
-    source: block.event.source
-  )
-}
-
 /// Content-only re-scroll key for the week grid: the visible week plus every
 /// week and anchor hour only — block geometry is intentionally excluded so
 /// that moving or resizing an event doesn't yank the scroll position back to

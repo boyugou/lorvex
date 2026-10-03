@@ -22,7 +22,9 @@ extension CalendarWeekGridView {
       days: columns.map { day in
         LorvexWeekLoad.DayInput(
           key: day.dayKey,
-          events: day.timedBlocks.map(\.event),
+          // A timed event of a day or more sits in the all-day strip but still
+          // takes the day's hours, as Today counts it.
+          events: day.timedBlocks.map(\.event) + day.allDayEvents.filter { !$0.allDay },
           tasks: day.scheduledTasks + day.taskBlocks.map(\.task))
       },
       todayKey: store.logicalTodayDateString,

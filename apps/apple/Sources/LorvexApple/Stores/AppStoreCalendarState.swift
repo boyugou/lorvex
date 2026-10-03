@@ -82,24 +82,11 @@ extension AppStore {
     set { calendarStorage.draftCalendarTitle = newValue }
   }
 
-  var draftCalendarDate: Date {
-    get { calendarStorage.draftCalendarDate }
-    set { calendarStorage.draftCalendarDate = newValue }
-  }
-
-  var draftCalendarStartTime: Date {
-    get { calendarStorage.draftCalendarStartTime }
-    set { calendarStorage.draftCalendarStartTime = newValue }
-  }
-
-  var draftCalendarEndTime: Date {
-    get { calendarStorage.draftCalendarEndTime }
-    set { calendarStorage.draftCalendarEndTime = newValue }
-  }
-
-  var draftCalendarAllDay: Bool {
-    get { calendarStorage.draftCalendarAllDay }
-    set { calendarStorage.draftCalendarAllDay = newValue }
+  /// When the draft event starts and ends. The create and edit form's Start
+  /// and End rows edit it, so an event can run overnight or across days.
+  var draftCalendarTiming: CalendarEventTiming {
+    get { calendarStorage.draftCalendarTiming }
+    set { calendarStorage.draftCalendarTiming = newValue }
   }
 
   var draftCalendarLocation: String {
@@ -152,21 +139,6 @@ extension AppStore {
     return true
   }
 
-  /// True when the draft's end time is after its start time. All-day events have
-  /// no intra-day span, so they are always valid. Compares time-of-day only: the
-  /// start/end pickers carry independent date components, and the create/edit
-  /// sheet has no end-date field, so end ≤ start would persist a zero- or
-  /// negative-duration event that the week grid can only render as a stub.
-  var draftCalendarTimesValid: Bool {
-    guard !draftCalendarAllDay else { return true }
-    let calendar = Calendar.current
-    let start = calendar.dateComponents([.hour, .minute], from: draftCalendarStartTime)
-    let end = calendar.dateComponents([.hour, .minute], from: draftCalendarEndTime)
-    let startMinutes = (start.hour ?? 0) * 60 + (start.minute ?? 0)
-    let endMinutes = (end.hour ?? 0) * 60 + (end.minute ?? 0)
-    return endMinutes > startMinutes
-  }
-
   /// Capture the live event draft before the create sheet resets and rewrites the
   /// shared draft fields. The inline editor binds the same fields, so without this
   /// an in-progress edit would be left holding the create form's values and Save
@@ -175,10 +147,7 @@ extension AppStore {
   func stashCalendarDraftForCreate() {
     calendarStorage.stashedDraft = AppStoreCalendarStorage.CalendarDraftSnapshot(
       title: draftCalendarTitle,
-      date: draftCalendarDate,
-      startTime: draftCalendarStartTime,
-      endTime: draftCalendarEndTime,
-      allDay: draftCalendarAllDay,
+      timing: draftCalendarTiming,
       location: draftCalendarLocation,
       notes: draftCalendarNotes,
       color: draftCalendarColor,
@@ -195,10 +164,7 @@ extension AppStore {
     guard let stashed = calendarStorage.stashedDraft else { return }
     calendarStorage.stashedDraft = nil
     draftCalendarTitle = stashed.title
-    draftCalendarDate = stashed.date
-    draftCalendarStartTime = stashed.startTime
-    draftCalendarEndTime = stashed.endTime
-    draftCalendarAllDay = stashed.allDay
+    draftCalendarTiming = stashed.timing
     draftCalendarLocation = stashed.location
     draftCalendarNotes = stashed.notes
     draftCalendarColor = stashed.color

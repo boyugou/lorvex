@@ -41,7 +41,9 @@ struct MobileCalendarAgendaPanel: View {
           ForEach(day.entries) { entry in
             switch entry {
             case .event(let event):
-              eventRow(event, isPast: day.hasPassed(event, todayKey: todayKey, nowMinutes: nowMinutes))
+              eventRow(
+                event, dayKey: day.key,
+                isPast: day.hasPassed(event, todayKey: todayKey, nowMinutes: nowMinutes))
             case .task(let task):
               MobileCalendarAgendaTaskRow(
                 task: task, dayKey: day.key, isMutating: taskIsMutating(task.id),
@@ -69,11 +71,11 @@ struct MobileCalendarAgendaPanel: View {
       delete: deleteScopedEvent)
   }
 
-  private func eventRow(_ event: CalendarTimelineEvent, isPast: Bool) -> some View {
+  private func eventRow(_ event: CalendarTimelineEvent, dayKey: String, isPast: Bool) -> some View {
     Button {
       editEvent(event)
     } label: {
-      MobileCalendarAgendaRow(event: event, isPast: isPast)
+      MobileCalendarAgendaRow(event: event, dayKey: dayKey, isPast: isPast)
     }
     .buttonStyle(.plain)
     .lorvexRowHoverEffect()

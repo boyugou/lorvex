@@ -22,17 +22,26 @@ public struct LorvexTodayTimelineItem: Identifiable, Equatable, Sendable {
 
   public var id: String
   public var kind: Kind
-  /// Minutes since midnight, or nil for an all-day event, which has no clock
-  /// position.
+  /// Minutes since midnight on this day, or nil for a row without a clock
+  /// position: an all-day event, or a day that a longer event fills. An event
+  /// that runs past midnight holds only its share of the day, so its first
+  /// day ends at 1440 and its last day starts at 0.
   public var startMinutes: Int?
   public var endMinutes: Int?
-  /// The leading time label; empty for an all-day event.
+  /// The leading time label: a start ("9:00 AM"), or "Until 1:30 AM" on the
+  /// last day of an event that started on an earlier day; empty for a row
+  /// without a clock position.
   public var timeLabel: String
   /// True once the clock has passed this row's end and the row asks nothing
   /// more of the day: a finished meeting, or a finished (or cancelled) task. A
   /// task whose time passed unfinished still needs its work and keeps reading
-  /// as actionable, and all-day events are never past.
+  /// as actionable, and rows without a clock position are never past.
   public var isPast: Bool
+  /// For an event row, the part of the event this day holds
+  /// (``CalendarTimelineEvent/dayPart(on:)``): the whole event, or the first,
+  /// a middle, or the last day of one that takes time on several days. Nil
+  /// for a task row and the now row.
+  public var eventPart: CalendarEventDayPart?
 
   public init(
     id: String,
@@ -40,7 +49,8 @@ public struct LorvexTodayTimelineItem: Identifiable, Equatable, Sendable {
     startMinutes: Int? = nil,
     endMinutes: Int? = nil,
     timeLabel: String = "",
-    isPast: Bool = false
+    isPast: Bool = false,
+    eventPart: CalendarEventDayPart? = nil
   ) {
     self.id = id
     self.kind = kind
@@ -48,18 +58,29 @@ public struct LorvexTodayTimelineItem: Identifiable, Equatable, Sendable {
     self.endMinutes = endMinutes
     self.timeLabel = timeLabel
     self.isPast = isPast
+    self.eventPart = eventPart
   }
 }
 
 /// Builds a day on the clock. Pure and synchronous, so every surface that
 /// draws the schedule applies the same ordering.
 public enum LorvexTodayTimeline {
-  /// Merge `events` and the timed `tasks` into one reading order:
+  /// Merge `events`, the events that occur on `day` (`yyyy-MM-dd`), and the
+  /// timed `tasks` into one reading order:
   ///
-  /// 1. all-day events, which frame the whole day rather than sitting at a
-  ///    time;
+  /// 1. all-day events, and the days in between of timed events that fill
+  ///    them, which frame the whole day rather than sitting at a time;
   /// 2. timed events and timed tasks, ascending by start, with a
   ///    ``LorvexTodayTimelineItem/Kind/now`` row at the clock's position.
+  ///
+  /// A timed event that runs past midnight takes only its share of `day`
+  /// (``CalendarTimelineEvent/clockSpan(on:)``): on its first day it runs from
+  /// its start to midnight and shows its start, so it never reads as past that
+  /// day; on its last day it runs from midnight to its end, opens the timed
+  /// rows, and shows "Until" its end (``CalendarTimelineEvent/timeLabel(for:)``).
+  /// One that ends at exactly midnight runs to the end of its day. An event
+  /// row is past once the clock clears its end on `day`, or its start when it
+  /// has no end time, so a zero-length event still ages out.
   ///
   /// A task appears only when `times` holds its time on this day; tasks without
   /// one are left out, since the schedule is drawn beside a list that already
@@ -69,6 +90,7 @@ public enum LorvexTodayTimeline {
   /// `nowMinutes` is minutes since midnight in the product's clock, or nil to
   /// omit the now row (a day that is not today has no "now").
   public static func build(
+    day: String,
     events: [CalendarTimelineEvent],
     tasks: [LorvexTask],
     times: [LorvexTask.ID: Range<Int>],
@@ -78,21 +100,21 @@ public enum LorvexTodayTimeline {
     var allDay: [LorvexTodayTimelineItem] = []
 
     for event in events {
-      let start = lorvexMinutesSinceMidnight(event.startTime)
-      let end = lorvexMinutesSinceMidnight(event.endTime)
-      let item = LorvexTodayTimelineItem(
-        id: "event:\(event.id)",
-        kind: .event(event),
-        startMinutes: event.allDay ? nil : start,
-        endMinutes: event.allDay ? nil : end,
-        timeLabel: event.allDay ? "" : (event.startTime.map(lorvexClockTimeLabel) ?? ""),
-        isPast: Self.isPast(start: start, end: end, nowMinutes: nowMinutes, allDay: event.allDay)
-      )
-      if event.allDay || start == nil {
-        allDay.append(item)
-      } else {
-        timed.append(item)
+      let part = event.dayPart(on: day)
+      guard let span = event.clockSpan(on: day) else {
+        allDay.append(
+          LorvexTodayTimelineItem(id: "event:\(event.id)", kind: .event(event), eventPart: part))
+        continue
       }
+      timed.append(
+        LorvexTodayTimelineItem(
+          id: "event:\(event.id)",
+          kind: .event(event),
+          startMinutes: span.start,
+          endMinutes: span.end,
+          timeLabel: event.timeLabel(for: part) ?? "",
+          isPast: nowMinutes.map { (span.end ?? span.start) <= $0 } == true,
+          eventPart: part))
     }
 
     for task in tasks {
@@ -139,16 +161,5 @@ public enum LorvexTodayTimeline {
     }
     let end = items[start...].firstIndex { !$0.isPast } ?? items.endIndex
     return start..<end
-  }
-
-  /// An event is past once the clock has cleared its end, falling back to its
-  /// start when it has no end, so a zero-length event still ages out. All-day
-  /// events never read as past: they belong to the whole day, including the
-  /// part still ahead.
-  private static func isPast(
-    start: Int?, end: Int?, nowMinutes: Int?, allDay: Bool
-  ) -> Bool {
-    guard !allDay, let nowMinutes, let boundary = end ?? start else { return false }
-    return boundary <= nowMinutes
   }
 }

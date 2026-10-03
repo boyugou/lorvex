@@ -74,8 +74,7 @@ struct TodayScheduleSection: View {
     case .event(let event):
       TodayEventRow(
         event: event,
-        timeLabel: row.startMinutes == nil
-          ? TodayCalmCopy.allDay : TodayCalmCopy.timeRange(start: row.startMinutes ?? 0, end: row.endMinutes),
+        timeLabel: Self.eventTimeLabel(row),
         isPast: row.isPast,
         isSelected: store.selectedCalendarEventID == event.id,
         open: { store.toggleTodayEventSelection(event) })
@@ -89,6 +88,17 @@ struct TodayScheduleSection: View {
   private func timeLabel(_ row: LorvexTodayTimelineItem, isRunning: Bool) -> String? {
     guard let start = row.startMinutes else { return nil }
     if isRunning, let end = row.endMinutes { return TodayCalmCopy.untilLabel(end: end) }
+    return TodayCalmCopy.timeRange(start: start, end: row.endMinutes)
+  }
+
+  /// An event's time: "All day" for a row without a clock position, the
+  /// range of an event within the day ("2:00 – 3:00 PM"), and for one day of
+  /// an event that runs past midnight that day's time, its start on the first
+  /// day and "Until 1:30 AM" on the last, since a range would cover only the
+  /// day's share of the event.
+  private static func eventTimeLabel(_ row: LorvexTodayTimelineItem) -> String {
+    guard let start = row.startMinutes else { return TodayCalmCopy.allDay }
+    guard row.eventPart == .whole else { return row.timeLabel }
     return TodayCalmCopy.timeRange(start: start, end: row.endMinutes)
   }
 
@@ -125,7 +135,10 @@ struct TodayScheduleSection: View {
 /// A calendar event in Today's schedule, laid out like a task row: a bar in
 /// the calendar's color where a task has its circle, the title, and the time
 /// with the location under it. A past event quiets its title and fades its
-/// bar.
+/// bar. VoiceOver reads a timed event's title, its whole time (the span
+/// across days for one that runs past midnight, which the row shows one day
+/// of), and its location (``calendarEventAccessibilityLabel(_:)``); an
+/// all-day event reads what the row shows.
 ///
 /// Clicking the row opens the event's detail in the inspector, as clicking a
 /// task row opens the task's; clicking it again, or Return or Space while it
@@ -189,6 +202,7 @@ struct TodayEventRow: View {
     }
     .reduceMotionAnimation(.snappy(duration: 0.16), value: isSelected)
     .accessibilityElement(children: .combine)
+    .accessibilityLabel(Text(verbatim: calendarEventAccessibilityLabel(event)), isEnabled: !event.allDay)
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
     .accessibilityAction(.default, open)

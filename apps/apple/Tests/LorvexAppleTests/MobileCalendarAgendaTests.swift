@@ -17,6 +17,21 @@ func calendarDayCountAdaptsToActualAvailableWidth() {
   #expect(!MobileCalendarDayView.usesAgendaPanel(for: 1_100, isRegularWidth: false))
 }
 
+/// A phone on its side (a compact height) shows three days in Day mode, in a
+/// compact width (iPhone Pro) and a regular one (iPhone Pro Max) alike, and
+/// never stands the agenda beside a grid only a few hours tall.
+@Test
+func calendarDayModeShowsThreeDaysOnAPhoneOnItsSide() {
+  #expect(
+    MobileCalendarDayView.adaptiveDayCount(for: 750, isRegularWidth: false, isCompactHeight: true)
+      == 3)
+  #expect(
+    MobileCalendarDayView.adaptiveDayCount(for: 830, isRegularWidth: true, isCompactHeight: true)
+      == 3)
+  #expect(
+    !MobileCalendarDayView.usesAgendaPanel(for: 900, isRegularWidth: true, isCompactHeight: true))
+}
+
 /// The week header names a week in the current year without the year, gives
 /// the years of a week that reaches past it, and breaks only after its dash.
 @Test
@@ -39,13 +54,40 @@ func calendarWeekRangeLabelOmitsTheCurrentYear() {
   #expect(label(day(2026, 12, 27), "zh_Hans").contains("2027年"))
 }
 
+/// The calendar opens in Day mode until the user switches, then in the mode
+/// last switched to. Showing a mode directly (as the DEBUG route does) is not
+/// remembered, and a stored value no mode names reads as Day.
 @MainActor
 @Test
-func mobileCalendarDefaultsToTheDayGrid() async throws {
-  let store = MobileStore(core: try await makeSeededInMemoryCore())
+func mobileCalendarOpensInTheModeLastSwitchedTo() async throws {
+  let suiteName = "MobileCalendarModeTests.\(UUID().uuidString)"
+  let defaults = try #require(UserDefaults(suiteName: suiteName))
+  defer { defaults.removePersistentDomain(forName: suiteName) }
+  let core = try await makeSeededInMemoryCore()
 
+  let store = MobileStore(core: core, defaults: defaults)
   #expect(store.calendarPresentationMode == .grid)
-  #expect(MobileCalendarPresentationMode.allCases == [.grid, .week])
+  #expect(MobileCalendarPresentationMode.allCases == [.grid, .week, .month])
+
+  #expect(store.calendarPendingDay(in: .current) == nil)
+  store.switchCalendarPresentationMode(to: .month, onDayKey: "2026-10-05")
+  #expect(store.calendarPresentationMode == .month)
+  #expect(store.calendarPendingDayKey == "2026-10-05")
+  var tokyo = Calendar(identifier: .gregorian)
+  tokyo.timeZone = try #require(TimeZone(identifier: "Asia/Tokyo"))
+  #expect(
+    store.calendarPendingDay(in: tokyo)
+      == tokyo.date(from: DateComponents(year: 2026, month: 10, day: 5)))
+  #expect(MobileStore(core: core, defaults: defaults).calendarPresentationMode == .month)
+
+  store.switchCalendarPresentationMode(to: .month, onDayKey: "2026-10-09")
+  #expect(store.calendarPendingDayKey == "2026-10-05")
+
+  store.calendarPresentationMode = .week
+  #expect(MobileStore(core: core, defaults: defaults).calendarPresentationMode == .month)
+
+  defaults.set("year", forKey: MobileCalendarPresentationMode.defaultsKey)
+  #expect(MobileStore(core: core, defaults: defaults).calendarPresentationMode == .grid)
 }
 
 @MainActor
@@ -190,7 +232,7 @@ func agendaIncludesMultiDayEventOnEveryCoveredDay() {
     id: "trip", title: "Conference", startDate: "2026-05-25", endDate: "2026-05-27")
 
   for key in ["2026-05-25", "2026-05-26", "2026-05-27"] {
-    let events = MobileCalendarDayView.agendaEvents(from: [trip], on: key)
+    let events = MobileCalendarAgendaDay.agendaEvents(from: [trip], on: key)
     #expect(events.map(\.id) == ["trip"], "expected the multi-day event on \(key)")
   }
 }
@@ -203,10 +245,10 @@ func agendaExcludesDaysOutsideTheSpan() {
   let single = makeAgendaEvent(
     id: "single", title: "Dentist", startDate: "2026-05-26", startTime: "09:00")
 
-  #expect(MobileCalendarDayView.agendaEvents(from: [trip, single], on: "2026-05-24").isEmpty)
-  #expect(MobileCalendarDayView.agendaEvents(from: [trip, single], on: "2026-05-28").isEmpty)
-  #expect(MobileCalendarDayView.agendaEvents(from: [single], on: "2026-05-25").isEmpty)
-  #expect(MobileCalendarDayView.agendaEvents(from: [single], on: "2026-05-27").isEmpty)
+  #expect(MobileCalendarAgendaDay.agendaEvents(from: [trip, single], on: "2026-05-24").isEmpty)
+  #expect(MobileCalendarAgendaDay.agendaEvents(from: [trip, single], on: "2026-05-28").isEmpty)
+  #expect(MobileCalendarAgendaDay.agendaEvents(from: [single], on: "2026-05-25").isEmpty)
+  #expect(MobileCalendarAgendaDay.agendaEvents(from: [single], on: "2026-05-27").isEmpty)
 }
 
 /// A nil `endDate` is treated as a single-day event on its `startDate`.
@@ -215,8 +257,8 @@ func agendaTreatsMissingEndDateAsSingleDay() {
   let event = makeAgendaEvent(
     id: "e", title: "Standup", startDate: "2026-05-26", startTime: "10:00")
 
-  #expect(MobileCalendarDayView.agendaEvents(from: [event], on: "2026-05-26").map(\.id) == ["e"])
-  #expect(MobileCalendarDayView.agendaEvents(from: [event], on: "2026-05-27").isEmpty)
+  #expect(MobileCalendarAgendaDay.agendaEvents(from: [event], on: "2026-05-26").map(\.id) == ["e"])
+  #expect(MobileCalendarAgendaDay.agendaEvents(from: [event], on: "2026-05-27").isEmpty)
 }
 
 /// Ordering is start-time ascending, with untimed (all-day / spanning) events
@@ -230,7 +272,7 @@ func agendaOrdersTimedAfterUntimedThenByStartTimeAndTitle() {
   let eight = makeAgendaEvent(
     id: "eight", title: "Breakfast", startDate: "2026-05-26", startTime: "08:00")
 
-  let ordered = MobileCalendarDayView.agendaEvents(
+  let ordered = MobileCalendarAgendaDay.agendaEvents(
     from: [nine, allDay, nineToo, eight], on: "2026-05-26")
   // Untimed first, then 08:00, then the two 09:00 events tie-broken by title
   // ("Alpha" < "Sync").

@@ -61,8 +61,10 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   /// from search.
   func loadSearchIndexTasks() async throws -> [LorvexTask]
 
-  /// Returns tasks with a scheduled due date inside the inclusive calendar
-  /// window, ordered by the canonical task order.
+  /// Returns the tasks of every status whose calendar day (the planned day,
+  /// else the due day) falls inside the inclusive window, ordered by the
+  /// canonical task order: the first `limit` of them, and never more than
+  /// ``CalendarGridModel/windowTaskLimit``.
   func getScheduledTasks(from: String, to: String, limit: Int) async throws -> [LorvexTask]
 
   /// Returns open tasks currently hidden by a future `available_from`

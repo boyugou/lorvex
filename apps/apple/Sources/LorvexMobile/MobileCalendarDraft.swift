@@ -34,6 +34,18 @@ public struct MobileCalendarDraft: Equatable, Sendable {
     MobileCalendarDraft(timing: .timed(startingAt: start))
   }
 
+  /// A timed one-hour draft on `day` for a New Event that names no time:
+  /// from the next full hour when `day` is the day of `now`, as the Mac's
+  /// toolbar offers (``CalendarEventTiming/nextHourBlock(after:calendar:)``),
+  /// else from 9:00.
+  public static func timedDefault(on day: Date, now: Date, calendar: Calendar) -> MobileCalendarDraft {
+    guard !calendar.isDate(day, inSameDayAs: now) else {
+      return MobileCalendarDraft(timing: .nextHourBlock(after: now, calendar: calendar))
+    }
+    let start = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) ?? day
+    return timedDefault(start: start)
+  }
+
   public init(event: CalendarTimelineEvent, fallbackDate: Date) {
     self.init(
       title: event.title,

@@ -447,10 +447,14 @@
       // the Habits workspace on the Tasks stack, where the Tasks home's row
       // leads; anything else routes through the normal deep-link handler.
       // `lorvex://tab/<name>/search/<q>` also pre-fills that workspace's search
-      // field so its no-results row renders, and `lorvex://tab/calendar/week`
-      // opens the calendar on its seven-day grid instead of the day grid it
-      // defaults to; `lorvex://tab/review/week` opens Review on its week digest
-      // instead of the day page.
+      // field so its no-results row renders. The calendar opens in the mode
+      // the route names, never the one the device remembers, so captures
+      // repeat: `lorvex://tab/calendar/week` and `lorvex://tab/calendar/month`
+      // open its seven-day grid or its month grid and any other calendar
+      // route its day grid; after `day`, `week`, or `month` a `yyyy-MM-dd` day
+      // may follow (`lorvex://tab/calendar/month/2026-10-20`).
+      // `lorvex://tab/review/week` opens Review on its week digest instead of
+      // the day page.
       if url.host == "tab", let name = url.pathComponents.dropFirst().first {
         let components = Array(url.pathComponents.dropFirst())
         if components.count >= 3, components[1] == "search",
@@ -463,8 +467,16 @@
           return
         }
         if let tab = MobileTab(rawValue: name) {
-          if tab == .calendar, components.count >= 2, components[1] == "week" {
-            calendarPresentationMode = .week
+          if tab == .calendar {
+            let mode = components.count >= 2 ? components[1] : ""
+            switch mode {
+            case "week": calendarPresentationMode = .week
+            case "month": calendarPresentationMode = .month
+            default: calendarPresentationMode = .grid
+            }
+            if ["day", "week", "month"].contains(mode), components.count >= 3 {
+              calendarPendingDayKey = components[2]
+            }
           }
           if tab == .review, components.count >= 2, components[1] == "week" {
             MobileReviewDebugState.initialMode = .weekly

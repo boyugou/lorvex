@@ -10,12 +10,6 @@ extension MobileCalendarDayView {
     focusWeek(on: day)
   }
 
-  /// Shows `day` at once, without paging, as a freshly switched mode opens.
-  func showWithoutPaging(_ day: Date) {
-    dayOffset = offset(showing: day)
-    focusWeek(on: day)
-  }
-
   private func focusWeek(on day: Date) {
     if weekMode { weekDayIndex = Self.dayIndexInWeek(of: day, calendar: calendar) }
   }
@@ -94,13 +88,5 @@ extension MobileCalendarDayView {
     var timing = CalendarEventTiming(event: event, fallbackDay: targetDay, calendar: calendar)
     timing.moveStart(to: newStart)
     await store.rescheduleCalendarEvent(event, newStart: timing.start, newEnd: timing.end)
-  }
-
-  func defaultCreateMinutes(on date: Date) -> Int {
-    if calendar.isDate(date, inSameDayAs: store.now()) {
-      let now = store.now()
-      return calendar.component(.hour, from: now) * 60
-    }
-    return 9 * 60
   }
 }

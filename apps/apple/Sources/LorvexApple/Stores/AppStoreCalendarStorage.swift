@@ -17,6 +17,8 @@ struct AppStoreCalendarStorage {
   /// panel. Nil hides the panel. Cleared when the event leaves the visible
   /// timeline (navigation, deletion, or a filter change).
   var selectedCalendarEventID: String?
+  /// The day the Calendar workspace shows next (``AppStore/calendarPendingDayKey``).
+  var calendarPendingDayKey: String?
   var draftCalendarTitle = ""
   /// When the draft event starts and ends, including whether it is all-day.
   var draftCalendarTiming = CalendarEventTiming.timed(startingAt: Date())
@@ -71,6 +73,7 @@ struct AppStoreCalendarStorage {
     calendarTimeline = nil
     calendarScheduledTasks = nil
     selectedCalendarEventID = nil
+    calendarPendingDayKey = nil
     draftCalendarTitle = ""
     draftCalendarTiming = CalendarEventTiming.timed(startingAt: Date())
     draftCalendarLocation = ""

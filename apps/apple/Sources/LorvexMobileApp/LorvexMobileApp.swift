@@ -80,6 +80,9 @@ struct LorvexMobileApp: App {
           await store.consumePendingNotificationActionError()
         #endif
         #if DEBUG
+          #if os(iOS)
+            DebugLaunchOrientation.applyIfRequested()
+          #endif
           await store.debugSeedSampleDataIfNeeded()
           // Load the snapshot before resolving a launch deep-link so hooks that
           // read seeded data (e.g. `lorvex://firsttask`) see it rather than an

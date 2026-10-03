@@ -24,6 +24,13 @@ import Foundation
 ///   cancelled task is not drawn, and a task passed twice is drawn once.
 public enum CalendarGridModel {
   public static let defaultEventDurationMinutes = 60
+  /// The most scheduled tasks a calendar window loads
+  /// (``LorvexTaskServicing/getScheduledTasks(from:to:limit:)``). The read
+  /// counts finished tasks too and keeps the first rows in the canonical task
+  /// order, not by day, so a cap a busy window can reach would drop tasks
+  /// from scattered days; this one leaves room for a month view's three
+  /// months of planned and finished work.
+  public static let windowTaskLimit = 2_000
   /// The height, in minutes, a shorter block is drawn at when nothing starts
   /// within that window below it.
   public static let minBlockMinutes = 20

@@ -48,7 +48,9 @@ extension MobileStore {
         if let loaded = try? await core.loadCalendarTimeline(from: from, to: to) {
           calendarTimeline = loaded
         }
-        if let loaded = try? await core.getScheduledTasks(from: from, to: to, limit: 500) {
+        if let loaded = try? await core.getScheduledTasks(
+          from: from, to: to, limit: CalendarGridModel.windowTaskLimit)
+        {
           calendarScheduledTasks = loaded
         }
       case .reviews:

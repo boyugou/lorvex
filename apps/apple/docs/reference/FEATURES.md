@@ -12,7 +12,7 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 |---|---|---|
 | macOS — sidebar + all workspaces | [SHIPPED] | Today, Calendar, All Tasks, Review, Habits (⌘1–⌘5), then the user's lists as task scopes and an Archived section; Memory (⌘6, no detached-window scene) and Settings sit in a pinned footer. Lists have no sidebar row — they are managed inline, with the catalog reached via ⌘K |
 | macOS — multi-window | [SHIPPED] | Detached list/workspace windows + floating task stickies |
-| macOS — menu bar extra | [SHIPPED] | Today / Next 7 Days panel: date, quick-add, today's tasks with one-click complete, habit check-in rings, the seven-day agenda, Open Lorvex and Quit; the icon carries the due-today/overdue count |
+| macOS — menu bar extra | [SHIPPED] | Today / Next 7 Days panel: date, quick-add, today's schedule and tasks with one-click complete, habit check-in rings, the seven-day agenda, events that open in the main window, Open Lorvex and Quit; the icon carries the due-today/overdue count |
 | macOS — full command menus + keyboard shortcuts | [SHIPPED] | |
 | macOS — settings (General/Assistant/Calendar/CloudSync/Diagnostics/Data/Permissions) | [SHIPPED] | |
 | macOS — workspace loading states | [SHIPPED] | Primary async workspaces show a native loading overlay |
@@ -33,7 +33,7 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 | iPad — tab shell (regular width) | [SHIPPED] | The iPhone shell at full width: one tab bar with Today, Calendar, Tasks, and Review plus the round ＋ capture button, each tab with its own navigation stack. Habits and Memory open from the Tasks tab home and Settings from Today; Lists is merged into the Tasks home. There is no sidebar — wide layouts add a second pane inside a tab |
 | iPad — Today schedule pane | [SHIPPED] | At regular width the day's schedule stands in a 380pt pane beside the Today list; on iPhone it opens from the day strip |
 | iPad — Tasks split workspace | [SHIPPED] | Query-backed status/search browser with persistent list + detail panes on regular width |
-| iPad — Calendar agenda workspace | [SHIPPED] | Time grid of one, two, or three day columns by width, with the agenda pane beside it from 860pt wide and quick create/edit affordances |
+| iPad — Calendar agenda workspace | [SHIPPED] | Time grid of one, two, or three day columns by width, with the agenda pane beside it from 860pt wide and quick create/edit affordances; Month mode names each day's events and tasks in the grid, beside (from 860pt) or above the chosen day's agenda |
 | iPad — Habits split workspace | [SHIPPED] | Active habit catalog pinned beside progress metrics and completion/edit/delete controls on regular width |
 | iPad — Memory split workspace | [SHIPPED] | Save controls and full memory catalog pinned beside selected content, metadata, and delete controls on regular width |
 | iPad — hardware keyboard shortcuts | [SHIPPED] | ⌘R, ⌘N, ⌘1-⌘4 for the tabs in bar order, ⌘5 Habits, ⌘6 Memory, ⌘, Settings (the Mac's numbering) |

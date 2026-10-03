@@ -6,27 +6,33 @@ import Foundation
 /// The line is read with the vocabularies of the user's languages
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
-/// French, Portuguese, Spanish, and Italian for a user who reads them. Each
-/// vocabulary lists its words. The details are read one kind at a time:
+/// French, Portuguese, Spanish, Italian, Russian, and Ukrainian for a user who
+/// reads them. Each vocabulary lists its words. The details are read one kind
+/// at a time:
 ///
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
 ///    accents ("#offsite2026", "#manana" for "Mañana"); any other `#word` is
 ///    a tag. A word's combining marks (Devanagari and Thai vowel signs,
 ///    Arabic harakat) and joiners (Persian, Indic) are part of it.
-/// 2. Date ranges ("May 3-5", "del 3 al 5 de mayo", 5月3日到5日), before
+/// 2. Text that looks like a detail but is none ("до 18:00", a deadline that
+///    is no start time), which a vocabulary lists as text to keep
+///    (``LorvexCaptureVocabulary/keptInTitle``). It stays in the title whole:
+///    no rule reads a part of it, so English does not take its "18:00" and
+///    leave "до" behind.
+/// 3. Date ranges ("May 3-5", "del 3 al 5 de mayo", 5月3日到5日), before
 ///    clock times and lengths, so a range's day numbers are not read as
 ///    hours or amounts ("de 3 a 5 de maio" is not 15:00 to 17:00), and before
 ///    the day rules, so none of them reads one end of a range. The range's
 ///    first day is the planned day, its last the due day, and its whole
 ///    text, connecting words included, is one phrase.
-/// 3. Priority, length, and clock time, so the day rules judge a weekday
+/// 4. Priority, length, and clock time, so the day rules judge a weekday
 ///    against the title words alone.
-/// 4. Repeats, before days, so "every monday" and 每周一 are not read as one
+/// 5. Repeats, before days, so "every monday" and 每周一 are not read as one
 ///    planned Monday, and 每月5号 not as one 5th.
-/// 5. The due day, before the planned day, so "by friday" and "周五前" are not
+/// 6. The due day, before the planned day, so "by friday" and "周五前" are not
 ///    read as planned days.
-/// 6. The planned day.
+/// 7. The planned day.
 ///
 /// The first phrase of each kind counts; a later one stays in the title. A
 /// date range takes both the planned day and the due day, so any other day
@@ -79,8 +85,8 @@ public enum LorvexCaptureParser {
   ///   - today: the logical today as `yyyy-MM-dd`. Dates written out ("Oct 5",
   ///     10月5日) are recognized only when it is given.
   ///   - languages: the languages the user reads, as BCP 47 codes, which
-  ///     decide whether Japanese, Korean, French, Portuguese, Spanish, and
-  ///     Italian words are read.
+  ///     decide whether Japanese, Korean, French, Portuguese, Spanish,
+  ///     Italian, Russian, and Ukrainian words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,
     languages: [String] = Locale.preferredLanguages
@@ -181,6 +187,15 @@ public enum LorvexCaptureParser {
       }
       result.tags.append(name)
       return .tag
+    }
+    // Text to keep in the title claims its span, so no rule reads a part of it.
+    for vocabulary in vocabularies {
+      for rule in vocabulary.keptInTitle {
+        take(rule.pattern, readingAs: vocabulary.readingForm) { match, source in
+          if rule.read(context(match, source)) == true { claimed.append(match.range) }
+          return nil
+        }
+      }
     }
     // A date range takes both day slots, so it counts only while both are
     // free; one that names no days claims its text instead.

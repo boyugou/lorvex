@@ -79,11 +79,17 @@ public final class MobileStore {
   /// rather than a today-anchored one; otherwise the week the surface is
   /// about to show would open with its earlier days empty.
   var calendarRequestedWindow: MobileCalendarWindow?
-  /// How many days the mobile calendar's grid shows: the width-adaptive
-  /// 1/2/3-day grid (default) or the seven days of a week.
-  public var calendarPresentationMode: MobileCalendarPresentationMode = .grid
-  /// A `yyyy-MM-dd` day the day grid should open on the next time it appears,
-  /// set when a day's header in week mode is tapped.
+  /// How the calendar shows time: the width-adaptive 1/2/3-day grid, the
+  /// seven days of a week, or a month over the chosen day's agenda. A store
+  /// opens in the mode the user last switched to
+  /// (``switchCalendarPresentationMode(to:onDayKey:)`` remembers it in
+  /// `defaults`), Day before any switch. Setting the property directly shows
+  /// a mode without remembering it.
+  public var calendarPresentationMode: MobileCalendarPresentationMode
+  /// A `yyyy-MM-dd` day the next calendar mode to appear opens on: the day a
+  /// mode switch carries over (a week column's header, the day Day mode or
+  /// the month grid shows). The mode's view clears it once it has opened
+  /// there.
   var calendarPendingDayKey: String?
   public var calendarDraft: MobileCalendarDraft
   public internal(set) var isMutatingCalendarEvent = false
@@ -341,6 +347,7 @@ public final class MobileStore {
     self.todayString = todayString
     self.now = now
     self.defaults = defaults
+    self.calendarPresentationMode = MobileCalendarPresentationMode.remembered(in: defaults)
     self.cloudSyncMode = cloudSyncMode
     self.cloudSyncController = cloudSyncController
     self.eventKitCoordinator = eventKitCoordinator

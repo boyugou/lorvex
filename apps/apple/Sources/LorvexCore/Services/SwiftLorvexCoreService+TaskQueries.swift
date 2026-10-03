@@ -61,7 +61,7 @@ extension SwiftLorvexCoreService {
 
   public func getScheduledTasks(from: String, to: String, limit: Int) async throws -> [LorvexTask] {
     try read { db in
-      let clampedLimit = min(max(1, limit), 500)
+      let clampedLimit = min(max(1, limit), CalendarGridModel.windowTaskLimit)
       // The calendar lane's day is planned-first with a deadline fallback —
       // `planned_date ?? due_date`, mirroring the reference product's
       // calendar controller. Filtering due_date alone hid every app-planned

@@ -254,7 +254,8 @@ extension AppStore {
       }
     }
     async let loadedTimeline = core.loadCalendarTimeline(from: from, to: to)
-    async let loadedTasks = core.getScheduledTasks(from: from, to: to, limit: 500)
+    async let loadedTasks = core.getScheduledTasks(
+      from: from, to: to, limit: CalendarGridModel.windowTaskLimit)
     let timeline = try await loadedTimeline
     let tasks = try await loadedTasks
     // A newer load (week navigation, the EventKit observer, or the view's

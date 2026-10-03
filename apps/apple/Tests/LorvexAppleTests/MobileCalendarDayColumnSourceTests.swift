@@ -83,8 +83,10 @@ func mobileCalendarAgendaPanelIncludesScheduledTasks() throws {
   // A row reads its time on the day it was grouped under, never a key formatted
   // in another time zone.
   #expect(agenda.contains("task: task, dayKey: day.key,"))
-  #expect(dayViewAgenda.contains("CalendarGridModel.scheduledTaskDayKey(task) == key"))
-  #expect(dayViewAgenda.contains("MobileCalendarAgendaDay(date: date, key: key,"))
-  #expect(dayViewAgenda.contains("tasks: tasks"))
+  #expect(agendaDay.contains("CalendarGridModel.scheduledTaskDayKey(task) == key"))
+  #expect(
+    agendaDay.contains(
+      "date: date, key: key, events: agendaEvents(from: events, on: key), tasks: dayTasks"))
+  #expect(dayViewAgenda.contains("MobileCalendarAgendaDay.days("))
   #expect(dayViewAgenda.contains("store.calendarScheduledTasks"))
 }

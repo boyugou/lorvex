@@ -87,9 +87,10 @@ public struct CalendarMonthGridDay: Identifiable, Equatable, Sendable {
 /// Layout rules:
 /// - The grid always starts on the first day of the week (per
 ///   `calendar.firstWeekday`) containing the 1st of the month, and spans
-///   whole weeks through the month's last day — 5 or 6 rows depending on how
-///   the month's length and first weekday align. Leading/trailing days from
-///   the adjacent months fill the remaining cells (`isCurrentMonth == false`).
+///   whole weeks through the month's last day — 4 to 6 rows depending on how
+///   the month's length and first weekday align, or at least a caller's
+///   minimum. Leading/trailing days from the adjacent months fill the
+///   remaining cells (`isCurrentMonth == false`).
 /// - An event occupies every day cell its `[startDate, endDate]` span
 ///   intersects within the grid range, regardless of `allDay` — unlike the
 ///   week/day timeline, the month grid has no intra-day axis to clip a timed
@@ -106,34 +107,41 @@ public enum CalendarMonthGridModel {
   }
 
   /// The grid's first visible day and how many days it spans (always a
-  /// multiple of 7) to cover the month containing `date` in whole weeks.
-  public static func gridRange(forMonthContaining date: Date, calendar: Calendar) -> (
-    start: Date, dayCount: Int
-  ) {
+  /// multiple of 7) to cover the month containing `date` in whole weeks, and
+  /// at least `minimumWeeks` weeks: a grid that keeps six rows for every month
+  /// (`minimumWeeks: 6`) fills the rows a shorter month leaves with days of
+  /// the next month.
+  public static func gridRange(
+    forMonthContaining date: Date, calendar: Calendar, minimumWeeks: Int = 0
+  ) -> (start: Date, dayCount: Int) {
     let monthStart = startOfMonth(containing: date, calendar: calendar)
     let gridStart = CalendarGridModel.startOfWeek(containing: monthStart, calendar: calendar)
     guard let monthDayRange = calendar.range(of: .day, in: .month, for: monthStart) else {
-      return (gridStart, 42)
+      return (gridStart, max(6, minimumWeeks) * 7)
     }
     let leadingDays = calendar.dateComponents([.day], from: gridStart, to: monthStart).day ?? 0
     let totalDays = leadingDays + monthDayRange.count
     let weeks = Int(ceil(Double(totalDays) / 7.0))
-    return (gridStart, max(weeks, 1) * 7)
+    return (gridStart, max(weeks, minimumWeeks, 1) * 7)
   }
 
   /// Builds the full weeks × 7 day-cell grid for the month containing
-  /// `monthAnchor`. `dayKeyFor` formats a Date to the `yyyy-MM-dd` key used by
-  /// event `startDate`/`endDate`. Task storage days use the shared
-  /// planned-first UTC key from ``CalendarGridModel/scheduledTaskDayKey(_:)``.
+  /// `monthAnchor`, at least `minimumWeeks` weeks long (see
+  /// ``gridRange(forMonthContaining:calendar:minimumWeeks:)``). `dayKeyFor`
+  /// formats a Date to the `yyyy-MM-dd` key used by event
+  /// `startDate`/`endDate`. Task storage days use the shared planned-first UTC
+  /// key from ``CalendarGridModel/scheduledTaskDayKey(_:)``.
   public static func buildDays(
     monthAnchor: Date,
     calendar: Calendar,
     events: [CalendarTimelineEvent],
     tasks: [LorvexTask],
+    minimumWeeks: Int = 0,
     dayKeyFor: (Date) -> String
   ) -> [CalendarMonthGridDay] {
     let monthStart = startOfMonth(containing: monthAnchor, calendar: calendar)
-    let (gridStart, dayCount) = gridRange(forMonthContaining: monthAnchor, calendar: calendar)
+    let (gridStart, dayCount) = gridRange(
+      forMonthContaining: monthAnchor, calendar: calendar, minimumWeeks: minimumWeeks)
     let dayDates: [Date] = (0..<dayCount).compactMap {
       calendar.date(byAdding: .day, value: $0, to: gridStart)
     }

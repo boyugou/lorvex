@@ -64,6 +64,33 @@ extension AppStore {
     selectCalendarEvent(event)
   }
 
+  /// Shows the main window's Today with `event`'s detail open in the
+  /// inspector, in place of whatever the inspector showed. Backs a click on an
+  /// event in the menu bar panel's Today.
+  func showEventInToday(_ event: CalendarTimelineEvent) {
+    selection = .today
+    selectedTaskID = nil
+    selectCalendarEvent(event)
+  }
+
+  /// Shows the Calendar workspace on `dayKey` (`yyyy-MM-dd`) with `event`'s
+  /// detail open beside the grid (``calendarPendingDayKey``). Backs a click on
+  /// an event in the menu bar panel's Next 7 Days.
+  func showEventInCalendar(_ event: CalendarTimelineEvent, onDayKey dayKey: String) {
+    selection = .calendar
+    calendarPendingDayKey = dayKey
+    selectCalendarEvent(event)
+  }
+
+  /// The day (`yyyy-MM-dd`) the Calendar workspace shows next, set by a
+  /// surface that opens the calendar on a given day. The workspace opens on
+  /// it when it is created, or moves to it when it is already on screen, and
+  /// clears it; nil leaves the workspace where it is (on today when it opens).
+  var calendarPendingDayKey: String? {
+    get { calendarStorage.calendarPendingDayKey }
+    set { calendarStorage.calendarPendingDayKey = newValue }
+  }
+
   var calendarScheduledTasks: [LorvexTask]? {
     get { calendarStorage.calendarScheduledTasks }
     set { calendarStorage.calendarScheduledTasks = newValue }

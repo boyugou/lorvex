@@ -56,8 +56,8 @@ func expectLinesUnread(_ texts: [String], languages: [String], sourceLocation: S
 }
 
 /// English and Chinese date ranges, what a range does to the rest of its line,
-/// and the spaced-dash rule every Latin-script vocabulary shares. The other
-/// languages' ranges are tested with their vocabularies.
+/// and the spaced-dash rule every vocabulary that writes a day before its month
+/// shares. The other languages' ranges are tested with their vocabularies.
 @Suite("Capture parser date ranges")
 struct CaptureParserDateRangeTests {
   @Test("English: a month written once serves both days")
@@ -237,10 +237,12 @@ struct CaptureParserDateRangeTests {
   @Test("A day alone opens a range joined by a spaced dash only after an opening word")
   func spacedDashAfterLoneDay() {
     // A spaced dash after a number sets the number apart as part of the title,
-    // in every Latin-script vocabulary, and the date after it is read alone.
+    // in every vocabulary that writes a date as its day and then its month, and
+    // the date after it is read alone.
     let alone: [(text: String, languages: [String])] = [
       ("Sprint 12 - 20 May", ["en"]), ("Sprint 12 - 20 mai", ["fr"]), ("Sprint 12 - 20 de maio", ["pt"]),
-      ("Sprint 12 - 20 de mayo", ["es"]), ("Sprint 12 - 20 maggio", ["it"]),
+      ("Sprint 12 - 20 de mayo", ["es"]), ("Sprint 12 - 20 maggio", ["it"]), ("Sprint 12 - 20 мая", ["ru"]),
+      ("Sprint 12 - 20 травня", ["uk"]),
     ]
     for line in alone {
       let parsed = LorvexCaptureParser.parse(
@@ -260,6 +262,12 @@ struct CaptureParserDateRangeTests {
     expectDateRanges([("Viagem", "de 12 - 20 de maio", "2027-05-12", "2027-05-20")], languages: ["pt"])
     expectDateRanges([("Viaje", "del 12 - 20 de mayo", "2027-05-12", "2027-05-20")], languages: ["es"])
     expectDateRanges([("Viaggio", "dal 12 - 20 maggio", "2027-05-12", "2027-05-20")], languages: ["it"])
+    expectDateRanges(
+      [("Поездка", "12-20 мая", "2027-05-12", "2027-05-20"), ("Поездка", "с 12 - 20 мая", "2027-05-12", "2027-05-20")],
+      languages: ["ru"])
+    expectDateRanges(
+      [("Поїздка", "12-20 травня", "2027-05-12", "2027-05-20"), ("Поїздка", "з 12 - 20 травня", "2027-05-12", "2027-05-20")],
+      languages: ["uk"])
   }
 
   @Test("A range takes the planned day and the due day, so another day phrase stays in the title")

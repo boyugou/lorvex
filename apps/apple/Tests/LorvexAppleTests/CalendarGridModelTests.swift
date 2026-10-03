@@ -86,6 +86,76 @@ func calendarGridModelDoesNotRenderMidnightEndSliverOnTheNextDay() throws {
   #expect(day20.timedBlocks.isEmpty)
 }
 
+// A timed event of 24 hours or more reads as days: it sits in the all-day
+// strip on each day it takes time on and leaves the time axes alone. A shorter
+// event that runs past midnight is drawn as two blocks, each marked with its
+// part and showing the time that part has: the first day the event's start,
+// the last day when it ends. An event within one day, or one that ends at
+// midnight, is drawn whole with its range.
+@Test
+func calendarGridModelPlacesEventsAcrossDaysByTheirLength() throws {
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  let start = try #require(calendar.date(from: DateComponents(year: 2026, month: 6, day: 19)))
+
+  let days = CalendarGridModel.buildDays(
+    rangeStart: start,
+    dayCount: 3,
+    calendar: calendar,
+    events: [
+      calendarGridEvent(
+        id: "retreat", title: "Retreat", startDate: "2026-06-19", startTime: "22:00",
+        endTime: "01:00", endDate: "2026-06-21"),
+      calendarGridEvent(
+        id: "shift", title: "Shift", startDate: "2026-06-20", startTime: "08:00",
+        endTime: "08:00", endDate: "2026-06-21"),
+      calendarGridEvent(
+        id: "flight", title: "Night flight", startDate: "2026-06-19", startTime: "22:30",
+        endTime: "01:30", endDate: "2026-06-20"),
+      calendarGridEvent(
+        id: "late-night", title: "Late night", startDate: "2026-06-20", startTime: "21:00",
+        endTime: "00:00", endDate: "2026-06-21"),
+      calendarGridEvent(
+        id: "standup", title: "Standup", startDate: "2026-06-21", startTime: "09:00",
+        endTime: "09:30"),
+    ],
+    tasks: [],
+    dayKeyFor: { calendarGridYMD.string(from: $0) }
+  )
+
+  func column(_ day: String) throws -> CalendarGridDay {
+    try #require(days.first { $0.dayKey == day })
+  }
+  func block(_ id: String, on day: String) throws -> CalendarGridTimedBlock {
+    try #require(try column(day).timedBlocks.first { $0.event.id == id })
+  }
+  #expect(try column("2026-06-19").allDayEvents.map(\.id) == ["retreat"])
+  #expect(try column("2026-06-20").allDayEvents.map(\.id) == ["retreat", "shift"])
+  #expect(try column("2026-06-21").allDayEvents.map(\.id) == ["retreat", "shift"])
+  #expect(days.allSatisfy { day in
+    !day.timedBlocks.contains { ["retreat", "shift"].contains($0.event.id) }
+  })
+
+  let first = try block("flight", on: "2026-06-19")
+  let last = try block("flight", on: "2026-06-20")
+  #expect(first.part == .firstDay)
+  #expect(last.part == .lastDay)
+  #expect(first.timeLabel == lorvexClockTimeLabel("22:30"))
+  #expect(last.timeLabel?.contains(lorvexClockTimeLabel("01:30")) == true)
+  #expect(last.timeLabel != lorvexClockTimeLabel("01:30"))
+  #expect(first.rangeLabel == nil)
+  #expect(last.rangeLabel == nil)
+
+  let lateNight = try block("late-night", on: "2026-06-20")
+  #expect(lateNight.part == .whole)
+  #expect(lateNight.timeLabel == lorvexClockTimeLabel("21:00"))
+  #expect(lateNight.rangeLabel == lorvexClockRangeLabel(startMinutes: 21 * 60, endMinutes: 1440))
+  let standup = try block("standup", on: "2026-06-21")
+  #expect(standup.part == .whole)
+  #expect(
+    standup.rangeLabel == lorvexClockRangeLabel(startMinutes: 9 * 60, endMinutes: 9 * 60 + 30))
+}
+
 @Test
 func calendarGridModelAnchorsToTodaysEarlyEventInsteadOfHidingItAboveTheFold() throws {
   var calendar = Calendar(identifier: .gregorian)

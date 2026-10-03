@@ -72,21 +72,18 @@ extension MobileCalendarDayView {
       calendar.date(
         bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: day
       ) ?? day
-    store.calendarDraft = MobileCalendarDraft.timedDefault(start: start, calendar: calendar)
+    store.calendarDraft = MobileCalendarDraft.timedDefault(start: start)
     isShowingCreateEvent = true
   }
 
-  /// Commits a drag-to-reschedule from the day column. Preserves the event's
-  /// duration; only the start and end move.
+  /// Commits a drag-to-reschedule from the day column. Only the start and end
+  /// move, and the event keeps its length in clock time
+  /// (``CalendarEventTiming/moveStart(to:)``), so one that ends at midnight or
+  /// runs past it keeps its length too.
   @MainActor
   func reschedule(
     _ event: CalendarTimelineEvent, toDay targetDay: Date, minute newStartMinute: Int
   ) async {
-    let durationSeconds: TimeInterval = {
-      let s = event.startTime.flatMap { hmToMinutes($0) } ?? 0
-      let e = event.endTime.flatMap { hmToMinutes($0) } ?? (s + 60)
-      return TimeInterval((e - s) * 60)
-    }()
     guard
       let newStart = calendar.date(
         bySettingHour: newStartMinute / 60,
@@ -94,8 +91,9 @@ extension MobileCalendarDayView {
         second: 0,
         of: targetDay)
     else { return }
-    let newEnd = newStart.addingTimeInterval(durationSeconds)
-    await store.rescheduleCalendarEvent(event, newStart: newStart, newEnd: newEnd)
+    var timing = CalendarEventTiming(event: event, fallbackDay: targetDay, calendar: calendar)
+    timing.moveStart(to: newStart)
+    await store.rescheduleCalendarEvent(event, newStart: timing.start, newEnd: timing.end)
   }
 
   func defaultCreateMinutes(on date: Date) -> Int {
@@ -104,11 +102,5 @@ extension MobileCalendarDayView {
       return calendar.component(.hour, from: now) * 60
     }
     return 9 * 60
-  }
-
-  private func hmToMinutes(_ hm: String) -> Int? {
-    let parts = hm.split(separator: ":")
-    guard parts.count == 2, let h = Int(parts[0]), let m = Int(parts[1]) else { return nil }
-    return h * 60 + m
   }
 }

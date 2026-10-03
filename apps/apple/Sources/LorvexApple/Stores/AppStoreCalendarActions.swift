@@ -6,15 +6,7 @@ extension AppStore {
 
   func prepareCalendarDraft(for event: CalendarTimelineEvent) {
     draftCalendarTitle = event.title
-    draftCalendarDate = Self.ymdFormatter.date(from: event.startDate) ?? draftCalendarDate
-    // Capture this event's parsed start once and fall back to it explicitly for
-    // the end, rather than reading the just-assigned `draftCalendarStartTime`
-    // store property (correct only by assignment order).
-    let parsedStart =
-      event.startTime.flatMap(Self.hmFormatter.date(from:)) ?? draftCalendarStartTime
-    draftCalendarStartTime = parsedStart
-    draftCalendarEndTime = event.endTime.flatMap(Self.hmFormatter.date(from:)) ?? parsedStart
-    draftCalendarAllDay = event.allDay
+    draftCalendarTiming = CalendarEventTiming(event: event, fallbackDay: draftCalendarTiming.start)
     draftCalendarLocation = event.location ?? ""
     draftCalendarNotes = event.notes ?? ""
     draftCalendarColor = event.color
@@ -39,19 +31,15 @@ extension AppStore {
   }
 
   /// Reset the shared calendar-event draft to fresh defaults before presenting
-  /// the create sheet. The draft fields are reused by the edit flow
-  /// (``prepareCalendarDraft(for:)``), so a create sheet opened after an edit
-  /// would otherwise inherit the edited event's title, date, and times. The
-  /// current draft is stashed first so an open inline edit is restored when the
-  /// create sheet dismisses.
+  /// the create sheet: an untitled one-hour event from the next full hour. The
+  /// draft fields are reused by the edit flow (``prepareCalendarDraft(for:)``),
+  /// so a create sheet opened after an edit would otherwise inherit the edited
+  /// event's title and times. The current draft is stashed first so an open
+  /// inline edit is restored when the create sheet dismisses.
   func beginCreateCalendarDraft() {
     stashCalendarDraftForCreate()
-    let now = Date()
     draftCalendarTitle = ""
-    draftCalendarDate = now
-    draftCalendarStartTime = now
-    draftCalendarEndTime = now.addingTimeInterval(60 * 60)
-    draftCalendarAllDay = false
+    draftCalendarTiming = .nextHourBlock(after: Date())
     draftCalendarLocation = ""
     draftCalendarNotes = ""
     draftCalendarColor = nil
@@ -70,12 +58,11 @@ extension AppStore {
       let event = await performCanonicalMutation({
         try await core.createCalendarEvent(
           title: draftCalendarTitle,
-          startDate: Self.ymdFormatter.string(from: draftCalendarDate),
-          endDate: nil,
-          startTime: draftCalendarAllDay
-            ? nil : Self.hmFormatter.string(from: draftCalendarStartTime),
-          endTime: draftCalendarAllDay ? nil : Self.hmFormatter.string(from: draftCalendarEndTime),
-          allDay: draftCalendarAllDay,
+          startDate: draftCalendarTiming.startDate,
+          endDate: draftCalendarTiming.endDate,
+          startTime: draftCalendarTiming.startTime,
+          endTime: draftCalendarTiming.endTime,
+          allDay: draftCalendarTiming.allDay,
           location: draftCalendarLocation.trimmedNilIfEmpty,
           notes: notes,
           recurrence: draftCalendarRecurrence,
@@ -108,25 +95,6 @@ extension AppStore {
     selection = .calendar
   }
 
-  /// The stored end date shifted to preserve an event's day-span when the
-  /// single-day edit form moves the start day. The draft carries one date and no
-  /// end-day field, so the whole event moves and the end must move by the same
-  /// offset. A single-day event (nil end) stays nil; passing the core's nil
-  /// (preserve) would strand the original end and either fail "end before start"
-  /// moving forward or silently rewrite the event multi-day moving back. Mirrors
-  /// the iOS `MobileStore.shiftedCalendarEndDate`.
-  func shiftedCalendarEndDate(for event: CalendarTimelineEvent, newStartDate: Date) -> String? {
-    guard let originalEnd = event.endDate else { return nil }
-    let newStartYmd = Self.ymdFormatter.string(from: newStartDate)
-    guard
-      let start = Self.ymdFormatter.date(from: event.startDate),
-      let end = Self.ymdFormatter.date(from: originalEnd)
-    else { return originalEnd }
-    // Rounding absorbs any ±1h DST offset in the raw seconds difference.
-    let spanDays = Int((end.timeIntervalSince(start) / 86_400).rounded())
-    return LorvexDateFormatters.ymdUTCAddingDays(newStartYmd, days: spanDays) ?? originalEnd
-  }
-
   func updateCalendarEvent(_ event: CalendarTimelineEvent) async {
     guard event.editable, !event.supportsScopedMutation else { return }
     await perform {
@@ -134,12 +102,11 @@ extension AppStore {
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
         title: draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines),
-        startDate: Self.ymdFormatter.string(from: draftCalendarDate),
-        endDate: shiftedCalendarEndDate(for: event, newStartDate: draftCalendarDate),
-        startTime: draftCalendarAllDay
-          ? nil : Self.hmFormatter.string(from: draftCalendarStartTime),
-        endTime: draftCalendarAllDay ? nil : Self.hmFormatter.string(from: draftCalendarEndTime),
-        allDay: draftCalendarAllDay,
+        startDate: draftCalendarTiming.startDate,
+        endDate: draftCalendarTiming.endDate(updating: event.endDate),
+        startTime: draftCalendarTiming.startTime,
+        endTime: draftCalendarTiming.endTime,
+        allDay: draftCalendarTiming.allDay,
         // This is a full-object edit surface. Empty values are deliberate
         // clears; nil would mean "leave unchanged" at the core patch boundary.
         location: draftCalendarLocation.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -173,18 +140,20 @@ extension AppStore {
   /// so the user can shift events without opening the edit sheet.
   ///
   /// Keeps the event's existing title / location / notes / all-day flag
-  /// intact and only changes the temporal axis. Recurring + all-day events
-  /// are no-ops — recurring requires choosing whether to edit this instance
-  /// vs the series (which only the sheet exposes), and all-day events have
-  /// no intra-day position to drag.
+  /// intact and only changes the temporal axis. Recurring, all-day, and
+  /// multi-day events are no-ops — recurring requires choosing whether to edit
+  /// this instance vs the series (which only the sheet exposes), all-day
+  /// events have no intra-day position to drag, and a multi-day event shows in
+  /// the grid as one piece per day, which the gestures cannot move as a whole
+  /// (``CalendarTimelineEvent/isMultiDay``; an event that ends at midnight is a
+  /// one-day event and does move).
   ///
   /// - Parameters:
   ///   - event: The event being rescheduled.
-  ///   - newStart: The new start instant. The date portion sets `startDate`
-  ///     and the time-of-day portion sets `startTime`.
-  ///   - newEnd: The new end instant. Time-of-day portion sets `endTime`;
-  ///     the date portion is dropped (events crossing midnight via drag are
-  ///     out of scope and the caller is expected to clamp).
+  ///   - newStart: The new start instant.
+  ///   - newEnd: The new end instant. A resize to the bottom of the grid passes
+  ///     midnight at the start of the next day (`dateAtMinute`), which is
+  ///     stored as that day at 00:00.
   ///   - notes: Optional notes override. When nil, leaves notes unchanged.
   func rescheduleCalendarEvent(
     _ event: CalendarTimelineEvent,
@@ -192,32 +161,26 @@ extension AppStore {
     newEnd: Date,
     notes: String? = nil
   ) async {
-    // Multi-day events (event.endDate != event.startDate) appear as per-day
-    // clips in the week grid; the drag-gesture math operates on the clip,
-    // not the event. Skipping at the store layer is defense in depth — the
-    // view-side guard also blocks the gesture from firing.
-    let isMultiDay = event.endDate != nil && event.endDate != event.startDate
-    guard event.editable, !event.allDay, !event.supportsScopedMutation, !isMultiDay else { return }
+    // Defense in depth: the view-side guard also keeps the gesture from firing.
+    guard event.editable, !event.allDay, !event.supportsScopedMutation, !event.isMultiDay
+    else { return }
+    let timing = CalendarEventTiming(start: newStart, end: newEnd, allDay: false)
     // Passing `nil` to the core's `updateCalendarEvent(notes:)` keeps the
     // existing notes column UNCHANGED (the core maps nil → `.unset`).
     // Passing `""` would overwrite the column to empty and wipe whatever
     // the user typed in the edit sheet — the drag gesture only changes
     // start/end, so notes must stay alone.
     await perform {
-      // A bottom-edge resize to 24:00 lands `newEnd` at next-day midnight (see
-      // `dateAtMinute`). Persist that as a real end date so the event spans
-      // 23:00→00:00 across the boundary instead of collapsing into a same-day
-      // negative span that the grid then clamps to a stub.
-      let endDate =
-        Calendar.current.isDate(newEnd, inSameDayAs: newStart)
-        ? nil : Self.ymdFormatter.string(from: newEnd)
       let updated = try await core.updateCalendarEvent(
         id: event.eventID,
         title: event.title,
-        startDate: Self.ymdFormatter.string(from: newStart),
-        endDate: endDate,
-        startTime: Self.hmFormatter.string(from: newStart),
-        endTime: Self.hmFormatter.string(from: newEnd),
+        startDate: timing.startDate,
+        // An event that had an end date and now fits in one day sends its
+        // start date: nil keeps the stored end, which would stretch an event
+        // moved up from a midnight end into the next day.
+        endDate: timing.endDate(updating: event.endDate),
+        startTime: timing.startTime,
+        endTime: timing.endTime,
         allDay: event.allDay,
         location: event.location,
         notes: notes

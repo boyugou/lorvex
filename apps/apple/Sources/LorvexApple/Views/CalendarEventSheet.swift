@@ -70,7 +70,11 @@ struct CalendarEventSheet: View {
           Button(thisEventLabel) { runSave(scope: .thisEvent, event: event) }
         }
         Button(thisAndFollowingLabel) { runSave(scope: .thisAndFollowing, event: event) }
-        Button(allEventsLabel) { runSave(scope: .allEvents, event: event) }
+        // A new length in days applies from this occurrence on: an all-events
+        // edit would write it onto the series' own first day.
+        if store.draftCalendarTiming.keepsDaySpan(of: event) {
+          Button(allEventsLabel) { runSave(scope: .allEvents, event: event) }
+        }
       }
       Button(cancelLabel, role: .cancel) {}
     } message: {
@@ -261,7 +265,7 @@ struct CalendarEventSheet: View {
   private var isConfirmDisabled: Bool {
     isSubmitting
       || store.draftCalendarTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-      || !store.draftCalendarTimesValid
+      || !store.draftCalendarTiming.isValid
   }
 
   private var confirmTitle: String {
@@ -298,7 +302,7 @@ struct CalendarEventSheet: View {
           table: "Localizable",
           bundle: LorvexL10n.bundle)
     }
-    if !store.draftCalendarTimesValid {
+    if !store.draftCalendarTiming.isValid {
       return String(
         localized: "calendar.event.end_after_start.help",
         defaultValue: "The end time must be after the start time",

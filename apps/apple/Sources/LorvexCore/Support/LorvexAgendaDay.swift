@@ -6,7 +6,9 @@ import Foundation
 public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
   /// The logical day as `yyyy-MM-dd`.
   public let key: String
-  /// All-day events first, then by start time, then by title.
+  /// All-day events and the days that longer events fill first, then by
+  /// start on the day, then by title. An event that began on an earlier day
+  /// starts the day at midnight (``CalendarTimelineEvent/clockSpan(on:)``).
   public var events: [CalendarTimelineEvent]
   /// Tasks with a time first, by start, then the rest in the canonical order
   /// they arrived in.
@@ -34,7 +36,7 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
   ) -> [LorvexAgendaDay] {
     (1...dayCount).compactMap { offset in
       guard let key = LorvexDateFormatters.ymdUTCAddingDays(todayKey, days: offset) else { return nil }
-      let dayEvents = events.filter { $0.occurs(on: key) }.sorted(by: eventOrder)
+      let dayEvents = events.filter { $0.occurs(on: key) }.sorted { eventOrder($0, $1, on: key) }
       let dayTasks = tasks.enumerated()
         .filter { $0.element.status.isActionable && CalendarGridModel.scheduledTaskDayKey($0.element) == key }
         .sorted { lhs, rhs in
@@ -48,8 +50,10 @@ public struct LorvexAgendaDay: Identifiable, Equatable, Sendable {
     }
   }
 
-  private static func eventOrder(_ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent) -> Bool {
-    switch (lhs.startTime, rhs.startTime) {
+  private static func eventOrder(
+    _ lhs: CalendarTimelineEvent, _ rhs: CalendarTimelineEvent, on day: String
+  ) -> Bool {
+    switch (lhs.clockSpan(on: day)?.start, rhs.clockSpan(on: day)?.start) {
     case (let left?, let right?) where left != right: left < right
     case (nil, _?): true
     case (_?, nil): false

@@ -36,33 +36,10 @@ struct CalendarEventFormFields: View {
         }
 
         DraftSheetControlRow(
-          title: String(localized: "calendar.field.date", defaultValue: "Date", table: "Localizable", bundle: LorvexL10n.bundle),
-          systemImage: "calendar"
-        ) {
-          // Date chip + custom mini-month popover, matching the task
-          // inspector; an event always has a date, so there is no clear.
-          LorvexDateChip(
-            date: store.draftCalendarDate,
-            placeholder: String(
-              localized: "calendar.field.date", defaultValue: "Date",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle),
-            onSet: { store.draftCalendarDate = $0 }
-          )
-          .accessibilityLabel(String(
-            localized: "calendar.event_date.a11y",
-            defaultValue: "Event date",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ))
-          .accessibilityIdentifier("\(idPrefix).date")
-        }
-
-        DraftSheetControlRow(
           title: String(localized: "calendar.field.all_day", defaultValue: "All Day", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "sun.max"
         ) {
-          Toggle("", isOn: $store.draftCalendarAllDay)
+          Toggle("", isOn: $store.draftCalendarTiming.allDay)
             .labelsHidden()
             .accessibilityLabel(String(
               localized: "calendar.field.all_day",
@@ -73,40 +50,75 @@ struct CalendarEventFormFields: View {
             .accessibilityIdentifier("\(idPrefix).allDay")
         }
 
-        if !store.draftCalendarAllDay {
-          DraftSheetControlRow(
-            title: String(localized: "calendar.field.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "clock"
-          ) {
-            LorvexTimeChip(
-              date: store.draftCalendarStartTime,
-              accessibilityIdentifier: "\(idPrefix).startTime",
-              onSet: { store.draftCalendarStartTime = $0 }
+        // Start and End each carry a day and, for a timed event, a clock time,
+        // so an event can run overnight or across several days. Moving the
+        // start keeps the event's length; an end time earlier than the start
+        // runs the event into the next day (`CalendarEventTiming`).
+        DraftSheetControlRow(
+          title: String(localized: "calendar.field.start", defaultValue: "Start", table: "Localizable", bundle: LorvexL10n.bundle),
+          systemImage: "clock"
+        ) {
+          HStack(spacing: LorvexDesign.Spacing.xs) {
+            LorvexDateChip(
+              date: store.draftCalendarTiming.start,
+              placeholder: startDateName,
+              accessibilityName: startDateName,
+              onSet: { store.draftCalendarTiming.setStartDay($0) }
             )
-            .accessibilityLabel(String(
-              localized: "calendar.start_time.a11y",
-              defaultValue: "Start time",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ))
+            .accessibilityIdentifier("\(idPrefix).startDate")
+            if !store.draftCalendarTiming.allDay {
+              LorvexTimeChip(
+                date: store.draftCalendarTiming.start,
+                accessibilityIdentifier: "\(idPrefix).startTime",
+                accessibilityName: String(
+                  localized: "calendar.start_time.a11y", defaultValue: "Start time",
+                  table: "Localizable", bundle: LorvexL10n.bundle),
+                onSet: { store.draftCalendarTiming.setStartTime($0) }
+              )
+            }
           }
+        }
 
-          DraftSheetControlRow(
-            title: String(localized: "calendar.field.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "timer"
-          ) {
-            LorvexTimeChip(
-              date: store.draftCalendarEndTime,
-              accessibilityIdentifier: "\(idPrefix).endTime",
-              onSet: { store.draftCalendarEndTime = $0 }
+        DraftSheetControlRow(
+          title: String(localized: "calendar.field.end", defaultValue: "End", table: "Localizable", bundle: LorvexL10n.bundle),
+          systemImage: "timer"
+        ) {
+          HStack(spacing: LorvexDesign.Spacing.xs) {
+            // The end day can't come before the start day.
+            LorvexDateChip(
+              date: store.draftCalendarTiming.end,
+              placeholder: endDateName,
+              minDate: store.draftCalendarTiming.calendar.startOfDay(
+                for: store.draftCalendarTiming.start),
+              accessibilityName: endDateName,
+              onSet: { store.draftCalendarTiming.setEndDay($0) }
             )
-            .accessibilityLabel(String(
-              localized: "calendar.end_time.a11y",
-              defaultValue: "End time",
-              table: "Localizable",
-              bundle: LorvexL10n.bundle
-            ))
+            .accessibilityIdentifier("\(idPrefix).endDate")
+            if !store.draftCalendarTiming.allDay {
+              LorvexTimeChip(
+                date: store.draftCalendarTiming.end,
+                accessibilityIdentifier: "\(idPrefix).endTime",
+                accessibilityName: String(
+                  localized: "calendar.end_time.a11y", defaultValue: "End time",
+                  table: "Localizable", bundle: LorvexL10n.bundle),
+                onSet: { store.draftCalendarTiming.setEndTime($0) }
+              )
+            }
           }
+        }
+
+        if !store.draftCalendarTiming.isValid {
+          Label(
+            String(
+              localized: "calendar.event.end_after_start.help",
+              defaultValue: "The end time must be after the start time",
+              table: "Localizable", bundle: LorvexL10n.bundle),
+            systemImage: "exclamationmark.triangle"
+          )
+          .font(LorvexDesign.Typography.secondaryText)
+          .foregroundStyle(LorvexDesign.Palette.warning)
+          .padding(.horizontal, LorvexDesign.Spacing.s)
+          .accessibilityIdentifier("\(idPrefix).timesInvalid")
         }
 
         DraftSheetField(
@@ -137,7 +149,7 @@ struct CalendarEventFormFields: View {
         CalendarEventRepeatField(
           recurrence: $store.draftCalendarRecurrence,
           isOpaque: store.draftCalendarRecurrenceIsOpaque,
-          referenceDate: store.draftCalendarDate,
+          referenceDate: store.draftCalendarTiming.start,
           idPrefix: idPrefix)
       }
 
@@ -170,6 +182,18 @@ struct CalendarEventFormFields: View {
     .task {
       writableCalendars = (try? await store.loadWritableEventKitCalendars()) ?? []
     }
+  }
+
+  private var startDateName: String {
+    String(
+      localized: "calendar.start_date.a11y", defaultValue: "Start date", table: "Localizable",
+      bundle: LorvexL10n.bundle)
+  }
+
+  private var endDateName: String {
+    String(
+      localized: "calendar.end_date.a11y", defaultValue: "End date", table: "Localizable",
+      bundle: LorvexL10n.bundle)
   }
 
   /// The writable-calendar chooser: a native menu picker whose default option is

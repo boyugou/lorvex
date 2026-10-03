@@ -346,12 +346,12 @@ struct CalendarWeekGridView: View {
               .fill(LorvexDesign.Palette.accent)
               .frame(width: 8, height: 8)
             VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-              Text(block.task.title)
+              Text(userContent: block.task.title)
                 .font(LorvexDesign.Typography.secondaryText)
                 .lineLimit(1)
               Text(lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin))
-              .font(LorvexDesign.Typography.tertiaryText)
-              .foregroundStyle(.secondary)
+                .font(LorvexDesign.Typography.tertiaryText)
+                .foregroundStyle(.secondary)
             }
             Spacer(minLength: LorvexDesign.Spacing.s)
           }
@@ -370,10 +370,12 @@ struct CalendarWeekGridView: View {
               .fill(eventColor(block.event))
               .frame(width: 8, height: 8)
             VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-              Text(block.event.title)
+              Text(userContent: block.event.title)
                 .font(LorvexDesign.Typography.secondaryText)
                 .lineLimit(1)
-              Text(calendarWeekOverflowTimeText(for: block.event))
+              // The block's own time: its range, or for one day of an event
+              // that runs past midnight its start or "Until 1:30 AM".
+              Text(block.rangeLabel ?? block.timeLabel ?? "")
                 .font(LorvexDesign.Typography.tertiaryText)
                 .foregroundStyle(.secondary)
             }
@@ -388,7 +390,7 @@ struct CalendarWeekGridView: View {
         }
         .buttonStyle(.plain)
         .disabled(!block.event.editable)
-        .accessibilityLabel(calendarWeekOverflowBlockAccessibilityLabel(block))
+        .accessibilityLabel(calendarEventAccessibilityLabel(block.event))
       }
     }
     .padding(LorvexDesign.Spacing.m)

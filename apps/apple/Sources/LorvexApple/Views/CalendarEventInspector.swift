@@ -92,9 +92,10 @@ struct CalendarEventInspector: View {
   }
 
   private var scheduleRow: some View {
-    detailRow(icon: "calendar", title: whenTitle) {
+    let span = event.timedSpanLabel
+    return detailRow(icon: "calendar", title: whenTitle) {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
-        plainText(Self.dateLabel(event.startDate))
+        plainText(span ?? Self.dayLabel(for: event))
         if event.allDay {
           Text(
             LocalizedStringResource(
@@ -103,7 +104,7 @@ struct CalendarEventInspector: View {
           )
           .font(LorvexDesign.Typography.secondaryText)
           .foregroundStyle(.secondary)
-        } else if let start = event.startTime {
+        } else if span == nil, let start = event.startTime {
           Text(lorvexClockRangeLabel(start: start, end: event.endTime))
             .font(LorvexDesign.Typography.secondaryText)
             .foregroundStyle(.secondary)
@@ -212,6 +213,19 @@ struct CalendarEventInspector: View {
   static func dateLabel(_ ymd: String) -> String {
     guard let date = LorvexDateFormatters.ymd.date(from: ymd) else { return ymd }
     return LorvexDateFormatters.string(date, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent)
+  }
+
+  /// The days `event` takes time on: one day ("Friday, October 2"), or the
+  /// first and last ("Friday, October 2 – Sunday, October 4") for an event
+  /// that spans several (``CalendarTimelineEvent/lastOccupiedDay``).
+  static func dayLabel(for event: CalendarTimelineEvent) -> String {
+    let lastDay = event.lastOccupiedDay
+    guard lastDay > event.startDate,
+      let first = LorvexDateFormatters.ymd.date(from: event.startDate),
+      let last = LorvexDateFormatters.ymd.date(from: lastDay)
+    else { return dateLabel(event.startDate) }
+    return LorvexDateFormatters.range(
+      from: first, to: last, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent)
   }
 
   private var whenTitle: String {

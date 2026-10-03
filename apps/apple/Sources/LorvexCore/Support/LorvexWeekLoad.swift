@@ -201,19 +201,31 @@ public struct LorvexWeekLoad: Equatable, Sendable {
   }
 
   /// The day's timed events as disjoint intervals inside the working window.
-  /// A multi-day timed event covers midnight to its end on its last day, its
-  /// start to midnight on its first, and whole days in between; an event that
-  /// does not occur on the day (``CalendarTimelineEvent/occurs(on:)``), such
-  /// as one ending at exactly midnight on its end day, adds nothing.
+  /// Each event takes its time on the day
+  /// (``CalendarTimelineEvent/clockSpan(on:)``): a multi-day timed event
+  /// covers its start to midnight on its first day, midnight to its end on its
+  /// last, and whole days in between, and an event that ends at exactly
+  /// midnight runs to the end of its day. An event without an end time takes
+  /// the hour the calendar grids draw it with
+  /// (``CalendarGridModel/defaultEventDurationMinutes``), and a zero-length
+  /// event takes no time. An event that does not occur on the day
+  /// (``CalendarTimelineEvent/occurs(on:)``) or has no readable start adds
+  /// nothing.
   static func mergedMeetings(
     _ events: [CalendarTimelineEvent], key: String, workStart: Int, workEnd: Int
   ) -> [(start: Int, end: Int)] {
     let intervals: [(start: Int, end: Int)] = events.compactMap { event in
       guard !event.allDay, event.occurs(on: key) else { return nil }
-      let endKey = event.endDate ?? event.startDate
-      let start = key == event.startDate ? CalendarGridModel.parseMinutes(event.startTime) ?? 0 : 0
-      var end = key == endKey ? CalendarGridModel.parseMinutes(event.endTime) ?? 24 * 60 : 24 * 60
-      if end <= start { end = 24 * 60 }
+      let start: Int
+      let end: Int
+      if event.dayPart(on: key) == .middleDay {
+        (start, end) = (0, 24 * 60)
+      } else if let span = event.clockSpan(on: key) {
+        start = span.start
+        end = min(span.end ?? span.start + CalendarGridModel.defaultEventDurationMinutes, 24 * 60)
+      } else {
+        return nil
+      }
       let clipped = (start: max(start, workStart), end: min(end, workEnd))
       return clipped.end > clipped.start ? clipped : nil
     }

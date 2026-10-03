@@ -38,6 +38,72 @@ extension CalendarTimelineEvent {
     let endsAtMidnight = !allDay && CalendarGridModel.parseMinutes(endTime) == 0
     return !(day == end && end != startDate && endsAtMidnight)
   }
+
+  /// The last day this event takes time on (`YYYY-MM-DD`), by the rule of
+  /// ``occurs(on:)``: its end date, or its start date when it has none, except
+  /// that a timed event ending at exactly midnight on a later day ends the day
+  /// before.
+  public var lastOccupiedDay: String {
+    let end = endDate ?? startDate
+    let endsAtMidnight = !allDay && CalendarGridModel.parseMinutes(endTime) == 0
+    guard end > startDate, endsAtMidnight else { return end }
+    return LorvexDateFormatters.ymdUTCAddingDays(end, days: -1) ?? end
+  }
+
+  /// True when this event takes time on more than one day: an all-day event
+  /// across several days, or a timed one that runs past midnight. A timed
+  /// event that ends at exactly midnight on the next day is a one-day event,
+  /// shown and dragged in the calendar grids as one block on its start day.
+  public var isMultiDay: Bool { lastOccupiedDay > startDate }
+
+  /// The part of this event that `day` (`YYYY-MM-DD`) holds, for a day the
+  /// event occurs on (``occurs(on:)``): the whole event when it takes time on
+  /// one day only, and otherwise its first day, its last day
+  /// (``lastOccupiedDay``), or a day in between.
+  public func dayPart(on day: String) -> CalendarEventDayPart {
+    guard isMultiDay else { return .whole }
+    if day <= startDate { return .firstDay }
+    return day >= lastOccupiedDay ? .lastDay : .middleDay
+  }
+
+  /// The minutes this event takes on `day` (`YYYY-MM-DD`), a day it occurs
+  /// on, measured on that day's clock. A one-day event runs from its start to
+  /// its end, which is nil when it has no end time and 1440 when it ends at
+  /// exactly midnight. An event that runs past midnight runs from its start
+  /// to 1440 on its first day and from 0 to its end on its last
+  /// (``dayPart(on:)``). Nil where the event has no place on the day's clock:
+  /// an all-day event, an event without a readable start, a day in between
+  /// that the event fills from midnight to midnight, and the last day of an
+  /// event without an end time.
+  public func clockSpan(on day: String) -> (start: Int, end: Int?)? {
+    guard !allDay, let start = lorvexMinutesSinceMidnight(startTime) else { return nil }
+    let end = lorvexMinutesSinceMidnight(endTime)
+    switch dayPart(on: day) {
+    case .whole:
+      // A one-day event with a later end date ends at exactly midnight.
+      return (start, (endDate ?? startDate) > startDate ? 1440 : end)
+    case .firstDay:
+      return (start, 1440)
+    case .middleDay:
+      return nil
+    case .lastDay:
+      return end.map { (0, $0) }
+    }
+  }
+}
+
+/// The part of an event that one day holds. An event that takes time on one
+/// day only, including a timed one that ends at exactly midnight, is whole on
+/// that day. An event that takes time on several days starts on its first
+/// day, ends on its last, and fills each day in between: a timed event that
+/// runs past midnight takes its first day from its start to midnight, each
+/// day in between from midnight to midnight, and its last day from midnight
+/// to its end.
+public enum CalendarEventDayPart: Sendable, Equatable {
+  case whole
+  case firstDay
+  case middleDay
+  case lastDay
 }
 
 extension Sequence where Element == CalendarTimelineEvent {

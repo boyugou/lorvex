@@ -189,7 +189,8 @@ func mobileStoreCalendarCreateSetsAndClearsMutatingFlag() async throws {
   await store.refresh()
 
   store.calendarDraft.title = "Audit Flag Test"
-  store.calendarDraft.date = ISO8601DateFormatter().date(from: "2026-06-01T00:00:00Z") ?? Date()
+  store.calendarDraft.timing.setStartDay(
+    try #require(LorvexDateFormatters.ymd.date(from: "2026-06-01")))
   let created = await store.createDraftCalendarEvent()
 
   #expect(created)
@@ -222,10 +223,10 @@ func mobileStoreCalendarUpdateSetsAndClearsMutatingFlag() async throws {
   #expect(store.isMutatingCalendarEvent == false)
 }
 
-// Moving an event's day through the single-day edit form must shift the stored
-// end date with the start, preserving the span. Passing the core `nil` (preserve)
-// would strand the original multi-day end, which then fails "end before start"
-// moving the day forward (regression guard).
+// Moving an event's start day keeps its length, so the stored end date moves
+// with the start. Sending the core `nil` (keep the stored end) would strand the
+// original multi-day end, which then fails "end before start" once the start
+// moves past it (regression guard).
 @MainActor
 @Test
 func mobileStoreCalendarDateEditShiftsStoredEndDate() async throws {
@@ -245,7 +246,8 @@ func mobileStoreCalendarDateEditShiftsStoredEndDate() async throws {
   #expect(event.endDate == "2026-06-03")
   await store.refresh()
   store.prepareCalendarDraft(for: event)
-  store.calendarDraft.date = try #require(LorvexDateFormatters.ymd.date(from: "2026-06-05"))
+  store.calendarDraft.timing.setStartDay(
+    try #require(LorvexDateFormatters.ymd.date(from: "2026-06-05")))
 
   let updated = await store.updateCalendarEvent(event)
   #expect(store.errorMessage == nil)

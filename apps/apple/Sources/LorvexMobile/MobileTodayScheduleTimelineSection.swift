@@ -88,9 +88,14 @@ struct MobileTodayScheduleTimelineSection: View {
       }
       .accessibilityIdentifier("today.schedule.task.\(task.id)")
     case .event(let event):
+      // One day of an event that runs past midnight shows that day's time (its
+      // start, or "Until 1:30 AM") and no duration, which would be only the
+      // day's share of the event. VoiceOver reads a timed event's whole time
+      // and place instead of the row's parts.
       LorvexTimelineRow(
         time: item.timeLabel.isEmpty ? allDayLabel : item.timeLabel, title: event.title,
-        duration: duration(item, task: nil), isCurrent: false, isQuiet: true, isPast: item.isPast
+        duration: item.eventPart == .whole ? duration(item, task: nil) : nil,
+        isCurrent: false, isQuiet: true, isPast: item.isPast
       ) {
         Capsule()
           .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
@@ -98,6 +103,7 @@ struct MobileTodayScheduleTimelineSection: View {
       }
       .contentShape(Rectangle())
       .onTapGesture { openEvent(event) }
+      .accessibilityLabel(Text(verbatim: calendarEventAccessibilityLabel(event)), isEnabled: !event.allDay)
       .accessibilityAddTraits(.isButton)
       .accessibilityAction { openEvent(event) }
       .accessibilityIdentifier("today.schedule.event")

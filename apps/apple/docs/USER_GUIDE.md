@@ -237,9 +237,12 @@ On Mac a quick-add field sits under the tasks; on iPhone and iPad the day's
 habits follow as rings. Nothing you or the assistant put on today is hidden.
 On Mac the day's schedule leads the page, under the briefing: your calendar
 events and the day's timed tasks in time order, above the tasks without a
-time. Click an event to see its details in the inspector, where an event you
-made in Lorvex can also be edited or deleted. On iPad the schedule stands
-beside the list; on iPhone, tap the day strip under the briefing to open it.
+time. An event that runs past midnight shows its start on the day it begins
+and "Until" its end at the top of the next day; a day it fills completely
+shows it as all day. Click an event to see its details in the inspector,
+where an event you made in Lorvex can also be edited or deleted. On iPad the
+schedule stands beside the list; on iPhone, tap the day strip under the
+briefing to open it.
 
 Open Today from the sidebar, by pressing **⌘1**, or by tapping the Today tab
 on iPhone/iPad.
@@ -435,9 +438,37 @@ your Lorvex tasks so you can see scheduling conflicts at a glance.
 Use the row buttons or context menu to edit or delete Lorvex-owned events.
 Imported EventKit events are read-only overlays.
 
+An event that lasts 24 hours or more appears in the all-day row of each day it
+covers. A shorter event that runs past midnight appears on both days: the
+first shows when it starts, and the second shows when it ends.
+
 Calendar permission is required to display EventKit events. If permission is
 denied, Lorvex shows only its own planning blocks with a permission prompt in
 the Settings diagnostics panel.
+
+### Creating and Editing Events
+
+On the Mac, click **+** (Create Event) in the Calendar toolbar, or click or
+drag across empty time in the grid. On iPhone and iPad, tap **New Event** in
+the **Calendar** tab. An event from the toolbar or **New Event** starts at the
+next full hour and lasts one hour; a click on the grid starts at that time,
+and a drag covers the time you dragged across.
+
+**Start** and **End** each have a day and, unless the event is all day, a
+time, so an event can run overnight, such as from 10 PM to 1 AM, or across
+several days. Changing the start moves the end with it, so the event keeps its
+length. Picking an end time earlier than the start time ends the event the
+next day. An event can't be saved while its end is not after its start.
+
+To move an event, drag it in the grid; on iPhone and iPad, touch and hold it
+first. On the Mac, drag an event's top or bottom edge to change when it starts
+or ends. Repeating events and events that continue past midnight into the next
+day can't be dragged; open them to change their times. An event that ends at
+exactly midnight counts as a one-day event and drags like any other.
+
+When you edit one occurrence of a repeating event and change how many days it
+spans, the change applies to this event or to this and the following events;
+**All Events** is not offered for that edit.
 
 ### Importing from System Calendars
 

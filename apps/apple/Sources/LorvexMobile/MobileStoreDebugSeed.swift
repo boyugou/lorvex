@@ -29,6 +29,18 @@
     }
   }
 
+  /// Dev/QA only: the `lorvex://sheet/event` screenshot hook parks the draft the
+  /// calendar opens its New Event sheet on at its next appearance. Consumed
+  /// once, so later visits start with the sheet closed.
+  enum MobileCalendarDebugState {
+    @MainActor static var initialCreateDraft: MobileCalendarDraft?
+
+    @MainActor static func takeInitialCreateDraft() -> MobileCalendarDraft? {
+      defer { initialCreateDraft = nil }
+      return initialCreateDraft
+    }
+  }
+
   /// Dev/QA only: the `lorvex://memorycomposer` screenshot hook asks the Memory
   /// workspace to raise its New Memory sheet on its next appearance. Consumed
   /// once, so later visits start with the sheet closed.
@@ -408,6 +420,28 @@
       return URL(string: args[index + 1])
     }
 
+    /// The New Event draft the `lorvex://sheet/event/<kind>` hook opens on:
+    /// `overnight` runs from 22:00 on `now`'s day to 01:00 the next day, `days`
+    /// covers `now`'s day and the two after it as an all-day event, and any
+    /// other kind is the next-hour default.
+    static func debugEventDraft(kind: String?, now: Date) -> MobileCalendarDraft {
+      let calendar = CalendarEventTiming.deviceCalendar
+      let day = calendar.startOfDay(for: now)
+      switch kind {
+      case "overnight":
+        let start = calendar.date(bySettingHour: 22, minute: 0, second: 0, of: day) ?? now
+        return MobileCalendarDraft(
+          title: "Night flight", timing: .timed(startingAt: start, minutes: 180))
+      case "days":
+        let last = calendar.date(byAdding: .day, value: 2, to: day) ?? day
+        return MobileCalendarDraft(
+          title: "Design conference",
+          timing: CalendarEventTiming(start: day, end: last, allDay: true))
+      default:
+        return MobileCalendarDraft(timing: .nextHourBlock(after: now))
+      }
+    }
+
     private func debugApplyNavigation(to url: URL) {
       // `lorvex://tab/<name>` selects a tab, and `lorvex://tab/habits` opens
       // the Habits workspace on the Tasks stack, where the Tasks home's row
@@ -442,12 +476,19 @@
       // `lorvex://sheet/capture` raises the quick-capture sheet (capture is an
       // action, not a deep-linkable destination — this is a screenshot hook);
       // `lorvex://sheet/capture/<text>` also types <text> into it, so the
-      // preview of what Add will create renders.
+      // preview of what Add will create renders. `lorvex://sheet/event` opens
+      // the calendar with its New Event sheet raised: `/overnight` on an event
+      // from 22:00 to 01:00 the next day, `/days` on an all-day event across
+      // three days, and otherwise on the next-hour default.
       if url.host == "sheet", let name = url.pathComponents.dropFirst().first {
         switch name {
         case "capture":
           if url.pathComponents.count > 2 { captureDraft.title = url.pathComponents[2] }
           isPresentingCapture = true
+        case "event":
+          let kind = url.pathComponents.count > 2 ? url.pathComponents[2] : nil
+          MobileCalendarDebugState.initialCreateDraft = Self.debugEventDraft(kind: kind, now: now())
+          selectedTab = .calendar
         default: break
         }
         return

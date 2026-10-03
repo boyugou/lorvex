@@ -16,9 +16,11 @@ public enum LorvexTimelineMetrics {
 /// two read as one thing. A row the clock has cleared steps back without
 /// losing legibility: its marker fades and its title takes the secondary
 /// style, while its time and duration keep theirs. The time column widens with
-/// the text; from the size where a column would leave the title a few words a
-/// line (``SwiftUI/DynamicTypeSize/stacksTimeColumn``), the marker leads and
-/// the time and duration sit above the title, which wraps as far as it needs.
+/// the text and fits any clock time on one line; a longer time ("Until 1:30
+/// AM") wraps onto a second line there rather than being cut short. From the
+/// size where a column would leave the title a few words a line
+/// (``SwiftUI/DynamicTypeSize/stacksTimeColumn``), the marker leads and the
+/// time and duration sit above the title, which wraps as far as it needs.
 /// Callers own the marker (a task's completion circle, a hold's thin bar in
 /// its calendar's color) and any gesture on the row.
 public struct LorvexTimelineRow<Marker: View>: View {
@@ -81,7 +83,8 @@ public struct LorvexTimelineRow<Marker: View>: View {
   private var inline: some View {
     HStack(spacing: LorvexDesign.Spacing.s + 2) {
       timeText
-        .lineLimit(1)
+        .lineLimit(2)
+        .fixedSize(horizontal: false, vertical: true)
         .frame(width: timeWidth, alignment: .leading)
       markerView
         .frame(width: 16)

@@ -1,21 +1,24 @@
 import LorvexCore
 import SwiftUI
 
-/// An event under a day of the agenda: a glyph (a sun for an all-day event),
-/// its title, and its time and place, with a repeat mark when it repeats. The
+/// An event under a day of the agenda: a glyph (a sun for an all-day event or
+/// a day a longer event fills, which both read "all day"), its title, and its
+/// time and place, with a repeat mark when it repeats. The
 /// title and the time each keep to two lines, and show whole at the
 /// accessibility text sizes. An event the clock has cleared steps back
 /// without losing legibility: its glyph fades and its title takes the
 /// secondary style, as a past row of the Today schedule does.
 struct MobileCalendarAgendaRow: View {
   let event: CalendarTimelineEvent
+  /// The row's day as `yyyy-MM-dd`, to read the part of the event it holds.
+  let dayKey: String
   var isPast = false
 
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
       // As wide as a task row's completion circle, so event and task titles
       // share one leading edge.
-      Image(systemName: event.allDay ? "sun.max" : "calendar")
+      Image(systemName: event.allDay || event.dayPart(on: dayKey) == .middleDay ? "sun.max" : "calendar")
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .opacity(isPast ? LorvexDesign.Palette.pastMarkOpacity : 1)
@@ -58,22 +61,22 @@ struct MobileCalendarAgendaRow: View {
     return lorvexDotJoined(facts)
   }
 
-  /// The event's time on the user's 12- or 24-hour clock, as a span when it
-  /// has an end ("9:00 – 9:30 AM", naming the day period once), the way the
-  /// task rows beside it read theirs; "all day" or "time unset" when it has no
-  /// clock time.
+  /// The event's time on the row's day, on the user's 12- or 24-hour clock:
+  /// a span when it has an end ("9:00 – 9:30 AM", naming the day period once),
+  /// the way the task rows beside it read theirs, and for one day of an event
+  /// that runs past midnight its start on the first day and "Until 1:30 AM" on
+  /// the last; "all day" for an all-day event or a day a longer event fills,
+  /// and "time unset" for a timed event without a clock time.
   private var timeLabel: String {
-    guard !event.allDay else {
-      return String(
-        localized: "calendar.all_day", defaultValue: "all day", table: "Localizable",
-        bundle: MobileL10n.bundle)
-    }
-    guard let start = event.startTime else {
+    if !event.allDay, event.startTime == nil {
       return String(
         localized: "calendar.time_unset", defaultValue: "time unset", table: "Localizable",
         bundle: MobileL10n.bundle)
     }
-    return lorvexClockRangeLabel(start: start, end: event.endTime)
+    return event.listTimeLabel(on: dayKey, range: MobileTodayCalmCopy.timeRange(start:end:))
+      ?? String(
+        localized: "calendar.all_day", defaultValue: "all day", table: "Localizable",
+        bundle: MobileL10n.bundle)
   }
 }
 

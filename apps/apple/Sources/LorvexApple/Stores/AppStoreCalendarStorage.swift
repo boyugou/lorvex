@@ -18,10 +18,8 @@ struct AppStoreCalendarStorage {
   /// timeline (navigation, deletion, or a filter change).
   var selectedCalendarEventID: String?
   var draftCalendarTitle = ""
-  var draftCalendarDate = Date()
-  var draftCalendarStartTime = Date()
-  var draftCalendarEndTime = Date()
-  var draftCalendarAllDay = false
+  /// When the draft event starts and ends, including whether it is all-day.
+  var draftCalendarTiming = CalendarEventTiming.timed(startingAt: Date())
   var draftCalendarLocation = ""
   var draftCalendarNotes = ""
   var draftCalendarColor: String?
@@ -48,15 +46,12 @@ struct AppStoreCalendarStorage {
   /// is stashed.
   var stashedDraft: CalendarDraftSnapshot?
 
-  /// Snapshot of the eight event-draft fields, used to stash/restore the draft
+  /// Snapshot of the event-draft fields, used to stash/restore the draft
   /// around the create sheet so create and edit don't corrupt each other's
   /// in-progress values.
   struct CalendarDraftSnapshot {
     var title: String
-    var date: Date
-    var startTime: Date
-    var endTime: Date
-    var allDay: Bool
+    var timing: CalendarEventTiming
     var location: String
     var notes: String
     var color: String?
@@ -77,10 +72,7 @@ struct AppStoreCalendarStorage {
     calendarScheduledTasks = nil
     selectedCalendarEventID = nil
     draftCalendarTitle = ""
-    draftCalendarDate = Date()
-    draftCalendarStartTime = Date()
-    draftCalendarEndTime = Date()
-    draftCalendarAllDay = false
+    draftCalendarTiming = CalendarEventTiming.timed(startingAt: Date())
     draftCalendarLocation = ""
     draftCalendarNotes = ""
     draftCalendarColor = nil

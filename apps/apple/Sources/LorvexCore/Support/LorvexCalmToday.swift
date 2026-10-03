@@ -100,8 +100,10 @@ public struct LorvexCalmToday: Equatable, Sendable {
   /// task leads.
   public var leadID: LorvexTask.ID?
   public var doneToday: Int
-  /// Timed calendar events still ahead today (or under way), all-day events
-  /// excluded.
+  /// Timed calendar events still ahead today (or under way): the timed rows
+  /// of Today's schedule the clock has not cleared
+  /// (``CalendarTimelineEvent/clockSpan(on:)``). All-day events, and days that
+  /// longer events fill, read as all day there and are not counted.
   public var remainingMeetings: Int
   /// Minutes of estimated work left, summed over the tasks that carry an
   /// estimate or a time (``Item/workMinutes(nowMinutes:)``); nil when none does.
@@ -186,11 +188,9 @@ public struct LorvexCalmToday: Equatable, Sendable {
     let work = items.compactMap { $0.workMinutes(nowMinutes: nowMinutes) }
     let workMinutes = work.isEmpty ? nil : work.reduce(0, +)
     let remainingMeetings = events.filter { event in
-      guard !event.allDay else { return false }
+      guard let span = event.clockSpan(on: logicalDay) else { return false }
       guard let nowMinutes else { return true }
-      if let endDate = event.endDate, endDate > logicalDay { return true }
-      let end = lorvexMinutesSinceMidnight(event.endTime) ?? lorvexMinutesSinceMidnight(event.startTime)
-      return (end ?? 0) > nowMinutes
+      return (span.end ?? span.start) > nowMinutes
     }.count
     return LorvexCalmToday(
       items: items,

@@ -29,7 +29,7 @@ struct MenuBarAgendaList: View {
             .foregroundStyle(.secondary)
             .padding(.bottom, LorvexDesign.Spacing.xxs)
             .accessibilityAddTraits(.isHeader)
-          ForEach(day.events) { eventRow($0) }
+          ForEach(day.events) { eventRow($0, dayKey: day.key) }
           ForEach(day.tasks) { task in
             MenuBarTaskRow(
               task: task, time: task.time(on: day.key), identifier: "menubar.agenda.task",
@@ -42,18 +42,18 @@ struct MenuBarAgendaList: View {
     }
   }
 
-  private func eventRow(_ event: CalendarTimelineEvent) -> some View {
+  private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Capsule()
         .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
         .frame(width: 3, height: 14)
         .frame(width: 18)
         .accessibilityHidden(true)
-      Text(event.title)
+      Text(userContent: event.title)
         .font(LorvexDesign.Typography.primaryText)
         .lineLimit(1)
       Spacer(minLength: 0)
-      Text(eventTime(event))
+      Text(eventTime(event, dayKey: dayKey))
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .monospacedDigit()
@@ -64,12 +64,11 @@ struct MenuBarAgendaList: View {
     .accessibilityIdentifier("menubar.agenda.event")
   }
 
-  /// An event's time on the agenda: "All day", or its range.
-  private func eventTime(_ event: CalendarTimelineEvent) -> String {
-    guard !event.allDay, let start = CalendarGridModel.parseMinutes(event.startTime) else {
-      return TodayCalmCopy.allDay
-    }
-    return TodayCalmCopy.timeRange(start: start, end: CalendarGridModel.parseMinutes(event.endTime))
+  /// An event's time on its day of the agenda: its range, "All day", or for
+  /// one day of an event that runs past midnight its start on the first day
+  /// and "Until 1:30 AM" on the last.
+  private func eventTime(_ event: CalendarTimelineEvent, dayKey: String) -> String {
+    event.listTimeLabel(on: dayKey, range: TodayCalmCopy.timeRange(start:end:)) ?? TodayCalmCopy.allDay
   }
 }
 

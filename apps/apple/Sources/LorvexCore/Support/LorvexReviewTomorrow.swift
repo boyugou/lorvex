@@ -39,7 +39,7 @@ public struct LorvexReviewTomorrow: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
       LorvexPageLabel(label)
       if let day, !day.events.isEmpty || !day.tasks.isEmpty {
-        ForEach(day.events) { eventRow($0) }
+        ForEach(day.events) { eventRow($0, dayKey: day.key) }
         ForEach(day.tasks) { taskRow($0, dayKey: day.key) }
       } else {
         Text(emptyLine)
@@ -52,7 +52,7 @@ public struct LorvexReviewTomorrow: View {
     .accessibilityIdentifier(identifier)
   }
 
-  private func eventRow(_ event: CalendarTimelineEvent) -> some View {
+  private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       marker {
         Capsule()
@@ -63,7 +63,7 @@ public struct LorvexReviewTomorrow: View {
         .font(LorvexDesign.Typography.primaryText)
         .lineLimit(2)
       Spacer(minLength: LorvexDesign.Spacing.s)
-      timeText(eventTime(event))
+      timeText(eventTime(event, dayKey: dayKey))
     }
     .padding(.vertical, LorvexDesign.Spacing.xxs)
     .accessibilityElement(children: .combine)
@@ -131,10 +131,10 @@ public struct LorvexReviewTomorrow: View {
       .lineLimit(1)
   }
 
-  private func eventTime(_ event: CalendarTimelineEvent) -> String {
-    guard !event.allDay, let start = CalendarGridModel.parseMinutes(event.startTime) else {
-      return allDay
-    }
-    return timeRange(start, CalendarGridModel.parseMinutes(event.endTime))
+  /// An event's time on the day: its range, the all-day word, or for one day
+  /// of an event that runs past midnight its start on the first day and
+  /// "Until 1:30 AM" on the last.
+  private func eventTime(_ event: CalendarTimelineEvent, dayKey: String) -> String {
+    event.listTimeLabel(on: dayKey, range: timeRange) ?? allDay
   }
 }

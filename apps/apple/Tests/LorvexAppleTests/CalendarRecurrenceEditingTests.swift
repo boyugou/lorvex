@@ -37,11 +37,9 @@ func calendarCreateWritesTypedRecurrenceThroughCore() async throws {
     core: try await makeSeededInMemoryCore(), eventKitCoordinator: makeRecurrenceCoordinator())
   await store.refresh()
 
-  let start = makeDate(2026, 7, 6, 10, 0)
   store.draftCalendarTitle = "Weekly sync"
-  store.draftCalendarDate = start
-  store.draftCalendarStartTime = start
-  store.draftCalendarEndTime = makeDate(2026, 7, 6, 10, 30)
+  store.draftCalendarTiming = CalendarEventTiming(
+    start: makeDate(2026, 7, 6, 10, 0), end: makeDate(2026, 7, 6, 10, 30), allDay: false)
   store.draftCalendarRecurrence = TaskRecurrenceRule(freq: .weekly, interval: 1, byDay: ["MO", "WE"])
 
   await store.createDraftCalendarEvent()
@@ -203,12 +201,10 @@ func calendarPrepareDraftSeedsRecurrenceFromEvent() async throws {
 
   // A recurring event round-trips its rule back into the draft so the editor
   // opens showing the current cadence.
-  let start = makeDate(2026, 7, 13, 9, 0)
   store.beginCreateCalendarDraft()
   store.draftCalendarTitle = "Standup"
-  store.draftCalendarDate = start
-  store.draftCalendarStartTime = start
-  store.draftCalendarEndTime = makeDate(2026, 7, 13, 9, 15)
+  store.draftCalendarTiming = CalendarEventTiming(
+    start: makeDate(2026, 7, 13, 9, 0), end: makeDate(2026, 7, 13, 9, 15), allDay: false)
   store.draftCalendarRecurrence = TaskRecurrenceRule(freq: .weekly, interval: 1, byDay: ["MO"])
   await store.createDraftCalendarEvent()
 

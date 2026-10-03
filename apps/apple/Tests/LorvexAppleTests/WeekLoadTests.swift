@@ -47,6 +47,28 @@ func weekLoadPacksTasksAroundMeetings() {
   #expect(load.headline == .fullest(key: "2026-09-21", freeMinutes: 240))
 }
 
+@Test("An event without an end time takes the grid's hour; a zero-length one takes no time; a filled day is busy")
+func weekLoadMeasuresEventsByTheirTimeOnTheDay() {
+  let open = CalendarTimelineEvent(
+    id: "open", title: "Open-ended", source: "canonical", editable: true,
+    startDate: "2026-09-21", startTime: "10:00", endDate: nil, endTime: nil, allDay: false,
+    location: nil, color: nil, eventType: "event", timezone: nil, isRecurring: false,
+    recurrenceRule: nil)
+  let load = build([
+    .init(
+      key: "2026-09-21",
+      events: [open, meeting("2026-09-21", "14:00", "14:00")],
+      tasks: []),
+    .init(
+      key: "2026-09-22",
+      events: [meeting("2026-09-21", "18:00", "09:00", endDay: "2026-09-23")],
+      tasks: []),
+  ])
+  #expect(load.days[0].meetingMinutes == CalendarGridModel.defaultEventDurationMinutes)
+  #expect(load.days[0].freeMinutes == 8 * 60 - 60, "not busy from 10:00 AM to the end of the day")
+  #expect(load.days[1].meetingMinutes == 8 * 60, "the trip fills the working day it spans")
+}
+
 @Test("Estimates that do not fit run past the window as overrun, widening the shared scale")
 func weekLoadMarksOverbookedDays() {
   let load = build([

@@ -55,17 +55,17 @@ func appStoreBeginCreateHabitDraftResetsToDefaults() async throws {
 func appStoreBeginCreateCalendarDraftClearsEditedFields() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
   store.draftCalendarTitle = "Edited event"
-  store.draftCalendarAllDay = true
+  store.draftCalendarTiming.allDay = true
   store.draftCalendarLocation = "Office"
   store.draftCalendarColor = "#3B82F6"
 
   store.beginCreateCalendarDraft()
   #expect(store.draftCalendarTitle.isEmpty)
   #expect(store.draftCalendarLocation.isEmpty)
-  #expect(store.draftCalendarAllDay == false)
+  #expect(store.draftCalendarTiming.allDay == false)
   #expect(store.draftCalendarColor == nil)
-  #expect(store.draftCalendarEndTime > store.draftCalendarStartTime)
-  #expect(store.draftCalendarEndTime.timeIntervalSince(store.draftCalendarStartTime) == 60 * 60)
+  #expect(store.draftCalendarTiming.isValid)
+  #expect(store.draftCalendarTiming.end.timeIntervalSince(store.draftCalendarTiming.start) == 60 * 60)
 }
 
 @MainActor
@@ -99,10 +99,11 @@ func mobileStoreBeginCreateHabitDraftResetsToDefaults() async throws {
 @MainActor
 @Test
 func mobileStoreBeginCreateCalendarDraftClearsEditedTitle() async throws {
-  // A mid-morning clock: the default block is clamped to the start's day, so a
-  // wall-clock `now` inside the last hour before midnight would shorten it.
-  let now = try #require(Calendar.current.date(
-    from: DateComponents(year: 2026, month: 5, day: 23, hour: 10, minute: 0)))
+  let calendar = CalendarEventTiming.deviceCalendar
+  let now = try #require(calendar.date(
+    from: DateComponents(year: 2026, month: 5, day: 23, hour: 10, minute: 20)))
+  let nextHour = try #require(calendar.date(
+    from: DateComponents(year: 2026, month: 5, day: 23, hour: 11, minute: 0)))
   let store = MobileStore(core: try await makeSeededInMemoryCore(), todayString: { "2026-05-23" }, now: { now })
   store.calendarDraft.title = "Edited event"
   store.calendarDraft.location = "Office"
@@ -110,27 +111,40 @@ func mobileStoreBeginCreateCalendarDraftClearsEditedTitle() async throws {
   store.beginCreateCalendarDraft()
   #expect(store.calendarDraft.trimmedTitle.isEmpty)
   #expect(store.calendarDraft.trimmedLocation.isEmpty)
-  #expect(store.calendarDraft.endTime.timeIntervalSince(store.calendarDraft.startTime) == 60 * 60)
+  // The new event is the hour from the next full hour.
+  #expect(store.calendarDraft.timing.allDay == false)
+  #expect(store.calendarDraft.timing.start == nextHour)
+  #expect(store.calendarDraft.timing.end.timeIntervalSince(nextHour) == 60 * 60)
 }
 
+// A new event's end comes from `CalendarEventTiming`, which keeps lengths in
+// wall-clock minutes and lets the end run past midnight; the create paths
+// never compute an end time themselves.
 @Test
-func createCalendarDraftDurationsDoNotUseOptionalCalendarFallbacks() throws {
+func createCalendarDraftsTakeTheirEndFromCalendarEventTiming() throws {
   let root = packageRoot()
-  let files = [
-    "Sources/LorvexApple/Stores/AppStoreCalendarActions.swift",
-    "Sources/LorvexApple/Views/CalendarWorkspaceCreateDraft.swift",
-    "Sources/LorvexMobile/MobileStoreCalendarActions.swift",
-    "Sources/LorvexMobile/MobileCalendarDayActions.swift",
+  let creations = [
+    "Sources/LorvexApple/Stores/AppStoreCalendarActions.swift":
+      "draftCalendarTiming = .nextHourBlock(after: Date())",
+    "Sources/LorvexApple/Views/CalendarWorkspaceCreateDraft.swift":
+      "store.draftCalendarTiming = .timed(startingAt: start",
+    "Sources/LorvexMobile/MobileStoreCalendarActions.swift":
+      "MobileCalendarDraft(timing: .nextHourBlock(after: now()))",
+    "Sources/LorvexMobile/MobileCalendarDayActions.swift":
+      "MobileCalendarDraft.timedDefault(start: start)",
   ]
 
-  for file in files {
+  for (file, creation) in creations {
     let source = try String(contentsOf: root.appending(path: file), encoding: .utf8)
     #expect(
+      source.contains(creation),
+      "\(file) should build its new-event draft through CalendarEventTiming")
+    #expect(
       !source.contains("date(byAdding: .hour"),
-      "\(file) should use fixed-duration Date arithmetic for draft end times")
+      "\(file) should leave draft end times to CalendarEventTiming")
     #expect(
       !source.contains("date(byAdding: .minute"),
-      "\(file) should use fixed-duration Date arithmetic for draft end times")
+      "\(file) should leave draft end times to CalendarEventTiming")
   }
 }
 

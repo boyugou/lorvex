@@ -98,25 +98,30 @@ func memoryEntryAccessibilityLabelCombinesTitleAndContent() {
 
 // MARK: - calendarEventAccessibilityLabel
 
+// An event reads as its title, its clock times, and its place when it has
+// one, never as the internal name of the calendar source it came from.
 @Test
-func calendarEventAccessibilityLabelAllDay() {
-  let label = calendarEventAccessibilityLabel(
-    title: "Company Holiday", allDay: true, startTime: nil, endTime: nil,
-    location: nil, source: "Google Calendar"
-  )
-  #expect(label.contains("Company Holiday"))
-  #expect(label.contains("All day"))
-  #expect(label.contains("Google Calendar"))
+func calendarEventAccessibilityLabelReadsTitleTimeAndPlace() {
+  var standup = CalendarTimelineEvent(
+    id: "standup", title: "Standup", source: "eventkit", editable: false,
+    startDate: "2026-10-02", startTime: "09:00", endDate: nil, endTime: "09:30",
+    allDay: false, location: "Zoom", color: nil, eventType: "event", timezone: nil,
+    isRecurring: false)
+  let time = lorvexClockRangeLabel(start: "09:00", end: "09:30")
+  #expect(calendarEventAccessibilityLabel(standup) == "Standup, \(time), Zoom")
+
+  standup.location = nil
+  #expect(calendarEventAccessibilityLabel(standup) == "Standup, \(time)")
 }
 
+// An event that runs into a later day reads as one span across its days.
 @Test
-func calendarEventAccessibilityLabelWithTime() {
-  let label = calendarEventAccessibilityLabel(
-    title: "Standup", allDay: false, startTime: "9:00 AM", endTime: "9:30 AM",
-    location: "Zoom", source: "Google Calendar"
-  )
-  #expect(label.contains("Standup"))
-  #expect(label.contains("9:00 AM"))
-  #expect(label.contains("9:30 AM"))
-  #expect(label.contains("Zoom"))
+func calendarEventAccessibilityLabelReadsAnOvernightEventAsASpan() throws {
+  let flight = CalendarTimelineEvent(
+    id: "flight", title: "Night flight", source: "lorvex", editable: true,
+    startDate: "2026-10-02", startTime: "22:30", endDate: "2026-10-03", endTime: "01:30",
+    allDay: false, location: nil, color: nil, eventType: "event", timezone: nil,
+    isRecurring: false)
+  let span = try #require(flight.timedSpanLabel)
+  #expect(calendarEventAccessibilityLabel(flight) == "Night flight, \(span)")
 }

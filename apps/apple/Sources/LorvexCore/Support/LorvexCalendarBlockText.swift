@@ -18,9 +18,9 @@ import SwiftUI
 /// The first three arrangements keep `verticalPadding` above and below the
 /// text; the last two give the block every point it has, at the cost of the
 /// breathing room. A time shows the range ("1:00 – 1:30 PM") where it fits
-/// the width, otherwise the start ("1:00 PM"). An arrangement that leaves the
-/// time out relies on the block's accessibility label, which the caller sets,
-/// to name it.
+/// the width, otherwise the single time ("1:00 PM"). An arrangement that
+/// leaves the time out relies on the block's accessibility label, which the
+/// caller sets, to name it.
 ///
 /// `accessory` leads every arrangement, aligned to the title's first baseline
 /// (a task block's completion circle); an event block passes none. A done
@@ -33,7 +33,7 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
   public static var minimumScale: CGFloat { 0.8 }
 
   private let title: String
-  private let start: String?
+  private let time: String?
   private let range: String?
   private let isDone: Bool
   private let verticalPadding: CGFloat
@@ -42,10 +42,11 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
 
   /// - Parameters:
   ///   - title: The event's or task's title.
-  ///   - start: The start time ("1:00 PM"); nil for a block that shows no
-  ///     time, such as one day's piece of a multi-day event.
-  ///   - range: The time range ("1:00 – 1:30 PM"), drawn instead of `start`
-  ///     where it fits the width.
+  ///   - time: The block's time: its start ("1:00 PM"), or the end of an event
+  ///     that started on an earlier day ("Until 1:00 AM"); nil for a block
+  ///     that shows no time.
+  ///   - range: The time range ("1:00 – 1:30 PM"), drawn instead of `time`
+  ///     where it fits the width; nil to always draw `time`.
   ///   - isDone: Strikes the title through and draws it secondary.
   ///   - verticalPadding: The space above and below the text in every
   ///     arrangement but the last.
@@ -53,7 +54,7 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
   ///   - accessory: The view leading the text, aligned to its first baseline.
   public init(
     title: String,
-    start: String?,
+    time: String?,
     range: String? = nil,
     isDone: Bool = false,
     verticalPadding: CGFloat = 2,
@@ -61,7 +62,7 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
     @ViewBuilder accessory: () -> Accessory
   ) {
     self.title = title
-    self.start = start
+    self.time = time
     self.range = range
     self.isDone = isDone
     self.verticalPadding = verticalPadding
@@ -71,9 +72,9 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
 
   public var body: some View {
     ViewThatFits(in: .vertical) {
-      if let start {
-        padded(stacked(titleLines: 2, start: start))
-        padded(stacked(titleLines: 1, start: start))
+      if let time {
+        padded(stacked(titleLines: 2, time: time))
+        padded(stacked(titleLines: 1, time: time))
       } else {
         padded(titleText.lineLimit(2))
       }
@@ -104,31 +105,31 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
   }
 
   /// The title with the time beside it when both fit whole (the range, else
-  /// the start), otherwise the title alone.
+  /// the single time), otherwise the title alone.
   private var oneLine: some View {
     ViewThatFits(in: .horizontal) {
-      if let start {
+      if let time {
         if let range { titleBeside(range) }
-        titleBeside(start)
+        titleBeside(time)
       }
       titleText.lineLimit(1)
     }
   }
 
-  private func titleBeside(_ time: String) -> some View {
+  private func titleBeside(_ label: String) -> some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.xs) {
       titleText.lineLimit(1)
-      timeText(time)
+      timeText(label)
     }
   }
 
   /// The title over its time line.
-  private func stacked(titleLines: Int, start: String) -> some View {
+  private func stacked(titleLines: Int, time: String) -> some View {
     VStack(alignment: .leading, spacing: 1) {
       titleText.lineLimit(titleLines)
       ViewThatFits(in: .horizontal) {
         if let range { timeText(range) }
-        timeText(start)
+        timeText(time)
       }
     }
   }
@@ -165,13 +166,13 @@ extension LorvexCalendarBlockText where Accessory == EmptyView {
   /// A block with no leading accessory, such as a calendar event's.
   public init(
     title: String,
-    start: String?,
+    time: String?,
     range: String? = nil,
     isDone: Bool = false,
     verticalPadding: CGFloat = 2
   ) {
     self.init(
-      title: title, start: start, range: range, isDone: isDone, verticalPadding: verticalPadding
+      title: title, time: time, range: range, isDone: isDone, verticalPadding: verticalPadding
     ) { EmptyView() }
   }
 }

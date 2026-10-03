@@ -16,6 +16,10 @@ public struct CalendarGridTimedBlock: Identifiable, Equatable, Sendable {
   /// Stable per-column identity (event id + day key), since a multi-day event
   /// yields one block per day it spans.
   public let id: String
+  /// Which part of the event this block draws: all of it, or the first or
+  /// last day of an event shorter than a day that runs past midnight. An event
+  /// of a day or more has no timed blocks, so no block draws a middle day.
+  public let part: CalendarEventDayPart
 
   public init(
     event: CalendarTimelineEvent,
@@ -24,7 +28,8 @@ public struct CalendarGridTimedBlock: Identifiable, Equatable, Sendable {
     drawnEndMin: Int? = nil,
     lane: Int,
     laneCount: Int,
-    id: String
+    id: String,
+    part: CalendarEventDayPart = .whole
   ) {
     self.event = event
     self.startMin = startMin
@@ -33,6 +38,7 @@ public struct CalendarGridTimedBlock: Identifiable, Equatable, Sendable {
     self.lane = lane
     self.laneCount = laneCount
     self.id = id
+    self.part = part
   }
 }
 
@@ -84,6 +90,8 @@ public struct CalendarGridDay: Identifiable, Equatable, Sendable {
   /// `yyyy-MM-dd` key matching `CalendarTimelineEvent.startDate`.
   public let dayKey: String
   public let timedBlocks: [CalendarGridTimedBlock]
+  /// The all-day strip's events, by title: the all-day events on this day and
+  /// the timed events of 24 hours or more that take time on it.
   public let allDayEvents: [CalendarTimelineEvent]
   /// Tasks planned (or, unplanned, due) on this day without a time on it; the
   /// all-day strip draws them as pills.

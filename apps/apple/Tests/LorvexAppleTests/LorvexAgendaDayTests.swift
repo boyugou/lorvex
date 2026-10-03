@@ -59,6 +59,44 @@ struct LorvexAgendaDayTests {
     #expect(days[1].events.map(\.title) == ["Offsite", "Overnight"])
   }
 
+  @Test("An event that began the day before leads the timed events; a day a longer event fills reads with the all-day ones")
+  func eventsOrderByTheirPlaceOnTheDay() {
+    let redEye = Self.event("Red-eye", from: "2026-10-02", until: "2026-10-03", "22:30", "01:30")
+    let trip = Self.event("Trip", from: "2026-10-02", until: "2026-10-04", "19:00", "09:00")
+    let days = LorvexAgendaDay.build(
+      todayKey: "2026-10-01",
+      events: [
+        Self.event("Breakfast", from: "2026-10-03", "08:00", "09:00"),
+        trip,
+        redEye,
+        Self.event("Holiday", from: "2026-10-03", allDay: true),
+      ],
+      tasks: [])
+    #expect(days.map(\.key) == ["2026-10-02", "2026-10-03", "2026-10-04"])
+    #expect(days[0].events.map(\.title) == ["Trip", "Red-eye"], "both start that evening, the trip first")
+    #expect(days[1].events.map(\.title) == ["Holiday", "Trip", "Red-eye", "Breakfast"])
+    #expect(days[2].events.map(\.title) == ["Trip"])
+  }
+
+  @Test("An event shows its time on each day it takes: its range, its start, until its end, or all day")
+  func eventsReadTheirTimeOnEachDay() {
+    let range = { (start: Int, end: Int?) in "\(start)-\(end.map { "\($0)" } ?? "")" }
+    let redEye = Self.event("Red-eye", from: "2026-10-02", until: "2026-10-03", "22:30", "01:30")
+    #expect(redEye.listTimeLabel(on: "2026-10-02", range: range) == lorvexClockTimeLabel("22:30"))
+    let until = redEye.listTimeLabel(on: "2026-10-03", range: range)
+    #expect(until?.contains(lorvexClockTimeLabel("01:30")) == true, "the day after reads when it ends")
+    #expect(until?.contains(lorvexClockTimeLabel("22:30")) == false)
+
+    let trip = Self.event("Trip", from: "2026-10-02", until: "2026-10-04", "19:00", "09:00")
+    #expect(trip.listTimeLabel(on: "2026-10-03", range: range) == nil, "a day the trip fills reads as all day")
+
+    #expect(Self.event("Breakfast", from: "2026-10-03", "08:00", "09:00").listTimeLabel(on: "2026-10-03", range: range) == "480-540")
+    #expect(
+      Self.event("Late", from: "2026-10-03", until: "2026-10-04", "21:00", "00:00").listTimeLabel(on: "2026-10-03", range: range)
+        == "1260-1440", "an end at midnight is the end of the day")
+    #expect(Self.event("Holiday", from: "2026-10-03", allDay: true).listTimeLabel(on: "2026-10-03", range: range) == nil)
+  }
+
   @Test("Timed tasks come first by start, finished tasks are left out")
   func tasksOrderAndStatus() {
     let days = LorvexAgendaDay.build(

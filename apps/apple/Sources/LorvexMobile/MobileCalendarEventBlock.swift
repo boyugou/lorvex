@@ -23,24 +23,17 @@ extension MobileCalendarDayColumn {
     let active = activeDrag != nil
     let dragOffsetX: CGFloat = activeDrag?.translationX ?? 0
     let dragOffsetY: CGFloat = activeDrag?.translationY ?? 0
-    let isMultiDay =
-      block.event.endDate != nil && block.event.endDate != block.event.startDate
     let isReschedulable =
       onReschedule != nil && block.event.editable && !block.event.allDay
-      && !block.event.supportsScopedMutation && !isMultiDay
-    let start = block.event.startTime.map(lorvexClockTimeLabel)
-    // A multi-day event's piece of one day is not its time, so it keeps its
-    // start alone.
-    let range =
-      isMultiDay
-      ? nil : lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin)
+      && !block.event.supportsScopedMutation && !block.event.isMultiDay
     // The text clears the 3pt color rail on the leading edge. A compact
     // block takes the trailing side down to 1pt instead, so its title keeps
     // every point of the narrow lane.
     let leadingPadding: CGFloat = 5
     let trailingPadding: CGFloat = isCompact ? 1 : 5
     return blockContent(
-      isCompact: isCompact, isTight: isTight, title: block.event.title, start: start, range: range
+      isCompact: isCompact, isTight: isTight, title: block.event.title, time: block.timeLabel,
+      range: block.rangeLabel
     )
     .padding(.leading, leadingPadding).padding(.trailing, trailingPadding)
     .frame(width: max(laneWidth - 2, 10), height: height, alignment: .topLeading)
@@ -99,13 +92,13 @@ extension MobileCalendarDayColumn {
   /// (``LorvexCalendarBlockText``).
   @ViewBuilder
   private func blockContent(
-    isCompact: Bool, isTight: Bool, title: String, start: String?, range: String?
+    isCompact: Bool, isTight: Bool, title: String, time: String?, range: String?
   ) -> some View {
     if isCompact {
       MobileCalendarCompactBlockTitle(title)
         .padding(.vertical, isTight ? 0 : 3)
     } else {
-      LorvexCalendarBlockText(title: title, start: start, range: range, verticalPadding: 3)
+      LorvexCalendarBlockText(title: title, time: time, range: range, verticalPadding: 3)
     }
   }
 

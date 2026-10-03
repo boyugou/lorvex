@@ -132,6 +132,30 @@ func calmTodayFacts() {
   #expect(unsized.facts == .day(tasks: 2, workMinutes: nil, meetings: 0))
 }
 
+@Test("the meetings ahead are the schedule's timed rows the clock has not cleared, across midnight too")
+func calmTodayCountsMeetingsByTheirPartOfTheDay() {
+  func spanning(_ id: String, _ from: String, _ start: String, _ to: String, _ end: String)
+    -> CalendarTimelineEvent
+  {
+    CalendarTimelineEvent(
+      id: id, eventID: id, supportsScopedMutation: false, title: id, source: "canonical",
+      editable: true, startDate: from, startTime: start, endDate: to, endTime: end, allDay: false,
+      location: nil, color: nil, eventType: "event", timezone: nil, isRecurring: false)
+  }
+  let events = [
+    spanning("trip", "2026-05-22", "18:00", "2026-05-24", "09:00"),
+    spanning("flight", "2026-05-22", "22:30", Fixture.day, "01:30"),
+    spanning("late", Fixture.day, "21:00", "2026-05-24", "00:00"),
+    spanning("redeye", Fixture.day, "23:00", "2026-05-24", "02:00"),
+  ]
+  let night = Fixture.page(tasks: [Fixture.task("a")], events: events, now: 60)
+  #expect(
+    night.facts == .day(tasks: 1, workMinutes: nil, meetings: 3),
+    "the flight until 1:30 AM, the late session, and the red-eye; the trip fills the day")
+  let evening = Fixture.page(tasks: [Fixture.task("a")], events: events, now: 22 * 60)
+  #expect(evening.facts == .day(tasks: 1, workMinutes: nil, meetings: 2), "both run past 10:00 PM")
+}
+
 @Test("work counts what is left of a running time and the estimate of a time that passed")
 func calmTodayWorkMinutes() {
   let page = Fixture.page(

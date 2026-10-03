@@ -18,6 +18,7 @@ extension MobileStore {
   var todaySchedule: [LorvexTodayTimelineItem] {
     let tasks = snapshot.today.tasks.filter(\.status.isActionable) + doneTodayTasks
     return LorvexTodayTimeline.build(
+      day: logicalTodayString,
       events: todayScheduleEvents,
       tasks: tasks,
       times: tasks.times(on: logicalTodayString),

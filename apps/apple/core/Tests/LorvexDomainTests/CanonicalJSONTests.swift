@@ -1,8 +1,9 @@
 import XCTest
 @testable import LorvexDomain
 
-/// Ported from `lorvex_domain::canonical_json::tests`. Each case asserts the
-/// Swift serializer reproduces the Rust output byte-for-byte.
+/// The canonical bytes sync checksums are computed over: sorted keys, no
+/// insignificant whitespace, and the escape table below. Each case pins the
+/// exact output, so a serializer change that would move a checksum fails here.
 final class CanonicalJSONTests: XCTestCase {
   private func canon(_ value: JSONValue) throws -> String {
     try canonicalizeJSON(value)
@@ -57,7 +58,9 @@ final class CanonicalJSONTests: XCTestCase {
     XCTAssertEqual(try canon(v), #"{"priority":2,"status":"open","title":"Buy milk"}"#)
   }
 
-  // MARK: - Escape-table parity (extends Rust coverage; matches serde_json)
+  // MARK: - Escape table: short escapes for tab, newline, return, backspace,
+  // form feed, quote, and backslash; lowercase \u00xx for other control
+  // characters; everything else, non-ASCII included, written as is.
 
   func testControlCharacterEscapes() throws {
     let v: JSONValue = .string("a\tb\nc\rd\u{08}e\u{0c}f\"g\\h")

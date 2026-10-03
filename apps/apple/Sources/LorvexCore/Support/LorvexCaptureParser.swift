@@ -6,8 +6,8 @@ import Foundation
 /// The line is read with the vocabularies of the user's languages
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
-/// French, and Portuguese for a user who reads them. Each vocabulary lists its
-/// words. The details are read one kind at a time:
+/// French, Portuguese, Spanish, and Italian for a user who reads them. Each
+/// vocabulary lists its words. The details are read one kind at a time:
 ///
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
@@ -69,8 +69,8 @@ public enum LorvexCaptureParser {
   ///   - today: the logical today as `yyyy-MM-dd`. Dates written out ("Oct 5",
   ///     10月5日) are recognized only when it is given.
   ///   - languages: the languages the user reads, as BCP 47 codes, which
-  ///     decide whether Japanese, Korean, French, and Portuguese words are
-  ///     read.
+  ///     decide whether Japanese, Korean, French, Portuguese, Spanish, and
+  ///     Italian words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,
     languages: [String] = Locale.preferredLanguages

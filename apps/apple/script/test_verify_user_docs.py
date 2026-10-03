@@ -11,7 +11,6 @@ from verify_user_docs import (
     DISTRIBUTION,
     FEATURES,
     MCP_TOOL_COUNT_PATTERNS,
-    ROADMAP,
     ROOT,
     documented_mcp_tool_examples,
     mcp_integration_section,
@@ -25,13 +24,6 @@ class VerifyUserDocsTests(unittest.TestCase):
     @staticmethod
     def mcp_count_documents(count: int) -> dict:
         return {
-            ROADMAP: (
-                f"- **MCP catalog at {count} tools.** Current state.\n"
-                f"  85 reference tools against Apple's catalog (now {count}): two gaps.\n"
-                f"  across the Apple MCP catalog (currently {count} tools) checked.\n"
-                f"- **MCP parity with the original reference catalog, and beyond.** The current Apple catalog has {count} tools.\n"
-                f"  additions leave the current catalog at {count} tools.\n"
-            ),
             FEATURES: f"MCP tool count: {count}. Scoped tools follow.\n",
             APPLE_NATIVE_ARCH: (
                 f"- It exposes {count} tools spanning tasks, day planning, lists, habits, calendar,\n"
@@ -48,14 +40,14 @@ class VerifyUserDocsTests(unittest.TestCase):
     def test_mcp_tool_count_docs_reject_missing_canonical_statement(self) -> None:
         count = len(EXPECTED_MCP_TOOLS)
         documents = self.mcp_count_documents(count)
-        documents[ROADMAP] = documents[ROADMAP].replace(
-            f"- **MCP catalog at {count} tools.** Current state.\n",
-            "",
-        )
+        documents[FEATURES] = "Scoped tools follow.\n"
 
         self.assertEqual(
             mcp_tool_count_doc_failures(documents),
-            ['MCP tool count statement "catalog headline" missing from ROADMAP.md'],
+            [
+                'MCP tool count statement "feature matrix count" missing from '
+                "apps/apple/docs/reference/FEATURES.md"
+            ],
         )
 
     def test_mcp_tool_count_docs_reject_wrong_count(self) -> None:
@@ -74,19 +66,20 @@ class VerifyUserDocsTests(unittest.TestCase):
             ],
         )
 
-    def test_mcp_tool_count_docs_reject_secondary_roadmap_drift(self) -> None:
+    def test_mcp_tool_count_docs_reject_architecture_drift(self) -> None:
         count = len(EXPECTED_MCP_TOOLS)
         wrong_count = count - 1
         documents = self.mcp_count_documents(count)
-        documents[ROADMAP] = documents[ROADMAP].replace(
-            f"(currently {count} tools)",
-            f"(currently {wrong_count} tools)",
+        documents[APPLE_NATIVE_ARCH] = documents[APPLE_NATIVE_ARCH].replace(
+            f"It exposes {count} tools",
+            f"It exposes {wrong_count} tools",
         )
 
         self.assertEqual(
             mcp_tool_count_doc_failures(documents),
             [
-                'MCP tool count statement "parameter audit count" in ROADMAP.md '
+                'MCP tool count statement "architecture count" in '
+                "apps/apple/docs/architecture/apple-native-architecture.md "
                 f"is {wrong_count}; expected {count} from "
                 "apps/apple/script/expected_mcp_tools.py"
             ],
@@ -95,7 +88,7 @@ class VerifyUserDocsTests(unittest.TestCase):
     def test_mcp_tool_count_guard_covers_canonical_docs(self) -> None:
         self.assertEqual(
             set(MCP_TOOL_COUNT_PATTERNS),
-            {ROADMAP, FEATURES, APPLE_NATIVE_ARCH},
+            {FEATURES, APPLE_NATIVE_ARCH},
         )
 
     def test_documented_mcp_tool_examples_extracts_tool_table_names(self) -> None:

@@ -27,21 +27,7 @@ struct HabitWeekdayPanel: View {
   var body: some View {
     InspectorPanel(accessibilityIdentifier: "habit.detail.weekdays.panel") {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-        HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-          Label(
-            String(localized: "habit_detail.weekdays.title", defaultValue: "By Weekday", table: "Localizable", bundle: LorvexL10n.bundle),
-            systemImage: "chart.bar.xaxis"
-          )
-          .font(LorvexDesign.Typography.primaryEmphasis)
-          .lineLimit(1)
-          Spacer(minLength: LorvexDesign.Spacing.s)
-          if rhythm.hasEnoughHistory, let window = windowLabel {
-            Text(window)
-              .font(LorvexDesign.Typography.tertiaryText)
-              .foregroundStyle(.secondary)
-              .lineLimit(1)
-          }
-        }
+        header
 
         if rhythm.hasEnoughHistory {
           bars
@@ -62,6 +48,47 @@ struct HabitWeekdayPanel: View {
       }
     }
   }
+
+  /// The title with the window it measures ("Last 12 weeks") at the trailing
+  /// edge, or, where the two do not fit on one line whole, the window on a
+  /// line of its own under the title's text, so neither is cut short.
+  private var header: some View {
+    ViewThatFits(in: .horizontal) {
+      HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+        Label(Self.title, systemImage: Self.titleSymbol)
+          .font(LorvexDesign.Typography.primaryEmphasis)
+          .lineLimit(1)
+        Spacer(minLength: LorvexDesign.Spacing.s)
+        windowCaption
+      }
+      Label {
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          Text(Self.title)
+            .lineLimit(1)
+          windowCaption
+        }
+      } icon: {
+        Image(systemName: Self.titleSymbol)
+      }
+      .font(LorvexDesign.Typography.primaryEmphasis)
+    }
+  }
+
+  @ViewBuilder
+  private var windowCaption: some View {
+    if rhythm.hasEnoughHistory, let window = windowLabel {
+      Text(window)
+        .font(LorvexDesign.Typography.tertiaryText)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+    }
+  }
+
+  private static var title: String {
+    String(localized: "habit_detail.weekdays.title", defaultValue: "By Weekday", table: "Localizable", bundle: LorvexL10n.bundle)
+  }
+
+  private static let titleSymbol = "chart.bar.xaxis"
 
   private var bars: some View {
     HStack(alignment: .bottom, spacing: LorvexDesign.Spacing.s) {

@@ -52,14 +52,21 @@ struct MobileTaskProperties: Equatable {
     func field(_ field: MobileTaskField, _ value: String?, tint: Tint? = nil) {
       if let value { rows.append(Row(field: field, value: value, tint: tint)) } else { additions.append(field) }
     }
+    // A planned day after a deadline that has not passed yet says so in the
+    // detail; text that leaves the app keeps only its dates, which stay true.
+    let isAfterDeadline =
+      days == .relative
+      && LorvexDayPhrase.isPlannedAfterDeadline(planned: task.plannedDate, due: task.dueDate, logicalDay: logicalDay)
     field(
       .doOn,
       task.plannedDate.map { planned in
         let day =
           days == .dated
           ? Self.dated(planned) : LorvexDayPhrase.phrase(for: planned, logicalDay: logicalDay, position: .leading)
-        return task.plannedTime.map { Copy.day(day, at: $0) } ?? day
-      })
+        let when = task.plannedTime.map { Copy.day(day, at: $0) } ?? day
+        return isAfterDeadline ? LorvexDayPhrase.afterDeadline(when) : when
+      },
+      tint: isAfterDeadline ? .soon : nil)
     field(.estimate, task.estimatedMinutes.flatMap { $0 > 0 ? LorvexDurationFormat.minutes($0) : nil })
     if let due = task.dueDate {
       let offset = lorvexDayOffset(from: logicalDay, to: due)

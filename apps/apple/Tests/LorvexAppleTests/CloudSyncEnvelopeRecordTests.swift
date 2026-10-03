@@ -672,7 +672,7 @@ func restampCopiesEveryWireFieldThroughEncryptedValues() {
 
 @Test
 func versionStringReadsEncryptedValueOnly() {
-  // `CloudSyncRecordPushing`'s conflict resolution reads `version` directly
+  // `CloudSyncConflictClassifier`'s conflict resolution reads `version` directly
   // off CKRecords surfaced by CloudKit's `serverRecordChanged` error payload
   // (not through `decode(_:)`), via this entry point. It reads ONLY the
   // encrypted view — the single shape `version` is written in.

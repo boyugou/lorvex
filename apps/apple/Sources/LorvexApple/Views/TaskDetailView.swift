@@ -197,7 +197,9 @@ struct TaskDetailView: View {
       }
     }
     let priority = displayPriority(for: task)
-    field("doOn", "calendar", Copy.addWhen, store.taskDetailDoOnSummary)
+    field(
+      "doOn", "calendar", Copy.addWhen, store.taskDetailDoOnSummary,
+      tint: store.taskDetailPlannedIsAfterDeadline ? LorvexDesign.Palette.dueSoon : nil)
     field("estimate", "hourglass", Copy.addLength, store.taskDetailEstimateSummary)
     field("due", "flag", Copy.addDue, store.taskDetailDueSummary.map { Self.sentenceCased($0) }, tint: dueTint)
     field("list", "list.bullet", Copy.addList, store.taskDetailListSummary(task: task))

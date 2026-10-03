@@ -130,6 +130,9 @@ extension StubCoreService {
   }
   func getTasksWithUpcomingReminders(hoursAhead: Int, limit: Int) async throws -> [LorvexTask] {
     upcomingReminderTaskCallCount += 1
+    if let upcomingReminderTasksError {
+      throw upcomingReminderTasksError
+    }
     return try await preview.getTasksWithUpcomingReminders(hoursAhead: hoursAhead, limit: limit)
   }
   func getDeferredTasks(listID: LorvexList.ID?, limit: Int, offset: Int) async throws

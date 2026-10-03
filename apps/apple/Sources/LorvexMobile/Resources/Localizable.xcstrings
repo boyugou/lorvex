@@ -18876,7 +18876,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg فترة"
+                      "value": "فترة واحدة"
                     }
                   },
                   "other": {
@@ -18888,7 +18888,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg فترات"
+                      "value": "فترتين"
                     }
                   },
                   "zero": {
@@ -52331,7 +52331,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una tarea por línea. Palabras (en inglés) como “tomorrow”, “3pm”, “every Monday”, “20 min” o “#lista” completan sus detalles."
+            "value": "Una tarea por línea. Palabras como “mañana”, “a las 15:00”, “cada lunes”, “20 min” o “#lista” completan sus detalles."
           }
         },
         "fr": {
@@ -52349,7 +52349,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un’attività per riga. Parole (in inglese) come “tomorrow”, “3pm”, “every Monday”, “20 min” o “#lista” ne completano i dettagli."
+            "value": "Un’attività per riga. Parole come “domani”, “alle 15”, “ogni lunedì”, “20 min” o “#lista” ne completano i dettagli."
           }
         },
         "ja": {
@@ -54781,7 +54781,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg عادة"
+                      "value": "عادة واحدة"
                     }
                   },
                   "other": {
@@ -54793,7 +54793,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg عادات"
+                      "value": "عادتين"
                     }
                   },
                   "zero": {

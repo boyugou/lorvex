@@ -34,8 +34,19 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
 
   public var id: String { rawValue }
 
-  /// The selectable languages (everything except `.system`), in menu order.
-  public static var selectable: [AppLanguage] { allCases.filter { $0 != .system } }
+  /// The selectable languages (everything except `.system`), in menu order:
+  /// by endonym in English collation, which for these scripts is the plain
+  /// Unicode order, so the Latin-script names come first alphabetically and
+  /// each other script follows as a group (Cyrillic, Arabic, Devanagari,
+  /// Hangul, Han), the way the system's own language lists read. Endonyms
+  /// read the same in every interface language, and so does their order.
+  public static let selectable: [AppLanguage] =
+    allCases
+    .filter { $0 != .system }
+    .sorted {
+      $0.endonym.compare($1.endonym, options: [], range: nil, locale: Locale(identifier: "en"))
+        == .orderedAscending
+    }
 
   /// The language the bundles fall back to when no preferred language is
   /// shipped: the catalogs' source language and every bundle's

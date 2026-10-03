@@ -171,6 +171,67 @@ func heatmapZeroWeeksIsEmpty() {
   #expect(grid == .empty)
 }
 
+/// Eight ISO weeks (Monday first) ending Saturday 2026-10-03: Aug 10 to Oct 4.
+private func isoWeeksEndingOctober3(locale: Locale) -> HabitHeatmapModel.Grid {
+  var iso = Calendar(identifier: .gregorian)
+  iso.timeZone = TimeZone(identifier: "UTC") ?? .current
+  iso.firstWeekday = 2
+  iso.minimumDaysInFirstWeek = 4
+  return HabitHeatmapModel.makeGrid(
+    completions: [], targetCount: 1, weeks: 8, endDate: date("2026-10-03", iso), calendar: iso,
+    locale: locale)
+}
+
+@Test
+func heatmapMonthLabelsMarkWhereAMonthOfTheLocaleCalendarBegins() {
+  // Gregorian: September begins in the week of Aug 31, October in the newest week.
+  let gregorian = isoWeeksEndingOctober3(locale: Locale(identifier: "en_US"))
+  #expect(gregorian.monthLabels == [nil, nil, nil, "Sep", nil, nil, nil, "Oct"])
+  // Umm al-Qura: Rabi' al-Awwal 1448 begins on Aug 14 and Rabi' al-Akhir on
+  // Sep 12, so those weeks carry the Hijri names and October 1 carries none.
+  let hijri = isoWeeksEndingOctober3(locale: Locale(identifier: "ar_SA"))
+  #expect(hijri.monthLabels == ["ربيع الأول", nil, nil, nil, "ربيع الآخر", nil, nil, nil])
+}
+
+@Test
+func monthLabelsKeepTheirColumnsWhileTheyFit() {
+  let positions = HabitHeatmapModel.monthLabelPositions(
+    starts: [0, 13, 26, 39, 52, 65, 78, 91], widths: [40, 0, 0, 0, 58, 0, 0, 0],
+    leadingEdge: 0, trailingEdge: 200, gap: 4)
+  #expect(positions == [0, nil, nil, nil, 52, nil, nil, nil])
+}
+
+@Test
+func anOlderMonthLabelThatWouldRunIntoTheNextIsLeftOut() {
+  // Two long names four weeks apart: the newer month keeps its name.
+  let positions = HabitHeatmapModel.monthLabelPositions(
+    starts: [0, 13, 26, 39, 52, 65, 78, 91], widths: [57, 0, 0, 0, 58, 0, 0, 0],
+    leadingEdge: 0, trailingEdge: 200, gap: 4)
+  #expect(positions == [nil, nil, nil, nil, 52, nil, nil, nil])
+}
+
+@Test
+func aMonthLabelNearTheNewestWeekEndsAtTheGridsEdge() {
+  // October began in the newest week: its name shifts back to end at the
+  // edge, and September's still clears it.
+  let shifted = HabitHeatmapModel.monthLabelPositions(
+    starts: [0, 13, 26, 39, 52, 65], widths: [20, 0, 0, 0, 0, 30],
+    leadingEdge: 0, trailingEdge: 75, gap: 4)
+  #expect(shifted == [0, nil, nil, nil, nil, 45])
+  // A name wider than the whole grid has nowhere to go.
+  let tooWide = HabitHeatmapModel.monthLabelPositions(
+    starts: [0], widths: [50], leadingEdge: 0, trailingEdge: 30, gap: 4)
+  #expect(tooWide == [nil])
+}
+
+@Test
+func monthLabelsOfHiddenWeeksAreLeftOut() {
+  let positions = HabitHeatmapModel.monthLabelPositions(
+    starts: [nil, nil, 0, 13], widths: [20, 0, 0, 20],
+    leadingEdge: 0, trailingEdge: 23, gap: 4)
+  #expect(positions == [nil, nil, nil, 3])
+}
+
 @Test
 func weekdayInitialsRotateWithFirstWeekday() {
   var sundayFirst = calendar()

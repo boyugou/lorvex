@@ -37,18 +37,18 @@ func mobileStoreRenamesEditedMemoryInsteadOfDuplicatingKey() async throws {
   let store = MobileStore(core: core)
 
   await store.loadMemorySnapshot()
-  let entry = try #require(store.memory?.entries.first { $0.key == "swift_migration" })
+  let entry = try #require(store.memory?.entries.first { $0.key == "new_laptop" })
 
   store.beginEditingMemory(entry)
-  store.memoryKeyDraft = "swift_migration_mobile"
+  store.memoryKeyDraft = "new_laptop_mobile"
   store.memoryContentDraft = "Renamed mobile memory."
   let saved = await store.saveMemoryDraft()
   let entries = try await core.loadMemory().entries
 
   #expect(saved)
-  #expect(entries.contains { $0.key == "swift_migration_mobile" })
-  #expect(!entries.contains { $0.key == "swift_migration" })
-  #expect(store.selectedMemoryKey == "swift_migration_mobile")
+  #expect(entries.contains { $0.key == "new_laptop_mobile" })
+  #expect(!entries.contains { $0.key == "new_laptop" })
+  #expect(store.selectedMemoryKey == "new_laptop_mobile")
   #expect(store.memoryEditingKey == nil)
   #expect(store.memoryKeyDraft == "")
   #expect(store.memoryContentDraft == "")
@@ -63,14 +63,14 @@ func mobileStoreEditorSaveLeavesInlineNewMemoryDraftUntouched() async throws {
   let core = try await makeSeededInMemoryCore()
   let store = MobileStore(core: core)
   await store.loadMemorySnapshot()
-  let existing = try #require(store.memory?.entries.first { $0.key == "swift_migration" })
+  let existing = try #require(store.memory?.entries.first { $0.key == "new_laptop" })
 
   // The user is mid-way through typing a NEW entry in the inline composer.
   store.memoryKeyDraft = "trip-ideas"
   store.memoryContentDraft = "book flights"
 
   let saved = await store.saveMemoryEntryEdit(
-    originalKey: existing.key, newKey: "swift_migration_renamed", content: "Edited via sheet.")
+    originalKey: existing.key, newKey: "new_laptop_renamed", content: "Edited via sheet.")
   #expect(saved)
 
   // The inline new-entry draft survives untouched.
@@ -79,9 +79,9 @@ func mobileStoreEditorSaveLeavesInlineNewMemoryDraftUntouched() async throws {
 
   // The edit (a rename) persisted and became the selection.
   let entries = try await core.loadMemory().entries
-  #expect(entries.contains { $0.key == "swift_migration_renamed" && $0.content == "Edited via sheet." })
-  #expect(!entries.contains { $0.key == "swift_migration" })
-  #expect(store.selectedMemoryKey == "swift_migration_renamed")
+  #expect(entries.contains { $0.key == "new_laptop_renamed" && $0.content == "Edited via sheet." })
+  #expect(!entries.contains { $0.key == "new_laptop" })
+  #expect(store.selectedMemoryKey == "new_laptop_renamed")
 }
 
 @MainActor
@@ -91,7 +91,7 @@ func mobileStoreDeletesMemory() async throws {
   let store = MobileStore(core: core)
 
   await store.loadMemorySnapshot()
-  let entry = try #require(store.memory?.entries.first { $0.key == "swift_migration" })
+  let entry = try #require(store.memory?.entries.first { $0.key == "new_laptop" })
 
   let deleted = await store.deleteMemoryEntry(entry)
   #expect(deleted)
@@ -106,7 +106,7 @@ func mobileStoreBatchDeletesMemory() async throws {
   let store = MobileStore(core: core)
 
   await store.loadMemorySnapshot()
-  let first = try #require(store.memory?.entries.first { $0.key == "swift_migration" })
+  let first = try #require(store.memory?.entries.first { $0.key == "new_laptop" })
   let second = try #require(store.memory?.entries.first { $0.key == "notes_for_ai" })
 
   store.selectMemoryEntry(first.id)

@@ -14443,7 +14443,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "سلسلة من %arg يوم"
+                      "value": "سلسلة من يوم واحد"
                     }
                   },
                   "other": {
@@ -14455,7 +14455,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "سلسلة من %arg أيام"
+                      "value": "سلسلة من يومين"
                     }
                   },
                   "zero": {
@@ -14487,7 +14487,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمال"
+                      "value": "إكمال واحد"
                     }
                   },
                   "other": {
@@ -14499,7 +14499,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمالات"
+                      "value": "إكمالان"
                     }
                   },
                   "zero": {
@@ -15073,7 +15073,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "سلسلة من %arg شهر"
+                      "value": "سلسلة من شهر واحد"
                     }
                   },
                   "other": {
@@ -15085,7 +15085,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "سلسلة من %arg أشهر"
+                      "value": "سلسلة من شهرين"
                     }
                   },
                   "zero": {
@@ -15117,7 +15117,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمال"
+                      "value": "إكمال واحد"
                     }
                   },
                   "other": {
@@ -15129,7 +15129,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمالات"
+                      "value": "إكمالان"
                     }
                   },
                   "zero": {
@@ -15703,7 +15703,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمال"
+                      "value": "إكمال واحد"
                     }
                   },
                   "other": {
@@ -15715,7 +15715,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمالات"
+                      "value": "إكمالان"
                     }
                   },
                   "zero": {
@@ -16073,7 +16073,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "سلسلة من %arg أسبوع"
+                      "value": "سلسلة من أسبوع واحد"
                     }
                   },
                   "other": {
@@ -16085,7 +16085,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "سلسلة من %arg أسابيع"
+                      "value": "سلسلة من أسبوعين"
                     }
                   },
                   "zero": {
@@ -16117,7 +16117,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمال"
+                      "value": "إكمال واحد"
                     }
                   },
                   "other": {
@@ -16129,7 +16129,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg إكمالات"
+                      "value": "إكمالان"
                     }
                   },
                   "zero": {
@@ -31677,7 +31677,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم إكمال %arg مهمة"
+                      "value": "تم إكمال مهمة واحدة"
                     }
                   },
                   "other": {
@@ -31689,7 +31689,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم إكمال %arg مهام"
+                      "value": "تم إكمال مهمتين"
                     }
                   },
                   "zero": {
@@ -31721,7 +31721,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تخطي %arg مهمة"
+                      "value": "تم تخطي مهمة واحدة"
                     }
                   },
                   "other": {
@@ -31733,7 +31733,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تخطي %arg مهام"
+                      "value": "تم تخطي مهمتين"
                     }
                   },
                   "zero": {
@@ -32991,7 +32991,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تأجيل %arg مهمة"
+                      "value": "تم تأجيل مهمة واحدة"
                     }
                   },
                   "other": {
@@ -33003,7 +33003,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تأجيل %arg مهام"
+                      "value": "تم تأجيل مهمتين"
                     }
                   },
                   "zero": {
@@ -33035,7 +33035,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تخطي %arg مهمة"
+                      "value": "تم تخطي مهمة واحدة"
                     }
                   },
                   "other": {
@@ -33047,7 +33047,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تخطي %arg مهام"
+                      "value": "تم تخطي مهمتين"
                     }
                   },
                   "zero": {
@@ -34574,7 +34574,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تمت إعادة فتح %arg مهمة"
+                      "value": "تمت إعادة فتح مهمة واحدة"
                     }
                   },
                   "other": {
@@ -34586,7 +34586,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تمت إعادة فتح %arg مهام"
+                      "value": "تمت إعادة فتح مهمتين"
                     }
                   },
                   "zero": {
@@ -34618,7 +34618,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تخطي %arg مهمة"
+                      "value": "تم تخطي مهمة واحدة"
                     }
                   },
                   "other": {
@@ -34630,7 +34630,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "تم تخطي %arg مهام"
+                      "value": "تم تخطي مهمتين"
                     }
                   },
                   "zero": {

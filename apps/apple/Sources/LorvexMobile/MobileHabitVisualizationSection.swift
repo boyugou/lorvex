@@ -32,8 +32,9 @@ struct MobileHabitVisualizationSection: View {
 /// The period's progress, the streaks, and the 30-day rate. The dial and its
 /// caption lead, beside the three stats where the width holds them all
 /// (an iPad pane), over them as three columns on a phone, and over three rows
-/// of a label and its value where three columns would break their labels
-/// (at accessibility text sizes).
+/// of a label and its value where the three columns do not fit whole (long
+/// labels, accessibility text sizes). A column is as wide as its label and
+/// value, so no label breaks, and the values share one baseline.
 private struct MobileHabitMomentumPanel: View {
   let habit: LorvexHabit
   let stats: HabitStats
@@ -49,16 +50,14 @@ private struct MobileHabitMomentumPanel: View {
   var body: some View {
     ViewThatFits(in: .horizontal) {
       HStack(spacing: LorvexDesign.Spacing.m) {
-        // Laid out before the three stretching stats so the title beside the
-        // ring keeps its one line instead of taking a quarter of the width.
+        // Laid out before the stats, whose gaps stretch, so the title beside
+        // the ring keeps its one line instead of taking a quarter of the width.
         ring.layoutPriority(1)
-        statViews(.column)
+        statColumns
       }
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         ring
-        HStack(spacing: LorvexDesign.Spacing.m) {
-          statViews(.column)
-        }
+        statColumns
       }
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         ring
@@ -121,9 +120,17 @@ private struct MobileHabitMomentumPanel: View {
     }
   }
 
+  /// The three stats as columns at their own widths, with the width left over
+  /// spread between them, and their values on one baseline.
+  private var statColumns: some View {
+    HStack(alignment: .lastTextBaseline, spacing: 0) {
+      statViews(.column)
+    }
+  }
+
   /// The current streak, the best streak, and the 30-day rate, each laid out
-  /// as `layout` says. Written out rather than looped: a `ViewThatFits`
-  /// candidate holds no `ForEach`.
+  /// as `layout` says, with a flexible gap between columns. Written out rather
+  /// than looped: a `ViewThatFits` candidate holds no `ForEach`.
   @ViewBuilder
   private func statViews(_ layout: StatLayout) -> some View {
     stat(
@@ -135,6 +142,7 @@ private struct MobileHabitMomentumPanel: View {
         bundle: MobileL10n.bundle),
       value: lorvexHabitStreakLabel(stats.currentStreak, frequencyType: habit.frequencyType),
       tint: currentStreakTint)
+    if layout == .column { Spacer(minLength: LorvexDesign.Spacing.m) }
     stat(
       layout,
       title: LocalizedStringResource(
@@ -144,6 +152,7 @@ private struct MobileHabitMomentumPanel: View {
         bundle: MobileL10n.bundle),
       value: lorvexHabitStreakLabel(stats.bestStreak, frequencyType: habit.frequencyType),
       tint: bestStreakTint)
+    if layout == .column { Spacer(minLength: LorvexDesign.Spacing.m) }
     stat(
       layout,
       title: LocalizedStringResource(
@@ -155,8 +164,9 @@ private struct MobileHabitMomentumPanel: View {
       tint: rateTint)
   }
 
-  /// A stat as a column (its label over its value, sharing the width with the
-  /// others) or as a row (its label, then its value at the trailing edge).
+  /// A stat as a column (its label over its value, as wide as the wider of
+  /// the two, so neither breaks) or as a row (its label, then its value at the
+  /// trailing edge).
   @ViewBuilder
   private func stat(_ layout: StatLayout, title: LocalizedStringResource, value: String, tint: Color)
     -> some View
@@ -174,7 +184,7 @@ private struct MobileHabitMomentumPanel: View {
         label
         reading
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
+      .fixedSize()
     case .row:
       HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
         label
@@ -334,19 +344,29 @@ private struct MobileHabitRhythmPanel: View {
   }
 }
 
-/// Lays out a habit heatmap's week columns, oldest to newest, showing as many
-/// of the newest as the proposed width fits at the fixed cell size, between a
+/// Lays out a habit heatmap's `weeks` week columns, oldest to newest, then
+/// any month labels, one per week in the same order. It shows as many of the
+/// newest weeks as the proposed width fits at the fixed cell size, between a
 /// season and a year: a phone shows about five months, an iPad pane or a
 /// readable-width screen the whole year. The columns that do not fit are
 /// placed far outside the bounds, so what shows always ends on the current
 /// week. The count is decided here, per layout pass, rather than measured
 /// into view state: a navigation transition proposes alternating widths to
-/// the incoming screen, and state derived from them flips every frame.
+/// the incoming screen, and state derived from them flips every frame. The
+/// month labels sit at the top of the columns where
+/// ``HabitHeatmapModel/monthLabelPositions(starts:widths:leadingEdge:trailingEdge:gap:)``
+/// puts them at their own widths; a label it leaves out goes outside the
+/// bounds with the hidden weeks.
 struct MobileHabitHeatmapLayout: Layout {
   static let minimumWeeks = 16
   static let maximumWeeks = 52
   static let cellSize: CGFloat = 10
   static let cellSpacing: CGFloat = 3
+  /// The least room between two month labels.
+  static let labelGap: CGFloat = 4
+
+  /// How many of the subviews are week columns.
+  let weeks: Int
 
   /// The columns shown of `count` in `width`: the newest that fit at the cell
   /// size and spacing, at least `minimumWeeks` (overflowing a narrower width),
@@ -363,20 +383,34 @@ struct MobileHabitHeatmapLayout: Layout {
   }
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-    let shown = Self.shownColumns(of: subviews.count, fitting: proposal.width)
+    let shown = Self.shownColumns(of: min(weeks, subviews.count), fitting: proposal.width)
     let height = subviews.first?.sizeThatFits(.unspecified).height ?? 0
     return CGSize(width: Self.width(ofColumns: shown), height: height)
   }
 
   func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-    let shown = Self.shownColumns(of: subviews.count, fitting: bounds.width)
-    let hidden = subviews.count - shown
-    for (index, subview) in subviews.enumerated() {
-      let column = index - hidden
-      let x = column < 0
-        ? bounds.minX - 100_000
-        : bounds.minX + CGFloat(column) * (Self.cellSize + Self.cellSpacing)
-      subview.place(at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading, proposal: .unspecified)
+    let count = min(weeks, subviews.count)
+    let shown = Self.shownColumns(of: count, fitting: bounds.width)
+    let hidden = count - shown
+    let starts: [CGFloat?] = (0..<count).map { index in
+      index < hidden ? nil : bounds.minX + CGFloat(index - hidden) * (Self.cellSize + Self.cellSpacing)
+    }
+    let outside = bounds.minX - 100_000
+    for (index, subview) in subviews.prefix(count).enumerated() {
+      subview.place(
+        at: CGPoint(x: starts[index] ?? outside, y: bounds.minY), anchor: .topLeading,
+        proposal: .unspecified)
+    }
+    let labels = Array(subviews.dropFirst(count))
+    guard !labels.isEmpty else { return }
+    let positions = HabitHeatmapModel.monthLabelPositions(
+      starts: starts, widths: labels.map { $0.sizeThatFits(.unspecified).width },
+      leadingEdge: bounds.minX, trailingEdge: bounds.minX + Self.width(ofColumns: shown),
+      gap: Self.labelGap)
+    for (index, label) in labels.enumerated() {
+      let x = positions.indices.contains(index) ? positions[index] : nil
+      label.place(
+        at: CGPoint(x: x ?? outside, y: bounds.minY), anchor: .topLeading, proposal: .unspecified)
     }
   }
 }
@@ -514,9 +548,11 @@ private struct MobileHabitHeatmapPanel: View {
 }
 
 /// The heatmap's cells, a week to a column under the month labels, beside a
-/// column of weekday initials. The cells have one size at every text size;
-/// the labels' row and column grow with the labels' text, which the panel
-/// caps.
+/// column of weekday initials. A month is named where it begins, in the
+/// calendar the app shows dates in (Hijri months under an Islamic calendar);
+/// a name that would run into the next month's is left out. The cells have
+/// one size at every text size; the labels' row and column grow with the
+/// labels' text, which the panel caps.
 private struct MobileHabitHeatmapGrid: View {
   let grid: HabitHeatmapModel.Grid
   let calendar: Calendar
@@ -529,9 +565,12 @@ private struct MobileHabitHeatmapGrid: View {
   var body: some View {
     HStack(alignment: .top, spacing: cellSpacing) {
       weekdayColumn
-      MobileHabitHeatmapLayout {
-        ForEach(Array(grid.columns.enumerated()), id: \.offset) { index, column in
-          weekColumn(column, monthLabel: grid.monthLabels[index])
+      MobileHabitHeatmapLayout(weeks: grid.columns.count) {
+        ForEach(Array(grid.columns.enumerated()), id: \.offset) { _, column in
+          weekColumn(column)
+        }
+        ForEach(Array(grid.monthLabels.enumerated()), id: \.offset) { _, label in
+          monthLabel(label)
         }
       }
     }
@@ -560,24 +599,24 @@ private struct MobileHabitHeatmapGrid: View {
     }
   }
 
-  /// One week: its month label, set where a month begins and drawn past the
-  /// cell's width, over the day cells.
-  private func weekColumn(_ column: [HabitHeatmapModel.Cell], monthLabel: String?) -> some View {
+  /// One week: the month labels' row, over the day cells.
+  private func weekColumn(_ column: [HabitHeatmapModel.Cell]) -> some View {
     VStack(spacing: cellSpacing) {
       monthRow(width: cellSize)
-        .overlay(alignment: .leading) {
-          if let monthLabel {
-            Text(monthLabel)
-              .font(LorvexDesign.Typography.tertiaryText)
-              .foregroundStyle(.secondary)
-              .lineLimit(1)
-              .fixedSize()
-          }
-        }
       ForEach(column) { cell in
         MobileHabitHeatmapCell(intensity: cell.intensity, tint: tint)
       }
     }
+  }
+
+  /// The name of the month a week begins, at its own width, or nothing for a
+  /// week no month begins in; ``MobileHabitHeatmapLayout`` places it.
+  private func monthLabel(_ label: String?) -> some View {
+    Text(verbatim: label ?? "")
+      .font(LorvexDesign.Typography.tertiaryText)
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+      .fixedSize()
   }
 }
 

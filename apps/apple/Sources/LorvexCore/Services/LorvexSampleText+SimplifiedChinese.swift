@@ -98,11 +98,18 @@ extension LorvexSampleText {
     "The offsite agenda comes first: the venue can't be booked until it's settled, so I moved the booking to tomorrow. Two meetings this afternoon.":
       "先定团建议程：议程没定下来就订不了场地，所以我把订场地挪到了明天。下午有两个会。",
     "The planning review first while the doc is fresh; the sync refactor takes the long block before lunch.":
-      "趁文档还新鲜，先做规划评审；午饭前那段整块时间留给同步层重构。",
+      "趁内容还记得清楚，先做规划评审；午饭前那段整块时间留给同步层重构。",
     "The launch checklist first; the status update after the design review.":
       "先过发布检查清单，设计评审之后再发进展汇报。",
 
     // Memory.
+    "notes_for_ai": "给 AI 的备注",
+    "new_laptop": "换新电脑",
+    "work_rhythm": "工作节奏",
+    "working_hours": "工作时间",
+    "manager": "上级",
+    "writing_style": "写作风格",
+    "current_focus": "当前重点",
     "The user is weighing a couple of UI frameworks for a personal side project — keep any tech suggestions framework-neutral.":
       "用户正在为一个个人业余项目比较几个 UI 框架，提技术建议时不要偏向某个框架。",
     "Before switching laptops, export the database and photo library so nothing is lost in the move.":

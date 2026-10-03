@@ -128,7 +128,9 @@ covers only 0. `ONE_ALSO_SELECTS` in `script/verify_localization_catalog.py`
 lists these languages, and the verifier rejects a `one` form, top-level or in a
 substitution, that leaves the count out where it must not. In every language,
 each form of a substitution contains `%arg`, except a unit word set apart from
-its number (see "Counts and plural forms").
+its number (see "Counts and plural forms") and a category the language names
+in the noun itself: Arabic `one` and `two` ("مهمة واحدة", "مهمتان") and the
+Hebrew dual `two`, which `WORDLESS_COUNT_CATEGORIES` lists.
 
 Because no plural category means exactly 1 in every language, a phrase that
 should read without a number for exactly one in every language ("Every week",
@@ -241,7 +243,10 @@ preference domain, which is where the system's per-app language setting
 writes it too (on Lorvex's page in iOS Settings, and under macOS System
 Settings > General > Language & Region > Applications). The in-app picker
 (`AppLanguage`) reads and writes that same value, so the picker and the system
-setting always agree; "System Default" removes it. The picker reads only the
+setting always agree; "System Default" removes it. It lists the languages by
+endonym in one order for every interface language: the Latin-script names
+alphabetically, then each other script as a group (Cyrillic, Arabic,
+Devanagari, Hangul, Han). The picker reads only the
 app's own domain: a plain `UserDefaults` lookup would fall through to launch
 arguments and to the system-wide list and report them as a choice. A bundle
 resolves its language once, at launch, so a change applies after a relaunch;
@@ -674,10 +679,10 @@ so a thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   than a literal translation, because Spanish runs about a quarter longer than
   English ("Planificar hoy", "Abre Lorvex", "7 días" for the menu bar panel's
   Next 7 Days switch). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Spanish capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
-  them "(en inglés)".
+- The capture parser (`LorvexCaptureParser`) reads Spanish day, time, and
+  duration words for a user who reads Spanish, so the Spanish capture hint gives
+  Spanish examples ("mañana", "a las 15:00", "cada lunes"). Spanish does not
+  write a clock time with h, so the time example says "a las".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are tú imperatives that
   name the app exactly once ("Añade una tarea a ${applicationName}").
 
@@ -763,8 +768,8 @@ widgets, and in Shortcuts.
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation, and may drop the copula ("कुछ प्लान नहीं").
   Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Hindi capture hint therefore
+- The capture parser (`LorvexCaptureParser`) reads no Hindi words; for a Hindi
+  reader it reads English and Chinese only. The Hindi capture hint therefore
   keeps its English example words ("tomorrow", "3pm", "every Monday") and
   introduces them as "अंग्रेज़ी शब्द".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
@@ -863,9 +868,9 @@ on the Mac, iPhone, watch, widgets, and in Shortcuts.
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation ("سبعة أيام" for the menu bar panel's Next 7 Days
   switch, "تم البدء" for a started task). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Arabic capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday", "20 min")
+- The capture parser (`LorvexCaptureParser`) reads no Arabic words; for an
+  Arabic reader it reads English and Chinese only. The Arabic capture hint
+  therefore keeps its English example words ("tomorrow", "3pm", "every Monday", "20 min")
   and introduces them as "الكلمات الإنجليزية".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are masculine imperatives
   that name the app exactly once ("أضف مهمة إلى ${applicationName}").
@@ -931,10 +936,9 @@ watch, widgets, and in Shortcuts.
   French runs about a fifth longer than English ("Planifier aujourd’hui", "Ouvrez
   Lorvex", "7 jours" for the menu bar panel's Next 7 Days switch, "Déborde" for
   Won’t fit). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The French capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
-  them "(en anglais)".
+- The capture parser (`LorvexCaptureParser`) reads French day, time, and
+  duration words for a user who reads French, so the French capture hint gives
+  French examples (« demain », « 15h », « tous les lundis »).
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says to
   the assistant, so they are tu imperatives that name the app exactly once ("Ajoute
   une tâche dans ${applicationName}"), unlike the vous of the interface.
@@ -998,10 +1002,9 @@ watch, widgets, and in Shortcuts.
   Italian runs about a fifth longer than English ("Pianifica oggi", "Apri
   Lorvex", "7 giorni" for the menu bar panel's Next 7 Days switch). Accessibility
   labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Italian capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
-  them "(in inglese)".
+- The capture parser (`LorvexCaptureParser`) reads Italian day, time, and
+  duration words for a user who reads Italian, so the Italian capture hint gives
+  Italian examples ("domani", "alle 15", "ogni lunedì").
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are tu imperatives that
   name the app exactly once, in front of its preposition ("Aggiungi un’attività a
   ${applicationName}").
@@ -1071,10 +1074,9 @@ Shortcuts.
   Portuguese runs about a fifth longer than English ("Planejar hoje", "Abra o
   Lorvex", "7 dias" for the menu bar panel's Next 7 Days switch). Accessibility
   labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Portuguese capture hint
-  therefore keeps its English example words ("tomorrow", "3pm", "every Monday")
-  and marks them "(em inglês)".
+- The capture parser (`LorvexCaptureParser`) reads Portuguese day, time, and
+  duration words for a user who reads Portuguese, so the Portuguese capture hint
+  gives Portuguese examples ("amanhã", "15h", "toda segunda").
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are você imperatives that
   name the app exactly once, contracted with its preposition ("Adicione uma
   tarefa ao ${applicationName}", "Conclua uma tarefa no ${applicationName}").
@@ -1153,9 +1155,9 @@ Shortcuts.
   ("7 дней" for the menu bar panel's Next 7 Days switch, "Не вошло" for Won’t
   fit, "ост." as the caption under the remaining-tasks ring, "Записать задачу"
   as a short title). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Russian capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
+- The capture parser (`LorvexCaptureParser`) reads no Russian words; for a
+  Russian reader it reads English and Chinese only. The Russian capture hint
+  therefore keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
   them "(на английском)".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says
   to the assistant, so they are singular imperatives that name the app exactly
@@ -1240,8 +1242,8 @@ in Shortcuts.
   ("7 днів" for the menu bar panel's Next 7 Days switch, "Не влізло" for Won’t
   fit, "зал." as the caption under the remaining-tasks ring, "Занотувати
   завдання" as a short title). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Ukrainian capture hint
+- The capture parser (`LorvexCaptureParser`) reads no Ukrainian words; for a
+  Ukrainian reader it reads English and Chinese only. The Ukrainian capture hint
   therefore keeps its English example words ("tomorrow", "3pm", "every Monday")
   and marks them "(англійською)".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are singular imperatives
@@ -1325,9 +1327,9 @@ thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   panel's Next 7 Days switch, "Nie zdąży" for Won’t fit, "zost." as the caption
   under the remaining-tasks ring, "Zapisz zadanie" as a short title).
   Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Polish capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
+- The capture parser (`LorvexCaptureParser`) reads no Polish words; for a
+  Polish reader it reads English and Chinese only. The Polish capture hint
+  therefore keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
   them "(po angielsku)".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are singular imperatives
   that name the app exactly once, leave it undeclined, and put it at the end
@@ -1406,10 +1408,9 @@ Shortcuts.
   for Won't fit, "今後7日間" for the menu bar panel's Next 7 Days switch, "残り" as
   the caption under the remaining-tasks ring, "今日の計画" as a short title).
   Accessibility labels may be longer ("今日の残りは3件です").
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Japanese capture hint
-  therefore keeps its English example words ("tomorrow", "3pm", "every Monday",
-  "20 min") in 「 」 and says they are English ("英語の「tomorrow」…"). Its `#`
+- The capture parser (`LorvexCaptureParser`) reads Japanese day, time, and
+  duration words for a user who reads Japanese, so the Japanese capture hint
+  gives Japanese examples in 「 」 (「明日」「午後3時」「毎週月曜」「30分」). Its `#`
   example carries an invisible word joiner (U+2060) after the `#`, so the
   example never splits across lines.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` name the app exactly
@@ -1489,10 +1490,9 @@ the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   없음" for Won't fit, "앞으로 7일" for the menu bar panel's Next 7 Days switch,
   "남음" as the caption under the remaining-tasks ring, "오늘 계획" as a short
   title). Accessibility labels may be longer ("오늘 남은 할 일 3개").
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. The Korean capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday", "20 min")
-  in “ ” and says they are English ("영어로 쓴 “tomorrow”…"). Its `#` example
+- The capture parser (`LorvexCaptureParser`) reads Korean day, time, and
+  duration words for a user who reads Korean, so the Korean capture hint gives
+  Korean examples in “ ” (“내일”, “오후 3시”, “매주 월요일”, “30분”). Its `#` example
   carries an invisible word joiner (U+2060) after the `#`, so the example never
   splits across lines.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` name the app exactly
@@ -1576,16 +1576,12 @@ widgets, and in Shortcuts. The text is written for Taiwan, not converted from
   for Won't fit, "未來 7 天" for the menu bar panel's Next 7 Days switch, "剩餘"
   as the caption under the remaining-tasks ring, "規劃今天" as a short title).
   Accessibility labels may be longer ("今天還剩 3 個任務").
-- The capture parser (`LorvexCaptureParser`) reads English and Simplified
-  Chinese day, time, and duration words only. A Traditional spelling is read
-  only where it is the same text in both scripts (今天, 明天, 今晚, 明晚, 星期五,
-  每天, 每星期一, 每月, 每年, 10月5日) or where the parser lists it, which is 點 in
-  a time ("下午3點", "晚上8點半"). It does not read 週 and 禮拜 ("週五", "下週",
-  "週末", "每週"), 後天 and 大後天, 後 after a count ("3天後"), 號 ("5號",
-  "每月5號"), 分鐘 and 小時 (so not "半小時"), 鐘 after 點, 緊急, 這 before a
-  weekday, or 每個 and 每兩 ("每個工作日", "每兩週"). The capture hint therefore
-  shows only forms the parser reads ("明天", "下午3點", "每星期一") and writes its
-  duration example in English ("英文的「20 min」"). Its `#` example carries an
+- The capture parser (`LorvexCaptureParser`) reads Chinese in either script:
+  it reads the Traditional characters its Chinese words use (後, 週, 這, 禮, 點,
+  鐘, 時, 個, 兩, 緊, 號, and 頭) as their Simplified forms, so "後天", "下週三",
+  "每月5號", "30分鐘", and "兩個鐘頭" read like their Simplified spellings. The
+  capture hint therefore writes every example in Traditional characters ("明天",
+  "下午3點", "每星期一", "30分鐘"). Its `#` example carries an
   invisible word joiner (U+2060) after the `#`, so the example never splits
   across lines.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` name the app exactly
@@ -1643,7 +1639,9 @@ shows the same commands for several.
    ```
 4. Add the language to `AppLanguage` (`Sources/LorvexCore/Support/AppLanguage.swift`)
    with its endonym. `LocalizationTests` fails until the picker offers exactly
-   the catalogs' languages.
+   the catalogs' languages. The picker sorts itself by endonym, and
+   `AppLanguageTests` pins that order, so add the language to its expected
+   list where its endonym falls.
 5. Sync bundle metadata so the OS includes the locale in app, complication, and
    widget bundles, and in the Info.plist embedded in the debug executable
    (`Config/LorvexAppleSwiftPM-Info.plist`, described under the headless

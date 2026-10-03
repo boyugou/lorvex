@@ -188,6 +188,24 @@ def plural_rules_for(language: str) -> tuple[frozenset[str], frozenset[str]] | N
     )
 
 
+# Plural categories that select a single integer and that a language names in
+# the form of the noun itself, so their forms may leave the number out even in
+# a substitution, where every other form shows it: Arabic writes one as the
+# singular with واحد or واحدة ("مهمة واحدة") and two as the dual ("مهمتان"), and
+# Hebrew's optional two is the dual of the nouns that have one ("יומיים").
+WORDLESS_COUNT_CATEGORIES: dict[str, frozenset[str]] = {
+    "ar": frozenset({"one", "two"}),
+    "he": frozenset({"two"}),
+}
+
+
+def wordless_count_categories(language: str) -> frozenset[str]:
+    """The plural categories whose forms may leave the number out in `language`."""
+    return WORDLESS_COUNT_CATEGORIES.get(language) or WORDLESS_COUNT_CATEGORIES.get(
+        re.split(r"[-_]", language, maxsplit=1)[0], frozenset()
+    )
+
+
 def undeclared_plural_language_failures(languages: tuple[str, ...]) -> list[str]:
     return [
         f"shipped language {language!r} has no CLDR plural categories in "
@@ -519,6 +537,7 @@ def format_placeholders(text: str) -> list[tuple[int, str]]:
 def localization_format_placeholders(
     localization: dict[str, object],
     countless_positions: frozenset[int] = frozenset(),
+    wordless_categories: frozenset[str] = frozenset(),
 ) -> tuple[list[tuple[int, str]], list[str]]:
     """Return a localization's wire-format argument signature.
 
@@ -530,7 +549,9 @@ def localization_format_placeholders(
     Every plural form of a substitution shows its number (`%arg`), except for
     an argument in `countless_positions`: a unit word set beside a number the
     surface shows apart from it ("days" under a large "30"), whose forms all
-    leave the number out.
+    leave the number out; and except for a form of a category in
+    `wordless_categories`, which the language names in the noun itself (the
+    Arabic dual, "عادتان"), so it may leave the number out.
     """
     string_unit = localization.get("stringUnit")
     text = string_unit.get("value") if isinstance(string_unit, dict) else None
@@ -603,7 +624,7 @@ def localization_format_placeholders(
                                 f"substitution {name!r} plural {category!r} shows the number, "
                                 "but the source's forms for this argument leave it out"
                             )
-                    elif "%arg" not in value:
+                    elif "%arg" not in value and category not in wordless_categories:
                         failures.append(
                             f"substitution {name!r} plural {category!r} must contain %arg"
                         )
@@ -1273,7 +1294,7 @@ def catalog_entry_failures(
                     failures.append(f"{key} missing non-empty {language} stringUnit.value")
                 else:
                     placeholders, substitution_failures = localization_format_placeholders(
-                        unit, countless)
+                        unit, countless, wordless_count_categories(language))
                     placeholders_by_language[language] = placeholders
                     failures.extend(
                         f"{key} {language} {failure}" for failure in substitution_failures

@@ -233,6 +233,50 @@ end of the line after a word that is not an article, while "segunda-feira",
 ("5/10") stays in the title, since the order of its day and month depends on
 the region.
 
+Spanish and Italian words are read when Spanish or Italian is among your
+device's preferred languages, in any regional variant. Accents are optional
+("manana", "lunedi"). Neither language writes a clock time with the letter
+h, so "2h" stays a length, as in English, and a time says "a las" or
+"alle": "a las 15:30", "alle 15", "ore 15:30". An hour from 1 to 6 with no
+part of the day is in the afternoon ("a las 3" is 3 PM) unless it is
+written with a zero ("06:30"), and a part of the day sets the hour: "de la
+tarde", "del pomeriggio", and "di sera" are the afternoon or the evening,
+while "de la mañana" and "di mattina" are the morning. A bare hour counts
+only at the end of the line or before a word that can follow a time ("a las
+3 con Ana"), so "a las 3 hermanas" and "alle 3 amiche" stay in the title,
+and so does a bare hour that names a deadline ("antes de las 6", "entro le
+18"). A time written without a Spanish or Italian word ("3pm",
+"14:00-16:30") is read by English, which also takes an English "at" or
+"from" in front of it.
+
+| Detail | Spanish | Italian |
+|---|---|---|
+| Day | hoy, esta noche, mañana, mañana por la tarde, pasado mañana, viernes, el viernes, este viernes, el próximo viernes, la semana que viene, el fin de semana, en 3 días | oggi, stasera, domani, domani sera, dopodomani, venerdì, questo venerdì, venerdì prossimo, la settimana prossima, nel weekend, il fine settimana, tra 3 giorni |
+| Date | 5 de octubre, el 5 de octubre, 1º de octubre, lunes 5 de octubre, 5 oct., el día 5 | 5 ottobre, il 5 ottobre, 1º novembre, lunedì 5 ottobre, 5 ott., il 5 |
+| Due day | para el viernes, antes del viernes, hasta mañana, vence el 5 de octubre, el viernes a más tardar | entro venerdì, per venerdì, entro il 5 ottobre, scade il 5 ottobre, venerdì al più tardi |
+| Time | a las 15:30, a las 3 de la tarde, a las 9 de la mañana, a las 8 de la noche, a las 3 y media, a la una, mediodía, a medianoche; de 3 a 4, de las 3 a las 4 de la tarde, entre las 3 y las 4 | alle 15, ore 15:30, alle 3 del pomeriggio, alle 9 di mattina, alle 8 di sera, alle 3 e mezza, all'una, mezzogiorno, a mezzanotte; dalle 3 alle 4, tra le 3 e le 4 |
+| Repeat | todos los días, cada lunes, todos los lunes y jueves, los lunes (at the end), cada dos lunes, entre semana, cada 15 días, cada mes, el 5 de cada mes, cada año; diariamente at the end | ogni giorno, ogni lunedì, tutti i lunedì e giovedì, il lunedì (at the end), un lunedì sì e uno no, nei giorni feriali, ogni 15 giorni, ogni mese, il 5 di ogni mese, ogni anno; quotidianamente at the end |
+| Length | durante 2 horas, por 2h, de 2 horas, 1h30, 30 min, 2 horas y media, media hora, una hora y media | per 2 ore, di 2 ore, 1h30, 30 min, 2 ore e mezza, mezz'ora, un'ora e mezza |
+| Priority | prioridad alta, baja prioridad, urgente | priorità alta, bassa priorità, urgente |
+
+A weekday alone is the coming one ("el lunes", "lunedì"), while the plural or
+the name after an article is a habit: "los lunes", "cada lunes", "il lunedì",
+"ogni lunedì", and "tutti i lunedì" repeat. A habit written with an article
+repeats only at the end of the line, so "los lunes de agosto" and "la riunione
+del lunedì" stay in the title, a weekday after "de" or "del" ("reunión de
+lunes") is never a day, and neither is a capitalized "Domingo" or "Domenica"
+in the middle of a line, which is a name. "Mañana" is tomorrow on its own,
+but "a las 9 de la mañana" is 9 AM, "por la mañana" stays in the title,
+"cada mañana" repeats every day, and "mañana por la mañana" is tomorrow
+morning. "Próximo" and "prossimo" mean next week's, so "el próximo viernes"
+and "venerdì prossimo" are the Friday of next week, while "este viernes" and
+"questo venerdì" are this week's. Both languages count a fortnight as fifteen
+days, so "cada 15 días" and "ogni 15 giorni" repeat every two weeks. A date
+written in digits ("5/10") stays in the title, since the order of its day
+and month depends on the region. Italian reads "weekend" only after an
+article or "questo" ("nel weekend"), so an English "this weekend" is left to
+English.
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline
@@ -416,6 +460,11 @@ list to move them; lists with assigned tasks must be emptied before deletion.
   complete. **Share** sends the task as plain text in your language: its
   title, its status unless it is open, the notes, one line per field with
   days written as dates, the assistant context, and the checklist.
+- **Plans that miss a deadline:** When a task's When day falls after its Due
+  day and that deadline is still ahead, the When row in Task Detail says so in
+  orange ("Tomorrow · after the deadline") on the Mac, iPhone, and iPad, since
+  working on it that day would finish it late. Once the deadline has passed,
+  the Due row says how late the task is instead.
 - **Mobile Task Rows:** A task row's circle is tinted by priority and
   completes the task. Under the title, capsules mark a task that is started or
   waiting on another task, and Today adds its own ("Until 3:00 PM",

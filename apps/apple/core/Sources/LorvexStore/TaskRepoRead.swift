@@ -305,7 +305,7 @@ extension TaskRepo {
     // -------------------------------------------------------------------
 
     /// Tasks scoped to a single tag, identified either directly by
-    /// `tagId` or by ``Tag/normalizeLookupKey(_:)``-equivalent
+    /// `tagId` or by ``normalizeLookupKey(_:)``-equivalent
     /// `tagLookupKey`. `tagId` wins when both are supplied; supplying
     /// neither returns `[]`.
     ///

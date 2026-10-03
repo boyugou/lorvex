@@ -13,10 +13,11 @@ import Foundation
 struct LorvexCaptureVocabulary: Sendable {
   /// The line as this vocabulary's patterns read it: the typed line; for
   /// Chinese the line with Traditional characters read as Simplified ones
-  /// (``simplifiedForMatching(_:)``); for French and Portuguese the line with
-  /// its accents left out (``unaccentedForMatching(_:)``). It must keep every
-  /// character at its UTF-16 offset, so a match range in it is the same range
-  /// in the typed line.
+  /// (``simplifiedForMatching(_:)``); for French, Portuguese, Spanish, and
+  /// Italian the line with its accents left out
+  /// (``unaccentedForMatching(_:)``). It must keep every character at its
+  /// UTF-16 offset, so a match range in it is the same range in the typed
+  /// line.
   var readingForm: @Sendable (String) -> String = { $0 }
   /// High (p1), medium (p2), or low (p3) priority.
   var priority: [Rule<LorvexTask.Priority>] = []
@@ -37,18 +38,20 @@ struct LorvexCaptureVocabulary: Sendable {
 
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
-  /// them: Japanese, Korean, French, and Portuguese when `languages` includes
-  /// them, then Chinese and English, which every line is read with.
+  /// them: Japanese, Korean, French, Portuguese, Spanish, and Italian when
+  /// `languages` includes them (any region of a language: "es-MX", "es-419",
+  /// "it-CH"), then Chinese and English, which every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
   /// Japanese particle ("10月5日に"). Every other language goes before
   /// English, so a part of the day written before a clock time ("下午3:30",
-  /// "오후 3:30") is read with the time instead of being left in the title
-  /// when the English pattern takes "3:30". Beside a language that writes a
-  /// clock time with the letter h, English leaves hour counts written with h
-  /// to it (``englishBesideHourClock``), so "15h" is never read as fifteen
-  /// hours.
+  /// "오후 3:30", "a las 3:30") is read with the time instead of being left in
+  /// the title when the English pattern takes "3:30". Beside a language that
+  /// writes a clock time with the letter h (French and Portuguese), English
+  /// leaves hour counts written with h to it (``englishBesideHourClock``), so
+  /// "15h" is never read as fifteen hours. Spanish and Italian do not write a
+  /// clock time that way, so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -56,6 +59,8 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("ko") { vocabularies.append(.korean) }
     if codes.contains("fr") { vocabularies.append(.french) }
     if codes.contains("pt") { vocabularies.append(.portuguese) }
+    if codes.contains("es") { vocabularies.append(.spanish) }
+    if codes.contains("it") { vocabularies.append(.italian) }
     let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
     return vocabularies + [.chinese, english]
   }
@@ -162,6 +167,18 @@ extension LorvexCaptureVocabulary {
     return word.isEmpty ? nil : String(word.reversed()).lowercased().replacingOccurrences(of: "’", with: "'")
   }
 
+  /// The word just after `match` in its line, lowercased, with a curly
+  /// apostrophe read as a straight one, or nil when the match ends the line or
+  /// punctuation, a digit, or a symbol follows it. A rule reads it to judge a
+  /// match by the word that follows it ("a las 3 hermanas" counts sisters, it
+  /// does not name an hour).
+  static func wordAfter(_ match: Match) -> String? {
+    guard let end = Range(match.result.range, in: match.source)?.upperBound else { return nil }
+    let word = match.source[end...].drop(while: \.isWhitespace)
+      .prefix(while: { $0.isLetter || $0 == "'" || $0 == "’" })
+    return word.isEmpty ? nil : String(word).lowercased().replacingOccurrences(of: "’", with: "'")
+  }
+
   /// Whether nothing but spaces and punctuation follows `match` in its line.
   static func endsLine(_ match: Match) -> Bool {
     guard let end = Range(match.result.range, in: match.source)?.upperBound else { return false }
@@ -169,7 +186,8 @@ extension LorvexCaptureVocabulary {
   }
 
   /// The amount a matched number spells, with a comma or a point before its
-  /// fraction ("1,5", "1.5"), since French and Portuguese write either.
+  /// fraction ("1,5", "1.5"), since French, Portuguese, Spanish, and Italian
+  /// write either.
   static func decimalAmount(_ text: String) -> Double? {
     LorvexNumberInput.decimal(from: text.replacingOccurrences(of: ",", with: "."))
   }

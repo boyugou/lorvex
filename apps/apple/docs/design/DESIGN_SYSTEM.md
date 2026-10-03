@@ -304,6 +304,12 @@ Buttons use the system styles. On macOS the workspace controls are
 `Picker` with `.segmented`. Custom button and segmented chromes are not
 introduced.
 
+A sheet or composer that makes something new confirms with Create (a habit,
+a list, an event, a memory); quick add confirms with Add, since it adds each
+typed line as a task. One that changes an existing item confirms with Save,
+or with Update in the Mac's memory composer, which creates and edits in one
+card. Cancel is plain and the confirm button prominent.
+
 A field editor (a popover from a property row) holds only its field and follows
 four rules. Presets come first and "Custom…" last, so the common answer is one
 click. There is no empty state: an editor with nothing set shows the ways to

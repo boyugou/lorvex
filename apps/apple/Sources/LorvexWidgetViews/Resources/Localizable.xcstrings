@@ -1745,7 +1745,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg عادة"
+                      "value": "عادة واحدة"
                     }
                   },
                   "other": {
@@ -1757,7 +1757,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg عادات"
+                      "value": "عادتين"
                     }
                   },
                   "zero": {
@@ -2405,7 +2405,7 @@
                   "one": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg مهمة"
+                      "value": "مهمة واحدة"
                     }
                   },
                   "other": {
@@ -2417,7 +2417,7 @@
                   "two": {
                     "stringUnit": {
                       "state": "translated",
-                      "value": "%arg مهام"
+                      "value": "مهمتين"
                     }
                   },
                   "zero": {

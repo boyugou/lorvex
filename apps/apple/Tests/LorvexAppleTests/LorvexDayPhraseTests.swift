@@ -70,6 +70,25 @@ struct LorvexDayPhraseTests {
         == "the same day · 7 days late")
   }
 
+  /// A planned day after a deadline still ahead would finish the task late;
+  /// one on the deadline is in time, and once the deadline has passed,
+  /// planning the task for today or later is how it catches up.
+  @Test func aPlannedDayAfterADeadlineStillAheadIsFlagged() throws {
+    func flagged(planned: String?, due: String?) throws -> Bool {
+      LorvexDayPhrase.isPlannedAfterDeadline(
+        planned: try planned.map(day), due: try due.map(day), logicalDay: logicalDay)
+    }
+    #expect(try flagged(planned: "2026-09-23", due: "2026-09-22"))
+    #expect(try flagged(planned: "2026-09-30", due: "2026-09-25"))
+    #expect(try !flagged(planned: "2026-09-22", due: "2026-09-22"))
+    #expect(try !flagged(planned: "2026-09-23", due: "2026-09-25"))
+    #expect(try !flagged(planned: "2026-09-23", due: "2026-09-21"))
+    #expect(try !flagged(planned: "2026-09-23", due: nil))
+    #expect(try !flagged(planned: nil, due: "2026-09-22"))
+    // The fact's words are held together by no-break spaces.
+    #expect(LorvexDayPhrase.afterDeadline("Tomorrow") == "Tomorrow · after\u{00A0}the\u{00A0}deadline")
+  }
+
   @Test func dayOffsetCountsWholeStoredDays() throws {
     #expect(lorvexDayOffset(from: logicalDay, to: try day("2026-09-22")) == 0)
     #expect(lorvexDayOffset(from: logicalDay, to: try day("2026-09-20")) == -2)

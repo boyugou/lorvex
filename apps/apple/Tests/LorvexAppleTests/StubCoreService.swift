@@ -95,6 +95,9 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// When set, `getDueHabitReminderOccurrences` throws this, modelling a
   /// transient habit occurrence-read failure during a reminder reschedule.
   var dueHabitReminderOccurrencesError: LorvexCoreError?
+  /// When set, `getTasksWithUpcomingReminders` throws this, modelling a
+  /// transient task-reminder read failure during a reminder reschedule.
+  var upcomingReminderTasksError: LorvexCoreError?
   var loadListsCallCount = 0
   var loadHabitsCallCount = 0
   var loadMemoryCallCount = 0

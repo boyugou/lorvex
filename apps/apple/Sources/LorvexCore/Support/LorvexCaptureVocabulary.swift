@@ -11,11 +11,12 @@ import Foundation
 /// vocabulary's ``readingForm``. The rule's reader turns one match into a
 /// value, or returns nil to leave the match in the title.
 struct LorvexCaptureVocabulary: Sendable {
-  /// The line as this vocabulary's patterns read it: the typed line, or for
+  /// The line as this vocabulary's patterns read it: the typed line; for
   /// Chinese the line with Traditional characters read as Simplified ones
-  /// (``simplifiedForMatching(_:)``). It must keep every character at its
-  /// UTF-16 offset, so a match range in it is the same range in the typed
-  /// line.
+  /// (``simplifiedForMatching(_:)``); for French and Portuguese the line with
+  /// its accents left out (``unaccentedForMatching(_:)``). It must keep every
+  /// character at its UTF-16 offset, so a match range in it is the same range
+  /// in the typed line.
   var readingForm: @Sendable (String) -> String = { $0 }
   /// High (p1), medium (p2), or low (p3) priority.
   var priority: [Rule<LorvexTask.Priority>] = []
@@ -29,24 +30,34 @@ struct LorvexCaptureVocabulary: Sendable {
   var due: [Rule<Day>] = []
   /// The day the task is planned for.
   var when: [Rule<Day>] = []
+  /// True for a language that writes a clock time with the letter h ("15h",
+  /// "15h30"), which reads every hour count written with h itself, as a time
+  /// or as a length by the words around it.
+  var writesClockTimesWithH = false
 
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
-  /// them: Japanese and Korean when `languages` includes them, then Chinese
-  /// and English, which every line is read with.
+  /// them: Japanese, Korean, French, and Portuguese when `languages` includes
+  /// them, then Chinese and English, which every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
   /// Japanese particle ("10月5日に"). Every other language goes before
   /// English, so a part of the day written before a clock time ("下午3:30",
   /// "오후 3:30") is read with the time instead of being left in the title
-  /// when the English pattern takes "3:30".
+  /// when the English pattern takes "3:30". Beside a language that writes a
+  /// clock time with the letter h, English leaves hour counts written with h
+  /// to it (``englishBesideHourClock``), so "15h" is never read as fifteen
+  /// hours.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
     if codes.contains("ja") { vocabularies.append(.japanese) }
     if codes.contains("ko") { vocabularies.append(.korean) }
-    return vocabularies + [.chinese, .english]
+    if codes.contains("fr") { vocabularies.append(.french) }
+    if codes.contains("pt") { vocabularies.append(.portuguese) }
+    let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
+    return vocabularies + [.chinese, english]
   }
 }
 
@@ -123,6 +134,73 @@ extension LorvexCaptureVocabulary {
   /// digit, or apostrophe on that side, so "today's" is one word.
   static let latinStart = #"(?<![\p{Latin}\p{N}'’])"#
   static let latinEnd = #"(?![\p{Latin}\p{N}'’])"#
+
+  /// The line with each accented letter read without its accent ("après" as
+  /// "apres", "ç" as "c"), so a pattern written without accents matches a
+  /// line typed with or without them. A character whose unaccented form takes
+  /// a different number of UTF-16 units, such as a letter typed with a
+  /// separate combining accent, stays as typed, which keeps every character
+  /// at its UTF-16 offset.
+  static func unaccentedForMatching(_ line: String) -> String {
+    var result = ""
+    for character in line {
+      let typed = String(character)
+      let unaccented = typed.folding(options: .diacriticInsensitive, locale: nil)
+      result += unaccented.utf16.count == typed.utf16.count ? unaccented : typed
+    }
+    return result
+  }
+
+  /// The word just before `match` in its line, lowercased, with a curly
+  /// apostrophe read as a straight one ("d'ici"), or nil when the match opens
+  /// the line. A rule reads it to judge a match by the word that introduces
+  /// it.
+  static func wordBefore(_ match: Match) -> String? {
+    guard let start = Range(match.result.range, in: match.source)?.lowerBound else { return nil }
+    let word = match.source[..<start].reversed().drop(while: \.isWhitespace)
+      .prefix(while: { $0.isLetter || $0 == "'" || $0 == "’" })
+    return word.isEmpty ? nil : String(word.reversed()).lowercased().replacingOccurrences(of: "’", with: "'")
+  }
+
+  /// Whether nothing but spaces and punctuation follows `match` in its line.
+  static func endsLine(_ match: Match) -> Bool {
+    guard let end = Range(match.result.range, in: match.source)?.upperBound else { return false }
+    return match.source[end...].allSatisfy { $0.isWhitespace || $0.isPunctuation }
+  }
+
+  /// The amount a matched number spells, with a comma or a point before its
+  /// fraction ("1,5", "1.5"), since French and Portuguese write either.
+  static func decimalAmount(_ text: String) -> Double? {
+    LorvexNumberInput.decimal(from: text.replacingOccurrences(of: ",", with: "."))
+  }
+
+  /// A matched phrase as a reader compares it: lowercased, with a curly
+  /// apostrophe read as a straight one, hyphens read as spaces, and each run
+  /// of spaces as one ("Après-demain" as "après demain").
+  static func normalizedPhrase(_ phrase: String) -> String {
+    phrase.lowercased().replacingOccurrences(of: "’", with: "'").replacingOccurrences(of: "-", with: " ")
+      .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+  }
+
+  /// A repeat pattern for a language that writes Latin letters: a cadence
+  /// written as `phrases` anywhere in the line, or as `adverb` at its end.
+  /// An adverb ("hebdomadairement", "semanalmente") cannot belong to a title
+  /// the way an adjective after its noun can ("Rapport hebdomadaire",
+  /// "Relatório semanal"), and the end of the line is where it says how a
+  /// task repeats.
+  static func cadencePattern(_ phrases: String, adverb: String) -> String {
+    "\(latinStart)(?:\(phrases))\(latinEnd)|\(latinStart)\(adverb)(?=\\s*$)"
+  }
+
+  /// "15h", "15h30", "15 h 30", or a bare "15", with nothing around it, as a
+  /// time written without a part of the day: one side of a range in a
+  /// language that writes a clock time with the letter h.
+  static func hourTime(_ text: String) -> ClockTime? {
+    guard let match = text.wholeMatch(of: /(\d{1,2})\s*(?:[hH](?:\s*(\d{2}))?)?/), let hour = number(match.output.1)
+    else { return nil }
+    let minute = match.output.2.flatMap { number($0) } ?? 0
+    return bareTime(hour: hour, minute: minute, hasLeadingZero: startsWithZero(String(match.output.1)))
+  }
 
   /// RFC 5545 weekday codes, Sunday first.
   static let weekdayCodes = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]

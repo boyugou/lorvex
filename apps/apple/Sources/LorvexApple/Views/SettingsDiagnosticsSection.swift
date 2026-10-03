@@ -111,56 +111,36 @@ extension SettingsView {
 
   private var appleSurfaceDiagnosticRows: [SettingsDiagnosticsRow] {
     let surfaces = store.appleSurfaceDiagnostics
-    var rows = [
-      SettingsDiagnosticsRow(
+    return [
+      surfaceRow(
         id: "spotlight",
         title: String(localized: "settings.diagnostics.spotlight", defaultValue: "Spotlight", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: surfaces.spotlightStatus,
-        detail: nil,
-        systemImage: "magnifyingglass",
-        level: .neutral
+        status: surfaces.spotlight,
+        systemImage: "magnifyingglass"
       ),
-      SettingsDiagnosticsRow(
+      surfaceRow(
         id: "task-reminders",
         title: String(localized: "settings.diagnostics.task_reminders", defaultValue: "Task Reminders", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: surfaces.reminderStatus,
-        detail: store.lastTaskReminderScheduleReport.requestedCount > 0
-          ? String(
-            localized: "settings.diagnostics.reminder_requests.detail",
-            defaultValue: "\(store.lastTaskReminderScheduleReport.requestedCount) requested",
-            table: "Localizable", bundle: LorvexL10n.bundle)
-          : nil,
-        systemImage: "bell",
-        level: .warning
+        status: surfaces.taskReminders,
+        systemImage: "bell"
       ),
-      SettingsDiagnosticsRow(
+      surfaceRow(
         id: "habit-reminders",
         title: String(localized: "settings.diagnostics.habit_reminders", defaultValue: "Habit Reminders", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: surfaces.habitReminderStatus,
-        detail: store.lastHabitReminderScheduleReport.requestedCount > 0
-          ? String(
-            localized: "settings.diagnostics.reminder_requests.detail",
-            defaultValue: "\(store.lastHabitReminderScheduleReport.requestedCount) requested",
-            table: "Localizable", bundle: LorvexL10n.bundle)
-          : nil,
-        systemImage: "bell.badge",
-        level: .warning
+        status: surfaces.habitReminders,
+        systemImage: "bell.badge"
       ),
-      SettingsDiagnosticsRow(
+      surfaceRow(
         id: "calendar-import",
         title: String(localized: "settings.diagnostics.calendar_import", defaultValue: "Calendar Import", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: surfaces.calendarImportStatus,
-        detail: nil,
-        systemImage: "calendar.badge.clock",
-        level: .neutral
+        status: surfaces.calendarImport,
+        systemImage: "calendar.badge.clock"
       ),
-      SettingsDiagnosticsRow(
+      surfaceRow(
         id: "widget",
         title: String(localized: "settings.diagnostics.widget_snapshot", defaultValue: "Widget Snapshot", table: "Localizable", bundle: LorvexL10n.bundle),
-        value: surfaces.widgetStatus,
-        detail: surfaces.widgetGeneratedAt.map { LorvexDateFormatters.dayAndClockTime($0) },
-        systemImage: "rectangle.inset.filled",
-        level: .neutral
+        status: surfaces.widget,
+        systemImage: "rectangle.inset.filled"
       ),
       SettingsDiagnosticsRow(
         id: "widget-today",
@@ -171,15 +151,21 @@ extension SettingsView {
         level: .neutral
       ),
     ]
+  }
 
-    if store.lastTaskReminderScheduleReport.requestedCount == 0 {
-      rows[1].level = .neutral
-    }
-    if store.lastHabitReminderScheduleReport.requestedCount == 0 {
-      rows[2].level = .neutral
-    }
-
-    return rows
+  /// A row for one Apple surface: its state, the line under it, and a warning
+  /// color on the icon only when the state needs attention.
+  private func surfaceRow(
+    id: String, title: String, status: AppleSurfaceDiagnostics.Status, systemImage: String
+  ) -> SettingsDiagnosticsRow {
+    SettingsDiagnosticsRow(
+      id: id,
+      title: title,
+      value: status.value,
+      detail: status.detail,
+      systemImage: systemImage,
+      level: status.needsAttention ? .warning : .neutral
+    )
   }
 
   private var noDiagnosticsPlaceholder: some View {
@@ -303,11 +289,15 @@ extension SettingsView {
     }
 
     let surfaces = store.appleSurfaceDiagnostics
-    lines.append("Spotlight: \(surfaces.spotlightStatus)")
-    lines.append("Task Reminders: \(surfaces.reminderStatus)")
-    lines.append("Habit Reminders: \(surfaces.habitReminderStatus)")
-    lines.append("Calendar Import: \(surfaces.calendarImportStatus)")
-    lines.append("Widget Snapshot: \(surfaces.widgetStatus)")
+    func line(_ label: String, _ status: AppleSurfaceDiagnostics.Status) -> String {
+      guard let detail = status.detail, !detail.isEmpty else { return "\(label): \(status.value)" }
+      return "\(label): \(status.value) (\(detail))"
+    }
+    lines.append(line("Spotlight", surfaces.spotlight))
+    lines.append(line("Task Reminders", surfaces.taskReminders))
+    lines.append(line("Habit Reminders", surfaces.habitReminders))
+    lines.append(line("Calendar Import", surfaces.calendarImport))
+    lines.append(line("Widget Snapshot", surfaces.widget))
     lines.append("Widget Today Tasks: \(surfaces.widgetTodayTaskCount)")
 
     return lines.joined(separator: "\n")

@@ -80,7 +80,7 @@ extension CalendarWeekGridView {
     let layout = allDayLayout(for: day)
     return VStack(spacing: LorvexDesign.Spacing.xxs) {
       ForEach(layout.events) { event in
-        allDayEventPill(event)
+        allDayEventPill(event, on: day)
       }
       ForEach(layout.tasks) { task in
         allDayTaskPill(task, on: day)
@@ -130,8 +130,10 @@ extension CalendarWeekGridView {
       Array(day.scheduledTasks.dropFirst(tasks.count)))
   }
 
-  private func allDayEventPill(_ event: CalendarTimelineEvent) -> some View {
-    allDayPill(title: event.title, color: eventColor(event))
+  /// An event's pill: its title, followed by its start on the day a timed
+  /// event of a day or more starts and by its end on the day it ends.
+  private func allDayEventPill(_ event: CalendarTimelineEvent, on day: CalendarGridDay) -> some View {
+    allDayPill(title: event.title, time: event.allDayStripTimeLabel(on: day.dayKey), color: eventColor(event))
       .onTapGesture { selectEvent(event) }
       .calendarPointingHandCursor()
       .accessibilityAddTraits(.isButton)
@@ -305,10 +307,11 @@ extension CalendarWeekGridView {
     Task { await store.rescheduleScheduledTask(id: task.id, to: target) }
   }
 
-  func allDayPill(title: String, color: Color) -> some View {
-    Text(title)
+  /// An event's pill in the all-day strip: the title, followed by `time`
+  /// where the width allows (``LorvexCalendarStripLabel``).
+  func allDayPill(title: String, time: String?, color: Color) -> some View {
+    LorvexCalendarStripLabel(title: title, time: time)
       .font(LorvexDesign.Typography.tertiaryText)
-      .lineLimit(1)
       .padding(.horizontal, LorvexDesign.Spacing.sm)
       .padding(.vertical, LorvexDesign.Spacing.xxs)
       .frame(maxWidth: .infinity, alignment: .leading)

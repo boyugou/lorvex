@@ -63,6 +63,8 @@ extension UserFacingError {
     case pausingUnstartedTask
     /// A habit reminder at a time the habit already has one.
     case habitReminderTimeTaken
+    /// A record whose combined content is too long to sync.
+    case recordTooLongToSync
 
     /// The reason `error` carries, or `nil` when it is none of the typed
     /// failures above.
@@ -114,6 +116,10 @@ extension UserFacingError {
       }
       if case HabitReminderError.timeTaken = error {
         self = .habitReminderTimeTaken
+        return
+      }
+      if case let LorvexCoreError.validation(field, _) = error, field == LorvexCoreError.syncPayloadField {
+        self = .recordTooLongToSync
         return
       }
       return nil
@@ -202,6 +208,11 @@ extension UserFacingError {
         String(
           localized: "error.reason.habit_reminder_time_taken",
           defaultValue: "This habit already has a reminder at that time. Choose another time.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .recordTooLongToSync:
+        String(
+          localized: "error.reason.record_too_long_to_sync",
+          defaultValue: "This item is too long to sync. Shorten its longest text and try again.",
           table: "Localizable", bundle: CoreL10n.bundle)
       }
     }

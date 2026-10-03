@@ -3,6 +3,7 @@ import GRDB
 import LorvexDomain
 import LorvexRuntime
 import LorvexStore
+import LorvexSync
 import LorvexWorkflow
 import Testing
 
@@ -337,6 +338,20 @@ struct UserFacingErrorTests {
     #expect(error.localizedDescription == error.description)
   }
 
+  @Test("a record too long to sync shows its own sentence; the detail keeps the sizes")
+  func recordTooLongToSyncIsWorded() throws {
+    let service = try SwiftLorvexCoreService.inMemory()
+    let error = service.mapWriteError(EnqueueError.canonicalization(.payloadTooLarge(sizeBytes: 70_000)))
+    let classification = UserFacingError.classify(error)
+    #expect(classification.reason == .recordTooLongToSync)
+    #expect(
+      UserFacingError.message(for: classification, copy: copy)
+        == UserFacingError.Reason.recordTooLongToSync.localizedMessage)
+    // The MCP envelope and the diagnostics log keep the English sentence.
+    #expect(classification.technicalDetail.contains("70000 bytes"))
+    #expect((error as? LorvexCoreError)?.errorDescription?.contains("too large to sync") == true)
+  }
+
   @Test("every reason has its own sentence, translated in the LorvexCore bundle")
   func reasonSentencesShipTranslated() throws {
     let reasons = UserFacingError.Reason.allCases
@@ -353,7 +368,7 @@ struct UserFacingErrorTests {
       "error.reason.habit_reminder_time_taken", "error.reason.starting_done_task",
       "error.reason.starting_canceled_task", "error.reason.starting_someday_task",
       "error.reason.completing_canceled_task", "error.reason.canceling_done_task",
-      "error.reason.pausing_unstarted_task",
+      "error.reason.pausing_unstarted_task", "error.reason.record_too_long_to_sync",
     ]
     #expect(keys.count == reasons.count, "a reason is missing from this key list")
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))

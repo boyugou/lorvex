@@ -94,7 +94,9 @@ struct MobileCalendarAllDayStrip: View {
       ForEach(columns) { day in
         VStack(spacing: 3) {
           ForEach(day.allDayEvents) { event in
-            allDayPill(title: event.title, color: eventColor(event))
+            allDayPill(
+              title: event.title, time: isCompact ? nil : event.allDayStripTimeLabel(on: day.dayKey),
+              color: eventColor(event))
               .onTapGesture { if event.editable { onTapEvent(event) } }
               .contextMenu {
                 if event.editable {
@@ -209,10 +211,11 @@ struct MobileCalendarAllDayStrip: View {
     .accessibilityIdentifier("mobileCalendar.allDayTask")
   }
 
-  private func allDayPill(title: String, color: Color) -> some View {
-    Text(title)
+  /// An event's pill in the all-day strip: the title, followed by `time`
+  /// where the width allows (``LorvexCalendarStripLabel``).
+  private func allDayPill(title: String, time: String?, color: Color) -> some View {
+    LorvexCalendarStripLabel(title: title, time: time)
       .font(isCompact ? LorvexDesign.CalendarMetrics.compactBlockText : LorvexDesign.Typography.tertiaryText)
-      .lineLimit(1)
       .padding(.horizontal, isCompact ? 4 : 6).padding(.vertical, 2)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(color.opacity(0.18), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))

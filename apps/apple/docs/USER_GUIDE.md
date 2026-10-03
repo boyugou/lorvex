@@ -203,6 +203,36 @@ title.
 The night runs past midnight in both, as in Chinese: 夜12時 and 밤 12시 mean
 00:00 the next day, and 今夜8時 and 오늘 밤 8시 mean 8 PM today.
 
+French and Portuguese words are read when French or Portuguese is among your
+device's preferred languages. Accents are optional ("apres-demain",
+"amanha"). Both languages write a clock time with the letter h, so "15h" and
+"15h30" are times, and an hour from 1 to 6 with no part of the day is in the
+afternoon ("3h" is 3 PM) unless it is written with a zero ("06h"). A length
+says that it is one: "pendant 2h" or "por 2h", minutes ("1h30min"), or a word
+("2 heures", "2 horas"). An hour that could be either a time or a length
+("réunion de 2h") and an hour that names a deadline ("avant 18h", "até 18h")
+stay in the title. With French or Portuguese among your languages, English
+leaves "2h" to them as well, so it plans 2 PM; write "2 hours" or "120 min"
+for a length.
+
+| Detail | French | Portuguese |
+|---|---|---|
+| Day | aujourd'hui, ce soir, demain, demain soir, après-demain, vendredi, ce vendredi, vendredi prochain, la semaine prochaine, ce week-end, dans 3 jours | hoje, hoje à noite, amanhã, depois de amanhã, sexta / sexta-feira, na sexta, nesta sexta, sexta que vem, próxima semana, fim de semana, daqui a 3 dias |
+| Date | 5 octobre, le 1er octobre, lundi 5 octobre, 5 oct. | 5 de outubro, 1º de outubro, dia 5 |
+| Due day | pour vendredi, d'ici demain, avant le 5 octobre, jusqu'au 5 octobre, vendredi au plus tard | até sexta, para o dia 5, prazo: 5 de outubro |
+| Time | 15h, 15h30, à 9h, vers 18h, 8h du soir, 3h de l'après-midi, midi, à minuit; de 14h à 16h, 14h-16h30, entre 14h et 16h | 15h, às 15h30, por volta das 18h, às 3 da tarde, às 8 da noite, meio-dia, à meia-noite; das 14h às 16h, entre 14h e 16h |
+| Repeat | tous les jours, chaque lundi, tous les lundis et jeudis, les lundis, un lundi sur deux, en semaine, tous les 15 jours, tous les mois, le 5 de chaque mois, chaque année; hebdomadairement at the end | todo dia, toda segunda, todas as segundas e quartas, aos sábados, às terças (at the end), dias úteis, a cada 15 dias, de 2 em 2 semanas, todo dia 5, todo ano; semanalmente at the end |
+| Length | pendant 2h, 1h30min, 1,5 h, 30 min, 2 heures, une demi-heure, un quart d'heure | por 2h, 1h30min, 1,5 h, 30 min, 2 horas, meia hora, uma hora e meia |
+| Priority | priorité haute, basse priorité, urgente | prioridade alta, baixa prioridade, urgente |
+
+Both languages count a fortnight as fifteen days, so "tous les 15 jours" and
+"a cada 15 dias" repeat every two weeks. A Portuguese weekday's short form is
+also an ordinal ("a segunda parte"), so "segunda" alone counts only at the
+end of the line after a word that is not an article, while "segunda-feira",
+"na segunda", and "toda segunda" always count. A date written in digits
+("5/10") stays in the title, since the order of its day and month depends on
+the region.
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline

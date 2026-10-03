@@ -30,11 +30,19 @@ extension SwiftLorvexCoreService {
     }
     if case EnqueueError.canonicalization(.payloadTooLarge(let sizeBytes)) = error {
       return LorvexCoreError.validation(
-        field: nil,
+        field: LorvexCoreError.syncPayloadField,
         message: "The record's combined content is too large to sync "
           + "(\(sizeBytes) bytes; the limit is \(SyncCanonicalize.maxCanonicalPayloadBytes)). "
           + "Shorten its longest text fields.")
     }
     return error
   }
+}
+
+extension LorvexCoreError {
+  /// The `field` of the validation error a write raises when a record's
+  /// combined content is too long to sync. The alert layer words that failure
+  /// itself (``UserFacingError/Reason/recordTooLongToSync``), while the MCP
+  /// envelope keeps the English sentence with its sizes.
+  static let syncPayloadField = "sync_payload"
 }

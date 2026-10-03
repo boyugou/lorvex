@@ -52337,7 +52337,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une tâche par ligne. Des mots (en anglais) comme « tomorrow », « 3pm », « every Monday », « 20 min » ou « #liste » complètent ses détails."
+            "value": "Une tâche par ligne. Des mots comme « demain », « 15h », « tous les lundis », « 20 min » ou « #liste » complètent ses détails."
           }
         },
         "hi": {
@@ -52373,7 +52373,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma tarefa por linha. Palavras (em inglês) como “tomorrow”, “3pm”, “every Monday”, “20 min” ou “#lista” completam os detalhes dela."
+            "value": "Uma tarefa por linha. Palavras como “amanhã”, “15h”, “toda segunda”, “20 min” ou “#lista” completam os detalhes dela."
           }
         },
         "ru": {

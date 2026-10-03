@@ -46231,92 +46231,92 @@
         }
       }
     },
-    "settings.activity.entry_count": {
-      "comment": "Disclosure row over the folded AI changelog or recent logs; the number of entries",
+    "settings.activity.latest_entry_count": {
+      "comment": "Disclosure row over the folded AI changelog or recent logs in Settings > Diagnostics. The number is how many of the newest entries the row unfolds; the panel loads only the newest few, never the whole log.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الإدخالات (%lld)"
+            "value": "أحدث الإدخالات (%lld)"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entries (%lld)"
+            "value": "Latest Entries (%lld)"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entradas (%lld)"
+            "value": "Entradas más recientes (%lld)"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entrées (%lld)"
+            "value": "Dernières entrées (%lld)"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "एंट्री (%lld)"
+            "value": "नवीनतम एंट्री (%lld)"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voci (%lld)"
+            "value": "Voci più recenti (%lld)"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "項目（%lld）"
+            "value": "最新の項目（%lld）"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "항목(%lld)"
+            "value": "최근 항목(%lld)"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wpisy (%lld)"
+            "value": "Najnowsze wpisy (%lld)"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entradas (%lld)"
+            "value": "Entradas mais recentes (%lld)"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записи (%lld)"
+            "value": "Последние записи (%lld)"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записи (%lld)"
+            "value": "Останні записи (%lld)"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "条目（%lld）"
+            "value": "最近条目（%lld）"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "項目（%lld）"
+            "value": "最近項目（%lld）"
           }
         }
       }
@@ -81635,180 +81635,92 @@
         }
       }
     },
-    "settings.diagnostics.status.unknown_error": {
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "خطأ غير معروف"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "unknown error"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "error desconocido"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "erreur inconnue"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "अज्ञात त्रुटि"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "errore sconosciuto"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不明なエラー"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "알 수 없는 오류"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "nieznany błąd"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "erro desconhecido"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "неизвестная ошибка"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "невідома помилка"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未知错误"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未知錯誤"
-          }
-        }
-      }
-    },
     "settings.diagnostics.status.failed": {
+      "comment": "Diagnostics status value when an Apple surface (Spotlight indexing, reminder scheduling, or calendar import) failed. The error's own description appears on a line under it.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فشل: %@"
+            "value": "فشل"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Failed: %@"
+            "value": "Failed"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Falló: %@"
+            "value": "Falló"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Échec : %@"
+            "value": "Échec"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "विफल: %@"
+            "value": "विफल"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non riuscito: %@"
+            "value": "Non riuscito"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "失敗：%@"
+            "value": "失敗"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "실패: %@"
+            "value": "실패"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Błąd: %@"
+            "value": "Błąd"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Falhou: %@"
+            "value": "Falhou"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ошибка: %@"
+            "value": "Ошибка"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Помилка: %@"
+            "value": "Помилка"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "失败：%@"
+            "value": "失败"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "失敗：%@"
+            "value": "失敗"
           }
         }
       }

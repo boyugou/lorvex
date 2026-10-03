@@ -42,8 +42,8 @@ func appleSurfaceDiagnosticsReportsNotStartedCalendarImport() {
     importedCalendarEventCount: 0
   )
 
-  #expect(diagnostics.calendarImportStatus == "Not started")
-  #expect(diagnostics.reminderStatus == "Disabled")
+  #expect(diagnostics.calendarImport.value == "Not started")
+  #expect(diagnostics.taskReminders.value == "Disabled")
 }
 
 @Test
@@ -62,9 +62,9 @@ func appleSurfaceDiagnosticsReportsSuccessfulCalendarImport() {
     importedCalendarEventCount: 7
   )
 
-  #expect(diagnostics.calendarImportStatus == "7 imported events")
-  #expect(diagnostics.spotlightStatus == "4 tasks, 7 calendar events")
-  #expect(diagnostics.reminderStatus == "1 scheduled reminder")
+  #expect(diagnostics.calendarImport.value == "7 imported events")
+  #expect(diagnostics.spotlight.value == "4 tasks, 7 calendar events")
+  #expect(diagnostics.taskReminders.value == "1 scheduled reminder")
 }
 
 /// The Spotlight status is one sentence whose two counts each take their own
@@ -80,7 +80,7 @@ func appleSurfaceDiagnosticsSpotlightStatusVariesEachCountOnItsOwn() {
       widgetSnapshot: nil,
       lastCalendarImportReport: .notStarted,
       importedCalendarEventCount: 0
-    ).spotlightStatus
+    ).spotlight.value
   }
 
   #expect(status(tasks: 1, events: 1) == "1 task, 1 calendar event")
@@ -89,7 +89,7 @@ func appleSurfaceDiagnosticsSpotlightStatusVariesEachCountOnItsOwn() {
 }
 
 @Test
-func appleSurfaceDiagnosticsReportsPublishedWidgetVersion() {
+func appleSurfaceDiagnosticsReportsPublishedWidgetVersion() throws {
   let snapshot = WidgetSnapshot(
     generatedAt: "2026-05-22T16:00:00Z",
     timezone: "UTC",
@@ -115,8 +115,10 @@ func appleSurfaceDiagnosticsReportsPublishedWidgetVersion() {
     importedCalendarEventCount: 0
   )
 
-  #expect(diagnostics.widgetStatus == "Published")
-  #expect(diagnostics.widgetGeneratedAt == LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
+  let generatedAt = try #require(LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
+  #expect(diagnostics.widget.value == "Published")
+  #expect(diagnostics.widget.detail == LorvexDateFormatters.dayAndClockTime(generatedAt))
+  #expect(diagnostics.widgetGeneratedAt == generatedAt)
   #expect(diagnostics.widgetTodayTaskCount == 1)
 }
 
@@ -132,7 +134,30 @@ func appleSurfaceDiagnosticsReportsTaskReminderSchedulingFailure() {
     importedCalendarEventCount: 0
   )
 
-  #expect(diagnostics.reminderStatus == "Permission Denied")
+  #expect(diagnostics.taskReminders.value == "Permission Denied")
+  #expect(diagnostics.taskReminders.detail == "2 requested")
+  #expect(diagnostics.taskReminders.needsAttention)
+}
+
+/// Reminders that were all scheduled are healthy: no line under the count and
+/// no warning, however many were requested.
+@Test
+func appleSurfaceDiagnosticsScheduledRemindersNeedNoAttention() {
+  let diagnostics = AppleSurfaceDiagnostics(
+    spotlightIndexedTaskCount: 0,
+    spotlightIndexedCalendarEventCount: 0,
+    scheduledReminderCount: 3,
+    taskReminderScheduleReport: .scheduled(3),
+    widgetSnapshot: nil,
+    lastCalendarImportReport: .notStarted,
+    importedCalendarEventCount: 0
+  )
+
+  #expect(diagnostics.taskReminders.value == "3 scheduled reminders")
+  #expect(diagnostics.taskReminders.detail == nil)
+  #expect(!diagnostics.taskReminders.needsAttention)
+  #expect(!diagnostics.spotlight.needsAttention)
+  #expect(!diagnostics.calendarImport.needsAttention)
 }
 
 @Test
@@ -149,8 +174,8 @@ func appleSurfaceDiagnosticsReportsHabitReminderStatusIndependently() {
   )
 
   // The habit row reads its own report, not the task one's scheduled count.
-  #expect(diagnostics.reminderStatus == "Disabled")
-  #expect(diagnostics.habitReminderStatus == "2 scheduled reminders")
+  #expect(diagnostics.taskReminders.value == "Disabled")
+  #expect(diagnostics.habitReminders.value == "2 scheduled reminders")
 }
 
 @Test
@@ -165,7 +190,7 @@ func appleSurfaceDiagnosticsReportsSingularSpotlightCounts() {
     importedCalendarEventCount: 0
   )
 
-  #expect(diagnostics.spotlightStatus == "1 task, 1 calendar event")
+  #expect(diagnostics.spotlight.value == "1 task, 1 calendar event")
 }
 
 @Test
@@ -182,8 +207,9 @@ func appleSurfaceDiagnosticsReportsFailedCalendarImport() {
     importedCalendarEventCount: 0
   )
 
-  #expect(diagnostics.calendarImportStatus.contains("Failed"))
-  #expect(diagnostics.calendarImportStatus.contains("Calendar full access denied"))
+  #expect(diagnostics.calendarImport.value == "Failed")
+  #expect(diagnostics.calendarImport.detail?.contains("Calendar full access denied") == true)
+  #expect(diagnostics.calendarImport.needsAttention)
 }
 
 @MainActor
@@ -205,5 +231,5 @@ func appStoreDiagnosticsProjectsEventKitImportResultsAfterRefresh() async throws
   let diag = store.appleSurfaceDiagnostics
   #expect(diag.lastCalendarImportReport.status == .succeeded)
   #expect(diag.importedCalendarEventCount == 1)
-  #expect(diag.calendarImportStatus == "1 imported event")
+  #expect(diag.calendarImport.value == "1 imported event")
 }

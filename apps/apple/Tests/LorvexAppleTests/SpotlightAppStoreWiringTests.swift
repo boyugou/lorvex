@@ -231,8 +231,8 @@ func appStoreTaskSpotlightFailureDoesNotOverwriteSuccessfulCount() async throws 
   await store.reindexTasksForSpotlight(tasks: page.tasks)
 
   #expect(store.lastSpotlightIndexedTaskCount == 9)
-  #expect(store.appleSurfaceDiagnostics.spotlightStatus.contains("Failed"))
-  #expect(store.appleSurfaceDiagnostics.spotlightStatus.contains("task spotlight failed"))
+  #expect(store.appleSurfaceDiagnostics.spotlight.value == "Failed")
+  #expect(store.appleSurfaceDiagnostics.spotlight.detail?.contains("task spotlight failed") == true)
 }
 
 @MainActor
@@ -248,8 +248,8 @@ func appStoreCalendarSpotlightFailureDoesNotOverwriteSuccessfulCount() async thr
   await store.reindexContentForSpotlight()
 
   #expect(store.lastSpotlightIndexedCalendarEventCount == 7)
-  #expect(store.appleSurfaceDiagnostics.spotlightStatus.contains("Failed"))
-  #expect(store.appleSurfaceDiagnostics.spotlightStatus.contains("calendar spotlight failed"))
+  #expect(store.appleSurfaceDiagnostics.spotlight.value == "Failed")
+  #expect(store.appleSurfaceDiagnostics.spotlight.detail?.contains("calendar spotlight failed") == true)
 }
 
 @MainActor

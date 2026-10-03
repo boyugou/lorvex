@@ -989,7 +989,7 @@ NON_COUNT_INTEGER_ARGUMENTS: dict[str, dict[int, str]] = {
     "review.calm.feel.dot": {1: _SCALE_POINT},
     "review.calm.habits_some": {1: _NUMERATOR},
     "review.calm.week_shape.day": {2: _LABEL_VALUE},
-    "settings.activity.entry_count": {1: _LABEL_VALUE},
+    "settings.activity.latest_entry_count": {1: _LABEL_VALUE},
     "system.entity.habit.progress.today": {1: _RATIO, 2: _RATIO},
     "system.list.health.read.item": {2: _LABEL_VALUE},
     "task_detail.notes.character_limit": {1: _NUMERATOR},

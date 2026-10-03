@@ -8,12 +8,17 @@ import SwiftUI
 /// suggested task times inside. One row holds the window as two time chips,
 /// start – end, in a group of its own so its explanation is the footer
 /// directly under it. Changes persist immediately; the store rejects an
-/// invalid window (end at or before start) with a visible error.
+/// invalid window (end at or before start) with a visible error, and the
+/// chips go back to the saved window.
 struct SettingsWorkingHoursRow: View {
   @Bindable var store: AppStore
 
   @State private var start = Date()
   @State private var end = Date()
+  /// The last window the store accepted, which a rejected window puts the
+  /// chips back on.
+  @State private var savedStart = Date()
+  @State private var savedEnd = Date()
   @State private var isLoaded = false
 
   var body: some View {
@@ -53,19 +58,35 @@ struct SettingsWorkingHoursRow: View {
       let stored = await store.loadWorkingHoursPreference()
       start = Self.date(fromHHMM: stored.start) ?? start
       end = Self.date(fromHHMM: stored.end) ?? end
+      savedStart = start
+      savedEnd = end
       isLoaded = true
     }
     .accessibilityIdentifier("settings.workingHours")
   }
 
   /// Persist the window after a user edit (the time chips call this directly).
-  /// The `isLoaded` guard drops the initial load's assignments so opening
-  /// Settings never re-saves the value it just read back.
+  /// Nothing is written before the stored window has loaded or when the edit
+  /// leaves the saved window unchanged. A window the store rejects puts the
+  /// chips back on the saved one, unless another edit has replaced it since.
   private func persist() {
     guard isLoaded else { return }
     let startText = Self.hhmm(from: start)
     let endText = Self.hhmm(from: end)
-    Task { await store.saveWorkingHoursPreference(start: startText, end: endText) }
+    guard startText != Self.hhmm(from: savedStart) || endText != Self.hhmm(from: savedEnd) else {
+      return
+    }
+    let newStart = start
+    let newEnd = end
+    Task {
+      if await store.saveWorkingHoursPreference(start: startText, end: endText) {
+        savedStart = newStart
+        savedEnd = newEnd
+      } else if start == newStart, end == newEnd {
+        start = savedStart
+        end = savedEnd
+      }
+    }
   }
 
   private static func date(fromHHMM value: String) -> Date? {

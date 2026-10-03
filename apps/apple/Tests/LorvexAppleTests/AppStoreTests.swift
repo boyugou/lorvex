@@ -39,14 +39,14 @@ func appStoreLoadsPreviewToday() async throws {
   let indexedCalendarEvents = store.lastSpotlightIndexedCalendarEventCount
   let diagnostics = store.appleSurfaceDiagnostics
   #expect(
-    diagnostics.spotlightStatus
+    diagnostics.spotlight.value
     == "5 tasks, \(indexedCalendarEvents) calendar event\(indexedCalendarEvents == 1 ? "" : "s")"
   )
-  #expect(diagnostics.reminderStatus == "Disabled")
+  #expect(diagnostics.taskReminders.value == "Disabled")
   // No EventKit coordinator is wired in this preview store, so no ingest runs
   // and the import status stays at its initial "Not started".
-  #expect(diagnostics.calendarImportStatus == "Not started")
-  #expect(diagnostics.widgetStatus == "Published")
+  #expect(diagnostics.calendarImport.value == "Not started")
+  #expect(diagnostics.widget.value == "Published")
   #expect(diagnostics.widgetTodayTaskCount == 3)
   #expect(diagnostics.widgetGeneratedAt == LorvexDateFormatters.iso8601.date(from: "2026-05-22T16:00:00Z"))
   #expect(await indexer.lastIndexedIDs().count == store.lastSpotlightIndexedTaskCount)

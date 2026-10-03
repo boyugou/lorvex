@@ -6429,6 +6429,96 @@
         }
       }
     },
+    "error.reason.record_too_long_to_sync": {
+      "comment": "Alert shown when saving an item whose text, all fields together, is more than one sync record can carry.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا العنصر أطول من أن تتم مزامنته. اختصر أطول نص فيه ثم حاول مرة أخرى."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This item is too long to sync. Shorten its longest text and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este elemento es demasiado largo para sincronizarse. Acorta su texto más largo e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet élément est trop long pour être synchronisé. Raccourcissez son texte le plus long, puis réessayez."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह आइटम सिंक होने के लिए बहुत लंबा है। इसका सबसे लंबा टेक्स्ट छोटा करके फिर से कोशिश करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo elemento è troppo lungo per essere sincronizzato. Accorcia il testo più lungo e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この項目は長すぎて同期できません。いちばん長いテキストを短くしてから、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 항목이 너무 길어 동기화할 수 없습니다. 가장 긴 텍스트를 줄인 후 다시 시도하세요."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten element jest za długi, aby go zsynchronizować. Skróć jego najdłuższy tekst i spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este item é longo demais para sincronizar. Encurte o texto mais longo e tente novamente."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот элемент слишком длинный для синхронизации. Сократите самый длинный текст и попробуйте ещё раз."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей елемент задовгий для синхронізації. Скоротіть найдовший текст та спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容太长，无法同步，请缩短最长的部分后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "內容太長，無法同步，請縮短最長的部分後再試。"
+          }
+        }
+      }
+    },
     "error.reason.starting_canceled_task": {
       "comment": "Alert shown when a person starts a task that was canceled.",
       "extractionState": "manual",

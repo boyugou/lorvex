@@ -3,78 +3,49 @@ import LorvexDomain
 import SwiftUI
 
 extension SettingsView {
-  var changelogSection: some View {
-    SettingsActivityLogSection(
-      title: String(localized: "settings.activity.ai_changelog", defaultValue: "AI Changelog", table: "Localizable", bundle: LorvexL10n.bundle),
-      count: store.runtimeDiagnostics?.changelog.entries.count ?? 0,
-      accessibilityIdentifier: "settings.activity.changelogToggle"
-    ) {
-      ForEach(store.runtimeDiagnostics?.changelog.entries ?? []) { entry in
-        RuntimeEntryRow(
-          title: entry.summary,
-          subtitle: "\(entry.entityType) · \(entry.operation)",
-          timestamp: entry.timestamp,
-          fallbackDetail: entry.initiatedBy
-        )
-      }
-    } empty: {
-      LorvexEmptyStatePanel(
-        title: String(localized: "settings.activity.no_changelog_entries.title", defaultValue: "No changelog entries", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "settings.activity.no_changelog_entries",
-          defaultValue: "No changelog entries loaded.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "clock.arrow.circlepath",
-        tint: .secondary,
-        style: .inline
-      )
-    }
-  }
-
   var logsSection: some View {
-    SettingsActivityLogSection(
-      title: String(localized: "settings.activity.recent_logs", defaultValue: "Recent Logs", table: "Localizable", bundle: LorvexL10n.bundle),
-      count: store.runtimeDiagnostics?.recentLogs.entries.count ?? 0,
-      accessibilityIdentifier: "settings.activity.logsToggle"
-    ) {
-      ForEach(store.runtimeDiagnostics?.recentLogs.entries ?? []) { entry in
-        RuntimeEntryRow(
-          // `origin` carries per-row provenance (the `error_logs.source`
-          // column, e.g. `metrickit.crash`); the stream-level `source`
-          // collapses every error_log row to `error_log`, so prefer the
-          // finer origin when present to label crash/hang/sync rows apart.
-          title: entry.summary,
-          subtitle: "\(entry.origin ?? entry.source) · \(entry.level.rawValue)",
-          timestamp: entry.timestamp
+    Section(String(localized: "settings.activity.recent_logs", defaultValue: "Recent Logs", table: "Localizable", bundle: LorvexL10n.bundle)) {
+      SettingsActivityFeed(
+        count: store.runtimeDiagnostics?.recentLogs.entries.count ?? 0,
+        accessibilityIdentifier: "settings.activity.logsToggle"
+      ) {
+        ForEach(store.runtimeDiagnostics?.recentLogs.entries ?? []) { entry in
+          RuntimeEntryRow(
+            // `origin` carries per-row provenance (the `error_logs.source`
+            // column, e.g. `metrickit.crash`); the stream-level `source`
+            // collapses every error_log row to `error_log`, so prefer the
+            // finer origin when present to label crash/hang/sync rows apart.
+            title: entry.summary,
+            subtitle: "\(entry.origin ?? entry.source) · \(entry.level.rawValue)",
+            timestamp: entry.timestamp
+          )
+        }
+      } empty: {
+        LorvexEmptyStatePanel(
+          title: String(localized: "settings.activity.no_recent_logs.title", defaultValue: "No recent logs", table: "Localizable", bundle: LorvexL10n.bundle),
+          message: String(
+            localized: "settings.activity.no_recent_logs",
+            defaultValue: "No recent logs loaded.",
+            table: "Localizable",
+            bundle: LorvexL10n.bundle
+          ),
+          systemImage: "doc.text.magnifyingglass",
+          tint: .secondary,
+          style: .inline
         )
       }
-    } empty: {
-      LorvexEmptyStatePanel(
-        title: String(localized: "settings.activity.no_recent_logs.title", defaultValue: "No recent logs", table: "Localizable", bundle: LorvexL10n.bundle),
-        message: String(
-          localized: "settings.activity.no_recent_logs",
-          defaultValue: "No recent logs loaded.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle
-        ),
-        systemImage: "doc.text.magnifyingglass",
-        tint: .secondary,
-        style: .inline
-      )
     }
   }
 }
 
-/// A diagnostics feed in the Activity pane, folded by default: the section
-/// shows one disclosure row carrying the entry count, and the rows appear only
-/// once the user opens it. The feeds run to hundreds of rows a person reads
-/// only while troubleshooting, so unfolded they would bury the retention
-/// control and every section after them. An empty feed shows `empty` directly,
-/// with nothing to fold.
-private struct SettingsActivityLogSection<Rows: View, Empty: View>: View {
-  let title: String
+/// The rows of a diagnostics feed in Settings › Diagnostics, folded by
+/// default: one disclosure row naming how many of the newest entries it holds
+/// (the panel loads only the newest few, never the whole log), and the
+/// entries only once the user opens it. Even that slice is a list a person
+/// reads only while troubleshooting, so unfolded it would push every section
+/// after it down. An empty feed shows `empty` directly, with nothing to fold.
+/// The caller wraps the rows in its section.
+private struct SettingsActivityFeed<Rows: View, Empty: View>: View {
   let count: Int
   let accessibilityIdentifier: String
   @ViewBuilder let rows: () -> Rows
@@ -82,31 +53,34 @@ private struct SettingsActivityLogSection<Rows: View, Empty: View>: View {
   @State private var isExpanded = false
 
   var body: some View {
-    Section(title) {
-      if count == 0 {
-        empty()
-      } else {
-        SettingsAdvancedDisclosureButton(
-          isExpanded: $isExpanded,
-          title: LocalizedStringResource(
-            "settings.activity.entry_count", defaultValue: "Entries (\(count))",
-            table: "Localizable", bundle: LorvexL10n.bundle),
-          accessibilityIdentifier: accessibilityIdentifier)
-        if isExpanded {
-          rows()
-        }
+    if count == 0 {
+      empty()
+    } else {
+      SettingsAdvancedDisclosureButton(
+        isExpanded: $isExpanded,
+        title: LocalizedStringResource(
+          "settings.activity.latest_entry_count", defaultValue: "Latest Entries (\(count))",
+          table: "Localizable", bundle: LorvexL10n.bundle),
+        accessibilityIdentifier: accessibilityIdentifier)
+      if isExpanded {
+        rows()
       }
     }
   }
 }
 
-/// Retention control for the AI changelog: how long the append-only audit trail
-/// of assistant writes is kept before the sync sweep trims it. "Off" stops
-/// recording new entries and purges existing ones on every synced device. Writes
-/// the account-scoped virtual `ai_changelog_retention_policy` preference
-/// (``ChangelogRetentionPolicy``) — the same value an assistant sets via
-/// `set_preference`.
-struct SettingsChangelogRetentionRow: View {
+/// The AI changelog's group in Settings › Diagnostics: how long the log of
+/// assistant writes is kept, then the log itself as a folded feed, with what
+/// the retention choice does as the group's footer. Keeping the control at
+/// the top of the group it governs leaves it in place however far the
+/// unfolded log runs.
+///
+/// The retention picker writes the account-scoped virtual
+/// `ai_changelog_retention_policy` preference (``ChangelogRetentionPolicy``),
+/// the same value an assistant sets via `set_preference`: the sync sweep trims
+/// older entries, and "Off" stops recording and purges existing entries on
+/// every synced device.
+struct SettingsChangelogSection: View {
   @Bindable var store: AppStore
 
   @State private var current: ChangelogRetentionPolicy = .maximum
@@ -117,8 +91,6 @@ struct SettingsChangelogRetentionRow: View {
     .maximum, .days(90), .days(30), .days(7), .off,
   ]
 
-  // The picker names its setting, so its group carries no header; what the
-  // choice does is the footer directly under it.
   var body: some View {
     Section {
       Picker(
@@ -134,6 +106,35 @@ struct SettingsChangelogRetentionRow: View {
       }
       .onChange(of: selection) { _, newValue in persist(newValue) }
       .accessibilityIdentifier("settings.activity.retention.picker")
+
+      SettingsActivityFeed(
+        count: store.runtimeDiagnostics?.changelog.entries.count ?? 0,
+        accessibilityIdentifier: "settings.activity.changelogToggle"
+      ) {
+        ForEach(store.runtimeDiagnostics?.changelog.entries ?? []) { entry in
+          RuntimeEntryRow(
+            title: entry.summary,
+            subtitle: "\(entry.entityType) · \(entry.operation)",
+            timestamp: entry.timestamp,
+            fallbackDetail: entry.initiatedBy
+          )
+        }
+      } empty: {
+        LorvexEmptyStatePanel(
+          title: String(localized: "settings.activity.no_changelog_entries.title", defaultValue: "No changelog entries", table: "Localizable", bundle: LorvexL10n.bundle),
+          message: String(
+            localized: "settings.activity.no_changelog_entries",
+            defaultValue: "No changelog entries loaded.",
+            table: "Localizable",
+            bundle: LorvexL10n.bundle
+          ),
+          systemImage: "clock.arrow.circlepath",
+          tint: .secondary,
+          style: .inline
+        )
+      }
+    } header: {
+      Text(String(localized: "settings.activity.ai_changelog", defaultValue: "AI Changelog", table: "Localizable", bundle: LorvexL10n.bundle))
     } footer: {
       Text(footnote)
     }
@@ -173,7 +174,13 @@ struct SettingsChangelogRetentionRow: View {
   }
 
   private func persist(_ wire: String) {
-    guard isLoaded else { return }
+    // Skip a no-op write. The load assigns `selection` and flips `isLoaded` in
+    // one synchronous batch, so `.onChange` fires with `isLoaded` already true;
+    // without the value check every appearance of the pane would re-persist a
+    // stored policy other than the default, bumping the retention version on
+    // every device and writing an `ai_changelog` row into the very log the
+    // user is trimming.
+    guard isLoaded, wire != current.wireValue else { return }
     let policy = ChangelogRetentionPolicy.parse(wire)
     current = policy
     Task { await store.saveChangelogRetentionPolicy(policy) }

@@ -41,6 +41,17 @@ extension CalendarTimelineEvent {
     }
   }
 
+  /// The time a pill in a calendar grid's all-day strip shows for this event
+  /// on `day`. A timed event of a day or more sits in the strip, as a pill on
+  /// each day it takes time on, and shows its start on the day it starts and
+  /// "Until 5:00 PM" on the day it ends (``timeLabel(for:)``). Nil for an
+  /// all-day event, for a day in between, which the event fills, and for an
+  /// event without a readable start.
+  public func allDayStripTimeLabel(on day: String) -> String? {
+    guard !allDay, lorvexMinutesSinceMidnight(startTime) != nil else { return nil }
+    return timeLabel(for: dayPart(on: day))
+  }
+
   /// The time this event shows under `day` in a list of days, such as an
   /// agenda or a review's look ahead. `range` words a one-day event's start
   /// and end on the day's clock (``clockSpan(on:)``: the end is nil when the

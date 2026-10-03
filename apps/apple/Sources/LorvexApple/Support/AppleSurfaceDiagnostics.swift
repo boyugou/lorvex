@@ -19,68 +19,99 @@ struct AppleSurfaceDiagnostics: Equatable, Sendable {
   var lastCalendarImportReport: CalendarIntegrationReport
   var importedCalendarEventCount: Int
 
-  var spotlightStatus: String {
+  /// One surface's state as its Settings row shows it.
+  struct Status: Equatable {
+    /// The short state: a count, "Disabled", "Permission Denied", or "Failed".
+    var value: String
+    /// The line under the state: what went wrong, in the error's own words;
+    /// how many reminders a denied permission kept from being scheduled; or
+    /// when the widget snapshot was published.
+    var detail: String?
+    /// True for a state the user should look at: a failure, or a denied
+    /// permission that keeps reminders from being scheduled.
+    var needsAttention: Bool
+
+    init(_ value: String, detail: String? = nil, needsAttention: Bool = false) {
+      self.value = value
+      self.detail = detail
+      self.needsAttention = needsAttention
+    }
+  }
+
+  var spotlight: Status {
     if let errorMessage = spotlightTaskIndexErrorMessage ?? spotlightContentIndexErrorMessage {
-      return Self.failedStatus(errorMessage)
+      return Self.failed(errorMessage)
     }
     let tasks = spotlightIndexedTaskCount
     let events = spotlightIndexedCalendarEventCount
-    return String(
-      localized: "settings.diagnostics.status.spotlight",
-      defaultValue: "\(tasks) tasks, \(events) calendar events",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
+    return Status(
+      String(
+        localized: "settings.diagnostics.status.spotlight",
+        defaultValue: "\(tasks) tasks, \(events) calendar events",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle))
   }
 
-  var reminderStatus: String {
-    Self.reminderStatus(taskReminderScheduleReport, scheduledCount: scheduledReminderCount)
+  var taskReminders: Status {
+    Self.reminders(taskReminderScheduleReport, scheduledCount: scheduledReminderCount)
   }
 
-  var habitReminderStatus: String {
-    Self.reminderStatus(
-      habitReminderScheduleReport, scheduledCount: habitReminderScheduleReport.scheduledCount)
+  var habitReminders: Status {
+    Self.reminders(habitReminderScheduleReport, scheduledCount: habitReminderScheduleReport.scheduledCount)
   }
 
-  private static func reminderStatus(
-    _ report: TaskReminderScheduleReport, scheduledCount: Int
-  ) -> String {
+  private static func reminders(_ report: TaskReminderScheduleReport, scheduledCount: Int) -> Status {
     switch report.status {
     case .disabled:
-      return String(
-        localized: "settings.diagnostics.status.disabled", defaultValue: "Disabled",
-        table: "Localizable", bundle: LorvexL10n.bundle)
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.disabled", defaultValue: "Disabled",
+          table: "Localizable", bundle: LorvexL10n.bundle))
     case .scheduled:
-      return String(
-        localized: "settings.diagnostics.status.reminders_scheduled_count",
-        defaultValue: scheduledCount == 1
-          ? "\(scheduledCount) scheduled reminder"
-          : "\(scheduledCount) scheduled reminders",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.reminders_scheduled_count",
+          defaultValue: scheduledCount == 1
+            ? "\(scheduledCount) scheduled reminder"
+            : "\(scheduledCount) scheduled reminders",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle))
     case .permissionDenied:
-      return String(
-        localized: "settings.diagnostics.status.permission_denied",
-        defaultValue: "Permission Denied",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
+      let requested = report.requestedCount
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.permission_denied",
+          defaultValue: "Permission Denied",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle),
+        detail: requested > 0
+          ? String(
+            localized: "settings.diagnostics.reminder_requests.detail",
+            defaultValue: "\(requested) requested",
+            table: "Localizable", bundle: LorvexL10n.bundle)
+          : nil,
+        needsAttention: true)
     case .failed:
-      return failedStatus(report.errorMessage)
+      return failed(report.errorMessage)
     }
   }
 
-  var widgetStatus: String {
+  var widget: Status {
     guard widgetSnapshot != nil else {
-      return String(
-        localized: "settings.diagnostics.status.widget_no_snapshot",
-        defaultValue: "No snapshot published",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.widget_no_snapshot",
+          defaultValue: "No snapshot published",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle))
     }
-    return String(
-      localized: "settings.diagnostics.status.widget_published",
-      defaultValue: "Published",
-      table: "Localizable",
-      bundle: LorvexL10n.bundle)
+    return Status(
+      String(
+        localized: "settings.diagnostics.status.widget_published",
+        defaultValue: "Published",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      detail: widgetGeneratedAt.map { LorvexDateFormatters.dayAndClockTime($0) })
   }
 
   /// How many of Today's tasks the published widget snapshot carries.
@@ -96,38 +127,40 @@ struct AppleSurfaceDiagnostics: Equatable, Sendable {
       ?? LorvexDateFormatters.iso8601.date(from: raw)
   }
 
-  var calendarImportStatus: String {
+  var calendarImport: Status {
     switch lastCalendarImportReport.status {
     case .notStarted:
-      return String(
-        localized: "settings.diagnostics.status.not_started", defaultValue: "Not started",
-        table: "Localizable", bundle: LorvexL10n.bundle)
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.not_started", defaultValue: "Not started",
+          table: "Localizable", bundle: LorvexL10n.bundle))
     case .succeeded:
       let importedCount = importedCalendarEventCount
-      return String(
-        localized: "settings.diagnostics.status.calendar_import_succeeded_count",
-        defaultValue: importedCount == 1
-          ? "\(importedCount) imported event"
-          : "\(importedCount) imported events",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle)
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.calendar_import_succeeded_count",
+          defaultValue: importedCount == 1
+            ? "\(importedCount) imported event"
+            : "\(importedCount) imported events",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle))
     case .skipped:
-      return String(
-        localized: "settings.diagnostics.status.skipped", defaultValue: "Skipped",
-        table: "Localizable", bundle: LorvexL10n.bundle)
+      return Status(
+        String(
+          localized: "settings.diagnostics.status.skipped", defaultValue: "Skipped",
+          table: "Localizable", bundle: LorvexL10n.bundle))
     case .failed:
-      return Self.failedStatus(lastCalendarImportReport.errorMessage)
+      return Self.failed(lastCalendarImportReport.errorMessage)
     }
   }
 
-  private static func failedStatus(_ message: String?) -> String {
-    String(
-      format: String(
-        localized: "settings.diagnostics.status.failed", defaultValue: "Failed: %@",
+  /// A failure: "Failed", with the error's own words on the line under it.
+  private static func failed(_ message: String?) -> Status {
+    Status(
+      String(
+        localized: "settings.diagnostics.status.failed", defaultValue: "Failed",
         table: "Localizable", bundle: LorvexL10n.bundle),
-      message ?? String(
-        localized: "settings.diagnostics.status.unknown_error", defaultValue: "unknown error",
-        table: "Localizable", bundle: LorvexL10n.bundle)
-    )
+      detail: message,
+      needsAttention: true)
   }
 }

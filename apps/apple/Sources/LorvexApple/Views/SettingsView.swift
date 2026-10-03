@@ -242,8 +242,7 @@ struct SettingsView: View {
       dataSection
     case .diagnostics:
       diagnosticsSection
-      SettingsChangelogRetentionRow(store: store)
-      changelogSection
+      SettingsChangelogSection(store: store)
       logsSection
       aboutSection
     }

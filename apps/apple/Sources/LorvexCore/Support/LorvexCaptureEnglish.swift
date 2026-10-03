@@ -28,18 +28,29 @@ extension LorvexCaptureVocabulary {
   /// - Length: "20 min", "1.5h", "20m", "1h30m", "half an hour".
   /// - Priority: "!" to "!!!", p1 to p3, "high priority", "low priority", and
   ///   "urgent" at the end of the line or opening it before a colon or comma.
-  static let english = LorvexCaptureVocabulary(
-    priority: [Rule(pattern: englishPriorityPattern, read: englishPriority)],
-    length: [Rule(pattern: englishLengthPattern, read: englishLength)],
-    time: [
-      Rule(pattern: englishRangePattern, read: englishRange),
-      Rule(pattern: englishTimePattern, read: englishTime),
-    ],
-    repeats: [Rule(pattern: englishRepeatPattern, read: englishRepeat)],
-    due: [Rule(pattern: #"\#(latinStart)(?:by|due)\s+(\#(englishDayPattern))\#(latinEnd)"#, read: englishDue)],
-    when: [
-      Rule(pattern: #"\#(latinStart)(?:(on|for|this|next)\s+)?(\#(englishDayPattern))\#(latinEnd)"#, read: englishWhen)
-    ])
+  static let english = englishVocabulary(readsHoursWithH: true)
+
+  /// English for a line also read in a language that writes a clock time
+  /// with the letter h (French and Portuguese "15h", "15h30"): an hour count
+  /// written with h ("2h", "1.5h", "1h30m") is left to that language, which
+  /// reads it as a time or a length by the words around it. Every other word
+  /// reads as in ``english``.
+  static let englishBesideHourClock = englishVocabulary(readsHoursWithH: false)
+
+  private static func englishVocabulary(readsHoursWithH: Bool) -> LorvexCaptureVocabulary {
+    LorvexCaptureVocabulary(
+      priority: [Rule(pattern: englishPriorityPattern, read: englishPriority)],
+      length: [Rule(pattern: englishLengthPattern) { englishLength($0, readsHoursWithH: readsHoursWithH) }],
+      time: [
+        Rule(pattern: englishRangePattern, read: englishRange),
+        Rule(pattern: englishTimePattern, read: englishTime),
+      ],
+      repeats: [Rule(pattern: englishRepeatPattern, read: englishRepeat)],
+      due: [Rule(pattern: #"\#(latinStart)(?:by|due)\s+(\#(englishDayPattern))\#(latinEnd)"#, read: englishDue)],
+      when: [
+        Rule(pattern: #"\#(latinStart)(?:(on|for|this|next)\s+)?(\#(englishDayPattern))\#(latinEnd)"#, read: englishWhen)
+      ])
+  }
 
   // MARK: - Priority
 
@@ -63,13 +74,16 @@ extension LorvexCaptureVocabulary {
   private static let englishLengthPattern =
     #"(?<![\p{Latin}\p{N}.])(?:for\s+)?(?:(\d+)\s*h\s*(\d+)\s*m(?:in)?|(\d+(?:\.\d+)?)(?:\s*(minutes|minute|mins|min|hours|hour|hrs|hr)|(m|h)))(?![\p{Latin}\p{N}])|(?<![\p{Latin}\p{N}])(?:for\s+)?(half an hour)(?![\p{Latin}\p{N}])"#
 
-  private static func englishLength(_ match: Match) -> Int? {
+  /// The length a match names. Without `readsHoursWithH`, an hour count
+  /// written with the letter h ("2h", "1h30m") names none.
+  private static func englishLength(_ match: Match, readsHoursWithH: Bool) -> Int? {
     if let hours = match.group(1).flatMap(number), let rest = match.group(2).flatMap(number) {
-      return taskLength(minutes: hours * 60 + rest)
+      return readsHoursWithH ? taskLength(minutes: hours * 60 + rest) : nil
     }
     if let amount = match.group(3).flatMap(LorvexNumberInput.decimal(from:)),
       let unit = (match.group(4) ?? match.group(5))?.lowercased()
     {
+      if !readsHoursWithH, match.group(5)?.lowercased() == "h" { return nil }
       return taskLength(minutes: Int((unit.hasPrefix("h") ? amount * 60 : amount).rounded()))
     }
     return match.group(6) == nil ? nil : 30

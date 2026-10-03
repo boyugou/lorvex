@@ -1,15 +1,19 @@
 import LorvexCore
 import SwiftUI
 
-/// Phone-native calendar: one vertical time-axis grid (hour gutter on the
-/// left, events as lane-packed blocks, all-day strip on top, live now-line)
-/// whose two modes differ only in how many days it shows. Day mode shows one
-/// day on a phone (two or three on a wide iPad, with the agenda beside it),
-/// swiped by day, under a week strip that jumps to any day of the week. Week
-/// mode shows the seven days of a week, swiped by week; tapping a day's header
-/// opens that day in Day mode. Above both sits one header row: the month (or
-/// the week's range) and a Today button that keeps its slot, hidden while
-/// today is in view, so nothing beside it moves when it appears.
+/// Phone-native calendar time grid: one vertical time axis (hour gutter on
+/// the left, events as lane-packed blocks, all-day strip on top, live
+/// now-line) whose two modes, Day and Week, differ only in how many days it
+/// shows; Month mode is ``MobileCalendarMonthView``. Day mode shows one
+/// day on a phone held upright (two or three on a wide iPad, with the agenda
+/// beside it), swiped by day, under a week strip that jumps to any day of the
+/// week. A phone on its side has the width of three days and the height of a
+/// few hours, so Day mode shows three days there, each named by its column
+/// header, without the week strip. Week mode shows the seven days of a week,
+/// swiped by week; tapping a day's header opens that day in Day mode. Above
+/// both sits one header row: the month (or the week's range) and a Today
+/// button that keeps its slot, hidden while today is in view, so nothing
+/// beside it moves when it appears.
 ///
 /// Reuses the hoisted pure `CalendarGridModel` lane packer for the visible
 /// day(s) and the mobile store's existing `loadCalendarTimeline` fetch path
@@ -20,6 +24,8 @@ import SwiftUI
 public struct MobileCalendarDayView: View {
   @Bindable var store: MobileStore
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+  /// Compact on a phone on its side.
+  @Environment(\.verticalSizeClass) private var verticalSizeClass
 
   /// When true, the grid shows the seven days of a week and pages by week.
   var weekMode: Bool = false
@@ -37,9 +43,6 @@ public struct MobileCalendarDayView: View {
   // Not private: the agenda-body extension (a separate file) routes scoped
   // deletes through this same this/future/all dialog.
   @State var eventAwaitingDeleteScope: CalendarTimelineEvent?
-  /// The scheduled tasks the agenda marks Blocked. Not private: the
-  /// agenda-body extension (a separate file) reads and refreshes it.
-  @State var agendaBlockedTaskIDs: Set<LorvexTask.ID> = []
   /// The calendar's width, so the mode picker names the day grid ("Day",
   /// "3 Days") even while the week is showing. The day count is derived when
   /// the picker draws rather than stored, because it also depends on the
@@ -51,31 +54,25 @@ public struct MobileCalendarDayView: View {
   /// In week mode each step is a week, so this still spans years either way.
   let pageRange = -180...180
 
+  /// Opens on the day a mode switch handed over
+  /// (``MobileStore/calendarPendingDay(in:)``), or on today. The view starts
+  /// on that day rather than moving there once it appears, so the week strip
+  /// takes its first position on the right week.
   public init(store: MobileStore, weekMode: Bool = false, searchQuery: String = "") {
     self.store = store
     self.weekMode = weekMode
     self.searchQuery = searchQuery
-    _weekDayIndex = State(initialValue: Self.dayIndexInWeek(of: today, calendar: calendar))
+    let day = store.calendarPendingDay(in: calendar) ?? today
+    _dayOffset = State(initialValue: offset(showing: day))
+    _weekDayIndex = State(initialValue: Self.dayIndexInWeek(of: day, calendar: calendar))
   }
 
-  var today: Date {
-    PlannedDayBridge.displayDate(
-      forLogicalDay: store.logicalTodayString,
-      timeZone: calendar.timeZone)
-      ?? calendar.startOfDay(for: store.now())
-  }
+  var today: Date { store.calendarToday(in: calendar) }
 
-  /// The loaded events narrowed by the calendar search field. Matches title,
-  /// location, and notes with the shared term-AND semantics, mirroring the macOS
-  /// calendar filter (which narrows the same event array). Tasks stay unfiltered
-  /// — this is an event search. An empty query returns every loaded event.
+  /// The loaded events narrowed by the calendar search field
+  /// (``MobileStore/calendarEvents(matching:)``).
   var filteredEvents: [CalendarTimelineEvent] {
-    let events = store.calendarTimeline?.events ?? []
-    let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !query.isEmpty else { return events }
-    return events.filter { event in
-      LorvexCatalogSearch.matches(query, fields: [event.title, event.location, event.notes])
-    }
+    store.calendarEvents(matching: searchQuery)
   }
 
   /// True while the search field holds a non-empty query.
@@ -127,7 +124,7 @@ public struct MobileCalendarDayView: View {
     Group {
       if weekMode {
         dayGrid(dayCount: 7)
-      } else if horizontalSizeClass == .regular {
+      } else if horizontalSizeClass == .regular || verticalSizeClass == .compact {
         GeometryReader { geo in
           let dayCount = dayCount(for: geo.size.width)
           if usesAgendaPanel(for: geo.size.width) {
@@ -147,7 +144,18 @@ public struct MobileCalendarDayView: View {
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
-    .toolbar { toolbarContent }
+    .toolbar {
+      MobileCalendarToolbar(
+        mode: store.calendarPresentationMode,
+        gridDayCount: dayCount(for: calendarWidth),
+        isCompactWidth: horizontalSizeClass != .regular,
+        switchMode: { switchMode(to: $0) },
+        createEvent: {
+          store.calendarDraft = .timedDefault(
+            on: defaultCreateDate, now: store.now(), calendar: calendar)
+          isShowingCreateEvent = true
+        })
+    }
     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
       calendarWidth = width
     }
@@ -158,11 +166,9 @@ public struct MobileCalendarDayView: View {
       if store.workdayEndMinutes == nil { await store.loadWorkdayWindow() }
     }
     .onAppear {
-      // A mode switch, or a week header opening its day, hands this view the
-      // day to open on.
-      guard let key = store.calendarPendingDayKey else { return }
+      // The view opened on the handed-over day (see init); the next mode to
+      // appear opens on its own.
       store.calendarPendingDayKey = nil
-      if let day = Self.keyFormatter.date(from: key) { showWithoutPaging(day) }
     }
     #if DEBUG
       .onAppear {
@@ -207,15 +213,24 @@ public struct MobileCalendarDayView: View {
     }
   }
 
+  /// Whether the week strip sits over the grid: in Day mode, except on a phone
+  /// on its side, where the strip would take the height of an hour from a
+  /// grid that shows only a few. Week mode's column headers already name
+  /// every day of the week, and so do the three columns of a phone on its
+  /// side.
+  var showsWeekStrip: Bool {
+    !weekMode && verticalSizeClass != .compact
+  }
+
   // The time grid in either mode. Its text stops growing at the largest
   // standard size: the week strip, column headers, and hour rows have fixed
   // geometry, so at accessibility sizes weekday names would break letter by
   // letter and event titles would clip. The agenda beside it keeps growing.
   func dayGrid(dayCount: Int) -> some View {
     VStack(spacing: 0) {
-      calendarHeader
-      // Week mode's column headers already name every day of the week.
-      if !weekMode {
+      MobileCalendarHeaderRow(
+        title: headerTitle, isOnToday: dayOffset == 0, goToToday: { jump(to: today) })
+      if showsWeekStrip {
         MobileCalendarWeekStripPager(
           visibleDate: visibleDate, today: today, calendar: calendar,
           weekRange: (pageRange.lowerBound / 7)...(pageRange.upperBound / 7)
@@ -227,38 +242,6 @@ public struct MobileCalendarDayView: View {
       pager(dayCount: dayCount)
     }
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-  }
-
-  /// The row above the grid: what the grid shows, then Today. Today keeps
-  /// its slot while today is in view, only hidden, so the title never shifts
-  /// when the user swipes away and the button appears.
-  private var calendarHeader: some View {
-    let isOnToday = dayOffset == 0
-    return HStack(spacing: LorvexDesign.Spacing.m) {
-      Text(headerTitle)
-        .font(LorvexDesign.Typography.primaryEmphasis)
-        .monospacedDigit()
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
-        .accessibilityAddTraits(.isHeader)
-        .contentTransition(.numericText())
-      Spacer(minLength: 0)
-      Button(
-        String(
-          localized: "calendar.today", defaultValue: "Today", table: "Localizable",
-          bundle: MobileL10n.bundle)
-      ) { jump(to: today) }
-      .buttonStyle(.bordered)
-      .controlSize(.small)
-      .opacity(isOnToday ? 0 : 1)
-      .disabled(isOnToday)
-      .accessibilityHidden(isOnToday)
-      .accessibilityIdentifier("mobileCalendarDay.today")
-    }
-    .padding(.horizontal, LorvexDesign.Spacing.l)
-    .padding(.top, LorvexDesign.Spacing.xs)
-    .animation(.snappy(duration: 0.2), value: isOnToday)
-    .accessibilityIdentifier("mobileCalendarDay.header")
   }
 
   /// The week's range in week mode ("Sep 27 – Oct 3"); the visible day's
@@ -295,66 +278,38 @@ public struct MobileCalendarDayView: View {
   /// Regular-width iPad can mean anything from a narrow Stage Manager tile to a
   /// full landscape canvas. Use the actual width so columns stay legible.
   func dayCount(for width: CGFloat) -> Int {
-    Self.adaptiveDayCount(for: width, isRegularWidth: horizontalSizeClass == .regular)
+    Self.adaptiveDayCount(
+      for: width, isRegularWidth: horizontalSizeClass == .regular,
+      isCompactHeight: verticalSizeClass == .compact)
   }
 
   func usesAgendaPanel(for width: CGFloat) -> Bool {
-    Self.usesAgendaPanel(for: width, isRegularWidth: horizontalSizeClass == .regular)
+    Self.usesAgendaPanel(
+      for: width, isRegularWidth: horizontalSizeClass == .regular,
+      isCompactHeight: verticalSizeClass == .compact)
   }
 
-  nonisolated static func adaptiveDayCount(for width: CGFloat, isRegularWidth: Bool) -> Int {
+  /// The days Day mode shows: one in a compact width, two or three by the
+  /// actual width in a regular one, and three on a phone on its side (a
+  /// compact height), whose landscape width holds three readable columns on
+  /// every iPhone.
+  nonisolated static func adaptiveDayCount(
+    for width: CGFloat, isRegularWidth: Bool, isCompactHeight: Bool = false
+  ) -> Int {
+    if isCompactHeight { return 3 }
     guard isRegularWidth else { return 1 }
     if width < 760 { return 1 }
     if width < 1_020 { return 2 }
     return 3
   }
 
-  nonisolated static func usesAgendaPanel(for width: CGFloat, isRegularWidth: Bool) -> Bool {
-    isRegularWidth && width >= 860
-  }
-
-  // MARK: Toolbar
-
-  @ToolbarContentBuilder
-  private var toolbarContent: some ToolbarContent {
-    // Centered in the nav bar (not crammed beside ＋ in the trailing area, where
-    // "Week" truncated to "We…"); the tab bar already names this surface, so the
-    // switcher stands in for the redundant inline title — mirrors Apple Calendar.
-    ToolbarItem(placement: .principal) {
-      Picker(
-        String(
-          localized: "calendar.view_picker", defaultValue: "View", table: "Localizable",
-          bundle: MobileL10n.bundle),
-        selection: Binding(
-          get: { store.calendarPresentationMode },
-          set: { switchMode(to: $0) })
-      ) {
-        ForEach(MobileCalendarPresentationMode.allCases) { mode in
-          Text(mode.title(gridDayCount: dayCount(for: calendarWidth))).tag(mode)
-        }
-      }
-      .pickerStyle(.segmented)
-      // A segmented control in the toolbar keeps the titles it was created
-      // with, so it is rebuilt whenever the grid's day count renames a segment.
-      .id(dayCount(for: calendarWidth))
-      .frame(maxWidth: 280)
-      .accessibilityIdentifier("mobileCalendar.presentationToggle")
-    }
-    // The tab bar's plus captures a task; New Event carries the calendar glyph
-    // so the two creation buttons never read as the same action.
-    ToolbarItem(placement: .primaryAction) {
-      Button {
-        let date = defaultCreateDate
-        prepareCreate(at: date, minutes: defaultCreateMinutes(on: date))
-      } label: {
-        Label(
-          String(
-            localized: "calendar.new_event", defaultValue: "New Event", table: "Localizable",
-            bundle: MobileL10n.bundle), systemImage: "calendar.badge.plus")
-      }
-      .lorvexToolbarHoverEffect()
-      .accessibilityIdentifier("mobileCalendar.toolbarCreate")
-    }
+  /// Whether the agenda stands beside the grid: in a regular width of at
+  /// least 860 points, and never in a compact height, where a list beside
+  /// the grid would show only a few rows.
+  nonisolated static func usesAgendaPanel(
+    for width: CGFloat, isRegularWidth: Bool, isCompactHeight: Bool = false
+  ) -> Bool {
+    isRegularWidth && !isCompactHeight && width >= 860
   }
 
   // MARK: Pager
@@ -366,7 +321,7 @@ public struct MobileCalendarDayView: View {
       startDate: date(forOffset: offset),
       dayCount: dayCount,
       showsHeaders: showsHeaders,
-      circlesTodayInHeaders: weekMode,
+      circlesTodayInHeaders: !showsWeekStrip,
       events: filteredEvents,
       tasks: store.calendarScheduledTasks,
       calendar: calendar,
@@ -438,17 +393,16 @@ public struct MobileCalendarDayView: View {
 
   /// Switches the calendar to `mode` on the day this view is showing, so the
   /// other mode opens where the person was: Day mode hands over its first
-  /// visible day, Week mode the focused day of its visible week.
+  /// visible day, Week mode the focused day of its visible week, and Month
+  /// mode opens on that day's month with the day chosen.
   private func switchMode(to mode: MobileCalendarPresentationMode) {
     switchMode(to: mode, on: modeSwitchDay)
   }
 
-  /// Switches the calendar to `mode` on `day`. The view that replaces this one
-  /// opens on it through `calendarPendingDayKey`.
+  /// Switches the calendar to `mode` on `day`, which the view that replaces
+  /// this one opens on.
   private func switchMode(to mode: MobileCalendarPresentationMode, on day: Date) {
-    guard mode != store.calendarPresentationMode else { return }
-    store.calendarPendingDayKey = Self.keyFormatter.string(from: day)
-    store.calendarPresentationMode = mode
+    store.switchCalendarPresentationMode(to: mode, onDayKey: Self.keyFormatter.string(from: day))
   }
 
 }

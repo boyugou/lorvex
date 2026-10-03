@@ -15,7 +15,10 @@ struct LorvexCaptureVocabulary: Sendable {
   /// Chinese the line with Traditional characters read as Simplified ones
   /// (``simplifiedForMatching(_:)``); for French, Portuguese, Spanish, and
   /// Italian the line with its accents left out
-  /// (``unaccentedForMatching(_:)``). It must keep every character at its
+  /// (``unaccentedForMatching(_:)``); for Russian the line with ё read as е
+  /// (``russianForMatching(_:)``); for Ukrainian the line with the curly and
+  /// the modifier-letter apostrophe read as the straight one
+  /// (``ukrainianForMatching(_:)``). It must keep every character at its
   /// UTF-16 offset, so a match range in it is the same range in the typed
   /// line.
   var readingForm: @Sendable (String) -> String = { $0 }
@@ -24,6 +27,14 @@ struct LorvexCaptureVocabulary: Sendable {
   /// A range of days written out ("May 3-5", "del 3 al 5 de mayo",
   /// 5月3日到5日): its first day is the planned day and its last the due day.
   var dateRange: [Rule<DayRangeReading>] = []
+  /// Text that looks like a detail but is none, which stays in the title whole
+  /// with no rule of any vocabulary reading a part of it: a deadline written
+  /// as a clock time ("до 18:00") is no start time, yet English would read
+  /// its "18:00" as one and leave "до" behind. A reader returns true for a
+  /// match to keep and nil for a match to leave to the other rules; a pattern
+  /// may also match text it must not keep (a range such as "с 14 до 18:00")
+  /// so that the scan moves past it whole.
+  var keptInTitle: [Rule<Bool>] = []
   /// A length in minutes, from 1 minute to 24 hours.
   var length: [Rule<Int>] = []
   /// A clock time.
@@ -41,19 +52,21 @@ struct LorvexCaptureVocabulary: Sendable {
 
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
-  /// them: Japanese, Korean, French, Portuguese, Spanish, and Italian when
-  /// `languages` includes them (any region of a language: "es-MX", "es-419",
-  /// "it-CH"), then Chinese and English, which every line is read with.
+  /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian, and
+  /// Ukrainian when `languages` includes them (any region of a language:
+  /// "es-MX", "es-419", "it-CH", "uk-UA"), then Chinese and English, which
+  /// every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
   /// Japanese particle ("10月5日に"). Every other language goes before
-  /// English, so a part of the day written before a clock time ("下午3:30",
-  /// "오후 3:30", "a las 3:30") is read with the time instead of being left in
-  /// the title when the English pattern takes "3:30". Beside a language that
-  /// writes a clock time with the letter h (French and Portuguese), English
-  /// leaves hour counts written with h to it (``englishBesideHourClock``), so
-  /// "15h" is never read as fifteen hours. Spanish and Italian do not write a
+  /// English, so a part of the day or a word written before a clock time
+  /// ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00") is read with the time
+  /// instead of being left in the title when the English pattern takes
+  /// "3:30" or "15:00". Beside a language that writes a clock time with the
+  /// letter h (French and Portuguese), English leaves hour counts written
+  /// with h to it (``englishBesideHourClock``), so "15h" is never read as
+  /// fifteen hours. Spanish, Italian, Russian, and Ukrainian do not write a
   /// clock time that way, so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
@@ -64,6 +77,8 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("pt") { vocabularies.append(.portuguese) }
     if codes.contains("es") { vocabularies.append(.spanish) }
     if codes.contains("it") { vocabularies.append(.italian) }
+    if codes.contains("ru") { vocabularies.append(.russian) }
+    if codes.contains("uk") { vocabularies.append(.ukrainian) }
     let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
     return vocabularies + [.chinese, english]
   }
@@ -161,6 +176,13 @@ extension LorvexCaptureVocabulary {
   /// digit, or apostrophe on that side, so "today's" is one word.
   static let latinStart = #"(?<![\p{Latin}\p{N}'’])"#
   static let latinEnd = #"(?![\p{Latin}\p{N}'’])"#
+
+  /// A word boundary for words written in Cyrillic letters: no Cyrillic
+  /// letter, digit, or apostrophe on that side. Ukrainian writes an apostrophe
+  /// inside a word in three forms (U+0027, U+2019, and U+02BC: п'ятниця), so a
+  /// word that contains any of them is one word.
+  static let cyrillicStart = #"(?<![\p{Cyrillic}\p{N}'\x{2019}\x{02BC}])"#
+  static let cyrillicEnd = #"(?![\p{Cyrillic}\p{N}'\x{2019}\x{02BC}])"#
 
   /// The line with each accented letter read without its accent ("après" as
   /// "apres", "ç" as "c"), so a pattern written without accents matches a

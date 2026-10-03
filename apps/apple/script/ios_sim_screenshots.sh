@@ -15,8 +15,11 @@
 # LORVEX_PREVIEW_NOW=17:45, after the day's meetings), or
 # `-UIPreferredContentSizeCategoryName
 # UICTContentSizeCategoryXXXL` to check a larger text size (the widgets* routes
-# show whether a fixed-size widget still fits).
-# Routes: today today-suggestion tasks calendar calendar-week habits review
+# show whether a fixed-size widget still fits), or
+# `-lorvexPreviewOrientation landscape` to lay the app out in landscape (the
+# screenshot comes out in landscape too).
+# Routes: today today-suggestion tasks calendar calendar-week calendar-month
+#         habits review
 #         review-week setup-welcome setup-cloudSync setup-notifications setup-done
 #         settings settings-bottom settings-export memory lists task-detail habit-detail
 #         habit-detail-middle habit-detail-end habit-editor review-end review-week-end
@@ -44,9 +47,11 @@
 #         lorvex://sheet/capture/<text> hook), so the preview of what
 #         Add will create renders under it; capture-repeat types a
 #         repeating line with a clock time.
-#         calendar-week opens the calendar on its seven-day grid (the DEBUG
-#         lorvex://tab/calendar/week hook) instead of the default day grid,
-#         and review-week opens Review on its week digest (lorvex://tab/review/week).
+#         calendar-week and calendar-month open the calendar on its
+#         seven-day grid or its month grid (the DEBUG
+#         lorvex://tab/calendar/week and lorvex://tab/calendar/month hooks)
+#         instead of the default day grid, and review-week opens Review on
+#         its week digest (lorvex://tab/review/week).
 #         task-detail-repeat and task-detail-depends open the seeded weekly
 #         task and the task with a dependency (the DEBUG
 #         lorvex://findtask/<title> hook). The raw URL
@@ -105,6 +110,7 @@ url_for() {
     lorvex://*) echo "$1" ;;
     today|tasks|calendar|habits|review) echo "lorvex://tab/$1" ;;
     calendar-week) echo "lorvex://tab/calendar/week" ;;
+    calendar-month) echo "lorvex://tab/calendar/month" ;;
     review-week|review-week-end) echo "lorvex://tab/review/week" ;;
     review-end) echo "lorvex://tab/review" ;;
     settings|memory|lists) echo "lorvex://dest/$1" ;;

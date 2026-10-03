@@ -85,8 +85,9 @@ struct MobileCalendarAgendaRow: View {
 /// the title and the facts each keep to two lines, and show whole at the
 /// accessibility text sizes. The circle completes the task and the rest of
 /// the row opens it; the row swipes and long-presses with the shared task
-/// actions, without Start while the task is blocked. A done or cancelled task
-/// keeps its place with its title struck through, as on every task row.
+/// actions, without Start while the task is blocked, and drags onto a
+/// calendar day to plan the task there. A done task keeps its place with its
+/// title struck through, as on every task row.
 struct MobileCalendarAgendaTaskRow: View {
   let task: LorvexTask
   /// The row's day as `yyyy-MM-dd`, to read the task's time on it and to tell
@@ -133,6 +134,9 @@ struct MobileCalendarAgendaTaskRow: View {
     // `Spacing.s` from the top, where an event row's title starts.
     .padding(.top, LorvexDesign.Spacing.xs)
     .padding(.bottom, LorvexDesign.Spacing.s)
+    // Dropped on a day of the calendar beside or above the agenda, the task
+    // is planned on that day.
+    .draggable(LorvexTaskRef(id: task.id, title: task.title))
     .lorvexRowHoverEffect()
     .taskRowActions(
       task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false,

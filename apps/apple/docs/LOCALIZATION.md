@@ -1155,10 +1155,12 @@ Shortcuts.
   ("7 дней" for the menu bar panel's Next 7 Days switch, "Не вошло" for Won’t
   fit, "ост." as the caption under the remaining-tasks ring, "Записать задачу"
   as a short title). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads no Russian words; for a
-  Russian reader it reads English and Chinese only. The Russian capture hint
-  therefore keeps its English example words ("tomorrow", "3pm", "every Monday") and marks
-  them "(на английском)".
+- The capture parser (`LorvexCaptureParser`) reads Russian day, date, time,
+  duration, repeat, and priority words for a user who reads Russian, so the
+  Russian capture hint gives Russian examples ("завтра", "в 15:00", "каждый
+  понедельник", "20 мин"). Russian says a clock time with "в", so the time
+  example says "в". The parser reads ё as е, and the title keeps the letter that
+  was typed.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says
   to the assistant, so they are singular imperatives that name the app exactly
   once, leave it undeclined, and put it at the end ("Добавь задачу в
@@ -1242,10 +1244,12 @@ in Shortcuts.
   ("7 днів" for the menu bar panel's Next 7 Days switch, "Не влізло" for Won’t
   fit, "зал." as the caption under the remaining-tasks ring, "Занотувати
   завдання" as a short title). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads no Ukrainian words; for a
-  Ukrainian reader it reads English and Chinese only. The Ukrainian capture hint
-  therefore keeps its English example words ("tomorrow", "3pm", "every Monday")
-  and marks them "(англійською)".
+- The capture parser (`LorvexCaptureParser`) reads Ukrainian day, date, time,
+  duration, repeat, and priority words for a user who reads Ukrainian, so the
+  Ukrainian capture hint gives Ukrainian examples ("завтра", "о 15:00", "кожного
+  понеділка", "20 хв"). Ukrainian says a clock time with "о", so the time
+  example says "о". The parser reads the apostrophe of "п'ятниця" typed as
+  U+0027, U+2019, or U+02BC, and the title keeps the one that was typed.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are singular imperatives
   that name the app exactly once, leave it undeclined, and put it at the end
   ("Додай завдання в ${applicationName}").

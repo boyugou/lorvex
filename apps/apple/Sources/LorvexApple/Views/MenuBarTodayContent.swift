@@ -1,32 +1,38 @@
 import LorvexCore
 import SwiftUI
 
-/// The menu bar panel's Today body: the lead task set larger, then the
-/// overdue tasks, the rest of today's tasks, the habits, and how much is done.
-/// Section labels appear only when more than one section is listed, so a
-/// plain day reads as one list. With no task and no habit it shows the sun
-/// arc for the hour.
+/// The menu bar panel's Today body (``MenuBarTodaySections``): the lead task
+/// set larger, then the rest of the day on the clock (events and timed tasks
+/// by start), the overdue tasks, the other tasks, the habits, and how much is
+/// done. Section labels appear only when more than one section is listed, so
+/// a plain day reads as one list. With nothing left on the day and no habit
+/// it shows the sun arc for the hour.
 struct MenuBarTodayContent: View {
   let page: LorvexCalmToday
+  /// The events that occur today (``AppStore/todayScheduleEvents``).
+  let events: [CalendarTimelineEvent]
+  /// The product day as `yyyy-MM-dd`.
+  let logicalDay: String
   let nowMinutes: Int?
   /// The habits that are not archived, in the catalog's order.
   let habits: [LorvexHabit]
   let isOverdue: (LorvexTask) -> Bool
   let complete: (LorvexTask) -> Void
   let open: (LorvexTask) -> Void
+  let openEvent: (CalendarTimelineEvent) -> Void
   let checkIn: (LorvexHabit) -> Void
 
   var body: some View {
-    let lead = page.lead
-    let rest = page.leadFirst.dropFirst(lead == nil ? 0 : 1)
-    let overdue = rest.filter { isOverdue($0.task) }
-    let others = rest.filter { !isOverdue($0.task) }
-    let sectionCount = [!overdue.isEmpty, !others.isEmpty, !habits.isEmpty].filter { $0 }.count
+    let sections = MenuBarTodaySections(
+      page: page, events: events, logicalDay: logicalDay, nowMinutes: nowMinutes, isOverdue: isOverdue)
+    let sectionCount = [
+      !sections.schedule.isEmpty, !sections.overdue.isEmpty, !sections.tasks.isEmpty, !habits.isEmpty,
+    ].filter { $0 }.count
     let labelsSections = sectionCount > 1
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      if let lead {
+      if let lead = sections.lead {
         leadBlock(lead)
-      } else if page.items.isEmpty, habits.isEmpty, let nowMinutes {
+      } else if sections.isEmpty, habits.isEmpty, let nowMinutes {
         LorvexSunArc(
           nowMinutes: nowMinutes, startLabel: TodayCalmCopy.sunStart, endLabel: TodayCalmCopy.sunEnd
         )
@@ -35,19 +41,25 @@ struct MenuBarTodayContent: View {
         .padding(.top, LorvexDesign.Spacing.xs)
         .accessibilityIdentifier("menubar.sun")
       }
-      if !overdue.isEmpty {
+      if !sections.schedule.isEmpty {
+        section(labelsSections ? TodayCalmCopy.scheduleTitle : nil) {
+          ForEach(sections.schedule) { scheduleRow($0) }
+        }
+        .accessibilityIdentifier("menubar.schedule")
+      }
+      if !sections.overdue.isEmpty {
         section(labelsSections ? MenuBarCopy.overdue : nil, isOverdue: true) {
-          ForEach(overdue) { taskRow($0) }
+          ForEach(sections.overdue) { taskRow($0) }
         }
         .accessibilityIdentifier("menubar.overdue")
       }
-      if !others.isEmpty {
-        section(labelsSections ? MenuBarCopy.today : nil) {
-          ForEach(others) { taskRow($0) }
+      if !sections.tasks.isEmpty {
+        section(labelsSections ? TodayCalmCopy.tasksTitle : nil) {
+          ForEach(sections.tasks) { taskRow($0) }
         }
       }
       if !habits.isEmpty {
-        section(labelsSections || lead != nil ? MenuBarCopy.habits : nil) {
+        section(labelsSections || sections.lead != nil ? MenuBarCopy.habits : nil) {
           ForEach(habits) { habitRow($0) }
         }
         .accessibilityIdentifier("menubar.habits")
@@ -124,6 +136,19 @@ struct MenuBarTodayContent: View {
     MenuBarTaskRow(
       task: item.task, time: item.time, identifier: "menubar.next",
       complete: { complete(item.task) }, open: { open(item.task) })
+  }
+
+  /// A row of the schedule: a timed task as every task row, or an event,
+  /// which opens in the main window's Today.
+  @ViewBuilder
+  private func scheduleRow(_ entry: MenuBarTodaySections.Entry) -> some View {
+    switch entry {
+    case .task(let item):
+      taskRow(item)
+    case .event(let event):
+      MenuBarEventRow(
+        event: event, dayKey: logicalDay, identifier: "menubar.event", open: { openEvent(event) })
+    }
   }
 
   /// The lead's circle, which completes its task: a ring that fills as a

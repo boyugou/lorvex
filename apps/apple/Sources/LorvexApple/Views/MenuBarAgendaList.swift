@@ -3,15 +3,17 @@ import SwiftUI
 
 /// The menu bar panel's Next 7 Days body: each day ahead that has something
 /// on it, under its name ("Tomorrow", then "Saturday, October 3"), with its
-/// events (a bar in the calendar's color, the title, the time) and then its
-/// tasks (the circle that completes it, the title that opens it, its time).
-/// A free week reads one line saying so.
+/// events (``MenuBarEventRow``, which opens the event on its day in the
+/// Calendar) and then its tasks (the circle that completes it, the title that
+/// opens it, its time). A free week reads one line saying so.
 struct MenuBarAgendaList: View {
   let days: [LorvexAgendaDay]
   /// The logical today as `yyyy-MM-dd`, which names tomorrow.
   let todayKey: String
   let complete: (LorvexTask) -> Void
   let open: (LorvexTask) -> Void
+  /// Opens an event, given the day (`yyyy-MM-dd`) it is listed under.
+  let openEvent: (CalendarTimelineEvent, String) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
@@ -29,7 +31,11 @@ struct MenuBarAgendaList: View {
             .foregroundStyle(.secondary)
             .padding(.bottom, LorvexDesign.Spacing.xxs)
             .accessibilityAddTraits(.isHeader)
-          ForEach(day.events) { eventRow($0, dayKey: day.key) }
+          ForEach(day.events) { event in
+            MenuBarEventRow(
+              event: event, dayKey: day.key, identifier: "menubar.agenda.event",
+              open: { openEvent(event, day.key) })
+          }
           ForEach(day.tasks) { task in
             MenuBarTaskRow(
               task: task, time: task.time(on: day.key), identifier: "menubar.agenda.task",
@@ -41,45 +47,12 @@ struct MenuBarAgendaList: View {
       }
     }
   }
-
-  private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Capsule()
-        .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
-        .frame(width: 3, height: 14)
-        .frame(width: 18)
-        .accessibilityHidden(true)
-      Text(userContent: event.title)
-        .font(LorvexDesign.Typography.primaryText)
-        .lineLimit(1)
-      Spacer(minLength: 0)
-      Text(eventTime(event, dayKey: dayKey))
-        .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(.secondary)
-        .monospacedDigit()
-        .lineLimit(1)
-    }
-    .frame(minHeight: MenuBarTaskRow.minHeight)
-    .accessibilityElement(children: .combine)
-    .accessibilityIdentifier("menubar.agenda.event")
-  }
-
-  /// An event's time on its day of the agenda: its range, "All day", or for
-  /// one day of an event that runs past midnight its start on the first day
-  /// and "Until 1:30 AM" on the last.
-  private func eventTime(_ event: CalendarTimelineEvent, dayKey: String) -> String {
-    event.listTimeLabel(on: dayKey, range: TodayCalmCopy.timeRange(start:end:)) ?? TodayCalmCopy.allDay
-  }
 }
 
 /// The menu bar panel's own words.
 enum MenuBarCopy {
   static var overdue: String {
     String(localized: "menubar.section.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  static var today: String {
-    String(localized: "menubar.section.today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   static var habits: String {

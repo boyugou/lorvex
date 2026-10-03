@@ -8,6 +8,18 @@ struct MobileCalendarWindow: Equatable, Sendable {
 }
 
 extension MobileStore {
+  /// Shows the calendar in `mode`, opening on `dayKey` (`yyyy-MM-dd`), and
+  /// remembers the mode so the next store opens the calendar in it. Switching
+  /// to the mode already shown does nothing.
+  func switchCalendarPresentationMode(
+    to mode: MobileCalendarPresentationMode, onDayKey dayKey: String
+  ) {
+    guard mode != calendarPresentationMode else { return }
+    calendarPendingDayKey = dayKey
+    calendarPresentationMode = mode
+    defaults.set(mode.rawValue, forKey: MobileCalendarPresentationMode.defaultsKey)
+  }
+
   public var canCreateCalendarDraft: Bool {
     calendarDraft.canSubmit && !isMutatingCalendarEvent
   }
@@ -211,7 +223,8 @@ extension MobileStore {
     do {
       await ingestEventKitWindow(fromDay: start, throughDay: end)
       let timeline = try await core.loadCalendarTimeline(from: start, to: end)
-      let tasks = try await core.getScheduledTasks(from: start, to: end, limit: 500)
+      let tasks = try await core.getScheduledTasks(
+        from: start, to: end, limit: CalendarGridModel.windowTaskLimit)
       // A newer window superseded this load while it was in flight; committing
       // now would pair this window's events with a different window's scheduled
       // tasks, so discard the stale result.
@@ -257,7 +270,8 @@ extension MobileStore {
     }
 
     let timeline = try await core.loadCalendarTimeline(from: fromDay, to: throughDay)
-    let tasks = try await core.getScheduledTasks(from: fromDay, to: throughDay, limit: 500)
+    let tasks = try await core.getScheduledTasks(
+      from: fromDay, to: throughDay, limit: CalendarGridModel.windowTaskLimit)
     guard token == calendarTimelineLoadToken else { return }
     calendarTimeline = timeline
     calendarScheduledTasks = tasks

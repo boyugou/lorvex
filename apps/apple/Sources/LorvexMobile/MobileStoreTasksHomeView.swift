@@ -3,10 +3,12 @@ import SwiftUI
 
 /// The Tasks tab home: a grid of smart collections over the user's lists.
 /// Drilling into any of them pushes the scoped task list
-/// (``MobileStoreTasksView``). The grid is two columns, and one column at
-/// accessibility text sizes, where a half-width card would break its name
-/// mid-word. A store with no task in any status has nothing for the grid to
-/// count, so an invitation to capture the first task stands in its place.
+/// (``MobileStoreTasksView``). The grid's four cards stand in one row where
+/// four fit (a phone on its side, an iPad) and in two rows of two where they
+/// do not, never three over one; at accessibility text sizes they stack in
+/// one column, where a half-width card would break its name mid-word. A store
+/// with no task in any status has nothing for the grid to count, so an
+/// invitation to capture the first task stands in its place.
 @MainActor
 public struct MobileStoreTasksHomeView: View {
   @Bindable var store: MobileStore
@@ -21,6 +23,8 @@ public struct MobileStoreTasksHomeView: View {
   @State private var holdsTasks: Bool?
   @State private var isShowingCreateList = false
   @State private var editingList: LorvexList?
+  /// The grid's width, which decides how many cards share a row.
+  @State private var gridWidth: CGFloat = 0
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   public init(store: MobileStore) {
@@ -220,17 +224,33 @@ public struct MobileStoreTasksHomeView: View {
     }
   }
 
-  /// Two columns, or one at accessibility text sizes, where a half-width card
-  /// has no room for "Scheduled" and breaks it mid-word (Reminders stacks its
-  /// smart lists the same way).
+  /// The grid's columns: as many as ``MobileStoreTasksHomeView/smartGridColumnCount(width:itemCount:)``
+  /// fits, or one at accessibility text sizes, where a half-width card has no
+  /// room for "Scheduled" and breaks it mid-word (Reminders stacks its smart
+  /// lists the same way).
   private var smartGridColumns: [GridItem] {
-    if dynamicTypeSize.isAccessibilitySize {
-      return [GridItem(.flexible())]
-    }
-    return [
-      GridItem(.flexible(), spacing: LorvexDesign.Spacing.m),
-      GridItem(.flexible()),
-    ]
+    let count =
+      dynamicTypeSize.isAccessibilitySize
+      ? 1
+      : Self.smartGridColumnCount(width: gridWidth, itemCount: MobileTaskSmartCollection.grid.count)
+    return Array(repeating: GridItem(.flexible(), spacing: LorvexDesign.Spacing.m), count: count)
+  }
+
+  /// The narrowest a card can be and still hold its count beside its tile
+  /// and its name on one line ("Запланированные", the longest name, at the
+  /// default text size).
+  nonisolated static let smartGridMinimumCardWidth: CGFloat = 150
+
+  /// How many cards share a row in `width` points: every card in one row
+  /// when they all fit at ``smartGridMinimumCardWidth``, otherwise rows filled
+  /// as evenly as ``LorvexBalancedGrid`` fills them, so four cards make one
+  /// row of four or two rows of two and never three over one. Two before the
+  /// width is known, the phone's layout.
+  nonisolated static func smartGridColumnCount(width: CGFloat, itemCount: Int) -> Int {
+    guard width > 0 else { return 2 }
+    let spacing = LorvexDesign.Spacing.m
+    let capacity = max(1, Int(((width + spacing) / (smartGridMinimumCardWidth + spacing)).rounded(.down)))
+    return LorvexBalancedGrid.columnCount(itemCount: itemCount, capacity: capacity)
   }
 
   private var smartGrid: some View {
@@ -250,6 +270,9 @@ public struct MobileStoreTasksHomeView: View {
         .accessibilityIdentifier("mobileTasks.collection.\(collection.id)")
       }
     }
+    // The column count follows the width but never changes it, so measuring
+    // the grid itself cannot feed back into its own layout.
+    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { gridWidth = $0 }
   }
 
   /// Text only, like every empty state here: the tab bar's ＋ already owns

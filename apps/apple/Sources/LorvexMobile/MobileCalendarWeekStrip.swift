@@ -107,8 +107,11 @@ struct MobileCalendarWeekStripPager: View {
       guard scrolledWeek != week else { return }
       withAnimation(.snappy) { scrolledWeek = week }
     }
-    .onChange(of: scrolledWeek) { _, week in
-      guard let week, week != visibleWeek else { return }
+    .onChange(of: scrolledWeek) { previous, week in
+      // The first position, which the strip takes as it appears, is no swipe:
+      // the visible day may move in the same update, and reading that first
+      // position against the moved day would select the week it left.
+      guard previous != nil, let week, week != visibleWeek else { return }
       selectDay(sameWeekday(inWeek: week))
     }
   }

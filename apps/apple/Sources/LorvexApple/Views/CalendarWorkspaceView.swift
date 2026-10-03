@@ -23,12 +23,14 @@ struct CalendarWorkspaceView: View {
   /// environment calendar to stay consistent with what's rendered.
   @Environment(\.calendar) var calendar
 
+  /// Opens on the day another surface asked for
+  /// (``AppStore/calendarPendingDayKey``), else on today.
   init(store: AppStore) {
     self.store = store
     let calendar = Calendar.current
     _anchorDate = State(
       initialValue: PlannedDayBridge.displayDate(
-        forLogicalDay: store.logicalTodayDateString,
+        forLogicalDay: store.calendarPendingDayKey ?? store.logicalTodayDateString,
         timeZone: calendar.timeZone)
         ?? calendar.startOfDay(for: Date()))
   }
@@ -133,7 +135,18 @@ struct CalendarWorkspaceView: View {
       // screen.
       fetchVisiblePeriod()
     }
+    // A day asked for while the calendar is on screen moves it there. One
+    // asked for before it appeared already chose its first day in `init`, so
+    // appearing only clears it.
+    .onChange(of: store.calendarPendingDayKey) { _, dayKey in
+      guard let dayKey else { return }
+      if let day = PlannedDayBridge.displayDate(forLogicalDay: dayKey, timeZone: calendar.timeZone) {
+        anchorDate = day
+      }
+      store.calendarPendingDayKey = nil
+    }
     .onAppear {
+      store.calendarPendingDayKey = nil
       fetchVisiblePeriod()
     }
     .task {

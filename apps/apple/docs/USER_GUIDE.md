@@ -328,10 +328,83 @@ and month depends on the region. Italian reads "weekend" only after an
 article or "questo" ("nel weekend"), so an English "this weekend" is left to
 English.
 
+Russian and Ukrainian words are read when Russian or Ukrainian is among your
+device's preferred languages, in any regional variant. The letter ё is optional
+in Russian ("отчёт" and "отчет"), and the Ukrainian apostrophe may be typed
+straight, curly, or as the modifier letter, or left out ("п'ятниця", "п’ятниця",
+"пʼятниця", "пятниця"); the title keeps the letters you typed. Russian says a
+clock time with "в" and Ukrainian with "о": "в 15:00", "в 3 часа дня", "о 15:00",
+"о 3 годині дня". An hour from 1 to 6 with no part of the day is in the
+afternoon ("в 3" is 3 PM) unless it is written with a zero ("06:30"), and a
+part of the day sets the hour: "утра" ("ранку") is the morning, "дня" is noon
+at 12 and the afternoon from 1 to 6, "вечера" ("вечора") is the evening, and
+"ночи" ("ночі") runs past midnight, so "в 2 ночи" is 02:00 on the next day and
+"в 11 ночи" is 23:00. A bare hour counts only at the end of the line or
+before a word that can follow a time ("в 3 с Иваном", "о 3 з Іваном"), so "в 3
+этапа" and "о 2 етапи" stay in the title, and so does a clock time that names a
+deadline ("до 18:00", "после 18:00", "не позднее 18:00"). A time written
+without a Russian or Ukrainian word ("3pm", "14:00-16:30") is read by English,
+which also takes an English "at" or "from" in front of it.
+
+| Detail | Russian | Ukrainian |
+|---|---|---|
+| Day | сегодня, сегодня вечером, завтра, завтра утром, послезавтра, в пятницу, в эту пятницу, в следующую пятницу, на следующей неделе, на выходных, через 3 дня | сьогодні, сьогодні ввечері, завтра, завтра вранці, післязавтра, у п'ятницю, у цю п'ятницю, у наступну п'ятницю, наступного тижня, на вихідних, через 3 дні |
+| Date | 5 мая, 5-го мая, 5 янв., в понедельник, 5 октября, 5 мая 2027 года | 5 травня, 5-го травня, 5 січ., у понеділок, 5 жовтня, 5 травня 2027 року |
+| Date range | с 3 по 5 мая, с 3 до 5 мая, от 3 до 5 мая, с 30 мая по 2 июня, 3–5 мая, 3-5 мая | з 3 по 5 травня, з 3 до 5 травня, від 3 до 5 травня, з 30 травня по 2 червня, 3–5 травня, 3-5 травня |
+| Due day | до пятницы, к пятнице, до 5 мая, не позднее пятницы, срок: 5 мая, дедлайн 5 мая | до п'ятниці, до 5 травня, не пізніше п'ятниці, термін: 5 травня, дедлайн 5 травня |
+| Time | в 15:00, в 15, в 3 часа дня, в 9 утра, в 7 вечера, в 2 ночи, в полдень, в полночь, около 15:00; с 14 до 16, с 14:00 до 16:00, с 9 утра до 6 вечера | о 15:00, о 15, о 3 годині дня, о 9 ранку, о 7 вечора, о 2 ночі, опівдні, опівночі, близько 15:00; з 14 до 16, з 14:00 до 16:00, з 9 ранку до 6 вечора |
+| Repeat | каждый день, каждую неделю, каждый понедельник, каждый понедельник и четверг, по понедельникам, по будням, по выходным, каждые 2 дня, раз в неделю, 5-го числа каждого месяца; ежедневно at the end | щодня, щотижня, кожного понеділка, щопонеділка, по понеділках, по буднях, по вихідних, кожні 2 дні, раз на тиждень, 5 числа кожного місяця; щоденно at the end |
+| Length | 30 минут, 30 мин, 2 часа, 2 ч, 1,5 часа, полтора часа, полчаса, на 30 минут, в течение 2 часов | 30 хвилин, 30 хв, 2 години, 2 год, 1,5 години, півтори години, півгодини, на 30 хвилин, протягом 2 годин |
+| Priority | высокий приоритет, низкий приоритет, срочно (at the end, or "Срочно:" at the start) | високий пріоритет, низький пріоритет, терміново (at the end, or "Терміново:" at the start) |
+
+A date range plans the task on its first day and makes it due on its last:
+"с 3 по 5 мая" and "з 3 по 5 травня" run from May 3 to May 5, and a month
+written once serves both days. The end must come after the start ("с 5 по 3
+мая" stays in the title), and the end names a month, so "с 3 по 5" stays in the
+title. As in English, a number alone before a spaced dash belongs to the title
+("Sprint 12 - 20 мая" is planned for May 20), while "12-20 мая" is a range.
+"С 14 до 16" and "з 14 до 16" are time ranges, but two bare hours count only
+at the end of the line or before a word that can follow a time, so "с 14 до 16
+страниц" stays in the title. They also stay after a word that names an amount
+or numbered items ("Цена от 10 до 20", "Прочитать главы с 3 до 5", "Ціна від
+10 до 20"), and a number before a percent or currency sign is never a time
+("от 10 до 20 ₽", "20 %"). A date written in digits ("5.10") stays in the
+title, since the order of its day and month depends on the region, and so does
+a month name without a day number ("Майские праздники", "Травневі свята"). A
+Ukrainian month abbreviation needs its dot ("5 січ.").
+
+A weekday is a day only with a word before it: "в", "во", or "на" in Russian,
+"у", "в", or "на" in Ukrainian, or the "с" ("з") that starts a day ("с
+понедельника"). A weekday after "на" plans the task for that day ("билеты на
+пятницу"). Alone, it stays in the title ("отчёт за понедельник", "Звіт за
+понеділок"), and so does a capitalized weekday in the middle of a line, which is
+a name ("Купить в Пятнице"). Среда is also the environment, so "Настроить среду
+разработки" stays in the title. A weekday that names today means a week ahead,
+"в эту пятницу" ("у цю п'ятницю") is this week's, and "в следующую пятницу"
+("у наступну п'ятницю") is next week's.
+
+"Через день" means both "in a day" and "every other day", so it stays in the
+title in both languages; write "через 1 день" or "каждые 2 дня" ("через 1
+день" or "кожні 2 дні") for the one you mean. Russian "ежедневно",
+"еженедельно", "ежемесячно", and "ежегодно" and Ukrainian "щоденно",
+"щотижнево", "щомісячно", and "щорічно" repeat only at the end of the line, so
+"Ежедневно проверять почту" and the adjectives "Ежедневный отчёт" and "Щоденний
+звіт" stay in the title, while the Ukrainian "щодня", "щотижня", "щомісяця", and
+"щороку" repeat anywhere. A length says that it is one: an amount after
+"через", "за", "по", "каждые" ("кожні"), or "раз в" ("раз на") names a moment or an
+interval, not a length ("через 2 часа", "по 2 часа"), "2 часа в день" stays in
+the title, "в 2 часа" is a time, and "час" or "година" alone is no length
+("Час пик").
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline
 quick-add field — type a title and press **Return** to save it to your inbox.
+Under it, **Today** shows the task you are on, the rest of the day's schedule
+(events and timed tasks still ahead), then your other tasks and your habits;
+**Next 7 Days** shows the week ahead. Click a task or an event to open it in
+the main window: an event of today opens beside Today, one of a later day on
+its day in the Calendar.
 
 ### From Home Screen Shortcuts (iOS/iPadOS)
 
@@ -611,6 +684,14 @@ your Lorvex tasks so you can see scheduling conflicts at a glance.
 Use the row buttons or context menu to edit or delete Lorvex-owned events.
 Imported EventKit events are read-only overlays.
 
+On iPhone and iPad, the control at the top of the **Calendar** tab switches
+between **Day**, **Week**, and **Month**, and keeps the day you were looking
+at. The calendar opens in the view you used last. Month view shows six weeks of days: on iPhone each day carries a dot for
+each event and a ring for each task, and on iPad the days name them. Tap a
+day to list its events and tasks under or beside the month, swipe to change
+months, and tap **Today** to come back. To move a task to another day, drag it
+from that list onto the day.
+
 An event that lasts 24 hours or more appears in the all-day row of each day it
 covers. A shorter event that runs past midnight appears on both days: the
 first shows when it starts, and the second shows when it ends.
@@ -623,9 +704,11 @@ the Settings diagnostics panel.
 
 On the Mac, click **+** (Create Event) in the Calendar toolbar, or click or
 drag across empty time in the grid. On iPhone and iPad, tap **New Event** in
-the **Calendar** tab. An event from the toolbar or **New Event** starts at the
-next full hour and lasts one hour; a click on the grid starts at that time,
-and a drag covers the time you dragged across.
+the **Calendar** tab, or touch and hold a day in Month view. An event from the
+toolbar or **New Event** starts at the next full hour and lasts one hour; on
+iPhone and iPad, an event for a day other than today (the day the calendar
+shows, or the day chosen in Month view) starts at 9 AM. A click on the grid
+starts at that time, and a drag covers the time you dragged across.
 
 **Start** and **End** each have a day and, unless the event is all day, a
 time, so an event can run overnight, such as from 10 PM to 1 AM, or across

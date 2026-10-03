@@ -40771,96 +40771,6 @@
         }
       }
     },
-    "menubar.section.today": {
-      "comment": "Menu bar panel, Today view: label over the rest of today's tasks.",
-      "extractionState": "manual",
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اليوم"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Today"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hoy"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aujourd’hui"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "आज"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oggi"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今日"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "오늘"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dzisiaj"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hoje"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сегодня"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сьогодні"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今天"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今天"
-          }
-        }
-      }
-    },
     "menubar.week.headline.both": {
       "comment": "Menu bar Next 7 Days headline: task count phrase, then event count phrase",
       "extractionState": "manual",
@@ -78936,7 +78846,7 @@
       }
     },
     "today.section.tasks": {
-      "comment": "Heads the tasks without a time under Today's schedule.",
+      "comment": "Heads the tasks without a time under Today's schedule, in the main window and the menu bar panel.",
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -84357,7 +84267,7 @@
       }
     },
     "today.calm.now.open": {
-      "comment": "Menu item opening the task's details",
+      "comment": "Menu item and tooltip opening a task's or an event's details",
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -84723,7 +84633,7 @@
       }
     },
     "today.calm.schedule.title": {
-      "comment": "Label of the schedule pane beside Today",
+      "comment": "Label of the schedule on Today, in the main window and the menu bar panel",
       "extractionState": "manual",
       "localizations": {
         "ar": {

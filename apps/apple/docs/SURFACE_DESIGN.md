@@ -25,8 +25,8 @@ day, works through Today's list, and drives keyboard-first workflows.
 - Multi-window: detached list windows, dedicated workspace windows, and floating
   task "stickies". ✅
 - Menu bar extra: today and the week ahead — date, a Today / Next 7 Days
-  switch, quick-add, today's tasks and habits with one-click complete and
-  check-in, the agenda of the next seven days, and Open / Quit. ✅
+  switch, quick-add, today's schedule, tasks, and habits with one-click
+  complete and check-in, the agenda of the next seven days, and Open / Quit. ✅
 - Full command menus + keyboard shortcuts. ✅
 - Command Palette (⌘K): fuzzy command and navigation palette. ✅
 - Settings: a sidebar of seven panes (General, Permissions, Calendar, Cloud
@@ -113,13 +113,20 @@ deep editing. Tab-first with `NavigationStack`.
 - Tab bar is Today · Calendar · Tasks · Review plus a round ＋ — the daily-driver
   surfaces are first-class, not buried. Today's list and its optional schedule
   live inside Today (interleaved with EventKit). ✅
-- Calendar is one time grid whose Day and Week modes differ only in how many
-  days it shows: Day (the default) is one day on a phone, swiped by day under
-  a week strip; Week is the seven days of a week, swiped by week, and tapping
-  a day's header opens that day in Day. Above the grid sits one row: the
-  month (or the week's range) and a Today button that keeps its slot, hidden
-  while today is in view, so nothing moves when it appears. The toolbar holds
-  only the Day/Week control and New Event. ✅
+- Calendar has three modes, and a switch between them keeps the day. Day and
+  Week are one time grid that differs only in how many days it shows: Day
+  (the default) is one day on a phone held upright, swiped by day under a
+  week strip, and three days on a phone on its side; Week is the seven days
+  of a week, swiped by week, and tapping a day's header opens that day in
+  Day. Month is six weeks of days, swiped by month, each day marked with a
+  dot per event and a ring per task, over the agenda of the chosen day; a
+  swipe chooses the month's first day (today in today's month), and a task
+  dragged from the agenda onto a day is planned there. Above every grid sits
+  one row: the month (or the week's range) and a Today button that keeps its
+  slot, hidden while it has nothing to do, so nothing moves when it appears.
+  The toolbar holds only the Day/Week/Month control, centered, and New Event,
+  which on a phone stands at the bar's leading edge so the control has room
+  in every language. ✅
 - The grid draws each day's timed tasks as blocks beside the events — a dashed
   accent outline with a ring that completes the task, a solid frame while the
   block is running. A block opens its task; the day's times themselves are
@@ -190,7 +197,9 @@ larger canvas, not stretch the phone.
   time grid remains primary while a pinned agenda inspector lists the visible
   days that have something on them (and today whenever it is visible), with
   quick create/edit affordances. Week mode is the seven-day grid across the
-  whole window. ✅
+  whole window. Month mode stands the chosen day's agenda beside a grid whose
+  days name their events and tasks, as many as fit and then "+N"; in a
+  window narrower than 860pt the agenda sits under the grid. ✅
 - A list opens as the Tasks workspace scoped to it, the same screen whether
   the Tasks home, a deep link, Handoff, or a newly created list opens it: the
   list's description reads under its title, and a List Actions menu holds Edit
@@ -283,19 +292,22 @@ A productivity app earns its home screen with more than one widget.
   and a one-line quick-add (Return creates an inbox task). Under it a body that
   grows with its content and scrolls past about 440pt, which keeps the panel
   near 600pt tall. ✅
-- Today reads the same `LorvexCalmToday` value as the Today workspace: the
-  task happening now with its ring (the ring completes it, the title opens it
-  in the main window) and its clock line, then Overdue, the rest of Today, and
-  Habits, each habit with a ring in its color that checks it in (a habit
-  counted several times a day adds one per click and is cleared only in the
-  Habits workspace), then "N done today". Section labels show only when more
-  than one section is listed. When nothing is listed, the sun's arc shows
-  where the day is. ✅
+- Today reads the same `LorvexCalmToday` value and schedule as the Today
+  workspace: the task happening now with its ring (the ring completes it, the
+  title opens it in the main window) and its clock line, then Schedule (the
+  all-day events, the events not yet over, and the open timed tasks, by
+  start), Overdue and Tasks (the tasks without a time), and Habits, each habit
+  with a ring in its color that checks it in (a habit counted several times a
+  day adds one per click and is cleared only in the Habits workspace), then
+  "N done today". An event row (a bar in the calendar's color, the title, the
+  time) opens the event in Today's inspector. Section labels show only when
+  more than one section is listed. When nothing is left on the day, the sun's
+  arc shows where the day is. ✅
 - Next 7 Days lists each of the seven days after today that has something on
-  it — "Tomorrow", then the spelled-out date — with its events (a bar in the
-  calendar's color and the time) and its open scheduled tasks (ring and
-  title, which opens the task in Tasks). A free week reads "Nothing planned
-  for the next 7 days." ✅
+  it — "Tomorrow", then the spelled-out date — with its events (the same rows,
+  which open the event on its day in the Calendar) and its open scheduled
+  tasks (ring and title, which opens the task in Tasks). A free week reads
+  "Nothing planned for the next 7 days." ✅
 - The footer holds Open Lorvex and Quit. The status-item glyph carries the
   due-today/overdue count. ✅
 

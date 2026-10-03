@@ -6,13 +6,14 @@ import SwiftUI
 /// sentence of facts, and a one-line quick-add stay put; under them a
 /// scrolling body that grows with its content up to ``bodyMaxHeight``.
 ///
-/// Today reads the same ``LorvexCalmToday`` as the Today workspace, without
-/// the workspace's search filter, so the two never disagree about the day:
-/// the lead task (``LorvexCalmToday/lead``) set larger, then the overdue
-/// tasks, the rest of the day's tasks, the habits (checked in from their
-/// rings), and how much is done. Next 7 Days is the agenda of the seven days
-/// after today (``LorvexAgendaDay``). The panel advances with the clock
-/// while it is open.
+/// Today reads the same ``LorvexCalmToday`` and the same schedule as the Today
+/// workspace, without the workspace's search filter, so the two never
+/// disagree about the day (``MenuBarTodayContent``): the lead task set
+/// larger, then what is still ahead on the clock, the tasks without a time,
+/// the habits (checked in from their rings), and how much is done. Next 7
+/// Days is the agenda of the seven days after today (``LorvexAgendaDay``).
+/// A task or an event clicked in either opens in the main window. The panel
+/// advances with the clock while it is open.
 struct MenuBarStatusView: View {
   @Bindable var store: AppStore
   @Environment(\.openWindow) private var openWindow
@@ -73,13 +74,18 @@ struct MenuBarStatusView: View {
           switch scope {
           case .today:
             MenuBarTodayContent(
-              page: page, nowMinutes: nowMinutes,
+              page: page, events: store.todayScheduleEvents, logicalDay: store.logicalTodayDateString,
+              nowMinutes: nowMinutes,
               habits: store.habits?.habits.filter { !$0.archived } ?? [],
               isOverdue: { store.isOverdue($0) },
               complete: { task in
                 Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
               },
               open: open,
+              openEvent: { event in
+                store.showEventInToday(event)
+                perform(.openMain)
+              },
               checkIn: checkIn)
           case .week:
             MenuBarAgendaList(
@@ -88,7 +94,11 @@ struct MenuBarStatusView: View {
               complete: { task in
                 Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
               },
-              open: { task in openRoute(.task(task.id)) })
+              open: { task in openRoute(.task(task.id)) },
+              openEvent: { event, dayKey in
+                store.showEventInCalendar(event, onDayKey: dayKey)
+                perform(.openMain)
+              })
           }
         }
         .padding(LorvexDesign.Spacing.m)

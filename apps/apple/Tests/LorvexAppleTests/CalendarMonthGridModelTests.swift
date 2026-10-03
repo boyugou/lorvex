@@ -431,3 +431,50 @@ private func calendarMonthGridTask(
     tags: []
   )
 }
+
+// MARK: - minimumWeeks: a grid that keeps six rows for every month
+
+@Test
+func calendarMonthGridPadsAShortMonthToTheMinimumWeeksWithTheNextMonth() throws {
+  // February 2026 starts on a Sunday and has 28 days, so a Sunday-first grid
+  // needs exactly four rows; a six-row grid fills two more with March 1–14.
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 1
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2026, month: 2, day: 10)))
+  let formatter = DateFormatter()
+  formatter.calendar = calendar
+  formatter.timeZone = calendar.timeZone
+  formatter.locale = Locale(identifier: "en_US_POSIX")
+  formatter.dateFormat = "yyyy-MM-dd"
+
+  #expect(CalendarMonthGridModel.gridRange(forMonthContaining: monthAnchor, calendar: calendar).dayCount == 28)
+  let range = CalendarMonthGridModel.gridRange(
+    forMonthContaining: monthAnchor, calendar: calendar, minimumWeeks: 6)
+  #expect(range.dayCount == 42)
+
+  let days = CalendarMonthGridModel.buildDays(
+    monthAnchor: monthAnchor, calendar: calendar, events: [], tasks: [], minimumWeeks: 6,
+    dayKeyFor: { formatter.string(from: $0) })
+  #expect(days.count == 42)
+  #expect(days.first?.dayKey == "2026-02-01")
+  #expect(days[27].dayKey == "2026-02-28")
+  #expect(days[28].dayKey == "2026-03-01")
+  #expect(days.last?.dayKey == "2026-03-14")
+  #expect(days.prefix(28).allSatisfy { $0.isCurrentMonth })
+  #expect(days.suffix(14).allSatisfy { !$0.isCurrentMonth })
+}
+
+@Test
+func calendarMonthGridMinimumWeeksNeverShortensALongMonth() throws {
+  // January 2023 under a Tuesday-first calendar needs six rows on its own; a
+  // smaller minimum leaves it at six.
+  var calendar = Calendar(identifier: .gregorian)
+  calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+  calendar.firstWeekday = 3
+  let monthAnchor = try #require(calendar.date(from: DateComponents(year: 2023, month: 1, day: 15)))
+
+  let range = CalendarMonthGridModel.gridRange(
+    forMonthContaining: monthAnchor, calendar: calendar, minimumWeeks: 4)
+  #expect(range.dayCount == 42)
+}

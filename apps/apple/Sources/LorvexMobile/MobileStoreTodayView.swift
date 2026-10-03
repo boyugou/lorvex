@@ -67,9 +67,11 @@ struct MobileStoreTodayView: View {
     }
     .scrollContentBackground(.hidden)
     .background(alignment: .top) {
+      // Under the bar and, on a phone on its side, beside the cutout and the
+      // home indicator too, so the wash reaches every edge the page does.
       if let nowMinutes = store.nowMinutesInProductDay {
         LorvexSkyWash(nowMinutes: nowMinutes)
-          .ignoresSafeArea(edges: .top)
+          .ignoresSafeArea(edges: [.top, .horizontal])
       }
     }
     .background(LorvexDesign.Palette.groupedBackground)

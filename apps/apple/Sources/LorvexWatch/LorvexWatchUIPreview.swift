@@ -8,8 +8,9 @@
   /// sample day so every page can be captured headlessly on a simulator with no
   /// paired phone pushing snapshots. `-lorvexUIPreviewPage <today|habits|capture>`
   /// picks the page to open and `-lorvexUIPreviewActions` opens the lead task's
-  /// actions. Mutations go to a forwarder that accepts and drops them, so the
-  /// buttons are live and their optimistic updates show.
+  /// actions, or with `-lorvexUIPreviewActionsTask <id>` that sample task's.
+  /// Mutations go to a forwarder that accepts and drops them, so the buttons
+  /// are live and their optimistic updates show.
   public enum LorvexWatchUIPreview {
     public static var isRequested: Bool { CommandLine.arguments.contains("-lorvexUIPreview") }
 
@@ -22,6 +23,14 @@
 
     public static var opensActions: Bool { CommandLine.arguments.contains("-lorvexUIPreviewActions") }
 
+    /// The sample task whose actions open instead of the lead's.
+    public static var actionsTaskID: String? {
+      let arguments = CommandLine.arguments
+      guard let index = arguments.firstIndex(of: "-lorvexUIPreviewActionsTask"), index + 1 < arguments.count
+      else { return nil }
+      return arguments[index + 1]
+    }
+
     /// Accepts every mutation and applies nothing: the preview has no phone,
     /// and the optimistic update is what a capture shows.
     public static let forwarder: any LorvexWatchMutationForwarding = DroppingForwarder()
@@ -33,8 +42,9 @@
     /// Writes the sample replica and returns its URL. The day is built around
     /// `now`: a started task whose saved time runs from 20 minutes ago to 25
     /// minutes ahead (the running lead), a started task without a time, an
-    /// overdue task, a task timed later today, and one with only an estimate,
-    /// written in the language the interface runs in (``LorvexSampleText``).
+    /// overdue task, a task timed later today, and one that waits on the
+    /// started one (Blocked), written in the language the interface runs in
+    /// (``LorvexSampleText``).
     public static func writeReplica(now: Date = Date()) throws -> URL {
       let directory = FileManager.default.temporaryDirectory
         .appendingPathComponent("lorvex-watch-ui-preview", isDirectory: true)
@@ -89,7 +99,7 @@
             scheduledStart: clock(nowMinutes + 45), scheduledEnd: clock(nowMinutes + 75)),
           .init(
             id: "preview-venue", title: text("Book the offsite venue"), status: open,
-            dueDate: nil, priority: 2, listID: nil, estimatedMinutes: 20),
+            dueDate: nil, priority: 2, listID: nil, estimatedMinutes: 20, isBlocked: true),
         ],
         habits: [
           .init(id: "preview-meditate", name: text("Meditate"), icon: "brain.head.profile", completedToday: 0, target: 1),

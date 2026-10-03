@@ -171,9 +171,11 @@ public struct LorvexHabitRingTile: View {
 /// each habit is its ring over its name (``LorvexHabitRingTile``), and a tap
 /// checks it in on that day (``LorvexHabitCheckIn``). A habit counted more
 /// than once a day shows its count under its name. As many columns as the
-/// width holds take the habits in order, so a review keeps them where they
-/// are from day to day. A review that can no longer be written shows the
-/// rings without taking taps.
+/// width holds take the habits in order, spread evenly over the rows
+/// (``LorvexBalancedGrid``) at the column widths Today's habit grid uses, so a
+/// review keeps them where they are from day to day. A review that can no
+/// longer be written, and a habit counted several times a day once its count
+/// is met, show their rings at full strength without taking taps.
 ///
 /// A tap shows its result at once: the tile draws the count the check-in will
 /// leave while the write and the reload that follows it run, then the
@@ -193,7 +195,8 @@ public struct LorvexReviewHabitList: View {
   /// the check-in returns.
   @State private var pendingCounts: [String: Int] = [:]
   @ScaledMetric(relativeTo: .body) private var ringDiameter: CGFloat = 34
-  @ScaledMetric(relativeTo: .body) private var columnWidth: CGFloat = 84
+  @ScaledMetric(relativeTo: .body) private var columnWidth: CGFloat = 76
+  @ScaledMetric(relativeTo: .body) private var maximumColumnWidth: CGFloat = 96
 
   public init(
     label: String, habits: [LorvexHabit], checkInLabel: String, identifier: String,
@@ -210,13 +213,9 @@ public struct LorvexReviewHabitList: View {
   public var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
       LorvexPageLabel(label)
-      LazyVGrid(
-        columns: [
-          GridItem(
-            .adaptive(minimum: columnWidth, maximum: columnWidth * 1.4),
-            spacing: LorvexDesign.Spacing.s, alignment: .top)
-        ],
-        alignment: .leading, spacing: LorvexDesign.Spacing.m
+      LorvexBalancedGrid(
+        minimumColumnWidth: columnWidth, maximumColumnWidth: maximumColumnWidth,
+        columnSpacing: LorvexDesign.Spacing.s, rowSpacing: LorvexDesign.Spacing.m
       ) {
         ForEach(habits) { habit in
           tile(habit)
@@ -247,7 +246,7 @@ public struct LorvexReviewHabitList: View {
         .padding(.vertical, LorvexDesign.Spacing.xxs)
         .contentShape(Rectangle())
     }
-    .buttonStyle(.plain)
+    .buttonStyle(LorvexTileButtonStyle())
     .disabled(!isEnabled || action == .none)
     .help(checkInLabel)
     .accessibilityLabel(habit.name)

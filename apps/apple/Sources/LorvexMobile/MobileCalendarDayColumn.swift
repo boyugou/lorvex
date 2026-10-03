@@ -58,6 +58,17 @@ struct MobileCalendarDayColumn: View {
   @State var dragState: DragState? = nil
   @State private var userHasScrolledTimeAxis = false
   @State private var pageWidth: CGFloat = 0
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+  /// Whether the page shows its all-day strip. A single day on a phone shows
+  /// it only when the day has something in it, as Calendar does, so an empty
+  /// band never sits over the hours. A multi-day page keeps it as the grid's
+  /// row for undated items, and a wide layout keeps it as the place to drop
+  /// a task dragged from beside the calendar.
+  private func showsAllDayStrip(_ columns: [CalendarGridDay]) -> Bool {
+    dayCount > 1 || horizontalSizeClass == .regular
+      || MobileCalendarAllDayStrip.hasContent(columns)
+  }
 
   /// Whether a day column is narrower than a full block layout needs — the
   /// seven-day week on a phone — so the all-day strip goes compact as the
@@ -105,20 +116,22 @@ struct MobileCalendarDayColumn: View {
         )
         Divider()
       }
-      MobileCalendarAllDayStrip(
-        columns: columns,
-        gutterWidth: gutterWidth,
-        isCompact: hasNarrowColumns,
-        eventColor: eventColor,
-        onTapEvent: onTapEvent,
-        onDeleteEvent: onDeleteEvent,
-        onTapTask: onTapTask,
-        onToggleTask: onToggleTask,
-        onDropTask: onDropTask
-      )
-      // The strip spans the page, so its width is the page's.
-      .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
-      Divider()
+      if showsAllDayStrip(columns) {
+        MobileCalendarAllDayStrip(
+          columns: columns,
+          gutterWidth: gutterWidth,
+          isCompact: hasNarrowColumns,
+          eventColor: eventColor,
+          onTapEvent: onTapEvent,
+          onDeleteEvent: onDeleteEvent,
+          onTapTask: onTapTask,
+          onToggleTask: onToggleTask,
+          onDropTask: onDropTask
+        )
+        // The strip spans the page, so its width is the page's.
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
+        Divider()
+      }
       ScrollViewReader { proxy in
         ScrollView {
           HStack(alignment: .top, spacing: 0) {
@@ -135,6 +148,8 @@ struct MobileCalendarDayColumn: View {
           }
           .frame(height: totalHeight)
         }
+        // A scroll to the anchor hour stops this far below the divider.
+        .contentMargins(.top, MobileDayScrollAnchor.topClearance, for: .scrollContent)
         .simultaneousGesture(
           DragGesture(minimumDistance: 8)
             .onChanged { _ in userHasScrolledTimeAxis = true }

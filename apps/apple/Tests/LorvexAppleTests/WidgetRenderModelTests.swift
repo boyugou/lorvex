@@ -71,6 +71,30 @@ func widgetRenderModelBuildsMediumLeadAndRows() {
 }
 
 @Test
+func widgetRenderModelRowsReadBlockedAfterAMissedDeadline() {
+  // None of these tasks has a time or is started, so none leads: each is a row.
+  let model = renderModel(
+    [
+      widgetTodayTask(
+        id: "late", title: "Late", dueDate: "2026-05-21", priority: 2, estimatedMinutes: 20,
+        isBlocked: true),
+      widgetTodayTask(
+        id: "waiting", title: "Waiting", dueDate: nil, priority: 2, estimatedMinutes: 20,
+        isBlocked: true),
+      widgetTodayTask(id: "free", title: "Free", dueDate: nil, priority: 2, estimatedMinutes: 20),
+    ],
+    family: .systemLarge)
+
+  #expect(model.lead == nil)
+  let rows = Dictionary(uniqueKeysWithValues: model.taskRows.map { ($0.id, $0) })
+  #expect(rows["late"]?.metadata == "Overdue")
+  #expect(rows["late"]?.tone == .overdue)
+  #expect(rows["waiting"]?.metadata == "Blocked")
+  #expect(rows["waiting"]?.tone == .plain)
+  #expect(rows["free"]?.metadata == "20 min")
+}
+
+@Test
 func widgetRenderModelPhrasesALeadWhoseTimeIsNotRunning() {
   let tasks = [
     widgetTodayTask(

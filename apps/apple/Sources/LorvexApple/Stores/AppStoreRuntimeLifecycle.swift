@@ -375,7 +375,10 @@ extension AppStore {
   /// never waits on the CloudSync operation gate.
   private func performLocalRefresh() async {
     let signpost = LorvexSignpost.begin(.refreshTotal)
-    defer { LorvexSignpost.end(signpost) }
+    defer {
+      LorvexSignpost.end(signpost)
+      taskDataGeneration &+= 1
+    }
     do {
       // Snapshot the detail draft before any awaited read. A peer can move,
       // complete, defer, or delete the selected task while the user is typing;

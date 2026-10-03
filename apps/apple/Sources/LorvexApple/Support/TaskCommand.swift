@@ -62,7 +62,10 @@ enum TaskCommand: CaseIterable {
     case .showDetail:
       return tasks.count == 1
     case .toggleStarted:
-      return tasks.count == 1 && (tasks[0].status == .open || tasks[0].status == .inProgress)
+      guard tasks.count == 1 else { return false }
+      let task = tasks[0]
+      return task.status == .inProgress
+        || (task.status == .open && !context.store.startIsHeldUp(for: task))
     case .deferToTomorrow:
       return tasks.contains { $0.status.isActive }
     case .save:

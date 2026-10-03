@@ -26,8 +26,9 @@
 # Output: <outdir>/<workspace>-<appearance>.png for today, today-suggestion
 # (Today with suggested times waiting in the schedule pane), today-event (a
 # timed event from Today's schedule open in the inspector), tasks,
-# tasks-inspector, tasks-list (Tasks scoped to the first list that is not the
-# Inbox), lists, calendar, calendar-day, calendar-month, habits,
+# tasks-inspector, tasks-inspector-waiting (a task that waits on an unfinished
+# one, so its Start is unavailable), tasks-list (Tasks scoped to the first list
+# that is not the Inbox), lists, calendar, calendar-day, calendar-month, habits,
 # habits-inspector and habits-inspector-open (a habit done today and one
 # still open), reviews, reviews-weekly, memory, settings-<category> for
 # each Settings category (general, permissions, calendar, cloudSync, mcpHost,

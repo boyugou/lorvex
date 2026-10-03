@@ -10,6 +10,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
   let actions: MobileTaskRowActions
   /// See ``MobileTaskRowContent/timeLabel``.
   var timeLabel: String? = nil
+  /// See ``MobileTaskRowContent/isBlocked``. A blocked row offers no Start.
+  var isBlocked = false
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
@@ -17,7 +19,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
     .draggable(LorvexTaskRef(id: task.id, title: task.title))
     .lorvexRowHoverEffect()
     .taskRowActions(
-      task: task, actions: actions, isMutating: isMutating, isBatchSelecting: isBatchSelecting)
+      task: task, actions: actions, isMutating: isMutating, isBatchSelecting: isBatchSelecting,
+      isHeldUp: isBlocked)
     .accessibilityAddTraits(isBatchSelected ? [.isSelected] : [])
     .accessibilityIdentifier("mobile.tasks.selectable.\(task.id)")
   }
@@ -35,7 +38,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
         HStack(spacing: LorvexDesign.Spacing.s) {
           batchSelectionCheckbox
           MobileTaskRowContent(
-            task: task, showsLeadingCircle: false, timeLabel: timeLabel, timeZone: productTimeZone)
+            task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
+            timeZone: productTimeZone)
             .equatable()
         }
         .contentShape(Rectangle())
@@ -46,7 +50,8 @@ struct MobileTaskWorkspaceSelectableRow: View {
         MobileTaskCompletionCircle(task: task, isMutating: isMutating, complete: actions.complete)
         Button(action: select) {
           MobileTaskRowContent(
-            task: task, showsLeadingCircle: false, timeLabel: timeLabel, timeZone: productTimeZone)
+            task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
+            timeZone: productTimeZone)
             .equatable()
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())

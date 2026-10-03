@@ -5,11 +5,15 @@ import SwiftUI
 /// A task's detail: the title and notes, the task's fields as rows with an
 /// Add Detail menu for the rest, the tasks it depends on, assistant context,
 /// the checklist and reminders when it has any, and the secondary actions. As
-/// a
-/// screen of its own it carries the "Task" title and a Share toolbar item; in
+/// a screen of its own it carries the "Task" title and a Share toolbar item; in
 /// a split's detail pane (`mobileDetailPresentation`) the header ends with a
 /// row of the pane's actions instead: `paneActions` (the status transition
 /// and Edit) followed by Share.
+///
+/// `actions` receives whether a task the detail's task waits on is still
+/// unfinished (``LorvexTask/isHeldUp(by:)``), judged from the same resolved
+/// tasks the Waits On rows show, so Start is unavailable exactly while a row
+/// above it shows an unfinished task.
 struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   let task: LorvexTask
   let timeZone: TimeZone
@@ -19,6 +23,9 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   let addReminder: ((Date) async -> Void)?
   let removeReminder: ((TaskReminder) async -> Void)?
   let resolveDependencyTasks: (([LorvexTask.ID]) async -> [LorvexTask])?
+  /// Changes whenever the store's task data may have changed, which reads
+  /// the tasks this task waits on again.
+  let dependencyRefreshKey: UInt64
   let completeDependency: ((LorvexTask) async -> Void)?
   let isDependencyMutating: (LorvexTask.ID) -> Bool
   /// The task's fields, whose rows and Add menu open one field each through
@@ -27,7 +34,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   /// What the Share button sends (``MobileShareText/task(_:listName:logicalDay:)``).
   let shareText: String
   let editField: (MobileTaskField) -> Void
-  @ViewBuilder let actions: () -> Actions
+  @ViewBuilder let actions: (_ isHeldUp: Bool) -> Actions
   @ViewBuilder let paneActions: () -> PaneActions
   @Environment(\.mobileDetailPresentation) private var presentation
 
@@ -36,6 +43,8 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   // has items keeps an "Add …" row for the next one.
   @State private var isComposingChecklistItem = false
   @State private var isComposingReminder = false
+  /// The tasks this task waits on, as the Waits On section last resolved them.
+  @State private var resolvedDependencies: [LorvexTask]?
 
   init(
     task: LorvexTask,
@@ -46,12 +55,13 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     addReminder: ((Date) async -> Void)? = nil,
     removeReminder: ((TaskReminder) async -> Void)? = nil,
     resolveDependencyTasks: (([LorvexTask.ID]) async -> [LorvexTask])? = nil,
+    dependencyRefreshKey: UInt64 = 0,
     completeDependency: ((LorvexTask) async -> Void)? = nil,
     isDependencyMutating: @escaping (LorvexTask.ID) -> Bool = { _ in false },
     properties: MobileTaskProperties,
     shareText: String,
     editField: @escaping (MobileTaskField) -> Void,
-    @ViewBuilder actions: @escaping () -> Actions,
+    @ViewBuilder actions: @escaping (_ isHeldUp: Bool) -> Actions,
     @ViewBuilder paneActions: @escaping () -> PaneActions
   ) {
     self.task = task
@@ -62,6 +72,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
     self.addReminder = addReminder
     self.removeReminder = removeReminder
     self.resolveDependencyTasks = resolveDependencyTasks
+    self.dependencyRefreshKey = dependencyRefreshKey
     self.completeDependency = completeDependency
     self.isDependencyMutating = isDependencyMutating
     self.properties = properties
@@ -108,6 +119,8 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
           ? nil : { setComposingReminder(true) })
       MobileTaskDependenciesSection(
         task: task,
+        resolvedDependencies: $resolvedDependencies,
+        refreshKey: dependencyRefreshKey,
         resolveDependencyTasks: resolveDependencyTasks,
         completeDependency: completeDependency,
         isDependencyMutating: isDependencyMutating)
@@ -198,7 +211,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
           }
         }
       }
-      actions()
+      actions(task.isHeldUp(by: resolvedDependencies ?? []))
     }
     #if DEBUG
       .onAppear {

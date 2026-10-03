@@ -235,7 +235,9 @@ struct MobileActionTaskRow: View {
     // Long-press (iPhone) / right-click (iPad pointer) context menu mirrors the
     // swipe actions — the standard iOS/iPadOS row idiom, which swipe alone
     // doesn't satisfy for pointer users.
-    .taskRowActions(task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false)
+    .taskRowActions(
+      task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false,
+      isHeldUp: isBlocked)
   }
 }
 

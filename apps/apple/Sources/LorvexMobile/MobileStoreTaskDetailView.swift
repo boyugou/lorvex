@@ -37,15 +37,17 @@ struct MobileStoreTaskDetailView: View {
       addReminder: { date in _ = await addReminder(date) },
       removeReminder: { reminder in _ = await removeReminder(reminder) },
       resolveDependencyTasks: resolveDependencyTasks,
+      dependencyRefreshKey: store.taskWorkspaceRevision,
       completeDependency: { dependency in _ = await store.completeTask(dependency.id) },
       isDependencyMutating: { store.taskIsMutating($0) },
       properties: MobileTaskProperties(task: task, listName: listName, logicalDay: store.logicalTodayString),
       shareText: MobileShareText.task(task, listName: listName, logicalDay: store.logicalTodayString),
       editField: edit
-    ) {
+    ) { isHeldUp in
       MobileTaskActionSection(
         task: task,
         isMutating: isMutating,
+        isHeldUp: isHeldUp,
         actions: actions,
         markSomeday: markSomeday,
         cancel: cancel

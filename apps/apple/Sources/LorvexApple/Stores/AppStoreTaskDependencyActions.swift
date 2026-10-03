@@ -85,6 +85,62 @@ extension AppStore {
     return resolved
   }
 
+  /// The ids of `tasks` that wait on an unfinished task
+  /// (``LorvexTaskServicing/blockedTaskIDs(in:)``), or none when the read
+  /// fails: the rows then go unmarked rather than the list failing over a
+  /// mark.
+  func blockedTaskIDs(in tasks: [LorvexTask]) async -> Set<LorvexTask.ID> {
+    (try? await core.blockedTaskIDs(in: tasks)) ?? []
+  }
+
+  /// Records the title of the one task the draft waits on, reading it from
+  /// the store when no loaded list holds it, so the Waits on row names it
+  /// wherever the detail was opened from (``taskDetailWaitsOnTitle``). The
+  /// task detail calls this whenever the draft's dependencies change and
+  /// whenever the store re-reads task data, so a renamed task shows its new
+  /// title. A draft that waits on several tasks or none records nothing.
+  func refreshTaskDetailDependencyTitles() async {
+    let ids = taskDetailDependencies
+    guard ids.count == 1 else {
+      taskDetailStorage.dependencyTitlesByID = [:]
+      return
+    }
+    let title: String?
+    if let loaded = taskForDetailDraft(id: ids[0]) {
+      title = loaded.title
+    } else {
+      title = try? await core.loadTask(id: ids[0]).title
+      // The draft may have changed while the read was in flight.
+      guard taskDetailDependencies == ids else { return }
+    }
+    taskDetailStorage.dependencyTitlesByID = title.map { [ids[0]: $0] } ?? [:]
+  }
+
+  /// Re-reads whether the selected task is held up, with the core's own test
+  /// (``LorvexTaskServicing/blockedTaskIDs(among:)``), and records the answer
+  /// in ``heldUpTaskID``. Only an open task that waits on something is read;
+  /// any other selection clears it. The task detail calls this whenever the
+  /// selection, its dependencies, or the store's task data change
+  /// (``taskDataGeneration``).
+  func refreshSelectedTaskStartGate() async {
+    guard let task = selectedTask, task.status == .open, !task.dependsOn.isEmpty else {
+      heldUpTaskID = nil
+      return
+    }
+    let isHeldUp = await blockedTaskIDs(in: [task]).contains(task.id)
+    // The selection may have moved on while the read was in flight.
+    guard selectedTaskID == task.id else { return }
+    heldUpTaskID = isHeldUp ? task.id : nil
+  }
+
+  /// Whether `task` is open but cannot start, because a task it waits on is
+  /// unfinished, as far as the store has read (``isBlocked(_:)``, the core's
+  /// own test). Every Start control and the Start Task command offer Start
+  /// only when this is false.
+  func startIsHeldUp(for task: LorvexTask) -> Bool {
+    task.status == .open && isBlocked(task)
+  }
+
   /// Task IDs that must be excluded from `taskID`'s dependency picker because a
   /// new edge from `taskID` to them would close a cycle: `taskID` itself, plus
   /// every task that already (transitively) depends on `taskID`.

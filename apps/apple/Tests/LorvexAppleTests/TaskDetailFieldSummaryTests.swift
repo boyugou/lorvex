@@ -54,3 +54,31 @@ func taskDetailHideUntilSummaryReadsAnArrivedDayAsUnset() async throws {
   store.selectTaskFromList(task.id)
   #expect(store.taskDetailHideUntilSummary == "tomorrow")
 }
+
+@MainActor
+@Test
+func taskDetailWaitsOnRowNamesTheTaskItWaitsOn() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  // The seeded "Book the offsite venue" waits on "Draft the team offsite agenda".
+  let agenda = try await core.loadTask(id: LorvexPreviewSeedID.agendaTask)
+  store.selectTaskFromList(LorvexPreviewSeedID.venueTask)
+  #expect(store.taskDetailWaitsOnTitle == agenda.title)
+
+  // A task no loaded list holds is named once the detail reads its title.
+  let elsewhere = try await core.createTask(TaskCreateDraft(title: "Confirm the caterer", notes: ""))
+  store.taskDetailDependencies = [elsewhere.id]
+  #expect(store.taskDetailWaitsOnTitle == nil)
+  #expect(store.taskDetailDependencyCountSummary == "1 task")
+  await store.refreshTaskDetailDependencyTitles()
+  #expect(store.taskDetailWaitsOnTitle == "Confirm the caterer")
+
+  // Several tasks read as a count.
+  store.taskDetailDependencies = [agenda.id, elsewhere.id]
+  await store.refreshTaskDetailDependencyTitles()
+  #expect(store.taskDetailWaitsOnTitle == nil)
+  #expect(store.taskDetailDependencyCountSummary == "2 tasks")
+  store.taskDetailDependencies = []
+  #expect(store.taskDetailDependencyCountSummary == nil)
+}

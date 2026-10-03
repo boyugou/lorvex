@@ -89,8 +89,9 @@ public struct WidgetLeadRender: Equatable, Sendable {
 
 /// One task under the lead.
 public struct WidgetTaskRenderRow: Equatable, Sendable, Identifiable {
-  /// How the metadata column reads: plain secondary text, the accent for a
-  /// running time or a started task, or red for a missed deadline.
+  /// How the metadata column reads: plain secondary text (also for a task
+  /// that waits on an unfinished one), the accent for a running time or a
+  /// started task, or red for a missed deadline.
   public enum Tone: Equatable, Sendable {
     case plain
     case running
@@ -101,7 +102,8 @@ public struct WidgetTaskRenderRow: Equatable, Sendable, Identifiable {
   public let id: String
   public let title: String
   /// "Until" and the end while the task's time runs, else the time's start as
-  /// a clock label, else "Overdue", else "Started", else the estimate, else nil.
+  /// a clock label, else "Overdue", else "Blocked" while it waits on an
+  /// unfinished task, else "Started", else the estimate, else nil.
   public let metadata: String?
   public let tone: Tone
   public let urlString: String?

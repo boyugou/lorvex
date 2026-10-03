@@ -320,6 +320,39 @@ struct LorvexWatchStoreTests {
     #expect(store.isLoading == false)
   }
 
+  @Test("snapshot backend reads which tasks wait on an unfinished task")
+  func snapshotBackendReadsBlockedTasks() async throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("lorvex-watch-\(UUID().uuidString)")
+    let snapshotURL = directory.appendingPathComponent(LorvexWatchReplicaStore.defaultReplicaFileName)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let snapshot = WidgetSnapshot(
+      generatedAt: "2026-05-24T12:00:00Z",
+      timezone: "America/Los_Angeles",
+      stats: .init(todayCount: 2, overdueCount: 0, dueTodayCount: 0),
+      briefing: nil,
+      tasks: [
+        .init(
+          id: "waiting", title: "Book the venue", status: LorvexTask.Status.open.rawValue,
+          dueDate: nil, priority: 2, listID: nil, estimatedMinutes: nil, isBlocked: true),
+        .init(
+          id: "free", title: "Draft the agenda", status: LorvexTask.Status.open.rawValue,
+          dueDate: nil, priority: 2, listID: nil, estimatedMinutes: nil),
+      ]
+    )
+    try writeWatchStoreReplica(snapshot, to: snapshotURL)
+
+    let store = LorvexWatchStore(
+      snapshotURL: snapshotURL,
+      now: { Date(timeIntervalSince1970: 1_779_624_180) }
+    )
+    await store.refresh()
+
+    #expect(store.tasks.map(\.id) == ["waiting", "free"])
+    #expect(store.blockedTaskIDs == ["waiting"])
+  }
+
   @Test("blank watch capture draft does not write")
   func blankCaptureDraftDoesNotWrite() async throws {
     let service = try await makeSeededInMemoryCore()

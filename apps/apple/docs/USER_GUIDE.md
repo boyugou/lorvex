@@ -392,6 +392,16 @@ list to move them; lists with assigned tasks must be emptied before deletion.
   "Pushed 4 times"). One line of metadata follows: the task's saved time, the
   due date, a repeat glyph, the estimate, and up to two tags, which drop whole
   when the line runs short.
+- **Tasks that wait on others:** Task Detail's **Waits on** field names the
+  tasks a task waits on; on the Mac its row shows the task's title, or how many
+  tasks when there are several. Until each of them is done, canceled, or
+  deleted, the task can't be started. Its rows read **Blocked**, and so do its
+  lines in the widgets and on Apple Watch. Its swipe actions and context menu
+  on iPhone and iPad, and its swipe on Apple Watch, leave out **Start**, and
+  the Mac's context menu grays it out. In Task Detail, and among its actions on
+  Apple Watch, Start stays in place but can't be used: on iPhone, iPad, and
+  Apple Watch a line under the actions says why, and on the Mac the button's
+  tooltip does. Finishing the last of them makes Start available again.
 - **Mobile Today habits:** When you have habits, the iPhone and iPad Today tab
   shows them as rings. Tap a ring to complete the habit for today or tap a
   completed one to reset it; touch and hold one to open its details. Creating

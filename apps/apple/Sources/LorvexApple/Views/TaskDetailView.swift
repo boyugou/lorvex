@@ -71,6 +71,21 @@ struct TaskDetailView: View {
         await store.loadSelectedTaskDetail()
       }
     }
+    // Re-read the tasks the selected task waits on when it, its dependencies,
+    // or its status change, and whenever the store re-reads task data, which
+    // is how a dependency finished here, on another device, or by the
+    // assistant reaches the detail.
+    .task(id: StartGateKey(task: store.selectedTask, taskDataGeneration: store.taskDataGeneration)) {
+      await store.refreshSelectedTaskStartGate()
+    }
+    // The Waits on row names the task the draft waits on, which no loaded
+    // list may hold; re-read its title as the draft or task data change.
+    .task(
+      id: DependencyTitleKey(
+        dependencies: store.taskDetailDependencies, taskDataGeneration: store.taskDataGeneration)
+    ) {
+      await store.refreshTaskDetailDependencyTitles()
+    }
     .onDisappear {
       // Closing a detail/workspace window cancels the view-owned debounce.
       // Capture the current target and hand the write to the store, which
@@ -81,6 +96,29 @@ struct TaskDetailView: View {
     .userActivity(LorvexActivityType.openTask, isActive: store.selectedTaskID != nil) { activity in
       guard let taskID = store.selectedTaskID else { return }
       configureOpenTaskActivity(activity, taskID: taskID, title: store.selectedTask?.title)
+    }
+  }
+
+  /// What the Waits on row's title depends on: the draft's dependencies and
+  /// the store's latest re-read of task data.
+  private struct DependencyTitleKey: Hashable {
+    var dependencies: [LorvexTask.ID]
+    var taskDataGeneration: UInt64
+  }
+
+  /// What the Start gate depends on: the selected task's identity, status, and
+  /// dependencies, and the store's latest re-read of task data.
+  private struct StartGateKey: Hashable {
+    var taskID: LorvexTask.ID?
+    var status: LorvexTask.Status?
+    var dependsOn: [LorvexTask.ID]
+    var taskDataGeneration: UInt64
+
+    init(task: LorvexTask?, taskDataGeneration: UInt64) {
+      taskID = task?.id
+      status = task?.status
+      dependsOn = task?.dependsOn ?? []
+      self.taskDataGeneration = taskDataGeneration
     }
   }
 
@@ -145,9 +183,15 @@ struct TaskDetailView: View {
     typealias Copy = TaskDetailSentenceCopy
     var rows: [InspectorPropertyRow] = []
     var additions: [InspectorPropertyAddition] = []
-    func field(_ id: String, _ systemImage: String, _ label: String, _ value: String?, tint: Color? = nil) {
+    func field(
+      _ id: String, _ systemImage: String, _ label: String, _ value: String?, tint: Color? = nil,
+      isUserContent: Bool = false
+    ) {
       if let value {
-        rows.append(.init(id: id, systemImage: systemImage, label: label, value: value, tint: tint))
+        rows.append(
+          .init(
+            id: id, systemImage: systemImage, label: label, value: value, tint: tint,
+            isUserContent: isUserContent))
       } else {
         additions.append(.init(id: id, label: label))
       }
@@ -163,7 +207,11 @@ struct TaskDetailView: View {
     field("repeat", "repeat", Copy.addRepeat, store.taskDetailRepeatSummary)
     field("reminders", "bell", Copy.addReminder, store.taskDetailRemindersSummary(task: task))
     field("tags", "tag", Copy.addTag, store.taskDetailTagsSummary)
-    field("dependencies", "arrow.triangle.branch", Copy.addWaitsOn, store.taskDetailDependencySummary)
+    // The task it waits on by title, or how many when it waits on several.
+    let waitsOnTitle = store.taskDetailWaitsOnTitle
+    field(
+      "dependencies", "arrow.triangle.branch", Copy.addWaitsOn,
+      waitsOnTitle ?? store.taskDetailDependencyCountSummary, isUserContent: waitsOnTitle != nil)
     field("hideUntil", "eye.slash", Copy.addHideUntil, store.taskDetailHideUntilSummary.map { Self.sentenceCased($0) })
     return (rows, additions)
   }

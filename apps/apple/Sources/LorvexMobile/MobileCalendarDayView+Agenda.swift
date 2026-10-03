@@ -39,8 +39,18 @@ extension MobileCalendarDayView {
         store.openTaskRouteOnCurrentStack(task.id)
       },
       taskActions: { store.rowActions(for: $0.id) },
-      taskIsMutating: { store.taskIsMutating($0) }
+      taskIsMutating: { store.taskIsMutating($0) },
+      taskIsBlocked: { agendaBlockedTaskIDs.contains($0) }
     )
+    // Re-read whenever a task changes (the revision advances on every local
+    // change and inbound task sync) or the window's tasks do, so a task whose
+    // blocker was just finished loses its mark at once.
+    .task(
+      id: MobileAgendaBlockedKey(
+        revision: store.taskWorkspaceRevision, taskIDs: store.calendarScheduledTasks.map(\.id))
+    ) {
+      agendaBlockedTaskIDs = await store.blockedTaskIDs(in: store.calendarScheduledTasks)
+    }
   }
 
   private func dates(dayCount: Int, from start: Date) -> [Date] {
@@ -99,4 +109,11 @@ extension MobileCalendarDayView {
       return MobileCalendarAgendaDay(date: date, key: key, events: events, tasks: tasks)
     }
   }
+}
+
+/// What the agenda's Blocked marks are read against: the task data's revision
+/// and the scheduled tasks in the loaded window.
+private struct MobileAgendaBlockedKey: Equatable {
+  let revision: UInt64
+  let taskIDs: [LorvexTask.ID]
 }

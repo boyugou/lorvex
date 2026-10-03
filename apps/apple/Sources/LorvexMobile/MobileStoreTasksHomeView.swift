@@ -269,6 +269,7 @@ public struct MobileStoreTasksHomeView: View {
         ForEach(searchResults.tasks) { task in
           MobileActionTaskRow(
             task: task,
+            isBlocked: searchResults.blockedTaskIDs.contains(task.id),
             isMutating: store.taskIsMutating(task.id),
             actions: store.rowActions(for: task.id)
           )

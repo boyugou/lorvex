@@ -5,6 +5,10 @@ import LorvexCore
 /// for the currently selected task and its checklist draft state.
 struct AppStoreTaskDetailStorage {
   var loadedTasksByID: [LorvexTask.ID: LorvexTask] = [:]
+  /// The title of the task the draft waits on, by its id, as the detail last
+  /// read it, so the Waits on row can name a task none of the loaded lists
+  /// holds.
+  var dependencyTitlesByID: [LorvexTask.ID: String] = [:]
   var taskDetailTitle = ""
   var taskDetailNotes = ""
   var taskDetailPriority: LorvexTask.Priority = .p2
@@ -31,6 +35,7 @@ struct AppStoreTaskDetailStorage {
 
   mutating func reset() {
     loadedTasksByID = [:]
+    dependencyTitlesByID = [:]
     resetDraft()
   }
 

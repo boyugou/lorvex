@@ -11,9 +11,14 @@ import SwiftUI
 /// in one tap. Only actions the task's status allows are shown, and a task
 /// that allows none (completed or cancelled) shows no tiles. At the
 /// accessibility text sizes the tiles wrap two to a row.
+///
+/// While a task the task waits on is unfinished (`isHeldUp`), Start stays in
+/// its place but is unavailable, and the section's footer says why: the core
+/// would refuse the start, so the tile does not offer it.
 struct MobileTaskActionSection: View {
   let task: LorvexTask
   let isMutating: Bool
+  var isHeldUp = false
   let actions: MobileTaskRowActions
   let markSomeday: () async -> Void
   let cancel: () async -> Void
@@ -51,8 +56,23 @@ struct MobileTaskActionSection: View {
         .disabled(isMutating)
         .listRowInsets(EdgeInsets())
         .listRowBackground(Color.clear)
+      } footer: {
+        if isStartHeldUp(tiles) {
+          Text(Self.heldUpReason)
+            .accessibilityIdentifier("task.detail.start.heldUpReason")
+        }
       }
     }
+  }
+
+  /// Why Start is unavailable, in the wording the app shows when the core
+  /// refuses such a start.
+  private static var heldUpReason: String {
+    UserFacingError.Reason.taskStartBlocked.localizedMessage
+  }
+
+  private func isStartHeldUp(_ tiles: [Tile]) -> Bool {
+    isHeldUp && tiles.contains(.start)
   }
 
   @ViewBuilder
@@ -62,6 +82,8 @@ struct MobileTaskActionSection: View {
       button(MobileTaskActionCopy.start, "play.fill", id: "task.detail.start") {
         await actions.start()
       }
+      .disabled(isHeldUp)
+      .accessibilityHint(isHeldUp ? Self.heldUpReason : "")
     case .pause:
       button(MobileTaskActionCopy.pause, "pause.fill", id: "task.detail.pause") {
         await actions.pause()
@@ -74,7 +96,8 @@ struct MobileTaskActionSection: View {
       MobileDeferMenu(deferByDays: actions.deferByDays) {
         MobileTaskActionTile(title: MobileTaskActionCopy.deferTask, systemImage: "clock.arrow.circlepath")
       }
-      .buttonStyle(.plain)
+      .menuStyle(.button)
+      .buttonStyle(LorvexTileButtonStyle())
       .accessibilityIdentifier("task.detail.defer")
     case .someday:
       button(
@@ -102,7 +125,7 @@ struct MobileTaskActionSection: View {
     } label: {
       MobileTaskActionTile(title: title, systemImage: systemImage, tint: tint)
     }
-    .buttonStyle(.plain)
+    .buttonStyle(LorvexTileButtonStyle())
     .accessibilityIdentifier(id)
   }
 }
@@ -111,7 +134,9 @@ struct MobileTaskActionSection: View {
 /// surface, the full width of its grid cell. A name of several words wraps
 /// between them onto a second line; a name of one word, hyphenated or not
 /// ("Когда-нибудь"), stays on one line and shrinks to fit rather than
-/// breaking inside the word.
+/// breaking inside the word. An unavailable tile keeps its card and draws its
+/// symbol and name in the tertiary gray, the way a contact card shows an
+/// action it can't take, so the row keeps its shape.
 struct MobileTaskActionTile: View {
   let title: String
   let systemImage: String
@@ -132,12 +157,11 @@ struct MobileTaskActionTile: View {
         .minimumScaleFactor(isOneWord ? 0.7 : 1)
         .multilineTextAlignment(.center)
     }
-    .foregroundStyle(tint)
+    .foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
     .frame(maxWidth: .infinity, minHeight: 64)
     .padding(.horizontal, LorvexDesign.Spacing.xs)
     .padding(.vertical, LorvexDesign.Spacing.s)
     .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
-    .opacity(isEnabled ? 1 : 0.45)
     .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
   }
 }

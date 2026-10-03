@@ -5,14 +5,19 @@ import SwiftUI
 #endif
 
 /// Starts a task, or pauses it when it is already started. A started task
-/// moves up with the other started tasks at the top of Today.
+/// moves up with the other started tasks at the top of Today. Start stays in
+/// place but cannot be used while the task waits on an unfinished task
+/// (`isBlocked`), since the phone would refuse it.
 struct LorvexWatchStartPauseButton: View {
   @Bindable var store: LorvexWatchStore
   let task: LorvexTask
+  /// The task waits on an unfinished task.
+  var isBlocked = false
   /// Runs after the action, to close the sheet the button sits in.
   let onDone: () -> Void
 
   private var isStarted: Bool { task.status == .inProgress }
+  private var isEnabled: Bool { store.canMutateTasks && (isStarted || !isBlocked) }
 
   var body: some View {
     Button {
@@ -35,9 +40,9 @@ struct LorvexWatchStartPauseButton: View {
         systemImage: isStarted ? "pause.circle" : "play.circle"
       )
       .font(.headline)
-      .foregroundStyle(store.canMutateTasks ? LorvexDesign.Palette.accent : Color.secondary)
+      .foregroundStyle(isEnabled ? LorvexDesign.Palette.accent : Color.secondary)
     }
-    .disabled(!store.canMutateTasks)
+    .disabled(!isEnabled)
     .buttonStyle(.bordered)
     .tint(LorvexDesign.Palette.accent)
     .accessibilityHint(

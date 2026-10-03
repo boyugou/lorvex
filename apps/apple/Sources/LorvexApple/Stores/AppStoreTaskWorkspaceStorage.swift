@@ -51,6 +51,9 @@ struct AppStoreTaskWorkspaceStorage {
   var completedTasks: [LorvexTask] = []
   var cancelledTasks: [LorvexTask] = []
   var somedayTasks: [LorvexTask] = []
+  /// The ids of the loaded rows that wait on an unfinished task, read with
+  /// their pages: replaced by a full load, extended by each appended page.
+  var blockedTaskIDs = Set<LorvexTask.ID>()
   var visibleOrderedTaskIDs: [LorvexTask.ID]?
   var selectedTaskIDs = Set<LorvexTask.ID>()
   var listScopeID: LorvexList.ID?

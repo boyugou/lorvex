@@ -96,11 +96,14 @@ struct MobileRegularLayoutParityTests {
       #expect(try mobileSource(file).contains(".mobileAccentRowStyle()"), "\(file)")
     }
 
-    // The task action tiles colour icon and name with one tint, and dim as a
-    // whole when disabled, so a tile never renders in two colours.
+    // The task action tiles colour icon and name with one style, the tint or,
+    // on an unavailable tile, the tertiary gray, so a tile never renders in
+    // two colours; the tile button style leaves an unavailable tile's card
+    // as it is rather than fading the whole tile.
     let actions = try mobileSource("MobileTaskActionViews.swift")
-    #expect(actions.contains(".foregroundStyle(tint)"))
-    #expect(actions.contains(".opacity(isEnabled ? 1 : 0.45)"))
+    #expect(
+      actions.contains(".foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))"))
+    #expect(actions.contains(".buttonStyle(LorvexTileButtonStyle())"))
     #expect(actions.contains("tint: LorvexDesign.Palette.destructive"))
 
     // The busy spinner is an overlay on the row, never a replacement label:

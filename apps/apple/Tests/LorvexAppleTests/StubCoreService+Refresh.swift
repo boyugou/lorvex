@@ -137,4 +137,7 @@ extension StubCoreService {
   {
     try await preview.getDeferredTasks(listID: listID, limit: limit, offset: offset)
   }
+  func blockedTaskIDs(among taskIDs: [LorvexTask.ID]) async throws -> Set<LorvexTask.ID> {
+    try await preview.blockedTaskIDs(among: taskIDs)
+  }
 }

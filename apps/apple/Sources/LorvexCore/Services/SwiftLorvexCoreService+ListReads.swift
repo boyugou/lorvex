@@ -46,6 +46,8 @@ extension SwiftLorvexCoreService {
         returned: tasks.count, totalMatching: Int(result.totalMatching),
         limit: clampedLimit, offset: clampedOffset)
       let counts = try Self.listCounts(db, id: id)
+      let blocked = try TaskRepo.Read.blockedTaskIDs(
+        db, among: tasks.filter(\.mayBeBlocked).map(\.id))
       return ListDetailSnapshot(
         list: SwiftLorvexListDeserializers.list(
           listRow,
@@ -59,7 +61,8 @@ extension SwiftLorvexCoreService {
         limit: clampedLimit,
         offset: clampedOffset,
         nextOffset: meta.nextOffset,
-        truncated: meta.truncated)
+        truncated: meta.truncated,
+        blockedTaskIDs: blocked)
     }
   }
 

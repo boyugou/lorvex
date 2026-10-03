@@ -97,9 +97,9 @@ func appStoreBadgeCountsTasksOutsideStaleTodaySnapshot() async throws {
 // After an inbound CloudKit cycle applies remote changes, the reminder/badge
 // surfaces must be re-planned from the post-apply DB. Otherwise a task completed
 // (or cancelled/deferred) on another device keeps its local notification armed
-// and fires on this Mac. `republishSurfacesAfterInboundSync` is the recompute
-// the cycle runs when it fetched records; this exercises that recompute drops a
-// now-inactive task's reminder.
+// and fires on this Mac. The selective reload a task-bearing inbound change runs
+// (`performSelectiveInboundReload`) is that recompute; this exercises that it
+// drops a now-inactive task's reminder.
 @MainActor
 @Test
 func appStoreRepublishAfterInboundDropsRemindersForRemotelyCompletedTask() async throws {
@@ -114,12 +114,12 @@ func appStoreRepublishAfterInboundDropsRemindersForRemotelyCompletedTask() async
   let task = try await core.createTask(title: "Remote-completed task", notes: "")
   let reminderAt = LorvexDateFormatters.iso8601.string(from: Date(timeIntervalSinceNow: 3600))
   _ = try await core.setTaskReminders(taskID: task.id, reminderAts: [reminderAt])
-  await store.republishSurfacesAfterInboundSync()
+  await store.performSelectiveInboundReload([.today, .tasks])
   #expect(await scheduler.lastScheduledIDs().contains(task.id))
 
   // Simulate the post-inbound state: the task was completed on another device.
   _ = try await core.completeTask(id: task.id)
-  await store.republishSurfacesAfterInboundSync()
+  await store.performSelectiveInboundReload([.today, .tasks])
   #expect(await scheduler.lastScheduledIDs().contains(task.id) == false)
 }
 

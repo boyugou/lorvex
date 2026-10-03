@@ -210,6 +210,7 @@ private struct ListDetailTaskResultRow: View {
       batchAccessibilityIdentifier: "listDetail.row.batchSelect.\(task.id)",
       toggleBatchSelection: { store.toggleSelectedListTaskBatchSelection(task.id) },
       openTask: { store.selectOnlySelectedListTask(task.id) },
+      isBlocked: store.isBlocked(task),
       timeLabel: timeLabel
     )
   }

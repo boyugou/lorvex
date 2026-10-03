@@ -132,6 +132,14 @@
             await emitStop("tasks-inspector")
             store.selectedTaskID = nil
           }
+          if selection == .tasks {
+            // A task that waits on an unfinished task: Start stays in place
+            // but unavailable until that task is done.
+            store.selectedTaskID = LorvexPreviewSeedID.venueTask
+            try? await Task.sleep(for: .seconds(2.5))
+            if store.selectedTask != nil { await emitStop("tasks-inspector-waiting") }
+            store.selectedTaskID = nil
+          }
           if selection == .tasks, let list = store.lists?.lists.first(where: { !$0.isInbox }) {
             // The same workspace scoped to a list, as the sidebar opens it.
             store.setTaskWorkspaceListScope(list.id)

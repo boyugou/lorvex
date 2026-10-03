@@ -16,15 +16,17 @@ public struct WidgetSnapshotProjector: Sendable {
   /// Projects the App-Group widget snapshot.
   ///
   /// The task list is ``TodaySnapshot/tasks``, Today's list in Today's order,
-  /// each task carrying its time today (``LorvexTask/time(on:)``), and narrowed
-  /// to the system Focus filter's lists while one is active. The numeric stats
-  /// (overdue / due-today / completed-today, top-level and per-list) come from
-  /// `statsSource` when supplied: its uncapped actionable (open + in_progress)
-  /// set and recently-completed set, so the counts reflect the whole workload
-  /// rather than just the day and completed-today is a real count instead of a
-  /// structural zero. When `statsSource` is nil the stats fall back to the day's
-  /// list, which under-counts undated and future work and cannot see completed
-  /// tasks — callers with core access should pass a `statsSource`.
+  /// each task carrying its time today (``LorvexTask/time(on:)``) and whether
+  /// it waits on an unfinished task (``TodaySnapshot/blockedTaskIDs``), and
+  /// narrowed to the system Focus filter's lists while one is active. The
+  /// numeric stats (overdue / due-today / completed-today, top-level and
+  /// per-list) come from `statsSource` when supplied: its uncapped actionable
+  /// (open + in_progress) set and recently-completed set, so the counts reflect
+  /// the whole workload rather than just the day and completed-today is a real
+  /// count instead of a structural zero. When `statsSource` is nil the stats
+  /// fall back to the day's list, which under-counts undated and future work
+  /// and cannot see completed tasks — callers with core access should pass a
+  /// `statsSource`.
   public func snapshot(
     storageGeneration: Int = 0,
     focusFilterRevision: Int = 0,
@@ -68,7 +70,8 @@ public struct WidgetSnapshotProjector: Sendable {
         listID: task.listID,
         estimatedMinutes: task.estimatedMinutes,
         scheduledStart: time.map { lorvexStoredClockTime(minutes: $0.lowerBound) },
-        scheduledEnd: time.map { lorvexStoredClockTime(minutes: $0.upperBound) }
+        scheduledEnd: time.map { lorvexStoredClockTime(minutes: $0.upperBound) },
+        isBlocked: today.blockedTaskIDs.contains(task.id)
       )
     }
 

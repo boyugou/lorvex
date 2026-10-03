@@ -17,6 +17,10 @@ public struct ListDetailSnapshot: Equatable, Sendable {
   public var offset: Int
   public var nextOffset: Int?
   public var truncated: Bool
+  /// The ids of `tasks` that wait on an unfinished task, read with them
+  /// (``LorvexTaskServicing/blockedTaskIDs(among:)``): their rows show
+  /// Blocked.
+  public var blockedTaskIDs: Set<LorvexTask.ID>
 
   public init(
     list: LorvexList,
@@ -26,7 +30,8 @@ public struct ListDetailSnapshot: Equatable, Sendable {
     limit: Int,
     offset: Int,
     nextOffset: Int?,
-    truncated: Bool
+    truncated: Bool,
+    blockedTaskIDs: Set<LorvexTask.ID> = []
   ) {
     self.list = list
     self.tasks = tasks
@@ -36,6 +41,7 @@ public struct ListDetailSnapshot: Equatable, Sendable {
     self.offset = offset
     self.nextOffset = nextOffset
     self.truncated = truncated
+    self.blockedTaskIDs = blockedTaskIDs
   }
 }
 

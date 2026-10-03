@@ -152,7 +152,7 @@ private struct MobileHabitMomentumPanel: View {
         table: "Localizable",
         bundle: MobileL10n.bundle),
       value: stats.completionRate30d.formatted(.percent.precision(.fractionLength(0))),
-      tint: .accentColor)
+      tint: rateTint)
   }
 
   /// A stat as a column (its label over its value, sharing the width with the
@@ -199,6 +199,12 @@ private struct MobileHabitMomentumPanel: View {
   /// has been recorded, `neutral` when the habit has never held one.
   private var bestStreakTint: Color {
     stats.bestStreak > 0 ? habit.tileTint : LorvexDesign.Palette.neutral
+  }
+
+  /// The 30-day rate tint: the habit's own identity color once the window
+  /// holds a check-in, `neutral` at 0%, like the streaks beside it.
+  private var rateTint: Color {
+    stats.completionRate30d > 0 ? habit.tileTint : LorvexDesign.Palette.neutral
   }
 
   private var fraction: Double {
@@ -431,6 +437,10 @@ private struct MobileHabitHeatmapPanel: View {
         // its month's columns.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
+    // The grid shows whole weeks, so it falls short of the width by up to a
+    // column; the card still spans the width, edge to edge with the panels
+    // above it, and the grid keeps to its leading side.
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(LorvexDesign.Spacing.l)
     .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .ignore)

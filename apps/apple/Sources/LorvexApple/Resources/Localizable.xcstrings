@@ -71583,8 +71583,8 @@
         }
       }
     },
-    "task_detail.dependencies.waits_on": {
-      "comment": "Task detail row: how many tasks this one waits on",
+    "task_detail.dependencies.count": {
+      "comment": "Task detail Waits on row value: how many tasks this one waits on, when the row cannot show the one task's title",
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -71593,37 +71593,37 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "بانتظار %lld مهام"
+                  "value": "%lld مهام"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "بانتظار %lld مهمة"
+                  "value": "%lld مهمة"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "بانتظار مهمة واحدة"
+                  "value": "مهمة واحدة"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "بانتظار %lld مهمة"
+                  "value": "%lld مهمة"
                 }
               },
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "بانتظار مهمتين"
+                  "value": "مهمتان"
                 }
               },
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "بانتظار %lld مهمة"
+                  "value": "%lld مهمة"
                 }
               }
             }
@@ -71635,13 +71635,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Waits on %lld"
+                  "value": "%lld task"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Waits on %lld"
+                  "value": "%lld tasks"
                 }
               }
             }
@@ -71653,13 +71653,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Depende de %lld"
+                  "value": "%lld tarea"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Depende de %lld"
+                  "value": "%lld tareas"
                 }
               }
             }
@@ -71671,13 +71671,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Dépend de %lld"
+                  "value": "%lld tâche"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Dépend de %lld"
+                  "value": "%lld tâches"
                 }
               }
             }
@@ -71689,13 +71689,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld पर निर्भर"
+                  "value": "%lld कार्य"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld पर निर्भर"
+                  "value": "%lld कार्य"
                 }
               }
             }
@@ -71707,13 +71707,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Dipende da %lld"
+                  "value": "%lld attività"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Dipende da %lld"
+                  "value": "%lld attività"
                 }
               }
             }
@@ -71722,13 +71722,13 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "依存先：%lld件"
+            "value": "タスク%lld件"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "의존 대상 %lld개"
+            "value": "할 일 %lld개"
           }
         },
         "pl": {
@@ -71737,25 +71737,25 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Zależy od: %lld"
+                  "value": "%lld zadania"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Zależy od: %lld"
+                  "value": "%lld zadań"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Zależy od: %lld"
+                  "value": "%lld zadanie"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Zależy od: %lld"
+                  "value": "%lld zadania"
                 }
               }
             }
@@ -71767,13 +71767,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Depende de %lld"
+                  "value": "%lld tarefa"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Depende de %lld"
+                  "value": "%lld tarefas"
                 }
               }
             }
@@ -71785,25 +71785,25 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Зависит от: %lld"
+                  "value": "%lld задачи"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Зависит от: %lld"
+                  "value": "%lld задач"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Зависит от: %lld"
+                  "value": "%lld задача"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Зависит от: %lld"
+                  "value": "%lld задачи"
                 }
               }
             }
@@ -71815,25 +71815,25 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Залежить від: %lld"
+                  "value": "%lld завдання"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Залежить від: %lld"
+                  "value": "%lld завдань"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Залежить від: %lld"
+                  "value": "%lld завдання"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Залежить від: %lld"
+                  "value": "%lld завдання"
                 }
               }
             }
@@ -71845,7 +71845,7 @@
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "等待 %lld 项"
+                  "value": "%lld 项任务"
                 }
               }
             }
@@ -71854,7 +71854,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "相依於 %lld 個"
+            "value": "%lld 個任務"
           }
         }
       }

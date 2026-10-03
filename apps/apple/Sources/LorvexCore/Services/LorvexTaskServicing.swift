@@ -99,6 +99,13 @@ public protocol LorvexTaskServicing: LorvexTaskImporting {
   func getDeferredTasks(listID: LorvexList.ID?, limit: Int, offset: Int) async throws
     -> TaskPageResult
 
+  /// The ids, among `taskIDs`, of tasks that cannot be started because a task
+  /// they depend on is unfinished: open, started, or someday, and not
+  /// archived. This is the test the core applies when it refuses a start, so
+  /// a surface that withholds Start for these ids agrees with the core.
+  /// Empty input returns an empty set.
+  func blockedTaskIDs(among taskIDs: [LorvexTask.ID]) async throws -> Set<LorvexTask.ID>
+
   /// Returns task reminders whose `reminder_at` is before `asOf` (defaults to
   /// now when nil) and have not been dismissed or cancelled.
   func getDueTaskReminders(asOf: String?, limit: Int) async throws -> [TaskReminderWithTask]

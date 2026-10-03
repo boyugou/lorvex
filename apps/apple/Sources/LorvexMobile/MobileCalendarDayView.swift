@@ -37,6 +37,9 @@ public struct MobileCalendarDayView: View {
   // Not private: the agenda-body extension (a separate file) routes scoped
   // deletes through this same this/future/all dialog.
   @State var eventAwaitingDeleteScope: CalendarTimelineEvent?
+  /// The scheduled tasks the agenda marks Blocked. Not private: the
+  /// agenda-body extension (a separate file) reads and refreshes it.
+  @State var agendaBlockedTaskIDs: Set<LorvexTask.ID> = []
   /// The calendar's width, so the mode picker names the day grid ("Day",
   /// "3 Days") even while the week is showing. The day count is derived when
   /// the picker draws rather than stored, because it also depends on the

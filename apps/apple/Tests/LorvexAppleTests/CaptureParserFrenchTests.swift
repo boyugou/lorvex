@@ -80,6 +80,62 @@ struct CaptureParserFrenchTests {
         == nil)
   }
 
+  @Test("Date ranges: the first day is planned and the last is due")
+  func dateRanges() {
+    expectDateRanges(
+      [
+        ("Voyage", "du 3 au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage à Lyon", "du 3 au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 3 mai au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 30 mai au 2 juin", "2027-05-30", "2027-06-02"),
+        ("Voyage", "3-5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "3 mai - 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "entre le 3 et le 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "entre le 3 mai et le 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 1er au 5 mai", "2027-05-01", "2027-05-05"),
+        ("Voyage", "du lundi 3 au mercredi 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 3 mai jusqu'au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 3 mai jusqu’au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 3 au 5 mai 2027", "2027-05-03", "2027-05-05"),
+        ("Voyage", "du 3 au 5 oct.", "2026-10-03", "2026-10-05"),
+        ("Voyage", "du 3 au 5 fevrier", "2027-02-03", "2027-02-05"),
+        ("Voyage", "du 30 décembre au 2 janvier", "2026-12-30", "2027-01-02"),
+        // "Au" needs no opening word.
+        ("Voyage", "3 au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "3 mai au 5 mai", "2027-05-03", "2027-05-05"),
+        ("Voyage", "3 jusqu'au 5 mai", "2027-05-03", "2027-05-05"),
+      ], languages: ["fr-FR"])
+  }
+
+  @Test("A range whose end is not after its start stays in the title whole")
+  func declinedDateRanges() {
+    expectLinesUnread(
+      [
+        "Voyage du 5 au 3 mai", "Voyage du 3 au 3 mai", "Voyage 5-3 mai", "Voyage entre le 5 et le 3 mai",
+        "Voyage du 3 au 30 février", "Voyage 5 au 3 mai",
+      ], languages: ["fr-FR"])
+  }
+
+  @Test("Repeats, time ranges, counts, and days with no month are not date ranges")
+  func nonDateRanges() {
+    let weekdays = parse("Voyage du lundi au vendredi")
+    #expect(weekdays.recurrence == TaskRecurrenceRule(freq: .weekly, byDay: ["MO", "TU", "WE", "TH", "FR"]))
+    #expect(weekdays.dueDayOffset == nil)
+
+    let time = parse("Réunion de 14h à 16h")
+    #expect(time.startMinutes == 14 * 60)
+    #expect(time.estimatedMinutes == 120)
+    #expect(time.dueDayOffset == nil)
+
+    // A lone day of the month is not a date in French, so a range of two is not.
+    expectLinesUnread(
+      ["Voyage du 3 au 5", "Lire pages 3-5", "Lire de 3 à 5 pages", "Dîner du 3 au 5 personnes"],
+      languages: ["fr-FR"])
+    // Two days joined by "et" without entre are two days, not a range.
+    #expect(parse("Dîner le 3 et le 5 mai").dueDayOffset == nil)
+    #expect(parse("Dîner 3 et 5 mai").dueDayOffset == nil)
+  }
+
   @Test("Due days")
   func dueDays() {
     let line = parse("Rapport pour vendredi")

@@ -15,6 +15,20 @@ extension LorvexCaptureVocabulary {
   ///   since the short forms are also English words. A capitalized weekday
   ///   inside the line with no lead word ("Monday Morning Memo") is a name,
   ///   not a date. Tonight is an evening, so "tonight 8:00" is 8 PM.
+  /// - Date range: "May 3-5", "May 3 - 5", "May 3 to 5", "May 3 through 5",
+  ///   "May 3 to May 5", "May 3rd-5th", "3-5 May", "May 30 - June 2",
+  ///   "2026-10-03 to 2026-10-05", each maybe after "from", and "between May 3
+  ///   and May 5". The first day is the planned day and the last the due day,
+  ///   so another day phrase stays in the title. A month written once serves
+  ///   both sides; the end must be after the start ("May 5-3" stays in the
+  ///   title whole); an end in an earlier month falls in the next year ("Dec
+  ///   30 - Jan 2"); a year at the end of a side counts ("May 3-5, 2027"). A
+  ///   range with no month ("3-5", "the 3rd to the 5th") is not a date, and
+  ///   nor is one whose end is followed by AM or PM ("May 3-5pm" is a time
+  ///   range) or by a length unit ("Oct 5 - 30 min"). A day alone opens a
+  ///   range joined by a dash only when the dash touches both sides ("3-5
+  ///   May") or "from" comes first: "Sprint 12 - 20 May" names a sprint and a
+  ///   date.
   /// - Repeat: every day, every weekday, every week, every other week, every
   ///   3 days, every month, every year, every Monday, every Mon and Thu,
   ///   every other Friday, and daily / weekly / monthly / yearly at the end of
@@ -40,6 +54,7 @@ extension LorvexCaptureVocabulary {
   private static func englishVocabulary(readsHoursWithH: Bool) -> LorvexCaptureVocabulary {
     LorvexCaptureVocabulary(
       priority: [Rule(pattern: englishPriorityPattern, read: englishPriority)],
+      dateRange: [Rule(pattern: englishDateRangePattern, read: englishDateRange)],
       length: [Rule(pattern: englishLengthPattern) { englishLength($0, readsHoursWithH: readsHoursWithH) }],
       time: [
         Rule(pattern: englishRangePattern, read: englishRange),
@@ -141,6 +156,62 @@ extension LorvexCaptureVocabulary {
     return wholeTime(text, pattern: englishTimePattern, in: match, read: englishTime)
   }
 
+  // MARK: - Date range
+
+  /// "May 3-5", "May 3 to May 5", "May 30 - June 2", "3-5 May", "5th of May to
+  /// 7th of May", "2026-10-03 to 2026-10-05", each maybe after "from" or
+  /// "between" and with a year after a side. A side written as a day alone
+  /// ("5" of "May 3-5", "3" of "3-5 May") takes the other side's month.
+  /// Groups: 1 from or between, 2 the start, 3 the word between the sides
+  /// (nil for a dash), 4 the end. The end may not be followed by AM or PM,
+  /// which makes "May 3-5pm" a time range, by a unit, which makes "Oct 5 - 30
+  /// min" a date and a length, or by a percent sign, a decimal fraction, or
+  /// another dash-joined number, which make it a different number.
+  private static var englishDateRangePattern: String {
+    let day = #"\d{1,2}(?:st|nd|rd|th)?"#
+    let year = #"(?:,?\s+\d{4})?"#
+    let iso = #"\d{4}-\d{2}-\d{2}"#
+    let monthFirst = "(?:\(englishMonthNames))\\.?\\s+\(day)(?![\\p{N}:])\(year)"
+    let dayFirst = "\(day)\\s+(?:of\\s+)?(?:\(englishMonthNames))\\.?\(year)"
+    let dayOnly = "\(day)(?![\\p{N}:])\(year)"
+    let side = "\(iso)|\(monthFirst)|\(dayFirst)|\(dayOnly)"
+    let unit = #"(?!\s*(?:hours?|hrs?|h|minutes?|mins?|m)(?![\p{Latin}\p{N}]))"#
+    let noNumberAfter = #"(?![%]|[.,]\p{N}|[-–—]\p{N})"#
+    return
+      #"\#(latinStart)(?:(from|between)\s+)?(\#(side))(?:\s*[-–—]\s*|\s+(to|through|thru|until|till|and)\s+)(\#(side))\#(latinEnd)\#(noMeridiemAfter)\#(unit)\#(noNumberAfter)"#
+  }
+
+  private static func englishDateRange(_ match: Match) -> DayRangeReading? {
+    guard let startText = match.group(2), let endText = match.group(4),
+      let start = englishRangeDate(startText), let end = englishRangeDate(endText)
+    else { return nil }
+    // "And" joins two days only after "between": "May 3 and May 5" names two.
+    if match.group(3)?.lowercased() == "and", match.group(1)?.lowercased() != "between" { return nil }
+    if start.month == nil, match.group(1) == nil, match.group(3) == nil, !dashTouchesBothSides(match, start: 2, end: 4) {
+      return nil
+    }
+    // A side without a month takes the other side's, so the other side needs
+    // one, and the day alone stands where the month is written around it: at
+    // the start of "3-5 May", at the end of "May 3-5".
+    switch (start.month, end.month) {
+    case (nil, nil): return nil
+    case (nil, _): guard endText.first?.isNumber == true, start.year == nil else { return nil }
+    case (_, nil): guard startText.first?.isLetter == true else { return nil }
+    default: break
+    }
+    return dayRangeReading(from: start, to: end, today: match.today)
+  }
+
+  /// A side of a date range: a date ("May 3", "3rd of May, 2027"), or a day
+  /// alone ("5th"), which has no month.
+  private static func englishRangeDate(_ text: String) -> ExplicitDate? {
+    let lower = text.lowercased()
+    if let date = englishDate(lower) { return date }
+    guard let match = lower.wholeMatch(of: /(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?/), let day = number(match.output.1)
+    else { return nil }
+    return ExplicitDate(year: match.output.2.flatMap { number($0) }, month: nil, day: day)
+  }
+
   // MARK: - Repeat
 
   /// "every other week", "every 3 days", "every Mon and Thu", or a cadence
@@ -232,12 +303,16 @@ extension LorvexCaptureVocabulary {
       + #"\d{4}-\d{2}-\d{2}|"# + englishMonthDayPattern + "|" + names
   }
 
+  /// The month names and abbreviations, longest first, as a pattern.
+  private static var englishMonthNames: String {
+    englishMonths.flatMap { $0 }.sorted { $0.count > $1.count }.joined(separator: "|")
+  }
+
   /// "Oct 5", "October 5th, 2027", "5 Oct", "5th of October".
   private static var englishMonthDayPattern: String {
-    let names = englishMonths.flatMap { $0 }.sorted { $0.count > $1.count }.joined(separator: "|")
     let day = #"\d{1,2}(?:st|nd|rd|th)?"#
     let year = #"(?:,?\s+\d{4})?"#
-    return "(?:\(names))\\.?\\s+\(day)(?![\\p{N}:])\(year)|\(day)\\s+(?:of\\s+)?(?:\(names))\(year)"
+    return "(?:\(englishMonthNames))\\.?\\s+\(day)(?![\\p{N}:])\(year)|\(day)\\s+(?:of\\s+)?(?:\(englishMonthNames))\(year)"
   }
 
   private static func englishWeekdayIndex(_ word: String) -> Int? {

@@ -173,6 +173,22 @@ struct CaptureParserTimeAndDateTests {
     #expect(parse("10月5日下午3点开会").title == "开会")
   }
 
+  @Test("Chinese: a number in 号 before a thing it numbers is not a day")
+  func chineseNumberedThings() {
+    // A building, a metro line, a meeting room, AA batteries; in Traditional
+    // characters too.
+    for text in ["去5号楼开会", "坐地铁2号线", "到3号会议室开会", "买5号电池", "5號樓開會"] {
+      let line = parse(text)
+      #expect(line.title == text, "\(text)")
+      #expect(line.plannedDayOffset == nil, "\(text)")
+      #expect(line.dueDayOffset == nil, "\(text)")
+    }
+    // 线上 (online), 门诊 (a clinic), and 院长 (a dean) may follow a date.
+    for text in ["5号线上开会", "5号门诊复查", "5号院长讲座"] {
+      #expect(parse(text).plannedDayOffset == 13, "\(text)")
+    }
+  }
+
   @Test("Written-out dates need the logical today")
   func datesNeedToday() {
     let line = parse("Renew passport Oct 5", today: nil)

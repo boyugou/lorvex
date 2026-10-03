@@ -1,3 +1,4 @@
+import CoreGraphics
 import LorvexCore
 import Testing
 
@@ -19,4 +20,25 @@ import Testing
 ])
 func balancedGridSpreadsItemsEvenlyOverItsRows(itemCount: Int, capacity: Int, columns: Int) {
   #expect(LorvexBalancedGrid.columnCount(itemCount: itemCount, capacity: capacity) == columns)
+}
+
+// The columns a row uses share its width, each at most the maximum: four
+// habits fill a phone's row and spread across a wide iPad card when the
+// maximum is unbounded, and keep to the leading edge, 96 pt wide, when it is
+// not. Three habits, or five in rows of three and two, share the phone's row
+// in thirds.
+@Test(arguments: [
+  (itemCount: 4, width: CGFloat(350), maximum: CGFloat.infinity, columns: 4, columnWidth: CGFloat(81.5)),
+  (itemCount: 4, width: CGFloat(830), maximum: CGFloat.infinity, columns: 4, columnWidth: CGFloat(201.5)),
+  (itemCount: 4, width: CGFloat(830), maximum: CGFloat(96), columns: 4, columnWidth: CGFloat(96)),
+  (itemCount: 3, width: CGFloat(350), maximum: CGFloat.infinity, columns: 3, columnWidth: CGFloat(334) / 3),
+  (itemCount: 5, width: CGFloat(350), maximum: CGFloat.infinity, columns: 3, columnWidth: CGFloat(334) / 3),
+])
+func balancedGridColumnsShareTheWidth(
+  itemCount: Int, width: CGFloat, maximum: CGFloat, columns: Int, columnWidth: CGFloat
+) {
+  let layout = LorvexBalancedGrid.columns(
+    itemCount: itemCount, width: width, minimumColumnWidth: 76, maximumColumnWidth: maximum, columnSpacing: 8)
+  #expect(layout.count == columns)
+  #expect(abs(layout.width - columnWidth) < 0.001)
 }

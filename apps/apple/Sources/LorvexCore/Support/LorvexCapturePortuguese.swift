@@ -28,6 +28,21 @@ extension LorvexCaptureVocabulary {
   ///   à noite, esta noite, and amanhã à noite are evenings. A date written in
   ///   digits ("5/10") is not read, since the order of its day and month
   ///   depends on the region.
+  /// - Date range: de 3 a 5 de maio, de 3 até 5 de maio, de 3 de maio a 5 de
+  ///   maio, de 30 de maio a 2 de junho, do dia 3 ao dia 5 de maio, entre 3 e 5
+  ///   de maio, entre os dias 3 e 5 de maio, entre o dia 3 e o dia 5 de maio,
+  ///   3-5 de maio, 3 a 5 de maio, each maybe with a year after the end ("de 3
+  ///   a 5 de maio de 2027"). The first day is the planned day and the last
+  ///   the due day, so another day phrase stays in the title. A day written
+  ///   without its month takes the month of the end; the end must be after the
+  ///   start ("de 5 a 3 de maio" stays in the title whole), and an end in an
+  ///   earlier month falls in the next year. "A", "ao", and "até" need no
+  ///   opening word when the end names a month, and "e" joins two days only
+  ///   after entre. Days of the month alone are read as "dia 5" is, with a
+  ///   word that joins the sides: "do dia 3 ao dia 5", "entre os dias 3 e 5"
+  ///   count, "de 3 a 5" does not. A day alone opens a range joined by a dash
+  ///   only when the dash touches both sides or an opening word comes first:
+  ///   "Sprint 12 - 20 de maio" names a sprint and a date.
   /// - Repeat: todo dia, todos os dias, dia sim dia não, todo dia útil, dias
   ///   úteis, de segunda a sexta, toda semana, semana sim semana não, toda
   ///   segunda, todas as segundas e quartas, todo sábado, aos domingos, nos
@@ -53,6 +68,7 @@ extension LorvexCaptureVocabulary {
   static let portuguese = LorvexCaptureVocabulary(
     readingForm: unaccentedForMatching,
     priority: [Rule(pattern: portuguesePriorityPattern, read: portuguesePriority)],
+    dateRange: [Rule(pattern: portugueseDateRangePattern, read: portugueseDateRange)],
     length: [Rule(pattern: portugueseLengthPattern, read: portugueseLength)],
     time: [
       Rule(pattern: portugueseRangePattern, read: portugueseRange),
@@ -248,6 +264,63 @@ extension LorvexCaptureVocabulary {
     case "meia noite", "meianoite": return ClockTime(minutes: 0, isAfterMidnight: true)
     default: return colonTime(text) ?? hourTime(text)
     }
+  }
+
+  // MARK: - Date range
+
+  /// "de 3 a 5 de maio", "de 3 de maio a 5 de maio", "do dia 3 ao dia 5 de
+  /// maio", "entre os dias 3 e 5 de maio", "3-5 de maio", "3 a 5 de maio",
+  /// and, for days of the month alone, "do dia 3 ao dia 5". The start is a date
+  /// or a day alone ("3", "dia 3"), the end a date or a day alone; each side
+  /// may have "dia" or "o dia" before it. Groups: 1 the word that opens the
+  /// range, if any (de, do, desde, entre, entre os dias), 2 the start, 3 a dash
+  /// between the sides, 4 a, ao, até, or e between them, 5 the end.
+  private static var portugueseDateRangePattern: String {
+    let dayMark = #"(?:(?:o\s+)?dia\s+)?"#
+    let day = #"\d{1,2}[º°o]?"#
+    let year = #"(?:\s+(?:de\s+)?\d{4})?"#
+    let full = "\(dayMark)\(day)\\s+(?:de\\s+)?(?:\(portugueseMonths.joined(separator: "|")))\(year)"
+    let bare = "\(dayMark)\(day)(?![\\p{N}:h])"
+    return
+      #"\#(latinStart)(?:(de|do|desde|entre(?:\s+os\s+dias)?)\s+)?(\#(full)|\#(bare))(?:\s*([-–—])\s*|\s+(a|ao|ate|e)\s+)(\#(full)|\#(bare))(?![\p{Latin}\p{N}:])"#
+  }
+
+  private static func portugueseDateRange(_ match: Match) -> DayRangeReading? {
+    guard let startText = match.group(2), let endText = match.group(5),
+      let start = portugueseRangeDate(startText), let end = portugueseRangeDate(endText)
+    else { return nil }
+    let lead = match.group(1).map(normalizedPhrase)
+    // "E" joins the sides only after entre ("dia 3 e dia 5" names two days); a,
+    // ao, and até join them after de, do, or desde, and with no opening word
+    // when the end names a month ("3 a 5 de maio").
+    if let word = match.group(4)?.lowercased() {
+      guard (word == "e") == (lead?.hasPrefix("entre") == true),
+        lead != nil || joinsWithoutOpeningWord(match, end: end)
+      else { return nil }
+    }
+    if start.month == nil, lead == nil, match.group(3) != nil, !dashTouchesBothSides(match, start: 2, end: 5) {
+      return nil
+    }
+    switch (start.month, end.month) {
+    case (nil, nil):
+      // Days of the month alone are read as "dia 5" is, with a word between
+      // the sides, so "de 3 a 5" and "dia 5 - 10 min" stay as they are.
+      guard match.group(4) != nil, startText.lowercased().contains("dia") || lead?.hasSuffix("dias") == true
+      else { return nil }
+    case (_, nil): return nil
+    default: break
+    }
+    return dayRangeReading(from: start, to: end, today: match.today)
+  }
+
+  /// A side of a date range: a date ("5 de maio", "dia 5 de maio de 2027", "o
+  /// dia 5 de maio"), or a day alone ("5", "dia 5"), which has no month.
+  private static func portugueseRangeDate(_ text: String) -> ExplicitDate? {
+    var words = normalizedPhrase(text)
+    if words.hasPrefix("o ") { words.removeFirst(2) }
+    if let date = portugueseDate(words) { return date }
+    guard let match = words.wholeMatch(of: /(\d{1,2})[º°o]?/), let day = number(match.output.1) else { return nil }
+    return ExplicitDate(day: day)
   }
 
   // MARK: - Repeat

@@ -21,6 +21,9 @@ struct LorvexCaptureVocabulary: Sendable {
   var readingForm: @Sendable (String) -> String = { $0 }
   /// High (p1), medium (p2), or low (p3) priority.
   var priority: [Rule<LorvexTask.Priority>] = []
+  /// A range of days written out ("May 3-5", "del 3 al 5 de mayo",
+  /// 5月3日到5日): its first day is the planned day and its last the due day.
+  var dateRange: [Rule<DayRangeReading>] = []
   /// A length in minutes, from 1 minute to 24 hours.
   var length: [Rule<Int>] = []
   /// A clock time.
@@ -104,6 +107,25 @@ extension LorvexCaptureVocabulary {
     /// True for the evening of a day ("tonight", 今晚), which puts a clock
     /// time written without AM, PM, or a part of the day in that evening.
     var isEvening = false
+  }
+
+  /// The first and the last day of a range a phrase names ("May 3-5").
+  struct DayRange {
+    /// Days after the logical today of the first day.
+    var start: Int
+    /// Days after the logical today of the last day, which is after the first.
+    var end: Int
+  }
+
+  /// What a date-range rule makes of one match.
+  enum DayRangeReading {
+    /// The match names these days, and its whole text leaves the title.
+    case range(DayRange)
+    /// The match is written as a range but names none, as "May 5-3" (the end
+    /// is not after the start) or "May 3 - Feb 30" (no such day). Its text
+    /// stays in the title, and no other rule reads a part of it, so neither
+    /// "May 5" nor "3 May" is taken from it.
+    case declined
   }
 
   /// A repeat a phrase names.
@@ -361,7 +383,7 @@ extension LorvexCaptureVocabulary {
   static func wholeTime(
     _ text: String, pattern: String, in match: Match, read: (Match) -> ClockTime?
   ) -> ClockTime? {
-    guard let regex = try? NSRegularExpression(pattern: "^(?:\(pattern))$", options: [.caseInsensitive]),
+    guard let regex = LorvexCapturePatterns.regex("^(?:\(pattern))$"),
       let result = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text))
     else { return nil }
     return read(Match(result: result, source: text, todayWeekday: match.todayWeekday, today: match.today))
@@ -446,6 +468,69 @@ extension LorvexCaptureVocabulary {
     }
     guard let result, (0...3650).contains(result) else { return nil }
     return result
+  }
+
+  /// The range of days from the written-out date `start` to `end`, each read
+  /// like a single date by ``offset(to:from:)``.
+  ///
+  /// A side written without a month takes the other side's ("May 3-5", "3-5
+  /// May"). The start without a year is the next such day, and the end the
+  /// first one after it: an end in an earlier month than the start's falls in
+  /// the following year ("Dec 30 - Jan 2"). A year written on the end only
+  /// ("Dec 30 - Jan 2, 2027") places the start too. When neither side has a
+  /// month ("del 3 al 5"), the start is the next such day and the end is a day
+  /// of the start's month.
+  ///
+  /// Nil without `today`, since written-out days are read only with it.
+  /// ``DayRangeReading/declined`` when a side names a day the calendar lacks, a
+  /// year is in the past, or the end is not after the start.
+  static func dayRangeReading(from start: ExplicitDate, to end: ExplicitDate, today: Date?) -> DayRangeReading? {
+    guard let today else { return nil }
+    var start = start
+    var end = end
+    start.month = start.month ?? end.month
+    end.month = end.month ?? start.month
+    if start.year == nil, let endYear = end.year {
+      start.year = (start.month ?? 1) <= (end.month ?? 12) ? endYear : endYear - 1
+    }
+    let calendar = utcCalendar
+    guard let first = offset(to: start, from: today),
+      let firstDay = calendar.date(byAdding: .day, value: first, to: today),
+      let year = calendar.dateComponents([.year], from: firstDay).year,
+      let month = calendar.dateComponents([.month], from: firstDay).month
+    else { return .declined }
+    let endMonth = end.month ?? month
+    end.month = endMonth
+    end.year = end.year ?? (endMonth >= month ? year : year + 1)
+    guard let last = offset(to: end, from: today), last > first else { return .declined }
+    return .range(DayRange(start: first, end: last))
+  }
+
+  /// The words that open a date range in the Latin-script vocabularies that
+  /// write one with an opening word ("du", "del", "dal", "entre", "tra").
+  private static let rangeOpeningWords: Set<String> = ["de", "del", "desde", "do", "du", "dal", "entre", "tra", "fra"]
+
+  /// Whether a range joined by a word that means "to" may stand without an
+  /// opening word ("3 al 5 de mayo"): its end names a month, and the word
+  /// before it is not an opening word. That word would make the text part of
+  /// a range that opens in another language, which that language reads whole:
+  /// Spanish would otherwise read "3 al 10 agosto" out of the Italian "dal 3
+  /// al 10 agosto" and leave "dal" in the title.
+  static func joinsWithoutOpeningWord(_ match: Match, end: ExplicitDate) -> Bool {
+    end.month != nil && !rangeOpeningWords.contains(wordBefore(match) ?? "")
+  }
+
+  /// Whether the dash between capture groups `start` and `end`, the two sides
+  /// of a range, touches both, as in "3-5 May". A range that opens with a day
+  /// alone and no opening word is read only then: a spaced dash after a number
+  /// ("Sprint 12 - 20 May") sets a number of the title apart from a date.
+  static func dashTouchesBothSides(_ match: Match, start: Int, end: Int) -> Bool {
+    let first = match.result.range(at: start)
+    let last = match.result.range(at: end)
+    guard first.location != NSNotFound, last.location != NSNotFound, last.location >= NSMaxRange(first),
+      let gap = Range(NSRange(location: NSMaxRange(first), length: last.location - NSMaxRange(first)), in: match.source)
+    else { return false }
+    return !match.source[gap].contains(where: \.isWhitespace)
   }
 
   /// The Gregorian calendar in UTC, in which the logical today and written

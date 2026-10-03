@@ -144,6 +144,7 @@ characters you typed.
 |---|---|---|
 | Day | today, tonight, tomorrow, Friday, this Friday, next Friday, next week, weekend, in 3 days | 今天, 明天, 后天, 大后天, 周三 / 星期三 / 礼拜三, 这周三, 下周三, 下周, 周末, 3天后 |
 | Date | Oct 5, October 5th, 5 Oct, 2026-10-05 | 10月5日, 10月5号, 5号 |
+| Date range | May 3-5, May 3 to 5, May 3 through 5, May 30 - June 2, 3-5 May, from May 3 to May 5, between May 3 and May 5 | 5月3日到5日, 5月3日至5日, 5月3日-5日, 5月3日到5月5日, 5月30日到6月2日, 从5月3日到5月5日, 3号到5号 |
 | Due day | by Friday, due tomorrow, by Oct 5 | 周五前, 明天之前, 10月5日前 |
 | Time | 3pm, 3:30 pm, at 15:30, noon, at midnight; 3-4pm, 11am to 1pm, 15:00–16:30 | 下午3点, 晚上8点半, 晚上12点, 三点一刻, 9点20分, 15:30; 下午3点到5点, 下午3-5点 |
 | Repeat | every day, every weekday, every other week, every 3 days, every Monday, every Mon and Thu, every month, every year; daily, weekly, monthly, yearly at the end | 每天, 每隔一天, 每3天, 每周, 每两周, 每周一, 每周一三五, 每个工作日, 每月, 每月5号, 每年 |
@@ -156,10 +157,28 @@ follows on, for, this, next, or by, and a capitalized weekday in the middle of
 a title ("Monday Morning Memo") stays part of the title.
 
 A date without a year that has already passed means next year's, and "5号"
-means the coming 5th. A time plans the task at that time for its length, or
-for half an hour, on the day you wrote or today when you wrote none. A time
-from 1 to 6 o'clock with no AM, PM, or part of the day (下午, 晚上) is in the
-afternoon.
+means the coming 5th unless it numbers a thing: 5号楼 (building 5), 2号线
+(line 2), and 5号电池 (AA batteries) stay in the title. A time plans the task
+at that time for its length, or for half an hour, on the day you wrote or
+today when you wrote none. A time from 1 to 6 o'clock with no AM, PM, or part
+of the day (下午, 晚上) is in the afternoon.
+
+A date range plans the task on its first day and makes it due on its last:
+"Trip May 3-5" is planned for May 3 and due May 5, and 出差5月3日到5日 does the
+same. A month written once serves both days ("May 3-5", "3-5 May", 5月3日到5日),
+each day may carry its own month ("May 30 - June 2", 5月30日到6月2日), and a
+year written after the end places the range ("Dec 30 - Jan 2, 2028"). The end
+must come after the start, and an end in an earlier month falls in the next
+year ("Dec 30 - Jan 2" runs into January). A range names both the planned day
+and the due day, so another day in the same line stays in the title. Text
+written like a range that names no days ("May 5-3", "May 3 - Feb 30") stays in
+the title whole, and so do counts and references ("pages 3-5", "score 3-5"). A
+number alone before a spaced dash belongs to the title: "Sprint 12 - 20 May"
+is planned for May 20, while "12-20 May" and "from 12 to 20 May" are ranges. A
+range ending in AM or PM is a time ("May 3-5pm"), and a weekday range
+("Mon-Fri") is not a date range. English needs a month in a range, so "the 3rd
+to the 5th" stays in the title; Chinese reads a range of days of the month in
+号 ("3号到5号") and leaves "3日到5日" alone.
 
 A time range plans the task from its start for as long as the range lasts,
 unless the line also names a length: "3-4pm" plans an hour from 3 PM. A side
@@ -194,6 +213,7 @@ title.
 |---|---|---|
 | Day | 今日, 今朝, 今夜, 明日, 明後日, 金曜 / 金曜日, 今週の金曜, 来週の金曜, 来週, 再来週, 週末, 来週末, 3日後 | 오늘, 오늘 밤, 내일, 모레, 내일모레, 글피, 금요일, 이번 주 금요일, 다음 주 금요일, 다음 주, 주말, 다음 주말, 3일 후 |
 | Date | 10月5日, 10/5, 10/5(月) | 10월 5일, 10/5 |
+| Date range | 5月3日から5日まで, 5月3日〜5日, 5月3日から5月5日まで, 5/3〜5/5 | 5월 3일부터 5일까지, 5월 3일~5일, 5월 3일부터 5월 5일까지, 5/3~5/5 |
 | Due day | 金曜までに, 今日中, 10/5締切 | 금요일까지, 내일까지, 10월 5일 마감 |
 | Time | 午後3時, 3時半, 9時20分, 夜8時, 午後3:30, 正午; 15時から16時まで, 3〜5時 | 오후 3시, 3시 반, 9시 20분, 저녁 7시, 오후 세 시, 오후 3:30, 정오, 자정; 3시부터 4시까지, 오후 3시~5시 |
 | Repeat | 毎日, 毎週, 隔週, 毎週月曜, 毎週月・水・金, 平日毎日, 毎月, 毎月5日, 毎年, 3日ごと, 1日おき | 매일, 매주, 격주, 매주 월요일, 매주 월수금, 월요일마다, 평일마다, 매달, 매달 5일, 매년, 3일마다 |
@@ -202,6 +222,12 @@ title.
 
 The night runs past midnight in both, as in Chinese: 夜12時 and 밤 12시 mean
 00:00 the next day, and 今夜8時 and 오늘 밤 8시 mean 8 PM today.
+
+A date range works as in English: 5月3日から5日まで and 5월 3일부터 5일까지
+plan the task on May 3 and make it due on May 5, with the particle after the
+range going with it. Both need a month, so "3日から5日まで" and
+"3일부터 5일까지" stay in the title, and "5日間" and "5일간" count days rather
+than end a range.
 
 French and Portuguese words are read when French or Portuguese is among your
 device's preferred languages. Accents are optional ("apres-demain",
@@ -219,11 +245,23 @@ for a length.
 |---|---|---|
 | Day | aujourd'hui, ce soir, demain, demain soir, après-demain, vendredi, ce vendredi, vendredi prochain, la semaine prochaine, ce week-end, dans 3 jours | hoje, hoje à noite, amanhã, depois de amanhã, sexta / sexta-feira, na sexta, nesta sexta, sexta que vem, próxima semana, fim de semana, daqui a 3 dias |
 | Date | 5 octobre, le 1er octobre, lundi 5 octobre, 5 oct. | 5 de outubro, 1º de outubro, dia 5 |
+| Date range | du 3 au 5 mai, du 30 mai au 2 juin, du 1er au 5 mai, du lundi 3 au mercredi 5 mai, entre le 3 et le 5 mai, 3-5 mai | de 3 a 5 de maio, de 30 de maio a 2 de junho, do dia 3 ao dia 5 de maio, entre os dias 3 e 5 de maio, 3-5 de maio |
 | Due day | pour vendredi, d'ici demain, avant le 5 octobre, jusqu'au 5 octobre, vendredi au plus tard | até sexta, para o dia 5, prazo: 5 de outubro |
 | Time | 15h, 15h30, à 9h, vers 18h, 8h du soir, 3h de l'après-midi, midi, à minuit; de 14h à 16h, 14h-16h30, entre 14h et 16h | 15h, às 15h30, por volta das 18h, às 3 da tarde, às 8 da noite, meio-dia, à meia-noite; das 14h às 16h, entre 14h e 16h |
 | Repeat | tous les jours, chaque lundi, tous les lundis et jeudis, les lundis, un lundi sur deux, en semaine, tous les 15 jours, tous les mois, le 5 de chaque mois, chaque année; hebdomadairement at the end | todo dia, toda segunda, todas as segundas e quartas, aos sábados, às terças (at the end), dias úteis, a cada 15 dias, de 2 em 2 semanas, todo dia 5, todo ano; semanalmente at the end |
 | Length | pendant 2h, 1h30min, 1,5 h, 30 min, 2 heures, une demi-heure, un quart d'heure | por 2h, 1h30min, 1,5 h, 30 min, 2 horas, meia hora, uma hora e meia |
 | Priority | priorité haute, basse priorité, urgente | prioridade alta, baixa prioridade, urgente |
+
+A date range plans the task on its first day and makes it due on its last,
+and a month written once serves both days: "du 3 au 5 mai" and "de 3 a 5 de
+maio" run from May 3 to May 5. The end must come after the start ("du 5 au 3
+mai" stays in the title). Au, jusqu'au, a, ao, and até need no opening word when
+the end names a month ("3 au 5 mai", "3 a 5 de maio"), while "et" and "e" join
+the two days of a range only after entre. A range of days with no month needs
+"dia" in Portuguese ("do dia 3 ao dia 5", "entre os dias 3 e 5"), since "de 3 a
+5" may be a count or a time; French reads a range only with its month. As in
+English, a number alone before a spaced dash belongs to the title ("Sprint 12 -
+20 mai" is planned for May 20).
 
 Both languages count a fortnight as fifteen days, so "tous les 15 jours" and
 "a cada 15 dias" repeat every two weeks. A Portuguese weekday's short form is
@@ -253,11 +291,24 @@ and so does a bare hour that names a deadline ("antes de las 6", "entro le
 |---|---|---|
 | Day | hoy, esta noche, mañana, mañana por la tarde, pasado mañana, viernes, el viernes, este viernes, el próximo viernes, la semana que viene, el fin de semana, en 3 días | oggi, stasera, domani, domani sera, dopodomani, venerdì, questo venerdì, venerdì prossimo, la settimana prossima, nel weekend, il fine settimana, tra 3 giorni |
 | Date | 5 de octubre, el 5 de octubre, 1º de octubre, lunes 5 de octubre, 5 oct., el día 5 | 5 ottobre, il 5 ottobre, 1º novembre, lunedì 5 ottobre, 5 ott., il 5 |
+| Date range | del 3 al 5 de mayo, del 30 de mayo al 2 de junio, desde el 3 hasta el 5 de mayo, entre el 3 y el 5 de mayo, 3-5 de mayo, del 3 al 5 | dal 3 al 5 maggio, dal 30 maggio al 2 giugno, tra il 3 e il 5 maggio, dal 3 maggio al 5 maggio, 3-5 maggio, dal 3 al 10 |
 | Due day | para el viernes, antes del viernes, hasta mañana, vence el 5 de octubre, el viernes a más tardar | entro venerdì, per venerdì, entro il 5 ottobre, scade il 5 ottobre, venerdì al più tardi |
 | Time | a las 15:30, a las 3 de la tarde, a las 9 de la mañana, a las 8 de la noche, a las 3 y media, a la una, mediodía, a medianoche; de 3 a 4, de las 3 a las 4 de la tarde, entre las 3 y las 4 | alle 15, ore 15:30, alle 3 del pomeriggio, alle 9 di mattina, alle 8 di sera, alle 3 e mezza, all'una, mezzogiorno, a mezzanotte; dalle 3 alle 4, tra le 3 e le 4 |
 | Repeat | todos los días, cada lunes, todos los lunes y jueves, los lunes (at the end), cada dos lunes, entre semana, cada 15 días, cada mes, el 5 de cada mes, cada año; diariamente at the end | ogni giorno, ogni lunedì, tutti i lunedì e giovedì, il lunedì (at the end), un lunedì sì e uno no, nei giorni feriali, ogni 15 giorni, ogni mese, il 5 di ogni mese, ogni anno; quotidianamente at the end |
 | Length | durante 2 horas, por 2h, de 2 horas, 1h30, 30 min, 2 horas y media, media hora, una hora y media | per 2 ore, di 2 ore, 1h30, 30 min, 2 ore e mezza, mezz'ora, un'ora e mezza |
 | Priority | prioridad alta, baja prioridad, urgente | priorità alta, bassa priorità, urgente |
+
+A date range plans the task on its first day and makes it due on its last:
+"del 3 al 5 de mayo" and "dal 3 al 5 maggio" run from May 3 to May 5, and a
+month written once serves both days. The opening del or dal may be left out
+when the end names a month ("3 al 5 de mayo", "3 al 5 maggio"), while "y" and
+"e" join the two days of a range only after entre or tra. A range of days with
+no month ("del 3 al 5", "dal 3 al 10") is read where a day alone is: only at
+the end of the line or before a word that can follow a date, so "del 3 al 5
+capítulos" is not a range. "De 3 a 4" and "dalle 3 alle 4" are time ranges, and
+"de lunes a viernes" and "dal lunedì al venerdì" repeat. As in English, a
+number alone before a spaced dash belongs to the title ("Sprint 12 - 20 de
+mayo" is planned for May 20).
 
 A weekday alone is the coming one ("el lunes", "lunedì"), while the plural or
 the name after an article is a habit: "los lunes", "cada lunes", "il lunedì",

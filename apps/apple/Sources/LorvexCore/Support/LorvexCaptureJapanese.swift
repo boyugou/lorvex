@@ -14,6 +14,16 @@ extension LorvexCaptureVocabulary {
   ///   after 来週 next week's, after 再来週 the week after's, weeks starting on
   ///   Monday. 今夜, 今晩, 明晩, and 明日の夜 are evenings. A name that begins with
   ///   a day word (明日香, 今日子) stays in the title.
+  /// - Date range: 5月3日から5日まで, 5月3日から5月5日まで, 5月3日〜5日, 5月3日～5日,
+  ///   5月3日-5日, 5/3〜5/5, with から, a wave dash, or a dash between the sides,
+  ///   maybe before まで or までに and a particle, and a weekday in brackets
+  ///   after a date ("5月3日(金)〜5日(日)"). The first day is the planned day
+  ///   and the last the due day, so another day phrase stays in the title. A
+  ///   day alone after the first date ("5日") takes its month; the end must
+  ///   be after the start ("5月5日から3日まで" stays in the title whole), and
+  ///   an end in an earlier month falls in the next year. 5日間 and 5日後 count
+  ///   days and are not a day, and a range without a month ("3日から5日まで")
+  ///   is not read, since a lone day of the month is not a date here.
   /// - Repeat: 毎日, 毎朝, 毎晩, 平日毎日, 毎週, 隔週, 毎週月曜, 毎月曜, 毎週月・水・金,
   ///   毎週月水金, 毎週土日, 毎週末 (Saturdays), 毎月, 毎月5日, 毎年, 隔日, 1日おき,
   ///   1週間おき, 3日ごと, 2週間ごと, 3か月ごと. A single weekday character after
@@ -31,6 +41,7 @@ extension LorvexCaptureVocabulary {
   /// - Priority: 至急, 大至急, 急ぎ. The Chinese words read 緊急.
   static let japanese = LorvexCaptureVocabulary(
     priority: [Rule(pattern: #"大?至急|急ぎ(?:の|で)?"#) { _ in .p1 }],
+    dateRange: [Rule(pattern: japaneseDateRangePattern, read: japaneseDateRange)],
     length: [Rule(pattern: japaneseLengthPattern, read: japaneseLength)],
     time: [
       Rule(pattern: japaneseRangePattern, read: japaneseRange),
@@ -162,6 +173,35 @@ extension LorvexCaptureVocabulary {
     return wholeTime(text, pattern: japaneseTimePattern, in: match, read: read)
       ?? wholeTime(text + "時", pattern: japaneseTimePattern, in: match, read: read)
       ?? colonTime(text)
+  }
+
+  // MARK: - Date range
+
+  /// 5月3日から5日まで, 5月3日から5月5日まで, 5月3日〜5日, 5/3〜5/5: a date, then
+  /// から, a wave dash, or a dash, then a date or a day alone ("5日"), maybe
+  /// before まで or までに and a particle, with a weekday in brackets after
+  /// either date. 5日間 and 5日後 count days, so they are not the end. Groups:
+  /// 1 the start, 2 the end.
+  private static var japaneseDateRangePattern: String {
+    let date = #"(?:\d{1,2}月\d{1,2}日|(?<![\d/])\d{1,2}/\d{1,2}(?![\d/]))"#
+    let day = #"(?<![\d月/])\d{1,2}日(?![間後])"#
+    return
+      #"(\#(date))\#(japaneseDateWeekday)\s*(?:から|〜|～|~|-|–|—)\s*(\#(date)|\#(day))\#(japaneseDateWeekday)(?:まで(?:に)?)?(?:には|に|は|の|も)?"#
+  }
+
+  private static func japaneseDateRange(_ match: Match) -> DayRangeReading? {
+    guard let startText = match.group(1), let endText = match.group(2),
+      let start = japaneseRangeDate(startText), let end = japaneseRangeDate(endText)
+    else { return nil }
+    return dayRangeReading(from: start, to: end, today: match.today)
+  }
+
+  /// A side of a date range: a date ("5月3日", "5/3"), or a day alone ("5日"),
+  /// which has no month.
+  private static func japaneseRangeDate(_ text: String) -> ExplicitDate? {
+    if let date = japaneseDate(text) { return date }
+    guard let match = text.wholeMatch(of: /(\d{1,2})日/), let day = number(match.output.1) else { return nil }
+    return ExplicitDate(day: day)
   }
 
   // MARK: - Repeat

@@ -6,12 +6,14 @@ import SwiftUI
 /// three over a row of two.
 ///
 /// As many columns fit as the width holds at `minimumColumnWidth` apart by
-/// `columnSpacing`; each column is that share of the width, at most
-/// `maximumColumnWidth`, and the grid uses only as many of them as the
-/// balanced rows need, from the leading edge. Each item is offered its
-/// column's width, and a row is as tall as its tallest item, which sits at the
-/// top of its cell. Items keep their order, so they stay where they are from
-/// day to day.
+/// `columnSpacing`, and the grid uses only as many of them as the balanced
+/// rows need. Those columns share the width, each at most
+/// `maximumColumnWidth`, from the leading edge: with an unbounded maximum
+/// (`.infinity`) a short row spreads across the whole width, as four habits
+/// do in a wide card, and with a bounded one it keeps to the leading edge.
+/// Each item is offered its column's width, and a row is as tall as its
+/// tallest item, which sits at the top of its cell. Items keep their order, so
+/// they stay where they are from day to day.
 public struct LorvexBalancedGrid: Layout {
   public var minimumColumnWidth: CGFloat
   public var maximumColumnWidth: CGFloat
@@ -37,17 +39,25 @@ public struct LorvexBalancedGrid: Layout {
     return (itemCount + rows - 1) / rows
   }
 
-  /// The columns a row of `width` holds, and each column's width.
-  private func columns(in width: CGFloat) -> (capacity: Int, width: CGFloat) {
+  /// The columns `itemCount` items take in a row of `width`: how many the
+  /// balanced rows use (``columnCount(itemCount:capacity:)`` of as many as fit
+  /// at `minimumColumnWidth`), and each one's width, the share of `width`
+  /// those columns take, at most `maximumColumnWidth`.
+  public static func columns(
+    itemCount: Int, width: CGFloat, minimumColumnWidth: CGFloat, maximumColumnWidth: CGFloat,
+    columnSpacing: CGFloat
+  ) -> (count: Int, width: CGFloat) {
     let capacity = max(1, Int(((width + columnSpacing) / (minimumColumnWidth + columnSpacing)).rounded(.down)))
-    let columnWidth = (width - CGFloat(capacity - 1) * columnSpacing) / CGFloat(capacity)
-    return (capacity, min(maximumColumnWidth, max(columnWidth, 0)))
+    let count = columnCount(itemCount: itemCount, capacity: capacity)
+    let share = (width - CGFloat(count - 1) * columnSpacing) / CGFloat(count)
+    return (count, min(maximumColumnWidth, max(share, 0)))
   }
 
   /// The rows `subviews` fill at `width`: each row's items and its height.
   private func rows(_ subviews: Subviews, width: CGFloat) -> (columnWidth: CGFloat, rows: [(range: Range<Int>, height: CGFloat)]) {
-    let (capacity, columnWidth) = columns(in: width)
-    let perRow = Self.columnCount(itemCount: subviews.count, capacity: capacity)
+    let (perRow, columnWidth) = Self.columns(
+      itemCount: subviews.count, width: width, minimumColumnWidth: minimumColumnWidth,
+      maximumColumnWidth: maximumColumnWidth, columnSpacing: columnSpacing)
     var rows: [(range: Range<Int>, height: CGFloat)] = []
     var start = 0
     while start < subviews.count {

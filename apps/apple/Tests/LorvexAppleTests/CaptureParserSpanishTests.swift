@@ -197,6 +197,101 @@ struct CaptureParserSpanishTests {
     #expect(parse("Entregar para 15 personas").dueDayOffset == nil)
   }
 
+  @Test("Date ranges: the first day is planned and the last is due")
+  func dateRanges() {
+    expectDateRanges(
+      [
+        ("Viaje", "del 3 al 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje a Madrid", "del 3 al 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "de 3 a 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "desde el 3 hasta el 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "entre el 3 y el 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "3-5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "del día 3 al día 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "del lunes 3 al miércoles 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "del 3 al 5 mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "del 3 al 5 de mayo de 2027", "2027-05-03", "2027-05-05"),
+        ("Viaje", "del primero al 5 de mayo", "2027-05-01", "2027-05-05"),
+        ("Viaje", "del 1º al 5 de mayo", "2027-05-01", "2027-05-05"),
+        ("Viaje", "del 3 de mayo al 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "desde el 3 de mayo hasta el 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "entre el 3 de mayo y el 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "del 30 de mayo al 2 de junio", "2027-05-30", "2027-06-02"),
+        ("Viaje", "desde el 30 de mayo hasta el 2 de junio", "2027-05-30", "2027-06-02"),
+        ("Viaje", "del 30 de diciembre al 2 de enero", "2026-12-30", "2027-01-02"),
+        ("Viaje", "del 3 al 5 de octubre", "2026-10-03", "2026-10-05"),
+        ("Feria", "3-5 de mayo", "2027-05-03", "2027-05-05"),
+        // A word that means "to" needs no opening word when the end names a month.
+        ("Viaje", "3 al 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "3 a 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "3 hasta el 5 de mayo", "2027-05-03", "2027-05-05"),
+        ("Viaje", "3 de mayo al 5 de mayo", "2027-05-03", "2027-05-05"),
+      ], languages: ["es-ES"])
+
+    // Beside Portuguese, "de 3 a 5 de mayo" is still Spanish's range, and
+    // beside Italian so are the ones with and without "del".
+    expectDateRanges(
+      [("Viaje", "de 3 a 5 de mayo", "2027-05-03", "2027-05-05")], languages: ["es-ES", "pt-BR"])
+    expectDateRanges(
+      [
+        ("Viaje", "del 3 al 10 de agosto", "2027-08-03", "2027-08-10"),
+        ("Viaje", "3 al 10 de agosto", "2027-08-03", "2027-08-10"),
+      ], languages: ["es-ES", "it-IT"])
+  }
+
+  @Test("A range of days with no month is read where a day of the month alone is")
+  func dateRangesWithoutAMonth() {
+    // The 3rd has passed this month, so the days are October's.
+    expectDateRanges(
+      [
+        ("Viaje", "del 3 al 5", "2026-10-03", "2026-10-05"),
+        ("Viaje", "desde el 3 hasta el 5", "2026-10-03", "2026-10-05"),
+        ("Viaje", "entre el 3 y el 5", "2026-10-03", "2026-10-05"),
+        ("Viaje", "del día 3 al día 5", "2026-10-03", "2026-10-05"),
+      ], languages: ["es-ES"])
+
+    let withDetail = parse("Viaje del 3 al 5 con Pedro")
+    #expect(withDetail.title == "Viaje con Pedro")
+    #expect(withDetail.plannedDayOffset == captureDayOffset("2026-10-03"))
+    #expect(withDetail.dueDayOffset == captureDayOffset("2026-10-05"))
+
+    // Not before a word that goes on with the days, as for "el 3" alone.
+    expectLinesUnread(
+      [
+        "Viaje del 3 al 5 de la lista", "Viaje del 3 al 5 capitulos", "Leer del 3 al 5 capítulos",
+        "Leer de 3 a 5 capítulos",
+        // With no month, the opening word is needed.
+        "Viaje 3 al 5",
+      ], languages: ["es-ES"])
+  }
+
+  @Test("A range whose end is not after its start stays in the title whole")
+  func declinedDateRanges() {
+    expectLinesUnread(
+      [
+        "Viaje del 5 al 3 de mayo", "Viaje 5-3 de mayo", "Viaje entre el 5 y el 3 de mayo",
+        "Viaje del 3 al 30 de febrero", "Viaje del 5 al 3", "Viaje 5 al 3 de mayo",
+      ], languages: ["es-ES"])
+  }
+
+  @Test("Time ranges, weekday ranges, and counts are not date ranges")
+  func nonDateRanges() {
+    for text in ["Reunión de 3 a 4", "Reunión entre las 3 y las 4"] {
+      let line = parse(text)
+      #expect(line.startMinutes == 15 * 60, "\(text)")
+      #expect(line.estimatedMinutes == 60, "\(text)")
+      #expect(line.plannedDayOffset == nil, "\(text)")
+      #expect(line.dueDayOffset == nil, "\(text)")
+    }
+    let weekdays = parse("Gimnasio de lunes a viernes")
+    #expect(weekdays.recurrence == TaskRecurrenceRule(freq: .weekly, byDay: ["MO", "TU", "WE", "TH", "FR"]))
+    #expect(weekdays.dueDayOffset == nil)
+    expectLinesUnread(["Viaje 3-5 personas", "Reunión de 3 a 5 páginas"], languages: ["es-ES"])
+    // Two days joined by "y" without entre are two days, not a range.
+    #expect(parse("Cena el 3 y el 5").dueDayOffset == nil)
+    #expect(parse("Cena 3 y 5 de mayo").dueDayOffset == nil)
+  }
+
   @Test("Due days")
   func dueDays() {
     let line = parse("Informe para el viernes")

@@ -179,6 +179,98 @@ struct CaptureParserItalianTests {
     }
   }
 
+  @Test("Date ranges: the first day is planned and the last is due")
+  func dateRanges() {
+    expectDateRanges(
+      [
+        ("Vacanze", "dal 3 al 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Viaggio a Roma", "dal 3 al 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "dal 30 maggio al 2 giugno", "2027-05-30", "2027-06-02"),
+        ("Vacanze", "tra il 3 e il 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "fra il 3 e il 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "3-5 maggio", "2027-05-03", "2027-05-05"),
+        ("Ferie", "3-10 agosto", "2027-08-03", "2027-08-10"),
+        ("Vacanze", "dal 3 maggio al 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "tra il 3 maggio e il 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "dal 3 fino al 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "dal 1º al 5 maggio", "2027-05-01", "2027-05-05"),
+        ("Vacanze", "dal primo al 5 maggio", "2027-05-01", "2027-05-05"),
+        ("Vacanze", "dal lunedì 3 al mercoledì 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "dal 3 al 5 maggio 2027", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "dal 3 al 5 di maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "dal 3 al 10 agosto", "2027-08-03", "2027-08-10"),
+        ("Vacanze", "dal 30 dicembre al 2 gennaio", "2026-12-30", "2027-01-02"),
+        ("Vacanze", "dal 3 al 5 ottobre", "2026-10-03", "2026-10-05"),
+        // A word that means "to" needs no opening word when the end names a month.
+        ("Vacanze", "3 al 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "3 fino al 5 maggio", "2027-05-03", "2027-05-05"),
+        ("Vacanze", "3 maggio al 5 maggio", "2027-05-03", "2027-05-05"),
+      ], languages: ["it-IT"])
+  }
+
+  @Test("Beside Spanish, an Italian range is read whole with its opening word")
+  func dateRangesBesideSpanish() {
+    // Spanish reads "3 al 10 agosto" with no opening word, so it must not take
+    // that text out of the middle of "dal 3 al 10 agosto".
+    let lines: [DateRangeLine] = [
+      ("Vacanze", "dal 3 al 10 agosto", "2027-08-03", "2027-08-10"),
+      ("Vacanze", "dal 3 al 5 marzo", "2027-03-03", "2027-03-05"),
+      ("Vacanze", "3 al 10 agosto", "2027-08-03", "2027-08-10"),
+    ]
+    expectDateRanges(lines, languages: ["it-IT", "es-ES"])
+    expectDateRanges(lines, languages: ["ja-JP", "ko-KR", "fr-FR", "pt-BR", "es-ES", "it-IT"])
+  }
+
+  @Test("A range of days with no month is read where a day of the month alone is")
+  func dateRangesWithoutAMonth() {
+    // The 3rd has passed this month, so the days are October's.
+    expectDateRanges(
+      [
+        ("Vacanze", "dal 3 al 10", "2026-10-03", "2026-10-10"),
+        ("Vacanze", "tra il 3 e il 5", "2026-10-03", "2026-10-05"),
+        ("Vacanze", "fra il 3 e il 5", "2026-10-03", "2026-10-05"),
+      ], languages: ["it-IT"])
+
+    let withDetail = parse("Ferie dal 3 al 10 con Marco")
+    #expect(withDetail.title == "Ferie con Marco")
+    #expect(withDetail.plannedDayOffset == captureDayOffset("2026-10-03"))
+    #expect(withDetail.dueDayOffset == captureDayOffset("2026-10-10"))
+
+    // Not before a word that goes on with the days, as for "il 3" alone.
+    #expect(parse("Comprare dal 3 al 5 libri").dueDayOffset == nil)
+    expectLinesUnread(["Leggere da 3 a 5 capitoli", "Viaggio 3-5 persone"], languages: ["it-IT"])
+  }
+
+  @Test("A range whose end is not after its start stays in the title whole")
+  func declinedDateRanges() {
+    expectLinesUnread(
+      [
+        "Vacanze dal 5 al 3 maggio", "Vacanze 5-3 maggio", "Vacanze tra il 5 e il 3 maggio",
+        "Vacanze dal 3 al 31 aprile", "Vacanze dal 5 al 3", "Vacanze 5 al 3 maggio",
+      ], languages: ["it-IT"])
+  }
+
+  @Test("Time ranges, weekday ranges, and counts are not date ranges")
+  func nonDateRanges() {
+    let dalle = parse("Riunione dalle 3 alle 4")
+    #expect(dalle.startMinutes == 15 * 60)
+    #expect(dalle.estimatedMinutes == 60)
+    #expect(dalle.plannedDayOffset == nil)
+    #expect(dalle.dueDayOffset == nil)
+    #expect(dalle.phrases.map(\.text) == ["dalle 3 alle 4"])
+    for text in ["Riunione tra le 3 e le 4", "Riunione da 3 a 5"] {
+      let line = parse(text)
+      #expect(line.startMinutes == 15 * 60, "\(text)")
+      #expect(line.dueDayOffset == nil, "\(text)")
+    }
+    let weekdays = parse("Ferie dal lunedì al venerdì")
+    #expect(weekdays.recurrence == TaskRecurrenceRule(freq: .weekly, byDay: ["MO", "TU", "WE", "TH", "FR"]))
+    #expect(weekdays.dueDayOffset == nil)
+    // Two days joined by "e" without tra are two days, not a range.
+    #expect(parse("Pranzo il 3 e il 5").dueDayOffset == nil)
+    #expect(parse("Pranzo 3 e 5 maggio").dueDayOffset == nil)
+  }
+
   @Test("Due days")
   func dueDays() {
     let line = parse("Relazione entro venerdì")

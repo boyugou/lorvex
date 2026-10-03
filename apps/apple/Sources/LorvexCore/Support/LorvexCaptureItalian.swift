@@ -46,6 +46,23 @@ extension LorvexCaptureVocabulary {
   ///   capitalized "Domenica" that does not open the line (a name) are left
   ///   in the title. A date written in digits ("15/10") is not read, since
   ///   the order of its day and month depends on the region.
+  /// - Date range: dal 3 al 5 maggio, dal 30 maggio al 2 giugno, dal 3 maggio
+  ///   al 5 maggio, dal 3 fino al 5 maggio, dal 1º al 5 maggio, dal lunedì 3
+  ///   al mercoledì 5 maggio, tra il 3 e il 5 maggio, fra il 3 e il 5 maggio,
+  ///   3-5 maggio, 3 al 5 maggio, each maybe with a year after the end ("dal 3
+  ///   al 5 maggio 2027"). The first day is the planned day and the last the
+  ///   due day, so another day phrase stays in the title. A day written
+  ///   without its month takes the month of the end; the end must be after the
+  ///   start ("dal 5 al 3 maggio" stays in the title whole), and an end in an
+  ///   earlier month falls in the next year. "Al" and "fino al" need no
+  ///   opening word when the end names a month, and "e" joins two days only
+  ///   after tra or fra. Days of the month alone ("dal 3 al 10", "tra il 3 e
+  ///   il 5") are read as "il 15" is: after il, al, or dal, and only at the
+  ///   end of the line or before a word that can follow a date, so "dal 3 al 5
+  ///   capitoli" stays in the title. "Dalle 3 alle 4" is a time range, not a
+  ///   date range. A day alone opens a range joined by a dash only when the
+  ///   dash touches both sides or an opening word comes first: "Sprint 12 - 20
+  ///   maggio" names a sprint and a date.
   /// - Repeat: ogni giorno, tutti i giorni, ogni mattina, ogni giorno
   ///   lavorativo, nei giorni feriali, dal lunedì al venerdì, ogni settimana,
   ///   tutte le settimane, ogni due settimane, ogni quindici giorni (every two
@@ -86,6 +103,7 @@ extension LorvexCaptureVocabulary {
   static let italian = LorvexCaptureVocabulary(
     readingForm: unaccentedForMatching,
     priority: [Rule(pattern: italianPriorityPattern, read: italianPriority)],
+    dateRange: [Rule(pattern: italianDateRangePattern, read: italianDateRange)],
     length: [Rule(pattern: italianLengthPattern, read: italianLength)],
     time: [
       Rule(pattern: italianFromToPattern, read: italianRange),
@@ -157,7 +175,7 @@ extension LorvexCaptureVocabulary {
 
   /// Whether the line goes on after `match` with nothing, punctuation, or a
   /// word in ``italianWordsAfterDetail`` (minus `excluding`).
-  private static func italianFollowsAsDetail(_ match: Match, excluding: Set<String> = []) -> Bool {
+  static func italianFollowsAsDetail(_ match: Match, excluding: Set<String> = []) -> Bool {
     guard let next = wordAfter(match) else { return true }
     let head = next.firstIndex(of: "'").map { String(next[...$0]) } ?? next
     return italianWordsAfterDetail.contains(head) && !excluding.contains(head)
@@ -246,7 +264,7 @@ extension LorvexCaptureVocabulary {
 
   /// What may follow a clock time: no letter, digit, or colon, and no decimal
   /// fraction.
-  private static let italianTimeEnd = #"(?![\p{Latin}\p{N}:]|[.,]\p{N})"#
+  static let italianTimeEnd = #"(?![\p{Latin}\p{N}:]|[.,]\p{N})"#
 
   /// "alle 3", "alle 15:30", "alle 15.30", "ore 15", "alle 9 di mattina",
   /// "alle 3 e mezza", "alle 4 meno un quarto", "alle 3 in punto", "alle 3
@@ -407,7 +425,7 @@ extension LorvexCaptureVocabulary {
   // MARK: - Repeat
 
   /// The singular weekday names, longest first, as a pattern.
-  private static var italianDayNames: String {
+  static var italianDayNames: String {
     italianWeekdays.sorted { $0.count > $1.count }.joined(separator: "|")
   }
 
@@ -520,14 +538,22 @@ extension LorvexCaptureVocabulary {
   }
 
   /// "15 ottobre", "lunedì 15 ottobre", "1º ottobre", "il primo ottobre", "15
-  /// di ottobre", "15 ott.", "15 ottobre 2027"; and a bare number after il, al,
-  /// or dal ("il 15", "entro il 15"), as a day of the month.
-  private static var italianDatePattern: String {
+  /// di ottobre", "15 ott.", "15 ottobre 2027": a day with its month.
+  static var italianMonthDatePattern: String {
     let months = italianMonths.flatMap { $0 }.sorted { $0.count > $1.count }.joined(separator: "|")
     let day = #"(?:\d{1,2}[º°]?|primo)"#
-    let notMore = #"(?![\p{N}%]|[:.,]\p{N})"#
     return "(?:(?:\(italianDayNames))\\s+)?\(day)\\s+(?:di\\s+)?(?:\(months))\\.?(?:\\s+(?:del\\s+)?\\d{4})?"
-      + "|(?<=\\bil\\s|\\bal\\s|\\bdal\\s)\\d{1,2}\(notMore)"
+  }
+
+  /// What may follow a day of the month written alone: no digit or percent
+  /// sign, and no decimal fraction or time. The colon goes last in its set,
+  /// since ICU reads a set that opens with "[:" as a POSIX class name.
+  static let italianNoMoreDigits = #"(?![\p{N}%]|[.,:]\p{N})"#
+
+  /// A day with its month ("15 ottobre"), and a bare number after il, al, or
+  /// dal ("il 15", "entro il 15"), as a day of the month.
+  private static var italianDatePattern: String {
+    italianMonthDatePattern + "|(?<=\\bil\\s|\\bal\\s|\\bdal\\s)\\d{1,2}\(italianNoMoreDigits)"
   }
 
   /// Words that, right before a day, make it part of the title instead: "la
@@ -625,7 +651,7 @@ extension LorvexCaptureVocabulary {
 
   /// A written-out date, maybe after its weekday: "15 ottobre", "lunedì 1º
   /// ottobre 2027", "15 di ottobre"; or a day of the month alone ("15").
-  private static func italianDate(_ words: String) -> ExplicitDate? {
+  static func italianDate(_ words: String) -> ExplicitDate? {
     if let match = words.wholeMatch(of: /(?:\p{L}+ )?(\d{1,2}|primo)[º°]? (?:di )?(\p{L}+)\.?(?: (?:del )?(\d{4}))?/),
       let day = italianDayNumber(String(match.output.1)),
       let month = italianMonths.firstIndex(where: { $0.contains(String(match.output.2)) })
@@ -639,7 +665,7 @@ extension LorvexCaptureVocabulary {
   }
 
   /// The day of the month "5", "1º", or "primo" names.
-  private static func italianDayNumber(_ text: String) -> Int? {
+  static func italianDayNumber(_ text: String) -> Int? {
     let lower = text.lowercased()
     return lower == "primo" ? 1 : number(lower)
   }

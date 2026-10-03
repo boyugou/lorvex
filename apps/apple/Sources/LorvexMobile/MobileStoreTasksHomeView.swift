@@ -1,7 +1,7 @@
 import LorvexCore
 import SwiftUI
 
-/// The Tasks tab home: a grid of smart collections over a "My Lists" section.
+/// The Tasks tab home: a grid of smart collections over the user's lists.
 /// Drilling into any of them pushes the scoped task list
 /// (``MobileStoreTasksView``). The grid is two columns, and one column at
 /// accessibility text sizes, where a half-width card would break its name
@@ -161,7 +161,12 @@ public struct MobileStoreTasksHomeView: View {
         }
         .accessibilityIdentifier("mobileTasks.newList")
       } header: {
+        // At the cards' edge in the page-label face, as Today's headings are,
+        // so the title, search field, grid, and heading share one edge.
         Text(String(localized: "destination.lists", defaultValue: "Lists", table: "Localizable", bundle: MobileL10n.bundle))
+          .font(LorvexDesign.Typography.pageLabel)
+          .textCase(nil)
+          .listRowInsets(.horizontal, 0)
       }
 
       // The finished and cancelled tasks are history across every list, not

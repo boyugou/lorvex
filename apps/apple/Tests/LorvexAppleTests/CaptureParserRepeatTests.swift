@@ -3,7 +3,7 @@ import Testing
 
 // 2026-09-22 is a Tuesday: weekday 3 in the Gregorian convention.
 private func parse(_ text: String) -> LorvexCaptureParse {
-  LorvexCaptureParser.parse(text, lists: [], todayWeekday: 3, today: "2026-09-22")
+  LorvexCaptureParser.parse(text, lists: [], todayWeekday: 3, today: "2026-09-22", languages: ["en"])
 }
 
 /// Repeat phrases in a capture line, and the first occurrence a repeating

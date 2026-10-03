@@ -3,7 +3,7 @@ import Testing
 
 // 2026-09-22 is a Tuesday: weekday 3 in the Gregorian convention.
 private func parse(_ text: String) -> LorvexCaptureParse {
-  LorvexCaptureParser.parse(text, lists: [], todayWeekday: 3, today: "2026-09-22")
+  LorvexCaptureParser.parse(text, lists: [], todayWeekday: 3, today: "2026-09-22", languages: ["en"])
 }
 
 /// Numbers typed in another script's digits read like ASCII ones. A Chinese

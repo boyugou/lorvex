@@ -28,6 +28,22 @@ struct LorvexClockTimeTests {
     }
   }
 
+  /// A Japanese span joins two single times with a wave dash, since the
+  /// Japanese span pattern spells them out ("15時00分～16時30分") where a single
+  /// time reads "15:00"; a 12-hour clock names a shared AM or PM once.
+  @Test func japaneseSpanReadsLikeTheTimesBesideIt() {
+    let japanese = Locale(identifier: "ja_JP")
+    #expect(lorvexClockRangeLabel(startMinutes: 15 * 60, endMinutes: 16 * 60 + 30, locale: japanese) == "15:00～16:30")
+    #expect(lorvexClockRangeLabel(startMinutes: 22 * 60, endMinutes: 1440, locale: japanese) == "22:00～0:00")
+    let twelveHour = LorvexClockFormat.twelveHour.applied(to: japanese)
+    #expect(lorvexClockRangeLabel(startMinutes: 15 * 60, endMinutes: 16 * 60 + 30, locale: twelveHour) == "午後3:00～4:30")
+    #expect(lorvexClockRangeLabel(startMinutes: 11 * 60, endMinutes: 13 * 60, locale: twelveHour) == "午前11:00～午後1:00")
+    // Other languages keep the system's span.
+    #expect(
+      lorvexClockRangeLabel(startMinutes: 15 * 60, endMinutes: 16 * 60 + 30, locale: Locale(identifier: "en_US"))
+        .hasSuffix("PM"))
+  }
+
   /// The locale's standard short time, as spans pad their ends: a 24-hour clock
   /// keeps the hour's leading zero, which `Date.FormatStyle`'s `.shortened`
   /// time drops ("9:45"), so a lone time would disagree with a span beside it.

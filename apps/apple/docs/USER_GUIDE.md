@@ -136,16 +136,18 @@ save it; the field clears and keeps focus so you can add several in a row.
 
 Every capture field reads a few details out of what you type and shows them
 under the field before you save; the rest becomes the title. English and
-Chinese both work, and Chinese needs no spaces ("明天开会30分钟").
+Chinese both work. Chinese needs no spaces ("明天开会30分钟") and reads the same
+in Traditional characters ("後天開會", "下週三", "30分鐘"); the title keeps the
+characters you typed.
 
 | Detail | English | Chinese |
 |---|---|---|
 | Day | today, tonight, tomorrow, Friday, this Friday, next Friday, next week, weekend, in 3 days | 今天, 明天, 后天, 大后天, 周三 / 星期三 / 礼拜三, 这周三, 下周三, 下周, 周末, 3天后 |
 | Date | Oct 5, October 5th, 5 Oct, 2026-10-05 | 10月5日, 10月5号, 5号 |
 | Due day | by Friday, due tomorrow, by Oct 5 | 周五前, 明天之前, 10月5日前 |
-| Time | 3pm, 3:30 pm, at 15:30, noon, at midnight | 下午3点, 晚上8点半, 晚上12点, 三点一刻, 9点20分, 15:30 |
+| Time | 3pm, 3:30 pm, at 15:30, noon, at midnight; 3-4pm, 11am to 1pm, 15:00–16:30 | 下午3点, 晚上8点半, 晚上12点, 三点一刻, 9点20分, 15:30; 下午3点到5点, 下午3-5点 |
 | Repeat | every day, every weekday, every other week, every 3 days, every Monday, every Mon and Thu, every month, every year; daily, weekly, monthly, yearly at the end | 每天, 每隔一天, 每3天, 每周, 每两周, 每周一, 每周一三五, 每个工作日, 每月, 每月5号, 每年 |
-| Length | 20 min, 1.5h, 20m, 1h30m, half an hour | 30分钟, 2小时, 半小时, 一个半小时 |
+| Length | 20 min, 1.5h, 20m, 1h30m, half an hour | 30分钟, 2小时, 2个钟头, 半小时, 半个钟头, 一个半小时 |
 | Priority | !, !!, !!!, p1–p3, high priority, low priority, urgent (at the end, or "Urgent:" at the start) | 紧急 |
 | List or tag | #listname (a list when the name matches one, a tag otherwise) | #清单名 |
 
@@ -159,6 +161,13 @@ for half an hour, on the day you wrote or today when you wrote none. A time
 from 1 to 6 o'clock with no AM, PM, or part of the day (下午, 晚上) is in the
 afternoon.
 
+A time range plans the task from its start for as long as the range lasts,
+unless the line also names a length: "3-4pm" plans an hour from 3 PM. A side
+written without AM, PM, or a part of the day follows the other side, so
+"11-1pm" runs from 11 AM to 1 PM and 下午3点到5点 ends at 5 PM. In English a
+range needs AM, PM, a colon, noon, or midnight on one side, so "Room 3-4"
+stays a title.
+
 A day's night runs past midnight. After 晚上, 半夜, "tonight", or 今晚, 6 to 11
 o'clock is that evening, while 12 o'clock and 1 to 5 o'clock come after
 midnight, on the next day: 今晚12点 and "at midnight" mean 00:00 tomorrow,
@@ -169,6 +178,30 @@ A repeating task is due on its first occurrence: the next of the weekdays or
 the day of the month it names (today counts), else the day you wrote, else
 today. "Weekly review" and other titles that open with a cadence word keep it;
 daily, weekly, monthly, and yearly repeat only at the end of the line.
+
+When a line names two days, two times, or two lengths, the first one counts
+and the later one stays in the title: "明天准备周五的汇报" plans "准备周五的汇报"
+for tomorrow.
+
+Japanese and Korean words are read too when Japanese or Korean is among your
+device's preferred languages (Language & Region in Settings). Japanese needs
+no spaces, and the particle after a day or a time goes with it: "金曜日に資料を送る"
+plans "資料を送る" for Friday. A Korean phrase stands as its own word, with its
+particle: "금요일에 회의" plans "회의" for Friday, while "긴급회의" stays in the
+title.
+
+| Detail | Japanese | Korean |
+|---|---|---|
+| Day | 今日, 今朝, 今夜, 明日, 明後日, 金曜 / 金曜日, 今週の金曜, 来週の金曜, 来週, 再来週, 週末, 来週末, 3日後 | 오늘, 오늘 밤, 내일, 모레, 내일모레, 글피, 금요일, 이번 주 금요일, 다음 주 금요일, 다음 주, 주말, 다음 주말, 3일 후 |
+| Date | 10月5日, 10/5, 10/5(月) | 10월 5일, 10/5 |
+| Due day | 金曜までに, 今日中, 10/5締切 | 금요일까지, 내일까지, 10월 5일 마감 |
+| Time | 午後3時, 3時半, 9時20分, 夜8時, 午後3:30, 正午; 15時から16時まで, 3〜5時 | 오후 3시, 3시 반, 9시 20분, 저녁 7시, 오후 세 시, 오후 3:30, 정오, 자정; 3시부터 4시까지, 오후 3시~5시 |
+| Repeat | 毎日, 毎週, 隔週, 毎週月曜, 毎週月・水・金, 平日毎日, 毎月, 毎月5日, 毎年, 3日ごと, 1日おき | 매일, 매주, 격주, 매주 월요일, 매주 월수금, 월요일마다, 평일마다, 매달, 매달 5일, 매년, 3일마다 |
+| Length | 30分, 2時間, 1時間半, 1時間30分 | 30분, 2시간, 1시간 반, 1시간 30분, 한 시간 |
+| Priority | 至急, 急ぎ, 緊急 | 긴급 |
+
+The night runs past midnight in both, as in Chinese: 夜12時 and 밤 12시 mean
+00:00 the next day, and 今夜8時 and 오늘 밤 8시 mean 8 PM today.
 
 ### From the Menu Bar Icon
 

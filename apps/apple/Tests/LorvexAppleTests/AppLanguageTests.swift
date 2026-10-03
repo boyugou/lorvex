@@ -70,6 +70,14 @@ struct AppLanguageTests {
     ([], "en"),
   ]
 
+  @Test("The picker lists endonyms with the Latin-script names first, then each script together")
+  func selectableOrderGroupsScripts() {
+    #expect(
+      AppLanguage.selectable == [
+        .en, .es, .fr, .it, .pl, .ptBR, .ru, .uk, .ar, .hi, .ko, .ja, .zhHans, .zhHant,
+      ])
+  }
+
   @Test("A system language selects its shipped language, whatever its region")
   func systemLanguageSelectsItsShippedLanguage() {
     let shipped = Set(AppLanguage.selectable.map(\.rawValue))

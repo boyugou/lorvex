@@ -89,7 +89,7 @@ struct MemoryComposerCard: View {
           } label: {
             Label(
               store.memoryEditingKey == nil
-                ? String(localized: "common.save", defaultValue: "Save", table: "Localizable", bundle: LorvexL10n.bundle)
+                ? String(localized: "common.create", defaultValue: "Create", table: "Localizable", bundle: LorvexL10n.bundle)
                 : String(localized: "memory.composer.update", defaultValue: "Update", table: "Localizable", bundle: LorvexL10n.bundle),
               systemImage: "brain")
           }

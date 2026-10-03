@@ -4,9 +4,10 @@ import LorvexDomain
 import LorvexStore
 
 /// Dependency edge helpers for single-row task updates. The cross-row
-/// cycle revalidator lives in ``TaskUpdateOrchestrator`` so it can
-/// observe the final post-update graph after every row's edges have
-/// landed.
+/// cycle revalidator is
+/// ``TaskUpdate/revalidateDependencyCycles(_:depChangedIds:errorContext:)``,
+/// which runs after every row's edges have landed so it sees the final
+/// post-update graph.
 public enum TaskUpdateDependencies {
 
   /// Snapshot `task_dependencies`, DELETE the row's outgoing edges,

@@ -46,12 +46,20 @@ public enum HabitHeatmapModel {
     }
   }
 
+  /// The heatmap's `weeks` columns, oldest first, ending with the week of
+  /// `endDate`. `calendar` lays out the weeks (its first weekday starts a
+  /// column) and writes the day keys the completions are matched on. A
+  /// column's month label is set where a month of `locale`'s own calendar
+  /// begins, on or before `endDate`, and names that month the way `locale`
+  /// abbreviates it: Gregorian months in most regions, Hijri months where the
+  /// locale's calendar is Islamic, as every other date in the app is shown.
   public static func makeGrid(
     completions: [HabitCompletionEntry],
     targetCount: Int,
     weeks: Int,
     endDate: Date,
-    calendar: Calendar
+    calendar: Calendar,
+    locale: Locale = LorvexClockFormat.displayLocale
   ) -> Grid {
     guard weeks > 0 else { return .empty }
     let target = max(1, targetCount)
@@ -72,7 +80,7 @@ public enum HabitHeatmapModel {
 
     var columns: [[Cell]] = []
     var monthLabels: [String?] = []
-    let monthFormatter = monthAbbreviationFormatter(calendar: calendar)
+    let monthCalendar = LorvexDateFormatters.displayCalendar(timeZone: calendar.timeZone, locale: locale)
 
     for week in 0..<weeks {
       guard let weekStart = calendar.date(byAdding: .weekOfYear, value: week, to: gridStart) else {
@@ -105,8 +113,9 @@ public enum HabitHeatmapModel {
             date: key, intensity: intensity, value: value, slot: slot,
             level: level(value: value, target: target)))
 
-        if calendar.component(.day, from: day) == 1 {
-          label = monthFormatter.string(from: day)
+        if monthCalendar.component(.day, from: day) == 1 {
+          label = LorvexDateFormatters.string(
+            day, template: "MMM", timeZone: calendar.timeZone, locale: locale)
         }
       }
       columns.append(column)
@@ -157,13 +166,31 @@ public enum HabitHeatmapModel {
     return formatter
   }
 
-  private static func monthAbbreviationFormatter(calendar: Calendar) -> DateFormatter {
-    let formatter = DateFormatter()
-    formatter.calendar = calendar
-    formatter.timeZone = calendar.timeZone
-    formatter.locale = Locale.current
-    formatter.setLocalizedDateFormatFromTemplate("MMM")
-    return formatter
+  /// Where a heatmap draws its month labels, from each week column's label
+  /// width (zero where no month begins) and the x its column starts at (nil
+  /// for a column the layout does not show), oldest first.
+  ///
+  /// A label starts at its column and runs over the weeks after it, but never
+  /// past `trailingEdge`, the newest column's end: a month that began in the
+  /// last weeks shifts back to end there. Walking from the newest month, a
+  /// label that would then come within `gap` of the next newer label shown,
+  /// or start before `leadingEdge`, is left out (nil), so the most recent
+  /// months keep their names and no two names overlap, however long a
+  /// language's month names run.
+  public static func monthLabelPositions(
+    starts: [CGFloat?], widths: [CGFloat], leadingEdge: CGFloat, trailingEdge: CGFloat,
+    gap: CGFloat
+  ) -> [CGFloat?] {
+    var positions = [CGFloat?](repeating: nil, count: min(starts.count, widths.count))
+    var nextShownStart = CGFloat.infinity
+    for index in positions.indices.reversed() {
+      guard let start = starts[index], widths[index] > 0 else { continue }
+      let x = min(start, trailingEdge - widths[index])
+      guard x >= leadingEdge, x + widths[index] + gap <= nextShownStart else { continue }
+      positions[index] = x
+      nextShownStart = x
+    }
+    return positions
   }
 }
 

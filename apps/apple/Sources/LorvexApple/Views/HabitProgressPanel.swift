@@ -3,7 +3,9 @@ import SwiftUI
 
 /// The habit inspector's Progress panel: the current and best streaks, the
 /// check-ins logged in all, and the share of the last 30 days done, as two
-/// rows of two readings, with the next milestone beneath.
+/// rows of two readings, with the next milestone beneath. A reading's name
+/// wraps onto a second line rather than truncate in a narrow inspector or a
+/// long language, and the two values of a row keep one baseline either way.
 ///
 /// Streaks read in the habit's own unit (days, weeks, or months). The current
 /// streak's flame takes the habit's color while the streak runs. The readings
@@ -26,7 +28,7 @@ struct HabitProgressPanel: View {
         .font(LorvexDesign.Typography.primaryEmphasis)
 
         Grid(alignment: .leading, horizontalSpacing: LorvexDesign.Spacing.m, verticalSpacing: LorvexDesign.Spacing.m) {
-          GridRow {
+          GridRow(alignment: .lastTextBaseline) {
             reading(
               title: String(localized: "habit_detail.stat.current", defaultValue: "Current streak", table: "Localizable", bundle: LorvexL10n.bundle),
               systemImage: "flame.fill",
@@ -38,7 +40,7 @@ struct HabitProgressPanel: View {
               iconTint: AnyShapeStyle(.tertiary),
               value: stats.map { lorvexHabitStreakLabel($0.bestStreak, frequencyType: habit.frequencyType) })
           }
-          GridRow {
+          GridRow(alignment: .lastTextBaseline) {
             reading(
               title: String(localized: "habit_detail.stat.total", defaultValue: "Check-ins", table: "Localizable", bundle: LorvexL10n.bundle),
               systemImage: "checkmark.seal.fill",
@@ -61,8 +63,8 @@ struct HabitProgressPanel: View {
     }
   }
 
-  /// One reading: an icon and its name in small secondary text, over its
-  /// value in large figures; a dash until the stats load.
+  /// One reading: an icon and its name in small secondary text (up to two
+  /// lines), over its value in large figures; a dash until the stats load.
   private func reading(title: String, systemImage: String, iconTint: AnyShapeStyle, value: String?)
     -> some View
   {
@@ -75,7 +77,8 @@ struct HabitProgressPanel: View {
           .foregroundStyle(iconTint)
       }
       .font(LorvexDesign.Typography.tertiaryText)
-      .lineLimit(1)
+      .lineLimit(2)
+      .fixedSize(horizontal: false, vertical: true)
       Text(value ?? "—")
         .font(LorvexDesign.Typography.sectionHeader.monospacedDigit())
         .foregroundStyle(value == nil ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.primary))

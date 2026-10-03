@@ -103,8 +103,8 @@ struct LorvexPreviewCoreFactoryTests {
     let memory = try await core.loadMemory()
     let notes = try #require(memory.entries.first { $0.key == "notes_for_ai" })
     #expect(notes.content.contains("framework"))
-    let migration = try #require(memory.entries.first { $0.key == "swift_migration" })
-    #expect(migration.content.contains("export the database"))
+    let laptop = try #require(memory.entries.first { $0.key == "new_laptop" })
+    #expect(laptop.content.contains("export the database"))
   }
 
   @Test("seeded daily review is loadable at its historical date")

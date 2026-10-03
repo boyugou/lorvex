@@ -89,6 +89,9 @@ struct MobileCalendarAllDayStrip: View {
           bundle: MobileL10n.bundle)
       )
       .font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
+      // A label that wraps in the narrow gutter ("весь / день") keeps each
+      // line against the hour labels' trailing edge.
+      .multilineTextAlignment(.trailing)
       .frame(width: gutterWidth, alignment: .trailing)
       .padding(.trailing, 6)
       ForEach(columns) { day in

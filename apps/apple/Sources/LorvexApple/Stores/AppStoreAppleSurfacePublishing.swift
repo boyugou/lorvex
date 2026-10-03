@@ -1,19 +1,11 @@
 import Foundation
 import LorvexCore
 import LorvexWidgetKitSupport
-import UserNotifications
 import LorvexCloudSync
 
 extension AppStore {
   static let calendarSpotlightPastHorizonDays = 183
   static let calendarSpotlightFutureHorizonDays = 365
-  static let taskReminderSchedulingHorizonHours = 24 * 365
-
-  /// Days of habit reminders pre-scheduled per re-plan. The OS fires each
-  /// one-shot trigger once; the refresh fan-out re-plans frequently enough that
-  /// a rolling two-week window stays well ahead of the user without crowding the
-  /// 64-pending-notification ceiling.
-  static let habitReminderHorizonDays = 14
 
   /// Replaces the Spotlight task index with every task that is neither
   /// cancelled nor in the Trash, so any task, not just today's, is findable and
@@ -91,118 +83,25 @@ extension AppStore {
     await rescheduleReminders()
   }
 
-  /// Re-plan task + habit reminder notifications under a single shared budget.
-  ///
-  /// Both kinds compete for the OS 64-pending-notification cap, so this gathers
-  /// every schedulable candidate from both, keeps the earliest-firing
-  /// ``ReminderBudget/pendingNotificationLimit`` across the combined set (so a
-  /// flood of far-future reminders of one kind can't crowd out near-term ones of
-  /// the other), and arms that earliest-due set while deliberately skipping the
-  /// rest rather than letting the OS drop them silently. The refresh fan-out
-  /// re-plans after every mutation, so a completed habit / delivered reminder
-  /// drops out on the next pass.
-  ///
-  /// Reminder candidates come from the delivery-aware core query rather than a
-  /// task snapshot: a snapshot does not carry this device's notification
-  /// receipt, so rebuilding from it could re-arm an already-delivered reminder
-  /// after a timezone re-anchor. A transient read failure leaves both kinds'
-  /// pending notifications untouched (never clears them on a flaky read).
+  /// Re-plans this Mac's task and habit reminder notifications under one
+  /// shared budget (``ReminderReplan``) and keeps the reports for Settings ›
+  /// Diagnostics. A failed read leaves the pending notifications as they were;
+  /// a pass that stopped before habits keeps the previous habit report, which
+  /// still describes them.
   func rescheduleReminders() async {
     let signpost = LorvexSignpost.begin(.notificationsReplace)
     defer { LorvexSignpost.end(signpost) }
-    // Mark elapsed reminders delivered before the reads, so the MCP due-queries
-    // stop re-surfacing ones the OS has already shown. Only reminders that were
-    // actually armed on a prior pass (their `last_armed_at` is stamped below)
-    // transition to delivered; a budgeted-out / denied / add-failed reminder
-    // stays pending and remains visible. Best-effort; a failure only
-    // over-returns, never blocks.
-    _ = try? await core.markDueTaskRemindersDelivered(asOf: now())
-    try? await core.reconcileDeliveredHabitReminders(asOf: now())
-
-    guard
-      let reminderTasks = try? await core.getTasksWithUpcomingReminders(
-        hoursAhead: Self.taskReminderSchedulingHorizonHours, limit: 500)
-    else {
-      return
-    }
-    // Only actionable tasks arm reminders — `open` and `in_progress` (started),
-    // so starting a task does NOT cancel its reminder. This matches the
-    // due/upcoming/mark-delivered core queries, which filter the actionable
-    // status list. A `someday` task is parked, so filtering on `.isActionable`
-    // (rather than `.isActive`, which includes `someday`) also drops parked
-    // tasks' one-shot snoozes below, so a parked task never fires anything.
-    let schedulableTasks = reminderTasks.filter { $0.status.isActionable }
-    let showTaskNotesInNotifications = await loadShowTaskNotesInNotificationsPreference()
-    let taskCandidates = taskReminderScheduler.candidates(
-      for: schedulableTasks, includeNotes: showTaskNotesInNotifications)
-
-    // If the occurrence read fails the pending set can't be reconciled, so we
-    // clear habit notifications rather than leave stale ones firing, and record
-    // the failure instead of swallowing it.
-    var occurrences: [DueHabitReminderOccurrence] = []
-    var habitReadError: (any Error)?
-    do {
-      occurrences = try await core.getDueHabitReminderOccurrences(
-        now: now(), horizonDays: Self.habitReminderHorizonDays)
-    } catch {
-      habitReadError = error
-    }
-
-    let budgeted = ReminderBudget.budget(
-      taskCandidates: taskCandidates, habitOccurrences: occurrences)
-    // Defer arming brand-new reminders while the setup wizard's own
-    // Notifications row hasn't yet had its chance to request authorization —
-    // see `ReminderOnboardingGate`. The live authorization read is skipped
-    // once setup is complete: the gate ignores it in that case anyway, and
-    // skipping avoids touching `UNUserNotificationCenter` (unavailable in the
-    // SwiftPM test-runner process) on the overwhelmingly common path.
-    let authorizationStatus: UNAuthorizationStatus =
-      isSetupCompleted ? .authorized : await notificationAuthorizationStatusProvider()
-    let gated = ReminderOnboardingGate.gate(
-      tasks: budgeted.tasks, habits: budgeted.habits,
+    let outcome = await ReminderReplan.run(
+      core: core, taskScheduler: taskReminderScheduler, habitScheduler: habitReminderScheduler,
+      includeTaskNotes: await loadShowTaskNotesInNotificationsPreference(),
       setupCompleted: isSetupCompleted,
-      authorizationStatus: authorizationStatus)
-
-    let taskReport = await taskReminderScheduler.scheduleReminders(gated.tasks)
-    lastTaskReminderScheduleReport = taskReport
-    lastScheduledReminderCount = taskReport.scheduledCount
-
-    // Replace the armed record with exactly the reminders the OS accepted —
-    // the armed earliest-due prefix (`scheduledCount` is 0 for a denied/
-    // disabled report). Reminders outside the prefix had their OS requests
-    // dropped by this replace pass, so their stale armed stamps are cleared:
-    // the stamp mirrors the currently pending request set, a budgeted-out /
-    // denied / add-failed reminder stays pending and remains visible to MCP
-    // due queries instead of being recorded as a phantom delivery.
-    // Best-effort: a failure only over-returns.
-    let armedReminderIDs = gated.tasks.prefix(taskReport.scheduledCount).map(\.reminderID)
-    try? await core.replaceArmedTaskReminders(reminderIDs: armedReminderIDs, asOf: now())
-
-    let habitReport = await habitReminderScheduler.replaceScheduledHabitReminders(
-      for: gated.habits)
-    lastHabitReminderScheduleReport =
-      habitReadError.map { .failed(scheduledCount: 0, requestedCount: 0, error: $0) } ?? habitReport
-
-    // Same contract for habits: record "armed through" per policy from the
-    // accepted prefix (the scheduler adds requests in array order and stops on
-    // the first failure) and clear every other policy's stamp. On a habit
-    // occurrence-read failure the replace above already cleared all pending
-    // habit notifications, so the empty map correctly clears the armed record
-    // with them. The delivered reconciler only records occurrences at or
-    // before this stamp, so a never-armed nudge keeps surfacing as due.
-    var armedThroughByPolicyID: [String: Date] = [:]
-    for occurrence in gated.habits.prefix(habitReport.scheduledCount) {
-      let policyID = occurrence.policy.id
-      armedThroughByPolicyID[policyID] = max(
-        armedThroughByPolicyID[policyID] ?? .distantPast, occurrence.fireDate)
+      authorizationStatus: notificationAuthorizationStatusProvider, now: now,
+      diagnosticSource: "macos.reminders.schedule")
+    lastTaskReminderScheduleReport = outcome.taskReport
+    lastScheduledReminderCount = outcome.taskReport.scheduledCount
+    if let habitReport = outcome.habitReport {
+      lastHabitReminderScheduleReport = habitReport
     }
-    try? await core.replaceArmedHabitReminders(
-      armedThroughByPolicyID: armedThroughByPolicyID, asOf: now())
-
-    // Drop one-shot snoozes whose task resolved (done, parked, trashed, or
-    // deleted, here or via sync) so a snoozed reminder never fires for it. The
-    // reminder reap above ignores the snooze prefix.
-    await taskReminderScheduler.cancelSnoozesOfResolvedTasks(core: core)
   }
 
   /// Recounts the Dock badge and the menu bar's attention count from every

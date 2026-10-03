@@ -30,7 +30,7 @@ import LorvexSync
 /// shape every record is written in, so a record missing an encrypted field is
 /// undecodable rather than silently recovered from a plaintext sibling.
 /// ``versionString(from:)`` exposes the same encrypted read for
-/// ``CloudSyncRecordPushing``, whose conflict resolution reads `version` directly
+/// ``CloudSyncConflictClassifier``, whose conflict resolution reads `version` directly
 /// off CKRecords surfaced by CloudKit's `serverRecordChanged` error payload
 /// rather than through ``decode(_:)``.
 public enum CloudSyncEnvelopeRecord {
@@ -246,7 +246,7 @@ public enum CloudSyncEnvelopeRecord {
 
   /// Read the `version` HLC string field from `CKRecord.encryptedValues` — the
   /// only view it is written in. ``decode(_:)`` performs this same encrypted read
-  /// inline; this entry point exists for ``CloudSyncRecordPushing``, whose conflict
+  /// inline; this entry point exists for ``CloudSyncConflictClassifier``, whose conflict
   /// resolution reads `version` directly off CKRecords surfaced by CloudKit's
   /// `serverRecordChanged` error payload rather than through ``decode(_:)``.
   public static func versionString(from record: CKRecord) -> String? {

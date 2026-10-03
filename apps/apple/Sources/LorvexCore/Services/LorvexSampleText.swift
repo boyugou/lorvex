@@ -18,20 +18,43 @@ import Foundation
 /// edited at its call site falls back to English until its table entry is
 /// edited too. Names of people, products, and places are adapted to the
 /// language rather than transliterated, as a speaker of it would write them.
+/// The tables write digits as ASCII, and a translation comes back with its
+/// digits in the numbering system its locale writes numbers in, so content
+/// seeded under a locale that uses Arabic-Indic digits reads "٣٠" beside the
+/// interface's own counts and times, as a person there would type it.
 public struct LorvexSampleText: Sendable {
   /// The language the strings are translated into.
   public let language: AppLanguage
 
-  public init(language: AppLanguage) {
+  /// The digits zero through nine as the locale writes numbers, or nil when
+  /// it writes them in ASCII.
+  private let digits: [Character]?
+
+  /// A translator into `language` whose translations write their digits as
+  /// `locale` writes numbers. The default is the locale the process runs in,
+  /// so a capture launched with `-AppleLocale ar_SA` seeds "٣٠" and one
+  /// launched with `-AppleLocale ar_AE` seeds "30", each matching the digits
+  /// its interface formats.
+  public init(language: AppLanguage, locale: Locale = .current) {
     self.language = language
+    let digits = (0...9).compactMap { $0.formatted(.number.locale(locale).grouping(.never)).first }
+    self.digits = digits.count == 10 && digits != Array("0123456789") ? digits : nil
   }
 
   /// The identity: every string comes back as written.
   public static let english = LorvexSampleText(language: .en)
 
   /// `english` in ``language``, or `english` when there is no translation.
+  /// A translation's ASCII digits come back in the locale's numbering
+  /// system; `english` itself always comes back as written.
   public func callAsFunction(_ english: String) -> String {
-    Self.tables[language]?[english] ?? english
+    guard let translation = Self.tables[language]?[english] else { return english }
+    guard let digits else { return translation }
+    return String(
+      translation.map { character in
+        guard character.isASCII, let value = character.wholeNumberValue else { return character }
+        return digits[value]
+      })
   }
 
   /// Each string of `english` translated as the single-string call
@@ -42,6 +65,18 @@ public struct LorvexSampleText: Sendable {
 
   /// The translation tables, one per language that has one.
   static let tables: [AppLanguage: [String: String]] = [
-    .zhHans: simplifiedChinese
+    .ar: arabic,
+    .es: spanish,
+    .fr: french,
+    .hi: hindi,
+    .it: italian,
+    .ja: japanese,
+    .ko: korean,
+    .pl: polish,
+    .ptBR: brazilianPortuguese,
+    .ru: russian,
+    .uk: ukrainian,
+    .zhHans: simplifiedChinese,
+    .zhHant: traditionalChinese,
   ]
 }

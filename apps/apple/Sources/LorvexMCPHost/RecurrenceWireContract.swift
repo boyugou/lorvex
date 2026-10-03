@@ -71,7 +71,7 @@ enum RecurrenceRuleSchema {
 
   /// The calendar `recurrence` object: the shared shape, no `anchor`. The
   /// description records the calendar-only runtime limits JSON Schema can't
-  /// express (see ``ValidationRecurrenceNormalize/normalizeCalendarRecurrence``):
+  /// express (see ``ValidationRecurrence/normalizeCalendarRecurrence(_:)``):
   /// COUNT is capped at 365, and a MONTHLY/YEARLY `byday` needs an ordinal
   /// prefix or a `bysetpos`.
   static var calendarRecurrenceProperty: Value {

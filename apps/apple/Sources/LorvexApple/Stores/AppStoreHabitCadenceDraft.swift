@@ -5,7 +5,7 @@ import LorvexCore
 /// `HabitCadenceInput.frequencyType` wire string (`"daily"` / `"weekly"` /
 /// `"times_per_week"` / `"monthly"`, snake_case for the multi-word case): this
 /// enum is the in-memory UI selection driving ``HabitCadenceEditor`` and
-/// ``HabitFormFields``, with `timesPerWeek` spelled camelCase because it never
+/// ``HabitFormSections``, with `timesPerWeek` spelled camelCase because it never
 /// round-trips through the wire — ``AppStore/draftHabitCadenceInput()`` maps it
 /// to the wire string on save.
 enum HabitCadenceMode: String, CaseIterable, Sendable {

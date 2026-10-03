@@ -16,17 +16,34 @@ extension AppStore {
   /// When the task is to be worked on: the planned day, and the task's time
   /// on it when it has one ("Today, 9:45 – 10:30 AM"). It opens the sentence.
   /// Without a planned day the field is unset. The time stays whole, so a
-  /// value too wide for the inspector wraps after the day.
+  /// value too wide for the inspector wraps after the day. A planned day
+  /// after a deadline that has not passed yet says so ("Tomorrow · after the
+  /// deadline"), since the plan would finish the task late.
   var taskDetailDoOnSummary: String? {
     guard taskDetailHasPlannedDate else { return nil }
     let day = LorvexDayPhrase.phrase(
       for: taskDetailPlannedDatePickerDate, logicalDay: logicalTodayDateString, position: .leading)
-    guard let time = taskDetailPlannedTime else { return day }
-    let range = lorvexWholeSpan(
-      lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound))
-    return String(
-      localized: "task_detail.do_on.day_time", defaultValue: "\(day), \(range)",
-      table: "Localizable", bundle: LorvexL10n.bundle)
+    let when: String
+    if let time = taskDetailPlannedTime {
+      let range = lorvexWholeSpan(
+        lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound))
+      when = String(
+        localized: "task_detail.do_on.day_time", defaultValue: "\(day), \(range)",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    } else {
+      when = day
+    }
+    return taskDetailPlannedIsAfterDeadline ? LorvexDayPhrase.afterDeadline(when) : when
+  }
+
+  /// Whether the draft's planned day falls after a deadline that has not
+  /// passed yet (``LorvexDayPhrase/isPlannedAfterDeadline(planned:due:logicalDay:)``),
+  /// which the When row says and tints.
+  var taskDetailPlannedIsAfterDeadline: Bool {
+    guard taskDetailHasPlannedDate, taskDetailHasDueDate else { return false }
+    return LorvexDayPhrase.isPlannedAfterDeadline(
+      planned: taskDetailPlannedDatePickerDate, due: taskDetailDueDatePickerDate,
+      logicalDay: logicalTodayDateString)
   }
 
   /// `due_date` as the Due row's value: the day on its own ("today",

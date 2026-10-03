@@ -57,6 +57,9 @@ extension CalendarWeekGridView {
       Text(LocalizedStringResource("calendar.all_day_strip", defaultValue: "all-day", table: "Localizable", bundle: LorvexL10n.bundle))
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(.secondary)
+        // A label that wraps in the gutter keeps each line against the hour
+        // labels' trailing edge.
+        .multilineTextAlignment(.trailing)
         .frame(width: gutterWidth, alignment: .trailing)
         .padding(.trailing, LorvexDesign.Spacing.sm)
       ForEach(columns) { day in

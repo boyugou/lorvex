@@ -8,14 +8,16 @@ import SwiftUI
 /// The grid spans the panel: it shows as many of the newest weeks as the
 /// width holds and grows the cells to fill it (``HabitHistoryGridLayout``).
 /// Weeks are Monday to Sunday, the week the habit's own progress counts, so a
-/// column of a weekly habit is one of its periods. A cell's fill is how far
-/// the day went toward the per-day target on a five-step ramp of the habit's
-/// color (``HabitHeatmapModel/level(value:target:)``), from a neutral wash
-/// for no check-in to the full color for the target met. A habit on chosen
-/// weekdays draws its other days fainter, so its pattern shows. Today has an
-/// outline, and every day names its date and count in a help tag. With
-/// Differentiate Without Color on, a slash marks a partial day and a dot a
-/// met one.
+/// column of a weekly habit is one of its periods. Above the weeks, a month is
+/// named where it begins, in the calendar the app shows dates in (Hijri months
+/// under an Islamic calendar); a name that would run into the next month's is
+/// left out. A cell's fill is how far the day went toward the per-day target
+/// on a five-step ramp of the habit's color
+/// (``HabitHeatmapModel/level(value:target:)``), from a neutral wash for no
+/// check-in to the full color for the target met. A habit on chosen weekdays
+/// draws its other days fainter, so its pattern shows. Today has an outline,
+/// and every day names its date and count in a help tag. With Differentiate
+/// Without Color on, a slash marks a partial day and a dot a met one.
 ///
 /// A habit counted several times a day explains its ramp with a "Less…More"
 /// legend; a habit done once a day has only the two ends, which need none.
@@ -92,12 +94,13 @@ struct HabitHistoryPanel: View {
   // MARK: Grid
 
   private var grid: some View {
-    HabitHistoryGridLayout(labelWidth: weekdayLabelWidth) {
+    HabitHistoryGridLayout(labelWidth: weekdayLabelWidth, weeks: cache.grid.columns.count) {
       weekdayColumn
-      ForEach(Array(cache.grid.columns.enumerated()), id: \.offset) { index, column in
-        weekColumn(
-          column, monthLabel: cache.grid.monthLabels[index],
-          isNewest: index == cache.grid.columns.count - 1)
+      ForEach(Array(cache.grid.columns.enumerated()), id: \.offset) { _, column in
+        weekColumn(column)
+      }
+      ForEach(Array(cache.grid.monthLabels.enumerated()), id: \.offset) { _, label in
+        monthLabel(label)
       }
     }
     .tint(identity)
@@ -109,7 +112,7 @@ struct HabitHistoryPanel: View {
   /// The grid's footprint while the detail loads: the same layout over empty
   /// weeks, so it takes the height the grid will.
   private var placeholder: some View {
-    HabitHistoryGridLayout(labelWidth: weekdayLabelWidth) {
+    HabitHistoryGridLayout(labelWidth: weekdayLabelWidth, weeks: Self.weeks) {
       Color.clear
       ForEach(0..<Self.weeks, id: \.self) { _ in Color.clear }
     }
@@ -139,28 +142,24 @@ struct HabitHistoryPanel: View {
     }
   }
 
-  /// One week: its month's name where a month begins, over the seven days.
-  /// The name runs on past the column over the weeks after it, or, in the
-  /// newest week, back over the weeks before, so it ends at the grid's edge.
-  private func weekColumn(_ column: [HabitHeatmapModel.Cell], monthLabel: String?, isNewest: Bool)
-    -> some View
-  {
+  /// One week: the month row's space, over the seven days.
+  private func weekColumn(_ column: [HabitHeatmapModel.Cell]) -> some View {
     VStack(spacing: HabitHistoryGridLayout.spacing) {
-      Color.clear
-        .frame(height: HabitHistoryGridLayout.monthRowHeight)
-        .overlay(alignment: isNewest ? .trailing : .leading) {
-          if let monthLabel {
-            Text(monthLabel)
-              .font(LorvexDesign.Typography.tertiaryText)
-              .foregroundStyle(.secondary)
-              .lineLimit(1)
-              .fixedSize()
-          }
-        }
+      Color.clear.frame(height: HabitHistoryGridLayout.monthRowHeight)
       ForEach(Array(column.enumerated()), id: \.element.slot) { row, cell in
         cellView(cell, row: row)
       }
     }
+  }
+
+  /// The name of the month a week begins, at its own width, or nothing for a
+  /// week no month begins in; ``HabitHistoryGridLayout`` places it.
+  private func monthLabel(_ label: String?) -> some View {
+    Text(verbatim: label ?? "")
+      .font(LorvexDesign.Typography.tertiaryText)
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+      .fixedSize()
   }
 
   @ViewBuilder
@@ -338,7 +337,8 @@ struct HabitHistoryPanel: View {
 }
 
 /// Lays out the History panel's grid: the weekday initials' column, then the
-/// week columns, oldest to newest.
+/// `weeks` week columns, oldest to newest, then any month labels, one per
+/// week in the same order.
 ///
 /// It shows as many of the newest weeks as the proposed width holds at
 /// ``minimumCell`` and grows the cells to fill the width, up to
@@ -347,15 +347,22 @@ struct HabitHistoryPanel: View {
 /// ends on the current week. The count is decided per layout pass rather than
 /// measured into view state, which would lag a resize by a frame. Every
 /// column is proposed the grid's full height, which its seven square cells
-/// and month row fill.
+/// and month row fill. The month labels sit in the month row where
+/// ``HabitHeatmapModel/monthLabelPositions(starts:widths:leadingEdge:trailingEdge:gap:)``
+/// puts them at their own widths; a label it leaves out goes outside the
+/// bounds with the hidden weeks.
 struct HabitHistoryGridLayout: Layout {
   static let minimumCell: CGFloat = 10
   static let maximumCell: CGFloat = 16
   static let spacing: CGFloat = 3
   static let monthRowHeight: CGFloat = 14
+  /// The least room between two month labels.
+  static let labelGap: CGFloat = 4
 
   /// The weekday initials' column width.
   let labelWidth: CGFloat
+  /// How many of the subviews after the weekday column are week columns.
+  let weeks: Int
 
   /// The weeks shown of `count` in `width` and their cell size.
   static func metrics(columns count: Int, width: CGFloat, labelWidth: CGFloat) -> (shown: Int, cell: CGFloat) {
@@ -373,7 +380,7 @@ struct HabitHistoryGridLayout: Layout {
   }
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-    let count = max(subviews.count - 1, 0)
+    let count = min(weeks, max(subviews.count - 1, 0))
     guard let width = proposal.width, width.isFinite else {
       let width = labelWidth + Self.spacing + CGFloat(count) * (Self.minimumCell + Self.spacing) - Self.spacing
       return CGSize(width: max(width, 0), height: Self.height(cell: Self.minimumCell))
@@ -384,7 +391,7 @@ struct HabitHistoryGridLayout: Layout {
 
   func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
     guard let labels = subviews.first else { return }
-    let count = subviews.count - 1
+    let count = min(weeks, subviews.count - 1)
     let metrics = Self.metrics(columns: count, width: bounds.width, labelWidth: labelWidth)
     let height = Self.height(cell: metrics.cell)
     labels.place(
@@ -392,12 +399,27 @@ struct HabitHistoryGridLayout: Layout {
       proposal: ProposedViewSize(width: labelWidth, height: height))
     let hidden = count - metrics.shown
     let gridMinX = bounds.minX + labelWidth + Self.spacing
-    for (index, subview) in subviews.dropFirst().enumerated() {
-      let column = index - hidden
-      let x = column < 0 ? bounds.minX - 100_000 : gridMinX + CGFloat(column) * (metrics.cell + Self.spacing)
+    let pitch = metrics.cell + Self.spacing
+    let starts: [CGFloat?] = (0..<count).map { index in
+      index < hidden ? nil : gridMinX + CGFloat(index - hidden) * pitch
+    }
+    let outside = bounds.minX - 100_000
+    for (index, subview) in subviews.dropFirst().prefix(count).enumerated() {
       subview.place(
-        at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading,
+        at: CGPoint(x: starts[index] ?? outside, y: bounds.minY), anchor: .topLeading,
         proposal: ProposedViewSize(width: metrics.cell, height: height))
+    }
+    let monthLabels = Array(subviews.dropFirst(1 + count))
+    guard !monthLabels.isEmpty else { return }
+    let positions = HabitHeatmapModel.monthLabelPositions(
+      starts: starts, widths: monthLabels.map { $0.sizeThatFits(.unspecified).width },
+      leadingEdge: gridMinX, trailingEdge: gridMinX + CGFloat(metrics.shown) * pitch - Self.spacing,
+      gap: Self.labelGap)
+    for (index, label) in monthLabels.enumerated() {
+      let x = positions.indices.contains(index) ? positions[index] : nil
+      label.place(
+        at: CGPoint(x: x ?? outside, y: bounds.minY + Self.monthRowHeight / 2), anchor: .leading,
+        proposal: .unspecified)
     }
   }
 }

@@ -839,6 +839,39 @@ class VerifyLocalizationCatalogTests(unittest.TestCase):
         self.assertEqual(required, {"other"})
         self.assertEqual(allowed, {"zero", "other"})
 
+    def test_an_arabic_substitution_names_one_and_two_without_the_number(self) -> None:
+        value = entry("placeholder replaced below", extra_localizations={"ar": "placeholder"})
+        value["localizations"]["en"] = substitution_localization(
+            "Kept %#@habits@.",
+            {"habits": plural_substitution(1, {"one": "%arg habit", "other": "%arg habits"})},
+        )
+        arabic_forms = {
+            "zero": "%arg عادة",
+            "one": "عادة واحدة",
+            "two": "عادتين",
+            "few": "%arg عادات",
+            "many": "%arg عادة",
+            "other": "%arg عادة",
+        }
+        value["localizations"]["ar"] = substitution_localization(
+            "حافظت على %#@habits@.",
+            {"habits": plural_substitution(1, arabic_forms)},
+        )
+        catalog = catalog_with_strings({"review.kept": value})
+
+        self.assertEqual(catalog_entry_failures(catalog, languages=("en", "ar")), [])
+
+        # The plural after three to ten still shows its number.
+        arabic_forms["few"] = "عادات"
+        value["localizations"]["ar"] = substitution_localization(
+            "حافظت على %#@habits@.",
+            {"habits": plural_substitution(1, arabic_forms)},
+        )
+        self.assertIn(
+            "review.kept ar substitution 'habits' plural 'few' must contain %arg",
+            catalog_entry_failures(catalog, languages=("en", "ar")),
+        )
+
     def test_catalog_entry_failures_understands_locale_specific_plural_substitutions(self) -> None:
         # Each language names and words its own substitutions; only the
         # arguments they stand for must agree.

@@ -56,10 +56,10 @@ struct MemoryToolTests {
 
   @Test("write_memory then read_memory reflects the update")
   func writeMemoryRoundTrip() async throws {
-    // Seeded store: `swift_migration` already exists, so this write replaces
+    // Seeded store: `new_laptop` already exists, so this write replaces
     // its content under last-write semantics.
     let registry = try await mcpSeededRegistry()
-    let key = "swift_migration"
+    let key = "new_laptop"
     let content = "Memory updated through the Swift MCP host."
 
     let writeResult = try await mcpRegistryCall(

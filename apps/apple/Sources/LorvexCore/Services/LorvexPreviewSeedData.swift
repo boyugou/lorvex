@@ -49,7 +49,7 @@ enum LorvexPreviewSeedData {
       updatedAt: "2026-05-22T00:00:00Z"
     ),
     MemoryEntry(
-      key: "swift_migration",
+      key: "new_laptop",
       content:
         "Before switching laptops, export the database and photo library so nothing is lost in the move.",
       updatedAt: "2026-05-22T00:00:00Z"

@@ -18,25 +18,7 @@ CLAUDE_GUIDE = ROOT / "CLAUDE.md"
 FEATURES = ROOT / "docs" / "reference" / "FEATURES.md"
 DISTRIBUTION = ROOT / "docs" / "DISTRIBUTION.md"
 CI_RELEASE_TRIGGER_POLICY = ROOT / "docs" / "execution" / "CI_RELEASE_TRIGGER_POLICY.md"
-ROADMAP = REPO_ROOT / "ROADMAP.md"
 MCP_TOOL_COUNT_PATTERNS = {
-    ROADMAP: {
-        "catalog headline": re.compile(
-            r"(?m)^- \*\*MCP catalog at (?P<count>\d+) tools\.\*\*"
-        ),
-        "reference parity count": re.compile(
-            r"(?m)^  85 reference tools against Apple's catalog \(now (?P<count>\d+)\):"
-        ),
-        "parameter audit count": re.compile(
-            r"(?m)^  across the Apple MCP catalog \(currently (?P<count>\d+) tools\)"
-        ),
-        "reference parity count (beyond)": re.compile(
-            r"(?m)^- \*\*MCP parity with the original reference catalog, and beyond\.\*\* The current Apple catalog has (?P<count>\d+) tools\."
-        ),
-        "gap closure count": re.compile(
-            r"(?m)^  additions leave the current catalog at (?P<count>\d+) tools\."
-        ),
-    },
     FEATURES: {
         "feature matrix count": re.compile(r"(?m)^MCP tool count: (?P<count>\d+)\."),
     },

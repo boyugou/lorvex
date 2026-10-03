@@ -2,8 +2,8 @@ import XCTest
 
 @testable import LorvexDomain
 
-/// The `description` strings are the wire wording surfaced to AI clients and
-/// must stay byte-identical to the Rust `Display` impls.
+/// The `description` strings are the wire wording surfaced to AI clients, so
+/// each case pins its exact text.
 final class ValidationErrorTests: XCTestCase {
   func testEmptyWording() {
     XCTAssertEqual(ValidationError.empty("title").description, "title must not be empty")

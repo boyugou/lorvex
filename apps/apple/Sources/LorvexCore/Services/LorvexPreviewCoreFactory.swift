@@ -88,7 +88,7 @@ public enum LorvexPreviewCoreFactory {
               reason: "blocked", note: text("The agenda comes first"))
           }
           _ = try await core.upsertMemory(
-            key: "work_rhythm",
+            key: text("work_rhythm"),
             content: text("Does deep work before lunch and keeps afternoons for meetings and email."))
         }
         try await seedTodayPool(core, text: text)
@@ -368,7 +368,7 @@ public enum LorvexPreviewCoreFactory {
   private static func seedMemory(_ core: SwiftLorvexCoreService, text: LorvexSampleText) async throws {
     for entry in LorvexPreviewSeedData.memory.entries {
       _ = try await core.importMemoryEntry(
-        key: entry.key, content: text(entry.content), updatedAt: entry.updatedAt)
+        key: text(entry.key), content: text(entry.content), updatedAt: entry.updatedAt)
     }
   }
 

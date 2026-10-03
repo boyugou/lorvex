@@ -33,6 +33,33 @@ func taskDetailDueSummaryNamesItsOwnDayEvenOnThePlannedDay() async throws {
   #expect(store.taskDetailDueSummary == "tomorrow")
 }
 
+/// The When row says when the plan would finish the task late, and stops
+/// saying it once the planned day is back on the deadline.
+@MainActor
+@Test
+func taskDetailDoOnSummarySaysWhenThePlanFallsAfterTheDeadline() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  var draft = TaskCreateDraft(title: "Book the venue", notes: "")
+  draft.plannedDate = try store.storageDate(daysFromLogicalToday: 1)
+  draft.dueDate = try store.storageDate(daysFromLogicalToday: 0)
+  let task = try await core.createTask(draft)
+  await store.refresh()
+
+  store.selectTaskFromList(task.id)
+  #expect(store.taskDetailPlannedIsAfterDeadline)
+  #expect(store.taskDetailDoOnSummary == LorvexDayPhrase.afterDeadline("Tomorrow"))
+
+  _ = try await core.updateTask(
+    TaskUpdateDraft(id: task.id, plannedDate: .set(try store.storageDate(daysFromLogicalToday: 0))))
+  await store.refresh()
+  store.selectedTaskID = nil
+  store.selectTaskFromList(task.id)
+  #expect(!store.taskDetailPlannedIsAfterDeadline)
+  #expect(store.taskDetailDoOnSummary == "Today")
+}
+
 @MainActor
 @Test
 func taskDetailHideUntilSummaryReadsAnArrivedDayAsUnset() async throws {

@@ -274,7 +274,7 @@
         ("current_focus", "Shipping the Apple-native rewrite this quarter."),
       ]
       for (key, content) in memories {
-        _ = try? await core.upsertMemory(key: key, content: text(content))
+        _ = try? await core.upsertMemory(key: text(key), content: text(content))
       }
 
       // Daily reviews — today (editable) plus prior days so the weekly digest has history.

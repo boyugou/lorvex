@@ -90,6 +90,38 @@ public enum LorvexDayPhrase {
     return "\(day) · \(daysLate(-offset))"
   }
 
+  /// Whether a task's planned day falls after a deadline that has not passed
+  /// yet, so working on it that day would finish it late.
+  ///
+  /// False when either day is missing, when the planned day is on or before
+  /// the deadline, and once the deadline has gone by: an overdue task's
+  /// deadline already says how late it is, and planning it for today or later
+  /// is the expected way to catch up, not a plan to warn about.
+  ///
+  /// - Parameters:
+  ///   - planned: the stored planned day, or `nil`.
+  ///   - due: the stored due day, or `nil`.
+  ///   - logicalDay: the product's logical today, `yyyy-MM-dd`.
+  public static func isPlannedAfterDeadline(planned: Date?, due: Date?, logicalDay: String) -> Bool {
+    guard let planned, let due,
+      let dueOffset = lorvexDayOffset(from: logicalDay, to: due), dueOffset >= 0,
+      let plannedOffset = lorvexDayOffset(from: logicalDay, to: planned)
+    else { return false }
+    return plannedOffset > dueOffset
+  }
+
+  /// A planned day's phrase with the fact that it falls after the deadline
+  /// ("Tomorrow · after the deadline"), for a planned day
+  /// ``isPlannedAfterDeadline(planned:due:logicalDay:)`` flags. The fact
+  /// keeps its words together, so a value too wide for its line wraps after
+  /// the separator rather than inside the fact.
+  public static func afterDeadline(_ plannedPhrase: String) -> String {
+    let fact = String(
+      localized: "day_phrase.after_deadline", defaultValue: "after the deadline", table: "Localizable",
+      bundle: CoreL10n.bundle)
+    return "\(plannedPhrase) · \(lorvexUnbreakable(fact))"
+  }
+
   private static func today(_ position: Position) -> String {
     switch position {
     case .leading:

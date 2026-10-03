@@ -38,6 +38,25 @@ struct MobileTaskPropertiesTests {
     #expect(due.value == "Yesterday")
   }
 
+  @Test("A planned day after a deadline still ahead says so and is tinted; shared text keeps only dates")
+  func plannedAfterTheDeadline() throws {
+    let task = Self.task(planned: "2026-04-06", due: "2026-04-05")
+    let properties = MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-04-05")
+    let when = try #require(properties.rows.first { $0.field == .doOn })
+    #expect(when.value == LorvexDayPhrase.afterDeadline("Tomorrow"))
+    #expect(when.tint == .soon)
+
+    let shared = MobileTaskProperties(task: task, listName: nil, logicalDay: "2026-04-05", days: .dated)
+    let sharedWhen = try #require(shared.rows.first { $0.field == .doOn })
+    #expect(sharedWhen.value == MobileTaskProperties.dated(try #require(task.plannedDate)))
+    #expect(sharedWhen.tint == nil)
+
+    // Once the deadline has passed, a later planned day is how the task catches up.
+    let overdue = MobileTaskProperties(
+      task: Self.task(planned: "2026-04-06", due: "2026-04-04"), listName: nil, logicalDay: "2026-04-05")
+    #expect(overdue.rows.first { $0.field == .doOn }?.value == "Tomorrow")
+  }
+
   @Test("The repeat row is the cadence, and tags join into one row")
   func repeatAndTags() {
     let rule = TaskRecurrenceRule(freq: .weekly, byDay: ["MO"], count: 10)

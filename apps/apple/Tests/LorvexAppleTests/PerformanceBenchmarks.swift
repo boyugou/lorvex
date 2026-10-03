@@ -166,20 +166,26 @@ func calendarRefreshUsesDueBoundedScheduledTaskQueries() throws {
   #expect(!mac.contains("limit: 5000"))
 }
 
-@Test("Mobile reminder scheduling avoids all-task fallback queries")
-func mobileReminderSchedulingAvoidsAllTaskFallbackQueries() throws {
+@Test("Reminder scheduling reads only tasks with upcoming reminders, on both shells")
+func reminderSchedulingAvoidsAllTaskFallbackQueries() throws {
   let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
     .deletingLastPathComponent()
-  let source = try String(
-    contentsOf: root.appending(path: "Sources/LorvexMobile/MobileStoreNotificationActions.swift"),
-    encoding: .utf8
-  )
+  func source(_ path: String) throws -> String {
+    try String(contentsOf: root.appending(path: path), encoding: .utf8)
+  }
+  let replan = try source("Sources/LorvexCore/Support/ReminderReplan.swift")
 
-  #expect(source.contains("core.getTasksWithUpcomingReminders("))
-  #expect(!source.contains("core.listTasks("))
-  #expect(!source.contains("limit: 5000"))
+  #expect(replan.contains("core.getTasksWithUpcomingReminders("))
+  #expect(!replan.contains("core.listTasks("))
+  #expect(!replan.contains("limit: 5000"))
+  for shell in [
+    "Sources/LorvexMobile/MobileStoreNotificationActions.swift",
+    "Sources/LorvexApple/Stores/AppStoreAppleSurfacePublishing.swift",
+  ] {
+    #expect(try source(shell).contains("ReminderReplan.run("))
+  }
 }
 
 @MainActor

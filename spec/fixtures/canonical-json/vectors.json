@@ -1,5 +1,5 @@
 {
-  "description": "Cross-language canonical-JSON parity vectors. Each `input` must canonicalize to the byte-identical `canonical` string in BOTH cores — Rust `lorvex_domain::canonical_json` and Swift `LorvexDomain.canonicalizeJSON` — because sync checksums are computed over these bytes. Expected outputs originate from the Rust implementation's test assertions and the shared escape-table contract. Integer numbers only: float formatting parity is asserted in implementation-level tests, not fixtures.",
+  "description": "Canonical-JSON vectors. Each `input` must canonicalize to the byte-identical `canonical` string through `LorvexDomain.canonicalizeJSON`, because sync checksums are computed over these bytes and every app version must compute the same checksum for the same payload. The vectors live outside the implementation, so a serializer change cannot move its expected outputs along with it; the outputs follow the shared escape-table contract. Integer numbers only: float formatting is asserted in implementation-level tests, not fixtures.",
   "vectors": [
     {
       "name": "sorted_keys",

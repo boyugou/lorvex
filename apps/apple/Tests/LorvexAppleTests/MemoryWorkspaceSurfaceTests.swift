@@ -23,9 +23,9 @@ func filteredMemoryEntriesMatchesOnKey() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
   await store.loadMemory()
 
-  store.searchText = "swift"
+  store.searchText = "new"
   let keys = store.filteredMemoryEntries.map(\.key)
-  #expect(keys == ["swift_migration"])
+  #expect(keys == ["new_laptop"])
 }
 
 @MainActor
@@ -34,11 +34,11 @@ func filteredMemoryEntriesMatchesOnContentCaseInsensitively() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
   await store.loadMemory()
 
-  // "swift_migration" content mentions "database"; "notes_for_ai" does not.
+  // "new_laptop" content mentions "database"; "notes_for_ai" does not.
   store.searchText = "DATABASE"
-  #expect(store.filteredMemoryEntries.map(\.key) == ["swift_migration"])
+  #expect(store.filteredMemoryEntries.map(\.key) == ["new_laptop"])
 
-  // "notes_for_ai" content mentions frameworks; the migration entry does not.
+  // "notes_for_ai" content mentions frameworks; the laptop entry does not.
   store.searchText = "framework"
   #expect(store.filteredMemoryEntries.map(\.key) == ["notes_for_ai"])
 }

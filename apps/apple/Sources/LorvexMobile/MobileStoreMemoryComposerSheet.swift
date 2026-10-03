@@ -85,7 +85,7 @@ struct MobileStoreMemoryComposerSheet: View {
             } else {
               Text(
                 String(
-                  localized: "common.save", defaultValue: "Save", table: "Localizable",
+                  localized: "common.create", defaultValue: "Create", table: "Localizable",
                   bundle: MobileL10n.bundle))
             }
           }

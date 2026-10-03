@@ -2,13 +2,12 @@ import XCTest
 
 @testable import LorvexDomain
 
-/// Drives the Swift canonical-JSON serializer with the cross-language vectors
-/// committed at `spec/fixtures/canonical-json/vectors.json` — the shared
-/// artifact both cores must reproduce byte-for-byte, because sync checksums
-/// are computed over canonical bytes. Unlike the hand-ported cases in
-/// `CanonicalJSONTests`, these inputs live outside either implementation, so
-/// a Rust-side change to the vectors mechanically reaches this suite through
-/// the committed file rather than through a manual port.
+/// Drives the canonical-JSON serializer with the language-neutral vectors
+/// committed at `spec/fixtures/canonical-json/vectors.json`. Sync checksums
+/// are computed over canonical bytes, so every app version must reproduce
+/// these strings byte-for-byte. Unlike the cases in `CanonicalJSONTests`, the
+/// vectors live outside the implementation, so a serializer change cannot
+/// move its expected outputs along with it.
 final class CanonicalJSONFixtureTests: XCTestCase {
   func testSharedVectorsCanonicalizeByteForByte() throws {
     let fixtureURL = URL(fileURLWithPath: #filePath)

@@ -29,17 +29,38 @@ public func lorvexClockTimeLabel(minutes: Int) -> String {
 /// 24-hour), naming the day period once when both ends share it. A span that
 /// does not run forward within one day (it ends at or past midnight, or before
 /// it starts) reads as the two clock labels joined by an en dash.
-public func lorvexClockRangeLabel(startMinutes: Int, endMinutes: Int) -> String {
+///
+/// A Japanese span joins its two clock labels with a wave dash ("15:00～16:30",
+/// "午後3:00～4:30"): the Japanese span pattern spells the times out
+/// ("15時00分～16時30分") where a single time reads "15:00", so a span and the
+/// times beside it would disagree, and the spelled-out span takes twice the
+/// width.
+public func lorvexClockRangeLabel(
+  startMinutes: Int, endMinutes: Int, locale: Locale = LorvexClockFormat.displayLocale
+) -> String {
   func date(_ minutes: Int) -> Date? {
-    LorvexDateFormatters.hourMinute.date(from: String(format: "%02d:%02d", minutes / 60, minutes % 60))
+    let wrapped = ((minutes % 1440) + 1440) % 1440
+    return LorvexDateFormatters.hourMinute.date(from: String(format: "%02d:%02d", wrapped / 60, wrapped % 60))
   }
+  func label(_ minutes: Int) -> String {
+    date(minutes).map { LorvexDateFormatters.clockTime($0, locale: locale) } ?? lorvexClockTimeLabel(minutes: minutes)
+  }
+  let isJapanese = locale.language.languageCode == .japanese
   guard (0..<1440).contains(startMinutes), endMinutes > startMinutes, endMinutes < 1440,
     let start = date(startMinutes), let end = date(endMinutes), start < end
   else {
-    return "\(lorvexClockTimeLabel(minutes: startMinutes)) – \(lorvexClockTimeLabel(minutes: endMinutes))"
+    return "\(label(startMinutes))\(isJapanese ? "～" : " – ")\(label(endMinutes))"
   }
-  return (start..<end).formatted(
-    Date.IntervalFormatStyle(time: .shortened, locale: LorvexClockFormat.displayLocale))
+  guard isJapanese else {
+    return (start..<end).formatted(Date.IntervalFormatStyle(time: .shortened, locale: locale))
+  }
+  let isTwelveHour = [.oneToTwelve, .zeroToEleven].contains(locale.hourCycle)
+  guard isTwelveHour, (startMinutes < 720) == (endMinutes < 720) else {
+    return "\(label(startMinutes))～\(label(endMinutes))"
+  }
+  var withoutPeriod = Date.FormatStyle(locale: locale).hour(.defaultDigits(amPM: .omitted)).minute()
+  withoutPeriod.timeZone = LorvexDateFormatters.hourMinute.timeZone
+  return "\(label(startMinutes))～\(end.formatted(withoutPeriod))"
 }
 
 /// Locale-aware label for an event's stored `HH:MM` start and end: the span

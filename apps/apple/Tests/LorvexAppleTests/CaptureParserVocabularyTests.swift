@@ -3,7 +3,7 @@ import Testing
 
 // 2026-09-22 is a Tuesday: weekday 3 in the Gregorian convention.
 private func parse(_ text: String, todayWeekday: Int = 3) -> LorvexCaptureParse {
-  LorvexCaptureParser.parse(text, lists: [], todayWeekday: todayWeekday)
+  LorvexCaptureParser.parse(text, lists: [], todayWeekday: todayWeekday, languages: ["en"])
 }
 
 /// The capture vocabulary beyond the basics: Chinese written without spaces,
@@ -43,6 +43,59 @@ struct CaptureParserVocabularyTests {
     #expect(parse("周末大扫除").plannedDayOffset == 4)
     #expect(parse("3天后复查").plannedDayOffset == 3)
     #expect(parse("每周一次复盘").plannedDayOffset == nil)
+    // The first day named counts; a later one stays in the title.
+    #expect(parse("明天准备周五的汇报").plannedDayOffset == 1)
+    #expect(parse("明天准备周五的汇报").title == "准备周五的汇报")
+  }
+
+  @Test("Traditional Chinese reads like Simplified, and the line keeps its characters")
+  func traditionalChinese() {
+    let line = parse("後天下午三點開會兩個鐘頭")
+    #expect(line.title == "開會")
+    #expect(line.plannedDayOffset == 2)
+    #expect(line.startMinutes == 15 * 60)
+    #expect(line.estimatedMinutes == 120)
+    #expect(line.phrases.map(\.text) == ["後天", "下午三點", "兩個鐘頭"])
+
+    // Today is Tuesday.
+    #expect(parse("大後天交報告").plannedDayOffset == 3)
+    #expect(parse("下週三開會").plannedDayOffset == 8)
+    #expect(parse("這週二例會").plannedDayOffset == 0)
+    #expect(parse("禮拜天去爬山").plannedDayOffset == 5)
+    #expect(parse("週末大掃除").plannedDayOffset == 4)
+    let later = parse("3天後複查")
+    #expect(later.plannedDayOffset == 3)
+    #expect(later.title == "複查")
+    #expect(parse("緊急修復登入").priority == .p1)
+    #expect(parse("整理報銷30分鐘").estimatedMinutes == 30)
+    let report = parse("寫週報一個半小時")
+    #expect(report.estimatedMinutes == 90)
+    #expect(report.title == "寫週報")
+
+    let due = parse("週五前提交報銷")
+    #expect(due.dueDayOffset == 3)
+    #expect(due.title == "提交報銷")
+
+    #expect(parse("每週一三五晨跑").recurrence == TaskRecurrenceRule(freq: .weekly, byDay: ["MO", "WE", "FR"]))
+    #expect(
+      parse("每個工作日站會").recurrence == TaskRecurrenceRule(freq: .weekly, byDay: ["MO", "TU", "WE", "TH", "FR"]))
+    #expect(parse("每兩週回顧").recurrence == TaskRecurrenceRule(freq: .weekly, interval: 2))
+
+    // A tag is the word as typed.
+    let tagged = parse("#時間管理 明天整理")
+    #expect(tagged.tags == ["時間管理"])
+    #expect(tagged.plannedDayOffset == 1)
+    #expect(tagged.title == "整理")
+  }
+
+  @Test("钟头 counts hours in either script")
+  func zhongtouLengths() {
+    #expect(parse("复盘2个钟头").estimatedMinutes == 120)
+    #expect(parse("复盘两个钟头").estimatedMinutes == 120)
+    #expect(parse("复盘一个半钟头").estimatedMinutes == 90)
+    #expect(parse("散步半个钟头").estimatedMinutes == 30)
+    #expect(parse("散步半个钟头").title == "散步")
+    #expect(parse("複盤一個鐘頭").estimatedMinutes == 60)
   }
 
   @Test("A Chinese day before 前 is the due day")

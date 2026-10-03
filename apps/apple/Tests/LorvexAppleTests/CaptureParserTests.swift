@@ -8,7 +8,7 @@ private let lists = [
 
 // 2026-09-22 is a Tuesday: weekday 3 in the Gregorian convention.
 private func parse(_ text: String) -> LorvexCaptureParse {
-  LorvexCaptureParser.parse(text, lists: lists, todayWeekday: 3)
+  LorvexCaptureParser.parse(text, lists: lists, todayWeekday: 3, languages: ["en"])
 }
 
 @Test
@@ -21,6 +21,14 @@ func captureParserReadsDayLengthAndList() {
   #expect(result.listName == "Offsite 2026")
   #expect(result.phrases.map(\.kind) == [.when, .length, .list])
   #expect(result.phrases.map(\.text) == ["tomorrow", "20 min", "#offsite2026"])
+}
+
+@Test
+func captureParserKeepsTheFirstPhraseOfAKind() {
+  let result = parse("Tomorrow prep for friday review")
+  #expect(result.plannedDayOffset == 1)
+  #expect(result.title == "prep for friday review")
+  #expect(parse("Pay rent 30 min then file taxes 2h").estimatedMinutes == 30)
 }
 
 @Test

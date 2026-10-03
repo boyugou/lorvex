@@ -36,6 +36,14 @@ struct LorvexCapturePreviewTests {
     #expect(words.first?.label == "Today")
   }
 
+  /// A range names the time and its length together, so one time word spans
+  /// it and no length word repeats it.
+  @Test func aTimeRangeShowsOneSpan() {
+    let words = preview("Team sync 3-4pm").words
+    #expect(words.map(\.id) == ["when", "time"])
+    #expect(words.last?.label == lorvexClockRangeLabel(startMinutes: 15 * 60, endMinutes: 16 * 60))
+  }
+
   /// Without a time the task has no planned day, so the due day is the only
   /// word that says when the first occurrence is.
   @Test func aRepeatingTaskWithoutATimeShowsItsFirstDueDay() {

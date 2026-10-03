@@ -123,5 +123,8 @@ extension AppStore {
     {
       syncSelectedTaskDraft(force: true)
     }
+    if reloadsTaskBearingDomain {
+      taskDataGeneration &+= 1
+    }
   }
 }

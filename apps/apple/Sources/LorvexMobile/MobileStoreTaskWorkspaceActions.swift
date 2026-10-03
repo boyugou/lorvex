@@ -30,7 +30,8 @@ extension MobileStore {
           tasks: tasks,
           totalMatching: narrowsInMemory ? tasks.count : result.totalMatching,
           nextOffset: result.nextOffset,
-          isNarrowed: narrowsInMemory
+          isNarrowed: narrowsInMemory,
+          blockedTaskIDs: await blockedTaskIDs(in: tasks)
         )
       } else {
         // searchTasks has no list/smart filter — narrow in memory.
@@ -48,7 +49,8 @@ extension MobileStore {
           tasks: tasks,
           totalMatching: narrowsInMemory ? tasks.count : result.totalMatching,
           nextOffset: result.nextOffset,
-          isNarrowed: narrowsInMemory
+          isNarrowed: narrowsInMemory,
+          blockedTaskIDs: await blockedTaskIDs(in: tasks)
         )
       }
       cacheTasks(page.tasks)
@@ -57,6 +59,14 @@ extension MobileStore {
       await presentUserFacingError(error)
       return .empty
     }
+  }
+
+  /// The ids of `tasks` that wait on an unfinished task
+  /// (``LorvexTaskServicing/blockedTaskIDs(in:)``), or none when the read
+  /// fails: their rows then offer Start, which the core refuses with its
+  /// reason, rather than the list failing over a mark.
+  func blockedTaskIDs(in tasks: [LorvexTask]) async -> Set<LorvexTask.ID> {
+    (try? await core.blockedTaskIDs(in: tasks)) ?? []
   }
 
   /// Whether the store holds a task in any status. A failed read answers

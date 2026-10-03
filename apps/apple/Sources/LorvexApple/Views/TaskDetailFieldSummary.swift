@@ -89,12 +89,25 @@ extension AppStore {
     return tags.isEmpty ? nil : tags.joined(separator: " · ")
   }
 
-  /// What this task is waiting on. The reverse direction (what it blocks) is not
+  /// The title of the one task the draft waits on, which the Waits on row
+  /// shows: read from the loaded tasks, else from the title the detail read
+  /// for it (``refreshTaskDetailDependencyTitles()``). Nil when the draft
+  /// waits on several tasks or none, or the one cannot be read.
+  var taskDetailWaitsOnTitle: String? {
+    let ids = taskDetailDependencies
+    guard ids.count == 1 else { return nil }
+    return taskForDetailDraft(id: ids[0])?.title
+      ?? taskDetailStorage.dependencyTitlesByID[ids[0]]
+  }
+
+  /// How many tasks the draft waits on ("2 tasks"), which the Waits on row
+  /// shows when it cannot name the one task (``taskDetailWaitsOnTitle``); nil
+  /// when it waits on none. The reverse direction (what it blocks) is not
   /// summarized here: it needs the whole dependency graph, which the row would
   /// have to load to render, and the editor behind the row shows both.
-  var taskDetailDependencySummary: String? {
-    let waitsOn = taskDetailDependencies.count
-    return waitsOn > 0 ? lorvexWaitsOnLabel(count: waitsOn) : nil
+  var taskDetailDependencyCountSummary: String? {
+    let count = taskDetailDependencies.count
+    return count > 0 ? lorvexDependencyCountLabel(count) : nil
   }
 }
 
@@ -106,8 +119,8 @@ func lorvexReminderCountLabel(_ count: Int) -> String {
     table: "Localizable", bundle: LorvexL10n.bundle)
 }
 
-func lorvexWaitsOnLabel(count: Int) -> String {
+func lorvexDependencyCountLabel(_ count: Int) -> String {
   String(
-    localized: "task_detail.dependencies.waits_on", defaultValue: "Waits on \(count)",
+    localized: "task_detail.dependencies.count", defaultValue: "\(count) tasks",
     table: "Localizable", bundle: LorvexL10n.bundle)
 }

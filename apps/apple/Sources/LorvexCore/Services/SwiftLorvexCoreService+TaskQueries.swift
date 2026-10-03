@@ -190,6 +190,11 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  public func blockedTaskIDs(among taskIDs: [LorvexTask.ID]) async throws -> Set<LorvexTask.ID> {
+    guard !taskIDs.isEmpty else { return [] }
+    return try read { db in try TaskRepo.Read.blockedTaskIDs(db, among: taskIDs) }
+  }
+
   public func getDeferredTasks(listID: LorvexList.ID?, limit: Int, offset: Int) async throws
     -> TaskPageResult
   {

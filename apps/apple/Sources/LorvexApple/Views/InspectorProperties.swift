@@ -11,6 +11,10 @@ struct InspectorPropertyRow: Identifiable {
   /// A state color for the value and its icon (an overdue deadline, a high
   /// priority); nil draws the value in the primary style.
   var tint: Color? = nil
+  /// The value is text the user wrote, such as a task's title, rather than
+  /// the app's words: it is typeset by the rules of its own script and kept
+  /// to two lines.
+  var isUserContent = false
 }
 
 /// A field the item does not carry yet, offered as a dashed "+ Field" capsule.
@@ -252,9 +256,10 @@ private struct InspectorPropertyRowLabel: View {
         .foregroundStyle(.secondary)
         .lineLimit(1)
         .frame(width: labelWidth, alignment: .leading)
-      Text(row.value)
+      (row.isUserContent ? Text(userContent: row.value) : Text(row.value))
         .font(LorvexDesign.Typography.primaryText)
         .foregroundStyle(row.tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.primary))
+        .lineLimit(row.isUserContent ? 2 : nil)
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
     }

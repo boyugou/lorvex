@@ -257,12 +257,14 @@ public struct MobileStoreTasksView: View {
         isBatchSelecting: isBatchSelecting,
         isBatchSelected: batchSelectedTaskIDs.contains(task.id),
         actions: store.rowActions(for: task.id) { await load() },
-        timeLabel: timeLabel
+        timeLabel: timeLabel,
+        isBlocked: page.blockedTaskIDs.contains(task.id)
       )
       .tag(task.id)
     } else {
       MobileActionTaskRow(
         task: task,
+        isBlocked: page.blockedTaskIDs.contains(task.id),
         isMutating: store.taskIsMutating(task.id),
         actions: store.rowActions(for: task.id) { await load() },
         timeLabel: timeLabel

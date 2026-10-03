@@ -8,21 +8,25 @@ import SwiftUI
 /// time passes and completes the task when tapped. Every other task is a row
 /// whose circle completes it. Tapping a task's title opens its actions (Start
 /// or Pause, Tomorrow, Cancel); a row's swipes reach the ones the phone's do,
-/// leading Start or Pause and trailing Tomorrow. An action that failed to save
-/// shows above the list, and once the phone's copy is hours old a footer says
-/// when it synced. With nothing left, the page says so and counts what got
-/// done.
+/// leading Start or Pause and trailing Tomorrow. A task that waits on an
+/// unfinished one reads "Blocked" and offers no Start. An action that failed
+/// to save shows above the list, and once the phone's copy is hours old a
+/// footer says when it synced. With nothing left, the page says so and counts
+/// what got done.
 struct LorvexWatchTodayPage: View {
   @Bindable var store: LorvexWatchStore
   @State private var actionTask: LorvexWatchTaskReference?
   @State private var didOpenActions = false
   private let opensActions: Bool
+  private let actionsTaskID: LorvexTask.ID?
 
-  /// `opensActions` opens the lead task's actions once the list loads; the
-  /// headless capture path uses it to photograph the sheet.
-  init(store: LorvexWatchStore, opensActions: Bool = false) {
+  /// `opensActions` opens a task's actions once the list loads: the task
+  /// `actionsTaskID` names, else the lead. The headless capture path uses it
+  /// to photograph the sheet.
+  init(store: LorvexWatchStore, opensActions: Bool = false, actionsTaskID: LorvexTask.ID? = nil) {
     self.store = store
     self.opensActions = opensActions
+    self.actionsTaskID = actionsTaskID
   }
 
   var body: some View {
@@ -36,12 +40,13 @@ struct LorvexWatchTodayPage: View {
     }
     .onChange(of: store.tasks.isEmpty, initial: true) { _, isEmpty in
       guard opensActions, !didOpenActions, !isEmpty,
-        let lead = store.lead(at: store.now()) ?? store.tasks.first
+        let task = actionsTaskID.flatMap({ id in store.tasks.first { $0.id == id } })
+          ?? store.lead(at: store.now()) ?? store.tasks.first
       else {
         return
       }
       didOpenActions = true
-      actionTask = LorvexWatchTaskReference(id: lead.id)
+      actionTask = LorvexWatchTaskReference(id: task.id)
     }
     .accessibilityIdentifier("watch.today")
   }
@@ -131,11 +136,12 @@ struct LorvexWatchTodayPage: View {
 
   private func rows(_ tasks: ArraySlice<LorvexTask>, nowMinutes: Int) -> some View {
     ForEach(tasks) { task in
+      let isBlocked = store.blockedTaskIDs.contains(task.id)
       LorvexWatchTaskRow(
         task: task,
         line: LorvexWatchTaskLine.make(
           task: task, time: store.savedTimes[task.id], nowMinutes: nowMinutes,
-          logicalDay: store.logicalDay),
+          logicalDay: store.logicalDay, isBlocked: isBlocked),
         canComplete: store.canMutateTasks,
         complete: {
           await store.completeTask(id: task.id)
@@ -144,25 +150,29 @@ struct LorvexWatchTodayPage: View {
         openActions: { actionTask = LorvexWatchTaskReference(id: task.id) }
       )
       .swipeActions(edge: .leading, allowsFullSwipe: true) {
-        Button {
-          Task {
-            if task.status == .inProgress {
-              await store.pauseTask(id: task.id)
-            } else {
-              await store.startTask(id: task.id)
+        // A task that waits on an unfinished one has no Start: the phone
+        // would refuse it. Its line says "Blocked".
+        if task.status == .inProgress || !isBlocked {
+          Button {
+            Task {
+              if task.status == .inProgress {
+                await store.pauseTask(id: task.id)
+              } else {
+                await store.startTask(id: task.id)
+              }
             }
+          } label: {
+            task.status == .inProgress
+              ? Label(
+                String(localized: "watch.action.pause", defaultValue: "Pause", table: "Localizable", bundle: WatchL10n.bundle),
+                systemImage: "pause.fill")
+              : Label(
+                String(localized: "watch.action.start", defaultValue: "Start", table: "Localizable", bundle: WatchL10n.bundle),
+                systemImage: "play.fill")
           }
-        } label: {
-          task.status == .inProgress
-            ? Label(
-              String(localized: "watch.action.pause", defaultValue: "Pause", table: "Localizable", bundle: WatchL10n.bundle),
-              systemImage: "pause.fill")
-            : Label(
-              String(localized: "watch.action.start", defaultValue: "Start", table: "Localizable", bundle: WatchL10n.bundle),
-              systemImage: "play.fill")
+          .tint(LorvexDesign.Palette.accent)
+          .disabled(!store.canMutateTasks)
         }
-        .tint(LorvexDesign.Palette.accent)
-        .disabled(!store.canMutateTasks)
       }
       .swipeActions(edge: .trailing, allowsFullSwipe: true) {
         Button {

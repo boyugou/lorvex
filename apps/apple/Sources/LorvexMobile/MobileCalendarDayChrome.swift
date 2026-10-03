@@ -44,7 +44,6 @@ struct MobileCalendarColumnHeaders: View {
     let isToday = isToday(day.date)
     return VStack(spacing: 2) {
       Text(LorvexDateFormatters.string(day.date, template: "EEE", timeZone: calendar.timeZone))
-      .textCase(.uppercase)
       .font(LorvexDesign.Typography.tertiaryText)
       .foregroundStyle(isToday ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
       Text(LorvexDateFormatters.dayNumber(day.date, timeZone: calendar.timeZone))
@@ -76,10 +75,13 @@ struct MobileCalendarAllDayStrip: View {
   let onDropTask: (LorvexTaskRef, Date) -> Void
   @Environment(\.calendar) private var calendar
 
+  /// Whether any of `columns` has an all-day event or a task without a time.
+  static func hasContent(_ columns: [CalendarGridDay]) -> Bool {
+    columns.contains { !$0.allDayEvents.isEmpty || !$0.scheduledTasks.isEmpty }
+  }
+
   var body: some View {
-    let hasContent = columns.contains {
-      !$0.allDayEvents.isEmpty || !$0.scheduledTasks.isEmpty
-    }
+    let hasContent = Self.hasContent(columns)
     HStack(alignment: .top, spacing: 0) {
       Text(
         String(
@@ -291,7 +293,14 @@ struct MobileCalendarHourGutter: View {
 
 }
 
-enum MobileDayScrollAnchor: Hashable { case hour(Int) }
+enum MobileDayScrollAnchor: Hashable {
+  case hour(Int)
+
+  /// The margin above the hours' scroll content, so the hour scrolled to the
+  /// top keeps its label and the blocks that start on it clear of the divider
+  /// over the grid.
+  static let topClearance: CGFloat = 10
+}
 
 /// Tags the chosen gutter row as the scroll anchor.
 struct MobileDayAnchorModifier: ViewModifier {

@@ -11,8 +11,10 @@
 # face (the app was not in front yet) is rerun by naming just that page.
 #
 # Usage: script/watch_sim_screenshots.sh <outdir> <page ...>
-# Pages: today habits capture, or actions (Today with its lead task's actions
-#        open). watchOS has one appearance, so there is no light/dark argument.
+# Pages: today habits capture, actions (Today with its lead task's actions
+#        open), or actions-blocked (the actions of the sample task that waits on
+#        an unfinished one). watchOS has one appearance, so there is no
+#        light/dark argument.
 # Env:   LORVEX_WATCH_SIM_DEVICE  device name (default: Apple Watch Series 11
 #                                 (46mm)); the newest watchOS runtime wins
 #        LORVEX_WATCH_SIM_UDID    exact device UDID, overriding the name lookup
@@ -67,6 +69,8 @@ boot() {
 launch_args_for() {
   case "$1" in
     actions) echo "-lorvexUIPreviewPage today -lorvexUIPreviewActions" ;;
+    actions-blocked)
+      echo "-lorvexUIPreviewPage today -lorvexUIPreviewActions -lorvexUIPreviewActionsTask preview-venue" ;;
     today|habits|capture) echo "-lorvexUIPreviewPage $1" ;;
     *) echo "unknown page: $1" >&2; return 1 ;;
   esac

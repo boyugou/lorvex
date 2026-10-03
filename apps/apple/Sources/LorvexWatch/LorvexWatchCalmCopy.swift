@@ -36,6 +36,11 @@ enum LorvexWatchCalmCopy {
     String(localized: "watch.task.started", defaultValue: "Started", table: "Localizable", bundle: WatchL10n.bundle)
   }
 
+  /// A task that waits on an unfinished task, so it cannot be started yet.
+  static var blocked: String {
+    String(localized: "watch.task.blocked", defaultValue: "Blocked", table: "Localizable", bundle: WatchL10n.bundle)
+  }
+
   static func complete(_ title: String) -> String {
     String(
       format: String(

@@ -41,6 +41,7 @@ extension AppStore {
       let loadedIDs = Set(current.tasks.map(\.id))
       var merged = page
       merged.tasks = current.tasks + page.tasks.filter { !loadedIDs.contains($0.id) }
+      merged.blockedTaskIDs = current.blockedTaskIDs.union(page.blockedTaskIDs)
       merged.returned = merged.tasks.count
       merged.limit = merged.tasks.count
       merged.offset = 0

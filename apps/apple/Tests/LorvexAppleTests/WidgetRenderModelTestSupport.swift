@@ -8,7 +8,8 @@ func widgetTodayTask(
   priority: Int?,
   estimatedMinutes: Int?,
   scheduledStart: String? = nil,
-  scheduledEnd: String? = nil
+  scheduledEnd: String? = nil,
+  isBlocked: Bool = false
 ) -> WidgetSnapshot.TodayTask {
   .init(
     id: id,
@@ -19,6 +20,7 @@ func widgetTodayTask(
     listID: nil,
     estimatedMinutes: estimatedMinutes,
     scheduledStart: scheduledStart,
-    scheduledEnd: scheduledEnd
+    scheduledEnd: scheduledEnd,
+    isBlocked: isBlocked
   )
 }

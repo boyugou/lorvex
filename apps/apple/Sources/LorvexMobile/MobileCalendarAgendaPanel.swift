@@ -29,6 +29,9 @@ struct MobileCalendarAgendaPanel: View {
   let taskActions: (LorvexTask) -> MobileTaskRowActions
   /// Whether a change to the task is in flight.
   let taskIsMutating: (LorvexTask.ID) -> Bool
+  /// Whether the task waits on an unfinished task, so its row reads Blocked
+  /// and offers no Start.
+  let taskIsBlocked: (LorvexTask.ID) -> Bool
   @State private var eventAwaitingDeleteScope: CalendarTimelineEvent?
 
   var body: some View {
@@ -47,7 +50,8 @@ struct MobileCalendarAgendaPanel: View {
             case .task(let task):
               MobileCalendarAgendaTaskRow(
                 task: task, dayKey: day.key, isMutating: taskIsMutating(task.id),
-                actions: taskActions(task), open: { openTask(task) })
+                isBlocked: taskIsBlocked(task.id), actions: taskActions(task),
+                open: { openTask(task) })
             }
           }
         } header: {

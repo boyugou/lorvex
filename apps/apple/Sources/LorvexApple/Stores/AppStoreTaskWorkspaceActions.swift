@@ -232,6 +232,10 @@ extension AppStore {
       taskWorkspaceStorage.completedTasks = pages.3.tasks
       taskWorkspaceStorage.cancelledTasks = pages.4.tasks
       taskWorkspaceStorage.somedayTasks = pages.5.tasks
+      taskWorkspaceStorage.blockedTaskIDs = pages.0.blockedTaskIDs
+        .union(pages.1.blockedTaskIDs).union(pages.2.blockedTaskIDs)
+        .union(pages.3.blockedTaskIDs).union(pages.4.blockedTaskIDs)
+        .union(pages.5.blockedTaskIDs)
     }
     // A refresh of the same search that changes a few rows (a completed,
     // deferred, or moved task) animates, so the row settles out of the queue
@@ -383,6 +387,7 @@ extension AppStore {
   }
 
   private func appendTaskWorkspacePage(_ page: TaskWorkspacePage, status: TaskWorkspaceSection) {
+    taskWorkspaceStorage.blockedTaskIDs.formUnion(page.blockedTaskIDs)
     switch status {
     case .open:
       // Mirror the disjoint-by-id rule from the full load (non-search only) so a

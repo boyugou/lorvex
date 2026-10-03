@@ -24,14 +24,17 @@ extension AppStore {
     listID: LorvexList.ID?,
     offset: Int
   ) async throws -> TaskWorkspacePage {
+    var page: TaskWorkspacePage
     switch status {
     case .scheduled:
-      return try await scheduledLanePage(query: query, listID: listID, offset: offset)
+      page = try await scheduledLanePage(query: query, listID: listID, offset: offset)
     case .deferred:
-      return try await deferredLanePage(query: query, listID: listID, offset: offset)
+      page = try await deferredLanePage(query: query, listID: listID, offset: offset)
     default:
-      return try await statusLanePage(status: status, query: query, listID: listID, offset: offset)
+      page = try await statusLanePage(status: status, query: query, listID: listID, offset: offset)
     }
+    page.blockedTaskIDs = await blockedTaskIDs(in: page.tasks)
+    return page
   }
 
   /// The Scheduled (defer-until / hidden) lane reads its own core query and is
@@ -144,4 +147,7 @@ extension AppStore {
 struct TaskWorkspacePage {
   let tasks: [LorvexTask]
   let nextOffset: Int?
+  /// The ids of `tasks` that wait on an unfinished task: their rows show
+  /// Blocked.
+  var blockedTaskIDs: Set<LorvexTask.ID> = []
 }

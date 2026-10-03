@@ -78,7 +78,8 @@ struct LorvexWatchApp: App {
       #if DEBUG
         LorvexWatchRootView(
           store: store, initialPage: LorvexWatchUIPreview.page,
-          opensActions: LorvexWatchUIPreview.opensActions)
+          opensActions: LorvexWatchUIPreview.opensActions,
+          actionsTaskID: LorvexWatchUIPreview.actionsTaskID)
       #else
         LorvexWatchRootView(store: store)
       #endif

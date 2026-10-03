@@ -47,7 +47,8 @@ struct WorkspaceRowDeferButton: View {
 
 /// A hover-revealed Start or Pause control for Today rows, beside the defer
 /// control: starting marks the task as begun, and pausing takes the mark off.
-/// Shown only for tasks that can start or pause (open or started).
+/// Shown only for tasks that can start or pause: started, or open and not held
+/// up by an unfinished task (``AppStore/startIsHeldUp(for:)``).
 struct WorkspaceRowStartButton: View {
   @Bindable var store: AppStore
   let task: LorvexTask

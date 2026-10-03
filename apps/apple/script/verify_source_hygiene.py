@@ -1106,9 +1106,11 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'private var hideInspectorButton: some View'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'LorvexIconButton('),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.fixedSize(horizontal: true, vertical: false)'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.labelStyle(.iconOnly)'),
+    # Start, Defer, and the overflow share one chip face; the overflow's is
+    # its symbol alone, never a prominent button.
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'private func headerChip(systemImage: String, title: String?, isActive: Bool = false)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'headerChip(systemImage: "ellipsis", title: nil)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.frame(minWidth: 0, maxWidth: .infinity)'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.buttonStyle(.bordered)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.buttonStyle(.borderedProminent)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.accessibilityIdentifier("task.detail.complete")'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'Label(String(localized: "common.complete"'),

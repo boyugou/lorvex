@@ -225,6 +225,18 @@ final class AppStore {
   /// always false once `refresh()` has settled.
   var refreshPending: Bool { refreshFlight.isPendingRerun }
 
+  /// Advances each time the store has re-read task data after a change: when
+  /// a local refresh pass ends, after a local mutation, and after an inbound
+  /// sync that touched tasks, lists, Today, or the calendar. A view that reads
+  /// tasks outside the published collections, such as the tasks the selected
+  /// task waits on, keys a re-read on it. Only those three paths write it.
+  var taskDataGeneration: UInt64 = 0
+
+  /// The selected task's ID while a task it waits on is unfinished, so it
+  /// cannot start; `nil` while it can, or before it has been read. Only
+  /// ``refreshSelectedTaskStartGate()`` writes it.
+  var heldUpTaskID: LorvexTask.ID?
+
   /// App-lifetime change-observer tasks (CloudKit push refresh, EventKit
   /// ingestion, notification-action error toasts), started once via
   /// `startLifetimeObserversIfNeeded`. The store outlives any single window, so

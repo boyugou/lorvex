@@ -168,6 +168,8 @@ struct WorkspaceTaskContextMenu: View {
         )
       }
     } else {
+      // Grayed out, not hidden, while a task it waits on is unfinished: the
+      // row's Blocked capsule says why.
       Button {
         Task { await store.startTaskFromRow(task) }
       } label: {
@@ -176,7 +178,7 @@ struct WorkspaceTaskContextMenu: View {
           systemImage: "play.circle"
         )
       }
-      .disabled(task.status != .open)
+      .disabled(task.status != .open || store.startIsHeldUp(for: task))
     }
 
     TaskDeferMenu(store: store, onDefer: { date in

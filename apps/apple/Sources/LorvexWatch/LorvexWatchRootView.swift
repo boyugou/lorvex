@@ -15,13 +15,19 @@ public struct LorvexWatchRootView: View {
   @State var store: LorvexWatchStore
   @State private var page: LorvexWatchPage
   private let opensActions: Bool
+  private let actionsTaskID: LorvexTask.ID?
 
-  /// `initialPage` and `opensActions` are the headless capture path's way to
-  /// land on a page or on the lead task's actions; the app opens on Today.
-  public init(store: LorvexWatchStore, initialPage: LorvexWatchPage = .today, opensActions: Bool = false) {
+  /// `initialPage`, `opensActions`, and `actionsTaskID` are the headless
+  /// capture path's way to land on a page or on a task's actions (the lead's
+  /// unless `actionsTaskID` names another); the app opens on Today.
+  public init(
+    store: LorvexWatchStore, initialPage: LorvexWatchPage = .today, opensActions: Bool = false,
+    actionsTaskID: LorvexTask.ID? = nil
+  ) {
     self.store = store
     _page = State(initialValue: initialPage)
     self.opensActions = opensActions
+    self.actionsTaskID = actionsTaskID
   }
 
   public var body: some View {
@@ -58,7 +64,7 @@ public struct LorvexWatchRootView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     } else {
       TabView(selection: $page) {
-        LorvexWatchTodayPage(store: store, opensActions: opensActions)
+        LorvexWatchTodayPage(store: store, opensActions: opensActions, actionsTaskID: actionsTaskID)
           .tag(LorvexWatchPage.today)
         if !store.habits.isEmpty {
           LorvexWatchHabitsPage(store: store)

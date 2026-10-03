@@ -85,14 +85,17 @@ struct MobileCalendarAgendaRow: View {
 /// the title and the facts each keep to two lines, and show whole at the
 /// accessibility text sizes. The circle completes the task and the rest of
 /// the row opens it; the row swipes and long-presses with the shared task
-/// actions. A done or cancelled task keeps its place with its title struck
-/// through, as on every task row.
+/// actions, without Start while the task is blocked. A done or cancelled task
+/// keeps its place with its title struck through, as on every task row.
 struct MobileCalendarAgendaTaskRow: View {
   let task: LorvexTask
   /// The row's day as `yyyy-MM-dd`, to read the task's time on it and to tell
   /// a due date from a planned one.
   let dayKey: String
   let isMutating: Bool
+  /// The task waits on an unfinished task: the facts end with "Blocked" and
+  /// the row's actions offer no Start.
+  var isBlocked = false
   let actions: MobileTaskRowActions
   let open: () -> Void
 
@@ -108,7 +111,7 @@ struct MobileCalendarAgendaTaskRow: View {
               .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
               .strikethrough(task.status.isResolved, color: .secondary)
               .lineLimitUnlessAccessibilitySize(2)
-            if let subtitle = Self.subtitle(for: task, dayKey: dayKey) {
+            if let subtitle = Self.subtitle(for: task, dayKey: dayKey, isBlocked: isBlocked) {
               Text(subtitle)
                 .font(LorvexDesign.Typography.secondaryText)
                 .foregroundStyle(.secondary)
@@ -131,17 +134,21 @@ struct MobileCalendarAgendaTaskRow: View {
     .padding(.top, LorvexDesign.Spacing.xs)
     .padding(.bottom, LorvexDesign.Spacing.s)
     .lorvexRowHoverEffect()
-    .taskRowActions(task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false)
+    .taskRowActions(
+      task: task, actions: actions, isMutating: isMutating, isBatchSelecting: false,
+      isHeldUp: isBlocked)
   }
 
   private var isDormant: Bool { task.status.isResolved || task.status == .someday }
 
   /// The line under a task's title on the day `dayKey` (`yyyy-MM-dd`): the
   /// task's time that day when it has one, else its estimate, then "Due" when
-  /// the day is its due date, joined by a dot; nil when none of them applies.
-  /// Each fact stays whole except after a span's dash, so the line breaks only
-  /// there or after a dot.
-  nonisolated static func subtitle(for task: LorvexTask, dayKey: String) -> String? {
+  /// the day is its due date, then "Blocked" when `isBlocked`, joined by a
+  /// dot; nil when none of them applies. Each fact stays whole except after a
+  /// span's dash, so the line breaks only there or after a dot.
+  nonisolated static func subtitle(
+    for task: LorvexTask, dayKey: String, isBlocked: Bool = false
+  ) -> String? {
     var facts: [String] = []
     if let time = task.time(on: dayKey) {
       facts.append(lorvexClockRangeLabel(startMinutes: time.lowerBound, endMinutes: time.upperBound))
@@ -154,6 +161,7 @@ struct MobileCalendarAgendaTaskRow: View {
           localized: "calendar.agenda.task.due", defaultValue: "Due", table: "Localizable",
           bundle: MobileL10n.bundle))
     }
+    if isBlocked { facts.append(MobileTaskDisplayText.blocked) }
     return facts.isEmpty ? nil : lorvexDotJoined(facts.map(lorvexUnbreakable))
   }
 }

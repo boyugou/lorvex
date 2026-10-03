@@ -38,6 +38,11 @@ public final class LorvexWatchStore {
   /// product day (in ``timezone``). A task without a time is absent.
   public internal(set) var savedTimes: [LorvexTask.ID: Range<Int>] = [:]
 
+  /// The listed tasks that wait on an unfinished task, as the phone (or the
+  /// core) last reported them: their rows read "Blocked", and Start is not
+  /// offered for them, since the phone would refuse it.
+  public internal(set) var blockedTaskIDs: Set<LorvexTask.ID> = []
+
   /// The product day's timezone identifier; nil reads the clock in the
   /// watch's own zone.
   public internal(set) var timezone: String?
@@ -171,6 +176,7 @@ public final class LorvexWatchStore {
         timezone = today.timezone
         let listed = today.tasks.filter { $0.status.isActionable }
         savedTimes = listed.times(on: dateString)
+        blockedTaskIDs = today.blockedTaskIDs
         tasks = listed
         moreCount = 0
         completedTodayCount = (try? await core.loadWidgetStatsSource().completedTodayTasks.count) ?? 0
@@ -199,6 +205,7 @@ public final class LorvexWatchStore {
       habits = []
       completedTodayCount = 0
       savedTimes = [:]
+      blockedTaskIDs = []
       if case LorvexWatchSnapshotError.unavailable(let fallback) = error {
         snapshotStatusText = Self.snapshotUnavailableStatusText(fallback)
       } else {

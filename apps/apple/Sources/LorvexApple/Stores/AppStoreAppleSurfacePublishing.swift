@@ -252,36 +252,19 @@ extension AppStore {
     }.value
   }
 
-  /// Re-plan reminders and the badge from the current DB after an inbound sync
-  /// drained remote changes outside a refresh fan-out.
-  ///
-  /// The sync cycle ran the reminder reschedule and badge on the pre-pull state,
-  /// so a task completed, cancelled, deferred, or re-timed on another device
-  /// would otherwise leave its local notification armed — it fires on this Mac
-  /// (often while backgrounded) until an unrelated trigger reschedules.
-  /// `runCloudSyncCycle` calls this only when it fetched inbound records while
-  /// no refresh was in flight (the post-local-mutation outbox drain); an
-  /// inbound arrival during a refresh instead sets `refreshPending`, so the
-  /// trailing single-flight re-run re-reads the UI, republishes the widget, and
-  /// re-plans reminders/badge in one pass rather than recomputing them here and
-  /// reloading again.
-  func republishSurfacesAfterInboundSync() async {
-    async let reminders: Void = rescheduleReminders()
-    async let badge: Void = updateBadge()
-    _ = await (reminders, badge)
-  }
-
   /// Re-plan reminders, the badge, and the widget snapshot from the current DB
   /// after any local in-app task or habit mutation, then start a sync pass that
-  /// sends the outbox.
+  /// sends the outbox. Advances ``taskDataGeneration`` first, so a view that
+  /// reads tasks outside the published collections re-reads them.
   ///
   /// Local mutations write to the DB but don't automatically update the reminder
   /// schedule or the dock badge, so a completed/cancelled/deferred task's
   /// notification stays armed (and can fire on this Mac while the app is still
-  /// open) and the badge stays wrong until the next refresh. This mirrors
-  /// `republishSurfacesAfterInboundSync` for the local-mutation path. Each
-  /// surface reads its own source, so a failed read leaves only that surface as
-  /// it was, and the sync outbox drains regardless. The snapshot write is
+  /// open) and the badge stays wrong until the next refresh. An inbound sync
+  /// re-plans the same surfaces in its selective reload
+  /// (``performSelectiveInboundReload(_:)``). Each surface reads its own
+  /// source, so a failed read leaves only that surface as it was, and the sync
+  /// outbox drains regardless. The snapshot write is
   /// best-effort so a transient App-Group write failure doesn't surface a modal
   /// on an otherwise-successful mutation.
   ///
@@ -291,6 +274,7 @@ extension AppStore {
   /// wait that long. Passes started while one runs coalesce into one trailing
   /// pass (``runCloudSyncCycle()``).
   func republishSurfacesAfterLocalMutation() async {
+    taskDataGeneration &+= 1
     await runLocalRetentionMaintenance()
     async let reminders: Void = rescheduleReminders()
     async let badge: Void = updateBadge()

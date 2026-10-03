@@ -262,4 +262,10 @@ func agendaTaskFactsBreakOnlyBetweenFacts() {
   // A time or a due date on another day says nothing about this one.
   #expect(facts(task(time: 585..<630, estimate: 45), on: "2026-10-01") == estimate)
   #expect(facts(task(due: midnight.addingTimeInterval(86_400))) == nil)
+  // A blocked task says so last.
+  let blocked = MobileTaskDisplayText.blocked
+  #expect(
+    MobileCalendarAgendaTaskRow.subtitle(for: task(due: midnight), dayKey: day, isBlocked: true)
+      == "Due\u{00A0}· \(blocked)")
+  #expect(MobileCalendarAgendaTaskRow.subtitle(for: task(), dayKey: day, isBlocked: true) == blocked)
 }

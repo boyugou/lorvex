@@ -96,6 +96,10 @@ struct MobileTaskWorkspacePage: Equatable, Sendable {
   /// page's `totalMatching` is only that page's post-filter count rather than a
   /// stable global total. Governs how ``appending(_:)`` combines the counts.
   var isNarrowed: Bool = false
+  /// The ids of the page's tasks that wait on an unfinished task, read with
+  /// the page (``LorvexTaskServicing/blockedTaskIDs(in:)``): their rows show
+  /// Blocked and offer no Start.
+  var blockedTaskIDs: Set<LorvexTask.ID> = []
 
   static let empty = MobileTaskWorkspacePage(tasks: [], totalMatching: 0, nextOffset: nil)
 
@@ -112,7 +116,8 @@ struct MobileTaskWorkspacePage: Equatable, Sendable {
       tasks: tasks + page.tasks,
       totalMatching: narrowed ? totalMatching + page.totalMatching : page.totalMatching,
       nextOffset: page.nextOffset,
-      isNarrowed: narrowed
+      isNarrowed: narrowed,
+      blockedTaskIDs: blockedTaskIDs.union(page.blockedTaskIDs)
     )
   }
 }

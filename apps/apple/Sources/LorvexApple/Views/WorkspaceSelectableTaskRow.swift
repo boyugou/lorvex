@@ -86,7 +86,11 @@ struct WorkspaceSelectableTaskRow: View {
         // would read as a second completion circle.
         HStack(spacing: WorkspaceSelectableTaskRowMetrics.trailingControlSpacing) {
           if showsTodayActions, task.status.isActionable {
-            WorkspaceRowStartButton(store: store, task: task, isVisible: isHovering)
+            // A task held up by an unfinished one shows no Start: its
+            // blocked badge already says why.
+            if !store.startIsHeldUp(for: task) {
+              WorkspaceRowStartButton(store: store, task: task, isVisible: isHovering)
+            }
             WorkspaceRowDeferButton(store: store, task: task, isVisible: isHovering)
           }
           WorkspaceBatchSelectionButton(

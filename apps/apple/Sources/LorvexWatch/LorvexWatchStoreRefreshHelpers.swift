@@ -51,6 +51,7 @@ extension LorvexWatchStore {
           times[task.id] = time
         }
       }
+      blockedTaskIDs = Set(snapshot.actionableTasks.filter(\.isBlocked).map(\.id))
       habits = snapshot.habits
       completedTodayCount = snapshot.stats.completedTodayCount
       snapshotStatusText = Self.snapshotStatusLabel(snapshot, now: refreshDate)
@@ -61,6 +62,7 @@ extension LorvexWatchStore {
       moreCount = 0
       habits = []
       savedTimes = [:]
+      blockedTaskIDs = []
       throw LorvexWatchSnapshotError.unavailable(fallback)
     }
   }

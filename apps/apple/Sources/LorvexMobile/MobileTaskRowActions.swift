@@ -113,12 +113,15 @@ enum MobileTaskActionCopy {
 /// trailing swipe; and a context menu with Complete, Start or Pause, and a
 /// Defer menu of days. Used by the plain action row and the batch-selectable
 /// workspace row; the latter passes `isBatchSelecting: true` to suppress the
-/// actions while selecting.
+/// actions while selecting. An open task held up by an unfinished one
+/// (`isHeldUp`) offers no Start, since the core would refuse it; its row's
+/// blocked capsule says why.
 private struct MobileTaskRowActionsModifier: ViewModifier {
   let task: LorvexTask
   let actions: MobileTaskRowActions
   let isMutating: Bool
   let isBatchSelecting: Bool
+  let isHeldUp: Bool
 
   private var isResolved: Bool { task.status.isResolved }
 
@@ -166,10 +169,11 @@ private struct MobileTaskRowActionsModifier: ViewModifier {
       }
   }
 
-  /// Start on an open task, Pause on a started one, nothing otherwise.
+  /// Start on an open task that is not held up, Pause on a started one,
+  /// nothing otherwise.
   @ViewBuilder
   private var startOrPauseButton: some View {
-    if task.status == .open {
+    if task.status == .open, !isHeldUp {
       Button {
         Task { await actions.start() }
       } label: {
@@ -188,15 +192,19 @@ private struct MobileTaskRowActionsModifier: ViewModifier {
 extension View {
   /// Attach the shared row actions (``MobileTaskRowActions``) as swipe actions
   /// and a context menu. Pass `isBatchSelecting: true` to disable them and hide
-  /// the context menu while the row is in batch-selection mode.
+  /// the context menu while the row is in batch-selection mode, and
+  /// `isHeldUp: true` for a task the core reports blocked by an unfinished
+  /// task, which then offers no Start.
   func taskRowActions(
     task: LorvexTask,
     actions: MobileTaskRowActions,
     isMutating: Bool,
-    isBatchSelecting: Bool
+    isBatchSelecting: Bool,
+    isHeldUp: Bool = false
   ) -> some View {
     modifier(
       MobileTaskRowActionsModifier(
-        task: task, actions: actions, isMutating: isMutating, isBatchSelecting: isBatchSelecting))
+        task: task, actions: actions, isMutating: isMutating, isBatchSelecting: isBatchSelecting,
+        isHeldUp: isHeldUp))
   }
 }

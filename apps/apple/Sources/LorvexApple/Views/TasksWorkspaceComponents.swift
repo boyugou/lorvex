@@ -130,6 +130,7 @@ struct TaskRowDropTarget: View {
       batchAccessibilityIdentifier: "tasks.row.batchSelect.\(task.id)",
       toggleBatchSelection: { store.toggleTaskWorkspaceBatchSelection(task.id) },
       openTask: { store.selectOnlyTaskInWorkspace(task.id) },
+      isBlocked: store.isBlocked(task),
       // Unscoped, the workspace spans every list, so the owning list is the row's
       // most useful context. Scoped to one list, every row would repeat the list
       // already named in the header — the same reason a list's own detail pane

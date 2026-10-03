@@ -15,11 +15,11 @@ enum WatchReplicaSnapshotProjectionError: Error, Equatable {
 }
 
 /// Converts the shared widget snapshot into the bounded subset the Watch app
-/// reads: the head of Today's list with each task's saved time, today's
-/// habits, and the day's counts. Source order is stable, so a constrained
-/// replica always holds the same leading tasks and habits for the same source
-/// value. The briefing and the list catalog stay on the phone; the watch shows
-/// neither.
+/// reads: the head of Today's list with each task's saved time and whether it
+/// waits on an unfinished task, today's habits, and the day's counts. Source
+/// order is stable, so a constrained replica always holds the same leading
+/// tasks and habits for the same source value. The briefing and the list
+/// catalog stay on the phone; the watch shows neither.
 struct WatchReplicaSnapshotProjector: Sendable {
   /// The most tasks the replica carries. The watch counts the rest from the
   /// uncapped `stats.today_count` ("3 more today").
@@ -63,7 +63,8 @@ struct WatchReplicaSnapshotProjector: Sendable {
         listID: nil,
         estimatedMinutes: task.estimatedMinutes,
         scheduledStart: time?.start,
-        scheduledEnd: time?.end)
+        scheduledEnd: time?.end,
+        isBlocked: task.isBlocked)
     }
     let habits = try source.habits.prefix(Self.maximumVisibleHabits).map { habit in
       try Self.requireCanonicalUUID(habit.id, field: "habits.id")

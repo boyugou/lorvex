@@ -133,6 +133,11 @@ public extension WidgetSnapshot {
     /// ends at midnight is `24:00`.
     public let scheduledStart: String?
     public let scheduledEnd: String?
+    /// `true` when the task waits on an unfinished task, and absent otherwise:
+    /// a task that waits on nothing carries no key, and a payload without the
+    /// key reads as waiting on nothing (``isBlocked``), so a reader or writer
+    /// that does not know the key exchanges the same tasks.
+    private let blocked: Bool?
 
     enum CodingKeys: String, CodingKey {
       case id
@@ -144,6 +149,7 @@ public extension WidgetSnapshot {
       case estimatedMinutes = "estimated_minutes"
       case scheduledStart = "scheduled_start"
       case scheduledEnd = "scheduled_end"
+      case blocked
     }
 
     public init(
@@ -155,7 +161,8 @@ public extension WidgetSnapshot {
       listID: String?,
       estimatedMinutes: Int?,
       scheduledStart: String? = nil,
-      scheduledEnd: String? = nil
+      scheduledEnd: String? = nil,
+      isBlocked: Bool = false
     ) {
       self.id = id
       self.title = title
@@ -166,7 +173,12 @@ public extension WidgetSnapshot {
       self.estimatedMinutes = estimatedMinutes
       self.scheduledStart = scheduledStart
       self.scheduledEnd = scheduledEnd
+      self.blocked = isBlocked ? true : nil
     }
+
+    /// True when the task waits on an unfinished task, so it cannot be
+    /// started: glances say "Blocked", and the watch offers no Start.
+    public var isBlocked: Bool { blocked == true }
 
     /// True when the task is actionable (`open` or `in_progress`). Widgets,
     /// complications, and the watch keep a started task visible just like the

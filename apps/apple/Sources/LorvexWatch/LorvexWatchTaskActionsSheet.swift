@@ -9,8 +9,9 @@ struct LorvexWatchTaskReference: Identifiable, Hashable {
 }
 
 /// A task's actions on the wrist, under its title: Start or Pause, Tomorrow,
-/// and Cancel. The sheet closes after an action, and as soon as the task leaves
-/// Today by any other path.
+/// and Cancel. While the task waits on an unfinished task, Start cannot be
+/// used and a line under the actions says why. The sheet closes after an
+/// action, and as soon as the task leaves Today by any other path.
 struct LorvexWatchTaskActionsSheet: View {
   @Bindable var store: LorvexWatchStore
   let taskID: LorvexTask.ID
@@ -18,18 +19,22 @@ struct LorvexWatchTaskActionsSheet: View {
 
   var body: some View {
     if let task = store.tasks.first(where: { $0.id == taskID }) {
+      let isBlocked = store.blockedTaskIDs.contains(task.id)
       List {
         Text(userContent: task.title)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(4)
           .listRowBackground(Color.clear)
-        LorvexWatchStartPauseButton(store: store, task: task) { dismiss() }
+        LorvexWatchStartPauseButton(store: store, task: task, isBlocked: isBlocked) { dismiss() }
           .listRowBackground(Color.clear)
         LorvexWatchDeferButton(store: store, task: task) { dismiss() }
           .listRowBackground(Color.clear)
         LorvexWatchCancelButton(store: store, task: task) { dismiss() }
           .listRowBackground(Color.clear)
-        if let reason = store.taskActionUnavailableReason {
+        if let reason = store.taskActionUnavailableReason
+          ?? (isBlocked && task.status == .open
+            ? UserFacingError.Reason.taskStartBlocked.localizedMessage : nil)
+        {
           Text(reason)
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(.secondary)

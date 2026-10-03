@@ -8,8 +8,19 @@ import SwiftUI
 /// is done or on its way is a glance away, finishing it a tap away, and its
 /// detail a tap away. The section hides when the task waits on nothing; the
 /// property sentence above then offers "+ Waits on".
+///
+/// The resolved tasks live in the hosting detail (`resolvedDependencies`), so
+/// the detail's Start tile follows the same statuses these rows show. They are
+/// read again whenever the task's dependencies or `refreshKey` change, so a
+/// task finished on another device or by the assistant shows as done here.
 struct MobileTaskDependenciesSection: View {
   let task: LorvexTask
+  /// The dependencies as last resolved, `nil` until the first resolution
+  /// lands.
+  @Binding var resolvedDependencies: [LorvexTask]?
+  /// Changes whenever the store's task data may have changed, which reads the
+  /// dependencies again.
+  var refreshKey: UInt64 = 0
   /// Resolves dependency task IDs to their tasks so the rows read as titles,
   /// not raw IDs. When absent (previews), the rows show the IDs.
   var resolveDependencyTasks: (([LorvexTask.ID]) async -> [LorvexTask])?
@@ -20,8 +31,6 @@ struct MobileTaskDependenciesSection: View {
   /// circle.
   var isDependencyMutating: (LorvexTask.ID) -> Bool = { _ in false }
 
-  /// The resolved dependencies, `nil` until the first resolution lands.
-  @State private var resolvedDependencies: [LorvexTask]?
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
@@ -57,7 +66,7 @@ struct MobileTaskDependenciesSection: View {
           }
         }
       }
-      .task(id: task.dependsOn) {
+      .task(id: ResolutionKey(taskID: task.id, dependsOn: task.dependsOn, refreshKey: refreshKey)) {
         await resolve()
       }
     }
@@ -97,5 +106,12 @@ struct MobileTaskDependenciesSection: View {
 
   private var isResolving: Bool {
     resolveDependencyTasks != nil && resolvedDependencies == nil
+  }
+
+  /// What a resolution reads: the task's dependencies as of the store's data.
+  private struct ResolutionKey: Hashable {
+    var taskID: LorvexTask.ID
+    var dependsOn: [LorvexTask.ID]
+    var refreshKey: UInt64
   }
 }

@@ -180,7 +180,8 @@ public struct WidgetRenderModelBuilder: Sendable {
   }
 
   /// A row under the lead: "Until" and the end while its time runs, else its
-  /// time's start, else "Overdue", else "Started", else its estimate.
+  /// time's start, else "Overdue", else "Blocked" while it waits on an
+  /// unfinished task, else "Started", else its estimate.
   private func taskRow(
     _ item: WidgetTodayGlance.Item, nowMinutes: Int, logicalDay: String?
   ) -> WidgetTaskRenderRow {
@@ -194,6 +195,8 @@ public struct WidgetRenderModelBuilder: Sendable {
     } else if Self.isOverdue(item.task, logicalDay: logicalDay) {
       metadata = Self.overdue
       tone = .overdue
+    } else if item.task.isBlocked {
+      metadata = Self.blocked
     } else if item.task.isStarted {
       metadata = Self.started
       tone = .started
@@ -231,6 +234,12 @@ public struct WidgetRenderModelBuilder: Sendable {
   private static var started: String {
     String(
       localized: "widget.task.started", defaultValue: "Started",
+      table: "Localizable", bundle: WidgetSupportL10n.bundle)
+  }
+
+  private static var blocked: String {
+    String(
+      localized: "widget.task.blocked", defaultValue: "Blocked",
       table: "Localizable", bundle: WidgetSupportL10n.bundle)
   }
 

@@ -25,11 +25,13 @@ struct LorvexWatchTaskLine: Equatable {
 
   /// Today's row rules, the same the widgets follow: "Until" and the end while
   /// the task's saved time runs, else the time's start; else "Overdue" for a
-  /// due date before `logicalDay`; else "Started"; else the estimate. Nil when
-  /// none applies. A time that has passed keeps reading as its start: the
-  /// task stays on Today and nothing asks about it.
+  /// due date before `logicalDay`; else "Blocked" when the task waits on an
+  /// unfinished task (`isBlocked`); else "Started"; else the estimate. Nil
+  /// when none applies. A time that has passed keeps reading as its start:
+  /// the task stays on Today and nothing asks about it.
   static func make(
-    task: LorvexTask, time: Range<Int>?, nowMinutes: Int, logicalDay: String?
+    task: LorvexTask, time: Range<Int>?, nowMinutes: Int, logicalDay: String?,
+    isBlocked: Bool = false
   ) -> LorvexWatchTaskLine? {
     if let time {
       return time.contains(nowMinutes)
@@ -40,6 +42,9 @@ struct LorvexWatchTaskLine: Equatable {
       LorvexDateFormatters.ymdUTC.string(from: due) < logicalDay
     {
       return LorvexWatchTaskLine(text: LorvexWatchCalmCopy.overdue, tone: .overdue)
+    }
+    if isBlocked {
+      return LorvexWatchTaskLine(text: LorvexWatchCalmCopy.blocked, tone: .plain)
     }
     if task.status == .inProgress {
       return LorvexWatchTaskLine(text: LorvexWatchCalmCopy.started, tone: .started)

@@ -319,16 +319,13 @@ struct MobileTodayPage: View {
   }
 
   /// The habits in a grid, each a ring over its name: as many columns as the
-  /// row holds, and the rest wrap onto more rows, so every habit is on the page
+  /// row holds, with the habits spread evenly over the rows so none is left
+  /// alone on the last (``LorvexBalancedGrid``), so every habit is on the page
   /// without a sideways scroll and keeps its place from day to day.
   private func habitGrid(_ habits: [LorvexHabit]) -> some View {
-    LazyVGrid(
-      columns: [
-        GridItem(
-          .adaptive(minimum: Self.habitColumnWidth, maximum: Self.habitColumnMaxWidth),
-          spacing: Self.habitSpacing, alignment: .top)
-      ],
-      alignment: .leading, spacing: LorvexDesign.Spacing.m
+    LorvexBalancedGrid(
+      minimumColumnWidth: Self.habitColumnWidth, maximumColumnWidth: Self.habitColumnMaxWidth,
+      columnSpacing: Self.habitSpacing, rowSpacing: LorvexDesign.Spacing.m
     ) {
       ForEach(habits) { habit in
         VStack(spacing: LorvexDesign.Spacing.xs) {
@@ -355,10 +352,14 @@ struct MobileTodayPage: View {
       reset: { await store.uncompleteHabit(habit) })
   }
 
+  /// A habit's name, which quiets to secondary once the day's count is met,
+  /// as a habit's name does on the reviews (``LorvexHabitRingTile``), so what
+  /// is still to do reads first.
   private func habitName(_ habit: LorvexHabit) -> some View {
-    Text(userContent: habit.name)
+    let isMet = habit.completionsToday >= max(habit.targetCount, 1)
+    return Text(userContent: habit.name)
       .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(.secondary)
+      .foregroundStyle(isMet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
       .fixedSize(horizontal: false, vertical: true)
       // The ring's label already names the habit.
       .accessibilityHidden(true)

@@ -6,6 +6,17 @@ import Foundation
 /// so a surface that edits, say, only the planned day never has to load the task
 /// and re-send the deadline / defer-until columns by hand.
 extension LorvexTaskServicing {
+  /// The ids of the loaded `tasks` that are open or started and wait on an
+  /// unfinished task (``blockedTaskIDs(among:)``): the rows a task list marks
+  /// Blocked, offering no Start for an open one. The store is asked only
+  /// about the tasks that can be blocked (``LorvexTask/mayBeBlocked``), so
+  /// tasks without dependencies cost no read.
+  public func blockedTaskIDs(in tasks: [LorvexTask]) async throws -> Set<LorvexTask.ID> {
+    let candidates = tasks.filter(\.mayBeBlocked).map(\.id)
+    guard !candidates.isEmpty else { return [] }
+    return try await blockedTaskIDs(among: candidates)
+  }
+
   /// Convenience overload for surfaces (UI, intents, watch, importers) that
   /// defer without a structured reason or free-text note. Forwards both `nil`.
   public func deferTask(id: LorvexTask.ID, until date: Date) async throws -> TodaySnapshot {

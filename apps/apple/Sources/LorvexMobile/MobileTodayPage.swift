@@ -15,6 +15,14 @@ import SwiftUI
 /// anywhere in the app: Start or Pause on the leading edge, Complete and Defer
 /// on the trailing edge.
 ///
+/// Every heading on the page starts at the cards' leading edge: the date and
+/// the strip's Schedule label as ground rows, Habits and Done as section
+/// headers with no horizontal inset, so the page reads down one edge rather
+/// than an inset-grouped list's indented headers. Schedule, Habits, and Done
+/// share the quiet page-label face. Schedule and Habits lead elsewhere (the
+/// schedule sheet, the Habits page), so a chevron follows their names; Done's
+/// chevron at the trailing edge folds it.
+///
 /// The words come from ``MobileTodayCalmCopy`` and the structure from
 /// ``LorvexCalmToday``, so the facts line never disagrees with the rows
 /// beneath it.
@@ -175,11 +183,12 @@ struct MobileTodayPage: View {
       Button(action: openSchedule) {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           HStack(spacing: LorvexDesign.Spacing.xxs) {
-            LorvexPageLabel(MobileTodayCalmCopy.scheduleTitle)
+            Text(MobileTodayCalmCopy.scheduleTitle)
             Image(systemName: "chevron.forward")
               .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-              .foregroundStyle(.tertiary)
           }
+          .font(LorvexDesign.Typography.pageLabel)
+          .foregroundStyle(.secondary)
           strip
         }
         .padding(.vertical, LorvexDesign.Spacing.xs)
@@ -309,11 +318,13 @@ struct MobileTodayPage: View {
           Image(systemName: "chevron.forward")
             .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
         }
+        .font(LorvexDesign.Typography.pageLabel)
         .textCase(nil)
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
       .accessibilityIdentifier("today.habits.all")
+      .listRowInsets(.horizontal, 0)
     }
     .accessibilityIdentifier("today.habits")
   }
@@ -321,10 +332,12 @@ struct MobileTodayPage: View {
   /// The habits in a grid, each a ring over its name: as many columns as the
   /// row holds, with the habits spread evenly over the rows so none is left
   /// alone on the last (``LorvexBalancedGrid``), so every habit is on the page
-  /// without a sideways scroll and keeps its place from day to day.
+  /// without a sideways scroll and keeps its place from day to day. A row's
+  /// habits share the card's width, so a few habits spread across a wide iPad
+  /// card as they do on a phone rather than gathering at its leading edge.
   private func habitGrid(_ habits: [LorvexHabit]) -> some View {
     LorvexBalancedGrid(
-      minimumColumnWidth: Self.habitColumnWidth, maximumColumnWidth: Self.habitColumnMaxWidth,
+      minimumColumnWidth: Self.habitColumnWidth, maximumColumnWidth: .infinity,
       columnSpacing: Self.habitSpacing, rowSpacing: LorvexDesign.Spacing.m
     ) {
       ForEach(habits) { habit in
@@ -374,14 +387,12 @@ struct MobileTodayPage: View {
   /// carries its symbol, and the size keeps the tap target near 44 pt.
   private static let habitRingSize: CGFloat = 40
   private static let habitColumnWidth: CGFloat = 76
-  private static let habitColumnMaxWidth: CGFloat = 96
 
   // MARK: Done
 
   /// What is already done today, newest first; the header folds it away and
   /// counts the rows only while they are folded, since open rows are their own
-  /// count. A record rather than work, so its header is a standard one, like
-  /// the habits', not a prominent one like the plan's.
+  /// count.
   private var doneSection: some View {
     Section {
       if !doneCollapsed {
@@ -405,12 +416,14 @@ struct MobileTodayPage: View {
           Spacer(minLength: 0)
           MobileFoldChevron(isExpanded: !doneCollapsed)
         }
+        .font(LorvexDesign.Typography.pageLabel)
         .textCase(nil)
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
       .accessibilityAddTraits(.isHeader)
       .accessibilityIdentifier("today.done.toggle")
+      .listRowInsets(.horizontal, 0)
     }
     .accessibilityIdentifier("today.done")
   }

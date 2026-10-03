@@ -62,6 +62,69 @@ struct CaptureParserJapaneseTests {
       LorvexCaptureParser.parse("10月5日に提出", lists: [], todayWeekday: 3, languages: ["ja"]).plannedDayOffset == nil)
   }
 
+  @Test("Date ranges: the first day is planned and the last is due")
+  func dateRanges() {
+    expectDateRanges(
+      [
+        ("出張", "5月3日から5日まで", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日から5月5日まで", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日〜5日", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日～5日", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日-5日", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日から5日", "2027-05-03", "2027-05-05"),
+        ("出張", "5/3〜5/5", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日(金)〜5日(日)", "2027-05-03", "2027-05-05"),
+        ("出張", "５月３日から５日まで", "2027-05-03", "2027-05-05"),
+        ("出張", "5月3日から5日までに", "2027-05-03", "2027-05-05"),
+        ("出張", "5月30日から6月2日まで", "2027-05-30", "2027-06-02"),
+        ("出張", "12月30日から1月2日まで", "2026-12-30", "2027-01-02"),
+        ("出張", "10月3日から5日まで", "2026-10-03", "2026-10-05"),
+      ], languages: ["ja-JP"])
+
+    // The range may open the line with no space after it, and its particle
+    // leaves with it.
+    let leading = parse("5月3日から5日まで出張")
+    #expect(leading.title == "出張")
+    #expect(leading.phrases.map(\.text) == ["5月3日から5日まで"])
+    let particle = parse("出張 5月3日から5日までに提出")
+    #expect(particle.title == "出張 提出")
+    #expect(particle.dueDayOffset == captureDayOffset("2027-05-05"))
+  }
+
+  @Test("A range whose end is not after its start stays in the title whole")
+  func declinedDateRanges() {
+    expectLinesUnread(
+      [
+        "出張 5月5日から3日まで", "出張 5月5日から5月3日まで", "出張 5月3日から5月3日まで", "出張 5月3日から2月30日まで",
+      ], languages: ["ja-JP"])
+  }
+
+  @Test("Weekday and time ranges, counts of days, and days with no month are not date ranges")
+  func nonDateRanges() {
+    // A weekday range is a planned weekday and a due weekday.
+    let weekdays = parse("会議 月曜から金曜まで")
+    #expect(weekdays.phrases.map(\.kind) == [.when, .due])
+
+    let time = parse("会議 15時から16時まで")
+    #expect(time.startMinutes == 15 * 60)
+    #expect(time.estimatedMinutes == 60)
+    #expect(time.dueDayOffset == nil)
+
+    // 5日後 counts days from today, so "5日後から7日後まで" is two such days.
+    let relative = parse("旅行 5日後から7日後まで")
+    #expect(relative.plannedDayOffset == 5)
+    #expect(relative.dueDayOffset == 7)
+
+    // 5日間 counts days, so it is no end: only the first date is read.
+    let span = parse("旅行 5月3日から5日間")
+    #expect(span.plannedDayOffset == captureDayOffset("2027-05-03"))
+    #expect(span.dueDayOffset == nil)
+    #expect(span.title == "旅行 5日間")
+
+    // A lone day of the month is not a date here.
+    expectLinesUnread(["旅行 3日から5日まで"], languages: ["ja-JP"])
+  }
+
   @Test("A name that starts with a day word stays whole")
   func namesStayWhole() {
     let asuka = parse("明日香さんに連絡")

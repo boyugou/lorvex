@@ -47,6 +47,24 @@ extension LorvexCaptureVocabulary {
   ///   does not open the line (a name) are left in the title. A date written
   ///   in digits ("15/10") is not read, since the order of its day and month
   ///   depends on the region.
+  /// - Date range: del 3 al 5 de mayo, de 3 a 5 de mayo, del 30 de mayo al 2
+  ///   de junio, desde el 3 hasta el 5 de mayo, entre el 3 y el 5 de mayo,
+  ///   del día 3 al día 5 de mayo, del lunes 3 al miércoles 5 de mayo, 3-5 de
+  ///   mayo, 3 al 5 de mayo, each maybe with a year after the end ("del 3 al 5
+  ///   de mayo de 2027"). The first day is the planned day and the last the
+  ///   due day, so another day phrase stays in the title. A day written
+  ///   without its month takes the month of the end; the end must be after the
+  ///   start ("del 5 al 3 de mayo" stays in the title whole), and an end in an
+  ///   earlier month falls in the next year. "Al", "a", and "hasta" need no
+  ///   opening word when the end names a month, and "y" joins two days only
+  ///   after entre. Days of the month alone ("del 3 al 5", "desde el 3 hasta
+  ///   el 5", "entre el 3 y el 5") are read as "el 15" is: after del, el, or
+  ///   día, and only at the end of the line or before a word that can follow a
+  ///   date, so "del 3 al 5 de la lista" and "del 3 al 5 capítulos" stay in
+  ///   the title. "De 3 a 4" is a time range, not a date range, as is "entre
+  ///   las 3 y las 4". A day alone opens a range joined by a dash only when
+  ///   the dash touches both sides or an opening word comes first: "Sprint 12
+  ///   - 20 de mayo" names a sprint and a date.
   /// - Repeat: todos los días, cada día, a diario, cada mañana, entre semana,
   ///   de lunes a viernes, todos los días laborables, cada semana, cada dos
   ///   semanas, cada quince días (every two weeks, as Spanish counts a
@@ -91,6 +109,7 @@ extension LorvexCaptureVocabulary {
   static let spanish = LorvexCaptureVocabulary(
     readingForm: unaccentedForMatching,
     priority: [Rule(pattern: spanishPriorityPattern, read: spanishPriority)],
+    dateRange: [Rule(pattern: spanishDateRangePattern, read: spanishDateRange)],
     length: [Rule(pattern: spanishLengthPattern, read: spanishLength)],
     time: [
       Rule(pattern: spanishFromToPattern, read: spanishRange),
@@ -157,7 +176,7 @@ extension LorvexCaptureVocabulary {
 
   /// Whether the line goes on after `match` with nothing, punctuation, or a
   /// word in ``spanishWordsAfterDetail`` (minus `excluding`).
-  private static func spanishFollowsAsDetail(_ match: Match, excluding: Set<String> = []) -> Bool {
+  static func spanishFollowsAsDetail(_ match: Match, excluding: Set<String> = []) -> Bool {
     guard let next = wordAfter(match) else { return true }
     return spanishWordsAfterDetail.contains(next) && !excluding.contains(next)
   }
@@ -240,7 +259,7 @@ extension LorvexCaptureVocabulary {
 
   /// What may follow a clock time: no letter, digit, or colon, and no decimal
   /// fraction.
-  private static let spanishTimeEnd = #"(?![\p{Latin}\p{N}:]|[.,]\p{N})"#
+  static let spanishTimeEnd = #"(?![\p{Latin}\p{N}:]|[.,]\p{N})"#
 
   /// "a las 3", "a las 15:30", "a las 9 de la mañana", "a las 3 y media", "a
   /// las 4 menos cuarto", "a las 3 en punto", "a las 15 h", "a las 3 pm", and
@@ -411,7 +430,7 @@ extension LorvexCaptureVocabulary {
   // MARK: - Repeat
 
   /// The weekday names, longest first, as a pattern.
-  private static var spanishWeekdayNames: String {
+  static var spanishWeekdayNames: String {
     spanishWeekdays.sorted { $0.count > $1.count }.joined(separator: "|")
   }
 
@@ -512,15 +531,24 @@ extension LorvexCaptureVocabulary {
   }
 
   /// "15 de octubre", "lunes 15 de octubre", "1º de octubre", "el primero de
-  /// octubre", "15 oct.", "15 de octubre de 2027"; "día 15"; and a bare
-  /// number after el or del ("el 15", "antes del 15"), as a day of the month.
-  private static var spanishDatePattern: String {
+  /// octubre", "15 oct.", "15 de octubre de 2027": a day with its month.
+  static var spanishMonthDatePattern: String {
     let months = spanishMonths.flatMap { $0 }.sorted { $0.count > $1.count }.joined(separator: "|")
     let day = #"(?:\d{1,2}[ºo°]?|1ro|primero)"#
-    let notMore = #"(?![\p{N}%]|[:.,]\p{N})"#
     return "(?:(?:\(spanishWeekdayNames))\\s+)?(?:dia\\s+)?\(day)\\s+(?:de\\s+)?(?:\(months))\\.?(?:\\s+(?:de\\s+)?\\d{4})?"
-      + "|dia\\s+\\d{1,2}\(notMore)"
-      + "|(?<=\\bel\\s|\\bdel\\s)\\d{1,2}\(notMore)"
+  }
+
+  /// What may follow a day of the month written alone: no digit or percent
+  /// sign, and no decimal fraction or time. The colon goes last in its set,
+  /// since ICU reads a set that opens with "[:" as a POSIX class name.
+  static let spanishNoMoreDigits = #"(?![\p{N}%]|[.,:]\p{N})"#
+
+  /// A day with its month ("15 de octubre"); "día 15"; and a bare number after
+  /// el or del ("el 15", "antes del 15"), as a day of the month.
+  private static var spanishDatePattern: String {
+    spanishMonthDatePattern
+      + "|dia\\s+\\d{1,2}\(spanishNoMoreDigits)"
+      + "|(?<=\\bel\\s|\\bdel\\s)\\d{1,2}\(spanishNoMoreDigits)"
   }
 
   /// Words that, right before a day, make it part of the title instead: a
@@ -599,7 +627,7 @@ extension LorvexCaptureVocabulary {
 
   /// A written-out date, maybe after its weekday: "15 de octubre", "lunes 1º
   /// de octubre de 2027"; or a day of the month alone ("día 15", "15").
-  private static func spanishDate(_ words: String) -> ExplicitDate? {
+  static func spanishDate(_ words: String) -> ExplicitDate? {
     if let match = words.wholeMatch(
       of: /(?:\p{L}+ )?(?:dia )?(\d{1,2}|1ro|primero)[ºo°]? (?:de )?(\p{L}+)\.?(?: (?:de )?(\d{4}))?/),
       let day = spanishDayNumber(String(match.output.1)),
@@ -614,7 +642,7 @@ extension LorvexCaptureVocabulary {
   }
 
   /// The day of the month "5", "1º", "1ro", or "primero" names.
-  private static func spanishDayNumber(_ text: String) -> Int? {
+  static func spanishDayNumber(_ text: String) -> Int? {
     let lower = text.lowercased()
     return ["primero", "1ro", "1º", "1o", "1°"].contains(lower) ? 1 : number(lower)
   }

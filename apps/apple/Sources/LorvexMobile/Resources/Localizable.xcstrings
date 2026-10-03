@@ -18496,85 +18496,85 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ثلاثون يومًا"
+            "value": "آخر ثلاثين يومًا"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "30-day"
+            "value": "Last 30 Days"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 días"
+            "value": "Últimos 30 días"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 jours"
+            "value": "30 derniers jours"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 दिन"
+            "value": "पिछले 30 दिन"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 giorni"
+            "value": "Ultimi 30 giorni"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "30日間"
+            "value": "過去30日間"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "30일"
+            "value": "최근 30일"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 dni"
+            "value": "Ostatnie 30 dni"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 dias"
+            "value": "Últimos 30 dias"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 дней"
+            "value": "За 30 дней"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 днів"
+            "value": "Останні 30 днів"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 天完成率"
+            "value": "近 30 天"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "30 天"
+            "value": "過去 30 天"
           }
         }
       }

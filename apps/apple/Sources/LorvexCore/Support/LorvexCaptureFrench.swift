@@ -25,6 +25,20 @@ extension LorvexCaptureVocabulary {
   ///   on Monday. Ce soir, cette nuit, and demain soir are evenings. A date
   ///   written in digits ("5/10") is not read, since the order of its day and
   ///   month depends on the region.
+  /// - Date range: du 3 au 5 mai, du 3 mai au 5 mai, du 30 mai au 2 juin, du
+  ///   1er au 5 mai, du lundi 3 au mercredi 5 mai, du 3 mai jusqu'au 5 mai,
+  ///   entre le 3 et le 5 mai, entre le 3 mai et le 5 mai, 3-5 mai, 3 mai - 5
+  ///   mai, 3 au 5 mai, each maybe with a year after the end ("du 3 au 5 mai
+  ///   2027"). The first day is the planned day and the last the due day, so
+  ///   another day phrase stays in the title. A day written without its month
+  ///   takes the month of the end; the end must be after the start ("du 5 au 3
+  ///   mai" stays in the title whole), and an end in an earlier month falls in
+  ///   the next year. "Et" joins two days only after entre. A range with no
+  ///   month ("du 3 au 5") is not read, since a lone day of the month is not a
+  ///   date here, and "du lundi au vendredi" is a repeat. A day alone opens a
+  ///   range joined by a dash only when the dash touches both sides or an
+  ///   opening word comes first: "Sprint 12 - 20 mai" names a sprint and a
+  ///   date.
   /// - Repeat: tous les jours, chaque jour, un jour sur deux, en semaine, tous
   ///   les jours ouvrés, du lundi au vendredi, toutes les semaines, chaque
   ///   semaine, une semaine sur deux, tous les quinze jours (every two weeks,
@@ -51,6 +65,7 @@ extension LorvexCaptureVocabulary {
   static let french = LorvexCaptureVocabulary(
     readingForm: unaccentedForMatching,
     priority: [Rule(pattern: frenchPriorityPattern, read: frenchPriority)],
+    dateRange: [Rule(pattern: frenchDateRangePattern, read: frenchDateRange)],
     length: [Rule(pattern: frenchLengthPattern, read: frenchLength)],
     time: [
       Rule(pattern: frenchRangePattern, read: frenchRange),
@@ -237,6 +252,51 @@ extension LorvexCaptureVocabulary {
     default: break
     }
     return colonTime(text) ?? hourTime(text)
+  }
+
+  // MARK: - Date range
+
+  /// "du 3 au 5 mai", "du 3 mai au 5 mai", "du lundi 3 au mercredi 5 mai", "du
+  /// 3 mai jusqu'au 5 mai", "entre le 3 et le 5 mai", "3-5 mai", "3 mai - 5
+  /// mai", "3 au 5 mai". The start is a date or a day alone ("3", "lundi 3",
+  /// "1er"); the end is a date, whose month the start takes when it has none.
+  /// Groups: 1 du, de, or entre, if any; 2 the start; 3 a dash between the
+  /// sides; 4 au, jusqu'au, or et between them; 5 the end.
+  private static var frenchDateRangePattern: String {
+    let weekday = "(?:(?:\(frenchWeekdayNames))\\s+)?"
+    let bareDay = "\(weekday)(?:\\d{1,2}|1er|premier)(?![\\p{Latin}\\p{N}:])"
+    return
+      #"\#(latinStart)(?:(du|de|entre)\s+(?:le\s+)?)?(\#(frenchDatePattern)|\#(bareDay))(?:\s*([-–—])\s*|\s+(au|jusqu['’]au|et)\s+)(?:le\s+)?(\#(frenchDatePattern))\#(latinEnd)"#
+  }
+
+  private static func frenchDateRange(_ match: Match) -> DayRangeReading? {
+    guard let startText = match.group(2), let endText = match.group(5),
+      let start = frenchRangeDate(startText), let end = frenchRangeDate(endText)
+    else { return nil }
+    // "Et" joins the sides only after entre ("le 3 mai et le 5 mai" names two
+    // days); "au" and "jusqu'au" join them after du or de, and with no
+    // opening word ("3 au 5 mai").
+    if let word = match.group(4)?.lowercased() {
+      let lead = match.group(1)?.lowercased()
+      guard (word == "et") == (lead == "entre"), lead != nil || joinsWithoutOpeningWord(match, end: end) else {
+        return nil
+      }
+    }
+    if start.month == nil, match.group(1) == nil, match.group(3) != nil, !dashTouchesBothSides(match, start: 2, end: 5) {
+      return nil
+    }
+    return dayRangeReading(from: start, to: end, today: match.today)
+  }
+
+  /// A side of a date range: a date ("5 mai", "lundi 1er octobre 2027"), or a
+  /// day alone ("5", "lundi 5", "1er"), which has no month.
+  private static func frenchRangeDate(_ text: String) -> ExplicitDate? {
+    let words = normalizedPhrase(text)
+    if let date = frenchDate(words) { return date }
+    guard let match = words.wholeMatch(of: /(?:\p{L}+ )?(\d{1,2}|1er|premier)/),
+      let day = frenchDayNumber(String(match.output.1))
+    else { return nil }
+    return ExplicitDate(day: day)
   }
 
   // MARK: - Repeat

@@ -14,24 +14,34 @@ import Foundation
 ///    accents ("#offsite2026", "#manana" for "Mañana"); any other `#word` is
 ///    a tag. A word's combining marks (Devanagari and Thai vowel signs,
 ///    Arabic harakat) and joiners (Persian, Indic) are part of it.
-/// 2. Priority, length, and clock time, so the day rules judge a weekday
+/// 2. Date ranges ("May 3-5", "del 3 al 5 de mayo", 5月3日到5日), before
+///    clock times and lengths, so a range's day numbers are not read as
+///    hours or amounts ("de 3 a 5 de maio" is not 15:00 to 17:00), and before
+///    the day rules, so none of them reads one end of a range. The range's
+///    first day is the planned day, its last the due day, and its whole
+///    text, connecting words included, is one phrase.
+/// 3. Priority, length, and clock time, so the day rules judge a weekday
 ///    against the title words alone.
-/// 3. Repeats, before days, so "every monday" and 每周一 are not read as one
+/// 4. Repeats, before days, so "every monday" and 每周一 are not read as one
 ///    planned Monday, and 每月5号 not as one 5th.
-/// 4. The due day, before the planned day, so "by friday" and "周五前" are not
+/// 5. The due day, before the planned day, so "by friday" and "周五前" are not
 ///    read as planned days.
-/// 5. The planned day.
+/// 6. The planned day.
 ///
 /// The first phrase of each kind counts; a later one stays in the title. A
-/// time range ("3-4pm", 下午3点到5点) names the time and, unless the line
-/// names a length, the length. A clock time written without AM, PM, or a part
-/// of the day, named with a day's evening ("tonight 8:00", "今晚8点"), is that
-/// evening, and its 12 o'clock the midnight that ends the day. A time after
-/// the midnight that ends its day ("at midnight", "晚上12点") moves the
-/// planned day one day on, and with it the days a repeat names ("每周五晚上12点"
-/// repeats on Saturdays at 00:00). Recognized phrases are removed from the
-/// title; between two characters of a script written without spaces (Chinese
-/// characters, Japanese kana) a phrase leaves no gap, elsewhere a space.
+/// date range takes both the planned day and the due day, so any other day
+/// phrase in the line stays in the title. Text written as a range that names
+/// no days ("May 5-3", an end that is not after its start) stays in the title
+/// whole: no other rule reads a part of it. A time range ("3-4pm",
+/// 下午3点到5点) names the time and, unless the line names a length, the
+/// length. A clock time written without AM, PM, or a part of the day, named
+/// with a day's evening ("tonight 8:00", "今晚8点"), is that evening, and its
+/// 12 o'clock the midnight that ends the day. A time after the midnight that
+/// ends its day ("at midnight", "晚上12点") moves the planned day one day on,
+/// and with it the days a repeat names ("每周五晚上12点" repeats on Saturdays
+/// at 00:00). Recognized phrases are removed from the title; between two
+/// characters of a script written without spaces (Chinese characters,
+/// Japanese kana) a phrase leaves no gap, elsewhere a space.
 public enum LorvexCaptureParser {
   /// A list the parser can match a `#word` against.
   public struct ListOption: Sendable {
@@ -87,23 +97,31 @@ public enum LorvexCaptureParser {
     // and the phrases come from it.
     var remaining = text
     var found: [(range: Range<String.Index>, phrase: LorvexCaptureParse.Phrase)] = []
+    // The spans of `remaining` that a date range claimed without reading
+    // (``LorvexCaptureVocabulary/DayRangeReading/declined``), in its UTF-16
+    // offsets. No rule reads a match that overlaps one, so "May 5-3" is not
+    // read as the day "May 5" with "-3" left behind.
+    var claimed: [NSRange] = []
 
     // Matches `pattern` against `remaining` in `form`, which keeps every
     // UTF-16 offset, so one match range locates a phrase in both. The handler
     // judges the matches front to back, so the first phrase of a kind is the
     // one that counts, and reads each match's groups from the line in `form`.
+    // A match that overlaps a claimed span is not offered to the handler.
     func take(
       _ pattern: String, readingAs form: (String) -> String = { $0 },
       _ handle: (NSTextCheckingResult, String) -> LorvexCaptureParse.Kind?
     ) {
-      guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+      guard let regex = LorvexCapturePatterns.regex(pattern) else {
         assertionFailure("A capture pattern does not compile: \(pattern)")
         return
       }
       var matchable = form(remaining)
       let nsRange = NSRange(matchable.startIndex..., in: matchable)
-      let taken = regex.matches(in: matchable, range: nsRange).compactMap { match in
-        handle(match, matchable).map { (range: match.range, kind: $0) }
+      let taken = regex.matches(in: matchable, range: nsRange).compactMap {
+        match -> (range: NSRange, kind: LorvexCaptureParse.Kind)? in
+        guard !claimed.contains(where: { NSIntersectionRange($0, match.range).length > 0 }) else { return nil }
+        return handle(match, matchable).map { (range: match.range, kind: $0) }
       }
       // Remove back to front so removing one leaves earlier ranges valid.
       for (matchRange, kind) in taken.reversed() {
@@ -119,10 +137,18 @@ public enum LorvexCaptureParser {
           && isUnspaced(remaining[range.upperBound])
         remaining.replaceSubrange(range, with: joinsUnspaced ? "" : " ")
         matchable.replaceSubrange(matchableRange, with: joinsUnspaced ? "" : " ")
+        // Claimed spans after the phrase move up with the text.
+        let shrink = matchRange.length - (joinsUnspaced ? 0 : 1)
+        for index in claimed.indices where claimed[index].location >= NSMaxRange(matchRange) {
+          claimed[index].location -= shrink
+        }
       }
     }
 
     let vocabularies = Vocabulary.vocabularies(for: languages)
+    func context(_ match: NSTextCheckingResult, _ source: String) -> Vocabulary.Match {
+      Vocabulary.Match(result: match, source: source, todayWeekday: todayWeekday, today: todayDate)
+    }
     // Tries every vocabulary's rules for one kind of detail. A match is taken
     // while `isOpen` holds and its rule reads a value from it.
     func read<Value>(
@@ -132,8 +158,7 @@ public enum LorvexCaptureParser {
       for vocabulary in vocabularies {
         for rule in vocabulary[keyPath: rules] {
           take(rule.pattern, readingAs: vocabulary.readingForm) { match, source in
-            let context = Vocabulary.Match(result: match, source: source, todayWeekday: todayWeekday, today: todayDate)
-            guard isOpen(), let value = rule.read(context) else { return nil }
+            guard isOpen(), let value = rule.read(context(match, source)) else { return nil }
             record(value)
             return kind
           }
@@ -156,6 +181,26 @@ public enum LorvexCaptureParser {
       }
       result.tags.append(name)
       return .tag
+    }
+    // A date range takes both day slots, so it counts only while both are
+    // free; one that names no days claims its text instead.
+    for vocabulary in vocabularies {
+      for rule in vocabulary.dateRange {
+        take(rule.pattern, readingAs: vocabulary.readingForm) { match, source in
+          guard result.plannedDayOffset == nil, result.dueDayOffset == nil,
+            let reading = rule.read(context(match, source))
+          else { return nil }
+          switch reading {
+          case .range(let days):
+            result.plannedDayOffset = days.start
+            result.dueDayOffset = days.end
+            return .when
+          case .declined:
+            claimed.append(match.range)
+            return nil
+          }
+        }
+      }
     }
     read(\.priority, as: .priority, while: { result.priority == nil }) { result.priority = $0 }
     read(\.length, as: .length, while: { result.estimatedMinutes == nil }) { result.estimatedMinutes = $0 }

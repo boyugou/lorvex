@@ -53,6 +53,68 @@ struct CaptureParserKoreanTests {
     #expect(parse("내일도 운동").title == "운동")
   }
 
+  @Test("Date ranges: the first day is planned and the last is due")
+  func dateRanges() {
+    expectDateRanges(
+      [
+        ("출장", "5월 3일부터 5일까지", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일부터 5월 5일까지", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일~5일", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일 ~ 5일", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일~5월 5일", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일-5일", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일부터 5일", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일 부터 5일 까지", "2027-05-03", "2027-05-05"),
+        ("출장", "5/3~5/5", "2027-05-03", "2027-05-05"),
+        ("출장", "５월 ３일부터 ５일까지", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 3일부터 5일까지에", "2027-05-03", "2027-05-05"),
+        ("출장", "5월 30일부터 6월 2일까지", "2027-05-30", "2027-06-02"),
+        ("출장", "12월 30일부터 1월 2일까지", "2026-12-30", "2027-01-02"),
+        ("출장", "10월 3일부터 5일까지", "2026-10-03", "2026-10-05"),
+      ], languages: ["ko-KR"])
+
+    // The range may open the line, and its particle leaves with it.
+    let leading = parse("5월 3일부터 5일까지 출장")
+    #expect(leading.title == "출장")
+    #expect(leading.phrases.map(\.text) == ["5월 3일부터 5일까지"])
+    let particle = parse("출장 5월 3일부터 5일까지에 제출")
+    #expect(particle.title == "출장 제출")
+    #expect(particle.dueDayOffset == captureDayOffset("2027-05-05"))
+  }
+
+  @Test("A range whose end is not after its start stays in the title whole")
+  func declinedDateRanges() {
+    expectLinesUnread(
+      ["출장 5월 5일부터 3일까지", "출장 5월 5일부터 5월 3일까지", "출장 5월 3일부터 5월 3일까지"],
+      languages: ["ko-KR"])
+  }
+
+  @Test("Weekday and time ranges, counts of days, and days with no month are not date ranges")
+  func nonDateRanges() {
+    // A weekday range is a planned weekday and a due weekday.
+    let weekdays = parse("회의 월요일부터 금요일까지")
+    #expect(weekdays.phrases.map(\.kind) == [.when, .due])
+
+    let time = parse("회의 3시부터 5시까지")
+    #expect(time.startMinutes == 15 * 60)
+    #expect(time.estimatedMinutes == 120)
+    #expect(time.dueDayOffset == nil)
+
+    // 5일 후 counts days from today, so "5일 후부터 7일 후까지" is two such days.
+    let relative = parse("여행 5일 후부터 7일 후까지")
+    #expect(relative.plannedDayOffset == 5)
+    #expect(relative.dueDayOffset == 7)
+
+    // 5일간 counts days, so it is no end: only the first date is read.
+    let span = parse("여행 5월 3일부터 5일간")
+    #expect(span.plannedDayOffset == captureDayOffset("2027-05-03"))
+    #expect(span.dueDayOffset == nil)
+    #expect(span.title == "여행 5일간")
+
+    // A lone day of the month is not a date here.
+    expectLinesUnread(["여행 3일부터 5일까지"], languages: ["ko-KR"])
+  }
+
   @Test("Clock times, with a part of the day or without")
   func times() {
     let line = parse("오후 3시 회의")

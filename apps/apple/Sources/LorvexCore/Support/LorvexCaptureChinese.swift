@@ -5,15 +5,27 @@ extension LorvexCaptureVocabulary {
   /// boundary, since Chinese is written without spaces ("明天开会" plans "开会"
   /// for tomorrow). The patterns are written in Simplified characters and read
   /// the line through ``simplifiedForMatching(_:)``, so "後天", "下週三",
-  /// "30分鐘", and "兩個鐘頭" are recognized as well.
+  /// "30分鐘", "兩個鐘頭", and "從5月3日到5月5日" are recognized as well.
   ///
   /// - Day: 今天, 今晚, 明天, 明晚, 后天, 大后天, 周三 / 星期三 / 礼拜三 (with
   ///   这 / 本 / 下), 下周, 下下周, 周末, 3天后; a date: 10月5日, 10月5号,
   ///   2026年10月5日, 5号. A date without a year that has passed this year
-  ///   means next year's; "5号" means the coming 5th. A weekday alone means
-  ///   the next such day, a full week ahead when it names today; with 这 or 本
-  ///   it is this week's, with 下 next week's, weeks starting on Monday. 今晚
-  ///   and 明晚 are evenings, so "今晚8点" is 8 PM.
+  ///   means next year's; "5号" means the coming 5th, unless a thing numbered
+  ///   that way follows it (5号楼, 2号线, 3号会议室, 5号电池), which stays in
+  ///   the title. A weekday alone means the next such day, a full week ahead
+  ///   when it names today; with 这 or 本 it is this week's, with 下 next
+  ///   week's, weeks starting on Monday. 今晚 and 明晚 are evenings, so
+  ///   "今晚8点" is 8 PM.
+  /// - Date range: 5月3日到5日, 5月3日至5日, 5月3日-5日, 5月3日到5月5日,
+  ///   5月3号到5号, 5月30日到6月2日, 2026年12月30日到2027年1月2日, each maybe after
+  ///   从 or 自, with 到, 至, a dash, or a tilde between the sides. The first
+  ///   day is the planned day and the last the due day, so another day phrase
+  ///   stays in the title. A day alone after the first date ("5日") takes its
+  ///   month; the end must be after the start ("5月5日到3日" stays in the
+  ///   title whole), and an end in an earlier month falls in the next year. A
+  ///   range of days of the month alone is read only in 号: "3号到5号" counts,
+  ///   "3日到5日" does not, since a lone 日 is not a date here. A range may
+  ///   end in 前 or 之前 ("5月3日到5日前").
   /// - Repeat: 每天, 每日, 每隔一天, 每3天, 每周, 每两周, 每周一, 每周一三五,
   ///   每个工作日, 每月, 每月5号, 每年.
   /// - Due: a day before 前 or 之前 ("周五前").
@@ -29,6 +41,7 @@ extension LorvexCaptureVocabulary {
   static let chinese = LorvexCaptureVocabulary(
     readingForm: simplifiedForMatching,
     priority: [Rule(pattern: #"(?<!不)紧急"#) { _ in .p1 }],
+    dateRange: [Rule(pattern: chineseDateRangePattern, read: chineseDateRange)],
     length: [Rule(pattern: chineseLengthPattern, read: chineseLength)],
     time: [
       Rule(pattern: chineseRangePattern, read: chineseRange),
@@ -52,7 +65,10 @@ extension LorvexCaptureVocabulary {
   /// Simplified form. Both sides of every pair are one UTF-16 unit.
   private static let simplifiedForms: [Character: Character] = [
     "後": "后", "週": "周", "這": "这", "禮": "礼", "點": "点", "鐘": "钟",
-    "時": "时", "個": "个", "兩": "两", "緊": "紧", "號": "号", "頭": "头",
+    "時": "时", "個": "个", "兩": "两", "緊": "紧", "號": "号", "頭": "头", "從": "从",
+    "樓": "楼", "棟": "栋", "館": "馆", "廳": "厅", "櫃": "柜", "會": "会", "議": "议",
+    "間": "间", "車": "车", "廂": "厢", "臺": "台", "電": "电", "線": "线", "門": "门",
+    "診": "诊", "長": "长",
   ]
 
   /// `text` with each Traditional character of ``simplifiedForms`` replaced by
@@ -175,6 +191,36 @@ extension LorvexCaptureVocabulary {
       ?? colonTime(text)
   }
 
+  // MARK: - Date range
+
+  /// 5月3日到5日, 5月3日至5月5日, 5月3日-5日, 从5月3日到5月5日, 3号到5号: a date, then 到,
+  /// 至, a dash, or a tilde, then a date or a day alone ("5日"), maybe after 从
+  /// or 自 and before 前 or 之前. Days of the month alone are read only in 号,
+  /// as the day rules read them. Groups: 1 the start and 2 the end of a
+  /// range of dates; 3 the start and 4 the end of a range of days of the month.
+  private static var chineseDateRangePattern: String {
+    let date = #"(?:\d{4}年)?\d{1,2}月\d{1,2}[日号]"#
+    let day = #"(?<![\d月])\d{1,2}(?:日|号\#(chineseNoNumberedThingAfter))"#
+    let lone = #"(?<![\d月年])\d{1,2}号"#
+    let connector = #"\s*(?:到|至|-|–|—|~|～|〜)\s*"#
+    return #"(?:[从自]\s*)?(?:(\#(date))\#(connector)(\#(date)|\#(day))|(\#(lone))\#(connector)(\#(day)))(?:之前|前)?"#
+  }
+
+  private static func chineseDateRange(_ match: Match) -> DayRangeReading? {
+    guard let startText = match.group(1) ?? match.group(3), let endText = match.group(2) ?? match.group(4),
+      let start = chineseRangeDate(startText), let end = chineseRangeDate(endText)
+    else { return nil }
+    return dayRangeReading(from: start, to: end, today: match.today)
+  }
+
+  /// A side of a date range: a date ("5月3日", "5月3号"), or a day alone ("5日",
+  /// "3号"), which has no month.
+  private static func chineseRangeDate(_ text: String) -> ExplicitDate? {
+    if let date = chineseDate(text) { return date }
+    guard let match = text.wholeMatch(of: /(\d{1,2})[日号]/), let day = number(match.output.1) else { return nil }
+    return ExplicitDate(day: day)
+  }
+
   // MARK: - Repeat
 
   /// The interval a repeat names: 每两周 is 2, 每隔一周 is 2 (one skipped), 每周
@@ -213,7 +259,14 @@ extension LorvexCaptureVocabulary {
 
   /// The days. Weekday characters: 一 … 六, and 日 / 天 for Sunday.
   private static let chineseDayPattern =
-    #"(?:\d{4}年)?\d{1,2}月\d{1,2}[日号]|\d{1,2}月\d{1,2}(?![\d点:：])|(?<!\d)\d{1,2}号|大后天|后天|今天|今晚|明天|明晚|下下周|(?<!每)(?:这|本|下)?(?:周|星期|礼拜)[一二三四五六日天]|下周|周末|\d{1,3}天后"#
+    #"(?:\d{4}年)?\d{1,2}月\d{1,2}[日号]|\d{1,2}月\d{1,2}(?![\d点:：])|(?<!\d)\d{1,2}号\#(chineseNoNumberedThingAfter)|大后天|后天|今天|今晚|明天|明晚|下下周|(?<!每)(?:这|本|下)?(?:周|星期|礼拜)[一二三四五六日天]|下周|周末|\d{1,3}天后"#
+
+  /// What may not follow a number written with 号 for the number to be a day
+  /// of the month: a thing numbered that way, as in 5号楼 (building 5), 2号线
+  /// (line 2), 3号会议室 (room 3), or 5号电池 (AA batteries). 线上 and 线下
+  /// (online, offline), 门诊 (a clinic), and 院长 (a dean) may follow a date.
+  private static let chineseNoNumberedThingAfter =
+    #"(?!楼|栋|馆|厅|柜|床|会议室|教室|房间|病房|窗口|车厢|站台|公路|电池|院(?!长)|线(?![上下])|门(?!诊))"#
 
   private static func chineseDue(_ match: Match) -> Day? {
     match.group(1)

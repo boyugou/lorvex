@@ -13,6 +13,16 @@ extension LorvexCaptureVocabulary {
   ///   such day, a full week ahead when it names today; after 이번 주 it is
   ///   this week's, after 다음 주 next week's, after 다다음 주 the week after's,
   ///   weeks starting on Monday. 오늘 밤 and 내일 밤 are evenings.
+  /// - Date range: 5월 3일부터 5일까지, 5월 3일부터 5월 5일까지, 5월 3일~5일,
+  ///   5월 3일 ~ 5일, 5월 3일-5일, 5/3~5/5, with 부터, a tilde, or a dash
+  ///   between the sides, maybe before 까지 and a particle. The first day is
+  ///   the planned day and the last the due day, so another day phrase stays
+  ///   in the title. A day alone after the first date ("5일") takes its month;
+  ///   the end must be after the start ("5월 5일부터 3일까지" stays in the
+  ///   title whole), and an end in an earlier month falls in the next year.
+  ///   "5일 후" and "5일간" count days and are not a day, and a range without
+  ///   a month ("3일부터 5일까지") is not read, since a lone day of the month
+  ///   is not a date here.
   /// - Repeat: 매일, 날마다, 격일, 평일마다, 매주, 격주, 매주 월요일, 월요일마다,
   ///   매주 월, 수, 금, 매주 월수금, 주마다, 매달, 매월, 매달 5일, 매년, 해마다,
   ///   3일마다, 2주마다, 3개월마다.
@@ -30,6 +40,7 @@ extension LorvexCaptureVocabulary {
   /// - Priority: 긴급, 급함.
   static let korean = LorvexCaptureVocabulary(
     priority: [Rule(pattern: #"\#(hangulStart)(?:긴급|급함)\#(hangulEnd)"#) { _ in .p1 }],
+    dateRange: [Rule(pattern: koreanDateRangePattern, read: koreanDateRange)],
     length: [Rule(pattern: koreanLengthPattern, read: koreanLength)],
     time: [
       Rule(pattern: koreanRangePattern, read: koreanRange),
@@ -184,6 +195,35 @@ extension LorvexCaptureVocabulary {
     wholeTime(text, pattern: koreanTimePattern, in: match, read: koreanTime)
       ?? wholeTime(text + "시", pattern: koreanTimePattern, in: match, read: koreanTime)
       ?? colonTime(text)
+  }
+
+  // MARK: - Date range
+
+  /// 5월 3일부터 5일까지, 5월 3일부터 5월 5일까지, 5월 3일~5일, 5/3~5/5: a date, then
+  /// 부터, a tilde, or a dash, then a date or a day alone ("5일"), maybe before
+  /// 까지 and a particle. "5일 후" and "5일간" count days, so they are not the
+  /// end. Groups: 1 the start, 2 the end.
+  private static var koreanDateRangePattern: String {
+    let date = #"(?:\d{1,2}\s*월\s*\d{1,2}\s*일|(?<![\d/])\d{1,2}/\d{1,2}(?![\d/]))"#
+    let day = #"(?<![\d월/])\d{1,2}\s*일(?!\s*(?:후|뒤))"#
+    return
+      #"\#(hangulStart)(\#(date))\s*(?:부터|~|〜|～|-|–|—)\s*(\#(date)|\#(day))(?:\s*까지(?:는)?)?(?:에는|엔|에|은|는|도|의)?\#(hangulEnd)"#
+  }
+
+  private static func koreanDateRange(_ match: Match) -> DayRangeReading? {
+    guard let startText = match.group(1), let endText = match.group(2),
+      let start = koreanRangeDate(startText), let end = koreanRangeDate(endText)
+    else { return nil }
+    return dayRangeReading(from: start, to: end, today: match.today)
+  }
+
+  /// A side of a date range: a date ("5월 3일", "5/3"), or a day alone ("5일"),
+  /// which has no month.
+  private static func koreanRangeDate(_ text: String) -> ExplicitDate? {
+    let word = text.filter { !$0.isWhitespace }
+    if let date = koreanDate(word) { return date }
+    guard let match = word.wholeMatch(of: /(\d{1,2})일/), let day = number(match.output.1) else { return nil }
+    return ExplicitDate(day: day)
   }
 
   // MARK: - Repeat

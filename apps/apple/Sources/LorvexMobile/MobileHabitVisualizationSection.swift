@@ -157,7 +157,7 @@ private struct MobileHabitMomentumPanel: View {
       layout,
       title: LocalizedStringResource(
         "habits.detail.rate_30d",
-        defaultValue: "30-day",
+        defaultValue: "Last 30 Days",
         table: "Localizable",
         bundle: MobileL10n.bundle),
       value: stats.completionRate30d.formatted(.percent.precision(.fractionLength(0))),

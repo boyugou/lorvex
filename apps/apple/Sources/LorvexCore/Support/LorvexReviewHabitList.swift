@@ -97,7 +97,7 @@ public struct LorvexHabitCheckRing: View {
     }
     .frame(width: diameter, height: diameter)
     .contentShape(Circle())
-    .animation(.snappy(duration: 0.2), value: fraction)
+    .reduceMotionAnimation(.snappy(duration: 0.2), value: fraction)
   }
 }
 
@@ -264,7 +264,7 @@ public struct LorvexReviewHabitList: View {
     case .addOne: count = habit.completionsToday + 1
     case .none: return
     }
-    withAnimation(.snappy(duration: 0.18)) { pendingCounts[habit.id] = count }
+    lorvexAnimated(.snappy(duration: 0.18)) { pendingCounts[habit.id] = count }
     await checkIn(habit)
     pendingCounts[habit.id] = nil
   }

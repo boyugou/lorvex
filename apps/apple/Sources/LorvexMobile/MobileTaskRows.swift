@@ -262,8 +262,8 @@ struct MobileTaskCompletionCircle: View {
         .font(.title3)
         .foregroundStyle(showsCheck ? AnyShapeStyle(LorvexDesign.Palette.done) : task.statusCircleStyle)
         .contentTransition(.symbolEffect(.replace))
-        .symbolEffect(.bounce, value: isCompleting)
-        .scaleEffect(isCompleting ? 1.18 : 1)
+        .reduceMotionBounce(value: isCompleting)
+        .reduceMotionPop(isActive: isCompleting)
         .mobileTaskCircleFrame()
         .contentShape(Circle())
         .padding(.top, LorvexDesign.Spacing.xs)
@@ -298,7 +298,7 @@ struct MobileTaskCompletionCircle: View {
 
   private func triggerComplete() {
     guard !task.status.isResolved, !isMutating, !isCompleting else { return }
-    withAnimation(.spring(response: 0.34, dampingFraction: 0.5)) {
+    lorvexAnimated(.spring(response: 0.34, dampingFraction: 0.5)) {
       isCompleting = true
     }
     Task {

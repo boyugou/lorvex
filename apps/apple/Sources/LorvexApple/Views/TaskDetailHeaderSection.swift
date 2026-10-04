@@ -61,7 +61,7 @@ extension TaskDetailView {
         .font(LorvexDesign.Typography.screenTitle.weight(.regular))
         .foregroundStyle(task.statusCircleStyle)
         .contentTransition(.symbolEffect(.replace))
-        .symbolEffect(.bounce, value: isDone)
+        .reduceMotionBounce(value: isDone)
         // As tall as the title's first line, so the circle sits on that line
         // whatever the title's length.
         .frame(width: 32, height: 24)

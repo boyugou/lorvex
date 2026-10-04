@@ -40,6 +40,8 @@ FORBIDDEN_TOKEN = "".join(["sc", "rat", "ch", "pa", "d"])
 # Rule kinds:
 #   ("contains", scope, literal)      scope must contain literal
 #   ("absent", scope, literal)        scope must NOT contain literal
+#   ("absent_except", scope, literal, [relpath, ...])
+#                                     like absent, but the listed files are exempt
 #   ("count_ge", scope, literal, n)   literal occurs at least n times
 #   ("order", ("file", p), a, b)      a appears before b in the file
 #   ("file_missing", relpath)         file must NOT exist (relative to apps/apple)
@@ -47,6 +49,18 @@ FORBIDDEN_TOKEN = "".join(["sc", "rat", "ch", "pa", "d"])
 RULES = [
     # --- repoProductionSourcesDoNotContainRemovedFreeformCaptureFeature ---
     ('tree_absent_token',),
+    # --- everyAnimationHonorsReduceMotion ---
+    # SwiftUI does not gate its animation drivers on Reduce Motion, so every
+    # animation runs through the helpers in LorvexReduceMotion.swift (lorvexAnimated,
+    # reduceMotionAnimation, reduceMotionBounce, reduceMotionPop) on every platform.
+    ('contains', ('file', 'Sources/LorvexCore/Support/LorvexReduceMotion.swift'), 'WKAccessibilityIsReduceMotionEnabled()'),
+    ('contains', ('file', 'Sources/LorvexCore/Support/LorvexReduceMotion.swift'), 'UIAccessibility.isReduceMotionEnabled'),
+    ('contains', ('file', 'Sources/LorvexCore/Support/LorvexReduceMotion.swift'), 'NSWorkspace.shared.accessibilityDisplayShouldReduceMotion'),
+    ('absent_except', ('dir', 'Sources', True), 'withAnimation(', ['Sources/LorvexCore/Support/LorvexReduceMotion.swift']),
+    ('absent_except', ('dir', 'Sources', True), 'withAnimation {', ['Sources/LorvexCore/Support/LorvexReduceMotion.swift']),
+    ('absent_except', ('dir', 'Sources', True), '.animation(', ['Sources/LorvexCore/Support/LorvexReduceMotion.swift']),
+    ('absent_except', ('dir', 'Sources', True), '.symbolEffect(.bounce', ['Sources/LorvexCore/Support/LorvexReduceMotion.swift']),
+    ('file_missing', 'Sources/LorvexApple/Support/LorvexReduceMotion.swift'),
     # --- mobileWorkspaceLoadingStatesDoNotReuseEmptyStates ---
     ('contains', ('file', 'Sources/LorvexMobile/MobileStoreTasksHomeView.swift'), 'MobileSkeletonRows'),
     ('contains', ('file', 'Sources/LorvexMobile/MobileStoreHabitsView.swift'), 'MobileSkeletonRows'),
@@ -1201,7 +1215,8 @@ RULES = [
     ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let compactRowHeight: CGFloat = 42'),
     ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let rowLeadingPadding: CGFloat = 8'),
     ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let rowTrailingPadding: CGFloat = 8'),
-    ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let horizontalInset: CGFloat = 12'),
+    ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let capsuleInset: CGFloat = 10'),
+    ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let capsuleContentPadding: CGFloat = 6'),
     ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let rowSpacing: CGFloat = 2'),
     ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let columnMinWidth: CGFloat = 180'),
     ('contains', ('join', ['Sources/LorvexApple/Views/SidebarView.swift', 'Sources/LorvexApple/Views/SidebarComponents.swift', 'Sources/LorvexApple/Views/SidebarListSection.swift']), 'static let columnIdealWidth: CGFloat = 232'),
@@ -2154,6 +2169,11 @@ def source_hygiene_failures(rules=RULES) -> list[str]:
             elif kind == "absent":
                 for label, text in _scope_texts(rule[1]):
                     if rule[2] in text:
+                        failures.append(f"{label}: forbidden fragment present {rule[2]!r}")
+            elif kind == "absent_except":
+                exempt = set(rule[3])
+                for label, text in _scope_texts(rule[1]):
+                    if label not in exempt and rule[2] in text:
                         failures.append(f"{label}: forbidden fragment present {rule[2]!r}")
             elif kind == "count_ge":
                 for label, text in _scope_texts(rule[1]):

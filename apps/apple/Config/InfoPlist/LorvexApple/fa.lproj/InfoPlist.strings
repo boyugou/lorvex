@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "برنامه Lorvex می‌تواند بلوک‌های برنامه‌ریزی را که می‌سازید به تقویم Apple اضافه کند.";
+"NSCalendarsFullAccessUsageDescription" = "برنامه Lorvex می‌تواند برای ساخت زمان‌بندی‌ها و زمینه دستیار، جزئیات رویدادها را بخواند.";

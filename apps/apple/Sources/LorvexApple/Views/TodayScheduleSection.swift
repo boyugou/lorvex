@@ -109,7 +109,7 @@ struct TodayScheduleSection: View {
 
   private func pastToggle(count: Int) -> some View {
     Button {
-      withAnimation(.snappy(duration: 0.18)) { showsPast.toggle() }
+      lorvexAnimated(.snappy(duration: 0.18)) { showsPast.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.m) {
         LorvexDisclosureChevron(isExpanded: showsPast)

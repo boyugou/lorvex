@@ -148,11 +148,15 @@ device.
       a checkbox — tapping it must complete the task. Don't show data the user
       can't act on, or actions that belong on another surface.
     - **Motion and feedback are part of the bar, not an afterthought.** State
-      changes should animate (`withAnimation`, matched transitions, spring
+      changes should animate (`lorvexAnimated`, matched transitions, spring
       easing), completion/selection should give crisp feedback (haptics via the
       shared feedback provider, subtle scale/check animations), and nothing
       should pop in/out abruptly. Loading, empty, and error states get the same
-      polish as the happy path.
+      polish as the happy path. Every animation goes through the helpers in
+      `LorvexCore/Support/LorvexReduceMotion.swift` (`lorvexAnimated`,
+      `reduceMotionAnimation`, `reduceMotionBounce`, `reduceMotionPop`) so it
+      honors Reduce Motion on every platform; `verify_source_hygiene.py`
+      rejects a raw `withAnimation(`, `.animation(`, or `.symbolEffect(.bounce`.
     - **Always visually QA headlessly** before considering a UI change done; the
       screenshot is the proof. iOS: `script/ios_sim_build.sh`, then
       `script/ios_sim_screenshots.sh <outdir> light today tasks …` boots the

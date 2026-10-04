@@ -263,7 +263,7 @@ private struct MobileHabitMomentumDial: View {
           tint.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)),
           lineWidth: lineWidth)
       LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
-        .animation(.easeInOut(duration: 0.25), value: fraction)
+        .reduceMotionAnimation(.easeInOut(duration: 0.25), value: fraction)
       VStack(spacing: 1) {
         Text("\(completed)")
           .font(.system(.title3, design: .rounded).weight(.semibold))

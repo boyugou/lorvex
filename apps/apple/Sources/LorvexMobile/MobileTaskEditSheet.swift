@@ -209,7 +209,7 @@ struct MobileTaskEditSheet: View {
     date: Binding<Date>,
     idElement: String
   ) -> some View {
-    Toggle(isOn: isOn.animation(.snappy)) {
+    Toggle(isOn: isOn.reduceMotionAnimation(.snappy)) {
       Label(title, systemImage: systemImage)
     }
     .accessibilityIdentifier("task.edit.\(idElement).toggle")

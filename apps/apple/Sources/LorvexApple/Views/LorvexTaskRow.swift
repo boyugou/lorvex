@@ -131,7 +131,7 @@ struct LorvexTaskRow: View {
         // so checking a task off animates in place rather than snapping — plus a
         // small bounce on the state change so completion feels rewarding.
         .contentTransition(.symbolEffect(.replace))
-        .symbolEffect(.bounce, value: isDone)
+        .reduceMotionBounce(value: isDone)
         .frame(width: 24, height: 24)
         .contentShape(Circle())
     }

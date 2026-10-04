@@ -7,7 +7,14 @@ enum SidebarMetrics {
     static let compactRowHeight: CGFloat = 42
     static let rowLeadingPadding: CGFloat = 8
     static let rowTrailingPadding: CGFloat = 8
-    static let horizontalInset: CGFloat = 12
+    /// How far the native sidebar list insets a row's selection capsule from the
+    /// column edge. The pinned footer draws its own capsule at the same inset.
+    static let capsuleInset: CGFloat = 10
+    /// How far the native sidebar list pads a row's content inside its selection
+    /// capsule, on top of the row's own `rowInsets`. The footer adds it to
+    /// `rowLeadingPadding` and `rowTrailingPadding` so its icon column and
+    /// titles line up with the list rows above it.
+    static let capsuleContentPadding: CGFloat = 6
     static let rowSpacing: CGFloat = 2
     /// The sole source of truth for the sidebar column's width range;
     /// `ContentView` passes these straight to `navigationSplitViewColumnWidth`.
@@ -145,8 +152,8 @@ struct SidebarFooterRow<Icon: View, Title: View>: View {
             Spacer(minLength: 0)
         }
         .font(SidebarTypography.title)
-        .padding(.leading, SidebarMetrics.rowLeadingPadding)
-        .padding(.trailing, SidebarMetrics.rowTrailingPadding)
+        .padding(.leading, SidebarMetrics.rowLeadingPadding + SidebarMetrics.capsuleContentPadding)
+        .padding(.trailing, SidebarMetrics.rowTrailingPadding + SidebarMetrics.capsuleContentPadding)
         .frame(maxWidth: .infinity, minHeight: SidebarMetrics.compactRowHeight, alignment: .leading)
         .background {
             if isSelected {

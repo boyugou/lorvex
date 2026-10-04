@@ -6,7 +6,7 @@ extension MobileCalendarDayView {
   /// day buttons do: Day mode to that day, Week mode to its week, focused on
   /// it.
   func jump(to day: Date) {
-    withAnimation { dayOffset = offset(showing: day) }
+    lorvexAnimated { dayOffset = offset(showing: day) }
     focusWeek(on: day)
   }
 

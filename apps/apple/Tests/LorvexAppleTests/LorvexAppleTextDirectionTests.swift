@@ -8,6 +8,9 @@ import Testing
 /// reads the default once per process, so these tests check the launch
 /// arguments the app hands it.
 struct LorvexAppleTextDirectionTests {
+  /// The shipped languages whose script reads right to left.
+  private static let rightToLeftLanguages: [AppLanguage] = [.ar, .fa, .ur, .he]
+
   @Test("A right-to-left language turns the text direction on and keeps every other argument")
   func rightToLeftLanguageTurnsTheDirectionOn() throws {
     let arguments: [String: Any] = ["AppleLanguages": ["ar"], "lorvexPreviewNow": "11:20"]
@@ -18,9 +21,17 @@ struct LorvexAppleTextDirectionTests {
     #expect(aligned.count == 3)
   }
 
+  @Test("Arabic, Persian, Urdu, and Hebrew each turn the text direction on")
+  func everyRightToLeftLanguageTurnsTheDirectionOn() {
+    for language in Self.rightToLeftLanguages {
+      let aligned = LorvexAppleTextDirection.alignedArguments([:], showing: language)
+      #expect(aligned?["AppleTextDirection"] as? Bool == true, "\(language.rawValue)")
+    }
+  }
+
   @Test("A left-to-right language leaves the arguments alone")
   func leftToRightLanguagesNeedNothing() {
-    for language in AppLanguage.selectable where language != .ar {
+    for language in AppLanguage.selectable where !Self.rightToLeftLanguages.contains(language) {
       #expect(LorvexAppleTextDirection.alignedArguments([:], showing: language) == nil)
     }
   }

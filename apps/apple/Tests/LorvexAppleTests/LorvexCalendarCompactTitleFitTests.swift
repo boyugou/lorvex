@@ -3,8 +3,8 @@ import Testing
 @testable import LorvexCore
 
 /// A compact calendar block's title shrinks only as far as its longest word
-/// needs to fit the block on one line, and a lane too narrow for a few letters
-/// draws no title.
+/// needs to fit the block on one line, a word that still does not fit keeps the
+/// title on one line, and a lane too narrow for a few letters draws no title.
 @Suite("Compact block title fit")
 struct LorvexCalendarCompactTitleFitTests {
   @Test("Short words keep the full size")
@@ -25,6 +25,29 @@ struct LorvexCalendarCompactTitleFitTests {
       LorvexCalendarCompactTitleFit.scale(title: "Internationalization", size: 11, width: 10)
         == LorvexCalendarCompactTitleFit.minimumScale)
     #expect(LorvexCalendarCompactTitleFit.scale(title: "Roadmap", size: 11, width: 0) == 1)
+  }
+
+  @Test("A word too wide even at the floor puts the title on one line instead of splitting it")
+  func overlongWordTakesOneLine() {
+    // "Quarterly" is about 44pt in the 11pt face and 35pt at the floor.
+    #expect(
+      LorvexCalendarCompactTitleFit.splitsAWord(
+        title: "Quarterly planning workshop", size: 11, width: 30))
+    #expect(
+      !LorvexCalendarCompactTitleFit.splitsAWord(
+        title: "Quarterly planning workshop", size: 11, width: 60))
+  }
+
+  @Test("Short words, an unmeasured block, and unspaced scripts keep wrapping")
+  func otherTitlesKeepWrapping() {
+    #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: "1:1 with Sam", size: 11, width: 40))
+    #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: "Quarterly", size: 11, width: 0))
+    #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: "季度规划研讨会议安排", size: 11, width: 30))
+    #expect(
+      !LorvexCalendarCompactTitleFit.splitsAWord(title: "การประชุมวางแผนรายไตรมาส", size: 11, width: 30))
+    // A Latin word beside Chinese still counts.
+    #expect(
+      LorvexCalendarCompactTitleFit.splitsAWord(title: "Quarterly 规划", size: 11, width: 30))
   }
 
   @Test("A lane that an overlap has split too narrow for a few letters draws no title")

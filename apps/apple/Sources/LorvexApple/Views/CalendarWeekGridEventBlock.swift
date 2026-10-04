@@ -259,7 +259,7 @@ extension CalendarWeekGridView {
           .clipShape(Capsule())
           .padding(alignment == .top ? .top : .bottom, 1)
           .opacity(visible ? 1 : 0)
-          .animation(.easeInOut(duration: 0.12), value: visible)
+          .reduceMotionAnimation(.easeInOut(duration: 0.12), value: visible)
       }
       .calendarResizeCursor()
       .gesture(gesture)

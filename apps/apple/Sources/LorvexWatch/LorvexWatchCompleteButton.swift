@@ -47,7 +47,7 @@ struct LorvexWatchCompleteButton: View {
 
   private func trigger() {
     guard isEnabled, !isCompleting else { return }
-    withAnimation(.spring(response: 0.34, dampingFraction: 0.6)) {
+    lorvexAnimated(.spring(response: 0.34, dampingFraction: 0.6)) {
       isCompleting = true
     }
     Task {

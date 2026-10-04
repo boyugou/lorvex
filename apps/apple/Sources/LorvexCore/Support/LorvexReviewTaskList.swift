@@ -241,11 +241,11 @@ public struct LorvexReviewTaskList: View {
   private func move(_ ids: [String], with deferral: Deferral) async {
     let fresh = ids.filter { !movingTaskIDs.contains($0) }
     guard !fresh.isEmpty else { return }
-    withAnimation(.snappy(duration: 0.18)) { movingTaskIDs.formUnion(fresh) }
+    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.formUnion(fresh) }
     await deferral.move(fresh)
     // A saved move has already reloaded the list without these rows; a failed
     // one leaves them, back at full strength.
-    withAnimation(.snappy(duration: 0.18)) { movingTaskIDs.subtract(fresh) }
+    lorvexAnimated(.snappy(duration: 0.18)) { movingTaskIDs.subtract(fresh) }
   }
 
   private func circle(_ task: ReviewTaskSummary, completion: Completion) -> some View {
@@ -269,11 +269,11 @@ public struct LorvexReviewTaskList: View {
 
   private func complete(_ task: ReviewTaskSummary, with completion: Completion) async {
     guard !completingTaskIDs.contains(task.id) else { return }
-    withAnimation(.snappy(duration: 0.18)) { _ = completingTaskIDs.insert(task.id) }
+    lorvexAnimated(.snappy(duration: 0.18)) { _ = completingTaskIDs.insert(task.id) }
     await completion.complete(task.id)
     // A saved completion has already reloaded the list without this row; a
     // failed one leaves the row, whose circle empties again.
-    withAnimation(.snappy(duration: 0.18)) { _ = completingTaskIDs.remove(task.id) }
+    lorvexAnimated(.snappy(duration: 0.18)) { _ = completingTaskIDs.remove(task.id) }
   }
 
   private func openButton(_ task: ReviewTaskSummary, showsFact: Bool) -> some View {

@@ -227,7 +227,7 @@ public struct MobileStoreTasksView: View {
         keyboardScrollTarget = nil
         // The least scroll that shows the row, as the Mac list moves with the
         // keyboard.
-        withAnimation(.snappy(duration: 0.16)) { proxy.scrollTo(taskID, anchor: nil) }
+        lorvexAnimated(.snappy(duration: 0.16)) { proxy.scrollTo(taskID, anchor: nil) }
       }
       .onKeyPress(.upArrow) {
         moveTaskSelection(by: -1) ? .handled : .ignored

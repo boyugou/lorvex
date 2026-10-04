@@ -51,7 +51,7 @@ struct CalendarWorkspaceView: View {
         .transition(.move(edge: .trailing).combined(with: .opacity))
       }
     }
-    .animation(.snappy(duration: 0.18), value: store.selectedCalendarEventID)
+    .reduceMotionAnimation(.snappy(duration: 0.18), value: store.selectedCalendarEventID)
     .calendarEventActions(eventActions, store: store)
   }
 

@@ -376,7 +376,7 @@ public struct MobileStoreHabitsView: View {
   }
 
   private func toggleBatchSelectionMode() {
-    withAnimation(.snappy) {
+    lorvexAnimated(.snappy) {
       isBatchSelecting.toggle()
       if !isBatchSelecting {
         batchSelectedHabitIDs.removeAll()
@@ -415,7 +415,7 @@ public struct MobileStoreHabitsView: View {
     let ids = Array(batchSelectedHabitIDs)
     guard await store.deleteHabits(ids) else { return }
     batchSelectedHabitIDs.removeAll()
-    withAnimation(.snappy) {
+    lorvexAnimated(.snappy) {
       isBatchSelecting = false
     }
   }

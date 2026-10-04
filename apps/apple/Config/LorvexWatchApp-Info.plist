@@ -17,7 +17,9 @@
 		<string>ar</string>
 		<string>en</string>
 		<string>es</string>
+		<string>fa</string>
 		<string>fr</string>
+		<string>he</string>
 		<string>hi</string>
 		<string>it</string>
 		<string>ja</string>
@@ -26,6 +28,7 @@
 		<string>pt-BR</string>
 		<string>ru</string>
 		<string>uk</string>
+		<string>ur</string>
 		<string>zh-Hans</string>
 		<string>zh-Hant</string>
 	</array>

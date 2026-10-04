@@ -116,7 +116,7 @@ repeat-forever shimmer and move/scale transitions deserve particular attention.
 
 Evidence:
 
-- `Sources/LorvexApple/Support/LorvexReduceMotion.swift`
+- `Sources/LorvexCore/Support/LorvexReduceMotion.swift`
 - `Sources/LorvexApple/Views/HabitMilestoneCelebrationView.swift`
 - `Sources/LorvexMobile/MobileHabitMilestoneCelebrationView.swift`
 - `Sources/LorvexMobile/MobileSkeletonLoading.swift`
@@ -127,6 +127,16 @@ Evidence:
 Release condition: inventory every automatic/repeating, move, scale, spring,
 bounce, and parallax effect; define its reduced-motion behavior; then complete
 all common tasks with the system setting enabled.
+
+Current source state (verified 2026-10-04): every animation driver in `Sources`
+(`withAnimation`, `.animation(_:value:)`, `Binding.animation`, and the bounce
+symbol effect) goes through the helpers in
+`Sources/LorvexCore/Support/LorvexReduceMotion.swift`, which read the system
+setting on macOS, iOS, iPadOS, and watchOS, and `verify_source_hygiene.py`
+rejects a raw driver anywhere else. With Reduce Motion on, state changes apply
+instantly, the tap-acknowledgment scale and the symbol bounce are skipped, and
+the skeleton shimmer stays still. The device pass with the setting enabled is
+still owed.
 
 ### A3 — HIGH — There is no saved runtime evidence for an App Store claim
 

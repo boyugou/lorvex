@@ -38,6 +38,6 @@ struct MobileProgressRing: View {
       }
     }
     .frame(width: size, height: size)
-    .animation(.easeInOut(duration: 0.2), value: value)
+    .reduceMotionAnimation(.easeInOut(duration: 0.2), value: value)
   }
 }

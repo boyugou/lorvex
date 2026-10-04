@@ -60,7 +60,7 @@ private struct LorvexSkeletonShimmer: ViewModifier {
           // other change in the update the skeleton appears in, such as the
           // surrounding workspace's first real layout, which then never
           // settles.
-          .animation(.linear(duration: 1.4).repeatForever(autoreverses: false), value: isAnimating)
+          .reduceMotionAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false), value: isAnimating)
         }
         .mask(content)
         .allowsHitTesting(false)

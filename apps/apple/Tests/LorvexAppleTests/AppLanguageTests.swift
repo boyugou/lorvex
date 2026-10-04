@@ -57,6 +57,11 @@ struct AppLanguageTests {
     (["pt-PT"], "pt-BR"),
     (["hi-IN"], "hi"),
     (["ar-SA"], "ar"),
+    (["fa-IR"], "fa"),
+    (["fa-AF"], "fa"),
+    (["ur-PK"], "ur"),
+    (["ur-IN"], "ur"),
+    (["he-IL"], "he"),
     (["ru-RU"], "ru"),
     (["ru-KZ"], "ru"),
     (["uk-UA"], "uk"),
@@ -74,7 +79,8 @@ struct AppLanguageTests {
   func selectableOrderGroupsScripts() {
     #expect(
       AppLanguage.selectable == [
-        .en, .es, .fr, .it, .pl, .ptBR, .ru, .uk, .ar, .hi, .ko, .ja, .zhHans, .zhHant,
+        .en, .es, .fr, .it, .pl, .ptBR, .ru, .uk, .he, .ur, .ar, .fa, .hi, .ko, .ja, .zhHans,
+        .zhHant,
       ])
   }
 
@@ -150,10 +156,13 @@ struct AppLanguageTests {
     #expect(AppLanguage.running != .system)
   }
 
-  @Test("Arabic reads right to left; following the system reads like the system's language")
+  @Test(
+    "Arabic, Persian, Urdu, and Hebrew read right to left; following the system reads like the system's language"
+  )
   func readingDirection() {
+    let rightToLeft: Set<AppLanguage> = [.ar, .fa, .ur, .he]
     for language in AppLanguage.selectable {
-      #expect(language.readsRightToLeft == (language == .ar), "\(language.rawValue)")
+      #expect(language.readsRightToLeft == rightToLeft.contains(language), "\(language.rawValue)")
     }
     #expect(AppLanguage.system.readsRightToLeft == AppLanguage.systemLanguage.readsRightToLeft)
   }

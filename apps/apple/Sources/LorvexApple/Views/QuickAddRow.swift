@@ -34,7 +34,7 @@ struct QuickAddRow: View {
           .transition(.opacity)
       }
     }
-    .animation(.snappy(duration: 0.18), value: current.words.isEmpty)
+    .reduceMotionAnimation(.snappy(duration: 0.18), value: current.words.isEmpty)
     // The panel's horizontal inset equals a task row's inner padding, so in a
     // lane of task rows the plus sits in their marker column and the typed
     // text starts on their title column.

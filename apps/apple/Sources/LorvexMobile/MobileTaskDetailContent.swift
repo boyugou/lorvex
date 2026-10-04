@@ -273,11 +273,11 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
   }
 
   private func setComposingChecklistItem(_ isComposing: Bool) {
-    withAnimation(.snappy) { isComposingChecklistItem = isComposing }
+    lorvexAnimated(.snappy) { isComposingChecklistItem = isComposing }
   }
 
   private func setComposingReminder(_ isComposing: Bool) {
-    withAnimation(.snappy) { isComposingReminder = isComposing }
+    lorvexAnimated(.snappy) { isComposingReminder = isComposing }
   }
 
   // MARK: Status chip

@@ -88,7 +88,7 @@ struct MobileTodayPage: View {
     // Every row sizes to its content, so the ground section's edge rows take
     // no height. The list reads this for all its rows, not per row.
     .environment(\.defaultMinListRowHeight, 0)
-    .animation(.snappy(duration: 0.25), value: page)
+    .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
     .sensoryFeedback(.success, trigger: store.doneTodayCount)
   }
 
@@ -145,7 +145,7 @@ struct MobileTodayPage: View {
           Button(
             showsFullBriefing ? MobileTodayCalmCopy.briefingLess : MobileTodayCalmCopy.briefingMore
           ) {
-            withAnimation(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
+            lorvexAnimated(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
           }
           .buttonStyle(.borderless)
           .font(LorvexDesign.Typography.secondaryText)
@@ -408,7 +408,7 @@ struct MobileTodayPage: View {
       }
     } header: {
       Button {
-        withAnimation(.snappy(duration: 0.2)) { doneCollapsed.toggle() }
+        lorvexAnimated(.snappy(duration: 0.2)) { doneCollapsed.toggle() }
       } label: {
         HStack(spacing: LorvexDesign.Spacing.s) {
           Text(MobileTodayCalmCopy.doneTitle)

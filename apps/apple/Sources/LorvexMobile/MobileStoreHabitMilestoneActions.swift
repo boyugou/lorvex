@@ -13,7 +13,7 @@ extension MobileStore {
       let info = habit.milestone, let reached = info.justReached
     else { return false }
     feedbackProvider.playFeedback(.habitMilestoneReached)
-    withAnimation(.spring(response: 0.42, dampingFraction: 0.62)) {
+    lorvexAnimated(.spring(response: 0.42, dampingFraction: 0.62)) {
       milestoneCelebration = MobileHabitMilestoneCelebration(
         habitName: habit.name,
         milestone: reached,

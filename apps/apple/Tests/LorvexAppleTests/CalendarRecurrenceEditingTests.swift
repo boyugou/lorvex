@@ -240,7 +240,7 @@ func calendarRepeatFieldEditsTypedRuleThroughCommonCases() throws {
   #expect(source.contains(#".accessibilityIdentifier("\(idPrefix).repeat.interval")"#))
   #expect(source.contains(#".accessibilityIdentifier("\(idPrefix).repeat.dayOfMonth")"#))
   // Motion on state changes.
-  #expect(source.contains(".animation(.snappy(duration: 0.18), value: recurrence)"))
+  #expect(source.contains(".reduceMotionAnimation(.snappy(duration: 0.18), value: recurrence)"))
 }
 
 @Test

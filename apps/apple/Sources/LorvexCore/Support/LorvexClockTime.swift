@@ -86,6 +86,18 @@ public func lorvexDayLine(logicalDay: String) -> String {
   return date.formatted(style.year(.omitted))
 }
 
+/// A `yyyy-MM-dd` product day in the short form of
+/// ``lorvexDayLine(logicalDay:)`` ("Tue, Sep 22"): the abbreviated weekday and
+/// the date without the year, in the user's locale and calendar, for a place
+/// too narrow for the spelled-out line. The input unchanged when it is not a
+/// day key.
+public func lorvexShortDayLine(logicalDay: String) -> String {
+  guard let date = LorvexDateFormatters.ymdUTC.date(from: logicalDay) else { return logicalDay }
+  var style = Date.FormatStyle(date: .abbreviated, time: .omitted)
+  style.timeZone = .gmt
+  return date.formatted(style.weekday(.abbreviated).year(.omitted))
+}
+
 /// Minutes since midnight for a stored `HH:MM` time-of-day string, or `nil` when
 /// it is not a parseable clock time.
 ///

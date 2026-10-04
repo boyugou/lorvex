@@ -102,7 +102,7 @@ struct MenuBarStatusView: View {
           }
         }
         .padding(LorvexDesign.Spacing.m)
-        .animation(.snappy(duration: 0.25), value: page)
+        .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
       }
       .scrollBounceBehavior(.basedOnSize)
       .frame(maxHeight: Self.bodyMaxHeight)
@@ -145,30 +145,59 @@ struct MenuBarStatusView: View {
   /// today's facts, or what the next seven days hold.
   private func header(_ page: LorvexCalmToday, weekDays: [LorvexAgendaDay]) -> some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
-      HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
-        Text(TodayCalmCopy.dateLine(logicalDay: store.logicalTodayDateString))
-          .font(LorvexDesign.Typography.pageLabel)
-          .foregroundStyle(.secondary)
-          .lineLimit(1)
-          .accessibilityIdentifier("menubar.date")
-        Spacer(minLength: 0)
-        Picker(MenuBarScope.pickerLabel, selection: $scope) {
-          ForEach(MenuBarScope.allCases) { scope in
-            Text(scope.title).tag(scope)
-          }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .controlSize(.small)
-        .fixedSize()
-        .accessibilityIdentifier("menubar.scope")
-      }
+      dateAndScope
       Text(headline(page, weekDays: weekDays), serifVoice: .panelSentence)
         .fixedSize(horizontal: false, vertical: true)
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("menubar.headline")
     }
     .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  /// The date beside the scope switch. The switch keeps the width its labels
+  /// need, and a translated "Next 7 Days" can take more than half the panel,
+  /// so the date has three forms and the first that fits is shown: the
+  /// spelled-out date, its short form, and the spelled-out date above the
+  /// switch.
+  private var dateAndScope: some View {
+    let day = store.logicalTodayDateString
+    return ViewThatFits(in: .horizontal) {
+      HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
+        dateLabel(TodayCalmCopy.dateLine(logicalDay: day))
+        Spacer(minLength: 0)
+        scopePicker
+      }
+      HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
+        dateLabel(TodayCalmCopy.shortDateLine(logicalDay: day))
+        Spacer(minLength: 0)
+        scopePicker
+      }
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+        dateLabel(TodayCalmCopy.dateLine(logicalDay: day))
+        scopePicker
+      }
+    }
+  }
+
+  private func dateLabel(_ text: String) -> some View {
+    Text(text)
+      .font(LorvexDesign.Typography.pageLabel)
+      .foregroundStyle(.secondary)
+      .lineLimit(1)
+      .accessibilityIdentifier("menubar.date")
+  }
+
+  private var scopePicker: some View {
+    Picker(MenuBarScope.pickerLabel, selection: $scope) {
+      ForEach(MenuBarScope.allCases) { scope in
+        Text(scope.title).tag(scope)
+      }
+    }
+    .pickerStyle(.segmented)
+    .labelsHidden()
+    .controlSize(.small)
+    .fixedSize()
+    .accessibilityIdentifier("menubar.scope")
   }
 
   private func headline(_ page: LorvexCalmToday, weekDays: [LorvexAgendaDay]) -> String {

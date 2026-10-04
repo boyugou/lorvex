@@ -157,7 +157,7 @@ struct SidebarView: View {
             .accessibilityLabel(String(localized: "sidebar.settings", defaultValue: "Settings", table: "Localizable", bundle: LorvexL10n.bundle))
             .accessibilityIdentifier("sidebar.settings")
         }
-        .padding(.horizontal, SidebarMetrics.horizontalInset)
+        .padding(.horizontal, SidebarMetrics.capsuleInset)
         .padding(.top, LorvexDesign.Spacing.sm)
         .padding(.bottom, 8)
         .overlay(alignment: .top) {

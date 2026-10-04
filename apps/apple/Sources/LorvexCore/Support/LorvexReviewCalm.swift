@@ -107,7 +107,7 @@ public struct LorvexDotScale: View {
       HStack(spacing: 0) {
         ForEach(1...5, id: \.self) { level in
           Button {
-            withAnimation(.snappy) { value = value == level ? nil : level }
+            lorvexAnimated(.snappy) { value = value == level ? nil : level }
           } label: {
             dot(level)
               .frame(width: dotSize(level), height: dotSize(level))
@@ -118,7 +118,7 @@ public struct LorvexDotScale: View {
           .disabled(!isEnabled)
           #if os(macOS) || os(iOS)
             .onHover { inside in
-              withAnimation(.easeOut(duration: 0.12)) {
+              lorvexAnimated(.easeOut(duration: 0.12)) {
                 if inside {
                   hoveredLevel = level
                 } else if hoveredLevel == level {

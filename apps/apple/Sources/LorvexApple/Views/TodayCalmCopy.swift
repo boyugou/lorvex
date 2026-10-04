@@ -257,6 +257,10 @@ enum TodayCalmCopy {
   /// The product day as a spelled-out date ("Tuesday, September 22").
   static func dateLine(logicalDay: String) -> String { lorvexDayLine(logicalDay: logicalDay) }
 
+  /// The product day as a short date ("Tue, Sep 22"), for a header too narrow
+  /// for ``dateLine(logicalDay:)``.
+  static func shortDateLine(logicalDay: String) -> String { lorvexShortDayLine(logicalDay: logicalDay) }
+
   static var doneTitle: String {
     String(
       localized: "today.list.done", defaultValue: "Done", table: "Localizable",

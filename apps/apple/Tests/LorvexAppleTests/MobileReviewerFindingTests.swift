@@ -17,7 +17,7 @@ func mobileReviewerFindingSourceGuards() throws {
   let heatmap = try mobileSource("MobileHabitVisualizationSection.swift")
   #expect(heatmap.contains("@State private var cachedGrid: HabitHeatmapModel.Grid"))
   #expect(!heatmap.contains("private var grid: HabitHeatmapModel.Grid"))
-  #expect(heatmap.contains(".animation(.easeInOut(duration: 0.25), value: fraction)"))
+  #expect(heatmap.contains(".reduceMotionAnimation(.easeInOut(duration: 0.25), value: fraction)"))
   // Every heatmap cell, in the grid and in the legend, is the one cell view
   // that draws the mark telling its state apart without color.
   #expect(heatmap.contains("MobileHabitHeatmapCell(intensity: cell.intensity, tint: tint)"))

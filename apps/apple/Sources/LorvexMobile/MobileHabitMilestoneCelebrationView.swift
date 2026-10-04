@@ -56,7 +56,7 @@ struct MobileHabitMilestoneCelebrationCard: View {
     .scaleEffect(reduceMotion ? 1 : (appeared ? 1 : 0.92))
     .task {
       guard !reduceMotion else { return }
-      withAnimation(.spring(response: 0.5, dampingFraction: 0.55)) { appeared = true }
+      lorvexAnimated(.spring(response: 0.5, dampingFraction: 0.55)) { appeared = true }
     }
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("mobileHabits.milestone.celebration")
@@ -76,7 +76,7 @@ struct MobileHabitMilestoneCelebrationCard: View {
         .foregroundStyle(celebration.tint)
         .offset(x: 7, y: -5)
         .opacity(reduceMotion ? 0 : 1)
-        .symbolEffect(.bounce, value: appeared)
+        .reduceMotionBounce(value: appeared)
     }
   }
 }

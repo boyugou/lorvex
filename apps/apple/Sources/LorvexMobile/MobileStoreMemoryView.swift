@@ -286,7 +286,7 @@ public struct MobileStoreMemoryView: View {
   }
 
   private func toggleBatchSelection() {
-    withAnimation(.snappy) {
+    lorvexAnimated(.snappy) {
       isBatchSelecting.toggle()
       if !isBatchSelecting {
         batchSelectedMemoryKeys.removeAll()
@@ -306,7 +306,7 @@ public struct MobileStoreMemoryView: View {
     let validKeys = Set(allMemoryKeys)
     batchSelectedMemoryKeys.formIntersection(validKeys)
     if allMemoryEntries.isEmpty {
-      withAnimation(.snappy) {
+      lorvexAnimated(.snappy) {
         isBatchSelecting = false
       }
     }
@@ -315,7 +315,7 @@ public struct MobileStoreMemoryView: View {
   private func deleteSelectedMemory() async {
     guard await store.deleteMemoryEntries(selectedMemoryEntries) else { return }
     batchSelectedMemoryKeys.removeAll()
-    withAnimation(.snappy) {
+    lorvexAnimated(.snappy) {
       isBatchSelecting = false
     }
   }

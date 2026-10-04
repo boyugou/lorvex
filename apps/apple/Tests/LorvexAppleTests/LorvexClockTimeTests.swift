@@ -80,4 +80,12 @@ struct LorvexClockTimeTests {
     #expect(line.contains("22"))
     #expect(lorvexDayLine(logicalDay: "not a day") == "not a day")
   }
+
+  @Test func shortDayLineKeepsTheWeekdayAndDropsTheYear() {
+    let short = lorvexShortDayLine(logicalDay: "2026-09-22")
+    #expect(!short.contains("2026"))
+    #expect(short.contains("22"))
+    #expect(short.count <= lorvexDayLine(logicalDay: "2026-09-22").count)
+    #expect(lorvexShortDayLine(logicalDay: "not a day") == "not a day")
+  }
 }

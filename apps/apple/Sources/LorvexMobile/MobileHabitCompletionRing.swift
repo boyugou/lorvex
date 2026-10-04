@@ -29,7 +29,7 @@ struct MobileHabitCompletionRing: View {
         isComplete: habit.isCompleteToday,
         symbol: showsSymbol ? habit.tileSymbol : nil
       )
-      .scaleEffect(pulse ? 1.18 : 1)
+      .reduceMotionPop(isActive: pulse)
       .contentShape(Circle())
     }
     .buttonStyle(.plain)
@@ -46,7 +46,7 @@ struct MobileHabitCompletionRing: View {
   private func trigger() {
     guard !isMutating else { return }
     let wasComplete = habit.isCompleteToday
-    withAnimation(.spring(response: 0.34, dampingFraction: 0.5)) {
+    lorvexAnimated(.spring(response: 0.34, dampingFraction: 0.5)) {
       pulse = true
     }
     Task {
@@ -55,7 +55,7 @@ struct MobileHabitCompletionRing: View {
       } else {
         await complete()
       }
-      withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+      lorvexAnimated(.spring(response: 0.3, dampingFraction: 0.7)) {
         pulse = false
       }
     }

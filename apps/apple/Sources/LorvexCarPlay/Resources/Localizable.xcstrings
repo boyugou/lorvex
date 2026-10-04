@@ -22,10 +22,22 @@
             "value": "Cancelar"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لغو"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Annuler"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ביטול"
           }
         },
         "hi": {
@@ -76,6 +88,12 @@
             "value": "Скасувати"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منسوخ کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -111,10 +129,22 @@
             "value": "Listo"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انجام شد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Terminer"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בוצע"
           }
         },
         "hi": {
@@ -165,6 +195,12 @@
             "value": "Готово"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ہو گیا"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -200,10 +236,22 @@
             "value": "Mejor mañana"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موکول به فردا"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Plutôt demain"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "דחייה למחר"
           }
         },
         "hi": {
@@ -254,6 +302,12 @@
             "value": "Краще завтра"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کل تک ملتوی کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -289,10 +343,22 @@
             "value": "Abrir en el iPhone"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باز کردن در iPhone"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrir sur l’iPhone"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתיחה ב-iPhone"
           }
         },
         "hi": {
@@ -343,6 +409,12 @@
             "value": "Відкрити на iPhone"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اپنے iPhone پر کھولیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -378,10 +450,22 @@
             "value": "Reintentar"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تلاش مجدد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Réessayer"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ניסיון חוזר"
           }
         },
         "hi": {
@@ -432,6 +516,12 @@
             "value": "Повторити"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوبارہ کوشش کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -468,10 +558,22 @@
             "value": "Aprox. %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدود %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Environ %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בערך %@"
           }
         },
         "hi": {
@@ -522,6 +624,12 @@
             "value": "Близько %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقریباً %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -557,10 +665,22 @@
             "value": "Vencida"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عقب‌افتاده"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "En retard"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "באיחור"
           }
         },
         "hi": {
@@ -611,6 +731,12 @@
             "value": "Прострочено"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تاخیر کا شکار"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -646,10 +772,22 @@
             "value": "Iniciada"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع‌شده"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Démarrée"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התחילה"
           }
         },
         "hi": {
@@ -700,6 +838,12 @@
             "value": "Розпочато"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع شدہ"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -736,10 +880,22 @@
             "value": "Iniciada · aprox. %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع‌شده · حدود %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Démarrée · environ %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התחילה · בערך %@"
           }
         },
         "hi": {
@@ -790,6 +946,12 @@
             "value": "Розпочато · близько %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع شدہ · تقریباً %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -825,10 +987,22 @@
             "value": "Hasta %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تا %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Jusqu’à %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עד %@"
           }
         },
         "hi": {
@@ -879,6 +1053,12 @@
             "value": "До %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ تک"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -914,10 +1094,22 @@
             "value": "No queda nada para hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای امروز چیزی باقی نمانده است."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Plus rien pour aujourd’hui."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא נשאר דבר להיום."
           }
         },
         "hi": {
@@ -968,6 +1160,12 @@
             "value": "На сьогодні нічого не залишилося."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کے لیے کچھ باقی نہیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1003,10 +1201,22 @@
             "value": "Todo al día"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همه انجام شد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tout est fait"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הכול הושלם"
           }
         },
         "hi": {
@@ -1057,6 +1267,12 @@
             "value": "Усе зроблено"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سب مکمل"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1092,10 +1308,22 @@
             "value": "No se pudieron cargar las tareas. Toca para reintentar."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بارگیری کارها انجام نشد — برای تلاش دوباره ضربه بزنید."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Impossible de charger les tâches. Touchez pour réessayer."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא ניתן לטעון את המשימות — יש להקיש כדי לנסות שוב."
           }
         },
         "hi": {
@@ -1146,6 +1374,12 @@
             "value": "Не вдалося завантажити завдання. Торкніть, щоб повторити."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام لوڈ نہیں ہو سکے — دوبارہ کوشش کے لیے ٹیپ کریں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1181,10 +1415,22 @@
             "value": "Error"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطا"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Erreur"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שגיאה"
           }
         },
         "hi": {
@@ -1235,6 +1481,12 @@
             "value": "Помилка"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خرابی"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1270,10 +1522,22 @@
             "value": "Hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امروز"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "היום"
           }
         },
         "hi": {
@@ -1322,6 +1586,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сьогодні"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج"
           }
         },
         "zh-Hans": {

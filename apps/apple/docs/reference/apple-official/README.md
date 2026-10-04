@@ -10,9 +10,9 @@ live documentation before a release.
 - Statements about the repository itself (deployment floors, file layout, script
   names, catalog and language counts) describe that snapshot. The deployment
   floor in force is macOS 26, iOS/iPadOS 26, and watchOS 26, and the shipped
-  languages are English, Arabic, Spanish, French, Hindi, Italian, Japanese,
-  Korean, Polish, Brazilian Portuguese, Russian, Ukrainian, Simplified Chinese,
-  and Traditional Chinese.
+  languages are English, Arabic, Spanish, Persian, French, Hebrew, Hindi,
+  Italian, Japanese, Korean, Polish, Brazilian Portuguese, Russian, Ukrainian,
+  Urdu, Simplified Chinese, and Traditional Chinese.
 - Source policy: Apple Developer Documentation, App Store Review Guidelines,
   App Store Connect Help, and Apple Support security/privacy documentation only
 - Copyright policy: paraphrases and short facts only; follow the source link for

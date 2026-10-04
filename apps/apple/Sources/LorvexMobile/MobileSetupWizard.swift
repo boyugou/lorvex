@@ -271,7 +271,7 @@ public struct MobileSetupWizard: View {
   // MARK: - Helpers
 
   private func advance() {
-    withAnimation { step = Step(rawValue: step.rawValue + 1) ?? .done }
+    lorvexAnimated { step = Step(rawValue: step.rawValue + 1) ?? .done }
   }
 
   /// Raises the system's notification prompt, then moves on whatever the

@@ -95,7 +95,7 @@ extension MobileCalendarDayColumn {
     isCompact: Bool, isTight: Bool, title: String, time: String?, range: String?
   ) -> some View {
     if isCompact {
-      MobileCalendarCompactBlockTitle(title)
+      LorvexCalendarCompactBlockTitle(title)
         .padding(.vertical, isTight ? 0 : 3)
     } else {
       LorvexCalendarBlockText(title: title, time: time, range: range, verticalPadding: 3)

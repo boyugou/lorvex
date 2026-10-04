@@ -84,11 +84,31 @@ public enum DayReview {
          ORDER BY \(TaskRepo.taskOrderBy)
          LIMIT ?2
     """
-  /// Active habits and the subset whose logged completion `value` met the
-  /// target on the day. Identical shape to ``Overview/loadHabitSummary``.
+  /// The active habits that belong to the day and the subset whose logged
+  /// completion `value` met the target on it. `?1` is the day, `?2` its
+  /// weekday (Monday-first, 0...6), `?3` its day of the month and `?4` the last
+  /// day of that month. A habit belongs to the day when its cadence makes the
+  /// day one it is for, or when it has a completion that day, so a check-in
+  /// made on any other day is counted as kept rather than dropped. A daily
+  /// habit is for every day; a weekly habit for its pinned weekdays (every day
+  /// when none is pinned); a monthly habit for its reminder day, clamped to the
+  /// month's last day (``effectiveMonthlyDay(_:year:month:)``); a
+  /// times-per-week habit for no particular day, since its quota belongs to the
+  /// week. The SQL restates ``isHabitReminderDay(_:_:)`` over the stored
+  /// columns and `habit_weekdays`.
   static let habitSummarySQL = """
     SELECT
-      (SELECT COUNT(*) FROM habits WHERE archived = 0),
+      (SELECT COUNT(*) FROM habits h
+       WHERE h.archived = 0
+         AND (h.frequency_type NOT IN ('weekly', 'monthly', 'times_per_week')
+              OR (h.frequency_type = 'weekly'
+                  AND (NOT EXISTS (SELECT 1 FROM habit_weekdays w WHERE w.habit_id = h.id)
+                       OR EXISTS (SELECT 1 FROM habit_weekdays w
+                                  WHERE w.habit_id = h.id AND w.weekday = ?2)))
+              OR (h.frequency_type = 'monthly'
+                  AND ?3 = MIN(MAX(COALESCE(h.day_of_month, 1), 1), ?4))
+              OR EXISTS (SELECT 1 FROM habit_completions hc
+                         WHERE hc.habit_id = h.id AND hc.completed_date = ?1 AND hc.value > 0))),
       (SELECT COUNT(DISTINCT h.id) FROM habits h
        INNER JOIN habit_completions hc ON h.id = hc.habit_id AND hc.completed_date = ?1
        WHERE h.archived = 0 AND hc.value >= h.target_count)
@@ -145,7 +165,15 @@ public enum DayReview {
         id: row[0], title: row[1], status: row[2], deferCount: row[3], plannedDate: row[4])
     }
 
-    let habitRow = try Row.fetchOne(db, sql: habitSummarySQL, arguments: [day])
+    // An unparseable day (the window above already rejects one) matches no
+    // pinned weekday and no monthly reminder day.
+    let parsedDay = try? LorvexDate.parse(day).get()
+    let weekday = parsedDay.map { WeekDay.from(date: $0).rawValue } ?? -1
+    let dayOfMonth = parsedDay?.ymd.day ?? -1
+    let lastDayOfMonth =
+      parsedDay.map { effectiveMonthlyDay(31, year: $0.ymd.year, month: $0.ymd.month) } ?? 31
+    let habitRow = try Row.fetchOne(
+      db, sql: habitSummarySQL, arguments: [day, weekday, dayOfMonth, lastDayOfMonth])
     let habitsTotal = (habitRow?[0] as Int64?) ?? 0
     let habitsCompleted = (habitRow?[1] as Int64?) ?? 0
 

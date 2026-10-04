@@ -104,6 +104,7 @@ private func summary(_ tokens: [String], locale identifier: String = "en_US") ->
 
 /// A phrase that follows other words starts a row with a capital, by the
 /// rules of the given language; a script without case is unchanged.
+@MainActor
 @Test func sentenceCaseFollowsTheLanguage() {
   let english = Locale(identifier: "en_US")
   let turkish = Locale(identifier: "tr_TR")

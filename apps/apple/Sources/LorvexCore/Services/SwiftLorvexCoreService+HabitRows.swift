@@ -72,6 +72,8 @@ extension SwiftLorvexCoreService {
       perPeriodTarget: row["per_period_target"] as Int64,
       dayOfMonth: (row["day_of_month"] as Int64?).map { Int($0) })
     let completionsToday = try habitValueOnDate(db, habitId: id, date: date)
+    let periodMetDays = try habitPeriodMetDays(
+      db, habitId: id, cadence: cadence, targetCount: targetCount, through: date)
     let totalCompletions = try Int.fetchOne(
       db, sql: "SELECT COALESCE(SUM(value), 0) FROM habit_completions WHERE habit_id = ?",
       arguments: [id]) ?? 0
@@ -86,8 +88,37 @@ extension SwiftLorvexCoreService {
       metric: metric, value: metricValue, target: milestoneTarget)
     return SwiftLorvexHabitDeserializers.habit(
       row, weekdays: weekdays, completionsToday: completionsToday,
-      totalCompletions: totalCompletions, completionRate30d: rate,
-      milestoneTarget: milestoneTarget, milestone: milestone)
+      periodMetDays: periodMetDays, totalCompletions: totalCompletions,
+      completionRate30d: rate, milestoneTarget: milestoneTarget, milestone: milestone)
+  }
+
+  /// How many days of the period `day` falls in have a completion that met the
+  /// habit's per-day target, counted from the period's first day through
+  /// `day`: the Gregorian month for a monthly habit and the ISO week (Monday
+  /// first) for a times-per-week one. Other cadences are not counted per
+  /// period and read 0, as does a `day` that is not a date.
+  static func habitPeriodMetDays(
+    _ db: Database, habitId: String, cadence: HabitCadence, targetCount: Int64,
+    through day: String
+  ) throws -> Int {
+    guard let date = lorvexDate(day) else { return 0 }
+    let first: IsoDate.YMD
+    switch cadence {
+    case .monthly:
+      first = IsoDate.YMD(year: date.ymd.year, month: date.ymd.month, day: 1)
+    case .timesPerWeek:
+      first = IsoDate.ymdFromDayNumber(
+        IsoDate.dayNumber(date.ymd) - WeekDay.from(date: date).rawValue)
+    case .daily, .weekly:
+      return 0
+    }
+    return try Int.fetchOne(
+      db,
+      sql: """
+        SELECT COUNT(*) FROM habit_completions
+        WHERE habit_id = ? AND completed_date >= ? AND completed_date <= ? AND value >= ?
+        """,
+      arguments: [habitId, first.canonicalString, day, max(targetCount, 1)]) ?? 0
   }
 
   /// The current milestone metric reading for a habit: total completions for the

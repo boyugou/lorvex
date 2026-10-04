@@ -17,9 +17,14 @@
 # UICTContentSizeCategoryXXXL` to check a larger text size (the widgets* routes
 # show whether a fixed-size widget still fits), or
 # `-lorvexPreviewOrientation landscape` to lay the app out in landscape (the
-# screenshot comes out in landscape too). LORVEX_SIM_SETTLE sets the seconds
-# to wait after each launch before the screenshot (default 4.5); raise it when
-# a loaded machine draws a screen late.
+# screenshot comes out in landscape too), or `-lorvexSeedStressData` to add the
+# content that breaks layouts (very long titles, lists and tags, a 25-item
+# checklist, overlapping, all-day and overnight events, a crowded day, ten
+# habits) on top of the sample day, with `-lorvexScrollListTo <middle|end>` to
+# scroll the tallest list on screen before the shot. LORVEX_SIM_SETTLE sets the
+# seconds to wait after each launch before the screenshot (default 4.5); raise
+# it when a loaded machine draws a screen late, and to about 11 for the stress
+# seed, which takes a few seconds to write.
 # Routes: today today-suggestion tasks calendar calendar-week calendar-month
 #         habits review
 #         review-week setup-welcome setup-cloudSync setup-notifications setup-done

@@ -4,6 +4,7 @@ import Testing
 @testable import LorvexMobile
 
 @Suite("Task detail action tiles")
+@MainActor
 struct MobileTaskActionTilesTests {
   @Test("each status shows only the actions it allows, and a resolved task shows none")
   func tilesPerStatus() {

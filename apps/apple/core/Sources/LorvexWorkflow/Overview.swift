@@ -6,10 +6,9 @@ import LorvexStore
 /// At-a-glance dashboard read model shared by the app and MCP surfaces.
 ///
 /// `loadOverviewSnapshot` composes per-list open counts, top-priority open
-/// tasks, recently-completed rows, the day's briefing,
-/// habit activity, and the day-bucket counts (Attention / Overdue /
-/// Today / Upcoming). The caller owns the read transaction (this operates on
-/// the supplied `db` directly).
+/// tasks, recently-completed rows, the day's briefing, and the day-bucket
+/// counts (Attention / Overdue / Today / Upcoming). The caller owns the read
+/// transaction (this operates on the supplied `db` directly).
 public enum Overview {
   /// Drop the in-process completion-streak cache for `db`. Call after inbound
   /// sync apply, which mutates completion state without bumping the
@@ -74,11 +73,6 @@ public enum Overview {
     public let openCount: Int64
   }
 
-  public struct HabitSummary: Sendable, Equatable {
-    public let count: Int64
-    public let completedToday: Int64
-  }
-
   public struct Snapshot: Sendable {
     public let date: String
     public let stats: Stats
@@ -89,7 +83,6 @@ public enum Overview {
     public let recentlyCompleted: [TaskRow]
     /// The assistant's briefing for ``date``, or nil when the day has none.
     public let briefing: String?
-    public let habits: HabitSummary
   }
 
   // MARK: - Stats aggregate
@@ -162,20 +155,6 @@ public enum Overview {
     guard let text = stored?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty
     else { return nil }
     return text
-  }
-
-  static func loadHabitSummary(_ db: Database, today: String) throws -> HabitSummary {
-    let row = try Row.fetchOne(
-      db,
-      sql: """
-        SELECT
-          (SELECT COUNT(*) FROM habits WHERE archived = 0),
-          (SELECT COUNT(DISTINCT h.id) FROM habits h
-           INNER JOIN habit_completions hc ON h.id = hc.habit_id AND hc.completed_date = ?
-           WHERE h.archived = 0 AND hc.value >= h.target_count)
-        """,
-      arguments: [today])
-    return HabitSummary(count: (row?[0] as Int64?) ?? 0, completedToday: (row?[1] as Int64?) ?? 0)
   }
 
   // MARK: - Streak
@@ -288,12 +267,11 @@ public enum Overview {
     let recentlyCompleted = try TaskRepo.Read.getRecentlyCompletedTasks(
       db, limit: Int64(limits.recentlyCompleted))
     let briefing = try loadBriefing(db, date: today)
-    let habits = try loadHabitSummary(db, today: today)
 
     return Snapshot(
       date: today, stats: stats, lists: listsPage.rows, listsTotal: listsPage.total,
       listsTruncated: listsPage.truncated, topByPriority: topByPriority,
-      recentlyCompleted: recentlyCompleted, briefing: briefing, habits: habits)
+      recentlyCompleted: recentlyCompleted, briefing: briefing)
   }
 
 }

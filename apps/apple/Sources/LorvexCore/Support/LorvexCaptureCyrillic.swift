@@ -3,7 +3,8 @@ import Foundation
 // What the Russian and Ukrainian vocabularies share: word boundaries and
 // endings for Cyrillic text and the clock times a part of the day names. The
 // readers of text that the Slavic vocabularies judge the same way (a
-// capitalized name, the words of a list, a date range) serve Polish too.
+// capitalized name, the words of a list, a date range) serve Polish too, and
+// the clock times of a part of the day and the date-range reader serve Arabic.
 
 extension LorvexCaptureVocabulary {
   /// What may follow a clock time: no Cyrillic letter, digit, colon, or
@@ -91,12 +92,13 @@ extension LorvexCaptureVocabulary {
     text.lowercased().split(whereSeparator: { !$0.isLetter && $0 != "'" }).map(String.init)
   }
 
-  /// The date range a match of a Slavic-language range pattern names, as
-  /// Russian, Ukrainian, and Polish write one ("с 3 по 5 мая", "з 3 до 5
-  /// травня", "od 3 do 5 maja"). Groups: 1 the opening word, if any ("с", "з",
-  /// "od"), 2 the start, 3 a dash between the sides, 4 the word that means "to"
-  /// between them ("по", "до", "do"), 5 the end. `side` reads one side's text
-  /// as a date, with a month for a date and with none for a day alone.
+  /// The date range a match of a range pattern names, as Russian, Ukrainian,
+  /// Polish, and Arabic write one ("с 3 по 5 мая", "з 3 до 5 травня", "od 3 do
+  /// 5 maja", "من 3 إلى 5 مارس"). Groups: 1 the opening word, if any ("с", "з",
+  /// "od", "من"), 2 the start, 3 a dash between the sides, 4 the word that
+  /// means "to" between them ("по", "до", "do", "إلى"), 5 the end. `side` reads
+  /// one side's text as a date, with a month for a date and with none for a
+  /// day alone.
   ///
   /// A word that means "to" joins the sides only after the opening word, so
   /// "3 по 5 мая" stays in the title. A start that is a day alone, with a dash

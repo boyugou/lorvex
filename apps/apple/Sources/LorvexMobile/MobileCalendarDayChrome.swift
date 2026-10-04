@@ -74,14 +74,48 @@ struct MobileCalendarAllDayStrip: View {
   let onToggleTask: (LorvexTask) -> Void
   let onDropTask: (LorvexTaskRef, Date) -> Void
   @Environment(\.calendar) private var calendar
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+  /// ``LorvexDesign/CalendarMetrics/allDayStripMaxHeight``, scaled with the
+  /// pills' text.
+  @ScaledMetric(relativeTo: .caption) private var baseMaxHeight: CGFloat =
+    LorvexDesign.CalendarMetrics.allDayStripMaxHeight
+  /// Whether the strip, once it scrolls, has rows below the visible ones. It
+  /// starts true: a strip scrolls only when its rows overflow, from the top.
+  @State private var hasRowsBelow = true
 
   /// Whether any of `columns` has an all-day event or a task without a time.
   static func hasContent(_ columns: [CalendarGridDay]) -> Bool {
     columns.contains { !$0.allDayEvents.isEmpty || !$0.scheduledTasks.isEmpty }
   }
 
+  /// The strip takes the height its rows need up to a limit, then scrolls
+  /// within it, so the hours below keep their room however many tasks the day
+  /// has. While rows lie below the visible ones, the last rows fade, so a cut
+  /// row reads as "more below" rather than as the end.
   var body: some View {
     let hasContent = Self.hasContent(columns)
+    ViewThatFits(in: .vertical) {
+      rows(hasContent: hasContent)
+      ScrollView(.vertical) { rows(hasContent: hasContent) }
+        .onScrollGeometryChange(for: Bool.self) { scroll in
+          scroll.contentOffset.y + scroll.containerSize.height < scroll.contentSize.height - 1
+        } action: { _, hasMore in
+          hasRowsBelow = hasMore
+        }
+        .mask {
+          VStack(spacing: 0) {
+            Color.black
+            LinearGradient(
+              colors: [.black, hasRowsBelow ? .clear : .black], startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: 16)
+          }
+        }
+    }
+    .frame(maxHeight: baseMaxHeight * (horizontalSizeClass == .regular ? 2 : 1))
+  }
+
+  private func rows(hasContent: Bool) -> some View {
     HStack(alignment: .top, spacing: 0) {
       Text(
         String(

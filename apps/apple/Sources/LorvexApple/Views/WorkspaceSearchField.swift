@@ -53,7 +53,7 @@ extension AppStore {
           format: String(
             localized: "tasks.search.prompt_list", defaultValue: "Search “%@”", table: "Localizable",
             bundle: LorvexL10n.bundle),
-          list.displayName)
+          Self.promptListName(list.displayName, limit: Self.searchPromptListNameLimit))
       }
       return String(localized: "tasks.search.prompt", defaultValue: "Search All Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
     case .memory:

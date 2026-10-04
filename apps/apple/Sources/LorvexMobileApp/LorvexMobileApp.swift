@@ -89,6 +89,9 @@ struct LorvexMobileApp: App {
           // empty store.
           _ = await store.refresh()
           store.debugApplyLaunchNavigationIfNeeded()
+          #if os(iOS)
+            await DebugListScroller.scrollIfRequested()
+          #endif
         #endif
       }
   }

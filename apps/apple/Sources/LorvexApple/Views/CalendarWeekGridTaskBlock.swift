@@ -7,7 +7,10 @@ import SwiftUI
 /// (`lorvexCalendarTaskSurface`, a hollow dashed outline) instead of an
 /// event's solid fill and rail, so time set aside for the user's own work never
 /// reads like a meeting. The block opens the task; the task's time is set in
-/// its detail or by suggested times on Today.
+/// its detail or by suggested times on Today. A block in a lane that overlap
+/// has narrowed below ``LorvexDesign/CalendarMetrics/compactLaneWidth`` drops
+/// the circle and the time line and shows its title alone, with the full label
+/// as its tooltip; its context menu still completes the task.
 extension CalendarWeekGridView {
   func taskBlock(
     _ block: CalendarGridTaskBlock, on day: CalendarGridDay, columnWidth: CGFloat
@@ -19,19 +22,33 @@ extension CalendarWeekGridView {
     let color = LorvexDesign.Palette.accent
     let isRunning = isRunningNow(block, on: day) && !block.isDone
     let isSelected = store.selectedTaskID == block.task.id
+    let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
+    let isTight = height < LorvexDesign.CalendarMetrics.tightBlockHeight
+    let label = calendarTimedTaskAccessibilityLabel(
+      title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin)
 
-    return LorvexCalendarBlockText(
-      title: block.task.title,
-      time: lorvexClockTimeLabel(minutes: block.startMin),
-      range: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
-      isDone: block.isDone,
-      verticalPadding: CalendarEventBlockMetrics.verticalPadding
-    ) {
-      taskCompletionCircle(for: block.task)
-        .accessibilityIdentifier("calendar.weekgrid.taskBlock.complete")
+    return Group {
+      if isCompact {
+        LorvexCalendarCompactBlockTitle(block.task.title, isDone: block.isDone)
+          .padding(.vertical, isTight ? 0 : CalendarEventBlockMetrics.verticalPadding)
+      } else {
+        LorvexCalendarBlockText(
+          title: block.task.title,
+          time: lorvexClockTimeLabel(minutes: block.startMin),
+          range: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
+          isDone: block.isDone,
+          verticalPadding: CalendarEventBlockMetrics.verticalPadding
+        ) {
+          taskCompletionCircle(for: block.task)
+            .accessibilityIdentifier("calendar.weekgrid.taskBlock.complete")
+        }
+      }
     }
     .padding(.leading, 3)
-    .padding(.trailing, CalendarEventBlockMetrics.horizontalPadding)
+    .padding(
+      .trailing,
+      isCompact ? CalendarEventBlockMetrics.compactTrailingPadding : CalendarEventBlockMetrics.horizontalPadding
+    )
     .frame(
       width: max(laneWidth - CalendarEventBlockMetrics.laneGap, 8),
       height: height,
@@ -72,11 +89,10 @@ extension CalendarWeekGridView {
         systemImage: block.isDone ? "arrow.uturn.backward.circle" : "checkmark.circle"
       ) { toggleCompletion(of: block.task) }
     }
+    .help(isCompact ? label : "")
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
-    .accessibilityLabel(
-      calendarTimedTaskAccessibilityLabel(
-        title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin))
+    .accessibilityLabel(label)
     .accessibilityIdentifier("calendar.weekgrid.taskBlock")
   }
 

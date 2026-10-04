@@ -182,7 +182,7 @@ public final class LorvexWatchStore {
         completedTodayCount = (try? await core.loadWidgetStatsSource().completedTodayTasks.count) ?? 0
         let habitCatalog = try await core.loadHabits(date: dateString)
         habits = habitCatalog.habits
-          .filter { !$0.archived }
+          .filter { !$0.archived && $0.isListed(on: dateString) }
           .map {
             WidgetSnapshot.HabitSummary(
               id: $0.id, name: $0.name, icon: $0.icon,

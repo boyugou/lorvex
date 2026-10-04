@@ -55,7 +55,7 @@ struct MobileCloudDataDeletionTests {
     #expect(try sync.engine.queuedZoneDeletes() == [CloudSyncController.zoneName])
     #expect(store.cloudSyncMode == .off, "the runtime mode stops passes immediately")
     #expect(persistedMode(suite) == .off, "the persisted mode flips off")
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(store.cloudSyncPauseReason == .userDeletedZone)
   }
 
@@ -67,7 +67,7 @@ struct MobileCloudDataDeletionTests {
     sync.confirmZoneDeletions()
 
     #expect(await store.deleteCloudDataEverywhere() == nil)
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(await sync.controller.state == .paused(.userDeletedZone))
   }
 
@@ -83,7 +83,7 @@ struct MobileCloudDataDeletionTests {
     #expect(errorMessage != nil)
     #expect(store.cloudSyncMode == .live)
     #expect(persistedMode(suite) == .live)
-    #expect(try await sync.pause.loadPauseReason() == nil)
+    #expect(await sync.pause.loadPauseReason() == nil)
   }
 
   @MainActor
@@ -107,7 +107,7 @@ struct MobileCloudDataDeletionTests {
     await store.setCloudSyncModeFromSettings(.live)
 
     #expect(store.cloudSyncMode == .live)
-    #expect(try await sync.pause.loadPauseReason() == nil, "switching to Live is the re-opt-in")
+    #expect(await sync.pause.loadPauseReason() == nil, "switching to Live is the re-opt-in")
     #expect(store.cloudSyncPauseReason == nil)
   }
 
@@ -122,7 +122,7 @@ struct MobileCloudDataDeletionTests {
     await store.setCloudSyncModeFromSettings(.live)
 
     #expect(
-      try await sync.pause.loadPauseReason() == .accountChanged,
+      await sync.pause.loadPauseReason() == .accountChanged,
       "an account-switch pause must not be lifted by a mode toggle")
     #expect(store.cloudSyncPauseReason == .accountChanged)
   }
@@ -143,7 +143,7 @@ struct MobileCloudDataDeletionTests {
 
     #expect(store.cloudSyncMode == .off)
     #expect(persistedMode(suite) == .off)
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
   }
 
   @MainActor
@@ -159,7 +159,7 @@ struct MobileCloudDataDeletionTests {
     #expect(await store.deleteCloudDataEverywhere() == nil)
     await store.adoptCurrentCloudAccountAndResumeSync(request: staleRequest)
 
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(store.cloudSyncPauseReason == .userDeletedZone)
   }
 }

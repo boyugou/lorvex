@@ -140,7 +140,18 @@
             if store.selectedTask != nil { await emitStop("tasks-inspector-waiting") }
             store.selectedTaskID = nil
           }
-          if selection == .tasks, let list = store.lists?.lists.first(where: { !$0.isInbox }) {
+          if selection == .tasks, LorvexStressSeed.isRequested {
+            // The stress seed's hardest tasks, one inspector each.
+            for (stop, titlePrefix) in LorvexStressSeed.inspectorTasks {
+              guard let task = store.taskWorkspaceOpenTasks.first(where: { $0.title.hasPrefix(titlePrefix) })
+              else { continue }
+              store.selectedTaskID = task.id
+              try? await Task.sleep(for: .seconds(2.5))
+              await emitStop(stop)
+            }
+            store.selectedTaskID = nil
+          }
+          if selection == .tasks, let list = Self.tourList(in: store) {
             // The same workspace scoped to a list, as the sidebar opens it.
             store.setTaskWorkspaceListScope(list.id)
             try? await Task.sleep(for: .seconds(2.5))
@@ -170,6 +181,15 @@
               store.selectedHabitID = habit.id
               try? await Task.sleep(for: .seconds(2.5))
               await emitStop(stop)
+            }
+            if LorvexStressSeed.isRequested,
+              let long = store.habits?.habits.first(where: {
+                $0.name.hasPrefix(LorvexStressSeed.longHabitNamePrefix)
+              })
+            {
+              store.selectedHabitID = long.id
+              try? await Task.sleep(for: .seconds(2.5))
+              await emitStop("habits-inspector-long")
             }
             store.selectedHabitID = nil
           }
@@ -203,7 +223,7 @@
         previewDefaults.removeObject(forKey: "menubar.scope")
         // A detached list window, on the same list the tasks-list stop scoped
         // to, announced like the other windows of its own.
-        if let list = store.lists?.lists.first(where: { !$0.isInbox }) {
+        if let list = Self.tourList(in: store) {
           let listWindow = makeDetachedListWindow(store: store, listID: list.id, beside: window)
           listWindow.orderFrontRegardless()
           try? await Task.sleep(for: .seconds(2.5))
@@ -214,7 +234,7 @@
         // The command palette on two typed queries: the start of a list's
         // name, where the jump leads, and a word that begins no destination or
         // list, where capture leads over the matching tasks.
-        let jumpQuery = store.lists?.lists.first(where: { !$0.isInbox })
+        let jumpQuery = Self.tourList(in: store)
           .map { String($0.displayName.prefix(4)) } ?? "Hab"
         for (stop, query) in [("palette-jump", jumpQuery), ("palette-search", "offsite")] {
           let palette = makeCommandPaletteWindow(store: store, query: query, beside: window)
@@ -274,7 +294,7 @@
         var sheetStops: [(String, AnyView)] = []
         let closed = Binding.constant(false)
         sheetStops.append(("sheet-createList", AnyView(CreateListSheet(store: store, isPresented: closed))))
-        if let list = store.lists?.lists.first(where: { !$0.isInbox }) {
+        if let list = Self.tourList(in: store) {
           sheetStops.append(("sheet-editList", AnyView(EditListSheet(list: list, store: store, isPresented: closed)
             .onAppear { store.prepareListDraft(for: list) })))
         }
@@ -606,6 +626,19 @@
       return sheetWindow
     }
 
+    /// The list the tour's list stops show: the first list that is not the
+    /// Inbox, or, with the stress seed, the list with the very long name.
+    @MainActor
+    private static func tourList(in store: AppStore) -> LorvexList? {
+      let lists = store.lists?.lists ?? []
+      if LorvexStressSeed.isRequested,
+        let long = lists.first(where: { $0.name.hasPrefix(LorvexStressSeed.longListNamePrefix) })
+      {
+        return long
+      }
+      return lists.first { !$0.isInbox }
+    }
+
     /// Announce a settled workspace, then keep it on screen until the capture
     /// driver says it is done shooting — or until ``captureAckTimeout`` passes
     /// when no driver is listening.
@@ -649,6 +682,7 @@
         plannedDay: CommandLine.arguments.contains("-uiPreviewPlannedDay"),
         untimed: CommandLine.arguments.contains("-uiPreviewUntimed"),
         dayState: LorvexPreviewDayState.requested,
+        stress: LorvexStressSeed.isRequested,
         text: LorvexSampleText(language: .running)))
     }
 

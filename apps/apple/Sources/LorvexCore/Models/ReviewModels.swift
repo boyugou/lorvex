@@ -169,13 +169,14 @@ public struct ReviewTaskSummary: Identifiable, Equatable, Sendable {
 /// instants bounding that local day; `dueOpenCount` compares the bare `date`
 /// string against the `due_date` date column (also `YYYY-MM-DD`).
 ///
-/// Habit metric: `habitsTotal` is the count of active (non-archived) habits and
-/// `habitsCompleted` is the count of those habits whose logged completion
-/// `value >= target_count` on `date` — the same "completed today" definition
-/// ``Overview/loadHabitSummary`` uses for the dashboard. No weekday-scheduling
-/// helper exists in the store layer to scope the denominator to "habits due
-/// that weekday", so the active-habit count is the cleanest definition the
-/// existing code already supports.
+/// Habit metric: `habitsTotal` is the count of active (non-archived) habits
+/// that belong to `date` — due that day by their cadence (a daily habit every
+/// day, a weekly habit on its pinned weekdays, a monthly habit on its day of
+/// the month; a times-per-week habit on no particular day) or checked in that
+/// day — and `habitsCompleted` is the count of those whose logged completion
+/// `value >= target_count` on `date`. A habit on a day it was not due is in
+/// neither count, so a day on which no habit was due does not read as habits
+/// missed.
 ///
 /// Event count: calendar events whose `[start_date, end_date]` span covers
 /// `date`, counted across BOTH `calendar_events` (Lorvex-owned) and

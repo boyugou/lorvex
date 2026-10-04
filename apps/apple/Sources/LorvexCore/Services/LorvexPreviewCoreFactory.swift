@@ -50,12 +50,15 @@ public enum LorvexPreviewCoreFactory {
     /// tasks (``seedTodayPool(_:)``), and, unless `untimed` is set, the times of
     /// two of them. `untimed` leaves the day without times, the state of anyone
     /// who never schedules. `dayState` then moves the seeded day into one of the
-    /// states it never reaches by itself (``LorvexPreviewDayState``). `text`
+    /// states it never reaches by itself (``LorvexPreviewDayState``). `stress`
+    /// adds the content that breaks layouts on top of the whole day
+    /// (``LorvexStressSeed``), in English whatever `text` says. `text`
     /// translates everything the seed writes as the user's or the assistant's
     /// words, so a run in another interface language shows sample content in it.
     public static func makeUIPreviewSeeded(
       todaySchedule: Bool, plannedDay: Bool = false, untimed: Bool = false,
-      dayState: LorvexPreviewDayState? = nil, text: LorvexSampleText = .english
+      dayState: LorvexPreviewDayState? = nil, stress: Bool = false,
+      text: LorvexSampleText = .english
     ) async throws -> SwiftLorvexCoreService {
       let core = try await makeSeeded(wallClock: previewWallClock, text: text)
       if todaySchedule {
@@ -95,6 +98,11 @@ public enum LorvexPreviewCoreFactory {
       }
       try seedAssistantSessions(core, now: previewWallClock())
       try await dayState?.apply(to: core, text: text)
+      if stress, let anchor = logicalDayAnchor() {
+        await LorvexStressSeed.apply(
+          to: core, today: LorvexDateFormatters.ymdUTC.string(from: anchor),
+          timezone: previewTimezone)
+      }
       return core
     }
 
@@ -139,24 +147,25 @@ public enum LorvexPreviewCoreFactory {
       }
     }
 
-    /// Synchronous form of ``makeUIPreviewSeeded(todaySchedule:plannedDay:untimed:dayState:text:)``
+    /// Synchronous form of ``makeUIPreviewSeeded(todaySchedule:plannedDay:untimed:dayState:stress:text:)``
     /// for launch-time construction (`--ui-preview` builds its `AppStore`
     /// inside the synchronous SwiftUI `App` init). Traps on a seed failure — a
     /// broken preview dataset is a build defect, not a runtime condition to
     /// recover from.
     public static func makeUIPreviewSeededBlocking(
       todaySchedule: Bool, plannedDay: Bool = false, untimed: Bool = false,
-      dayState: LorvexPreviewDayState? = nil, text: LorvexSampleText = .english
+      dayState: LorvexPreviewDayState? = nil, stress: Bool = false,
+      text: LorvexSampleText = .english
     ) -> SwiftLorvexCoreService {
       waitForPreviewCore {
         try await makeUIPreviewSeeded(
           todaySchedule: todaySchedule, plannedDay: plannedDay, untimed: untimed,
-          dayState: dayState, text: text)
+          dayState: dayState, stress: stress, text: text)
       }
     }
 
     /// `--ui-preview -uiPreviewEmptyStore` core, built synchronously like
-    /// ``makeUIPreviewSeededBlocking(todaySchedule:plannedDay:untimed:dayState:text:)``:
+    /// ``makeUIPreviewSeededBlocking(todaySchedule:plannedDay:untimed:dayState:stress:text:)``:
     /// the store of someone who has not added anything yet. It holds only
     /// what a new store holds (the schema's Inbox) plus the preview
     /// environment's preferences, whose timezone keeps the pinned preview

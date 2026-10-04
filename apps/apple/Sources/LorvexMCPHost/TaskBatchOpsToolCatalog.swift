@@ -101,7 +101,7 @@ enum TaskBatchOpsToolCatalog {
   static let appendBodyTool = Tool(
     name: "append_to_task_body",
     title: "Append To Task Body",
-    description: "Append Markdown text to a task's body/notes without replacing existing content. Added after a blank-line separator. Use for observations, context, or quick notes without overwriting existing body content. Prefer set_task_ai_notes for assistant-maintained context that should be visually distinct. Returns the full updated task object.",
+    description: "Append plain text to a task's body/notes without replacing existing content. Added after a blank-line separator. The body is plain text that the app shows exactly as written, so write sentences rather than Markdown syntax. Use for observations, context, or quick notes without overwriting existing body content. Prefer set_task_ai_notes for assistant-maintained context that should be visually distinct; that block is rendered as Markdown. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([
@@ -112,7 +112,7 @@ enum TaskBatchOpsToolCatalog {
         ]),
         "text": .object([
           "type": .string("string"),
-          "description": .string("Markdown text to append."),
+          "description": .string("Plain text to append."),
         ]),
       ]),
       "required": .array([.string("task_id"), .string("text")]),

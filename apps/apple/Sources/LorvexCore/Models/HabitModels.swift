@@ -108,6 +108,12 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
   public var dayOfMonth: Int?
   public var targetCount: Int
   public var completionsToday: Int
+  /// Days of the current period on which the per-day target was met, counted
+  /// from the period's first day through the day the habit was loaded for: the
+  /// month for a `monthly` cadence and the ISO week (Monday first) for a
+  /// `times_per_week` one. 0 for every other cadence, and for value-only
+  /// constructions (seed data, fixtures) that do not project it.
+  public var periodMetDays: Int
   public var totalCompletions: Int
   public var completionRate30d: Double
   public var archived: Bool
@@ -137,7 +143,8 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
     perPeriodTarget: Int? = nil,
     dayOfMonth: Int? = nil,
     milestoneTarget: Int? = nil,
-    milestone: HabitMilestoneInfo? = nil
+    milestone: HabitMilestoneInfo? = nil,
+    periodMetDays: Int = 0
   ) {
     self.id = id
     self.name = name
@@ -150,6 +157,7 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
     self.dayOfMonth = dayOfMonth
     self.targetCount = targetCount
     self.completionsToday = completionsToday
+    self.periodMetDays = periodMetDays
     self.totalCompletions = totalCompletions
     self.completionRate30d = completionRate30d
     self.archived = archived

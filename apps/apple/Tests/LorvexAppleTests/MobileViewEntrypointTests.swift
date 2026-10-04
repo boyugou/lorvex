@@ -41,10 +41,13 @@ func mobileTodayShowsHabitsAndEventsOnlyWhenLoaded() throws {
   let schedule = try mobileSourceFile("Sources/LorvexMobile/MobileTodayScheduleSheet.swift")
 
   // Today never fabricates empty arrays: habits render only when their data is
-  // loaded and non-empty, so a clear day reads as one calm composed state rather
-  // than a stack of empty sections.
+  // loaded and, once the habits resting today are left out, non-empty, so a
+  // clear day reads as one calm composed state rather than a stack of empty
+  // sections.
   #expect(!page.contains("store.habits?.habits ?? []"))
-  #expect(page.contains("if let habits = store.habits?.habits, !habits.isEmpty"))
+  #expect(
+    page.contains(
+      "if let habits = store.habits?.habits.listed(on: store.logicalTodayString), !habits.isEmpty"))
   // The schedule list draws today's events and timed tasks as one timeline
   // (events filtered to the logical day, not the raw multi-day window), and
   // its empty line only when that timeline has nothing to draw.

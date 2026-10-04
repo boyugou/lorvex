@@ -35,15 +35,7 @@ struct TasksView: View {
 
   private func quickAddPlaceholder(for listID: LorvexList.ID) -> String {
     let name = store.lists?.lists.first { $0.id == listID }?.displayName ?? listID
-    return String(
-      format: String(
-        localized: "list_detail.quick_add.placeholder",
-        defaultValue: "Add a task to “%@”",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle
-      ),
-      name
-    )
+    return AppStore.quickAddPlaceholder(listName: name)
   }
 
   /// The inline quick-add both view modes lead with, so ⌘N always has a field

@@ -4,7 +4,7 @@ extension TaskMutationToolCatalog {
   static let setTaskAINotesTool = Tool(
     name: "set_task_ai_notes",
     title: "Set Task AI Context",
-    description: "Replace the assistant-maintained context block for one task without changing canonical task notes. Use this for the current recommendation, caveat, operating instruction, or short reasoning a future assistant should preserve. Pass an empty notes string to clear the block. Returns the full updated task object.",
+    description: "Replace the assistant-maintained context block for one task without changing canonical task notes. Use this for the current recommendation, caveat, operating instruction, or short reasoning a future assistant should preserve. The block is rendered as Markdown (headings, lists, bold, checkboxes). Pass an empty notes string to clear the block. Returns the full updated task object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

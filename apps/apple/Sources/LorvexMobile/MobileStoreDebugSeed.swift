@@ -333,6 +333,11 @@
           kind: .perRecord)
       }
 
+      if LorvexStressSeed.isRequested {
+        await LorvexStressSeed.apply(
+          to: core, today: todayString(), timezone: TimeZone.current.identifier)
+      }
+
       // A capture of one of Today's edge states moves the sample day into it.
       if let state = LorvexPreviewDayState.requested, let service = core as? SwiftLorvexCoreService {
         try? await state.apply(to: service, text: text)

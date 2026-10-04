@@ -14,7 +14,8 @@ struct MenuBarTodayContent: View {
   /// The product day as `yyyy-MM-dd`.
   let logicalDay: String
   let nowMinutes: Int?
-  /// The habits that are not archived, in the catalog's order.
+  /// The habits still open on `logicalDay` (``LorvexHabit/isListed(on:)``) and
+  /// not archived, in the catalog's order.
   let habits: [LorvexHabit]
   let isOverdue: (LorvexTask) -> Bool
   let complete: (LorvexTask) -> Void

@@ -32,9 +32,9 @@ func openSectionExcludesPlannedAndDeferredSectionCarriesIt() {
 }
 
 @Test
-func overdueComparesTheDueDayWithTheLogicalDay() throws {
+func overdueComparesTheDueDayWithTheLogicalDay() {
   var due = makeMobileTask(id: "due", title: "due", priority: .p2)
-  due.dueDate = try #require(LorvexDateFormatters.ymdUTC.date(from: "2026-05-24"))
+  due.dueDate = LorvexDateFormatters.ymdUTC.date(from: "2026-05-24")
   let undated = makeMobileTask(id: "undated", title: "undated", priority: .p2)
 
   #expect(LorvexTaskSections.isOverdue(due, logicalDay: "2026-05-25"))

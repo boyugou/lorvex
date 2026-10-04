@@ -54,6 +54,21 @@ from the system's CLDR duration units ("1 hr 30 min", "1小时30分钟", "1 ч 3
 The catalogs carry no minute or hour words of their own; a sentence around
 such a value takes it as a `%@` argument ("About %@", "%@ left").
 
+**Dates that open a line.** System date data writes weekday and month names
+in lowercase in Spanish, French, Italian, Brazilian Portuguese, Russian,
+Ukrainian, Polish, Dutch, and Romanian ("lunes, 21 de septiembre", "сентябрь
+2026 г."). The app's text is in sentence case, so a title, heading, or label
+that opens with a date must start with a capital. Such a date is written with
+`position: .leading` (`LorvexDateFormatters.string`, `range`, `lorvexDayLine`,
+`lorvexShortDayLine`; a `Date.FormatStyle` takes
+`capitalizationContext: .beginningOfSentence`), which applies the language's
+own capitalization of the start of a sentence ("Lunes, 21 de septiembre",
+"Сентябрь 2026 г."). A date that follows other words in a sentence keeps the
+default `.inline` position, so a Siri reply that names the day after other
+words keeps its lowercase weekday. A relative phrase ("yesterday", "hace 3
+días") always starts in lowercase, in every language. `LorvexDateHeadingTests`
+pins the month and weekday templates.
+
 **Lists and ordinals.** Names that read as one phrase (a rule's weekdays, the
 tasks a Siri reply names) are joined by the display locale's list format,
 `.formatted(.list(type: .and))`, with `width: .narrow` for compact labels. It
@@ -109,7 +124,8 @@ optional `many` that only round millions select and that falls back to `other`
 when absent; Hindi and Persian `one`/`other`, where `one` selects both 0 and
 1; Urdu `one`/`other`, where `one` selects only 1; Hebrew `one`/`other` with an
 optional `two` for the dual, where `one` selects only 1 and `two` only 2; Chinese
-(Simplified and Traditional), Japanese, and Korean only `other`; Russian and
+(Simplified and Traditional), Indonesian, Japanese, Korean, Malay, and
+Vietnamese only `other`; Russian and
 Ukrainian
 `one`/`few`/`many`/`other`, where `one` selects 1,
 21, 31, and so on (never 11), `few` 2 to 4, 22 to 24, and so on (never 12 to 14),
@@ -207,11 +223,12 @@ that its bundles ship, matched the way Foundation matches localizations:
 
 - A regional system language selects its language: `ar-SA` and `ar-EG` select
   `ar`; `de-AT` and `de-CH` select `de`; `es-MX`, `es-419`, and `es-ES` select
-  `es`; `fr-CA` and `fr-CH` select `fr`; `hi-IN` selects `hi`; `it-CH` selects
-  `it`; `ja-JP` selects `ja`; `ko-KR` selects `ko`; `nl-BE` selects `nl`;
-  `pl-PL` selects `pl`; `ro-MD` selects `ro`; `ru-RU` and `ru-KZ` select `ru`;
-  `uk-UA` selects `uk`; `en-GB` selects `en`. `pt-PT` selects `pt-BR`, the one
-  Portuguese variety shipped.
+  `es`; `fr-CA` and `fr-CH` select `fr`; `hi-IN` selects `hi`; `id-ID` selects
+  `id`; `it-CH` selects `it`; `ja-JP` selects `ja`; `ko-KR` selects `ko`;
+  `ms-MY`, `ms-SG`, and `ms-BN` select `ms`; `nl-BE` selects `nl`; `pl-PL`
+  selects `pl`; `ro-MD` selects `ro`; `ru-RU` and `ru-KZ` select `ru`; `uk-UA`
+  selects `uk`; `vi-VN` selects `vi`; `en-GB` selects `en`. `pt-PT` selects
+  `pt-BR`, the one Portuguese variety shipped.
 - Chinese is matched by script, and a code with no script gets the script its
   region writes. `zh-Hant`, every `zh-Hant-*` code, and the Taiwan, Hong Kong,
   and Macau regions (`zh-TW`, `zh-HK`, `zh-MO`) select `zh-Hant`; `zh-Hans`,
@@ -364,10 +381,11 @@ localize through two different catalogs:
 
 English (`en`) is the source language. The shipped languages are English,
 Arabic (`ar`), German (`de`), Spanish (`es`), Persian (`fa`), French (`fr`),
-Hebrew (`he`), Hindi (`hi`), Italian (`it`), Japanese (`ja`), Korean (`ko`),
-Dutch (`nl`), Polish (`pl`), Brazilian Portuguese (`pt-BR`), Romanian (`ro`),
-Russian (`ru`), Ukrainian (`uk`), Urdu (`ur`), Simplified Chinese (`zh-Hans`),
-and Traditional Chinese (`zh-Hant`).
+Hebrew (`he`), Hindi (`hi`), Indonesian (`id`), Italian (`it`), Japanese
+(`ja`), Korean (`ko`), Malay (`ms`), Dutch (`nl`), Polish (`pl`), Brazilian
+Portuguese (`pt-BR`), Romanian (`ro`), Russian (`ru`), Ukrainian (`uk`), Urdu
+(`ur`), Vietnamese (`vi`), Simplified Chinese (`zh-Hans`), and Traditional
+Chinese (`zh-Hant`).
 
 The target set is the 31 locales lorvex.app is published in: `en`, `zh-Hans`,
 `zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`, `pt-BR`, `ru`, `id`, `ur`, `de`, `ja`,
@@ -1679,7 +1697,7 @@ in Shortcuts.
   written out ("هفت روز آینده", "دوازده‌ساعته"), because an ASCII digit would
   stand beside the system's Persian ones. The exceptions are examples a person
   types: the numbers in the milestone and encouragement hints ("مثلاً 50") and
-  the example words of the capture hint.
+  the example words of the capture hint, whose digits are Persian ones.
 - An `fa` plural entry carries `one` and `other`, and Persian `one` also
   selects 0. A noun stays singular after a number, so the two forms of a count
   are usually alike ("%lld کار باقی مانده"). A `one` form that drops the number
@@ -1709,13 +1727,21 @@ in Shortcuts.
   wording than a literal translation ("هفت روز آینده" for the menu bar panel's
   Next 7 Days switch, "همگام‌شده %@" for the watch's sync status). Accessibility
   labels may be longer.
-- The capture parser (`LorvexCaptureParser`) has no Persian vocabulary: it reads
-  English and Chinese words wherever the interface language is Persian. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("عبارت‌های انگلیسی مانند «tomorrow»، «3pm»، «every Monday»، «20 min»
-  یا «#list»"). Inside Persian text a Latin word that follows a number is laid
-  out right to left together with the number, so "20 min" displays as
-  "min 20".
+- The capture parser (`LorvexCaptureParser`) reads Persian day, date, time,
+  duration, repeat, and priority words for a user who reads Persian (the
+  Iranian and the Afghan spellings), so the Persian capture hint gives Persian
+  examples ("فردا", "ساعت ۳ بعدازظهر", "هر دوشنبه", "۲۰ دقیقه"). Persian says a
+  clock time with "ساعت", so the time example says it. A written date is
+  counted in the Solar Hijri calendar ("۱۲ مهر") or, when it names a Gregorian
+  month, in the Gregorian one ("۵ مارس"), and weeks start on Monday as the
+  app's weeks do, so "هفته آینده شنبه" is the Saturday that closes the coming
+  week. The parser reads the Persian and Arabic digits as Latin ones and the letters
+  that are spelled in more than one way as one (أ, إ, and آ as ا; ي and ى as
+  ی; ك as ک; ة as ه), ignores vowel signs and tatweel, and reads a compound
+  typed with a space, a zero-width non-joiner, or nothing as one word
+  ("سه‌شنبه", "سه شنبه", "سهشنبه"); the title keeps what was typed. The hint's
+  examples hold no Latin text, so they need no bidirectional isolate, and
+  their digits are the Persian ones a Persian keyboard types.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are spoken singular
   imperatives that name the app exactly once ("یک کار به ${applicationName}
   اضافه کن").
@@ -1809,12 +1835,33 @@ Shortcuts.
   wording than a literal translation ("اگلے 7 دن" for the menu bar panel's Next
   7 Days switch, "%@ سنک ہوا" for the watch's sync status). Accessibility labels
   may be longer.
-- The capture parser (`LorvexCaptureParser`) has no Urdu vocabulary: it reads
-  English and Chinese words wherever the interface language is Urdu. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("انگریزی الفاظ جیسے "tomorrow"، "3pm"، "every Monday"، "20 min" یا
-  "#list""). Inside Urdu text a Latin word that follows a number is laid out
-  right to left together with the number, so "20 min" displays as "min 20".
+- The capture parser (`LorvexCaptureParser`) reads Urdu day, date, time,
+  duration, repeat, and priority words for a user who reads Urdu (ur-PK and
+  ur-IN), so the Urdu capture hint gives Urdu examples ("کل", "شام 5 بجے", "ہر
+  پیر", "20 منٹ", "#فہرست"). Urdu says a clock time with بجے after the hour, so
+  the time example carries it. کل is read as tomorrow and پرسوں as the day
+  after tomorrow and never as a past day, because the app writes the past day
+  گزشتہ کل; a line in the past tense stays unread. A written date is counted in
+  the Gregorian calendar, whose months Urdu writes in their own spellings
+  (مارچ, مئی, اکتوبر); the months of the Islamic and the Indian calendars are
+  not read. Weeks start on Monday as the app's weeks do, so "اگلے جمعہ" is the
+  Friday of the week that begins on the coming Monday, and the weekend is
+  Saturday and Sunday ("ویک اینڈ" is the coming Saturday). ہفتہ and ہفتے also
+  mean "the week", so they name Saturday only beside a mark of a day ("ہفتے
+  کو", "ہفتہ اور اتوار") while سنیچر names it anywhere. The parser reads the
+  Arabic-Indic and the Extended Arabic-Indic digits as Latin ones and the
+  letters that Urdu and Arabic keyboards spell in more than one way as one (the
+  alefs with hamza or madda as ا; ي, ى, and ئ as ی; ك as ک; every heh as ہ; ں
+  as ن), but keeps the bari ye ے apart from the choti yeh ی, since "ہے" and
+  "ہی" are different words. It ignores vowel signs and tatweel, reads a
+  compound typed with a space, a zero-width non-joiner, or nothing as one word
+  ("سہ پہر", "سہ‌پہر", "سہپہر"), and leaves the title as it was typed. Urdu
+  written in Latin letters is not read. A user whose languages hold Urdu
+  together with Arabic or Persian also gets Arabic "كل" (all) and Persian "کل"
+  (whole) read as tomorrow when no phrase of that language claims them first,
+  because the Urdu reading form folds the Arabic kaf into the Urdu one. The
+  hint's examples hold no Latin text, so they need no bidirectional isolate,
+  and their digits are the ASCII ones Urdu locales format numbers with.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
   that name the app exactly once ("ایک کام ${applicationName} میں شامل کریں").
 
@@ -1918,12 +1965,38 @@ in Shortcuts.
   wording than a literal translation ("7 הימים הקרובים" for the menu bar panel's
   Next 7 Days switch, "סונכרן %@" for the watch's sync status). Accessibility
   labels may be longer.
-- The capture parser (`LorvexCaptureParser`) has no Hebrew vocabulary: it reads
-  English and Chinese words wherever the interface language is Hebrew. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("מילים באנגלית כמו "tomorrow", "3pm", "every Monday", "20 min" או
-  "#list""). Inside Hebrew text a Latin word that follows a number is laid out
-  right to left together with the number, so "20 min" displays as "min 20".
+- The capture parser (`LorvexCaptureParser`) reads Hebrew day, date, time,
+  duration, repeat, and priority words for a user who reads Hebrew (he-IL and
+  any other region), so the Hebrew capture hint gives Hebrew examples ("מחר",
+  "בשעה 5 בערב", "כל יום שני", "20 דקות", "#רשימה"). Hebrew says a clock time
+  with "בשעה" before the hour, so the time example carries it. Hebrew attaches
+  the one-letter prepositions and the article to the word they go with
+  ("בשבוע", "למחר", "השבוע"), so each pattern spells the prefixes it accepts and
+  a word with any other prefix ("ומחר", "שמחר") stays unread. No past day is
+  read: אתמול is no day word, and a line in the past tense or one that says
+  אתמול holds no day to plan except מחר, מחרתיים, and "בעוד" with a count, which
+  cannot be past. A written date is counted in the Gregorian calendar, whose
+  months Hebrew writes in their own spellings (מרץ or מרס, אוקטובר); the Hebrew
+  calendar is out of scope, so its months (תשרי, ניסן), digits-only dates, and
+  Hebrew numerals ("י״ב") are not read. Weeks start on Monday as the app's
+  weeks do, so "בשבוע הבא ביום רביעי" is the Wednesday of the week that begins
+  on the coming Monday, and the weekend is Saturday and Sunday ("סוף השבוע" is
+  the coming Saturday). Israel's week starts on Sunday and its weekend is
+  Friday and Saturday, so the phrases that depend on which days make up the
+  week ("כל יום עבודה", "בימי עבודה", a span from Sunday to Thursday with no
+  "כל") stay in the title. The weekday names (ראשון, שני, שלישי) are also
+  ordinary words, so they name a day after "יום" or with an attached ב ("ביום
+  שני", "בשלישי"), and a number after ב is a clock time only with a colon, a
+  fraction word, or a part of the day ("ב-9 בבוקר"), since "ב-5 ימים" counts
+  things. דחוף is a priority word only at the end of the line or before a
+  colon or a comma, since it is an ordinary adjective elsewhere. The parser
+  reads the final letters (ך ם ן ף ץ) as the regular ones, every hyphen and the
+  maqaf as the hyphen, and every apostrophe and double quote as the geresh and
+  gershayim, so "אחה"צ", "אחה”צ", and "אחה״צ" are one word. It ignores niqqud,
+  a word may carry it anywhere, and the title keeps what was typed. Hebrew
+  written in Latin letters is not read. The hint's examples hold no Latin text,
+  so they need no bidirectional isolate, and their digits are the ASCII ones
+  Hebrew locales format numbers with.
 
 ## German conventions
 
@@ -2210,6 +2283,316 @@ widgets, and in Shortcuts.
   ("Scrieți o nouă intrare în jurnal în ${applicationName}", "Scrie în
   ${applicationName}"); the singular is the shorter one to say aloud.
 
+## Indonesian conventions
+
+The `id` catalogs are Indonesian as written in Indonesia; id-ID and every
+other Indonesian locale select them. They follow Apple's Indonesian usage
+(Pengaturan, Kalender, Pengingat, Pintasan, Fokus) and keep one term per
+concept across every catalog, so a thing reads the same on the Mac, iPhone,
+watch, widgets, and in Shortcuts. Indonesian and Malay share much of their
+vocabulary but not their word choices, so each catalog keeps to its own
+variety: the Indonesian one writes hapus, tanggal, perangkat, and jadwal where
+Malay writes padam, tarikh, peranti, and jadual.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | tugas, daftar, label | Apple's Notes and Freeform call a tag Label; a task's checklist is a daftar centang and its item an item |
+| Inbox (the seeded list) | Inbox | Apple's Calendar keeps the English word; shown while the list keeps its seeded name |
+| Today, Tomorrow, Yesterday | Hari Ini, Besok, Kemarin | the navigation button and the date chips; inside a sentence they are lowercase ("hari ini", "besok") |
+| Someday | Suatu Hari | |
+| Due (the deadline field) | Jatuh Tempo | "jatuh tempo" inside a sentence; Terlewat is overdue |
+| Open (a task not yet done) | Belum Selesai | the status and the filter; Sedang Dikerjakan is In Progress and Dimulai a started task |
+| Blocked, cancelled, completed | Diblokir, Dibatalkan, Selesai | |
+| Done (a button) and complete (an action) | Selesai, Selesaikan | Selesai closes a sheet and is the Completed state; Selesaikan completes a task |
+| Defer and snooze | Tunda | one word for both, the one Apple's Clock, Home, and Maps write for snooze; "Tunda ke Besok" moves a task to a later day and "Tunda 1 Jam" snoozes a reminder |
+| Plan (verb) | rencanakan | direncanakan is planned, and a task's planned date is its tanggal rencana |
+| Schedule (the day pane) | Jadwal | Sarankan Waktu proposes times; Jam Aktif are the day hours |
+| Capture (quick add) | Catat | |
+| Review (the day and the week) | Tinjauan | Tinjauan Harian and Tinjauan Mingguan; its fields are Pencapaian, Hambatan, Pelajaran |
+| Memory | Memori | one entry is an entri memori |
+| Assistant, AI | asisten, AI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | kebiasaan, check-in, rekor, tonggak | rekor is the word Apple's Journal uses for a streak; a habit's goal is its Target |
+| Reminder | pengingat | |
+| Dependency | Dependensi | a task Menunggu another |
+| Recurrence | pengulangan | Ulangi is the field and berulang is recurring |
+| Sync, snapshot | penyelarasan, snapshot | selaraskan is the verb, as in Apple's Music and Freeform; uploading is unggah, fetching unduh, and a sync record a rekaman |
+| Event | acara | the word Apple's Calendar uses |
+| App icon badge | lencana | Apple's Mail writes tanda for its unread badge, a word that also means any mark, so the badge on an app icon takes the more specific one |
+| Agenda (the mobile list mode) | Agenda | |
+| Apple features | Pengaturan, Kalender, Pengingat, Pintasan, Fokus, Pengaturan Sistem, layar kunci | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+
+- The reader is addressed as Anda, with a capital A, and never as kamu.
+  Apple's Indonesian system apps and frameworks on macOS 26 (among them Music,
+  TV, Find My, Home, Maps, Podcasts, Photos, and Journal) use Anda in 4,818
+  strings and never kamu, engkau, or aku. Lorvex leaves the pronoun out
+  wherever the sentence carries the address ("Pastikan Lorvex memiliki akses
+  kalender di Pengaturan Sistem.") and writes Anda only where a possessive or
+  a contrast needs it ("Hari ini milik Anda."). Buttons and menu items are
+  root-form verbs ("Hapus Kebiasaan…"), and so are intent titles ("Selesaikan
+  Tugas Lorvex", "Ubah Nama Label Lorvex"); instructions are imperatives
+  ("Ketuk ＋ untuk mencatat tugas pertama"); a confirmation question names the
+  object ("Hapus daftar “%@”?"); an intent's description is a statement that
+  opens with an me- verb ("Menyelesaikan tugas Lorvex."); and a confirmation
+  after an action is a passive with di- ("%@ diselesaikan.").
+- Buttons, menu items, tabs, section and field labels, and intent titles are
+  in Title Case wherever the English entry is, with the function words dan,
+  atau, di, ke, dari, untuk, yang, dengan, pada, dalam, sebagai, oleh, and
+  hingga in lowercase mid-title ("Pindahkan ke Besok"), as Apple's Indonesian
+  writes them ("Pengingat Baru", "Catatan Cepat", "Tindakan Cepat"). A
+  sentence, a caption, and an entry the English writes in lowercase are in
+  sentence case. Weekday and month names come from the calendar, capitalized
+  (Senin, Januari).
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with “ ” as in English ("Hapus daftar “%@”?"); Apple's Indonesian
+  writes curly double quotes in 1,303 strings and straight ones in 57. An
+  ellipsis is the single character … attached to the word (1,473 strings
+  against 33 with three dots in Apple's), and a spaced en dash – stands for
+  the English em dash, the form Apple's Indonesian uses more often (29
+  strings against 24 with a spaced em dash). The Return key is "Return"
+  ("tekan Return", as in Apple's Calculator and Freeform).
+- A third-party app is "app" ("app kalender lain"; 376 strings in Apple's
+  Indonesian against 62 with aplikasi), a file is "file" (718 strings, none
+  with berkas), and an email is "email" (226 strings, none with surel).
+- A point groups thousands and a comma marks decimals ("10.000", "2,5 jam").
+  The system writes a clock time with a point ("17.05"), a duration as "1 j,
+  30 mnt", and a relative time as "5 mnt lalu", so a sentence takes such a
+  value as a `%@` argument and may end on it. An ordinal is "ke-1", so
+  `recurrence.weekday.nth` ("%2$@ %1$@") reads "Sen ke-1" for the first
+  Monday, and a list of names reads "A, B, dan C" (narrow "A, B, C").
+- Indonesian has the single plural category `other`, so a plural entry is one
+  plain string that shows the number wherever the English forms show it
+  ("%lld tugas", "%lld kali sehari"), and a noun after a number is not
+  reduplicated ("3 tugas", never "3 tugas-tugas"). An entry whose English forms
+  leave the number out (the "kali selesai" under the goal ring's large number)
+  is a substitution with only `other`.
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("Tidak muat" for Won’t fit, "+%lld lainnya" for a small widget's overflow,
+  "sisa" as the caption under the remaining-tasks ring, "Item baru" in the
+  checklist field of the Mac inspector). Accessibility labels may be longer.
+- The capture parser (`LorvexCaptureParser`) has no Indonesian vocabulary: it
+  reads English and Chinese words wherever the interface language is
+  Indonesian. The capture hint (`capture.footer.words`) therefore gives
+  English examples and says so ("Kata bahasa Inggris seperti “tomorrow”,
+  “3pm”, “every Monday”, “20 min”, atau “#list” mengisi detail tugas.").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
+  name the app exactly once, after "di" ("Catat tugas di
+  ${applicationName}") or after "ke" where the English says to ("Tambahkan
+  tugas ke ${applicationName}"). The phrase that opens the app reads "Buka
+  ${applicationName}".
+
+## Malay conventions
+
+The `ms` catalogs are Malay as written in Malaysia in Rumi script; ms-MY,
+ms-SG, ms-BN, and every other Malay locale select them. They follow Apple's
+Malay usage (Seting, Kalendar, Peringatan, Pintasan, Fokus) and keep one term
+per concept across every catalog, so a thing reads the same on the Mac,
+iPhone, watch, widgets, and in Shortcuts. Malay and Indonesian share much of
+their vocabulary but not their word choices, so each catalog keeps to its own
+variety: the Malay one writes padam, tarikh, peranti, and jadual where
+Indonesian writes hapus, tanggal, perangkat, and jadwal.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | tugas, senarai, tag | a task's checklist is a senarai semak, as in Apple's Notes, and its item an item |
+| Inbox (the seeded list) | Peti Masuk | Apple's Calendar and Mail word; shown while the list keeps its seeded name |
+| Today, Tomorrow, Yesterday | Hari Ini, Esok, Semalam | the navigation button and the date chips; inside a sentence they are lowercase ("hari ini", "esok") |
+| Someday | Suatu Hari | |
+| Due (the deadline field) | Tarikh Jangka | Apple's Reminders word, "tarikh jangka" inside a sentence; Lewat is overdue |
+| Open (a task not yet done) | Belum Selesai | the status and the filter; Sedang Berjalan is In Progress and Dimulakan a started task |
+| Blocked, cancelled, completed | Disekat, Dibatalkan, Selesai | |
+| Done (a button) and complete (an action) | Selesai, Selesaikan | Selesai closes a sheet and is the Completed state; Selesaikan completes a task |
+| Defer and snooze | Tangguhkan, Tangguh | Tangguhkan moves a task to a later day ("Tangguhkan hingga Esok"); Tangguh snoozes a reminder ("Tangguh 1 Jam"), because Apple's Clock writes Tidur for snooze, which here would read as sleep |
+| Plan (verb) | rancang | dirancang is planned, and a task's planned date is its tarikh rancangan |
+| Schedule (the day pane) | Jadual | Cadangkan Masa proposes times; Jam Aktif are the day hours |
+| Capture (quick add) | Catat | |
+| Review (the day and the week) | Semakan | Semakan Harian and Semakan Mingguan; its fields are Kejayaan, Halangan, Pengajaran |
+| Memory | Memori | one entry is an entri memori |
+| Assistant, AI | pembantu AI | always with AI, since pembantu alone names any helper; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | tabiat, check-in, rentetan, tonggak | tabiat is the word Apple's Journal uses for a habit ("Bina Tabiat"); the same app writes pencapaian berterusan for a streak, which is too long for a stat tile; a habit's goal is its Matlamat |
+| Reminder | peringatan | Apple's Reminders word |
+| Dependency | Kebergantungan | a task Menunggu another |
+| Recurrence | perulangan | Ulang is the field and berulang is recurring |
+| Sync, snapshot | penyelarasan, syot kilat | selaraskan is the verb; uploading is muat naik, fetching muat turun, and a sync record a rekod |
+| Event | peristiwa | the word Apple's Calendar uses |
+| App icon badge | lencana | Apple's Mail and Reminders word |
+| Agenda (the mobile list mode) | Agenda | |
+| Apple features | Seting, Kalendar, Peringatan, Pintasan, Fokus, Seting Sistem, skrin kunci | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+
+- The reader is addressed as anda, in lowercase inside a sentence and with a
+  capital only where a sentence starts ("Anda sudah bersedia."). Apple's Malay
+  system apps and frameworks on macOS 26 (among them Music, TV, Find My, Home,
+  Maps, Podcasts, Photos, and Journal) use anda in 4,280 strings and Anda in
+  998, and never awak or kamu. Lorvex leaves the pronoun out wherever the
+  sentence carries the address and writes anda where a possessive needs it
+  ("Tiba masanya untuk tabiat anda"). Buttons and menu items are root-form
+  verbs ("Padam Tabiat…"), and so are intent titles ("Selesaikan Tugas
+  Lorvex", "Namakan Semula Tag Lorvex"); instructions are imperatives
+  ("Ketik ＋ untuk mencatat tugas pertama"), and a request opens with Sila,
+  Apple's Malay for please (293 strings: "Sila cuba lagi."); a confirmation
+  question names the object ("Padam senarai “%@”?"); an intent's description is
+  a statement that opens with a men- verb ("Menyelesaikan tugas Lorvex."); and
+  a confirmation after an action is a passive with di- ("%@ diselesaikan.").
+- Buttons, menu items, tabs, section and field labels, and intent titles are
+  in Title Case wherever the English entry is, with the function words dan,
+  atau, di, ke, dari, daripada, untuk, yang, dengan, pada, dalam, sebagai,
+  oleh, hingga, and kepada in lowercase mid-title, as Apple's Malay writes
+  them ("Peringatan Baharu", "Nota Cepat", "Tindakan Cepat"). A sentence, a
+  caption, and an entry the English writes in lowercase are in sentence case.
+  Weekday and month names come from the calendar, capitalized (Isnin,
+  Januari).
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with “ ” as in English ("Padam senarai “%@”?"); Apple's Malay writes
+  curly double quotes in 1,321 strings and straight ones in 41. An ellipsis
+  is the single character … attached to the word (1,474 strings against 32
+  with three dots in Apple's), and a spaced en dash – stands for the English
+  em dash, the form Apple's Malay uses more often (30 strings against 23 with
+  a spaced em dash). The Return key is "Return" ("tekan Return", as in
+  Apple's Calculator and Freeform).
+- Malay spells words as Apple's Malay does: "bahasa Inggeris", "app" for a
+  third-party app (376 strings against 62 with aplikasi), "fail" for a file
+  (718 strings, 5 with file), "e-mel" for email (145 strings, none with
+  email), "peranti" for a device, "Seting" for settings (528 strings, none
+  with Tetapan), and "Tambah" for add in buttons, prompts, and sentences alike
+  (771 strings against 4 with Tambahkan).
+- A comma groups thousands and a point marks decimals ("10,000", "2.5 jam"),
+  the reverse of Indonesian. The system writes a clock time in 12 hours with
+  PG and PTG ("5:05 PTG"), a duration as "1 j dan 30 min", and a relative time
+  as "5 min lalu", so a sentence takes such a value as a `%@` argument and may
+  end on it. The ordinal of 1 is "No. 1" and of every later number "ke-2",
+  "ke-3", so `recurrence.weekday.nth` ("%2$@ %1$@") reads "Isn No. 1" for the
+  first Monday and "Isn ke-2" for the second, and a list of names reads "A, B
+  dan C" with no comma before dan (narrow "A, B, C").
+- Malay has the single plural category `other`, so a plural entry is one plain
+  string that shows the number wherever the English forms show it ("%lld
+  tugas", "%lld kali sehari"), and a noun after a number is not reduplicated
+  ("3 tugas", never "3 tugas-tugas"). An entry whose English forms leave the
+  number out (the "kali selesai" under the goal ring's large number) is a
+  substitution with only `other`.
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("Tidak muat" for Won’t fit, "+%lld lagi" for a small widget's overflow,
+  "berbaki" as the caption under the remaining-tasks ring, "Item baharu" in
+  the checklist field of the Mac inspector). Accessibility labels may be
+  longer.
+- The capture parser (`LorvexCaptureParser`) has no Malay vocabulary: it reads
+  English and Chinese words wherever the interface language is Malay. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("Perkataan bahasa Inggeris seperti “tomorrow”, “3pm”, “every
+  Monday”, “20 min” atau “#list” melengkapkan butiran tugas.").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
+  name the app exactly once, after "dalam" ("Catat tugas dalam
+  ${applicationName}") or after "ke dalam" where the English says to ("Tambah
+  tugas ke dalam ${applicationName}"). The phrase that opens the app reads
+  "Buka ${applicationName}".
+
+## Vietnamese conventions
+
+The `vi` catalogs are Vietnamese as written in Vietnam; vi-VN and every other
+Vietnamese locale select them. They follow Apple's Vietnamese usage (Cài đặt,
+Lịch, Lời nhắc, Phím tắt, Tập trung) and keep one term per concept across
+every catalog, so a thing reads the same on the Mac, iPhone, watch, widgets,
+and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | nhiệm vụ, danh sách, thẻ | Apple's Notes and Freeform call a tag Thẻ; a task's checklist is a checklist, as in Apple's Notes, and its item a mục |
+| Inbox (the seeded list) | Hộp thư đến | Apple's Calendar and Mail word; shown while the list keeps its seeded name |
+| Today, Tomorrow, Yesterday | Hôm nay, Ngày mai, Hôm qua | the navigation button and the date chips; inside a sentence they are lowercase ("hôm nay", "ngày mai") |
+| Someday | Một ngày nào đó | |
+| Due (the deadline field) | Đến hạn | Quá hạn is overdue |
+| Open (a task not yet done) | Chưa hoàn thành | the status and the filter; Đang thực hiện is In Progress and Đã bắt đầu a started task |
+| Blocked, cancelled, completed | Bị chặn, Đã hủy, Đã hoàn thành | |
+| Done (a button) and complete (an action) | Xong, Hoàn thành | Xong closes a sheet; Hoàn thành completes a task; Đã hoàn thành is the state |
+| Defer and snooze | Hoãn, Báo lại | Hoãn moves a task to a later day ("Hoãn đến ngày mai"); Báo lại snoozes a reminder ("Báo lại sau 1 giờ"), the word Apple's Clock, Home, and Maps use |
+| Plan (verb) | lên kế hoạch | "đã lên kế hoạch" is planned, and a task's planned date is its ngày lên kế hoạch |
+| Schedule (the day pane) | Lịch trình | Gợi ý giờ proposes times; Khung giờ trong ngày are the day hours |
+| Capture (quick add) | Ghi nhanh | |
+| Review (the day and the week) | Tổng kết | Tổng kết hàng ngày and hàng tuần; its fields are Thành tựu, Trở ngại, Bài học |
+| Memory | Bộ nhớ | one entry is a mục ghi nhớ; Apple's Photos uses Kỷ niệm for its own Memories, which is a different feature |
+| Assistant, AI | trợ lý, AI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | thói quen, điểm danh, chuỗi, cột mốc | chuỗi is the word Apple's Journal uses for a streak; a habit's goal is its mục tiêu |
+| Reminder | lời nhắc | Apple's Reminders word |
+| Dependency | Phụ thuộc | a task Đang chờ another |
+| Recurrence | lặp lại | |
+| Sync, snapshot | đồng bộ hóa, ảnh chụp nhanh | uploading is tải lên, fetching tải về, and a sync record a bản ghi; the Cloud Sync tab, section, and messages are named Đồng bộ iCloud so the label fits the Mac settings sidebar |
+| Event | sự kiện | the word Apple's Calendar uses |
+| App icon badge | huy hiệu | Apple's Mail writes biểu tượng for its unread badge, a word that also names the icon itself, so the badge on an app icon takes the more specific one |
+| Agenda (the mobile list mode) | Lịch biểu | |
+| Apple features | Cài đặt, Lịch, Lời nhắc, Phím tắt, Tập trung, Cài đặt hệ thống, màn hình khóa | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+
+- The reader is addressed as bạn, and never as quý khách. Apple's Vietnamese
+  system apps and frameworks on macOS 26 (among them Music, TV, Find My, Home,
+  Maps, Podcasts, Photos, and Journal) use bạn in 4,939 strings and never quý
+  khách. Lorvex leaves the pronoun out wherever the sentence carries the
+  address ("Hãy mở lại Lorvex để áp dụng ngôn ngữ mới.") and writes bạn where
+  a clause needs a subject ("Bạn cũng có thể thêm hoặc sửa ghi chú."). An
+  instruction opens with Hãy, which Apple's Vietnamese writes more often than
+  Vui lòng (323 strings against 264). Buttons and menu items are bare verbs
+  ("Thêm nhiệm vụ", "Xóa thói quen…"), and so are intent titles ("Hoàn thành
+  nhiệm vụ Lorvex", "Đổi tên thẻ Lorvex") and intent descriptions ("Hoàn thành
+  một nhiệm vụ Lorvex."); a confirmation after an action opens with Đã ("Đã hoàn
+  thành %@."). The assistant's own briefings speak in the first person with
+  tôi, and the Mac click is "Bấm" (79 strings in Apple's Vietnamese, none with
+  Nhấp).
+- Text is in sentence case everywhere: window titles, buttons, menu items,
+  tabs, section headers, and intent titles, as in Apple's Vietnamese ("Lời
+  nhắc mới", "Ghi chú nhanh", "Thêm vào Lịch"). Only proper names, Apple's
+  feature names (Lịch, and Cài đặt where a sentence names the app), and
+  Lorvex's own view names inside a sentence take a capital; weekday names come
+  from the calendar capitalized (Thứ Hai, Chủ Nhật) and months lowercase
+  ("tháng 3").
+- Every Vietnamese string is NFC: each letter with its tone mark is one
+  precomposed character, never a base letter followed by a combining mark. The
+  tone mark sits on the first vowel of oa, oe, and uy, as in Apple's
+  Vietnamese ("hóa" in 815 strings and "hoá" in none, "Hủy" and never "Huỷ"),
+  so the catalogs write "đồng bộ hóa" and "thủy". Every syllable is separated
+  by a space, a daily or weekly cadence is "Hàng ngày" and "Hàng tuần" (Apple
+  writes Hàng in 61 strings and Hằng in none), and "Hãy" is the imperative
+  marker.
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with “ ” as in English ("Xóa danh sách “%@”?"); Apple's Vietnamese
+  writes curly double quotes in 1,303 strings and straight ones in 55. An
+  ellipsis is the single character … attached to the word (1,475 strings
+  against 32 with three dots in Apple's), and a spaced en dash – stands for
+  the English em dash, the form Apple's Vietnamese uses more often (40
+  strings against 15 with a spaced em dash). The Return key is "Return" ("nhấn
+  Return", as in Apple's Calculator, Freeform, and Notes).
+- A point groups thousands and a comma marks decimals ("10.000", "2,5 giờ").
+  The system writes a clock time in 24 hours ("17:05"), a duration as "1 giờ,
+  30 phút", and a relative time as "5 phút trước" or "sau 2 giờ nữa", so a
+  sentence takes such a value as a `%@` argument and may end on it. Its
+  ordinal is "thứ 1", which beside a short weekday name ("Thứ 2" is Monday)
+  would read "Thứ 2 thứ 1", so `recurrence.weekday.nth` writes "%2$@ (lần
+  %1$@)", "Thứ 2 (lần thứ 1)", and a list of names reads "A, B và C" (narrow
+  "A, B, C").
+- Vietnamese has the single plural category `other`, so a plural entry is one
+  plain string that shows the number wherever the English forms show it
+  ("%lld nhiệm vụ", "%lld lần mỗi ngày"), and a noun does not change after a
+  number. An entry whose English forms leave the number out (the "lần hoàn
+  thành" under the goal ring's large number) is a substitution with only
+  `other`.
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("Không vừa" for Won’t fit, "+%lld nữa" for a small widget's overflow,
+  "%lld xong hôm nay" for the done-today count under a small widget's ring,
+  "còn" as the caption under the remaining-tasks ring, "Đồng bộ iCloud" for
+  the Cloud Sync tab of the Mac settings sidebar). Accessibility labels may be
+  longer.
+- The capture parser (`LorvexCaptureParser`) has no Vietnamese vocabulary: it
+  reads English and Chinese words wherever the interface language is
+  Vietnamese. The capture hint (`capture.footer.words`) therefore gives
+  English examples and says so ("Các từ tiếng Anh như “tomorrow”, “3pm”,
+  “every Monday”, “20 min” hoặc “#list” sẽ điền chi tiết cho nhiệm vụ.").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
+  name the app exactly once, after "trong" ("Ghi nhanh nhiệm vụ trong
+  ${applicationName}") or after "vào" where the English says to ("Thêm nhiệm
+  vụ vào ${applicationName}"). The phrase that opens the app reads "Mở
+  ${applicationName}".
+
 ## How to add a new locale
 
 Every catalog and every shipping bundle must carry the same language set, so a
@@ -2282,8 +2665,8 @@ shows the same commands for several.
 7. Add a conventions section for the language to this document, as the
    Simplified Chinese, Spanish, French, Italian, Brazilian Portuguese, Russian,
    Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, Arabic,
-   Persian, Urdu, Hebrew, German, Dutch, and Romanian ones: one term per
-   concept across every catalog,
+   Persian, Urdu, Hebrew, German, Dutch, Romanian, Indonesian, Malay, and
+   Vietnamese ones: one term per concept across every catalog,
    punctuation and quotation marks, spacing around numbers and Latin words.
 8. Capture the macOS tour and the iOS screens in the language (see "Headless
    screenshots") and look for truncated, clipped, or overlapping text.

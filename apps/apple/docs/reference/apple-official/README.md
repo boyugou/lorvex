@@ -11,9 +11,9 @@ live documentation before a release.
   names, catalog and language counts) describe that snapshot. The deployment
   floor in force is macOS 26, iOS/iPadOS 26, and watchOS 26, and the shipped
   languages are English, Arabic, German, Spanish, Persian, French, Hebrew,
-  Hindi, Italian, Japanese, Korean, Dutch, Polish, Brazilian Portuguese,
-  Romanian, Russian, Ukrainian, Urdu, Simplified Chinese, and Traditional
-  Chinese.
+  Hindi, Indonesian, Italian, Japanese, Korean, Malay, Dutch, Polish,
+  Brazilian Portuguese, Romanian, Russian, Ukrainian, Urdu, Vietnamese,
+  Simplified Chinese, and Traditional Chinese.
 - Source policy: Apple Developer Documentation, App Store Review Guidelines,
   App Store Connect Help, and Apple Support security/privacy documentation only
 - Copyright policy: paraphrases and short facts only; follow the source link for

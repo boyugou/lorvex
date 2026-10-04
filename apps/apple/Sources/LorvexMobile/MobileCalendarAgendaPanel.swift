@@ -190,6 +190,7 @@ struct MobileCalendarAgendaPanel: View {
         localized: "calendar.today", defaultValue: "Today", table: "Localizable",
         bundle: MobileL10n.bundle)
     }
-    return LorvexDateFormatters.string(day.date, template: "EEEE", timeZone: calendar.timeZone)
+    return LorvexDateFormatters.string(
+      day.date, template: "EEEE", timeZone: calendar.timeZone, position: .leading)
   }
 }

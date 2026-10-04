@@ -20,9 +20,11 @@
 		<string>fr</string>
 		<string>he</string>
 		<string>hi</string>
+		<string>id</string>
 		<string>it</string>
 		<string>ja</string>
 		<string>ko</string>
+		<string>ms</string>
 		<string>nl</string>
 		<string>pl</string>
 		<string>pt-BR</string>
@@ -30,6 +32,7 @@
 		<string>ru</string>
 		<string>uk</string>
 		<string>ur</string>
+		<string>vi</string>
 		<string>zh-Hans</string>
 		<string>zh-Hant</string>
 	</array>
@@ -40,7 +43,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>75</string>
+	<string>77</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
 	<key>LSUIElement</key>

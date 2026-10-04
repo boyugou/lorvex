@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex có thể thêm các khung thời gian lập kế hoạch bạn tạo vào ứng dụng Lịch.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex có thể đọc chi tiết sự kiện để xây dựng lịch trình và ngữ cảnh cho trợ lý.";

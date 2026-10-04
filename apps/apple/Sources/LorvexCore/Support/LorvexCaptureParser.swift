@@ -7,14 +7,15 @@ import Foundation
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
 /// French, Portuguese, Spanish, Italian, Russian, Ukrainian, Polish, Arabic,
-/// and Hindi for a user who reads them. Each vocabulary lists its words. The
-/// details are read one kind at a time:
+/// Persian, Hindi, Urdu, and Hebrew for a user who reads them. Each vocabulary
+/// lists its words. The details are read one kind at a time:
 ///
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
 ///    accents ("#offsite2026", "#manana" for "Mañana"); any other `#word` is
 ///    a tag. A word's combining marks (Devanagari and Thai vowel signs,
-///    Arabic harakat) and joiners (Persian, Indic) are part of it.
+///    Arabic harakat, Hebrew niqqud) and joiners (Persian, Urdu, Indic) are
+///    part of it.
 /// 2. Text that looks like a detail but is none ("до 18:00", a deadline that
 ///    is no start time), which a vocabulary lists as text to keep
 ///    (``LorvexCaptureVocabulary/keptInTitle``). It stays in the title whole:
@@ -86,7 +87,8 @@ public enum LorvexCaptureParser {
   ///     10月5日) are recognized only when it is given.
   ///   - languages: the languages the user reads, as BCP 47 codes, which
   ///     decide whether Japanese, Korean, French, Portuguese, Spanish,
-  ///     Italian, Russian, Ukrainian, Polish, Arabic, and Hindi words are read.
+  ///     Italian, Russian, Ukrainian, Polish, Arabic, Persian, Hindi, Urdu,
+  ///     and Hebrew words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,
     languages: [String] = Locale.preferredLanguages
@@ -316,15 +318,16 @@ public enum LorvexCaptureParser {
 
   /// Collapses the gaps removed phrases leave behind: repeated spaces, commas
   /// with nothing between them, and separators stranded at either end ("Call
-  /// the caterer ,", "：整理报销", "اتصل بأمي ،", "मीटिंग ।"). The Arabic comma and
-  /// semicolon count as separators like the others, and the Devanagari danda
-  /// ends the sentence a removed phrase stood in without a gap before it.
+  /// the caterer ,", "：整理报销", "اتصل بأمي ،", "मीटिंग ।", "رپورٹ بھیجیں ۔"). The
+  /// Arabic comma and semicolon count as separators like the others, and the
+  /// Devanagari danda and the Urdu full stop end the sentence a removed phrase
+  /// stood in without a gap before it.
   /// Connecting words ("on", "by", "for") are consumed with the phrase they
   /// introduce, so a title's own words are never trimmed.
   private static func cleanTitle(_ text: String) -> String {
     var title = text.replacingOccurrences(of: #"\s*[,，](\s*[,，])+"#, with: ",", options: .regularExpression)
     title = title.replacingOccurrences(of: #"\s*،(\s*[،,，])+"#, with: "،", options: .regularExpression)
-    title = title.replacingOccurrences(of: #"\s+([,，،।])"#, with: "$1", options: .regularExpression)
+    title = title.replacingOccurrences(of: #"\s+([,，،।۔])"#, with: "$1", options: .regularExpression)
     title = title.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
     title = title.replacingOccurrences(
       of: #"^[\s,;:\-–—，、：；،؛]+|[\s,;:\-–—，、：；،؛]+$"#, with: "", options: .regularExpression)

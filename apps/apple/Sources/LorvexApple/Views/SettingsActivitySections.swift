@@ -210,7 +210,8 @@ struct SettingsChangelogSection: View {
 /// at the trailing edge in the viewer's own time zone. `timestamp` is the feed's
 /// ISO-8601 UTC string; an entry from today shows its time alone, an older one
 /// its date and time, and the hover tooltip carries the full date. A missing or
-/// unparsable timestamp falls back to `fallbackDetail`.
+/// unparsable timestamp falls back to `fallbackDetail`. VoiceOver reads the
+/// title and source line as the row's label and the time as its value.
 struct RuntimeEntryRow: View {
   let title: String
   let subtitle: String
@@ -233,7 +234,7 @@ struct RuntimeEntryRow: View {
           .font(LorvexDesign.Typography.tertiaryText.monospacedDigit())
           .foregroundStyle(.secondary)
           .lineLimit(1)
-          .help(date.formatted(date: .complete, time: .standard))
+          .help(Self.fullStamp(date, time: .standard))
       } else if let detail = timestamp ?? fallbackDetail {
         Text(detail)
           .font(LorvexDesign.Typography.tertiaryText)
@@ -244,6 +245,15 @@ struct RuntimeEntryRow: View {
     .padding(.vertical, LorvexDesign.Spacing.xxs)
     .accessibilityElement(children: .combine)
     .accessibilityLabel(String(format: accessibilityLabelFormat, displayTitle, subtitle))
+    .accessibilityValue(spokenTimestamp)
+  }
+
+  /// When the entry happened, with its full date ("Sunday, October 4, 2026 at
+  /// 3:41 PM"). When the timestamp is missing or unparsable it is the text the
+  /// row shows in the stamp's place, and empty when the row shows none.
+  var spokenTimestamp: String {
+    if let date { return Self.fullStamp(date, time: .shortened) }
+    return timestamp ?? fallbackDetail ?? ""
   }
 
   private var date: Date? {
@@ -256,6 +266,10 @@ struct RuntimeEntryRow: View {
     Calendar.current.isDateInToday(date)
       ? date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: LorvexClockFormat.displayLocale))
       : date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened, locale: LorvexClockFormat.displayLocale))
+  }
+
+  private static func fullStamp(_ date: Date, time: Date.FormatStyle.TimeStyle) -> String {
+    date.formatted(Date.FormatStyle(date: .complete, time: time, locale: LorvexClockFormat.displayLocale))
   }
 
   private var displayTitle: String {

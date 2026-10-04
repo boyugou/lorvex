@@ -20,10 +20,13 @@
       .de: ["Studio"],
       .es: ["Personal"],
       .fr: ["urgent", "Studio"],
+      .id: ["Studio"],
       .it: ["Studio"],
+      .ms: ["Studio"],
       .nl: ["planning", "urgent", "Studio"],
       .pl: ["Studio"],
       .ro: ["Personal", "urgent", "Studio"],
+      .vi: ["Studio"],
     ]
 
     /// The registered tables in a stable order, so a failure message names

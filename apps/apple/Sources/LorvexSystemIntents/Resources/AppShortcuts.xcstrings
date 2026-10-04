@@ -52,6 +52,12 @@
             "value": "${applicationName} में कार्य जोड़ें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambahkan tugas ke ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -68,6 +74,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에 할 일 추가"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambah tugas ke dalam ${applicationName}"
           }
         },
         "nl": {
@@ -110,6 +122,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں شامل کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm nhiệm vụ vào ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -177,6 +195,12 @@
             "value": "${applicationName} में आदत जोड़ें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambahkan kebiasaan di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -193,6 +217,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에 습관 추가"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambah tabiat dalam ${applicationName}"
           }
         },
         "nl": {
@@ -235,6 +265,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک عادت ${applicationName} میں شامل کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm thói quen trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -302,6 +338,12 @@
             "value": "${applicationName} में कार्य दर्ज करें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catat tugas di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -318,6 +360,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 빠르게 추가"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catat tugas dalam ${applicationName}"
           }
         },
         "nl": {
@@ -360,6 +408,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں فوراً درج کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi nhanh nhiệm vụ trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -427,6 +481,12 @@
             "value": "${applicationName} में कार्य पूर्ण करें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selesaikan tugas di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -443,6 +503,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일 완료"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selesaikan tugas dalam ${applicationName}"
           }
         },
         "nl": {
@@ -485,6 +551,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں مکمل کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoàn thành nhiệm vụ trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -552,6 +624,12 @@
             "value": "${applicationName} में आदत बनाएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buat kebiasaan di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -568,6 +646,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 습관 만들기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cipta tabiat dalam ${applicationName}"
           }
         },
         "nl": {
@@ -610,6 +694,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک عادت ${applicationName} میں بنائیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tạo thói quen trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -677,6 +767,12 @@
             "value": "${applicationName} में कार्य टालें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunda tugas di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -693,6 +789,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일 미루기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tangguhkan tugas dalam ${applicationName}"
           }
         },
         "nl": {
@@ -735,6 +837,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں ملتوی کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoãn nhiệm vụ trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -802,6 +910,12 @@
             "value": "${applicationName} के कार्य दिखाएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan daftar tugas di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -818,6 +932,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}의 할 일 목록 보기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senaraikan tugas dalam ${applicationName}"
           }
         },
         "nl": {
@@ -860,6 +980,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کاموں کی فہرست ${applicationName} میں دکھائیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liệt kê nhiệm vụ trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -927,6 +1053,12 @@
             "value": "${applicationName} में कार्य को पूरा चिह्नित करें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tandai tugas selesai di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -943,6 +1075,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 완료로 표시"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tandakan tugas sebagai selesai dalam ${applicationName}"
           }
         },
         "nl": {
@@ -985,6 +1123,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں مکمل شدہ نشان زد کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đánh dấu nhiệm vụ là hoàn thành trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1052,6 +1196,12 @@
             "value": "${applicationName} में कार्य को आज की सूची में ले जाएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pindahkan tugas ke hari ini di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1068,6 +1218,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 오늘로 이동"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alihkan tugas ke hari ini dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1110,6 +1266,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں آج پر منتقل کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di chuyển nhiệm vụ sang hôm nay trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1177,6 +1339,12 @@
             "value": "${applicationName} खोलें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1193,6 +1361,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName} 열기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka ${applicationName}"
           }
         },
         "nl": {
@@ -1235,6 +1409,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایپ ${applicationName} کھولیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1302,6 +1482,12 @@
             "value": "${applicationName} में आज की सूची खोलें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka hari ini di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1318,6 +1504,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 오늘 열기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka hari ini dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1360,6 +1552,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آج کو ${applicationName} میں کھولیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở hôm nay trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1427,6 +1625,12 @@
             "value": "${applicationName} में कार्य को आज के लिए प्लान करें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rencanakan tugas untuk hari ini di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1443,6 +1647,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 오늘로 계획"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rancang tugas untuk hari ini dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1485,6 +1695,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں آج کے لیے منصوبہ بند کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lên kế hoạch cho một nhiệm vụ hôm nay trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1552,6 +1768,12 @@
             "value": "${applicationName} का अवलोकन पढ़ें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bacakan ikhtisar di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1568,6 +1790,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 개요 읽기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bacakan gambaran keseluruhan dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1610,6 +1838,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "خلاصہ ${applicationName} میں پڑھیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc tổng quan trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1677,6 +1911,12 @@
             "value": "${applicationName} की साप्ताहिक समीक्षा पढ़ें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bacakan tinjauan mingguan di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1693,6 +1933,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 주간 회고 읽기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bacakan semakan mingguan dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1735,6 +1981,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہفتہ وار جائزہ ${applicationName} میں پڑھیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc tổng kết hàng tuần trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1802,6 +2054,12 @@
             "value": "${applicationName} में कार्य को कल के लिए शेड्यूल करें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jadwalkan tugas untuk besok di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1818,6 +2076,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 내일로 계획"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jadualkan tugas untuk esok dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1860,6 +2124,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک کام ${applicationName} میں کل کے لیے شیڈول کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lên lịch cho một nhiệm vụ ngày mai trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -1927,6 +2197,12 @@
             "value": "${applicationName} में कार्य खोजें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cari tugas di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1943,6 +2219,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일 검색"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cari tugas dalam ${applicationName}"
           }
         },
         "nl": {
@@ -1985,6 +2267,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کام ${applicationName} میں تلاش کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tìm kiếm nhiệm vụ trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -2052,6 +2340,12 @@
             "value": "${applicationName} का अवलोकन दिखाएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan ikhtisar Lorvex di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2068,6 +2362,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 개요 보기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunjukkan gambaran keseluruhan Lorvex dalam ${applicationName}"
           }
         },
         "nl": {
@@ -2110,6 +2410,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایپ Lorvex کا خلاصہ ${applicationName} میں دکھائیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiển thị tổng quan Lorvex trong ${applicationName}"
           }
         },
         "zh-Hans": {
@@ -2177,6 +2483,12 @@
             "value": "${applicationName} की साप्ताहिक समीक्षा दिखाएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tampilkan tinjauan mingguan di ${applicationName}"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2193,6 +2505,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 주간 회고 보기"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunjukkan semakan mingguan dalam ${applicationName}"
           }
         },
         "nl": {
@@ -2235,6 +2553,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہفتہ وار جائزہ ${applicationName} میں دکھائیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiển thị tổng kết hàng tuần trong ${applicationName}"
           }
         },
         "zh-Hans": {

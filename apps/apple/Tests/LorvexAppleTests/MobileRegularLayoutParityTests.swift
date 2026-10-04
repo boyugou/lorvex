@@ -45,6 +45,32 @@ struct MobileRegularLayoutParityTests {
     #expect(!habitSection.contains("private struct MobileHabitRow"))
   }
 
+  @Test("A phone on its side stands the brief beside the task list, each its own list")
+  func sidewaysPhoneTodaySplitsTheBriefFromTheTasks() throws {
+    let today = try mobileSource("MobileStoreTodayView.swift")
+    #expect(today.contains("verticalSizeClass == .compact"))
+    #expect(today.contains("todayList(.brief, openSchedule: { isShowingSchedule = true })"))
+    #expect(today.contains("todayList(.tasks, openSchedule: nil)"))
+    // The regular-width layout is tested first, so a Pro Max on its side
+    // keeps the list beside the standing schedule.
+    let regular = try #require(today.range(of: "horizontalSizeClass == .regular {"))
+    let sideways = try #require(today.range(of: "verticalSizeClass == .compact {"))
+    #expect(regular.lowerBound < sideways.lowerBound)
+
+    // Each list draws its own part: the ground section only without `.tasks`,
+    // the rows only without `.brief`.
+    let page = try mobileSource("MobileTodayPage.swift")
+    #expect(page.contains("if portion != .tasks {"))
+    #expect(page.contains("if portion != .brief {"))
+  }
+
+  @Test("The time-of-day wash runs behind both Today panes, so it does not stop at the divider")
+  func skyWashCoversBothTodayPanes() throws {
+    let today = try mobileSource("MobileStoreTodayView.swift")
+    // One draw for the list and one for the standing schedule pane.
+    #expect(today.components(separatedBy: ".background(alignment: .top) { skyWash }").count == 3)
+  }
+
   @Test("Today's date is drawn once")
   func todayDateIsDrawnOnce() throws {
     // Today opens with its own date line, so the bar draws no date subtitle.

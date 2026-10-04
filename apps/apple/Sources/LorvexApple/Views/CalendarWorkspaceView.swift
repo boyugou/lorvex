@@ -203,7 +203,8 @@ struct CalendarWorkspaceView: View {
   }
 
   private var monthRangeTitle: String {
-    LorvexDateFormatters.string(monthAnchor, template: "yMMMM", timeZone: calendar.timeZone)
+    LorvexDateFormatters.string(
+      monthAnchor, template: "yMMMM", timeZone: calendar.timeZone, position: .leading)
   }
 
   /// Moves `anchorDate` by one visible period. A week step keeps the weekday

@@ -97,7 +97,9 @@ struct MobileTaskFieldEditor: View {
     let quick: [(String, Date)] = LorvexTaskFieldChoices.quickDays(calendar: calendar).map { offset, day in
       let label =
         offset == 0 ? MobileCaptureCopy.today
-        : offset == 1 ? MobileCaptureCopy.tomorrow : day.formatted(.dateTime.weekday(.wide))
+        : offset == 1
+          ? MobileCaptureCopy.tomorrow
+          : day.formatted(Date.FormatStyle(capitalizationContext: .beginningOfSentence).weekday(.wide))
       return (label, day)
     }
     return Section {

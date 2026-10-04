@@ -127,7 +127,9 @@ deep editing. Tab-first with `NavigationStack`.
   slot, hidden while it has nothing to do, so nothing moves when it appears.
   The toolbar holds only the Day/Week/Month control, centered, and New Event,
   which on a phone stands at the bar's leading edge so the control has room
-  in every language. ✅
+  in every language. The grid's all-day row is as tall as its pills, up to a
+  limit, then scrolls; on a phone on its side each column header puts the
+  weekday and the date on one line. ✅
 - The grid draws each day's timed tasks as blocks beside the events — a dashed
   accent outline with a ring that completes the task, a solid frame while the
   block is running. A block opens its task; the day's times themselves are
@@ -139,7 +141,11 @@ deep editing. Tab-first with `NavigationStack`.
   holds and the day's timed tasks). Then the list: started tasks first, then
   the rest in the canonical order, with no section headers, the day's habits
   as rings, and Done, which folds on request. Every task row swipes and
-  long-presses as it does anywhere in the app. ✅
+  long-presses as it does anywhere in the app. On a phone on its side the page
+  is two lists side by side, the brief (date and facts, briefing, day strip)
+  on the left and the task list with the habits and Done on the right, each
+  scrolling on its own, so the first tasks are in view as the page opens; the
+  strip still opens the schedule sheet. ✅
 - Habits are listed by what is open. A habit pinned to weekdays rests on
   its other days; a monthly habit appears from its day of the month until it
   is done; a times-per-week habit stays until the week's quota is met. Each

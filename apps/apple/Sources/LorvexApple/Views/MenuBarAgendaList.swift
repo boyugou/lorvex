@@ -73,6 +73,6 @@ enum MenuBarCopy {
         localized: "menubar.agenda.tomorrow", defaultValue: "Tomorrow", table: "Localizable",
         bundle: LorvexL10n.bundle)
     }
-    return lorvexDayLine(logicalDay: key)
+    return lorvexDayLine(logicalDay: key, position: .leading)
   }
 }

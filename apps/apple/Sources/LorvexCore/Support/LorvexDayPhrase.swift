@@ -20,6 +20,17 @@ public enum LorvexDayPhrase {
     case leading
     /// Follows other words: "due today", "Hidden until tomorrow".
     case inline
+
+    /// The capitalization a date formatter applies at this position. A leading
+    /// date capitalizes its first word in the languages that capitalize the
+    /// start of a sentence ("Lunes, 21 de septiembre"); an inline one never
+    /// does.
+    public var capitalizationContext: FormatStyleCapitalizationContext {
+      switch self {
+      case .leading: .beginningOfSentence
+      case .inline: .middleOfSentence
+      }
+    }
   }
 
   /// The phrase for the stored day `date`.
@@ -43,7 +54,7 @@ public enum LorvexDayPhrase {
     default:
       var style = Date.FormatStyle(
         locale: locale, calendar: locale.calendar, timeZone: .gmt,
-        capitalizationContext: position == .leading ? .beginningOfSentence : .middleOfSentence)
+        capitalizationContext: position.capitalizationContext)
       if let offset, (2...6).contains(offset) {
         return date.formatted(style.weekday(.wide))
       }

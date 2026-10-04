@@ -21,10 +21,21 @@ struct LorvexCaptureVocabulary: Sendable {
   /// (``ukrainianForMatching(_:)``); for Polish the line without its accents
   /// and with ł read as l (``polishForMatching(_:)``); for Arabic the line with
   /// its digits read as ASCII ones and its alef, alef maksura, and teh marbuta
-  /// forms read as one letter each (``arabicForMatching(_:)``); for Hindi the
+  /// forms read as one letter each (``arabicForMatching(_:)``); for Persian the
+  /// line with its digits read as ASCII ones, its alefs with hamza or madda read
+  /// as the bare alef, and its Arabic yeh, kaf, and teh marbuta forms read as
+  /// the Persian yeh, kaf, and heh (``persianForMatching(_:)``); for Hindi the
   /// line with its digits read as ASCII ones, its precomposed nukta letters
   /// read as the base consonants, and the candrabindu read as the anusvara
-  /// (``hindiForMatching(_:)``). It must keep every character at its UTF-16
+  /// (``hindiForMatching(_:)``); for Urdu the line with its Arabic-Indic and
+  /// Extended Arabic-Indic digits read as ASCII ones, its alefs with hamza or
+  /// madda read as the bare alef, its Arabic yeh forms read as the Urdu choti
+  /// yeh, its Arabic kaf read as the Urdu kaf, its heh forms read as one heh,
+  /// and its noon ghunna read as the noon (``urduForMatching(_:)``); for
+  /// Hebrew the line with its final letters read as the regular ones, its
+  /// maqaf and other hyphens read as the hyphen, and its apostrophe-like and
+  /// double-quote-like marks read as the geresh and the gershayim
+  /// (``hebrewForMatching(_:)``). It must keep every character at its UTF-16
   /// offset, so a match range in it is the same range in the typed line.
   var readingForm: @Sendable (String) -> String = { $0 }
   /// High (p1), medium (p2), or low (p3) priority.
@@ -58,9 +69,10 @@ struct LorvexCaptureVocabulary: Sendable {
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
   /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian,
-  /// Ukrainian, Polish, Arabic, and Hindi when `languages` includes them (any
-  /// region of a language: "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL",
-  /// "ar-SA", "hi-IN"), then Chinese and English, which every line is read
+  /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, and Hebrew when
+  /// `languages` includes them (any region of a language: "es-MX", "es-419",
+  /// "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF", "hi-IN", "ur-PK",
+  /// "ur-IN", "he-IL"), then Chinese and English, which every line is read
   /// with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
@@ -68,13 +80,21 @@ struct LorvexCaptureVocabulary: Sendable {
   /// Japanese particle ("10月5日に"). Every other language goes before
   /// English, so a part of the day or a word written before or after a clock
   /// time ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00", "o 15:00", "الساعة 3:30",
-  /// "3:30 बजे") is read with the time instead of being left in the title when
-  /// the English pattern takes "3:30" or "15:00". Beside a language that
+  /// "ساعت 3:30", "3:30 बजे", "3:30 بجے", "בשעה 3:30") is read with the time
+  /// instead of being left in the title when the English pattern takes "3:30"
+  /// or "15:00". Persian goes after Arabic, so for a user who reads both, a
+  /// phrase the two could read is read the Arabic way; they share few words.
+  /// Urdu goes after Persian and Hindi, so for a user who reads Urdu and one of
+  /// them, a phrase two of them could read is read the earlier way; Urdu
+  /// shares its script with Arabic and Persian and its spoken words with Hindi,
+  /// but few written words with any of them. Hebrew goes last of the
+  /// languages: its letters belong to no other vocabulary, so its position
+  /// settles no phrase between it and another language. Beside a language that
   /// writes a clock time with the letter h (French and Portuguese), English
   /// leaves hour counts written with h to it (``englishBesideHourClock``), so
   /// "15h" is never read as fifteen hours. Spanish, Italian, Russian,
-  /// Ukrainian, Polish, Arabic, and Hindi do not write a clock time that way,
-  /// so "2h" beside them stays a length.
+  /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, and Hebrew do not write a
+  /// clock time that way, so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -88,7 +108,10 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("uk") { vocabularies.append(.ukrainian) }
     if codes.contains("pl") { vocabularies.append(.polish) }
     if codes.contains("ar") { vocabularies.append(.arabic) }
+    if codes.contains("fa") { vocabularies.append(.persian) }
     if codes.contains("hi") { vocabularies.append(.hindi) }
+    if codes.contains("ur") { vocabularies.append(.urdu) }
+    if codes.contains("he") { vocabularies.append(.hebrew) }
     let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
     return vocabularies + [.chinese, english]
   }

@@ -89,7 +89,9 @@ enum MobileTodayCalmCopy {
   }
 
   /// The well's reason: the tasks the move would take off today, by name, and
-  /// the time that frees. Without candidates it points at the two ways out.
+  /// the time that frees. Without candidates it points at the two ways out. The
+  /// sentence ends in one period even where the duration's last unit is an
+  /// abbreviation that carries its own ("11 godz.").
   static func overbookedMessage(_ overbooked: LorvexCalmToday.Overbooked) -> String {
     let candidates = overbooked.candidates
     guard let first = candidates.first?.title else {
@@ -100,26 +102,28 @@ enum MobileTodayCalmCopy {
     }
     let minutes = candidates.reduce(0) { $0 + max($1.estimatedMinutes ?? 0, 0) }
     let freed = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(minutes)))
+    let message: String
     switch candidates.count {
     case 1:
-      return String(
+      message = String(
         localized: "today.overbooked.move.one",
         defaultValue: "Moving “\(first)” to tomorrow frees about \(freed).",
         table: "Localizable", bundle: MobileL10n.bundle)
     case 2:
       let second = candidates[1].title
-      return String(
+      message = String(
         localized: "today.overbooked.move.two",
         defaultValue: "Moving “\(first)” and “\(second)” to tomorrow frees about \(freed).",
         table: "Localizable", bundle: MobileL10n.bundle)
     default:
       let second = candidates[1].title
       let more = candidates.count - 2
-      return String(
+      message = String(
         localized: "today.overbooked.move.more",
         defaultValue: "Moving “\(first)”, “\(second)”, and \(more) more to tomorrow frees about \(freed).",
         table: "Localizable", bundle: MobileL10n.bundle)
     }
+    return lorvexSingleFinalPeriod(message)
   }
 
   static var overbookedAction: String {
@@ -164,8 +168,12 @@ enum MobileTodayCalmCopy {
   /// A minutes-since-midnight value as a locale-aware clock label.
   static func clockLabel(_ minutes: Int) -> String { lorvexClockTimeLabel(minutes: minutes) }
 
-  /// The product day as a spelled-out date ("Tuesday, September 22").
-  static func dateLine(logicalDay: String) -> String { lorvexDayLine(logicalDay: logicalDay) }
+  /// The product day as a spelled-out date ("Tuesday, September 22"), the
+  /// title of a page: its weekday takes a capital in the languages that write
+  /// it in lowercase.
+  static func dateLine(logicalDay: String) -> String {
+    lorvexDayLine(logicalDay: logicalDay, position: .leading)
+  }
 
   static var doneTitle: String {
     String(
@@ -251,13 +259,15 @@ enum MobileTodayCalmCopy {
       bundle: MobileL10n.bundle)
   }
 
-  /// The suggestion's caption when no working time is left for any task.
+  /// The suggestion's caption when no working time is left for any task. The
+  /// sentence ends in one period even where the clock's last mark is one ("5:00 p.m.").
   static func noTimeLeft(workingHours: Range<Int>) -> String {
     let end = clockLabel(workingHours.upperBound)
-    return String(
-      localized: "today.schedule.no_time_left",
-      defaultValue: "No time is left today for these tasks. Your day hours end at \(end).",
-      table: "Localizable", bundle: MobileL10n.bundle)
+    return lorvexSingleFinalPeriod(
+      String(
+        localized: "today.schedule.no_time_left",
+        defaultValue: "No time is left today for these tasks. Your day hours end at \(end).",
+        table: "Localizable", bundle: MobileL10n.bundle))
   }
 
   /// The pane's line when today has tasks but none of them has a time.

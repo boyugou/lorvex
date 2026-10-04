@@ -17,12 +17,12 @@ struct TodayColumn: View {
   /// The day as of this render, built once (``AppStore/todayColumnContent``).
   let content: TodayColumnContent
   @State private var showsFullBriefing = false
+  /// Whether the three-line limit cuts the briefing at the column's current
+  /// width, which is what brings the "Show more" toggle.
+  @State private var briefingHidesText = false
 
   private var page: LorvexCalmToday { content.page }
   private var nowMinutes: Int? { content.nowMinutes }
-
-  /// Briefings longer than this open on three lines with a "Show more" toggle.
-  private static let briefingFoldLength = 150
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -94,10 +94,11 @@ struct TodayColumn: View {
   }
 
   /// The assistant's briefing in the system face, marked by the sparkles
-  /// glyph rather than italics. A long one opens on three lines.
+  /// glyph rather than italics. One that takes more than three lines at the
+  /// column's width opens on three, with a toggle for the rest; a shorter one
+  /// shows in full and has no toggle.
   private func briefingView(_ text: String) -> some View {
-    let folds = text.count > Self.briefingFoldLength
-    return HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "sparkles")
         .foregroundStyle(LorvexDesign.Palette.accent)
         .accessibilityHidden(true)
@@ -105,10 +106,9 @@ struct TodayColumn: View {
         Text(userContent: text)
           .font(LorvexDesign.Typography.briefing)
           .foregroundStyle(.primary)
-          .lineLimit(folds && !showsFullBriefing ? 3 : nil)
-          .fixedSize(horizontal: false, vertical: true)
+          .lorvexLineClamp(3, isClamped: !showsFullBriefing, hidesText: $briefingHidesText)
           .textSelection(.enabled)
-        if folds {
+        if briefingHidesText {
           Button(showsFullBriefing ? TodayCalmCopy.briefingLess : TodayCalmCopy.briefingMore) {
             lorvexAnimated(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
           }

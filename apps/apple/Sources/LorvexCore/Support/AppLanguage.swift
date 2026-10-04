@@ -6,7 +6,9 @@ import Foundation
 /// `.system` follows the system language; every other case forces one shipped
 /// localization, and there is one case per shipped localization (a test
 /// compares the cases with the languages the string catalogs carry). The raw
-/// values are the bundle's localization identifiers.
+/// values are the bundle's localization identifiers, and each case is named by
+/// its identifier: `.id` is Indonesian, a static member that never meets the
+/// `Identifiable` instance property of the same name.
 ///
 /// The choice is stored as the app's own `AppleLanguages` preference, the same
 /// value the system's per-app language setting writes (on Lorvex's page in iOS
@@ -25,9 +27,11 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case fr
   case he
   case hi
+  case id
   case it
   case ja
   case ko
+  case ms
   case nl
   case pl
   case ptBR = "pt-BR"
@@ -35,6 +39,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case ru
   case uk
   case ur
+  case vi
   case zhHans = "zh-Hans"
   case zhHant = "zh-Hant"
 
@@ -73,9 +78,11 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .fr: "Français"
     case .he: "עברית"
     case .hi: "हिन्दी"
+    case .id: "Bahasa Indonesia"
     case .it: "Italiano"
     case .ja: "日本語"
     case .ko: "한국어"
+    case .ms: "Bahasa Melayu"
     case .nl: "Nederlands"
     case .pl: "Polski"
     case .ptBR: "Português (Brasil)"
@@ -83,6 +90,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .ru: "Русский"
     case .uk: "Українська"
     case .ur: "اردو"
+    case .vi: "Tiếng Việt"
     case .zhHans: "简体中文"
     case .zhHant: "繁體中文"
     }

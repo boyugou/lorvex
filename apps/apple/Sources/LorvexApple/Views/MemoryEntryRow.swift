@@ -8,7 +8,8 @@ import SwiftUI
 /// so a glyph would repeat on each row what the page title already says. Edit and Delete appear on hover
 /// and in the row's context menu, and the whole row taps to edit. Memory is
 /// AI-managed context the assistant keeps about the user; the app edits it as the
-/// AI actor.
+/// AI actor. VoiceOver reads the title and content as the row's label and the
+/// day it was last updated as its value.
 struct MemoryEntryRow: View {
   let entry: MemoryEntry
   let edit: () -> Void
@@ -36,6 +37,7 @@ struct MemoryEntryRow: View {
     .help(String(localized: "memory.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)
+    .accessibilityValue(spokenUpdatedDay)
     .accessibilityIdentifier("memory.row.\(entry.key)")
     .accessibilityAction(
       named: Text(String(localized: "memory.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle)),
@@ -105,6 +107,9 @@ struct MemoryEntryRow: View {
   private var accessibilityLabel: String {
     "\(entry.displayTitle). \(entry.content)"
   }
+
+  /// The day the entry was last updated, as the footer shows it.
+  var spokenUpdatedDay: String { Self.formattedDay(entry.updatedAt) }
 
   /// A readable absolute day (e.g. "May 22, 2026") for the row footer. Memory
   /// timestamps arrive as ISO 8601 with or without fractional seconds (the MCP

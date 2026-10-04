@@ -117,10 +117,11 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 
 ## Localization and preview videos
 
-- Screenshots are per-localization. Lorvex ships twenty languages (English,
-  Arabic, German, Spanish, Persian, French, Hebrew, Hindi, Italian, Japanese,
-  Korean, Dutch, Polish, Brazilian Portuguese, Romanian, Russian, Ukrainian,
-  Urdu, Simplified Chinese, and Traditional Chinese); add localized sets only
+- Screenshots are per-localization. Lorvex ships twenty-three languages
+  (English, Arabic, German, Spanish, Persian, French, Hebrew, Hindi,
+  Indonesian, Italian, Japanese, Korean, Malay, Dutch, Polish, Brazilian
+  Portuguese, Romanian, Russian, Ukrainian, Urdu, Vietnamese, Simplified
+  Chinese, and Traditional Chinese); add localized sets only
   for locales whose listing you localize. The iOS and
   watchOS capture scripts take `-AppleLanguages` launch arguments through
   `LORVEX_SIM_EXTRA_ARGS` and `LORVEX_WATCH_SIM_EXTRA_ARGS`.

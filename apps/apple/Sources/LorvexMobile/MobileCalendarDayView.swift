@@ -252,7 +252,8 @@ public struct MobileCalendarDayView: View {
       return Self.weekRangeLabel(
         from: visibleDate, calendar: calendar, now: LorvexPreviewClock.now(in: calendar))
     }
-    return LorvexDateFormatters.string(visibleDate, template: "yMMMM", timeZone: calendar.timeZone)
+    return LorvexDateFormatters.string(
+      visibleDate, template: "yMMMM", timeZone: calendar.timeZone, position: .leading)
   }
 
   /// The week that starts on `start` as a locale-aware range: "Sep 27 –

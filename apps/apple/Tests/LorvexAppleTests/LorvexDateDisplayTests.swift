@@ -115,6 +115,31 @@ struct LorvexDateDisplayTests {
         == formatter.localizedString(from: DateComponents(day: -3)))
   }
 
+  @Test("Malay keeps \"yesterday\" whole where its abbreviated style would cut the word")
+  func malayAbbreviatedStyleKeepsYesterday() {
+    let malay = Locale(identifier: "ms_MY")
+    let abbreviated = LorvexDateFormatters.relativeDays(-1, unitsStyle: .abbreviated, locale: malay)
+    #expect(abbreviated == "semalam")
+    #expect(abbreviated == LorvexDateFormatters.relativeDays(-1, unitsStyle: .short, locale: malay))
+  }
+
+  @Test("A relative phrase starts in lowercase, which Vietnamese's capitalized day words would not")
+  func relativePhrasesStartInLowercase() {
+    let vietnamese = Locale(identifier: "vi_VN")
+    let styles: [RelativeDateTimeFormatter.UnitsStyle] = [.full, .short, .abbreviated]
+    for days in -2...2 {
+      for style in styles {
+        let phrase = LorvexDateFormatters.relativeDays(days, unitsStyle: style, locale: vietnamese)
+        #expect(phrase.first?.isLowercase == true, "\(days) days, style \(style.rawValue): \(phrase)")
+      }
+    }
+    #expect(LorvexDateFormatters.relativeDays(-1, locale: vietnamese) == "hôm qua")
+    #expect(LorvexDateFormatters.relativeDays(2, unitsStyle: .abbreviated, locale: vietnamese) == "ngày kia")
+    // A phrase that is already lowercase, and one that opens with a count, is unchanged.
+    #expect(LorvexDateFormatters.relativeDays(-3, locale: vietnamese) == "3 ngày trước")
+    #expect(LorvexDateFormatters.relativeDays(1, locale: english) == "tomorrow")
+  }
+
   @Test("A date without its year is one in the logical today's year, as the locale's calendar counts it")
   func theYearIsLeftOutOnlyWithinTheCalendarsYear() throws {
     // March 15, 2027 is Esfand 24, 1405: the Persian year of the logical

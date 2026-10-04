@@ -468,6 +468,192 @@ a bound, not a length ("za 2 godziny", "co 2h", "za 15 min"), "2 godziny
 dziennie" and "30 minut temu" stay in the title, and "godzina" alone is no
 length ("Godzina szczytu").
 
+Arabic words are read when Arabic is among your device's preferred languages,
+in any regional variant. Vowel signs and tatweel are optional, and the letters
+that are spelled in more than one way are read as one (أ, إ, آ as ا, ى as ي, ة
+as ه), so "غداً", "غدًا", and "غدا" are the same word, and so are "الأربعاء" and
+"الاربعاء"; the title keeps what you typed. The Arabic-Indic digits ("٣") and
+the Extended Arabic-Indic digits ("۳") read as the digits they stand for.
+Arabic says a clock time with "الساعة": "الساعة 3", "الساعة 3:30", "الساعة 3
+مساءً", "عند الساعة 9 صباحاً". An hour from 1 to 6 with no part of the day is
+in the afternoon ("الساعة 3" is 3 PM) unless it is written with a zero
+("06:30"), and a part of the day sets the hour: "صباحاً" is the morning,
+"ظهراً" is noon at 12 and the afternoon from 1 to 6, "مساءً" is the evening,
+and "ليلاً" runs past midnight, so "الساعة 2 ليلاً" is 02:00 on the next day
+and "الساعة 11 ليلاً" is 23:00. A part of the day beside the day phrase sets a
+bare hour too: "غداً صباحاً الساعة 6" is 06:00. A bare number is never an hour
+("اجتماع 3", and "3 م" counts meters), "12 صباحاً" and "12 مساءً" are not
+read, and a clock time that names a deadline ("قبل الساعة 18:00", "حتى 18:00")
+stays in the title. A time written without an Arabic word ("3pm",
+"14:00-16:30") is read by English, which also takes an English "at" or "from"
+in front of it.
+
+| Detail | Arabic |
+|---|---|
+| Day | اليوم, الليلة, غداً, غداً صباحاً, بكرة, بعد غد, يوم الخميس, هذا الخميس, الخميس القادم, مساء الخميس, الأسبوع القادم, بعد 3 أيام, بعد أسبوع |
+| Date | 5 مارس, 5 من مارس, يوم 5 مارس, بتاريخ 5 مارس, 5 كانون الثاني, 5 مارس 2027 |
+| Date range | من 3 إلى 5 مارس, من 30 يناير إلى 2 فبراير, من 3 مارس حتى 5 أبريل, بين 3 و5 مارس, 3-5 مارس |
+| Due day | قبل الخميس, حتى غداً, بحلول 5 مارس, لغاية الخميس القادم, الموعد النهائي: الخميس, موعد التسليم 5 مارس |
+| Time | الساعة 3, الساعة 15:30, الساعة 3 مساءً, الساعة 9 صباحاً, الساعة 3 ونصف, الساعة 3 إلا ربع, عند منتصف الليل, في منتصف النهار; من الساعة 2 إلى 4, من 9 صباحاً إلى 5 مساءً, بين الساعة 2 و4, الساعة 2-4 |
+| Repeat | كل يوم, كل أسبوع, كل اثنين, كل اثنين وخميس, كل يوم من الأحد إلى الخميس, كل يومين, كل 3 أيام, كل شهر, 5 من كل شهر, مرة في الأسبوع, مرة كل أسبوعين; يومياً at the end |
+| Length | 20 دقيقة, 30 د, 3 ساعات, ساعتين, 1.5 ساعة, نصف ساعة, ربع ساعة, ساعة ونصف, لمدة ساعة |
+| Priority | أولوية عالية, أولوية منخفضة, عاجل (at the end, or "عاجل:" at the start) |
+
+A date range plans the task on its first day and makes it due on its last:
+"من 3 إلى 5 مارس" and "بين 3 و5 مارس" run from March 3 to March 5, and a month
+written once serves both days. The end must come after the start ("من 5 إلى 3
+مارس" stays in the title), and the end names a month, so "من 3 إلى 5" stays in
+the title. "إلى" joins the two days only after "من", and "و" only after "بين".
+Two bare hours are not a time range either ("من 14 إلى 16 صفحة" stays in the
+title): a range needs "الساعة", a part of the day, or a colon ("من الساعة 2
+إلى 4", "من 2 إلى 4 مساءً", "من 14:00 إلى 16:00"). The months are the Gregorian
+ones, in the names used across the Arab world (يناير, كانون الثاني, جانفي). A
+month name needs its day number ("مارس" is also a verb), and a date written in
+digits only ("5/3") or a Hijri date ("3 رمضان") stays in the title.
+
+A weekday is a day only with a word before it: "يوم", "في يوم", "ليوم", or
+"في" ("يوم الخميس"), "هذا" ("هذا الخميس"), or a part of the day ("مساء
+الخميس"); or with a word for next after it ("الخميس القادم", "الجمعة
+المقبلة"). Alone, it stays in the title ("صلاة الجمعة", "الجمعة العظيمة",
+"اجتماع الخميس"), and so does a weekday in the past ("الخميس الماضي") or a
+night ("ليلة الجمعة" is the night before Friday). A weekday that names today
+means a week ahead, "هذا الخميس" is this week's, and "الخميس القادم" is the
+coming one. Sunday needs its article ("الأحد"): without it "أحد" means
+"someone", so "كل أحد" (everyone) and "يوم أحد" stay in the title.
+
+"كل ساعتين" and "كل 15 دقيقة" are intervals shorter than a day, so they are
+not repeats and stay in the title whole, as do "كل عام وأنتم بخير" (a
+greeting) and "مرتين في الأسبوع" (twice a week). "يومياً", "أسبوعياً",
+"شهرياً", and "سنوياً" repeat only at the end of the line, so the adjective in
+"تقرير يومي" stays in the title. A length says that it is one: an amount after
+"بعد", "كل", "قبل", "منذ", "خلال", or "في" names a moment or an interval, not a
+length ("بعد 15 دقيقة", "كل ساعتين"), "20 دقيقة في اليوم" stays in the title,
+and "ساعة" alone is a watch or a clock unless "لمدة" or an approximation opens
+it ("لمدة ساعة", "حوالي ساعة"). Arabic attaches one-letter words to the next
+word, and only the attached forms Lorvex lists are read: "و" between weekdays
+("كل اثنين وخميس"), "ل" before an amount, a date, or a day ("لـ 20 دقيقة", "لـ
+5 مارس", "ليوم الخميس"), and "ب" in "بحلول", "بالليل", and "بأولوية". Any other
+attached word ("وغداً", "لغد") stays in the title. The working days and the
+weekend are not read, because which days they are depends on the country.
+
+Hindi words are read when Hindi is among your device's preferred languages, in
+any regional variant. A word counts only as a whole word in Devanagari, so
+"आजकल" (nowadays) and "कलयुग" hold no day, and a hyphen between two Devanagari
+words joins them ("आज-कल"). Hindi writes its postpositions as separate words,
+and the one that goes with a detail is read with it: "सोमवार को", "कल से", "5 बजे
+की मीटिंग", "30 मिनट के लिए". The Devanagari digits ("५") read as the digits
+they stand for, the nukta is optional ("ज़रूरी" and "जरूरी", "हफ़्ते" and
+"हफ्ते"), the candrabindu and the anusvara are one sign ("पाँच" and "पांच"),
+and a nasal conjunct may be spelled either way ("सितंबर" and "सितम्बर"); the
+title keeps what you typed. Hindi written in Latin letters ("kal subah 9 baje")
+is not read. English is read beside Hindi, so "3pm", "17:30", and "30 min" work
+as they do alone, and Hindi does not write a clock time with the letter h, so
+"2h" stays a length.
+
+"कल" means both tomorrow and yesterday, and "परसों" both the day after tomorrow
+and the day before yesterday. Lorvex reads "कल" as tomorrow and "परसों" as the
+day after tomorrow, and never reads a past day, since the app itself writes the
+past day "बीता कल". A day stays in the title when its line says that it is
+past: a past-tense word anywhere in the line ("कल मीटिंग थी", "मैं कल गया
+था", "कल मीटिंग हुई"), or "बीता", "गुज़रा", "पिछले", or "पहले" just before it
+("बीता कल", "पिछले शुक्रवार", "पहले शुक्रवार"). A past statement without such
+a word ("कल मैंने फोन किया") is read as tomorrow.
+
+Hindi says a clock time with "बजे" after the hour: "5 बजे", "5:30 बजे", "साढ़े
+5 बजे" (5:30), "सवा 5 बजे" (5:15), "पौने 6 बजे" (5:45), "डेढ़ बजे" (1:30), and
+"ढाई बजे" (2:30). The hour may be a number word before "बजे" ("पाँच बजे"), while
+a number word anywhere else is a count ("तीन लोग"). An hour from 1 to 6 with no
+part of the day is in the afternoon ("5 बजे" is 5 PM) unless it is written with
+a zero ("06:30 बजे"), and a part of the day sets the hour: "सुबह" is the
+morning, "दोपहर" is noon at 12 and the afternoon from 1 to 6, "शाम" is the
+evening, and "रात" runs past midnight, so "रात 2 बजे" is 02:00 on the next day
+and "रात 10 बजे" is 22:00. "आधी रात" is the midnight that ends the day. The part
+of the day may stand before the hour ("सुबह 9 बजे", "शाम को 5 बजे", "सुबह ठीक
+6 बजे") or after "बजे" ("9 बजे सुबह"). An hour with no part of the day of its
+own takes the one part of the day the line names elsewhere: in its day phrase
+("कल सुबह मीटिंग 6 बजे" is 06:00), after "हर" ("हर सुबह 6 बजे योग"), or in a
+noun ("रात का खाना 8 बजे" is 20:00, "सुबह की सैर 6 बजे" is 06:00). A line that
+names two different parts of the day leaves the hour as it reads alone, and an
+hour written on the 24-hour clock ("20:00 बजे", "06:30 बजे") is read as
+written. A clock time that names a bound ("5 बजे तक", "शाम 5 बजे से पहले", "5
+बजे के बाद") stays in the title, and so does "5 बजकर 30 मिनट".
+
+| Detail | Hindi |
+|---|---|
+| Day | आज, आज रात, कल, कल सुबह, परसों, सोमवार को, इस शुक्रवार, अगले सोमवार, अगले हफ़्ते, इस वीकेंड, 3 दिन बाद, एक हफ़्ते बाद |
+| Date | 5 मई, 5 मई 2027, तारीख 5 मई, 1 जनवरी, 12 दिसंबर, 5 अक्टूबर |
+| Date range | 3 से 5 मार्च, 3 मार्च से 5 मार्च तक, 30 जनवरी से 2 फ़रवरी तक, 3-5 मार्च, सोमवार से बुधवार तक |
+| Due day | शुक्रवार तक, कल शाम से पहले, 5 मई तक, अंतिम तिथि: 5 मई, डेडलाइन शुक्रवार |
+| Time | 5 बजे, 5:30 बजे, साढ़े 5 बजे, पौने 6 बजे, डेढ़ बजे, पाँच बजे, सुबह 9 बजे, शाम को 5 बजे, रात के 10 बजे, 9 बजे सुबह, आधी रात, शाम 5:30; 3 से 5 बजे, सुबह 9 से 11 बजे तक, 3 बजे से 5 बजे तक, 14:00 से 16:00 |
+| Repeat | हर दिन, रोज़, हर सुबह, हर सोमवार, हर सोमवार और गुरुवार, हर दूसरे सोमवार, हर हफ़्ते, हर 2 दिन, हर महीने, हर महीने की 5 तारीख, हर साल, हर वीकेंड, हर कार्यदिवस, हर सोमवार से शुक्रवार |
+| Length | 30 मिनट, 2 घंटे, 1.5 घंटे, 1 घंटा 30 मिनट, आधा घंटा, पौन घंटा, डेढ़ घंटा, दो घंटे, 30 मिनट के लिए |
+| Priority | उच्च प्राथमिकता, मध्यम प्राथमिकता, निम्न प्राथमिकता, प्राथमिकता: उच्च, ज़रूरी (at the end, or "ज़रूरी:" at the start) |
+
+A date range plans the task on its first day and makes it due on its last:
+"3 से 5 मार्च" and "3 मार्च से 5 मार्च तक" run from March 3 to March 5, and a
+month written once serves both days. The end must come after the start ("5 से 3
+मार्च" stays in the title), and the end names a month, so "3 से 5" is never a
+range of days. A span of weekdays does the same: "सोमवार से बुधवार तक" plans the
+task on the coming Monday and makes it due on the Wednesday after it, while
+"सोमवार से शुक्रवार" alone stays in the title, since it is a week of work as
+often as it is the working week. As in English, a number alone before a spaced
+dash belongs to the title ("Sprint 12 - 20 मार्च" is planned for March 20),
+while "12-20 मार्च" is a range. A range in the past tense, or one that a
+possessive follows ("5 से 8 मई तक की छुट्टी"), stays in the title whole, since
+it may be an event the task only prepares for. "3 से 5 बजे" is a time range:
+its end carries "बजे", so "3 से 5" alone stays in the title. A date needs its
+day number before the month name (जनवरी, फ़रवरी, मार्च, अप्रैल, मई, जून,
+जुलाई, अगस्त, सितंबर, अक्टूबर, नवंबर, दिसंबर, in the spellings people type); a
+month without a day, a month before its day, a date written in digits ("5/10"),
+a date the calendar lacks ("31 अप्रैल"), and a month of the Vikram Samvat year
+("चैत्र", "वैशाख") stay in the title.
+
+A weekday is a day only with its full name in "वार" (सोमवार, मंगलवार, बुधवार,
+गुरुवार or बृहस्पतिवार, शुक्रवार, शनिवार, रविवार or इतवार): the short forms
+"रवि", "सोम", "मंगल", "बुध", "गुरु", "शुक्र", and "शनि" are ordinary words and
+names ("शनि मंदिर जाना", "मंगल ग्रह देखना") and stay in the title. A weekday
+alone is the coming one, a week ahead when it names today; "इस" makes it this
+week's, "अगले" makes it next week's (weeks start on Monday), and "आने वाले"
+the coming one. A day that a possessive follows is an attribute of a noun, not
+a plan: "सोमवार की मीटिंग" and "कल की रिपोर्ट" stay in the title, and "कल रात
+का खाना" reads only "कल". A part of the day after a day belongs to it ("कल
+सुबह", "शुक्रवार की शाम"), the afternoon also as "दोपहर बाद" ("कल दोपहर बाद"),
+and the emphatic "ही" or "भी" goes with a day, its postposition, or a deadline
+word ("आज ही", "सोमवार को ही", "शुक्रवार तक ही"). The weekend ("वीकेंड",
+"सप्ताहांत", "हफ़्ते के अंत") is the coming Saturday, today on a Saturday or a
+Sunday, and the Saturday a week later after "अगले". "इस हफ़्ते" alone names no
+single day and stays in the title, and "आज तक" (so far) and "आज से पहले" are
+idioms, not deadlines.
+
+"हर" (or "प्रत्येक", "हरेक") with a day, week, month, year, weekday, or part of
+the day repeats the task, and so do the words for every day ("रोज़", "रोज़ाना",
+"प्रतिदिन", "नित्य"). "हर सोमवार और गुरुवार" repeats on both days, "हर दूसरे
+सोमवार" every other week, "हर वीकेंड" on Saturday and Sunday, and "हर कार्यदिवस"
+on the working days, as does a span of weekdays beside "हर" or a word for every
+day ("हर सोमवार से शुक्रवार", "रोज़ सोमवार से शुक्रवार"). "हर महीने की 5
+तारीख" repeats on the 5th, while a day of the month alone ("5 तारीख तक") is
+not read. A part of the day after "हर" belongs to the repeat and gives an hour
+beside it its half of the day: "हर सुबह 6 बजे योग" repeats every day at 06:00.
+An interval shorter than a day ("हर 2 घंटे") is not a repeat and stays in the
+title whole, and so does a cadence word that describes a noun ("रोज़ का काम",
+"हर साल की रिपोर्ट"); "रोज़ा", "रोज़गार", and "रोज़ी" are other words.
+
+A length says that it is one: "30 मिनट", "2 घंटे", "1.5 घंटे", "आधा घंटा",
+"डेढ़ घंटा", "ढाई घंटे", and "साढ़े 3 घंटे", each maybe after "लगभग" or "करीब",
+and with the word that goes with it ("30 मिनट की मीटिंग"). An amount before
+"बाद", "पहले", or "में", or after "हर", "कम से कम", or "दिन में", names a moment,
+an interval, or a bound, not a length ("2 घंटे बाद", "हर 2 घंटे", "दिन में 2
+घंटे"), and neither is a side of a range of amounts ("2 से 3 घंटे"); "घंटा"
+alone is no length ("घंटा भर"). A number before a counted noun, a price, or a
+percent sign is never a time, a length, or a day ("5 लोग", "5 रुपये", "5%").
+
+"उच्च", "मध्यम", and "निम्न" before "प्राथमिकता" set the priority, and so do
+the same words after it ("प्राथमिकता: उच्च"). "ज़रूरी", "अत्यावश्यक", "तुरंत",
+and "अर्जेंट" are priority words only at the end of the line, or at its start
+before a colon or a comma ("ज़रूरी: रिपोर्ट भेजें"); anywhere else "ज़रूरी" is an
+ordinary adjective and stays in the title ("ज़रूरी दवाइयाँ ख़रीदना", "रिपोर्ट
+भेजें ज़रूरी है").
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline

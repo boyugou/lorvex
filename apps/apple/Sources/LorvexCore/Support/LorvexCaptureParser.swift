@@ -6,9 +6,9 @@ import Foundation
 /// The line is read with the vocabularies of the user's languages
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
-/// French, Portuguese, Spanish, Italian, Russian, Ukrainian, and Polish for a
-/// user who reads them. Each vocabulary lists its words. The details are read
-/// one kind at a time:
+/// French, Portuguese, Spanish, Italian, Russian, Ukrainian, Polish, Arabic,
+/// and Hindi for a user who reads them. Each vocabulary lists its words. The
+/// details are read one kind at a time:
 ///
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
@@ -86,7 +86,7 @@ public enum LorvexCaptureParser {
   ///     10月5日) are recognized only when it is given.
   ///   - languages: the languages the user reads, as BCP 47 codes, which
   ///     decide whether Japanese, Korean, French, Portuguese, Spanish,
-  ///     Italian, Russian, Ukrainian, and Polish words are read.
+  ///     Italian, Russian, Ukrainian, Polish, Arabic, and Hindi words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,
     languages: [String] = Locale.preferredLanguages
@@ -316,15 +316,18 @@ public enum LorvexCaptureParser {
 
   /// Collapses the gaps removed phrases leave behind: repeated spaces, commas
   /// with nothing between them, and separators stranded at either end ("Call
-  /// the caterer ,", "：整理报销"). Connecting words ("on", "by", "for") are
-  /// consumed with the phrase they introduce, so a title's own words are never
-  /// trimmed.
+  /// the caterer ,", "：整理报销", "اتصل بأمي ،", "मीटिंग ।"). The Arabic comma and
+  /// semicolon count as separators like the others, and the Devanagari danda
+  /// ends the sentence a removed phrase stood in without a gap before it.
+  /// Connecting words ("on", "by", "for") are consumed with the phrase they
+  /// introduce, so a title's own words are never trimmed.
   private static func cleanTitle(_ text: String) -> String {
     var title = text.replacingOccurrences(of: #"\s*[,，](\s*[,，])+"#, with: ",", options: .regularExpression)
-    title = title.replacingOccurrences(of: #"\s+([,，])"#, with: "$1", options: .regularExpression)
+    title = title.replacingOccurrences(of: #"\s*،(\s*[،,，])+"#, with: "،", options: .regularExpression)
+    title = title.replacingOccurrences(of: #"\s+([,，،।])"#, with: "$1", options: .regularExpression)
     title = title.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
     title = title.replacingOccurrences(
-      of: #"^[\s,;:\-–—，、：；]+|[\s,;:\-–—，、：；]+$"#, with: "", options: .regularExpression)
+      of: #"^[\s,;:\-–—，、：；،؛]+|[\s,;:\-–—，、：；،؛]+$"#, with: "", options: .regularExpression)
     return title.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 }

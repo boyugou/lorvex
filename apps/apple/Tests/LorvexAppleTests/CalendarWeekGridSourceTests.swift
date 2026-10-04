@@ -131,6 +131,23 @@ func calendarWeekGridEventBlocksUseCompactMetrics() throws {
   #expect(!source.contains(".background(color.opacity(0.22)"))
 }
 
+/// Overlap can split a lane too narrow for a word. Both block kinds then draw
+/// the shared compact title, which fits the longest word or draws nothing,
+/// instead of letting the title break letter by letter, and the tooltip names
+/// the block.
+@Test
+func calendarWeekGridBlocksGoCompactInNarrowLanes() throws {
+  for name in ["CalendarWeekGridEventBlock", "CalendarWeekGridTaskBlock"] {
+    let source = try String(
+      contentsOf: packageRoot().appending(path: "Sources/LorvexApple/Views/\(name).swift"),
+      encoding: .utf8
+    )
+    #expect(source.contains("laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth"))
+    #expect(source.contains("LorvexCalendarCompactBlockTitle("))
+    #expect(source.contains(".help(isCompact ? label : \"\")"))
+  }
+}
+
 /// The previous and next buttons step with ⌘ and an arrow key, bound through
 /// `lorvexStepShortcut` so the key follows the chevron in a right-to-left
 /// layout (`LorvexLayoutDirectionTests` pins the mapping).

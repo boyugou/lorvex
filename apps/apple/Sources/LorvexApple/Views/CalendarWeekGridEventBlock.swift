@@ -4,6 +4,7 @@ import SwiftUI
 enum CalendarEventBlockMetrics {
   static let verticalPadding: CGFloat = 2
   static let horizontalPadding: CGFloat = 4
+  static let compactTrailingPadding: CGFloat = 1
   static let laneGap: CGFloat = 2
   static let cornerRadius: CGFloat = CalendarWeekGridMetrics.eventCornerRadius
   static let accentRailWidth: CGFloat = 2.5
@@ -47,14 +48,30 @@ extension CalendarWeekGridView {
       block.event.editable && !block.event.allDay && !block.event.supportsScopedMutation
       && !block.event.isMultiDay
     let showsResizeGrips = isSelected || hoveredEventID == block.event.id
+    // Overlap can leave a lane too narrow for a time line or a word: it then
+    // shows the title alone, and the tooltip carries the rest.
+    let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
+    let isTight = baseHeight < LorvexDesign.CalendarMetrics.tightBlockHeight
+    let label = calendarEventAccessibilityLabel(block.event)
 
-    return LorvexCalendarBlockText(
-      title: block.event.title,
-      time: block.timeLabel,
-      range: block.rangeLabel,
-      verticalPadding: CalendarEventBlockMetrics.verticalPadding
+    return Group {
+      if isCompact {
+        LorvexCalendarCompactBlockTitle(block.event.title)
+          .padding(.vertical, isTight ? 0 : CalendarEventBlockMetrics.verticalPadding)
+      } else {
+        LorvexCalendarBlockText(
+          title: block.event.title,
+          time: block.timeLabel,
+          range: block.rangeLabel,
+          verticalPadding: CalendarEventBlockMetrics.verticalPadding
+        )
+      }
+    }
+    .padding(.leading, CalendarEventBlockMetrics.horizontalPadding)
+    .padding(
+      .trailing,
+      isCompact ? CalendarEventBlockMetrics.compactTrailingPadding : CalendarEventBlockMetrics.horizontalPadding
     )
-    .padding(.horizontal, CalendarEventBlockMetrics.horizontalPadding)
     .frame(
       width: max(laneWidth - CalendarEventBlockMetrics.laneGap, 8),
       height: renderedHeight,
@@ -90,7 +107,7 @@ extension CalendarWeekGridView {
       }
     }
     .overlay(alignment: .topTrailing) {
-      if block.event.editable && !isEditable {
+      if block.event.editable && !isEditable && !isCompact {
         inGridEditSheetHint(for: block)
       }
     }
@@ -147,9 +164,10 @@ extension CalendarWeekGridView {
       selectEvent(block.event)
       return .handled
     }
+    .help(isCompact ? label : "")
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
-    .accessibilityLabel(calendarEventAccessibilityLabel(block.event))
+    .accessibilityLabel(label)
     .contextMenu { eventBlockContextMenu(block.event) }
   }
 

@@ -27,15 +27,7 @@ struct ListDetailPane: View {
 
           WorkspaceReviewList(taskNavigation: store.arrowKeyTaskNavigation(on: .selectedList)) {
             QuickAddRow(
-              placeholder: String(
-                format: String(
-                  localized: "list_detail.quick_add.placeholder",
-                  defaultValue: "Add a task to “%@”",
-                  table: "Localizable",
-                  bundle: LorvexL10n.bundle
-                ),
-                detail.list.displayName
-              ),
+              placeholder: AppStore.quickAddPlaceholder(listName: detail.list.displayName),
               focusToken: store.quickAddFocusToken,
               preview: store.quickAddPreview
             ) { text in

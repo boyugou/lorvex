@@ -223,6 +223,22 @@ extension TaskDetailView {
         .accessibilityIdentifier("task.detail.addToCalendar")
       }
 
+      Button {
+        openWindow(id: LorvexWindowID.stickyTaskGroupID, value: StickyTaskRef(taskID: task.id))
+      } label: {
+        Label(
+          String(localized: "task_detail.pin_sticky", defaultValue: "Pin as Sticky", table: "Localizable", bundle: LorvexL10n.bundle),
+          systemImage: "pin")
+      }
+      .help(
+        String(
+          localized: "task_detail.pin_sticky.help",
+          defaultValue: "Open this task in a floating sticky window",
+          table: "Localizable",
+          bundle: LorvexL10n.bundle)
+      )
+      .accessibilityIdentifier("task.detail.pinSticky")
+
       Divider()
 
       Button(role: .destructive) {

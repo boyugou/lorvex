@@ -768,10 +768,18 @@ widgets, and in Shortcuts.
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation, and may drop the copula ("कुछ प्लान नहीं").
   Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads no Hindi words; for a Hindi
-  reader it reads English and Chinese only. The Hindi capture hint therefore
-  keeps its English example words ("tomorrow", "3pm", "every Monday") and
-  introduces them as "अंग्रेज़ी शब्द".
+- The capture parser (`LorvexCaptureParser`) reads Hindi day, date, time,
+  duration, repeat, and priority words for a user who reads Hindi, so the Hindi
+  capture hint gives Hindi examples (“कल”, “शाम 5 बजे”, “हर सोमवार”, “20 मिनट”,
+  “#सूची”). Hindi says a clock time with बजे after the hour, so the time example
+  carries it. कल is read as tomorrow and परसों as the day after tomorrow and
+  never as a past day, because the app writes the past day बीता कल; a line in
+  the past tense stays unread. The parser reads the Devanagari digits as Latin
+  ones, the precomposed nukta letters as their base consonants, and the
+  candrabindu as the anusvara, accepts a nukta typed as a separate sign or left
+  out, and the title keeps what was typed. Hindi written in Latin letters is not
+  read. The examples are Devanagari, written left to right like the rest of the
+  string, so the hint needs no bidirectional isolate.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
   that name the app exactly once, in front of its postposition
   ("${applicationName} में कार्य जोड़ें").
@@ -857,21 +865,25 @@ on the Mac, iPhone, watch, widgets, and in Shortcuts.
   format, which attaches و to the next item, so the "and N more" that ends a
   Siri reply (`system.list.more`) is only "%lld أخرى".
 - No bidirectional control characters are written into a catalog unless a
-  capture shows a string rendering wrongly. Two strings carry a left-to-right
+  capture shows a string rendering wrongly. One string carries a left-to-right
   isolate (U+2066 and U+2069) because the surrounding Arabic reorders what is
   inside it: the keyboard shortcut on the last page of the first-run wizard
-  (`setup.done.capture.detail`) displays "⌘N" as "N⌘" otherwise, and the
-  example "20 min" in the capture hint (`capture.footer.words`) displays as
-  "min 20", because a number that follows an Arabic letter is laid out right to
-  left together with the word beside it.
+  (`setup.done.capture.detail`) displays "⌘N" as "N⌘" otherwise. The capture
+  hint (`capture.footer.words`) needs none, since its examples hold no Latin
+  text: a Latin word that follows a number inside Arabic text is laid out right
+  to left together with the number ("20 min" would display as "min 20").
 - Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation ("سبعة أيام" for the menu bar panel's Next 7 Days
   switch, "تم البدء" for a started task). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) reads no Arabic words; for an
-  Arabic reader it reads English and Chinese only. The Arabic capture hint
-  therefore keeps its English example words ("tomorrow", "3pm", "every Monday", "20 min")
-  and introduces them as "الكلمات الإنجليزية".
+- The capture parser (`LorvexCaptureParser`) reads Arabic day, date, time,
+  duration, repeat, and priority words for a user who reads Arabic, so the
+  Arabic capture hint gives Arabic examples ("غدًا", "الساعة 3 مساءً", "كل
+  اثنين", "20 دقيقة"). Arabic says a clock time with "الساعة", so the time
+  example says it. The parser reads the letters that are spelled in more than
+  one way as one (أ, إ, آ, and ٱ as ا, ى as ي, ة as ه) and ignores vowel signs
+  and tatweel, and the title keeps what was typed. The hint's examples hold no
+  Latin text, so they need no bidirectional isolate.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are masculine imperatives
   that name the app exactly once ("أضف مهمة إلى ${applicationName}").
 

@@ -115,7 +115,7 @@ public struct WidgetSnapshotProjector: Sendable {
 
     let habitSummaries: [WidgetSnapshot.HabitSummary] =
       habitCatalog?.habits
-        .filter { !$0.archived }
+        .filter { !$0.archived && $0.isListed(on: todayYmd) }
         .map { habit in
           WidgetSnapshot.HabitSummary(
             id: habit.id,

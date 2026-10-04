@@ -316,8 +316,14 @@ func mobileCycleCoalescesOverlappingTriggersAndRetainsProgress() async throws {
 /// A task action returns once the store shows it, not once iCloud has it: the
 /// sync pass the write starts runs on its own, so the task can be acted on
 /// again, and the action's feedback plays, while the pass is still sending.
+///
+/// A regression is a hang (an action that waited for the pass never returns
+/// while the gate holds it), which the time limit turns into a failure. The
+/// limit is well above the length of a full suite run, because the suite's
+/// main-actor tests queue for one actor and each test's clock includes its
+/// wait: this test reads about a minute in a run that finishes in 75 seconds.
 @MainActor
-@Test(.timeLimit(.minutes(1)))
+@Test(.timeLimit(.minutes(5)))
 func mobileTaskActionDoesNotWaitForItsSyncPass() async throws {
   let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let (store, sync) = makeLiveStore(core: core)

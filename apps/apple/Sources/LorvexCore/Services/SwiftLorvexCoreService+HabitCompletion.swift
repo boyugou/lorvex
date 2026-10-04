@@ -16,7 +16,7 @@ import LorvexWorkflow
 /// applies the same upsert across many habits in one transaction.
 ///
 /// A day counts as "completed" when its `habit_completions.value >=
-/// target_count` (matching `Overview.loadHabitSummary`).
+/// target_count`.
 extension SwiftLorvexCoreService {
 
   // MARK: - Reads

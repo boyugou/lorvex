@@ -21,7 +21,14 @@
 # LORVEX_PREVIEW_NOW=17:45, after the day's meetings, for the done sentence),
 # or `overbooked` (more estimated work than free time), or `-uiPreviewEmptyStore`
 # to open every workspace on an empty store, as someone sees the app before
-# adding anything (stops that need a task, habit, or list are skipped).
+# adding anything (stops that need a task, habit, or list are skipped), or
+# `-lorvexSeedStressData` to add the layout-stress content (very long titles and
+# list names, ten tags, a 25-item checklist, overlapping, all-day and overnight
+# events, a crowded day, long habit and memory text) on top of the seeded day.
+# It adds the stops tasks-inspector-tags, tasks-inspector-checklist,
+# tasks-inspector-dependencies, and habits-inspector-long, and points the list
+# stops (tasks-list, list-window, palette-jump, sheet-editList) at the list with
+# the very long name.
 # Requires a debug build first: `swift build -j 4 --product LorvexApple`.
 # Output: <outdir>/<workspace>-<appearance>.png for today, today-suggestion
 # (Today with suggested times waiting in the schedule pane), today-event (a

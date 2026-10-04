@@ -8,6 +8,9 @@ extension TaskDetailView {
   /// The list and priority live in the property sentence below, and the
   /// started state in the Start toggle under the header, so this block does
   /// not repeat them. Nothing here reports save state: the panel autosaves.
+  /// The inspector's ✕ is the only control beside the title, so a long title
+  /// wraps at the width the habit inspector's name has; Pin as Sticky is in the
+  /// More menu under the header.
   func headerSection(task: LorvexTask) -> some View {
     InspectorPanel(accessibilityIdentifier: "task.detail.header.panel", chrome: .header) {
       HStack(alignment: .top, spacing: LorvexDesign.Spacing.s) {
@@ -21,7 +24,9 @@ extension TaskDetailView {
           )
           .font(LorvexDesign.Typography.screenTitle)
           .textFieldStyle(.plain)
-          .lineLimit(1...4)
+          // No upper cap: the inspector scrolls, and a cap would clip the rest
+          // of a long title with no ellipsis to say so.
+          .lineLimit(1...)
           .fixedSize(horizontal: false, vertical: true)
           .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
           .focused($titleFieldFocused)
@@ -38,10 +43,7 @@ extension TaskDetailView {
           statusPills(task: task)
         }
 
-        HStack(spacing: 0) {
-          pinAsStickyButton(task: task)
-          hideInspectorButton
-        }
+        hideInspectorButton
       }
     }
   }
@@ -107,20 +109,6 @@ extension TaskDetailView {
       }
       .padding(.top, 1)
       .accessibilityIdentifier("task.detail.header.pills")
-    }
-  }
-
-  private func pinAsStickyButton(task: LorvexTask) -> some View {
-    LorvexIconButton(
-      systemImage: "pin",
-      label: String(
-        localized: "task_detail.pin_sticky.help",
-        defaultValue: "Open this task in a floating sticky window",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle),
-      accessibilityIdentifier: "task.detail.pinSticky"
-    ) {
-      openWindow(id: LorvexWindowID.stickyTaskGroupID, value: StickyTaskRef(taskID: task.id))
     }
   }
 

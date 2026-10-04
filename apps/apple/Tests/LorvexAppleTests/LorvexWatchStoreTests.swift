@@ -37,6 +37,52 @@ struct LorvexWatchStoreTests {
     #expect(store.error == nil)
   }
 
+  @Test("refresh lists the habits that are on for the day and leaves a resting one out")
+  func refreshLeavesOutAHabitOnItsRestDay() async throws {
+    let service = try makeInMemoryCore()
+    _ = try await service.createHabit(
+      name: "Water", cue: nil, icon: nil, color: nil, targetCount: 1, cadence: .daily,
+      milestoneTarget: nil)
+    _ = try await service.createHabit(
+      name: "Gym", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "weekly", weekdays: [0, 2, 4]),
+      milestoneTarget: nil)
+
+    // 2026-05-26 is a Tuesday.
+    let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-26")
+    await store.refresh()
+
+    #expect(store.habits.map(\.name) == ["Water"])
+  }
+
+  @Test("refresh lists a monthly habit from its day and a times-per-week habit until its quota is met")
+  func refreshListsPeriodHabitsWhileTheyAreOpen() async throws {
+    let service = try makeInMemoryCore()
+    _ = try await service.createHabit(
+      name: "Rent", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "monthly", dayOfMonth: 20),
+      milestoneTarget: nil)
+    _ = try await service.createHabit(
+      name: "Taxes", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "monthly", dayOfMonth: 28),
+      milestoneTarget: nil)
+    _ = try await service.createHabit(
+      name: "Run", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "times_per_week", perPeriodTarget: 2),
+      milestoneTarget: nil)
+    let swim = try await service.createHabit(
+      name: "Swim", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "times_per_week", perPeriodTarget: 1),
+      milestoneTarget: nil)
+    // The week of Monday 2026-05-25 already holds Swim's one check-in.
+    _ = try await service.completeHabit(id: swim.id, date: "2026-05-25")
+
+    let store = LorvexWatchStore(core: service, logicalDayOverride: "2026-05-26")
+    await store.refresh()
+
+    #expect(store.habits.map(\.name) == ["Rent", "Run"])
+  }
+
   @Test("isLoading is false after refresh completes")
   func isLoadingFalseAfterRefresh() async throws {
     let service = try await makeSeededInMemoryCore()

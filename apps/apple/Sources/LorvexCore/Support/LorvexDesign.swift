@@ -166,12 +166,31 @@ public enum LorvexDesign {
     /// (`LorvexCalendarBlockText`).
     public static let tightBlockHeight: CGFloat = 16
 
-    /// Lane width below which a timed block on the phone grid goes compact:
-    /// its title alone, in ``compactBlockText``, wrapping as far as the block
-    /// is tall, with no time line and no completion ring. A seven-day week on
-    /// a phone gives each day about 44pt, where a title beside a ring or over
-    /// a time keeps only a letter or two.
+    /// Lane width below which a timed block goes compact: its title alone
+    /// (`LorvexCalendarCompactBlockTitle`), wrapping as far as the block is
+    /// tall, with no time line and no completion ring. A seven-day week on a
+    /// phone gives each day about 44pt, and a Mac week of three overlapping
+    /// blocks in a 1440pt window about 54pt a lane, where a title beside a
+    /// ring or over a time keeps only a letter or two.
     public static let compactLaneWidth: CGFloat = 64
+
+    /// The weight of a timed block's title. The Mac's blocks are smaller and
+    /// denser than the phone's, so their titles take a heavier weight to stay
+    /// legible.
+    public static var blockTitleWeight: Font.Weight {
+      #if os(macOS)
+        .semibold
+      #else
+        .medium
+      #endif
+    }
+
+    /// Height of the all-day strip, at the default text size on a phone, beyond
+    /// which it scrolls within itself: about four and a half rows of pills, the
+    /// half row showing that more follow. The strip sits above the hours, so a
+    /// day with a dozen unscheduled tasks would otherwise push the hours off the
+    /// screen. A wide layout allows twice as much.
+    public static let allDayStripMaxHeight: CGFloat = 124
 
     /// The title face of a compact block (``compactLaneWidth``) and of the
     /// all-day pills in columns that narrow: SF's condensed width, so a

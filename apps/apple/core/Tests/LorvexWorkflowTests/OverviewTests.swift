@@ -91,7 +91,6 @@ final class OverviewTests: XCTestCase {
     // The schema seeds the `inbox` list; it should appear with an open count.
     XCTAssertTrue(snapshot.lists.contains { $0.id == "inbox" })
     XCTAssertNil(snapshot.briefing)
-    XCTAssertEqual(snapshot.habits.count, 0)
   }
 
   func testBriefingIsTheStoredTextTrimmed() throws {

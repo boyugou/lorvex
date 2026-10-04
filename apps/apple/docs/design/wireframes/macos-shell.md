@@ -101,8 +101,9 @@ pane's own header.
   `selectedHabitID` observers in `AppStore`), and opening a Today event closes
   an open task (`toggleTodayEventSelection`). Navigating to a workspace that
   carries no selection clears it.
-- "Pin as Sticky" (task detail header or task right-click menu) opens a floating,
-  always-on-top sticky note window for the task (`Views/StickyTaskWindow.swift`).
+- "Pin as Sticky" (the task detail's More menu or the task right-click menu) opens
+  a floating, always-on-top sticky note window for the task
+  (`Views/StickyTaskWindow.swift`).
 - A list row's context menu offers Edit, Open in New Window (a detached window
   hosting `ListDetailPane`), Move Up/Down, Archive, and Delete. Delete always
   asks first: an empty list is deleted outright, while a list that still holds

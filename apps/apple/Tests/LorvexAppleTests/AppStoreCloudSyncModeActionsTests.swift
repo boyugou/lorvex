@@ -47,7 +47,7 @@ struct AppStoreCloudSyncModeActionsTests {
     await store.turnOnCloudSync(request: request)?.value
 
     #expect(store.cloudSyncMode == .live)
-    #expect(try await sync.pause.loadPauseReason() == nil, "turning sync on is the explicit re-opt-in")
+    #expect(await sync.pause.loadPauseReason() == nil, "turning sync on is the explicit re-opt-in")
     #expect(store.cloudSyncPauseReason == nil)
   }
 
@@ -90,7 +90,7 @@ struct AppStoreCloudSyncModeActionsTests {
     for _ in 0..<1_000 where await sync.controller.state != .stopped { await Task.yield() }
     #expect(store.cloudSyncMode == .off)
     #expect(await sync.controller.state == .stopped)
-    #expect(try sync.engines.engines[0].cancelled)
+    #expect(sync.engines.engines[0].cancelled)
 
     let second = try #require(store.makeCloudDeletionReenableRequest())
     await store.turnOnCloudSync(request: second)?.value

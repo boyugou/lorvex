@@ -139,6 +139,15 @@ deep editing. Tab-first with `NavigationStack`.
   the rest in the canonical order, with no section headers, the day's habits
   as rings, and Done, which folds on request. Every task row swipes and
   long-presses as it does anywhere in the app. ✅
+- Habits are listed by what is open. A habit pinned to weekdays rests on
+  its other days; a monthly habit appears from its day of the month until it
+  is done; a times-per-week habit stays until the week's quota is met. Each
+  leaves the Today habit grid, the Mac menu bar, the widgets and the watch
+  when it is not open, unless it was checked in that day
+  (`LorvexHabit.isListed(on:)`). The day reviews' habit grid and count take
+  the habits that were due that day or checked in that day
+  (`LorvexHabit.isReviewed(on:)`), so a day a habit was not due never reads as
+  that habit missed. The Habits pages keep listing every habit. ✅
 - The leading swipe starts or pauses a task; the trailing swipe defers it to
   tomorrow. Both also reach from the context menu and the task detail. ✅
 - The schedule sheet's ⋯ menu holds Suggest Times, which lays today's open

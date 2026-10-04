@@ -44,12 +44,22 @@ final class DayReviewTests: XCTestCase {
       ])
   }
 
-  private func insertHabit(_ db: Database, id: String, target: Int, archived: Int = 0) throws {
+  /// `weekdays` are Monday-first (0=Mon … 6=Sun) and belong to a `weekly` habit;
+  /// `dayOfMonth` belongs to a `monthly` one.
+  private func insertHabit(
+    _ db: Database, id: String, target: Int, archived: Int = 0,
+    frequencyType: String = "daily", weekdays: [Int] = [], dayOfMonth: Int? = nil
+  ) throws {
     try db.execute(
       sql: "INSERT INTO habits (id, name, frequency_type, target_count, archived, lookup_key, "
-        + "version, created_at, updated_at) "
-        + "VALUES (?, ?, 'daily', ?, ?, ?, ?, '2026-04-01T00:00:00Z', '2026-04-01T00:00:00Z')",
-      arguments: [id, id, target, archived, id, Self.version])
+        + "day_of_month, version, created_at, updated_at) "
+        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, '2026-04-01T00:00:00Z', '2026-04-01T00:00:00Z')",
+      arguments: [id, id, frequencyType, target, archived, id, dayOfMonth, Self.version])
+    for weekday in weekdays {
+      try db.execute(
+        sql: "INSERT INTO habit_weekdays (habit_id, weekday) VALUES (?, ?)",
+        arguments: [id, weekday])
+    }
   }
 
   private func insertHabitCompletion(_ db: Database, habitId: String, date: String, value: Int)
@@ -257,6 +267,103 @@ final class DayReviewTests: XCTestCase {
       try DayReview.loadDaySummary(db, date: Self.day, completedLimit: 5, dueOpenLimit: 5)
     }
     XCTAssertEqual(inherited.eventCount, 1)
+  }
+
+  /// A habit counts on the days its cadence makes it due: a daily habit and a
+  /// weekly one with no pinned weekdays every day, a weekday-pinned one on its
+  /// weekdays, a monthly one on its day of the month, and a times-per-week one
+  /// on none. 2026-04-06 is a Monday.
+  func testLoadDaySummaryCountsEachHabitOnlyOnTheDaysItIsDue() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try store.writer.write { db in
+      try setLosAngelesTimezone(db)
+      try insertHabit(db, id: "gym", target: 1, frequencyType: "weekly", weekdays: [0, 2, 4])
+      try insertHabit(db, id: "water", target: 1)
+      try insertHabit(db, id: "plan", target: 1, frequencyType: "weekly")
+      try insertHabit(db, id: "run", target: 1, frequencyType: "times_per_week")
+      try insertHabit(db, id: "rent", target: 1, frequencyType: "monthly", dayOfMonth: 8)
+    }
+    let totals: [(day: String, total: Int64)] = [
+      ("2026-04-06", 3), ("2026-04-07", 2), ("2026-04-08", 4), ("2026-04-09", 2),
+      ("2026-04-10", 3), ("2026-04-11", 2), ("2026-04-12", 2),
+    ]
+    for (day, total) in totals {
+      let summary = try store.writer.read { db in
+        try DayReview.loadDaySummary(db, date: day, completedLimit: 5, dueOpenLimit: 5)
+      }
+      XCTAssertEqual(summary.habitsTotal, total, day)
+      XCTAssertEqual(summary.habitsCompleted, 0, day)
+    }
+  }
+
+  /// A check-in on a rest day is counted: the habit is in the day's total, and
+  /// in its completed count once the target is met.
+  func testLoadDaySummaryKeepsACheckInMadeOnARestDay() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    let tuesday = "2026-04-07"
+    try store.writer.write { db in
+      try setLosAngelesTimezone(db)
+      try insertHabit(db, id: "water", target: 1)
+      try insertHabit(db, id: "gym", target: 1, frequencyType: "weekly", weekdays: [0, 2, 4])
+      try insertHabit(db, id: "stretch", target: 2, frequencyType: "weekly", weekdays: [0])
+      try insertHabit(db, id: "read", target: 1, frequencyType: "weekly", weekdays: [3])
+      try insertHabitCompletion(db, habitId: "gym", date: tuesday, value: 1)
+      try insertHabitCompletion(db, habitId: "stretch", date: tuesday, value: 1)
+    }
+    let summary = try store.writer.read { db in
+      try DayReview.loadDaySummary(db, date: tuesday, completedLimit: 5, dueOpenLimit: 5)
+    }
+
+    // water (daily), gym (checked in), stretch (checked in, 1 of 2); read is
+    // pinned to Thursday and was not checked in.
+    XCTAssertEqual(summary.habitsTotal, 3)
+    XCTAssertEqual(summary.habitsCompleted, 1)  // gym met its target
+  }
+
+  /// A monthly habit is due on its day of the month, clamped to the month's last
+  /// day (the 31st falls on the 30th in April and the 28th in February), and on
+  /// the 1st when it names no day.
+  func testLoadDaySummaryClampsAMonthlyHabitToTheMonthsLastDay() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try store.writer.write { db in
+      try setLosAngelesTimezone(db)
+      try insertHabit(db, id: "bills", target: 1, frequencyType: "monthly", dayOfMonth: 31)
+      try insertHabit(db, id: "rent", target: 1, frequencyType: "monthly")
+    }
+    let totals: [(day: String, total: Int64)] = [
+      ("2026-04-01", 1), ("2026-04-29", 0), ("2026-04-30", 1),
+      ("2026-02-28", 1), ("2026-01-30", 0), ("2026-01-31", 1),
+    ]
+    for (day, total) in totals {
+      let summary = try store.writer.read { db in
+        try DayReview.loadDaySummary(db, date: day, completedLimit: 5, dueOpenLimit: 5)
+      }
+      XCTAssertEqual(summary.habitsTotal, total, day)
+    }
+  }
+
+  /// A times-per-week habit, or a monthly habit on a day other than its own, is
+  /// in the day's counts only when it was checked in that day.
+  func testLoadDaySummaryCountsAPeriodHabitOnlyOnADayItWasCheckedIn() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    let tuesday = "2026-04-07"
+    try store.writer.write { db in
+      try setLosAngelesTimezone(db)
+      try insertHabit(db, id: "run", target: 1, frequencyType: "times_per_week")
+      try insertHabit(db, id: "swim", target: 1, frequencyType: "times_per_week")
+      try insertHabit(db, id: "rent", target: 1, frequencyType: "monthly", dayOfMonth: 20)
+      try insertHabit(db, id: "bills", target: 1, frequencyType: "monthly", dayOfMonth: 25)
+      try insertHabitCompletion(db, habitId: "run", date: tuesday, value: 1)
+      try insertHabitCompletion(db, habitId: "rent", date: tuesday, value: 1)
+    }
+    let summary = try store.writer.read { db in
+      try DayReview.loadDaySummary(db, date: tuesday, completedLimit: 5, dueOpenLimit: 5)
+    }
+
+    // run and rent were checked in; swim has no particular day and bills falls
+    // on the 25th.
+    XCTAssertEqual(summary.habitsTotal, 2)
+    XCTAssertEqual(summary.habitsCompleted, 2)
   }
 
   func testLoadDaySummaryRejectsOutOfRangeLimit() throws {

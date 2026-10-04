@@ -1,0 +1,54 @@
+import Testing
+
+@testable import LorvexCore
+
+/// A compact calendar block's title shrinks only as far as its longest word
+/// needs to fit the block on one line, and a lane too narrow for a few letters
+/// draws no title.
+@Suite("Compact block title fit")
+struct LorvexCalendarCompactTitleFitTests {
+  @Test("Short words keep the full size")
+  func shortWordsKeepSize() {
+    #expect(LorvexCalendarCompactTitleFit.scale(title: "1:1 with Sam", size: 11, width: 40) == 1)
+  }
+
+  @Test("A word wider than the block shrinks the face to fit it")
+  func longWordShrinks() {
+    let scale = LorvexCalendarCompactTitleFit.scale(title: "Roadmap sync", size: 11, width: 30)
+    #expect(scale < 1)
+    #expect(scale >= LorvexCalendarCompactTitleFit.minimumScale)
+  }
+
+  @Test("The face never shrinks below the floor, and an unmeasured block keeps it whole")
+  func floorAndUnmeasured() {
+    #expect(
+      LorvexCalendarCompactTitleFit.scale(title: "Internationalization", size: 11, width: 10)
+        == LorvexCalendarCompactTitleFit.minimumScale)
+    #expect(LorvexCalendarCompactTitleFit.scale(title: "Roadmap", size: 11, width: 0) == 1)
+  }
+
+  @Test("A lane that an overlap has split too narrow for a few letters draws no title")
+  func narrowLaneDrawsNoTitle() {
+    // A phone week's day holds about 40pt of text in one lane, 16pt when two
+    // blocks overlap, and 8pt when three do.
+    #expect(LorvexCalendarCompactTitleFit.isLegible(width: 40, size: 11))
+    #expect(!LorvexCalendarCompactTitleFit.isLegible(width: 16, size: 11))
+    #expect(!LorvexCalendarCompactTitleFit.isLegible(width: 8, size: 11))
+  }
+
+  @Test("A Mac week's three overlapping blocks keep their titles until the window is very narrow")
+  func macWeekLanesStayLegible() {
+    // About 43pt of text per lane in a 1440pt window, about 31pt in 1100pt,
+    // and about 22pt when the window is squeezed toward its minimum.
+    #expect(LorvexCalendarCompactTitleFit.isLegible(width: 43, size: 11))
+    #expect(LorvexCalendarCompactTitleFit.isLegible(width: 31, size: 11))
+    #expect(!LorvexCalendarCompactTitleFit.isLegible(width: 22, size: 11))
+  }
+
+  @Test("The legible width grows with the face and waits for the first measurement")
+  func legibleWidthScalesWithTheFace() {
+    #expect(LorvexCalendarCompactTitleFit.isLegible(width: 30, size: 11))
+    #expect(!LorvexCalendarCompactTitleFit.isLegible(width: 30, size: 16))
+    #expect(!LorvexCalendarCompactTitleFit.isLegible(width: 0, size: 11))
+  }
+}

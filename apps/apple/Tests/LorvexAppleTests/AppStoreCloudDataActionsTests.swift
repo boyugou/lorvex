@@ -48,7 +48,7 @@ struct AppStoreCloudDataActionsTests {
     #expect(try sync.engine.queuedZoneDeletes() == [CloudSyncController.zoneName])
     #expect(settings.cloudSyncMode == .off, "the persisted mode flips off")
     #expect(store.cloudSyncMode == .off, "the runtime mode stops passes immediately")
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(store.cloudSyncPauseReason == .userDeletedZone)
   }
 
@@ -60,7 +60,7 @@ struct AppStoreCloudDataActionsTests {
     sync.confirmZoneDeletions()
 
     #expect(await store.deleteCloudDataEverywhere(settings: settings) == nil)
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
   }
 
   @MainActor
@@ -76,7 +76,7 @@ struct AppStoreCloudDataActionsTests {
     #expect(errorMessage != nil)
     #expect(settings.cloudSyncMode == .live)
     #expect(store.cloudSyncMode == .live)
-    #expect(try await sync.pause.loadPauseReason() == nil)
+    #expect(await sync.pause.loadPauseReason() == nil)
     #expect(store.cloudSyncPauseReason == nil)
   }
 
@@ -90,7 +90,7 @@ struct AppStoreCloudDataActionsTests {
     let request = try #require(store.makeCloudDeletionReenableRequest())
     await store.liftCloudDeletionPauseForExplicitReenable(request: request)
 
-    #expect(try await sync.pause.loadPauseReason() == nil, "turning sync back on is the re-opt-in")
+    #expect(await sync.pause.loadPauseReason() == nil, "turning sync back on is the re-opt-in")
     #expect(store.cloudSyncPauseReason == nil)
   }
 
@@ -105,7 +105,7 @@ struct AppStoreCloudDataActionsTests {
     await store.liftCloudDeletionPauseForExplicitReenable(request: request)
 
     #expect(
-      try await sync.pause.loadPauseReason() == .accountChanged,
+      await sync.pause.loadPauseReason() == .accountChanged,
       "an account-switch pause must not be lifted by a mode toggle")
   }
 
@@ -132,7 +132,7 @@ struct AppStoreCloudDataActionsTests {
 
     await store.liftCloudDeletionPauseForExplicitReenable(request: staleRequest)
 
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(settings.cloudSyncMode == .off)
     #expect(store.cloudSyncMode == .off)
   }
@@ -151,7 +151,7 @@ struct AppStoreCloudDataActionsTests {
     #expect(await store.deleteCloudDataEverywhere(settings: settings) == nil)
     await store.adoptCurrentCloudAccountAndResumeSync(request: staleRequest)
 
-    #expect(try await sync.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await sync.pause.loadPauseReason() == .userDeletedZone)
     #expect(store.cloudSyncPauseReason == .userDeletedZone)
   }
 }

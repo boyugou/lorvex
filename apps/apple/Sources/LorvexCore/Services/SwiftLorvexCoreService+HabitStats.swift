@@ -12,7 +12,7 @@ import LorvexWorkflow
 /// and longest streaks via `LorvexDomain`'s `computeHabitCurrentStreak` /
 /// `computeHabitLongestStreak`, plus today's value, total completions, and the
 /// trailing-30-day completion rate. A day counts as "completed" when its
-/// `habit_completions.value >= target_count` (matching `Overview.loadHabitSummary`).
+/// `habit_completions.value >= target_count`.
 /// `completionRate30d` is completed units over the cadence's scheduled
 /// occurrences due across the habit's active window — the trailing 30 days, or
 /// fewer for a habit younger than 30 days (see

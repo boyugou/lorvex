@@ -76,7 +76,7 @@ struct MenuBarStatusView: View {
             MenuBarTodayContent(
               page: page, events: store.todayScheduleEvents, logicalDay: store.logicalTodayDateString,
               nowMinutes: nowMinutes,
-              habits: store.habits?.habits.filter { !$0.archived } ?? [],
+              habits: store.habits?.habits.filter { !$0.archived }.listed(on: store.logicalTodayDateString) ?? [],
               isOverdue: { store.isOverdue($0) },
               complete: { task in
                 Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }

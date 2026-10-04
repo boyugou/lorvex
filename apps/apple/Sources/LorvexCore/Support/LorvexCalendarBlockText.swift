@@ -136,7 +136,7 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
 
   private var titleText: some View {
     Text(userContent: title)
-      .font(LorvexDesign.Typography.tertiaryText.weight(Self.titleWeight))
+      .font(LorvexDesign.Typography.tertiaryText.weight(LorvexDesign.CalendarMetrics.blockTitleWeight))
       .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
       .strikethrough(isDone)
   }
@@ -149,16 +149,6 @@ public struct LorvexCalendarBlockText<Accessory: View>: View {
       .monospacedDigit()
       .lineLimit(1)
       .fixedSize()
-  }
-
-  /// The Mac's blocks are smaller and denser than the phone's, so their
-  /// titles take a heavier weight to stay legible.
-  private static var titleWeight: Font.Weight {
-    #if os(macOS)
-      .semibold
-    #else
-      .medium
-    #endif
   }
 }
 

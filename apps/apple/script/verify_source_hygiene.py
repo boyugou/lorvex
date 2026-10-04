@@ -1104,7 +1104,12 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'InspectorCloseButton(accessibilityIdentifier: "task.detail.inspector.close")'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'store.selectedTaskID = nil'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'private var hideInspectorButton: some View'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'LorvexIconButton('),
+    # The inspector's ✕ is the only control beside the task title, so a long
+    # title wraps at the width the habit inspector's name has; Pin as Sticky is
+    # an item of the More menu.
+    ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'pinAsStickyButton'),
+    ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'LorvexIconButton('),
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.accessibilityIdentifier("task.detail.pinSticky")'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.fixedSize(horizontal: true, vertical: false)'),
     # Start, Defer, and the overflow share one chip face; the overflow's is
     # its symbol alone, never a prominent button.
@@ -1351,8 +1356,14 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'store.taskDetailDraftTaskID == task.id ? store.taskDetailPriority : task.priority'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'store.syncSelectedTaskDraft(force: true)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'axis: .vertical'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), '.lineLimit(1...4)'),
+    # The inspector scrolls, so a title, habit name, or checklist item wraps to
+    # as many lines as it needs: a capped vertical field clips the rest with no
+    # ellipsis to say so.
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), '.lineLimit(1...)'),
+    ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), '.lineLimit(1...4)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), '.lineLimit(2...4)'),
+    ('absent', ('file', 'Sources/LorvexApple/Views/HabitDetailHeader.swift'), '.lineLimit(1...3)'),
+    ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailChecklistSection.swift'), '.lineLimit(1...3)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), '.fixedSize(horizontal: false, vertical: true)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'func latenessSection('),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), '.frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)'),
@@ -2003,6 +2014,18 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexMobile/MobileCalendarAgendaRow.swift'), '.lineLimit(1)'),
     # --- scheduleRowsOfferCompletionToVoiceOver ---
     ('contains', ('file', 'Sources/LorvexMobile/MobileTodayScheduleTimelineSection.swift'), '.accessibilityAction(named: Text(MobileTaskActionCopy.completionToggle(isDone: isDone)))'),
+    # --- dayListsShowTheHabitsThatAreOnForTheDay ---
+    # A habit has days it is open and days it was due, so every list of a
+    # day's habits takes the matching `LorvexHabit` filter for its day instead
+    # of showing every habit: the open ones (`isListed(on:)`) on the Today
+    # grid, the menu bar, the widgets and the watch, and the ones that counted
+    # (`isReviewed(on:)`) in both day reviews.
+    ('contains', ('file', 'Sources/LorvexMobile/MobileTodayPage.swift'), '.listed(on: store.logicalTodayString)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/MenuBarStatusView.swift'), '.listed(on: store.logicalTodayDateString)'),
+    ('contains', ('file', 'Sources/LorvexWidgetKitSupport/WidgetSnapshotProjector.swift'), '$0.isListed(on: todayYmd)'),
+    ('contains', ('file', 'Sources/LorvexWatch/LorvexWatchStore.swift'), '$0.isListed(on: dateString)'),
+    ('contains', ('file', 'Sources/LorvexMobile/MobileStoreReviewDayReads.swift'), '.reviewed(on: date)'),
+    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreReviewDayActions.swift'), '.reviewed(on: date)'),
     # --- widgetButtonsAreDrawnByWidgetKit ---
     # WidgetKit draws only SwiftUI-rendered views. On macOS the borderless
     # button style is an AppKit control, so a widget shows its unsupported-view

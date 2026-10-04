@@ -54,10 +54,30 @@ struct MobileChecklistItemRow: View {
         .foregroundStyle(item.completedAt == nil ? Color.primary : Color.secondary)
     } icon: {
       Image(systemName: item.completedAt == nil ? "circle" : "checkmark.circle.fill")
-        .font(LorvexDesign.Typography.primaryText)
         .foregroundStyle(item.completedAt == nil ? Color.secondary : LorvexDesign.Palette.done)
     }
+    .labelStyle(MobileDetailGlyphLabelStyle())
     .padding(.vertical, LorvexDesign.Spacing.xs)
+  }
+}
+
+/// The label of a task-detail row that leads with a glyph, such as a checklist
+/// item or a reminder. The glyph is set in the title's face and sits on the
+/// title's first baseline, which centers it on the first line's capitals. It
+/// stands in the column a task row gives its circle, so the title starts where
+/// task rows and Waits On rows start theirs. A title that wraps therefore
+/// hangs under its own first line instead of the glyph centering against all
+/// of it. VoiceOver reads the title alone; the glyph is decoration.
+private struct MobileDetailGlyphLabelStyle: LabelStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.m) {
+      configuration.icon
+        .font(LorvexDesign.Typography.primaryText)
+        .mobileTaskCircleFrame(isSquare: false)
+        .accessibilityHidden(true)
+      configuration.title
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
   }
 }
 
@@ -78,9 +98,9 @@ struct MobileReminderRow: View {
         .font(LorvexDesign.Typography.primaryText)
     } icon: {
       Image(systemName: "bell")
-        .font(LorvexDesign.Typography.primaryText)
         .foregroundStyle(LorvexDesign.Palette.warning)
     }
+    .labelStyle(MobileDetailGlyphLabelStyle())
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
       if let removeReminder {

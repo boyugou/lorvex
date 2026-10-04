@@ -5,11 +5,12 @@ import LorvexCore
 /// tomorrow's agenda for the review of today, and the week review's week
 /// ahead and finished count per day.
 extension MobileStore {
-  /// The active habits with their completions on `date`, or nil when the read
-  /// fails, so the page keeps what it shows.
+  /// The active habits that count in `date`'s review
+  /// (``LorvexHabit/isReviewed(on:)``), with their completions that day, or
+  /// nil when the read fails, so the page keeps what it shows.
   func loadReviewHabits(date: String) async -> [LorvexHabit]? {
     guard let snapshot = try? await core.loadHabits(date: date) else { return nil }
-    return snapshot.habits.filter { !$0.archived }
+    return snapshot.habits.filter { !$0.archived }.reviewed(on: date)
   }
 
   /// Tomorrow's events and scheduled tasks, read for the day after the

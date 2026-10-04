@@ -187,7 +187,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     let state = await h.controller.start()
     #expect(state == .paused(.accountChanged))
     #expect(h.engines.engines.isEmpty)
-    #expect(try await h.pause.loadPauseReason() == .accountChanged)
+    #expect(await h.pause.loadPauseReason() == .accountChanged)
   }
 
   @Test func switchingBackToTheBoundAccountResumes() async throws {
@@ -196,7 +196,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     await h.account.set("account-a")
     let state = await h.controller.handleAccountChange()
     #expect(state == .running)
-    #expect(try await h.pause.loadPauseReason() == nil)
+    #expect(await h.pause.loadPauseReason() == nil)
   }
 
   @Test func adoptingTheNewAccountResetsZoneStateAndUploadsAgain() async throws {
@@ -522,7 +522,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
       saved: [], failed: records.map { ($0, CKError(.zoneNotFound)) })
 
     #expect(await h.controller.state == .paused(.userDeletedZone))
-    #expect(try await h.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await h.pause.loadPauseReason() == .userDeletedZone)
     #expect(try h.zoneCheckpoint() == nil)
   }
 
@@ -792,7 +792,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     _ = await h.controller.start()
     #expect(await h.controller.state == .running)
     #expect(try h.zoneCheckpoint() == "0")
-    #expect(try await h.pause.loadPauseReason() == nil)
+    #expect(await h.pause.loadPauseReason() == nil)
   }
 
   @Test func reenablingAfterDeletionStartsAFreshZone() async throws {
@@ -849,7 +849,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
 
     #expect(Set(engine.queuedZoneDeletes()) == [CloudSyncController.zoneName, "LorvexGeneration-e1-2"])
     #expect(await h.controller.state == .paused(.userDeletedZone))
-    #expect(try await h.pause.loadPauseReason() == .userDeletedZone)
+    #expect(await h.pause.loadPauseReason() == .userDeletedZone)
   }
 
   @Test func anUnconfirmedDeletionThrowsAndDoesNotPause() async throws {
@@ -859,7 +859,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     await #expect(throws: CloudSyncCloudDeletionIncomplete.self) {
       try await h.controller.deleteAllCloudData()
     }
-    #expect(try await h.pause.loadPauseReason() == nil)
+    #expect(await h.pause.loadPauseReason() == nil)
   }
 
   @Test func deletingWhenNothingExistsStillPauses() async throws {
@@ -897,7 +897,7 @@ private final class GatedAccountStatusChecker: CloudKitAccountStatusChecking, @u
     await #expect(throws: CloudSyncInboundApplyFailure.self) {
       _ = try await h.controller.syncNow()
     }
-    #expect(try h.engines.engines[0].sendCount == 0)
+    #expect(h.engines.engines[0].sendCount == 0)
   }
 
   @Test func syncNowIsNilWhileNotRunning() async throws {

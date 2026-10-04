@@ -161,11 +161,13 @@ private struct ChecklistItemRow: View {
         : LocalizedStringResource("task_detail.checklist.completed_a11y", defaultValue: "Completed", table: "Localizable", bundle: LorvexL10n.bundle)))
       .accessibilityAddTraits(item.completedAt == nil ? [] : .isSelected)
 
-      // Wrapping, not scrolling: a plain single-line field clips its overflow at
-      // the frame edge with no ellipsis, so in the inspector's narrow column an
-      // ordinary item such as "Confirm session topics with the facilitators"
-      // was readable only by clicking into it and scrolling. The same
-      // `axis: .vertical` shape carries the task title in this inspector.
+      // Wrapping to as many lines as the item needs, not scrolling: a plain
+      // single-line field clips its overflow at the frame edge with no
+      // ellipsis, and a capped one clips after its last line, so in the
+      // inspector's narrow column an ordinary item such as "Confirm session
+      // topics with the facilitators" would be readable only by clicking into
+      // it and scrolling. The same `axis: .vertical` shape carries the task
+      // title in this inspector.
       TextField(
         String(localized: "task_detail.checklist.item_placeholder", defaultValue: "Checklist item", table: "Localizable", bundle: LorvexL10n.bundle),
         text: store.checklistDraftBinding(for: item),
@@ -174,7 +176,7 @@ private struct ChecklistItemRow: View {
         .font(LorvexDesign.Typography.primaryText)
         .textFieldStyle(.plain)
         .foregroundStyle(item.completedAt == nil ? Color.primary : Color.secondary)
-        .lineLimit(1...3)
+        .lineLimit(1...)
         .fixedSize(horizontal: false, vertical: true)
         .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
         .layoutPriority(1)

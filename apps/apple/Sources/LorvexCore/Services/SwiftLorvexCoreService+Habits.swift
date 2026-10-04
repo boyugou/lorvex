@@ -26,7 +26,7 @@ import LorvexWorkflow
 /// all three.
 ///
 /// A day counts as "completed" when its `habit_completions.value >=
-/// target_count` (matching `Overview.loadHabitSummary`).
+/// target_count`.
 extension SwiftLorvexCoreService {
 
   public func createHabit(

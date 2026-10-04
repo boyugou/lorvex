@@ -184,6 +184,7 @@ func mobileStorePostMutationBadgeUsesCanonicalUncappedCount() async throws {
 
 /// A reminder in the iPhone task detail is named the way the task's rows name
 /// a day, in the product time zone; an unreadable stored time shows as stored.
+@MainActor
 @Test
 func mobileReminderRowNamesTheDayAndTheTimeInTheProductZone() throws {
   let tokyo = try #require(TimeZone(identifier: "Asia/Tokyo"))

@@ -151,6 +151,60 @@ func widgetSnapshotProjectorPopulatesHabitsFromCatalog() {
 }
 
 @Test
+func widgetSnapshotProjectorLeavesOutAHabitOnItsRestDay() {
+  let now = Date(timeIntervalSince1970: 1_779_465_600)
+  let today = TodaySnapshot(summary: "", tasks: [], localChangeSequence: 0)
+  func habit(_ id: String, weekdays: [Int]?, completionsToday: Int = 0) -> LorvexHabit {
+    LorvexHabit(
+      id: id, name: id, icon: nil, color: nil, cue: nil,
+      frequencyType: weekdays == nil ? "daily" : "weekly", targetCount: 1,
+      completionsToday: completionsToday, totalCompletions: 0, completionRate30d: 0,
+      archived: false, weekdays: weekdays)
+  }
+  // 2026-05-26 is a Tuesday: the Monday-Wednesday-Friday habit rests, and one
+  // pinned to Mondays stays because it was checked in.
+  let catalog = HabitCatalogSnapshot(habits: [
+    habit("daily", weekdays: nil),
+    habit("mon-wed-fri", weekdays: [0, 2, 4]),
+    habit("tuesday", weekdays: [1]),
+    habit("checked-in", weekdays: [0], completionsToday: 1),
+  ])
+  let snapshot = WidgetSnapshotProjector(now: { now }).snapshot(
+    logicalDay: "2026-05-26", today: today, timezone: "UTC", habitCatalog: catalog)
+
+  #expect(snapshot.habits.map(\.id) == ["daily", "tuesday", "checked-in"])
+}
+
+@Test
+func widgetSnapshotProjectorListsAPeriodHabitOnlyWhileItIsOpen() {
+  let now = Date(timeIntervalSince1970: 1_779_465_600)
+  let today = TodaySnapshot(summary: "", tasks: [], localChangeSequence: 0)
+  func habit(
+    _ id: String, frequencyType: String, perPeriodTarget: Int? = nil, dayOfMonth: Int? = nil,
+    periodMetDays: Int = 0
+  ) -> LorvexHabit {
+    LorvexHabit(
+      id: id, name: id, icon: nil, color: nil, cue: nil, frequencyType: frequencyType,
+      targetCount: 1, completionsToday: 0, totalCompletions: 0, completionRate30d: 0,
+      archived: false, perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth,
+      periodMetDays: periodMetDays)
+  }
+  // 2026-05-26: a monthly habit shows from its day until the month has a met
+  // day, and a times-per-week habit until the week's quota is met.
+  let catalog = HabitCatalogSnapshot(habits: [
+    habit("monthly-open", frequencyType: "monthly", dayOfMonth: 20),
+    habit("monthly-done", frequencyType: "monthly", dayOfMonth: 20, periodMetDays: 1),
+    habit("monthly-later", frequencyType: "monthly", dayOfMonth: 28),
+    habit("weekly-open", frequencyType: "times_per_week", perPeriodTarget: 3, periodMetDays: 2),
+    habit("weekly-met", frequencyType: "times_per_week", perPeriodTarget: 3, periodMetDays: 3),
+  ])
+  let snapshot = WidgetSnapshotProjector(now: { now }).snapshot(
+    logicalDay: "2026-05-26", today: today, timezone: "UTC", habitCatalog: catalog)
+
+  #expect(snapshot.habits.map(\.id) == ["monthly-open", "weekly-open"])
+}
+
+@Test
 func widgetSnapshotProjectorListsTheActionableTasksInTodaysOrder() {
   let now = Date(timeIntervalSince1970: 1_779_465_600)
   let today = TodaySnapshot(
@@ -258,6 +312,7 @@ func widgetFamilyKindCoversAccessoryCircular() {
   #expect(WidgetFamilyKind.accessoryCircular.maxTaskRows == 0)
 }
 
+@MainActor
 @Test
 func systemWidgetDrawsEveryRowItsFamiliesBudget() {
   // The medium and large views draw their rows as static branches up to a

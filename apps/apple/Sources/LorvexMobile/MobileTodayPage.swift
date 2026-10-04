@@ -9,8 +9,9 @@ import SwiftUI
 /// tomorrow. Then the list: started tasks first, then the rest in the
 /// canonical order, with no section headers, because each row says what a
 /// header would (an overdue due date in red, a Started badge, the time of a
-/// timed task). The day's habits as rings and what is already done close the
-/// page; Done folds on request, since it is a record rather than work. Every
+/// timed task). The habits still open today (``LorvexHabit/isListed(on:)``)
+/// as rings and what is already done close the page; Done folds on request,
+/// since it is a record rather than work. Every
 /// task row swipes and long-presses the way a task row does
 /// anywhere in the app: Start or Pause on the leading edge, Complete and Defer
 /// on the trailing edge.
@@ -74,7 +75,7 @@ struct MobileTodayPage: View {
       } else {
         emptyDaySection
       }
-      if let habits = store.habits?.habits, !habits.isEmpty {
+      if let habits = store.habits?.habits.listed(on: store.logicalTodayString), !habits.isEmpty {
         habitsSection(habits)
       }
       if !store.doneTodayTasks.isEmpty {

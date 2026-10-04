@@ -278,9 +278,15 @@ extension SwiftLorvexCoreService {
   /// Set or clear a whole list's archive state. Archiving keeps the list and all
   /// its tasks (completed history under the list name) but drops it from the
   /// active catalog; unarchiving restores it. Bumps version + emits the list
-  /// upsert/changelog like any other list write.
+  /// upsert/changelog like any other list write. The inbox is never archived:
+  /// it is the list a task falls back to and the starting `default_list_id`, so
+  /// retiring it would hide the list new tasks are filed under.
   private func setListArchived(id: LorvexList.ID, archived: Bool) throws -> LorvexList {
-    try withWrite { db, hlc, deviceId in
+    if archived && id == inboxListId {
+      throw LorvexCoreError.unsupportedOperation(
+        "Cannot archive the inbox list: it is the canonical fallback for tasks and must stay active.")
+    }
+    return try withWrite { db, hlc, deviceId in
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()
       guard

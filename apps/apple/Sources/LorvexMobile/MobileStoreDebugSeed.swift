@@ -81,6 +81,23 @@
     }
   }
 
+  /// Dev/QA only: whether the launch seed (`-lorvexSeedSampleData` with its
+  /// stress and day-state additions) has finished writing and the store has
+  /// refreshed from it. A screenshot hook that reads the seeded data waits for
+  /// this, so what it shows does not depend on how far the seed had got.
+  enum MobileSeedDebugState {
+    @MainActor static var isFinished = false
+
+    /// Suspends until the seed has finished, or until `limit` has passed, so a
+    /// launch that never reaches the seed does not wait forever.
+    @MainActor static func waitUntilFinished(limit: Duration = .seconds(60)) async {
+      let deadline = ContinuousClock.now + limit
+      while !isFinished, ContinuousClock.now < deadline {
+        try? await Task.sleep(for: .milliseconds(200))
+      }
+    }
+  }
+
   extension MobileStore {
     /// Dev/QA only: seed a realistic sample dataset so populated layouts can be
     /// inspected in the simulator during the UI redesign. Triggered by the
@@ -91,6 +108,7 @@
     /// interface runs in (``LorvexSampleText``), so a capture run launched with
     /// `-AppleLanguages (zh-Hans)` shows Chinese tasks under a Chinese interface.
     public func debugSeedSampleDataIfNeeded() async {
+      defer { MobileSeedDebugState.isFinished = true }
       guard CommandLine.arguments.contains("-lorvexSeedSampleData") else { return }
       guard
         let existing = try? await core.listTasks(

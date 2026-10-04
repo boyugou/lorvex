@@ -155,6 +155,9 @@ struct MobileTaskEditSheet: View {
           localized: "sheet.edit_task", defaultValue: "Edit Task", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

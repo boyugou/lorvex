@@ -28,36 +28,37 @@ struct MobileHabitReminderList: View {
     if !policies.isEmpty || isInteractive {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         Label(String(localized: "habits.detail.reminders", defaultValue: "Reminders", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "bell")
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
+          .font(LorvexDesign.Typography.sectionHeader)
 
-        if sortedPolicies.isEmpty {
-          Text(String(localized: "habits.reminders.empty", defaultValue: "No reminders yet.", table: "Localizable", bundle: MobileL10n.bundle))
-            .font(LorvexDesign.Typography.secondaryText)
-            .foregroundStyle(.secondary)
-        } else {
-          ForEach(sortedPolicies) { policy in
-            reminderRow(policy)
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+          if sortedPolicies.isEmpty {
+            Text(String(localized: "habits.reminders.empty", defaultValue: "No reminders yet.", table: "Localizable", bundle: MobileL10n.bundle))
+              .font(LorvexDesign.Typography.secondaryText)
+              .foregroundStyle(.secondary)
+          } else {
+            ForEach(sortedPolicies) { policy in
+              reminderRow(policy)
+            }
+          }
+
+          if isInteractive {
+            Button {
+              timeSheet = MobileHabitReminderTimeContext(
+                policy: nil, time: MobileHabitReminderTime.defaultTime())
+            } label: {
+              Label(
+                String(localized: "habits.reminders.add", defaultValue: "Add Reminder", table: "Localizable", bundle: MobileL10n.bundle),
+                systemImage: "plus.circle.fill")
+            }
+            .disabled(isMutating)
+            .accessibilityIdentifier("mobileHabits.detail.reminders.add")
           }
         }
-
-        if isInteractive {
-          Button {
-            timeSheet = MobileHabitReminderTimeContext(
-              policy: nil, time: MobileHabitReminderTime.defaultTime())
-          } label: {
-            Label(
-              String(localized: "habits.reminders.add", defaultValue: "Add Reminder", table: "Localizable", bundle: MobileL10n.bundle),
-              systemImage: "plus.circle.fill")
-          }
-          .disabled(isMutating)
-          .accessibilityIdentifier("mobileHabits.detail.reminders.add")
-        }
+        .padding(LorvexDesign.Spacing.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+          LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
       }
-      .padding(LorvexDesign.Spacing.l)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(
-        .regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
       .accessibilityElement(children: .contain)
       .accessibilityIdentifier("mobileHabits.detail.reminders")
       .sheet(item: $timeSheet) { context in

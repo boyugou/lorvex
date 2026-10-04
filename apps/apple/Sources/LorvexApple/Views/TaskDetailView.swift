@@ -11,16 +11,14 @@ struct TaskDetailView: View {
   var body: some View {
     Group {
       if let task = store.selectedTask {
-        ScrollView {
-          InspectorColumn {
-            VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-              headerSection(task: task)
-              headerActions(task: task)
-              properties(task: task)
-              checklistSection(task: task)
-              notesSection(task: task)
-              assistantContextSection(task: task)
-            }
+        InspectorScrollView {
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+            headerSection(task: task)
+            headerActions(task: task)
+            properties(task: task)
+            checklistSection(task: task)
+            notesSection(task: task)
+            assistantContextSection(task: task)
           }
         }
         .frame(minWidth: 0, maxWidth: .infinity)

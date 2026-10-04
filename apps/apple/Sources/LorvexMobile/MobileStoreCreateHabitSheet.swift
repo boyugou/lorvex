@@ -68,6 +68,9 @@ struct MobileStoreCreateHabitSheet: View {
           idPrefix: "mobileCreateHabit")
       }
       .navigationTitle(String(localized: "sheet.new_habit", defaultValue: "New Habit", table: "Localizable", bundle: MobileL10n.bundle))
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle)) {
@@ -92,8 +95,8 @@ struct MobileStoreCreateHabitSheet: View {
         }
       }
     }
-    // Habit editor detents: medium + large for cue/goal edits without a full screen jump.
-    .mobileCompactEditorSheetPresentation()
+    // The habit form is a dense form, so it opens at full height.
+    .mobileFullEditorSheetPresentation()
     .onAppear { store.beginCreateHabitDraft() }
   }
 

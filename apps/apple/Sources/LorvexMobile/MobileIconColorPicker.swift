@@ -70,7 +70,6 @@ struct MobileIconColorPicker: View {
     Text(text)
       .font(.footnote.weight(.semibold))
       .foregroundStyle(.secondary)
-      .textCase(.uppercase)
   }
 
   private func swatch(_ hex: String) -> some View {

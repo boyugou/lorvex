@@ -58,16 +58,20 @@ extension SidebarView {
                         Label(String(localized: "list_row.move_down", defaultValue: "Move Down", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "arrow.down")
                     }
                     .disabled(listIndex == nil || listIndex == store.orderedLists.count - 1)
-                    Divider()
-                    Button {
-                        Task { await store.archiveList(list) }
-                    } label: {
-                        Label(String(localized: "list_row.archive.action", defaultValue: "Archive List", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "archivebox")
-                    }
-                    Button(role: .destructive) {
-                        listPendingDeletion = list
-                    } label: {
-                        Label(String(localized: "list_row.delete.action", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "trash")
+                    // The Inbox is the list every task falls back to: it can be
+                    // edited and moved, never archived or deleted.
+                    if !list.isInbox {
+                        Divider()
+                        Button {
+                            Task { await store.archiveList(list) }
+                        } label: {
+                            Label(String(localized: "list_row.archive.action", defaultValue: "Archive List", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "archivebox")
+                        }
+                        Button(role: .destructive) {
+                            listPendingDeletion = list
+                        } label: {
+                            Label(String(localized: "list_row.delete.action", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "trash")
+                        }
                     }
                 }
                 .dropDestination(for: LorvexTaskRef.self) { [store] refs, _ in

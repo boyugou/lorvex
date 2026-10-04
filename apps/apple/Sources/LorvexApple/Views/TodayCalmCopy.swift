@@ -11,8 +11,10 @@ enum TodayCalmCopy {
   /// The facts under the date, in reading order: tasks left, the estimated
   /// work, and meetings still ahead ("7 tasks left", "about 5 hr of work",
   /// "2 events"), drawn by ``LorvexFactsLine``. A day with nothing left says
-  /// so in one sentence instead.
-  static func facts(_ facts: LorvexCalmToday.Facts) -> [String] {
+  /// so in one sentence instead. `workIsStated` leaves the estimated work out
+  /// when the page states it elsewhere (the overbooked well's title), so one
+  /// figure is not read twice.
+  static func facts(_ facts: LorvexCalmToday.Facts, workIsStated: Bool = false) -> [String] {
     switch facts {
     case .empty:
       return [emptySentence]
@@ -20,7 +22,7 @@ enum TodayCalmCopy {
       return [allDoneSentence]
     case .day(let tasks, let workMinutes, let meetings):
       var parts = [tasksLeft(tasks)]
-      if let workMinutes, workMinutes > 0 {
+      if !workIsStated, let workMinutes, workMinutes > 0 {
         let length = lorvexUnbreakable(LorvexDurationFormat.hoursAndMinutes(roundedWork(workMinutes)))
         parts.append(
           String(

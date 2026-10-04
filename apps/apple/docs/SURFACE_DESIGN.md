@@ -67,7 +67,8 @@ day, works through Today's list, and drives keyboard-first workflows.
 - Today is one column holding the whole day, every task on it once; the
   window's trailing panel opens only for a selected task's detail. The column
   opens with the date and a line of facts ("5 tasks left · about 3 hr 30 min
-  of work · 2 events"), then the day's briefing when the assistant wrote one
+  of work · 2 events"; the estimate drops out while the overbooked decision
+  below states it), then the day's briefing when the assistant wrote one
   (`set_daily_briefing`), in the system face under the sparkles glyph — the
   same line the widgets show under their title. When the day holds more
   estimated work than the free working time left, one decision follows,

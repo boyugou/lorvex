@@ -240,6 +240,20 @@ func appStoreDeletesEmptyPreviewList() async throws {
 
 @MainActor
 @Test
+func appStoreKeepsTheInboxActiveWhenArchivingItIsAttempted() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+
+  await store.refresh()
+
+  let inbox = try #require(store.lists?.lists.first { $0.id == "inbox" })
+  await store.archiveList(inbox)
+  #expect(store.lists?.lists.contains { $0.id == inbox.id } == true)
+  #expect(store.archivedLists?.lists.contains { $0.id == inbox.id } != true)
+  #expect(store.errorMessage?.contains("Cannot archive the inbox list") == true)
+}
+
+@MainActor
+@Test
 func appStoreRejectsDeletingListWithTasks() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
 

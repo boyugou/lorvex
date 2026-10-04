@@ -65,6 +65,9 @@ struct MobileStoreCreateListSheet: View {
           localized: "sheet.new_list", defaultValue: "New List", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

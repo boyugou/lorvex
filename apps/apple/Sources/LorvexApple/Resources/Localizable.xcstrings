@@ -64283,7 +64283,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The hours Lorvex plans your tasks into. How full a day is counts against them, and suggested times stay inside them."
+            "value": "Lorvex plans your tasks into these hours. It judges how full a day is against them, and suggested times stay inside them."
           }
         },
         "es": {

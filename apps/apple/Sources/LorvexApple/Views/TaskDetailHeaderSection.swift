@@ -22,7 +22,7 @@ extension TaskDetailView {
             text: taskTitleBinding(for: task),
             axis: .vertical
           )
-          .font(LorvexDesign.Typography.screenTitle)
+          .font(LorvexDesign.Typography.detailTitle)
           .textFieldStyle(.plain)
           // No upper cap: the inspector scrolls, and a cap would clip the rest
           // of a long title with no ellipsis to say so.
@@ -62,7 +62,9 @@ extension TaskDetailView {
         .foregroundStyle(task.statusCircleStyle)
         .contentTransition(.symbolEffect(.replace))
         .symbolEffect(.bounce, value: isDone)
-        .frame(width: 32, height: 32)
+        // As tall as the title's first line, so the circle sits on that line
+        // whatever the title's length.
+        .frame(width: 32, height: 24)
         .contentShape(Circle())
     }
     .buttonStyle(.plain)

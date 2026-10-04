@@ -22,10 +22,9 @@ struct CommandPaletteResultRow: View {
             .font(LorvexDesign.Typography.secondaryText)
             .lineLimit(1)
           if let subtitle, !subtitle.isEmpty {
-            Text(subtitle)
+            subtitleLine(subtitle)
               .font(LorvexDesign.Typography.tertiaryText)
               .foregroundStyle(.secondary)
-              .lineLimit(1)
           }
         }
         Spacer(minLength: 0)
@@ -51,6 +50,21 @@ struct CommandPaletteResultRow: View {
       if hovering { hover() }
     }
     .accessibilityIdentifier("commandPalette.result.\(result.id)")
+  }
+
+  /// The dimmed line under a task row: the list's name, then the facts after
+  /// it (" · Due today"). A long list name is what truncates; the facts keep
+  /// their full width, since they are what tells two similar tasks apart.
+  @ViewBuilder
+  private func subtitleLine(_ subtitle: String) -> some View {
+    if let separator = subtitle.range(of: " · ") {
+      HStack(spacing: 0) {
+        Text(verbatim: String(subtitle[..<separator.lowerBound])).lineLimit(1)
+        Text(verbatim: String(subtitle[separator.lowerBound...])).lineLimit(1).fixedSize()
+      }
+    } else {
+      Text(subtitle).lineLimit(1)
+    }
   }
 
   /// A list wears its own icon and color, as in the sidebar; every other row

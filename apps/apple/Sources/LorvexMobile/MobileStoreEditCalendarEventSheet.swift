@@ -88,6 +88,9 @@ struct MobileStoreEditCalendarEventSheet: View {
           localized: "sheet.edit_event", defaultValue: "Edit Event", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(
@@ -177,8 +180,8 @@ struct MobileStoreEditCalendarEventSheet: View {
             bundle: MobileL10n.bundle))
       }
     }
-    // Calendar event editor detents: medium + large for schedule edits from every calendar entry point.
-    .mobileCompactEditorSheetPresentation()
+    // The event form is a dense form, so it opens at full height.
+    .mobileFullEditorSheetPresentation()
   }
 
   // A recurring event routes save/delete through the occurrence-vs-following-vs-

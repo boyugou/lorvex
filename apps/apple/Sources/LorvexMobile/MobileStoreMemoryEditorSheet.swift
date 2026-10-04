@@ -70,6 +70,9 @@ struct MobileStoreMemoryEditorSheet: View {
           localized: "memory.section.edit", defaultValue: "Edit Memory",
           table: "Localizable", bundle: MobileL10n.bundle)
       )
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

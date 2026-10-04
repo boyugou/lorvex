@@ -239,6 +239,20 @@ struct ListToolTests {
           "Cannot delete the inbox list: it is the canonical fallback for tasks and must always exist."))
   }
 
+  @Test("archive_list rejects the sentinel inbox list")
+  func archiveListRejectsInbox() async throws {
+    let result = try await mcpRegistryCall(
+      try mcpInMemoryRegistry(),
+      tool: "archive_list",
+      arguments: ["id": .string("inbox")]
+    )
+    #expect(result.isError == true)
+    #expect(
+      mcpTextContent(result)
+        == SecurityFencing.fence(
+          "Cannot archive the inbox list: it is the canonical fallback for tasks and must stay active."))
+  }
+
   @Test("reorder_lists sets the manual order and returns the refreshed catalog")
   func reorderListsRoundTrip() async throws {
     let registry = try mcpInMemoryRegistry()

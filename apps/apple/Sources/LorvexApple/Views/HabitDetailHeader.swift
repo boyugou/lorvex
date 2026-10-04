@@ -68,7 +68,7 @@ struct HabitDetailHeader: View {
           text: $name,
           axis: .vertical
         )
-        .font(LorvexDesign.Typography.screenTitle)
+        .font(LorvexDesign.Typography.detailTitle)
         .textFieldStyle(.plain)
         .lineLimit(1...)
         .fixedSize(horizontal: false, vertical: true)

@@ -87,7 +87,11 @@ extension Text {
   /// CJK runs stay upright where the Latin voice is italic, since Chinese has no
   /// italic. iOS falls back from New York to PingFang, whose marks keep their
   /// width, so there the whole string is set in New York.
+  ///
+  /// A number stays on one line with the word after it (``lorvexNumbersTied(_:)``),
+  /// so a count never ends a line apart from what it counts.
   public init(_ string: String, serifVoice voice: LorvexDesign.Typography.SerifVoice) {
+    let string = lorvexNumbersTied(string)
     #if os(macOS)
       var attributed = AttributedString()
       for run in LorvexSerifRuns.split(string) {

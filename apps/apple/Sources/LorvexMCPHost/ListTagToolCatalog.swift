@@ -86,7 +86,7 @@ extension ListHabitToolCatalog {
   static let archiveListTool = Tool(
     name: "archive_list",
     title: "Archive List",
-    description: "Archive a Lorvex list, retiring it from the active set while keeping the list and all its tasks — including completed and cancelled history — under its name. Use this instead of delete_list when a project is finished but its records should be preserved. Reversible via unarchive_list. Returns the full updated list object.",
+    description: "Archive a Lorvex list, retiring it from the active set while keeping the list and all its tasks — including completed and cancelled history — under its name. Use this instead of delete_list when a project is finished but its records should be preserved. Reversible via unarchive_list. The inbox cannot be archived. Returns the full updated list object.",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -1,6 +1,9 @@
 import MCP
 
 extension ToolRegistry {
+  /// The longest horizon `get_upcoming_tasks` looks ahead: ten years.
+  static let maximumUpcomingDays = 3_650
+
   func dependencyGraphResult(arguments: [String: Value]) async throws -> CallTool.Result {
     let taskID = try StrictScalarArguments.optionalString(
       arguments["task_id"], field: "task_id")
@@ -18,13 +21,11 @@ extension ToolRegistry {
   }
 
   func upcomingTasksResult(arguments: [String: Value]) async throws -> CallTool.Result {
-    let days = max(
-      1, try StrictScalarArguments.int(arguments["days"], field: "days", default: 7))
-    let limit = min(
-      max(1, try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 100)),
-      500)
-    let offset = max(
-      0, try StrictScalarArguments.int(arguments["offset"], field: "offset", default: 0))
+    let days = min(
+      max(1, try StrictScalarArguments.int(arguments["days"], field: "days", default: 7)),
+      Self.maximumUpcomingDays)
+    let limit = try PagingArguments.limit(arguments, default: 100, maximum: 500)
+    let offset = try PagingArguments.offset(arguments)
     let outputOptions = try TaskValueOptions.from(arguments: arguments, defaultShape: .compact)
 
     let value = try await coreBridge.getUpcomingTasks(
@@ -35,11 +36,8 @@ extension ToolRegistry {
 
   func dueTaskRemindersResult(arguments: [String: Value]) async throws -> CallTool.Result {
     let asOf = try StrictScalarArguments.optionalString(arguments["as_of"], field: "as_of")
-    let limit = min(
-      max(1, try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 50)),
-      500)
-    let offset = max(
-      0, try StrictScalarArguments.int(arguments["offset"], field: "offset", default: 0))
+    let limit = try PagingArguments.limit(arguments, default: 50, maximum: 500)
+    let offset = try PagingArguments.offset(arguments)
 
     let value = try await coreBridge.getDueTaskReminders(asOf: asOf, limit: limit, offset: offset)
 
@@ -50,11 +48,8 @@ extension ToolRegistry {
     let hours = min(
       max(1, try StrictScalarArguments.int(arguments["hours"], field: "hours", default: 24)),
       168)
-    let limit = min(
-      max(1, try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 50)),
-      500)
-    let offset = max(
-      0, try StrictScalarArguments.int(arguments["offset"], field: "offset", default: 0))
+    let limit = try PagingArguments.limit(arguments, default: 50, maximum: 500)
+    let offset = try PagingArguments.offset(arguments)
 
     let value =
       try await coreBridge.getUpcomingTaskReminders(hours: hours, limit: limit, offset: offset)

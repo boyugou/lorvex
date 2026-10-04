@@ -198,7 +198,7 @@ Tokens live in `LorvexDesign.Typography` and are built on Dynamic Type styles.
 | Token | macOS | iOS / iPadOS |
 |---|---|---|
 | `screenTitle` | `.title` semibold | `.largeTitle` bold (system navigation titles where possible) |
-| `detailTitle` | `.title2` semibold | `.title2` semibold (the item a detail screen is about) |
+| `detailTitle` | 17pt semibold (an inspector's task or habit title) | `.title2` semibold (the item a detail screen is about) |
 | `sectionHeader` | `.title3` semibold | `.headline` |
 | `primaryText` | 14pt | `.body` |
 | `primaryEmphasis` | 14pt medium | `.body` semibold |
@@ -309,6 +309,12 @@ a list, an event, a memory); quick add confirms with Add, since it adds each
 typed line as a task. One that changes an existing item confirms with Save,
 or with Update in the Mac's memory composer, which creates and edits in one
 card. Cancel is plain and the confirm button prominent.
+
+On iPhone and iPad a create or edit sheet titles itself inline, between
+its Cancel and its confirm button, so the title does not take a line of
+a short sheet's height. A dense form (a task, a habit, an event, a repeat
+rule) opens at full height; a form of a few fields (a list, a memory)
+opens at a half-height detent that expands.
 
 A field editor (a popover from a property row) holds only its field and follows
 four rules. Presets come first and "Custom…" last, so the common answer is one
@@ -535,7 +541,9 @@ While day hours remain and the day's estimated work exceeds the free
 working time left, one well says so ("About 6 hr of work, 4 hr free") and
 offers to move the named tasks to tomorrow. With nothing that can move on its
 own, it states the fact alone. This is the one decision Today asks about the
-shape of the day; nothing else about capacity asks for attention.
+shape of the day; nothing else about capacity asks for attention. The
+facts line under the date leaves the estimated work out while this well
+states it, so the page names the figure once.
 
 Suggested times are a draft until the user answers them. On iPhone they wait
 in a well whose button opens the schedule sheet; on iPad they stand in the
@@ -543,8 +551,10 @@ schedule pane; on macOS they stand at the top of the schedule section in
 Today's column. Either way the suggestion is headed "Suggested Times"
 above the saved one, which reads "Current Schedule" while the suggestion
 waits, and "Use These Times" is its prominent button; "Dismiss" discards it
-without changing the day. Tasks that did not fit get "Move to Tomorrow" in
-the same row of buttons, so a full day never ends in a dead-end list.
+without changing the day. On every platform the two answers lead the
+suggestion (beside its title on macOS), where a long proposal cannot push
+them off screen. Tasks that did not fit get "Move to Tomorrow", so a full day
+never ends in a dead-end list; it follows the rows that say what did not fit.
 
 The grammar reaches the glances too. The Today widget and the macOS menu bar
 panel draw the same lead task with the same ring and, while its time runs,

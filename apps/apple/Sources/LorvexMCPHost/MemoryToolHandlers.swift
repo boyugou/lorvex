@@ -5,10 +5,8 @@ extension ToolRegistry {
   func memoryResult(arguments: [String: Value] = [:]) async throws -> CallTool.Result {
     let entries = try await memoryPayloads()
     let requestedKeys = try memoryRequestedKeys(arguments: arguments)
-    let limit = max(
-      1, min(try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 20), 100))
-    let offset = max(
-      0, try StrictScalarArguments.int(arguments["offset"], field: "offset", default: 0))
+    let limit = try PagingArguments.limit(arguments, default: 20, maximum: 100)
+    let offset = try PagingArguments.offset(arguments)
     let filtered = entries.filter { entry in
       guard !requestedKeys.isEmpty else { return true }
       guard let key = entry.objectValue?["key"]?.stringValue else { return false }

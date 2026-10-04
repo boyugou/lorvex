@@ -45,6 +45,33 @@ final class SwiftLorvexCoreServiceInboxDeleteGuardTests: XCTestCase {
     XCTAssertTrue(inboxStillExists, "the inbox list must survive a delete attempt")
   }
 
+  func testArchiveInboxListIsRefused() async throws {
+    let service = try makeService()
+
+    do {
+      _ = try await service.archiveList(id: "inbox")
+      XCTFail("archiving the inbox list must throw")
+    } catch {
+      XCTAssertTrue(
+        "\(error)".contains("Cannot archive the inbox list"), "unexpected error: \(error)")
+    }
+
+    let inboxArchivedAt = try service.read { db in
+      try String.fetchOne(db, sql: "SELECT archived_at FROM lists WHERE id = 'inbox'")
+    }
+    XCTAssertNil(inboxArchivedAt, "the inbox list must stay active after an archive attempt")
+  }
+
+  func testArchiveNormalListStillWorks() async throws {
+    let service = try makeService()
+    let list = try await service.createList(
+      name: "Closing", description: nil, color: nil, icon: nil, aiNotes: nil)
+
+    let archived = try await service.archiveList(id: list.id)
+
+    XCTAssertTrue(archived.isArchived)
+  }
+
   func testDeleteNormalEmptyListStillWorks() async throws {
     let service = try makeService()
     let list = try await service.createList(

@@ -35,6 +35,35 @@ func mobileTaskDetailSheetsUseNativePresentationChrome() throws {
 
 @MainActor
 @Test
+func mobileEditorSheetsTitleThemselvesInlineAndDenseFormsOpenFullHeight() throws {
+  // A create or edit sheet carries its title inline between Cancel and the
+  // confirm button, so a large title does not take a line of a short sheet.
+  let sheets = [
+    "MobileStoreCreateHabitSheet", "MobileStoreEditHabitSheet",
+    "MobileStoreCreateListSheet", "MobileStoreEditListSheet",
+    "MobileStoreCreateCalendarEventSheet", "MobileStoreEditCalendarEventSheet",
+    "MobileStoreMemoryEditorSheet", "MobileTaskEditSheet",
+  ]
+  for name in sheets {
+    let source = try mobileSourceFile("Sources/LorvexMobile/\(name).swift")
+    #expect(source.contains(".navigationBarTitleDisplayMode(.inline)"), "\(name) titles itself inline")
+  }
+
+  // The forms with many fields (a habit, an event, a task) open at full height
+  // instead of a half-height detent that hides most of them.
+  let dense = [
+    "MobileStoreCreateHabitSheet", "MobileStoreEditHabitSheet",
+    "MobileStoreCreateCalendarEventSheet", "MobileStoreEditCalendarEventSheet",
+    "MobileTaskEditSheet",
+  ]
+  for name in dense {
+    let source = try mobileSourceFile("Sources/LorvexMobile/\(name).swift")
+    #expect(source.contains(".mobileFullEditorSheetPresentation()"), "\(name) opens at full height")
+  }
+}
+
+@MainActor
+@Test
 func mobileTodayShowsHabitsAndEventsOnlyWhenLoaded() throws {
   let source = try mobileSourceFile("Sources/LorvexMobile/MobileStoreTodayView.swift")
   let page = try mobileSourceFile("Sources/LorvexMobile/MobileTodayPage.swift")

@@ -114,7 +114,8 @@ struct MobileTodayPage: View {
         .font(LorvexDesign.Typography.pageTitle)
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("today.date")
-      LorvexFactsLine(MobileTodayCalmCopy.facts(page.facts))
+      LorvexFactsLine(
+        MobileTodayCalmCopy.facts(page.facts, workIsStated: page.overbooked != nil))
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .accessibilityIdentifier("today.headline")
@@ -182,7 +183,9 @@ struct MobileTodayPage: View {
       segments: store.todayStripSegments, nowMinutes: nowMinutes, range: store.todayStripRange)
     if let openSchedule {
       Button(action: openSchedule) {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+        // The clock's mark overhangs the strip by 5pt, so the label stands
+        // further off than a tight caption would, clear of the mark.
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
           HStack(spacing: LorvexDesign.Spacing.xxs) {
             Text(MobileTodayCalmCopy.scheduleTitle)
             Image(systemName: "chevron.forward")

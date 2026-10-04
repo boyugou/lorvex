@@ -39,6 +39,24 @@ public func lorvexWholeSpan(_ text: String) -> String {
   return result
 }
 
+/// `text` with the space after each number made no-break, so a count never
+/// ends a line apart from the word it counts: "...came in. 16 tasks are
+/// overdue." wraps before "16", not between "16" and "tasks". A number is a run
+/// of decimal digits in any script, and only a plain space between a number and
+/// a letter is tied; a number before a dash, a dot, or any other mark, and every
+/// other space, still breaks normally.
+public func lorvexNumbersTied(_ text: String) -> String {
+  let characters = Array(text)
+  var result = ""
+  for (index, character) in characters.enumerated() {
+    let endsNumber =
+      index > 0 && characters[index - 1].unicodeScalars.allSatisfy { $0.properties.generalCategory == .decimalNumber }
+    let startsWord = index + 1 < characters.count && characters[index + 1].isLetter
+    result.append(character == " " && endsNumber && startsWord ? "\u{00A0}" : character)
+  }
+  return result
+}
+
 /// `facts` joined by dots, with a no-break space tying each dot to the fact
 /// before it, so a line that wraps breaks after a dot and never starts with
 /// one. Facts passed through ``lorvexUnbreakable(_:)`` first stay whole as

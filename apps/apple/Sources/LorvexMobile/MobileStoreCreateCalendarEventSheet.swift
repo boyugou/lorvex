@@ -64,6 +64,9 @@ struct MobileStoreCreateCalendarEventSheet: View {
           localized: "sheet.new_event", defaultValue: "New Event", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(
@@ -95,8 +98,8 @@ struct MobileStoreCreateCalendarEventSheet: View {
         }
       }
     }
-    // Calendar event editor detents: medium + large for schedule edits from every calendar entry point.
-    .mobileCompactEditorSheetPresentation()
+    // The event form is a dense form, so it opens at full height.
+    .mobileFullEditorSheetPresentation()
   }
 
   private func submit() {

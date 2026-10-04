@@ -12,11 +12,8 @@ extension ToolRegistry {
     }
     let outputOptions = try CalendarEventValueOptions.from(
       arguments: arguments, defaultShape: .compact)
-    let limit = min(
-      max(try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 100), 1),
-      500)
-    let offset = max(
-      try StrictScalarArguments.int(arguments["offset"], field: "offset", default: 0), 0)
+    let limit = try PagingArguments.limit(arguments, default: 100, maximum: 500)
+    let offset = try PagingArguments.offset(arguments)
     let value = try await calendarTimelinePayload(
       from: from, to: to, outputOptions: outputOptions, limit: limit, offset: offset)
     return fencedReadResult(text: "Loaded calendar timeline.", value: value)

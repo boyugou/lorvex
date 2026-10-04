@@ -30,8 +30,9 @@ struct MobileTaskEditSheet: View {
           TextField(
             String(
               localized: "task_edit.title_placeholder", defaultValue: "Title", table: "Localizable",
-              bundle: MobileL10n.bundle), text: $draft.title
+              bundle: MobileL10n.bundle), text: $draft.title, axis: .vertical
           )
+          .lineLimit(1...)
           .focused($focusedField, equals: .title)
           .submitLabel(.next)
           .onSubmit { focusedField = .notes }

@@ -280,5 +280,6 @@ struct TaskDetailLengthPicker: View {
     }
     .buttonStyle(.bordered)
     .buttonBorderShape(.circle)
+    .accessibilityLabel(Choices.lengthStepAccessibilityLabel(delta: delta))
   }
 }

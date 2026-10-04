@@ -57,6 +57,8 @@ struct MenuBarStatusView: View {
       todayKey: store.logicalTodayDateString,
       events: store.calendarTimeline?.events ?? [],
       tasks: store.calendarScheduledTasks ?? [])
+    // A free week has nothing to list: the headline above already says so.
+    let showsBody = scope == .today || !weekDays.isEmpty
     return VStack(spacing: 0) {
       header(page, weekDays: weekDays)
         .padding(.horizontal, LorvexDesign.Spacing.m)
@@ -67,46 +69,48 @@ struct MenuBarStatusView: View {
         .padding(.horizontal, LorvexDesign.Spacing.m)
         .padding(.bottom, LorvexDesign.Spacing.m)
 
-      Divider()
+      if showsBody {
+        Divider()
 
-      ScrollView {
-        Group {
-          switch scope {
-          case .today:
-            MenuBarTodayContent(
-              page: page, events: store.todayScheduleEvents, logicalDay: store.logicalTodayDateString,
-              nowMinutes: nowMinutes,
-              habits: store.habits?.habits.filter { !$0.archived }.listed(on: store.logicalTodayDateString) ?? [],
-              isOverdue: { store.isOverdue($0) },
-              complete: { task in
-                Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
-              },
-              open: open,
-              openEvent: { event in
-                store.showEventInToday(event)
-                perform(.openMain)
-              },
-              checkIn: checkIn)
-          case .week:
-            MenuBarAgendaList(
-              days: weekDays,
-              todayKey: store.logicalTodayDateString,
-              complete: { task in
-                Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
-              },
-              open: { task in openRoute(.task(task.id)) },
-              openEvent: { event, dayKey in
-                store.showEventInCalendar(event, onDayKey: dayKey)
-                perform(.openMain)
-              })
+        ScrollView {
+          Group {
+            switch scope {
+            case .today:
+              MenuBarTodayContent(
+                page: page, events: store.todayScheduleEvents, logicalDay: store.logicalTodayDateString,
+                nowMinutes: nowMinutes,
+                habits: store.habits?.habits.filter { !$0.archived }.listed(on: store.logicalTodayDateString) ?? [],
+                isOverdue: { store.isOverdue($0) },
+                complete: { task in
+                  Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
+                },
+                open: open,
+                openEvent: { event in
+                  store.showEventInToday(event)
+                  perform(.openMain)
+                },
+                checkIn: checkIn)
+            case .week:
+              MenuBarAgendaList(
+                days: weekDays,
+                todayKey: store.logicalTodayDateString,
+                complete: { task in
+                  Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
+                },
+                open: { task in openRoute(.task(task.id)) },
+                openEvent: { event, dayKey in
+                  store.showEventInCalendar(event, onDayKey: dayKey)
+                  perform(.openMain)
+                })
+            }
           }
+          .padding(LorvexDesign.Spacing.m)
+          .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
         }
-        .padding(LorvexDesign.Spacing.m)
-        .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(maxHeight: Self.bodyMaxHeight)
+        .fixedSize(horizontal: false, vertical: true)
       }
-      .scrollBounceBehavior(.basedOnSize)
-      .frame(maxHeight: Self.bodyMaxHeight)
-      .fixedSize(horizontal: false, vertical: true)
 
       Divider()
 

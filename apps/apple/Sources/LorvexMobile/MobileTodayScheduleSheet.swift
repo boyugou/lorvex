@@ -186,8 +186,7 @@ struct MobileTodayScheduleSheet: View {
         }
       }
     }
-    .presentationDetents([.medium, .large])
-    .presentationDragIndicator(.visible)
+    .mobileCompactEditorSheetPresentation()
     // The list draws no background of its own (it is also the iPad's
     // transparent schedule pane), so at the medium detent the default glass
     // let Today's rows show through behind the schedule's text.

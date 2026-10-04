@@ -67,7 +67,6 @@ struct MobileStoreCaptureSheet: View {
         }
       }
     }
-    .presentationDetents([.medium, .large])
-    .presentationDragIndicator(.visible)
+    .mobileCompactEditorSheetPresentation()
   }
 }

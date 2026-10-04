@@ -11,6 +11,16 @@ public enum LorvexTaskFieldChoices {
   /// The length at which the length ring is full, in minutes.
   public static let lengthRingFull = 120
 
+  /// What VoiceOver says for a length stepper button that moves the length by
+  /// `delta` minutes: a sign and the spoken duration ("+15 minutes",
+  /// "−15 minutes"), which every language reads without a translated phrase.
+  public static func lengthStepAccessibilityLabel(
+    delta: Int, locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    let sign = delta < 0 ? "\u{2212}" : "+"
+    return sign + LorvexDurationFormat.minutes(abs(delta), style: .spoken, locale: locale)
+  }
+
   /// How full the length ring is for `minutes`, from 0 to 1.
   public static func lengthFraction(_ minutes: Int) -> Double {
     min(max(Double(minutes) / Double(lengthRingFull), 0), 1)

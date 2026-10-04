@@ -5,7 +5,8 @@ import SwiftUI
 /// on it, under its name ("Tomorrow", then "Saturday, October 3"), with its
 /// events (``MenuBarEventRow``, which opens the event on its day in the
 /// Calendar) and then its tasks (the circle that completes it, the title that
-/// opens it, its time). A free week reads one line saying so.
+/// opens it, its time). A free week has no body: the panel's headline already
+/// says so, and the panel shows this list only when `days` is not empty.
 struct MenuBarAgendaList: View {
   let days: [LorvexAgendaDay]
   /// The logical today as `yyyy-MM-dd`, which names tomorrow.
@@ -17,13 +18,6 @@ struct MenuBarAgendaList: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
-      if days.isEmpty {
-        Text(MenuBarCopy.weekEmpty)
-          .font(LorvexDesign.Typography.secondaryText)
-          .foregroundStyle(.secondary)
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .accessibilityIdentifier("menubar.agenda.empty")
-      }
       ForEach(days) { day in
         VStack(alignment: .leading, spacing: 0) {
           Text(MenuBarCopy.dayTitle(day.key, todayKey: todayKey))
@@ -61,12 +55,6 @@ enum MenuBarCopy {
 
   static var checkIn: String {
     String(localized: "menubar.habit.check_in", defaultValue: "Check In", table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  static var weekEmpty: String {
-    String(
-      localized: "menubar.agenda.empty", defaultValue: "Nothing planned for the next 7 days.",
-      table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
   static func complete(_ title: String) -> String {

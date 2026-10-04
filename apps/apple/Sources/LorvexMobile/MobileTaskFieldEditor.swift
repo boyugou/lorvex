@@ -82,8 +82,7 @@ struct MobileTaskFieldEditor: View {
         }
       }
     }
-    .presentationDetents(field == .doOn || field == .due || field == .hideUntil ? [.large] : [.medium, .large])
-    .presentationDragIndicator(.visible)
+    .mobileEditorSheetPresentation(opensFullHeight: field == .doOn || field == .due || field == .hideUntil)
   }
 
   /// Saves with any tag typed but not yet added, so tapping Done before
@@ -141,8 +140,15 @@ struct MobileTaskFieldEditor: View {
   private var priorityEditor: some View {
     Picker(MobileTaskFieldCopy.title(field), selection: $draft.priority) {
       ForEach([LorvexTask.Priority.p1, .p2, .p3], id: \.self) { priority in
-        Label(priority.localizedPhrase, systemImage: priority.prioritySymbolName)
-          .tag(priority)
+        // The flag takes the priority's own color, as it does on every task
+        // row; a list would otherwise tint all three with the accent.
+        Label {
+          Text(priority.localizedPhrase)
+        } icon: {
+          Image(systemName: priority.prioritySymbolName)
+            .foregroundStyle(priority.priorityTint)
+        }
+        .tag(priority)
       }
     }
     .pickerStyle(.inline)
@@ -155,14 +161,20 @@ struct MobileTaskFieldEditor: View {
         Button {
           Task { await moveToList(list.id) }
         } label: {
-          HStack {
-            Text(list.displayName).foregroundStyle(Color.primary)
+          HStack(spacing: LorvexDesign.Spacing.m) {
+            MobileIconTile(
+              icon: list.icon, fallback: "tray.fill",
+              tint: Color(lorvexHex: list.color) ?? LorvexDesign.Palette.accent, size: 30)
+            Text(userContent: list.displayName).foregroundStyle(Color.primary)
             Spacer()
             if list.id == currentListID {
-              Image(systemName: "checkmark").foregroundStyle(LorvexDesign.Palette.accent)
+              Image(systemName: "checkmark")
+                .foregroundStyle(LorvexDesign.Palette.accent)
+                .accessibilityHidden(true)
             }
           }
         }
+        .accessibilityAddTraits(list.id == currentListID ? [.isSelected] : [])
         .disabled(isSaving)
       }
     }
@@ -250,6 +262,7 @@ struct MobileTaskLengthEditor: View {
       HStack(spacing: LorvexDesign.Spacing.xl) {
         Button { set(max(0, minutes - Choices.lengthStep)) } label: { Image(systemName: "minus").frame(width: 32, height: 32) }
           .buttonStyle(.bordered).buttonBorderShape(.circle)
+          .accessibilityLabel(Choices.lengthStepAccessibilityLabel(delta: -Choices.lengthStep))
         ZStack {
           Circle().stroke(
             LorvexDesign.Palette.accent.opacity(LorvexDesign.Palette.trackOpacity(for: colorScheme)), lineWidth: 7)
@@ -257,14 +270,24 @@ struct MobileTaskLengthEditor: View {
             fraction: Choices.lengthFraction(minutes), style: LorvexDesign.Palette.accent, lineWidth: 7)
           Text(minutes > 0 ? LorvexDurationFormat.minutes(minutes) : "–")
             .font(LorvexDesign.Typography.sectionHeader.monospacedDigit())
+            // The ring keeps its size at every text size, so the minutes shrink
+            // to stay on one line inside it instead of wrapping against its edge.
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .padding(.horizontal, LorvexDesign.Spacing.m)
         }
         .frame(width: 112, height: 112)
         .reduceMotionAnimation(.snappy(duration: 0.2), value: minutes)
         Button { set(minutes + Choices.lengthStep) } label: { Image(systemName: "plus").frame(width: 32, height: 32) }
           .buttonStyle(.bordered).buttonBorderShape(.circle)
+          .accessibilityLabel(Choices.lengthStepAccessibilityLabel(delta: Choices.lengthStep))
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, LorvexDesign.Spacing.s)
+      // The row's leftmost text is the minutes inside the ring, so the list
+      // would start a separator at the middle of the row; the ring and the
+      // lengths below it read as one control and need no line between them.
+      .listRowSeparator(.hidden, edges: .bottom)
       LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
         ForEach(Choices.lengthPresets, id: \.self) { preset in
           Button(LorvexDurationFormat.minutes(preset)) { set(preset) }
@@ -273,6 +296,9 @@ struct MobileTaskLengthEditor: View {
             .tint(minutes == preset ? LorvexDesign.Palette.accent : .secondary)
         }
       }
+      // The first chip's text sits inside its capsule, so the separator would
+      // start there; it starts at the row's edge, level with the row below.
+      .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
       if minutes > 0 {
         Button(MobileTaskFieldCopy.noLength, role: .destructive) { set(0) }
           .mobileDestructiveRowStyle()

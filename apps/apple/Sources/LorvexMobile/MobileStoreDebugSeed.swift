@@ -54,6 +54,38 @@
     }
   }
 
+  /// Dev/QA only: the `lorvex://sheet/newlist`, `lorvex://sheet/editlist`,
+  /// `lorvex://sheet/newhabit`, and `lorvex://firsttask/edit` screenshot hooks
+  /// name one tap-gated sheet for the screen that owns it to raise on its next
+  /// appearance. A screen takes only the sheet it owns, and takes it once, so
+  /// later visits start with the sheet closed. A `/appearance` suffix on the
+  /// list and habit routes also opens the icon and color popover over the
+  /// sheet's header.
+  enum MobileSheetDebugState {
+    enum Sheet {
+      case newList
+      case editList
+      case newHabit
+      case editTask
+    }
+
+    @MainActor static var pending: Sheet?
+    @MainActor static var opensAppearance = false
+
+    /// Whether the pending sheet is `sheet`; true at most once per request.
+    @MainActor static func take(_ sheet: Sheet) -> Bool {
+      guard pending == sheet else { return false }
+      pending = nil
+      return true
+    }
+
+    /// Whether the header's icon and color popover was asked for; true once.
+    @MainActor static func takeOpensAppearance() -> Bool {
+      defer { opensAppearance = false }
+      return opensAppearance
+    }
+  }
+
   /// Dev/QA only: the `lorvex://tab/<name>/search/<query>` screenshot hook
   /// pre-fills the search field of that workspace, so its no-results row can
   /// be captured without typing. The query is keyed by workspace because one
@@ -443,8 +475,9 @@
 
     /// The New Event draft the `lorvex://sheet/event/<kind>` hook opens on:
     /// `overnight` runs from 22:00 on `now`'s day to 01:00 the next day, `days`
-    /// covers `now`'s day and the two after it as an all-day event, and any
-    /// other kind is the next-hour default.
+    /// covers `now`'s day and the two after it as an all-day event, `long` is
+    /// a next-hour event with a sentence-length title, and any other kind is
+    /// the next-hour default.
     static func debugEventDraft(kind: String?, now: Date) -> MobileCalendarDraft {
       let calendar = CalendarEventTiming.deviceCalendar
       let day = calendar.startOfDay(for: now)
@@ -458,6 +491,10 @@
         return MobileCalendarDraft(
           title: "Design conference",
           timing: CalendarEventTiming(start: day, end: last, allDay: true))
+      case "long":
+        return MobileCalendarDraft(
+          title: "Quarterly planning offsite with the leadership and product teams",
+          timing: .nextHourBlock(after: now))
       default:
         return MobileCalendarDraft(timing: .nextHourBlock(after: now))
       }
@@ -513,6 +550,11 @@
       // the calendar with its New Event sheet raised: `/overnight` on an event
       // from 22:00 to 01:00 the next day, `/days` on an all-day event across
       // three days, and otherwise on the next-hour default.
+      // `lorvex://sheet/newlist` raises the Tasks home's New List sheet,
+      // `lorvex://sheet/editlist` the Edit List sheet of the first list with a
+      // description, and `lorvex://sheet/newhabit` the Habits workspace's New
+      // Habit sheet; each of the three takes a `/appearance` suffix that also
+      // opens the header's icon and color popover.
       if url.host == "sheet", let name = url.pathComponents.dropFirst().first {
         switch name {
         case "capture":
@@ -522,6 +564,14 @@
           let kind = url.pathComponents.count > 2 ? url.pathComponents[2] : nil
           MobileCalendarDebugState.initialCreateDraft = Self.debugEventDraft(kind: kind, now: now())
           selectedTab = .calendar
+        case "newlist", "editlist":
+          MobileSheetDebugState.pending = name == "newlist" ? .newList : .editList
+          MobileSheetDebugState.opensAppearance = url.pathComponents.last == "appearance"
+          selectedTab = .tasks
+        case "newhabit":
+          MobileSheetDebugState.pending = .newHabit
+          MobileSheetDebugState.opensAppearance = url.pathComponents.last == "appearance"
+          openWorkspaceDestination(.habits)
         default: break
         }
         return
@@ -560,9 +610,10 @@
       // `lorvex://firsttask` opens the first seeded task's detail on the Today
       // stack (we don't know seeded IDs ahead of time) — a screenshot hook.
       // `lorvex://firsttask/compose/<checklist|reminder>` also unfolds one of the
-      // detail's inline composers, and `lorvex://firsttask/field/<field>` raises
-      // one sentence word's editor (`waitsOn`, `due`, …); both are otherwise
-      // tap-gated.
+      // detail's inline composers, `lorvex://firsttask/field/<field>` raises
+      // one sentence word's editor (`waitsOn`, `due`, …), and
+      // `lorvex://firsttask/edit` raises the full Edit sheet; all three are
+      // otherwise tap-gated.
       if url.host == "firsttask",
         let id = snapshot.today.tasks.first?.id
       {
@@ -573,6 +624,9 @@
         }
         if components.count >= 3, components[1] == "field" {
           MobileTaskDetailDebugState.initialField = MobileTaskField(rawValue: components[2])
+        }
+        if components.count >= 2, components[1] == "edit" {
+          MobileSheetDebugState.pending = .editTask
         }
         navigate(to: .task(id))
         return

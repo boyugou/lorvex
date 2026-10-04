@@ -34,6 +34,8 @@
 #         capture-filled capture-repeat
 #         task-detail-repeat task-detail-repeat-editor task-detail-depends memory-composer
 #         memory-composer-filled tasks-search-empty habits-search-empty
+#         sheet-newlist sheet-editlist sheet-newhabit task-edit
+#         sheet-newlist-appearance sheet-editlist-appearance sheet-newhabit-appearance
 #         widgets widgets-large widgets-lock widgets-more, or any raw
 #         lorvex:// URL. A route written as <first>+<second> launches on
 #         <first> and opens <second> two seconds later (the DEBUG
@@ -66,6 +68,14 @@
 #         where the day a plain weekly rule falls on shows chosen. The raw URL
 #         lorvex://firsttask/field/<field> raises the editor behind one
 #         sentence word of Today's first task (waitsOn, due, tags, …).
+#         sheet-newlist and sheet-editlist open the Tasks home with its New
+#         List sheet raised, or the Edit List sheet of the first list that has
+#         a description; sheet-newhabit opens Habits with its New Habit sheet
+#         raised; task-edit opens Today's first task with its full Edit sheet
+#         raised (the DEBUG lorvex://sheet/<newlist|editlist|newhabit> and
+#         lorvex://firsttask/edit hooks). The -appearance variants of the
+#         New List, Edit List, and New Habit routes also open the icon and
+#         color popover over the sheet's header.
 #         habit-detail-end opens the first habit's detail scrolled to its end
 #         (the DEBUG -lorvexScrollHabitDetailToEnd hook), where its reminders
 #         and the Archive and Delete buttons sit; habit-detail-middle opens it
@@ -140,6 +150,13 @@ url_for() {
     capture-repeat) echo "lorvex://sheet/capture/Standup%20every%20mon%20and%20thu%209%3A30am" ;;
     memory-composer) echo "lorvex://memorycomposer" ;;
     memory-composer-filled) echo "lorvex://memorycomposer/filled" ;;
+    sheet-newlist) echo "lorvex://sheet/newlist" ;;
+    sheet-editlist) echo "lorvex://sheet/editlist" ;;
+    sheet-newhabit) echo "lorvex://sheet/newhabit" ;;
+    sheet-newlist-appearance) echo "lorvex://sheet/newlist/appearance" ;;
+    sheet-editlist-appearance) echo "lorvex://sheet/editlist/appearance" ;;
+    sheet-newhabit-appearance) echo "lorvex://sheet/newhabit/appearance" ;;
+    task-edit) echo "lorvex://firsttask/edit" ;;
     *) echo "lorvex://tab/today" ;;
   esac
 }

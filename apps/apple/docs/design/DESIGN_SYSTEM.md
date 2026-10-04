@@ -298,6 +298,7 @@ them and in the platform module otherwise.
 | `TaskDetailChoiceRow` (macOS) | a one-click choice in an editor: a title, an optional trailing detail, a hover fill, and an accent title with a checkmark when it is the current value |
 | `TaskDetailMonthCalendar` (macOS) | the month grid of every day field: round 32 pt day cells, the chosen day filled with the accent, today's number accent-colored, neighbouring months dimmed, `LorvexIconButton` arrows |
 | `CreationSheetLayout` + `CreationSheetHeader` (macOS) | the create and edit sheet: a small centered action title, the thing being made as a live preview (icon tile in its color, opening the icon and color picker; the name typed beside it), the remaining fields as a grouped form, then Cancel and the confirm button |
+| `MobileCreationHeader` (iOS) | the first row of the list and habit sheets, with no card behind it: a 56 pt live preview tile in its color with a pencil badge that opens the color and icon choices in a popover (`MobileIconColorPicker`), the name typed beside it in the detail-title face (wrapping rather than truncating), and a second line for the description or encouragement; the remaining fields are grouped sections below. At accessibility text sizes the tile sits above the text, and the badge stays at its default size. A create sheet puts the cursor in the name as it opens |
 
 Buttons use the system styles. On macOS the workspace controls are
 `.bordered` / `.borderedProminent` (glass on macOS 26); segmented choices use

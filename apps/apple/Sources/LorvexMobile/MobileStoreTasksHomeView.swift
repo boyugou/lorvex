@@ -50,6 +50,18 @@ public struct MobileStoreTasksHomeView: View {
         if let query = MobileSearchDebugState.takeInitialQuery(for: .tasks) {
           searchQuery = query
         }
+        if MobileSheetDebugState.take(.newList) { isShowingCreateList = true }
+      }
+      .task {
+        // Dev/QA only: `lorvex://sheet/editlist` raises the Edit List sheet of
+        // the first list with a description once the launch seed has landed.
+        guard MobileSheetDebugState.pending == .editList else { return }
+        await MobileSeedDebugState.waitUntilFinished()
+        guard MobileSheetDebugState.take(.editList),
+          let list = userLists.first(where: { !($0.description ?? "").isEmpty }) ?? userLists.first
+        else { return }
+        store.prepareListDraft(for: list)
+        editingList = list
       }
     #endif
     // No toolbar ＋: the tab bar's round ＋ already raises capture on every tab,

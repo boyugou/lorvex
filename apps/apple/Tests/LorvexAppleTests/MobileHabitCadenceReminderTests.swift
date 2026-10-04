@@ -38,6 +38,26 @@ func mobileHabitDraftCadenceInputBridgesEditorSelections() {
 }
 
 @Test
+func mobileHabitDraftPerDayTargetReadsAndWritesTheGoalText() {
+  var draft = MobileHabitDraft()
+  #expect(draft.perDayTarget == 1)
+
+  draft.perDayTarget = 3
+  #expect(draft.targetCount == 3)
+  #expect(draft.resolvedTargetCount == 3)
+
+  draft.perDayTarget = 0
+  #expect(draft.perDayTarget == 1, "the stepper never goes below one check-in")
+
+  draft.targetCountText = ""
+  #expect(draft.perDayTarget == 1, "a goal text that holds no number reads as one check-in")
+
+  draft.cadenceMode = .monthly
+  draft.perDayTarget = 4
+  #expect(draft.resolvedTargetCount == 1, "a monthly habit keeps its single check-in")
+}
+
+@Test
 func mobileHabitDraftInitMapsStoredCadence() {
   let habit = LorvexHabit(
     id: "habit-read", name: "Read", icon: nil, color: nil, cue: nil,

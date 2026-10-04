@@ -273,13 +273,14 @@ struct TaskDetailLengthPicker: View {
 
   private func stepButton(systemImage: String, delta: Int) -> some View {
     Button {
-      set(max(0, minutes + delta))
+      set(Choices.length(minutes, steppedBy: delta))
     } label: {
       Image(systemName: systemImage)
         .frame(width: 28, height: 28)
     }
     .buttonStyle(.bordered)
     .buttonBorderShape(.circle)
+    .disabled(delta < 0 ? minutes <= 0 : minutes >= Choices.lengthMax)
     .accessibilityLabel(Choices.lengthStepAccessibilityLabel(delta: delta))
   }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// The choices the task-detail field pickers offer on macOS and iPhone, so the
 /// length and day words edit the same way on both. Wording stays with each
@@ -10,6 +11,14 @@ public enum LorvexTaskFieldChoices {
   public static let lengthStep = 15
   /// The length at which the length ring is full, in minutes.
   public static let lengthRingFull = 120
+  /// The longest estimate a task can hold, in minutes (a full day).
+  public static let lengthMax = Int(ValidationLimits.maxEstimatedMinutes)
+
+  /// `minutes` moved by `delta` and kept between no estimate (0) and
+  /// ``lengthMax``, so a stepper never produces a length the task cannot save.
+  public static func length(_ minutes: Int, steppedBy delta: Int) -> Int {
+    min(max(minutes + delta, 0), lengthMax)
+  }
 
   /// What VoiceOver says for a length stepper button that moves the length by
   /// `delta` minutes: a sign and the spoken duration ("+15 minutes",
@@ -111,5 +120,35 @@ public enum LorvexTaskFieldChoices {
     return (0..<3).compactMap { offset in
       calendar.date(byAdding: .day, value: offset, to: today).map { (offset, $0) }
     }
+  }
+
+  /// What a multiple-selection calendar draws for an optional day: one
+  /// whole-day entry in `calendar`, or no entry (nothing marked) while there
+  /// is no day. A single-date picker cannot show "no date", which is why an
+  /// unset field uses this instead.
+  public static func calendarSelection(
+    for day: Date?, calendar: Calendar = .autoupdatingCurrent
+  ) -> Set<DateComponents> {
+    guard let day else { return [] }
+    return [calendar.dateComponents([.calendar, .era, .year, .month, .day], from: day)]
+  }
+
+  /// The day a calendar that holds at most one day stands for after the user
+  /// changed its selection to `selection`: the day that differs from `current`
+  /// when another was added (the earliest, should several arrive at once), and
+  /// no day when nothing else is selected. Tapping the marked day again leaves
+  /// the selection empty, or holding only that day when the calendar hands back
+  /// its own unchanged copy instead of removing it; both clear the day, since
+  /// a tap on a marked day always deselects it. Days are local midnights in
+  /// `calendar`.
+  public static func day(
+    afterSelecting selection: Set<DateComponents>, replacing current: Date?,
+    calendar: Calendar = .autoupdatingCurrent
+  ) -> Date? {
+    let days = selection.compactMap { parts in
+      (parts.calendar ?? calendar).date(from: parts).map { calendar.startOfDay(for: $0) }
+    }
+    guard let current else { return days.min() }
+    return days.filter { !calendar.isDate($0, inSameDayAs: current) }.min()
   }
 }

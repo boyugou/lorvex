@@ -16,7 +16,6 @@ struct MobileTaskEditSheet: View {
   private enum Field {
     case title
     case notes
-    case estimate
   }
 
   var body: some View {
@@ -53,8 +52,6 @@ struct MobileTaskEditSheet: View {
             minHeight: 120
           )
           .focused($focusedField, equals: .notes)
-          .submitLabel(.next)
-          .onSubmit { focusedField = .estimate }
         }
 
         Section(
@@ -62,18 +59,7 @@ struct MobileTaskEditSheet: View {
             localized: "task_edit.section.planning", defaultValue: "Planning", table: "Localizable",
             bundle: MobileL10n.bundle)
         ) {
-          TextField(
-            String(
-              localized: "task_edit.estimate", defaultValue: "Estimate", table: "Localizable",
-              bundle: MobileL10n.bundle), text: $draft.estimatedMinutesText
-          )
-          .focused($focusedField, equals: .estimate)
-          .submitLabel(.done)
-          .onSubmit { Task { await commitPendingTagAndSave() } }
-          #if os(iOS)
-            .keyboardType(.numberPad)
-          #endif
-          .mobileKeyboardDoneToolbar { Task { await commitPendingTagAndSave() } }
+          estimateRow
         }
 
         Section {
@@ -151,14 +137,11 @@ struct MobileTaskEditSheet: View {
           )
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "sheet.edit_task", defaultValue: "Edit Task", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(
@@ -186,6 +169,31 @@ struct MobileTaskEditSheet: View {
     }
     // Task editor detents: large only because tags, dependencies, and notes need full-height editing.
     .mobileFullEditorSheetPresentation()
+  }
+
+  /// The estimate as a row that opens the ring-and-chips editor of the task's
+  /// How Long field, so a length is chosen in minutes it names, never typed as
+  /// a bare number. The row shows the current length once there is one.
+  private var estimateRow: some View {
+    let title = String(
+      localized: "task_edit.estimate", defaultValue: "Estimate", table: "Localizable",
+      bundle: MobileL10n.bundle)
+    return NavigationLink {
+      Form { MobileTaskLengthEditor(minutesText: $draft.estimatedMinutesText) }
+        .navigationTitle(title)
+        #if os(iOS)
+          .navigationBarTitleDisplayMode(.inline)
+        #endif
+    } label: {
+      LabeledContent {
+        if let minutes = draft.parsedEstimatedMinutes {
+          Text(LorvexDurationFormat.minutes(minutes))
+        }
+      } label: {
+        Label(title, systemImage: "hourglass")
+      }
+    }
+    .accessibilityIdentifier("task.edit.estimate")
   }
 
   /// Saves with any tag typed but not yet added, so pressing Save before

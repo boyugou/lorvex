@@ -10,6 +10,12 @@
             "value": "إلغاء المهمة"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe abbrechen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -64,6 +70,12 @@
             "value": "할 일 취소"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleer taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -74,6 +86,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulați sarcina"
           }
         },
         "ru": {
@@ -116,6 +134,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إلغاء هذا التكرار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederholung abbrechen"
           }
         },
         "en": {
@@ -172,6 +196,12 @@
             "value": "이번 반복 취소"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleer herhaling"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -182,6 +212,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar ocorrência"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulați apariția"
           }
         },
         "ru": {
@@ -224,6 +260,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هل تريد إلغاء هذا التكرار من \"%@\"؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Wiederholung von %@ abbrechen?"
           }
         },
         "en": {
@@ -280,6 +322,12 @@
             "value": "“%@”의 이번 반복을 취소하시겠습니까?"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze herhaling van %@ annuleren?"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -290,6 +338,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar esta ocorrência de “%@”?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulați această apariție a sarcinii %@?"
           }
         },
         "ru": {
@@ -332,6 +386,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يلغي هذا التكرار من \"%@\""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bricht diese Wiederholung von %@ ab"
           }
         },
         "en": {
@@ -388,6 +448,12 @@
             "value": "“%@”의 이번 반복을 취소합니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleert deze herhaling van %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -398,6 +464,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancela esta ocorrência de “%@”"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulează această apariție a sarcinii %@"
           }
         },
         "ru": {
@@ -440,6 +512,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "في المهام المتكررة، يُلغى هذا التكرار فقط وتستمر التكرارات اللاحقة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei wiederkehrenden Aufgaben wird nur diese Wiederholung abgebrochen; künftige Wiederholungen laufen weiter."
           }
         },
         "en": {
@@ -496,6 +574,12 @@
             "value": "반복되는 할 일은 이번 반복만 취소되고 이후 반복은 그대로 이어집니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bij terugkerende taken wordt alleen deze herhaling geannuleerd; toekomstige herhalingen lopen door."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -506,6 +590,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Em tarefas recorrentes, apenas esta ocorrência é cancelada e as próximas continuam."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pentru sarcinile recurente, se anulează doar această apariție, iar aparițiile viitoare continuă."
           }
         },
         "ru": {
@@ -548,6 +638,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إلغاء هذا التكرار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederholung abbrechen"
           }
         },
         "en": {
@@ -604,6 +700,12 @@
             "value": "이번 반복 취소"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleer herhaling"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -614,6 +716,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelar ocorrência"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulați apariția"
           }
         },
         "ru": {
@@ -656,6 +764,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "وضع علامة على %@ كمكتملة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ als erledigt markieren"
           }
         },
         "en": {
@@ -712,6 +826,12 @@
             "value": "“%@” 완료로 표시"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markeer %@ als voltooid"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -722,6 +842,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Marcar “%@” como concluída"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcați sarcina %@ drept finalizată"
           }
         },
         "ru": {
@@ -764,6 +890,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يؤجل %@ إلى الغد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschiebt %@ auf morgen"
           }
         },
         "en": {
@@ -820,6 +952,12 @@
             "value": "“%@” 할 일을 내일로 미룹니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stelt %@ uit tot morgen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -830,6 +968,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adia “%@” para amanhã"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amână sarcina %@ pentru mâine"
           }
         },
         "ru": {
@@ -872,6 +1016,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إبقاء المهمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe behalten"
           }
         },
         "en": {
@@ -928,6 +1078,12 @@
             "value": "할 일 유지"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taak behouden"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -938,6 +1094,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manter tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Păstrați sarcina"
           }
         },
         "ru": {
@@ -980,6 +1142,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "غدًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen"
           }
         },
         "en": {
@@ -1036,6 +1204,12 @@
             "value": "내일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1046,6 +1220,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amanhã"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mâine"
           }
         },
         "ru": {
@@ -1088,6 +1268,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مهمة قيد الانتظار: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausstehende Aufgabe: %@"
           }
         },
         "en": {
@@ -1144,6 +1330,12 @@
             "value": "대기 중인 할 일: %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taak in wachtrij: %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1154,6 +1346,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarefa pendente: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcină în așteptare: %@"
           }
         },
         "ru": {
@@ -1196,6 +1394,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "جارٍ الإضافة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird erfasst"
           }
         },
         "en": {
@@ -1252,6 +1456,12 @@
             "value": "추가 중"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vastleggen…"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1262,6 +1472,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicionando"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se adaugă"
           }
         },
         "ru": {
@@ -1304,6 +1520,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مهمة جديدة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufgabe"
           }
         },
         "en": {
@@ -1360,6 +1582,12 @@
             "value": "새 할 일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1370,6 +1598,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nova tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcină nouă"
           }
         },
         "ru": {
@@ -1412,6 +1646,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfassen"
           }
         },
         "en": {
@@ -1468,6 +1708,12 @@
             "value": "추가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vastleggen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1478,6 +1724,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicionar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adăugare"
           }
         },
         "ru": {
@@ -1520,6 +1772,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة مهمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe erfassen"
           }
         },
         "en": {
@@ -1576,6 +1834,12 @@
             "value": "할 일 추가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leg taak vast"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1586,6 +1850,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicionar tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adăugați sarcina"
           }
         },
         "ru": {
@@ -1628,6 +1898,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "عنوان المهمة الجديدة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel der neuen Aufgabe"
           }
         },
         "en": {
@@ -1684,6 +1960,12 @@
             "value": "새 할 일 제목"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel van nieuwe taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1694,6 +1976,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Título da nova tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titlul sarcinii noi"
           }
         },
         "ru": {
@@ -1736,6 +2024,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تجاهل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
           }
         },
         "en": {
@@ -1792,6 +2086,12 @@
             "value": "닫기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluit"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1802,6 +2102,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dispensar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Închideți"
           }
         },
         "ru": {
@@ -1844,6 +2150,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإجراءات المحفوظة غير متاحة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesicherte Aktionen nicht verfügbar"
           }
         },
         "en": {
@@ -1900,6 +2212,12 @@
             "value": "저장된 동작을 사용할 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewaarde acties niet beschikbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1910,6 +2228,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ações salvas indisponíveis"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acțiuni salvate indisponibile"
           }
         },
         "ru": {
@@ -1952,6 +2276,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex على iPhone، ثم أعد فتح تطبيق الساعة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex auf dem iPhone und dann die Watch-App erneut"
           }
         },
         "en": {
@@ -2008,6 +2338,12 @@
             "value": "iPhone에서 Lorvex를 연 다음 Apple Watch 앱을 다시 여세요"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex op je iPhone en open daarna de Watch-app opnieuw"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2018,6 +2354,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex no iPhone e reabra o app do relógio"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pe iPhone, apoi redeschideți aplicația de pe ceas"
           }
         },
         "ru": {
@@ -2093,6 +2435,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld قيد الانتظار"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ausstehend"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ausstehend"
                 }
               }
             }
@@ -2242,6 +2602,24 @@
             "value": "대기 중 %lld개"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld in wachtrij"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld in wachtrij"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -2285,6 +2663,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld pendentes"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld în așteptare"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld în așteptare"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld în așteptare"
                 }
               }
             }
@@ -2392,6 +2794,12 @@
             "value": "لم يتم تطبيق الإجراء %lld"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion %lld wurde nicht angewendet"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -2446,6 +2854,12 @@
             "value": "적용되지 않은 동작 %lld"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actie %lld is niet toegepast"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2456,6 +2870,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A ação %lld não foi aplicada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acțiunea %lld nu a fost aplicată"
           }
         },
         "ru": {
@@ -2498,6 +2918,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّرت قراءة هذا الإجراء على iPhone. حدّث Lorvex على كلا الجهازين."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein iPhone konnte diese Aktion nicht lesen. Aktualisiere Lorvex auf beiden Geräten."
           }
         },
         "en": {
@@ -2554,6 +2980,12 @@
             "value": "iPhone에서 이 동작을 읽을 수 없습니다. 두 기기에서 모두 Lorvex를 업데이트하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je iPhone kon deze actie niet lezen. Werk Lorvex bij op beide apparaten."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2564,6 +2996,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seu iPhone não conseguiu ler esta ação. Atualize o Lorvex nos dois dispositivos."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-ul nu a putut citi această acțiune. Actualizați Lorvex pe ambele dispozitive."
           }
         },
         "ru": {
@@ -2606,6 +3044,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التسليم إلى iPhone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übermittlung ans iPhone"
           }
         },
         "en": {
@@ -2662,6 +3106,12 @@
             "value": "iPhone으로 전달"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verzending naar iPhone"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2672,6 +3122,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Envio ao iPhone"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transmitere către iPhone"
           }
         },
         "ru": {
@@ -2714,6 +3170,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يتعارض هذا الإجراء مع تغييرات أحدث."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aktion steht im Konflikt mit neueren Änderungen."
           }
         },
         "en": {
@@ -2770,6 +3232,12 @@
             "value": "이 동작이 더 최근의 변경 사항과 충돌합니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze actie conflicteert met nieuwere wijzigingen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2780,6 +3248,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta ação entra em conflito com alterações mais recentes."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această acțiune intră în conflict cu modificări mai recente."
           }
         },
         "ru": {
@@ -2822,6 +3296,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يتم تطبيق هذا الإجراء على iPhone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aktion wurde auf dem iPhone nicht angewendet."
           }
         },
         "en": {
@@ -2878,6 +3358,12 @@
             "value": "이 동작은 iPhone에 적용되지 않았습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze actie is niet toegepast op iPhone."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2888,6 +3374,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta ação não foi aplicada no iPhone."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această acțiune nu a fost aplicată pe iPhone."
           }
         },
         "ru": {
@@ -2930,6 +3422,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "عنوان المهمة لم يعد صالحًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Aufgabentitel ist nicht mehr gültig."
           }
         },
         "en": {
@@ -2986,6 +3484,12 @@
             "value": "할 일 제목이 더 이상 유효하지 않습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De taaktitel is niet meer geldig."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2996,6 +3500,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O título da tarefa não é mais válido."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titlul sarcinii nu mai este valid."
           }
         },
         "ru": {
@@ -3038,6 +3548,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يعد هذا العنصر موجودًا على iPhone."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Objekt existiert auf dem iPhone nicht mehr."
           }
         },
         "en": {
@@ -3094,6 +3610,12 @@
             "value": "이 항목이 iPhone에 더 이상 없습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het item bestaat niet meer op iPhone."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3104,6 +3626,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O item não existe mais no iPhone."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elementul nu mai există pe iPhone."
           }
         },
         "ru": {
@@ -3146,6 +3674,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا الإجراء المحفوظ قديم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese gesicherte Aktion ist veraltet."
           }
         },
         "en": {
@@ -3202,6 +3736,12 @@
             "value": "저장된 동작이 최신 상태가 아닙니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze bewaarde actie is verouderd."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3212,6 +3752,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta ação salva está desatualizada."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această acțiune salvată este depășită."
           }
         },
         "ru": {
@@ -3254,6 +3800,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يعد هذا الإجراء صالحًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aktion ist nicht mehr gültig."
           }
         },
         "en": {
@@ -3310,6 +3862,12 @@
             "value": "이 동작은 더 이상 유효하지 않습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze actie is niet meer geldig."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3320,6 +3878,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta ação não é mais válida."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această acțiune nu mai este validă."
           }
         },
         "ru": {
@@ -3362,6 +3926,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم استبدال مساحة عمل iPhone قبل تطبيق هذا الإجراء."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Arbeitsbereich auf dem iPhone wurde ersetzt, bevor diese Aktion angewendet wurde."
           }
         },
         "en": {
@@ -3418,6 +3988,12 @@
             "value": "이 동작이 적용되기 전에 iPhone의 데이터베이스가 교체되었습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De werkruimte op iPhone is vervangen voordat deze actie werd toegepast."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3428,6 +4004,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O espaço de trabalho do iPhone foi substituído antes de esta ação ser aplicada."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spațiul de lucru de pe iPhone a fost înlocuit înainte ca această acțiune să fie aplicată."
           }
         },
         "ru": {
@@ -3470,6 +4052,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يتم حفظ هذا التغيير. حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Änderung wurde nicht gesichert. Versuche es erneut."
           }
         },
         "en": {
@@ -3526,6 +4114,12 @@
             "value": "변경 사항을 저장하지 못했습니다. 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die wijziging is niet bewaard. Probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3536,6 +4130,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A alteração não foi salva. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modificarea nu a fost salvată. Încercați din nou."
           }
         },
         "ru": {
@@ -3578,6 +4178,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex على iPhone أو Mac لإضافة مهام جديدة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex auf dem iPhone oder Mac, um neue Aufgaben zu erfassen."
           }
         },
         "en": {
@@ -3634,6 +4240,12 @@
             "value": "새 할 일을 추가하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex op iPhone of Mac om nieuwe taken vast te leggen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3644,6 +4256,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex no iPhone ou no Mac para adicionar novas tarefas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pe iPhone sau Mac pentru a adăuga sarcini noi."
           }
         },
         "ru": {
@@ -3686,6 +4304,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex على iPhone أو Mac لتطبيق هذا الإجراء."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex auf dem iPhone oder Mac, um diese Aktion anzuwenden."
           }
         },
         "en": {
@@ -3742,6 +4366,12 @@
             "value": "이 동작을 적용하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex op iPhone of Mac om deze actie toe te passen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3752,6 +4382,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex no iPhone ou no Mac para aplicar esta ação."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pe iPhone sau Mac pentru a aplica această acțiune."
           }
         },
         "ru": {
@@ -3794,6 +4430,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أعد المحاولة، أو افتح Lorvex على iPhone إذا استمرت المشكلة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuche es erneut oder öffne Lorvex auf deinem iPhone, falls das Problem bestehen bleibt."
           }
         },
         "en": {
@@ -3850,6 +4492,12 @@
             "value": "다시 시도하세요. 계속되면 iPhone에서 Lorvex를 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probeer het opnieuw of open Lorvex op je iPhone als het probleem blijft bestaan."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3860,6 +4508,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tente novamente ou, se o problema persistir, abra o Lorvex no seu iPhone."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reîncercați sau deschideți Lorvex pe iPhone dacă problema persistă."
           }
         },
         "ru": {
@@ -3902,6 +4556,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّر تحميل اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Heute“ konnte nicht geladen werden"
           }
         },
         "en": {
@@ -3958,6 +4618,12 @@
             "value": "오늘을 불러올 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘Vandaag’ kon niet worden geladen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3968,6 +4634,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível carregar Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Astăzi” nu s-a putut încărca"
           }
         },
         "ru": {
@@ -4010,6 +4682,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إعادة المحاولة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
           }
         },
         "en": {
@@ -4066,6 +4744,12 @@
             "value": "다시 시도"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probeer opnieuw"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4076,6 +4760,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tentar novamente"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reîncercați"
           }
         },
         "ru": {
@@ -4118,6 +4808,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يعيد تحميل اليوم من اللقطة أو من iPhone المقترن"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lädt „Heute“ erneut aus dem Snapshot oder vom gekoppelten iPhone"
           }
         },
         "en": {
@@ -4174,6 +4870,12 @@
             "value": "스냅샷 또는 페어링된 iPhone에서 오늘을 다시 불러옵니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laadt ‘Vandaag’ opnieuw vanuit de snapshot of de gekoppelde iPhone"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4184,6 +4886,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recarrega Hoje a partir do instantâneo ou do iPhone pareado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reîncarcă „Astăzi” din instantaneu sau de pe iPhone-ul asociat"
           }
         },
         "ru": {
@@ -4226,6 +4934,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيانات الساعة غير متاحة: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watch-Daten nicht verfügbar: %@"
           }
         },
         "en": {
@@ -4282,6 +4996,12 @@
             "value": "Apple Watch 데이터를 사용할 수 없음: %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watch-gegevens niet beschikbaar: %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4292,6 +5012,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dados do relógio indisponíveis: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date indisponibile pe ceas: %@"
           }
         },
         "ru": {
@@ -4334,6 +5060,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex على iPhone للمزامنة، ثم أعد المحاولة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex auf deinem iPhone, um zu synchronisieren, und versuche es dann erneut."
           }
         },
         "en": {
@@ -4390,6 +5122,12 @@
             "value": "iPhone에서 Lorvex를 열어 동기화한 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex op je iPhone om te synchroniseren en probeer het daarna opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4400,6 +5138,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex no seu iPhone para sincronizar e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pe iPhone pentru a sincroniza, apoi reîncercați."
           }
         },
         "ru": {
@@ -4442,6 +5186,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم غير متاح"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Heute“ nicht verfügbar"
           }
         },
         "en": {
@@ -4498,6 +5248,12 @@
             "value": "오늘을 표시할 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘Vandaag’ niet beschikbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4508,6 +5264,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoje indisponível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Astăzi” indisponibil"
           }
         },
         "ru": {
@@ -4549,6 +5311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "العادات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewohnheiten"
           }
         },
         "en": {
@@ -4605,6 +5373,12 @@
             "value": "습관"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewoontes"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4615,6 +5389,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hábitos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiceiuri"
           }
         },
         "ru": {
@@ -4657,6 +5437,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حالة بيانات الساعة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status der Watch-Daten"
           }
         },
         "en": {
@@ -4713,6 +5499,12 @@
             "value": "Apple Watch 데이터 상태"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status van Watch-gegevens"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4723,6 +5515,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status dos dados do relógio"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starea datelor de pe ceas"
           }
         },
         "ru": {
@@ -4765,6 +5563,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيانات اللقطة تالفة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot-Daten beschädigt"
           }
         },
         "en": {
@@ -4821,6 +5625,12 @@
             "value": "스냅샷 데이터가 손상됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot-gegevens beschadigd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4831,6 +5641,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instantâneo danificado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datele instantaneului sunt deteriorate"
           }
         },
         "ru": {
@@ -4872,6 +5688,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مباشر من Lorvex"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live von Lorvex"
           }
         },
         "en": {
@@ -4928,6 +5750,12 @@
             "value": "Lorvex 실시간 데이터"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live van Lorvex"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4938,6 +5766,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ao vivo do Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În direct din Lorvex"
           }
         },
         "ru": {
@@ -4979,6 +5813,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يتم التحديث"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht aktualisiert"
           }
         },
         "en": {
@@ -5035,6 +5875,12 @@
             "value": "새로 고치지 않음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet vernieuwd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5045,6 +5891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não atualizado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neactualizat"
           }
         },
         "ru": {
@@ -5087,6 +5939,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex للمزامنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex zum Synchronisieren"
           }
         },
         "en": {
@@ -5143,6 +6001,12 @@
             "value": "Lorvex를 열어 동기화"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex om te synchroniseren"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5153,6 +6017,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pentru sincronizare"
           }
         },
         "ru": {
@@ -5195,6 +6065,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لقطة متزامنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot synchronisiert"
           }
         },
         "en": {
@@ -5251,6 +6127,12 @@
             "value": "동기화된 스냅샷"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot gesynchroniseerd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5261,6 +6143,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instantâneo sincronizado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantaneu sincronizat"
           }
         },
         "ru": {
@@ -5303,6 +6191,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تمت المزامنة %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisiert %@"
           }
         },
         "en": {
@@ -5359,6 +6253,12 @@
             "value": "%@ 동기화됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesynchroniseerd %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5369,6 +6269,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sincronizado %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sincronizat %@"
           }
         },
         "ru": {
@@ -5410,6 +6316,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اللقطة غير متاحة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot nicht verfügbar"
           }
         },
         "en": {
@@ -5466,6 +6378,12 @@
             "value": "스냅샷을 사용할 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot niet beschikbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5476,6 +6394,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instantâneo indisponível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantaneu indisponibil"
           }
         },
         "ru": {
@@ -5518,6 +6442,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعذّرت قراءة اللقطة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot nicht lesbar"
           }
         },
         "en": {
@@ -5574,6 +6504,12 @@
             "value": "스냅샷을 읽을 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot onleesbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5584,6 +6520,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instantâneo ilegível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantaneu ilizibil"
           }
         },
         "ru": {
@@ -5626,6 +6568,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حدّث Lorvex للمزامنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisiere Lorvex, um zu synchronisieren"
           }
         },
         "en": {
@@ -5682,6 +6630,12 @@
             "value": "Lorvex를 업데이트하여 동기화"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk Lorvex bij om te synchroniseren"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5692,6 +6646,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualize o Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizați Lorvex pentru a sincroniza"
           }
         },
         "ru": {
@@ -5734,6 +6694,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "محظورة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blockiert"
           }
         },
         "en": {
@@ -5790,6 +6756,12 @@
             "value": "차단됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geblokkeerd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5800,6 +6772,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bloqueada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocată"
           }
         },
         "ru": {
@@ -5842,6 +6820,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex على iPhone أو Mac لإضافة مهام جديدة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex auf dem iPhone oder Mac, um neue Aufgaben zu erfassen."
           }
         },
         "en": {
@@ -5898,6 +6882,12 @@
             "value": "새 할 일을 추가하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex op iPhone of Mac om nieuwe taken vast te leggen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5908,6 +6898,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex no iPhone ou no Mac para adicionar novas tarefas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pe iPhone sau Mac pentru a adăuga sarcini noi."
           }
         },
         "ru": {
@@ -5950,6 +6946,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "انتظر حتى ينتهي Lorvex من التحديث."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warte, bis Lorvex die Aktualisierung abgeschlossen hat."
           }
         },
         "en": {
@@ -6006,6 +7008,12 @@
             "value": "Lorvex가 새로 고침을 마칠 때까지 기다리세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wacht tot Lorvex klaar is met vernieuwen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6016,6 +7024,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aguarde o Lorvex terminar a atualização."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Așteptați ca Lorvex să termine actualizarea."
           }
         },
         "ru": {
@@ -6057,6 +7071,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المكتملة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt"
           }
         },
         "en": {
@@ -6113,6 +7133,12 @@
             "value": "완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltooid"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6123,6 +7149,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Feito"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizat"
           }
         },
         "ru": {
@@ -6165,6 +7197,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حتى %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis %@"
           }
         },
         "en": {
@@ -6221,6 +7259,12 @@
             "value": "%@까지"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tot %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6231,6 +7275,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Até %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Până la %@"
           }
         },
         "ru": {
@@ -6273,6 +7323,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex Heute"
           }
         },
         "en": {
@@ -6329,6 +7385,12 @@
             "value": "Lorvex 오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6339,6 +7401,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex Astăzi"
           }
         },
         "ru": {
@@ -6381,6 +7449,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يعرض عدد المهام المتبقية اليوم والمهمة الأولى في القائمة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt, wie viele Aufgaben heute noch offen sind und welche ganz oben steht."
           }
         },
         "en": {
@@ -6437,6 +7511,12 @@
             "value": "오늘 남은 할 일 수와 맨 위 할 일을 표시합니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont hoeveel taken er vandaag nog zijn en welke bovenaan staat."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6447,6 +7527,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostra quantas tarefas restam hoje e a primeira da lista."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează câte sarcini au mai rămas astăzi și care este prima."
           }
         },
         "ru": {
@@ -6488,6 +7574,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تأجيل إلى الغد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf morgen verschieben"
           }
         },
         "en": {
@@ -6544,6 +7636,12 @@
             "value": "내일까지 미루기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel uit tot morgen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6554,6 +7652,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adiar para amanhã"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amânați pentru mâine"
           }
         },
         "ru": {
@@ -6595,6 +7699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إيقاف مؤقت"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausieren"
           }
         },
         "en": {
@@ -6651,6 +7761,12 @@
             "value": "일시 정지"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauzeer"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6661,6 +7777,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pausar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suspendați"
           }
         },
         "ru": {
@@ -6702,6 +7824,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يزيل %@ من المهام التي بدأ العمل عليها"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimmt %@ aus den gestarteten Aufgaben heraus"
           }
         },
         "en": {
@@ -6758,6 +7886,12 @@
             "value": "시작된 할 일에서 “%@” 항목을 제외합니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haalt %@ uit de gestarte taken"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6768,6 +7902,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove “%@” das tarefas iniciadas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scoate sarcina %@ din sarcinile începute"
           }
         },
         "ru": {
@@ -6809,6 +7949,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بدء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starten"
           }
         },
         "en": {
@@ -6865,6 +8011,12 @@
             "value": "시작"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6875,6 +8027,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Iniciar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începeți"
           }
         },
         "ru": {
@@ -6916,6 +8074,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يعلّم %@ كمهمة بدأ العمل عليها"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiert %@ als gestartet"
           }
         },
         "en": {
@@ -6972,6 +8136,12 @@
             "value": "“%@” 항목을 시작됨으로 표시합니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markeert %@ als gestart"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6982,6 +8152,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Marca “%@” como iniciada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marchează sarcina %@ ca începută"
           }
         },
         "ru": {
@@ -7023,6 +8199,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "متبقية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "übrig"
           }
         },
         "en": {
@@ -7079,6 +8261,12 @@
             "value": "남음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "over"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7089,6 +8277,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "a fazer"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rămase"
           }
         },
         "ru": {
@@ -7130,6 +8324,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "د"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Min."
           }
         },
         "en": {
@@ -7186,6 +8386,12 @@
             "value": "분"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7196,6 +8402,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "min"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min."
           }
         },
         "ru": {
@@ -7238,6 +8450,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المتبقي %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %@"
           }
         },
         "en": {
@@ -7294,6 +8512,12 @@
             "value": "%@ 남음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7304,6 +8528,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tempo restante: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timp rămas: %@"
           }
         },
         "ru": {
@@ -7345,6 +8575,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يعرض إجراءات هذه المهمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt die Aktionen dieser Aufgabe"
           }
         },
         "en": {
@@ -7401,6 +8637,12 @@
             "value": "이 할 일의 동작을 표시합니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont de acties van deze taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7411,6 +8653,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostra as ações desta tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează acțiunile acestei sarcini"
           }
         },
         "ru": {
@@ -7452,6 +8700,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "متأخرة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überfällig"
           }
         },
         "en": {
@@ -7508,6 +8762,12 @@
             "value": "기한 초과"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlopen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7518,6 +8778,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atrasada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restantă"
           }
         },
         "ru": {
@@ -7559,6 +8825,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم البدء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestartet"
           }
         },
         "en": {
@@ -7615,6 +8887,12 @@
             "value": "시작됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestart"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7625,6 +8903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Iniciada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începută"
           }
         },
         "ru": {
@@ -7666,6 +8950,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إنجاز كل شيء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles erledigt"
           }
         },
         "en": {
@@ -7722,6 +9012,12 @@
             "value": "모두 완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles gedaan"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7732,6 +9028,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tudo em dia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totul rezolvat"
           }
         },
         "ru": {
@@ -7807,6 +9109,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld مكتملة اليوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld heute erledigt"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld heute erledigt"
                 }
               }
             }
@@ -7950,6 +9270,24 @@
             "value": "오늘 %lld개 완료"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld vandaag voltooid"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld vandaag voltooid"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -7993,6 +9331,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld concluídas hoje"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld finalizate astăzi"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld finalizată astăzi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld finalizate astăzi"
                 }
               }
             }
@@ -8136,6 +9498,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weitere heute"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weitere heute"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -8274,6 +9654,24 @@
             "value": "오늘 %lld개 더 있음"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "nog %lld vandaag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "nog %lld vandaag"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -8317,6 +9715,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "mais %lld hoje"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "încă %lld astăzi"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "încă %lld astăzi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "încă %lld astăzi"
                 }
               }
             }
@@ -8423,6 +9845,12 @@
             "value": "لم يتبقَّ شيء لليوم."
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für heute ist nichts mehr übrig."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -8477,6 +9905,12 @@
             "value": "오늘 남은 할 일이 없습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is niets meer over voor vandaag."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8487,6 +9921,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada mais para hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu mai rămâne nimic pentru astăzi."
           }
         },
         "ru": {
@@ -8528,6 +9968,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
           }
         },
         "en": {
@@ -8584,6 +10030,12 @@
             "value": "오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8594,6 +10046,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Astăzi"
           }
         },
         "ru": {
@@ -8635,6 +10093,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex على iPhone لتغيير المهام."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex auf dem iPhone, um Aufgaben zu ändern."
           }
         },
         "en": {
@@ -8691,6 +10155,12 @@
             "value": "할 일을 변경하려면 iPhone에서 Lorvex를 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex op iPhone om taken te wijzigen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8701,6 +10171,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex no iPhone para alterar tarefas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pe iPhone pentru a modifica sarcinile."
           }
         },
         "ru": {
@@ -8775,6 +10251,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "لا توجد مهام متبقية اليوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgabe heute noch übrig"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Aufgaben heute noch übrig"
                 }
               }
             }
@@ -8924,6 +10418,24 @@
             "value": "오늘 남은 할 일 %lld개"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld taak nog over voor vandaag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld taken nog over voor vandaag"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -8967,6 +10479,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld tarefas restantes hoje"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sarcini rămase astăzi"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sarcină rămasă astăzi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de sarcini rămase astăzi"
                 }
               }
             }

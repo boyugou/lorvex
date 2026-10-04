@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex kan planningsblokken die je maakt toevoegen aan de Agenda-app.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex kan de details van activiteiten lezen om planningen en context voor de assistent op te stellen.";

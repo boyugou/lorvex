@@ -93,6 +93,28 @@ struct LorvexDateDisplayTests {
     #expect(LorvexDateFormatters.relativeDays(-3, locale: english) == "3 days ago")
   }
 
+  @Test("The abbreviated relative style never reads as a bare signed number")
+  func abbreviatedRelativeDaysKeepTheirPhrase() throws {
+    // French, Russian, and Romanian abbreviate "45 days ago" to "-45 j",
+    // "-45 дн", and "-45 zile", which reads as arithmetic; their short style
+    // keeps the whole phrase, so that is what is shown.
+    for identifier in ["fr_FR", "ru_RU", "ro_RO"] {
+      let locale = Locale(identifier: identifier)
+      let phrase = LorvexDateFormatters.relativeDays(-45, unitsStyle: .abbreviated, locale: locale)
+      #expect(phrase == LorvexDateFormatters.relativeDays(-45, unitsStyle: .short, locale: locale), "\(identifier)")
+      let first = try #require(phrase.first)
+      #expect(!"-\u{2212}+".contains(first), "\(identifier) starts with a sign")
+    }
+    // A language whose abbreviated style is already a phrase keeps it.
+    let formatter = RelativeDateTimeFormatter()
+    formatter.locale = english
+    formatter.unitsStyle = .abbreviated
+    formatter.dateTimeStyle = .named
+    #expect(
+      LorvexDateFormatters.relativeDays(-3, unitsStyle: .abbreviated, locale: english)
+        == formatter.localizedString(from: DateComponents(day: -3)))
+  }
+
   @Test("A date without its year is one in the logical today's year, as the locale's calendar counts it")
   func theYearIsLeftOutOnlyWithinTheCalendarsYear() throws {
     // March 15, 2027 is Esfand 24, 1405: the Persian year of the logical

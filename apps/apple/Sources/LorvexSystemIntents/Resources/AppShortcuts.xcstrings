@@ -10,6 +10,12 @@
             "value": "أضف مهمة إلى ${applicationName}"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge eine Aufgabe zu ${applicationName} hinzu"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -64,6 +70,12 @@
             "value": "${applicationName}에 할 일 추가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg een taak toe aan ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -74,6 +86,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione uma tarefa ao ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă o sarcină în ${applicationName}"
           }
         },
         "ru": {
@@ -115,6 +133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أضف عادة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge eine Gewohnheit in ${applicationName} hinzu"
           }
         },
         "en": {
@@ -171,6 +195,12 @@
             "value": "${applicationName}에 습관 추가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg een gewoonte toe in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -181,6 +211,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adicione um hábito no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă un obicei în ${applicationName}"
           }
         },
         "ru": {
@@ -222,6 +258,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "سجّل مهمة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfasse eine Aufgabe in ${applicationName}"
           }
         },
         "en": {
@@ -278,6 +320,12 @@
             "value": "${applicationName}에서 할 일을 빠르게 추가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leg een taak vast in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -288,6 +336,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anote uma tarefa no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notează o sarcină în ${applicationName}"
           }
         },
         "ru": {
@@ -329,6 +383,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أكمل مهمة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledige eine Aufgabe in ${applicationName}"
           }
         },
         "en": {
@@ -385,6 +445,12 @@
             "value": "${applicationName}에서 할 일 완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltooi een taak in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -395,6 +461,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conclua uma tarefa no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizează o sarcină în ${applicationName}"
           }
         },
         "ru": {
@@ -436,6 +508,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أنشئ عادة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle eine Gewohnheit in ${applicationName}"
           }
         },
         "en": {
@@ -492,6 +570,12 @@
             "value": "${applicationName}에서 습관 만들기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak een gewoonte aan in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -502,6 +586,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Crie um hábito no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Creează un obicei în ${applicationName}"
           }
         },
         "ru": {
@@ -543,6 +633,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أجّل مهمة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschiebe eine Aufgabe in ${applicationName}"
           }
         },
         "en": {
@@ -599,6 +695,12 @@
             "value": "${applicationName}에서 할 일 미루기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel een taak uit in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -609,6 +711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adie uma tarefa no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amână o sarcină în ${applicationName}"
           }
         },
         "ru": {
@@ -650,6 +758,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعرض المهام في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeige meine Aufgaben in ${applicationName}"
           }
         },
         "en": {
@@ -706,6 +820,12 @@
             "value": "${applicationName}의 할 일 목록 보기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toon de taken in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -716,6 +836,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Liste as tarefas do ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează sarcinile din ${applicationName}"
           }
         },
         "ru": {
@@ -757,6 +883,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "علّم مهمة كمكتملة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiere eine Aufgabe in ${applicationName} als erledigt"
           }
         },
         "en": {
@@ -813,6 +945,12 @@
             "value": "${applicationName}에서 할 일을 완료로 표시"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markeer een taak als voltooid in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -823,6 +961,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Marque uma tarefa como feita no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marchează o sarcină ca finalizată în ${applicationName}"
           }
         },
         "ru": {
@@ -864,6 +1008,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "انقل مهمة إلى اليوم في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verschiebe eine Aufgabe auf heute in ${applicationName}"
           }
         },
         "en": {
@@ -920,6 +1070,12 @@
             "value": "${applicationName}에서 할 일을 오늘로 이동"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplaats een taak naar vandaag in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -930,6 +1086,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mova uma tarefa para hoje no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mută o sarcină pe astăzi în ${applicationName}"
           }
         },
         "ru": {
@@ -971,6 +1133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne ${applicationName}"
           }
         },
         "en": {
@@ -1027,6 +1195,12 @@
             "value": "${applicationName} 열기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open de app ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1037,6 +1211,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide ${applicationName}"
           }
         },
         "ru": {
@@ -1078,6 +1258,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح اليوم في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Heute in ${applicationName}"
           }
         },
         "en": {
@@ -1134,6 +1320,12 @@
             "value": "${applicationName}에서 오늘 열기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open vandaag in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1144,6 +1336,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra Hoje no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide Astăzi în ${applicationName}"
           }
         },
         "ru": {
@@ -1185,6 +1383,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "خطط مهمة لليوم في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plane eine Aufgabe für heute in ${applicationName}"
           }
         },
         "en": {
@@ -1241,6 +1445,12 @@
             "value": "${applicationName}에서 할 일을 오늘로 계획"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan een taak voor vandaag in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1251,6 +1461,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planeje uma tarefa para hoje no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planifică o sarcină pentru astăzi în ${applicationName}"
           }
         },
         "ru": {
@@ -1292,6 +1508,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اقرأ النظرة العامة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lies die Übersicht in ${applicationName} vor"
           }
         },
         "en": {
@@ -1348,6 +1570,12 @@
             "value": "${applicationName}에서 개요 읽기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees het overzicht in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1358,6 +1586,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leia a visão geral do ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citește prezentarea generală din ${applicationName}"
           }
         },
         "ru": {
@@ -1399,6 +1633,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اقرأ المراجعة الأسبوعية في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lies den Wochenrückblick in ${applicationName} vor"
           }
         },
         "en": {
@@ -1455,6 +1695,12 @@
             "value": "${applicationName}에서 주간 회고 읽기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees de weekterugblik in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1465,6 +1711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leia a revisão semanal do ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citește recapitularea săptămânală din ${applicationName}"
           }
         },
         "ru": {
@@ -1506,6 +1758,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حدد موعد مهمة للغد في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plane eine Aufgabe für morgen in ${applicationName}"
           }
         },
         "en": {
@@ -1562,6 +1820,12 @@
             "value": "${applicationName}에서 할 일을 내일로 계획"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan een taak voor morgen in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1572,6 +1836,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Programe uma tarefa para amanhã no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programează o sarcină pentru mâine în ${applicationName}"
           }
         },
         "ru": {
@@ -1613,6 +1883,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابحث عن المهام في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche Aufgaben in ${applicationName}"
           }
         },
         "en": {
@@ -1669,6 +1945,12 @@
             "value": "${applicationName}에서 할 일 검색"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoek taken in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1679,6 +1961,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Busque tarefas no ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caută sarcini în ${applicationName}"
           }
         },
         "ru": {
@@ -1720,6 +2008,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعرض نظرة Lorvex العامة في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeige die Lorvex-Übersicht in ${applicationName}"
           }
         },
         "en": {
@@ -1776,6 +2070,12 @@
             "value": "${applicationName}에서 개요 보기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toon het Lorvex-overzicht in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1786,6 +2086,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostre a visão geral do ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează prezentarea generală Lorvex din ${applicationName}"
           }
         },
         "ru": {
@@ -1827,6 +2133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعرض المراجعة الأسبوعية في ${applicationName}"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeige den Wochenrückblick in ${applicationName}"
           }
         },
         "en": {
@@ -1883,6 +2195,12 @@
             "value": "${applicationName}에서 주간 회고 보기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toon de weekterugblik in ${applicationName}"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1893,6 +2211,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostre a revisão semanal do ${applicationName}"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează recapitularea săptămânală din ${applicationName}"
           }
         },
         "ru": {

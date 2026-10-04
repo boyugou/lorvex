@@ -55,14 +55,11 @@ struct MobileStoreMemoryComposerSheet: View {
               table: "Localizable", bundle: MobileL10n.bundle))
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "memory.new", defaultValue: "New Memory", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

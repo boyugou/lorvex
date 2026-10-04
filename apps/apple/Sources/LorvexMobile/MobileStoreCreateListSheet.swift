@@ -12,14 +12,11 @@ struct MobileStoreCreateListSheet: View {
             store: store, idPrefix: "mobileCreateList", focusesNameOnAppear: true, submit: submit)
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "sheet.new_list", defaultValue: "New List", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

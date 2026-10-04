@@ -67,14 +67,11 @@ struct MobileDependencyPicker: View {
           }
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "dependency.add", defaultValue: "Add Dependency", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .searchable(
         text: $query,
         prompt: String(

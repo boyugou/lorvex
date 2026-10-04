@@ -19,6 +19,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case system
   case en
   case ar
+  case de
   case es
   case fa
   case fr
@@ -27,8 +28,10 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case it
   case ja
   case ko
+  case nl
   case pl
   case ptBR = "pt-BR"
+  case ro
   case ru
   case uk
   case ur
@@ -64,6 +67,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .system: ""
     case .en: "English"
     case .ar: "العربية"
+    case .de: "Deutsch"
     case .es: "Español"
     case .fa: "فارسی"
     case .fr: "Français"
@@ -72,8 +76,10 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .it: "Italiano"
     case .ja: "日本語"
     case .ko: "한국어"
+    case .nl: "Nederlands"
     case .pl: "Polski"
     case .ptBR: "Português (Brasil)"
+    case .ro: "Română"
     case .ru: "Русский"
     case .uk: "Українська"
     case .ur: "اردو"

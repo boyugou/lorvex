@@ -189,26 +189,31 @@ public enum LorvexDateFormatters {
   /// `date` relative to `reference`: "4 minutes ago" or "in 2 hours" with
   /// `.full` units, "4 min. ago" with `.abbreviated`; a `.named` style writes
   /// "yesterday" or "now" where the language has a word for the distance.
+  /// Where a language writes `.abbreviated` as a bare signed number ("-4 j"),
+  /// the short style's phrase is used instead.
   public static func relative(
     _ date: Date, to reference: Date,
     unitsStyle: RelativeDateTimeFormatter.UnitsStyle = .full,
     dateTimeStyle: RelativeDateTimeFormatter.DateTimeStyle = .named,
     locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
-    displayFormatters.relativeFormatter(unitsStyle: unitsStyle, dateTimeStyle: dateTimeStyle, locale: locale)
-      .localizedString(for: date, relativeTo: reference)
+    relativePhrase(unitsStyle: unitsStyle, dateTimeStyle: dateTimeStyle, locale: locale) {
+      $0.localizedString(for: date, relativeTo: reference)
+    }
   }
 
   /// A whole number of days from today, named where the language has a word
   /// for it: "today", "tomorrow", "3 days ago"; "in 3d" with `.abbreviated`
   /// units. Counting whole days keeps a due date later today reading "today"
-  /// rather than "in 5 hours".
+  /// rather than "in 5 hours". Where a language writes `.abbreviated` as a
+  /// bare signed number ("-3 j"), the short style's phrase is used instead.
   public static func relativeDays(
     _ days: Int, unitsStyle: RelativeDateTimeFormatter.UnitsStyle = .full,
     locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
-    displayFormatters.relativeFormatter(unitsStyle: unitsStyle, dateTimeStyle: .named, locale: locale)
-      .localizedString(from: DateComponents(day: days))
+    relativePhrase(unitsStyle: unitsStyle, dateTimeStyle: .named, locale: locale) {
+      $0.localizedString(from: DateComponents(day: days))
+    }
   }
 
   /// How long ago something happened, given its age in seconds, in the
@@ -228,9 +233,31 @@ public enum LorvexDateFormatters {
       } else {
         DateComponents(minute: -max(1, seconds / 60))
       }
-    return displayFormatters.relativeFormatter(
-      unitsStyle: unitsStyle, dateTimeStyle: .numeric, locale: locale
-    ).localizedString(from: components)
+    return relativePhrase(unitsStyle: unitsStyle, dateTimeStyle: .numeric, locale: locale) {
+      $0.localizedString(from: components)
+    }
+  }
+
+  /// The phrase `phrase` reads from the cached relative formatter for
+  /// `unitsStyle`. French, Russian, and Romanian write the abbreviated style
+  /// as a bare signed number ("-3 j", "-3 дн", "-45 zile"), which reads as
+  /// arithmetic rather than a time, while their short style keeps the whole
+  /// phrase ("il y a 3 j"); a result that starts with a sign is therefore
+  /// written again in the short style.
+  private static func relativePhrase(
+    unitsStyle: RelativeDateTimeFormatter.UnitsStyle,
+    dateTimeStyle: RelativeDateTimeFormatter.DateTimeStyle, locale: Locale,
+    phrase: (RelativeDateTimeFormatter) -> String
+  ) -> String {
+    let result = phrase(
+      displayFormatters.relativeFormatter(unitsStyle: unitsStyle, dateTimeStyle: dateTimeStyle, locale: locale))
+    let directionMarks: Set<Character> = ["\u{200E}", "\u{200F}", "\u{061C}"]
+    guard unitsStyle == .abbreviated,
+      let first = result.first(where: { !directionMarks.contains($0) }),
+      "-\u{2212}+".contains(first)
+    else { return result }
+    return phrase(
+      displayFormatters.relativeFormatter(unitsStyle: .short, dateTimeStyle: dateTimeStyle, locale: locale))
   }
 
   private static let displayFormatters = DisplayFormatterCache()

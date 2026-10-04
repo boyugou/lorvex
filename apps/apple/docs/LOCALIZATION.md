@@ -102,7 +102,8 @@ the CLDR category automatically. The rules for writing count strings are under
 catalogs carry; see "Language coverage" below. A plural entry carries, for each
 language, the CLDR categories that language's integer counts select, as
 declared in `PLURAL_CATEGORIES` in `script/verify_localization_catalog.py`:
-English `one`/`other`; Spanish and Italian `one`/`other`, and French and
+English, German, and Dutch `one`/`other`, where `one` selects only 1; Spanish
+and Italian `one`/`other`, and French and
 Brazilian Portuguese `one`/`other` where `one` selects both 0 and 1, each with an
 optional `many` that only round millions select and that falls back to `other`
 when absent; Hindi and Persian `one`/`other`, where `one` selects both 0 and
@@ -114,14 +115,18 @@ Ukrainian
 21, 31, and so on (never 11), `few` 2 to 4, 22 to 24, and so on (never 12 to 14),
 and `many` 0, 5 to 20, 25 to 30, and so on; Polish `one`/`few`/`many`/`other`,
 where `one` selects only 1, `few` 2 to 4, 22 to 24, and so on, and `many` 0, 5 to
-21, 25 to 31, and so on, 12 to 14 included; Arabic all six: `zero` selects 0,
+21, 25 to 31, and so on, 12 to 14 included; Romanian `one`/`few`/`other`, where
+`one` selects only 1, `few` 0, 2 to 19, 101 to 119, 201 to 219, and so on, and
+`other` 20 to 100, 120 to 200, and so on; Arabic all six: `zero` selects 0,
 `one` 1, `two` 2, `few` 3 to 10, `many` 11 to 99, and `other` 100 and over.
 In Russian, Ukrainian, and Polish only fractions select `other`; the format
 still requires the form, so it carries the genitive singular ("1,5 дня").
+In Romanian a fraction selects `few`.
 Apple's lookup honors an explicit `zero` entry in every language.
 
 A `one` form may leave the number out ("Once a week") only in a language whose
-`one` means exactly 1, as in English, Spanish, Italian, and Polish. French,
+`one` means exactly 1, as in English, German, Dutch, Spanish, Italian, Romanian,
+and Polish. French,
 Brazilian Portuguese, Hindi, Bengali, and Persian also use `one` for 0, and
 Russian and Ukrainian use it for 21, 31, 101, and so on, so their `one` forms
 show the count. A `zero` form takes 0 over from `one`, so an entry that defines
@@ -201,9 +206,10 @@ Each process shows the first language in the user's preferred-language list
 that its bundles ship, matched the way Foundation matches localizations:
 
 - A regional system language selects its language: `ar-SA` and `ar-EG` select
-  `ar`; `es-MX`, `es-419`, and `es-ES` select `es`; `fr-CA` and `fr-CH` select
-  `fr`; `hi-IN` selects `hi`; `it-CH` selects `it`; `ja-JP` selects `ja`;
-  `ko-KR` selects `ko`; `pl-PL` selects `pl`; `ru-RU` and `ru-KZ` select `ru`;
+  `ar`; `de-AT` and `de-CH` select `de`; `es-MX`, `es-419`, and `es-ES` select
+  `es`; `fr-CA` and `fr-CH` select `fr`; `hi-IN` selects `hi`; `it-CH` selects
+  `it`; `ja-JP` selects `ja`; `ko-KR` selects `ko`; `nl-BE` selects `nl`;
+  `pl-PL` selects `pl`; `ro-MD` selects `ro`; `ru-RU` and `ru-KZ` select `ru`;
   `uk-UA` selects `uk`; `en-GB` selects `en`. `pt-PT` selects `pt-BR`, the one
   Portuguese variety shipped.
 - Chinese is matched by script, and a code with no script gets the script its
@@ -216,7 +222,7 @@ that its bundles ship, matched the way Foundation matches localizations:
   `zh-HK` and `zh-MO` to `zh-Hant` on its own, and `AppLanguage` reads the same
   answer from it rather than keeping a region table of its own.
 - A list whose first language is not shipped falls through to the next one: a
-  Mac set to German, then Simplified Chinese, shows Simplified Chinese.
+  Mac set to Swedish, then Simplified Chinese, shows Simplified Chinese.
 - A list naming no shipped language selects the development language, English.
 
 `AppLanguageTests` pins these rules.
@@ -357,10 +363,11 @@ localize through two different catalogs:
 ## Language coverage
 
 English (`en`) is the source language. The shipped languages are English,
-Arabic (`ar`), Spanish (`es`), Persian (`fa`), French (`fr`), Hebrew (`he`),
-Hindi (`hi`), Italian (`it`), Japanese (`ja`), Korean (`ko`), Polish (`pl`),
-Brazilian Portuguese (`pt-BR`), Russian (`ru`), Ukrainian (`uk`), Urdu (`ur`),
-Simplified Chinese (`zh-Hans`), and Traditional Chinese (`zh-Hant`).
+Arabic (`ar`), German (`de`), Spanish (`es`), Persian (`fa`), French (`fr`),
+Hebrew (`he`), Hindi (`hi`), Italian (`it`), Japanese (`ja`), Korean (`ko`),
+Dutch (`nl`), Polish (`pl`), Brazilian Portuguese (`pt-BR`), Romanian (`ro`),
+Russian (`ru`), Ukrainian (`uk`), Urdu (`ur`), Simplified Chinese (`zh-Hans`),
+and Traditional Chinese (`zh-Hant`).
 
 The target set is the 31 locales lorvex.app is published in: `en`, `zh-Hans`,
 `zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`, `pt-BR`, `ru`, `id`, `ur`, `de`, `ja`,
@@ -1918,6 +1925,291 @@ in Shortcuts.
   "#list""). Inside Hebrew text a Latin word that follows a number is laid out
   right to left together with the number, so "20 min" displays as "min 20".
 
+## German conventions
+
+The `de` catalogs are Standard German as written in Germany; de-DE, de-AT,
+de-CH, and every other German locale select them, so regional vocabulary is
+avoided and the spelling uses ß. They follow Apple's German usage
+(Einstellungen, Kalender, Erinnerungen, Kurzbefehle) and keep one term per
+concept across every catalog, so a thing reads the same on the Mac, iPhone,
+watch, widgets, and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | Aufgabe, Liste, Tag | Aufgabe and Liste are feminine, Tag masculine (plural Tags); a task's checklist is a Checkliste and its item a Checklistenpunkt |
+| Inbox (the seeded list) | Eingang | shown while the list keeps its seeded name |
+| Someday | Irgendwann | capitalized, and quoted where it names the view inside a sentence („Irgendwann“) |
+| Due (the deadline field) | Fällig | "Fällig: %@" leads a row, so a relative word or a date never reads as a clause; Überfällig is overdue |
+| Open (a task not yet done) | Offen | the status; In Bearbeitung is In Progress and Gestartet a started task |
+| Blocked, cancelled, completed | Blockiert, Abgebrochen, Erledigt | Abgeschlossen is the state of a finished sync, diagnostic, or setup step, never of a task |
+| Done (a button) and complete (an action) | Fertig, Erledigen | Fertig closes a sheet; Erledigen completes a task; Erledigt is the state |
+| Defer and snooze | Verschieben, Ausblenden bis | Verschieben moves a task to a later day ("Auf morgen verschieben"); Ausblenden bis hides a task until a date; a reminder's snooze action is "In einer Stunde erinnern" |
+| Plan (verb) | planen | |
+| Schedule (the day pane) | Zeitplan | Zeiten vorschlagen proposes one; the Tagesstunden are the day hours |
+| Capture (quick add) | Erfassen | |
+| Review (the day and the week) | Rückblick | Tagesrückblick and Wochenrückblick; its fields are Erfolge, Hindernisse, Erkenntnisse |
+| Memory | Gedächtnis | one entry is a Gedächtniseintrag |
+| Assistant, AI | Assistent, KI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | Gewohnheit, Abhaken, Serie, Meilenstein | Abhaken is the check-in action, its entries are Einträge, and a habit's total is its Erledigungen |
+| Depends on | Hängt ab von | an Abhängigkeit; a task Wartet auf another |
+| Recurrence | Wiederholung | Wiederholen is the field; a recurring task is wiederkehrend |
+| Sync, snapshot | Synchronisierung, Snapshot | uploading is Hochladen, fetching Abrufen, and a sync record a Datensatz |
+| Event | Ereignis | a calendar event is a Kalenderereignis |
+| App icon badge | Kennzeichen | the word Apple's German Mail uses ("Kennzeichen für ungelesene Mails"); macOS Reminders writes the loanword "Badge-Anzahl", which Lorvex does not use; the app icon is the App-Symbol |
+| Apple features | Einstellungen, Kalender, Erinnerungen, Kurzbefehle, Siri, Spotlight, Fokus, Systemeinstellungen, Sperrbildschirm | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+
+- The reader is addressed as du, never Sie. Apple's German system apps on macOS
+  26 (among them Reminders, Calendar, Notes, Journal, Mail, Music, Maps, Photos,
+  Home, and Find My) use du or dein in more than 4,000 strings and never address
+  the reader as Sie; the 38 strings that contain a capitalized Sie use it as the
+  third-person pronoun "they" or "it". Buttons, menu items, and intent titles
+  are infinitives ("Aufgabe erledigen", "Löschen"); instructions are du
+  imperatives ("Füge den ersten Checklistenpunkt hinzu"); an intent's
+  description is a third-person statement ("Erledigt eine Lorvex-Aufgabe."); a
+  confirmation after an action is a participle ("%@ erledigt."). A pronoun
+  inside a sentence is lowercase ("deiner Gewohnheiten").
+- Every noun is capitalized, including the nouns in a button ("Aufgabe
+  erledigen") and Lorvex's own view names (Heute, Irgendwann, Kalender,
+  Gedächtnis); every other word is lowercase, so a button or a menu item is not
+  in title case. A compound that contains a Latin name takes a hyphen
+  ("Lorvex-Aufgabe", "iCloud-Account", "Widget-Snapshot"). ä, ö, ü, and ß are
+  always written out, never as ae, oe, or ue.
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with „ “ (U+201E and U+201C), never with straight quotes or « », and
+  only where the English quotes ("Liste „%@“ löschen?", "Lädt „Heute“ erneut
+  aus dem Snapshot"). An ellipsis is a no-break space followed by the single
+  character … ("Gewohnheit löschen …"), as in Apple's German, which writes
+  1,587 of its ellipses that way against 54 after a plain space. "z. B." takes
+  a no-break space after "z." so it never splits across lines. The apostrophe
+  is ’ and appears once, in "Los geht’s". A spaced en dash – stands for the
+  English em dash (Apple's German uses 61 spaced en dashes against 8 spaced em
+  dashes).
+- The Return key is "Zeilenschalter", as Apple's German system apps (Calculator,
+  Freeform) name it ("Aufgabe eingeben, Zeilenschalter drücken"). A clock time
+  reads "um 15:00" without "Uhr", because the formatted time already carries
+  the locale's form; "Uhrzeit" names a time of day.
+- A point groups thousands and a comma marks decimals ("10.000", "2,5 Std.").
+  The system's abbreviated durations and relative times end in a period ("30
+  Min.", "2 Std.", "vor 2 Wo."), so a sentence never ends on such a
+  placeholder: a word follows it ("werden etwa %2$@ frei.") or parentheses
+  enclose it ("Letzter Upload (%@)."), so no sentence ends in two periods.
+- `one` selects only 1, as in English, so a top-level `one` form may leave the
+  number out ("Einmal pro Woche") while `other` shows it ("%lld-mal pro Woche");
+  a substitution's `one` still contains `%arg`. `other` also covers 0 ("0
+  Aufgaben"). A verb agrees with the form ("%lld Aufgabe wartet auf andere
+  Aufgaben", "%lld Aufgaben warten auf andere Aufgaben").
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation,
+  because German compounds are long ("7 Tage" for the menu bar panel's Next 7
+  Days switch, "Passt nicht" for Won’t fit, "+%lld mehr" for a small widget's
+  overflow, "Synchronisierung" for the Cloud Sync tab). Accessibility labels may
+  be longer.
+- The capture parser (`LorvexCaptureParser`) has no German vocabulary: it reads
+  English and Chinese words wherever the interface language is German. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("Englische Wörter wie „tomorrow“, „3pm“, „every Monday“, „20 min“
+  oder „#list“").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says
+  to the assistant, so they are du imperatives that name the app exactly once
+  and leave it undeclined ("Füge eine Aufgabe zu ${applicationName} hinzu",
+  "Erledige eine Aufgabe in ${applicationName}"); a separable verb takes its
+  prefix at the end ("hinzu", "vor"). Apple's own German phrases mix
+  infinitives and du imperatives; the Lorvex phrases keep the du of the
+  interface.
+
+## Dutch conventions
+
+The `nl` catalogs are Standard Dutch as written in the Netherlands; nl-NL,
+nl-BE, and every other Dutch locale select them, so Flemish vocabulary is
+avoided. They follow Apple's Dutch usage (Instellingen, Agenda, Herinneringen,
+Opdrachten) and keep one term per concept across every catalog, so a thing
+reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | taak, lijst, tag | all three are de-words (plurals taken, lijsten, tags); a task's checklist is a checklist and its item a checklistonderdeel |
+| Inbox (the seeded list) | Inkomend | shown while the list keeps its seeded name |
+| Someday | Ooit | capitalized, and quoted where it names the view inside a sentence (‘Ooit’) |
+| Due (the deadline field) | Vervaldatum | "Vervaldatum: %@" leads a row; Verlopen is overdue |
+| Open (a task not yet done) | Open | the status; Bezig is In Progress and Gestart a started task |
+| Blocked, cancelled, completed | Geblokkeerd, Geannuleerd, Voltooid | |
+| Done (a button) and complete (an action) | Gereed, Voltooi | Gereed closes a sheet; Voltooi completes a task; Voltooid is the state |
+| Defer and snooze | Stel uit, Verberg tot | Stel uit moves a task to a later day ("Verplaats naar morgen" is the Move to Tomorrow button); Verberg tot hides a task until a date; a reminder's snooze action is "Herinner me over 1 uur" |
+| Plan (verb) | plannen | |
+| Schedule (the day pane) | Planning | Stel tijden voor proposes one; the Daguren are the day hours |
+| Capture (quick add) | Vastleggen | |
+| Review (the day and the week) | Terugblik | dagterugblik and weekterugblik; its fields are Successen, Obstakels, Inzichten |
+| Memory | Geheugen | het-word; one entry is a geheugenitem |
+| Assistant, AI | assistent, AI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | gewoonte, afvinken, reeks, mijlpaal | plural gewoontes; Vink af is the check-in action |
+| Depends on | Hangt af van | an afhankelijkheid; a task Wacht op another |
+| Recurrence | herhaling | Herhaal is the field; a recurring task is terugkerend |
+| Sync, snapshot | synchronisatie, snapshot | uploading is uploaden, fetching ophalen, and a sync record a record |
+| Event | activiteit | the word Apple's Agenda app uses |
+| App icon badge | Badge | Apple's Reminders writes "aantal badges"; the app icon is the appsymbool, as in Apple's Mail, Music, and TV |
+| Agenda (the mobile list mode) | Overzicht | Agenda is Apple's name for the Calendar app, so Lorvex's own Agenda mode takes another word |
+| Apple features | Instellingen, Agenda, Herinneringen, Opdrachten, Siri, Spotlight, focus, Systeeminstellingen, toegangsscherm | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+
+- The reader is addressed as je and jouw, never u. Apple's Dutch system apps on
+  macOS 26 (among them Reminders, Calendar, Notes, Journal, Mail, Music, Maps,
+  Photos, Home, and Find My) use je, jij, or jouw in about 4,500 strings and
+  never address the reader as u or uw; the lone "u" in its tables is a
+  format-specifier key or the abbreviation of "uur". Buttons and menu items are
+  singular imperatives ("Voeg toe", "Verwijder", "Wijzig"), and so are intent
+  titles ("Voltooi Lorvex-taak") and instructions ("Voeg een taak toe en druk op
+  Return"); a confirmation question is an infinitive ("Lijst ‘%@’
+  verwijderen?"); an intent's description is a third-person statement
+  ("Voltooit een Lorvex-taak."); a confirmation after an action is a participle
+  ("%@ voltooid.").
+- Text is in sentence case everywhere: window titles, buttons, menu items, tabs,
+  and section headers, and no noun takes a capital. Weekday and month names
+  come from the calendar in lowercase. Only proper names, Apple's feature names,
+  and Lorvex's own view names inside a sentence (Vandaag, Ooit, Agenda) take a
+  capital. A Dutch compound is one word, and a Latin name joins the Dutch noun
+  with a hyphen ("Lorvex-taak", "iCloud-account", "Widget-snapshot",
+  "Agenda-activiteit").
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with ‘ ’, never with « » or double quotes, and only where the English
+  quotes ("Lijst ‘%@’ verwijderen?"). Apple's Dutch writes the straight single
+  quote in 811 of its strings around a placeholder; Lorvex writes the
+  typographic form so every quotation mark and the apostrophe ’ ("agenda’s")
+  are curly. An ellipsis is the single character … attached to the word, as in
+  English ("Verwijder gewoonte…"). A spaced en dash – stands for the
+  English em dash, the standard Dutch dash (Apple's Dutch uses 25 spaced en
+  dashes against 19 spaced em dashes).
+- The Return key is "Return", as in Apple's Dutch system apps ("Voeg een taak
+  toe en druk op Return"). A clock time reads "om 17:00".
+- A point groups thousands and a comma marks decimals ("10.000", "2,5 uur").
+  The system writes a duration as "1 uur, 30 min" and a relative time as "5
+  min. geleden", so a sentence may end on either.
+- `one` selects only 1, as in English, so a top-level `one` form may leave the
+  number out ("Eén keer per week") while `other` shows it ("%lld keer per
+  week"); a substitution's `one` still contains `%arg`. `other` also covers 0.
+  A verb agrees with the form ("%lld taak wacht op andere taken", "%lld taken
+  wachten op andere taken"), and a counted noun that does not vary stays
+  alike in both forms ("%1$@ is %2$lld keer voltooid.").
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("7 dagen" for the menu bar panel's Next 7 Days switch, "Past niet" for
+  Won’t fit, "+%lld meer" for a small widget's overflow). Accessibility labels
+  may be longer.
+- The capture parser (`LorvexCaptureParser`) has no Dutch vocabulary: it reads
+  English and Chinese words wherever the interface language is Dutch. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("Engelse woorden zoals ‘tomorrow’, ‘3pm’, ‘every Monday’, ‘20 min’
+  of ‘#list’").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are singular
+  imperatives that name the app exactly once ("Voeg een taak toe aan
+  ${applicationName}"). The phrase that opens the app reads "Open de app
+  ${applicationName}": the bare imperative "Open ${applicationName}" is the
+  English phrase letter for letter, which `verify_localization_catalog.py`
+  rejects as an untranslated phrase.
+
+## Romanian conventions
+
+The `ro` catalogs are Romanian as written in Romania; ro-RO, ro-MD, and every
+other Romanian locale select them. They follow Apple's Romanian usage
+(Configurări, Calendar, Mementouri, Scurtături) and keep one term per concept
+across every catalog, so a thing reads the same on the Mac, iPhone, watch,
+widgets, and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | sarcină, listă, tag | sarcină and listă are feminine (plurals sarcini, liste), tag neuter (plural taguri); a task's checklist is a listă de control and its item an element |
+| Inbox (the seeded list) | Primite | shown while the list keeps its seeded name |
+| Someday | Cândva | capitalized, and quoted where it names the view inside a sentence („Cândva”) |
+| Due (the deadline field) | Scadență | "Scadență: %@" leads a row; Restantă (Restante in the plural) is overdue |
+| Open (a task not yet done) | De făcut | the status; În curs is In Progress and Începută a started task; the lists scope that English calls Open reads Active |
+| Blocked, cancelled, completed | Blocată, Anulată, Finalizată | |
+| Done (a button) and complete (an action) | Gata, Finalizați | Gata closes a sheet; Finalizați completes a task (Finalizare in an intent title); Finalizată is the state |
+| Defer and snooze | Amânați, Ascundeți până la | Amânați moves a task to a later day ("Mutați pe mâine" is the Move to Tomorrow button); Ascundeți până la hides a task until a date; a reminder's snooze action is "Reamintire peste o oră" |
+| Plan (verb) | planifica | |
+| Schedule (the day pane) | Program | Sugerați ore proposes one; Orele zilei are the day hours |
+| Capture (quick add) | Adăugare | |
+| Review (the day and the week) | Recapitulare | recapitulare zilnică and săptămânală; its fields are Realizări, Obstacole, Concluzii |
+| Memory | Memorie | one entry is an înregistrare |
+| Assistant, AI | asistent, AI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | obicei, bifare, serie, jalon | plural obiceiuri; Bifați is the check-in action |
+| Reminder | memento | plural mementouri |
+| Depends on | Depinde de | a dependență; a task Așteaptă another |
+| Recurrence | repetare | Repetare is the field; one occurrence of a repeat is an apariție |
+| Sync, snapshot | sincronizare, instantaneu | uploading is încărcare, fetching preluare |
+| Event | eveniment | |
+| App icon badge | Insignă | Apple's Reminders writes "contor de insigne"; the app icon is the pictogramă |
+| Apple features | Configurări, Calendar, Mementouri, Scurtături, Siri, Spotlight, Concentrare, Configurări sistem, ecranul de blocare | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+
+- The interface addresses the reader in the polite plural, and the Siri phrases
+  use the informal singular. Apple's Romanian system apps on macOS 26 (among
+  them Reminders, Calendar, Notes, Journal, Shortcuts, Mail, Music, Maps, Photos,
+  Home, and Find My) use polite-plural verb forms and vă in about 2,100 strings
+  against about 60 singular forms ("Faceți clic", "Creați", "puteți"). Buttons
+  and menu items are polite-plural imperatives ("Ștergeți", "Adăugați o
+  sarcină"), and so are instructions ("Atingeți ＋"). App Intent titles and
+  short titles are verbal nouns ("Finalizare sarcină Lorvex"), as in Apple's
+  Shortcuts; an intent's description is a third-person statement ("Finalizează
+  o sarcină Lorvex."); a confirmation names the result with "a fost" ("Sarcina
+  %@ a fost finalizată."). The abbreviation dvs. appears only where a possessive
+  or a pronoun cannot be dropped (the habit reminder, the Memory subtitle, and
+  the notices that Lorvex data was deleted from iCloud); everywhere else the
+  verb ending or the clitic vă carries the address.
+- Text is in sentence case everywhere: window titles, buttons, menu items, tabs,
+  and section headers. Weekday and month names come from the calendar in
+  lowercase. Only proper names, Apple's feature names, and Lorvex's own view
+  names (Astăzi, Mâine, Cândva) take a capital, and a view name inside a
+  sentence is quoted („Astăzi”).
+- The diacritics are the comma-below ș and ț and the letters ă, â, and î; the
+  cedilla forms ş and ţ appear in no string. â stands inside a word and î at its
+  start or end, and î stays after a prefix ("reîncărcați").
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with „ ” (U+201E and U+201D), never with straight quotes or « », and
+  only where the English quotes ("Ștergeți lista „%@”?"). An ellipsis is the
+  single character … attached to the word, as in English ("Ștergeți
+  obiceiul…"). A spaced en dash – stands for the English em dash (Apple's
+  Romanian uses 54 spaced en dashes against 6 spaced em dashes). Product names
+  stay Latin and Lorvex is not declined ("în Lorvex", "sarcină Lorvex", "Tagul
+  Lorvex"), while an Apple device name takes its definite article after a
+  hyphen ("iPhone-ul asociat").
+- The Return key is "Retur", as Apple's Romanian system apps (Calculator, Notes,
+  Freeform) name it ("apăsați Retur"). A clock time reads "la 17:00".
+- A point groups thousands and a comma marks decimals ("10.000", "2,5 ore").
+  The system's abbreviated durations and relative times end in a period ("30
+  min.", "2 ore 30 min.", "-2 săpt.") and the relative ones carry a minus sign,
+  so a sentence never ends on such a placeholder: a word follows it
+  ("aproximativ %@ de muncă.") or parentheses enclose it ("Ultima încărcare
+  (%@).").
+- `one` selects only 1, `few` selects 0, 2 to 19, 101 to 119, and so on, and a
+  fraction, and `other` selects 20 to 100, 120 to 200, and so on. A plural
+  entry carries all three, and the `other` form puts "de" between a count and
+  its noun ("1 sarcină", "2 sarcini", "20 de sarcini"). A top-level `one` form
+  may leave the number out ("O dată pe săptămână", beside "De %lld ori pe
+  săptămână" for `few` and "De %lld de ori pe săptămână" for `other`); a
+  substitution's `one` still contains `%arg`. A verb or participle agrees with
+  the form ("A fost finalizată %arg sarcină", "Au fost finalizate %arg
+  sarcini", "Au fost finalizate %arg de sarcini").
+- A status word agrees with what it describes: Blocată, Anulată, Finalizată, and
+  Începută for a task; the neuter obicei takes the feminine plural ("obiceiuri
+  finalizate").
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("7 zile" for the menu bar panel's Next 7 Days switch, "Nu încape" for Won’t
+  fit, "+%lld în plus" for a small widget's overflow). Accessibility labels may
+  be longer.
+- The capture parser (`LorvexCaptureParser`) has no Romanian vocabulary: it
+  reads English and Chinese words wherever the interface language is Romanian.
+  The capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("Cuvinte englezești precum „tomorrow”, „3pm”, „every Monday”, „20
+  min” sau „#list”").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says
+  to the assistant, so they are informal singular imperatives that name the app
+  exactly once and leave it undeclined ("Adaugă o sarcină în
+  ${applicationName}", "Afișează sarcinile din ${applicationName}"), unlike the
+  polite plural of the interface. Apple's own Romanian phrases use both forms
+  ("Scrieți o nouă intrare în jurnal în ${applicationName}", "Scrie în
+  ${applicationName}"); the singular is the shorter one to say aloud.
+
 ## How to add a new locale
 
 Every catalog and every shipping bundle must carry the same language set, so a
@@ -1990,7 +2282,8 @@ shows the same commands for several.
 7. Add a conventions section for the language to this document, as the
    Simplified Chinese, Spanish, French, Italian, Brazilian Portuguese, Russian,
    Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, Arabic,
-   Persian, Urdu, and Hebrew ones: one term per concept across every catalog,
+   Persian, Urdu, Hebrew, German, Dutch, and Romanian ones: one term per
+   concept across every catalog,
    punctuation and quotation marks, spacing around numbers and Latin words.
 8. Capture the macOS tour and the iOS screens in the language (see "Headless
    screenshots") and look for truncated, clipped, or overlapping text.

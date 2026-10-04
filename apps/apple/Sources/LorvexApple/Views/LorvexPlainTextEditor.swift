@@ -30,7 +30,7 @@ struct LorvexPlainTextEditor: View {
           // to the same `fontSize`, so a fixed typography token here would
           // desync the placeholder's size from the actual typed text.
           .font(.system(size: fontSize))  // lorvex-design-token: allow
-          .foregroundStyle(.tertiary)
+          .foregroundStyle(LorvexDesign.Palette.placeholderText)
           .padding(.top, 1)
           .allowsHitTesting(false)
       }

@@ -43,10 +43,7 @@ struct MobileDestructiveConfirmationSheet: View {
           .accessibilityIdentifier("\(accessibilityIdentifierPrefix).confirm")
         }
       }
-      .navigationTitle(title)
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
+      .mobileSheetTitle(title)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

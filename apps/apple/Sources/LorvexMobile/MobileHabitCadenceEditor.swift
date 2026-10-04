@@ -11,7 +11,7 @@ struct MobileHabitCadenceSection: View {
   let idPrefix: String
 
   var body: some View {
-    Section(String(localized: "habits.section.cadence", defaultValue: "Cadence", table: "Localizable", bundle: MobileL10n.bundle)) {
+    Section(String(localized: "habits.detail.frequency", defaultValue: "Frequency", table: "Localizable", bundle: MobileL10n.bundle)) {
       Picker(
         String(localized: "habits.detail.frequency", defaultValue: "Frequency", table: "Localizable", bundle: MobileL10n.bundle),
         selection: $draft.cadenceMode.reduceMotionAnimation(.snappy)

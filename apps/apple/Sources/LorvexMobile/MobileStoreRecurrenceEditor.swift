@@ -90,14 +90,11 @@ struct MobileStoreRecurrenceEditor: View {
         }
       }
       .disabled(isSaving)
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "recurrence.title", defaultValue: "Recurrence", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

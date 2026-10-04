@@ -37,7 +37,7 @@ public struct MobilePlainTextEditor: View {
       if text.isEmpty && !placeholder.isEmpty {
         Text(placeholder)
           .font(LorvexDesign.Typography.primaryText)
-          .foregroundStyle(.tertiary)
+          .foregroundStyle(LorvexDesign.Palette.placeholderText)
           .padding(.top, Self.textTopInset)
           .allowsHitTesting(false)
       }

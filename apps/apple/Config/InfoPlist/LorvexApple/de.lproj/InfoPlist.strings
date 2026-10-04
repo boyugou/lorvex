@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex kann Planungsblöcke, die du erstellst, in die App „Kalender“ eintragen.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex kann Ereignisdetails lesen, um Zeitpläne und Kontext für den Assistenten zu erstellen.";

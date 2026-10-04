@@ -60,14 +60,11 @@ struct MobileStoreCreateCalendarEventSheet: View {
           .accessibilityIdentifier("mobileCreateCalendarEvent.notes")
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "sheet.new_event", defaultValue: "New Event", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

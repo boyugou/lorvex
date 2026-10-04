@@ -635,12 +635,16 @@
       // the Today stack, for a task detail that is not first on Today (a
       // repeating task, one with dependencies) — a screenshot hook;
       // `lorvex://findtask/<title>/field/<field>` also raises one field's
-      // editor, as `firsttask` does. The title is the seed's English one and
-      // is translated the way the seed wrote it.
+      // editor, and `lorvex://findtask/<title>/edit` the full Edit sheet, as
+      // `firsttask` does. The title is the seed's English one and is
+      // translated the way the seed wrote it.
       if url.host == "findtask", url.pathComponents.count >= 2 {
         let components = url.pathComponents
         if components.count >= 4, components[2] == "field" {
           MobileTaskDetailDebugState.initialField = MobileTaskField(rawValue: components[3])
+        }
+        if components.count >= 3, components[2] == "edit" {
+          MobileSheetDebugState.pending = .editTask
         }
         let seededTitle = LorvexSampleText(language: .running)(components[1])
         Task { @MainActor in

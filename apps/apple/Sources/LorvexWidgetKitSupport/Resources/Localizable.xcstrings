@@ -10,6 +10,12 @@
             "value": "يعرض المهمة في أعلى قائمة اليوم."
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt die oberste Aufgabe in „Heute“."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -64,6 +70,12 @@
             "value": "오늘의 맨 위 할 일을 표시합니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont de bovenste taak in ‘Vandaag’."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -74,6 +86,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostra a tarefa no topo de Hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afișează prima sarcină din „Astăzi”."
           }
         },
         "ru": {
@@ -115,6 +133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex Heute"
           }
         },
         "en": {
@@ -171,6 +195,12 @@
             "value": "Lorvex 오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -181,6 +211,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex Astăzi"
           }
         },
         "ru": {
@@ -223,6 +259,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مراجعة المواصفات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spezifikation prüfen"
           }
         },
         "en": {
@@ -279,6 +321,12 @@
             "value": "사양서 검토"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Specificatie nakijken"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -289,6 +337,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisar especificação"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificare specificație"
           }
         },
         "ru": {
@@ -364,6 +418,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld متبقية"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld übrig"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld übrig"
                 }
               }
             }
@@ -513,6 +585,24 @@
             "value": "%lld개 남음"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld over"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld over"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -556,6 +646,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld restantes"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rămase"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rămasă"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rămase"
                 }
               }
             }
@@ -663,6 +777,12 @@
             "value": "حوالي %@"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwa %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -717,6 +837,12 @@
             "value": "약 %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ongeveer %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -727,6 +853,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "cerca de %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aproximativ %@"
           }
         },
         "ru": {
@@ -768,6 +900,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيانات الأداة غير متاحة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget-Daten sind nicht verfügbar."
           }
         },
         "en": {
@@ -824,6 +962,12 @@
             "value": "위젯 데이터를 사용할 수 없습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De gegevens voor de widget zijn niet beschikbaar."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -834,6 +978,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Os dados do widget não estão disponíveis."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datele widgetului nu sunt disponibile."
           }
         },
         "ru": {
@@ -875,6 +1025,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اطّلع على تقدم عاداتك اليوم بنظرة سريعة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sieh den Fortschritt deiner Gewohnheiten von heute auf einen Blick."
           }
         },
         "en": {
@@ -931,6 +1087,12 @@
             "value": "오늘의 습관 진행 상황을 한눈에 확인하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zie de voortgang van je gewoontes van vandaag in één oogopslag."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -941,6 +1103,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veja rapidamente o progresso dos hábitos de hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vedeți dintr-o privire progresul obiceiurilor de astăzi."
           }
         },
         "ru": {
@@ -982,6 +1150,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex لتحميل العادات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex, um Gewohnheiten zu laden."
           }
         },
         "en": {
@@ -1038,6 +1212,12 @@
             "value": "Lorvex를 열어 습관을 불러오세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex om gewoontes te laden."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1048,6 +1228,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex para carregar os hábitos."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pentru a încărca obiceiurile."
           }
         },
         "ru": {
@@ -1091,6 +1277,12 @@
             "value": "العادات"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewohnheiten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -1145,6 +1337,12 @@
             "value": "습관"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewoontes"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1155,6 +1353,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hábitos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiceiuri"
           }
         },
         "ru": {
@@ -1198,6 +1402,12 @@
             "value": "العادات"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewohnheiten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -1252,6 +1462,12 @@
             "value": "습관"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewoontes"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1262,6 +1478,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hábitos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiceiuri"
           }
         },
         "ru": {
@@ -1303,6 +1525,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إكمال مهمة في Lorvex من أداة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt eine Lorvex-Aufgabe über ein Widget."
           }
         },
         "en": {
@@ -1359,6 +1587,12 @@
             "value": "위젯에서 Lorvex 할 일을 완료합니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltooit een Lorvex-taak vanuit een widget."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1369,6 +1603,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conclui uma tarefa do Lorvex a partir de um widget."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizează o sarcină Lorvex dintr-un widget."
           }
         },
         "ru": {
@@ -1410,6 +1650,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إكمال \"%@\"."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ erledigt."
           }
         },
         "en": {
@@ -1466,6 +1712,12 @@
             "value": "“%@” 할 일을 완료했습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ voltooid."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1476,6 +1728,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” concluída."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcina %@ a fost finalizată."
           }
         },
         "ru": {
@@ -1517,6 +1775,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إكمال المهمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe erledigen"
           }
         },
         "en": {
@@ -1573,6 +1837,12 @@
             "value": "할 일 완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltooi taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1583,6 +1853,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Concluir tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizare sarcină"
           }
         },
         "ru": {
@@ -1624,6 +1900,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تسجيل عادة في Lorvex من أداة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hakt eine Lorvex-Gewohnheit über ein Widget ab."
           }
         },
         "en": {
@@ -1680,6 +1962,12 @@
             "value": "위젯에서 Lorvex 습관을 기록합니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vinkt een Lorvex-gewoonte af vanuit een widget."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1690,6 +1978,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conclui um hábito do Lorvex a partir de um widget."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bifează un obicei Lorvex dintr-un widget."
           }
         },
         "ru": {
@@ -1731,6 +2025,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم تسجيل \"%@\"."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ abgehakt."
           }
         },
         "en": {
@@ -1787,6 +2087,12 @@
             "value": "“%@” 습관을 기록했습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ afgevinkt."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1797,6 +2103,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hábito “%@” concluído."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiceiul %@ a fost bifat."
           }
         },
         "ru": {
@@ -1838,6 +2150,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إكمال العادة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewohnheit erledigen"
           }
         },
         "en": {
@@ -1894,6 +2212,12 @@
             "value": "습관 완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltooi gewoonte"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1904,6 +2228,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Concluir hábito"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizare obicei"
           }
         },
         "ru": {
@@ -1945,6 +2275,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المهمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe"
           }
         },
         "en": {
@@ -2001,6 +2337,12 @@
             "value": "할 일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2011,6 +2353,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcină"
           }
         },
         "ru": {
@@ -2053,6 +2401,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "معرّف العادة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewohnheits-ID"
           }
         },
         "en": {
@@ -2109,6 +2463,12 @@
             "value": "습관 ID"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewoonte-ID"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2119,6 +2479,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ID do hábito"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID obicei"
           }
         },
         "ru": {
@@ -2161,6 +2527,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اسم العادة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name der Gewohnheit"
           }
         },
         "en": {
@@ -2217,6 +2589,12 @@
             "value": "습관 이름"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam van de gewoonte"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2227,6 +2605,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nome do hábito"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numele obiceiului"
           }
         },
         "ru": {
@@ -2269,6 +2653,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المهمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe"
           }
         },
         "en": {
@@ -2325,6 +2715,12 @@
             "value": "할 일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2335,6 +2731,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarefa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcină"
           }
         },
         "ru": {
@@ -2376,6 +2778,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex جاهز."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex ist bereit."
           }
         },
         "en": {
@@ -2432,6 +2840,12 @@
             "value": "Lorvex를 사용할 준비가 되었습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex is klaar."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2442,6 +2856,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Lorvex está pronto."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex este gata."
           }
         },
         "ru": {
@@ -2484,6 +2904,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التأمل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meditieren"
           }
         },
         "en": {
@@ -2540,6 +2966,12 @@
             "value": "명상"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mediteren"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2550,6 +2982,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Meditar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meditație"
           }
         },
         "ru": {
@@ -2592,6 +3030,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "القراءة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesen"
           }
         },
         "en": {
@@ -2648,6 +3092,12 @@
             "value": "독서"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lezen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2658,6 +3108,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ler"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citit"
           }
         },
         "ru": {
@@ -2700,6 +3156,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المشي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spaziergang"
           }
         },
         "en": {
@@ -2756,6 +3218,12 @@
             "value": "산책"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wandelen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2766,6 +3234,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Caminhar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plimbare"
           }
         },
         "ru": {
@@ -2808,6 +3282,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "شرب الماء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wasser trinken"
           }
         },
         "en": {
@@ -2864,6 +3344,12 @@
             "value": "물 마시기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Water drinken"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2874,6 +3360,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beber água"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidratare"
           }
         },
         "ru": {
@@ -2915,6 +3407,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تابع إنجاز مهام اليوم بنظرة سريعة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sieh auf einen Blick, wie viele heutige Aufgaben erledigt sind."
           }
         },
         "en": {
@@ -2971,6 +3469,12 @@
             "value": "오늘의 할 일 완료 현황을 한눈에 확인하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volg de voortgang van de taken van vandaag in één oogopslag."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2981,6 +3485,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Acompanhe rapidamente a conclusão das tarefas de hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urmăriți dintr-o privire finalizarea sarcinilor de astăzi."
           }
         },
         "ru": {
@@ -3022,6 +3532,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex للتحميل."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex zum Laden."
           }
         },
         "en": {
@@ -3078,6 +3594,12 @@
             "value": "Lorvex를 열어 불러오세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex om te laden."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3088,6 +3610,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex para carregar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pentru încărcare."
           }
         },
         "ru": {
@@ -3129,6 +3657,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التقدم اليومي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagesfortschritt"
           }
         },
         "en": {
@@ -3185,6 +3719,12 @@
             "value": "오늘의 진행 상황"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagvoortgang"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3195,6 +3735,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Progresso diário"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progres zilnic"
           }
         },
         "ru": {
@@ -3236,6 +3782,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التقدم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortschritt"
           }
         },
         "en": {
@@ -3292,6 +3844,12 @@
             "value": "진행 상황"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voortgang"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3302,6 +3860,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Progresso"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progres"
           }
         },
         "ru": {
@@ -3343,6 +3907,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التقدم غير متاح"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortschritt nicht verfügbar"
           }
         },
         "en": {
@@ -3399,6 +3969,12 @@
             "value": "진행 상황을 확인할 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voortgang niet beschikbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3409,6 +3985,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Progresso indisponível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progres indisponibil"
           }
         },
         "ru": {
@@ -3450,6 +4032,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Lorvex للتحديث"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Lorvex zum Aktualisieren"
           }
         },
         "en": {
@@ -3506,6 +4094,12 @@
             "value": "Lorvex를 열면 새로 고쳐집니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Lorvex om te vernieuwen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3516,6 +4110,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abra o Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Lorvex pentru actualizare"
           }
         },
         "ru": {
@@ -3557,6 +4157,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيانات اللقطة تالفة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot-Daten beschädigt"
           }
         },
         "en": {
@@ -3613,6 +4219,12 @@
             "value": "스냅샷 데이터가 손상됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot-gegevens beschadigd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3623,6 +4235,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instantâneo danificado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datele instantaneului sunt deteriorate"
           }
         },
         "ru": {
@@ -3664,6 +4282,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اللقطة غير متاحة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot nicht verfügbar"
           }
         },
         "en": {
@@ -3720,6 +4344,12 @@
             "value": "스냅샷을 사용할 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snapshot niet beschikbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3730,6 +4360,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Instantâneo indisponível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantaneu indisponibil"
           }
         },
         "ru": {
@@ -3771,6 +4407,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "وقت التحديث غير متاح"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisierungszeit nicht verfügbar"
           }
         },
         "en": {
@@ -3827,6 +4469,12 @@
             "value": "업데이트 시간을 확인할 수 없음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijdstip van update niet beschikbaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3837,6 +4485,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hora da atualização indisponível"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora actualizării indisponibilă"
           }
         },
         "ru": {
@@ -3878,6 +4532,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حدِّث تطبيق Lorvex للتحديث"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisiere Lorvex für neue Daten"
           }
         },
         "en": {
@@ -3934,6 +4594,12 @@
             "value": "Lorvex를 업데이트하면 새로 고쳐집니다"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werk Lorvex bij om te vernieuwen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3944,6 +4610,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualize o Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizați Lorvex pentru date noi"
           }
         },
         "ru": {
@@ -3985,6 +4657,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم التحديث %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisiert %@"
           }
         },
         "en": {
@@ -4041,6 +4719,12 @@
             "value": "%@ 업데이트됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijgewerkt %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4051,6 +4735,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualizado %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizat %@"
           }
         },
         "ru": {
@@ -4092,6 +4782,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم التحديث الآن"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerade aktualisiert"
           }
         },
         "en": {
@@ -4148,6 +4844,12 @@
             "value": "방금 업데이트됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zojuist bijgewerkt"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4158,6 +4860,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atualizado agora"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizat acum"
           }
         },
         "ru": {
@@ -4199,6 +4907,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم يتبقَّ شيء لليوم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für heute ist nichts mehr übrig."
           }
         },
         "en": {
@@ -4255,6 +4969,12 @@
             "value": "오늘 남은 할 일이 없습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is niets meer over voor vandaag."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4265,6 +4985,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nada mais para hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu mai rămâne nimic pentru astăzi."
           }
         },
         "ru": {
@@ -4306,6 +5032,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يتم عرض آخر قائمة محفوظة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt die zuletzt gesicherte Liste."
           }
         },
         "en": {
@@ -4362,6 +5094,12 @@
             "value": "마지막으로 저장된 목록을 표시하고 있습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont de laatst bewaarde lijst."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4372,6 +5110,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostrando a última lista salva."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se afișează ultima listă salvată."
           }
         },
         "ru": {
@@ -4414,6 +5158,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "محظورة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blockiert"
           }
         },
         "en": {
@@ -4470,6 +5220,12 @@
             "value": "차단됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geblokkeerd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4480,6 +5236,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bloqueada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blocată"
           }
         },
         "ru": {
@@ -4521,6 +5283,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مهمة خاصة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Private Aufgabe"
           }
         },
         "en": {
@@ -4577,6 +5345,12 @@
             "value": "비공개 할 일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privétaak"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4587,6 +5361,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarefa privada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcină privată"
           }
         },
         "ru": {
@@ -4625,6 +5405,12 @@
       "extractionState": "manual",
       "localizations": {
         "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
+        "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex"
@@ -4684,6 +5470,12 @@
             "value": "Lorvex"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4691,6 +5483,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex"
@@ -4735,6 +5533,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
           }
         },
         "en": {
@@ -4791,6 +5595,12 @@
             "value": "오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4801,6 +5611,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Astăzi"
           }
         },
         "ru": {
@@ -4842,6 +5658,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اطّلع على مهام اليوم بنظرة سريعة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sieh deine heutigen Aufgaben auf einen Blick."
           }
         },
         "en": {
@@ -4898,6 +5720,12 @@
             "value": "오늘의 할 일을 한눈에 확인하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zie je taken van vandaag in één oogopslag."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4908,6 +5736,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Veja rapidamente as tarefas de hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vedeți dintr-o privire sarcinile de astăzi."
           }
         },
         "ru": {
@@ -4949,6 +5783,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
           }
         },
         "en": {
@@ -5005,6 +5845,12 @@
             "value": "오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5015,6 +5861,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Astăzi"
           }
         },
         "ru": {
@@ -5056,6 +5908,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حتى %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis %@"
           }
         },
         "en": {
@@ -5112,6 +5970,12 @@
             "value": "%@까지"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tot %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5122,6 +5986,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Até %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Până la %@"
           }
         },
         "ru": {
@@ -5164,6 +6034,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم البدء · حوالي %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestartet · etwa %@"
           }
         },
         "en": {
@@ -5220,6 +6096,12 @@
             "value": "시작됨 · 약 %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestart · ongeveer %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5230,6 +6112,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Iniciada · cerca de %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începută · aproximativ %@"
           }
         },
         "ru": {
@@ -5271,6 +6159,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "متأخرة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überfällig"
           }
         },
         "en": {
@@ -5327,6 +6221,12 @@
             "value": "기한 초과"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlopen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5337,6 +6237,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Atrasada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restantă"
           }
         },
         "ru": {
@@ -5378,6 +6284,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم البدء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestartet"
           }
         },
         "en": {
@@ -5434,6 +6346,12 @@
             "value": "시작됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestart"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5444,6 +6362,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Iniciada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începută"
           }
         },
         "ru": {
@@ -5485,6 +6409,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الرد على ملاحظات التصميم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Design-Feedback antworten"
           }
         },
         "en": {
@@ -5541,6 +6471,12 @@
             "value": "디자인 피드백에 답장"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reageer op ontwerpfeedback"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5551,6 +6487,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Responder ao feedback de design"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Răspunde la feedbackul de design"
           }
         },
         "ru": {
@@ -5592,6 +6534,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تجديد جواز السفر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reisepass verlängern"
           }
         },
         "en": {
@@ -5648,6 +6596,12 @@
             "value": "여권 갱신"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paspoort verlengen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5658,6 +6612,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Renovar o passaporte"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reînnoiește pașaportul"
           }
         },
         "ru": {
@@ -5699,6 +6659,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حجز تذاكر الطيران"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flüge buchen"
           }
         },
         "en": {
@@ -5755,6 +6721,12 @@
             "value": "항공편 예약"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vluchten boeken"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5765,6 +6737,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reservar voos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezervă zboruri"
           }
         },
         "ru": {
@@ -5806,6 +6784,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مراجعة المواصفات هي الأهم اليوم؛ أما حجز الرحلات فيمكنه الانتظار حتى الخميس."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Prüfen der Spezifikation ist heute am wichtigsten; die Flüge können bis Donnerstag warten."
           }
         },
         "en": {
@@ -5862,6 +6846,12 @@
             "value": "오늘은 사양서 검토가 가장 중요합니다. 항공편 예약은 목요일까지 미뤄도 됩니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het nakijken van de specificatie is vandaag het belangrijkst; de vluchten kunnen tot donderdag wachten."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5872,6 +6862,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A revisão da especificação é o mais importante hoje; os voos podem esperar até quinta-feira."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificarea specificației este cel mai important lucru astăzi; zborurile pot aștepta până joi."
           }
         },
         "ru": {
@@ -5913,6 +6909,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إنجاز كل شيء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles erledigt"
           }
         },
         "en": {
@@ -5969,6 +6971,12 @@
             "value": "모두 완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles gedaan"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5979,6 +6987,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tudo em dia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Totul rezolvat"
           }
         },
         "ru": {
@@ -6020,6 +7034,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute öffnen"
           }
         },
         "en": {
@@ -6076,6 +7096,12 @@
             "value": "오늘 열기"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6086,6 +7112,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrir Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschidere Astăzi"
           }
         },
         "ru": {
@@ -6127,6 +7159,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح Lorvex على شاشة اليوم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet Lorvex bei „Heute“."
           }
         },
         "en": {
@@ -6183,6 +7221,12 @@
             "value": "Lorvex에서 오늘 화면을 엽니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opent Lorvex bij ‘Vandaag’."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6193,6 +7237,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abre o Lorvex em Hoje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide Lorvex la „Astăzi”."
           }
         },
         "ru": {
@@ -6268,6 +7318,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld متبقية اليوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld heute übrig"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld heute übrig"
                 }
               }
             }
@@ -6417,6 +7485,24 @@
             "value": "오늘 %lld개 남음"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld over vandaag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld over vandaag"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -6460,6 +7546,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld restantes hoje"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rămase astăzi"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rămasă astăzi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld rămase astăzi"
                 }
               }
             }

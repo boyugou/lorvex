@@ -22,10 +22,7 @@ struct MobileStoreEditHabitSheet: View {
           frequencyType: store.habitDraft.frequencyType,
           idPrefix: "mobileEditHabit")
       }
-      .navigationTitle(String(localized: "sheet.edit_habit", defaultValue: "Edit Habit", table: "Localizable", bundle: MobileL10n.bundle))
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
+      .mobileSheetTitle(String(localized: "sheet.edit_habit", defaultValue: "Edit Habit", table: "Localizable", bundle: MobileL10n.bundle))
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle)) {

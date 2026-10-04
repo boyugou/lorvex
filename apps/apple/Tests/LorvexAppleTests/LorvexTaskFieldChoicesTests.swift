@@ -66,6 +66,16 @@ struct LorvexTaskFieldChoicesTests {
     #expect(LorvexTaskFieldChoices.lengthFraction(500) == 1)
   }
 
+  @Test("stepping the length stays between no estimate and a full day")
+  func steppingTheLengthStaysInRange() {
+    #expect(LorvexTaskFieldChoices.lengthMax == 1440)
+    #expect(LorvexTaskFieldChoices.length(45, steppedBy: 15) == 60)
+    #expect(LorvexTaskFieldChoices.length(45, steppedBy: -15) == 30)
+    #expect(LorvexTaskFieldChoices.length(10, steppedBy: -15) == 0)
+    #expect(LorvexTaskFieldChoices.length(1430, steppedBy: 15) == 1440)
+    #expect(LorvexTaskFieldChoices.length(1440, steppedBy: 15) == 1440)
+  }
+
   @Test("the quick days are today and the next two, as local midnights")
   func quickDays() throws {
     var calendar = Calendar(identifier: .gregorian)
@@ -78,6 +88,68 @@ struct LorvexTaskFieldChoicesTests {
     #expect(
       days.map { ISO8601DateFormatter().string(from: $0.date) }
         == ["2026-09-29T00:00:00Z", "2026-09-30T00:00:00Z", "2026-10-01T00:00:00Z"])
+  }
+
+  @Test("an unset day draws as an empty calendar selection, a set day as one whole-day entry")
+  func calendarSelectionFollowsTheDay() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+    let day = try #require(ISO8601DateFormatter().date(from: "2026-10-07T00:00:00Z"))
+
+    #expect(LorvexTaskFieldChoices.calendarSelection(for: nil, calendar: calendar).isEmpty)
+
+    let selection = LorvexTaskFieldChoices.calendarSelection(for: day, calendar: calendar)
+    let parts = try #require(selection.first)
+    #expect(selection.count == 1)
+    #expect([parts.year, parts.month, parts.day] == [2026, 10, 7])
+    #expect(parts.calendar != nil)
+  }
+
+  @Test("a single-day calendar moves its day on a tap and clears it when the marked day is tapped again")
+  func singleDayCalendarSelection() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+    let formatter = ISO8601DateFormatter()
+    func date(_ day: String) throws -> Date {
+      try #require(formatter.date(from: "\(day)T00:00:00Z"))
+    }
+    func selection(_ days: [String]) throws -> Set<DateComponents> {
+      Set(
+        try days.map {
+          calendar.dateComponents([.calendar, .era, .year, .month, .day], from: try date($0))
+        })
+    }
+    func result(_ days: [String], current: String?) throws -> String? {
+      LorvexTaskFieldChoices.day(
+        afterSelecting: try selection(days), replacing: try current.map(date), calendar: calendar
+      ).map { String(formatter.string(from: $0).prefix(10)) }
+    }
+
+    // No day yet: the first tap picks that day.
+    #expect(try result(["2026-10-09"], current: nil) == "2026-10-09")
+    // Another day tapped while one is marked: the picker holds both, the new one wins.
+    #expect(try result(["2026-10-07", "2026-10-09"], current: "2026-10-07") == "2026-10-09")
+    // The earliest of several additions at once.
+    #expect(
+      try result(["2026-10-07", "2026-10-12", "2026-10-09"], current: "2026-10-07") == "2026-10-09")
+    // The marked day tapped again leaves the selection empty, or holding only
+    // that day when the calendar hands back its own copy: no day either way.
+    #expect(try result([], current: "2026-10-07") == nil)
+    #expect(try result(["2026-10-07"], current: "2026-10-07") == nil)
+    #expect(try result([], current: nil) == nil)
+  }
+
+  @Test("a selection entry without a calendar reads in the caller's calendar, as a local midnight")
+  func calendarSelectionWithoutACalendar() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+    let parts = DateComponents(year: 2026, month: 10, day: 9)
+
+    let day = try #require(
+      LorvexTaskFieldChoices.day(afterSelecting: [parts], replacing: nil, calendar: calendar))
+
+    #expect(day == calendar.startOfDay(for: day))
+    #expect(calendar.dateComponents([.year, .month, .day], from: day) == parts)
   }
 
   @Test("day presets name the coming weekend, the next Monday, and next month")

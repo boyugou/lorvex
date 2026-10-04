@@ -13,14 +13,11 @@ struct MobileStoreEditListSheet: View {
           MobileListSheetHeader(store: store, idPrefix: "mobileEditList", submit: submit)
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "sheet.edit_list", defaultValue: "Edit List", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

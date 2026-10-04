@@ -17,10 +17,13 @@
     /// Table entries whose value is legitimately the English key itself,
     /// because the language spells the word the same way.
     private static let spelledAsInEnglish: [AppLanguage: Set<String>] = [
+      .de: ["Studio"],
       .es: ["Personal"],
       .fr: ["urgent", "Studio"],
       .it: ["Studio"],
+      .nl: ["planning", "urgent", "Studio"],
       .pl: ["Studio"],
+      .ro: ["Personal", "urgent", "Studio"],
     ]
 
     /// The registered tables in a stable order, so a failure message names

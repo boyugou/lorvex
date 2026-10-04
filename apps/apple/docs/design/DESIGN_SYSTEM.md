@@ -64,14 +64,19 @@ Rules that follow from the table:
   turns green with a check.
 
 - The tertiary style (`.tertiary`) is for what a reader can skip without
-  losing anything: placeholder text, the "·" between facts, disclosure
-  chevrons, drag handles, a cancelled task's circle, and the days outside the
-  month a calendar shows. It measures under 2:1 on the page ground, where text
-  reads as disabled. Anything that names, counts, times, or explains — a
-  section label, a row's time or duration, an empty state's hint, the ends of
-  a scale — is at least `.secondary`, and so is a control drawn as a glyph
-  alone (an icon button, a hollow rating step), including one a hover
-  reveals.
+  losing anything: the "·" between facts, disclosure chevrons, drag handles,
+  a cancelled task's circle, and the days outside the month a calendar shows.
+  It measures under 2:1 on the page ground, where text reads as disabled.
+  Anything that names, counts, times, or explains — a section label, a row's
+  time or duration, an empty state's hint, the ends of a scale — is at least
+  `.secondary`, and so is a control drawn as a glyph alone (an icon button, a
+  hollow rating step), including one a hover reveals.
+
+- Placeholder text drawn by hand over an editor (the notes editors') takes
+  `Palette.placeholderText`, the platform's own placeholder color, so it
+  matches the placeholder of the system field beside it. Under Increase
+  Contrast the system darkens that color to about 4.5:1 on a card, where
+  `.tertiary` stays near 1.8:1.
 
 - Something the clock has cleared (a finished meeting, a task done earlier
   in the day, a day the week has left behind) steps back without losing
@@ -296,9 +301,11 @@ them and in the platform module otherwise.
 | `InspectorColumn` + `InspectorPanel` (macOS) | the trailing inspector's content column (top-leading, at most 500 pt wide, shared insets) and the faint grouped card each of its sections sits in; the header's panel draws no card, and inside a popover no panel does. The task and habit inspectors are both built from them |
 | `InspectorProperties` (macOS) | a task's or a habit's set fields as rows (icon, field name, value) with dashed "+ Field" additions; a row opens its field's popover editor, or a native menu for short fixed choices |
 | `TaskDetailChoiceRow` (macOS) | a one-click choice in an editor: a title, an optional trailing detail, a hover fill, and an accent title with a checkmark when it is the current value |
+| `MobileFieldChip` (mobile) | a one-tap choice in a field editor (the quick days, the length presets): a neutral `.bordered` capsule with primary text, and the system `.borderedProminent` accent fill while it names the field's current value, with the selected trait for VoiceOver; the weekday pills of a habit's cadence wear the same on and off look |
 | `TaskDetailMonthCalendar` (macOS) | the month grid of every day field: round 32 pt day cells, the chosen day filled with the accent, today's number accent-colored, neighbouring months dimmed, `LorvexIconButton` arrows |
 | `CreationSheetLayout` + `CreationSheetHeader` (macOS) | the create and edit sheet: a small centered action title, the thing being made as a live preview (icon tile in its color, opening the icon and color picker; the name typed beside it), the remaining fields as a grouped form, then Cancel and the confirm button |
 | `MobileCreationHeader` (iOS) | the first row of the list and habit sheets, with no card behind it: a 56 pt live preview tile in its color with a pencil badge that opens the color and icon choices in a popover (`MobileIconColorPicker`), the name typed beside it in the detail-title face (wrapping rather than truncating), and a second line for the description or encouragement; the remaining fields are grouped sections below. At accessibility text sizes the tile sits above the text, and the badge stays at its default size. A create sheet puts the cursor in the name as it opens |
+| `mobileSheetTitle` (iOS) | the inline title of every sheet with a Cancel button: the system's headline size while it fits between the two bar buttons, the page-label size when only that fits, and two lines of the page-label size otherwise, in a title area two lines tall and capped at the default text size, so a long translation is never cut short with an ellipsis; the navigation title is still set for VoiceOver |
 
 Buttons use the system styles. On macOS the workspace controls are
 `.bordered` / `.borderedProminent` (glass on macOS 26); segmented choices use

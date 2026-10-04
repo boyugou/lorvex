@@ -39,7 +39,7 @@ struct AppLanguageTests {
     (["yue-HK"], "zh-Hant"),
     (["yue"], "zh-Hant"),
     (["yue-Hans-CN"], "zh-Hans"),
-    (["de-DE", "fr-FR"], "fr"),
+    (["sv-SE", "fr-FR"], "fr"),
     (["ja"], "ja"),
     (["ja-JP"], "ja"),
     (["ko"], "ko"),
@@ -66,12 +66,20 @@ struct AppLanguageTests {
     (["ru-KZ"], "ru"),
     (["uk-UA"], "uk"),
     (["pl-PL"], "pl"),
+    (["de-DE"], "de"),
+    (["de-AT"], "de"),
+    (["de-CH"], "de"),
+    (["nl-NL"], "nl"),
+    (["nl-BE"], "nl"),
+    (["ro-RO"], "ro"),
+    (["ro-MD"], "ro"),
     // The first shipped language in the list wins.
-    (["de-DE", "zh-Hans-CN"], "zh-Hans"),
-    (["de-DE", "ja-JP"], "ja"),
-    (["de-DE", "es-MX", "en-US"], "es"),
+    (["nl-NL", "de-DE"], "nl"),
+    (["sv-SE", "zh-Hans-CN"], "zh-Hans"),
+    (["sv-SE", "ja-JP"], "ja"),
+    (["sv-SE", "es-MX", "en-US"], "es"),
     // A list naming no shipped language selects the development language.
-    (["de-DE"], "en"),
+    (["sv-SE"], "en"),
     ([], "en"),
   ]
 
@@ -79,8 +87,8 @@ struct AppLanguageTests {
   func selectableOrderGroupsScripts() {
     #expect(
       AppLanguage.selectable == [
-        .en, .es, .fr, .it, .pl, .ptBR, .ru, .uk, .he, .ur, .ar, .fa, .hi, .ko, .ja, .zhHans,
-        .zhHant,
+        .de, .en, .es, .fr, .it, .nl, .pl, .ptBR, .ro, .ru, .uk, .he, .ur, .ar, .fa, .hi, .ko,
+        .ja, .zhHans, .zhHant,
       ])
   }
 

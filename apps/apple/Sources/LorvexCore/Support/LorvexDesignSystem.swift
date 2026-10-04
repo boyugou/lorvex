@@ -170,6 +170,21 @@ extension LorvexDesign {
     /// under 2:1 and reads as disabled.
     public static let pastMarkOpacity: Double = 0.45
 
+    /// The color of a text field's placeholder: the platform's own placeholder
+    /// color, so a placeholder drawn by hand over an editor (the notes editors')
+    /// matches the one in the system field beside it, including the darker value
+    /// the system gives it under Increase Contrast, which the hierarchical
+    /// `.tertiary` style does not follow.
+    public static let placeholderText: Color = {
+      #if canImport(UIKit) && !os(watchOS)
+        return Color(uiColor: .placeholderText)
+      #elseif canImport(AppKit)
+        return Color(nsColor: .placeholderTextColor)
+      #else
+        return Color.secondary
+      #endif
+    }()
+
     /// Hairline separators inside cards and between rows.
     public static let separator: Color = {
       #if canImport(UIKit) && !os(watchOS)

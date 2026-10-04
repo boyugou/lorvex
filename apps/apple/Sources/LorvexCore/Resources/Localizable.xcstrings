@@ -11,6 +11,12 @@
             "value": "مستحقة %@"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fällig %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -65,6 +71,12 @@
             "value": "기한은 %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vervalt %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -75,6 +87,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "prazo %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scadentă %@"
           }
         },
         "ru": {
@@ -117,6 +135,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "متأخرة %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "überfällig, %@"
           }
         },
         "en": {
@@ -173,6 +197,12 @@
             "value": "기한 초과: %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "verlopen, %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -183,6 +213,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "atrasada %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "restantă, %@"
           }
         },
         "ru": {
@@ -225,6 +261,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تتكرر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wiederholt sich"
           }
         },
         "en": {
@@ -281,6 +323,12 @@
             "value": "반복"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "herhaalt"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -291,6 +339,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "repete"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "se repetă"
           }
         },
         "ru": {
@@ -333,6 +387,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حتى %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis %@"
           }
         },
         "en": {
@@ -389,6 +449,12 @@
             "value": "%@까지"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tot %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -399,6 +465,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Até %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Până la %@"
           }
         },
         "ru": {
@@ -441,6 +513,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أحداث التقويم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalenderereignisse"
           }
         },
         "en": {
@@ -497,6 +575,12 @@
             "value": "캘린더 이벤트"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenda-activiteiten"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -507,6 +591,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eventos do calendário"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evenimente din calendar"
           }
         },
         "ru": {
@@ -549,6 +639,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الموجزات اليومية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagesbriefings"
           }
         },
         "en": {
@@ -605,6 +701,12 @@
             "value": "일일 브리핑"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagelijkse briefings"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -615,6 +717,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Briefings diários"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Briefinguri zilnice"
           }
         },
         "ru": {
@@ -657,6 +765,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المراجعات اليومية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagesrückblicke"
           }
         },
         "en": {
@@ -713,6 +827,12 @@
             "value": "일일 회고"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagterugblikken"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -723,6 +843,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisões diárias"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recapitulări zilnice"
           }
         },
         "ru": {
@@ -765,6 +891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "العادات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewohnheiten"
           }
         },
         "en": {
@@ -821,6 +953,12 @@
             "value": "습관"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewoontes"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -831,6 +969,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hábitos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiceiuri"
           }
         },
         "ru": {
@@ -873,6 +1017,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "القوائم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen"
           }
         },
         "en": {
@@ -929,6 +1079,12 @@
             "value": "목록"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lijsten"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -939,6 +1095,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
           }
         },
         "ru": {
@@ -981,6 +1143,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الذاكرة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnis"
           }
         },
         "en": {
@@ -1037,6 +1205,12 @@
             "value": "메모리"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geheugen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1047,6 +1221,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Memória"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memorie"
           }
         },
         "ru": {
@@ -1089,6 +1269,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التفضيلات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voreinstellungen"
           }
         },
         "en": {
@@ -1145,6 +1331,12 @@
             "value": "환경설정"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorkeuren"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1155,6 +1347,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Preferências"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferințe"
           }
         },
         "ru": {
@@ -1197,6 +1395,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوسوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags"
           }
         },
         "en": {
@@ -1253,6 +1457,12 @@
             "value": "태그"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1263,6 +1473,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Etiquetas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taguri"
           }
         },
         "ru": {
@@ -1305,6 +1521,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "روابط المهام والأحداث"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verknüpfungen zwischen Aufgaben und Ereignissen"
           }
         },
         "en": {
@@ -1361,6 +1583,12 @@
             "value": "할 일-이벤트 연결"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppelingen tussen taken en activiteiten"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1371,6 +1599,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vínculos tarefa–evento"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legături între sarcini și evenimente"
           }
         },
         "ru": {
@@ -1413,6 +1647,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المهام"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgaben"
           }
         },
         "en": {
@@ -1469,6 +1709,12 @@
             "value": "할 일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taken"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1479,6 +1725,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tarefas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarcini"
           }
         },
         "ru": {
@@ -1521,6 +1773,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التقويم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender"
           }
         },
         "en": {
@@ -1577,6 +1835,12 @@
             "value": "캘린더"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenda"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1587,6 +1851,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Calendário"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
           }
         },
         "ru": {
@@ -1629,6 +1899,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التخطيط"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planung"
           }
         },
         "en": {
@@ -1685,6 +1961,12 @@
             "value": "계획"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planning"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1695,6 +1977,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planejamento"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificare"
           }
         },
         "ru": {
@@ -1737,6 +2025,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "المراجعات والمساعد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückblicke & Assistent"
           }
         },
         "en": {
@@ -1793,6 +2087,12 @@
             "value": "회고 및 어시스턴트"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terugblikken & assistent"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1803,6 +2103,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Revisões e assistente"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recapitulări și asistent"
           }
         },
         "ru": {
@@ -1845,6 +2151,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإعدادات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen"
           }
         },
         "en": {
@@ -1901,6 +2213,12 @@
             "value": "설정"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instellingen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -1911,6 +2229,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ajustes"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurări"
           }
         },
         "ru": {
@@ -1953,6 +2277,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "قائمة التحقق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checkliste"
           }
         },
         "en": {
@@ -2009,6 +2339,12 @@
             "value": "체크리스트"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checklist"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2019,6 +2355,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "lista de verificação"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "listă de control"
           }
         },
         "ru": {
@@ -2061,6 +2403,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التبعيات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abhängigkeiten"
           }
         },
         "en": {
@@ -2117,6 +2465,12 @@
             "value": "의존 관계"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "afhankelijkheden"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2127,6 +2481,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "dependências"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dependențe"
           }
         },
         "ru": {
@@ -2169,6 +2529,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "السجل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
           }
         },
         "en": {
@@ -2225,6 +2591,12 @@
             "value": "기록"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geschiedenis"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2235,6 +2607,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "histórico"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "istoric"
           }
         },
         "ru": {
@@ -2277,6 +2655,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "القائمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste"
           }
         },
         "en": {
@@ -2333,6 +2717,12 @@
             "value": "목록"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lijst"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2343,6 +2733,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "lista"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "listă"
           }
         },
         "ru": {
@@ -2385,6 +2781,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوقت المخطط"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geplante Uhrzeit"
           }
         },
         "en": {
@@ -2441,6 +2843,12 @@
             "value": "예정 시간"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geplande tijd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2451,6 +2859,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "horário planejado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "oră planificată"
           }
         },
         "ru": {
@@ -2493,6 +2907,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "قاعدة التكرار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederholungsregel"
           }
         },
         "en": {
@@ -2549,6 +2969,12 @@
             "value": "반복 규칙"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "herhaalregel"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2559,6 +2985,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "regra de repetição"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "regulă de repetare"
           }
         },
         "ru": {
@@ -2601,6 +3033,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "التذكيرات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen"
           }
         },
         "en": {
@@ -2657,6 +3095,12 @@
             "value": "알림"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "herinneringen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2667,6 +3111,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "lembretes"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mementouri"
           }
         },
         "ru": {
@@ -2709,6 +3159,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحالة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
           }
         },
         "en": {
@@ -2765,6 +3221,12 @@
             "value": "상태"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -2775,6 +3237,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "status"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "stare"
           }
         },
         "ru": {
@@ -2850,6 +3318,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "تم استيراد %lld"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importiert"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importiert"
                 }
               }
             }
@@ -2999,6 +3485,24 @@
             "value": "%lld개 가져옴"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geïmporteerd"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geïmporteerd"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -3042,6 +3546,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld importados"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importate"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importată"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importate"
                 }
               }
             }
@@ -3188,6 +3716,34 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "تم تخطي %arg"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg übersprungen"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg übersprungen"
                     }
                   }
                 }
@@ -3409,6 +3965,34 @@
             "value": "%1$@, %2$lld개 건너뜀"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg overgeslagen"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg overgeslagen"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3470,6 +4054,40 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg ignorados"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg omise"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg omisă"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg omise"
                     }
                   }
                 }
@@ -3609,6 +4227,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -3663,6 +4287,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -3670,6 +4300,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -3748,6 +4384,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld سجل مستورد"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importierter Datensatz"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld importierte Datensätze"
                 }
               }
             }
@@ -3897,6 +4551,24 @@
             "value": "가져온 항목 %lld개"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geïmporteerd record"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld geïmporteerde records"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -3940,6 +4612,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld registros importados"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld înregistrări importate"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld înregistrare importată"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de înregistrări importate"
                 }
               }
             }
@@ -4092,6 +4788,34 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg موجودة مسبقًا"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bereits vorhanden"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg bereits vorhanden"
                     }
                   }
                 }
@@ -4313,6 +5037,34 @@
             "value": "%1$@, 이미 있는 항목 %2$lld개"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg al aanwezig"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg al aanwezig"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4374,6 +5126,40 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg já presentes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg deja prezente"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg deja prezentă"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg deja prezente"
                     }
                   }
                 }
@@ -4513,6 +5299,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -4567,6 +5359,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -4574,6 +5372,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -4652,6 +5456,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "و%lld سجل آخر…"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "und %lld weitere …"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "und %lld weitere …"
                 }
               }
             }
@@ -4801,6 +5623,24 @@
             "value": "외 %lld개…"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "en nog %lld…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "en nog %lld…"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -4844,6 +5684,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "e mais %lld…"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "și încă %lld…"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "și încă %lld…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "și încă %lld…"
                 }
               }
             }
@@ -4951,6 +5815,12 @@
             "value": "ما لم يتم استيراده:"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht importiert:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -5005,6 +5875,12 @@
             "value": "가져오지 못한 항목:"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet geïmporteerd:"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5015,6 +5891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não importados:"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neimportate:"
           }
         },
         "ru": {
@@ -5057,6 +5939,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "\"%@\""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“"
           }
         },
         "en": {
@@ -5113,6 +6001,12 @@
             "value": "“%@”"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5123,6 +6017,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@”"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@”"
           }
         },
         "ru": {
@@ -5165,6 +6065,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تمت استعادتها دون هذه التفاصيل:"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne diese Details wiederhergestellt:"
           }
         },
         "en": {
@@ -5221,6 +6127,12 @@
             "value": "다음 세부 정보 없이 복원됨:"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hersteld zonder deze details:"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5231,6 +6143,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restaurados sem estes itens:"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurate fără aceste detalii:"
           }
         },
         "ru": {
@@ -5273,6 +6191,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بعد موعد الاستحقاق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nach der Frist"
           }
         },
         "en": {
@@ -5329,6 +6253,12 @@
             "value": "기한 이후"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "na de vervaldatum"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -5339,6 +6269,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "depois do prazo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "după termenul limită"
           }
         },
         "ru": {
@@ -5414,6 +6350,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "منذ %lld يوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "vor %lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "vor %lld Tagen"
                 }
               }
             }
@@ -5563,6 +6517,24 @@
             "value": "%lld일 전"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dag geleden"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dagen geleden"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -5606,6 +6578,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "há %lld dias"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "acum %lld zile"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "acum %lld zi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "acum %lld de zile"
                 }
               }
             }
@@ -5755,6 +6751,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag überfällig"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage überfällig"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -5899,6 +6913,24 @@
             "value": "%lld일 지연"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dag te laat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dagen te laat"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -5942,6 +6974,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld dias de atraso"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zile de întârziere"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zi de întârziere"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de zile de întârziere"
                 }
               }
             }
@@ -6055,6 +7111,12 @@
             "value": "اليوم نفسه"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "am selben Tag"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -6109,6 +7171,12 @@
             "value": "같은 날"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dezelfde dag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6119,6 +7187,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "no mesmo dia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "în aceeași zi"
           }
         },
         "ru": {
@@ -6161,6 +7235,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
           }
         },
         "en": {
@@ -6217,6 +7297,12 @@
             "value": "오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6227,6 +7313,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Astăzi"
           }
         },
         "ru": {
@@ -6269,6 +7361,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heute"
           }
         },
         "en": {
@@ -6325,6 +7423,12 @@
             "value": "오늘"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vandaag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6335,6 +7439,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "astăzi"
           }
         },
         "ru": {
@@ -6377,6 +7487,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "غدًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen"
           }
         },
         "en": {
@@ -6433,6 +7549,12 @@
             "value": "내일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6443,6 +7565,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amanhã"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mâine"
           }
         },
         "ru": {
@@ -6485,6 +7613,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "غدًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "morgen"
           }
         },
         "en": {
@@ -6541,6 +7675,12 @@
             "value": "내일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "morgen"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6551,6 +7691,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "amanhã"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mâine"
           }
         },
         "ru": {
@@ -6593,6 +7739,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أمس"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestern"
           }
         },
         "en": {
@@ -6649,6 +7801,12 @@
             "value": "어제"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gisteren"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6659,6 +7817,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ontem"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ieri"
           }
         },
         "ru": {
@@ -6701,6 +7865,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أمس"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gestern"
           }
         },
         "en": {
@@ -6757,6 +7927,12 @@
             "value": "어제"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gisteren"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6767,6 +7943,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ontem"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ieri"
           }
         },
         "ru": {
@@ -6809,6 +7991,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إنشاء قاعدة البيانات هذه بواسطة إصدار أحدث من Lorvex. يُرجى تحديث Lorvex لفتحها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Datenbank wurde mit einer neueren Version von Lorvex erstellt. Bitte aktualisiere Lorvex, um sie zu öffnen."
           }
         },
         "en": {
@@ -6865,6 +8053,12 @@
             "value": "이 데이터베이스는 더 새로운 버전의 Lorvex에서 만들어졌습니다. 열려면 Lorvex를 업데이트하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze database is gemaakt met een nieuwere versie van Lorvex. Werk Lorvex bij om de database te openen."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6875,6 +8069,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este banco de dados foi criado por uma versão mais recente do Lorvex. Atualize o Lorvex para abri-lo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această bază de date a fost creată cu o versiune mai nouă a Lorvex. Actualizați Lorvex pentru a o deschide."
           }
         },
         "ru": {
@@ -6917,6 +8117,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حدث خطأ ما. يُرجى المحاولة مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
           }
         },
         "en": {
@@ -6973,6 +8179,12 @@
             "value": "문제가 발생했습니다. 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is iets misgegaan. Probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -6983,6 +8195,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Algo deu errado. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceva nu a funcționat corect. Încercați din nou."
           }
         },
         "ru": {
@@ -7025,6 +8243,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا العنصر لم يعد موجودًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Objekt existiert nicht mehr."
           }
         },
         "en": {
@@ -7081,6 +8305,12 @@
             "value": "해당 항목이 더 이상 존재하지 않습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dat item bestaat niet meer."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7091,6 +8321,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esse item não existe mais."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest element nu mai există."
           }
         },
         "ru": {
@@ -7133,6 +8369,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا الوقت غير موجود في ذلك اليوم لأن الساعات تتقدّم مع بدء التوقيت الصيفي. اختر وقتًا قبله أو بعده."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Uhrzeit gibt es an diesem Tag nicht, weil die Uhren für die Sommerzeit vorgestellt werden. Wähle eine frühere oder spätere Uhrzeit."
           }
         },
         "en": {
@@ -7189,6 +8431,12 @@
             "value": "이날은 서머타임 시작으로 시계가 앞당겨져 이 시간이 없습니다. 더 이르거나 늦은 시간을 선택하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit tijdstip bestaat niet op die dag omdat de klok voor de zomertijd vooruit wordt gezet. Kies een eerder of later tijdstip."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7199,6 +8447,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este horário não existe nesse dia porque os relógios são adiantados para o horário de verão. Escolha um horário anterior ou posterior."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această oră nu există în ziua respectivă, deoarece ceasurile se mută înainte pentru ora de vară. Alegeți o oră mai devreme sau mai târziu."
           }
         },
         "ru": {
@@ -7241,6 +8495,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذه المهمة مكتملة بالفعل. أعِد فتحها قبل إلغائها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe ist bereits erledigt. Öffne sie wieder, bevor du sie abbrichst."
           }
         },
         "en": {
@@ -7297,6 +8557,12 @@
             "value": "이 할 일은 이미 완료되었습니다. 취소하려면 먼저 다시 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze taak is al voltooid. Heropen de taak voordat je deze annuleert."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7307,6 +8573,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta tarefa já foi concluída. Reabra-a antes de cancelá-la."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină este deja finalizată. Redeschideți-o înainte de a o anula."
           }
         },
         "ru": {
@@ -7349,6 +8621,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إلغاء هذه المهمة. أعِد فتحها قبل إكمالها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe wurde abgebrochen. Öffne sie wieder, bevor du sie erledigst."
           }
         },
         "en": {
@@ -7405,6 +8683,12 @@
             "value": "이 할 일은 취소되었습니다. 완료하려면 먼저 다시 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze taak is geannuleerd. Heropen de taak voordat je deze voltooit."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7415,6 +8699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta tarefa foi cancelada. Reabra-a antes de concluí-la."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină a fost anulată. Redeschideți-o înainte de a o finaliza."
           }
         },
         "ru": {
@@ -7457,6 +8747,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لهذه العادة تذكير في هذا الوقت بالفعل. اختر وقتًا آخر."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für diese Gewohnheit gibt es zu dieser Uhrzeit bereits eine Erinnerung. Wähle eine andere Uhrzeit."
           }
         },
         "en": {
@@ -7513,6 +8809,12 @@
             "value": "이 습관에는 그 시간에 이미 알림이 있습니다. 다른 시간을 선택하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze gewoonte heeft al een herinnering op dat tijdstip. Kies een ander tijdstip."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7523,6 +8825,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este hábito já tem um lembrete nesse horário. Escolha outro horário."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest obicei are deja un memento la ora respectivă. Alegeți altă oră."
           }
         },
         "ru": {
@@ -7565,6 +8873,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "توجد ذاكرة بهذا الاسم بالفعل. اختر اسمًا آخر."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Gedächtniseintrag mit diesem Namen existiert bereits. Wähle einen anderen Namen."
           }
         },
         "en": {
@@ -7621,6 +8935,12 @@
             "value": "같은 이름의 메모리가 이미 있습니다. 다른 이름을 선택하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er bestaat al een geheugenitem met deze naam. Kies een andere naam."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7631,6 +8951,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Já existe uma memória com esse nome. Escolha outro nome."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Există deja o înregistrare din memorie cu acest nume. Alegeți alt nume."
           }
         },
         "ru": {
@@ -7673,6 +8999,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذه الملاحظات طويلة جدًا. اختصرها ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Notizen sind zu lang. Kürze sie und versuche es erneut."
           }
         },
         "en": {
@@ -7729,6 +9061,12 @@
             "value": "메모가 너무 깁니다. 줄인 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze notities zijn te lang. Kort ze in en probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7739,6 +9077,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Estas notas são longas demais. Encurte-as e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceste notițe sunt prea lungi. Scurtați-le și încercați din nou."
           }
         },
         "ru": {
@@ -7781,6 +9125,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يمكن الإيقاف المؤقت إلا لمهمة قيد التنفيذ."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur eine Aufgabe in Bearbeitung kann pausiert werden."
           }
         },
         "en": {
@@ -7837,6 +9187,12 @@
             "value": "진행 중인 할 일만 일시 정지할 수 있습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen een taak die bezig is, kan worden gepauzeerd."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7847,6 +9203,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Só é possível pausar uma tarefa em andamento."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doar o sarcină în curs poate fi suspendată."
           }
         },
         "ru": {
@@ -7889,6 +9251,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا العنصر أطول من أن تتم مزامنته. اختصر أطول نص فيه ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Objekt ist zu lang für die Synchronisierung. Kürze den längsten Text und versuche es erneut."
           }
         },
         "en": {
@@ -7945,6 +9313,12 @@
             "value": "이 항목이 너무 길어 동기화할 수 없습니다. 가장 긴 텍스트를 줄인 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit item is te lang om te synchroniseren. Kort de langste tekst in en probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -7955,6 +9329,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este item é longo demais para sincronizar. Encurte o texto mais longo e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest element este prea lung pentru a fi sincronizat. Scurtați cel mai lung text și încercați din nou."
           }
         },
         "ru": {
@@ -7997,6 +9377,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم إلغاء هذه المهمة. أعِد فتحها قبل بدئها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe wurde abgebrochen. Öffne sie wieder, bevor du sie startest."
           }
         },
         "en": {
@@ -8053,6 +9439,12 @@
             "value": "이 할 일은 취소되었습니다. 시작하려면 먼저 다시 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze taak is geannuleerd. Heropen de taak voordat je deze start."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8063,6 +9455,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta tarefa foi cancelada. Reabra-a antes de iniciá-la."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină a fost anulată. Redeschideți-o înainte de a o începe."
           }
         },
         "ru": {
@@ -8105,6 +9503,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذه المهمة مكتملة بالفعل. أعِد فتحها قبل بدئها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe ist bereits erledigt. Öffne sie wieder, bevor du sie startest."
           }
         },
         "en": {
@@ -8161,6 +9565,12 @@
             "value": "이 할 일은 이미 완료되었습니다. 시작하려면 먼저 다시 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze taak is al voltooid. Heropen de taak voordat je deze start."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8171,6 +9581,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta tarefa já foi concluída. Reabra-a antes de iniciá-la."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină este deja finalizată. Redeschideți-o înainte de a o începe."
           }
         },
         "ru": {
@@ -8213,6 +9629,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذه المهمة في \"يومًا ما\". أعِد فتحها قبل بدئها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe befindet sich in „Irgendwann“. Öffne sie wieder, bevor du sie startest."
           }
         },
         "en": {
@@ -8269,6 +9691,12 @@
             "value": "이 할 일은 ‘언젠가’에 있습니다. 시작하려면 먼저 다시 여세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze taak staat in ‘Ooit’. Heropen de taak voordat je deze start."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8279,6 +9707,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta tarefa está em “Algum dia”. Reabra-a antes de iniciá-la."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină se află în „Cândva”. Redeschideți-o înainte de a o începe."
           }
         },
         "ru": {
@@ -8321,6 +9755,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يوجد وسم بهذا الاسم بالفعل. اختر اسمًا آخر."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Tag mit diesem Namen existiert bereits. Wähle einen anderen Namen."
           }
         },
         "en": {
@@ -8377,6 +9817,12 @@
             "value": "같은 이름의 태그가 이미 있습니다. 다른 이름을 선택하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er bestaat al een tag met deze naam. Kies een andere naam."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8387,6 +9833,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Já existe uma etiqueta com esse nome. Escolha outro nome."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Există deja un tag cu acest nume. Alegeți alt nume."
           }
         },
         "ru": {
@@ -8429,6 +9881,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أحد الوسوم طويل جدًا. اختصره ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Tag ist zu lang. Kürze ihn und versuche es erneut."
           }
         },
         "en": {
@@ -8485,6 +9943,12 @@
             "value": "태그가 너무 깁니다. 줄인 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een tag is te lang. Kort de tag in en probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8495,6 +9959,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uma etiqueta é longa demais. Encurte-a e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un tag este prea lung. Scurtați-l și încercați din nou."
           }
         },
         "ru": {
@@ -8537,6 +10007,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعتمد هذه المهمة على مهام لم تكتمل بعد. أكمِلها أو ألغِها أولًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufgabe hängt von Aufgaben ab, die noch nicht erledigt sind. Erledige oder breche diese zuerst ab."
           }
         },
         "en": {
@@ -8593,6 +10069,12 @@
             "value": "이 할 일이 의존하는 할 일이 아직 완료되지 않았습니다. 먼저 완료하거나 취소하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze taak hangt af van taken die nog niet zijn voltooid. Voltooi of annuleer die eerst."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8603,6 +10085,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta tarefa depende de tarefas que ainda não foram concluídas. Conclua ou cancele essas tarefas primeiro."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină depinde de sarcini care nu sunt încă finalizate. Finalizați-le sau anulați-le mai întâi."
           }
         },
         "ru": {
@@ -8645,6 +10133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا النص طويل جدًا. اختصره ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Text ist zu lang. Kürze ihn und versuche es erneut."
           }
         },
         "en": {
@@ -8701,6 +10195,12 @@
             "value": "텍스트가 너무 깁니다. 줄인 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze tekst is te lang. Kort de tekst in en probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8711,6 +10211,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este texto é longo demais. Encurte-o e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest text este prea lung. Scurtați-l și încercați din nou."
           }
         },
         "ru": {
@@ -8753,6 +10259,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تحتاج المهمة إلى عنوان. أضف عنوانًا ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Aufgabe braucht einen Titel. Gib einen Titel ein und versuche es erneut."
           }
         },
         "en": {
@@ -8809,6 +10321,12 @@
             "value": "할 일에는 제목이 필요합니다. 제목을 입력한 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een taak heeft een titel nodig. Voeg een titel toe en probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8819,6 +10337,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uma tarefa precisa de um título. Adicione um e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O sarcină are nevoie de un titlu. Adăugați unul și încercați din nou."
           }
         },
         "ru": {
@@ -8861,6 +10385,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا العنوان طويل جدًا. اختصره ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Titel ist zu lang. Kürze ihn und versuche es erneut."
           }
         },
         "en": {
@@ -8917,6 +10447,12 @@
             "value": "제목이 너무 깁니다. 줄인 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze titel is te lang. Kort de titel in en probeer het opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -8927,6 +10463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este título é longo demais. Encurte-o e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest titlu este prea lung. Scurtați-l și încercați din nou."
           }
         },
         "ru": {
@@ -8969,6 +10511,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا يستطيع Lorvex الوصول إلى مساحة تخزين بياناته، لذا تعذّر إكمال هذا الإجراء. يُرجى إعادة تشغيل Lorvex."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex kann nicht auf seinen Datenspeicher zugreifen, daher konnte dies nicht abgeschlossen werden. Bitte starte Lorvex neu."
           }
         },
         "en": {
@@ -9025,6 +10573,12 @@
             "value": "Lorvex가 데이터 저장소에 접근할 수 없어 작업을 완료하지 못했습니다. Lorvex를 다시 시작하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex heeft geen toegang tot de gegevensopslag, dus dit kon niet worden voltooid. Start Lorvex opnieuw op."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -9035,6 +10589,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Lorvex não consegue acessar o armazenamento de dados, então não foi possível concluir a operação. Reinicie o Lorvex."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex nu poate accesa spațiul de stocare a datelor, deci acțiunea nu a putut fi finalizată. Reporniți Lorvex."
           }
         },
         "ru": {
@@ -9110,6 +10670,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld يوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage"
                 }
               }
             }
@@ -9259,6 +10837,24 @@
             "value": "%lld일"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dagen"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -9302,6 +10898,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld dias"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zile"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de zile"
                 }
               }
             }
@@ -9446,6 +11066,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld شهر"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Monat"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Monate"
                 }
               }
             }
@@ -9601,6 +11239,24 @@
             "value": "%lld개월"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld maand"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld maanden"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -9644,6 +11300,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld meses"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld luni"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lună"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de luni"
                 }
               }
             }
@@ -9793,6 +11473,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Woche"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Wochen"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -9937,6 +11635,24 @@
             "value": "%lld주"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld week"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld weken"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -9980,6 +11696,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld semanas"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld săptămâni"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld săptămână"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de săptămâni"
                 }
               }
             }
@@ -10093,6 +11833,12 @@
             "value": "هذه النسخة الاحتياطية تالفة ولا يمكن استيرادها. صدِّرها مرة أخرى على الجهاز الذي أُنشئت عليه، ثم حاول مرة أخرى."
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Backup ist beschädigt und kann nicht importiert werden. Exportiere es erneut auf dem Gerät, von dem es stammt, und versuche es dann noch einmal."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -10147,6 +11893,12 @@
             "value": "이 백업이 손상되어 가져올 수 없습니다. 원래 기기에서 다시 내보낸 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze back-up is beschadigd en kan niet worden geïmporteerd. Exporteer de back-up opnieuw op het apparaat waarvan deze afkomstig is en probeer het daarna opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10157,6 +11909,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este backup está danificado e não pode ser importado. Exporte-o de novo no dispositivo de origem e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această copie de rezervă este deteriorată și nu poate fi importată. Exportați-o din nou de pe dispozitivul de la care provine, apoi încercați din nou."
           }
         },
         "ru": {
@@ -10199,6 +11957,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الملف المحدد فارغ."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ausgewählte Datei ist leer."
           }
         },
         "en": {
@@ -10255,6 +12019,12 @@
             "value": "선택한 파일이 비어 있습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het geselecteerde bestand is leeg."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10265,6 +12035,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O arquivo selecionado está vazio."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fișierul selectat este gol."
           }
         },
         "ru": {
@@ -10307,6 +12083,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أُنشئت هذه النسخة الاحتياطية بإصدار أحدث من Lorvex. حدِّث Lorvex على هذا الجهاز، ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Backup wurde mit einer neueren Version von Lorvex erstellt. Aktualisiere Lorvex auf diesem Gerät und versuche es dann erneut."
           }
         },
         "en": {
@@ -10363,6 +12145,12 @@
             "value": "이 백업은 더 새로운 버전의 Lorvex에서 만들어졌습니다. 이 기기에서 Lorvex를 업데이트한 후 다시 시도하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze back-up is gemaakt met een nieuwere versie van Lorvex. Werk Lorvex bij op dit apparaat en probeer het daarna opnieuw."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10373,6 +12161,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este backup foi criado por uma versão mais recente do Lorvex. Atualize o Lorvex neste dispositivo e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această copie de rezervă a fost creată cu o versiune mai nouă a Lorvex. Actualizați Lorvex pe acest dispozitiv, apoi încercați din nou."
           }
         },
         "ru": {
@@ -10415,6 +12209,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا تحتوي هذه النسخة الاحتياطية على بيانات لاستيرادها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Backup enthält keine Daten zum Importieren."
           }
         },
         "en": {
@@ -10471,6 +12271,12 @@
             "value": "이 백업에는 가져올 데이터가 없습니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze back-up bevat geen gegevens om te importeren."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10481,6 +12287,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este backup não tem dados para importar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această copie de rezervă nu conține date de importat."
           }
         },
         "ru": {
@@ -10523,6 +12335,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا الملف ليس نسخة احتياطية من Lorvex، أو أنه تالف. اختر ملفًا مُصدَّرًا من Lorvex."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Datei ist kein Lorvex-Backup oder sie ist beschädigt. Wähle eine aus Lorvex exportierte Datei."
           }
         },
         "en": {
@@ -10579,6 +12397,12 @@
             "value": "이 파일은 Lorvex 백업이 아니거나 손상되었습니다. Lorvex에서 내보낸 파일을 선택하세요."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit bestand is geen Lorvex-back-up of het is beschadigd. Kies een bestand dat uit Lorvex is geëxporteerd."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10589,6 +12413,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Este arquivo não é um backup do Lorvex ou está danificado. Escolha um arquivo exportado do Lorvex."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest fișier nu este o copie de rezervă Lorvex sau este deteriorat. Alegeți un fișier exportat din Lorvex."
           }
         },
         "ru": {
@@ -10631,6 +12461,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حجم الملف المحدد %1$@. الحد الأقصى لحجم النسخة الاحتياطية من Lorvex هو %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die ausgewählte Datei ist %1$@ groß. Ein Lorvex-Backup darf höchstens %2$@ groß sein."
           }
         },
         "en": {
@@ -10687,6 +12523,12 @@
             "value": "선택한 파일의 크기는 %1$@입니다. Lorvex 백업은 최대 %2$@까지 가능합니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het geselecteerde bestand is %1$@. Een Lorvex-back-up mag maximaal %2$@ zijn."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10697,6 +12539,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "O arquivo selecionado tem %1$@. Um backup do Lorvex pode ter no máximo %2$@."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fișierul selectat are %1$@. O copie de rezervă Lorvex poate avea cel mult %2$@."
           }
         },
         "ru": {
@@ -10739,6 +12587,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوارد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingang"
           }
         },
         "en": {
@@ -10795,6 +12649,12 @@
             "value": "수신함"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inkomend"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10805,6 +12665,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entrada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primite"
           }
         },
         "ru": {
@@ -10847,6 +12713,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة \"%@\""
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fügt „%@“ hinzu"
           }
         },
         "en": {
@@ -10903,6 +12775,12 @@
             "value": "“%@” 추가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voegt ‘%@’ toe"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -10913,6 +12791,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Adiciona “%@”"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă „%@”"
           }
         },
         "ru": {
@@ -10955,6 +12839,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مستحقة %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fällig %@"
           }
         },
         "en": {
@@ -11011,6 +12901,12 @@
             "value": "기한: %@"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vervalt %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11021,6 +12917,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prazo %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scadent %@"
           }
         },
         "ru": {
@@ -11063,6 +12965,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بعد الإكمال"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Erledigung"
           }
         },
         "en": {
@@ -11119,6 +13027,12 @@
             "value": "완료 후"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na voltooiing"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11129,6 +13043,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Após a conclusão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "După finalizare"
           }
         },
         "ru": {
@@ -11171,6 +13091,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يُحدَّد موعد المهمة التالية بناءً على وقت إكمال هذه المهمة، لذا فإن الإكمال المتأخر يؤخر موعدها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die nächste Wiederholung richtet sich nach dem Zeitpunkt, an dem du diese erledigst – ein verspäteter Abschluss verschiebt sie also nach hinten."
           }
         },
         "en": {
@@ -11227,6 +13153,12 @@
             "value": "다음 할 일은 이 할 일을 완료한 시점을 기준으로 일정이 잡히므로, 늦게 완료하면 그만큼 뒤로 밀립니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De volgende herhaling wordt gepland ten opzichte van het moment waarop je deze voltooit, dus een late afronding schuift ook de volgende op."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11237,6 +13169,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "A próxima é planejada com base em quando você conclui esta, então uma conclusão tardia a empurra para frente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Următoarea apariție este programată în funcție de momentul în care o finalizați, așa că o finalizare târzie o amână."
           }
         },
         "ru": {
@@ -11279,6 +13217,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بانتظام"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regelmäßig"
           }
         },
         "en": {
@@ -11335,6 +13279,12 @@
             "value": "정기적으로"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regelmatig"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11345,6 +13295,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Regularmente"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regulat"
           }
         },
         "ru": {
@@ -11387,6 +13343,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تتكرر وفق جدول ثابت، بغض النظر عن وقت إنهائك لها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederholt sich nach festem Zeitplan, unabhängig davon, wann du fertig wirst."
           }
         },
         "en": {
@@ -11443,6 +13405,12 @@
             "value": "완료 시점과 관계없이 정해진 일정에 따라 반복됩니다."
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herhaalt volgens een vast schema, ongeacht wanneer je klaar bent."
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11453,6 +13421,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Repete em um cronograma fixo, independentemente de quando você terminar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se repetă după un program fix, indiferent de momentul în care terminați."
           }
         },
         "ru": {
@@ -11495,6 +13469,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "كل يوم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeden Tag"
           }
         },
         "en": {
@@ -11551,6 +13531,12 @@
             "value": "매일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke dag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11561,6 +13547,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todos os dias"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În fiecare zi"
           }
         },
         "ru": {
@@ -11603,6 +13595,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "كل شهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeden Monat"
           }
         },
         "en": {
@@ -11659,6 +13657,12 @@
             "value": "매월"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke maand"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -11669,6 +13673,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todo mês"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În fiecare lună"
           }
         },
         "ru": {
@@ -11744,6 +13754,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "كل %lld يوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Tage"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Tage"
                 }
               }
             }
@@ -11893,6 +13921,24 @@
             "value": "%lld일마다"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld dag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld dagen"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -11936,6 +13982,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "A cada %lld dias"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld zile"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld zi"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld de zile"
                 }
               }
             }
@@ -12085,6 +14155,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Monate"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Monate"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -12229,6 +14317,24 @@
             "value": "%lld개월마다"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld maand"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld maanden"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -12272,6 +14378,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "A cada %lld meses"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld luni"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld lună"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld de luni"
                 }
               }
             }
@@ -12421,6 +14551,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Wochen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Wochen"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -12565,6 +14713,24 @@
             "value": "%lld주마다"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld week"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld weken"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -12608,6 +14774,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "A cada %lld semanas"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld săptămâni"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld săptămână"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld de săptămâni"
                 }
               }
             }
@@ -12757,6 +14947,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Jahre"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Alle %lld Jahre"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -12901,6 +15109,24 @@
             "value": "%lld년마다"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld jaar"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elke %lld jaar"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -12944,6 +15170,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "A cada %lld anos"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld ani"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld an"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La fiecare %lld de ani"
                 }
               }
             }
@@ -13057,6 +15307,12 @@
             "value": "كل أسبوع"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Woche"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -13111,6 +15367,12 @@
             "value": "매주"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke week"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13121,6 +15383,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Toda semana"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În fiecare săptămână"
           }
         },
         "ru": {
@@ -13163,6 +15431,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "كل سنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedes Jahr"
           }
         },
         "en": {
@@ -13219,6 +15493,12 @@
             "value": "매년"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elk jaar"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13229,6 +15509,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todo ano"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În fiecare an"
           }
         },
         "ru": {
@@ -13271,6 +15557,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يوميًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Täglich"
           }
         },
         "en": {
@@ -13327,6 +15619,12 @@
             "value": "매일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagelijks"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13337,6 +15635,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diária"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zilnic"
           }
         },
         "ru": {
@@ -13379,6 +15683,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "شهريًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monatlich"
           }
         },
         "en": {
@@ -13435,6 +15745,12 @@
             "value": "매월"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maandelijks"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13445,6 +15761,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mensal"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lunar"
           }
         },
         "ru": {
@@ -13487,6 +15809,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أسبوعيًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wöchentlich"
           }
         },
         "en": {
@@ -13543,6 +15871,12 @@
             "value": "매주"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wekelijks"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13553,6 +15887,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Semanal"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Săptămânal"
           }
         },
         "ru": {
@@ -13595,6 +15935,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "سنويًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jährlich"
           }
         },
         "en": {
@@ -13651,6 +15997,12 @@
             "value": "매년"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaarlijks"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13658,6 +16010,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anual"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "Anual"
@@ -13703,6 +16061,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "بعد الإكمال"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nach Erledigung"
           }
         },
         "en": {
@@ -13759,6 +16123,12 @@
             "value": "완료 후"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "na voltooiing"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -13769,6 +16139,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "após a conclusão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "după finalizare"
           }
         },
         "ru": {
@@ -13844,6 +16220,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld مرة"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "einmal"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld-mal"
                 }
               }
             }
@@ -13993,6 +16387,24 @@
             "value": "%lld회"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld keer"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld keer"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -14036,6 +16448,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld vezes"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "de %lld ori"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "o dată"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "de %lld de ori"
                 }
               }
             }
@@ -14185,6 +16621,24 @@
             }
           }
         },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld übersprungen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld übersprungen"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -14329,6 +16783,24 @@
             "value": "%lld회 건너뜀"
           }
         },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld overgeslagen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld overgeslagen"
+                }
+              }
+            }
+          }
+        },
         "pl": {
           "variations": {
             "plural": {
@@ -14372,6 +16844,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld ignoradas"
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld omise"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld omisă"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld omise"
                 }
               }
             }
@@ -14479,6 +16975,12 @@
             "value": "حتى %@"
           }
         },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bis %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -14533,6 +17035,12 @@
             "value": "%@까지"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tot %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -14543,6 +17051,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "até %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "până la %@"
           }
         },
         "ru": {
@@ -14585,6 +17099,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخر %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "letzter %@"
           }
         },
         "en": {
@@ -14641,6 +17161,12 @@
             "value": "마지막 %@요일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "laatste %@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -14651,6 +17177,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "últ. %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ultima %@"
           }
         },
         "ru": {
@@ -14693,6 +17225,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@ رقم %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
           }
         },
         "en": {
@@ -14749,6 +17287,12 @@
             "value": "%1$@ %2$@요일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -14756,6 +17300,12 @@
           }
         },
         "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "ro": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@"
@@ -14801,6 +17351,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@ رقم %1$@ من النهاية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ von hinten"
           }
         },
         "en": {
@@ -14857,6 +17413,12 @@
             "value": "끝에서 %1$@ %2$@요일"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ laatste %2$@"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -14867,6 +17429,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@ a partir do fim"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ de la sfârșit"
           }
         },
         "ru": {
@@ -14909,6 +17477,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ملغاة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgebrochen"
           }
         },
         "en": {
@@ -14965,6 +17539,12 @@
             "value": "취소됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geannuleerd"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -14975,6 +17555,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cancelada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulată"
           }
         },
         "ru": {
@@ -15017,6 +17603,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مكتملة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt"
           }
         },
         "en": {
@@ -15073,6 +17665,12 @@
             "value": "완료됨"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltooid"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15083,6 +17681,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Concluída"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizată"
           }
         },
         "ru": {
@@ -15125,6 +17729,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "قيد التنفيذ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Bearbeitung"
           }
         },
         "en": {
@@ -15181,6 +17791,12 @@
             "value": "진행 중"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezig"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15191,6 +17807,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Em andamento"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În curs"
           }
         },
         "ru": {
@@ -15233,6 +17855,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "غير مكتملة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offen"
           }
         },
         "en": {
@@ -15289,6 +17917,12 @@
             "value": "미완료"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15299,6 +17933,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pendente"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De făcut"
           }
         },
         "ru": {
@@ -15341,6 +17981,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "يومًا ما"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irgendwann"
           }
         },
         "en": {
@@ -15397,6 +18043,12 @@
             "value": "언젠가"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ooit"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15407,6 +18059,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Algum dia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cândva"
           }
         },
         "ru": {
@@ -15449,6 +18107,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "عالية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoch"
           }
         },
         "en": {
@@ -15505,6 +18169,12 @@
             "value": "높음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoog"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15515,6 +18185,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridicată"
           }
         },
         "ru": {
@@ -15557,6 +18233,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "منخفضة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niedrig"
           }
         },
         "en": {
@@ -15613,6 +18295,12 @@
             "value": "낮음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laag"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15623,6 +18311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Baixa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scăzută"
           }
         },
         "ru": {
@@ -15665,6 +18359,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "عادية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
           }
         },
         "en": {
@@ -15721,6 +18421,12 @@
             "value": "보통"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normaal"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15731,6 +18437,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normal"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normală"
           }
         },
         "ru": {
@@ -15773,6 +18485,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أولوية عالية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hohe Priorität"
           }
         },
         "en": {
@@ -15829,6 +18547,12 @@
             "value": "우선순위: 높음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoge prioriteit"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15839,6 +18563,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prioridade alta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritate ridicată"
           }
         },
         "ru": {
@@ -15881,6 +18611,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أولوية منخفضة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niedrige Priorität"
           }
         },
         "en": {
@@ -15937,6 +18673,12 @@
             "value": "우선순위: 낮음"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lage prioriteit"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -15947,6 +18689,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prioridade baixa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritate scăzută"
           }
         },
         "ru": {
@@ -15989,6 +18737,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "أولوية عادية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normale Priorität"
           }
         },
         "en": {
@@ -16045,6 +18799,12 @@
             "value": "우선순위: 보통"
           }
         },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normale prioriteit"
+          }
+        },
         "pl": {
           "stringUnit": {
             "state": "translated",
@@ -16055,6 +18815,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prioridade normal"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritate normală"
           }
         },
         "ru": {

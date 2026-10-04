@@ -134,22 +134,28 @@ public struct LorvexReviewTaskList: View {
   private var labelLine: some View {
     let movable = deferral.map { deferral in tasks.filter(deferral.canMove) } ?? []
     if let deferral, !movable.isEmpty {
-      // The action sits beside the label, and under it at accessibility
-      // sizes, where the two no longer fit one line.
-      let layout =
-        dynamicTypeSize.isAccessibilitySize
-        ? AnyLayout(VStackLayout(alignment: .leading, spacing: LorvexDesign.Spacing.xxs))
-        : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
-      layout {
-        LorvexPageLabel(label)
-        Button(deferral.sectionLabel(movable.count)) {
-          Task { await move(movable.map(\.id), with: deferral) }
+      // The action sits beside the label while both fit on one line, and
+      // under it when they do not: a longer translation or an accessibility
+      // text size. Beside the label it keeps its ideal width: an HStack
+      // offers each of two flexible children half the row, which would wrap
+      // or cut the action even where the row has room.
+      let action = Button(deferral.sectionLabel(movable.count)) {
+        Task { await move(movable.map(\.id), with: deferral) }
+      }
+      .buttonStyle(.plain)
+      .font(LorvexDesign.Typography.pageLabel)
+      .foregroundStyle(LorvexDesign.Palette.accent)
+      .disabled(!movingTaskIDs.isEmpty)
+      .accessibilityIdentifier("\(identifier).tomorrow")
+      ViewThatFits(in: .horizontal) {
+        HStack(alignment: .firstTextBaseline) {
+          LorvexPageLabel(label)
+          action.fixedSize(horizontal: true, vertical: false)
         }
-        .buttonStyle(.plain)
-        .font(LorvexDesign.Typography.pageLabel)
-        .foregroundStyle(LorvexDesign.Palette.accent)
-        .disabled(!movingTaskIDs.isEmpty)
-        .accessibilityIdentifier("\(identifier).tomorrow")
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+          LorvexPageLabel(label)
+          action
+        }
       }
     } else {
       LorvexPageLabel(label)

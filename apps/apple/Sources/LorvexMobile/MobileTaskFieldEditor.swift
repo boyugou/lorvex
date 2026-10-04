@@ -65,10 +65,7 @@ struct MobileTaskFieldEditor: View {
           EmptyView()
         }
       }
-      .navigationTitle(MobileTaskFieldCopy.title(field))
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
+      .mobileSheetTitle(MobileTaskFieldCopy.title(field))
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(MobileTaskFieldCopy.cancel, action: cancel)
@@ -106,16 +103,53 @@ struct MobileTaskFieldEditor: View {
     return Section {
       HStack(spacing: LorvexDesign.Spacing.s) {
         ForEach(quick, id: \.1) { label, day in
-          let isOn = has.wrappedValue && calendar.isDate(date.wrappedValue, inSameDayAs: day)
-          Button(label) {
+          MobileFieldChip(
+            title: label,
+            isSelected: has.wrappedValue && calendar.isDate(date.wrappedValue, inSameDayAs: day)
+          ) {
             has.wrappedValue = true
             date.wrappedValue = day
           }
-          .buttonStyle(.bordered)
-          .buttonBorderShape(.capsule)
-          .tint(isOn ? LorvexDesign.Palette.accent : .secondary)
         }
       }
+      monthCalendar(has: has, date: date, calendar: calendar)
+      if has.wrappedValue {
+        Button(MobileTaskFieldCopy.noDate, role: .destructive) { has.wrappedValue = false }
+          .mobileDestructiveRowStyle()
+      }
+    } footer: {
+      Text(hint)
+    }
+  }
+
+  /// The month grid for a field that may have no day. iPhone and iPad mark no
+  /// day while the field is empty and let a second tap on the marked day clear
+  /// it, because a single-date picker always shows a selection (today, for an
+  /// empty field) and tapping that selected day changes nothing.
+  @ViewBuilder
+  private func monthCalendar(has: Binding<Bool>, date: Binding<Date>, calendar: Calendar) -> some View {
+    #if os(iOS)
+      MultiDatePicker(
+        selection: Binding(
+          get: {
+            LorvexTaskFieldChoices.calendarSelection(
+              for: has.wrappedValue ? date.wrappedValue : nil, calendar: calendar)
+          },
+          set: { selection in
+            if let day = LorvexTaskFieldChoices.day(
+              afterSelecting: selection, replacing: has.wrappedValue ? date.wrappedValue : nil,
+              calendar: calendar)
+            {
+              has.wrappedValue = true
+              date.wrappedValue = day
+            } else {
+              has.wrappedValue = false
+            }
+          })
+      ) {
+        Text(MobileTaskFieldCopy.title(field))
+      }
+    #else
       DatePicker(
         MobileTaskFieldCopy.title(field),
         selection: Binding(
@@ -128,13 +162,7 @@ struct MobileTaskFieldEditor: View {
       )
       .datePickerStyle(.graphical)
       .labelsHidden()
-      if has.wrappedValue {
-        Button(MobileTaskFieldCopy.noDate, role: .destructive) { has.wrappedValue = false }
-          .mobileDestructiveRowStyle()
-      }
-    } footer: {
-      Text(hint)
-    }
+    #endif
   }
 
   private var priorityEditor: some View {
@@ -260,8 +288,9 @@ struct MobileTaskLengthEditor: View {
   var body: some View {
     Section {
       HStack(spacing: LorvexDesign.Spacing.xl) {
-        Button { set(max(0, minutes - Choices.lengthStep)) } label: { Image(systemName: "minus").frame(width: 32, height: 32) }
+        Button { set(Choices.length(minutes, steppedBy: -Choices.lengthStep)) } label: { Image(systemName: "minus").frame(width: 32, height: 32) }
           .buttonStyle(.bordered).buttonBorderShape(.circle)
+          .disabled(minutes <= 0)
           .accessibilityLabel(Choices.lengthStepAccessibilityLabel(delta: -Choices.lengthStep))
         ZStack {
           Circle().stroke(
@@ -278,8 +307,9 @@ struct MobileTaskLengthEditor: View {
         }
         .frame(width: 112, height: 112)
         .reduceMotionAnimation(.snappy(duration: 0.2), value: minutes)
-        Button { set(minutes + Choices.lengthStep) } label: { Image(systemName: "plus").frame(width: 32, height: 32) }
+        Button { set(Choices.length(minutes, steppedBy: Choices.lengthStep)) } label: { Image(systemName: "plus").frame(width: 32, height: 32) }
           .buttonStyle(.bordered).buttonBorderShape(.circle)
+          .disabled(minutes >= Choices.lengthMax)
           .accessibilityLabel(Choices.lengthStepAccessibilityLabel(delta: Choices.lengthStep))
       }
       .frame(maxWidth: .infinity)
@@ -290,10 +320,9 @@ struct MobileTaskLengthEditor: View {
       .listRowSeparator(.hidden, edges: .bottom)
       LorvexFlowLayout(spacing: LorvexDesign.Spacing.xs, lineSpacing: LorvexDesign.Spacing.xs) {
         ForEach(Choices.lengthPresets, id: \.self) { preset in
-          Button(LorvexDurationFormat.minutes(preset)) { set(preset) }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            .tint(minutes == preset ? LorvexDesign.Palette.accent : .secondary)
+          MobileFieldChip(title: LorvexDurationFormat.minutes(preset), isSelected: minutes == preset) {
+            set(preset)
+          }
         }
       }
       // The first chip's text sits inside its capsule, so the separator would

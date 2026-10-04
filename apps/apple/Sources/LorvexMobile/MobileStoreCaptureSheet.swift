@@ -20,14 +20,11 @@ struct MobileStoreCaptureSheet: View {
       // Long capture form with multi-line notes: let the user swipe the scroll to
       // dismiss the keyboard.
       .scrollDismissesKeyboard(.interactively)
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "capture.sheet.title", defaultValue: "Capture", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

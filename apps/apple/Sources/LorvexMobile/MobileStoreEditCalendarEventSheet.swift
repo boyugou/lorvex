@@ -84,14 +84,11 @@ struct MobileStoreEditCalendarEventSheet: View {
           }
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "sheet.edit_event", defaultValue: "Edit Event", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

@@ -65,14 +65,11 @@ struct MobileStoreMemoryEditorSheet: View {
           .accessibilityIdentifier("mobileMemory.editor.content")
         }
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         String(
           localized: "memory.section.edit", defaultValue: "Edit Memory",
           table: "Localizable", bundle: MobileL10n.bundle)
       )
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

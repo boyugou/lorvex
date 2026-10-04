@@ -6,7 +6,6 @@ import SwiftUI
 /// user with no way to resign first responder. Attach this to numeric fields to
 /// surface a Done button in the keyboard accessory bar.
 struct MobileKeyboardDoneToolbar: ViewModifier {
-  let onDone: (() -> Void)?
   @FocusState private var focused: Bool
 
   func body(content: Content) -> some View {
@@ -20,7 +19,6 @@ struct MobileKeyboardDoneToolbar: ViewModifier {
               localized: "common.done", defaultValue: "Done", table: "Localizable",
               bundle: MobileL10n.bundle)
           ) {
-            onDone?()
             focused = false
           }
         }
@@ -31,7 +29,7 @@ struct MobileKeyboardDoneToolbar: ViewModifier {
 extension View {
   /// Adds a keyboard accessory Done button that dismisses the keyboard, so
   /// `numberPad` fields (which lack a return key) do not trap focus.
-  func mobileKeyboardDoneToolbar(onDone: (() -> Void)? = nil) -> some View {
-    modifier(MobileKeyboardDoneToolbar(onDone: onDone))
+  func mobileKeyboardDoneToolbar() -> some View {
+    modifier(MobileKeyboardDoneToolbar())
   }
 }

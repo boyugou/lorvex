@@ -59,7 +59,8 @@ func mobileSheetsShareOnePresentationThatOpensFullHeightAtAccessibilitySizes() t
 @Test
 func mobileEditorSheetsTitleThemselvesInlineAndDenseFormsOpenFullHeight() throws {
   // A create or edit sheet carries its title inline between Cancel and the
-  // confirm button, so a large title does not take a line of a short sheet.
+  // confirm button (mobileSheetTitle sets the inline display), so a large
+  // title does not take a line of a short sheet.
   let sheets = [
     "MobileStoreCreateHabitSheet", "MobileStoreEditHabitSheet",
     "MobileStoreCreateListSheet", "MobileStoreEditListSheet",
@@ -68,8 +69,10 @@ func mobileEditorSheetsTitleThemselvesInlineAndDenseFormsOpenFullHeight() throws
   ]
   for name in sheets {
     let source = try mobileSourceFile("Sources/LorvexMobile/\(name).swift")
-    #expect(source.contains(".navigationBarTitleDisplayMode(.inline)"), "\(name) titles itself inline")
+    #expect(source.contains(".mobileSheetTitle("), "\(name) titles itself inline")
   }
+  let sheetTitle = try mobileSourceFile("Sources/LorvexMobile/MobileSheetTitle.swift")
+  #expect(sheetTitle.contains(".navigationBarTitleDisplayMode(.inline)"))
 
   // The forms with many fields (a habit, an event, a task) open at full height
   // instead of a half-height detent that hides most of them.
@@ -126,6 +129,67 @@ func mobileTaskFieldPickersShowPriorityColorsAndListTiles() throws {
   let source = try mobileSourceFile("Sources/LorvexMobile/MobileTaskFieldEditor.swift")
   #expect(source.contains(".foregroundStyle(priority.priorityTint)"))
   #expect(source.contains("MobileIconTile("))
+}
+
+@MainActor
+@Test
+func mobileDayEditorMarksNoDayWhileTheFieldIsEmpty() throws {
+  // A single-date picker always shows a selected day (today, for an empty
+  // field), and tapping that day changes nothing, so an empty planned, due, or
+  // hide-until field would look set and ignore a tap on today. The iOS editor
+  // draws its month in a multiple-selection calendar that can show no day, and
+  // reads every change through the shared single-day rules.
+  let source = try mobileSourceFile("Sources/LorvexMobile/MobileTaskFieldEditor.swift")
+  #expect(source.contains("MultiDatePicker("))
+  #expect(source.contains("LorvexTaskFieldChoices.calendarSelection("))
+  #expect(source.contains("LorvexTaskFieldChoices.day("))
+}
+
+@MainActor
+@Test
+func mobileFieldEditorsDrawTheirQuickChoicesAsSelectableChips() throws {
+  // The quick days and the length presets are one-tap choices that read as a
+  // set: the current one is filled with the accent and the rest stay neutral
+  // with primary text, instead of gray text on a gray capsule.
+  let editor = try mobileSourceFile("Sources/LorvexMobile/MobileTaskFieldEditor.swift")
+  let uses = editor.components(separatedBy: "MobileFieldChip(").count - 1
+  #expect(uses == 2, "the day editor and the length editor each draw their choices as chips")
+  #expect(!editor.contains(".tint(.secondary)"))
+
+  let chip = try mobileSourceFile("Sources/LorvexMobile/MobileFieldChip.swift")
+  #expect(chip.contains(".borderedProminent"))
+  #expect(chip.contains(".tint(.primary)"))
+  #expect(chip.contains(".accessibilityAddTraits(isSelected ? .isSelected : [])"))
+}
+
+@MainActor
+@Test
+func handDrawnNotesPlaceholdersFollowThePlatformPlaceholderColor() throws {
+  // The notes editors draw their placeholder over a text view, so it takes the
+  // platform's placeholder color like the system field beside it; the
+  // hierarchical tertiary style stays near 1.8:1 under Increase Contrast while
+  // the system placeholder darkens to about 4.5:1.
+  let editors = [
+    "Sources/LorvexMobile/MobilePlainTextEditor.swift",
+    "Sources/LorvexApple/Views/LorvexPlainTextEditor.swift",
+  ]
+  for path in editors {
+    let source = try mobileSourceFile(path)
+    #expect(source.contains(".foregroundStyle(LorvexDesign.Palette.placeholderText)"), "\(path)")
+    #expect(!source.contains(".foregroundStyle(.tertiary)"), "\(path)")
+  }
+}
+
+@MainActor
+@Test
+func mobileTaskEditSheetChoosesTheEstimateInsteadOfTypingIt() throws {
+  // The estimate is a row that opens the How Long editor's ring and chips,
+  // because a bare numeric field names no unit and its keyboard Done would
+  // save the whole task.
+  let source = try mobileSourceFile("Sources/LorvexMobile/MobileTaskEditSheet.swift")
+  #expect(source.contains("MobileTaskLengthEditor("))
+  #expect(!source.contains(".numberPad"))
+  #expect(!source.contains("mobileKeyboardDoneToolbar"))
 }
 
 @MainActor
@@ -207,11 +271,42 @@ func mobileTodayUsesPullToRefreshAndLeavesCaptureToTheTabBar() throws {
   #expect(root.contains(#""today.capture""#))
 }
 
+@MainActor
+@Test
+func mobileSheetsTitleThemselvesThroughTheFittingSheetTitle() throws {
+  // A sheet's Cancel and confirm buttons leave its inline title little room,
+  // and a long translation is cut short there. Every sheet with a Cancel
+  // button draws its title through mobileSheetTitle, which steps down a text
+  // style and wraps onto two lines instead. The habit reminder-time sheet and
+  // the data import preview keep the system's large title, which has a line
+  // of its own and so never competes with the buttons.
+  let largeTitled: Set<String> = ["MobileHabitReminderList.swift", "MobileStoreDataImportSection.swift"]
+  let directory = try mobileSourceRoot().appendingPathComponent("Sources/LorvexMobile")
+  let names = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+    .filter { $0.hasSuffix(".swift") && !largeTitled.contains($0) }
+    .sorted()
+  var sheets = 0
+  for name in names {
+    let source = try mobileSourceFile("Sources/LorvexMobile/\(name)")
+    guard source.contains("ToolbarItem(placement: .cancellationAction)") else { continue }
+    sheets += 1
+    #expect(source.contains(".mobileSheetTitle("), "\(name) titles its sheet with mobileSheetTitle")
+  }
+  #expect(sheets >= 14, "the sheet scan found the sheets")
+
+  let title = try mobileSourceFile("Sources/LorvexMobile/MobileSheetTitle.swift")
+  #expect(title.contains("ToolbarItem(placement: .principal)"))
+  #expect(title.contains("ViewThatFits(in: .horizontal)"))
+}
+
+private func mobileSourceRoot() -> URL {
+  URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+}
+
 private func mobileSourceFile(_ relativePath: String) throws -> String {
-  let root = URL(fileURLWithPath: #filePath)
-    .deletingLastPathComponent()
-    .deletingLastPathComponent()
-    .deletingLastPathComponent()
-  let url = root.appendingPathComponent(relativePath)
+  let url = mobileSourceRoot().appendingPathComponent(relativePath)
   return try String(contentsOf: url, encoding: .utf8)
 }

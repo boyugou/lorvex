@@ -151,6 +151,7 @@ public struct MobileStoreHabitsView: View {
         if let query = MobileSearchDebugState.takeInitialQuery(for: .habits) {
           searchQuery = query
         }
+        if MobileSheetDebugState.take(.newHabit) { isShowingCreateHabit = true }
       }
     #endif
     .accessibilityIdentifier("mobileHabits.root")

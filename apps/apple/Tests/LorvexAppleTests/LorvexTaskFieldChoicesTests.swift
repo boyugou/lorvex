@@ -7,6 +7,15 @@ import Testing
 /// moves and ends, and the length and day choices.
 @Suite("Task field choices")
 struct LorvexTaskFieldChoicesTests {
+  @Test("the length stepper buttons speak their sign and the spoken duration")
+  func lengthStepButtonsSpeakTheirSignAndDuration() {
+    let english = Locale(identifier: "en_US")
+    #expect(LorvexTaskFieldChoices.lengthStepAccessibilityLabel(delta: 15, locale: english) == "+15 minutes")
+    #expect(
+      LorvexTaskFieldChoices.lengthStepAccessibilityLabel(delta: -15, locale: english)
+        == "\u{2212}15 minutes")
+  }
+
   @Test("Add Time on today starts at the next half hour, strictly after the clock")
   func newTimeOnTodayStartsAtTheNextHalfHour() {
     // 10:10 proposes 10:30; 10:30 itself proposes 11:00.

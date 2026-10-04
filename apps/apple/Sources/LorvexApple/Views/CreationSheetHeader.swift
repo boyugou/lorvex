@@ -53,7 +53,8 @@ struct CreationSheetHeader<Subtitle: View>: View {
               .font(LorvexDesign.Typography.secondaryText)
               .symbolRenderingMode(.palette)
               .foregroundStyle(.white, tint)
-              .offset(x: 4, y: 4)
+              .padding(.trailing, -LorvexDesign.Spacing.xs)
+              .padding(.bottom, -LorvexDesign.Spacing.xs)
               .accessibilityHidden(true)
           }
       }

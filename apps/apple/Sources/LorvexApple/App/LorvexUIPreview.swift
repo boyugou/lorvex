@@ -41,6 +41,13 @@
       CommandLine.arguments.contains("-uiPreviewTour")
     }
 
+    /// `-uiPreviewEmptyStore` runs the preview over a store with nothing in it,
+    /// as the app is seen before anything is added. The stops that open a
+    /// seeded task, list, or habit are skipped, since none exists to open.
+    static var usesEmptyStore: Bool {
+      CommandLine.arguments.contains("-uiPreviewEmptyStore")
+    }
+
     /// `-uiPreviewAckDir <dir>` makes every tour stop a handshake: after
     /// printing a stop's marker the tour holds that workspace on screen until
     /// the capture driver creates `<dir>/<stop>.ack`. Without the handshake the
@@ -132,7 +139,7 @@
             await emitStop("tasks-inspector")
             store.selectedTaskID = nil
           }
-          if selection == .tasks {
+          if selection == .tasks, !usesEmptyStore {
             // A task that waits on an unfinished task: Start stays in place
             // but unavailable until that task is done.
             store.selectedTaskID = LorvexPreviewSeedID.venueTask
@@ -248,7 +255,9 @@
         // another, so the Dependencies editor shows what a blocker's row says
         // under its title. The route loads the task and its draft even when
         // no loaded list holds it.
-        if let load = store.applyRouteNavigation(.task(LorvexPreviewSeedID.venueTask)) { await load() }
+        if !usesEmptyStore, let load = store.applyRouteNavigation(.task(LorvexPreviewSeedID.venueTask)) {
+          await load()
+        }
         if let waiting = store.selectedTask, !waiting.dependsOn.isEmpty {
           for field in ["doOn", "due", "estimate", "repeat", "reminders", "tags", "dependencies"] {
             let editor = makeTaskEditorWindow(store: store, task: waiting, field: field, beside: window)
@@ -674,7 +683,7 @@
     /// tour launched with `-AppleLanguages (zh-Hans)` captures Chinese tasks.
     @MainActor
     static func makeUIPreviewStore() -> AppStore {
-      if CommandLine.arguments.contains("-uiPreviewEmptyStore") {
+      if LorvexUIPreview.usesEmptyStore {
         return AppStore(core: LorvexPreviewCoreFactory.makeUIPreviewEmptyBlocking())
       }
       return AppStore(core: LorvexPreviewCoreFactory.makeUIPreviewSeededBlocking(

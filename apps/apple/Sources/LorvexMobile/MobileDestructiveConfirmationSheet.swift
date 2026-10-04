@@ -7,7 +7,9 @@ import SwiftUI
 /// The friction is the consequence statement plus a destructive-role button the
 /// user has to aim at, which is how the system's own irreversible actions
 /// confirm. Store-agnostic (plain data in, one callback out), hence the
-/// `Mobile` — not `MobileStore` — prefix.
+/// `Mobile` — not `MobileStore` — prefix. It opens at half height, and at
+/// full height at accessibility text sizes, where the statement and the button
+/// under it would not both fit in half of the screen.
 struct MobileDestructiveConfirmationSheet: View {
   let title: String
   let message: String
@@ -19,6 +21,7 @@ struct MobileDestructiveConfirmationSheet: View {
   let onConfirm: () -> Void
 
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
   var body: some View {
     NavigationStack {
@@ -57,6 +60,6 @@ struct MobileDestructiveConfirmationSheet: View {
         }
       }
     }
-    .presentationDetents([.medium])
+    .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium])
   }
 }

@@ -28,8 +28,9 @@ struct MobileStoreEditCalendarEventSheet: View {
           TextField(
             String(
               localized: "calendar.field.title", defaultValue: "Title", table: "Localizable",
-              bundle: MobileL10n.bundle), text: $store.calendarDraft.title
+              bundle: MobileL10n.bundle), text: $store.calendarDraft.title, axis: .vertical
           )
+          .lineLimit(1...)
           .focused($focusedField, equals: .title)
           .submitLabel(.next)
           .onSubmit { focusedField = .location }

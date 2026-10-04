@@ -227,6 +227,14 @@ public struct MobileHabitDraft: Equatable, Sendable {
     LorvexNumberInput.integer(from: targetCountText)
   }
 
+  /// The per-day check-in count the goal stepper edits: ``targetCount`` read
+  /// as at least 1 (1 when the text holds no number). Setting it writes the
+  /// count back to `targetCountText` in the user's digits, never below 1.
+  public var perDayTarget: Int {
+    get { max(targetCount ?? 1, 1) }
+    set { targetCountText = LorvexNumberInput.text(for: max(newValue, 1)) }
+  }
+
   /// The parsed milestone goal: a positive integer, or nil when the field is
   /// empty or not a positive number (an optional personal goal, so a blank or
   /// invalid field simply means "no goal").

@@ -17,15 +17,20 @@ enum MobileIconChoices {
   ]
 }
 
-/// A live identity editor — a large tile preview over a color swatch row + an
-/// SF-Symbol grid — for the list / habit create + edit sheets. Sets the color
-/// and icon the catalog rows render; without an explicit choice a list/habit
-/// falls back to the default accent + fallback glyph.
+/// The color swatches and SF Symbol grid offered when picking a list or habit's
+/// appearance, sized for the popover ``MobileCreationHeader`` opens from its
+/// tile. Sets the color and icon the catalog rows render. With no explicit
+/// choice a list or habit draws the default accent and its fallback glyph, and
+/// the picker shows those two as selected.
 struct MobileIconColorPicker: View {
   @Binding var icon: String?
   @Binding var color: String?
   let fallbackIcon: String
   let iconChoices: [String]
+
+  /// The popover's width: six 42-point icon buttons, five 8-point gaps, and
+  /// the 14-point content padding on both sides.
+  static let width: CGFloat = 320
 
   /// A friendly, well-separated hue ramp (system colors as Lorvex hex).
   static let colorChoices: [String] = [
@@ -33,21 +38,26 @@ struct MobileIconColorPicker: View {
     "#007AFF", "#5856D6", "#AF52DE", "#FF2D55", "#8E8E93",
   ]
 
+  /// The swatch that stands for the default accent tint, shown as selected
+  /// while a draft has no color.
+  static let defaultColor = "#007AFF"
+
   private var tint: Color { Color(lorvexHex: color) ?? LorvexDesign.Palette.accent }
 
-  var body: some View {
-    VStack(spacing: LorvexDesign.Spacing.l) {
-      MobileIconTile(icon: icon, fallback: fallbackIcon, tint: tint, size: 72)
-        .frame(maxWidth: .infinity)
-        .reduceMotionAnimation(.snappy, value: icon)
-        .reduceMotionAnimation(.snappy, value: color)
-        .accessibilityHidden(true)
+  /// The hex of the swatch that is selected: the draft's color, or the default.
+  private var selectedColor: String { (color ?? Self.defaultColor).uppercased() }
 
+  /// The symbol the tile draws, which is the icon button that is selected: an
+  /// emoji or unknown icon resolves to the fallback glyph, as it does there.
+  private var selectedSymbol: String { LorvexSymbol.name(for: icon, fallback: fallbackIcon) }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.l) {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
         pickerHeader(String(localized: "appearance.color", defaultValue: "Color", table: "Localizable", bundle: MobileL10n.bundle))
         LazyVGrid(
           columns: Array(repeating: GridItem(.flexible(), spacing: LorvexDesign.Spacing.s), count: 5),
-          spacing: LorvexDesign.Spacing.m
+          spacing: 0
         ) {
           ForEach(Self.colorChoices, id: \.self) { swatch($0) }
         }
@@ -63,7 +73,11 @@ struct MobileIconColorPicker: View {
         }
       }
     }
-    .padding(.vertical, LorvexDesign.Spacing.s)
+    .padding(LorvexDesign.Spacing.m)
+    .frame(width: Self.width)
+    // The grids' cells have a fixed size, so the picker's headings and glyphs
+    // stop growing at the largest ordinary text size.
+    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
   }
 
   private func pickerHeader(_ text: String) -> some View {
@@ -72,8 +86,11 @@ struct MobileIconColorPicker: View {
       .foregroundStyle(.secondary)
   }
 
+  /// One color swatch: a 30-point circle inside a button that is a column wide
+  /// and 44 points high, the smallest comfortable touch target, so the grid
+  /// itself carries no row gap.
   private func swatch(_ hex: String) -> some View {
-    let isSelected = color == hex
+    let isSelected = selectedColor == hex
     return Button {
       lorvexAnimated(.snappy) { color = hex }
     } label: {
@@ -92,6 +109,8 @@ struct MobileIconColorPicker: View {
             .padding(-3)
         }
         .scaleEffect(isSelected ? 1.12 : 1)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
     // Each swatch announces its own color name so VoiceOver users can tell them
@@ -101,7 +120,7 @@ struct MobileIconColorPicker: View {
   }
 
   private func iconButton(_ symbol: String) -> some View {
-    let isSelected = icon == symbol
+    let isSelected = selectedSymbol == symbol
     return Button {
       lorvexAnimated(.snappy) { icon = symbol }
     } label: {

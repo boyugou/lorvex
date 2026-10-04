@@ -120,8 +120,10 @@ struct MobileStoreTaskDetailView: View {
     #if DEBUG
       .onAppear {
         // Dev/QA only: the `lorvex://firsttask/field/…` screenshot hook raises
-        // one word's editor so it can be captured without a tap.
+        // one word's editor, and `lorvex://firsttask/edit` the full Edit sheet,
+        // so they can be captured without a tap.
         if let field = MobileTaskDetailDebugState.takeInitialField() { edit(field) }
+        if MobileSheetDebugState.take(.editTask) { editDraft = MobileTaskEditDraft(task: task) }
       }
     #endif
     .sheet(isPresented: $isEditingRecurrence) {

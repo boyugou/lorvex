@@ -20,7 +20,6 @@ public struct LorvexMobileStoreRootView: View {
 
   public var body: some View {
     tabBarBody
-    .tint(.accentColor)
     // A crossing staged by a habit completion floats a celebratory badge above
     // the whole shell, wherever the completion was logged (Today, the Habits
     // workspace, a habit's detail).
@@ -118,6 +117,10 @@ public struct LorvexMobileStoreRootView: View {
     .sheet(isPresented: $store.isPresentingCapture) {
       MobileStoreCaptureSheet(store: store)
     }
+    // Last, so the sheets presented from this view (capture, setup) inherit the
+    // accent as the sheets inside the tabs do; without it their Cancel button
+    // draws in the label color while every other sheet's draws in the accent.
+    .tint(.accentColor)
   }
 
   /// The tab bar's selection: one of the store's tabs, or the round + that

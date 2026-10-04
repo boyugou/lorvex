@@ -70,6 +70,8 @@ The same structure on macOS, iPhone, and iPad, top to bottom:
 
 1. **The date** and one **facts line**: tasks left, the estimated work when any
    task carries an estimate ("about 5 hr of work"), and meetings still ahead.
+   While the overbooked decision (item 3) states that estimate, the line
+   leaves it out, so the page names the figure once.
 2. **The briefing**, when the assistant wrote one for today.
 3. **One decision when today is overbooked.** While working hours remain and
    the estimated work exceeds the free working time left, the page says so

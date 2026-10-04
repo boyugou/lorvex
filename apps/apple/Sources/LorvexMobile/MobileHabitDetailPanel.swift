@@ -59,7 +59,7 @@ struct MobileHabitDetailPanel: View {
     .defaultScrollAnchor(Self.initialScrollAnchor, for: .sizeChanges)
     .mobileReadableScrollMargins()
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(.background)
+    .background(LorvexDesign.Palette.groupedBackground)
     .accessibilityIdentifier("mobileHabits.detail.panel")
     .confirmationDialog(
       String(
@@ -151,8 +151,12 @@ struct MobileHabitDetailPanel: View {
     }
   }
 
+  /// Complete Today is the page's prominent button while the day is open. Once
+  /// the habit is done, Reset Today is an undo, so it steps back to the
+  /// bordered style beside Edit rather than leading the page.
+  @ViewBuilder
   private var completeAction: some View {
-    Button {
+    let button = Button {
       Task {
         if habit.isCompleteToday {
           _ = await reset()
@@ -167,9 +171,13 @@ struct MobileHabitDetailPanel: View {
         : String(localized: "habits.detail.complete", defaultValue: "Complete Today", table: "Localizable", bundle: MobileL10n.bundle),
         systemImage: habit.isCompleteToday ? "arrow.counterclockwise" : "checkmark")
     }
-    .buttonStyle(.borderedProminent)
     .disabled(isMutating)
     .accessibilityIdentifier("mobileHabits.detail.complete")
+    if habit.isCompleteToday {
+      button.buttonStyle(.bordered)
+    } else {
+      button.buttonStyle(.borderedProminent)
+    }
   }
 
   private var editAction: some View {
@@ -193,7 +201,7 @@ struct MobileHabitDetailPanel: View {
     .padding(LorvexDesign.Spacing.l)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(
-      .regularMaterial,
+      LorvexDesign.Palette.card,
       in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
   }
 

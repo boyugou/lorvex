@@ -38,7 +38,7 @@ extension SwiftLorvexCoreService {
   ) async throws -> [CalendarTimelineEvent] {
     try read { db in
       let pageSize = min(max(1, limit ?? 50), 500)
-      let startAt = max(0, offset)
+      let startAt = LorvexPageBounds.clampedOffset(offset)
       // Over-fetch so the requested page still fills after dropping `offset`:
       // the global top-(offset+pageSize) rows are contained in each source's own
       // top-(offset+pageSize), so a per-source cap of that bound is safe. Capped

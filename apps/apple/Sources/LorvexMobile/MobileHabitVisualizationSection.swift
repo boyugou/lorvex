@@ -21,7 +21,7 @@ struct MobileHabitVisualizationSection: View {
         MobileSkeletonRows(count: 3, showsTrailingDetail: true)
         .padding(LorvexDesign.Spacing.l)
         .background(
-          .regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
+          LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
         .accessibilityIdentifier("mobileHabits.detail.visualization.loading")
       }
     }
@@ -67,7 +67,7 @@ private struct MobileHabitMomentumPanel: View {
       }
     }
     .padding(LorvexDesign.Spacing.l)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
+    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(momentumAccessibilityLabel)
     .accessibilityIdentifier("mobileHabits.detail.momentum")
@@ -323,7 +323,7 @@ private struct MobileHabitRhythmPanel: View {
       }
     }
     .padding(LorvexDesign.Spacing.l)
-    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
+    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(rhythmAccessibilityLabel)
     .accessibilityIdentifier("mobileHabits.detail.rhythm")
@@ -476,7 +476,7 @@ private struct MobileHabitHeatmapPanel: View {
     // above it, and the grid keeps to its leading side.
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(LorvexDesign.Spacing.l)
-    .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
+    .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(heatmapAccessibilityLabel)
     .accessibilityIdentifier("mobileHabits.detail.heatmap")

@@ -8,9 +8,14 @@ import SwiftUI
 /// `hiddenCount` is how many it leaves out, and a last line says so ("2 more")
 /// so the sentence and the list never seem to disagree.
 ///
-/// A row sets its fact at the trailing edge of the title's first line, and at
-/// the accessibility text sizes under the title, whose whole text it then
-/// shows, since beside a fact that large the title would hold a word a line.
+/// A row sets its fact at the trailing end of the title's line. On macOS the
+/// title takes up to two lines beside it. On iPhone and iPad the fact keeps
+/// that place only while the title fits one line beside it; otherwise it
+/// stands under the title, which then has the whole width, so a long fact
+/// ("Planned for Wed, Oct 7") never narrows the title to a few words a line.
+/// At the accessibility text sizes the fact is always under the title, whose
+/// whole text it then shows, since beside a fact that large the title would
+/// hold a word a line.
 ///
 /// With a ``Completion``, each row leads with a task circle that completes the
 /// task: the circle fills at once and stays filled while the save runs, and
@@ -283,14 +288,7 @@ public struct LorvexReviewTaskList: View {
           }
           .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-          HStack(alignment: .firstTextBaseline) {
-            title(task)
-              .lineLimit(2)
-            Spacer(minLength: LorvexDesign.Spacing.s)
-            if showsFact, let fact = detail(task) {
-              factText(fact)
-            }
-          }
+          titleLine(task, fact: showsFact ? detail(task) : nil)
         }
       }
       .padding(.vertical, LorvexDesign.Spacing.xxs)
@@ -298,6 +296,43 @@ public struct LorvexReviewTaskList: View {
     }
     .buttonStyle(.plain)
     .accessibilityIdentifier("\(identifier).\(task.id)")
+  }
+
+  /// The title with its fact, if any, at the trailing end of the line. On
+  /// iOS a fact the title cannot sit beside on one line moves under it.
+  @ViewBuilder
+  private func titleLine(_ task: ReviewTaskSummary, fact: String?) -> some View {
+    #if os(iOS)
+      if let fact {
+        ViewThatFits(in: .horizontal) {
+          HStack(alignment: .firstTextBaseline) {
+            title(task)
+              .lineLimit(1)
+            Spacer(minLength: LorvexDesign.Spacing.s)
+            factText(fact)
+          }
+          VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
+            title(task)
+              .lineLimit(2)
+            factText(fact)
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      } else {
+        title(task)
+          .lineLimit(2)
+          .frame(maxWidth: .infinity, alignment: .leading)
+      }
+    #else
+      HStack(alignment: .firstTextBaseline) {
+        title(task)
+          .lineLimit(2)
+        Spacer(minLength: LorvexDesign.Spacing.s)
+        if let fact {
+          factText(fact)
+        }
+      }
+    #endif
   }
 
   private func title(_ task: ReviewTaskSummary) -> some View {

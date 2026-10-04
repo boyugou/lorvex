@@ -29,18 +29,13 @@ struct MobileMemoryDetailPanel: View {
     }
     .mobileReadableScrollMargins()
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(.background)
+    .background(LorvexDesign.Palette.groupedBackground)
     .accessibilityIdentifier("mobileMemory.detailPanel")
   }
 
   private var header: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-      Image(systemName: "sparkles")
-        .font(LorvexDesign.Typography.screenTitle)
-        .foregroundStyle(.tint)
-        .frame(width: 56, height: 56)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
-        .accessibilityHidden(true)
+      MobileIconTile(symbol: "sparkles", size: 56)
 
       Text(userContent: entry.displayTitle)
         .font(LorvexDesign.Typography.detailTitle)
@@ -54,7 +49,7 @@ struct MobileMemoryDetailPanel: View {
       .textSelection(.enabled)
       .frame(maxWidth: .infinity, alignment: .leading)
       .padding(LorvexDesign.Spacing.l)
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
+      .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
   }
 
   /// When the note last changed, as a caption under its text: secondary

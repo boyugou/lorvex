@@ -81,7 +81,7 @@ struct TodayColumn: View {
         .font(LorvexDesign.Typography.pageTitle)
         .accessibilityAddTraits(.isHeader)
         .accessibilityIdentifier("today.date")
-      LorvexFactsLine(TodayCalmCopy.facts(page.facts))
+      LorvexFactsLine(TodayCalmCopy.facts(page.facts, workIsStated: page.overbooked != nil))
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)

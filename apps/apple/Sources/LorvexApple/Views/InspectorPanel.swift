@@ -7,9 +7,11 @@ import SwiftUI
 /// material, border, radius, padding, and accessibility identifier here avoids
 /// each inspector section drifting into its own card style.
 ///
-/// Inside a popover (``EnvironmentValues/inspectorPanelInPopover``) the panel
-/// draws no card and adds no padding: the popover is already the container and
-/// pads its content, so a card there reads as a box nested in a box.
+/// The `.header` chrome (an inspector's title block) and a popover
+/// (``EnvironmentValues/inspectorPanelInPopover``) draw no card and add no
+/// padding. The inspector column or the popover already insets the content, so
+/// padding there would indent a title block from the property rows beneath it,
+/// and a card in a popover reads as a box nested in a box.
 struct InspectorPanel<Content: View>: View {
   let accessibilityIdentifier: String
   var padding: CGFloat = LorvexDesign.Spacing.m
@@ -19,7 +21,7 @@ struct InspectorPanel<Content: View>: View {
 
   var body: some View {
     content()
-      .padding(inPopover ? 0 : padding)
+      .padding(effectiveChrome == .header ? 0 : padding)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(panelBackground)
       .overlay(panelBorder)

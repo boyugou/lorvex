@@ -5,9 +5,9 @@ import SwiftUI
 /// the working window that day's meetings and tasks already take (a timed
 /// task counts its time, any other task its estimate), or the overrun in the
 /// overdue tint when the day holds more than the window; and in the week that
-/// holds today, which days are already past. It is the same arithmetic as the
-/// iPhone Plan strip and Today's overrun headline, so the three surfaces agree
-/// on which day is full.
+/// holds today, which days are already past. Today's column counts the same
+/// tasks as Today's page (see ``loadTasks(scheduled:todaysList:)``), so the
+/// two state one overrun for one day.
 extension CalendarWeekGridView {
   /// The load of the visible columns, one day per column in column order,
   /// measured against the stored working hours.
@@ -18,6 +18,7 @@ extension CalendarWeekGridView {
     let workEnd =
       store.workdayEndMinutes
       ?? WorkingHoursPreference.minutesOfDay(WorkingHoursPreference.defaultWindow.end) ?? 18 * 60
+    let todayKey = store.logicalTodayDateString
     return LorvexWeekLoad.build(
       days: columns.map { day in
         LorvexWeekLoad.DayInput(
@@ -25,12 +26,27 @@ extension CalendarWeekGridView {
           // A timed event of a day or more sits in the all-day strip but still
           // takes the day's hours, as Today counts it.
           events: day.timedBlocks.map(\.event) + day.allDayEvents.filter { !$0.allDay },
-          tasks: day.scheduledTasks + day.taskBlocks.map(\.task))
+          tasks: Self.loadTasks(
+            scheduled: day.scheduledTasks + day.taskBlocks.map(\.task),
+            todaysList: day.dayKey == todayKey ? store.today.tasks : nil))
       },
-      todayKey: store.logicalTodayDateString,
+      todayKey: todayKey,
       workStart: workStart,
       workEnd: max(workEnd, workStart + 60),
       nowMinutes: store.nowMinutesInProductDay)
+  }
+
+  /// The tasks one column's load counts: those scheduled on its day or
+  /// time-blocked in it, and, on today, Today's whole list as well (`todaysList`
+  /// is nil for any other day). Today's list also holds the tasks due today and
+  /// the ones carried over from earlier days, which Today's overbooked decision
+  /// measures, so counting them keeps today's column and Today's page from
+  /// stating different overruns. A scheduled task the list lacks still counts,
+  /// and no task counts twice.
+  nonisolated static func loadTasks(scheduled: [LorvexTask], todaysList: [LorvexTask]?) -> [LorvexTask] {
+    guard let todaysList else { return scheduled }
+    let listed = Set(todaysList.map(\.id))
+    return todaysList + scheduled.filter { !listed.contains($0.id) }
   }
 }
 

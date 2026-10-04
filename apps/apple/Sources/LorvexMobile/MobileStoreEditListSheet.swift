@@ -57,6 +57,9 @@ struct MobileStoreEditListSheet: View {
           localized: "sheet.edit_list", defaultValue: "Edit List", table: "Localizable",
           bundle: MobileL10n.bundle)
       )
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(

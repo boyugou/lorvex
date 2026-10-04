@@ -79,11 +79,14 @@ struct MobileStoreTodayView: View {
 
   #if DEBUG
     /// The screenshot run's `-lorvexUIPreviewSuggestedTimes` hook: once Today
-    /// has loaded, suggest times, and on iPhone open the schedule sheet they
-    /// wait in; iPad shows them in the standing pane.
+    /// has loaded and the launch seed has finished, suggest times, and on
+    /// iPhone open the schedule sheet they wait in; iPad shows them in the
+    /// standing pane. A suggestion plans around the calendar as it stands, so
+    /// asking before the seed has written its events would leave them out.
     private func suggestTimesForPreviewIfRequested() async {
       guard CommandLine.arguments.contains("-lorvexUIPreviewSuggestedTimes") else { return }
-      try? await Task.sleep(for: .seconds(1.5))
+      await MobileSeedDebugState.waitUntilFinished()
+      try? await Task.sleep(for: .seconds(0.5))
       await store.suggestDayTimes()
       if horizontalSizeClass != .regular { isShowingSchedule = true }
     }

@@ -85,11 +85,8 @@ extension ToolRegistry {
     }
     let from = try StrictScalarArguments.optionalString(arguments["from"], field: "from")
     let to = try StrictScalarArguments.optionalString(arguments["to"], field: "to")
-    let limit = min(
-      max(1, try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 50)),
-      500)
-    let offset = max(
-      0, try StrictScalarArguments.int(arguments["offset"], field: "offset", default: 0))
+    let limit = try PagingArguments.limit(arguments, default: 50, maximum: 500)
+    let offset = try PagingArguments.offset(arguments)
     let outputOptions = try CalendarEventValueOptions.from(
       arguments: arguments, defaultShape: .compact)
     let value = try await searchCalendarEventsPayload(

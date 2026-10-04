@@ -177,7 +177,7 @@ extension SwiftLorvexCoreService {
     since: String?
   ) async throws -> AIChangelogSnapshot {
     let clampedLimit = min(max(limit ?? 50, 1), 500)
-    let clampedOffset = max(offset ?? 0, 0)
+    let clampedOffset = LorvexPageBounds.clampedOffset(offset ?? 0)
     return try read { db in
       let parsedEntityType = entityType.flatMap(EntityKind.parse)
       if entityType != nil, parsedEntityType == nil {
@@ -223,7 +223,7 @@ extension SwiftLorvexCoreService {
     redact: Bool
   ) async throws -> RecentLogsPage {
     let clampedLimit = min(max(limit, 1), 500)
-    let clampedOffset = max(offset, 0)
+    let clampedOffset = LorvexPageBounds.clampedOffset(offset)
     return try read { db in
       try Self.mergedRecentLogs(
         db, limit: clampedLimit, offset: clampedOffset, since: since,

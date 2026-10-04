@@ -113,7 +113,7 @@ on screen and use pull-to-refresh.
 | Region | What it renders | Data source | View |
 |---|---|---|---|
 | Toolbar | The gear pushes `MobileRoute.workspace(.settings)` onto Today's stack, at every size class. The principal slot holds a blank, accessibility-hidden label, so no title sits above the date line; the "Today" navigation title names the back button once another screen is pushed. Capture is the tab bar's round ＋ on every tab | `store.routePath` | `MobileTodayPageChrome` |
-| Header | The date line, the facts line built by `MobileTodayCalmCopy.facts(_:)` (tasks left, then "about N of work" and "N meetings" when either applies, or one sentence on an empty or all-done day), and, when the day has one, the assistant's briefing card (folds past 150 characters with a Show more/less toggle) | `store.snapshot.today`, `page.facts` | `MobileTodayPage.header` |
+| Header | The date line, the facts line built by `MobileTodayCalmCopy.facts(_:workIsStated:)` (tasks left, then "about N of work" and "N meetings" when either applies, or one sentence on an empty or all-done day; the estimate is left out while the overbooked well below states it), and, when the day has one, the assistant's briefing card (folds past 150 characters with a Show more/less toggle) | `store.snapshot.today`, `page.facts` | `MobileTodayPage.header` |
 | Schedule strip | The day drawn to scale (calendar events and timed tasks); tapping it opens the schedule sheet. Shown whenever the day holds tasks, even before anything is timed | `store.todayStripSegments`, `store.todayStripRange` | `MobileTodayPage.stripRow` |
 | Overbooked well | "About X of work, Y free" (for example "About 6 hr of work, 4 hr free"), or "About X of work and no free time left", with a Move to Tomorrow action whose message names the least-urgent movable tasks by title ("Moving “X” to tomorrow frees about Y."). With no movable task it shows the same title and "Defer what can wait, or ask your assistant to plan the day." without the button. Present only when the day holds more estimated work than free working time | `page.overbooked` | `LorvexDecisionWell` |
 | Task list | Every unfinished task on the day, started tasks first, then by priority and due date, no section headers, and no disclosure chevron at a row's end (`MobileTaskRow` hides it); a row shows a Started badge, an overdue due date in red, or a timed task's time | `page.items` (`LorvexCalmToday`) | `MobileActionTaskRow` |
@@ -194,7 +194,8 @@ on iOS) with a white spinner while saving.
 - Schedule strip tap → the schedule sheet (`MobileTodayScheduleSheet`); its
   header ⋯ menu offers Suggest Times (`suggestDayTimes`) and, once a task has
   a time today, Clear Times, which confirms through a dialog first. A
-  suggestion under review offers Use These Times or Dismiss.
+  suggestion under review offers Use These Times or Dismiss above its rows,
+  and Move to Tomorrow under the tasks that did not fit.
   Tapping a task or event row opens it, dismissing the sheet first on iPhone.
 - Habit row (Today's strip or its accessibility-size list row): tap the ring
   to complete or reset today; the long-press context menu offers Open

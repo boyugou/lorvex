@@ -26,9 +26,7 @@ extension ToolRegistry {
     }
     let from = try StrictScalarArguments.optionalString(arguments["from"], field: "from")
     let to = try StrictScalarArguments.optionalString(arguments["to"], field: "to")
-    let limit = min(
-      max(1, try StrictScalarArguments.int(arguments["limit"], field: "limit", default: 100)),
-      500)
+    let limit = try PagingArguments.limit(arguments, default: 100, maximum: 500)
 
     let payload: Value
     payload = try await habitCompletionsPayload(id: id, from: from, to: to, limit: limit)

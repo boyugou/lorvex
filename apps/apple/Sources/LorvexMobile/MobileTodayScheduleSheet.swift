@@ -197,11 +197,13 @@ struct MobileTodayScheduleSheet: View {
 }
 
 /// Suggested times the user is deciding on: a caption when no working time is
-/// left, the suggestion drawn in the timeline's columns
-/// (``LorvexProposedScheduleRows``) so it reads against the day below, and the
-/// two answers, Use These Times and Dismiss, with Move to Tomorrow for the
-/// tasks that did not fit. These are list rows: the
-/// schedule list owns the insets and separators.
+/// left, the two answers, Use These Times and Dismiss, then the suggestion
+/// drawn in the timeline's columns (``LorvexProposedScheduleRows``) so it
+/// reads against the day below, and Move to Tomorrow for the tasks that did
+/// not fit. The answers stand above the rows so a long suggestion never
+/// pushes them off screen; Move to Tomorrow follows the rows, beside the
+/// tasks it moves. These are list rows: the schedule list owns the insets and
+/// separators.
 struct MobileTodaySuggestedTimesRows: View {
   @Bindable var store: MobileStore
   let proposal: DayTimesProposal
@@ -224,38 +226,42 @@ struct MobileTodaySuggestedTimesRows: View {
         .accessibilityIdentifier("today.suggestion.noTimeLeft")
     }
 
+    answers
+      .padding(.horizontal, LorvexTimelineMetrics.horizontalPadding)
+      .padding(.vertical, LorvexDesign.Spacing.xs)
+
     LorvexProposedScheduleRows(
       proposal: proposal, dayRows: dayRows, wontFitLabel: MobileTodayCalmCopy.wontFit,
       busyLabel: MobileTodayCalmCopy.busy, durationLabel: { LorvexDurationFormat.minutes($0) })
 
-    controls
-      .padding(.horizontal, LorvexTimelineMetrics.horizontalPadding)
-      .padding(.vertical, LorvexDesign.Spacing.xs)
+    // What did not fit has somewhere to go: tomorrow, one tap away, under the
+    // rows that say what did not fit.
+    if !proposal.unscheduled.isEmpty {
+      moveUnscheduled
+        .padding(.horizontal, LorvexTimelineMetrics.horizontalPadding)
+        .padding(.vertical, LorvexDesign.Spacing.xs)
+    }
+  }
+
+  private var moveUnscheduled: some View {
+    HStack(spacing: 0) {
+      Button {
+        Task { await store.moveUnscheduledSuggestionToTomorrow() }
+      } label: {
+        Text(MobileTodayCalmCopy.overbookedAction)
+      }
+      .buttonStyle(.bordered)
+      .buttonBorderShape(.capsule)
+      .disabled(store.isSavingDayTimes)
+      .accessibilityIdentifier("today.suggestion.moveToTomorrow")
+      Spacer(minLength: 0)
+    }
   }
 
   /// Use These Times is the answer the suggestion asks for, so it is the
   /// prominent button; Dismiss stands beside it, bordered. Styled buttons each
   /// own their tap target inside the List row, where default-styled ones would
   /// make the whole row one ambiguous button.
-  private var controls: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      answers
-      // What did not fit has somewhere to go: tomorrow, one tap away. On a
-      // line of its own, so three buttons never crowd a phone's width.
-      if !proposal.unscheduled.isEmpty {
-        Button {
-          Task { await store.moveUnscheduledSuggestionToTomorrow() }
-        } label: {
-          Text(MobileTodayCalmCopy.overbookedAction)
-        }
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.capsule)
-        .disabled(store.isSavingDayTimes)
-        .accessibilityIdentifier("today.suggestion.moveToTomorrow")
-      }
-    }
-  }
-
   private var answers: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       if !proposal.placements.isEmpty {

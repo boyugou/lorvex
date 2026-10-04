@@ -154,7 +154,10 @@ extension SwiftLorvexCoreService {
           + "WHERE habit_id = ? AND completed_date = ?",
         arguments: [id, date])
       let current: Int = existing?["value"] ?? 0
-      let next = delta == 0 ? (current >= target ? 0 : target) : min(max(current + delta, 0), target)
+      // The result is clamped to [0, target], so a delta beyond that span lands
+      // where the clamp would put it; limiting it first keeps the sum from overflowing.
+      let step = min(max(delta, -target), target)
+      let next = delta == 0 ? (current >= target ? 0 : target) : min(max(current + step, 0), target)
       // A no-op adjustment leaves the row, sync outbox, and changelog untouched.
       guard next != current else { return try Self.loadHabitsSnapshot(db, date: date) }
 

@@ -49,7 +49,7 @@ struct MobileStoreSettingsWorkingHoursSection: View {
       Text(
         String(
           localized: "settings.working_hours.caption",
-          defaultValue: "The hours Lorvex plans your tasks into. How full a day is counts against them, and suggested times stay inside them.",
+          defaultValue: "Lorvex plans your tasks into these hours. It judges how full a day is against them, and suggested times stay inside them.",
           table: "Localizable", bundle: MobileL10n.bundle))
     }
     .task {

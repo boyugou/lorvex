@@ -14,7 +14,9 @@ private enum ListCatalogRowMetrics {
 /// progress, then its first open tasks in the canonical order with a count of
 /// the rest, so the catalog shows what each list holds next. Clicking the card
 /// opens the list's Tasks scope; clicking a previewed task opens that task
-/// there. Edit and Delete appear on hover at the card's top edge.
+/// there. Edit and Delete appear on hover at the card's top edge. The Inbox is
+/// the list every task falls back to, so its card offers Edit only: no Delete,
+/// no Archive.
 struct ListCatalogRow: View {
   let list: LorvexList
   /// The list's first open tasks; empty shows the counts alone.
@@ -92,10 +94,12 @@ struct ListCatalogRow: View {
       Button(String(localized: "list_row.open_new_window", defaultValue: "Open in New Window", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "macwindow.on.rectangle") {
         openWindow(value: list.id)
       }
-      Divider()
-      Button(String(localized: "list_row.archive.action", defaultValue: "Archive List", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "archivebox", action: archive)
-      Button(String(localized: "list_row.delete.action", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "trash", role: .destructive) {
-        isShowingDeleteConfirmation = true
+      if !list.isInbox {
+        Divider()
+        Button(String(localized: "list_row.archive.action", defaultValue: "Archive List", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "archivebox", action: archive)
+        Button(String(localized: "list_row.delete.action", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "trash", role: .destructive) {
+          isShowingDeleteConfirmation = true
+        }
       }
     }
     .confirmationDialog(
@@ -212,20 +216,22 @@ struct ListCatalogRow: View {
         ))
       .accessibilityIdentifier("list.action.edit")
 
-      Button(role: .destructive) {
-        isShowingDeleteConfirmation = true
-      } label: {
-        Image(systemName: "trash")
-          .frame(width: 18, height: 18)
+      if !list.isInbox {
+        Button(role: .destructive) {
+          isShowingDeleteConfirmation = true
+        } label: {
+          Image(systemName: "trash")
+            .frame(width: 18, height: 18)
+        }
+        .buttonStyle(.borderless)
+        .help(String(localized: "list_row.delete.help", defaultValue: "Delete list", table: "Localizable", bundle: LorvexL10n.bundle))
+        .accessibilityLabel(
+          String(
+            format: String(localized: "list_row.delete.a11y", defaultValue: "Delete %@", table: "Localizable", bundle: LorvexL10n.bundle),
+            list.displayName
+          ))
+        .accessibilityIdentifier("list.action.delete")
       }
-      .buttonStyle(.borderless)
-      .help(String(localized: "list_row.delete.help", defaultValue: "Delete list", table: "Localizable", bundle: LorvexL10n.bundle))
-      .accessibilityLabel(
-        String(
-          format: String(localized: "list_row.delete.a11y", defaultValue: "Delete %@", table: "Localizable", bundle: LorvexL10n.bundle),
-          list.displayName
-        ))
-      .accessibilityIdentifier("list.action.delete")
     }
   }
 

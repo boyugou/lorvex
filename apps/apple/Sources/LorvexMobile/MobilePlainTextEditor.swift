@@ -1,11 +1,21 @@
 import LorvexCore
 import SwiftUI
 
-/// Mobile multi-line plain-text editor for human-authored notes.
+/// Mobile multi-line plain-text editor for human-authored notes. Its text
+/// starts on the row's own leading edge, in line with a neighboring
+/// `TextField`'s, and the placeholder stands where the first typed character
+/// will.
 public struct MobilePlainTextEditor: View {
   @Binding private var text: String
   private let placeholder: String
   private let minHeight: CGFloat
+
+  /// How far the editor's text container sits in from the view's edge on each
+  /// side (UIKit's default line-fragment padding). The editor reaches this far
+  /// past the row so the text itself lands on the row's content edges.
+  private static let textInset: CGFloat = 5
+  /// The text container's inset from the view's top edge.
+  private static let textTopInset: CGFloat = 8
 
   public init(
     text: Binding<String>,
@@ -23,12 +33,12 @@ public struct MobilePlainTextEditor: View {
         .font(LorvexDesign.Typography.primaryText)
         .frame(minHeight: minHeight)
         .scrollContentBackground(.hidden)
+        .padding(.horizontal, -Self.textInset)
       if text.isEmpty && !placeholder.isEmpty {
         Text(placeholder)
           .font(LorvexDesign.Typography.primaryText)
           .foregroundStyle(.tertiary)
-          .padding(.top, 8)
-          .padding(.leading, 5)
+          .padding(.top, Self.textTopInset)
           .allowsHitTesting(false)
       }
     }

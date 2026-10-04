@@ -27,8 +27,14 @@ public enum LorvexDesign {
     #if os(macOS)
     /// Screen / pane title (e.g. the task title field).
     public static let screenTitle = Font.system(.title, design: .default).weight(.semibold)
-    /// The name a detail pane leads with (a habit's or memory's title).
-    public static let detailTitle = Font.system(.title2, design: .default).weight(.semibold)
+    /// The name a detail pane leads with: an inspector's task or habit title,
+    /// a memory's title. One step below a screen title, so a sentence-long
+    /// title wraps to a few lines in the inspector's narrow column. A fixed
+    /// 17pt (the `.title2` size) rather than the `.title2` text style: that
+    /// style's line metrics leave a wrapped `TextField` a hundredth of a point
+    /// shorter than its last line needs, and AppKit then does not draw the
+    /// line (`TitleFieldFitTests`).
+    public static let detailTitle = Font.system(size: 17, weight: .semibold)
     /// Section / disclosure-group header.
     public static let sectionHeader = Font.system(.title3, design: .default).weight(.semibold)
     /// Primary row text — the main content of a row (task names, notes labels).

@@ -38,7 +38,7 @@ extension TaskToolCatalog {
       "properties": .object([
         "days": .object([
           "type": .string("integer"),
-          "description": .string("Number of days ahead to look. Default 7."),
+          "description": .string("Number of days ahead to look, capped at 3650. Default 7."),
         ]),
         "limit": .object([
           "type": .string("integer"),

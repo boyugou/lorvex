@@ -391,6 +391,13 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.focusable()'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.onKeyPress(.return) { select(); return .handled }'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.onKeyPress(.space) { select(); return .handled }'),
+    # --- macOSInboxOffersNeitherArchiveNorDelete ---
+    # The Inbox is the list every task falls back to; the catalog card (hover
+    # button and context menu) and the sidebar row's context menu leave out
+    # Archive and Delete for it, as the iPhone list menu does.
+    ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '      if !list.isInbox {\n        Divider()'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '      if !list.isInbox {\n        Button(role: .destructive) {'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/SidebarListSection.swift'), 'if !list.isInbox {\n                        Divider()'),
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceSelectableTaskRow.swift'), 'if isBatchSelected'),
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceSelectableTaskRow.swift'), '.fill(.tint.opacity(0.035))'),
     ('absent', ('file', 'Sources/LorvexApple/Views/WorkspaceSelectableTaskRow.swift'), 'HStack(alignment: .top'),
@@ -876,7 +883,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/WorkspaceTaskColumn.swift'), 'WorkspaceDashboardLaneMetrics.maxWidth'),
     ('absent', ('file', 'Sources/LorvexApple/Views/HabitsWorkspaceView.swift'), 'WorkspaceHeader(\n        title:'),
     # --- macOSHabitInspectorSharesTheTaskInspectorKit ---
-    ('contains', ('file', 'Sources/LorvexApple/Views/HabitDetailInspector.swift'), 'InspectorColumn {'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/HabitDetailInspector.swift'), 'InspectorScrollView {'),
     ('contains', ('file', 'Sources/LorvexApple/Views/HabitDetailProperties.swift'), 'InspectorProperties(rows: content.rows, additions: content.additions, idPrefix: "habit.detail")'),
     ('contains', ('file', 'Sources/LorvexApple/Views/HabitDetailActions.swift'), '.accessibilityIdentifier("habit.detail.more")'),
     ('contains', ('file', 'Sources/LorvexApple/Views/HabitProgressPanel.swift'), 'InspectorPanel(accessibilityIdentifier: "habit.detail.progress.panel")'),
@@ -998,6 +1005,12 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '"task_detail.actions.start.help"'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '"task_detail.actions.pause.help"'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'clock.arrow.circlepath'),
+    # --- macOSInspectorsCarryTheToolbarInsetInTheirContent ---
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailView.swift'), 'InspectorScrollView {'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorScrollView.swift'), 'struct InspectorScrollView<Content: View>: View'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorScrollView.swift'), '.padding(.top, proxy.safeAreaInsets.top)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorScrollView.swift'), '.contentMargins(.top, proxy.safeAreaInsets.top, for: .scrollIndicators)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorScrollView.swift'), '.ignoresSafeArea(.container, edges: .top)'),
     # --- macOSTaskDetailUsesBoundedInspectorColumn ---
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorColumn.swift'), 'enum InspectorColumnMetrics'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorColumn.swift'), 'static let maxContentWidth: CGFloat = 500'),
@@ -1376,7 +1389,7 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), 'struct InspectorPanel<Content: View>: View'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), 'var padding: CGFloat = LorvexDesign.Spacing.m'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), 'var chrome: InspectorPanelChrome = .group'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), '.padding(inPopover ? 0 : padding)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), '.padding(effectiveChrome == .header ? 0 : padding)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), '.frame(maxWidth: .infinity, alignment: .leading)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), '.background(panelBackground)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/InspectorPanel.swift'), '.overlay(panelBorder)'),

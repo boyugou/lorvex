@@ -181,6 +181,9 @@ struct HabitMomentumCard: View {
             .lineLimit(1)
         }
       }
+      // The title takes the height its lines need, whatever height the card's
+      // stack offers the header, so a title that wraps never truncates mid-word.
+      .fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: LorvexDesign.Spacing.s)
       HabitProgressRing(
         completed: progress.completed,

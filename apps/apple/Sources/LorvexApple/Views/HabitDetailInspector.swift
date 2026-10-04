@@ -58,22 +58,20 @@ struct HabitDetailInspector: View {
         habit: habit, completions: $0.completions.completions, today: Date(),
         calendar: Self.gregorian(in: store.logicalTimeZone))
     }
-    return ScrollView {
-      InspectorColumn {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-          HabitDetailHeader(
-            store: store, habit: habit, progress: progress,
-            isChoosingAppearance: $isChoosingAppearance)
-          HabitDetailActions(
-            store: store, habit: habit, progress: progress,
-            isChoosingAppearance: $isChoosingAppearance)
-          HabitDetailProperties(
-            store: store, habit: habit, reminderPolicies: detail?.reminderPolicies)
-          HabitProgressPanel(habit: habit, stats: stats)
-          HabitHistoryPanel(habit: habit, detail: detail, timeZone: store.logicalTimeZone)
-          if let rhythm {
-            HabitWeekdayPanel(habit: habit, rhythm: rhythm)
-          }
+    return InspectorScrollView {
+      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+        HabitDetailHeader(
+          store: store, habit: habit, progress: progress,
+          isChoosingAppearance: $isChoosingAppearance)
+        HabitDetailActions(
+          store: store, habit: habit, progress: progress,
+          isChoosingAppearance: $isChoosingAppearance)
+        HabitDetailProperties(
+          store: store, habit: habit, reminderPolicies: detail?.reminderPolicies)
+        HabitProgressPanel(habit: habit, stats: stats)
+        HabitHistoryPanel(habit: habit, detail: detail, timeZone: store.logicalTimeZone)
+        if let rhythm {
+          HabitWeekdayPanel(habit: habit, rhythm: rhythm)
         }
       }
     }

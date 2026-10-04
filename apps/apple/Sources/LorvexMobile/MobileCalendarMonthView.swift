@@ -276,7 +276,7 @@ struct MobileCalendarMonthView: View {
     selectedDay = calendar.startOfDay(for: day)
     let target = offset(showing: day)
     guard target != monthOffset else { return }
-    withAnimation { monthOffset = target }
+    lorvexAnimated { monthOffset = target }
   }
 
   /// The page of the month containing `day`, within the pager's range.

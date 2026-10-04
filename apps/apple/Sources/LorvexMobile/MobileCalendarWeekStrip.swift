@@ -105,7 +105,7 @@ struct MobileCalendarWeekStripPager: View {
     .onAppear { scrolledWeek = visibleWeek }
     .onChange(of: visibleWeek) { _, week in
       guard scrolledWeek != week else { return }
-      withAnimation(.snappy) { scrolledWeek = week }
+      lorvexAnimated(.snappy) { scrolledWeek = week }
     }
     .onChange(of: scrolledWeek) { previous, week in
       // The first position, which the strip takes as it appears, is no swipe:

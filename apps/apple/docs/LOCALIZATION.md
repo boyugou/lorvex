@@ -105,7 +105,9 @@ declared in `PLURAL_CATEGORIES` in `script/verify_localization_catalog.py`:
 English `one`/`other`; Spanish and Italian `one`/`other`, and French and
 Brazilian Portuguese `one`/`other` where `one` selects both 0 and 1, each with an
 optional `many` that only round millions select and that falls back to `other`
-when absent; Hindi `one`/`other`, where `one` selects both 0 and 1; Chinese
+when absent; Hindi and Persian `one`/`other`, where `one` selects both 0 and
+1; Urdu `one`/`other`, where `one` selects only 1; Hebrew `one`/`other` with an
+optional `two` for the dual, where `one` selects only 1 and `two` only 2; Chinese
 (Simplified and Traditional), Japanese, and Korean only `other`; Russian and
 Ukrainian
 `one`/`few`/`many`/`other`, where `one` selects 1,
@@ -245,8 +247,8 @@ Settings > General > Language & Region > Applications). The in-app picker
 (`AppLanguage`) reads and writes that same value, so the picker and the system
 setting always agree; "System Default" removes it. It lists the languages by
 endonym in one order for every interface language: the Latin-script names
-alphabetically, then each other script as a group (Cyrillic, Arabic,
-Devanagari, Hangul, Han). The picker reads only the
+alphabetically, then each other script as a group (Cyrillic, Hebrew, Arabic
+script, Devanagari, Hangul, Han). The picker reads only the
 app's own domain: a plain `UserDefaults` lookup would fall through to launch
 arguments and to the system-wide list and report them as a choice. A bundle
 resolves its language once, at launch, so a change applies after a relaunch;
@@ -259,8 +261,9 @@ The layout direction follows the language the app shows, however that
 language was chosen. iOS mirrors an app running in a right-to-left language
 by itself. AppKit mirrors only while the `AppleTextDirection` default is on,
 and the value AppKit registers for it follows the system's language list, not
-the app's: Arabic chosen in the in-app picker or under System Settings >
-Applications on an English Mac would show Arabic text laid out left to right.
+the app's: Arabic, Persian, Urdu, or Hebrew chosen in the in-app picker or
+under System Settings > Applications on an English Mac would show its text laid
+out left to right.
 So the Mac app turns the default on for its own process at launch, in the
 launch-argument domain, whenever the language it runs in reads right to left
 (`LorvexAppleTextDirection`, called first in `LorvexAppleApp.init()`, since
@@ -354,10 +357,10 @@ localize through two different catalogs:
 ## Language coverage
 
 English (`en`) is the source language. The shipped languages are English,
-Arabic (`ar`), Spanish (`es`), French (`fr`), Hindi (`hi`), Italian (`it`),
-Japanese (`ja`), Korean (`ko`), Polish (`pl`), Brazilian Portuguese (`pt-BR`),
-Russian (`ru`), Ukrainian (`uk`), Simplified Chinese (`zh-Hans`), and
-Traditional Chinese (`zh-Hant`).
+Arabic (`ar`), Spanish (`es`), Persian (`fa`), French (`fr`), Hebrew (`he`),
+Hindi (`hi`), Italian (`it`), Japanese (`ja`), Korean (`ko`), Polish (`pl`),
+Brazilian Portuguese (`pt-BR`), Russian (`ru`), Ukrainian (`uk`), Urdu (`ur`),
+Simplified Chinese (`zh-Hans`), and Traditional Chinese (`zh-Hant`).
 
 The target set is the 31 locales lorvex.app is published in: `en`, `zh-Hans`,
 `zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`, `pt-BR`, `ru`, `id`, `ur`, `de`, `ja`,
@@ -371,11 +374,12 @@ back to a sibling region), and `zh-Hant` (Taiwan usage) serves Hong Kong and
 Macau. A language ships only when every catalog, every InfoPlist.strings
 target, and the language picker carry it; the verifier and `LocalizationTests`
 reject a partial language, so languages are added one batch at a time, each
-language in the batch complete before the batch merges. Arabic is
-right-to-left; its mirrored layout is captured and reviewed on the macOS
-preview tour, the iOS screens, and the iOS widget gallery, while the watch and
-CarPlay surfaces have no Arabic capture. Persian, Urdu, and Hebrew are
-right-to-left too and need the same review when they are added.
+language in the batch complete before the batch merges. Arabic, Persian,
+Urdu, and Hebrew are right-to-left. Arabic's mirrored layout is captured and
+reviewed on the macOS preview tour, the iOS screens, and the iOS widget gallery;
+the Persian, Urdu, and Hebrew layouts are captured and reviewed on the macOS
+preview tour and the iPad screens. The watch and CarPlay surfaces have no
+capture in any right-to-left language.
 
 ## Catalog location
 
@@ -1606,6 +1610,314 @@ widgets, and in Shortcuts. The text is written for Taiwan, not converted from
   once and keep a space on each side of it, as around any Latin word
   ("在 ${applicationName} 中新增任務", "開啟 ${applicationName}").
 
+## Persian conventions
+
+The `fa` catalogs are standard Persian as written in Iran, in the neutral polite
+register of Apple's Persian interfaces (تقویم, اعلان‌ها, میان‌برها). Every
+Persian locale (fa-IR, fa-AF) selects them. They keep one term per concept across
+every catalog, so a thing reads the same on the Mac, iPhone, watch, widgets, and
+in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | کار, فهرست, برچسب | plurals کارها, فهرست‌ها, برچسب‌ها; the loanword تسک is not used; a task's checklist is a چک‌لیست and its item a مورد |
+| Inbox (the seeded list) | صندوق ورودی | shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | امروز, فردا, دیروز | |
+| Someday | شاید بعدها | quoted inside a sentence («شاید بعدها») |
+| Due, overdue | سررسید, عقب‌افتاده | |
+| Open (a task not yet done) | باز | در حال انجام is the In Progress status and مسدود a blocked task |
+| Done and complete | تمام, انجام‌شده, تکمیل‌شده, تکمیل | تمام closes a sheet; انجام‌شده and انجام شد mark finished work; تکمیل‌شده is the Completed status; تکمیل completes a task |
+| Cancel, cancelled | لغو, لغوشده | |
+| Defer and snooze | موکول کردن, تعویق | defer moves a task to a later day (موکول به فردا); snooze moves a reminder (تعویق یک‌ساعته) |
+| Plan, schedule | برنامه‌ریزی, زمان‌بندی | برنامه alone means the app, so a schedule is never برنامه |
+| Capture (quick add) | افزودن | افزودن کار names the capture sheet and افزودن سریع the quick-capture entry |
+| Review (the day and the week) | مرور | مرور روزانه, مرور هفتگی; its fields are موفقیت‌ها, موانع, آموخته‌ها; the assistant's briefing is a خلاصه |
+| Memory | حافظه | one entry is a مورد |
+| Assistant, AI | دستیار, هوش مصنوعی | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone, goal | عادت, ثبت, زنجیره, نقطه‌ی عطف, هدف | ثبت is also the check-in action |
+| Waits on, dependency | منتظر, وابستگی | |
+| Reminder, recurrence | یادآور, تکرار | |
+| Sync, snapshot | همگام‌سازی, اسنپ‌شات | |
+| Settings | تنظیمات | |
+| Apple features | تقویم, رویداد, اعلان‌ها, صفحه قفل, میان‌برها, حالت تمرکز, ویجت | Dock and Spotlight stay Latin |
+
+- The reader is addressed politely in the plural. Instructions are imperatives
+  ("Lorvex را دوباره راه‌اندازی کنید"); buttons, menu items, and intent titles
+  are verbal nouns ("افزودن", "حذف", "افزودن به تقویم"); a question is a passive
+  subjunctive ("فهرست «%@» حذف شود؟"); a confirmation or a failure is a past
+  passive ("فهرست %@ از Lorvex حذف شد.", "تعویق یادآور انجام نشد."). Persian does
+  not mark gender, so no sentence depends on the reader's. The word برنامه
+  alone means the app, and a sentence that would open with the Latin name opens
+  with it ("برنامه Lorvex می‌تواند …").
+- Letters are the Persian ی (U+06CC) and ک (U+06A9), never the Arabic ي and ك.
+  The zero-width non-joiner (U+200C) separates the verb prefixes می‌ and نمی‌
+  from their verb ("می‌شود"), the suffixes ها, های, تر, and ای from a word that
+  ends in a joining letter ("فهرست‌ها", "مناسب‌تر", "هفته‌ای"), and the parts of
+  a compound ("برنامه‌ریزی", "همگام‌سازی", "تکمیل‌شده"). A word ending in a
+  non-joining letter takes its suffix without it ("کارها").
+- Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
+  Spotlight, Apple Watch, CarPlay, Claude, MCP, and file formats such as JSON,
+  CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. The prepositions stand apart
+  from them ("در Lorvex", "از iCloud").
+- Punctuation is the Persian comma ، semicolon ؛ and question mark ؟. A sentence
+  ends with the Latin full stop, and the colon, the parentheses, and the
+  single-character ellipsis … are the same as in English.
+- Quotation marks are « » (U+00AB, U+00BB; « comes first in the text), never
+  straight or curly quotes. They stand wherever the English quotes with curly
+  quotes; a name the English leaves bare stays bare unless the sentence needs
+  the quotes to show where the name ends ("کار «%@» تکمیل شد.").
+- A Persian locale formats numbers in Extended Arabic-Indic digits (fa-IR
+  writes "۱۲"), so counts, times, and dates arrive through placeholders and
+  the system picks the digits. A number the English writes as a fixed digit is
+  written out ("هفت روز آینده", "دوازده‌ساعته"), because an ASCII digit would
+  stand beside the system's Persian ones. The exceptions are examples a person
+  types: the numbers in the milestone and encouragement hints ("مثلاً 50") and
+  the example words of the capture hint.
+- An `fa` plural entry carries `one` and `other`, and Persian `one` also
+  selects 0. A noun stays singular after a number, so the two forms of a count
+  are usually alike ("%lld کار باقی مانده"). A `one` form that drops the number
+  ("روزی یک بار") comes with a `zero` form that shows it ("روزی %lld بار"), so a
+  count of 0 does not read "once". Both forms of a substitution carry `%arg`.
+- A string that fills in several values uses positional specifiers (`%1$@`,
+  `%2$lld`) wherever the Persian word order differs from the English, never
+  concatenation in code.
+- Weekday names come from the calendar ("دوشنبه", "سه‌شنبه"). The system's
+  ordinal for Persian is the number followed by a full stop ("۲."), which reads
+  as an ordinal when the number leads, so a weekday's position in a month is
+  "%1$@ %2$@" and its position from the end "%1$@ از آخر %2$@". Lists of
+  names are joined by the system's list format.
+- A paragraph takes its base direction from its first strong character, so a
+  sentence that opens with a Latin name or a placeholder would lay out left to
+  right and put its closing punctuation at the wrong end. A sentence is
+  therefore written to open with a Persian word ("برنامه Lorvex آماده است."),
+  and what the English opens with moves behind it. Short labels, window titles,
+  accessibility labels, and format names that are one Latin name ("Lorvex",
+  "CSV", "JSON", "CloudKit", "Spotlight") stay as they are. No other
+  bidirectional control character is written into a catalog, except one
+  left-to-right isolate (U+2066 and U+2069) around the keyboard shortcut on
+  the last page of the first-run wizard (`setup.done.capture.detail`), which
+  displays "⌘N" as "N⌘" otherwise.
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, and App Shortcut short titles) use shorter
+  wording than a literal translation ("هفت روز آینده" for the menu bar panel's
+  Next 7 Days switch, "همگام‌شده %@" for the watch's sync status). Accessibility
+  labels may be longer.
+- The capture parser (`LorvexCaptureParser`) has no Persian vocabulary: it reads
+  English and Chinese words wherever the interface language is Persian. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("عبارت‌های انگلیسی مانند «tomorrow»، «3pm»، «every Monday»، «20 min»
+  یا «#list»"). Inside Persian text a Latin word that follows a number is laid
+  out right to left together with the number, so "20 min" displays as
+  "min 20".
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are spoken singular
+  imperatives that name the app exactly once ("یک کار به ${applicationName}
+  اضافه کن").
+
+## Urdu conventions
+
+The `ur` catalogs are standard Urdu as written in Pakistan, in the polite آپ
+register, with the Perso-Arabic vocabulary the language has and the English
+loanwords people say for technology (ٹیگ, اسنوز, ویجٹ, ڈیٹا). Every Urdu locale
+(ur-PK, ur-IN) selects them. They keep one term per concept across every
+catalog, so a thing reads the same on the Mac, iPhone, watch, widgets, and in
+Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | کام, فہرست, ٹیگ | plurals کام, فہرستیں, ٹیگز; a task's checklist is a چیک لسٹ and its item an آئٹم |
+| Inbox (the seeded list) | ان باکس | shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | آج, آئندہ کل, گزشتہ کل | کل means both "yesterday" and "tomorrow" in Urdu, and the system's relative date formatter writes yesterday as کل and tomorrow as آئندہ کل; a label that names tomorrow alone is therefore آئندہ کل, one that names yesterday is the explicit گزشتہ کل, and inside a sentence tomorrow stays کل ("کل تک ملتوی کریں") |
+| Someday | کسی دن | quoted inside a sentence ("کسی دن") |
+| Due, overdue | مقررہ تاریخ, تاخیر کا شکار | |
+| Open (a task not yet done) | نامکمل | جاری is the In Progress status and رکا ہوا a blocked task |
+| Done and complete | ہو گیا, مکمل | ہو گیا closes a sheet or marks finished work; مکمل is the Completed status and مکمل کریں completes a task |
+| Cancel, cancelled | منسوخ کریں, منسوخ | |
+| Defer and snooze | ملتوی کریں, اسنوز کریں | defer moves a task to a later day; snooze moves a reminder |
+| Plan, schedule, agenda | منصوبہ, شیڈول, ایجنڈا | |
+| Capture (quick add) | شامل کریں | کام شامل کریں names the capture sheet |
+| Review (the day and the week) | جائزہ | روزانہ جائزہ, ہفتہ وار جائزہ; its fields are کامیابیاں, رکاوٹیں, اسباق; the assistant's briefing is a بریفنگ |
+| Memory | حافظہ | one entry is an اندراج |
+| Assistant, AI | اسسٹنٹ, AI | AI stays Latin; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone, goal | عادت, چیک اِن, تسلسل, سنگ میل, ہدف | چیک اِن کریں is the check-in action |
+| Waits on, dependency | انتظار میں, انحصار | |
+| Reminder, recurrence | یاد دہانی, تکرار | |
+| Sync, snapshot | سنک, اسنیپ شاٹ | |
+| Settings | ترتیبات | |
+| Apple features | کیلنڈر, نوٹیفکیشنز, لاک اسکرین, شارٹ کٹس, فوکس, ویجٹ | Dock and Spotlight stay Latin |
+
+- The reader is addressed as آپ. Buttons, menu items, instructions, and intent
+  titles are polite imperatives ("شامل کریں", "حذف کریں", "کام شامل کریں"); a
+  question is the same form ("فہرست "%@" حذف کریں؟"); a confirmation is a
+  perfect with گیا or ہو گیا ("فہرست %@ کو Lorvex سے حذف کر دیا گیا۔"); a
+  failure is "… نہیں ہو سکا۔". A verb agrees with the noun's gender: کام,
+  ایونٹ, ٹیگ, اندراج, and ڈیٹا are masculine; فہرست, عادت, and یاد دہانی are
+  feminine. Lorvex takes masculine forms ("Lorvex ویجٹ کیش صاف نہیں کر سکا۔"),
+  except directly after ایپ, which is feminine ("یہ ایپ اس طرح بنائی گئی ہے").
+  Sentences about the user use the honorific plural.
+- Letters are the Urdu ک, ی, ہ, ے, ں, and ھ, never the Arabic ك, ي, and ه. The
+  text is plain Urdu; the system renders it in Nastaliq, whose letters stand
+  taller and lower than Naskh letters.
+- Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
+  Spotlight, Apple Watch, CarPlay, Claude, MCP, AI, and file formats such as
+  JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. They sit in the sentence
+  as they are ("ایپ Lorvex میں کھولیں", "اپنی iCloud ترتیبات کھولیں").
+- Punctuation is the Urdu full stop ۔ comma ، semicolon ؛ and question mark ؟. The
+  colon, the parentheses, and the single-character ellipsis … are the same as
+  in English.
+- Quotation marks are the straight `"`, never curly quotes or « ». They stand
+  wherever the English quotes with curly quotes.
+- Urdu locales (ur-PK and ur-IN) format numbers in ASCII digits, so a fixed
+  number in the catalog is a digit ("اگلے 7 دن", "12 گھنٹے") as it is in
+  English, and counts arrive through placeholders.
+- A `ur` plural entry carries `one` and `other`, and `one` selects exactly 1,
+  so a `one` form may drop the number ("دن میں ایک بار"). A noun before a
+  postposition takes its oblique plural ("%arg دنوں میں ہدف پورا ہوا"), while a
+  noun that has no separate plural keeps its form ("%lld کام"). Both forms of a
+  substitution carry `%arg`.
+- A string that fills in several values uses positional specifiers (`%1$@`,
+  `%2$lld`) wherever the Urdu word order differs from the English, never
+  concatenation in code. Urdu puts the verb last, so a sentence often needs
+  them.
+- Weekday names come from the calendar ("پیر", "منگل", "اتوار"). The system's
+  ordinal for Urdu is the number followed by a full stop ("2."), which reads as
+  an ordinal when the number leads, so a weekday's position in a month is
+  "%1$@ %2$@", its position from the end "آخر سے %1$@ %2$@", and the last one
+  "آخری %@". Lists of names are joined by the system's list format.
+- A paragraph takes its base direction from its first strong character, so a
+  sentence that opens with a Latin name or a placeholder would lay out left to
+  right and move its closing punctuation (the Urdu full stop belongs to the
+  right-to-left run and stays in place; an ASCII mark does not). A sentence or
+  an action label is written to open with an Urdu word ("ایپ Lorvex کھولیں",
+  "اپنا iCloud ڈیٹا حذف کریں", "اپنے iPhone پر کھولیں"): a label that opened
+  with the Latin name would lay out left to right and an Urdu reader would meet
+  its Urdu words before the name ("Lorvex میں کھولیں" reads "میں کھولیں
+  Lorvex"). Noun-phrase titles that name a Latin product first ("Apple فیچرز",
+  "Lorvex فہرست"), window titles, accessibility labels, Siri entity type
+  names, and format names stay as they are. No other bidirectional control
+  character is written into a catalog, except one left-to-right isolate
+  (U+2066 and U+2069) around the keyboard shortcut on the last page of the
+  first-run wizard (`setup.done.capture.detail`).
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, and App Shortcut short titles) use shorter
+  wording than a literal translation ("اگلے 7 دن" for the menu bar panel's Next
+  7 Days switch, "%@ سنک ہوا" for the watch's sync status). Accessibility labels
+  may be longer.
+- The capture parser (`LorvexCaptureParser`) has no Urdu vocabulary: it reads
+  English and Chinese words wherever the interface language is Urdu. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("انگریزی الفاظ جیسے "tomorrow"، "3pm"، "every Monday"، "20 min" یا
+  "#list""). Inside Urdu text a Latin word that follows a number is laid out
+  right to left together with the number, so "20 min" displays as "min 20".
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
+  that name the app exactly once ("ایک کام ${applicationName} میں شامل کریں").
+
+## Hebrew conventions
+
+The `he` catalogs are modern Hebrew written without vowel points, in the
+register of Apple's Hebrew interfaces (לוח שנה, התראות, קיצורי דרך). Every Hebrew
+locale (he-IL and the rest) selects them. They keep one term per concept across
+every catalog, so a thing reads the same on the Mac, iPhone, watch, widgets, and
+in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | משימה, רשימה, תג | plurals משימות, רשימות, תגים; a task's checklist is a רשימת תיוג and its item a פריט |
+| Inbox (the seeded list) | תיבת דואר נכנס | shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | היום, מחר, אתמול | |
+| Someday | מתישהו | quoted inside a sentence ("מתישהו") |
+| Due, overdue | תאריך יעד, באיחור | |
+| Open (a task not yet done) | פתוחה | statuses agree with the feminine משימה: פתוחה, הושלמה, בוטלה, חסומה (plural פתוחות, הושלמו); בתהליך is In Progress |
+| Done and complete | סיום, הושלמה, השלמה | סיום closes a sheet; הושלמה is the Completed status; השלמה completes a task |
+| Cancel, cancelled | ביטול, בוטלה | |
+| Allow, allowed (a permission) | אפשר, מותר | אפשר is the platform's button word (אפשר התראות); אישור is only OK |
+| Defer and snooze | דחייה, נודניק | defer moves a task to a later day; snooze moves a reminder (נודניק עד) |
+| Plan, schedule, agenda | תכנון, לוח זמנים, סדר יום | |
+| Capture (quick add) | הוספה | הוספת משימה names the capture sheet |
+| Review (the day and the week) | סקירה | סקירה יומית, סקירה שבועית; its fields are הצלחות, חסמים, תובנות; the assistant's briefing is a תדריך |
+| Memory | זיכרון | one entry is a רשומת זיכרון |
+| Assistant, AI | עוזר, AI | AI stays Latin; Claude and MCP stay as they are |
+| About (an estimate) | בערך | a separate word before the duration ("בערך %@ של עבודה"), never the prefix כ- |
+| Habit, check-in, streak, milestone, goal | הרגל, סימון, רצף, אבן דרך, יעד | סימון is also the check-in action |
+| Waits on, dependency | ממתינה ל, תלות | |
+| Reminder, recurrence | תזכורת, חזרה | |
+| Sync, snapshot | סנכרון, תמונת מצב | |
+| Settings | הגדרות | |
+| Apple features | לוח שנה, התראות, מסך הנעילה, קיצורי דרך, מצב ריכוז, ווידג׳ט | Dock and Spotlight stay Latin |
+
+- The text avoids addressing the reader in a gendered form. Buttons, menu items,
+  and intent titles are verbal nouns ("הוספה", "מחיקה", "הוספה ללוח השנה"); a
+  question is an infinitive ("למחוק את הרשימה "%@"?"); an instruction is
+  impersonal ("יש להפעיל מחדש את Lorvex", "לוחצים על ⌘N"); a confirmation is a
+  past tense that agrees with the noun ("המשימה "%@" הושלמה."); and a second
+  person form is one that the unpointed spelling gives both genders ("שבחרת",
+  "שלך"). First-person past forms in sample content ("סקרתי") read the same for
+  every speaker. Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are
+  infinitives that name the app exactly once ("להוסיף משימה ל-${applicationName}").
+- Hebrew is written unpointed. The geresh ׳ (U+05F3) marks an abbreviation or a
+  foreign sound ("דק׳", "מס׳", "ווידג׳ט") and the gershayim ״ (U+05F4) an acronym;
+  neither is the ASCII apostrophe or quotation mark.
+- Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
+  Spotlight, Apple Watch, CarPlay, Claude, MCP, AI, and file formats such as
+  JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. A one-letter prefix (ל, ב,
+  ה, ו, מ, ש, כ) takes a hyphen before Latin text, a digit, or a placeholder
+  that always opens with a digit or Latin text: a number, a clock time, an ISO
+  date, a counted phrase, or the app name ("ל-Lorvex", "ב-7 הימים הקרובים",
+  "ב-%@" before a time, "ו-%2$@" before "2 אירועים"). A placeholder that can
+  open with a Hebrew word takes no hyphenated prefix. That holds for a name, for
+  a duration (the system writes two hours as the word שעתיים), and for a day
+  line (it opens with יום). The sentence is built so that a noun or a separate
+  word stands before such a placeholder ("לרשימה "%2$@"", "בערך %@ של עבודה");
+  a day line takes the attached prefix ("ב%@" reads "ביום ראשון, 4 באוקטובר").
+- Punctuation is ASCII: the comma, the full stop, the semicolon, and the
+  question mark are the same as in English, as are the colon, the parentheses,
+  and the single-character ellipsis …. The dash is the em dash — with spaces.
+- Quotation marks are the straight `"`, never curly quotes or the Hebrew
+  gershayim. They stand wherever the English quotes with curly quotes, and
+  Lorvex's own view and button names inside a sentence are quoted the same way
+  ("מתישהו").
+- Hebrew locales format numbers in ASCII digits, so a fixed number in the
+  catalog is a digit ("7 הימים הקרובים", "12 שעות") as it is in English, and
+  counts arrive through placeholders. A count is written with its digits before
+  the noun, so the gender agreement of Hebrew numerals never shows.
+- An `he` plural entry carries `one` and `other` and may carry `two`, the dual,
+  where the noun has one. `one` selects exactly 1 and spells the number as a
+  word or leaves it out ("משימה אחת", "פעם ביום"); `two` is the dual with no
+  number ("שתי משימות", "יומיים", "כל שבועיים"); `other` shows the count ("%lld
+  משימות"). Verbs and adjectives agree with the form ("נבחרה משימה אחת",
+  "נבחרו שתי משימות", "נבחרו %lld משימות"). A form that omits the count carries
+  numbered specifiers where the string takes several values. Every form of a
+  substitution carries `%arg`, except the dual, which names the count in the
+  noun.
+- A string that fills in several values uses positional specifiers (`%1$@`,
+  `%2$lld`) wherever the Hebrew word order differs from the English, never
+  concatenation in code.
+- Weekday names come from the calendar ("יום שני", "יום ג׳"). The system's
+  ordinal for Hebrew is the bare number, so a weekday's position in a month is
+  "%2$@ מס׳ %1$@" and its position from the end "%2$@ מס׳ %1$@ מהסוף". Lists
+  of names are joined by the system's list format, which attaches ו- to the last
+  item.
+- A paragraph takes its base direction from its first strong character, so a
+  sentence that opens with a Latin name or a placeholder would lay out left to
+  right and put its closing punctuation at the wrong end. A sentence is
+  therefore written to open with a Hebrew word ("אפליקציית Lorvex יכולה …"), and
+  what the English opens with moves behind it. Short labels, window titles,
+  accessibility labels, and format names that are one Latin name ("Lorvex",
+  "CSV", "JSON", "CloudKit", "Spotlight") stay as they are. No other
+  bidirectional control character is written into a catalog, except one
+  left-to-right isolate (U+2066 and U+2069) around the keyboard shortcut on the
+  last page of the first-run wizard (`setup.done.capture.detail`).
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, and App Shortcut short titles) use shorter
+  wording than a literal translation ("7 הימים הקרובים" for the menu bar panel's
+  Next 7 Days switch, "סונכרן %@" for the watch's sync status). Accessibility
+  labels may be longer.
+- The capture parser (`LorvexCaptureParser`) has no Hebrew vocabulary: it reads
+  English and Chinese words wherever the interface language is Hebrew. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("מילים באנגלית כמו "tomorrow", "3pm", "every Monday", "20 min" או
+  "#list""). Inside Hebrew text a Latin word that follows a number is laid out
+  right to left together with the number, so "20 min" displays as "min 20".
+
 ## How to add a new locale
 
 Every catalog and every shipping bundle must carry the same language set, so a
@@ -1677,9 +1989,9 @@ shows the same commands for several.
    shipping bundle has the same complete set.
 7. Add a conventions section for the language to this document, as the
    Simplified Chinese, Spanish, French, Italian, Brazilian Portuguese, Russian,
-   Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, and Arabic
-   ones: one term per concept across every catalog, punctuation and quotation
-   marks, spacing around numbers and Latin words.
+   Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, Arabic,
+   Persian, Urdu, and Hebrew ones: one term per concept across every catalog,
+   punctuation and quotation marks, spacing around numbers and Latin words.
 8. Capture the macOS tour and the iOS screens in the language (see "Headless
    screenshots") and look for truncated, clipped, or overlapping text.
 

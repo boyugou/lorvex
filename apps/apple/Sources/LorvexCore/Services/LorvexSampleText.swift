@@ -67,7 +67,9 @@ public struct LorvexSampleText: Sendable {
   static let tables: [AppLanguage: [String: String]] = [
     .ar: arabic,
     .es: spanish,
+    .fa: persian,
     .fr: french,
+    .he: hebrew,
     .hi: hindi,
     .it: italian,
     .ja: japanese,
@@ -76,6 +78,7 @@ public struct LorvexSampleText: Sendable {
     .ptBR: brazilianPortuguese,
     .ru: russian,
     .uk: ukrainian,
+    .ur: urdu,
     .zhHans: simplifiedChinese,
     .zhHant: traditionalChinese,
   ]

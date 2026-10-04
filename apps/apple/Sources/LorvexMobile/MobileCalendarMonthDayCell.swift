@@ -98,7 +98,7 @@ struct MobileCalendarMonthDayCell: View {
           Circle().fill(isToday ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
         }
       }
-      .animation(.snappy(duration: 0.2), value: isSelected)
+      .reduceMotionAnimation(.snappy(duration: 0.2), value: isSelected)
   }
 
   private var numberStyle: AnyShapeStyle {

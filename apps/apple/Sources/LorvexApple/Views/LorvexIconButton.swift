@@ -30,7 +30,7 @@ struct LorvexIconButton: View {
     }
     .buttonStyle(.plain)
     .onHover { isHovering = $0 }
-    .animation(.easeOut(duration: 0.12), value: isHovering)
+    .reduceMotionAnimation(.easeOut(duration: 0.12), value: isHovering)
     .help(label)
     .accessibilityLabel(label)
     .accessibilityIdentifier(accessibilityIdentifier ?? "")

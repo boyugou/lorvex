@@ -96,7 +96,7 @@ struct MobileCalendarHeaderRow: View {
     }
     .padding(.horizontal, LorvexDesign.Spacing.l)
     .padding(.top, LorvexDesign.Spacing.xs)
-    .animation(.snappy(duration: 0.2), value: isOnToday)
+    .reduceMotionAnimation(.snappy(duration: 0.2), value: isOnToday)
     .accessibilityIdentifier("mobileCalendar.header")
   }
 }

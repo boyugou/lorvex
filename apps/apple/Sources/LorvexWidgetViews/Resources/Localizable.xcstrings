@@ -23,10 +23,22 @@
             "value": "Completar %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Terminer %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "השלמת %@"
           }
         },
         "hi": {
@@ -75,6 +87,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Виконати завдання «%@»"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ مکمل کریں"
           }
         },
         "zh-Hans": {
@@ -172,6 +190,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld کار برای امروز باقی مانده است"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld کار برای امروز باقی مانده است"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -185,6 +221,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld tâches restantes aujourd’hui"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "משימה אחת נותרה להיום"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld משימות נותרו להיום"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "שתי משימות נותרו להיום"
                 }
               }
             }
@@ -346,6 +406,24 @@
             }
           }
         },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld کام باقی ہے"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld کام باقی ہیں"
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "variations": {
             "plural": {
@@ -388,10 +466,22 @@
             "value": "pend."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باقی"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "à faire"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נותרו"
           }
         },
         "hi": {
@@ -442,6 +532,12 @@
             "value": "зал."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باقی"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -478,10 +574,22 @@
             "value": "min"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دقیقه"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "min"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "דק׳"
           }
         },
         "hi": {
@@ -532,6 +640,12 @@
             "value": "хв"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منٹ"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -568,10 +682,22 @@
             "value": "Tiempo restante: %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ باقی"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Temps restant : %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נותרו %@"
           }
         },
         "hi": {
@@ -622,6 +748,12 @@
             "value": "Залишилося %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ باقی"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -658,10 +790,22 @@
             "value": "Lista"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فهرست"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Liste"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רשימה"
           }
         },
         "hi": {
@@ -712,6 +856,12 @@
             "value": "Список"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فہرست"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -748,10 +898,22 @@
             "value": "Elige una lista para ver solo sus tareas."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فهرستی را انتخاب کنید تا فقط کارهای آن نمایش داده شود."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Choisissez une liste pour n’afficher que ses tâches."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לבחור רשימה כדי להציג רק את המשימות שלה."
           }
         },
         "hi": {
@@ -802,6 +964,12 @@
             "value": "Виберіть список, щоб показувати лише його завдання."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صرف اس کے کام دکھانے کے لیے کوئی فہرست منتخب کریں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -838,10 +1006,22 @@
             "value": "Hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امروز"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "היום"
           }
         },
         "hi": {
@@ -892,6 +1072,12 @@
             "value": "Сьогодні"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -928,10 +1114,22 @@
             "value": "Aún no hay hábitos."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنوز عادتی پیگیری نمی‌شود."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aucune habitude suivie pour l’instant."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עדיין לא נעקבים הרגלים."
           }
         },
         "hi": {
@@ -982,6 +1180,12 @@
             "value": "Звичок поки немає."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابھی کوئی عادت ٹریک نہیں ہو رہی۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1018,10 +1222,22 @@
             "value": "Lista"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فهرست"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Liste"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רשימה"
           }
         },
         "hi": {
@@ -1070,6 +1286,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Список"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فہرست"
           }
         },
         "zh-Hans": {
@@ -1168,6 +1390,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld انجام‌شده امروز"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld انجام‌شده امروز"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -1181,6 +1421,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld terminées"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "אחת הושלמה היום"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld הושלמו היום"
                 }
               }
             }
@@ -1342,6 +1600,24 @@
             }
           }
         },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld مکمل"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld مکمل"
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1438,6 +1714,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld کار دیگر امروز"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld کار دیگر امروز"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -1451,6 +1745,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld de plus"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "עוד אחת להיום"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "עוד %lld להיום"
                 }
               }
             }
@@ -1612,6 +1924,24 @@
             }
           }
         },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld اور"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld اور"
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1648,10 +1978,22 @@
             "value": "Todos los hábitos completados hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همه عادت‌های امروز انجام شد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Toutes les habitudes validées aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כל ההרגלים של היום בוצעו"
           }
         },
         "hi": {
@@ -1700,6 +2042,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Усі звички виконано сьогодні"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کی تمام عادات مکمل ہو گئیں"
           }
         },
         "zh-Hans": {
@@ -1827,6 +2175,34 @@
             }
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld از %#@habitcount@"
+          },
+          "substitutions": {
+            "habitcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg عادت انجام شد"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg عادت انجام شد"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -1848,6 +2224,40 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg habitudes validées"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld מתוך %#@habitcount@"
+          },
+          "substitutions": {
+            "habitcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg הרגל בוצע"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg הרגלים בוצעו"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "שני הרגלים בוצעו"
                     }
                   }
                 }
@@ -2077,6 +2487,34 @@
             }
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@habitcount@ میں سے %1$lld مکمل"
+          },
+          "substitutions": {
+            "habitcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg عادت"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg عادات"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2128,10 +2566,22 @@
             "value": "Completar %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Valider %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "השלמת %@"
           }
         },
         "hi": {
@@ -2182,6 +2632,12 @@
             "value": "Виконати звичку «%@»"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ مکمل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2218,10 +2674,22 @@
             "value": "%1$@, %2$lld de %3$lld"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@، %2$lld از %3$lld"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@, %2$lld sur %3$lld"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld מתוך %3$lld"
           }
         },
         "hi": {
@@ -2272,6 +2740,12 @@
             "value": "%1$@, %2$lld з %3$lld"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@، %3$lld میں سے %2$lld"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2308,10 +2782,22 @@
             "value": "Hábitos"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت‌ها"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Habitudes"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הרגלים"
           }
         },
         "hi": {
@@ -2360,6 +2846,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Звички"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادات"
           }
         },
         "zh-Hans": {
@@ -2487,6 +2979,34 @@
             }
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld از %#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کار امروز تکمیل شد"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کار امروز تکمیل شد"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -2508,6 +3028,40 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg tâches terminées aujourd’hui"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld מתוך %#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg משימה הושלמה היום"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg משימות הושלמו היום"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "שתי משימות הושלמו היום"
                     }
                   }
                 }
@@ -2737,6 +3291,34 @@
             }
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج %#@taskcount@ میں سے %1$lld مکمل"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کام"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کام"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2879,6 +3461,34 @@
             }
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کار"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کار"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -2900,6 +3510,40 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg tâches"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg משימה"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg משימות"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "שתי משימות"
                     }
                   }
                 }
@@ -3123,6 +3767,34 @@
             }
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کام"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg کام"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3175,10 +3847,22 @@
             "value": "Progreso"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیشرفت"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Progression"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התקדמות"
           }
         },
         "hi": {
@@ -3227,6 +3911,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прогрес"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش رفت"
           }
         },
         "zh-Hans": {
@@ -3324,6 +4014,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی‌مانده"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی‌مانده"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -3337,6 +4045,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld restantes"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרה אחת"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרו %lld"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרו שתיים"
                 }
               }
             }
@@ -3498,6 +4230,24 @@
             }
           }
         },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی"
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "variations": {
             "plural": {
@@ -3539,10 +4289,22 @@
             "value": "Todo al día"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همه انجام شد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tout est fait"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הכול הושלם"
           }
         },
         "hi": {
@@ -3593,6 +4355,12 @@
             "value": "Усе зроблено"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سب مکمل"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3628,10 +4396,22 @@
             "value": "No queda nada para hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای امروز چیزی باقی نمانده است."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Plus rien pour aujourd’hui."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא נשאר דבר להיום."
           }
         },
         "hi": {
@@ -3680,6 +4460,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "На сьогодні нічого не залишилося."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کے لیے کچھ باقی نہیں۔"
           }
         },
         "zh-Hans": {
@@ -3778,6 +4564,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%lld دیگر"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%lld دیگر"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -3791,6 +4595,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "+%lld autres"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%lld נוספת"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%lld נוספות"
                 }
               }
             }
@@ -3947,6 +4769,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "+%lld ще"
+                }
+              }
+            }
+          }
+        },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%lld اور"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "+%lld اور"
                 }
               }
             }

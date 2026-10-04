@@ -39,8 +39,8 @@ struct MobileIconColorPicker: View {
     VStack(spacing: LorvexDesign.Spacing.l) {
       MobileIconTile(icon: icon, fallback: fallbackIcon, tint: tint, size: 72)
         .frame(maxWidth: .infinity)
-        .animation(.snappy, value: icon)
-        .animation(.snappy, value: color)
+        .reduceMotionAnimation(.snappy, value: icon)
+        .reduceMotionAnimation(.snappy, value: color)
         .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
@@ -75,7 +75,7 @@ struct MobileIconColorPicker: View {
   private func swatch(_ hex: String) -> some View {
     let isSelected = color == hex
     return Button {
-      withAnimation(.snappy) { color = hex }
+      lorvexAnimated(.snappy) { color = hex }
     } label: {
       Circle()
         .fill(Color(lorvexHex: hex) ?? .accentColor)
@@ -103,7 +103,7 @@ struct MobileIconColorPicker: View {
   private func iconButton(_ symbol: String) -> some View {
     let isSelected = icon == symbol
     return Button {
-      withAnimation(.snappy) { icon = symbol }
+      lorvexAnimated(.snappy) { icon = symbol }
     } label: {
       Image(systemName: symbol)
         .font(.title3)

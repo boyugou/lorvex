@@ -247,7 +247,7 @@ struct TaskDetailLengthPicker: View {
           }
         }
         .frame(width: 96, height: 96)
-        .animation(.snappy(duration: 0.2), value: minutes)
+        .reduceMotionAnimation(.snappy(duration: 0.2), value: minutes)
         stepButton(systemImage: "plus", delta: Choices.lengthStep)
       }
       .frame(maxWidth: .infinity)

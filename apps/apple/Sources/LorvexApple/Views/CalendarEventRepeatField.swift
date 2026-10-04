@@ -51,7 +51,7 @@ struct CalendarEventRepeatField: View {
           .transition(.opacity.combined(with: .move(edge: .top)))
       }
     }
-    .animation(.snappy(duration: 0.18), value: recurrence)
+    .reduceMotionAnimation(.snappy(duration: 0.18), value: recurrence)
     .onChange(of: referenceDate) { _, newDate in
       guard var rule = recurrence else { return }
       switch automaticallyDerivedAxis {

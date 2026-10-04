@@ -25,7 +25,7 @@ public struct LorvexMobileStoreRootView: View {
     // the whole shell, wherever the completion was logged (Today, the Habits
     // workspace, a habit's detail).
     .lorvexMobileMilestoneCelebration(store.milestoneCelebration) {
-      withAnimation(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
+      lorvexAnimated(.easeOut(duration: 0.2)) { store.milestoneCelebration = nil }
     }
     .preferredColorScheme(AppAppearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
     .lorvexClockLocale()

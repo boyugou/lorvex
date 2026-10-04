@@ -151,7 +151,7 @@ struct MobileStoreReviewDayPage: View {
         let date = store.selectedReviewDate
         await store.checkInHabit(habit, on: date)
         if let loaded = await store.loadReviewHabits(date: date), date == store.selectedReviewDate {
-          withAnimation(.snappy(duration: 0.18)) { habits = loaded }
+          lorvexAnimated(.snappy(duration: 0.18)) { habits = loaded }
         }
       }
     }
@@ -200,7 +200,7 @@ struct MobileStoreReviewDayPage: View {
         }
       } else if editable {
         Button {
-          withAnimation(.snappy) { showsMoreFields = true }
+          lorvexAnimated(.snappy) { showsMoreFields = true }
         } label: {
           HStack(spacing: LorvexDesign.Spacing.xxs) {
             Text(Copy.moreFields)

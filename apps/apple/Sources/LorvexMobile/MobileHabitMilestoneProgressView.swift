@@ -184,6 +184,6 @@ private struct MobileMilestoneBar: View {
       }
     }
     .frame(height: height)
-    .animation(.easeInOut(duration: 0.28), value: fraction)
+    .reduceMotionAnimation(.easeInOut(duration: 0.28), value: fraction)
   }
 }

@@ -70,7 +70,7 @@ struct TodayColumn: View {
       }
     }
     .frame(maxWidth: 720, alignment: .leading)
-    .animation(.snappy(duration: 0.25), value: page)
+    .reduceMotionAnimation(.snappy(duration: 0.25), value: page)
   }
 
   // MARK: Header
@@ -110,7 +110,7 @@ struct TodayColumn: View {
           .textSelection(.enabled)
         if folds {
           Button(showsFullBriefing ? TodayCalmCopy.briefingLess : TodayCalmCopy.briefingMore) {
-            withAnimation(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
+            lorvexAnimated(.snappy(duration: 0.2)) { showsFullBriefing.toggle() }
           }
           .buttonStyle(.link)
           .font(LorvexDesign.Typography.secondaryText)
@@ -197,7 +197,7 @@ struct TodayColumn: View {
   private var doneSection: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button {
-        withAnimation(.snappy(duration: 0.2)) { store.isTodayDoneCollapsed.toggle() }
+        lorvexAnimated(.snappy(duration: 0.2)) { store.isTodayDoneCollapsed.toggle() }
       } label: {
         // A record rather than work, so a quiet line, not a section title.
         HStack(spacing: LorvexDesign.Spacing.xs) {

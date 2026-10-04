@@ -10,6 +10,6 @@ public struct LorvexTileButtonStyle: ButtonStyle {
   public func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .opacity(configuration.isPressed ? 0.55 : 1)
-      .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+      .reduceMotionAnimation(.easeOut(duration: 0.15), value: configuration.isPressed)
   }
 }

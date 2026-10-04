@@ -19,7 +19,11 @@ import SwiftUI
 /// block ("Roadmap" in a phone week's 40pt lane), the face shrinks just
 /// enough for that word to fit one line, down to
 /// ``LorvexCalendarCompactTitleFit/minimumScale``, rather than splitting the
-/// word across lines.
+/// word across lines. A word still wider than the block at that size is not
+/// split either: the title then takes a single line that ends in an ellipsis
+/// ("Quarte…"). A title in a script that wraps between its own characters
+/// (Chinese, Japanese, Korean, Thai) keeps wrapping over as many lines as the
+/// block is tall.
 public struct LorvexCalendarCompactBlockTitle: View {
   private let title: String
   private let isDone: Bool
@@ -39,7 +43,9 @@ public struct LorvexCalendarCompactBlockTitle: View {
       .font(.system(size: fittedSize, weight: LorvexDesign.CalendarMetrics.blockTitleWeight).width(.condensed))  // lorvex-design-token: allow
       .strikethrough(isDone)
       .foregroundStyle(isDone ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
-      .lineLimit(nil)
+      .lineLimit(
+        LorvexCalendarCompactTitleFit.splitsAWord(title: title, size: baseSize, width: width) ? 1 : nil
+      )
       .frame(maxWidth: .infinity, alignment: .topLeading)
       .opacity(LorvexCalendarCompactTitleFit.isLegible(width: width, size: baseSize) ? 1 : 0)
       .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
@@ -89,6 +95,32 @@ enum LorvexCalendarCompactTitleFit {
       .max() ?? 0
     guard widest > room else { return 1 }
     return max(minimumScale, room / widest)
+  }
+
+  /// Whether a word of `title` is still wider than `width` once the face has
+  /// shrunk to ``minimumScale``, so that setting the title over several lines
+  /// would split that word between letters. An unmeasured (zero) width is
+  /// never too narrow. Words in a script that wraps between its own
+  /// characters never count: a run of Chinese, Japanese, Korean, or Thai is
+  /// meant to break wherever the line ends.
+  static func splitsAWord(title: String, size: CGFloat, width: CGFloat) -> Bool {
+    guard width > 0 else { return false }
+    let room = width - layoutAllowance
+    return title.split(whereSeparator: \.isWhitespace).contains { word in
+      !wrapsBetweenCharacters(word) && wordWidth(String(word), size: size) * minimumScale > room
+    }
+  }
+
+  /// Whether `word` holds a character of a script that wraps between its
+  /// characters or between words no space marks: Han, kana, Hangul, Thai, Lao,
+  /// Myanmar, or Khmer.
+  private static func wrapsBetweenCharacters(_ word: Substring) -> Bool {
+    LorvexUserContentTypesetting.containsCJK(word)
+      || word.unicodeScalars.contains { scalar in
+        (0x0E00...0x0EFF).contains(scalar.value)  // Thai, Lao
+          || (0x1000...0x109F).contains(scalar.value)  // Myanmar
+          || (0x1780...0x17FF).contains(scalar.value)  // Khmer
+      }
   }
 
   /// The word's width in the title face (`LorvexDesign.CalendarMetrics

@@ -49,7 +49,7 @@ extension MobileStore {
       if let loaded = try? await core.loadDaySummary(date: loadingDate),
         selectedReviewDate == loadingDate
       {
-        withAnimation(.snappy(duration: 0.18)) { dayReviewEvidence = loaded }
+        lorvexAnimated(.snappy(duration: 0.18)) { dayReviewEvidence = loaded }
       }
     }
     if snapshot.weeklyReview != nil {
@@ -57,7 +57,7 @@ extension MobileStore {
       if let loaded = try? await core.getWeeklyReviewSnapshot(weekOf: loadingAnchor),
         weeklyReviewAnchor == loadingAnchor
       {
-        withAnimation(.snappy(duration: 0.18)) { snapshot.weeklyReview = loaded }
+        lorvexAnimated(.snappy(duration: 0.18)) { snapshot.weeklyReview = loaded }
       }
     }
   }

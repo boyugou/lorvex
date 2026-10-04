@@ -25,7 +25,7 @@ struct EventKitCalendarFilterPicker: View {
     // its first click in a freshly shown grouped Form (see SettingsMCPSections
     // for the reference pattern).
     Button {
-      withAnimation(.snappy(duration: 0.2)) { expanded.toggle() }
+      lorvexAnimated(.snappy(duration: 0.2)) { expanded.toggle() }
     } label: {
       HStack(spacing: LorvexDesign.Spacing.s) {
         Text(String(localized: "settings.calendar.filter.title", defaultValue: "Calendars to Mirror", table: "Localizable", bundle: LorvexL10n.bundle))

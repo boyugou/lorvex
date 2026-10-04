@@ -83,7 +83,7 @@ public struct MobileStoreSettingsView: View {
       if MobileStore.debugScrollSettingsToDataExport {
         for _ in 0..<4 {
           try? await Task.sleep(for: .milliseconds(400))
-          withAnimation { proxy.scrollTo(Self.debugDataExportAnchor, anchor: .top) }
+          lorvexAnimated { proxy.scrollTo(Self.debugDataExportAnchor, anchor: .top) }
         }
         return
       }
@@ -93,7 +93,7 @@ public struct MobileStoreSettingsView: View {
       // runloop after the diagnostics load, so a single early scroll lands short.
       for _ in 0..<4 {
         try? await Task.sleep(for: .milliseconds(400))
-        withAnimation { proxy.scrollTo(Self.debugDiagnosticsAnchor, anchor: .top) }
+        lorvexAnimated { proxy.scrollTo(Self.debugDiagnosticsAnchor, anchor: .top) }
       }
     }
   #endif

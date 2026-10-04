@@ -33,7 +33,7 @@ extension MobileStoreTasksView {
     }
     // Animate the row diff so a completed/deferred task glides out of the list
     // after its completion moment instead of snapping away.
-    withAnimation(.snappy) {
+    lorvexAnimated(.snappy) {
       page = loaded
     }
     pruneBatchSelection()
@@ -105,7 +105,7 @@ extension MobileStoreTasksView {
   }
 
   func toggleBatchSelectionMode() {
-    withAnimation(.snappy) {
+    lorvexAnimated(.snappy) {
       isBatchSelecting.toggle()
       if !isBatchSelecting {
         batchSelectedTaskIDs.removeAll()

@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "אפליקציית Lorvex יכולה להוסיף את בלוקי התכנון שיצרת ללוח השנה של Apple.";
+"NSCalendarsFullAccessUsageDescription" = "אפליקציית Lorvex יכולה לקרוא פרטי אירועים כדי לבנות לוחות זמנים והקשר עבור העוזר.";

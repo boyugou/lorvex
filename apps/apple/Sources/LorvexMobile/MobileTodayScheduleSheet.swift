@@ -60,7 +60,7 @@ struct MobileTodayScheduleList: View {
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
-      .animation(.snappy(duration: 0.2), value: store.proposedDayTimes)
+      .reduceMotionAnimation(.snappy(duration: 0.2), value: store.proposedDayTimes)
     }
     .accessibilityIdentifier("today.schedule")
   }

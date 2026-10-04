@@ -22,10 +22,22 @@
             "value": "Añade una tarea a ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک کار به ${applicationName} اضافه کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ajoute une tâche dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להוסיף משימה ל-${applicationName}"
           }
         },
         "hi": {
@@ -76,6 +88,12 @@
             "value": "Додай завдання в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں شامل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -111,10 +129,22 @@
             "value": "Añade un hábito en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک عادت اضافه کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ajoute une habitude dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להוסיף הרגל ב-${applicationName}"
           }
         },
         "hi": {
@@ -165,6 +195,12 @@
             "value": "Додай звичку в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک عادت ${applicationName} میں شامل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -200,10 +236,22 @@
             "value": "Anota una tarea en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} سریع یک کار اضافه کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Note une tâche dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לרשום משימה ב-${applicationName}"
           }
         },
         "hi": {
@@ -254,6 +302,12 @@
             "value": "Занотуй завдання в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں فوراً درج کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -289,10 +343,22 @@
             "value": "Completa una tarea en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک کار را تکمیل کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Termine une tâche dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להשלים משימה ב-${applicationName}"
           }
         },
         "hi": {
@@ -343,6 +409,12 @@
             "value": "Виконай завдання в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں مکمل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -378,10 +450,22 @@
             "value": "Crea un hábito en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک عادت بساز"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Crée une habitude dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ליצור הרגל ב-${applicationName}"
           }
         },
         "hi": {
@@ -432,6 +516,12 @@
             "value": "Створи звичку в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک عادت ${applicationName} میں بنائیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -467,10 +557,22 @@
             "value": "Aplaza una tarea en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک کار را موکول کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Reporte une tâche dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לדחות משימה ב-${applicationName}"
           }
         },
         "hi": {
@@ -521,6 +623,12 @@
             "value": "Відклади завдання в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں ملتوی کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -556,10 +664,22 @@
             "value": "Muestra las tareas de ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} کارها را فهرست کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Affiche les tâches de ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להציג רשימת משימות ב-${applicationName}"
           }
         },
         "hi": {
@@ -610,6 +730,12 @@
             "value": "Покажи завдання в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کاموں کی فہرست ${applicationName} میں دکھائیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -645,10 +771,22 @@
             "value": "Marca una tarea como hecha en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک کار را انجام‌شده علامت بزن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Marque une tâche comme faite dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לסמן משימה כהושלמה ב-${applicationName}"
           }
         },
         "hi": {
@@ -699,6 +837,12 @@
             "value": "Познач завдання як виконане в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں مکمل شدہ نشان زد کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -734,10 +878,22 @@
             "value": "Mueve una tarea a hoy en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک کار را به امروز منتقل کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Déplace une tâche à aujourd’hui dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להעביר משימה להיום ב-${applicationName}"
           }
         },
         "hi": {
@@ -788,6 +944,12 @@
             "value": "Перенеси завдання на сьогодні в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں آج پر منتقل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -823,10 +985,22 @@
             "value": "Abre ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامه ${applicationName} را باز کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvre ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לפתוח את ${applicationName}"
           }
         },
         "hi": {
@@ -877,6 +1051,12 @@
             "value": "Відкрий ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایپ ${applicationName} کھولیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -912,10 +1092,22 @@
             "value": "Abre la vista de hoy en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امروز را در ${applicationName} باز کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvre la vue Aujourd’hui dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לפתוח את היום ב-${applicationName}"
           }
         },
         "hi": {
@@ -966,6 +1158,12 @@
             "value": "Відкрий сьогодні в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کو ${applicationName} میں کھولیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1001,10 +1199,22 @@
             "value": "Planifica una tarea para hoy en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک کار را برای امروز برنامه‌ریزی کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Planifie une tâche pour aujourd’hui dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לתכנן משימה להיום ב-${applicationName}"
           }
         },
         "hi": {
@@ -1055,6 +1265,12 @@
             "value": "Заплануй завдання на сьогодні в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں آج کے لیے منصوبہ بند کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1090,10 +1306,22 @@
             "value": "Lee la visión general de ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمای کلی را در ${applicationName} بخوان"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Lis la vue d’ensemble dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לקרוא את הסקירה הכללית של ${applicationName}"
           }
         },
         "hi": {
@@ -1144,6 +1372,12 @@
             "value": "Прочитай огляд у ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خلاصہ ${applicationName} میں پڑھیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1179,10 +1413,22 @@
             "value": "Lee la revisión semanal de ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرور هفتگی را در ${applicationName} بخوان"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Lis le bilan hebdomadaire dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לקרוא את הסקירה השבועית של ${applicationName}"
           }
         },
         "hi": {
@@ -1233,6 +1479,12 @@
             "value": "Прочитай підсумки тижня в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ہفتہ وار جائزہ ${applicationName} میں پڑھیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1268,10 +1520,22 @@
             "value": "Programa una tarea para mañana en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} یک کار را برای فردا زمان‌بندی کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Programme une tâche pour demain dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לתזמן משימה למחר ב-${applicationName}"
           }
         },
         "hi": {
@@ -1322,6 +1586,12 @@
             "value": "Заплануй завдання на завтра в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک کام ${applicationName} میں کل کے لیے شیڈول کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1357,10 +1627,22 @@
             "value": "Busca tareas en ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در ${applicationName} کارها را جست‌وجو کن"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Cherche des tâches dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לחפש משימות ב-${applicationName}"
           }
         },
         "hi": {
@@ -1411,6 +1693,12 @@
             "value": "Знайди завдання в ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام ${applicationName} میں تلاش کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1446,10 +1734,22 @@
             "value": "Muestra la visión general de ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمای کلی Lorvex را در ${applicationName} نشان بده"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Affiche la vue d’ensemble de ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להציג את הסקירה הכללית של Lorvex ב-${applicationName}"
           }
         },
         "hi": {
@@ -1500,6 +1800,12 @@
             "value": "Покажи огляд Lorvex у ${applicationName}"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایپ Lorvex کا خلاصہ ${applicationName} میں دکھائیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1535,10 +1841,22 @@
             "value": "Muestra la revisión semanal de ${applicationName}"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرور هفتگی را در ${applicationName} نشان بده"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Affiche le bilan hebdomadaire dans ${applicationName}"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "להציג את הסקירה השבועית ב-${applicationName}"
           }
         },
         "hi": {
@@ -1587,6 +1905,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Покажи підсумки тижня в ${applicationName}"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ہفتہ وار جائزہ ${applicationName} میں دکھائیں"
           }
         },
         "zh-Hans": {

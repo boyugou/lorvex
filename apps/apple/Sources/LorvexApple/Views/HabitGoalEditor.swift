@@ -117,7 +117,7 @@ struct HabitGoalEditor: View {
       }
     }
     .frame(width: 96, height: 96)
-    .animation(.snappy(duration: 0.2), value: target)
+    .reduceMotionAnimation(.snappy(duration: 0.2), value: target)
     .help(readingLabel)
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(HabitDetailFieldCopy.goal)

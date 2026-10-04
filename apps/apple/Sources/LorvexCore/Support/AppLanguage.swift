@@ -20,7 +20,9 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case en
   case ar
   case es
+  case fa
   case fr
+  case he
   case hi
   case it
   case ja
@@ -29,17 +31,18 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case ptBR = "pt-BR"
   case ru
   case uk
+  case ur
   case zhHans = "zh-Hans"
   case zhHant = "zh-Hant"
 
   public var id: String { rawValue }
 
   /// The selectable languages (everything except `.system`), in menu order:
-  /// by endonym in English collation, which for these scripts is the plain
-  /// Unicode order, so the Latin-script names come first alphabetically and
-  /// each other script follows as a group (Cyrillic, Arabic, Devanagari,
-  /// Hangul, Han), the way the system's own language lists read. Endonyms
-  /// read the same in every interface language, and so does their order.
+  /// by endonym in English collation, so the Latin-script names come first
+  /// alphabetically and each other script follows as a group (Cyrillic,
+  /// Hebrew, Arabic, Devanagari, Hangul, Han), the way the system's own
+  /// language lists read. Endonyms read the same in every interface language,
+  /// and so does their order.
   public static let selectable: [AppLanguage] =
     allCases
     .filter { $0 != .system }
@@ -62,7 +65,9 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .en: "English"
     case .ar: "العربية"
     case .es: "Español"
+    case .fa: "فارسی"
     case .fr: "Français"
+    case .he: "עברית"
     case .hi: "हिन्दी"
     case .it: "Italiano"
     case .ja: "日本語"
@@ -71,13 +76,14 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .ptBR: "Português (Brasil)"
     case .ru: "Русский"
     case .uk: "Українська"
+    case .ur: "اردو"
     case .zhHans: "简体中文"
     case .zhHant: "繁體中文"
     }
   }
 
-  /// Whether the language's script reads right to left (Arabic). `.system`
-  /// reads the way the language it resolves to does.
+  /// Whether the language's script reads right to left (Arabic, Persian,
+  /// Urdu, Hebrew). `.system` reads the way the language it resolves to does.
   public var readsRightToLeft: Bool {
     Locale.Language(identifier: resolved.rawValue).characterDirection == .rightToLeft
   }

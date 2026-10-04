@@ -1,3 +1,4 @@
+import LorvexCore
 import SwiftUI
 
 /// Bridges the main window's `NavigationSplitViewVisibility` to the menu bar.

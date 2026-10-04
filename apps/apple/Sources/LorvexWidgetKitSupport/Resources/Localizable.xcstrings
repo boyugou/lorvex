@@ -22,10 +22,22 @@
             "value": "Muestra la primera tarea de Hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کار بالای فهرست «امروز» را نشان می‌دهد."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Affiche la tâche en tête d’Aujourd’hui."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מציג את המשימה שבראש \"היום\"."
           }
         },
         "hi": {
@@ -76,6 +88,12 @@
             "value": "Показує завдання, яке стоїть першим у «Сьогодні»."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"آج\" میں سب سے اوپر والا کام دکھاتا ہے۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -111,10 +129,22 @@
             "value": "Lorvex Hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex امروز"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex Aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex היום"
           }
         },
         "hi": {
@@ -165,6 +195,12 @@
             "value": "Lorvex Сьогодні"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex آج"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -201,10 +237,22 @@
             "value": "Revisar especificación"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرور مشخصات"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Relire les spécifications"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "סקירת המפרט"
           }
         },
         "hi": {
@@ -253,6 +301,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перевірити специфікацію"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصریحات کا جائزہ"
           }
         },
         "zh-Hans": {
@@ -351,6 +405,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -364,6 +436,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld restantes"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרה אחת"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרו %lld"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרו שתיים"
                 }
               }
             }
@@ -525,6 +621,24 @@
             }
           }
         },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی"
+                }
+              }
+            }
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -561,10 +675,22 @@
             "value": "aprox. %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدود %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "environ %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "בערך %@"
           }
         },
         "hi": {
@@ -615,6 +741,12 @@
             "value": "близько %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقریباً %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -650,10 +782,22 @@
             "value": "Los datos del widget no están disponibles."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "داده‌های ویجت در دسترس نیست."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Les données du widget ne sont pas disponibles."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נתוני הווידג׳ט אינם זמינים."
           }
         },
         "hi": {
@@ -704,6 +848,12 @@
             "value": "Дані віджета недоступні."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ویجٹ کا ڈیٹا دستیاب نہیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -739,10 +889,22 @@
             "value": "Consulta de un vistazo el progreso de tus hábitos de hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیشرفت عادت‌های امروز را با یک نگاه ببینید."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Consultez d’un coup d’œil la progression de vos habitudes du jour."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מבט מהיר על ההתקדמות בהרגלים של היום."
           }
         },
         "hi": {
@@ -793,6 +955,12 @@
             "value": "Стежте за прогресом звичок на сьогодні з одного погляду."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کی عادات کی پیش رفت ایک نظر میں دیکھیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -828,10 +996,22 @@
             "value": "Abre Lorvex para cargar los hábitos."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای بارگیری عادت‌ها، Lorvex را باز کنید."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrez Lorvex pour charger les habitudes."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לפתוח את Lorvex כדי לטעון את ההרגלים."
           }
         },
         "hi": {
@@ -882,6 +1062,12 @@
             "value": "Відкрийте Lorvex, щоб завантажити звички."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادات لوڈ کرنے کے لیے Lorvex کھولیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -917,10 +1103,22 @@
             "value": "Hábitos"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت‌ها"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Habitudes"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הרגלים"
           }
         },
         "hi": {
@@ -969,6 +1167,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Звички"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادات"
           }
         },
         "zh-Hans": {
@@ -1006,10 +1210,22 @@
             "value": "Hábitos"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت‌ها"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Habitudes"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הרגלים"
           }
         },
         "hi": {
@@ -1060,6 +1276,12 @@
             "value": "Звички"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادات"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1095,10 +1317,22 @@
             "value": "Completa una tarea de Lorvex desde un widget."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل یک کار Lorvex از طریق ویجت."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Termine une tâche de Lorvex depuis un widget."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "השלמת משימה ב-Lorvex מתוך ווידג׳ט."
           }
         },
         "hi": {
@@ -1149,6 +1383,12 @@
             "value": "Виконує завдання Lorvex із віджета."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ویجٹ سے Lorvex کام مکمل کریں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1184,10 +1424,22 @@
             "value": "Se completó “%@”."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کار «%@» تکمیل شد."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "« %@ » terminée."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המשימה \"%@\" הושלמה."
           }
         },
         "hi": {
@@ -1238,6 +1490,12 @@
             "value": "Завдання «%@» виконано."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام \"%@\" مکمل ہو گیا۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1273,10 +1531,22 @@
             "value": "Completar tarea"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل کار"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Terminer la tâche"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "השלמת משימה"
           }
         },
         "hi": {
@@ -1327,6 +1597,12 @@
             "value": "Виконати завдання"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام مکمل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1362,10 +1638,22 @@
             "value": "Registra un hábito de Lorvex desde un widget."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثبت یک عادت Lorvex از طریق ویجت."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Valide une habitude de Lorvex depuis un widget."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רישום הרגל ב-Lorvex מתוך ווידג׳ט."
           }
         },
         "hi": {
@@ -1416,6 +1704,12 @@
             "value": "Виконує звичку Lorvex із віджета."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ویجٹ سے Lorvex عادت درج کریں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1451,10 +1745,22 @@
             "value": "Se registró “%@”."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت «%@» ثبت شد."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Habitude « %@ » validée."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההרגל \"%@\" נרשם."
           }
         },
         "hi": {
@@ -1505,6 +1811,12 @@
             "value": "Звичку «%@» виконано."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت \"%@\" درج ہو گئی۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1540,10 +1852,22 @@
             "value": "Completar hábito"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل عادت"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Valider l’habitude"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "השלמת הרגל"
           }
         },
         "hi": {
@@ -1594,6 +1918,12 @@
             "value": "Виконати звичку"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت مکمل کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1629,10 +1959,22 @@
             "value": "Tarea"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کار"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tâche"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "משימה"
           }
         },
         "hi": {
@@ -1683,6 +2025,12 @@
             "value": "Завдання"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1719,10 +2067,22 @@
             "value": "ID del hábito"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شناسه عادت"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "ID de l’habitude"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מזהה הרגל"
           }
         },
         "hi": {
@@ -1773,6 +2133,12 @@
             "value": "ID звички"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت کی آئی ڈی"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1809,10 +2175,22 @@
             "value": "Nombre del hábito"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نام عادت"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Nom de l’habitude"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שם ההרגל"
           }
         },
         "hi": {
@@ -1863,6 +2241,12 @@
             "value": "Назва звички"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت کا نام"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1899,10 +2283,22 @@
             "value": "Tarea"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کار"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tâche"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "משימה"
           }
         },
         "hi": {
@@ -1953,6 +2349,12 @@
             "value": "Завдання"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کام"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -1988,10 +2390,22 @@
             "value": "Lorvex está listo."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامه Lorvex آماده است."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex est prêt."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אפליקציית Lorvex מוכנה."
           }
         },
         "hi": {
@@ -2042,6 +2456,12 @@
             "value": "Lorvex готовий."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایپ Lorvex تیار ہے۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2078,10 +2498,22 @@
             "value": "Meditar"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراقبه"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Méditer"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מדיטציה"
           }
         },
         "hi": {
@@ -2132,6 +2564,12 @@
             "value": "Медитувати"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراقبہ"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2168,10 +2606,22 @@
             "value": "Leer"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مطالعه"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Lire"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "קריאה"
           }
         },
         "hi": {
@@ -2222,6 +2672,12 @@
             "value": "Читати"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مطالعہ"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2258,10 +2714,22 @@
             "value": "Caminar"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیاده‌روی"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Marcher"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הליכה"
           }
         },
         "hi": {
@@ -2312,6 +2780,12 @@
             "value": "Гуляти"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چہل قدمی"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2348,10 +2822,22 @@
             "value": "Beber agua"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نوشیدن آب"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Boire de l’eau"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שתיית מים"
           }
         },
         "hi": {
@@ -2402,6 +2888,12 @@
             "value": "Пити воду"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پانی پینا"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2437,10 +2929,22 @@
             "value": "Sigue de un vistazo las tareas que completas hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل کارهای امروز را با یک نگاه دنبال کنید."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Suivez d’un coup d’œil l’avancement des tâches du jour."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מבט מהיר על השלמת המשימות של היום."
           }
         },
         "hi": {
@@ -2491,6 +2995,12 @@
             "value": "Стежте за виконанням завдань на сьогодні з одного погляду."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کے کاموں کی تکمیل ایک نظر میں دیکھیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2526,10 +3036,22 @@
             "value": "Abre Lorvex para cargar."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای بارگیری، Lorvex را باز کنید."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrez Lorvex pour charger."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לפתוח את Lorvex כדי לטעון."
           }
         },
         "hi": {
@@ -2580,6 +3102,12 @@
             "value": "Відкрийте Lorvex для завантаження."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لوڈ کرنے کے لیے Lorvex کھولیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2615,10 +3143,22 @@
             "value": "Progreso diario"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیشرفت روزانه"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Progression du jour"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התקדמות יומית"
           }
         },
         "hi": {
@@ -2669,6 +3209,12 @@
             "value": "Прогрес за день"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روزانہ پیش رفت"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2704,10 +3250,22 @@
             "value": "Progreso"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیشرفت"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Progression"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התקדמות"
           }
         },
         "hi": {
@@ -2758,6 +3316,12 @@
             "value": "Прогрес"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش رفت"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2793,10 +3357,22 @@
             "value": "Progreso no disponible"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیشرفت در دسترس نیست"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Progression indisponible"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההתקדמות אינה זמינה"
           }
         },
         "hi": {
@@ -2847,6 +3423,12 @@
             "value": "Прогрес недоступний"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پیش رفت دستیاب نہیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2882,10 +3464,22 @@
             "value": "Abre Lorvex"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای تازه‌سازی، Lorvex را باز کنید"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrez Lorvex"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לפתוח את Lorvex כדי לרענן"
           }
         },
         "hi": {
@@ -2936,6 +3530,12 @@
             "value": "Відкрийте Lorvex для оновлення"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ریفریش کے لیے Lorvex کھولیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -2971,10 +3571,22 @@
             "value": "Instantánea dañada"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "داده‌های اسنپ‌شات آسیب‌دیده است"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Instantané endommagé"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "נתוני תמונת המצב פגומים"
           }
         },
         "hi": {
@@ -3025,6 +3637,12 @@
             "value": "Дані знімка пошкоджено"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسنیپ شاٹ ڈیٹا خراب ہے"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3060,10 +3678,22 @@
             "value": "Instantánea no disponible"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسنپ‌شات در دسترس نیست"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Instantané indisponible"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "תמונת המצב אינה זמינה"
           }
         },
         "hi": {
@@ -3114,6 +3744,12 @@
             "value": "Знімок недоступний"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسنیپ شاٹ دستیاب نہیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3149,10 +3785,22 @@
             "value": "Hora de actualización no disponible"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زمان به‌روزرسانی در دسترس نیست"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Heure de mise à jour indisponible"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "שעת העדכון אינה זמינה"
           }
         },
         "hi": {
@@ -3203,6 +3851,12 @@
             "value": "Час оновлення недоступний"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اپ ڈیٹ کا وقت دستیاب نہیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3238,10 +3892,22 @@
             "value": "Actualiza Lorvex"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای تازه‌سازی، Lorvex را به‌روزرسانی کنید"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Mettez Lorvex à jour"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש לעדכן את Lorvex כדי לרענן"
           }
         },
         "hi": {
@@ -3292,6 +3958,12 @@
             "value": "Оновіть Lorvex для завантаження даних"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ریفریش کے لیے Lorvex اپ ڈیٹ کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3327,10 +3999,22 @@
             "value": "Actualizado %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "به‌روزرسانی %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Mis à jour %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עודכן %@"
           }
         },
         "hi": {
@@ -3381,6 +4065,12 @@
             "value": "Оновлено %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ اپ ڈیٹ ہوا"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3416,10 +4106,22 @@
             "value": "Actualizado ahora"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همین حالا به‌روزرسانی شد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Mis à jour à l’instant"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עודכן עכשיו"
           }
         },
         "hi": {
@@ -3470,6 +4172,12 @@
             "value": "Оновлено щойно"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابھی اپ ڈیٹ ہوا"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3505,10 +4213,22 @@
             "value": "No queda nada para hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای امروز چیزی باقی نمانده است."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Plus rien pour aujourd’hui."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לא נשאר דבר להיום."
           }
         },
         "hi": {
@@ -3559,6 +4279,12 @@
             "value": "На сьогодні нічого не залишилося."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کے لیے کچھ باقی نہیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3594,10 +4320,22 @@
             "value": "Se muestra la última lista guardada."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخرین فهرست ذخیره‌شده نمایش داده می‌شود."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Affichage de la dernière liste enregistrée."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מוצגת הרשימה השמורה האחרונה."
           }
         },
         "hi": {
@@ -3648,6 +4386,12 @@
             "value": "Показано останній збережений список."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تازہ ترین محفوظ شدہ فہرست دکھائی جا رہی ہے۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3684,10 +4428,22 @@
             "value": "Bloqueada"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسدود"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bloquée"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "חסומה"
           }
         },
         "hi": {
@@ -3738,6 +4494,12 @@
             "value": "Заблоковано"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رکا ہوا"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3773,10 +4535,22 @@
             "value": "Tarea privada"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کار خصوصی"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tâche privée"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "משימה פרטית"
           }
         },
         "hi": {
@@ -3827,6 +4601,12 @@
             "value": "Приватне завдання"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نجی کام"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3862,7 +4642,19 @@
             "value": "Lorvex"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
         "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
+        "he": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex"
@@ -3916,6 +4708,12 @@
             "value": "Lorvex"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -3951,10 +4749,22 @@
             "value": "Hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امروز"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "היום"
           }
         },
         "hi": {
@@ -4005,6 +4815,12 @@
             "value": "Сьогодні"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4040,10 +4856,22 @@
             "value": "Consulta de un vistazo las tareas de hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کارهای امروز را با یک نگاه ببینید."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Consultez d’un coup d’œil les tâches du jour."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מבט מהיר על המשימות של היום."
           }
         },
         "hi": {
@@ -4094,6 +4922,12 @@
             "value": "Завдання на сьогодні з одного погляду."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج کے کام ایک نظر میں دیکھیں۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4129,10 +4963,22 @@
             "value": "Hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امروز"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "היום"
           }
         },
         "hi": {
@@ -4183,6 +5029,12 @@
             "value": "Сьогодні"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4218,10 +5070,22 @@
             "value": "Hasta %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تا %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Jusqu’à %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "עד %@"
           }
         },
         "hi": {
@@ -4272,6 +5136,12 @@
             "value": "До %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ تک"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4308,10 +5178,22 @@
             "value": "Iniciada · aprox. %@"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع‌شده · حدود %@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Démarrée · environ %@"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התחילה · בערך %@"
           }
         },
         "hi": {
@@ -4362,6 +5244,12 @@
             "value": "Розпочато · близько %@"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع شدہ · تقریباً %@"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4397,10 +5285,22 @@
             "value": "Vencida"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عقب‌افتاده"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "En retard"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "באיחור"
           }
         },
         "hi": {
@@ -4451,6 +5351,12 @@
             "value": "Прострочено"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تاخیر کا شکار"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4486,10 +5392,22 @@
             "value": "Iniciada"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع‌شده"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Démarrée"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "התחילה"
           }
         },
         "hi": {
@@ -4540,6 +5458,12 @@
             "value": "Розпочато"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروع شدہ"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4575,10 +5499,22 @@
             "value": "Responder los comentarios de diseño"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاسخ به بازخورد طراحی"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Répondre aux retours de design"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מענה למשוב העיצוב"
           }
         },
         "hi": {
@@ -4629,6 +5565,12 @@
             "value": "Відповісти на зауваження щодо дизайну"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ڈیزائن فیڈبیک کا جواب دیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4664,10 +5606,22 @@
             "value": "Renovar pasaporte"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمدید پاسپورت"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Renouveler le passeport"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "חידוש דרכון"
           }
         },
         "hi": {
@@ -4718,6 +5672,12 @@
             "value": "Замінити паспорт"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاسپورٹ کی تجدید کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4753,10 +5713,22 @@
             "value": "Reservar vuelos"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رزرو پروازها"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Réserver les vols"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הזמנת טיסות"
           }
         },
         "hi": {
@@ -4807,6 +5779,12 @@
             "value": "Забронювати авіаквитки"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پروازیں بک کریں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4842,10 +5820,22 @@
             "value": "Hoy lo más importante es revisar la especificación; los vuelos pueden esperar hasta el jueves."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرور مشخصات امروز از همه مهم‌تر است؛ رزرو پروازها می‌تواند تا پنجشنبه صبر کند."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "La relecture des spécifications compte le plus aujourd’hui ; les vols peuvent attendre jeudi."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "סקירת המפרט היא החשובה ביותר היום; עם הטיסות אפשר להמתין עד יום חמישי."
           }
         },
         "hi": {
@@ -4896,6 +5886,12 @@
             "value": "Сьогодні найважливіше перевірити специфікацію; авіаквитки можуть почекати до четверга."
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آج تصریحات کا جائزہ سب سے اہم ہے؛ پروازوں کی بکنگ جمعرات تک رک سکتی ہے۔"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4931,10 +5927,22 @@
             "value": "Todo al día"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "همه انجام شد"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tout est fait"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הכול הושלם"
           }
         },
         "hi": {
@@ -4985,6 +5993,12 @@
             "value": "Усе зроблено"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سب مکمل"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -5020,10 +6034,22 @@
             "value": "Abrir Hoy"
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باز کردن «امروز»"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvrir Aujourd’hui"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתיחת \"היום\""
           }
         },
         "hi": {
@@ -5074,6 +6100,12 @@
             "value": "Відкрити «Сьогодні»"
           }
         },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"آج\" کھولیں"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -5109,10 +6141,22 @@
             "value": "Abre Lorvex en Hoy."
           }
         },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«امروز» را در Lorvex باز می‌کند."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Ouvre Lorvex sur Aujourd’hui."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פותח את Lorvex ב\"היום\"."
           }
         },
         "hi": {
@@ -5161,6 +6205,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Відкриває «Сьогодні» в Lorvex."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"آج\" میں Lorvex کھولتا ہے۔"
           }
         },
         "zh-Hans": {
@@ -5259,6 +6309,24 @@
             }
           }
         },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی‌مانده امروز"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld باقی‌مانده امروز"
+                }
+              }
+            }
+          }
+        },
         "fr": {
           "variations": {
             "plural": {
@@ -5272,6 +6340,30 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld restantes aujourd’hui"
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרה אחת להיום"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרו %lld להיום"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "נותרו שתיים להיום"
                 }
               }
             }
@@ -5428,6 +6520,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Ще %lld"
+                }
+              }
+            }
+          }
+        },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld باقی"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "آج %lld باقی"
                 }
               }
             }

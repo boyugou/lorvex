@@ -225,7 +225,9 @@ struct CalendarMonthGridDayCell: View {
   /// task's span. An untimed task has no time line.
   private var overflowPopover: some View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-      Text(LorvexDateFormatters.string(day.date, template: "EEEEMMMMd", timeZone: calendar.timeZone))
+      Text(
+        LorvexDateFormatters.string(
+          day.date, template: "EEEEMMMMd", timeZone: calendar.timeZone, position: .leading))
         .font(LorvexDesign.Typography.primaryEmphasis)
       ForEach(day.entries) { entry in
         switch entry {

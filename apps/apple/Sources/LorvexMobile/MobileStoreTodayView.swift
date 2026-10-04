@@ -4,6 +4,7 @@ import SwiftUI
 struct MobileStoreTodayView: View {
   @Bindable var store: MobileStore
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+  @Environment(\.verticalSizeClass) private var verticalSizeClass
   @State private var editingHabit: LorvexHabit?
   @State private var editingCalendarEvent: CalendarTimelineEvent?
   /// iPhone shows the day's schedule as a sheet opened from the day strip.
@@ -18,7 +19,10 @@ struct MobileStoreTodayView: View {
 
   /// iPhone reads the Today list alone and opens the schedule as a sheet from
   /// the day strip. Regular width (iPad) keeps the list in a readable column
-  /// and stands the schedule beside it, so nothing needs opening.
+  /// and stands the schedule beside it, so nothing needs opening. A phone on
+  /// its side (a compact height) has room for little above the first task, so
+  /// it stands the brief, the date, briefing, and day strip, beside the task
+  /// list, each scrolling on its own; the strip still opens the schedule sheet.
   @ViewBuilder
   private var content: some View {
     if horizontalSizeClass == .regular {
@@ -36,7 +40,17 @@ struct MobileStoreTodayView: View {
           }
         )
         .frame(width: 380)
+        .background(alignment: .top) { skyWash }
         .accessibilityIdentifier("today.schedulePane")
+      }
+      .modifier(chrome)
+    } else if verticalSizeClass == .compact {
+      HStack(spacing: 0) {
+        todayList(.brief, openSchedule: { isShowingSchedule = true })
+          .frame(maxWidth: 360)
+        Divider()
+          .ignoresSafeArea()
+        todayList(.tasks, openSchedule: nil)
       }
       .modifier(chrome)
     } else {
@@ -51,13 +65,16 @@ struct MobileStoreTodayView: View {
       isShowingSchedule: $isShowingSchedule)
   }
 
-  private func todayList(openSchedule: (() -> Void)?) -> some View {
+  private func todayList(
+    _ portion: MobileTodayPage.Portion = .whole, openSchedule: (() -> Void)?
+  ) -> some View {
     // Per-minute, so a running time and the strip's now line follow the clock
     // without a reload.
     TimelineView(.everyMinute) { _ in
       MobileTodayPage(
         store: store,
         page: store.calmToday,
+        portion: portion,
         nowMinutes: store.nowMinutesInProductDay,
         editHabit: { habit in
           store.prepareHabitDraft(for: habit)
@@ -66,15 +83,21 @@ struct MobileStoreTodayView: View {
         openSchedule: openSchedule)
     }
     .scrollContentBackground(.hidden)
-    .background(alignment: .top) {
-      // Under the bar and, on a phone on its side, beside the cutout and the
-      // home indicator too, so the wash reaches every edge the page does.
-      if let nowMinutes = store.nowMinutesInProductDay {
-        LorvexSkyWash(nowMinutes: nowMinutes)
-          .ignoresSafeArea(edges: [.top, .horizontal])
-      }
-    }
+    .background(alignment: .top) { skyWash }
     .background(LorvexDesign.Palette.groupedBackground)
+  }
+
+  /// The time-of-day tint behind a Today pane. It runs under the bar and, on a
+  /// phone on its side, beside the cutout and the home indicator too, so the
+  /// wash reaches every edge the page does. On iPad the list and the
+  /// schedule pane each draw it over the same height, so the tint reads as
+  /// one wash across the split instead of ending at the divider.
+  @ViewBuilder
+  private var skyWash: some View {
+    if let nowMinutes = store.nowMinutesInProductDay {
+      LorvexSkyWash(nowMinutes: nowMinutes)
+        .ignoresSafeArea(edges: [.top, .horizontal])
+    }
   }
 
   #if DEBUG

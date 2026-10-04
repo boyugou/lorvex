@@ -76,12 +76,23 @@ public func lorvexClockRangeLabel(start: String, end: String?) -> String {
 }
 
 /// A `yyyy-MM-dd` product day spelled out without the year ("Tuesday,
-/// September 22"), in the user's locale; the input unchanged when it is not a
-/// day key. The day key names a calendar day, not an instant, so it is parsed
-/// and formatted in UTC and never shifts across the device timezone.
-public func lorvexDayLine(logicalDay: String) -> String {
+/// September 22"), in `locale` (the user's by default); the input unchanged
+/// when it is not a day key. The day key names a calendar day, not an
+/// instant, so it is parsed and formatted in UTC and never shifts across the
+/// device timezone.
+///
+/// `position` is where the line sits. A title or label passes `.leading`, so
+/// the weekday takes a capital in the languages that write it in lowercase
+/// ("Lunes, 21 de septiembre"); `.inline`, after other words in a sentence,
+/// keeps it lowercase.
+public func lorvexDayLine(
+  logicalDay: String, position: LorvexDayPhrase.Position = .inline,
+  locale: Locale = .autoupdatingCurrent
+) -> String {
   guard let date = LorvexDateFormatters.ymdUTC.date(from: logicalDay) else { return logicalDay }
-  var style = Date.FormatStyle(date: .complete, time: .omitted)
+  var style = Date.FormatStyle(
+    date: .complete, time: .omitted, locale: locale,
+    capitalizationContext: position.capitalizationContext)
   style.timeZone = .gmt
   return date.formatted(style.year(.omitted))
 }
@@ -90,10 +101,16 @@ public func lorvexDayLine(logicalDay: String) -> String {
 /// ``lorvexDayLine(logicalDay:)`` ("Tue, Sep 22"): the abbreviated weekday and
 /// the date without the year, in the user's locale and calendar, for a place
 /// too narrow for the spelled-out line. The input unchanged when it is not a
-/// day key.
-public func lorvexShortDayLine(logicalDay: String) -> String {
+/// day key. `position` and `locale` are as for
+/// ``lorvexDayLine(logicalDay:position:locale:)``.
+public func lorvexShortDayLine(
+  logicalDay: String, position: LorvexDayPhrase.Position = .inline,
+  locale: Locale = .autoupdatingCurrent
+) -> String {
   guard let date = LorvexDateFormatters.ymdUTC.date(from: logicalDay) else { return logicalDay }
-  var style = Date.FormatStyle(date: .abbreviated, time: .omitted)
+  var style = Date.FormatStyle(
+    date: .abbreviated, time: .omitted, locale: locale,
+    capitalizationContext: position.capitalizationContext)
   style.timeZone = .gmt
   return date.formatted(style.weekday(.abbreviated).year(.omitted))
 }

@@ -58,7 +58,9 @@ struct TaskDetailMonthCalendar: View {
 
   private var header: some View {
     HStack(spacing: 0) {
-      Text(shownMonth.formatted(.dateTime.month(.wide).year()))
+      Text(
+        shownMonth.formatted(
+          Date.FormatStyle(capitalizationContext: .beginningOfSentence).month(.wide).year()))
         .font(LorvexDesign.Typography.primaryEmphasis)
         .padding(.leading, LorvexDesign.Spacing.xs)
         .accessibilityAddTraits(.isHeader)

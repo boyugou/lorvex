@@ -103,6 +103,9 @@
 #         LORVEX_SIM_UDID    exact device UDID, overriding the name lookup
 #         LORVEX_SIM_FRESH   1 to skip the sample seed, so every route shows the
 #                            empty store a fresh install starts with
+#         LORVEX_SIM_INCREASE_CONTRAST  "enabled" to capture with the Increase
+#                            Contrast accessibility setting on; any other
+#                            value (the default) pins it off
 # Requires script/ios_sim_build.sh to have produced the .app.
 set -u
 OUT="${1:?usage: ios_sim_screenshots.sh <outdir> <light|dark> <route ...>}"
@@ -201,6 +204,9 @@ xcrun simctl ui "$UDID" appearance "$APPEARANCE" >/dev/null 2>&1
 # for captures to show what a new iPhone shows; a launch argument
 # (-UIPreferredContentSizeCategoryName) still picks another size for the app.
 xcrun simctl ui "$UDID" content_size large >/dev/null 2>&1
+# Increase Contrast is a device setting too: pin it off unless asked for, so a
+# capture taken after a contrast run does not silently keep it.
+xcrun simctl ui "$UDID" increase_contrast "${LORVEX_SIM_INCREASE_CONTRAST:-disabled}" >/dev/null 2>&1
 for ROUTE in "${ROUTES[@]}"; do
   LATER=""
   if [[ "$ROUTE" == *+* ]]; then
@@ -228,6 +234,7 @@ for ROUTE in "${ROUTES[@]}"; do
   xcrun simctl io "$UDID" screenshot "$OUT/$NAME-$APPEARANCE.png" >/dev/null 2>&1 && echo "captured $NAME $APPEARANCE"
 done
 xcrun simctl ui "$UDID" appearance light >/dev/null 2>&1
+xcrun simctl ui "$UDID" increase_contrast disabled >/dev/null 2>&1
 xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1
 xcrun simctl shutdown "$UDID" >/dev/null 2>&1
 echo "finished → $OUT (booted devices left: $(xcrun simctl list devices booted | grep -c Booted))"

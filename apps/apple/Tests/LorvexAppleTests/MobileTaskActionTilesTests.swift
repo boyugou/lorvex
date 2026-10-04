@@ -1,3 +1,4 @@
+import Foundation
 import LorvexCore
 import Testing
 
@@ -40,5 +41,31 @@ struct MobileTaskActionTilesTests {
     #expect(
       MobileTaskActionLabelFit.scale(titles: russian, size: 13, width: 20)
         == MobileTaskActionLabelFit.minimumScale)
+  }
+
+  @Test("a name wraps only when it has several words and is wider than its tile")
+  func labelWrapping() {
+    let english = ["Start", "Defer", "Someday", "Cancel"]
+    #expect(!MobileTaskActionLabelFit.wraps(titles: english, size: 13, width: 78.5))
+    // "Cancelar tarea" is two words wider than a phone's tile, so it takes a
+    // second line; a wide enough tile keeps it on one.
+    let spanish = ["Iniciar", "Aplazar", "Algún día", "Cancelar tarea"]
+    #expect(MobileTaskActionLabelFit.wraps(titles: spanish, size: 13, width: 78.5))
+    #expect(!MobileTaskActionLabelFit.wraps(titles: spanish, size: 13, width: 140))
+    // One long word never wraps, and an unmeasured row reports no wrap.
+    #expect(!MobileTaskActionLabelFit.wraps(titles: ["Когда-нибудь"], size: 13, width: 40))
+    #expect(!MobileTaskActionLabelFit.wraps(titles: spanish, size: 13, width: 0))
+  }
+
+  @Test("two lines of a name are twice the height of one, and grow with the size")
+  func labelHeight() {
+    let one = MobileTaskActionLabelFit.height(lines: 1, size: 13)
+    let two = MobileTaskActionLabelFit.height(lines: 2, size: 13)
+    // Typed, so the comparison stays between two CGFloats: `one + one` would
+    // otherwise be inferred as a Double inside `#expect`.
+    let doubled: CGFloat = one + one
+    #expect(one > 13)
+    #expect(two == doubled)
+    #expect(MobileTaskActionLabelFit.height(lines: 2, size: 20) > two)
   }
 }

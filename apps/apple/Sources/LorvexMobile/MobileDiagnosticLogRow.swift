@@ -12,6 +12,10 @@ import SwiftUI
 /// classified exception — and is the reason this row exists, so it is truncated
 /// only until tapped: tapping expands it in full and makes it selectable, which
 /// is the only way to get the text off the device and into a bug report.
+///
+/// The row is one accessibility element. Its label names the origin, the
+/// summary, and the age; the full detail is its value, spoken whether or not the
+/// row is expanded, so VoiceOver reaches the payload without a tap.
 struct MobileDiagnosticLogRow: View {
   let entry: RecentLogEntry
   let now: Date
@@ -55,6 +59,7 @@ struct MobileDiagnosticLogRow: View {
     }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)
+    .accessibilityValue(details ?? "")
     .accessibilityIdentifier("mobileDiagnostics.log.\(entry.id)")
   }
 

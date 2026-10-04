@@ -16,7 +16,9 @@ import SwiftUI
 /// in one tap. Only actions the task's status allows are shown, and a task
 /// that allows none (completed or cancelled) shows no tiles. At the
 /// accessibility text sizes the tiles wrap two to a row. The tiles' names
-/// share one size, fitted to the row by ``MobileTaskActionLabelFit``.
+/// share one size, fitted to the row by ``MobileTaskActionLabelFit``, and when
+/// any name wraps onto a second line every tile keeps room for one, so the
+/// symbols stay on one line across the row.
 ///
 /// While a task the task waits on is unfinished (`isHeldUp`), Start stays in
 /// its place but is unavailable, and the section's footer says why: the core
@@ -54,11 +56,15 @@ struct MobileTaskActionSection: View {
     let tiles = Self.tiles(for: task.status)
     if !tiles.isEmpty {
       let columns = dynamicTypeSize.isAccessibilitySize ? 2 : tiles.count
-      let labelSize =
+      let titles = tiles.map(title(for:))
+      let textWidth = MobileTaskActionLabelFit.textWidth(rowWidth: rowWidth, columns: columns)
+      let size =
         labelBaseSize
-        * MobileTaskActionLabelFit.scale(
-          titles: tiles.map(title(for:)), size: labelBaseSize,
-          width: MobileTaskActionLabelFit.textWidth(rowWidth: rowWidth, columns: columns))
+        * MobileTaskActionLabelFit.scale(titles: titles, size: labelBaseSize, width: textWidth)
+      let label = MobileTaskActionLabelStyle(
+        size: size,
+        reservesSecondLine: MobileTaskActionLabelFit.wraps(
+          titles: titles, size: size, width: textWidth))
       Section {
         LazyVGrid(
           columns: Array(
@@ -66,7 +72,7 @@ struct MobileTaskActionSection: View {
           spacing: LorvexDesign.Spacing.s
         ) {
           ForEach(tiles, id: \.self) { tile in
-            view(for: tile, labelSize: labelSize)
+            view(for: tile, label: label)
           }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
@@ -111,51 +117,51 @@ struct MobileTaskActionSection: View {
   }
 
   @ViewBuilder
-  private func view(for tile: Tile, labelSize: CGFloat) -> some View {
+  private func view(for tile: Tile, label: MobileTaskActionLabelStyle) -> some View {
     switch tile {
     case .start:
-      button(tile, "play.fill", id: "task.detail.start", labelSize: labelSize) {
+      button(tile, "play.fill", id: "task.detail.start", label: label) {
         await actions.start()
       }
       .disabled(isHeldUp)
       .accessibilityHint(isHeldUp ? Self.heldUpReason : "")
     case .pause:
-      button(tile, "pause.fill", id: "task.detail.pause", labelSize: labelSize) {
+      button(tile, "pause.fill", id: "task.detail.pause", label: label) {
         await actions.pause()
       }
     case .complete:
-      button(tile, "checkmark", id: "task.detail.completeParked", labelSize: labelSize) {
+      button(tile, "checkmark", id: "task.detail.completeParked", label: label) {
         await actions.complete()
       }
     case .deferTask:
       MobileDeferMenu(deferByDays: actions.deferByDays) {
         MobileTaskActionTile(
-          title: title(for: tile), systemImage: "clock.arrow.circlepath", labelSize: labelSize)
+          title: title(for: tile), systemImage: "clock.arrow.circlepath", label: label)
       }
       .menuStyle(.button)
       .buttonStyle(LorvexTileButtonStyle())
       .accessibilityIdentifier("task.detail.defer")
     case .someday:
-      button(tile, "moon", id: "task.detail.moveToSomeday", labelSize: labelSize) {
+      button(tile, "moon", id: "task.detail.moveToSomeday", label: label) {
         await markSomeday()
       }
     case .cancel:
       button(
-        tile, "xmark", id: "task.detail.cancel", labelSize: labelSize,
+        tile, "xmark", id: "task.detail.cancel", label: label,
         tint: LorvexDesign.Palette.destructive
       ) { await cancel() }
     }
   }
 
   private func button(
-    _ tile: Tile, _ systemImage: String, id: String, labelSize: CGFloat,
+    _ tile: Tile, _ systemImage: String, id: String, label: MobileTaskActionLabelStyle,
     tint: Color = LorvexDesign.Palette.accent, action: @escaping () async -> Void
   ) -> some View {
     Button {
       Task { await action() }
     } label: {
       MobileTaskActionTile(
-        title: title(for: tile), systemImage: systemImage, labelSize: labelSize, tint: tint)
+        title: title(for: tile), systemImage: systemImage, label: label, tint: tint)
     }
     .buttonStyle(LorvexTileButtonStyle())
     .accessibilityIdentifier(id)
@@ -197,35 +203,66 @@ enum MobileTaskActionLabelFit {
     let widest =
       titles
       .flatMap { $0.split(whereSeparator: \.isWhitespace) }
-      .map { wordWidth(String($0), size: size) }
+      .map { extent(of: String($0), size: size) }
       .max() ?? 0
     guard widest > room else { return 1 }
     return max(minimumScale, room / widest)
   }
 
-  private static func wordWidth(_ word: String, size: CGFloat) -> CGFloat {
+  /// Whether a name takes a second line: some name of several words is wider
+  /// than `width` at `size`. A name of one word never wraps (it stays whole
+  /// and shrinks), and an unmeasured (zero) width reports false.
+  static func wraps(titles: [String], size: CGFloat, width: CGFloat) -> Bool {
+    guard width > 0 else { return false }
+    let room = width - layoutAllowance
+    return titles.contains { title in
+      title.contains(where: \.isWhitespace) && extent(of: title, size: size) > room
+    }
+  }
+
+  /// The height `lines` lines of a name take at `size`.
+  static func height(lines: Int, size: CGFloat) -> CGFloat {
+    #if canImport(UIKit)
+      let lineHeight = UIFont.systemFont(ofSize: size, weight: .medium).lineHeight
+    #else
+      let font = NSFont.systemFont(ofSize: size, weight: .medium)
+      let lineHeight = font.ascender - font.descender + font.leading
+    #endif
+    return ceil(lineHeight) * CGFloat(lines)
+  }
+
+  private static func extent(of text: String, size: CGFloat) -> CGFloat {
     #if canImport(UIKit)
       let font = UIFont.systemFont(ofSize: size, weight: .medium)
     #else
       let font = NSFont.systemFont(ofSize: size, weight: .medium)
     #endif
-    return ceil((word as NSString).size(withAttributes: [.font: font]).width)
+    return ceil((text as NSString).size(withAttributes: [.font: font]).width)
   }
+}
+
+/// How a row of action tiles draws its names: the one size they share, and
+/// whether every tile keeps room for a second line because one name wraps.
+struct MobileTaskActionLabelStyle: Equatable {
+  var size: CGFloat
+  var reservesSecondLine = false
 }
 
 /// One action tile: the symbol over its name in the tile's tint, on the card
 /// surface, the full width of its grid cell. The name is drawn at
-/// `labelSize`, the size its row fits every tile's name to. A name of several
-/// words wraps between them onto a second line; a name of one word,
-/// hyphenated or not ("Когда-нибудь"), stays on one line, shrinking further
-/// only if it still does not fit at that size, rather than breaking inside
-/// the word. An unavailable tile keeps its card and draws its symbol and name
-/// in the tertiary gray, the way a contact card shows an action it can't
-/// take, so the row keeps its shape.
+/// `label.size`, the size its row fits every tile's name to. A name of several
+/// words wraps between them onto a second line, and the row then gives every
+/// name two lines of room, top aligned, so the symbols stay level
+/// (`label.reservesSecondLine`); a name of one word, hyphenated or not
+/// ("Когда-нибудь"), stays on one line, shrinking further only if it still
+/// does not fit at that size, rather than breaking inside the word. An
+/// unavailable tile keeps its card and draws its symbol and name in the
+/// tertiary gray, the way a contact card shows an action it can't take, so
+/// the row keeps its shape.
 struct MobileTaskActionTile: View {
   let title: String
   let systemImage: String
-  let labelSize: CGFloat
+  let label: MobileTaskActionLabelStyle
   var tint: Color = LorvexDesign.Palette.accent
 
   @Environment(\.isEnabled) private var isEnabled
@@ -239,10 +276,14 @@ struct MobileTaskActionTile: View {
         .frame(height: 22)
       Text(title)
         // The footnote style scaled with the text, then fitted to the row.
-        .font(.system(size: labelSize, weight: .medium))  // lorvex-design-token: allow
+        .font(.system(size: label.size, weight: .medium))  // lorvex-design-token: allow
         .lineLimit(isOneWord ? 1 : 2)
         .minimumScaleFactor(isOneWord ? 0.7 : 1)
         .multilineTextAlignment(.center)
+        .frame(
+          minHeight: label.reservesSecondLine
+            ? MobileTaskActionLabelFit.height(lines: 2, size: label.size) : nil,
+          alignment: .top)
     }
     .foregroundStyle(isEnabled ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
     .frame(maxWidth: .infinity, minHeight: 64)

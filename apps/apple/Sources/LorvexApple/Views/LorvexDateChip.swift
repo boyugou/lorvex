@@ -382,7 +382,7 @@ private struct LorvexMiniMonth: View {
   }
 
   private var monthTitle: String {
-    LorvexDateFormatters.string(visibleMonth, template: "yMMMM", timeZone: timeZone)
+    LorvexDateFormatters.string(visibleMonth, template: "yMMMM", timeZone: timeZone, position: .leading)
   }
 
   private func accessibilityLabel(for day: Date) -> String {

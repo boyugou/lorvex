@@ -175,7 +175,8 @@ struct MobileCalendarMonthView: View {
     VStack(spacing: 0) {
       MobileCalendarHeaderRow(
         title: LorvexDateFormatters.string(
-          monthStart(forOffset: monthOffset), template: "yMMMM", timeZone: calendar.timeZone),
+          monthStart(forOffset: monthOffset), template: "yMMMM", timeZone: calendar.timeZone,
+          position: .leading),
         isOnToday: monthOffset == 0 && selectedKey == store.logicalTodayString,
         goToToday: { choose(today) })
       weekdayRow

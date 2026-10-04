@@ -87,14 +87,16 @@ extension CloudSyncStatusReport {
     switch accountAvailability {
     case .available:
       if let lastPushAt {
-        return String(
-          format: String(
-            localized: "settings.cloud_sync.summary.live_last_push",
-            defaultValue: "Live sync active. Last push %@.",
-            table: "Localizable",
-            bundle: LorvexL10n.bundle
-          ),
-          cloudSyncRelativeDateString(for: lastPushAt)
+        return lorvexSingleFinalPeriod(
+          String(
+            format: String(
+              localized: "settings.cloud_sync.summary.live_last_push",
+              defaultValue: "Live sync active. Last push %@.",
+              table: "Localizable",
+              bundle: LorvexL10n.bundle
+            ),
+            cloudSyncRelativeDateString(for: lastPushAt)
+          )
         )
       }
       return String(

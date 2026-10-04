@@ -24,12 +24,29 @@ import SwiftUI
 /// schedule sheet, the Habits page), so a chevron follows their names; Done's
 /// chevron at the trailing edge folds it.
 ///
+/// A phone on its side has height for little more than the date and the
+/// briefing, so it draws the page as two lists side by side, the brief and the
+/// tasks (``Portion``), each scrolling on its own, and the first tasks are in
+/// view as the page opens.
+///
 /// The words come from ``MobileTodayCalmCopy`` and the structure from
 /// ``LorvexCalmToday``, so the facts line never disagrees with the rows
 /// beneath it.
 struct MobileTodayPage: View {
+  /// Which part of the page a list draws.
+  enum Portion {
+    /// The whole page: the brief, then the tasks, habits, and what is done.
+    case whole
+    /// The date and facts, the briefing, the day strip, and the overbooked
+    /// well: what introduces the list.
+    case brief
+    /// The tasks, habits, and what is done: the list itself.
+    case tasks
+  }
+
   @Bindable var store: MobileStore
   let page: LorvexCalmToday
+  var portion: Portion = .whole
   let nowMinutes: Int?
   let editHabit: (LorvexHabit) -> Void
   /// Opens the day's schedule from the strip; `nil` when the schedule already
@@ -37,11 +54,11 @@ struct MobileTodayPage: View {
   let openSchedule: (() -> Void)?
 
   @State private var showsFullBriefing = false
+  /// Whether the four-line limit cuts the briefing at the page's current width
+  /// and text size, which is what brings the "Show more" toggle.
+  @State private var briefingHidesText = false
   @AppStorage("today.done.collapsed") private var doneCollapsed = false
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-  /// Briefings longer than this open on four lines with a "Show more" toggle.
-  private static let briefingFoldLength = 150
 
   /// Insets for the rows drawn on the page ground rather than in a card: the
   /// header, the strip, and the well line up with the cards' edges.
@@ -50,36 +67,40 @@ struct MobileTodayPage: View {
 
   var body: some View {
     List {
-      Section {
-        groundEdge
-        Group {
-          header
-          if showsStrip {
-            stripRow
+      if portion != .tasks {
+        Section {
+          groundEdge
+          Group {
+            header
+            if showsStrip {
+              stripRow
+            }
+            if let overbooked = page.overbooked {
+              overbookedWell(overbooked)
+            }
           }
-          if let overbooked = page.overbooked {
-            overbookedWell(overbooked)
-          }
+          .listRowInsets(Self.groundInsets)
+          groundEdge
         }
-        .listRowInsets(Self.groundInsets)
-        groundEdge
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        // The header, strip, and well introduce the list under them, so the
+        // list follows closer than the gap between two cards.
+        .mobileListSectionSpacing(LorvexDesign.Spacing.m)
       }
-      .listRowBackground(Color.clear)
-      .listRowSeparator(.hidden)
-      // The header, strip, and well introduce the list under them, so the
-      // list follows closer than the gap between two cards.
-      .mobileListSectionSpacing(LorvexDesign.Spacing.m)
 
-      if !page.items.isEmpty {
-        taskSection
-      } else {
-        emptyDaySection
-      }
-      if let habits = store.habits?.habits.listed(on: store.logicalTodayString), !habits.isEmpty {
-        habitsSection(habits)
-      }
-      if !store.doneTodayTasks.isEmpty {
-        doneSection
+      if portion != .brief {
+        if !page.items.isEmpty {
+          taskSection
+        } else {
+          emptyDaySection
+        }
+        if let habits = store.habits?.habits.listed(on: store.logicalTodayString), !habits.isEmpty {
+          habitsSection(habits)
+        }
+        if !store.doneTodayTasks.isEmpty {
+          doneSection
+        }
       }
     }
     // The page opens with its own date rather than a header, so it sits just
@@ -128,10 +149,11 @@ struct MobileTodayPage: View {
   }
 
   /// The assistant's briefing in the system face, marked by the sparkles
-  /// glyph rather than italics. A long one opens on four lines.
+  /// glyph rather than italics. One that takes more than four lines at the
+  /// page's width and text size opens on four, with a toggle for the rest; a
+  /// shorter one shows in full and has no toggle.
   private func briefingView(_ text: String) -> some View {
-    let folds = text.count > Self.briefingFoldLength
-    return HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
+    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "sparkles")
         .foregroundStyle(LorvexDesign.Palette.accent)
         .accessibilityHidden(true)
@@ -139,9 +161,8 @@ struct MobileTodayPage: View {
         Text(userContent: text)
           .font(LorvexDesign.Typography.briefing)
           .foregroundStyle(.primary)
-          .lineLimit(folds && !showsFullBriefing ? 4 : nil)
-          .fixedSize(horizontal: false, vertical: true)
-        if folds {
+          .lorvexLineClamp(4, isClamped: !showsFullBriefing, hidesText: $briefingHidesText)
+        if briefingHidesText {
           Button(
             showsFullBriefing ? MobileTodayCalmCopy.briefingLess : MobileTodayCalmCopy.briefingMore
           ) {

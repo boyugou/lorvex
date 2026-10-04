@@ -10,13 +10,16 @@ import SwiftUI
 /// in a filled accent circle. A grid under the week strip turns the circle
 /// off: the strip already circles the chosen day, and a second circle right
 /// below it reads as the same date drawn twice. With `onOpenDay`, each header
-/// is a button that opens its day.
+/// is a button that opens its day. On a phone on its side (a compact height)
+/// the weekday and the date share one line, so the hours keep the height of
+/// the second.
 struct MobileCalendarColumnHeaders: View {
   let columns: [CalendarGridDay]
   let calendar: Calendar
   let gutterWidth: CGFloat
   var circlesToday = true
   var onOpenDay: ((Date) -> Void)? = nil
+  @Environment(\.verticalSizeClass) private var verticalSizeClass
 
   var body: some View {
     HStack(spacing: 0) {
@@ -42,17 +45,30 @@ struct MobileCalendarColumnHeaders: View {
 
   private func label(for day: CalendarGridDay) -> some View {
     let isToday = isToday(day.date)
-    return VStack(spacing: 2) {
-      Text(LorvexDateFormatters.string(day.date, template: "EEE", timeZone: calendar.timeZone))
+    let sidewaysPhone = verticalSizeClass == .compact
+    let circle: CGFloat = sidewaysPhone ? 24 : 28
+    let weekday = Text(LorvexDateFormatters.string(day.date, template: "EEE", timeZone: calendar.timeZone))
       .font(LorvexDesign.Typography.tertiaryText)
       .foregroundStyle(isToday ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-      Text(LorvexDateFormatters.dayNumber(day.date, timeZone: calendar.timeZone))
-        .font(LorvexDesign.Typography.secondaryText.weight(.semibold).monospacedDigit())
-        .foregroundStyle(
-          isToday ? (circlesToday ? AnyShapeStyle(.white) : AnyShapeStyle(.tint)) : AnyShapeStyle(.primary)
-        )
-        .frame(width: 28, height: 28)
-        .background { if isToday && circlesToday { Circle().fill(.tint) } }
+    let number = Text(LorvexDateFormatters.dayNumber(day.date, timeZone: calendar.timeZone))
+      .font(LorvexDesign.Typography.secondaryText.weight(.semibold).monospacedDigit())
+      .foregroundStyle(
+        isToday ? (circlesToday ? AnyShapeStyle(.white) : AnyShapeStyle(.tint)) : AnyShapeStyle(.primary)
+      )
+      .frame(width: circle, height: circle)
+      .background { if isToday && circlesToday { Circle().fill(.tint) } }
+    return Group {
+      if sidewaysPhone {
+        HStack(spacing: 4) {
+          weekday
+          number
+        }
+      } else {
+        VStack(spacing: 2) {
+          weekday
+          number
+        }
+      }
     }
     .frame(maxWidth: .infinity)
     .contentShape(Rectangle())
@@ -82,6 +98,11 @@ struct MobileCalendarAllDayStrip: View {
   /// Whether the strip, once it scrolls, has rows below the visible ones. It
   /// starts true: a strip scrolls only when its rows overflow, from the top.
   @State private var hasRowsBelow = true
+  /// The day whose column a dragged task is over, which draws a wash behind it.
+  @State private var dropTargetedDay: Date?
+  /// A column's least height, a one-line pill's: a day with nothing in it
+  /// stays a drop target the size of its cell.
+  @ScaledMetric(relativeTo: .caption) private var cellMinHeight: CGFloat = 18
 
   /// Whether any of `columns` has an all-day event or a task without a time.
   static func hasContent(_ columns: [CalendarGridDay]) -> Bool {
@@ -90,29 +111,32 @@ struct MobileCalendarAllDayStrip: View {
 
   /// The strip takes the height its rows need up to a limit, then scrolls
   /// within it, so the hours below keep their room however many tasks the day
-  /// has. While rows lie below the visible ones, the last rows fade, so a cut
-  /// row reads as "more below" rather than as the end.
+  /// has, and an empty or one-row strip leaves them all the rest. While rows
+  /// lie below the visible ones, the last rows fade, so a cut row reads as
+  /// "more below" rather than as the end.
   var body: some View {
     let hasContent = Self.hasContent(columns)
-    ViewThatFits(in: .vertical) {
-      rows(hasContent: hasContent)
-      ScrollView(.vertical) { rows(hasContent: hasContent) }
-        .onScrollGeometryChange(for: Bool.self) { scroll in
-          scroll.contentOffset.y + scroll.containerSize.height < scroll.contentSize.height - 1
-        } action: { _, hasMore in
-          hasRowsBelow = hasMore
-        }
-        .mask {
-          VStack(spacing: 0) {
-            Color.black
-            LinearGradient(
-              colors: [.black, hasRowsBelow ? .clear : .black], startPoint: .top, endPoint: .bottom
-            )
-            .frame(height: 16)
+    MobileHeightCapLayout(maxHeight: baseMaxHeight * (horizontalSizeClass == .regular ? 2 : 1)) {
+      ViewThatFits(in: .vertical) {
+        rows(hasContent: hasContent)
+        ScrollView(.vertical) { rows(hasContent: hasContent) }
+          .onScrollGeometryChange(for: Bool.self) { scroll in
+            scroll.contentOffset.y + scroll.containerSize.height < scroll.contentSize.height - 1
+          } action: { _, hasMore in
+            hasRowsBelow = hasMore
           }
-        }
+          .mask {
+            VStack(spacing: 0) {
+              Color.black
+              LinearGradient(
+                colors: [.black, hasRowsBelow ? .clear : .black], startPoint: .top,
+                endPoint: .bottom
+              )
+              .frame(height: 16)
+            }
+          }
+      }
     }
-    .frame(maxHeight: baseMaxHeight * (horizontalSizeClass == .regular ? 2 : 1))
   }
 
   private func rows(hasContent: Bool) -> some View {
@@ -163,15 +187,24 @@ struct MobileCalendarAllDayStrip: View {
             allDayTaskPill(task)
           }
         }
+        .frame(maxWidth: .infinity, minHeight: cellMinHeight, alignment: .topLeading)
+        .padding(.horizontal, 3)
+        .contentShape(Rectangle())
+        .background {
+          if dropTargetedDay == day.date {
+            RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
+              .fill(LorvexDesign.Palette.accent.opacity(0.14))
+          }
+        }
         .dropDestination(for: LorvexTaskRef.self) { refs, _ in
           guard !refs.isEmpty else { return false }
           for ref in refs {
             onDropTask(ref, day.date)
           }
           return true
+        } isTargeted: { targeted in
+          dropTargetedDay = targeted ? day.date : (dropTargetedDay == day.date ? nil : dropTargetedDay)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 3)
       }
     }
     .padding(.vertical, hasContent ? 5 : 2)

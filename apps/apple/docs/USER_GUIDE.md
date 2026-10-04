@@ -654,6 +654,493 @@ before a colon or a comma ("ज़रूरी: रिपोर्ट भेज�
 ordinary adjective and stays in the title ("ज़रूरी दवाइयाँ ख़रीदना", "रिपोर्ट
 भेजें ज़रूरी है").
 
+Persian words are read when Persian is among your device's preferred languages,
+in any regional variant (Iranian and Afghan spellings). A word counts only as a
+whole word in Persian letters, so "امروزی" (modern) and "فردایی" hold no day,
+and the zero-width non-joiner that Persian writes inside a word keeps it whole
+("پس‌فردا", "دوشنبه‌ها"). A compound may be typed with a space, a non-joiner,
+or nothing between its words ("سه‌شنبه", "سه شنبه", "سهشنبه"; "قبل از" and
+"قبل‌از"). Vowel signs and tatweel are optional, the Persian and Arabic digits
+("۳" and "٣") read as the digits they stand for, and the letters that are
+spelled in more than one way are read as one (أ, إ, آ as ا, ي and ى as ی, ك as
+ک, ة as ه), so "آینده" and "اینده" are the same word; the title keeps what you
+typed. Persian written in Latin letters ("farda sobh") is not read. English is
+read beside Persian, so "3pm", "17:30", and "30 min" work as they do alone, and
+Persian does not write a clock time with the letter h, so "2h" stays a length.
+
+A written date is counted in the Solar Hijri calendar, which Persian speakers
+date by ("۱۲ مهر", "۳۱ شهریور"), or in the Gregorian one when it names a
+Gregorian month ("۵ مارس", "۵ ژانویه"; the Dari spellings "جنوری", "اپریل", and
+"اگست" work too). A date without a year means the next such day, counted in its
+own calendar, and a year written after it ("۱۲ مهر ۱۴۰۵", "۵ مارس ۲۰۲۷") must
+not be past or more than ten years ahead. A date needs its day number before
+the month name: a month alone ("مهر"), a date written in digits only
+("۱۴۰۵/۷/۱۲"), a date the calendar lacks ("۳۱ مهر", or "۳۰ اسفند" in a year
+that is not a leap year), the lunar Hijri months ("رمضان"), and the Afghan names
+of the Solar months ("حمل", "ثور") stay in the title. Weeks start on Monday, as
+the app's weeks do in every language: "هفته آینده سه‌شنبه" is the Tuesday of the
+week that begins on the coming Monday, and "هفته آینده شنبه" the Saturday that
+closes it.
+
+Only the future is read. Persian has one word for each of today, tomorrow, and
+the day after ("امروز", "فردا", "پس‌فردا"), so "دیروز" and "پریروز" name no day,
+and a weekday that "گذشته", "پیش", "قبل", or "قبلی" follows is the past ("پنجشنبه
+گذشته", "جمعه قبل") and stays in the title. So does "شب جمعه", the night before
+Friday, and the names that hold a weekday ("نماز جمعه", "بازار جمعه",
+"چهارشنبه‌سوری"). A weekday alone is the coming one, a week ahead when it names
+today; "این" or "همین" makes it this week's, today when it names today; "آینده",
+"آتی", "بعدی", or "بعد" after it makes it the coming one ("پنجشنبه آینده",
+"پنجشنبه‌ی بعد", but "پنجشنبه بعد از ظهر" is the afternoon); and a week named
+before or after it makes it that week's ("هفته آینده سه‌شنبه", "سه‌شنبه هفته
+آینده", "پنجشنبه این هفته"). A part of the day before or after a day belongs to
+it ("صبح پنجشنبه", "جمعه عصر", "فردا شب"; the night only after it: "پنجشنبه
+شب"). A count of days, weeks, or months ahead is a day ("۳ روز دیگر", "سه روز
+دیگه", "۲ هفته دیگر", "یک ماه دیگر", "بعد از ۳ روز"; months are counted on the
+Solar Hijri calendar), but not when "از" follows it ("۳ روز بعد از جلسه"), nor
+"مانده" or "باقی" ("۳ روز دیگر مانده"), and a count with no word for ahead
+("سفر ۵ روز") stays in the title. The weekend and the working days are not
+read, because which days they are depends on the country.
+
+Persian says a clock time with "ساعت": "ساعت ۵", "ساعت ۵:۳۰", "ساعت ۱۷", "ساعت
+پنج", "ساعت ۵ و نیم" (5:30), "ساعت ۵ و ربع" (5:15), "ساعت ۵ و ده دقیقه" (5:10),
+"ساعت ۶ ربع کم" (5:45), "یک ربع به ۶" (5:45), and "ده دقیقه به ۶" (5:50). An
+hour from 1 to 6 with no part of the day is in the afternoon ("ساعت ۵" is 5 PM)
+unless it is written with a zero ("ساعت ۰۶:۳۰"), and a part of the day sets the
+hour: "صبح" (also "سحر", "بامداد", "قبل از ظهر") is the morning, "ظهر" is noon at
+12 and the afternoon from 1 to 6 ("بعد از ظهر" is the afternoon), "عصر" and
+"غروب" are the evening, and "شب" runs past midnight, so "ساعت ۲ شب" is 02:00 on
+the next day and "ساعت ۱۰ شب" is 22:00. "در نیمه‌شب" is the midnight that ends
+the day. A part of the day beside the day phrase sets a bare hour too: "فردا صبح
+ساعت ۶" is 06:00, and "هر شب ساعت ۱۰" is 22:00. An hour with a part of the day
+needs no "ساعت" ("۸ شب", "۹ صبح", "۸ و نیم شب", "۵ بعدازظهر"), except that the
+night names no hour from 1 to 5 without it, since "۳ شب" is three nights. A bare
+number is never an hour ("جلسه ۳", "جلسه با ۳ نفر"), "۵ و نیم" is 5:30 only at
+the end of the line ("۲ و نیم کیلو" counts kilograms), "ساعت ۱۲ صبح" and "ساعت
+۱۲ عصر" are not read, and a clock time that names a bound ("تا ساعت ۵", "قبل از
+۱۸:۰۰", "بعد از ساعت ۵:۳۰", "قبل از ساعت ۵ عصر") stays in the title.
+
+| Detail | Persian |
+|---|---|
+| Day | امروز, امشب, فردا, فردا صبح, پس‌فردا, جمعه, این جمعه, پنجشنبه آینده, هفته آینده, ۳ روز دیگر, یک هفته دیگر |
+| Date | ۱۲ مهر, ۱۲ مهر ۱۴۰۵, پنجشنبه ۱۲ مهر, ۵ مارس, ۵ مارس ۲۰۲۷ |
+| Date range | از ۳ تا ۵ آبان, ۳ تا ۵ آبان, از ۳ آبان تا ۵ آذر, بین ۳ و ۵ آبان, ۳-۵ آبان, از دوشنبه تا چهارشنبه |
+| Due day | تا جمعه, قبل از فردا, تا ۱۲ مهر, حداکثر پنجشنبه, تا آخر روز, مهلت: جمعه, ددلاین ۱۲ مهر |
+| Time | ساعت ۵, ساعت ۱۷:۳۰, ساعت ۵ عصر, ساعت ۹ صبح, ساعت ۵ و نیم, ساعت ۶ ربع کم, یک ربع به ۶, ۸ شب, در نیمه‌شب; از ساعت ۲ تا ۴, از ۹ صبح تا ۵ بعدازظهر, بین ساعت ۲ و ۴, ساعت ۲-۴ |
+| Repeat | هر روز, هر صبح, هر هفته, هر دوشنبه, هر دوشنبه و پنجشنبه, دوشنبه‌ها, روزهای دوشنبه و چهارشنبه, هر دو روز, یک روز در میان, یک دوشنبه در میان, هر ماه, هر سال, هفته‌ای یک بار; روزانه at the start or after a comma |
+| Length | ۲۰ دقیقه, ۲ ساعت, ۱٫۵ ساعت, ۲ ساعت و نیم, نیم ساعت, ربع ساعت, یک ربع, به مدت ۲ ساعت |
+| Priority | اولویت بالا, اولویت متوسط, اولویت پایین, فوری (at the end, or "فوری:" at the start) |
+
+A date range plans the task on its first day and makes it due on its last:
+"از ۳ تا ۵ آبان" and "از ۳ آبان تا ۵ آذر" run from 3 Aban to 5 Aban and from 3
+Aban to 5 Azar, and a month written once serves both days. "الی" may stand for
+"تا", "بین ... و" and a dash join the days too, and a year may follow the end.
+The end must come after the start ("از ۵ تا ۳ آبان" stays in the title), and
+the end names a month, so "از ۳ تا ۵" is never a range of days. "و" joins the
+days only after "بین" ("۳ و ۵ آبان" names two days and stays in the title
+whole), and a range whose sides name different calendars ("از ۳ مهر تا ۵ مارس")
+stays in the title whole too. As in English, a number alone before a spaced
+dash belongs to the title ("اسپرینت ۱۲ - ۲۰ مهر" is planned for 20 Mehr), while
+"۱۲-۲۰ مهر" is a range. Two bare hours are not a time range either ("از ۱۴ تا ۱۶
+صفحه" stays in the title): a range needs "ساعت", a part of the day, or a colon
+("از ساعت ۲ تا ۴", "از ۲ تا ۴ عصر", "۱۴:۰۰ تا ۱۶:۰۰"). A span of weekdays does
+the same as a range of dates: "از دوشنبه تا چهارشنبه" plans the task on the
+coming Monday and makes it due on the Wednesday after it, and a span runs
+through the week's end ("از جمعه تا دوشنبه"). The spans that are a week of work
+("از دوشنبه تا جمعه", "از شنبه تا چهارشنبه", "از شنبه تا پنجشنبه") stay in the
+title whole, since each is a week of work as often as it is a span of days, and
+so does a span in the past ("تا چهارشنبه گذشته") or from a day to itself.
+
+A due day follows "تا", "قبل از", "پیش از", "حداکثر", or "نهایتاً" ("تا جمعه",
+"قبل از فردا", "تا ۱۲ مهر", "تا آخر روز"), or a label ("مهلت", "ددلاین",
+"سررسید", "موعد", "آخرین مهلت", "تاریخ سررسید": "مهلت: جمعه"). A day after "بعد
+از", "پس از", or "از" is neither a deadline nor a planned day ("بعد از جمعه"
+stays in the title), and neither is a day that a stretch word precedes ("هر",
+"همه", "تمام", "طی", "ظرف", "آخر", "اول"). The day before a clock deadline is
+the due day, and the clock stays in the title: "گزارش جمعه تا ساعت ۵" is due
+Friday.
+
+"هر" with a day, week, month, year, weekday, or part of the day repeats the
+task: "هر روز", "هر دو روز", "هر ۳ هفته", "هر ماه", "هر سال", "هر دوشنبه و
+پنجشنبه". A part of the day after "هر" belongs to the repeat ("هر صبح" and "هر
+شب" repeat every day) and gives an hour beside it its half of the day: "هر شب
+ساعت ۱۰" repeats every day at 22:00. "یک روز در میان" is every other day, "یک
+دوشنبه در میان" every other week on Monday, "هفته‌ای یک بار", "ماهی یک بار",
+and "روزی یک بار" once per week, month, and day, and "دو هفته یک بار" every two
+weeks. The plural weekday ("دوشنبه‌ها") and "روزهای" with weekdays ("روزهای
+دوشنبه و چهارشنبه") repeat too, as does a span of weekdays beside "هر",
+"روزهای", or a word for every day ("هر روز از دوشنبه تا جمعه", "روزهای شنبه تا
+چهارشنبه"), which runs through the week's end. The adverbs "روزانه", "هر
+روزه", "هفتگی", "ماهانه", and "سالانه" repeat only at the start of the line
+("روزانه ۳۰ دقیقه ورزش") or at its end after a comma ("ورزش، روزانه"); after the
+task's noun they are its adjective, and "گزارش روزانه" and "جلسه هفتگی" stay in
+the title. A part of the day before a weekday ("هر شب جمعه") is that day's
+night and is not read, an interval shorter than a day ("هر ۲ ساعت") is not a
+repeat and stays in the title whole, and "هر دو" before a noun that is not a
+unit ("هر دو کتاب") means "both". "هر ماه" beside a day of the month ("اجاره
+هر ماه ۵ام") stays in the title, since Persian speakers count the days of a
+month in the Solar Hijri calendar, whose months are not the Gregorian months a
+monthly repeat keeps.
+
+A length says that it is one: "۲۰ دقیقه", "۲ ساعت", "۱٫۵ ساعت", "۲ ساعت و ۳۰
+دقیقه", "دو و نیم ساعت", "نیم ساعت", "ربع ساعت", "یک ربع", "سه ربع", "بیست و پنج
+دقیقه", "جلسه ۲ ساعته", and "۳۰ دقیقه‌ای", each maybe after "به مدت", "مدت",
+"حدود", "تقریباً", "نزدیک", or "برای". An amount after "بعد از", "پس از", "قبل از",
+"پیش از", "کمتر از", "بیش از", "حداقل", "حداکثر", "هر", "تا", "طی", "ظرف", "در",
+"روزی", or "ماهی", and one before "پیش", "بعد", "دیگر", "باقی", or "در روز", names
+a moment, an interval, a rate, or a bound, not a length ("بعد از ۱۵ دقیقه", "هر ۲
+ساعت", "روزی ۲ ساعت", "۲ ساعت پیش", "۱۰ دقیقه دیگر"), and neither is a side of a
+range of amounts ("۲ تا ۳ ساعت"). "ساعت" and "دقیقه" alone are nouns (a watch, a
+moment), and a number before a counted noun, a price, or a percent sign is never
+a time, a length, or a day ("۵ نفر", "۵۰ هزار تومان", "۲۰٪").
+
+"اولویت بالا" (also "اولویت بسیار بالا", "اولویت خیلی بالا", "اولویت زیاد"),
+"اولویت متوسط" (also "معمولی", "نرمال"), and "اولویت پایین" (also "کم",
+"کمتر") set the priority, each maybe with a colon ("اولویت: بالا") or after "با"
+("با اولویت بالا"). "فوری" is a priority word only at the end of the line, or at
+its start before a colon or a comma ("فوری: گزارش را بفرست"); anywhere else it is
+an ordinary adjective and stays in the title ("کار فوری دارم", "تماس فوری با
+مادر").
+
+Urdu words are read when Urdu is among your device's preferred languages, in
+any regional variant (ur-PK and ur-IN). A word counts only as a whole word in
+Urdu letters, so "کلاس" (a class) and "آجکل" (nowadays) hold no day, and the
+Urdu full stop and comma end a word ("رپورٹ بھیجیں کل۔"). The Arabic-Indic and
+Extended Arabic-Indic digits ("٣" and "۳") read as the digits they stand for,
+and vowel signs and tatweel are optional. The letters that Urdu and Arabic
+keyboards spell in more than one way are read as one (the alefs with hamza or
+madda as ا, ي and ى as ی, ك as ک, every heh as ہ, and ں as ن), so "بھی" and
+"بهي" are the same word; the bari ye ے stays a different letter from the choti
+yeh ی, since "ہے" (is) and "ہی" (only) are different words. A compound may be
+typed with a space, a zero-width non-joiner, or nothing between its words ("سہ
+پہر", "سہ‌پہر", "سہپہر"); the title keeps what you typed. Urdu written in Latin
+letters ("kal subah 9 baje") is not read. English is read beside Urdu, so
+"3pm", "17:30", and "30 min" work as they do alone, and Urdu does not write a
+clock time with the letter h, so "2h" stays a length.
+
+"کل" means both tomorrow and yesterday, and "پرسوں" both the day after tomorrow
+and the day before yesterday. Lorvex reads "کل" as tomorrow and "پرسوں" as the
+day after tomorrow, and never reads a past day, since the app itself writes the
+past day "گزشتہ کل". A day stays in the title when its line says that it is
+past: a past-tense word anywhere in the line ("کل میٹنگ تھی", "میں کل گیا
+تھا", "کل میٹنگ ہوئی"), or "گزشتہ", "گزرا", "پچھلا", or "پہلا" just before it
+("گزشتہ کل", "پچھلے جمعہ", "پہلے جمعہ"). A past statement without such a word
+("کل میں نے فون کیا") is read as tomorrow. "کل" is also the word for "total":
+it is no day before "رقم", "تعداد", "ملا", and the like ("کل رقم"), and "آج
+کل" is "nowadays". "میں" after a day is never read as a postposition, since it
+is also "I": "آج میں رپورٹ لکھوں گا" reads only "آج".
+
+Urdu says a clock time with "بجے" after the hour: "5 بجے", "5:30 بجے", "ساڑھے 5
+بجے" (5:30), "سوا 5 بجے" (5:15), "پونے 6 بجے" (5:45), "ڈیڑھ بجے" (1:30), and
+"ڈھائی بجے" (2:30). The hour may be a number word before "بجے" ("پانچ بجے"),
+while a number word anywhere else is a count ("تین لوگ"). An hour from 1 to 6
+with no part of the day is in the afternoon ("5 بجے" is 5 PM) unless it is
+written with a zero ("06:30 بجے"), and a part of the day sets the hour: "صبح"
+(also "سویرے" and "تڑکے") is the morning, "دوپہر" and "سہ پہر" are noon at 12
+and the afternoon from 1 to 6, "شام" is the evening, and "رات" runs past
+midnight, so "رات 2 بجے" is 02:00 on the next day and "رات 10 بجے" is 22:00.
+"آدھی رات" and "نصف شب" are the midnight that ends the day. The part of the
+day may stand before the hour ("صبح 9 بجے", "شام کو 5 بجے", "رات کے 10 بجے",
+"صبح ٹھیک 6 بجے") or after "بجے" ("9 بجے صبح"). An hour with no part of the day
+of its own takes the one part of the day the line names elsewhere: in its day
+phrase ("کل صبح میٹنگ 6 بجے" is 06:00), after "ہر" ("ہر صبح 6 بجے ورزش"), or in
+a noun ("رات کا کھانا 8 بجے" is 20:00, "صبح کی سیر 6 بجے" is 06:00). A line
+that names two different parts of the day leaves the hour as it reads alone,
+and an hour written on the 24-hour clock ("20:00 بجے", "06:30 بجے") is read as
+written. A clock time that names a bound ("5 بجے تک", "شام 5 بجے سے پہلے", "5
+بجے کے بعد") stays in the title, and so does "5 بج کر 30 منٹ".
+
+| Detail | Urdu |
+|---|---|
+| Day | آج, آج رات, کل, کل صبح, پرسوں, جمعہ کو, اس جمعہ, اگلے پیر, اگلے ہفتے, ویک اینڈ, 3 دن بعد, ایک ہفتے بعد |
+| Date | 5 مئی, 5 مئی 2027, تاریخ 5 مئی, 1 جنوری, 12 دسمبر, 5 اکتوبر |
+| Date range | 3 سے 5 مارچ, 3 مارچ سے 5 مارچ تک, 30 جنوری سے 2 فروری تک, 3 تا 5 مارچ, 3-5 مارچ, پیر سے بدھ تک |
+| Due day | جمعہ تک, کل شام سے پہلے, 5 مئی تک, آخری تاریخ: 5 مئی, ڈیڈ لائن جمعہ |
+| Time | 5 بجے, 5:30 بجے, ساڑھے 5 بجے, پونے 6 بجے, ڈیڑھ بجے, پانچ بجے, صبح 9 بجے, شام کو 5 بجے, رات کے 10 بجے, 9 بجے صبح, آدھی رات, شام 5:30; 3 سے 5 بجے, صبح 9 سے 11 بجے تک, 3 بجے سے 5 بجے تک, 14:00 سے 16:00 |
+| Repeat | ہر دن, ہر روز, روزانہ, ہر صبح, ہر پیر, ہر پیر اور جمعرات, ہر دوسرے پیر, ہر ہفتے, ہر 2 دن, ہر مہینے, ہر مہینے کی 5 تاریخ, ہر سال, ہر ویک اینڈ, ہر کام کے دن, ہر پیر سے جمعہ |
+| Length | 30 منٹ, 2 گھنٹے, 1.5 گھنٹے, 1 گھنٹہ 30 منٹ, آدھا گھنٹہ, پون گھنٹہ, ڈیڑھ گھنٹہ, دو گھنٹے, 30 منٹ کے لیے |
+| Priority | اعلیٰ ترجیح, معمولی ترجیح, کم ترجیح, ترجیح: اعلیٰ, فوری (at the end, or "فوری:" at the start) |
+
+A written date is counted in the Gregorian calendar and needs its day number
+before the month name (جنوری, فروری, مارچ, اپریل, مئی, جون, جولائی, اگست,
+ستمبر, اکتوبر, نومبر, دسمبر, in the spellings people type: "ایپریل", "جولای",
+"اگسٹ" work too). A date without a year means the next such day, a year
+written after it ("5 مئی 2027", "5 مئی 2028ء") must not be past or more than
+ten years ahead, and a label ("تاریخ 5 مئی", "بتاریخ: 5 مئی") or a weekday
+("پیر، 5 اکتوبر") may go with it. A month alone ("چھٹی مئی میں"), a month
+before its day ("مئی 5"), a date written in digits ("5/10"), a date the
+calendar lacks ("31 اپریل"), a day of the month alone ("5 تاریخ کو"), and the
+months of the Islamic and the Indian calendars ("محرم", "رمضان", "چیت") stay in
+the title. A date range plans the task on its first day and makes it due on its
+last: "3 سے 5 مارچ" and "3 مارچ سے 5 مارچ تک" run from March 3 to March 5, and
+a month written once serves both days. "تا" and a dash join the days too, "سے
+لے کر" may open the end, "کے بیچ" or "کے درمیان" may close it ("3 اور 5 مارچ کے
+درمیان"), and a year may follow the end. The end must come after the start ("5
+سے 3 مارچ" stays in the title), and the end names a month, so "3 سے 5" is never
+a range of days. "3 اور 5 مارچ" with no "کے بیچ" or "کے درمیان" names two days
+and stays in the title whole. As in English, a number alone before a spaced
+dash belongs to the title ("Sprint 12 - 20 مارچ" is planned for March 20),
+while "12-20 مارچ" is a range. A range in the past tense, or one that a
+possessive follows ("5 سے 8 مئی تک کی چھٹی"), stays in the title whole, since
+it may be an event the task only prepares for. "3 سے 5 بجے" is a time range:
+its end carries "بجے", so "3 سے 5" alone stays in the title. A span of
+weekdays does the same as a range of dates: "پیر سے بدھ تک" plans the task on
+the coming Monday and makes it due on the Wednesday after it, while "پیر سے
+جمعہ" and "پیر سے ہفتہ" alone stay in the title, since each is a week of work
+as often as it is a span of days.
+
+A weekday is a day by its name: پیر (or سوموار), منگل, بدھ, جمعرات, جمعہ (or
+جمعے), ہفتہ or سنیچر, and اتوار. A weekday alone is the coming one, a week ahead
+when it names today; "اس" makes it this week's, "اگلے" makes it next week's
+(weeks start on Monday, as the app's weeks do), and "آئندہ" or "آنے والے" the
+coming one. "کو", "کے دن", "کے روز", and "بروز" go with the name ("جمعہ کو",
+"جمعہ کے روز", "بروز جمعہ"). "ہفتہ" and "ہفتے" also mean "the week", so they name
+Saturday only beside a mark of a day ("ہفتے کو", "ہفتے کے دن", "بروز ہفتہ",
+"ہفتے کی شام", "ہفتہ اور اتوار") or before a deadline word ("ہفتے تک");
+anywhere else ("اس ہفتے", "ہفتہ وار", "ہفتہ بھر") they stay in the title, while
+"سنیچر" names Saturday anywhere. The names that hold a weekday ("پیر صاحب",
+"پیر میں درد", "بدھ مت", "جمعہ بازار", "جمعہ مبارک", "نماز جمعہ") are no day.
+A day that a possessive follows is an attribute of a noun, not a plan: "پیر کی
+میٹنگ" and "کل کی رپورٹ" stay in the title, and "کل رات کا کھانا" reads only
+"کل". A part of the day after a day belongs to it ("کل صبح", "جمعہ کی شام"),
+the afternoon also as "دوپہر بعد" ("کل دوپہر بعد"), and the emphatic "ہی" or
+"بھی" goes with a day, its postposition, or a deadline word ("آج ہی", "پیر کو
+ہی", "جمعہ تک ہی"). A list of weekdays with no "ہر" ("پیر اور جمعرات کو") stays
+in the title, since one planned day cannot carry the list. The weekend ("ویک
+اینڈ", "اختتام ہفتہ", "ہفتے کے آخر", "ہفتہ اور اتوار") is the coming Saturday,
+today on a Saturday or a Sunday, and the Saturday a week later after "اگلے".
+"اس ہفتے" alone names no single day and stays in the title. A count of days,
+weeks, or months ahead is a day ("3 دن بعد", "تین دن بعد", "2 ہفتے بعد", "ایک
+ہفتے کے بعد", "1 مہینے بعد"; months are counted on the calendar), but "رپورٹ 3
+دن میں", "3 دن پہلے", and "میٹنگ کے 3 دن بعد" name no day.
+
+A due day follows "تک", "سے پہلے", or "سے قبل" ("جمعہ تک", "کل شام سے پہلے", "5
+مئی تک", "اگلے ہفتے تک"), or a label ("آخری تاریخ", "مقررہ تاریخ", "حتمی تاریخ",
+"ڈیڈ لائن": "آخری تاریخ: 5 مئی", "ڈیڈ لائن جمعہ"). The day before a clock
+deadline is the due day, and the clock stays in the title: "رپورٹ جمعہ شام 5
+بجے تک" is due Friday. "آج تک" (so far) and "آج سے پہلے" are idioms, not
+deadlines, and a deadline that a possessive follows ("جمعہ تک کی رپورٹ") stays
+in the title.
+
+"ہر" with a day, week, month, year, weekday, or part of the day repeats the
+task, and so do "روزانہ", "ہفتہ وار", "ماہانہ", "ماہوار", and "سالانہ" (each maybe
+with "کی بنیاد پر" after it). "ہر پیر اور جمعرات" repeats on both days, "ہر دوسرے
+پیر" every other week, "ہر ویک اینڈ" on Saturday and Sunday, and "ہر کام کے دن"
+on the working days, as does a span of weekdays beside "ہر" or a word for every
+day ("ہر پیر سے جمعہ", "پیر سے جمعہ ہر روز"). "ہر ہفتے" is every week and "ہر
+ہفتے کو" every Saturday. "ہر مہینے کی 5 تاریخ" repeats on the 5th, while a day of
+the month alone ("5 تاریخ کو") is not read. A part of the day after "ہر" belongs
+to the repeat and gives an hour beside it its half of the day: "ہر صبح 6 بجے
+ورزش" repeats every day at 06:00. An interval shorter than a day ("ہر 2
+گھنٹے") is not a repeat and stays in the title whole, and so does a cadence word
+that a possessive follows, since it describes a noun ("روزانہ کی رپورٹ", "ہر
+سال کا جائزہ", "ہر ہفتے کی میٹنگ"). Urdu puts an adjective before its noun, so
+the adverbs read as repeats elsewhere in the line ("روزانہ دوا لیں"). A bare
+"روز" is no repeat word ("جمعہ کے روز" names a day), and "روزہ", "روزگار", and
+"روز مرہ" are other words.
+
+A length says that it is one: "30 منٹ", "2 گھنٹے", "1.5 گھنٹے", "1 گھنٹہ 30
+منٹ", "آدھا گھنٹہ", "پون گھنٹہ" (45 minutes), "سوا گھنٹہ" (75 minutes), "ڈیڑھ
+گھنٹہ", "ڈھائی گھنٹے", "ساڑھے 3 گھنٹے", and "بیس منٹ", each maybe after
+"تقریباً", "قریباً", or "لگ بھگ", and with the word that goes with it ("30 منٹ
+کے لیے", "30 منٹ کی میٹنگ"). An amount before "بعد", "پہلے", or "میں", or after
+"ہر", "کم از کم", or "دن میں", names a moment, an interval, or a bound, not a
+length ("2 گھنٹے بعد", "ہر 2 گھنٹے", "دن میں 2 گھنٹے"), and neither is a side of a
+range of amounts ("2 سے 3 گھنٹے"); "گھنٹہ" alone is no length ("گھنٹہ بھر"). A
+number before a counted noun, a price, or a percent sign is never a time, a
+length, or a day ("3 لوگوں کے ساتھ میٹنگ", "500 روپے", "20%").
+
+"اعلیٰ", "معمولی", and "کم" before "ترجیح" set the priority, and so do the same
+words after it ("ترجیح: اعلیٰ"); "درمیانی" and "عام" are the middle priority,
+"نچلی" the low one, and "زیادہ" the high one, and "کے ساتھ", "پر", or "سے" may
+follow ("اعلیٰ ترجیح کے ساتھ بھیجیں"). "فوری", "ضروری", "انتہائی ضروری", "فوراً",
+and "ارجنٹ" are priority words only at the end of the line, or at its start
+before a colon or a comma ("فوری: رپورٹ بھیجیں"); anywhere else "ضروری" is an
+ordinary adjective and stays in the title ("ضروری دوائیں خریدنا", "رپورٹ بھیجیں
+ضروری ہے"). The Urdu full stop that follows a detail stays with the title:
+"امی کو فون کرنا کل۔" gives the title "امی کو فون کرنا۔".
+
+Hebrew words are read when Hebrew is among your device's preferred languages,
+in any regional variant. A word counts only as a whole word in Hebrew letters,
+so "מחרוזת" (a string) and "היומן" (the diary) hold no day. Hebrew attaches its
+one-letter prepositions and the article to the word they go with ("למחר",
+"בשבוע", "השבוע", "בבוקר"): each word is read with the prefixes it takes, and a
+word with another prefix ("ומחר", "שמחר") stays in the title. The final letters
+(ך ם ן ף ץ) are read as the regular ones, the maqaf and every dash as the
+hyphen ("ב־17:30" is "ב-17:30"), every apostrophe as the geresh, and every
+double quote as the gershayim, so "אחה״צ" (afternoon) typed with a straight or a
+curly double quote is the same word. Niqqud is optional on any letter, and the
+title keeps what you typed. A word with two usual spellings is read in both
+("שתיים" and "שתים", "צהריים" and "צהרים", "מרץ" and "מרס"). Hebrew written in
+Latin letters ("machar") and Hebrew numerals ("י״ב") are not read. English is
+read beside Hebrew, so "3pm", "17:30", and "30 min" work as they do alone, and
+Hebrew does not write a clock time with the letter h, so "2h" stays a length.
+
+Weeks start on Monday, as the app's weeks do in every language, and the weekend
+is Saturday and Sunday. Israel's week starts on Sunday and its weekend is Friday
+and Saturday, so the phrases that depend on which days make up the week are left
+in the title: "כל יום עבודה", "בימי עבודה", and "ימי חול" (working days), and a
+span from Sunday to Thursday or Friday, or from Monday to Friday or Saturday,
+with no "כל" before it ("מיום ראשון עד יום חמישי"), since each is a week of work
+as often as it is a span of days.
+
+Only the future is read. A line in the past tense (a form of "היה": "היה",
+"הייתה", "היו", "הייתי", "היינו") or one that says "אתמול", "שלשום", or "אמש"
+holds no day to plan ("היום הייתה פגישה"), except "מחר", "מחרתיים", and "בעוד"
+with a count, which cannot be past. A weekday that "שעבר", "הקודם", "האחרון", or
+"שחלף" follows is the past one ("ביום שני שעבר") and stays in the title, and
+"היום" before the article and an adjective is "the day", not today ("היום
+הראשון"). A day that "של" (of), "כל" (every), or a bound ("לפני", "אחרי", "מאז")
+stands before is no plan ("הדוח של מחר" stays in the title), and neither is a
+day after a noun in the construct state, which ends in ת ("ארוחת הערב", "ישיבת
+יום שני").
+
+A weekday is a day by its name: ראשון, שני, שלישי, רביעי, חמישי, שישי, and שבת.
+It takes "יום" before it ("יום שני", "ביום שני", "ליום שני"), an attached ב
+("בשלישי"), or, after "יום", a letter from א׳ to ו׳ or ש׳ ("יום ג׳"). The names
+are ordinary words too (שני is "second" and "two"), so a name with neither "יום"
+nor an attached ב is no day; "בשני" is a day only at the end of the line or
+before a part of the day, a time, or "הבא"; and no name is a day before a month
+or "החודש" ("בראשון לחודש", "בראשון במאי"), in the city "ראשון לציון", or before
+"מתוך" ("בשישי מתוך עשרה" is the sixth of ten). A weekday alone is the coming
+one, a full week ahead when it names today; "הזה", "השבוע", and "בשבוע הזה" make
+it this week's, today when it names today; "הבא" and "הקרוב" make it the coming
+one; and "בשבוע הבא" makes it next week's, so "בשבוע הבא ביום רביעי" is the
+Wednesday of the week that begins on the coming Monday. A list of weekdays with
+no "כל" ("ביום שני וחמישי", "בשישי ובשבת") stays in the title, since one planned
+day cannot carry the list.
+
+A part of the day after a day belongs to it ("מחר בבוקר", "היום אחר הצהריים",
+"ביום שלישי בערב"), and "הערב", "הלילה", and "הבוקר" are today. A count of
+days, weeks, or months ahead is a day ("בעוד 3 ימים", "בעוד שלושה שבועות",
+"בעוד יומיים", "בעוד שבוע", "בעוד חודש"; months are counted on the calendar),
+but "בעוד שעה" (in an hour) names no day. "בשבוע הבא" alone is seven days
+ahead. The weekend ("סוף השבוע", "סוף שבוע", "סופ״ש", each maybe with ב or ל and
+with "הבא", "הקרוב", or "הזה") is the coming Saturday, today on a Saturday or a
+Sunday, and the Saturday a week later after "הבא".
+
+Hebrew says a clock time with "בשעה" or "ב-" before the hour: "בשעה 5", "בשעה
+17:30", "ב-17:30", "בשעה 5.30", "בשלוש וחצי" (3:30), "בשעה 3 ורבע" (3:15), "ברבע
+לשש" (5:45), "בשעה 4 פחות רבע" (3:45), and "בשעה 3 ו-10 דקות" (3:10). The hour
+is digits or a word from "אחת" to "שתים עשרה" in the feminine, since "שעה" is
+feminine ("שלוש", "חמש", "שתיים"). A bare number is no time, because "ב-5 ימים"
+counts things: after "שעה" the number alone is enough, and after "ב-" it needs a
+colon, a fraction word, "רבע ל", or a part of the day ("ב-9 בבוקר"), so "ב-5" is
+left in the title. An hour in words needs a fraction word, "רבע ל", or a part of
+the day too ("בחמש אחר הצהריים"), so "בחמש" alone is left in the title as well.
+An hour from 1 to 6 with no part of the day anywhere in the line is in the
+afternoon ("בשעה 5" is 17:00, but "בשעה 7" is 07:00) unless it is written with a
+zero ("בשעה 06:30"), and a part of the day sets the hour: "בבוקר" (also "לפנות
+בוקר") is the morning, "בצהריים" and "אחר הצהריים" ("אחה״צ") are noon at 12 and
+the afternoon from 1 to 6, "בערב" is the evening, and "בלילה" runs past
+midnight, so "בשעה 8 בלילה" is 20:00, "בשעה 2 בלילה" is 02:00 on the next day,
+and "בשעה 12 בלילה" and "בחצות" are 00:00 on the next day.
+
+An hour with no part of the day of its own takes the one part of the day the
+line names elsewhere: in its day phrase ("מחר בבוקר פגישה בשעה 6" is 06:00),
+after "כל" ("כל בוקר בשעה 6"), or in a noun ("ארוחת ערב בשעה 8" is 20:00). A line
+that names two different parts of the day leaves the hour as it reads alone, and
+an hour on the 24-hour clock ("בשעה 17:30", "בשעה 17") is read as written.
+"בערך", "בסביבות", "בדיוק", and "בקירוב" may go with a time ("בערך בשעה 5", "בשעה
+5 בדיוק"). A time range plans the task from its start for as long as the range
+lasts: "מ-9 עד 11 בבוקר", "בין 14:00 ל-16:00", "משעה 9 עד 11", "בשעה 17:30 עד
+18:30", and "18:00-19:30". Two bare numbers are a range only with "משעה" or
+"בשעות" before them, a colon, or a part of the day, so "מ-14 עד 16 עמודים" stays
+in the title. A clock time that names a bound ("עד 17:00", "לפני 18:00", "אחרי
+18:00", "עד השעה 5", "עד 5 בערב", "לא יאוחר מ-17:00") stays in the title, and so
+does a number before a percent sign, a price, or a counted noun ("ב-5 וחצי ק״מ").
+
+| Detail | Hebrew |
+|---|---|
+| Day | היום, הערב, מחר, מחר בבוקר, מחרתיים, ביום שני, ביום שני הבא, בשבוע הבא ביום רביעי, בשבוע הבא, סוף השבוע, בעוד 3 ימים, בעוד שבועיים |
+| Date | 5 במרץ, ב-5 במרץ, 5 במרץ 2027, בתאריך 5 במרץ, ביום שני 5 באוקטובר |
+| Date range | מ-3 עד 5 במרץ, בין 3 ל-5 במרץ, 3-5 במרץ, מ-30 בינואר עד 2 בפברואר, מיום שני עד יום רביעי |
+| Due day | עד יום שישי, עד מחר, עד ה-5 במרץ, לפני יום שישי, לא יאוחר מיום שלישי, מועד אחרון: יום חמישי, דדליין מחר |
+| Time | בשעה 5, בשעה 17:30, ב-17:30, ב-9 בבוקר, בשלוש וחצי, בשעה 3 ורבע, ברבע לשש, בחמש אחר הצהריים, בשעה 8 בלילה, בחצות; מ-9 עד 11 בבוקר, בין 14:00 ל-16:00, 18:00-19:30 |
+| Repeat | כל יום, מדי יום, כל יומיים, כל 3 ימים, כל שבוע, כל חודש, כל חודש ב-5, כל שנה, כל יום שני, כל שני וחמישי, כל יום ראשון עד חמישי, כל סוף שבוע, כל בוקר, אחת לשבוע, פעם ב-3 חודשים, יום כן יום לא |
+| Length | 30 דקות, שעתיים, 1.5 שעות, שעה ו-30 דקות, חצי שעה, רבע שעה, שלושת רבעי שעה, שעה וחצי, שלוש שעות, עשרים דקות, ריצה של 30 דקות |
+| Priority | עדיפות גבוהה, עדיפות בינונית, עדיפות נמוכה, עדיפות: גבוהה, דחוף (at the end, or "דחוף:" at the start) |
+
+A written date is counted in the Gregorian calendar and needs its day number
+before the month name: ינואר, פברואר, מרץ (or מרס), אפריל, מאי, יוני, יולי, אוגוסט,
+ספטמבר, אוקטובר, נובמבר, and דצמבר, each maybe with ב ("5 במרץ"). The day may
+carry ב or ה ("ב-5 במרץ", "ה-5 במרץ"), a label ("בתאריך 5 במרץ") or a weekday
+("ביום שני, 5 באוקטובר") may go with it, a date without a year means the next
+such day, and a year written after it ("5 במרץ 2027") must not be past or more
+than ten years ahead. A month alone, a date written in digits ("5.3", "5/3"), a
+date the calendar lacks ("31 באפריל"), and the months of the Hebrew calendar
+("תשרי", "ניסן") stay in the title.
+
+A date range plans the task on its first day and makes it due on its last: "מ-3
+עד 5 במרץ", "מה-3 ועד ה-5 במרץ", "בין 3 ל-5 במרץ", and "3-5 במרץ" run from March
+3 to March 5, and "מ-30 בינואר עד 2 בפברואר" names both months. A day written
+without its month takes the month of the end, a year may follow the end, and the
+end must come after the start ("מ-5 עד 3 במרץ" stays in the title whole). The end
+names a month, so "3 עד 5" is never a range of days. "ב-3 ו-5 במרץ" (two days
+joined by "ו-" with no "בין") names two days and stays in the title whole, and
+so does a range in the past tense. A range names both the planned day and the
+due day, so another day in the same line stays in the title. As in English, a
+number alone before a spaced dash belongs to the title ("ספרינט 12 - 20 במרץ" is
+planned for March 20), while "ספרינט 12-20 במרץ" is a range. A span of weekdays
+does the same as a range of dates: "מיום שני עד יום רביעי", "משני עד רביעי",
+"בין יום שני ליום רביעי", and "מיום ב׳ עד ד׳" plan the task on the coming
+Monday and make it due on the Wednesday after it. The spans that are a week of
+work (Sunday to Thursday or Friday, Monday to Friday or Saturday) and a span from
+a day to itself stay in the title.
+
+A due day follows "עד" ("עד יום שישי", "עד מחר", "עד ה-5 במרץ", "עד השבוע הבא",
+"עד סוף היום"), "לפני" or "לא יאוחר מ" with a weekday or a date ("לפני יום שישי",
+"לא יאוחר מיום שלישי"), or a label ("מועד אחרון", "תאריך יעד", "דדליין": "מועד
+אחרון: יום חמישי", "דדליין מחר"), and a part of the day after it goes with it
+("עד מחר בבוקר"). The day before a clock deadline is the due day, and the clock
+stays in the title: "עד יום שישי בשעה 17:00" is due Friday. "עד היום" (so far),
+"עד הבוקר", "עד שני" (which may be "until the second"), "עד סוף השבוע" and "עד
+סוף החודש" (the end of the working week as often as the weekend), and "לפני
+מחר" are not read, and neither is "לפני שבת", which means before the Sabbath
+begins on Friday ("לפני יום שבת" and "עד שבת" are read).
+
+"כל" and "מדי" with a day, week, month, year, weekday, or part of the day repeat
+the task: "כל יום", "מדי יום", "כל שבוע", "כל חודש", "כל שנה", and the intervals
+"כל יומיים", "כל שבועיים", "כל 3 ימים", and "כל שלושה שבועות". So do "אחת
+לשבוע", "פעם בחודש", "פעם ב-3 חודשים", "יום כן יום לא" (every second day), "שבוע
+כן שבוע לא", and "על בסיס יומי" ("על בסיס שבועי", "חודשי", and "שנתי" too). A
+weekday repeats every week ("כל יום שני"), a list repeats on each of its days
+("כל שני וחמישי", "כל ב׳ וד׳", "בימי שני וחמישי", "כל שבוע ביום שני"), a span of
+weekdays after "כל" or "בימי" holds the days it names ("כל יום ראשון עד חמישי",
+"בימים א׳-ה׳"), and "כל סוף שבוע" and "כל סופ״ש" repeat on Saturday and Sunday.
+"כל חודש ב-5" and "ב-5 לכל חודש" repeat on the 5th of each month. A part of the
+day after "כל" ("כל בוקר", "כל ערב", "כל לילה", "כל יום בבוקר") repeats every day
+and gives an hour beside it its half of the day: "כל בוקר בשעה 6" repeats every
+day at 06:00.
+
+An interval shorter than a day ("כל שעתיים"), "כל הבוקר" (all morning), "כל ערב
+חג" (a holiday's eve), "כל יום ראשון בחודש" (one Sunday of the month), "כל בוקר
+ובערב" (twice a day), and "כל" with a compound that holds "יום" ("כל יום
+הולדת") are no repeat and stay in the title whole. The adjectives "יומי",
+"שבועי", "חודשי", and "שנתי" are not read ("דוח שבועי"), because they follow
+their noun as a title's own words do; only "על בסיס" gives them a repeat. The
+working-day phrases "כל יום עבודה", "בימי עבודה", and "ימי חול" stay whole too.
+
+A length says that it is one: "30 דקות", "2 שעות", "1.5 שעות", "3 שעות ו-20
+דקות", "שעה ו-30 דקות", "חצי שעה", "רבע שעה", "שלושת רבעי שעה" (45 minutes),
+"שעה וחצי", "שעתיים", "שעתיים וחצי", "שלוש שעות", "עשרים דקות", "שעה אחת", "30
+דק׳", and "3 שע׳", each maybe after "בערך", "כ-", "למשך", "במשך", "ל-", "של",
+"בן", or "בת" ("ריצה של 30 דקות", "סרט בן שעתיים"). "שעה" and "דקה" alone are
+lengths only after one of those words ("בערך שעה", "למשך שעה"). An amount after
+"בעוד", "עוד", "תוך", "כל", "עד", "לפני", "אחרי", "לפחות", "מ-", or "ב-", or before
+"לפני", "אחרי", "ביום", "בשבוע", "בחודש", or "מאז", names a moment, an interval, a
+bound, or a rate, not a length ("בעוד 30 דקות", "30 דקות ביום", "30 דקות לפני
+הפגישה"), and neither is a side of a range of amounts ("2-3 שעות", "בין 2 ל-3
+שעות"); each stays in the title whole. "ריצה 30 דקות כל יום" is a length of 30
+minutes and a daily repeat.
+
+"עדיפות גבוהה" is high priority, "עדיפות בינונית" (or "רגילה") the middle one,
+and "עדיפות נמוכה" the low one, each also with "ב" before "עדיפות", after a colon
+("עדיפות: גבוהה"), and with "מאוד". "דחוף", "דחופה", "בהול", and "בדחיפות",
+maybe with "מאוד" or "ביותר", are high priority only at the end of the line, or
+at its start before a colon or a comma ("דחוף: להגיש דוח"); anywhere else "דחוף"
+is an ordinary adjective and stays in the title ("דחוף לקנות חלב"). "חשוב" is
+not a priority word.
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline

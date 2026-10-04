@@ -212,7 +212,8 @@ struct CalendarEventInspector: View {
   /// parse it through the shared current-tz `ymd` formatter.
   static func dateLabel(_ ymd: String) -> String {
     guard let date = LorvexDateFormatters.ymd.date(from: ymd) else { return ymd }
-    return LorvexDateFormatters.string(date, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent)
+    return LorvexDateFormatters.string(
+      date, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent, position: .leading)
   }
 
   /// The days `event` takes time on: one day ("Friday, October 2"), or the
@@ -225,7 +226,8 @@ struct CalendarEventInspector: View {
       let last = LorvexDateFormatters.ymd.date(from: lastDay)
     else { return dateLabel(event.startDate) }
     return LorvexDateFormatters.range(
-      from: first, to: last, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent)
+      from: first, to: last, template: "EEEEMMMMd", timeZone: .autoupdatingCurrent,
+      position: .leading)
   }
 
   private var whenTitle: String {

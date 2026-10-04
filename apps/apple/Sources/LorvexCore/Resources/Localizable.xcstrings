@@ -53,6 +53,12 @@
             "value": "नियत %@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jatuh tempo %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -69,6 +75,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기한은 %@"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dijangka %@"
           }
         },
         "nl": {
@@ -111,6 +123,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقررہ تاریخ: %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "đến hạn %@"
           }
         },
         "zh-Hans": {
@@ -179,6 +197,12 @@
             "value": "अतिदेय %@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "terlewat %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -195,6 +219,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기한 초과: %@"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lewat %@"
           }
         },
         "nl": {
@@ -237,6 +267,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تاخیر کا شکار: %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "quá hạn %@"
           }
         },
         "zh-Hans": {
@@ -305,6 +341,12 @@
             "value": "दोहराया जाता है"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "berulang"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -321,6 +363,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "반복"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "berulang"
           }
         },
         "nl": {
@@ -363,6 +411,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "دہرایا جاتا ہے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lặp lại"
           }
         },
         "zh-Hans": {
@@ -431,6 +485,12 @@
             "value": "%@ तक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hingga %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -447,6 +507,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@까지"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sehingga %@"
           }
         },
         "nl": {
@@ -489,6 +555,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ تک"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đến %@"
           }
         },
         "zh-Hans": {
@@ -557,6 +629,12 @@
             "value": "कैलेंडर इवेंट"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acara Kalender"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -573,6 +651,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "캘린더 이벤트"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peristiwa Kalendar"
           }
         },
         "nl": {
@@ -615,6 +699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کیلنڈر ایونٹس"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sự kiện lịch"
           }
         },
         "zh-Hans": {
@@ -683,6 +773,12 @@
             "value": "दैनिक ब्रीफ़िंग"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ringkasan Harian"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -699,6 +795,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "일일 브리핑"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taklimat Harian"
           }
         },
         "nl": {
@@ -741,6 +843,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "روزانہ بریفنگز"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản tóm tắt hàng ngày"
           }
         },
         "zh-Hans": {
@@ -809,6 +917,12 @@
             "value": "दैनिक समीक्षाएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinjauan Harian"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -825,6 +939,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "일일 회고"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semakan Harian"
           }
         },
         "nl": {
@@ -867,6 +987,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "روزانہ جائزے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tổng kết hàng ngày"
           }
         },
         "zh-Hans": {
@@ -935,6 +1061,12 @@
             "value": "आदतें"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kebiasaan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -951,6 +1083,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabiat"
           }
         },
         "nl": {
@@ -993,6 +1131,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "عادات"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thói quen"
           }
         },
         "zh-Hans": {
@@ -1061,6 +1205,12 @@
             "value": "सूचियाँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daftar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1077,6 +1227,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "목록"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senarai"
           }
         },
         "nl": {
@@ -1119,6 +1275,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "فہرستیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danh sách"
           }
         },
         "zh-Hans": {
@@ -1187,6 +1349,12 @@
             "value": "मेमोरी"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memori"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1203,6 +1371,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "메모리"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memori"
           }
         },
         "nl": {
@@ -1245,6 +1419,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حافظہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bộ nhớ"
           }
         },
         "zh-Hans": {
@@ -1313,6 +1493,12 @@
             "value": "सेटिंग्ज़"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preferensi"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1329,6 +1515,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "환경설정"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seting"
           }
         },
         "nl": {
@@ -1371,6 +1563,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ترجیحات"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tùy chọn"
           }
         },
         "zh-Hans": {
@@ -1439,6 +1637,12 @@
             "value": "टैग"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1455,6 +1659,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "태그"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
           }
         },
         "nl": {
@@ -1497,6 +1707,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ٹیگز"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thẻ"
           }
         },
         "zh-Hans": {
@@ -1565,6 +1781,12 @@
             "value": "कार्य–इवेंट लिंक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tautan Tugas–Acara"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1581,6 +1803,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일-이벤트 연결"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pautan Tugas–Peristiwa"
           }
         },
         "nl": {
@@ -1623,6 +1851,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کام–ایونٹ لنکس"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liên kết nhiệm vụ–sự kiện"
           }
         },
         "zh-Hans": {
@@ -1691,6 +1925,12 @@
             "value": "कार्य"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1707,6 +1947,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas"
           }
         },
         "nl": {
@@ -1749,6 +1995,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کام"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ"
           }
         },
         "zh-Hans": {
@@ -1817,6 +2069,12 @@
             "value": "कैलेंडर"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1833,6 +2091,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "캘린더"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalendar"
           }
         },
         "nl": {
@@ -1875,6 +2139,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کیلنڈر"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lịch"
           }
         },
         "zh-Hans": {
@@ -1943,6 +2213,12 @@
             "value": "प्लानिंग"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perencanaan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -1959,6 +2235,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "계획"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perancangan"
           }
         },
         "nl": {
@@ -2001,6 +2283,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "منصوبہ بندی"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lập kế hoạch"
           }
         },
         "zh-Hans": {
@@ -2069,6 +2357,12 @@
             "value": "समीक्षाएँ और असिस्टेंट"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinjauan & Asisten"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2085,6 +2379,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "회고 및 어시스턴트"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semakan & Pembantu AI"
           }
         },
         "nl": {
@@ -2127,6 +2427,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "جائزے اور اسسٹنٹ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tổng kết & trợ lý"
           }
         },
         "zh-Hans": {
@@ -2195,6 +2501,12 @@
             "value": "सेटिंग्ज़"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pengaturan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2211,6 +2523,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "설정"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seting"
           }
         },
         "nl": {
@@ -2253,6 +2571,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ترتیبات"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cài đặt"
           }
         },
         "zh-Hans": {
@@ -2321,6 +2645,12 @@
             "value": "चेकलिस्ट"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "daftar centang"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2337,6 +2667,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "체크리스트"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "senarai semak"
           }
         },
         "nl": {
@@ -2379,6 +2715,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "چیک لسٹ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "checklist"
           }
         },
         "zh-Hans": {
@@ -2447,6 +2789,12 @@
             "value": "निर्भरताएँ"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dependensi"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2463,6 +2811,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "의존 관계"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kebergantungan"
           }
         },
         "nl": {
@@ -2505,6 +2859,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "انحصارات"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phụ thuộc"
           }
         },
         "zh-Hans": {
@@ -2573,6 +2933,12 @@
             "value": "इतिहास"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "riwayat"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2589,6 +2955,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기록"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sejarah"
           }
         },
         "nl": {
@@ -2631,6 +3003,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تاریخچہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lịch sử"
           }
         },
         "zh-Hans": {
@@ -2699,6 +3077,12 @@
             "value": "सूची"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "daftar"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2715,6 +3099,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "목록"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "senarai"
           }
         },
         "nl": {
@@ -2757,6 +3147,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "فہرست"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "danh sách"
           }
         },
         "zh-Hans": {
@@ -2825,6 +3221,12 @@
             "value": "नियोजित समय"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waktu yang direncanakan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2841,6 +3243,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "예정 시간"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "masa yang dirancang"
           }
         },
         "nl": {
@@ -2883,6 +3291,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "منصوبہ بند وقت"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "giờ đã lên kế hoạch"
           }
         },
         "zh-Hans": {
@@ -2951,6 +3365,12 @@
             "value": "दोहराने का नियम"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aturan pengulangan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -2967,6 +3387,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "반복 규칙"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "peraturan perulangan"
           }
         },
         "nl": {
@@ -3009,6 +3435,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تکرار کا قاعدہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "quy tắc lặp lại"
           }
         },
         "zh-Hans": {
@@ -3077,6 +3509,12 @@
             "value": "रिमाइंडर"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pengingat"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -3093,6 +3531,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "알림"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "peringatan"
           }
         },
         "nl": {
@@ -3135,6 +3579,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یاد دہانیاں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lời nhắc"
           }
         },
         "zh-Hans": {
@@ -3203,6 +3653,12 @@
             "value": "स्थिति"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -3219,6 +3675,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "상태"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "status"
           }
         },
         "nl": {
@@ -3261,6 +3723,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "حیثیت"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "trạng thái"
           }
         },
         "zh-Hans": {
@@ -3455,6 +3923,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld diimpor"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -3483,6 +3957,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개 가져옴"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld diimport"
           }
         },
         "nl": {
@@ -3651,6 +4131,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã nhập %lld"
           }
         },
         "zh-Hans": {
@@ -3925,6 +4411,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld dilewati"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -3963,6 +4455,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@, %2$lld개 건너뜀"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld dilangkau"
           }
         },
         "nl": {
@@ -4203,6 +4701,12 @@
             }
           }
         },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, đã bỏ qua %2$lld"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -4269,6 +4773,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -4282,6 +4792,12 @@
           }
         },
         "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ms": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -4324,6 +4840,12 @@
           }
         },
         "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "vi": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -4521,6 +5043,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld rekaman diimpor"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -4549,6 +5077,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "가져온 항목 %lld개"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld rekod diimport"
           }
         },
         "nl": {
@@ -4717,6 +5251,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã nhập %lld bản ghi"
           }
         },
         "zh-Hans": {
@@ -4997,6 +5537,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld sudah ada"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -5035,6 +5581,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@, 이미 있는 항목 %2$lld개"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld sudah wujud"
           }
         },
         "nl": {
@@ -5275,6 +5827,12 @@
             }
           }
         },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld đã có sẵn"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -5341,6 +5899,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -5354,6 +5918,12 @@
           }
         },
         "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ms": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -5396,6 +5966,12 @@
           }
         },
         "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "vi": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -5593,6 +6169,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dan %lld lainnya…"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -5621,6 +6203,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "외 %lld개…"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dan %lld lagi…"
           }
         },
         "nl": {
@@ -5789,6 +6377,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "và %lld mục khác…"
           }
         },
         "zh-Hans": {
@@ -5857,6 +6451,12 @@
             "value": "इंपोर्ट नहीं हुए:"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak diimpor:"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -5873,6 +6473,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "가져오지 못한 항목:"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak diimport:"
           }
         },
         "nl": {
@@ -5915,6 +6521,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "امپورٹ نہیں ہوئے:"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không nhập được:"
           }
         },
         "zh-Hans": {
@@ -5983,6 +6595,12 @@
             "value": "“%@”"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -5996,6 +6614,12 @@
           }
         },
         "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
+          }
+        },
+        "ms": {
           "stringUnit": {
             "state": "translated",
             "value": "“%@”"
@@ -6041,6 +6665,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "\"%@\""
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
           }
         },
         "zh-Hans": {
@@ -6109,6 +6739,12 @@
             "value": "इन विवरणों के बिना रीस्टोर हुए:"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipulihkan tanpa detail berikut:"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -6125,6 +6761,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "다음 세부 정보 없이 복원됨:"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dipulihkan tanpa butiran berikut:"
           }
         },
         "nl": {
@@ -6167,6 +6809,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ان تفصیلات کے بغیر بحال ہوئے:"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã khôi phục nhưng thiếu các chi tiết sau:"
           }
         },
         "zh-Hans": {
@@ -6235,6 +6883,12 @@
             "value": "नियत तारीख़ के बाद"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "setelah jatuh tempo"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -6251,6 +6905,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기한 이후"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "selepas tarikh jangka"
           }
         },
         "nl": {
@@ -6293,6 +6953,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقررہ تاریخ کے بعد"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sau hạn chót"
           }
         },
         "zh-Hans": {
@@ -6487,6 +7153,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hari lalu"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -6515,6 +7187,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld일 전"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hari lalu"
           }
         },
         "nl": {
@@ -6683,6 +7361,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ngày trước"
           }
         },
         "zh-Hans": {
@@ -6883,6 +7567,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "terlambat %lld hari"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -6911,6 +7601,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld일 지연"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lewat %lld hari"
           }
         },
         "nl": {
@@ -7081,6 +7777,12 @@
             }
           }
         },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "trễ %lld ngày"
+          }
+        },
         "zh-Hans": {
           "variations": {
             "plural": {
@@ -7153,6 +7855,12 @@
             "value": "उसी दिन"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pada hari yang sama"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7169,6 +7877,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "같은 날"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pada hari yang sama"
           }
         },
         "nl": {
@@ -7211,6 +7925,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اسی دن"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cùng ngày"
           }
         },
         "zh-Hans": {
@@ -7279,6 +7999,12 @@
             "value": "आज"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hari ini"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7295,6 +8021,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hari ini"
           }
         },
         "nl": {
@@ -7337,6 +8069,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آج"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôm nay"
           }
         },
         "zh-Hans": {
@@ -7405,6 +8143,12 @@
             "value": "आज"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hari ini"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7421,6 +8165,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hari ini"
           }
         },
         "nl": {
@@ -7463,6 +8213,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آج"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hôm nay"
           }
         },
         "zh-Hans": {
@@ -7531,6 +8287,12 @@
             "value": "कल"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Besok"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7547,6 +8309,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "내일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esok"
           }
         },
         "nl": {
@@ -7589,6 +8357,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آئندہ کل"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ngày mai"
           }
         },
         "zh-Hans": {
@@ -7657,6 +8431,12 @@
             "value": "कल"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "besok"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7673,6 +8453,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "내일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esok"
           }
         },
         "nl": {
@@ -7715,6 +8501,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آئندہ کل"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ngày mai"
           }
         },
         "zh-Hans": {
@@ -7783,6 +8575,12 @@
             "value": "बीता कल"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kemarin"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7799,6 +8597,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "어제"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semalam"
           }
         },
         "nl": {
@@ -7841,6 +8645,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "گزشتہ کل"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hôm qua"
           }
         },
         "zh-Hans": {
@@ -7909,6 +8719,12 @@
             "value": "बीते कल"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kemarin"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -7925,6 +8741,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "어제"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "semalam"
           }
         },
         "nl": {
@@ -7967,6 +8789,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "گزشتہ کل"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hôm qua"
           }
         },
         "zh-Hans": {
@@ -8035,6 +8863,12 @@
             "value": "यह डेटाबेस Lorvex के नए संस्करण में बना था। इसे खोलने के लिए कृपया Lorvex अपडेट करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basis data ini dibuat oleh versi Lorvex yang lebih baru. Perbarui Lorvex untuk membukanya."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8051,6 +8885,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 데이터베이스는 더 새로운 버전의 Lorvex에서 만들어졌습니다. 열려면 Lorvex를 업데이트하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pangkalan data ini dicipta oleh versi Lorvex yang lebih baharu. Sila kemas kini Lorvex untuk membukanya."
           }
         },
         "nl": {
@@ -8093,6 +8933,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ ڈیٹابیس Lorvex کے نئے ورژن سے بنایا گیا تھا۔ اسے کھولنے کے لیے براہ کرم Lorvex اپ ڈیٹ کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cơ sở dữ liệu này được tạo bởi phiên bản Lorvex mới hơn. Hãy cập nhật Lorvex để mở."
           }
         },
         "zh-Hans": {
@@ -8161,6 +9007,12 @@
             "value": "कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ada yang salah. Coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8177,6 +9029,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "문제가 발생했습니다. 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masalah telah berlaku. Sila cuba lagi."
           }
         },
         "nl": {
@@ -8219,6 +9077,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã xảy ra sự cố. Hãy thử lại."
           }
         },
         "zh-Hans": {
@@ -8287,6 +9151,12 @@
             "value": "वह आइटम अब मौजूद नहीं है।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item itu sudah tidak ada."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8303,6 +9173,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "해당 항목이 더 이상 존재하지 않습니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item itu sudah tidak wujud."
           }
         },
         "nl": {
@@ -8345,6 +9221,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "وہ آئٹم اب موجود نہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mục đó không còn tồn tại."
           }
         },
         "zh-Hans": {
@@ -8413,6 +9295,12 @@
             "value": "उस दिन यह समय मौजूद नहीं है, क्योंकि डेलाइट सेविंग टाइम के लिए घड़ियाँ आगे बढ़ जाती हैं। इससे पहले या बाद का समय चुनें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waktu ini tidak ada pada hari tersebut karena jam dimajukan untuk waktu musim panas. Pilih waktu yang lebih awal atau lebih lambat."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8429,6 +9317,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이날은 서머타임 시작으로 시계가 앞당겨져 이 시간이 없습니다. 더 이르거나 늦은 시간을 선택하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masa ini tidak wujud pada hari tersebut kerana jam dimajukan untuk waktu jimat siang. Pilih masa yang lebih awal atau lebih lewat."
           }
         },
         "nl": {
@@ -8471,6 +9365,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ وقت اس دن موجود نہیں کیونکہ ڈے لائٹ سیونگ ٹائم کے لیے گھڑیاں آگے بڑھ جاتی ہیں۔ پہلے یا بعد کا کوئی وقت منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giờ này không tồn tại vào ngày đó vì đồng hồ được chỉnh sớm lên cho giờ mùa hè. Hãy chọn giờ sớm hơn hoặc muộn hơn."
           }
         },
         "zh-Hans": {
@@ -8539,6 +9439,12 @@
             "value": "यह कार्य पहले ही पूरा हो चुका है। रद्द करने से पहले इसे फिर से खोलें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini sudah selesai. Buka kembali sebelum membatalkannya."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8555,6 +9461,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일은 이미 완료되었습니다. 취소하려면 먼저 다시 여세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini sudah selesai. Buka semula tugas ini sebelum membatalkannya."
           }
         },
         "nl": {
@@ -8597,6 +9509,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ کام پہلے ہی مکمل ہو چکا ہے۔ منسوخ کرنے سے پہلے اسے دوبارہ کھولیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ này đã xong. Hãy mở lại trước khi hủy."
           }
         },
         "zh-Hans": {
@@ -8665,6 +9583,12 @@
             "value": "यह कार्य रद्द कर दिया गया है। पूरा करने से पहले इसे फिर से खोलें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini telah dibatalkan. Buka kembali sebelum menyelesaikannya."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8681,6 +9605,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일은 취소되었습니다. 완료하려면 먼저 다시 여세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini telah dibatalkan. Buka semula tugas ini sebelum menyelesaikannya."
           }
         },
         "nl": {
@@ -8723,6 +9653,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ کام منسوخ کر دیا گیا تھا۔ مکمل کرنے سے پہلے اسے دوبارہ کھولیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ này đã bị hủy. Hãy mở lại trước khi hoàn thành."
           }
         },
         "zh-Hans": {
@@ -8791,6 +9727,12 @@
             "value": "इस आदत के लिए उस समय पहले से एक रिमाइंडर है। कोई दूसरा समय चुनें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kebiasaan ini sudah memiliki pengingat pada waktu tersebut. Pilih waktu lain."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8807,6 +9749,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 습관에는 그 시간에 이미 알림이 있습니다. 다른 시간을 선택하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabiat ini sudah mempunyai peringatan pada masa itu. Pilih masa lain."
           }
         },
         "nl": {
@@ -8849,6 +9797,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اس عادت کی اس وقت پہلے سے یاد دہانی موجود ہے۔ کوئی اور وقت منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thói quen này đã có lời nhắc vào giờ đó. Hãy chọn giờ khác."
           }
         },
         "zh-Hans": {
@@ -8917,6 +9871,12 @@
             "value": "इस नाम की मेमोरी पहले से मौजूद है। कोई दूसरा नाम चुनें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memori dengan nama ini sudah ada. Pilih nama lain."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -8933,6 +9893,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "같은 이름의 메모리가 이미 있습니다. 다른 이름을 선택하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memori dengan nama ini sudah wujud. Pilih nama lain."
           }
         },
         "nl": {
@@ -8975,6 +9941,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اس نام کا حافظہ اندراج پہلے سے موجود ہے۔ کوئی اور نام منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã có mục ghi nhớ với tên này. Hãy chọn tên khác."
           }
         },
         "zh-Hans": {
@@ -9043,6 +10015,12 @@
             "value": "ये नोट बहुत लंबे हैं। इन्हें छोटा करके फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catatan ini terlalu panjang. Persingkat lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9059,6 +10037,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "메모가 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nota ini terlalu panjang. Pendekkan dan cuba lagi."
           }
         },
         "nl": {
@@ -9101,6 +10085,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ نوٹس بہت لمبے ہیں۔ انہیں مختصر کریں اور دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi chú này quá dài. Hãy rút ngắn rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -9169,6 +10159,12 @@
             "value": "केवल प्रगति में चल रहे कार्य को ही रोका जा सकता है।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hanya tugas yang sedang dikerjakan yang dapat dijeda."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9185,6 +10181,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "진행 중인 할 일만 일시 정지할 수 있습니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hanya tugas yang sedang berjalan boleh dijeda."
           }
         },
         "nl": {
@@ -9227,6 +10229,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "صرف جاری کام کو موقوف کیا جا سکتا ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉ có thể tạm dừng nhiệm vụ đang thực hiện."
           }
         },
         "zh-Hans": {
@@ -9295,6 +10303,12 @@
             "value": "यह आइटम सिंक होने के लिए बहुत लंबा है। इसका सबसे लंबा टेक्स्ट छोटा करके फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item ini terlalu panjang untuk diselaraskan. Persingkat teks terpanjangnya lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9311,6 +10325,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 항목이 너무 길어 동기화할 수 없습니다. 가장 긴 텍스트를 줄인 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item ini terlalu panjang untuk diselaraskan. Pendekkan teksnya yang terpanjang dan cuba lagi."
           }
         },
         "nl": {
@@ -9353,6 +10373,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ آئٹم سنک کرنے کے لیے بہت لمبا ہے۔ اس کا سب سے لمبا متن مختصر کریں اور دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mục này quá dài để đồng bộ hóa. Hãy rút ngắn đoạn văn bản dài nhất rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -9421,6 +10447,12 @@
             "value": "यह कार्य रद्द कर दिया गया है। शुरू करने से पहले इसे फिर से खोलें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini telah dibatalkan. Buka kembali sebelum memulainya."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9437,6 +10469,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일은 취소되었습니다. 시작하려면 먼저 다시 여세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini telah dibatalkan. Buka semula tugas ini sebelum memulakannya."
           }
         },
         "nl": {
@@ -9479,6 +10517,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ کام منسوخ کر دیا گیا تھا۔ شروع کرنے سے پہلے اسے دوبارہ کھولیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ này đã bị hủy. Hãy mở lại trước khi bắt đầu."
           }
         },
         "zh-Hans": {
@@ -9547,6 +10591,12 @@
             "value": "यह कार्य पहले ही पूरा हो चुका है। शुरू करने से पहले इसे फिर से खोलें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini sudah selesai. Buka kembali sebelum memulainya."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9563,6 +10613,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일은 이미 완료되었습니다. 시작하려면 먼저 다시 여세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini sudah selesai. Buka semula tugas ini sebelum memulakannya."
           }
         },
         "nl": {
@@ -9605,6 +10661,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ کام پہلے ہی مکمل ہو چکا ہے۔ شروع کرنے سے پہلے اسے دوبارہ کھولیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ này đã xong. Hãy mở lại trước khi bắt đầu."
           }
         },
         "zh-Hans": {
@@ -9673,6 +10735,12 @@
             "value": "यह कार्य “किसी दिन” में है। शुरू करने से पहले इसे फिर से खोलें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini ada di Suatu Hari. Buka kembali sebelum memulainya."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9689,6 +10757,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일은 ‘언젠가’에 있습니다. 시작하려면 먼저 다시 여세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini berada dalam Suatu Hari. Buka semula tugas ini sebelum memulakannya."
           }
         },
         "nl": {
@@ -9731,6 +10805,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ کام \"کسی دن\" میں ہے۔ شروع کرنے سے پہلے اسے دوبارہ کھولیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ này đang ở Một ngày nào đó. Hãy mở lại trước khi bắt đầu."
           }
         },
         "zh-Hans": {
@@ -9799,6 +10879,12 @@
             "value": "इस नाम का टैग पहले से मौजूद है। कोई दूसरा नाम चुनें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label dengan nama ini sudah ada. Pilih nama lain."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9815,6 +10901,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "같은 이름의 태그가 이미 있습니다. 다른 이름을 선택하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag dengan nama ini sudah wujud. Pilih nama lain."
           }
         },
         "nl": {
@@ -9857,6 +10949,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اس نام کا ٹیگ پہلے سے موجود ہے۔ کوئی اور نام منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã có thẻ với tên này. Hãy chọn tên khác."
           }
         },
         "zh-Hans": {
@@ -9925,6 +11023,12 @@
             "value": "एक टैग बहुत लंबा है। उसे छोटा करके फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Label terlalu panjang. Persingkat lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -9941,6 +11045,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "태그가 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag terlalu panjang. Pendekkan dan cuba lagi."
           }
         },
         "nl": {
@@ -9983,6 +11093,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ایک ٹیگ بہت لمبا ہے۔ اسے مختصر کریں اور دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một thẻ quá dài. Hãy rút ngắn rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -10051,6 +11167,12 @@
             "value": "यह कार्य उन कार्यों पर निर्भर है जो अभी पूरे नहीं हुए हैं। पहले उन्हें पूरा या रद्द करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini bergantung pada tugas yang belum selesai. Selesaikan atau batalkan tugas tersebut terlebih dahulu."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -10067,6 +11189,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일이 의존하는 할 일이 아직 완료되지 않았습니다. 먼저 완료하거나 취소하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas ini bergantung pada tugas yang belum selesai. Selesaikan atau batalkan tugas itu dahulu."
           }
         },
         "nl": {
@@ -10109,6 +11237,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ کام ایسے کاموں پر منحصر ہے جو ابھی مکمل نہیں ہوئے۔ پہلے انہیں مکمل یا منسوخ کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ này phụ thuộc vào các nhiệm vụ chưa xong. Hãy hoàn thành hoặc hủy chúng trước."
           }
         },
         "zh-Hans": {
@@ -10177,6 +11311,12 @@
             "value": "यह टेक्स्ट बहुत लंबा है। इसे छोटा करके फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teks ini terlalu panjang. Persingkat lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -10193,6 +11333,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "텍스트가 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teks ini terlalu panjang. Pendekkan dan cuba lagi."
           }
         },
         "nl": {
@@ -10235,6 +11381,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ متن بہت لمبا ہے۔ اسے مختصر کریں اور دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản này quá dài. Hãy rút ngắn rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -10303,6 +11455,12 @@
             "value": "कार्य का शीर्षक होना ज़रूरी है। शीर्षक जोड़कर फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas harus memiliki judul. Tambahkan judul lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -10319,6 +11477,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일에는 제목이 필요합니다. 제목을 입력한 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas memerlukan tajuk. Tambah satu dan cuba lagi."
           }
         },
         "nl": {
@@ -10361,6 +11525,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کام کا عنوان ضروری ہے۔ ایک شامل کریں اور دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ cần có tiêu đề. Hãy thêm tiêu đề rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -10429,6 +11599,12 @@
             "value": "यह शीर्षक बहुत लंबा है। इसे छोटा करके फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Judul ini terlalu panjang. Persingkat lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -10445,6 +11621,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "제목이 너무 깁니다. 줄인 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tajuk ini terlalu panjang. Pendekkan dan cuba lagi."
           }
         },
         "nl": {
@@ -10487,6 +11669,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ عنوان بہت لمبا ہے۔ اسے مختصر کریں اور دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiêu đề này quá dài. Hãy rút ngắn rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -10555,6 +11743,12 @@
             "value": "Lorvex अपने डेटा स्टोरेज तक नहीं पहुँच सकता, इसलिए यह पूरा नहीं हो सका। कृपया Lorvex को दोबारा शुरू करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex tidak dapat mengakses penyimpanan datanya sehingga tindakan ini tidak dapat diselesaikan. Mulai ulang Lorvex."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -10571,6 +11765,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex가 데이터 저장소에 접근할 수 없어 작업을 완료하지 못했습니다. Lorvex를 다시 시작하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex tidak dapat mengakses storan datanya, jadi tindakan ini tidak dapat diselesaikan. Sila mulakan semula Lorvex."
           }
         },
         "nl": {
@@ -10613,6 +11813,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اپنے ڈیٹا اسٹوریج تک رسائی حاصل نہیں ہو سکی، اس لیے یہ عمل مکمل نہیں ہو سکا۔ براہ کرم Lorvex دوبارہ شروع کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex không thể truy cập bộ lưu trữ dữ liệu, nên không thể hoàn tất thao tác này. Hãy khởi động lại Lorvex."
           }
         },
         "zh-Hans": {
@@ -10807,6 +12013,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hari"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -10835,6 +12047,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hari"
           }
         },
         "nl": {
@@ -11003,6 +12221,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ngày"
           }
         },
         "zh-Hans": {
@@ -11209,6 +12433,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld bulan"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -11237,6 +12467,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개월"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld bulan"
           }
         },
         "nl": {
@@ -11405,6 +12641,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tháng"
           }
         },
         "zh-Hans": {
@@ -11605,6 +12847,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minggu"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -11633,6 +12881,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld주"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minggu"
           }
         },
         "nl": {
@@ -11803,6 +13057,12 @@
             }
           }
         },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tuần"
+          }
+        },
         "zh-Hans": {
           "variations": {
             "plural": {
@@ -11875,6 +13135,12 @@
             "value": "यह बैकअप क्षतिग्रस्त है और इंपोर्ट नहीं किया जा सकता। जिस डिवाइस पर यह बना था, उस पर इसे दोबारा एक्सपोर्ट करें, फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadangan ini rusak dan tidak dapat diimpor. Ekspor ulang di perangkat asalnya, lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -11891,6 +13157,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 백업이 손상되어 가져올 수 없습니다. 원래 기기에서 다시 내보낸 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandaran ini rosak dan tidak dapat diimport. Eksport semula pada peranti asalnya, kemudian cuba lagi."
           }
         },
         "nl": {
@@ -11933,6 +13205,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ بیک اپ خراب ہے اور امپورٹ نہیں ہو سکتا۔ اسے اسی ڈیوائس پر دوبارہ ایکسپورٹ کریں جہاں سے یہ آیا تھا، پھر دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu này bị hỏng và không thể nhập. Hãy xuất lại trên thiết bị gốc rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -12001,6 +13279,12 @@
             "value": "चुनी गई फ़ाइल खाली है।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File yang dipilih kosong."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12017,6 +13301,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "선택한 파일이 비어 있습니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fail yang dipilih kosong."
           }
         },
         "nl": {
@@ -12059,6 +13349,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "منتخب کردہ فائل خالی ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tệp đã chọn trống."
           }
         },
         "zh-Hans": {
@@ -12127,6 +13423,12 @@
             "value": "यह बैकअप Lorvex के नए संस्करण से बनाया गया था। इस डिवाइस पर Lorvex अपडेट करें, फिर से कोशिश करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadangan ini dibuat oleh versi Lorvex yang lebih baru. Perbarui Lorvex di perangkat ini, lalu coba lagi."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12143,6 +13445,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 백업은 더 새로운 버전의 Lorvex에서 만들어졌습니다. 이 기기에서 Lorvex를 업데이트한 후 다시 시도하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandaran ini dibuat oleh versi Lorvex yang lebih baharu. Kemas kini Lorvex pada peranti ini, kemudian cuba lagi."
           }
         },
         "nl": {
@@ -12185,6 +13493,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ بیک اپ Lorvex کے نئے ورژن سے بنایا گیا تھا۔ اس ڈیوائس پر Lorvex اپ ڈیٹ کریں، پھر دوبارہ کوشش کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu này được tạo bởi phiên bản Lorvex mới hơn. Hãy cập nhật Lorvex trên thiết bị này rồi thử lại."
           }
         },
         "zh-Hans": {
@@ -12253,6 +13567,12 @@
             "value": "इस बैकअप में इंपोर्ट करने के लिए कोई डेटा नहीं है।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadangan ini tidak berisi data untuk diimpor."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12269,6 +13589,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 백업에는 가져올 데이터가 없습니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandaran ini tiada data untuk diimport."
           }
         },
         "nl": {
@@ -12311,6 +13637,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اس بیک اپ میں امپورٹ کرنے کے لیے کوئی ڈیٹا نہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bản sao lưu này không có dữ liệu để nhập."
           }
         },
         "zh-Hans": {
@@ -12379,6 +13711,12 @@
             "value": "यह फ़ाइल Lorvex बैकअप नहीं है, या यह क्षतिग्रस्त है। Lorvex से एक्सपोर्ट की गई फ़ाइल चुनें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File ini bukan cadangan Lorvex, atau file rusak. Pilih file yang diekspor dari Lorvex."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12395,6 +13733,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 파일은 Lorvex 백업이 아니거나 손상되었습니다. Lorvex에서 내보낸 파일을 선택하세요."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fail ini bukan sandaran Lorvex, atau rosak. Pilih fail yang dieksport daripada Lorvex."
           }
         },
         "nl": {
@@ -12437,6 +13781,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "یہ فائل Lorvex کا بیک اپ نہیں ہے، یا خراب ہے۔ Lorvex سے ایکسپورٹ کی گئی فائل منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tệp này không phải bản sao lưu Lorvex, hoặc bị hỏng. Hãy chọn tệp được xuất từ Lorvex."
           }
         },
         "zh-Hans": {
@@ -12505,6 +13855,12 @@
             "value": "चुनी गई फ़ाइल का आकार %1$@ है। Lorvex बैकअप का आकार अधिकतम %2$@ हो सकता है।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File yang dipilih berukuran %1$@. Cadangan Lorvex berukuran maksimum %2$@."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12521,6 +13877,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "선택한 파일의 크기는 %1$@입니다. Lorvex 백업은 최대 %2$@까지 가능합니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fail yang dipilih bersaiz %1$@. Sandaran Lorvex boleh bersaiz sehingga %2$@."
           }
         },
         "nl": {
@@ -12563,6 +13925,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "منتخب کردہ فائل %1$@ کی ہے۔ Lorvex بیک اپ زیادہ سے زیادہ %2$@ کا ہو سکتا ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tệp đã chọn có dung lượng %1$@. Bản sao lưu Lorvex có dung lượng tối đa %2$@."
           }
         },
         "zh-Hans": {
@@ -12616,7 +13984,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Boîte de réception"
+            "value": "Réception"
           }
         },
         "he": {
@@ -12629,6 +13997,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "इनबॉक्स"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kotak Masuk"
           }
         },
         "it": {
@@ -12647,6 +14021,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "수신함"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Peti Masuk"
           }
         },
         "nl": {
@@ -12689,6 +14069,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ان باکس"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hộp thư đến"
           }
         },
         "zh-Hans": {
@@ -12757,6 +14143,12 @@
             "value": "“%@” जोड़ेगा"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menambahkan “%@”"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12773,6 +14165,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” 추가"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menambah “%@”"
           }
         },
         "nl": {
@@ -12815,6 +14213,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "\"%@\" شامل کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thêm “%@”"
           }
         },
         "zh-Hans": {
@@ -12883,6 +14287,12 @@
             "value": "नियत: %@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jatuh tempo %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -12899,6 +14309,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기한: %@"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dijangka %@"
           }
         },
         "nl": {
@@ -12941,6 +14357,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقررہ تاریخ: %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đến hạn %@"
           }
         },
         "zh-Hans": {
@@ -13009,6 +14431,12 @@
             "value": "पूरा होने के बाद"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setelah selesai"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -13025,6 +14453,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "완료 후"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selepas selesai"
           }
         },
         "nl": {
@@ -13067,6 +14501,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تکمیل کے بعد"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sau khi hoàn thành"
           }
         },
         "zh-Hans": {
@@ -13135,6 +14575,12 @@
             "value": "अगली बार की तारीख़ इस पर निर्भर है कि आप इसे कब पूरा करते हैं, इसलिए देर से पूरा करने पर वह आगे खिसक जाती है।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berikutnya dijadwalkan berdasarkan kapan tugas ini diselesaikan, sehingga penyelesaian yang terlambat menggesernya ke depan."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -13151,6 +14597,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "다음 할 일은 이 할 일을 완료한 시점을 기준으로 일정이 잡히므로, 늦게 완료하면 그만큼 뒤로 밀립니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yang seterusnya dijadualkan berdasarkan bila tugas ini diselesaikan, jadi penyelesaian yang lewat akan menganjakkannya ke hadapan."
           }
         },
         "nl": {
@@ -13193,6 +14645,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اگلی تکرار اس وقت کے مطابق طے ہوتی ہے جب آپ اسے مکمل کرتے ہیں، اس لیے دیر سے مکمل کرنے پر وہ آگے بڑھ جاتی ہے۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lần tiếp theo được lên lịch dựa trên thời điểm nhiệm vụ này hoàn thành, nên nếu hoàn thành muộn thì lần tiếp theo cũng bị lùi lại."
           }
         },
         "zh-Hans": {
@@ -13261,6 +14719,12 @@
             "value": "नियमित रूप से"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berkala"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -13277,6 +14741,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "정기적으로"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berkala"
           }
         },
         "nl": {
@@ -13319,6 +14789,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "باقاعدگی سے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đều đặn"
           }
         },
         "zh-Hans": {
@@ -13387,6 +14863,12 @@
             "value": "तय शेड्यूल पर दोहराता है, चाहे आप इसे कभी भी पूरा करें।"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berulang sesuai jadwal tetap, kapan pun tugas diselesaikan."
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -13403,6 +14885,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "완료 시점과 관계없이 정해진 일정에 따라 반복됩니다."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berulang mengikut jadual tetap, tidak kira bila tugas diselesaikan."
           }
         },
         "nl": {
@@ -13445,6 +14933,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقررہ شیڈول پر دہرایا جاتا ہے، چاہے آپ اسے کبھی بھی مکمل کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lặp lại theo lịch cố định, bất kể khi nào hoàn thành."
           }
         },
         "zh-Hans": {
@@ -13513,6 +15007,12 @@
             "value": "हर दिन"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap hari"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -13529,6 +15029,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap hari"
           }
         },
         "nl": {
@@ -13571,6 +15077,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہر دن"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi ngày"
           }
         },
         "zh-Hans": {
@@ -13639,6 +15151,12 @@
             "value": "हर महीने"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap bulan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -13655,6 +15173,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매월"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap bulan"
           }
         },
         "nl": {
@@ -13697,6 +15221,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہر مہینے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi tháng"
           }
         },
         "zh-Hans": {
@@ -13891,6 +15421,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld hari"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -13919,6 +15455,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld일마다"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld hari"
           }
         },
         "nl": {
@@ -14087,6 +15629,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi %lld ngày"
           }
         },
         "zh-Hans": {
@@ -14287,6 +15835,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld bulan"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -14315,6 +15869,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개월마다"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld bulan"
           }
         },
         "nl": {
@@ -14483,6 +16043,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi %lld tháng"
           }
         },
         "zh-Hans": {
@@ -14683,6 +16249,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld minggu"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -14711,6 +16283,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld주마다"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld minggu"
           }
         },
         "nl": {
@@ -14879,6 +16457,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi %lld tuần"
           }
         },
         "zh-Hans": {
@@ -15079,6 +16663,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld tahun"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -15107,6 +16697,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld년마다"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap %lld tahun"
           }
         },
         "nl": {
@@ -15277,6 +16873,12 @@
             }
           }
         },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi %lld năm"
+          }
+        },
         "zh-Hans": {
           "variations": {
             "plural": {
@@ -15349,6 +16951,12 @@
             "value": "हर सप्ताह"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap minggu"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -15365,6 +16973,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매주"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap minggu"
           }
         },
         "nl": {
@@ -15407,6 +17021,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہر ہفتے"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi tuần"
           }
         },
         "zh-Hans": {
@@ -15475,6 +17095,12 @@
             "value": "हर साल"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap tahun"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -15491,6 +17117,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매년"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setiap tahun"
           }
         },
         "nl": {
@@ -15533,6 +17165,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہر سال"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mỗi năm"
           }
         },
         "zh-Hans": {
@@ -15601,6 +17239,12 @@
             "value": "दैनिक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harian"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -15617,6 +17261,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harian"
           }
         },
         "nl": {
@@ -15659,6 +17309,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "روزانہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hàng ngày"
           }
         },
         "zh-Hans": {
@@ -15727,6 +17383,12 @@
             "value": "मासिक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulanan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -15743,6 +17405,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매월"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bulanan"
           }
         },
         "nl": {
@@ -15785,6 +17453,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ماہانہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hàng tháng"
           }
         },
         "zh-Hans": {
@@ -15853,6 +17527,12 @@
             "value": "साप्ताहिक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mingguan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -15869,6 +17549,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매주"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mingguan"
           }
         },
         "nl": {
@@ -15911,6 +17597,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "ہفتہ وار"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hàng tuần"
           }
         },
         "zh-Hans": {
@@ -15979,6 +17671,12 @@
             "value": "वार्षिक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tahunan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -15995,6 +17693,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "매년"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tahunan"
           }
         },
         "nl": {
@@ -16037,6 +17741,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "سالانہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hàng năm"
           }
         },
         "zh-Hans": {
@@ -16105,6 +17815,12 @@
             "value": "पूरा होने के बाद"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "setelah selesai"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -16121,6 +17837,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "완료 후"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "selepas selesai"
           }
         },
         "nl": {
@@ -16163,6 +17885,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "تکمیل کے بعد"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sau khi hoàn thành"
           }
         },
         "zh-Hans": {
@@ -16357,6 +18085,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kali"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -16385,6 +18119,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld회"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kali"
           }
         },
         "nl": {
@@ -16553,6 +18293,12 @@
                 }
               }
             }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld lần"
           }
         },
         "zh-Hans": {
@@ -16753,6 +18499,12 @@
             }
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dilewati"
+          }
+        },
         "it": {
           "variations": {
             "plural": {
@@ -16781,6 +18533,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld회 건너뜀"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dilangkau"
           }
         },
         "nl": {
@@ -16951,6 +18709,12 @@
             }
           }
         },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld đã bỏ qua"
+          }
+        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
@@ -17017,6 +18781,12 @@
             "value": "%@ तक"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hingga %@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17033,6 +18803,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@까지"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sehingga %@"
           }
         },
         "nl": {
@@ -17075,6 +18851,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ تک"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "đến %@"
           }
         },
         "zh-Hans": {
@@ -17143,6 +18925,12 @@
             "value": "अंतिम %@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ terakhir"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17159,6 +18947,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "마지막 %@요일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ terakhir"
           }
         },
         "nl": {
@@ -17201,6 +18995,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخری %@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cuối"
           }
         },
         "zh-Hans": {
@@ -17269,6 +19069,12 @@
             "value": "%1$@ %2$@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ %1$@"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17285,6 +19091,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@요일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ %1$@"
           }
         },
         "nl": {
@@ -17327,6 +19139,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ (lần %1$@)"
           }
         },
         "zh-Hans": {
@@ -17395,6 +19213,12 @@
             "value": "अंत से %1$@ %2$@"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ %1$@ dari akhir"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17411,6 +19235,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "끝에서 %1$@ %2$@요일"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ %1$@ dari akhir"
           }
         },
         "nl": {
@@ -17453,6 +19283,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخر سے %1$@ %2$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ (lần %1$@ tính từ cuối)"
           }
         },
         "zh-Hans": {
@@ -17521,6 +19357,12 @@
             "value": "रद्द"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dibatalkan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17537,6 +19379,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "취소됨"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dibatalkan"
           }
         },
         "nl": {
@@ -17579,6 +19427,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "منسوخ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã hủy"
           }
         },
         "zh-Hans": {
@@ -17647,6 +19501,12 @@
             "value": "पूर्ण"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selesai"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17663,6 +19523,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "완료됨"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selesai"
           }
         },
         "nl": {
@@ -17705,6 +19571,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "مکمل"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã hoàn thành"
           }
         },
         "zh-Hans": {
@@ -17773,6 +19645,12 @@
             "value": "प्रगति में"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sedang Dikerjakan"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17789,6 +19667,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "진행 중"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sedang Berjalan"
           }
         },
         "nl": {
@@ -17831,6 +19715,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "جاری"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang thực hiện"
           }
         },
         "zh-Hans": {
@@ -17899,6 +19789,12 @@
             "value": "लंबित"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belum Selesai"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -17915,6 +19811,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "미완료"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belum Selesai"
           }
         },
         "nl": {
@@ -17957,6 +19859,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "نامکمل"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chưa hoàn thành"
           }
         },
         "zh-Hans": {
@@ -18025,6 +19933,12 @@
             "value": "किसी दिन"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suatu Hari"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18041,6 +19955,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "언젠가"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suatu Hari"
           }
         },
         "nl": {
@@ -18083,6 +20003,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کسی دن"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một ngày nào đó"
           }
         },
         "zh-Hans": {
@@ -18151,6 +20077,12 @@
             "value": "उच्च"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinggi"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18167,6 +20099,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "높음"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinggi"
           }
         },
         "nl": {
@@ -18209,6 +20147,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعلیٰ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cao"
           }
         },
         "zh-Hans": {
@@ -18277,6 +20221,12 @@
             "value": "कम"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendah"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18293,6 +20243,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "낮음"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendah"
           }
         },
         "nl": {
@@ -18335,6 +20291,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کم"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thấp"
           }
         },
         "zh-Hans": {
@@ -18403,6 +20365,12 @@
             "value": "सामान्य"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18419,6 +20387,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "보통"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biasa"
           }
         },
         "nl": {
@@ -18461,6 +20435,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "معمولی"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bình thường"
           }
         },
         "zh-Hans": {
@@ -18529,6 +20509,12 @@
             "value": "उच्च प्राथमिकता"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritas tinggi"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18545,6 +20531,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "우선순위: 높음"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keutamaan tinggi"
           }
         },
         "nl": {
@@ -18587,6 +20579,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعلیٰ ترجیح"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mức ưu tiên cao"
           }
         },
         "zh-Hans": {
@@ -18655,6 +20653,12 @@
             "value": "कम प्राथमिकता"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritas rendah"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18671,6 +20675,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "우선순위: 낮음"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keutamaan rendah"
           }
         },
         "nl": {
@@ -18713,6 +20723,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "کم ترجیح"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mức ưu tiên thấp"
           }
         },
         "zh-Hans": {
@@ -18781,6 +20797,12 @@
             "value": "सामान्य प्राथमिकता"
           }
         },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritas normal"
+          }
+        },
         "it": {
           "stringUnit": {
             "state": "translated",
@@ -18797,6 +20819,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "우선순위: 보통"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keutamaan biasa"
           }
         },
         "nl": {
@@ -18839,6 +20867,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "معمولی ترجیح"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mức ưu tiên bình thường"
           }
         },
         "zh-Hans": {

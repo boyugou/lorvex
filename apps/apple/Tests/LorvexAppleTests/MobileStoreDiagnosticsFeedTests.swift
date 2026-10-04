@@ -51,3 +51,19 @@ func mobileDiagnosticsFeedLeavesRoutineLowerSeverityRowsOut() async throws {
     store.recentDiagnosticLogs.isEmpty,
     "a failure panel that also lists routine activity buries the failures")
 }
+
+/// A log row replaces its combined accessibility label with a short phrase
+/// (origin, summary, age), which leaves the detail line out. The detail is the
+/// payload the feed exists to show, so the row must speak it as its value.
+@Test
+func mobileDiagnosticLogRowSpeaksItsDetailAsTheValue() throws {
+  let source = try String(
+    contentsOf: URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .appending(path: "Sources/LorvexMobile/MobileDiagnosticLogRow.swift"),
+    encoding: .utf8)
+  #expect(source.contains(".accessibilityLabel(accessibilityLabel)"))
+  #expect(source.contains(".accessibilityValue(details ?? \"\")"))
+}

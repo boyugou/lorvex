@@ -112,12 +112,18 @@ public enum LorvexDateFormatters {
   /// `date` written from a localized template, which names the fields and
   /// lets the locale order and punctuate them: "EEE" writes "Mon" / "周一",
   /// "MMMd" writes "Sep 29" / "9月29日", "yyyyMMMM" writes "September 2026" /
-  /// "2026年9月".
+  /// "2026年9月". Spanish, French, Italian, Portuguese, Russian, Ukrainian,
+  /// Polish, Dutch, and Romanian write weekday and month names in lowercase;
+  /// `position` `.leading` is for a date that opens a title, heading, or
+  /// label, which takes a capital where the language capitalizes the start of
+  /// a sentence ("Septiembre de 2026"). `.inline`, the default, keeps the
+  /// language's lowercase.
   public static func string(
     _ date: Date, template: String, timeZone: TimeZone,
-    locale: Locale = LorvexClockFormat.displayLocale
+    locale: Locale = LorvexClockFormat.displayLocale,
+    position: LorvexDayPhrase.Position = .inline
   ) -> String {
-    displayFormatters.formatter(.template(template), timeZone: timeZone, locale: locale)
+    displayFormatters.formatter(.template(template, position), timeZone: timeZone, locale: locale)
       .string(from: date)
   }
 
@@ -143,13 +149,20 @@ public enum LorvexDateFormatters {
 
   /// The days from `start` to `end` written from a localized template, with
   /// the fields both share written once: "MMMd" writes "Sep 22 – 28" within a
-  /// month and "Sep 27 – Oct 3" across two.
+  /// month and "Sep 27 – Oct 3" across two. `position` is as for
+  /// ``string(_:template:timeZone:locale:position:)``; an interval formatter
+  /// has no capitalization context, so a `.leading` range has its first
+  /// letter uppercased in `locale`.
   public static func range(
     from start: Date, to end: Date, template: String, timeZone: TimeZone,
-    locale: Locale = LorvexClockFormat.displayLocale
+    locale: Locale = LorvexClockFormat.displayLocale,
+    position: LorvexDayPhrase.Position = .inline
   ) -> String {
-    displayFormatters.intervalFormatter(template: template, timeZone: timeZone, locale: locale)
-      .string(from: start, to: end)
+    let text = displayFormatters.intervalFormatter(
+      template: template, timeZone: timeZone, locale: locale
+    ).string(from: start, to: end)
+    guard position == .leading else { return text }
+    return String(text.prefix(1)).uppercased(with: locale) + text.dropFirst()
   }
 
   /// `date`'s clock time in the locale's standard short time pattern: "9:45 AM"
@@ -183,14 +196,17 @@ public enum LorvexDateFormatters {
     _ date: Date, timeZone: TimeZone = .autoupdatingCurrent,
     locale: Locale = LorvexClockFormat.displayLocale
   ) -> String {
-    displayFormatters.formatter(.template("j"), timeZone: timeZone, locale: locale).string(from: date)
+    displayFormatters.formatter(.template("j", .inline), timeZone: timeZone, locale: locale)
+      .string(from: date)
   }
 
   /// `date` relative to `reference`: "4 minutes ago" or "in 2 hours" with
   /// `.full` units, "4 min. ago" with `.abbreviated`; a `.named` style writes
   /// "yesterday" or "now" where the language has a word for the distance.
-  /// Where a language writes `.abbreviated` as a bare signed number ("-4 j"),
-  /// the short style's phrase is used instead.
+  /// Where a language's `.abbreviated` style does not read as a phrase (a bare
+  /// signed number, "-4 j", or a clipped word, Malay's "semlm"), the short
+  /// style's phrase is used instead. The phrase starts in lowercase in every
+  /// language, so it continues a sentence or labels a lowercase chip.
   public static func relative(
     _ date: Date, to reference: Date,
     unitsStyle: RelativeDateTimeFormatter.UnitsStyle = .full,
@@ -205,8 +221,11 @@ public enum LorvexDateFormatters {
   /// A whole number of days from today, named where the language has a word
   /// for it: "today", "tomorrow", "3 days ago"; "in 3d" with `.abbreviated`
   /// units. Counting whole days keeps a due date later today reading "today"
-  /// rather than "in 5 hours". Where a language writes `.abbreviated` as a
-  /// bare signed number ("-3 j"), the short style's phrase is used instead.
+  /// rather than "in 5 hours". Where a language's `.abbreviated` style does
+  /// not read as a phrase (a bare signed number, "-3 j", or a clipped word,
+  /// Malay's "semlm"), the short style's phrase is used instead. The phrase
+  /// starts in lowercase in every language, so it continues a sentence or
+  /// labels a lowercase chip.
   public static func relativeDays(
     _ days: Int, unitsStyle: RelativeDateTimeFormatter.UnitsStyle = .full,
     locale: Locale = LorvexClockFormat.displayLocale
@@ -239,39 +258,65 @@ public enum LorvexDateFormatters {
   }
 
   /// The phrase `phrase` reads from the cached relative formatter for
-  /// `unitsStyle`. French, Russian, and Romanian write the abbreviated style
-  /// as a bare signed number ("-3 j", "-3 дн", "-45 zile"), which reads as
-  /// arithmetic rather than a time, while their short style keeps the whole
-  /// phrase ("il y a 3 j"); a result that starts with a sign is therefore
-  /// written again in the short style.
+  /// `unitsStyle`, adjusted in three languages whose system data does not read
+  /// as a phrase a sentence continues with or a lowercase chip shows:
+  ///
+  /// - French, Russian, and Romanian write the abbreviated style as a bare
+  ///   signed number ("-3 j", "-3 дн", "-45 zile"), which reads as arithmetic
+  ///   rather than a time, while their short style keeps the whole phrase
+  ///   ("il y a 3 j"); a result that starts with a sign is therefore written
+  ///   again in the short style.
+  /// - Malay writes "yesterday" abbreviated as "semlm" and every other
+  ///   abbreviated phrase exactly as its short style, so Malay uses the short
+  ///   style throughout.
+  /// - Vietnamese capitalizes its day words ("Hôm qua", "Ngày kia"), so the
+  ///   first letter of a phrase is lowercased.
   private static func relativePhrase(
     unitsStyle: RelativeDateTimeFormatter.UnitsStyle,
     dateTimeStyle: RelativeDateTimeFormatter.DateTimeStyle, locale: Locale,
     phrase: (RelativeDateTimeFormatter) -> String
   ) -> String {
-    let result = phrase(
-      displayFormatters.relativeFormatter(unitsStyle: unitsStyle, dateTimeStyle: dateTimeStyle, locale: locale))
-    let directionMarks: Set<Character> = ["\u{200E}", "\u{200F}", "\u{061C}"]
-    guard unitsStyle == .abbreviated,
+    let style: RelativeDateTimeFormatter.UnitsStyle =
+      unitsStyle == .abbreviated && locale.language.languageCode?.identifier == "ms" ? .short : unitsStyle
+    var result = phrase(
+      displayFormatters.relativeFormatter(unitsStyle: style, dateTimeStyle: dateTimeStyle, locale: locale))
+    if style == .abbreviated,
       let first = result.first(where: { !directionMarks.contains($0) }),
       "-\u{2212}+".contains(first)
-    else { return result }
-    return phrase(
-      displayFormatters.relativeFormatter(unitsStyle: .short, dateTimeStyle: dateTimeStyle, locale: locale))
+    {
+      result = phrase(
+        displayFormatters.relativeFormatter(unitsStyle: .short, dateTimeStyle: dateTimeStyle, locale: locale))
+    }
+    return loweringFirstLetter(of: result)
+  }
+
+  /// The invisible marks a right-to-left phrase may open with.
+  private static let directionMarks: Set<Character> = ["\u{200E}", "\u{200F}", "\u{061C}"]
+
+  /// `text` with its first character lowercased when that is an uppercase
+  /// letter; a leading direction mark is skipped.
+  private static func loweringFirstLetter(of text: String) -> String {
+    guard let index = text.firstIndex(where: { !directionMarks.contains($0) }),
+      text[index].isUppercase
+    else { return text }
+    var lowered = text
+    lowered.replaceSubrange(index...index, with: text[index].lowercased())
+    return lowered
   }
 
   private static let displayFormatters = DisplayFormatterCache()
 
   /// The display patterns a cached `DateFormatter` is built from.
   fileprivate enum Pattern {
-    case template(String)
+    case template(String, LorvexDayPhrase.Position)
     case styles(date: DateFormatter.Style, time: DateFormatter.Style)
     case fixed(String)
 
     /// The pattern's part of a cache key.
     var key: String {
       switch self {
-      case .template(let template): "template:\(template)"
+      case .template(let template, let position):
+        "template:\(template):\(position == .leading ? "leading" : "inline")"
       case .styles(let date, let time): "styles:\(date.rawValue):\(time.rawValue)"
       case .fixed(let format): "fixed:\(format)"
       }
@@ -309,8 +354,9 @@ public enum LorvexDateFormatters {
         formatter.locale = locale
         formatter.timeZone = timeZone
         switch pattern {
-        case .template(let template):
+        case .template(let template, let position):
           formatter.setLocalizedDateFormatFromTemplate(template)
+          if position == .leading { formatter.formattingContext = .beginningOfSentence }
         case .styles(let date, let time):
           formatter.dateStyle = date
           formatter.timeStyle = time

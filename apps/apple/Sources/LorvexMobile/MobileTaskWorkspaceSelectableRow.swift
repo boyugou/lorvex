@@ -12,6 +12,9 @@ struct MobileTaskWorkspaceSelectableRow: View {
   var timeLabel: String? = nil
   /// See ``MobileTaskRowContent/isBlocked``. A blocked row offers no Start.
   var isBlocked = false
+  /// The search the list is filtered by; empty outside a search. See
+  /// ``LorvexTask/mobileSearchMatch(for:)``.
+  var searchQuery = ""
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
@@ -39,7 +42,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
           batchSelectionCheckbox
           MobileTaskRowContent(
             task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
-            timeZone: productTimeZone)
+            searchMatch: task.mobileSearchMatch(for: searchQuery), timeZone: productTimeZone)
             .equatable()
         }
         .contentShape(Rectangle())
@@ -51,7 +54,7 @@ struct MobileTaskWorkspaceSelectableRow: View {
         Button(action: select) {
           MobileTaskRowContent(
             task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
-            timeZone: productTimeZone)
+            searchMatch: task.mobileSearchMatch(for: searchQuery), timeZone: productTimeZone)
             .equatable()
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())

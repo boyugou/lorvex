@@ -201,7 +201,7 @@ struct CommandPaletteView: View {
     switch result {
     case .navigate(let selection):
       store.navigateToWorkspace(selection)
-    case .openTask(let id, _, _, _):
+    case .openTask(let id, _, _, _, _):
       // Across every list, so the task's row is on screen whichever list holds
       // it; the shared route loads the task when no loaded view has it.
       store.setTaskWorkspaceListScope(nil)

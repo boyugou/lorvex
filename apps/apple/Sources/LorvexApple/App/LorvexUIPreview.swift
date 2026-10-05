@@ -165,6 +165,14 @@
             await emitStop("tasks-list")
             store.setTaskWorkspaceListScope(nil)
           }
+          if selection == .tasks, !usesEmptyStore {
+            // A search whose matches sit in the notes: the rows quote the text
+            // around the word under each title that lacks it.
+            store.searchText = "team"
+            try? await Task.sleep(for: .seconds(2.5))
+            await emitStop("tasks-search")
+            store.searchText = ""
+          }
           if selection == .calendar {
             // The workspace reads its persisted presentation from the preview
             // defaults when it is created, so each grid is shown by setting
@@ -238,12 +246,13 @@
           await emitStop("list-window")
           listWindow.orderOut(nil)
         }
-        // The command palette on two typed queries: the start of a list's
-        // name, where the jump leads, and a word that begins no destination or
-        // list, where capture leads over the matching tasks.
+        // The command palette on three typed queries: the start of a list's
+        // name, where the jump leads, a word that begins no destination or
+        // list, where capture leads over the matching tasks, and a word only
+        // the notes hold, where the task rows quote them.
         let jumpQuery = Self.tourList(in: store)
           .map { String($0.displayName.prefix(4)) } ?? "Hab"
-        for (stop, query) in [("palette-jump", jumpQuery), ("palette-search", "offsite")] {
+        for (stop, query) in [("palette-jump", jumpQuery), ("palette-search", "offsite"), ("palette-notes", "team")] {
           let palette = makeCommandPaletteWindow(store: store, query: query, beside: window)
           palette.orderFrontRegardless()
           try? await Task.sleep(for: .seconds(2.5))

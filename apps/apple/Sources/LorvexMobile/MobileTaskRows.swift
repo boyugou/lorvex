@@ -32,6 +32,8 @@ struct MobileTaskRow: View, Equatable {
   var timeIsRunning: Bool = false
   /// See ``MobileTaskRowContent/chips``.
   var chips: [LorvexTaskRowChip] = []
+  /// See ``MobileTaskRowContent/searchMatch``.
+  var searchMatch: LorvexTaskSearchMatch? = nil
   /// See ``MobileTaskRowContent/timeZone``.
   var timeZone: TimeZone = .autoupdatingCurrent
 
@@ -39,7 +41,8 @@ struct MobileTaskRow: View, Equatable {
     NavigationLink(value: MobileRoute.task(task.id)) {
       MobileTaskRowContent(
         task: task, isBlocked: isBlocked, showsLeadingCircle: showsLeadingCircle,
-        timeLabel: timeLabel, timeIsRunning: timeIsRunning, chips: chips, timeZone: timeZone
+        timeLabel: timeLabel, timeIsRunning: timeIsRunning, chips: chips,
+        searchMatch: searchMatch, timeZone: timeZone
       )
       .equatable()
     }
@@ -50,7 +53,8 @@ struct MobileTaskRow: View, Equatable {
     .accessibilityLabel(
       taskAccessibilityLabel(
         task, timeLabel: timeLabel,
-        details: chips.map(\.title) + (isBlocked ? [MobileTaskDisplayText.blocked] : []),
+        details: [searchMatch?.text].compactMap { $0 } + chips.map(\.title)
+          + (isBlocked ? [MobileTaskDisplayText.blocked] : []),
         timeZone: timeZone))
     .accessibilityIdentifier("mobile.task.row.\(task.id)")
   }
@@ -75,12 +79,20 @@ struct MobileTaskRowContent: View, Equatable {
   /// Status chips the host supplies ("Until 3:00 PM", "Pushed 4 times"), drawn
   /// beside the Started and Blocked badges. Display only.
   var chips: [LorvexTaskRowChip] = []
+  /// Why the task is in a search result when its title does not show the match
+  /// (``LorvexTask/searchMatch(for:visibleTagCount:)``), quoted under the
+  /// title. `nil` outside a search and for a task whose title explains it.
+  var searchMatch: LorvexTaskSearchMatch? = nil
   /// The zone the due facts count days in: the product time zone the host
   /// reads from the environment (`lorvexProductTimeZone`), so they agree with
   /// the lists the product's logical day builds. A stored
   /// value rather than an environment read, so the synthesized equality that
   /// lets the row skip redraws also notices a change of zone.
   var timeZone: TimeZone = .autoupdatingCurrent
+
+  /// The tags the metadata line shows. A search match in one of these needs no
+  /// excerpt, because the row already shows it.
+  static let visibleTagCount = 2
 
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }
@@ -105,6 +117,7 @@ struct MobileTaskRowContent: View, Equatable {
           .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .strikethrough(isInactive, color: .secondary)
           .lineLimitUnlessAccessibilitySize(2)
+        if let searchMatch { LorvexSearchExcerptLine(match: searchMatch) }
         if isInProgress || isBlocked || !chips.isEmpty {
           HStack(spacing: LorvexDesign.Spacing.xs) {
             ForEach(chips) { chip in
@@ -182,7 +195,7 @@ struct MobileTaskRowContent: View, Equatable {
     if timeLabel == nil, let minutes = task.estimatedMinutes {
       parts.append(LorvexDurationFormat.minutes(minutes))
     }
-    parts.append(contentsOf: task.tags.prefix(2))
+    parts.append(contentsOf: task.tags.prefix(Self.visibleTagCount))
     return parts
   }
 
@@ -196,6 +209,16 @@ struct MobileTaskRowContent: View, Equatable {
         isOverdue: task.isOverdue(timeZone: timeZone), isDueSoon: task.isDueSoon(timeZone: timeZone),
         repeats: task.recurrence != nil, calmLabels: calm)
     }
+  }
+}
+
+extension LorvexTask {
+  /// The excerpt a mobile row quotes under the title for `query`, or `nil`
+  /// outside a search (an empty query) and when nothing beyond the title and the
+  /// row's own tags explains the match.
+  func mobileSearchMatch(for query: String) -> LorvexTaskSearchMatch? {
+    query.isEmpty
+      ? nil : searchMatch(for: query, visibleTagCount: MobileTaskRowContent.visibleTagCount)
   }
 }
 
@@ -214,6 +237,9 @@ struct MobileActionTaskRow: View {
   var timeIsRunning: Bool = false
   /// See ``MobileTaskRowContent/chips``.
   var chips: [LorvexTaskRowChip] = []
+  /// The search the list is filtered by; empty outside a search. See
+  /// ``LorvexTask/mobileSearchMatch(for:)``.
+  var searchQuery = ""
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
 
   var body: some View {
@@ -228,7 +254,8 @@ struct MobileActionTaskRow: View {
       // `List(selection:)` row instead.
       MobileTaskRow(
         task: task, isBlocked: isBlocked, showsLeadingCircle: false, timeLabel: timeLabel,
-        timeIsRunning: timeIsRunning, chips: chips, timeZone: productTimeZone
+        timeIsRunning: timeIsRunning, chips: chips,
+        searchMatch: task.mobileSearchMatch(for: searchQuery), timeZone: productTimeZone
       )
       .equatable()
     }

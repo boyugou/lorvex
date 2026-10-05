@@ -69,7 +69,9 @@ struct CalendarMonthGridDayCell: View {
     }
     .padding(CalendarMonthGridDayCellMetrics.cellPadding)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .background(isToday ? Color.accentColor.opacity(0.07) : Color.clear)
+    // Kept inside the cell: a background reaches into the safe area by default,
+    // and the first column's tint would then show through the sidebar.
+    .background(isToday ? Color.accentColor.opacity(0.07) : Color.clear, ignoresSafeAreaEdges: [])
     .contentShape(Rectangle())
     .onTapGesture(perform: onOpenDay)
     .calendarPointingHandCursor()

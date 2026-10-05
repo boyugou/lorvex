@@ -1849,6 +1849,12 @@ matches wherever the typed characters appear inside it. Searching lists,
 habits, and memory entries, the command palette, tag suggestions, and the
 pickers that Shortcuts and Siri show compare text the same way.
 
+When a word you searched for is in a task's notes, its assistant context, or a
+tag the row does not show, and not in the title, the row quotes the text around
+it on a line under the title, with the word in bold. A task whose title holds
+the word, or whose visible tags do, shows no quote. The command palette's task
+results quote the same way, and since they show no tags, they quote a tag too.
+
 ### Batch Operations
 
 Select multiple tasks by ⌘-clicking rows (⇧-click extends a range). The

@@ -244,6 +244,9 @@ public struct MobileStoreTasksView: View {
     }
   }
 
+  /// What the rows quote a match against: the search text, or empty outside a search.
+  private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+
   @ViewBuilder
   private func taskRow(_ task: LorvexTask, timeLabel: String?) -> some View {
     if horizontalSizeClass == .regular || isBatchSelecting {
@@ -261,7 +264,8 @@ public struct MobileStoreTasksView: View {
         isBatchSelected: batchSelectedTaskIDs.contains(task.id),
         actions: store.rowActions(for: task.id) { await load() },
         timeLabel: timeLabel,
-        isBlocked: page.blockedTaskIDs.contains(task.id)
+        isBlocked: page.blockedTaskIDs.contains(task.id),
+        searchQuery: trimmedQuery
       )
       .tag(task.id)
     } else {
@@ -270,7 +274,8 @@ public struct MobileStoreTasksView: View {
         isBlocked: page.blockedTaskIDs.contains(task.id),
         isMutating: store.taskIsMutating(task.id),
         actions: store.rowActions(for: task.id) { await load() },
-        timeLabel: timeLabel
+        timeLabel: timeLabel,
+        searchQuery: trimmedQuery
       )
     }
   }

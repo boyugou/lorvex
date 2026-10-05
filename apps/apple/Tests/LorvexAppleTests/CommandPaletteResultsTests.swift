@@ -71,7 +71,33 @@ func aTaskWhoseOnlyMatchIsItsAssistantContextIsListed() {
   ]
   let groups = CommandPaletteResults.groups(query: "flights", tasks: tasks)
   let taskGroup = groups.first { $0.title == "Tasks" }?.results ?? []
-  #expect(taskGroup == [.openTask(id: "1", title: "Plan trip", subtitle: nil)])
+  #expect(
+    taskGroup == [
+      .openTask(
+        id: "1", title: "Plan trip", subtitle: nil,
+        excerpt: tasks[0].searchMatch(for: "flights"))
+    ])
+}
+
+@Test
+func aTaskResultQuotesWhereTheQueryMatchedWhenItsTitleDoesNot() {
+  let tasks = [
+    makeTask(id: "1", title: "Quarterly planning", notes: "Call Dana about the budget review"),
+    makeTask(id: "2", title: "Review the budget", notes: "Budget numbers are in the sheet"),
+    makeTask(id: "3", title: "Errands", tags: ["budget"]),
+  ]
+  let groups = CommandPaletteResults.groups(query: "budget", tasks: tasks)
+  let taskGroup = groups.first { $0.title == "Tasks" }?.results ?? []
+  let excerpts = taskGroup.map { result -> LorvexTaskSearchMatch? in
+    if case .openTask(_, _, _, _, let excerpt) = result { return excerpt }
+    return nil
+  }
+  #expect(excerpts.count == 3)
+  #expect(excerpts[0]?.field == .notes)
+  #expect(excerpts[0]?.text == "Call Dana about the budget review")
+  #expect(excerpts[1] == nil)
+  // The palette row shows no tags, so a tag match is quoted too.
+  #expect(excerpts[2]?.field == .tags)
 }
 
 @Test

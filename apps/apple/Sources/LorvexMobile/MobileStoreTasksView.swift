@@ -118,10 +118,13 @@ public struct MobileStoreTasksView: View {
         MobileTaskBatchActionBar(
           canCompleteOrDefer: !batchActionIDs(done: false).isEmpty,
           canReopen: !batchActionIDs(done: true).isEmpty,
+          canMove: !batchSelectedTaskIDs.isEmpty,
+          moveTargets: batchMoveTargets,
           isMutating: store.isMutatingTask,
           complete: { Task { await performBatchComplete() } },
           deferTask: { Task { await performBatchDefer() } },
-          reopen: { Task { await performBatchReopen() } }
+          reopen: { Task { await performBatchReopen() } },
+          move: { listID in Task { await performBatchMove(toListID: listID) } }
         )
         .transition(.move(edge: .bottom).combined(with: .opacity))
       }
@@ -272,71 +275,4 @@ public struct MobileStoreTasksView: View {
     }
   }
 
-}
-
-/// A single, light contextual action row (Photos-style) shown while batch
-/// selecting. Each action is an equal-width icon-over-label button that tints
-/// when enabled and dims when not; the selection count lives in the nav title.
-private struct MobileTaskBatchActionBar: View {
-  let canCompleteOrDefer: Bool
-  let canReopen: Bool
-  let isMutating: Bool
-  let complete: () -> Void
-  let deferTask: () -> Void
-  let reopen: () -> Void
-
-  var body: some View {
-    HStack(spacing: 0) {
-      action(
-        label: LocalizedStringResource(
-          "action.complete", defaultValue: "Complete",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        identifier: "complete",
-        systemImage: "checkmark.circle.fill", tint: LorvexDesign.Palette.done,
-        enabled: canCompleteOrDefer, action: complete)
-      action(
-        label: LocalizedStringResource(
-          "action.defer", defaultValue: "Defer",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        identifier: "defer",
-        systemImage: "clock", tint: LorvexDesign.Palette.dueSoon,
-        enabled: canCompleteOrDefer, action: deferTask)
-      action(
-        label: LocalizedStringResource(
-          "action.reopen", defaultValue: "Reopen",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        identifier: "reopen",
-        systemImage: "arrow.uturn.backward", tint: .accentColor,
-        enabled: canReopen, action: reopen)
-    }
-    .padding(.top, LorvexDesign.Spacing.xs)
-    .background(.bar)
-    .overlay(alignment: .top) { Divider() }
-    .accessibilityIdentifier("mobileTasks.batchActionBar")
-  }
-
-  private func action(
-    label: LocalizedStringResource,
-    identifier: String,
-    systemImage: String,
-    tint: Color,
-    enabled: Bool,
-    action: @escaping () -> Void
-  ) -> some View {
-    Button(action: action) {
-      VStack(spacing: 3) {
-        Image(systemName: systemImage)
-          .font(.title3)
-        Text(label)
-          .font(.caption2)
-      }
-      .frame(maxWidth: .infinity)
-      .padding(.vertical, LorvexDesign.Spacing.xs)
-      .contentShape(Rectangle())
-    }
-    .buttonStyle(.plain)
-    .foregroundStyle(enabled && !isMutating ? tint : Color.secondary.opacity(0.6))
-    .disabled(!enabled || isMutating)
-    .accessibilityIdentifier("mobileTasks.batch.\(identifier)")
-  }
 }

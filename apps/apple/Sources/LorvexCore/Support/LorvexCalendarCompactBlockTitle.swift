@@ -1,4 +1,6 @@
+import NaturalLanguage
 import SwiftUI
+import Synchronization
 
 #if os(macOS)
   import AppKit
@@ -21,9 +23,11 @@ import SwiftUI
 /// ``LorvexCalendarCompactTitleFit/minimumScale``, rather than splitting the
 /// word across lines. A word still wider than the block at that size is not
 /// split either: the title then takes a single line that ends in an ellipsis
-/// ("Quarte…"). A title in a script that wraps between its own characters
-/// (Chinese, Japanese, Korean, Thai) keeps wrapping over as many lines as the
-/// block is tall.
+/// ("Quarte…"). Thai, Lao, Myanmar, and Khmer mark no word boundary, so the
+/// words are the dictionary words the system's own line breaking keeps whole
+/// ("การประชุม", not a spaced run). A title in Chinese, Japanese, or Korean,
+/// which wraps between its own characters, keeps wrapping over as many lines
+/// as the block is tall.
 public struct LorvexCalendarCompactBlockTitle: View {
   private let title: String
   private let isDone: Bool
@@ -90,9 +94,7 @@ enum LorvexCalendarCompactTitleFit {
   static func scale(title: String, size: CGFloat, width: CGFloat) -> CGFloat {
     guard width > 0 else { return 1 }
     let room = width - layoutAllowance
-    let widest = title.split(whereSeparator: \.isWhitespace)
-      .map { wordWidth(String($0), size: size) }
-      .max() ?? 0
+    let widest = words(in: title).map { wordWidth($0.text, size: size) }.max() ?? 0
     guard widest > room else { return 1 }
     return max(minimumScale, room / widest)
   }
@@ -100,28 +102,71 @@ enum LorvexCalendarCompactTitleFit {
   /// Whether a word of `title` is still wider than `width` once the face has
   /// shrunk to ``minimumScale``, so that setting the title over several lines
   /// would split that word between letters. An unmeasured (zero) width is
-  /// never too narrow. Words in a script that wraps between its own
-  /// characters never count: a run of Chinese, Japanese, Korean, or Thai is
+  /// never too narrow. Chinese, Japanese, and Korean text never counts: it is
   /// meant to break wherever the line ends.
   static func splitsAWord(title: String, size: CGFloat, width: CGFloat) -> Bool {
     guard width > 0 else { return false }
     let room = width - layoutAllowance
-    return title.split(whereSeparator: \.isWhitespace).contains { word in
-      !wrapsBetweenCharacters(word) && wordWidth(String(word), size: size) * minimumScale > room
+    return words(in: title).contains { word in
+      !word.wrapsBetweenCharacters && wordWidth(word.text, size: size) * minimumScale > room
     }
   }
 
-  /// Whether `word` holds a character of a script that wraps between its
-  /// characters or between words no space marks: Han, kana, Hangul, Thai, Lao,
-  /// Myanmar, or Khmer.
-  private static func wrapsBetweenCharacters(_ word: Substring) -> Bool {
-    LorvexUserContentTypesetting.containsCJK(word)
-      || word.unicodeScalars.contains { scalar in
-        (0x0E00...0x0EFF).contains(scalar.value)  // Thai, Lao
-          || (0x1000...0x109F).contains(scalar.value)  // Myanmar
-          || (0x1780...0x17FF).contains(scalar.value)  // Khmer
-      }
+  /// A run of a title that a line should not break inside, unless it is text
+  /// that wraps between its own characters.
+  struct Word {
+    let text: String
+    let wrapsBetweenCharacters: Bool
   }
+
+  /// The words of `title`: the runs between spaces, with a run in a script that
+  /// marks no word boundary (Thai, Lao, Myanmar, Khmer) cut into the
+  /// dictionary words the system breaks lines between, and a run that holds
+  /// Chinese, Japanese, or Korean kept whole and marked as wrapping between
+  /// characters.
+  static func words(in title: String) -> [Word] {
+    title.split(whereSeparator: \.isWhitespace).flatMap { run -> [Word] in
+      if LorvexUserContentTypesetting.containsCJK(run) {
+        return [Word(text: String(run), wrapsBetweenCharacters: true)]
+      }
+      guard marksNoWordBoundary(run) else {
+        return [Word(text: String(run), wrapsBetweenCharacters: false)]
+      }
+      return dictionaryWords(in: String(run)).map { Word(text: $0, wrapsBetweenCharacters: false) }
+    }
+  }
+
+  /// Whether `run` holds a character of Thai, Lao, Myanmar, or Khmer.
+  private static func marksNoWordBoundary(_ run: Substring) -> Bool {
+    run.unicodeScalars.contains { scalar in
+      (0x0E00...0x0EFF).contains(scalar.value)  // Thai, Lao
+        || (0x1000...0x109F).contains(scalar.value)  // Myanmar
+        || (0x1780...0x17FF).contains(scalar.value)  // Khmer
+    }
+  }
+
+  /// The dictionary words of `run`, from the system's word tokenizer; the run
+  /// itself when the tokenizer finds none. A block redraws as its lane
+  /// resizes, so the segmentation of a title is kept.
+  private static func dictionaryWords(in run: String) -> [String] {
+    if let cached = dictionaryWordCache.withLock({ $0[run] }) { return cached }
+    let tokenizer = NLTokenizer(unit: .word)
+    tokenizer.string = run
+    var found: [String] = []
+    tokenizer.enumerateTokens(in: run.startIndex..<run.endIndex) { range, _ in
+      found.append(String(run[range]))
+      return true
+    }
+    let words = found.isEmpty ? [run] : found
+    dictionaryWordCache.withLock { cache in
+      if cache.count >= dictionaryWordCacheLimit { cache.removeAll() }
+      cache[run] = words
+    }
+    return words
+  }
+
+  private static let dictionaryWordCache = Mutex<[String: [String]]>([:])
+  private static let dictionaryWordCacheLimit = 512
 
   /// The word's width in the title face (`LorvexDesign.CalendarMetrics
   /// .blockTitleWeight`, condensed). The watch draws no calendar grid, so it

@@ -78,6 +78,11 @@ struct AppLanguageTests {
     (["ms-SG"], "ms"),
     (["ms-BN"], "ms"),
     (["vi-VN"], "vi"),
+    (["tr-TR"], "tr"),
+    (["tr-CY"], "tr"),
+    (["th-TH"], "th"),
+    (["el-GR"], "el"),
+    (["el-CY"], "el"),
     // The first shipped language in the list wins.
     (["nl-NL", "de-DE"], "nl"),
     (["sv-SE", "zh-Hans-CN"], "zh-Hans"),
@@ -92,8 +97,8 @@ struct AppLanguageTests {
   func selectableOrderGroupsScripts() {
     #expect(
       AppLanguage.selectable == [
-        .id, .ms, .de, .en, .es, .fr, .it, .nl, .pl, .ptBR, .ro, .vi, .ru, .uk, .he, .ur, .ar,
-        .fa, .hi, .ko, .ja, .zhHans, .zhHant,
+        .id, .ms, .de, .en, .es, .fr, .it, .nl, .pl, .ptBR, .ro, .vi, .tr, .el, .ru, .uk, .he,
+        .ur, .ar, .fa, .hi, .th, .ko, .ja, .zhHans, .zhHant,
       ])
   }
 

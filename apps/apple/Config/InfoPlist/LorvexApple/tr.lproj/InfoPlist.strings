@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex, oluşturduğunuz planlama bloklarını Takvim’e ekleyebilir.";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex, programları ve asistan bağlamını oluşturmak için etkinlik ayrıntılarını okuyabilir.";

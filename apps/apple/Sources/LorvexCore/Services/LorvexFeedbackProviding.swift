@@ -16,6 +16,8 @@ public enum LorvexFeedbackKind: Sendable {
   case taskReopened
   /// Fired when a task is deferred to a later day.
   case taskDeferred
+  /// Fired when tasks are filed into another list.
+  case taskMoved
   /// Fired when a habit is marked complete for the day.
   case habitCompleted
   /// Fired when a habit completion crosses a milestone waypoint — a stronger,

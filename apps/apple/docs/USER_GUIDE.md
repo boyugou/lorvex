@@ -1807,7 +1807,9 @@ list to move them; lists with assigned tasks must be emptied before deletion.
 Drag a task row onto a different list in the sidebar to move it. To reassign
 several at once, select multiple tasks and use the **Lists** submenu in the
 workspace selection menu — the batch menu that appears in the header while a
-selection is active.
+selection is active. On iPhone and iPad, tap **Select** in the Tasks toolbar,
+tap the tasks, then choose **List** in the bottom bar and pick the list to
+file them in.
 
 ### Recurrence
 
@@ -1861,7 +1863,8 @@ active — also offers **Select All** and **Clear Selection**. With tasks select
   deferred.
 
 On iPhone and iPad, tap **Select** in the Tasks workspace toolbar, then tap task
-rows to select them; a bottom action bar offers Complete, Defer, and Reopen.
+rows to select them; a bottom action bar offers Complete, Defer, Reopen, and
+List, which opens a menu of the lists to move the selection to.
 
 ---
 

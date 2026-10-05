@@ -1,6 +1,10 @@
 import LorvexCore
 import SwiftUI
 
+#if os(macOS)
+  import AppKit
+#endif
+
 /// One set field of the item an inspector shows (a task, a habit), drawn as
 /// a row of its properties.
 struct InspectorPropertyRow: Identifiable {
@@ -21,6 +25,36 @@ struct InspectorPropertyRow: Identifiable {
 struct InspectorPropertyAddition: Identifiable {
   let id: String
   let label: String
+}
+
+/// The width of the field-name column in an inspector's property rows.
+enum InspectorPropertyMetrics {
+  /// The narrowest column, which fits English field names ("Priority").
+  static let minimumLabelWidth: CGFloat = 84
+  /// The widest the column grows for a long translation; a name wider than
+  /// this wraps onto a second line, so the value keeps its room.
+  static let maximumLabelWidth: CGFloat = 132
+
+  /// The column's width at the default text size for `labels`: the widest
+  /// field name on one line in the label font, between ``minimumLabelWidth``
+  /// and ``maximumLabelWidth``. The Greek name for priority is wider than the
+  /// English names the minimum was set for. Callers scale the result with the
+  /// text, as the names scale.
+  @MainActor static func labelWidth(fitting labels: [String]) -> CGFloat {
+    let key = labels.joined(separator: "\u{1F}")
+    if let cached = fittedLabelWidths[key] { return cached }
+    #if os(macOS)
+      let font = NSFont.preferredFont(forTextStyle: .callout)
+      let widest = labels.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+      let width = min(maximumLabelWidth, max(minimumLabelWidth, widest.rounded(.up) + 2))
+    #else
+      let width = minimumLabelWidth
+    #endif
+    fittedLabelWidths[key] = width
+    return width
+  }
+
+  @MainActor private static var fittedLabelWidths: [String: CGFloat] = [:]
 }
 
 /// An inspector's fields as rows, one per set field: an icon, the field's
@@ -52,7 +86,7 @@ struct InspectorProperties<Editor: View, MenuItems: View>: View {
   @ViewBuilder var menuItems: (_ id: String, _ openEditor: @escaping () -> Void) -> MenuItems
 
   @State private var editingID: String?
-  @ScaledMetric(relativeTo: .callout) private var labelWidth: CGFloat = 84
+  @ScaledMetric(relativeTo: .callout) private var labelScale: CGFloat = 1
 
   /// The rows, then the additions, in one sequence keyed by field id, so a
   /// field that moves between the two keeps its control and the popover it
@@ -118,7 +152,10 @@ struct InspectorProperties<Editor: View, MenuItems: View>: View {
   }
 
   private func rowLabel(_ row: InspectorPropertyRow, isActive: Bool) -> some View {
-    InspectorPropertyRowLabel(row: row, labelWidth: labelWidth, isActive: isActive)
+    InspectorPropertyRowLabel(
+      row: row,
+      labelWidth: InspectorPropertyMetrics.labelWidth(fitting: rows.map(\.label)) * labelScale,
+      isActive: isActive)
   }
 
   private func additionLabel(_ addition: InspectorPropertyAddition) -> some View {
@@ -254,8 +291,9 @@ private struct InspectorPropertyRowLabel: View {
       Text(row.label)
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
-        .lineLimit(1)
+        .lineLimit(2)
         .frame(width: labelWidth, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
       (row.isUserContent ? Text(userContent: row.value) : Text(row.value))
         .font(LorvexDesign.Typography.primaryText)
         .foregroundStyle(row.tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.primary))

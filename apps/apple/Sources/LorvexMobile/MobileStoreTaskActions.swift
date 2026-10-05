@@ -126,7 +126,7 @@ extension MobileStore {
     return didMutate
   }
 
-  private func stableUniqueTaskIDs(_ ids: [LorvexTask.ID]) -> [LorvexTask.ID] {
+  func stableUniqueTaskIDs(_ ids: [LorvexTask.ID]) -> [LorvexTask.ID] {
     var seen = Set<LorvexTask.ID>()
     return ids.filter { seen.insert($0).inserted }
   }

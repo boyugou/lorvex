@@ -7,11 +7,14 @@ import Testing
 /// choice: multi-word queries match on independent terms in any order.
 @Suite("Task search semantics")
 struct LorvexTaskSearchSemanticsTests {
-  private func task(title: String, notes: String = "", tags: [String] = []) -> LorvexTask {
+  private func task(
+    title: String, notes: String = "", aiNotes: String? = nil, tags: [String] = []
+  ) -> LorvexTask {
     LorvexTask(
       id: "t",
       title: title,
       notes: notes,
+      aiNotes: aiNotes,
       priority: .p2,
       status: .open,
       dueDate: nil,
@@ -35,6 +38,23 @@ struct LorvexTaskSearchSemanticsTests {
   @Test("terms may match across different fields")
   func termsAcrossFields() {
     #expect(task(title: "Buy milk", tags: ["errand"]).matchesSearch("milk errand"))
+  }
+
+  @Test("the assistant context is searched like the notes")
+  func assistantContextIsSearched() {
+    let planned = task(title: "Plan trip", aiNotes: "Prefers morning flights")
+    #expect(planned.matchesSearch("flights"))
+    #expect(planned.matchesSearch("trip flights"))
+    #expect(!planned.matchesSearch("trains"))
+  }
+
+  @Test("the priority and status wire values are not searched")
+  func wireValuesAreNotSearched() {
+    // The helper's task is P2 and open; neither word appears in its text.
+    let rent = task(title: "Pay rent")
+    #expect(!rent.matchesSearch("open"))
+    #expect(!rent.matchesSearch("p2"))
+    #expect(!rent.matchesSearch("rent open"))
   }
 
   @Test("single-word query is plain substring; empty query matches all")

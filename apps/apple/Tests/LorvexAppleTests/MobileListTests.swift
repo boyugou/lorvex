@@ -43,6 +43,52 @@ func mobileStoreMovesDroppedTaskToListAndReloadsCatalog() async throws {
 
 @MainActor
 @Test
+func mobileStoreMovesABatchOfTasksToOneListInOneCall() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let feedback = RecordingFeedbackProvider()
+  let store = MobileStore(
+    core: core, feedbackProvider: feedback, todayString: { "2026-05-23" })
+  await store.refresh()
+  let revision = store.taskWorkspaceRevision
+
+  // The repeated id counts once; the cancelled task moves like an open one.
+  let moved = await store.moveTasks(
+    [
+      LorvexPreviewSeedID.venueTask, LorvexPreviewSeedID.secondMonitorTask,
+      LorvexPreviewSeedID.venueTask,
+    ],
+    toListID: LorvexPreviewSeedID.appleNativeList)
+
+  #expect(moved)
+  #expect(store.errorMessage == nil)
+  #expect(store.isMutatingTask == false)
+  #expect(feedback.recorded == [.taskMoved])
+  // Only the open task adds to the list's open count.
+  #expect(store.lists?.lists.first { $0.id == LorvexPreviewSeedID.appleNativeList }?.openCount == 3)
+  #expect(store.taskWorkspaceRevision != revision)
+  for id in [LorvexPreviewSeedID.venueTask, LorvexPreviewSeedID.secondMonitorTask] {
+    #expect(try await core.loadTask(id: id).listID == LorvexPreviewSeedID.appleNativeList)
+    #expect(store.resolveTask(id)?.listID == LorvexPreviewSeedID.appleNativeList)
+  }
+}
+
+@MainActor
+@Test
+func mobileStoreMovingNoTasksChangesNothing() async throws {
+  let feedback = RecordingFeedbackProvider()
+  let store = MobileStore(
+    core: try await makeSeededInMemoryCore(), feedbackProvider: feedback,
+    todayString: { "2026-05-23" })
+  await store.refresh()
+
+  let moved = await store.moveTasks([], toListID: LorvexPreviewSeedID.appleNativeList)
+
+  #expect(!moved)
+  #expect(feedback.recorded.isEmpty)
+}
+
+@MainActor
+@Test
 func mobileStoreCreatesListAndOpensItsScreen() async throws {
   let store = MobileStore(
     core: try await makeSeededInMemoryCore(), selectedTab: .tasks, todayString: { "2026-05-23" })

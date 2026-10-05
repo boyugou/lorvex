@@ -4,13 +4,14 @@ import Testing
 
 @testable import LorvexApple
 
-private func makeTask(id: String, title: String, notes: String = "", tags: [String] = [])
-  -> LorvexTask
-{
+private func makeTask(
+  id: String, title: String, notes: String = "", aiNotes: String? = nil, tags: [String] = []
+) -> LorvexTask {
   LorvexTask(
     id: id,
     title: title,
     notes: notes,
+    aiNotes: aiNotes,
     priority: .p2,
     status: .open,
     dueDate: nil,
@@ -60,6 +61,17 @@ func nonEmptyQueryLeadsWithNewTaskAndMatchesTasks() {
       .openTask(id: "1", title: "Write report", subtitle: nil),
       .openTask(id: "3", title: "Report to manager", subtitle: nil),
     ])
+}
+
+@Test
+func aTaskWhoseOnlyMatchIsItsAssistantContextIsListed() {
+  let tasks = [
+    makeTask(id: "1", title: "Plan trip", aiNotes: "Prefers morning flights"),
+    makeTask(id: "2", title: "Buy milk"),
+  ]
+  let groups = CommandPaletteResults.groups(query: "flights", tasks: tasks)
+  let taskGroup = groups.first { $0.title == "Tasks" }?.results ?? []
+  #expect(taskGroup == [.openTask(id: "1", title: "Plan trip", subtitle: nil)])
 }
 
 @Test

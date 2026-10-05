@@ -17,6 +17,8 @@ struct AppKitFeedbackProvider: LorvexFeedbackProviding {
       performer.perform(.alignment, performanceTime: .default)
     case .taskDeferred:
       performer.perform(.alignment, performanceTime: .default)
+    case .taskMoved:
+      performer.perform(.alignment, performanceTime: .default)
     case .habitCompleted:
       performer.perform(.levelChange, performanceTime: .default)
     case .habitMilestoneReached:

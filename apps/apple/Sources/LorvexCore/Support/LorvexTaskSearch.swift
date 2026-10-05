@@ -2,7 +2,10 @@ import Foundation
 
 extension LorvexTask {
   /// Case-insensitive term-AND match of `query` against the task's title,
-  /// notes, priority, status, and tags.
+  /// notes, assistant context, and tags — the same fields the core's task
+  /// search reads. The priority and status wire values ("P1", "in_progress")
+  /// are internal identifiers the user never sees as text, so they are not
+  /// searched.
   ///
   /// Platform-neutral so every surface scores a task identically: the macOS
   /// workspace search filter and command palette filter in-memory pools through
@@ -17,8 +20,7 @@ extension LorvexTask {
     LorvexCatalogSearch.matches(query, fields: [
       title,
       notes,
-      priority.rawValue,
-      status.rawValue,
+      aiNotes,
       tags.joined(separator: " "),
     ])
   }

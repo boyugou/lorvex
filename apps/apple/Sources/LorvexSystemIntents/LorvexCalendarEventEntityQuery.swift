@@ -56,7 +56,7 @@ struct LorvexCalendarEventEntityQuery: EntityQuery, EntityStringQuery {
     let entities = try await allCalendarEventEntities(core: core)
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
-      entity.title.localizedStandardContains(query)
+      entity.title.containsSearchTerm(query)
         || entity.id.localizedStandardContains(query)
         || entity.scheduleSummary.localizedStandardContains(query)
     }

@@ -415,6 +415,178 @@ final class TaskRepoSearchTests: XCTestCase {
     XCTAssertEqual(result.rows[0].core.id, "bench-02500")
   }
 
+  // ── Folded scan ────────────────────────────────────────
+
+  /// The titles among `titles` (each an open task) that the production search
+  /// returns for `query`, in result order.
+  private func titlesFound(by query: String, among titles: [String]) throws -> [String] {
+    let store = try TestSupport.freshStore()
+    return try store.writer.write { db -> [String] in
+      for (index, title) in titles.enumerated() {
+        try self.insertTask(db, "t\(index)", title, "open", priority: 2)
+      }
+      let result = try TaskRepo.Search.searchTasksWithFallback(
+        db, predicate: self.pred(query), page: .default)
+      XCTAssertEqual(result.totalMatching, Int64(result.rows.count), "query \(query)")
+      return result.rows.map(\.core.title)
+    }
+  }
+
+  /// Each row is a stored title and the queries a person would type for it:
+  /// the index leaves these apart (ё against е, ł against l, đ against d, and
+  /// so on) and the folded scan joins them.
+  func testFoldedScanFindsTitlesTypedWithOtherLettersOrCase() throws {
+    let cases: [(title: String, queries: [String])] = [
+      ("Всё ещё впереди", ["все еще", "ВСЁ", "все"]),
+      ("Ёлку купить", ["елку", "ёлку", "ЕЛКУ"]),
+      ("Łódź: kupić mleko", ["lodz", "łódź", "LODZ kupic"]),
+      ("Đi chợ mua rau", ["di cho", "ĐI", "DI CHO MUA"]),
+      ("Straße putzen", ["strasse", "STRASSE", "Straße"]),
+      ("Işık faturasını öde", ["ışık", "isik", "ISIK", "Işık"]),
+      ("İstanbul gezisi", ["istanbul", "İSTANBUL", "ıstanbul"]),
+      ("Καλημέρα κόσμε", ["καλημερα", "ΚΑΛΗΜΕΡΑ", "κοσμε"]),
+      ("λόγος και πράξη", ["λογοσ", "ΛΟΓΟΣ", "λογος"]),
+      ("أسماء الطلاب", ["اسماء", "الطلاب", "أسماء"]),
+      ("کتاب خوب", ["كتاب", "کتاب", "كتاب خوب"]),
+      ("Ærlig Øl bestilt", ["aerlig", "ol bestilt"]),
+      ("שָׁלוֹם עולם", ["שלום", "עולם"]),
+    ]
+    for (title, queries) in cases {
+      for query in queries {
+        XCTAssertEqual(
+          try titlesFound(by: query, among: [title, "Unrelated chore", "Другое дело"]), [title],
+          "\(query) should find \(title)")
+      }
+    }
+  }
+
+  func testFoldedScanRequiresEveryWordAndFindsNothingElse() throws {
+    let titles = ["Купить молоко и хлеб", "Купить билеты", "Позвонить маме"]
+    XCTAssertEqual(try titlesFound(by: "купить хлеб", among: titles), [titles[0]])
+    XCTAssertEqual(
+      try titlesFound(by: "КУПИТЬ", among: titles).sorted(), [titles[0], titles[1]].sorted())
+    XCTAssertEqual(try titlesFound(by: "купить сахар", among: titles), [])
+    XCTAssertEqual(try titlesFound(by: "çhezzz", among: titles), [])
+  }
+
+  /// Punctuation in the query only separates words, so LIKE wildcards typed
+  /// by the user never act as wildcards.
+  func testFoldedScanTreatsLikeWildcardsAsText() throws {
+    let titles = ["Łódź 100% done", "Łódź a_b"]
+    XCTAssertEqual(try titlesFound(by: "lodz 100%", among: titles), [titles[0]])
+    XCTAssertEqual(try titlesFound(by: "lodz a_b", among: titles), [titles[1]])
+    XCTAssertEqual(try titlesFound(by: "lodz %", among: titles).sorted(), titles.sorted())
+  }
+
+  func testFoldedScanMatchesTagNames() throws {
+    let store = try TestSupport.freshStore()
+    let found = try store.writer.write { db -> [String] in
+      try self.insertTask(db, "t1", "Weekly report", "open", priority: 2)
+      try self.insertTask(db, "t2", "Another report", "open", priority: 2)
+      try db.execute(
+        sql: """
+          INSERT INTO tags (id, display_name, lookup_key, version, created_at, updated_at) \
+          VALUES ('tag-1', 'Ёжик', 'ёжик', \
+          '0000000000000_0000_0000000000000000', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')
+          """)
+      try db.execute(
+        sql: """
+          INSERT INTO task_tags (task_id, tag_id, version, created_at) \
+          VALUES ('t1', 'tag-1', '0000000000000_0000_0000000000000000', '2026-01-01T00:00:00Z')
+          """)
+      return try TaskRepo.Search.searchTasksWithFallback(
+        db, predicate: self.pred("ежик"), page: .default
+      ).rows.map(\.core.id)
+    }
+    XCTAssertEqual(found, ["t1"])
+  }
+
+  func testFoldedScanHonorsStatusFilterOrderingAndArchive() throws {
+    let store = try TestSupport.freshStore()
+    try store.writer.write { db in
+      try self.insertTask(db, "done", "Łódź trip report", "completed", priority: 1)
+      try self.insertTask(db, "later", "Łódź", "someday", priority: 1)
+      try self.insertTask(db, "open-exact", "Łódź", "open", priority: 3)
+      try self.insertTask(db, "open-long", "Łódź weekend trip planning", "open", priority: 1)
+      try self.insertTask(db, "gone", "Łódź archived", "open", priority: 1)
+      try db.execute(
+        sql: "UPDATE tasks SET archived_at = '2026-01-02T00:00:00.000Z' WHERE id = 'gone'")
+
+      let all = try TaskRepo.Search.searchTasksWithFallback(
+        db, predicate: self.pred("lodz"), page: .default)
+      // Open tasks first (an exact title match above a longer title), then
+      // someday, then completed; the archived task is never returned.
+      XCTAssertEqual(all.rows.map(\.core.id), ["open-exact", "open-long", "later", "done"])
+      XCTAssertEqual(all.totalMatching, 4)
+
+      let open = try TaskRepo.Search.searchTasksWithFallback(
+        db, predicate: self.pred("lodz", status: ["open"]), page: .default)
+      XCTAssertEqual(open.rows.map(\.core.id), ["open-exact", "open-long"])
+
+      let second = try TaskRepo.Search.searchTasksWithFallback(
+        db, predicate: self.pred("lodz"), page: Pagination(limit: 2, offset: 2))
+      XCTAssertEqual(second.rows.map(\.core.id), ["later", "done"])
+      XCTAssertEqual(second.totalMatching, 4)
+    }
+  }
+
+  /// An index hit is returned as before; the folded scan does not widen it.
+  func testFoldedScanDoesNotRunWhenTheIndexFoundSomething() throws {
+    let titles = ["Łódź trip", "lodz notes"]
+    XCTAssertEqual(try titlesFound(by: "lodz", among: titles), ["lodz notes"])
+  }
+
+  /// Body text and AI notes are folded too, and a word may sit in a different
+  /// field than the others.
+  func testFoldedScanReadsBodiesAndNotes() throws {
+    let store = try TestSupport.freshStore()
+    try store.writer.write { db in
+      try self.insertTask(db, "body", "План", "open", priority: 2)
+      try db.execute(sql: "UPDATE tasks SET body = 'Ёлка во дворе' WHERE id = 'body'")
+      try self.insertTask(db, "notes", "Заметка", "open", priority: 2)
+      try db.execute(sql: "UPDATE tasks SET ai_notes = 'Всё ещё актуально' WHERE id = 'notes'")
+      try self.insertTask(db, "none", "Другое", "open", priority: 2)
+
+      func found(_ query: String) throws -> [String] {
+        try TaskRepo.Search.searchTasksWithFallback(
+          db, predicate: self.pred(query), page: .default
+        ).rows.map(\.core.id)
+      }
+      XCTAssertEqual(try found("елка"), ["body"])
+      XCTAssertEqual(try found("все еще"), ["notes"])
+      XCTAssertEqual(try found("заметка все"), ["notes"])
+      XCTAssertEqual(try found("елка заметка"), [])
+    }
+  }
+
+  /// The short trailing token is retried alone through LIKE only after the
+  /// folded scan, which requires every word, found nothing.
+  func testShortTrailingTokenRetryRunsAfterTheFoldedScan() throws {
+    let titles = ["Unrelated chore", "Đi chợ mua rau"]
+    XCTAssertEqual(try titlesFound(by: "di cho", among: titles), [titles[1]])
+    XCTAssertEqual(try titlesFound(by: "zzz cho", among: titles), [titles[0]])
+  }
+
+  // ── Scripts without word spaces beyond CJK ───────────────────
+
+  func testThaiQueryFindsAWordInsideAnUnspacedTitle() throws {
+    let titles = ["ที่ต้องทำวันนี้ซื้อของ", "ประชุมทีมพรุ่งนี้", "Unrelated"]
+    XCTAssertEqual(try titlesFound(by: "วันนี้", among: titles), [titles[0]])
+    XCTAssertEqual(try titlesFound(by: "ซื้อของ", among: titles), [titles[0]])
+    XCTAssertEqual(try titlesFound(by: "ทีม", among: titles), [titles[1]])
+    XCTAssertEqual(try titlesFound(by: "ทีมพรุ่ง", among: titles), [titles[1]])
+    XCTAssertEqual(try titlesFound(by: "ไม่มี", among: titles), [])
+  }
+
+  func testKhmerAndBurmeseQueriesFindWordsInsideTitles() throws {
+    XCTAssertEqual(
+      try titlesFound(by: "អីវ៉ាន់", among: ["ទិញអីវ៉ាន់នៅផ្សារ", "Unrelated"]),
+      ["ទិញអីវ៉ាន់នៅផ្សារ"])
+    XCTAssertEqual(
+      try titlesFound(by: "ဈေးဝယ်", among: ["မနက်ဖြန်ဈေးဝယ်ရန်", "Unrelated"]),
+      ["မနက်ဖြန်ဈေးဝယ်ရန်"])
+  }
+
   // ── is_fts_schema_missing classifier (fts_schema.rs) ─────────
 
   func testIsFtsSchemaMissingMatchesLiveSqliteMissingTableText() throws {

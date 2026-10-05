@@ -401,6 +401,42 @@ struct MCPToolSweepFixTests {
     #expect(task["match_reasons"]?.arrayValue?.compactMap(\.stringValue) == ["title"])
   }
 
+  @Test("search_tasks finds a title typed without its stroke letters and names the field")
+  func searchTasksFindsLetterVariantsAndNamesTheField() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let strokeTitle: String = "Łódź w piątek"
+    let spreadTitle: String = "Plan wyjazdu"
+    _ = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string(strokeTitle)])
+    let spread = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string(spreadTitle)])
+    let spreadID = try #require(spread.structuredContent?.objectValue?["id"]?.stringValue)
+    _ = try await mcpRegistryCall(
+      registry, tool: "set_task_ai_notes",
+      arguments: ["task_id": .string(spreadID), "notes": .string("Hotel w Łodzi")])
+
+    func reasons(for query: String) async throws -> [String: [String]] {
+      let result = try await mcpRegistryCall(
+        registry, tool: "search_tasks", arguments: ["query": .string(query)])
+      let tasks = try #require(result.structuredContent?.objectValue?["tasks"]?.arrayValue)
+      return Dictionary(
+        uniqueKeysWithValues: tasks.compactMap { value -> (String, [String])? in
+          guard let task = value.objectValue, let title = task["title"]?.stringValue else {
+            return nil
+          }
+          let names = task["match_reasons"]?.arrayValue?.compactMap(\.stringValue) ?? []
+          return (title, names)
+        })
+    }
+
+    // The index cannot match "lodz" to "Łódź"; the folded scan does.
+    let strokeLetters = try await reasons(for: "lodz")
+    #expect(strokeLetters[SecurityFencing.fence(strokeTitle)] == ["title"])
+    // Words split across fields name each field that holds one.
+    let splitAcrossFields = try await reasons(for: "plan lodzi")
+    #expect(splitAcrossFields[SecurityFencing.fence(spreadTitle)] == ["title", "ai_notes"])
+  }
+
   @Test("search_tasks reports live-core ai_notes-only match reasons")
   func searchTasksReportsLiveCoreAINotesOnlyMatchReasons() async throws {
     let fixture = mcpOnDiskRegistry()

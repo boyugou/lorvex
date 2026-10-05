@@ -142,7 +142,7 @@ struct TaskDetailTagsPicker: View {
     // A tag put on the task from elsewhere while the picker is open still lists.
     var tags = applied.filter { tag in !order.contains { Self.same($0, tag) } } + order
     guard !typed.isEmpty else { return tags.map(Row.tag) }
-    tags = tags.filter { $0.localizedStandardContains(typed) }
+    tags = tags.filter { $0.containsSearchTerm(typed) }
     if let exact = tags.firstIndex(where: { Self.same($0, typed) }) {
       tags.insert(tags.remove(at: exact), at: 0)
       return tags.map(Row.tag)

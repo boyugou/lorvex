@@ -77,8 +77,8 @@ struct LorvexChecklistItemEntityQuery: EntityQuery, EntityStringQuery {
     let entities = try await suggestedEntities(core: core)
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
-      entity.text.localizedStandardContains(query)
-        || entity.taskTitle.localizedStandardContains(query)
+      entity.text.containsSearchTerm(query)
+        || entity.taskTitle.containsSearchTerm(query)
     }
   }
 }

@@ -1,4 +1,5 @@
 import LorvexCore
+import LorvexDomain
 import MCP
 
 extension CoreBridgeClient {
@@ -41,19 +42,26 @@ extension CoreBridgeClient {
     })
   }
 
-  /// The fields of `task` that contain `query`, ignoring case and accents as
-  /// the store's full-text index does, so a task the search found by an
-  /// accented word still names the field it was found in.
+  /// The fields of `task` that account for a search hit on `query`, compared
+  /// the way the store's search compares text (case, accents, and letter
+  /// variants such as ё, ł, and ß ignored, via `SearchFold`). A field is named
+  /// when it holds every word of the query; when the words are spread over
+  /// several fields, each field holding at least one of them is named, so a
+  /// task the search found always names where it was found.
   static func matchReasons(task: LorvexTask, query: String) -> [String] {
-    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else { return [] }
-    var reasons: [String] = []
-    if task.title.localizedStandardContains(trimmed) { reasons.append("title") }
-    if task.notes.localizedStandardContains(trimmed) { reasons.append("notes") }
-    if task.aiNotes?.localizedStandardContains(trimmed) == true { reasons.append("ai_notes") }
-    if task.tags.contains(where: { $0.localizedStandardContains(trimmed) }) {
-      reasons.append("tags")
-    }
-    return reasons
+    let words = SearchFold.tokens(query)
+    guard !words.isEmpty else { return [] }
+    let fields: [(name: String, text: String)] = [
+      ("title", SearchFold.fold(task.title)),
+      ("notes", SearchFold.fold(task.notes)),
+      ("ai_notes", SearchFold.fold(task.aiNotes ?? "")),
+      ("tags", task.tags.map(SearchFold.fold).joined(separator: " ")),
+    ]
+    let holdingEveryWord = fields.filter { field in words.allSatisfy { field.text.contains($0) } }
+    let named =
+      holdingEveryWord.isEmpty
+      ? fields.filter { field in words.contains { field.text.contains($0) } }
+      : holdingEveryWord
+    return named.map(\.name)
   }
 }

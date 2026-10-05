@@ -122,6 +122,36 @@ final class TaskRepoReadListTests: XCTestCase {
     }
   }
 
+  /// The filter compares folded text on both sides, so it ignores case in
+  /// every script (SQLite LIKE folds ASCII only) and the accent or letter
+  /// variants a query is typed without.
+  func testTextFilterIgnoresCaseAccentsAndLetterVariantsInEveryScript() throws {
+    let store = try TestSupport.freshStore()
+    try store.writer.write { db in
+      try self.insertTask(db, "ru", "Купить молоко, всё ещё свежее", "open")
+      try self.insertTask(db, "pl", "Łódź w piątek", "open")
+      try self.insertTask(db, "el", "Καλημέρα κόσμε", "open")
+      try self.insertTask(db, "tr", "Işık faturası", "open")
+      try self.insertTask(db, "ar", "أسماء الطلاب", "open")
+      try self.insertTask(db, "body", "Plan", "open")
+      try db.execute(sql: "UPDATE tasks SET body = 'Straße und Ärger' WHERE id = 'body'")
+      try self.insertTask(db, "notes", "Plan B", "open")
+      try db.execute(sql: "UPDATE tasks SET ai_notes = 'Ёлка во дворе' WHERE id = 'notes'")
+
+      let cases: [(text: String, id: String)] = [
+        ("КУПИТЬ", "ru"), ("все еще", "ru"), ("lodz", "pl"), ("ŁÓDŹ", "pl"),
+        ("καλημερα", "el"), ("ΚΟΣΜΕ", "el"), ("isik", "tr"), ("ışık", "tr"),
+        ("اسماء", "ar"), ("strasse", "body"), ("arger", "body"), ("елка", "notes"),
+      ]
+      for (text, id) in cases {
+        var q = TaskRepo.ListTasksQuery()
+        q.status = .all
+        q.text = text
+        XCTAssertEqual(self.ids(try TaskRepo.Read.listTasks(db, query: q)), [id], text)
+      }
+    }
+  }
+
   func testTextFilterEscapesLikeMetacharacters() throws {
     let store = try TestSupport.freshStore()
     let result = try store.writer.write { db -> TaskRepo.ListTasksResult in

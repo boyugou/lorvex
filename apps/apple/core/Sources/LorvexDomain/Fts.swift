@@ -55,13 +55,15 @@ public enum Fts {
     return String(String.UnicodeScalarView(query.unicodeScalars[..<idx]))
   }
 
-  // MARK: - CJK detection
+  // MARK: - Unspaced-script detection
 
-  /// Returns `true` if the query contains any CJK character. FTS5 unicode61
-  /// treats CJK runs as opaque tokens because it splits only on whitespace
-  /// and punctuation, so callers must route CJK queries through a LIKE
-  /// fallback path.
-  public static func containsCjk(_ query: String) -> Bool {
+  /// Returns `true` if the query contains a character of a script that does
+  /// not separate words with spaces: Chinese, Japanese, Korean, Thai, Lao,
+  /// Burmese, or Khmer. FTS5 unicode61 splits only on whitespace and
+  /// punctuation, so it treats a whole run of such text as one opaque token
+  /// and cannot find a word inside it; callers route these queries through
+  /// substring matching (the trigram index, or LIKE) instead.
+  public static func containsUnspacedScript(_ query: String) -> Bool {
     for s in query.unicodeScalars {
       let v = s.value
       if (0x4E00...0x9FFF).contains(v)  // CJK Unified Ideographs
@@ -74,6 +76,13 @@ public enum Fts {
         || (0x1100...0x11FF).contains(v)  // Hangul Jamo
         || (0xFF65...0xFF9F).contains(v)  // Halfwidth Katakana
         || (0xF900...0xFAFF).contains(v)  // CJK Compatibility Ideographs
+        || (0x0E00...0x0E7F).contains(v)  // Thai
+        || (0x0E80...0x0EFF).contains(v)  // Lao
+        || (0x1000...0x109F).contains(v)  // Myanmar
+        || (0xA9E0...0xA9FF).contains(v)  // Myanmar Extended-B
+        || (0xAA60...0xAA7F).contains(v)  // Myanmar Extended-A
+        || (0x1780...0x17FF).contains(v)  // Khmer
+        || (0x19E0...0x19FF).contains(v)  // Khmer Symbols
       {
         return true
       }
@@ -82,10 +91,10 @@ public enum Fts {
   }
 
   /// Returns `true` when a query should skip FTS5 entirely and go straight
-  /// to the LIKE fallback path: any CJK content, or no alphanumeric scalar
-  /// anywhere in the input.
+  /// to the LIKE fallback path: any unspaced-script content, or no
+  /// alphanumeric scalar anywhere in the input.
   public static func shouldUseLikeFallback(_ query: String) -> Bool {
-    if containsCjk(query) { return true }
+    if containsUnspacedScript(query) { return true }
     return !anyAlphanumeric(query)
   }
 

@@ -1,3 +1,4 @@
+import Foundation
 import LorvexCore
 import Testing
 
@@ -27,4 +28,15 @@ func memoryTitleLeavesTypedPhrasesAlone() {
   #expect(MemoryEntry.displayTitle(forKey: "___") == "___")
   let entry = MemoryEntry(key: "behavioral_patterns", content: "", updatedAt: "")
   #expect(entry.displayTitle == "Behavioral patterns")
+}
+
+@Test("the first letter is capitalized in the language the title is read in")
+func memoryTitleCapitalizesInTheReadersLanguage() {
+  // Turkish capitalizes a dotted "i" as "İ", so a plain uppercase would misspell it.
+  #expect(
+    MemoryEntry.displayTitle(forKey: "ilgi_alanları", locale: Locale(identifier: "tr_TR"))
+      == "İlgi alanları")
+  #expect(
+    MemoryEntry.displayTitle(forKey: "ilgi_alanları", locale: Locale(identifier: "en_US"))
+      == "Ilgi alanları")
 }

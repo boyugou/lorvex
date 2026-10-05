@@ -58,6 +58,6 @@ struct LorvexHabitReminderEntityQuery: EntityQuery, EntityStringQuery {
     let query = string.trimmingCharacters(in: .whitespacesAndNewlines)
     let entities = try await suggestedEntities(core: core)
     guard !query.isEmpty else { return entities }
-    return entities.filter { $0.habitName.localizedStandardContains(query) }
+    return entities.filter { $0.habitName.containsSearchTerm(query) }
   }
 }

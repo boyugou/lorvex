@@ -35,8 +35,17 @@ struct LorvexCaptureVocabulary: Sendable {
   /// Hebrew the line with its final letters read as the regular ones, its
   /// maqaf and other hyphens read as the hyphen, and its apostrophe-like and
   /// double-quote-like marks read as the geresh and the gershayim
-  /// (``hebrewForMatching(_:)``). It must keep every character at its UTF-16
-  /// offset, so a match range in it is the same range in the typed line.
+  /// (``hebrewForMatching(_:)``); for German the line with ä, ö, ü, and ß read
+  /// as a, o, u, and s and a diaeresis typed as a separate sign after a, o,
+  /// or u read as e, so every pattern reads a word typed with the umlauts, with
+  /// "ae", "oe", "ue", and "ss", or with the dots left out
+  /// (``germanForMatching(_:)``); for Dutch the line with its accents left out
+  /// ("één" as "een", "vóór" as "voor", "geëindigd" as "geeindigd"), which
+  /// ``unaccentedForMatching(_:)`` does; for Romanian the same, which reads ă,
+  /// â, and î as a, a, and i and both the comma-below and the cedilla forms of
+  /// ș/ş and ț/ţ as s and t ("mâine" as "maine", "sâmbătă" as "sambata"). It
+  /// must keep every character at its UTF-16 offset, so a match range in it is
+  /// the same range in the typed line.
   var readingForm: @Sendable (String) -> String = { $0 }
   /// High (p1), medium (p2), or low (p3) priority.
   var priority: [Rule<LorvexTask.Priority>] = []
@@ -69,32 +78,42 @@ struct LorvexCaptureVocabulary: Sendable {
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
   /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian,
-  /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, and Hebrew when
-  /// `languages` includes them (any region of a language: "es-MX", "es-419",
-  /// "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF", "hi-IN", "ur-PK",
-  /// "ur-IN", "he-IL"), then Chinese and English, which every line is read
-  /// with.
+  /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, Hebrew, German, Dutch, and
+  /// Romanian when `languages` includes them (any region of a language:
+  /// "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF",
+  /// "hi-IN", "ur-PK", "ur-IN", "he-IL", "de-AT", "de-CH", "nl-BE", "ro-MD"),
+  /// then Chinese and English, which every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
   /// Japanese particle ("10月5日に"). Every other language goes before
   /// English, so a part of the day or a word written before or after a clock
   /// time ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00", "o 15:00", "الساعة 3:30",
-  /// "ساعت 3:30", "3:30 बजे", "3:30 بجے", "בשעה 3:30") is read with the time
-  /// instead of being left in the title when the English pattern takes "3:30"
-  /// or "15:00". Persian goes after Arabic, so for a user who reads both, a
-  /// phrase the two could read is read the Arabic way; they share few words.
-  /// Urdu goes after Persian and Hindi, so for a user who reads Urdu and one of
-  /// them, a phrase two of them could read is read the earlier way; Urdu
-  /// shares its script with Arabic and Persian and its spoken words with Hindi,
-  /// but few written words with any of them. Hebrew goes last of the
-  /// languages: its letters belong to no other vocabulary, so its position
-  /// settles no phrase between it and another language. Beside a language that
-  /// writes a clock time with the letter h (French and Portuguese), English
-  /// leaves hour counts written with h to it (``englishBesideHourClock``), so
-  /// "15h" is never read as fifteen hours. Spanish, Italian, Russian,
-  /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, and Hebrew do not write a
-  /// clock time that way, so "2h" beside them stays a length.
+  /// "ساعت 3:30", "3:30 बजे", "3:30 بجے", "בשעה 3:30", "um 15:30", "abends
+  /// 7:30", "om 15:30", "'s avonds 7:30", "la 15:30", "seara 7:30") is read with
+  /// the time instead of being left in the title when the English pattern takes
+  /// "3:30" or "15:00". Persian goes after Arabic, so for a user who reads both,
+  /// a phrase the two could read is read the Arabic way; they share few words.
+  /// Urdu goes after Persian and Hindi, so for a user who
+  /// reads Urdu and one of them, a phrase two of them could read is read the
+  /// earlier way; Urdu shares its script with Arabic and Persian and its spoken
+  /// words with Hindi, but few written words with any of them. Hebrew goes
+  /// after them: its letters belong to no other vocabulary, so its position
+  /// settles no phrase between it and another language. German, Dutch, and
+  /// Romanian go last of the languages: their words are written in Latin letters
+  /// like the French, Portuguese, Spanish, Italian, and Polish ones, but no
+  /// phrase is the same in two of them ("um 15 Uhr", "om 15 uur", "la ora 15",
+  /// "jeden Montag", "elke maandag", "în fiecare luni"), and where two of them
+  /// share a word with one meaning ("morgen", "15 oktober", "15 august") either
+  /// reads it alike, so their positions settle no phrase either. Beside a
+  /// language that writes a clock time with the letter h (French, Portuguese,
+  /// and German), English leaves hour counts
+  /// written with h to it (``englishBesideHourClock``), so "15h" is never read
+  /// as fifteen hours.
+  /// Spanish, Italian, Russian, Ukrainian, Polish, Arabic, Persian, Hindi,
+  /// Urdu, Hebrew, Dutch, and Romanian do not write a clock time that way (Dutch
+  /// writes its hours with "uur" or "u", Romanian with "ora" before the hour),
+  /// so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -112,6 +131,9 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("hi") { vocabularies.append(.hindi) }
     if codes.contains("ur") { vocabularies.append(.urdu) }
     if codes.contains("he") { vocabularies.append(.hebrew) }
+    if codes.contains("de") { vocabularies.append(.german) }
+    if codes.contains("nl") { vocabularies.append(.dutch) }
+    if codes.contains("ro") { vocabularies.append(.romanian) }
     let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
     return vocabularies + [.chinese, english]
   }

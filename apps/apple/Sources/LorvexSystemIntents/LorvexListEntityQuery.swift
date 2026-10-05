@@ -37,7 +37,7 @@ struct LorvexListEntityQuery: EntityQuery, EntityStringQuery {
     let entities = try await allListEntities(core: core)
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
-      entity.name.localizedStandardContains(query)
+      entity.name.containsSearchTerm(query)
         || entity.id.localizedStandardContains(query)
     }
   }

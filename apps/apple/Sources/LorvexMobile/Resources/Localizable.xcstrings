@@ -84128,7 +84128,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Aufgabe pro Zeile. Englische Wörter wie „tomorrow“, „3pm“, „every Monday“, „20 min“ oder „#list“ ergänzen die Details der Aufgabe."
+            "value": "Eine Aufgabe pro Zeile. Wörter wie „morgen“, „um 15 Uhr“, „jeden Montag“, „20 Min“ oder „#Liste“ ergänzen die Details der Aufgabe."
           }
         },
         "en": {
@@ -84200,7 +84200,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eén taak per regel. Engelse woorden zoals ‘tomorrow’, ‘3pm’, ‘every Monday’, ‘20 min’ of ‘#list’ vullen de details van de taak in."
+            "value": "Eén taak per regel. Woorden zoals ‘morgen’, ‘om 15:00’, ‘elke maandag’, ‘20 min’ of ‘#lijst’ vullen de details van de taak in."
           }
         },
         "pl": {
@@ -84218,7 +84218,7 @@
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "O sarcină pe rând. Cuvinte englezești precum „tomorrow”, „3pm”, „every Monday”, „20 min” sau „#list” completează detaliile sarcinii."
+            "value": "O sarcină pe rând. Cuvinte precum „mâine”, „la 15:00”, „în fiecare luni”, „20 min” sau „#listă” completează detaliile sarcinii."
           }
         },
         "ru": {

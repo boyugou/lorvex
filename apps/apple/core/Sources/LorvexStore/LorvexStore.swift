@@ -219,6 +219,7 @@ public final class LorvexStore: @unchecked Sendable {
     // which the sync pipeline classifies as transient and retries. Hosts that
     // never post the notification are unaffected.
     config.observesSuspensionNotifications = true
+    registerSearchFunctions(in: &config)
     let queue = try DatabaseQueue(path: url.path, configuration: config)
     try applySchema(
       queue, sql: schemaSQL, schemaChecksum: schemaChecksum, migrations: migrations,
@@ -247,6 +248,7 @@ public final class LorvexStore: @unchecked Sendable {
     config.foreignKeysEnabled = true
     config.busyMode = .timeout(5)
     config.defaultTransactionKind = .immediate
+    registerSearchFunctions(in: &config)
     let queue = try DatabaseQueue(configuration: config)
     try applySchema(
       queue, sql: schemaSQL, schemaChecksum: nil, migrations: migrations, managed: false)

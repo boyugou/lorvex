@@ -1141,6 +1141,438 @@ at its start before a colon or a comma ("דחוף: להגיש דוח"); anywhere
 is an ordinary adjective and stays in the title ("דחוף לקנות חלב"). "חשוב" is
 not a priority word.
 
+German words are read when German is among your device's preferred languages,
+in any regional variant (Germany, Austria, and Switzerland). The umlauts and ß
+are optional: ä, ö, ü, and ß are read as the plain letter and the digraphs ae,
+oe, ue, and ss as the same letters, so "übermorgen", "uebermorgen", and
+"ubermorgen" are one word, and the title keeps the letters you typed. German
+says a clock time with "um" and "Uhr": "um 15 Uhr", "um 15:30 Uhr", "15.30
+Uhr", "um 15 Uhr 30", "um 15h", "um 3", and an hour spelled as a word after
+"um" or "gegen" ("um drei Uhr", "gegen vier"). An hour from 1 to 6 with no part
+of the day is in the afternoon ("um 3 Uhr" is 3 PM) unless it is written with a
+zero ("06:30"), and a part of the day sets the hour: "morgens" and "vormittags"
+are the morning, "mittags" is noon at 12 and "nachmittags" the afternoon from 1
+to 6, "abends" is the evening, and "nachts" runs past midnight, so "um 2 Uhr
+nachts" is 02:00 on the next day and "um 11 Uhr nachts" is 23:00. "Um 12 Uhr
+nachts", "um 24 Uhr", and "um Mitternacht" mean 00:00 the next day. A part of
+the day beside the day phrase sets a bare hour too ("heute Abend um 7" is
+19:00, "morgen früh um 6" is 06:00), and so does "Abendessen" or "Abendbrot"
+("Abendessen um 8" is 20:00).
+
+German names the half hour by the hour it leads to: "halb vier" is 3:30,
+"viertel nach drei" is 3:15, and "Viertel vor vier" is 3:45. "Viertel vier"
+(3:15), "dreiviertel vier" (3:45), "fünf nach drei", and "zehn vor vier" are times
+only after "um" ("um zehn vor vier" is 3:50), since without it they could be
+words of a title. A bare hour counts only at the end of the line or before a
+word that can follow a time: a preposition, a pronoun, a conjunction, or the
+infinitive of an everyday activity ("um 3 mit Anna", "um 7 aufstehen"). "Um 3
+Kuchen" and "ab 15 Personen" count things and "Preis um 5 erhöhen" says by how
+much, so they stay in the title. An hour with "Uhr" is a time wherever it
+stands, and a time that names a deadline ("bis 17 Uhr", "vor 17 Uhr", "nach 17
+Uhr") stays in the title, while "ab 17 Uhr" starts at 17:00. An hour count
+written with h is a clock time from 13h on or after "um", "gegen", or "ab"
+("15h", "um 10h"), and a length from 2h to 8h ("2h", "1h30"); 9h to 12h alone
+could be either, so they stay in the title. With German among your languages,
+English leaves an hour count written with h to German as well.
+
+| Detail | German |
+|---|---|
+| Day | heute, heute Abend, heute Nacht, morgen, morgen früh, übermorgen, Freitag, am Freitag, diesen Freitag, nächsten Freitag, nächste Woche, am Wochenende, in 3 Tagen, in einer Woche |
+| Date | 15. Oktober, 15 Oktober, am 1. Mai 2027, 15. Okt., 15.10., 15.10.2026, 15/10, 2026-10-15 |
+| Date range | vom 3. bis 5. Mai, vom 30. Mai bis 2. Juni, vom 3.5. bis 5.5., zwischen dem 3. und 5. Mai, 3.-5. Mai, 3-5 Mai, von Montag bis Mittwoch |
+| Due day | bis Freitag, bis zum 15. Oktober, bis morgen, spätestens Freitag, fällig am Freitag, Frist: Freitag, Deadline Freitag, zum 31.7. |
+| Time | um 15 Uhr, um 15:30 Uhr, 15.30 Uhr, um 15h, gegen 15 Uhr, ab 15 Uhr, um 3 Uhr nachmittags, um 8 Uhr abends, um drei, halb vier, viertel nach drei, um zehn vor vier, um Mitternacht; von 14 bis 16 Uhr, von 14:00 bis 16:30 Uhr, 14-16 Uhr |
+| Repeat | jeden Tag, täglich, jeden Montag, montags, jeden Montag und Donnerstag, jede Woche, wöchentlich, alle 2 Wochen, alle zwei Tage, jeden zweiten Tag, jede zweite Woche, zweiwöchentlich, jeden Monat, monatlich, am 15. jedes Monats, jedes Jahr, jährlich, werktags, an Wochenenden |
+| Length | 30 Min, 30 Minuten, 1 Std, 2 Stunden, 1,5 Stunden, 1 Stunde 30 Minuten, eine halbe Stunde, anderthalb Stunden, eine Viertelstunde, dreiviertel Stunde, für 2 Stunden, 2h, 1h30 |
+| Priority | dringend, wichtig (at the end, or "Dringend:" at the start), hohe Priorität, niedrige Priorität, Prio 1, Prio: niedrig |
+
+A weekday alone or after "am" is the coming one, and a weekday that names today
+means a week ahead ("am Dienstag" on a Tuesday is next Tuesday). "Diesen
+Freitag" is this week's, which may be today, and "nächsten Freitag" is next
+week's. A part of the day may follow a weekday or be written onto it ("Freitag
+Abend", "Samstagabend", "Freitag früh"). Weeks start on Monday, as the app's
+weeks do: "nächste Woche" plans the task seven days ahead, and the weekend is
+Saturday and Sunday ("am Wochenende" is the coming Saturday, "nächstes
+Wochenende" the one after). The abbreviations Mo, Di, Mi, Do, Fr, Sa, and So are
+ordinary words too ("so", "do"), so they name a day only after a word that
+points at one ("am Mo", "von Mo bis Mi", "bis kommenden Fr", "jeden Mo"), and a
+weekday that is part of a name or a title stays ("Frau Montag", "Montag-Meeting",
+"Sonntagsbraten"). No past day is read: "gestern", "vorgestern", and "letzten
+Montag" stay in the title. "Morgen" is tomorrow in lowercase, and in capitals
+where a line opens with it ("Morgen Zahnarzt") or a part of the day follows it
+("Morgen früh"); elsewhere a capitalized "Morgen" is the noun for the morning
+("guten Morgen", "am Morgen"). "In 3 Tagen" and "in 2 Wochen" count days and
+weeks; months and years are not read.
+
+A written date has its day number before the month ("15. Oktober", "15
+Oktober", "1. Mai 2027", "5. Jänner"), or is in digits with the day first
+("15.10.", "15.10.2026", "15.10.26", "15/10", "15-10-2026", "2026-10-15"), maybe
+with a weekday in front ("Freitag, den 16.10.", "Fr. 16.10."), and "am", "ab",
+"für", or "zum" may open it. A month abbreviation needs a dot, its own or the
+day's ("5. Okt", "5 Okt."), since several are words too (Jan, Mar, Sep).
+Digits with no closing dot ("15.10") are a date only after a word that
+introduces it ("am 15.10", "bis 15.10"), since "15.10 Uhr" is a time. A date
+without a year that has already passed means next year's, and a year written
+after it must not be past or more than ten years ahead ("5. Oktober 2025" stays
+in the title). A day the calendar lacks ("31. April"), a month alone ("im Mai",
+"Mitte Oktober"), a day of the month alone ("bis zum 5."), and numbers that
+number things ("Kapitel 3.5.", "Version 2.3.4") stay in the title.
+
+A date range plans the task on its first day and makes it due on its last:
+"vom 3. bis 5. Mai", "vom 3. bis zum 5. Mai", "zwischen dem 3. und 5. Mai",
+"3.-5. Mai", "3-5 Mai", and "vom 28.12. bis 2.1." run from the first date to the
+last, and a month written once serves both days. A span of weekdays does the
+same: "von Montag bis Mittwoch" and "von Mo bis Mi" plan the coming Monday and
+make the task due on the Wednesday after it, while Monday to Friday is the
+working week, which repeats. The end must come after the start ("vom 5. bis 3.
+Mai" stays in the title), and the end names its month, so "vom 3. bis 5." is
+never a range. "Bis" joins the two days only after "vom" or "von", or after a
+first day that has its ordinal dot ("3. bis 5. Mai"); a bare number before
+"bis" belongs to the title ("Sprint 12 bis 20 Mai" is due on May 20), as it
+does before a spaced dash ("Sprint 12 - 20 Mai" is planned for May 20). A range
+names both the planned day and the due day, so another day in the same line
+stays in the title.
+
+A due day follows "bis" ("bis Freitag", "bis zum 15. Oktober", "bis morgen",
+"bis spätestens Freitag", "bis kommenden Fr"), "spätestens", "fällig" ("fällig am
+Freitag"), "zum" with a date ("zum 31.7."), or a label ("Frist: Freitag",
+"Abgabefrist 15.10.", "Deadline Freitag", "Stichtag 1.11."). The day before a
+clock deadline is the due day, and the clock stays in the title: "bis Freitag 17
+Uhr" is due Friday, and "17 Uhr" stays. "Bis bald", "bis Ende Juli", "bis Ende
+der Woche", and "bis Juli" are not read.
+
+"Jeden" or "jede" with a day, week, month, or year repeats the task ("jeden
+Tag", "jede Woche", "jeden Monat", "jedes Jahr"), and so do the adverbs
+"täglich", "wöchentlich", "monatlich", and "jährlich" wherever they stand in the
+line, while the adjectives with an ending ("tägliche Aufgaben", "wöchentlicher
+Bericht") stay in the title. The counted intervals are "alle 3 Tage", "alle
+zwei Wochen", "alle 14 Tage" (every second week), "jeden zweiten Tag", "jede
+zweite Woche", "zweiwöchentlich", "vierzehntägig", "vierteljährlich", and
+"halbjährlich". A weekday repeats every week ("jeden Montag", "montags", "an
+jedem Montag"), a list repeats on each of its days ("jeden Montag und
+Donnerstag", "montags, mittwochs und freitags", "jeden Mo und Do"), "werktags",
+"an Werktagen", "Mo-Fr", and "von Montag bis Freitag" repeat on the working
+days, and "jedes Wochenende" and "an Wochenenden" on Saturday and Sunday. A
+weekday after an interval fixes its days ("alle 2 Wochen montags", "jede zweite
+Woche am Freitag", "alle zwei Wochen jeden Montag"), a day of the month repeats
+each month ("am 15. jedes Monats", "zum 1. jedes Monats", "jeden Monat am 15."),
+and "einmal pro Woche" and "einmal im Monat" repeat weekly and monthly. A
+weekday by its place in the month ("jeden ersten Montag im Monat", "jeden
+letzten Freitag", "jeden 2. Montag") has no repeat rule and stays in the title
+whole, and so does "zweimal pro Woche", which counts times.
+
+A length says that it is one: "30 Min", "30 Minuten", "1 Std", "2 Stunden", "1,5
+Stunden", "1 Stunde 30 Minuten", "2h", "1h30", "eine halbe Stunde", "1/2
+Stunde", "anderthalb Stunden", "zweieinhalb Stunden", "eine Viertelstunde",
+"dreiviertel Stunde", and "zwanzig Minuten", maybe after "für", "ca.", "etwa",
+or "Dauer:", or before "lang" ("30 Minuten lang"). An amount after "in",
+"alle", "nach", "vor", "um", "pro", "ab", "bis", "mindestens", or "höchstens", or
+before "vorher", "später", "früher", or "pro Tag", names a moment, an interval,
+a bound, or a rate, not a length ("in 30 Minuten", "alle 2 Stunden", "2 Stunden
+pro Tag", "30 Minuten vorher"), and a side of a range of amounts ("5-6
+Stunden") is none either.
+
+"Priorität hoch", "hohe Priorität", and "Prio 1" are high priority, "mittlere
+Priorität" ("Prio 2") the middle one, and "niedrige Priorität" ("Prio:
+niedrig", "Prio 3") the low one. "Dringend", "dringlich", "eilig", and
+"wichtig", also with "sehr" ("sehr wichtig"), are high priority only at the end
+of the line, or at its start before a colon or a comma ("Wichtig:
+Steuererklärung abgeben"); anywhere else they are ordinary adjectives and stay
+in the title ("Das ist wichtig für mich"), and "nicht dringend" turns the word
+around, so it stays too.
+
+Dutch words are read when Dutch is among your device's preferred languages, in
+any regional variant (the Netherlands and Belgium). Accents are optional: é, ë,
+ï, and ó are read as the plain letter, so "één" and "een", "vóór" and "voor", and
+"tweeënhalf" and "tweeenhalf" are one word, and the title keeps the letters you
+typed. Dutch says a clock time with "om" and then "uur", a colon, or "u" after
+the hour: "om 15:00", "om 15.30 uur", "om 15u30", "om 3 uur", "om 3", and an
+hour spelled as a word ("om drie uur", "om drie"). A time written with a dot
+("15.30") needs "om" or "uur", since without them it could be a number. An hour
+from 1 to 6 with no part of the day is in the afternoon ("om 3 uur" is 3 PM)
+unless it is written with a zero ("06:00"), and a part of the day sets the hour:
+"'s ochtends", "'s morgens", and "voormiddags" are the morning, "'s middags" and
+"namiddags" the afternoon, "'s avonds" the evening, and "'s nachts" runs past
+midnight, so "om 2 uur 's nachts" is 02:00 on the next day and "om 11 uur 's
+nachts" is 23:00. "Om 12 uur 's nachts", "om 24 uur", and "om middernacht" mean
+00:00 the next day. The apostrophe of "'s middags" may be straight, curly, or
+left out. A part of the day beside the day phrase sets a bare hour too
+("vanavond om 7" is 19:00, "morgenavond om 8" is 20:00), and so does "avondeten"
+or "diner" ("Avondeten om 7" is 19:00).
+
+Dutch names the half hour by the hour it leads to: "half vier" is 3:30, "kwart
+over drie" is 3:15, and "kwart voor vier" is 3:45. "Tien over drie" (3:10),
+"vijf voor half vier" (3:25), and "vijf over half vier" (3:35) are times only
+after "om", and "half een" needs a word before it ("om half een" is 12:30),
+since without one they could be words of a title. A bare hour counts only at the
+end of the line or before a word that can follow a time: a preposition, a
+pronoun, a conjunction, or the infinitive of an everyday activity ("om 3 met
+Anna", "om 7 opstaan"). "Om 3 koekjes" counts things and "om 5 verhogen" says by
+how much, so they stay in the title. A count of hours with "uur" is a length
+when it stands alone ("rapport 2 uur" lasts two hours) and a clock time after
+"om", a day, a date, or a part of the day ("om 3 uur", "morgen 3 uur", "vrijdag
+14 uur", "'s avonds 8 uur"); "morgen 3 uur lang" is a length again. An hour from
+13 on with no "om" or day ("13 uur") is not read. A count written with "u" is a
+clock time ("15u", "om 15u30"), and one written with h is a length, as in
+English ("2h"). A clock time that names a bound ("tot 17 uur", "voor 17:00",
+"tegen 17 uur", "uiterlijk 17:00", "na 18 uur", "niet later dan 17 uur") stays
+in the title, while the day before it is the due day: "voor vrijdag om 17 uur"
+is due Friday, and "om 17 uur" stays.
+
+| Detail | Dutch |
+|---|---|
+| Day | vandaag, vanavond, vannacht, morgen, morgenochtend, morgenavond, morgen vroeg, overmorgen, vrijdag, op vrijdag, deze vrijdag, volgende vrijdag, vrijdagavond, volgende week, volgende week maandag, in het weekend, dit weekend, volgend weekend, over 3 dagen, over een week |
+| Date | 15 oktober, op 15 oktober, 1 mei 2027, 15 okt., vrijdag 16 oktober, 15-10-2026, 15.10.2026, op 15/10 |
+| Date range | van 3 tot 5 mei, van 3 tot en met 5 mei, 3 t/m 5 mei, 3-5 mei, van 30 mei tot 2 juni, tussen 3 en 5 mei, van maandag tot woensdag |
+| Due day | voor vrijdag, tot vrijdag, tot en met vrijdag, tegen vrijdag, uiterlijk vrijdag, ten laatste vrijdag, deadline vrijdag, voor 15 oktober |
+| Time | om 15:00, om 15.30 uur, om 15u30, om 3 uur, om drie uur, om 3 uur 's middags, om 8 uur 's avonds, 's avonds om 8, half vier, om kwart over drie, om tien over drie, om middernacht; van 14 tot 16 uur, tussen 14 en 16 uur, 14:00-16:00, van half 3 tot half 5 |
+| Repeat | elke dag, dagelijks, elke maandag, maandags, elke maandag en donderdag, elke week, wekelijks, om de week, om de 2 weken, elke twee dagen, elke maand, maandelijks, elke maand op de 15e, elk jaar, jaarlijks, elk kwartaal, doordeweeks, op werkdagen, elk weekend |
+| Length | 30 min, 30 minuten, 2 uur, 1,5 uur, 1 uur 30 min, een half uur, anderhalf uur, een kwartier, drie kwartier, een uurtje, 45 minuten lang, duur: 2 uur, 2h |
+| Priority | dringend, belangrijk, urgent (at the end, or "Dringend:" at the start), hoge prioriteit, gemiddelde prioriteit, lage prioriteit, prio 1, prio: laag |
+
+A weekday alone or after "op" is the coming one, and a weekday that names today
+means a week ahead ("op dinsdag" on a Tuesday is next Tuesday). "Komende
+vrijdag" and "aanstaande vrijdag" are the coming one too, "deze vrijdag" is this
+week's, which may be today, and "volgende vrijdag" is next week's. A part of the
+day may follow a weekday or be written onto it ("vrijdagavond", "vrijdag
+avond", "vrijdagochtend"). Weeks start on Monday, as the app's weeks do:
+"volgende week" plans the task seven days ahead, "volgende week maandag" and
+"maandag volgende week" name next Monday, and the weekend is Saturday and
+Sunday ("dit weekend" and "in het weekend" are the coming Saturday, "volgend
+weekend" the one after). The abbreviations ma, di, wo, do, vr, za, and zo are
+ordinary words too ("zo", "do"), so they name a day only after a word that
+points at one ("op ma", "van ma tot wo", "elke ma", "komende vr", "deze wo"),
+and a weekday that is part of a name or a compound stays ("mevrouw Maandag",
+"maandag-meeting", "vrijdagmiddagborrel"). No past day is read: "gisteren",
+"eergisteren", "gisteravond", "vorige maandag", "afgelopen vrijdag", "vorige
+week", and "vorig weekend" stay in the title, and so does a weekend named by
+what it comes before ("voor het weekend"). "Morgen" is tomorrow, while
+"goedemorgen" and "de morgen" are the greeting and the noun for the morning, so
+they stay. "Over 3 dagen" and "over 2 weken" count days and weeks; months and
+years are not read.
+
+A written date has its day number before the month ("15 oktober", "op 15
+oktober", "1 mei 2027", "15 okt.", "3 sept"), or is in digits with the day first
+("15-10-2026", "15/10/2026", "15.10.2026", "15.10."), maybe with a weekday in
+front ("vrijdag 16 oktober", "vr. 16 okt"). Digits with no year ("15-10",
+"15/10", "15.10") are a date only after "op", "voor", "tot", "tegen",
+"uiterlijk", or "vanaf" ("op 15-10", "vanaf 15/10"), since without one they could
+be a score, a version, or a room number. A date without a year that has already
+passed means next year's, and a year written after it must not be past or more
+than ten years ahead ("15 oktober 2025" stays in the title). A day the calendar
+lacks ("31 februari"), a month alone ("in mei"), and numbers that number things
+("hoofdstuk 3.5", "versie 2.3.4", "score 3-1") stay in the title.
+
+A date range plans the task on its first day and makes it due on its last: "van
+3 tot 5 mei", "van 3 tot en met 5 mei", "3 t/m 5 mei", "3-5 mei", "van 30 mei
+tot 2 juni", and "tussen 3 en 5 mei" run from the first date to the last, and a
+month written once serves both days. A span of weekdays does the same: "van
+maandag tot woensdag" and "vrijdag t/m zondag" plan the coming first day and
+make the task due on the last day after it, while Monday to Friday ("ma-vr",
+"maandag t/m vrijdag") is the working week, which repeats. The end must come
+after the start ("van 5 tot 3 mei" stays in the title), and the end names its
+month, so "van 3 tot 5" is never a range of days; it is the hours 15:00 to
+17:00. "Tot" joins two days only after "van", while "t/m", "tot en met", and a
+dash need no "van": "Vakantie 3 tot 5 mei" is due on May 5 and keeps the "3" in
+the title, while "Vakantie 3-5 mei" is a range. A number alone before a spaced
+dash belongs to the title ("Sprint 12 - 20 mei" is planned for May 20). A range
+names both the planned day and the due day, so another day in the same line
+stays in the title.
+
+A due day follows "voor", "tot", "tot en met", "t/m", "tegen", "uiterlijk", or
+"ten laatste" ("voor vrijdag", "tot en met vrijdag", "uiterlijk 15 oktober"), or
+a label ("deadline vrijdag", "deadline: vrijdag", "einddatum 15 oktober",
+"inleverdatum vrijdag"), and "uiterlijk" may follow the day ("vrijdag
+uiterlijk"). A weekday abbreviation after a deadline word ("voor vr", "tot ma")
+is not read, and neither is "voor het weekend".
+
+"Elke" or "iedere" with a day, week, month, or year repeats the task ("elke
+dag", "elke week", "elke maand", "elk jaar"), and so do the adverbs "dagelijks",
+"wekelijks", "maandelijks", and "jaarlijks" at the end of the line, or at its
+start before a colon or a comma. Before a noun they are adjectives and stay in
+the title ("Wekelijks overleg", "Dagelijkse stand-up"). The counted intervals
+are "om de dag", "om de week", "om de 2 weken", "elke twee dagen", "elke 3
+dagen", "elke 14 dagen" (every second week), "elke derde dag", "elke tweede
+week", "tweewekelijks", "om de maand", "elke 2 maanden", "elk kwartaal", "elk
+half jaar", and "elke twee jaar". A weekday repeats every week ("elke maandag",
+"maandags", "'s maandags"), a list repeats on each of its days ("elke maandag en
+donderdag", "maandags en donderdags", "elke ma en wo"), "doordeweeks", "op
+werkdagen", "elke werkdag", and "ma-vr" repeat on the working days, and "elk
+weekend" and "in de weekenden" repeat on Saturday and Sunday, while "in het
+weekend" is one day. A weekday after an interval fixes its days ("elke 2 weken
+op maandag", "om de week op dinsdag", "wekelijks op maandag"), and a day of the
+month repeats each month ("elke maand op de 15e", "elke 15e van de maand",
+"maandelijks op de eerste"). A weekday by its place in the month ("elke eerste
+maandag van de maand", "elke tweede maandag") has no repeat rule and stays in
+the title whole, and so does "twee keer per week", which counts times.
+
+A length says that it is one: "30 min", "30 minuten", "2 uur", "1,5 uur", "1 uur
+30 min", "2h", "een half uur", "anderhalf uur", "tweeënhalf uur", "een
+kwartier", "drie kwartier", "een uurtje", and "twintig minuten", maybe after
+"voor", "ongeveer", "ca.", "zo'n", or "duur:", or before "lang" ("45 minuten
+lang"). A whole count of hours is a length up to 12 ("2 uur"). An amount after
+"over", "na", "binnen", "elke", "om de", "per", or "minstens", or before
+"geleden", "later", "extra", "te laat", or "per dag", names a moment, an
+interval, a bound, or a rate, not a length ("over 30 min", "2 uur geleden",
+"elke 2 uur", "2 uur per dag", "30 min voor de vergadering"); each stays in the
+title whole.
+
+"Prioriteit hoog", "hoge prioriteit", and "prio 1" are high priority,
+"gemiddelde prioriteit" ("normale prioriteit", "prio 2") the middle one, and
+"lage prioriteit" ("prio: laag", "prio 3") the low one. "Dringend", "belangrijk",
+and "urgent", also with "zeer", "erg", or "heel" ("zeer belangrijk"), are high
+priority only at the end of the line, or at its start before a colon or a comma
+("Dringend: rapport schrijven"); anywhere else they are ordinary adjectives and
+stay in the title ("Een belangrijke vergadering"), and "niet dringend" or
+"minder belangrijk" turn the word around, so they stay too. A full stop or an
+exclamation mark that ends the line goes with the word.
+
+Romanian words are read when Romanian is among your device's preferred
+languages, in any regional variant (Romania and Moldova). The diacritics are
+optional: ă, â, and î are read as the plain letter, and the comma-below letters
+ș and ț and the cedilla letters ş and ţ are both read as s and t, so "mâine" and
+"maine", "sâmbătă" and "sambata", and "marți", "marţi", and "marti" are one
+word, and the title keeps the letters you typed. Romanian says a clock time with
+"la" or "ora" before the hour: "la ora 15", "la 15:30", "ora 15.30", "la 3", and
+an hour spelled as a word ("la trei", "la ora trei"). A time written with a dot
+whose minutes could be a month ("la 5.10") is a time only after "ora" ("ora
+5.10"). An hour from 1 to 6 with no part of the day is in the afternoon ("la ora
+3" is 3 PM) unless it is written with a zero ("la 03:00"), and a part of the day
+sets the hour: "dimineața" is the morning, "după-amiaza" the afternoon, and
+"seara" the evening ("la 8 seara" is 20:00, "la 7 dimineața" is 07:00).
+"Noaptea" runs past midnight, so "la 2 noaptea" is 02:00 on the next day and "la
+11 noaptea" is 23:00. "La 12 noaptea" and "la miezul nopții" mean 00:00 the next
+day, and "la prânz" is noon. A part of the day beside the day phrase sets a bare
+hour too ("diseară la 7" is 19:00, "mâine seara la 8" is 20:00), and so does
+"cina" ("Cina la 8" is 20:00).
+
+Romanian adds to the hour it names: "la 3 și jumătate" is 3:30, "la 3 și un
+sfert" is 3:15, "la 3 fără un sfert" is 2:45, "la 3 fără 10" is 2:50, and "la 3
+și 10" is 3:10. These spoken forms need "la" or "ora" before the hour, since
+without one they could be words of a title ("Cumpără 3 și jumătate kg"), and
+minutes with a unit word ("la 3 și 10 minute") stay in the title whole. A bare
+hour counts only at the end of the line or before a word that can follow a time:
+a preposition, a conjunction, a pronoun, or a day word ("la 3 cu Ana", "Mama sună
+la 7"). "La 3 prieteni" counts people and "pâine la 3 lei" gives a price, so
+they stay in the title. A count written with h is a length, as in English
+("2h"), since Romanian does not write a clock time with that letter. A clock time
+that names a bound ("până la ora 17", "înainte de 17:00", "după ora 18", "cel
+târziu la ora 17") stays in the title, while the day before it is the due day:
+"până vineri la ora 17" is due Friday, and "la ora 17" stays.
+
+| Detail | Romanian |
+|---|---|
+| Day | azi, astăzi, diseară, în seara asta, mâine, mâine dimineață, mâine seara, poimâine, vineri, pe vineri, vineri asta, vineri viitoare, vineri seara, săptămâna viitoare, în weekend, weekendul acesta, weekendul viitor, peste 3 zile, peste o săptămână |
+| Date | 15 octombrie, pe 15 octombrie, în data de 15 octombrie, 1 mai 2027, 15 oct., vineri 16 octombrie, 15.10.2026, 15/10/2026, pe 15.10 |
+| Date range | de la 3 la 5 mai, de la 3 până la 5 mai, între 3 și 5 mai, în perioada 3-5 mai, 3-5 mai, de la 30 mai la 2 iunie, 3 mai - 5 mai, de la luni până miercuri |
+| Due day | până vineri, până la 15 octombrie, cel târziu vineri, înainte de vineri, pentru vineri, termen: vineri, deadline vineri, scadent vineri |
+| Time | la ora 15, la 15:30, ora 15.30, la 3, la trei, la 8 seara, la 7 dimineața, la 3 și jumătate, la 3 fără un sfert, la prânz, la miezul nopții, seara la 8; de la 14 la 16, între 14 și 16, 14:00-16:00 |
+| Repeat | în fiecare zi, zilnic, în fiecare luni, lunea, în fiecare luni și joi, lunea și joia, în fiecare săptămână, săptămânal, o dată la două săptămâni, la două zile, din două în două zile, în fiecare lună, lunar, în fiecare 15 ale lunii, în fiecare an, în zilele lucrătoare, de luni până vineri, în fiecare weekend |
+| Length | 30 de minute, 30 min, 2 ore, o oră, 1,5 ore, 2 ore și 30 de minute, o oră și jumătate, jumătate de oră, un sfert de oră, trei sferturi de oră, zece minute, durează 2 ore, 2h |
+| Priority | urgent, important (at the end, or "Urgent:" at the start), prioritate mare, prioritate medie, prioritate scăzută, prio 1, prio: mică |
+
+A weekday alone or after "la", "pe", "în", or "de" is the coming one, and a
+weekday that names today means a week ahead ("marți" on a Tuesday is next
+Tuesday). "Vineri asta" and "marți aceasta" are this week's, which may be today,
+"vineri care vine" is the coming one, and "vineri viitoare" and "vineri
+următoare" are next week's. A part of the day may follow a weekday ("vineri
+dimineața", "vineri seara"). Weeks start on Monday, as the app's weeks do:
+"săptămâna viitoare" plans the task seven days ahead, "săptămâna viitoare
+vineri" and "vineri, săptămâna viitoare" name next Friday, and the weekend is
+Saturday and Sunday ("în weekend" and "weekendul acesta" are the coming
+Saturday, "weekendul viitor" the one after). The definite forms "lunea",
+"martea", "miercurea", "joia", and "vinerea" name the day too ("lunea
+viitoare"), and "sâmbăta" and "duminica" read like "sâmbătă" and "duminică".
+"Luni" is also the plural of "lună", so after a count or before "de zile" it
+stays in the title ("peste 3 luni", "două luni", "luni de zile"). No past day is
+read: "ieri", "alaltăieri", "ieri seara", "luni trecută", "vinerea trecută",
+"săptămâna trecută", and "weekendul trecut" stay in the title, and so does "azi
+noapte", which names the night just gone as often as the one to come. "Peste 3
+zile", "peste o săptămână", and "peste 2 săptămâni" count days and weeks; "în 3
+zile" may mean within three days, so it is not read, and months and years are
+not read either ("peste o lună", "peste un an").
+
+A written date has its day number before the month ("15 octombrie", "pe 15
+octombrie", "în data de 15 octombrie", "1 mai 2027", "15 oct.", "3 sept."), or is
+in digits with the day first ("15.10.2026", "15.10.", "15/10/2026",
+"15-10-2026"), maybe with a weekday in front ("vineri 16 octombrie", "vineri, 16
+octombrie"). Digits with no year ("15.10", "15/10") are a date only after "pe" or
+"în data de" ("pe 15.10") or after a deadline word ("până la 15.10"), since
+without one they could be a score, a version, or a time. A date without a year
+that has already passed means next year's, and a year written after it must not
+be past ("15 octombrie 2025" stays in the title). A day the calendar lacks ("31
+februarie"), a month alone ("Ianuarie", "Vacanța în mai"), and numbers that
+number things ("capitolul 1.5.", "versiunea 2.3.4", "scor 3-1") stay in the
+title. "Mai" is the month only where no adverb of comparison follows it: "3 mai"
+is a date, while "3 mai multe" and "Mai multe idei" stay.
+
+A date range plans the task on its first day and makes it due on its last: "de la
+3 la 5 mai", "de la 3 până la 5 mai", "între 3 și 5 mai", "în perioada 3-5 mai",
+"3-5 mai", "de la 30 mai la 2 iunie", and "3 mai - 5 mai" run from the first date
+to the last, and a month written once serves both days. A span of weekdays does
+the same: "de la luni până miercuri" and "vineri - duminică" plan the coming first
+day and make the task due on the last day after it, while Monday to Friday ("luni
+- vineri", "de luni până vineri") is the working week, which repeats. The end
+must come after the start ("de la 5 la 3 mai" stays in the title), and the end
+names its month, so "de la 3 la 5" is never a range of days; it is the hours
+15:00 to 17:00. "Până la" joins two days only after "de la", "din", or "în
+perioada", or after a first date that has its own month: "Vacanță 3 până la 5
+mai" is due on May 5 and keeps the "3" in the title, while "Vacanță de la 3 până
+la 5 mai" is a range. A number alone before a spaced dash belongs to the title
+("Sprint 12 - 20 mai" is planned for May 20). A range names both the planned day
+and the due day, so another day in the same line stays in the title.
+
+A due day follows "până", "până la", "cel târziu", "înainte de", or "pentru"
+("până vineri", "cel târziu pe 15 octombrie", "înainte de vineri", "tema pentru
+luni"), or a label ("termen: vineri", "termen limită vineri", "deadline vineri",
+"scadent 15 octombrie"), and "cel târziu" may follow the day ("vineri cel
+târziu"). The weekend is no due day ("până la weekend" and "pentru weekend" stay
+in the title), and neither is a count ("pentru 3 zile", "Salariu pentru 3 luni").
+
+"În fiecare" with a day, week, month, or year repeats the task ("în fiecare zi",
+"în fiecare săptămână", "în fiecare lună", "în fiecare an", "în fiecare
+dimineață"), and so do the adverbs "zilnic", "săptămânal", "lunar", and "anual"
+at the end of the line, or at its start before a colon or a comma. Before a noun
+they are adjectives and stay in the title ("ședință săptămânală"). The counted
+intervals are "la două zile", "din două în două zile", "în fiecare a doua zi",
+"la fiecare 3 zile", "o dată la două săptămâni", "în fiecare a doua săptămână",
+"la 14 zile" (every second week), "la fiecare 2 luni", "trimestrial", and
+"semestrial". A weekday repeats every week ("în fiecare luni", "lunea"), a list
+repeats on each of its days ("în fiecare luni și joi", "lunea și joia"),
+"zilele lucrătoare", "în zilele de lucru", and "luni - vineri" repeat on the
+working days, and "în fiecare weekend" and "în weekenduri" repeat on Saturday
+and Sunday, while "în weekend" is one day. "Sâmbăta" and "duminica" read like
+the plain names, so they repeat a task only beside another definite form
+("lunea și sâmbăta"), and "sâmbăta și duminica" stays in the title. A weekday
+after an interval fixes its days ("o dată la 2 săptămâni joia"), and a day of
+the month repeats each month ("în fiecare 15 ale lunii", "în fiecare lună pe
+15", "lunar pe 15"). A weekday by its place in the month ("prima luni din
+lună", "ultima vineri din lună", "în fiecare a doua marți") has no repeat rule
+and stays in the title whole.
+
+A length says that it is one: "30 de minute", "30 min", "2 ore", "1,5 ore", "2
+ore și 30 de minute", "2h", "o oră", "o oră și jumătate", "jumătate de oră", "un
+sfert de oră", "trei sferturi de oră", and "zece minute", maybe after "pentru",
+"cam", "aproximativ", "timp de", "durează", or "durata:". The particle "de" joins
+a count from 20 up to its noun ("30 de minute") and may be left out ("30
+minute"). A whole count of hours is a length up to 24 ("24 de ore"). An amount
+after "peste", "în", "după", "acum", "la fiecare", or "mai mult de", or before
+"înainte", "în urmă", "pe zi", "mai târziu", or "suplimentare", names a moment,
+an interval, a bound, or a rate, not a length ("peste 2 ore", "în 10 minute", "2
+ore în urmă", "2 ore pe zi", "30 de minute înainte"); each stays in the title
+whole.
+
+"Prioritate mare", "prioritate înaltă", "de mare prioritate", and "prio 1" are
+high priority, "prioritate medie" ("prio 2") the middle one, and "prioritate
+scăzută" ("prioritate mică", "prio: mică", "prio 3") the low one. "Urgent" and
+"important", also with "foarte" ("foarte important"), are high priority only at
+the end of the line, or at its start before a colon or a comma ("Urgent:
+raport"); anywhere else they are ordinary adjectives and stay in the title ("Un
+raport urgent pentru Anna"), and "nu e urgent" turns the word around, so it
+stays too. The feminine and plural forms ("urgentă", "importante") are not
+read, since without diacritics they are the nouns "urgență" and "importanță". A
+full stop or an exclamation mark that ends the line goes with the word.
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline
@@ -1400,6 +1832,20 @@ beside it is a menu of your lists. Use tags to filter and organize your task
 lists. The MCP host
 exposes tag management tools so your AI client can tag tasks during capture or
 triage.
+
+### Searching Tasks
+
+The search field in All Tasks (⌘F on the Mac), the command palette, and the
+assistant's `search_tasks` tool share one search. It ignores capitals and
+accents, lets the last word be a start of a word, and needs every word to
+appear in the title, notes, assistant context, or tags. Letters typed in a
+simpler form than the stored text still match: `lodz` finds `Łódź`, `все`
+finds `всё`, `strasse` finds `Straße`, `isik` finds `Işık`, `καλημερα` finds
+`Καλημέρα`, and `اسماء` finds `أسماء`. Text in scripts that put no spaces
+between words (Chinese, Japanese, Korean, Thai, Lao, Burmese, and Khmer)
+matches wherever the typed characters appear inside it. Searching lists,
+habits, and memory entries, the command palette, tag suggestions, and the
+pickers that Shortcuts and Siri show compare text the same way.
 
 ### Batch Operations
 

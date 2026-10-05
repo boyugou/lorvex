@@ -2,32 +2,30 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   LorvexCarPlay.entitlements
-  PROVISIONING REQUIRED: These entitlements activate the CarPlay template
-  application scene. Apple must approve each entitlement key for the Lorvex
-  App ID before this file has any effect at runtime.
+  PROVISIONING REQUIRED: This entitlement activates the CarPlay template
+  application scene. Apple must approve it for the Lorvex iOS App ID
+  (com.lorvex.apple) before this file has any effect at runtime.
 
   Steps to activate:
-    1. Submit a CarPlay entitlement request at
-       developer.apple.com → Certificates, Identifiers & Profiles → your
-       App ID → Additional Capabilities → CarPlay.
-    2. Once approved, merge these keys into LorvexMobileApp.entitlements, OR
-       set this file as the Code Signing Entitlements for the iOS app target
-       in Xcode / XcodeGen.
+    1. Submit a CarPlay entitlement request through the form at
+       developer.apple.com/contact/carplay.
+    2. Once approved, merge the approved entitlement key into
+       LorvexMobileApp.entitlements, OR set this file as the Code Signing
+       Entitlements for the iOS app target in Xcode / XcodeGen.
     3. Rebuild and re-profile the app.
 
-  Category choice: com.apple.developer.carplay-communication is the correct
-  category for a productivity / to-do / scheduling app. The previous file
-  declared both carplay-maps AND carplay-general, which are mutually exclusive
-  categories — Apple's portal enforces one category per App ID.
-  carplay-maps is for navigation apps; carplay-general is an internal Apple
-  category unavailable to third parties.
+  Category: com.apple.developer.carplay-communication is Apple's messaging and
+  VoIP category. Apple's CarPlay categories name no task list (driving task
+  covers tasks that help with the drive itself), so approval is uncertain. If
+  Apple approves a different category, replace the key below with the one it
+  grants; an App ID holds one category.
 
   Until Apple grants the entitlement the CarPlay scene configuration in
   Info.plist is silently ignored. The code compiles and tests pass without it.
 -->
 <plist version="1.0">
 <dict>
-  <!-- Communication category: correct for task management / scheduling apps. -->
+  <!-- The messaging and VoIP category; replace it with the category Apple approves. -->
   <key>com.apple.developer.carplay-communication</key>
   <true/>
 </dict>

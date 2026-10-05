@@ -339,7 +339,10 @@ task. Siri-driven voice intents are a tracked follow-up.
 delegate are implemented and fully tested; the CarPlay scene is silently ignored
 at runtime until Apple approves the CarPlay entitlement for the Lorvex App ID.
 No further code changes are needed to activate CarPlay once the entitlement
-is granted and merged into the iOS app target.
+is granted and merged into the iOS app target. Apple's CarPlay categories name
+no task list, so approval is uncertain; the Lorvex widgets that support the
+small family appear on the CarPlay home screen on iOS 26 without any
+entitlement.
 
 ### What the driver sees
 
@@ -408,9 +411,10 @@ the lead row follow the clock without a database read, and refreshes
 
 ### Provisioning checklist (Apple approval required)
 
-1. At developer.apple.com → Certificates, Identifiers & Profiles → App ID
-   `com.lorvex.apple.mobile` → Additional Capabilities, request CarPlay
-   (choose the category Apple approves — Navigation / Maps, or General).
+1. Request the CarPlay entitlement through the form at
+   developer.apple.com/contact/carplay for the iOS App ID `com.lorvex.apple`, in
+   the category that fits best (driving task is the closest; it covers tasks
+   that help with the drive itself, not a task list in general).
 2. Once approved, merge `Config/LorvexCarPlay.entitlements` keys into
    `Config/LorvexMobileApp.entitlements`.
 3. Uncomment the `CPSupportsTemplateApplicationScene` block in

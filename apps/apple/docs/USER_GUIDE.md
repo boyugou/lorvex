@@ -1573,6 +1573,452 @@ stays too. The feminine and plural forms ("urgentă", "importante") are not
 read, since without diacritics they are the nouns "urgență" and "importanță". A
 full stop or an exclamation mark that ends the line goes with the word.
 
+Indonesian words are read when Indonesian is among your device's preferred
+languages, in any regional variant. Indonesian has no diacritics, so the line is
+read as typed, and the title keeps the letters you typed. Indonesian says a
+clock time with "jam" or "pukul" before the hour: "jam 15", "jam 15.30", "pukul
+15.30", "jam 3", and an hour spelled as a word ("jam tiga"). A time with minutes
+and a part of the day needs no "jam" ("7.30 malam"). An hour from 1 to 6 with no
+part of the day is in the afternoon ("jam 3" is 3 PM) unless it is written with
+a zero ("jam 03.00"), and a part of the day sets the hour: "pagi" is the
+morning, "siang" midday, "sore" the afternoon, and "malam" the evening ("jam 8
+malam" is 20:00, "jam 7 pagi" is 07:00), while "subuh" and "dini hari" are the
+small hours ("jam 4 subuh" is 04:00). A part of the day beside the hour on the
+line sets a bare hour too ("malam jam 8" is 20:00, "besok pagi jam 7" is
+07:00), and so does a meal ("makan malam jam 7" is 19:00). "Malam" runs past
+midnight, so "jam 12 malam" and "tengah malam" are 00:00 on the next day, and
+"tengah hari" is noon.
+
+Indonesian counts the half hour toward the next hour: "setengah empat" is 3:30
+("jam setengah 4", "setengah empat sore"). "Kurang" takes minutes off and
+"lewat" adds them: "jam 3 kurang 10" is 2:50, "jam 3 kurang seperempat" is 2:45,
+and "jam 3 lewat 15" is 3:15. A bare "setengah empat" counts only at the end of
+the line or before a word that can follow a time ("setengah empat dengan Ani");
+"setengah empat kilo" gives an amount, so it stays in the title. English is read
+beside Indonesian, so "3pm", "17:30", and "30 min" work as they do alone, and
+Indonesian does not write a clock time with the letter h, so "2h" stays a
+length. A clock time that names a bound ("sebelum jam 5", "sampai pukul 17.00",
+"paling lambat jam 5 sore") stays in the title, while the day before it is the
+due day: "sebelum Jumat jam 17" is due Friday, and "jam 17" stays. A time range
+may leave the part of the day off one side: the side takes the reading that fits
+the other, so "jam 9 sampai 5 sore" is 09:00 to 17:00.
+
+| Detail | Indonesian |
+|---|---|
+| Day | hari ini, malam ini, nanti malam, besok, besok pagi, lusa, Jumat, hari Jumat, Jumat ini, Jumat depan, Jumat sore, minggu depan, akhir pekan, akhir pekan depan, 3 hari lagi, dalam 3 hari, seminggu lagi |
+| Date | 15 Oktober, tanggal 15 Oktober, tgl. 15 Okt, 1 Mei 2027, Jumat 16 Oktober, 15/10/2026, 15.10.2026, pada 15/10, tanggal 25 |
+| Date range | 3-5 Mei, 3 sampai 5 Mei, 3 s/d 5 Mei, dari 3 hingga 5 Mei, antara 3 dan 5 Mei, 30 Mei - 2 Juni, dari Senin sampai Rabu |
+| Due day | sebelum Jumat, sampai Jumat, paling lambat Jumat, sebelum tanggal 15 Oktober, tenggat Jumat, batas waktu Jumat, deadline Jumat, jatuh tempo 15 Oktober |
+| Time | jam 15, jam 15.30, pukul 15.30, jam 3 sore, jam 8 malam, jam 7 pagi, jam 12 siang, jam 3 kurang 10, jam 3 lewat 15, setengah empat, tengah malam, 7.30 malam; jam 14-16, dari jam 14 sampai jam 16, antara jam 14 dan 16, jam 14.00-16.00 |
+| Repeat | setiap hari, setiap pagi, harian, setiap Senin, setiap hari Senin, setiap Senin dan Kamis, setiap Senin sampai Jumat, setiap hari kerja, setiap akhir pekan, setiap minggu, mingguan, seminggu sekali, 2 minggu sekali, setiap 2 hari, setiap bulan, bulanan, setiap tanggal 15, setiap tahun, setiap triwulan |
+| Length | 30 menit, 30 mnt, 2 jam, 1,5 jam, 1 jam 30 menit, setengah jam, sejam, seperempat jam, tiga perempat jam, dua jam, lima belas menit, selama 2 jam, durasi: 2 jam, 2h |
+| Priority | penting, mendesak, urgent, darurat, segera (at the end, or "Penting:" at the start), prioritas tinggi, prioritas sedang, prioritas rendah, prio 1, prio: rendah |
+
+A weekday alone or after "pada", "di", or "hari" is the coming one, and a weekday
+that names today means a week ahead ("Selasa" on a Tuesday is next Tuesday).
+"Selasa ini" is this week's, which may be today, and "Selasa depan" and "Jumat
+minggu depan" are next week's. A part of the day may follow a weekday ("Jumat
+sore"), and so may "sekali" ("besok pagi sekali"). Weeks start on Monday, as the
+app's weeks do: "minggu depan" plans the task seven days ahead, and the weekend
+is Saturday and Sunday ("akhir pekan" is the coming Saturday, "akhir pekan
+depan" the one after). "Minggu" is also the word for the week, so it names
+Sunday only after "hari" ("hari Minggu"), before a part of the day ("Minggu
+pagi"), or beside another weekday ("Sabtu dan Minggu", "Jumat sampai Minggu");
+"Minggu" alone, "minggu ini", and "Sekolah Minggu" stay in the title. A list of
+weekdays names no one day ("Kelas Senin dan Rabu", "Senin atau Selasa"), so it
+stays in the title too, and so do the names that hold a weekday ("Salat Jumat",
+"Jumat Agung"). No past day is read: "kemarin", "kemarin lusa", "Senin lalu",
+"minggu lalu", "semalam", and "tadi malam" stay in the title. A phrase whose day
+cannot be named stays too: "besok lusa" means tomorrow or the day after, and
+"malam Jumat" is the night before Friday ("makan malam Jumat" is dinner on
+Friday). "3 hari lagi", "dalam 3 hari", "seminggu lagi", and "2 minggu lagi"
+count days and weeks, while a count of times before them gives a rate ("tiga kali
+dalam seminggu" stays in the title); months and years are not read ("bulan
+depan", "sebulan lagi").
+
+A written date has its day number before the month ("15 Oktober", "tanggal 15
+Oktober", "pada 15 Oktober", "1 Mei 2027", "tgl. 15 Okt"), or is in digits with
+the day first ("15/10/2026", "15-10-2026", "15.10.2026"), maybe with a weekday in
+front ("Jumat 16 Oktober"). Digits with no year ("15/10") are a date only after
+"pada", "tanggal", or a deadline word ("sebelum 15/10"), since without one they
+could be a score, a version, or a time. A date without a year that has already
+passed means next year's, and a year written after it must not be past ("15
+Oktober 2025" stays in the title). "Tanggal 25" alone is the 25th of this month,
+or of next month once it has passed. A day the calendar lacks ("31 Februari"), a
+month alone ("Mei", "libur di bulan Mei"), and numbers that number things ("bab
+1.5", "versi 2.3.4", "skor 3-1") stay in the title.
+
+A date range plans the task on its first day and makes it due on its last: "3-5
+Mei", "3 sampai 5 Mei", "3 s/d 5 Mei", "dari 3 hingga 5 Mei", "antara 3 dan 5
+Mei", "30 Mei - 2 Juni", and "3 Mei sampai 5 Mei" run from the first date to the
+last, and a month written once serves both days. A span of weekdays does the
+same: "dari Senin sampai Rabu" and "Jumat - Minggu" plan the coming first day and
+make the task due on the last day after it, while Monday to Friday after
+"setiap" is the working week, which repeats. The end must come after the start
+("5-3 Mei" stays in the title), and the end names its month, so "dari 3 sampai
+5" is never a range of days; it is the hours 15:00 to 17:00. A number alone
+before a spaced dash belongs to the title ("Sprint 12 - 20 Mei" is planned for
+May 20). A range names both the planned day and the due day, so another day in
+the same line stays in the title.
+
+A due day follows "sebelum", "paling lambat", "paling telat",
+"selambat-lambatnya", "sampai", "hingga", or a label ("tenggat", "batas waktu",
+"deadline", "jatuh tempo"): "sebelum Jumat", "paling lambat tanggal 15
+Oktober", "tenggat: Jumat", "sampai besok". The weekend is no due day ("sebelum
+akhir pekan" stays in the title), and neither is a count ("untuk 3 hari").
+
+"Setiap" or "tiap" with a day, week, month, or year repeats the task ("setiap
+hari", "setiap minggu", "setiap bulan", "setiap tahun", "setiap pagi", "setiap
+malam"), and so do the adjectives "harian", "mingguan", "bulanan", and "tahunan"
+at the end of the line, or at its start before a colon or a comma. Before a noun
+or in the middle of the line they stay in the title ("buku harian", "Laporan
+harian untuk tim"). The counted intervals are "setiap 2 hari", "2 hari sekali",
+"seminggu sekali", "sekali seminggu", "2 minggu sekali", "sekali dalam 2
+minggu", "setiap 14 hari" (every second week), "setiap 2 bulan", "3 bulan
+sekali", "setiap triwulan", and "setiap semester". A weekday repeats every week
+("setiap Senin", "tiap hari Senin"), a list repeats on each of its days ("setiap
+Senin dan Kamis", "setiap Senin, Rabu, dan Jumat"), "setiap Senin sampai Jumat",
+"setiap hari kerja", and "pada hari kerja" repeat on the working days, and
+"setiap akhir pekan" repeats on Saturday and Sunday, while "akhir pekan" alone is
+one day. A part of the day after the weekdays goes with them ("setiap Jumat
+malam"). "Setiap minggu" is every week and "setiap hari Minggu" every Sunday. A
+weekday after an interval fixes its days ("setiap 2 minggu hari Kamis"), and a
+day of the month repeats each month ("setiap tanggal 15", "setiap bulan tanggal
+15", "tanggal 15 setiap bulan"). A weekday by its place in the month ("setiap
+Senin pertama") has no repeat rule and stays in the title whole, and so does
+every day with a day left out ("setiap hari kecuali Minggu"), a count of times
+("dua kali seminggu"), or an interval of hours ("setiap 2 jam").
+
+A length says that it is one: "30 menit", "30 mnt", "2 jam", "1,5 jam", "1 jam
+30 menit", "2 jam setengah", "setengah jam", "sejam", "seperempat jam", "tiga
+perempat jam", and "lima belas menit", maybe after "selama", "durasi", "sekitar",
+"kurang lebih", or "untuk". "Jam" after a number is a length and before one the
+clock ("3 jam" and "jam 3"), so a number that stands before "jam 10 pagi" is no
+amount of hours ("ruang 3 jam 10 pagi"), and "jam" before a clock noun is no
+length either ("2 jam tangan" is two watches). An amount after "dalam",
+"setiap", "setelah", "sebelum", or "kurang dari", or before "lagi", "yang lalu",
+"sehari", or "per hari", names a moment, an interval, a bound, or a rate, not a
+length ("dalam 2 jam", "2 jam lagi", "setiap 2 jam", "2 jam sehari"); each stays
+in the title whole, and so does a range of amounts ("2-3 jam", "2 sampai 3 jam").
+
+"Prioritas tinggi", "prioritas utama", and "prio 1" are high priority,
+"prioritas sedang" ("prio 2") the middle one, and "prioritas rendah" ("prio:
+rendah", "prio 3") the low one. "Penting", "mendesak", "urgent", "darurat", and
+"segera", also with "sangat" or "sekali" ("sangat penting"), are high priority
+only at the end of the line, or at its start before a colon or a comma
+("Penting: kirim laporan"); anywhere else they are ordinary adjectives and stay
+in the title ("Dokumen penting dibawa"), and "tidak penting" or "kurang
+mendesak" turn the word around, so they stay too. A full stop or an exclamation
+mark that ends the line goes with the word.
+
+Malay words are read when Malay is among your device's preferred languages, in
+any regional variant. Malay has no diacritics, so the line is read as typed, and
+the title keeps the letters you typed. Malay says a clock time with "pukul",
+"jam", or "pkl" before the hour: "pukul 15", "pukul 15.30", "jam 3", "pkl 3",
+and an hour spelled as a word ("pukul tiga"). A time with minutes and a part of
+the day needs no "pukul" ("7.30 malam"). An hour from 1 to 6 with no part of the
+day is in the afternoon ("pukul 3" is 3 PM) unless it is written with a zero
+("pukul 03.00"), and a part of the day sets the hour: "pagi" is the morning,
+"tengah hari" midday, "petang" the afternoon, and "malam" the evening ("pukul 8
+malam" is 20:00, "pukul 7 pagi" is 07:00), while "subuh" and "dini hari" are the
+small hours ("pukul 4 subuh" is 04:00). "PG" and "PTG", the 12-hour clock's AM
+and PM that Apple's Malay writes, set the hour too ("9.30 PG" is 09:30, "3.30
+PTG" is 15:30). A part of the day beside the hour on the line sets a bare hour
+as well ("malam pukul 8" is 20:00, "esok pagi pukul 7" is 07:00), and so does a
+meal, a prayer, or the fast ("makan malam pukul 7", "berbuka puasa pukul 7").
+"Malam" runs past midnight, so "pukul 12 malam" and "tengah malam" are 00:00 on
+the next day. "Tengah hari" is also the word for lunch, so it sets an hour
+("pukul 1 tengah hari" is 13:00) but is no time of its own.
+
+Malay puts the half hour after the hour: "pukul tiga setengah" is 3:30. A
+quarter is said both ways ("tiga suku" is 3:15 or 2:45), and "setengah empat"
+is 3:30 in Indonesian but is not said the same way everywhere in Malay, so
+neither is read as a time and both stay in the title. English is read beside
+Malay, so "3pm", "17:30", and "30 min" work as they do alone, and Malay does
+not write a clock time with the letter h, so "2h" stays a length. A clock time
+that names a bound ("sebelum pukul 5", "hingga jam 17.00", "paling lewat pukul 5
+petang") stays in the title, while the day before it is the due day: "sebelum
+Jumaat pukul 17" is due Friday, and "pukul 17" stays. A time range may leave
+the part of the day off one side: the side takes the reading that fits the
+other, so "dari 9 hingga 5 petang" is 09:00 to 17:00. When Malay and Indonesian
+are both among your languages, both are read, Malay first, and the Indonesian
+words that Malay does not write ("besok sore", "jam 3 sore", "tanggal 5
+Oktober", "setengah empat") work as they do for Indonesian alone.
+
+| Detail | Malay |
+|---|---|
+| Day | hari ini, malam ini, malam nanti, esok, esok pagi, pagi esok, lusa, Jumaat, hari Jumaat, Jumaat ini, Jumaat depan, Jumaat petang, minggu depan, hujung minggu, hujung minggu depan, 3 hari lagi, dalam 3 hari, seminggu lagi |
+| Date | 15 Oktober, tarikh 15 Oktober, 15hb Oktober, 15 Okt, 1 Mei 2027, Jumaat 16 Oktober, 15/10/2026, 15.10.2026, pada 15/10, tarikh 25, 25hb |
+| Date range | 3-5 Mei, 3 hingga 5 Mei, 3 sampai 5 Mei, dari 3 hingga 5 Mei, antara 3 dan 5 Mei, 30 Mei - 2 Jun, dari Isnin hingga Rabu |
+| Due day | sebelum Jumaat, hingga Jumaat, sampai esok, paling lewat Jumaat, selewat-lewatnya Jumaat, sebelum 15 Oktober, tarikh akhir Jumaat, had masa Jumaat, deadline Jumaat |
+| Time | pukul 15, pukul 15.30, jam 15:30, pkl 3, pukul 3 petang, pukul 8 malam, pukul 7 pagi, pukul 12 tengah hari, pukul tiga setengah, tengah malam, 7.30 malam, 9.30 PG, 3.30 PTG; pukul 14-16, dari pukul 14 hingga pukul 16, antara pukul 14 dan 16, pukul 14.00-16.00 |
+| Repeat | setiap hari, setiap pagi, harian, setiap Isnin, setiap hari Isnin, setiap Isnin dan Khamis, setiap Isnin hingga Jumaat, setiap hari kerja, setiap hujung minggu, setiap minggu, mingguan, seminggu sekali, 2 minggu sekali, setiap 2 hari, setiap bulan, bulanan, setiap tarikh 15, setiap tahun |
+| Length | 30 minit, 30 min, 2 jam, 1,5 jam, 1 jam 30 minit, setengah jam, sejam, sejam setengah, suku jam, dua jam, lima belas minit, selama 2 jam, tempoh 2 jam |
+| Priority | penting, mendesak, urgent, segera (at the end, or "Penting:" at the start), keutamaan tinggi, keutamaan sederhana, keutamaan rendah, prioriti 1, prio rendah |
+
+A weekday alone or after "pada" or "hari" is the coming one, and a weekday that
+names today means a week ahead ("Selasa" on a Tuesday is next Tuesday). "Selasa
+ini" is this week's, which may be today, and "Selasa depan", "Selasa hadapan",
+and "Jumaat minggu depan" are next week's. A part of the day may follow a
+weekday ("Jumaat petang") or come before it ("petang Jumaat"), and may come
+before or after "esok" ("esok pagi", "pagi esok"); a part of the day that forms
+a noun with the word before it stays with that noun ("Makan malam esok" is
+dinner tomorrow). Weeks start on Monday, as the app's weeks do: "minggu depan"
+plans the task seven days ahead, and the weekend is Saturday and Sunday
+("hujung minggu" is the coming Saturday, "hujung minggu depan" the one after).
+"Minggu" is the word for the week and never Sunday, which is "Ahad" ("hari
+Ahad"); "Minggu" alone stays in the title. A list of weekdays names no one day
+("Kelas Isnin dan Rabu"), so it stays in the title too, and so do the names that
+hold a weekday ("Solat Jumaat", "Jumaat Agung"). No past day is read:
+"semalam", "kelmarin", "Isnin lepas", "minggu lalu", and "malam tadi" stay in
+the title. A phrase whose day cannot be named stays too: "esok lusa" means
+tomorrow or the day after, and "malam Jumaat" is the night before Friday
+("makan malam Jumaat" is dinner on Friday). "3 hari lagi", "dalam 3 hari",
+"seminggu lagi", and "2 minggu lagi" count days and weeks, while a count of
+times before them gives a rate ("tiga kali dalam seminggu" stays in the title);
+"dalam seminggu" alone is as often "per week" as "in a week", and months and
+years are not read ("bulan depan", "sebulan lagi").
+
+A written date has its day number before the month ("15 Oktober", "tarikh 15
+Oktober", "pada 15 Oktober", "15hb Oktober", "1 Mei 2027", "15 Okt"), or is in
+digits with the day first ("15/10/2026", "15-10-2026", "15.10.2026"), maybe with
+a weekday in front ("Jumaat 16 Oktober"). Digits with no year ("15/10") are a
+date only after "pada", "tarikh", or a deadline word ("sebelum 15/10"), since
+without one they could be a score, a version, or a time. A date without a year
+that has already passed means next year's, and a year written after it must not
+be past ("15 Oktober 2025" stays in the title). "Tarikh 25" and "25hb" alone are
+the 25th of this month, or of next month once it has passed. A day the calendar
+lacks ("31 Februari"), a month alone ("Mei", "cuti pada bulan Mei"), and numbers
+that number things ("bab 1.5", "versi 2.3.4", "skor 3-1") stay in the title.
+"Mac" is the month unless a product name follows it ("2 Mac mini" counts
+computers), and "2HB" is a pencil, not the 2nd.
+
+A date range plans the task on its first day and makes it due on its last: "3-5
+Mei", "3 hingga 5 Mei", "3 sampai 5 Mei", "dari 3 hingga 5 Mei", "antara 3 dan 5
+Mei", "30 Mei - 2 Jun", and "3 Mei hingga 5 Mei" run from the first date to the
+last, and a month written once serves both days. A span of weekdays does the
+same: "dari Isnin hingga Rabu" and "Jumaat - Ahad" plan the coming first day and
+make the task due on the last day after it, while Monday to Friday after
+"setiap" is the working week, which repeats. The end must come after the start
+("5-3 Mei" stays in the title), and the end names its month, so "dari 3 hingga
+5" is never a range of days; it is the hours 15:00 to 17:00. A number alone
+before a spaced dash belongs to the title ("Sprint 12 - 20 Mei" is planned for
+May 20). A range names both the planned day and the due day, so another day in
+the same line stays in the title.
+
+A due day follows "sebelum", "paling lewat", "paling lambat",
+"selewat-lewatnya", "selambat-lambatnya", "hingga", "sehingga", "sampai", or a
+label ("tarikh akhir", "tarikh tamat", "had masa", "deadline"): "sebelum
+Jumaat", "paling lewat 15 Oktober", "tarikh akhir: Jumaat", "sampai esok". The
+weekend is no due day ("sebelum hujung minggu" stays in the title), and neither
+is a count ("untuk 3 hari").
+
+"Setiap" or "tiap" ("tiap-tiap") with a day, week, month, or year repeats the
+task ("setiap hari", "setiap minggu", "setiap bulan", "setiap tahun", "setiap
+pagi", "setiap malam"), and so do the adjectives "harian", "mingguan",
+"bulanan", and "tahunan" at the end of the line, or at its start before a colon
+or a comma. Before a noun or in the middle of the line they stay in the title
+("buku harian", "Berita Harian", "Laporan harian untuk pasukan"). The counted
+intervals are "setiap 2 hari", "2 hari sekali", "seminggu sekali", "sekali
+seminggu", "2 minggu sekali", "sekali dalam 2 minggu", "setiap 14 hari" (every
+second week), "setiap 2 bulan", "3 bulan sekali", and "setiap suku tahun". A
+weekday repeats every week ("setiap Isnin", "tiap hari Isnin"), a list repeats
+on each of its days ("setiap Isnin dan Khamis", "setiap Isnin, Rabu dan
+Jumaat"), "setiap Isnin hingga Jumaat", "setiap hari kerja", and "pada hari
+kerja" repeat on the working days, and "setiap hujung minggu" repeats on
+Saturday and Sunday, while "hujung minggu" alone is one day. A part of the day
+after the weekdays goes with them ("setiap Jumaat malam"). A weekday after an
+interval fixes its days ("setiap 2 minggu hari Khamis"), and a day of the month
+repeats each month ("setiap tarikh 15", "setiap 15hb", "setiap bulan pada
+tarikh 15", "tarikh 15 setiap bulan"). A weekday by its place in the month
+("setiap Isnin pertama") has no repeat rule and stays in the title whole, and so
+does every day with a day left out ("setiap hari kecuali Ahad"), a count of
+times ("dua kali seminggu"), or an interval of hours ("setiap 2 jam").
+
+A length says that it is one: "30 minit", "30 min", "2 jam", "1,5 jam", "1 jam
+30 minit", "2 jam setengah", "setengah jam", "sejam", "sejam setengah", "suku
+jam", "tiga suku jam", and "lima belas minit", maybe after "selama", "tempoh",
+"anggaran", "kira-kira", "lebih kurang", or "untuk". "Jam" after a number is a
+length and before one the clock ("3 jam" and "jam 3"), so a number that stands
+before "jam 10 pagi" is no amount of hours ("bilik 3 jam 10 pagi"), and "jam"
+before a clock noun is no length either ("2 jam tangan" is two watches). An
+amount after "dalam", "setiap", "selepas", "sebelum", or "kurang daripada", or
+before "lagi", "yang lalu", "sehari", "per hari", or "sekali", names a moment, an
+interval, a bound, or a rate, not a length ("dalam 2 jam", "2 jam lagi", "setiap
+2 jam", "2 jam sehari"); each stays in the title whole, and so does a range of
+amounts ("2-3 jam", "2 hingga 3 jam").
+
+"Keutamaan tinggi", "keutamaan utama", "prioriti tinggi", and "prio 1" are high
+priority, "keutamaan sederhana" ("prio 2") the middle one, and "keutamaan
+rendah" ("prio rendah", "prio 3") the low one. "Penting", "mendesak", "urgent",
+and "segera", also with "sangat" ("sangat penting"), are high priority only at
+the end of the line, or at its start before a colon or a comma ("Penting: hantar
+laporan"); anywhere else they are ordinary adjectives and stay in the title
+("Dokumen penting dibawa"), and "tidak penting" or "kurang mendesak" turn the
+word around, so they stay too ("Beli mi segera" is instant noodles). A full stop
+or an exclamation mark that ends the line goes with the word.
+
+Vietnamese words are read when Vietnamese is among your device's preferred
+languages, in any regional variant. A line may be typed with every tone mark,
+with none ("ngay mai", "thu hai", "3 gio chieu"), or with the stroke of "đ"
+written as "d"; a word is read in one of those whole spellings, so "đem" (to
+bring) is not "đêm" (night), "tôi" (I) is not "tối" (evening), and the name
+"Tuấn" is not "tuần" (week). A few words are read only with their marks, since
+without them they are another everyday word: "thứ Tư" ("thứ tự" is an order),
+"tới", "mốt", "đúng", "khẩn", and "gấp" ("gặp" is to meet). The title keeps the
+letters you typed, with the marks you typed.
+
+Vietnamese says a clock time with "giờ" or the letter h after the hour: "3
+giờ", "15 giờ 30", "15h", "7h30", "lúc 3 giờ", and an hour spelled as a word
+("ba giờ chiều", "lúc ba giờ"). "Rưỡi" after the hour is the half hour ("3 giờ
+rưỡi" is 3:30), and "kém" takes minutes off ("3 giờ kém 15" is 2:45). Minutes
+after "h" follow it directly ("15h30") or, with their unit, after a space ("15h
+30 phút"); a number after "h" and a space with no unit belongs to the next word
+("18h 1 tiếng" is 18:00 and an hour). An hour from 1 to 6 with no part of the
+day is in the afternoon ("3 giờ" is 3 PM) unless it is written with a zero ("03
+giờ"), and a part of the day sets the hour: "sáng" is the morning, "trưa"
+midday, "chiều" the afternoon, "tối" the evening, "đêm" and "khuya" the night
+("7 giờ sáng" is 07:00, "8 giờ tối" is 20:00). A part of the day or a meal
+written beside the hour sets it too ("tối 8 giờ" is 20:00, "ăn tối 7 giờ" is
+19:00), and stays in the title. "12 giờ đêm", "12 giờ tối", and "nửa đêm" are
+midnight at the end of the named day, so they plan the next day, and "2 giờ đêm"
+is 02:00 on the next day. "SA" and "CH", the 12-hour clock's AM and PM that
+Apple's Vietnamese writes, set the hour when typed in capitals ("9:30 SA" is
+09:30, "3:30 CH" is 15:30); lowercase "sa" and "ch" stay in the title.
+
+English is read beside Vietnamese, so "3pm", "17:30", and "30 min" work as they
+do alone. Vietnamese writes a clock time with the letter h, so beside it "15h"
+and "2h" are times (15:00 and 14:00), where English alone reads them as lengths;
+a decimal ("1,5h") or an hour count up to 12 with minutes in "p" or "m" ("1h30p",
+"1h30m") is still a length, while an hour past 12 with minutes ("15 giờ 30 phút",
+"18h30p") is a clock time. A clock time that names a bound ("trước 5 giờ chiều", "chậm
+nhất 17h", "sau 18:00") stays in the title, while the day before it is the due
+day: "trước thứ Sáu 5 giờ chiều" is due Friday, and "5 giờ chiều" stays. A time
+range may leave the part of the day off one side: the side takes the reading
+that fits the other, so "từ 9 đến 5 giờ chiều" is 09:00 to 17:00. "Khoảng 3
+giờ" and "tầm 3 giờ" are as often about three hours as about three o'clock, and
+"12 giờ sáng" and "12 giờ chiều" are meant both ways, so each stays in the
+title. French, Portuguese, and German also write a clock time with the letter h
+and read "15h" first, so on a device that reads one of them and Vietnamese, a
+"lúc" before it stays in the title.
+
+| Detail | Vietnamese |
+|---|---|
+| Day | hôm nay, sáng nay, tối nay, ngày mai, sáng mai, chiều mai, ngày kia, thứ Sáu, vào thứ Sáu, thứ Sáu tuần này, thứ Sáu tuần sau, chiều thứ Sáu, thứ Sáu chiều, tuần sau, cuối tuần, cuối tuần sau, 3 ngày nữa, sau 3 ngày, 2 tuần nữa |
+| Date | 15 tháng 10, ngày 15 tháng 10, 15 thg 10, 15 tháng 10 năm 2027, thứ Sáu 16 tháng 10, 15/10/2026, 15-10-2026, 15.10.2026, vào 15/10, ngày 15 |
+| Date range | 3-5 tháng 5, từ 3 đến 5 tháng 5, từ ngày 3 đến ngày 5 tháng 5, từ 3/5 đến 5/5, giữa ngày 3 và ngày 5 tháng 5, từ thứ Hai đến thứ Sáu |
+| Due day | trước thứ Sáu, hạn chót thứ Sáu, đến hết hôm nay, chậm nhất ngày mai, trước 15 tháng 10, hạn nộp 15/10, deadline thứ Sáu, hạn thứ Sáu tuần sau |
+| Time | 3 giờ chiều, lúc 3 giờ chiều, 15h, 15h30, 15 giờ 30, 3 giờ rưỡi, 3 giờ kém 15, ba giờ chiều, 8 giờ tối, 12 giờ đêm, nửa đêm, 9:30 SA, 3:30 CH; từ 3 giờ đến 5 giờ chiều, 3-5 giờ chiều, từ 14h đến 16h30, 14:00-16:00, giữa 3 giờ và 5 giờ chiều |
+| Repeat | mỗi ngày, hằng ngày, mỗi sáng, mỗi thứ Hai, mọi thứ Hai, mỗi thứ Ba và thứ Năm, mỗi thứ Hai đến thứ Sáu, mỗi ngày làm việc, mỗi cuối tuần, mỗi tuần, hàng tuần, mỗi 2 tuần, cách tuần, 2 ngày một lần, mỗi tháng, ngày 15 hàng tháng, mỗi năm |
+| Length | 30 phút, 2 tiếng, 1,5 giờ, 1.5h, 1h30p, 1 tiếng rưỡi, nửa tiếng, 1 giờ 30 phút, 2 tiếng 30 phút, mất 2 giờ, khoảng 30 phút, 2 giờ đồng hồ |
+| Priority | quan trọng, khẩn cấp, gấp, khẩn (at the end, or "Quan trọng:" at the start), ưu tiên cao, ưu tiên trung bình, ưu tiên thấp, ưu tiên 1 |
+
+A weekday alone, or after "vào", is the coming one, and a weekday that names
+today means a week ahead ("thứ Ba" on a Tuesday is next Tuesday). "Thứ Ba tuần
+này" is this week's, which may be today, and a weekday of this week that has
+passed ("thứ Hai tuần này" on a Tuesday) is not read; "thứ Sáu tuần sau" and
+"tuần sau thứ Sáu" are next week's. "Thứ 2" to "thứ 7" are Monday to Saturday
+and "Chủ nhật" is Sunday, while the short forms "T2" to "T7" and "CN" stay in
+the title. A part of the day may come before or after a weekday ("chiều thứ
+Sáu", "thứ Sáu chiều") and before "nay" or "mai" ("sáng mai", "buổi sáng mai");
+a part of the day that forms a noun with the word before it stays with that
+noun ("Ăn tối mai" is dinner tomorrow, and the title stays "Ăn tối"). Weeks
+start on Monday, as the app's weeks do: "tuần sau" plans the task seven days
+ahead, and the weekend is Saturday and Sunday ("cuối tuần" is the coming
+Saturday, "cuối tuần sau" the one after). "Mai" alone is a name and the apricot
+blossom ("Họp Mai", "hoa mai"), so tomorrow is read after "ngày" or a part of
+the day only, and "mốt" (the day after tomorrow) is read after "ngày" only
+("ngày mốt").
+
+No past day is read: "hôm qua", "hôm kia", "tuần trước", "thứ Hai tuần trước",
+"cuối tuần trước", and "3 ngày trước" stay in the title. A phrase whose day
+cannot be named stays too: a list of weekdays ("thứ Hai và thứ Tư"), a month or
+a year ahead ("tháng sau", "năm sau", "2 tháng nữa"), a count of working days
+("3 ngày làm việc nữa"), a bound at a period or a period a task is for ("trước
+cuối tuần", "đến tuần sau", "trong 3 ngày nữa", "3 tuần tới"), the ordinals
+("lần thứ hai", "ngày thứ hai", which is the second day, and "thứ tự", which is
+an order), the names of days ("Thứ Sáu đen", "Chủ nhật Phục Sinh"), and "3 ngày
+2 đêm", which is three days and two nights. "Vào" may stand before a day ("vào
+ngày mai", "vào thứ Sáu", "vào 15/10").
+
+A written date has its day number before the month ("15 tháng 10", "ngày 15
+tháng 10", "15 thg 10"), or is in digits with the day first ("15/10/2026",
+"15-10-2026", "15.10.2026"), maybe with a weekday in front ("thứ Sáu 16 tháng
+10"). Digits with no year ("15/10") are a date only after "ngày", "vào", or a
+deadline word ("trước 15/10"), since without one they could be a fraction, a
+score, or a version. A date without a year that has already passed means next
+year's, and a year written after it must not be past ("15 tháng 10 năm 2025"
+stays in the title). "Ngày 5" alone is the 5th of this month, or of next month
+once it has passed. A day the calendar lacks ("30 tháng 2"), a month alone
+("tháng 5"), and numbers that number things ("chương 1.5", "phiên bản 2.3.4",
+"tỉ số 3-1") stay in the title. So do dates of the lunar calendar ("15 tháng 8
+âm lịch", "15/8 AL", "âm lịch 15/8", "mùng 5 tháng 10"), which people use for
+Tết, the full moon, and anniversaries and which the planner does not count in.
+
+A date range plans the task on its first day and makes it due on its last: "3-5
+tháng 5", "từ 3 đến 5 tháng 5", "từ ngày 3 đến ngày 5 tháng 5", "từ 3/5 đến
+5/5", and "giữa ngày 3 và ngày 5 tháng 5" run from the first date to the last,
+and a month written once serves both days. A span of weekdays does the same:
+"từ thứ Hai đến thứ Sáu" and "thứ Sáu đến Chủ nhật" plan the coming first day
+and make the task due on the last day after it, while Monday to Friday after
+"mỗi" is the working week, which repeats. The end must come after the start
+("5-3 tháng 5" stays in the title), and the end names its month. A number alone
+before a spaced dash belongs to the title ("Sprint 12 - 14 tháng 10" is planned
+for October 14). A range names both the planned day and the due day, so another
+day in the same line stays in the title.
+
+A due day follows "trước", "hạn", "hạn chót", "hạn cuối", "hạn nộp", "hết hạn",
+"đến hạn", "đến", "đến hết", "tới", "cho đến", "chậm nhất", "muộn nhất", "trễ
+nhất", or "deadline": "trước thứ Sáu", "hạn chót 15 tháng 10", "đến hết hôm
+nay", "chậm nhất ngày mai". The weekend is no due day ("trước cuối tuần" stays
+in the title), and neither is a count ("trong 3 ngày nữa").
+
+"Mỗi", "mọi", "hằng", or "hàng" with a day, week, month, or year repeats the
+task ("mỗi ngày", "hằng ngày", "mỗi tuần", "hàng tháng", "mỗi năm", "mỗi sáng",
+"mỗi tối"), and so does a weekday before "hàng tuần" ("thứ Hai hàng tuần"). A
+weekday repeats every week ("mỗi thứ Hai", "mọi thứ Hai", "các thứ Hai"), a list
+repeats on each of its days ("mỗi thứ Ba và thứ Năm", "mỗi thứ 2, 4, 6"), and
+"mỗi thứ Hai đến thứ Sáu", "mỗi ngày làm việc", and "các ngày trong tuần" repeat
+on the working days, while "mỗi cuối tuần" repeats on Saturday and Sunday and
+"cuối tuần" alone is one day. The counted intervals are "mỗi 2 ngày", "mỗi hai
+tuần", "cứ 3 tháng", "2 ngày một lần", "2 tuần/lần", "cách ngày", "cách tuần",
+"một lần mỗi tuần", and "mỗi 2 tuần vào thứ Ba" (a weekday after an interval
+fixes its days). A day of the month repeats each month ("ngày 15 hàng tháng",
+"mỗi tháng vào ngày 5"). A weekday by its place in the month ("thứ Hai đầu tiên
+của tháng") has no repeat rule and stays in the title whole, and so does every
+day with a day left out ("mỗi ngày trừ Chủ nhật"), a count of times ("2 lần một
+tuần", "mỗi tuần ba lần"), an interval of hours ("mỗi 2 giờ"), and "mỗi tháng 10"
+(every October).
+
+A length says that it is one: "30 phút", "2 tiếng", "1,5 giờ", "1 tiếng rưỡi",
+"nửa tiếng", "1 giờ 30 phút", "2 tiếng 30 phút", "1h30p", and "ba mươi phút",
+maybe after "mất", "tốn", "kéo dài", "thời lượng", "ước tính", "dự kiến",
+"khoảng", or "tầm". A bare number of "giờ" is a clock hour ("Họp 3 giờ" is 15:00),
+so "giờ" is a length with "đồng hồ" ("2 giờ đồng hồ"), after "mất", "tốn", "kéo
+dài", "thời lượng", "ước tính", or "dự kiến" ("mất 2 giờ"), and with minutes
+counted in "phút" when no lead and no part of the day makes it a clock ("3 giờ
+15 phút" is three hours fifteen minutes, and "lúc 3 giờ 15 phút" is 15:15), while
+"tiếng" is always a length ("2 tiếng"). An hour past 12 with minutes ("15 giờ
+30 phút", "18h30p") is a clock time and no length of 15 or 18 hours, unless one
+of those openers comes first ("mất 15 giờ 30 phút"). An amount after "trong",
+"sau", "mỗi", "cách", "trước", "tối đa", or "ít nhất", or before "nữa", "trước",
+"một ngày", or "một lần", names a moment, an interval, a bound, or a rate, not a
+length ("trong 2 tiếng", "sau 30 phút", "2 tiếng nữa", "mỗi 2 giờ", "2 tiếng một
+ngày"); each stays in the title whole, and so does a range of amounts ("2-3
+tiếng", "2 hoặc 3 tiếng"), a fraction ("1/2 giờ"), and the language of a lesson
+("học 2 tiếng Anh").
+
+"Ưu tiên cao", "mức độ ưu tiên cao", and "ưu tiên 1" are high priority, "ưu tiên
+trung bình" ("ưu tiên 2") the middle one, and "ưu tiên thấp" ("ưu tiên: thấp",
+"ưu tiên 3") the low one. "Khẩn cấp", "quan trọng", "khẩn", and "gấp", also with
+"rất", "cực kỳ", "vô cùng", "hết sức", or "khá" ("rất quan trọng"), are high
+priority only at the end of the line, or at its start before a colon or a comma
+("Quan trọng: nộp báo cáo"); anywhere else they are ordinary words and stay in
+the title ("tài liệu quan trọng của dự án", "gấp quần áo"), and "không gấp",
+"chưa khẩn cấp", and "không quan trọng" turn the word around, so they stay too,
+as does "quan trọng nhất". A full stop or an exclamation mark that ends the line
+goes with the word.
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline

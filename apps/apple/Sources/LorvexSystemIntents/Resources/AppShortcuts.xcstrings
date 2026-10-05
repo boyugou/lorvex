@@ -10,6 +10,12 @@
             "value": "أضف مهمة إلى ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক যোগ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -80,6 +86,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에 할 일 추가"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य जोडा"
           }
         },
         "ms": {
@@ -171,6 +183,12 @@
             "value": "أضف عادة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ অভ্যাস যোগ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -241,6 +259,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에 습관 추가"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये सवय जोडा"
           }
         },
         "ms": {
@@ -332,6 +356,12 @@
             "value": "سجّل مهمة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক লিখে রাখুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -402,6 +432,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 빠르게 추가"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य लिहून ठेवा"
           }
         },
         "ms": {
@@ -493,6 +529,12 @@
             "value": "أكمل مهمة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক সম্পূর্ণ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -563,6 +605,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일 완료"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य पूर्ण करा"
           }
         },
         "ms": {
@@ -654,6 +702,12 @@
             "value": "أنشئ عادة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি অভ্যাস তৈরি করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -724,6 +778,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 습관 만들기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक सवय तयार करा"
           }
         },
         "ms": {
@@ -815,6 +875,12 @@
             "value": "أجّل مهمة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক পিছিয়ে দিন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -885,6 +951,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일 미루기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य पुढे ढकला"
           }
         },
         "ms": {
@@ -976,6 +1048,12 @@
             "value": "اعرض المهام في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এর টাস্কের তালিকা দেখান"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1046,6 +1124,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}의 할 일 목록 보기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मधील कार्यांची यादी दाखवा"
           }
         },
         "ms": {
@@ -1137,6 +1221,12 @@
             "value": "علّم مهمة كمكتملة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক সম্পন্ন হিসাবে চিহ্নিত করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1207,6 +1297,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 완료로 표시"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य पूर्ण म्हणून चिन्हांकित करा"
           }
         },
         "ms": {
@@ -1298,6 +1394,12 @@
             "value": "انقل مهمة إلى اليوم في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক আজকের জন্য সরান"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1368,6 +1470,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 오늘로 이동"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य आजसाठी मूव्ह करा"
           }
         },
         "ms": {
@@ -1459,6 +1567,12 @@
             "value": "افتح ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} খুলুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1529,6 +1643,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName} 열기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} उघडा"
           }
         },
         "ms": {
@@ -1620,6 +1740,12 @@
             "value": "افتح اليوم في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ আজকের টাস্ক খুলুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1690,6 +1816,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 오늘 열기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये आजची कार्ये उघडा"
           }
         },
         "ms": {
@@ -1781,6 +1913,12 @@
             "value": "خطط مهمة لليوم في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক আজকের জন্য প্ল্যান করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1851,6 +1989,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 오늘로 계획"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य आजसाठी प्लॅन करा"
           }
         },
         "ms": {
@@ -1942,6 +2086,12 @@
             "value": "اقرأ النظرة العامة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এর ওভারভিউ পড়ুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2012,6 +2162,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 개요 읽기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} चा ओव्हरव्ह्यू वाचा"
           }
         },
         "ms": {
@@ -2103,6 +2259,12 @@
             "value": "اقرأ المراجعة الأسبوعية في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এর সাপ্তাহিক পর্যালোচনা পড়ুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2173,6 +2335,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 주간 회고 읽기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} चा साप्ताहिक आढावा वाचा"
           }
         },
         "ms": {
@@ -2264,6 +2432,12 @@
             "value": "حدد موعد مهمة للغد في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ একটি টাস্ক আগামীকালের জন্য শিডিউল করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2334,6 +2508,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일을 내일로 계획"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये एक कार्य उद्यासाठी शेड्यूल करा"
           }
         },
         "ms": {
@@ -2425,6 +2605,12 @@
             "value": "ابحث عن المهام في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ টাস্ক সার্চ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2495,6 +2681,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 할 일 검색"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये कार्ये सर्च करा"
           }
         },
         "ms": {
@@ -2586,6 +2778,12 @@
             "value": "اعرض نظرة Lorvex العامة في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ Lorvex-এর ওভারভিউ দেখান"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2656,6 +2854,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 개요 보기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये Lorvex चा ओव्हरव्ह्यू दाखवा"
           }
         },
         "ms": {
@@ -2747,6 +2951,12 @@
             "value": "اعرض المراجعة الأسبوعية في ${applicationName}"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}-এ সাপ্তাহিক পর্যালোচনা দেখান"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2817,6 +3027,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "${applicationName}에서 주간 회고 보기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} मध्ये साप्ताहिक आढावा दाखवा"
           }
         },
         "ms": {

@@ -10,6 +10,12 @@
             "value": "يعرض المهمة في أعلى قائمة اليوم."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজকের তালিকার সবার উপরের টাস্কটি দেখায়।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -80,6 +86,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘의 맨 위 할 일을 표시합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आजच्या यादीतील सर्वात वरचे कार्य दाखवते."
           }
         },
         "ms": {
@@ -171,6 +183,12 @@
             "value": "Lorvex اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex আজ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -241,6 +259,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex 오늘"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex आज"
           }
         },
         "ms": {
@@ -333,6 +357,12 @@
             "value": "مراجعة المواصفات"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্পেক পর্যালোচনা করা"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -403,6 +433,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "사양서 검토"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्पेकचा आढावा घेणे"
           }
         },
         "ms": {
@@ -526,6 +562,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld متبقية"
+                }
+              }
+            }
+          }
+        },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lldটি বাকি"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lldটি বাকি"
                 }
               }
             }
@@ -715,6 +769,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개 남음"
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld शिल्लक"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld शिल्लक"
+                }
+              }
+            }
           }
         },
         "ms": {
@@ -945,6 +1017,12 @@
             "value": "حوالي %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "প্রায় %@"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1015,6 +1093,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "약 %@"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुमारे %@"
           }
         },
         "ms": {
@@ -1106,6 +1190,12 @@
             "value": "بيانات الأداة غير متاحة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "উইজেটের ডেটা উপলভ্য নয়।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1176,6 +1266,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "위젯 데이터를 사용할 수 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "विजेटचा डेटा उपलब्ध नाही."
           }
         },
         "ms": {
@@ -1267,6 +1363,12 @@
             "value": "اطّلع على تقدم عاداتك اليوم بنظرة سريعة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজকের অভ্যাসের অগ্রগতি এক নজরে দেখুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1337,6 +1439,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘의 습관 진행 상황을 한눈에 확인하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आजच्या सवयींची प्रगती एका दृष्टिक्षेपात पाहा."
           }
         },
         "ms": {
@@ -1428,6 +1536,12 @@
             "value": "افتح Lorvex لتحميل العادات."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাস লোড করতে Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1498,6 +1612,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 열어 습관을 불러오세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवयी लोड करण्यासाठी Lorvex उघडा."
           }
         },
         "ms": {
@@ -1589,6 +1709,12 @@
             "value": "العادات"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাস"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1659,6 +1785,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवयी"
           }
         },
         "ms": {
@@ -1750,6 +1882,12 @@
             "value": "العادات"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাস"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1820,6 +1958,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवयी"
           }
         },
         "ms": {
@@ -1911,6 +2055,12 @@
             "value": "إكمال مهمة في Lorvex من أداة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "উইজেট থেকে একটি Lorvex টাস্ক সম্পূর্ণ করুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1981,6 +2131,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "위젯에서 Lorvex 할 일을 완료합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "विजेटवरून एक Lorvex कार्य पूर्ण करा."
           }
         },
         "ms": {
@@ -2072,6 +2228,12 @@
             "value": "تم إكمال \"%@\"."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” সম্পূর্ণ করা হয়েছে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2142,6 +2304,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” 할 일을 완료했습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य ‘%@’ पूर्ण केले."
           }
         },
         "ms": {
@@ -2233,6 +2401,12 @@
             "value": "إكمال المهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক সম্পূর্ণ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2303,6 +2477,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일 완료"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य पूर्ण करा"
           }
         },
         "ms": {
@@ -2394,6 +2574,12 @@
             "value": "تسجيل عادة في Lorvex من أداة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "উইজেট থেকে একটি Lorvex অভ্যাস লগ করুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2464,6 +2650,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "위젯에서 Lorvex 습관을 기록합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "विजेटवरून एक Lorvex सवय नोंदवा."
           }
         },
         "ms": {
@@ -2555,6 +2747,12 @@
             "value": "تم تسجيل \"%@\"."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” লগ করা হয়েছে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2625,6 +2823,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” 습관을 기록했습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवय ‘%@’ नोंदवली."
           }
         },
         "ms": {
@@ -2716,6 +2920,12 @@
             "value": "إكمال العادة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাস সম্পূর্ণ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2786,6 +2996,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관 완료"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवय पूर्ण करा"
           }
         },
         "ms": {
@@ -2877,6 +3093,12 @@
             "value": "المهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2947,6 +3169,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य"
           }
         },
         "ms": {
@@ -3039,6 +3267,12 @@
             "value": "معرّف العادة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাসের আইডি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3109,6 +3343,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관 ID"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवयीचा ID"
           }
         },
         "ms": {
@@ -3201,6 +3441,12 @@
             "value": "اسم العادة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাসের নাম"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3271,6 +3517,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관 이름"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवयीचे नाव"
           }
         },
         "ms": {
@@ -3363,6 +3615,12 @@
             "value": "المهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3433,6 +3691,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य"
           }
         },
         "ms": {
@@ -3524,6 +3788,12 @@
             "value": "Lorvex جاهز."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex প্রস্তুত।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3594,6 +3864,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 사용할 준비가 되었습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex तयार आहे."
           }
         },
         "ms": {
@@ -3686,6 +3962,12 @@
             "value": "التأمل"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ধ্যান করা"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3756,6 +4038,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "명상"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ध्यान करणे"
           }
         },
         "ms": {
@@ -3848,6 +4136,12 @@
             "value": "القراءة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পড়া"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3918,6 +4212,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "독서"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "वाचन"
           }
         },
         "ms": {
@@ -4010,6 +4310,12 @@
             "value": "المشي"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "হাঁটা"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4080,6 +4386,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "산책"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "चालणे"
           }
         },
         "ms": {
@@ -4172,6 +4484,12 @@
             "value": "شرب الماء"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "জল পান করা"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4242,6 +4560,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "물 마시기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पाणी पिणे"
           }
         },
         "ms": {
@@ -4333,6 +4657,12 @@
             "value": "تابع إنجاز مهام اليوم بنظرة سريعة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজকের টাস্ক সম্পূর্ণ হওয়ার অগ্রগতি এক নজরে দেখুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4403,6 +4733,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘의 할 일 완료 현황을 한눈에 확인하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आजची कार्ये किती पूर्ण झाली ते एका दृष्टिक्षेपात पाहा."
           }
         },
         "ms": {
@@ -4494,6 +4830,12 @@
             "value": "افتح Lorvex للتحميل."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "লোড করতে Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4564,6 +4906,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 열어 불러오세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लोड करण्यासाठी Lorvex उघडा."
           }
         },
         "ms": {
@@ -4655,6 +5003,12 @@
             "value": "التقدم اليومي"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দৈনিক অগ্রগতি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4725,6 +5079,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘의 진행 상황"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दैनिक प्रगती"
           }
         },
         "ms": {
@@ -4816,6 +5176,12 @@
             "value": "التقدم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অগ্রগতি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4886,6 +5252,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "진행 상황"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्रगती"
           }
         },
         "ms": {
@@ -4977,6 +5349,12 @@
             "value": "التقدم غير متاح"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অগ্রগতি উপলভ্য নয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5047,6 +5425,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "진행 상황을 확인할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्रगती उपलब्ध नाही"
           }
         },
         "ms": {
@@ -5138,6 +5522,12 @@
             "value": "افتح Lorvex للتحديث"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "রিফ্রেশ করতে Lorvex খুলুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5208,6 +5598,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 열면 새로 고쳐집니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रिफ्रेश करण्यासाठी Lorvex उघडा"
           }
         },
         "ms": {
@@ -5299,6 +5695,12 @@
             "value": "بيانات اللقطة تالفة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্ন্যাপশট ডেটা ক্ষতিগ্রস্ত"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5369,6 +5771,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "스냅샷 데이터가 손상됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्नॅपशॉट डेटा खराब झाला आहे"
           }
         },
         "ms": {
@@ -5460,6 +5868,12 @@
             "value": "اللقطة غير متاحة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্ন্যাপশট উপলভ্য নয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5530,6 +5944,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "스냅샷을 사용할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्नॅपशॉट उपलब्ध नाही"
           }
         },
         "ms": {
@@ -5621,6 +6041,12 @@
             "value": "وقت التحديث غير متاح"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপডেটের সময় উপলভ্য নয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5691,6 +6117,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "업데이트 시간을 확인할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अपडेटची वेळ उपलब्ध नाही"
           }
         },
         "ms": {
@@ -5782,6 +6214,12 @@
             "value": "حدِّث تطبيق Lorvex للتحديث"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "রিফ্রেশ করতে Lorvex আপডেট করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5852,6 +6290,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 업데이트하면 새로 고쳐집니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रिफ्रेश करण्यासाठी Lorvex अपडेट करा"
           }
         },
         "ms": {
@@ -5943,6 +6387,12 @@
             "value": "تم التحديث %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপডেট করা হয়েছে: %@"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6013,6 +6463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 업데이트됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अपडेट केले: %@"
           }
         },
         "ms": {
@@ -6104,6 +6560,12 @@
             "value": "تم التحديث الآن"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এইমাত্র আপডেট করা হয়েছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6174,6 +6636,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "방금 업데이트됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आत्ताच अपडेट केले"
           }
         },
         "ms": {
@@ -6265,6 +6733,12 @@
             "value": "لم يتبقَّ شيء لليوم."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজকের জন্য আর কিছু বাকি নেই।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6335,6 +6809,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 남은 할 일이 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आजसाठी काहीही शिल्लक नाही."
           }
         },
         "ms": {
@@ -6426,6 +6906,12 @@
             "value": "يتم عرض آخر قائمة محفوظة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সর্বশেষ সেভ করা তালিকা দেখানো হচ্ছে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6496,6 +6982,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "마지막으로 저장된 목록을 표시하고 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शेवटची जतन केलेली यादी दाखवत आहे."
           }
         },
         "ms": {
@@ -6588,6 +7080,12 @@
             "value": "محظورة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ব্লক করা হয়েছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6658,6 +7156,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "차단됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ब्लॉक केलेले"
           }
         },
         "ms": {
@@ -6749,6 +7253,12 @@
             "value": "مهمة خاصة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "গোপনীয় টাস্ক"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6819,6 +7329,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "비공개 할 일"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "खाजगी कार्य"
           }
         },
         "ms": {
@@ -6910,6 +7426,12 @@
             "value": "Lorvex"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6977,6 +7499,12 @@
           }
         },
         "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
+        "mr": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex"
@@ -7071,6 +7599,12 @@
             "value": "اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7141,6 +7675,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज"
           }
         },
         "ms": {
@@ -7232,6 +7772,12 @@
             "value": "اطّلع على مهام اليوم بنظرة سريعة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজকের টাস্ক এক নজরে দেখুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7302,6 +7848,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘의 할 일을 한눈에 확인하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आजची कार्ये एका दृष्टिक्षेपात पाहा."
           }
         },
         "ms": {
@@ -7393,6 +7945,12 @@
             "value": "اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7463,6 +8021,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज"
           }
         },
         "ms": {
@@ -7554,6 +8118,12 @@
             "value": "حتى %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ পর্যন্ত"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7624,6 +8194,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@까지"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ पर्यंत"
           }
         },
         "ms": {
@@ -7716,6 +8292,12 @@
             "value": "تم البدء · حوالي %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরু হয়েছে · প্রায় %@"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7786,6 +8368,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "시작됨 · 약 %@"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुरू झाले · सुमारे %@"
           }
         },
         "ms": {
@@ -7877,6 +8465,12 @@
             "value": "متأخرة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বকেয়া"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7947,6 +8541,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기한 초과"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ओव्हरड्यू"
           }
         },
         "ms": {
@@ -8038,6 +8638,12 @@
             "value": "تم البدء"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরু হয়েছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8108,6 +8714,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "시작됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुरू झाले"
           }
         },
         "ms": {
@@ -8199,6 +8811,12 @@
             "value": "الرد على ملاحظات التصميم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ডিজাইন ফিডব্যাকের উত্তর দেওয়া"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8269,6 +8887,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "디자인 피드백에 답장"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "डिझाइन फीडबॅकला उत्तर देणे"
           }
         },
         "ms": {
@@ -8360,6 +8984,12 @@
             "value": "تجديد جواز السفر"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পাসপোর্ট নবায়ন করা"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8430,6 +9060,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "여권 갱신"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पासपोर्ट नूतनीकरण करणे"
           }
         },
         "ms": {
@@ -8521,6 +9157,12 @@
             "value": "حجز تذاكر الطيران"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ফ্লাইট বুক করা"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8591,6 +9233,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "항공편 예약"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फ्लाइट बुक करणे"
           }
         },
         "ms": {
@@ -8682,6 +9330,12 @@
             "value": "مراجعة المواصفات هي الأهم اليوم؛ أما حجز الرحلات فيمكنه الانتظار حتى الخميس."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ স্পেক পর্যালোচনাই সবচেয়ে জরুরি; ফ্লাইটের বুকিং বৃহস্পতিবার পর্যন্ত অপেক্ষা করতে পারে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8752,6 +9406,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘은 사양서 검토가 가장 중요합니다. 항공편 예약은 목요일까지 미뤄도 됩니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज स्पेकचा आढावा सर्वात महत्त्वाचा आहे; फ्लाइटची बुकिंग गुरुवारपर्यंत थांबू शकते."
           }
         },
         "ms": {
@@ -8843,6 +9503,12 @@
             "value": "تم إنجاز كل شيء"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সব হয়ে গেছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8913,6 +9579,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "모두 완료"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सर्व झाले"
           }
         },
         "ms": {
@@ -9004,6 +9676,12 @@
             "value": "فتح اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ খুলুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9074,6 +9752,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 열기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज उघडा"
           }
         },
         "ms": {
@@ -9165,6 +9849,12 @@
             "value": "فتح Lorvex على شاشة اليوم."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex খুলে সরাসরি আজকের স্ক্রিনে যায়।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9235,6 +9925,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex에서 오늘 화면을 엽니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex उघडून थेट आजच्या स्क्रीनवर जाते."
           }
         },
         "ms": {
@@ -9358,6 +10054,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld متبقية اليوم"
+                }
+              }
+            }
+          }
+        },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ %lldটি বাকি"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ %lldটি বাকি"
                 }
               }
             }
@@ -9547,6 +10261,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 %lld개 남음"
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज %lld शिल्लक"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज %lld शिल्लक"
+                }
+              }
+            }
           }
         },
         "ms": {

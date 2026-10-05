@@ -22,7 +22,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - watchOS / CarPlay / Widgets design audits (need on-device).
 
 ### Localization
-- Grow from the twenty-six shipped languages to the 31 locales lorvex.app is
+- Grow from the twenty-eight shipped languages to the 31 locales lorvex.app is
   published in (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"), one
   batch of languages at a time. Each batch is prepared on its own worktree
   branch with `apps/apple/script/localization_transfer.py` and merges with
@@ -33,14 +33,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   Polish (`pl`), Japanese (`ja`), Korean (`ko`), Traditional Chinese
   (`zh-Hant`), Persian (`fa`), Urdu (`ur`), Hebrew (`he`), German (`de`), Dutch
   (`nl`), Romanian (`ro`), Indonesian (`id`), Malay (`ms`), Vietnamese (`vi`),
-  Turkish (`tr`), Thai (`th`), and Greek (`el`) have shipped. The rest follow
-  in batches of related languages: Bengali and Marathi; and Telugu, Tamil, and
-  Malayalam.
+  Turkish (`tr`), Thai (`th`), Greek (`el`), Bengali (`bn`), and Marathi (`mr`)
+  have shipped. The rest, Telugu, Tamil, and Malayalam, follow as one batch.
 - The App Store listing (`apps/apple/docs/APP_STORE_METADATA.md`) carries its
   name, subtitle, description, and keywords in App Store Connect for every
   shipped language except Urdu, Hebrew, German, Dutch, Romanian, Indonesian,
-  Malay, Vietnamese, Turkish, Thai, and Greek, whose listing copy is not
-  written yet. Persian has no listing: App Store Connect offers no Persian
+  Malay, Vietnamese, Turkish, Thai, Greek, Bengali, and Marathi, whose listing
+  copy is not written yet. Persian has no listing: App Store Connect offers no Persian
   localization.
   Screenshots exist for English and Simplified Chinese; the other locales show
   the English ones until their own are captured and uploaded. The sample

@@ -279,11 +279,15 @@ class VerifyUserDocsTests(unittest.TestCase):
             checks["required"],
         )
         self.assertIn(
-            "| iOS CarPlay approval template | `LorvexCarPlay.entitlements` | — | — | — | — | — | CarPlay communication entitlement template; merge into the iOS app entitlements only after Apple approval |",
+            "| iOS CarPlay approval template | `LorvexCarPlay.entitlements` | — | — | — | — | — | CarPlay entitlement template (`carplay-communication`, the messaging and VoIP entitlement); merge into the iOS app entitlements only if Apple approves a CarPlay capability for the iOS App ID |",
             checks["required"],
         )
         self.assertIn(
-            "The template declares\n`com.apple.developer.carplay-communication`; do not merge it into\n`LorvexMobileApp.entitlements` until Apple approves the CarPlay capability",
+            "The template declares\n`com.apple.developer.carplay-communication`, the entitlement Apple grants to\nmessaging and VoIP apps.",
+            checks["required"],
+        )
+        self.assertIn(
+            "developer.apple.com/contact/carplay for the iOS App ID `com.lorvex.apple`.",
             checks["required"],
         )
         self.assertIn(

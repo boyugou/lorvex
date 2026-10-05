@@ -38,16 +38,44 @@ struct LorvexCalendarCompactTitleFitTests {
         title: "Quarterly planning workshop", size: 11, width: 60))
   }
 
-  @Test("Short words, an unmeasured block, and unspaced scripts keep wrapping")
+  @Test("Short words, an unmeasured block, and Chinese text keep wrapping")
   func otherTitlesKeepWrapping() {
     #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: "1:1 with Sam", size: 11, width: 40))
     #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: "Quarterly", size: 11, width: 0))
     #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: "季度规划研讨会议安排", size: 11, width: 30))
-    #expect(
-      !LorvexCalendarCompactTitleFit.splitsAWord(title: "การประชุมวางแผนรายไตรมาส", size: 11, width: 30))
     // A Latin word beside Chinese still counts.
     #expect(
       LorvexCalendarCompactTitleFit.splitsAWord(title: "Quarterly 规划", size: 11, width: 30))
+  }
+
+  @Test("A Thai title is cut into dictionary words, not at its characters")
+  func thaiTitleBreaksBetweenWords() {
+    let title = "การประชุมวางแผนรายไตรมาส"
+    let words = LorvexCalendarCompactTitleFit.words(in: title).map(\.text)
+    #expect(words.count > 1)
+    #expect(words.joined() == title)
+    #expect(words.allSatisfy { !$0.isEmpty })
+    #expect(LorvexCalendarCompactTitleFit.words(in: title).allSatisfy { !$0.wrapsBetweenCharacters })
+  }
+
+  @Test("A Thai word wider than the block keeps the title on one line instead of splitting it")
+  func thaiWordTooWideTakesOneLine() {
+    let title = "การประชุมวางแผนรายไตรมาส"
+    #expect(LorvexCalendarCompactTitleFit.splitsAWord(title: title, size: 11, width: 30))
+    #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: title, size: 11, width: 120))
+    #expect(!LorvexCalendarCompactTitleFit.splitsAWord(title: title, size: 11, width: 0))
+    // The face shrinks for the longest word, within the floor.
+    let scale = LorvexCalendarCompactTitleFit.scale(title: title, size: 11, width: 40)
+    #expect(scale < 1)
+    #expect(scale >= LorvexCalendarCompactTitleFit.minimumScale)
+  }
+
+  @Test("Words keep Latin runs whole and cut only the Thai run beside them")
+  func mixedTitlesCutOnlyTheUnspacedRun() {
+    let words = LorvexCalendarCompactTitleFit.words(in: "Zoom ประชุมทีม Roadmap").map(\.text)
+    #expect(words.first == "Zoom")
+    #expect(words.last == "Roadmap")
+    #expect(words.count >= 4)
   }
 
   @Test("A lane that an overlap has split too narrow for a few letters draws no title")

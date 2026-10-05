@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Το Lorvex μπορεί να προσθέτει στο Ημερολόγιο τα μπλοκ προγραμματισμού που δημιουργείτε.";
+"NSCalendarsFullAccessUsageDescription" = "Το Lorvex μπορεί να διαβάζει λεπτομέρειες γεγονότων για τη δημιουργία προγραμμάτων και πλαισίου για τον βοηθό.";

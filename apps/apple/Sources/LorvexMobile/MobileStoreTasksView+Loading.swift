@@ -156,6 +156,19 @@ extension MobileStoreTasksView {
     await load()
   }
 
+  /// The lists the batch bar offers: every list but the one this screen is
+  /// scoped to, whose tasks are already in it.
+  var batchMoveTargets: [LorvexList] {
+    (store.lists?.lists ?? []).filter { $0.id != scope.listID }
+  }
+
+  func performBatchMove(toListID listID: LorvexList.ID) async {
+    let ids = Array(batchSelectedTaskIDs)
+    guard await store.moveTasks(ids, toListID: listID) else { return }
+    batchSelectedTaskIDs.subtract(ids)
+    await load()
+  }
+
   func pruneBatchSelection() {
     // Keep a selected id when it is either in the loaded window or still resolves
     // to an in-scope task in the cache. Intersecting only with `page.tasks` would

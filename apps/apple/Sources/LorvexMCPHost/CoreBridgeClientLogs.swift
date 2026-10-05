@@ -1,4 +1,5 @@
 import LorvexCore
+import LorvexDomain
 import MCP
 
 extension CoreBridgeClient {
@@ -18,12 +19,18 @@ extension CoreBridgeClient {
       entityID: entityID,
       since: since)
     let entries = changelog.entries.map { entry -> Value in
-      .object([
+      // A memory entry's id is its key, free text an assistant chose, so it is
+      // fenced like the key a memory read returns. Every other entity's id is
+      // a generated one.
+      let entityID = entry.entityId.map { id in
+        Value.string(entry.entityType == EntityName.memory ? SecurityFencing.fence(id) : id)
+      }
+      return .object([
         "id": .string(entry.id),
         "timestamp": entry.timestamp.map(Value.string) ?? .null,
         "entity_type": .string(entry.entityType),
         "operation": .string(entry.operation),
-        "entity_id": entry.entityId.map(Value.string) ?? .null,
+        "entity_id": entityID ?? .null,
         "summary": .string(entry.summary),
         "initiated_by": entry.initiatedBy.map(Value.string) ?? .null,
         "mcp_tool": entry.mcpTool.map(Value.string) ?? .null,

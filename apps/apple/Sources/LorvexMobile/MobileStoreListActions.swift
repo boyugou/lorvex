@@ -119,4 +119,25 @@ extension MobileStore {
       await presentUserFacingError(error)
     }
   }
+
+  /// Moves every task in `ids` to list `listID` in one core call, then reloads
+  /// the list catalog so each list's counts follow. A task already in the list
+  /// stays where it is. Returns whether the move committed.
+  @discardableResult
+  public func moveTasks(_ ids: [LorvexTask.ID], toListID listID: LorvexList.ID) async -> Bool {
+    let uniqueIDs = stableUniqueTaskIDs(ids)
+    guard !uniqueIDs.isEmpty else { return false }
+    let moved = await mutateTaskReturningToday(affectedIDs: uniqueIDs) {
+      _ = try await self.core.batchMoveTasks(ids: uniqueIDs, toListID: listID)
+      return try await self.core.loadToday()
+    }
+    guard moved else { return false }
+    feedbackProvider.playFeedback(.taskMoved)
+    do {
+      lists = try await core.loadLists()
+    } catch {
+      await presentUserFacingError(error)
+    }
+    return true
+  }
 }

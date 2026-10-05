@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex สามารถเพิ่มบล็อกการวางแผนที่สร้างไว้ลงในแอปปฏิทินได้";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex สามารถอ่านรายละเอียดกิจกรรมเพื่อสร้างกำหนดการและบริบทให้ผู้ช่วยได้";

@@ -16,6 +16,12 @@
             "value": "Füge eine Aufgabe zu ${applicationName} hinzu"
           }
         },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προσθήκη εργασίας στο «${applicationName}»"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -112,6 +118,18 @@
             "value": "Добавь задачу в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เพิ่มงานใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasına görev ekle"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -157,6 +175,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Füge eine Gewohnheit in ${applicationName} hinzu"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προσθήκη συνήθειας στο «${applicationName}»"
           }
         },
         "en": {
@@ -255,6 +279,18 @@
             "value": "Добавь привычку в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เพิ่มนิสัยใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasına alışkanlık ekle"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -300,6 +336,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erfasse eine Aufgabe in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Γρήγορη προσθήκη εργασίας στο «${applicationName}»"
           }
         },
         "en": {
@@ -398,6 +440,18 @@
             "value": "Запиши задачу в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จดงานใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görev not et"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -443,6 +497,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erledige eine Aufgabe in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ολοκλήρωση εργασίας στο «${applicationName}»"
           }
         },
         "en": {
@@ -541,6 +601,18 @@
             "value": "Выполни задачу в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำงานให้เสร็จใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görev tamamla"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -586,6 +658,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erstelle eine Gewohnheit in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δημιουργία συνήθειας στο «${applicationName}»"
           }
         },
         "en": {
@@ -684,6 +762,18 @@
             "value": "Создай привычку в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สร้างนิสัยใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında alışkanlık oluştur"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -729,6 +819,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verschiebe eine Aufgabe in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αναβολή εργασίας στο «${applicationName}»"
           }
         },
         "en": {
@@ -827,6 +923,18 @@
             "value": "Отложи задачу в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เลื่อนงานใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görev ertele"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -872,6 +980,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zeige meine Aufgaben in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εμφάνιση λίστας εργασιών στο «${applicationName}»"
           }
         },
         "en": {
@@ -970,6 +1084,18 @@
             "value": "Покажи задачи в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แสดงรายการงานใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görevleri listele"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1015,6 +1141,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Markiere eine Aufgabe in ${applicationName} als erledigt"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Σήμανση εργασίας ως ολοκληρωμένης στο «${applicationName}»"
           }
         },
         "en": {
@@ -1113,6 +1245,18 @@
             "value": "Отметь задачу выполненной в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำเครื่องหมายว่างานเสร็จใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görevi bitti olarak işaretle"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1158,6 +1302,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verschiebe eine Aufgabe auf heute in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μετακίνηση εργασίας στο σήμερα με «${applicationName}»"
           }
         },
         "en": {
@@ -1256,6 +1406,18 @@
             "value": "Перенеси задачу на сегодня в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ย้ายงานมาวันนี้ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görevi bugüne taşı"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1301,6 +1463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öffne ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Άνοιγμα του «${applicationName}»"
           }
         },
         "en": {
@@ -1399,6 +1567,18 @@
             "value": "Открой ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasını aç"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1444,6 +1624,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öffne Heute in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Άνοιγμα του σήμερα στο «${applicationName}»"
           }
         },
         "en": {
@@ -1542,6 +1728,18 @@
             "value": "Открой сегодня в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดวันนี้ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında bugünü aç"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1587,6 +1785,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plane eine Aufgabe für heute in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προγραμματισμός εργασίας για σήμερα στο «${applicationName}»"
           }
         },
         "en": {
@@ -1685,6 +1889,18 @@
             "value": "Запланируй задачу на сегодня в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "วางแผนงานสำหรับวันนี้ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında bugüne görev planla"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1730,6 +1946,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lies die Übersicht in ${applicationName} vor"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανάγνωση της επισκόπησης στο «${applicationName}»"
           }
         },
         "en": {
@@ -1828,6 +2050,18 @@
             "value": "Прочитай обзор в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อ่านภาพรวมใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında genel bakışı oku"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1873,6 +2107,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lies den Wochenrückblick in ${applicationName} vor"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανάγνωση της εβδομαδιαίας ανασκόπησης στο «${applicationName}»"
           }
         },
         "en": {
@@ -1971,6 +2211,18 @@
             "value": "Прочитай итоги недели в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อ่านการทบทวนประจำสัปดาห์ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında haftalık gözden geçirmeyi oku"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2016,6 +2268,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plane eine Aufgabe für morgen in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προγραμματισμός εργασίας για αύριο στο «${applicationName}»"
           }
         },
         "en": {
@@ -2114,6 +2372,18 @@
             "value": "Запланируй задачу на завтра в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำหนดงานสำหรับพรุ่งนี้ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında yarına görev planla"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2159,6 +2429,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Suche Aufgaben in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αναζήτηση εργασιών στο «${applicationName}»"
           }
         },
         "en": {
@@ -2257,6 +2533,18 @@
             "value": "Найди задачи в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ค้นหางานใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında görevlerde ara"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2302,6 +2590,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zeige die Lorvex-Übersicht in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εμφάνιση της επισκόπησης του Lorvex στο «${applicationName}»"
           }
         },
         "en": {
@@ -2400,6 +2694,18 @@
             "value": "Покажи обзор Lorvex в ${applicationName}"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แสดงภาพรวมของ Lorvex ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında Lorvex genel bakışını göster"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2445,6 +2751,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zeige den Wochenrückblick in ${applicationName}"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εμφάνιση της εβδομαδιαίας ανασκόπησης στο «${applicationName}»"
           }
         },
         "en": {
@@ -2541,6 +2853,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Покажи итоги недели в ${applicationName}"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แสดงการทบทวนประจำสัปดาห์ใน ${applicationName}"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} uygulamasında haftalık gözden geçirmeyi göster"
           }
         },
         "uk": {

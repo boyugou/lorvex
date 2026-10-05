@@ -117,14 +117,13 @@ the CLDR category automatically. The rules for writing count strings are under
 catalogs carry; see "Language coverage" below. A plural entry carries, for each
 language, the CLDR categories that language's integer counts select, as
 declared in `PLURAL_CATEGORIES` in `script/verify_localization_catalog.py`:
-English, German, and Dutch `one`/`other`, where `one` selects only 1; Spanish
-and Italian `one`/`other`, and French and
-Brazilian Portuguese `one`/`other` where `one` selects both 0 and 1, each with an
-optional `many` that only round millions select and that falls back to `other`
-when absent; Hindi and Persian `one`/`other`, where `one` selects both 0 and
+English, German, Dutch, Turkish, and Greek `one`/`other`, where `one` selects
+only 1; Spanish and Italian `one`/`other`, and French and Brazilian Portuguese
+`one`/`other` where `one` selects both 0 and 1, each with an optional `many`
+that only round millions select and that falls back to `other` when absent; Hindi and Persian `one`/`other`, where `one` selects both 0 and
 1; Urdu `one`/`other`, where `one` selects only 1; Hebrew `one`/`other` with an
 optional `two` for the dual, where `one` selects only 1 and `two` only 2; Chinese
-(Simplified and Traditional), Indonesian, Japanese, Korean, Malay, and
+(Simplified and Traditional), Indonesian, Japanese, Korean, Malay, Thai, and
 Vietnamese only `other`; Russian and
 Ukrainian
 `one`/`few`/`many`/`other`, where `one` selects 1,
@@ -142,7 +141,7 @@ Apple's lookup honors an explicit `zero` entry in every language.
 
 A `one` form may leave the number out ("Once a week") only in a language whose
 `one` means exactly 1, as in English, German, Dutch, Spanish, Italian, Romanian,
-and Polish. French,
+Polish, Turkish, and Greek. French,
 Brazilian Portuguese, Hindi, Bengali, and Persian also use `one` for 0, and
 Russian and Ukrainian use it for 21, 31, 101, and so on, so their `one` forms
 show the count. A `zero` form takes 0 over from `one`, so an entry that defines
@@ -222,13 +221,14 @@ Each process shows the first language in the user's preferred-language list
 that its bundles ship, matched the way Foundation matches localizations:
 
 - A regional system language selects its language: `ar-SA` and `ar-EG` select
-  `ar`; `de-AT` and `de-CH` select `de`; `es-MX`, `es-419`, and `es-ES` select
-  `es`; `fr-CA` and `fr-CH` select `fr`; `hi-IN` selects `hi`; `id-ID` selects
-  `id`; `it-CH` selects `it`; `ja-JP` selects `ja`; `ko-KR` selects `ko`;
-  `ms-MY`, `ms-SG`, and `ms-BN` select `ms`; `nl-BE` selects `nl`; `pl-PL`
-  selects `pl`; `ro-MD` selects `ro`; `ru-RU` and `ru-KZ` select `ru`; `uk-UA`
-  selects `uk`; `vi-VN` selects `vi`; `en-GB` selects `en`. `pt-PT` selects
-  `pt-BR`, the one Portuguese variety shipped.
+  `ar`; `de-AT` and `de-CH` select `de`; `el-GR` and `el-CY` select `el`;
+  `es-MX`, `es-419`, and `es-ES` select `es`; `fr-CA` and `fr-CH` select `fr`;
+  `hi-IN` selects `hi`; `id-ID` selects `id`; `it-CH` selects `it`; `ja-JP`
+  selects `ja`; `ko-KR` selects `ko`; `ms-MY`, `ms-SG`, and `ms-BN` select
+  `ms`; `nl-BE` selects `nl`; `pl-PL` selects `pl`; `ro-MD` selects `ro`;
+  `ru-RU` and `ru-KZ` select `ru`; `th-TH` selects `th`; `tr-TR` and `tr-CY`
+  select `tr`; `uk-UA` selects `uk`; `vi-VN` selects `vi`; `en-GB` selects
+  `en`. `pt-PT` selects `pt-BR`, the one Portuguese variety shipped.
 - Chinese is matched by script, and a code with no script gets the script its
   region writes. `zh-Hant`, every `zh-Hant-*` code, and the Taiwan, Hong Kong,
   and Macau regions (`zh-TW`, `zh-HK`, `zh-MO`) select `zh-Hant`; `zh-Hans`,
@@ -270,8 +270,8 @@ Settings > General > Language & Region > Applications). The in-app picker
 (`AppLanguage`) reads and writes that same value, so the picker and the system
 setting always agree; "System Default" removes it. It lists the languages by
 endonym in one order for every interface language: the Latin-script names
-alphabetically, then each other script as a group (Cyrillic, Hebrew, Arabic
-script, Devanagari, Hangul, Han). The picker reads only the
+alphabetically, then each other script as a group (Greek, Cyrillic, Hebrew,
+Arabic script, Devanagari, Thai, Hangul, Han). The picker reads only the
 app's own domain: a plain `UserDefaults` lookup would fall through to launch
 arguments and to the system-wide list and report them as a choice. A bundle
 resolves its language once, at launch, so a change applies after a relaunch;
@@ -380,12 +380,12 @@ localize through two different catalogs:
 ## Language coverage
 
 English (`en`) is the source language. The shipped languages are English,
-Arabic (`ar`), German (`de`), Spanish (`es`), Persian (`fa`), French (`fr`),
-Hebrew (`he`), Hindi (`hi`), Indonesian (`id`), Italian (`it`), Japanese
-(`ja`), Korean (`ko`), Malay (`ms`), Dutch (`nl`), Polish (`pl`), Brazilian
-Portuguese (`pt-BR`), Romanian (`ro`), Russian (`ru`), Ukrainian (`uk`), Urdu
-(`ur`), Vietnamese (`vi`), Simplified Chinese (`zh-Hans`), and Traditional
-Chinese (`zh-Hant`).
+Arabic (`ar`), German (`de`), Greek (`el`), Spanish (`es`), Persian (`fa`),
+French (`fr`), Hebrew (`he`), Hindi (`hi`), Indonesian (`id`), Italian (`it`),
+Japanese (`ja`), Korean (`ko`), Malay (`ms`), Dutch (`nl`), Polish (`pl`),
+Brazilian Portuguese (`pt-BR`), Romanian (`ro`), Russian (`ru`), Thai (`th`),
+Turkish (`tr`), Ukrainian (`uk`), Urdu (`ur`), Vietnamese (`vi`), Simplified
+Chinese (`zh-Hans`), and Traditional Chinese (`zh-Hant`).
 
 The target set is the 31 locales lorvex.app is published in: `en`, `zh-Hans`,
 `zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`, `pt-BR`, `ru`, `id`, `ur`, `de`, `ja`,
@@ -2065,7 +2065,10 @@ watch, widgets, and in Shortcuts.
   The system's abbreviated durations and relative times end in a period ("30
   Min.", "2 Std.", "vor 2 Wo."), so a sentence never ends on such a
   placeholder: a word follows it ("werden etwa %2$@ frei.") or parentheses
-  enclose it ("Letzter Upload (%@)."), so no sentence ends in two periods.
+  enclose it ("Letzter Upload (%@)."), so no sentence ends in two periods. A
+  point after a numeral also marks an ordinal ("am 15."), so an example number
+  in a hint sits inside parentheses ("(z. B. 50).") rather than ending a
+  sentence, where "50." would read as "the fiftieth".
 - `one` selects only 1, as in English, so a top-level `one` form may leave the
   number out ("Einmal pro Woche") while `other` shows it ("%lld-mal pro Woche");
   a substitution's `one` still contains `%arg`. `other` also covers 0 ("0
@@ -2706,6 +2709,397 @@ and in Shortcuts.
   vụ vào ${applicationName}"). The phrase that opens the app reads "Mở
   ${applicationName}".
 
+## Turkish conventions
+
+The `tr` catalogs are Turkish as written in Turkey; tr-TR, tr-CY, and every
+other Turkish locale select them. They follow Apple's Turkish usage (Ayarlar,
+Takvim, Anımsatıcılar, Kestirmeler, Odak) and keep one term per concept across
+every catalog, so a thing reads the same on the Mac, iPhone, watch, widgets,
+and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | görev, liste, etiket | görev is Apple's Shortcuts word for a task and Etiket Apple's Notes word for a tag; a task's checklist is a kontrol listesi, the ordinary Turkish word, where Apple's Shortcuts writes Denetim Listesi and Notes writes Yapılacaklar Listesi, which would name a second to-do list, and its item is an öğe |
+| Inbox (the seeded list) | Gelen Kutusu | Apple's Shortcuts word; shown while the list keeps its seeded name |
+| Today, Tomorrow, Yesterday | Bugün, Yarın, Dün | the navigation button and the date chips; inside a sentence they are lowercase ("bugün", "yarın") |
+| Someday | Bir gün | quoted inside a sentence, with a suffix straight after the closing quote ("“Bir gün”e taşı") |
+| Due (the deadline field) | Son tarih | the plain word for a deadline, where Apple's Reminders writes Hedeflenen Tarih; Gecikmiş is overdue |
+| Open (a task not yet done) | Açık | the status and the filter; Devam ediyor is In Progress and Başlandı a started task |
+| Blocked, cancelled, completed | Engellendi, İptal edildi, Tamamlandı | |
+| Done (a button) and complete (an action) | Bitti, Tamamla | Bitti closes a sheet, as in Apple's apps (587 of Apple's strings that read Done); Tamamla completes a task; Tamamlandı is the Completed state |
+| Defer and snooze | Ertele | one word for both, the one Apple's Clock writes for snooze; "Yarına ertele" moves a task to a later day and "1 saat sonra anımsat" snoozes a reminder, as Apple's Mail and Reminders write "1 Saat Sonra Anımsat" |
+| Plan (verb) | planla | "planlandı" is planned |
+| Schedule (the day pane) | Program | Apple's Home writes Plan for a schedule, which Lorvex keeps for the verb planla |
+| Capture (quick add) | Hızlı ekle | |
+| Review (the day and the week) | Gözden geçirme | Günlük and Haftalık are its two modes; its fields are Başarılar, Engeller, Öğrenilenler |
+| Memory | Bellek | one entry is a bellek girdisi |
+| Assistant, AI | asistan, yapay zekâ | zekâ keeps its circumflex, as in Apple's Turkish; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | alışkanlık, işaretleme, seri, kilometre taşı | seri is the word Apple's Journal uses for a streak; İşaretle logs a check-in |
+| Reminder | anımsatıcı | Apple's Reminders word (1,174 strings, and none with hatırlatıcı) |
+| Dependency | bağımlılık | Bağımlılıklar is the Waits on field |
+| Recurrence | yineleme | Yineleme is the field, as in Apple's Calendar, and yinelenen is recurring |
+| Sync, snapshot | eşzamanlama, anlık görüntü | eşzamanla is the verb, as in Apple's Music and TV (senkron appears in one string), so the toggle reads "iCloud ile eşzamanla" and the feature "iCloud eşzamanlaması" |
+| Event | etkinlik | the word Apple's Calendar uses |
+| App icon badge | işaret | Apple's Reminders word, "Uygulama simgesi işareti" |
+| Appearance (light, dark, system) | Görünüş (Açık, Koyu, Sistem) | Görünüş names Apple's Appearance setting (41 strings, among them the Appearance pane of System Settings and its App Intents), and Açık and Koyu are its Light and Dark (28 and 27 strings); "Sistem saptanmışı" is System Default |
+| Widget | araç takımı | Apple's macOS 26 word (208 strings against 3 with widget) |
+| Agenda (the mobile list mode) | Ajanda | |
+| Apple features | Ayarlar, Takvim, Anımsatıcılar, Kestirmeler, Odak, Sistem Ayarları, Kilitli Ekran | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+
+- The reader is addressed formally, in the second person plural, and never as
+  sen. Apple's Turkish strings on macOS 26 (435,075 in the system apps,
+  frameworks, and extensions, among them Podcasts, Home, Maps, Photos,
+  Journal, and Wallet) carry a second-person-plural possessive (-ınız, -iniz,
+  -unuz, -ünüz) in 24,018 strings and the pronoun siz in 1,955, against 89
+  with sen, most of them in the sensitive-content warnings. An instruction is
+  a polite plural imperative ("Yeni dili uygulamak için Lorvex’i yeniden
+  başlatın."), the form of 14,501 of Apple's sentences of four words or more
+  against 1,084 with the singular. The word lütfen appears only where the
+  English says please ("Bir sorun oluştu. Lütfen yeniden deneyin."; Apple's
+  Turkish has it in 2,637 strings). A button, menu item, tab, or intent title
+  is the bare stem ("Ekle", "Sil", "Düzenle", "Vazgeç", "Lorvex görevini
+  tamamla"), as in Apple's Turkish (Vazgeç in 2,178 strings and İptal in none,
+  Sil in 1,076, Ekle in 324 and Ekleyin as a label in none). An intent's
+  description is a polite plural imperative ("Bir Lorvex görevini
+  tamamlayın."); a confirmation after an action is a past statement that
+  puts the value after a colon ("Tamamlandı: %@."); and a confirmation
+  question puts the noun after the quoted value ("“%@” listesi silinsin
+  mi?").
+- Text is in sentence case: window titles, buttons, menu items, tabs, section
+  headers, and intent titles capitalize only the first word ("Yeni liste",
+  "Hızlı ekle", "Son tarih", "Lorvex görevi ekle"). This follows the app's own
+  sentence-case rule and departs from Apple's Turkish, which capitalizes each
+  word of a two-word label (57,605 strings against 7,323 in sentence case,
+  "Yeni Pencere"), so a Lorvex label reads lower-cased beside a system one.
+  Names keep their capitals (Lorvex, Takvim, Anımsatıcılar, Gelen Kutusu), and
+  weekday and month names come from the calendar capitalized (Pazartesi,
+  Ocak). Turkish has a dotted and a dotless i in both cases: the capital of i
+  is İ and the lowercase of I is ı, so a word that begins with the dotted
+  vowel starts with İ ("İptal edildi", "İyi", "İşaretle"), as in Apple's
+  Turkish (24,621 strings with İ). Search folds İ and ı to i.
+- No ending ever attaches to a value that arrives at run time. A task title,
+  list name, or date follows a colon at the end of the sentence ("Sil: %@",
+  "Yarına ertelendi: %@.", "Lorvex’e eklendi: %@."), or it is quoted with the
+  noun after it ("“%@” görevini aç", "“%@” listesi"), so the case ending or
+  possessive sits on the noun. A fixed product or app name takes an
+  apostrophe and the ending that follows its pronunciation (Lorvex’te,
+  Lorvex’i, Lorvex’e, iCloud’a, iCloud’dan, Takvim’e, Ayarlar’ı, Kilitli
+  Ekran’da, Mac’te, and with a possessive "iPhone’unuz" and "Mac’inizde").
+  Apple's Turkish writes the curly apostrophe ’ in 38,573 strings and the
+  straight one in 828, and "Takvim’e Ekle" for its own Add to Calendar.
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with “ ” as in English; Apple's Turkish writes curly double quotes in
+  15,833 strings and straight ones in 145. An ellipsis is the single
+  character … attached to the word (8,579 strings against 275 with three dots
+  in Apple's), and a spaced en dash – stands for the English em dash, the
+  form Apple's Turkish uses more often (227 strings against 116 with a spaced
+  em dash). The Return key is "Return" with tuşu and the ending on the
+  noun ("Return tuşuna basın"; 55 strings in Apple's Turkish, among them its
+  Calculator's).
+- Turkish spells words as Apple's Turkish does: "uygulama" for an app (7,673
+  strings), "dosya" for a file (4,375), "sözcük" for a word (247 against 23
+  with kelime), and "yapay zekâ" with the circumflex (43 strings, none
+  without).
+- A point groups thousands and a comma marks decimals ("10.000", "2,5"). The
+  system writes a clock time in 24 hours ("17:05"), a duration as "1 sa. 30
+  dk.", and a relative time as "5 dakika önce" or "2 saat sonra", so a
+  sentence takes such a value as a `%@` argument and may end on it. Its
+  ordinal is "1.", and a weekday is the calendar's short name, so
+  `recurrence.weekday.nth` ("%1$@ %2$@") reads "1. Pzt", the last is "son
+  Pzt" and the second to last "sondan 2. Pzt". A list of names reads "A, B ve
+  C" (narrow "A, B, C").
+- A number followed by a full stop reads as an ordinal in Turkish ("50." is
+  "ellinci", the fiftieth), so a sample number never closes a sentence: the
+  milestone hints put it inside parentheses ("Toplam tamamlama sayısı (örneğin
+  50). Alışkanlık devam eder.").
+- Turkish has the plural categories `one` and `other`, where `one` selects
+  only 1, and a noun stays singular after a number ("3 görev", never "3
+  görevler"). A `one` form leaves the number out where the English does
+  ("Günde bir kez" beside "Günde %lld kez"), and an entry whose English forms
+  leave the number out under a large figure (the "tamamlama" under the goal
+  ring's count) is a substitution with `one` and `other`. A batch dialog that
+  reports two counts joins its clauses with a semicolon ("3 görev tamamlandı;
+  1 görev atlandı.").
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("Sığmıyor" for Won’t fit, "+%lld daha" for a small widget's overflow,
+  "kaldı" as the caption under the remaining-tasks ring, "dk" for minutes on a
+  complication, "Hepsi tamam" for an empty day). Accessibility labels may be
+  longer. A placeholder in a narrow sheet field stays about as long as the
+  English one ("Bir teşvik sözü ekleyin" for "Add an encouraging line" on the
+  habit sheet).
+- The capture parser (`LorvexCaptureParser`) has no Turkish vocabulary: it
+  reads English and Chinese words wherever the interface language is Turkish.
+  The capture hint (`capture.footer.words`) therefore gives English examples
+  and says so ("Satır başına bir görev. İngilizce “tomorrow”, “3pm”, “every
+  Monday”, “20 min” veya “#list” gibi sözcükler görevin ayrıntılarını
+  doldurur.").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
+  name the app exactly once and put the word uygulaması after it with the
+  ending the verb needs, so the token never takes a suffix ("${applicationName}
+  uygulamasına görev ekle", "${applicationName} uygulamasında görev tamamla",
+  "${applicationName} uygulamasını aç"). Apple's own Turkish phrases do the
+  same: 106 of the 154 translated strings that carry the token put
+  Uygulamasında or uygulamasına after it, and none attaches an ending to the
+  token itself.
+
+## Thai conventions
+
+The `th` catalogs are Thai as written in Thailand; th-TH and every other Thai
+locale select them. They follow Apple's Thai usage (การตั้งค่า, ปฏิทิน,
+เตือนความจำ, คำสั่งลัด, โฟกัส) and keep one term per concept across every
+catalog, so a thing reads the same on the Mac, iPhone, watch, widgets, and in
+Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | งาน, ลิสต์, แท็ก | ลิสต์ is Apple's Reminders word for a list and แท็ก its Notes word for a tag; a task's checklist is an เช็คลิสต์, as in Apple's Notes, and its item a รายการ |
+| Inbox (the seeded list) | กล่องเข้า | Apple's Shortcuts word; shown while the list keeps its seeded name |
+| Today, Tomorrow, Yesterday | วันนี้, พรุ่งนี้, เมื่อวาน | the navigation button and the date chips |
+| Someday | สักวัน | quoted “สักวัน” inside a sentence and unquoted on a button ("ย้ายไปสักวัน") |
+| Due (the deadline field) | วันถึงกำหนด | Apple's Reminders word; ถึงกำหนด heads a table column and เกินกำหนด is overdue |
+| Open (a task not yet done) | ยังไม่เสร็จ | the status and the filter; กำลังดำเนินการ is In Progress and เริ่มแล้ว a started task |
+| Blocked, cancelled, completed | ถูกปิดกั้น, ยกเลิกแล้ว, เสร็จแล้ว | |
+| Done (a button) and complete (an action) | เสร็จสิ้น, ทำเสร็จ | เสร็จสิ้น closes a sheet, as in Apple's apps (587 of Apple's strings that read Done); ทำเสร็จ completes a task; เสร็จแล้ว is the Completed state |
+| Defer and snooze | เลื่อน | one word for both, the one Apple's Reminders writes for snooze; "เลื่อนไปพรุ่งนี้" moves a task to a later day and "เลื่อน 1 ชั่วโมง" snoozes a reminder |
+| Plan (verb) | วางแผน | วางแผนไว้ is planned |
+| Schedule (the day pane) | กำหนดการ | Apple's Calendar names its agenda มุมมองกำหนดการ, and the Agenda row below takes the same word; Apple's other apps write กำหนดเวลา for a schedule, which reads as a time limit |
+| Capture (quick add) | จดงาน | |
+| Review (the day and the week) | ทบทวน | รายวัน and รายสัปดาห์ are its two modes; its fields are ความสำเร็จ, อุปสรรค, สิ่งที่ได้เรียนรู้ |
+| Memory | หน่วยความจำ | one entry is a รายการหน่วยความจำ; Apple's Photos writes ความทรงจำ for its own Memories, which is a different feature |
+| Assistant, AI | ผู้ช่วย, AI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | นิสัย, เช็คอิน, สถิติต่อเนื่อง, ก้าวสำคัญ | Apple's Journal writes ช่วงเวลาเขียนที่ติดกัน for its writing streak, which is too long for a stat tile; เช็คอิน is the word of Apple's Wallet and App Intents |
+| Reminder | เตือนความจำ | Apple's Reminders word |
+| Dependency | ต้องรอ | the Waits on field; งานที่ต้องรอ is a task's dependencies |
+| Recurrence | ทำประจำ | the word of Apple's Calendar (กิจกรรมทำประจำ) |
+| Sync, snapshot | เชื่อมข้อมูล, สแนปช็อต | เชื่อมข้อมูล is Apple's word for sync (1,853 strings against 2 with ซิงค์), as in "การเชื่อมข้อมูล iCloud" |
+| Event | กิจกรรม | the word Apple's Calendar uses |
+| App icon badge | ป้ายกำกับ | Apple's Reminders word |
+| Appearance (light, dark, system) | รูปแบบ (สว่าง, มืด, ระบบ) | รูปแบบ names Apple's Appearance setting (34 strings, among them the Appearance pane of System Settings and its App Intents), and สว่าง and มืด are its Light and Dark (26 strings each); รูปลักษณ์ is Image Playground's word for the look of a generated picture, and it is not used for the setting |
+| Agenda (the mobile list mode) | กำหนดการ | |
+| Apple features | การตั้งค่า, ปฏิทิน, เตือนความจำ, คำสั่งลัด, โฟกัส, การตั้งค่าระบบ, หน้าจอล็อค | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+
+- The reader is addressed neutrally, with no politeness particle. Apple's
+  Thai strings on macOS 26 (422,120 in the system apps, frameworks, and
+  extensions, among them Podcasts, Home, Maps, Photos, Journal, and Wallet)
+  carry คุณ in 44,995 strings (ของคุณ in 26,071), ครับ in 7 and ค่ะ in none.
+  Lorvex writes คุณ only where a possessive or a contrast needs it (106 of its
+  2,416 Thai texts: "ข้อมูลของคุณ") and never ครับ, ค่ะ, or คะ. A request opens
+  with โปรด where the English says please (Apple's Thai has โปรด in 3,903
+  strings and กรุณา in 10), and an instruction is a bare verb phrase ("ติดตั้ง
+  Lorvex ใหม่จากไฟล์ดาวน์โหลดต้นฉบับ"). A button, menu item, tab, or intent title is a
+  bare verb ("เพิ่ม", "ลบ", "แก้ไข", "จดงาน Lorvex"), as in Apple's Thai (ลบ in
+  653 strings, เพิ่ม in 323); an intent's description is a bare verb phrase
+  ("เลื่อนงาน Lorvex ไปเป็นพรุ่งนี้"); a confirmation after an action ends in
+  แล้ว ("จดงาน %@ ใน Lorvex แล้ว"); and a yes-or-no question ends in หรือไม่
+  ("ลบลิสต์ “%@” หรือไม่").
+- Thai has no letter case, and no space between the words of a clause. A space
+  separates phrases and sentences, so a long string breaks into spaced
+  clauses ("ยังไม่มีแท็ก พิมพ์แท็กแล้วกด Return"), and a clause itself is
+  written solid. A Latin word, a number, or a placeholder beside Thai text has
+  a space on each side ("เปิดใน Lorvex", "วันนี้อีก %lld งาน", "ทำเสร็จ
+  %1$lld รายการ"), as in Apple's Thai (67,499 strings with a space between
+  Latin and Thai against 74 without). A sentence has no final period (1,326
+  of Apple's 422,120 strings end in one), consecutive sentences are separated
+  by a space, and no string carries a zero-width space (6 in Apple's) or
+  another invisible break mark: the text engine finds the line breaks inside a
+  clause. A question has no question mark (323 of Apple's strings have one).
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with “ ” and a space outside each quote where the Thai text goes on
+  ("ลบลิสต์ “%@” หรือไม่"); Apple's Thai writes curly double quotes in 15,474
+  strings and straight ones in 378. An ellipsis is the single character …
+  (8,729 strings against 31 with three dots in Apple's), and a spaced en dash
+  – stands for the English em dash, the form Apple's Thai uses more often
+  (276 strings against 128 with a spaced em dash). The Return key is "Return"
+  after กด ("กด Return", as in Apple's Calculator and Books).
+- Thai spells words as Apple's Thai does: "แอป" for an app (6,472 strings
+  against 1,403 with แอปพลิเคชัน), "ไฟล์" for a file (7,135 against 20 with
+  แฟ้ม), "ล็อค" (3,837 against 188 with ล็อก), and "เวอร์ชั่น" for version
+  (1,527, none with เวอร์ชัน).
+- Digits are Latin (Apple's Thai has no Thai digit in 422,120 strings), a comma
+  groups thousands, and a point marks decimals ("10,000", "2.5"). The system
+  writes a clock time in 24 hours ("17:05"), a duration as "1 ชม. 30 นาที", and
+  a relative time as "5 นาทีที่ผ่านมา" or "ในอีก 2 ชั่วโมง", so a sentence takes
+  such a value as a `%@` argument. Dates follow the user's calendar, which is
+  the Buddhist one on a device set to Thailand ("3 ต.ค. 2569" for 3 October
+  2026), so Lorvex's own Thai text never writes a year and no sentence mixes
+  the two eras. The ordinal is "ที่ 1", so `recurrence.weekday.nth`
+  ("%2$@ %1$@") reads "จันทร์ ที่ 1", the last is "จันทร์ สุดท้าย" and the
+  second to last "จันทร์ ที่ 2 จากท้าย". A list of names is spaced and takes
+  และ before the last ("A B และ C").
+- Thai has the single plural category `other`, so a plural entry is one plain
+  string that shows the number wherever the English forms show it ("วันละ
+  %lld ครั้ง", "%lld งาน"), and a classifier follows the number: รายการ for
+  items and tasks counted in a sentence, ครั้ง for times, and วัน, สัปดาห์,
+  and เดือน for spans. An entry whose English forms leave the number out is a
+  substitution with only `other`. A batch dialog that reports two counts is
+  one plain numbered string ("ทำเสร็จ %1$lld รายการ ข้าม %2$lld รายการ").
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation
+  ("ไม่พอดี" for Won’t fit, "อีก %lld" for a small widget's overflow, "เหลือ"
+  as the caption under the remaining-tasks ring, "นาที" for minutes on a
+  complication, "เรียบร้อยหมดแล้ว" for an empty day). Accessibility labels may
+  be longer. A placeholder in a narrow sheet field stays about as long as the
+  English one ("เพิ่มประโยคให้กำลังใจ" for "Add an encouraging line" on the
+  habit sheet).
+- The capture parser (`LorvexCaptureParser`) has no Thai vocabulary: it reads
+  English and Chinese words wherever the interface language is Thai. The
+  capture hint (`capture.footer.words`) therefore gives English examples and
+  says so ("หนึ่งบรรทัดต่อหนึ่งงาน คำภาษาอังกฤษอย่าง “tomorrow”, “3pm”, “every
+  Monday”, “20 min” หรือ “#list” จะเติมรายละเอียดของงานให้").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are bare verb phrases
+  that name the app exactly once, after ใน ("เพิ่มงานใน ${applicationName}",
+  "ทำงานให้เสร็จใน ${applicationName}"); Apple's Thai puts the token after ใน
+  in 104 of its 153 translated strings that carry it. The phrase that opens
+  the app reads "เปิด ${applicationName}".
+
+## Greek conventions
+
+The `el` catalogs are Greek as written in Greece; el-GR, el-CY, and every other
+Greek locale select them. They follow Apple's Greek usage (Ρυθμίσεις,
+Ημερολόγιο, Υπομνήσεις, Συντομεύσεις, Συγκέντρωση) and keep one term per
+concept across every catalog, so a thing reads the same on the Mac, iPhone,
+watch, widgets, and in Shortcuts.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | εργασία, λίστα, ετικέτα | Apple's Shortcuts words for a task and a list, and Notes' word for a tag; a task's checklist is a λίστα ελέγχου, as in Apple's Notes, and its item a στοιχείο |
+| Inbox (the seeded list) | Εισερχόμενα | Apple's Shortcuts word; shown while the list keeps its seeded name |
+| Today, Tomorrow, Yesterday | Σήμερα, Αύριο, Χθες | the navigation button and the date chips; inside a sentence they are lowercase ("σήμερα", "αύριο") |
+| Someday | Κάποτε | quoted «Κάποτε» inside a sentence |
+| Due (the deadline field) | Προθεσμία | Apple's Reminders and Shortcuts word; Εκπρόθεσμη is overdue |
+| Open (a task not yet done) | Ανοιχτή | the status; Ανοιχτές is the filter, Σε εξέλιξη is In Progress and Ξεκίνησε a started task |
+| Blocked, cancelled, completed | Αποκλεισμένη, Ακυρώθηκε, Ολοκληρώθηκε | a status word agrees with εργασία, so it is feminine |
+| Done (a button) and complete (an action) | Τέλος, Ολοκλήρωση | Τέλος closes a sheet, as in Apple's apps (587 of Apple's strings that read Done); Ολοκλήρωση completes a task |
+| Defer and snooze | Αναβολή | one word for both, the one Apple's Clock, Reminders, and Home write for snooze; "Αναβολή για αύριο" moves a task to a later day and "Αναβολή κατά 1 ώρα" snoozes a reminder |
+| Plan (verb) | προγραμματισμός | Προγραμματισμένο is planned |
+| Schedule (the day pane) | Πρόγραμμα | Apple's Home word |
+| Capture (quick add) | Γρήγορη προσθήκη | |
+| Review (the day and the week) | Ανασκόπηση | Ημερήσια and Εβδομαδιαία are its two modes; its fields are Επιτυχίες, Εμπόδια, Διδάγματα |
+| Memory | Μνήμη | one entry is a καταχώριση μνήμης; Apple's Photos writes Αναμνήσεις for its own Memories, which is a different feature |
+| Assistant, AI | βοηθός, AI | Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone | συνήθεια, καταγραφή, σερί, ορόσημο | σερί is the word Apple's Journal uses for a streak and takes the genitive ("Σερί %lld ημερών"); Καταγραφή logs a check-in |
+| Celebrate (a milestone) | γιορτάζω, εορτασμός | the verb is the hints' ("Γιορτάστε όταν φτάσετε …", "που αξίζει να γιορτάσετε"), as in Apple's Journal ("Πώς γιορτάζετε αυτήν την ημέρα;"), and the field label "Όριο εορτασμού" takes the noun Apple's Messages writes for its Celebration effect |
+| Reminder | υπόμνηση | Apple's Reminders word (1,154 strings against 121 with υπενθύμιση); υπενθυμίζει is the verb |
+| Dependency | εξάρτηση | Εξαρτάται από is the Waits on field |
+| Recurrence | επανάληψη | Apple's Calendar and Shortcuts word |
+| Sync, snapshot | συγχρονισμός, στιγμιότυπο | the Mac settings tab for Cloud Sync is named Συγχρονισμός alone, and its switch reads "Συγχρονισμός με το iCloud" |
+| Event | γεγονός | the word Apple's Calendar uses |
+| All day | Ολοήμερο, όλη μέρα | Ολοήμερο is the word of Apple's Calendar and Shortcuts (14 of the 16 strings that read All Day; Calendar writes Όλη την ημέρα in the other 2); the lowercase label in the week grid's time gutter reads "όλη μέρα", so that it wraps between its two words where the gutter is narrow |
+| App icon badge | ταμπέλα | Apple's Reminders word |
+| Appearance (light, dark, system) | Εμφάνιση (Ανοιχτό, Σκούρο, Σύστημα) | Εμφάνιση names Apple's Appearance setting (41 strings, among them the Appearance pane of System Settings and its App Intents); the pane writes the feminine Ανοιχτόχρωμη and Σκούρα for Light and Dark, which do not fit under the picker's thumbnails, so the picker takes the neuter Ανοιχτό and Σκούρο that Apple's Appearance App Intents write for the values light and dark |
+| Widget | widget | in Latin letters, as in Apple's Greek (210 strings) |
+| Agenda (the mobile list mode) | Ατζέντα | |
+| Apple features | Ρυθμίσεις, Ημερολόγιο, Υπομνήσεις, Συντομεύσεις, Συγκέντρωση, Ρυθμίσεις συστήματος, οθόνη κλειδώματος | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+
+- The reader is addressed formally, in the second person plural, and never
+  with σου. Apple's Greek strings on macOS 26 (434,998 in the system apps,
+  frameworks, and extensions, among them Podcasts, Home, Maps, Photos,
+  Journal, and Wallet) carry σας in 24,831 strings and σου in 207, most of
+  them in the sensitive-content warnings and the Apple ID setup text. An
+  instruction is a polite plural imperative ("Επιλέξτε", "Δοκιμάστε",
+  "Πληκτρολογήστε", "Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά."), the form
+  of 10,342 of Apple's sentences of four words or more against 149 with the
+  singular, and Μπορείτε opens 3,201 of its strings against 23 for Μπορείς.
+  There is no please word, since Apple's Greek has Παρακαλώ in 3 strings and
+  Παρακαλούμε in 2: where the English says please, the polite plural
+  imperative stands alone ("Παρουσιάστηκε πρόβλημα. Δοκιμάστε ξανά."). A
+  button, menu item, tab, or intent title is a verbal noun ("Προσθήκη",
+  "Διαγραφή", "Ακύρωση", "Ολοκλήρωση εργασίας Lorvex"), as in Apple's Greek
+  (Ακύρωση in 2,163 strings, Διαγραφή in 612, Προσθήκη in 342). An intent's
+  description is a polite plural imperative ("Ολοκληρώστε μια εργασία
+  Lorvex."); a confirmation after an action is a past statement ("Η εργασία
+  %@ ολοκληρώθηκε."); and a confirmation question opens with Να and takes the
+  question mark ("Να διαγραφεί η λίστα «%@»;", the shape of 584 of Apple's
+  titles).
+- Greek is written in the monotonic system: one accent (tonos) on the stressed
+  syllable of every word of two or more syllables, a diaeresis where two
+  vowels are read apart, and no breathing or circumflex mark (Apple's Greek
+  has no polytonic mark in 434,998 strings). A capital that opens a word keeps
+  its accent ("Άνοιγμα", "Έως"), and a word set wholly in capitals loses it
+  (3,111 of Apple's Greek strings contain an all-capital word of three or more
+  letters without an accent, and one contains such a word with an accent on its
+  first letter). The only all-capital word in the catalogs is the button ΟΚ,
+  which Apple writes in Greek letters more often than in Latin ones (760
+  strings against 663).
+- Text is in sentence case: window titles, buttons, menu items, tabs, section
+  headers, and intent titles capitalize only the first word ("Νέα λίστα",
+  "Γρήγορη προσθήκη", "Ρυθμίσεις συστήματος"), as in Apple's Greek (48,139
+  two-word labels in sentence case against 1,480 with a capital on each
+  word). Names keep their capitals, and weekday and month names come from the
+  calendar (Δευτέρα, Οκτωβρίου).
+- Greek nouns, articles, and adjectives agree in gender, number, and case, so
+  no declined word sits beside a value that arrives at run time. A value
+  follows a colon label ("Πιο δυνατές ημέρες: %@", "Επόμενο: %lld ημέρες"),
+  follows a noun in apposition ("Το γεγονός ημερολογίου %@ ενημερώθηκε στο
+  Lorvex."), or the whole phrase that agrees with it sits inside the plural
+  variation ("%arg εργασία ολοκληρώθηκε σήμερα" and "%arg εργασίες
+  ολοκληρώθηκαν σήμερα"). Lorvex takes the neuter article ("το Lorvex", "του
+  Lorvex"), as Apple's Greek does for Latin-script product names: the neuter
+  article precedes Mac, iPhone, iCloud, and the like in 17,422 of its strings,
+  and no other article does.
+- User content, and Lorvex's own view and button names inside a sentence, are
+  quoted with « » where the English quotes them; Apple's Greek writes
+  guillemets in 29,848 strings, curly double quotes in 39, and straight ones
+  in 109. An ellipsis is the single character … (10,416 strings against 62
+  with three dots in Apple's), and a spaced en dash – stands for the English
+  em dash (1,487 strings against 76 with a spaced em dash). The Return key is
+  "Return" with the article before it ("πατήστε το Return", as in Apple's
+  Calculator and Books).
+- The question mark is the semicolon ;, the ASCII character that Apple's Greek
+  uses (8,475 of its strings end in one, and 2 use the separate Greek
+  question mark character), so a semicolon never separates two clauses: a
+  batch dialog that reports two counts joins them with a comma
+  ("Ολοκληρώθηκαν 3 εργασίες, παραλείφθηκε 1 εργασία."), and every string that
+  asks something ends in ; ("Να διαγραφεί αυτό το επαναλαμβανόμενο γεγονός;").
+- A point groups thousands and a comma marks decimals ("10.000", "2,5"). The
+  system writes a clock time in the region's clock ("5:05 μμ" on a 12-hour
+  clock), a duration as "1 ώ. 30 λ.", and a relative time as "πριν από 5
+  λεπτά" or "σε 2 ώρες" (abbreviated on a chip: "σε 3 ημ.", "3 ημ. πριν"), so
+  a sentence takes such a value as a `%@` argument. Its ordinal is the bare
+  number and a weekday is the calendar's short name, so
+  `recurrence.weekday.nth` ("%1$@η %2$@") reads "1η Δευ", the last is
+  "τελευταία Δευ" and the second to last "2η από το τέλος Δευ". The feminine
+  ending is right for six weekdays and wrong for the neuter Σάββατο (short
+  name Σάβ), whose ordinal is "1ο" and whose last is "τελευταίο"; one template
+  cannot express both. A list of names reads "A, B και C" (narrow "A, B, C").
+- A count of a total reads "3 από 5", the form of Apple's Greek for "%1$lld of
+  %2$lld" (9 strings, among them Books and Notes). The habits header puts each
+  of its three counts after a short period label and leaves out the word for
+  done ("Σήμερα: 8 από 9 · Αυτή την εβδομάδα: 0 από 2 · Αυτόν τον μήνα: 0 από
+  1"), since the full sentence is longer and the line sits under the Συνήθειες
+  title. The small widget's footer likewise counts "3 ολοκληρώθηκαν" without
+  σήμερα, and its accessibility label keeps the full "%arg εργασίες
+  ολοκληρώθηκαν σήμερα".
+- Greek has the plural categories `one` and `other`, where `one` selects only
+  1, and a `one` form leaves the number out where the English does ("Μία φορά
+  την ημέρα" beside "%lld φορές την ημέρα"). A phrase that needs the plural
+  forms of a noun and its predicate puts both inside the variation.
+- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+  buttons, segmented controls, the time column of suggested times, and App
+  Shortcut short titles) use shorter wording than a literal translation ("Δεν
+  χωράει" for Won’t fit, "+%lld ακόμη" for a small widget's overflow, "ακόμη"
+  as the caption under the remaining-tasks ring, "λ." for minutes on a
+  complication, "Όλα καθαρά" for an empty day). Accessibility labels may be
+  longer. A placeholder in a narrow sheet field stays about as long as the
+  English one ("Προσθέστε ενθάρρυνση" for "Add an encouraging line" on the
+  habit sheet).
+- The capture parser (`LorvexCaptureParser`) has no Greek vocabulary: it reads
+  English and Chinese words wherever the interface language is Greek. The
+  capture hint (`capture.footer.words`) therefore gives English examples in
+  « » and says so ("Μία εργασία ανά γραμμή. Αγγλικές λέξεις όπως «tomorrow»,
+  «3pm», «every Monday», «20 min» ή «#list» συμπληρώνουν τις λεπτομέρειές
+  της.").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are verbal nouns that
+  name the app exactly once, in guillemets after στο ("Προσθήκη εργασίας στο
+  «${applicationName}»") or με ("Μετακίνηση εργασίας στο σήμερα με
+  «${applicationName}»"). The phrase that opens the app reads "Άνοιγμα του
+  «${applicationName}»". Apple's own Greek phrases take this form: of the 153
+  translated strings that carry the token, 150 put it in guillemets and 81 open
+  with a verbal noun, and none opens with a singular imperative.
+
 ## How to add a new locale
 
 Every catalog and every shipping bundle must carry the same language set, so a
@@ -2778,9 +3172,10 @@ shows the same commands for several.
 7. Add a conventions section for the language to this document, as the
    Simplified Chinese, Spanish, French, Italian, Brazilian Portuguese, Russian,
    Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, Arabic,
-   Persian, Urdu, Hebrew, German, Dutch, Romanian, Indonesian, Malay, and
-   Vietnamese ones: one term per concept across every catalog,
-   punctuation and quotation marks, spacing around numbers and Latin words.
+   Persian, Urdu, Hebrew, German, Dutch, Romanian, Indonesian, Malay,
+   Vietnamese, Turkish, Thai, and Greek ones: one term per concept across every
+   catalog, the form of address and the evidence for it, punctuation and
+   quotation marks, spacing around numbers and Latin words.
 8. Capture the macOS tour and the iOS screens in the language (see "Headless
    screenshots") and look for truncated, clipped, or overlapping text.
 

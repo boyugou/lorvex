@@ -17,6 +17,12 @@
             "value": "fällig %@"
           }
         },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "προθεσμία %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -113,6 +119,18 @@
             "value": "срок: %@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ถึงกำหนด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son tarih %@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -159,6 +177,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "überfällig, %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "εκπρόθεσμη, προθεσμία %@"
           }
         },
         "en": {
@@ -257,6 +281,18 @@
             "value": "просрочено: %@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เกินกำหนดตั้งแต่ %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gecikmiş, son tarih %@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -303,6 +339,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "wiederholt sich"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "επαναλαμβάνεται"
           }
         },
         "en": {
@@ -401,6 +443,18 @@
             "value": "повторяется"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำประจำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yinelenir"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -447,6 +501,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bis %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Έως %@"
           }
         },
         "en": {
@@ -545,6 +605,18 @@
             "value": "До %@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จนถึง %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ saatine kadar"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -591,6 +663,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kalenderereignisse"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Γεγονότα ημερολογίου"
           }
         },
         "en": {
@@ -689,6 +767,18 @@
             "value": "События календаря"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กิจกรรมในปฏิทิน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim etkinlikleri"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -735,6 +825,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagesbriefings"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ημερήσιες ενημερώσεις"
           }
         },
         "en": {
@@ -833,6 +929,18 @@
             "value": "Ежедневные брифинги"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สรุปประจำวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük özetler"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -879,6 +987,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tagesrückblicke"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ημερήσιες ανασκοπήσεις"
           }
         },
         "en": {
@@ -977,6 +1091,18 @@
             "value": "Итоги дня"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การทบทวนรายวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük gözden geçirmeler"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1023,6 +1149,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gewohnheiten"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Συνήθειες"
           }
         },
         "en": {
@@ -1121,6 +1253,18 @@
             "value": "Привычки"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นิสัย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alışkanlıklar"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1167,6 +1311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Λίστες"
           }
         },
         "en": {
@@ -1265,6 +1415,18 @@
             "value": "Списки"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลิสต์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listeler"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1311,6 +1473,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gedächtnis"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μνήμη"
           }
         },
         "en": {
@@ -1409,6 +1577,18 @@
             "value": "Память"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หน่วยความจำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bellek"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1455,6 +1635,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voreinstellungen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προτιμήσεις"
           }
         },
         "en": {
@@ -1553,6 +1739,18 @@
             "value": "Предпочтения"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ค่ากำหนด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tercihler"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1599,6 +1797,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tags"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ετικέτες"
           }
         },
         "en": {
@@ -1697,6 +1901,18 @@
             "value": "Теги"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แท็ก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiketler"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1743,6 +1959,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verknüpfungen zwischen Aufgaben und Ereignissen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Συνδέσεις εργασιών–γεγονότων"
           }
         },
         "en": {
@@ -1841,6 +2063,18 @@
             "value": "Связи задач и событий"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลิงก์งานกับกิจกรรม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görev–etkinlik bağlantıları"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -1887,6 +2121,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aufgaben"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εργασίες"
           }
         },
         "en": {
@@ -1985,6 +2225,18 @@
             "value": "Задачи"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งาน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görevler"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2031,6 +2283,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kalender"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ημερολόγιο"
           }
         },
         "en": {
@@ -2129,6 +2387,18 @@
             "value": "Календарь"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปฏิทิน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takvim"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2175,6 +2445,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Planung"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προγραμματισμός"
           }
         },
         "en": {
@@ -2273,6 +2549,18 @@
             "value": "Планирование"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การวางแผน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planlama"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2319,6 +2607,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rückblicke & Assistent"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανασκοπήσεις και βοηθός"
           }
         },
         "en": {
@@ -2417,6 +2711,18 @@
             "value": "Итоги и ассистент"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การทบทวนและผู้ช่วย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gözden geçirmeler ve asistan"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2463,6 +2769,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ρυθμίσεις"
           }
         },
         "en": {
@@ -2561,6 +2873,18 @@
             "value": "Настройки"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การตั้งค่า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2607,6 +2931,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checkliste"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "λίστα ελέγχου"
           }
         },
         "en": {
@@ -2705,6 +3035,18 @@
             "value": "чек-лист"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เช็คลิสต์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kontrol listesi"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2751,6 +3093,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abhängigkeiten"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "εξαρτήσεις"
           }
         },
         "en": {
@@ -2849,6 +3197,18 @@
             "value": "зависимости"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานที่ต้องรอ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bağımlılıklar"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -2895,6 +3255,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Verlauf"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ιστορικό"
           }
         },
         "en": {
@@ -2993,6 +3359,18 @@
             "value": "история"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ประวัติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geçmiş"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -3039,6 +3417,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Liste"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "λίστα"
           }
         },
         "en": {
@@ -3137,6 +3521,18 @@
             "value": "список"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลิสต์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "liste"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -3183,6 +3579,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "geplante Uhrzeit"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "προγραμματισμένη ώρα"
           }
         },
         "en": {
@@ -3281,6 +3683,18 @@
             "value": "запланированное время"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เวลาที่วางแผนไว้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "planlanan saat"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -3327,6 +3741,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wiederholungsregel"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "κανόνας επανάληψης"
           }
         },
         "en": {
@@ -3425,6 +3845,18 @@
             "value": "правило повтора"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กฎการทำประจำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yineleme kuralı"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -3471,6 +3903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erinnerungen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "υπομνήσεις"
           }
         },
         "en": {
@@ -3569,6 +4007,18 @@
             "value": "напоминания"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เตือนความจำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "anımsatıcılar"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -3615,6 +4065,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Status"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "κατάσταση"
           }
         },
         "en": {
@@ -3713,6 +4169,18 @@
             "value": "статус"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถานะ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "durum"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -3804,6 +4272,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld importiert"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld εισήχθη"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld εισήχθησαν"
                 }
               }
             }
@@ -4085,6 +4571,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำเข้า %lld รายการ"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld içe aktarıldı"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld içe aktarıldı"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -4230,6 +4740,34 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg übersprungen"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg παραλείφθηκε"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg παραλείφθηκαν"
                     }
                   }
                 }
@@ -4633,6 +5171,40 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, ข้าม %2$lld รายการ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg atlandı"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg atlandı"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -4737,6 +5309,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -4833,6 +5411,18 @@
             "value": "%1$@: %2$@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -4924,6 +5514,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld importierte Datensätze"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld εγγραφή εισήχθη"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld εγγραφές εισήχθησαν"
                 }
               }
             }
@@ -5205,6 +5813,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นำเข้า %lld รายการ"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kayıt içe aktarıldı"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kayıt içe aktarıldı"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -5356,6 +5988,34 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg bereits vorhanden"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg υπήρχε ήδη"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg υπήρχαν ήδη"
                     }
                   }
                 }
@@ -5759,6 +6419,40 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, มีอยู่แล้ว %2$lld รายการ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg zaten mevcut"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg zaten mevcut"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -5863,6 +6557,12 @@
             "value": "%1$@: %2$@"
           }
         },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -5959,6 +6659,18 @@
             "value": "%1$@: %2$@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -6050,6 +6762,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "und %lld weitere …"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "και %lld ακόμη…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "και %lld ακόμη…"
                 }
               }
             }
@@ -6331,6 +7061,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "และอีก %lld รายการ…"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ve %lld tane daha…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ve %lld tane daha…"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -6413,6 +7167,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht importiert:"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δεν εισήχθησαν:"
           }
         },
         "en": {
@@ -6511,6 +7271,18 @@
             "value": "Не импортировано:"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่ได้นำเข้า:"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçe aktarılmayanlar:"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -6557,6 +7329,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "„%@“"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«%@»"
           }
         },
         "en": {
@@ -6655,6 +7433,18 @@
             "value": "«%@»"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -6701,6 +7491,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ohne diese Details wiederhergestellt:"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Επαναφέρθηκαν χωρίς αυτές τις λεπτομέρειες:"
           }
         },
         "en": {
@@ -6799,6 +7595,18 @@
             "value": "Восстановлено без этих данных:"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กู้คืนแล้วแต่ไม่มีรายละเอียดเหล่านี้:"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şu ayrıntılar olmadan geri yüklendi:"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -6845,6 +7653,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "nach der Frist"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "μετά την προθεσμία"
           }
         },
         "en": {
@@ -6943,6 +7757,18 @@
             "value": "позже срока"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หลังวันถึงกำหนด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son tarihten sonra"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -7034,6 +7860,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "vor %lld Tagen"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "πριν από %lld ημέρα"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "πριν από %lld ημέρες"
                 }
               }
             }
@@ -7315,6 +8159,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld วันที่แล้ว"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün önce"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün önce"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -7448,6 +8316,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Tage überfällig"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ημέρα καθυστέρηση"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ημέρες καθυστέρηση"
                 }
               }
             }
@@ -7729,6 +8615,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เกินกำหนด %lld วัน"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün gecikti"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün gecikti"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -7817,6 +8727,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "am selben Tag"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "την ίδια ημέρα"
           }
         },
         "en": {
@@ -7915,6 +8831,18 @@
             "value": "в тот же день"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "วันเดียวกัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aynı gün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -7961,6 +8889,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Heute"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Σήμερα"
           }
         },
         "en": {
@@ -8059,6 +8993,18 @@
             "value": "Сегодня"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "วันนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8105,6 +9051,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "heute"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "σήμερα"
           }
         },
         "en": {
@@ -8203,6 +9155,18 @@
             "value": "сегодня"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "วันนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bugün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8249,6 +9213,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Morgen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αύριο"
           }
         },
         "en": {
@@ -8347,6 +9317,18 @@
             "value": "Завтра"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พรุ่งนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yarın"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8393,6 +9375,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "morgen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "αύριο"
           }
         },
         "en": {
@@ -8491,6 +9479,18 @@
             "value": "завтра"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พรุ่งนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yarın"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8537,6 +9537,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gestern"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Χθες"
           }
         },
         "en": {
@@ -8635,6 +9641,18 @@
             "value": "Вчера"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เมื่อวาน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8681,6 +9699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "gestern"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "χθες"
           }
         },
         "en": {
@@ -8779,6 +9803,18 @@
             "value": "вчера"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เมื่อวาน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8825,6 +9861,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Datenbank wurde mit einer neueren Version von Lorvex erstellt. Bitte aktualisiere Lorvex, um sie zu öffnen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η βάση δεδομένων δημιουργήθηκε από νεότερη έκδοση του Lorvex. Ενημερώστε το Lorvex για να την ανοίξετε."
           }
         },
         "en": {
@@ -8923,6 +9965,18 @@
             "value": "Эта база данных создана более новой версией Lorvex. Обновите Lorvex, чтобы открыть её."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ฐานข้อมูลนี้สร้างโดย Lorvex เวอร์ชั่นที่ใหม่กว่า โปรดอัปเดต Lorvex เพื่อเปิดใช้งาน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu veritabanı, Lorvex’in daha yeni bir sürümüyle oluşturulmuş. Açmak için lütfen Lorvex’i güncelleyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -8969,6 +10023,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Παρουσιάστηκε πρόβλημα. Δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -9067,6 +10127,18 @@
             "value": "Что-то пошло не так. Повторите попытку."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีบางอย่างผิดพลาด โปรดลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir sorun oluştu. Lütfen yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9113,6 +10185,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Objekt existiert nicht mehr."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το στοιχείο δεν υπάρχει πια."
           }
         },
         "en": {
@@ -9211,6 +10289,18 @@
             "value": "Этого элемента больше нет."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่มีรายการนั้นแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu öğe artık yok."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9257,6 +10347,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Uhrzeit gibt es an diesem Tag nicht, weil die Uhren für die Sommerzeit vorgestellt werden. Wähle eine frühere oder spätere Uhrzeit."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η ώρα δεν υπάρχει εκείνη την ημέρα, επειδή τα ρολόγια πηγαίνουν μπροστά λόγω θερινής ώρας. Επιλέξτε νωρίτερη ή μεταγενέστερη ώρα."
           }
         },
         "en": {
@@ -9355,6 +10451,18 @@
             "value": "В этот день такого времени нет: часы переводятся вперёд на летнее время. Выберите более раннее или более позднее время."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่มีเวลานี้ในวันดังกล่าว เนื่องจากนาฬิกาเดินหน้าไปตามเวลาออมแสง เลือกเวลาที่เร็วกว่าหรือช้ากว่า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saatler yaz saati uygulaması nedeniyle ileri alındığı için bu saat o gün mevcut değil. Daha erken ya da daha geç bir saat seçin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9401,6 +10509,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Aufgabe ist bereits erledigt. Öffne sie wieder, bevor du sie abbrichst."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η εργασία έχει ήδη ολοκληρωθεί. Ανοίξτε την ξανά πριν την ακυρώσετε."
           }
         },
         "en": {
@@ -9499,6 +10613,18 @@
             "value": "Эта задача уже выполнена. Чтобы отменить её, сначала откройте её снова."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานนี้เสร็จแล้ว เปิดงานใหม่ก่อนยกเลิก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu görev zaten tamamlandı. İptal etmeden önce yeniden açın."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9545,6 +10671,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Aufgabe wurde abgebrochen. Öffne sie wieder, bevor du sie erledigst."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η εργασία ακυρώθηκε. Ανοίξτε την ξανά πριν την ολοκληρώσετε."
           }
         },
         "en": {
@@ -9643,6 +10775,18 @@
             "value": "Эта задача отменена. Чтобы выполнить её, сначала откройте её снова."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานนี้ถูกยกเลิก เปิดงานใหม่ก่อนทำให้เสร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu görev iptal edildi. Tamamlamadan önce yeniden açın."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9689,6 +10833,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für diese Gewohnheit gibt es zu dieser Uhrzeit bereits eine Erinnerung. Wähle eine andere Uhrzeit."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η συνήθεια έχει ήδη υπόμνηση εκείνη την ώρα. Επιλέξτε άλλη ώρα."
           }
         },
         "en": {
@@ -9787,6 +10937,18 @@
             "value": "У этой привычки уже есть напоминание на это время. Выберите другое время."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นิสัยนี้มีเตือนความจำในเวลานั้นอยู่แล้ว เลือกเวลาอื่น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu alışkanlığın o saatte zaten bir anımsatıcısı var. Başka bir saat seçin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9833,6 +10995,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Gedächtniseintrag mit diesem Namen existiert bereits. Wähle einen anderen Namen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Υπάρχει ήδη καταχώριση μνήμης με αυτό το όνομα. Επιλέξτε άλλο όνομα."
           }
         },
         "en": {
@@ -9931,6 +11099,18 @@
             "value": "Запись памяти с таким названием уже существует. Выберите другое название."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีรายการหน่วยความจำที่ใช้ชื่อนี้อยู่แล้ว เลือกชื่ออื่น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ada sahip bir bellek girdisi zaten var. Başka bir ad seçin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -9977,6 +11157,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Notizen sind zu lang. Kürze sie und versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτές οι σημειώσεις είναι πολύ μεγάλες. Συντομεύστε τις και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -10075,6 +11261,18 @@
             "value": "Заметки слишком длинные. Сократите их и попробуйте ещё раз."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โน้ตยาวเกินไป ย่อให้สั้นลงแล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu notlar çok uzun. Kısaltıp yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10121,6 +11319,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nur eine Aufgabe in Bearbeitung kann pausiert werden."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μόνο μια εργασία σε εξέλιξη μπορεί να τεθεί σε παύση."
           }
         },
         "en": {
@@ -10219,6 +11423,18 @@
             "value": "Приостановить можно только задачу в работе."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หยุดพักได้เฉพาะงานที่กำลังดำเนินการอยู่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca devam eden bir görev duraklatılabilir."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10265,6 +11481,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Objekt ist zu lang für die Synchronisierung. Kürze den längsten Text und versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το στοιχείο είναι πολύ μεγάλο για συγχρονισμό. Συντομεύστε το μεγαλύτερο κείμενό του και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -10363,6 +11585,18 @@
             "value": "Этот элемент слишком длинный для синхронизации. Сократите самый длинный текст и попробуйте ещё раз."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายการนี้ยาวเกินกว่าจะเชื่อมข้อมูลได้ ย่อข้อความที่ยาวที่สุดแล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu öğe eşzamanlanamayacak kadar uzun. En uzun metnini kısaltıp yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10409,6 +11643,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Aufgabe wurde abgebrochen. Öffne sie wieder, bevor du sie startest."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η εργασία ακυρώθηκε. Ανοίξτε την ξανά πριν την ξεκινήσετε."
           }
         },
         "en": {
@@ -10507,6 +11747,18 @@
             "value": "Эта задача отменена. Чтобы начать её, сначала откройте её снова."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานนี้ถูกยกเลิก เปิดงานใหม่ก่อนเริ่ม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu görev iptal edildi. Başlatmadan önce yeniden açın."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10553,6 +11805,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Aufgabe ist bereits erledigt. Öffne sie wieder, bevor du sie startest."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η εργασία έχει ήδη ολοκληρωθεί. Ανοίξτε την ξανά πριν την ξεκινήσετε."
           }
         },
         "en": {
@@ -10651,6 +11909,18 @@
             "value": "Эта задача уже выполнена. Чтобы начать её, сначала откройте её снова."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานนี้เสร็จแล้ว เปิดงานใหม่ก่อนเริ่ม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu görev zaten tamamlandı. Başlatmadan önce yeniden açın."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10697,6 +11967,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Aufgabe befindet sich in „Irgendwann“. Öffne sie wieder, bevor du sie startest."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η εργασία βρίσκεται στο «Κάποτε». Ανοίξτε την ξανά πριν την ξεκινήσετε."
           }
         },
         "en": {
@@ -10795,6 +12071,18 @@
             "value": "Эта задача в разделе «Когда-нибудь». Чтобы начать её, сначала откройте её снова."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานนี้อยู่ใน “สักวัน” เปิดงานใหม่ก่อนเริ่ม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu görevin durumu “Bir gün”. Başlatmadan önce yeniden açın."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10841,6 +12129,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Tag mit diesem Namen existiert bereits. Wähle einen anderen Namen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Υπάρχει ήδη ετικέτα με αυτό το όνομα. Επιλέξτε άλλο όνομα."
           }
         },
         "en": {
@@ -10939,6 +12233,18 @@
             "value": "Тег с таким названием уже существует. Выберите другое название."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีแท็กที่ใช้ชื่อนี้อยู่แล้ว เลือกชื่ออื่น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ada sahip bir etiket zaten var. Başka bir ad seçin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -10985,6 +12291,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ein Tag ist zu lang. Kürze ihn und versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μια ετικέτα είναι πολύ μεγάλη. Συντομεύστε την και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -11083,6 +12395,18 @@
             "value": "Один из тегов слишком длинный. Сократите его и попробуйте ещё раз."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แท็กยาวเกินไป ย่อให้สั้นลงแล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir etiket çok uzun. Kısaltıp yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -11129,6 +12453,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Aufgabe hängt von Aufgaben ab, die noch nicht erledigt sind. Erledige oder breche diese zuerst ab."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η εργασία εξαρτάται από εργασίες που δεν έχουν ολοκληρωθεί ακόμη. Ολοκληρώστε ή ακυρώστε τις πρώτα."
           }
         },
         "en": {
@@ -11227,6 +12557,18 @@
             "value": "Эта задача зависит от незавершённых задач. Сначала завершите или отмените их."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานนี้ต้องรองานที่ยังไม่เสร็จ ทำงานเหล่านั้นให้เสร็จหรือยกเลิกก่อน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu görev, henüz tamamlanmamış görevlere bağlı. Önce onları tamamlayın veya iptal edin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -11273,6 +12615,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieser Text ist zu lang. Kürze ihn und versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το κείμενο είναι πολύ μεγάλο. Συντομεύστε το και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -11371,6 +12719,18 @@
             "value": "Текст слишком длинный. Сократите его и попробуйте ещё раз."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้อความยาวเกินไป ย่อให้สั้นลงแล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu metin çok uzun. Kısaltıp yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -11417,6 +12777,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eine Aufgabe braucht einen Titel. Gib einen Titel ein und versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μια εργασία χρειάζεται τίτλο. Προσθέστε έναν και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -11515,6 +12881,18 @@
             "value": "У задачи должно быть название. Добавьте его и попробуйте ещё раз."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานต้องมีชื่อเรื่อง เพิ่มชื่อเรื่องแล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir görevin başlığı olmalıdır. Başlık ekleyip yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -11561,6 +12939,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieser Titel ist zu lang. Kürze ihn und versuche es erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτός ο τίτλος είναι πολύ μεγάλος. Συντομεύστε τον και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -11659,6 +13043,18 @@
             "value": "Название слишком длинное. Сократите его и попробуйте ещё раз."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ชื่อเรื่องยาวเกินไป ย่อให้สั้นลงแล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu başlık çok uzun. Kısaltıp yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -11705,6 +13101,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex kann nicht auf seinen Datenspeicher zugreifen, daher konnte dies nicht abgeschlossen werden. Bitte starte Lorvex neu."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το Lorvex δεν έχει πρόσβαση στον χώρο αποθήκευσης δεδομένων του, επομένως δεν ήταν δυνατή η ολοκλήρωση. Κάντε επανεκκίνηση του Lorvex."
           }
         },
         "en": {
@@ -11803,6 +13205,18 @@
             "value": "Lorvex не может получить доступ к хранилищу данных, поэтому действие не выполнено. Перезапустите Lorvex."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex เข้าถึงที่เก็บข้อมูลไม่ได้ จึงดำเนินการไม่สำเร็จ โปรดรีสตาร์ท Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex veri depolama alanına erişemiyor, bu yüzden işlem tamamlanamadı. Lütfen Lorvex’i yeniden başlatın."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -11894,6 +13308,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Tage"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ημέρα"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ημέρες"
                 }
               }
             }
@@ -12175,6 +13607,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld วัน"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -12308,6 +13764,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Monate"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld μήνας"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld μήνες"
                 }
               }
             }
@@ -12595,6 +14069,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld เดือน"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ay"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ay"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -12728,6 +14226,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld Wochen"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld εβδομάδα"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld εβδομάδες"
                 }
               }
             }
@@ -13009,6 +14525,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld สัปดาห์"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld hafta"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld hafta"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -13097,6 +14637,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Backup ist beschädigt und kann nicht importiert werden. Exportiere es erneut auf dem Gerät, von dem es stammt, und versuche es dann noch einmal."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το αντίγραφο ασφαλείας είναι κατεστραμμένο και δεν μπορεί να εισαχθεί. Εξαγάγετέ το ξανά στη συσκευή από την οποία προήλθε και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -13195,6 +14741,18 @@
             "value": "Эта резервная копия повреждена и не может быть импортирована. Экспортируйте её ещё раз на исходном устройстве и повторите попытку."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้อมูลสำรองนี้เสียหายและนำเข้าไม่ได้ ส่งออกอีกครั้งบนอุปกรณ์ที่ใช้สร้าง แล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yedek hasarlı ve içe aktarılamıyor. Geldiği aygıtta yeniden dışa aktarın, sonra tekrar deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -13241,6 +14799,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die ausgewählte Datei ist leer."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το επιλεγμένο αρχείο είναι κενό."
           }
         },
         "en": {
@@ -13339,6 +14903,18 @@
             "value": "Выбранный файл пуст."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไฟล์ที่เลือกว่างเปล่า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçilen dosya boş."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -13385,6 +14961,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Backup wurde mit einer neueren Version von Lorvex erstellt. Aktualisiere Lorvex auf diesem Gerät und versuche es dann erneut."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το αντίγραφο ασφαλείας δημιουργήθηκε από νεότερη έκδοση του Lorvex. Ενημερώστε το Lorvex σε αυτή τη συσκευή και δοκιμάστε ξανά."
           }
         },
         "en": {
@@ -13483,6 +15065,18 @@
             "value": "Эта резервная копия создана более новой версией Lorvex. Обновите Lorvex на этом устройстве и повторите попытку."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้อมูลสำรองนี้สร้างโดย Lorvex เวอร์ชั่นที่ใหม่กว่า อัปเดต Lorvex บนอุปกรณ์เครื่องนี้ แล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yedek, Lorvex’in daha yeni bir sürümüyle oluşturulmuş. Bu aygıtta Lorvex’i güncelleyin, sonra yeniden deneyin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -13529,6 +15123,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dieses Backup enthält keine Daten zum Importieren."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το αντίγραφο ασφαλείας δεν περιέχει δεδομένα προς εισαγωγή."
           }
         },
         "en": {
@@ -13627,6 +15227,18 @@
             "value": "В этой резервной копии нет данных для импорта."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้อมูลสำรองนี้ไม่มีข้อมูลที่จะนำเข้า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yedekte içe aktarılacak veri yok."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -13673,6 +15285,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diese Datei ist kein Lorvex-Backup oder sie ist beschädigt. Wähle eine aus Lorvex exportierte Datei."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτό το αρχείο δεν είναι αντίγραφο ασφαλείας του Lorvex ή είναι κατεστραμμένο. Επιλέξτε ένα αρχείο που έχει εξαχθεί από το Lorvex."
           }
         },
         "en": {
@@ -13771,6 +15389,18 @@
             "value": "Этот файл не является резервной копией Lorvex или повреждён. Выберите файл, экспортированный из Lorvex."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไฟล์นี้ไม่ใช่ข้อมูลสำรองของ Lorvex หรือเสียหาย เลือกไฟล์ที่ส่งออกจาก Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya bir Lorvex yedeği değil ya da hasarlı. Lorvex’ten dışa aktarılmış bir dosya seçin."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -13817,6 +15447,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die ausgewählte Datei ist %1$@ groß. Ein Lorvex-Backup darf höchstens %2$@ groß sein."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το επιλεγμένο αρχείο είναι %1$@. Ένα αντίγραφο ασφαλείας του Lorvex μπορεί να είναι έως %2$@."
           }
         },
         "en": {
@@ -13915,6 +15551,18 @@
             "value": "Размер выбранного файла — %1$@. Резервная копия Lorvex не может превышать %2$@."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไฟล์ที่เลือกมีขนาด %1$@ ข้อมูลสำรองของ Lorvex ใหญ่ได้สูงสุด %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçilen dosya %1$@ boyutunda. Bir Lorvex yedeği en fazla %2$@ olabilir."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -13961,6 +15609,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eingang"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εισερχόμενα"
           }
         },
         "en": {
@@ -14059,6 +15713,18 @@
             "value": "Входящие"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กล่องเข้า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelen Kutusu"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14105,6 +15771,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fügt „%@“ hinzu"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Θα προστεθεί «%@»"
           }
         },
         "en": {
@@ -14203,6 +15875,18 @@
             "value": "Добавится «%@»"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จะเพิ่ม “%@”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eklenecek: “%@”"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14249,6 +15933,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fällig %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Προθεσμία: %@"
           }
         },
         "en": {
@@ -14347,6 +16037,18 @@
             "value": "Срок: %@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ถึงกำหนด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son tarih: %@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14393,6 +16095,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nach Erledigung"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μετά την ολοκλήρωση"
           }
         },
         "en": {
@@ -14491,6 +16199,18 @@
             "value": "После выполнения"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หลังทำเสร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlandıktan sonra"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14537,6 +16257,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die nächste Wiederholung richtet sich nach dem Zeitpunkt, an dem du diese erledigst – ein verspäteter Abschluss verschiebt sie also nach hinten."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Η επόμενη προγραμματίζεται με βάση το πότε ολοκληρώνετε αυτήν, οπότε αν τελειώσετε αργά μετατίθεται αργότερα."
           }
         },
         "en": {
@@ -14635,6 +16361,18 @@
             "value": "Следующее повторение планируется от момента выполнения этого, поэтому позднее выполнение сдвигает его вперёд."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ครั้งถัดไปจะกำหนดตามเวลาที่คุณทำเสร็จ ถ้าเสร็จช้าก็จะเลื่อนออกไปด้วย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir sonraki, bunu ne zaman tamamladığınıza göre planlanır; geç bitirirseniz ileri kayar."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14681,6 +16419,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Regelmäßig"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Τακτικά"
           }
         },
         "en": {
@@ -14779,6 +16523,18 @@
             "value": "Регулярно"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สม่ำเสมอ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenli olarak"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14825,6 +16581,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wiederholt sich nach festem Zeitplan, unabhängig davon, wann du fertig wirst."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Επαναλαμβάνεται με σταθερό πρόγραμμα, ανεξάρτητα από το πότε ολοκληρώνετε."
           }
         },
         "en": {
@@ -14923,6 +16685,18 @@
             "value": "Повторяется по фиксированному расписанию независимо от того, когда вы выполните задачу."
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำประจำตามกำหนดคงที่ ไม่ว่าคุณจะทำเสร็จเมื่อใด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne zaman bitirdiğinizden bağımsız olarak sabit bir takvimle yinelenir."
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -14969,6 +16743,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jeden Tag"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάθε ημέρα"
           }
         },
         "en": {
@@ -15067,6 +16847,18 @@
             "value": "Каждый день"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุกวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her gün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -15113,6 +16905,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jeden Monat"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάθε μήνα"
           }
         },
         "en": {
@@ -15211,6 +17009,18 @@
             "value": "Каждый месяц"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุกเดือน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her ay"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -15302,6 +17112,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Alle %lld Tage"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld ημέρα"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld ημέρες"
                 }
               }
             }
@@ -15583,6 +17411,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุก %lld วัน"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld günde bir"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld günde bir"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -15716,6 +17568,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Alle %lld Monate"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld μήνα"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld μήνες"
                 }
               }
             }
@@ -15997,6 +17867,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุก %lld เดือน"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld ayda bir"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld ayda bir"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -16130,6 +18024,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Alle %lld Wochen"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld εβδομάδα"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld εβδομάδες"
                 }
               }
             }
@@ -16411,6 +18323,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุก %lld สัปดาห์"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld haftada bir"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld haftada bir"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -16544,6 +18480,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Alle %lld Jahre"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld έτος"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Κάθε %lld έτη"
                 }
               }
             }
@@ -16825,6 +18779,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุก %lld ปี"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld yılda bir"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Her %lld yılda bir"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -16913,6 +18891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jede Woche"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάθε εβδομάδα"
           }
         },
         "en": {
@@ -17011,6 +18995,18 @@
             "value": "Каждую неделю"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุกสัปดาห์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her hafta"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17057,6 +19053,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jedes Jahr"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάθε έτος"
           }
         },
         "en": {
@@ -17155,6 +19157,18 @@
             "value": "Каждый год"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทุกปี"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her yıl"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17201,6 +19215,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Täglich"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Καθημερινά"
           }
         },
         "en": {
@@ -17299,6 +19319,18 @@
             "value": "Ежедневно"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17345,6 +19377,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Monatlich"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μηνιαία"
           }
         },
         "en": {
@@ -17443,6 +19481,18 @@
             "value": "Ежемесячно"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายเดือน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aylık"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17489,6 +19539,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wöchentlich"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Εβδομαδιαία"
           }
         },
         "en": {
@@ -17587,6 +19643,18 @@
             "value": "Еженедельно"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายสัปดาห์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftalık"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17633,6 +19701,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jährlich"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ετήσια"
           }
         },
         "en": {
@@ -17731,6 +19805,18 @@
             "value": "Ежегодно"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายปี"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yıllık"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17777,6 +19863,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "nach Erledigung"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "μετά την ολοκλήρωση"
           }
         },
         "en": {
@@ -17875,6 +19967,18 @@
             "value": "после выполнения"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หลังทำเสร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tamamlandıktan sonra"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -17966,6 +20070,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld-mal"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld φορά"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld φορές"
                 }
               }
             }
@@ -18247,6 +20369,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ครั้ง"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kez"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kez"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -18380,6 +20526,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld übersprungen"
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld παραλείφθηκε"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld παραλείφθηκαν"
                 }
               }
             }
@@ -18661,6 +20825,30 @@
             }
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้าม %lld ครั้ง"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld atlandı"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld atlandı"
+                }
+              }
+            }
+          }
+        },
         "uk": {
           "variations": {
             "plural": {
@@ -18743,6 +20931,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "bis %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "έως %@"
           }
         },
         "en": {
@@ -18841,6 +21035,18 @@
             "value": "до %@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จนถึง %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tarihine kadar"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -18887,6 +21093,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "letzter %@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "τελευταία %@"
           }
         },
         "en": {
@@ -18985,6 +21197,18 @@
             "value": "посл. %@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ สุดท้าย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son %@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19031,6 +21255,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@η %2$@"
           }
         },
         "en": {
@@ -19129,6 +21359,18 @@
             "value": "%1$@-й %2$@"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19175,6 +21417,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ %2$@ von hinten"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@η από το τέλος %2$@"
           }
         },
         "en": {
@@ -19273,6 +21521,18 @@
             "value": "%1$@-й %2$@ с конца"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ %1$@ จากท้าย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sondan %1$@ %2$@"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19319,6 +21579,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abgebrochen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ακυρώθηκε"
           }
         },
         "en": {
@@ -19417,6 +21683,18 @@
             "value": "Отменена"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยกเลิกแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İptal edildi"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19463,6 +21741,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erledigt"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ολοκληρώθηκε"
           }
         },
         "en": {
@@ -19561,6 +21845,18 @@
             "value": "Выполнена"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เสร็จแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlandı"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19607,6 +21903,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "In Bearbeitung"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Σε εξέλιξη"
           }
         },
         "en": {
@@ -19705,6 +22007,18 @@
             "value": "В работе"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังดำเนินการ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam ediyor"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19751,6 +22065,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Offen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανοιχτή"
           }
         },
         "en": {
@@ -19849,6 +22169,18 @@
             "value": "Не выполнена"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยังไม่เสร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -19895,6 +22227,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Irgendwann"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κάποτε"
           }
         },
         "en": {
@@ -19993,6 +22331,18 @@
             "value": "Когда-нибудь"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สักวัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir gün"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -20039,6 +22389,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hoch"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Υψηλή"
           }
         },
         "en": {
@@ -20137,6 +22493,18 @@
             "value": "Высокий"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สูง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yüksek"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -20183,6 +22551,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Niedrig"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Χαμηλή"
           }
         },
         "en": {
@@ -20281,6 +22655,18 @@
             "value": "Низкий"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ต่ำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düşük"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -20327,6 +22713,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normal"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κανονική"
           }
         },
         "en": {
@@ -20425,6 +22817,18 @@
             "value": "Обычный"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปกติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -20471,6 +22875,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hohe Priorität"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Υψηλή προτεραιότητα"
           }
         },
         "en": {
@@ -20569,6 +22979,18 @@
             "value": "Высокий приоритет"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ความสำคัญสูง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yüksek öncelik"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -20615,6 +23037,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Niedrige Priorität"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Χαμηλή προτεραιότητα"
           }
         },
         "en": {
@@ -20713,6 +23141,18 @@
             "value": "Низкий приоритет"
           }
         },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ความสำคัญต่ำ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düşük öncelik"
+          }
+        },
         "uk": {
           "stringUnit": {
             "state": "translated",
@@ -20759,6 +23199,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normale Priorität"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Κανονική προτεραιότητα"
           }
         },
         "en": {
@@ -20855,6 +23301,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обычный приоритет"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ความสำคัญปกติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal öncelik"
           }
         },
         "uk": {

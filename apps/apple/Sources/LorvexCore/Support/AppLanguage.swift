@@ -22,6 +22,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case en
   case ar
   case de
+  case el
   case es
   case fa
   case fr
@@ -37,6 +38,8 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
   case ptBR = "pt-BR"
   case ro
   case ru
+  case th
+  case tr
   case uk
   case ur
   case vi
@@ -47,10 +50,10 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
 
   /// The selectable languages (everything except `.system`), in menu order:
   /// by endonym in English collation, so the Latin-script names come first
-  /// alphabetically and each other script follows as a group (Cyrillic,
-  /// Hebrew, Arabic, Devanagari, Hangul, Han), the way the system's own
-  /// language lists read. Endonyms read the same in every interface language,
-  /// and so does their order.
+  /// alphabetically and each other script follows as a group (Greek,
+  /// Cyrillic, Hebrew, Arabic, Devanagari, Thai, Hangul, Han), the way the
+  /// system's own language lists read. Endonyms read the same in every
+  /// interface language, and so does their order.
   public static let selectable: [AppLanguage] =
     allCases
     .filter { $0 != .system }
@@ -73,6 +76,7 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .en: "English"
     case .ar: "العربية"
     case .de: "Deutsch"
+    case .el: "Ελληνικά"
     case .es: "Español"
     case .fa: "فارسی"
     case .fr: "Français"
@@ -88,6 +92,8 @@ public enum AppLanguage: String, CaseIterable, Identifiable, Sendable {
     case .ptBR: "Português (Brasil)"
     case .ro: "Română"
     case .ru: "Русский"
+    case .th: "ไทย"
+    case .tr: "Türkçe"
     case .uk: "Українська"
     case .ur: "اردو"
     case .vi: "Tiếng Việt"

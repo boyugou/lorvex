@@ -23,6 +23,9 @@ public struct UIKitFeedbackProvider: LorvexFeedbackProviding {
     case .taskDeferred:
       let gen = UIImpactFeedbackGenerator(style: .light)
       gen.impactOccurred()
+    case .taskMoved:
+      let gen = UIImpactFeedbackGenerator(style: .light)
+      gen.impactOccurred()
     case .habitCompleted:
       let gen = UINotificationFeedbackGenerator()
       gen.notificationOccurred(.success)

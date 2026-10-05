@@ -13,8 +13,12 @@ enum CommandPaletteResult: Identifiable, Equatable {
   /// (``CommandPaletteResults/taskSubtitle(_:listNames:now:timeZone:)``);
   /// `nil` when the task has nothing worth surfacing. `isDone` marks a
   /// completed or cancelled task, whose row leads with a check instead of an
-  /// empty circle.
-  case openTask(id: LorvexTask.ID, title: String, subtitle: String?, isDone: Bool = false)
+  /// empty circle. `excerpt` quotes where the query matched when the title does
+  /// not show it (``LorvexTask/searchMatch(for:visibleTagCount:)``); the row
+  /// shows no tags, so a tag match is quoted too.
+  case openTask(
+    id: LorvexTask.ID, title: String, subtitle: String?, isDone: Bool = false,
+    excerpt: LorvexTaskSearchMatch? = nil)
   /// Open a list in the Tasks workspace, as its sidebar row does. `icon` and
   /// `colorHex` are the list's own, so the row wears the sidebar's icon.
   case openList(id: LorvexList.ID, name: String, icon: String?, colorHex: String?)
@@ -26,7 +30,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
   var id: String {
     switch self {
     case .navigate(let selection): "navigate.\(selection.rawValue)"
-    case .openTask(let id, _, _, _): "task.\(id)"
+    case .openTask(let id, _, _, _, _): "task.\(id)"
     case .openList(let id, _, _, _): "list.\(id)"
     case .createTask: "create"
     case .action(let command): "action.\(command.id)"
@@ -45,7 +49,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
           bundle: LorvexL10n.bundle
         ),
         String(localized: selection.macOSLocalizedTitle))
-    case .openTask(_, let title, _, _):
+    case .openTask(_, let title, _, _, _):
       return title
     case .openList(_, let name, _, _):
       return name
@@ -67,7 +71,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
   var systemImage: String {
     switch self {
     case .navigate(let selection): selection.systemImage
-    case .openTask(_, _, _, let isDone): isDone ? "checkmark.circle" : "circle"
+    case .openTask(_, _, _, let isDone, _): isDone ? "checkmark.circle" : "circle"
     case .openList: "folder"
     case .createTask: "plus.circle"
     case .action(let command): command.systemImage
@@ -187,7 +191,7 @@ enum CommandPaletteResults {
         .map {
           CommandPaletteResult.openTask(
             id: $0.id, title: $0.title, subtitle: taskSubtitle($0, listNames: listNames, now: now, timeZone: timeZone),
-            isDone: $0.status.isResolved)
+            isDone: $0.status.isResolved, excerpt: $0.searchMatch(for: query))
         }
       if !taskResults.isEmpty {
         groups.append(CommandPaletteGroup(title: "Tasks", results: Array(taskResults)))

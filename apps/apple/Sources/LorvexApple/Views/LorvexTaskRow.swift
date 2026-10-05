@@ -42,6 +42,10 @@ struct LorvexTaskRow: View {
   /// Host-supplied status chips shown under the title beside the in-progress
   /// and blocked badges.
   var chips: [LorvexTaskRowChip] = []
+  /// Why the task is in a search result when its title does not show the match
+  /// (``LorvexTask/searchMatch(for:visibleTagCount:)``), quoted under the
+  /// title. `nil` outside a search and for a task whose title explains it.
+  var searchMatch: LorvexTaskSearchMatch? = nil
   /// Tap-to-complete from the leading circle. When `nil` the circle is read-only
   /// (e.g. previews, or surfaces that don't own a completion action).
   var onToggleComplete: (() -> Void)?
@@ -49,6 +53,10 @@ struct LorvexTaskRow: View {
   /// The zone the due facts count days in, so they agree with the lists the
   /// product's logical day builds.
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
+
+  /// The tags the metadata line shows. A search match in one of these needs no
+  /// excerpt, because the row already shows it.
+  static let visibleTagCount = 3
 
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }
@@ -73,6 +81,8 @@ struct LorvexTaskRow: View {
           .foregroundStyle(isDormant ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .strikethrough(isInactive, color: .secondary)
           .lineLimit(2)
+
+        if let searchMatch { LorvexSearchExcerptLine(match: searchMatch) }
 
         if isInProgress || isBlocked || !chips.isEmpty {
           HStack(spacing: LorvexDesign.Spacing.xs) {
@@ -171,10 +181,11 @@ struct LorvexTaskRow: View {
   }
 
   /// What the row shows beyond the task's own fields, for VoiceOver, in the
-  /// row's order: host chips, the blocked badge, the owning list, and the day
-  /// a hidden task comes back.
+  /// row's order: the search excerpt, host chips, the blocked badge, the owning
+  /// list, and the day a hidden task comes back.
   private var accessibilityDetails: [String] {
-    var details = chips.map(\.title)
+    var details = [searchMatch?.text].compactMap { $0 }
+    details.append(contentsOf: chips.map(\.title))
     if isBlocked { details.append(TaskDisplayText.blocked) }
     if let owningList { details.append(owningList.name) }
     if let hiddenLabel = task.hiddenUntilShortLabel(timeZone: productTimeZone) {
@@ -192,7 +203,7 @@ struct LorvexTaskRow: View {
     if timeLabel == nil, let minutes = task.estimatedMinutes {
       parts.append(LorvexDurationFormat.minutes(minutes))
     }
-    parts.append(contentsOf: task.tags.prefix(3))
+    parts.append(contentsOf: task.tags.prefix(Self.visibleTagCount))
     return parts
   }
 
@@ -305,6 +316,10 @@ struct TaskRowItem: View {
   var timeIsRunning: Bool = false
   /// See ``LorvexTaskRow/chips``.
   var chips: [LorvexTaskRowChip] = []
+  /// The search the list is filtered by. The row quotes the part of the task
+  /// the title does not show when it holds a term of this query; empty outside a
+  /// search.
+  var searchQuery: String = ""
   @Environment(\.undoManager) private var undoManager
 
   private var isSelected: Bool { store.selectedTaskID == task.id }
@@ -322,7 +337,9 @@ struct TaskRowItem: View {
     LorvexTaskRow(
       task: task, isSelected: isSelected, isBlocked: isBlocked,
       owningList: owningListLabel, timeLabel: timeLabel, timeIsRunning: timeIsRunning,
-      chips: chips
+      chips: chips,
+      searchMatch: searchQuery.isEmpty
+        ? nil : task.searchMatch(for: searchQuery, visibleTagCount: LorvexTaskRow.visibleTagCount)
     ) {
       Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
     }

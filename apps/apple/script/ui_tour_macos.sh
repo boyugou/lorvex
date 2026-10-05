@@ -35,7 +35,8 @@
 # timed event from Today's schedule open in the inspector), tasks,
 # tasks-inspector, tasks-inspector-waiting (a task that waits on an unfinished
 # one, so its Start is unavailable), tasks-list (Tasks scoped to the first list
-# that is not the Inbox), lists, calendar, calendar-day, calendar-month, habits,
+# that is not the Inbox), tasks-search (Tasks searched for a word the notes
+# hold, where the rows quote the notes), lists, calendar, calendar-day, calendar-month, habits,
 # habits-inspector and habits-inspector-open (a habit done today and one
 # still open), reviews, reviews-weekly, memory, settings-<category> for
 # each Settings category (general, permissions, calendar, cloudSync, mcpHost,
@@ -43,8 +44,9 @@
 # window of its own: menubar and menubar-week (the menu bar panel on Today
 # and on Next 7 Days), list-window (a detached
 # list window, on the list tasks-list scopes to), palette-jump and
-# palette-search (the command palette on a list's name and on a word that
-# names no destination), task-editor-doOn, task-editor-due,
+# palette-search and palette-notes (the command palette on a list's name, on a
+# word that names no destination, and on a word only the notes hold),
+# task-editor-doOn, task-editor-due,
 # task-editor-estimate, task-editor-repeat, task-editor-reminders,
 # task-editor-tags, and task-editor-dependencies (the task detail's field popovers, on a task that
 # waits on another), habits-inspector-fields (a habit with ten weeks of

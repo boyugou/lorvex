@@ -9,7 +9,12 @@ struct CommandPaletteResultRow: View {
   let hover: () -> Void
 
   private var subtitle: String? {
-    if case .openTask(_, _, let subtitle, _) = result { return subtitle }
+    if case .openTask(_, _, let subtitle, _, _) = result { return subtitle }
+    return nil
+  }
+
+  private var excerpt: LorvexTaskSearchMatch? {
+    if case .openTask(_, _, _, _, let excerpt) = result { return excerpt }
     return nil
   }
 
@@ -26,6 +31,7 @@ struct CommandPaletteResultRow: View {
               .font(LorvexDesign.Typography.tertiaryText)
               .foregroundStyle(.secondary)
           }
+          if let excerpt { LorvexSearchExcerptLine(match: excerpt) }
         }
         Spacer(minLength: 0)
         if isHighlighted {

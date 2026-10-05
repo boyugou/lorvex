@@ -136,7 +136,8 @@ struct TaskRowDropTarget: View {
       // already named in the header — the same reason a list's own detail pane
       // never shows it.
       showsOwningList: store.taskWorkspaceListScopeID == nil,
-      timeLabel: timeLabel
+      timeLabel: timeLabel,
+      searchQuery: store.trimmedSearchText
     )
   }
 }

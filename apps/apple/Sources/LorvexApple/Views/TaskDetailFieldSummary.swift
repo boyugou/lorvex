@@ -110,12 +110,15 @@ extension AppStore {
     return list.displayName
   }
 
+  /// The draft's tags as the Tags row reads them: each name whole, joined by
+  /// dots that stay with the name before them, so a row that wraps breaks
+  /// after a dot and never starts a line with one. Nil without a tag.
   var taskDetailTagsSummary: String? {
     let tags = taskDetailTagsText
       .split(separator: ",")
       .map { $0.trimmingCharacters(in: .whitespaces) }
       .filter { !$0.isEmpty }
-    return tags.isEmpty ? nil : tags.joined(separator: " · ")
+    return tags.isEmpty ? nil : lorvexDotJoined(tags.map(lorvexUnbreakable))
   }
 
   /// The title of the one task the draft waits on, which the Waits on row

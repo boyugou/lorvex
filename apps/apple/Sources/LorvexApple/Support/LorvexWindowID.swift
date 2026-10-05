@@ -76,7 +76,7 @@ enum LorvexWindowID: String, CaseIterable {
     }
   }
 
-  /// ⇧⌘1-5 open Today, Plan, All Tasks, Review, and Habits in their own
+  /// ⌥⌘1-5 open Today, Plan, All Tasks, Review, and Habits in their own
   /// windows: the same digit as the ⌘1-5 sidebar navigation to the same
   /// destination. Lists has no digit, because ⌘6 goes to Memory, which has no
   /// window of its own.
@@ -90,6 +90,11 @@ enum LorvexWindowID: String, CaseIterable {
     default: nil
     }
   }
+
+  /// The modifiers pressed with ``keyboardShortcut``. ⇧⌘3, ⇧⌘4, and ⇧⌘5 are
+  /// macOS's screenshot shortcuts, which the system handles before any app
+  /// menu, so the digits pair with ⌥⌘ instead of ⇧⌘.
+  static let keyboardShortcutModifiers: EventModifiers = [.command, .option]
 
   var minimumContentSize: CGSize {
     switch self {

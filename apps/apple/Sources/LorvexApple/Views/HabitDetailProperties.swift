@@ -113,7 +113,7 @@ enum HabitDetailFieldCopy {
       return String(localized: "habit_detail.reminder.off", defaultValue: "Off", table: "Localizable", bundle: LorvexL10n.bundle)
     }
     guard times.count > 3 else {
-      return times.map(HabitReminderTime.display).joined(separator: " · ")
+      return lorvexDotJoined(times.map { lorvexUnbreakable(HabitReminderTime.display($0)) })
     }
     let earliest = HabitReminderTime.display(first)
     let latest = HabitReminderTime.display(last)

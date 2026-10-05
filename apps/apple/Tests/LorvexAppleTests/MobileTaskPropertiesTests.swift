@@ -28,6 +28,18 @@ struct MobileTaskPropertiesTests {
     #expect(properties.rows.first { $0.field == .priority }?.tint == .high)
   }
 
+  @Test("Tags are plain text when shared and wrap after their dots on screen")
+  func tagsWrapAfterTheirDots() throws {
+    let properties = MobileTaskProperties(
+      task: Self.task(tags: ["work", "q4 planning"]), listName: "Inbox", logicalDay: "2026-04-05")
+    let tags = try #require(properties.rows.first { $0.field == .tags })
+    #expect(tags.value == "work · q4 planning")
+    // Each tag stays whole and each dot stays with the tag before it, so a wrapped row never starts with a dot.
+    #expect(tags.displayValue == "work\u{00A0}· q4\u{00A0}planning")
+    let list = try #require(properties.rows.first { $0.field == .list })
+    #expect(list.displayValue == list.value)
+  }
+
   @Test("A deadline on the planned day names its own day, and an overdue one is tinted")
   func dueNamesItsDay() throws {
     let properties = MobileTaskProperties(

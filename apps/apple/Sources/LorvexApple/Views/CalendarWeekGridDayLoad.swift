@@ -110,11 +110,6 @@ enum CalendarWeekDayLoadCaption: Equatable {
     }
   }
 
-  var isOver: Bool {
-    if case .over = self { return true }
-    return false
-  }
-
   /// What VoiceOver says for a day without a caption, whose empty column is
   /// not read aloud.
   static var nothingPlanned: String {

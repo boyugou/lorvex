@@ -1968,7 +1968,8 @@ The **Review** workspace opens on today's review, one page per day:
 
 - One sentence reading the day: how many tasks you finished, how many due
   tasks are still open, and how many habits you kept.
-- **What moved forward**: the tasks you finished that day.
+- **What moved forward**: the tasks you finished that day. The list shows up
+  to five and counts the rest.
 - **Still open**: the tasks due that day that are not done yet. Tap a task's
   circle to complete it, or its title to open it. **Move All to Tomorrow**
   beside the heading plans every listed task for tomorrow; to move one task,
@@ -2001,7 +2002,8 @@ to read the week on one page:
 - Under it, a bar for each of the week's seven days, as tall as the number
   of tasks you finished that day. It appears once you finished anything that
   week.
-- **What moved forward**: the week's top finished tasks.
+- **What moved forward**: the week's top finished tasks. The list shows up to
+  five and counts the rest.
 - **The days**: each day's review, which opens that day.
 - A question about the task pushed off most often, once it has been pushed
   three or more times: **Move to Someday** parks it until it matters.
@@ -2269,14 +2271,14 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 | ⌘4 | Review |
 | ⌘5 | Habits |
 | ⌘6 | Memory |
-| ⇧⌘1–⇧⌘5 | Open Today, Calendar, All Tasks, Review, or Habits in its own window |
+| ⌥⌘1–⌥⌘5 | Open Today, Calendar, All Tasks, Review, or Habits in its own window |
 | ⌘← / ⌘→ | Previous / next day, week, or month in Calendar, and day or week in Review (the keys swap in right-to-left languages) |
 | ⌃⌘S | Show or hide the sidebar |
 | ⌘R | Refresh data |
 | ⌘, | Settings |
 
 The numeric accelerators follow the sidebar from top to bottom, then Memory in
-its footer (⌘1–⌘6). Adding ⇧ opens the same destination in its own window
+its footer (⌘1–⌘6). Adding ⌥ opens the same destination in its own window
 (Workspace menu); Memory has no separate window. In the Command Palette (⌘K),
 type the start of a destination's or a list's name and press Return to go
 there; any other text becomes a new task on Return, with matching tasks listed
@@ -2298,7 +2300,7 @@ These act on the selected task.
 | ⌘⇧D | Defer to tomorrow |
 | ⌘⇧Return | Complete task |
 | ⌘⇧O | Reopen task |
-| ⌘⌫ | Cancel task |
+| ⌘⌫ | Cancel task (while you type in a text field or editor, it deletes to the start of the line instead) |
 
 ### Quick-Add Field (macOS)
 

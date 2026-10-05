@@ -140,6 +140,30 @@ func captureParserKeepsADetailsOnlyLineAsTheTitle() {
 }
 
 @Test
+func captureParserReadsALineUpToTheReadLimit() {
+  let limit = LorvexCaptureParser.maxReadLength
+  let filler = String(repeating: "a", count: limit - " tomorrow".utf16.count)
+  let line = filler + " tomorrow"
+  #expect(line.utf16.count == limit)
+  let result = parse(line)
+  #expect(result.title == filler)
+  #expect(result.plannedDayOffset == 1)
+}
+
+@Test
+func captureParserTakesALineBeyondTheReadLimitAsATitleAlone() {
+  // A pasted page: no title can be this long, and every pattern would scan all of it.
+  let line = String(repeating: "call the caterer tomorrow ", count: 100) + "#work 20 min"
+  #expect(line.utf16.count > LorvexCaptureParser.maxReadLength)
+  let result = parse(line)
+  #expect(result.title == line)
+  #expect(!result.hasDetails)
+  #expect(result.tags.isEmpty)
+  #expect(result.phrases.isEmpty)
+  #expect(parse("  " + line + "\n").title == line)
+}
+
+@Test
 func captureListMatchesAnAliasAndReportsTheShownName() {
   let inbox = LorvexCaptureParser.ListOption(id: "inbox", name: "收件箱", aliases: ["Inbox"])
   let byShownName = LorvexCaptureParser.parse("Call the caterer #收件箱", lists: [inbox], todayWeekday: 3)

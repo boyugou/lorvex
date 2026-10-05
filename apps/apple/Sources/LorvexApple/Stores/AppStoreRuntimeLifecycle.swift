@@ -25,6 +25,7 @@ extension AppStore {
       Task { [weak self] in await self?.connectCloudSyncReports() },
     ]
     rescheduleLogicalDayBoundaryWake()
+    Task.detached(priority: .utility) { LorvexCaptureParser.warmUp() }
   }
 
   /// Republishes when the local calendar day rolls over. The widget/complication

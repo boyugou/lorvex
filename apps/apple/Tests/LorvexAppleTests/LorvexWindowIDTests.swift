@@ -60,7 +60,7 @@ func lorvexWorkspaceWindowsCoverDedicatedWorkspaceScenes() {
   #expect(LorvexWindowID.taskDetail.keyboardShortcut == nil)
 }
 
-/// ⇧⌘N opens in a window the destination ⌘N navigates to, so one digit means
+/// ⌥⌘N opens in a window the destination ⌘N navigates to, so one digit means
 /// one place across the Workspace and Navigate menus.
 @Test
 func workspaceWindowShortcutsMatchSidebarNavigationDigits() {
@@ -72,6 +72,16 @@ func workspaceWindowShortcutsMatchSidebarNavigationDigits() {
     #expect(window.keyboardShortcut != nil, "\(window)")
     #expect(window.keyboardShortcut == selection.navigationShortcut, "\(window)")
   }
+}
+
+/// macOS handles ⇧⌘3, ⇧⌘4, and ⇧⌘5 (screenshots) before any app menu, so a window
+/// shortcut pressed with ⇧⌘ would never reach the app; Option keeps every digit usable
+/// and distinct from the sidebar's plain ⌘ digits.
+@Test
+func workspaceWindowShortcutsAvoidTheSystemScreenshotKeys() {
+  let modifiers = LorvexWindowID.keyboardShortcutModifiers
+  #expect(modifiers == [.command, .option])
+  #expect(!modifiers.contains(.shift))
 }
 
 /// Which windows refresh on open, not in what order: the order follows the

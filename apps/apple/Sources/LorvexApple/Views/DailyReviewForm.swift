@@ -113,20 +113,11 @@ struct DailyReviewForm: View {
 
   @ViewBuilder
   private var moved: some View {
-    if let tasks = store.dayReviewEvidence?.topCompleted, !tasks.isEmpty {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-        LorvexPageLabel(Copy.movedLabel)
-        ForEach(tasks) { task in
-          HStack(spacing: LorvexDesign.Spacing.s) {
-            Image(systemName: "checkmark.circle.fill")
-              .foregroundStyle(LorvexDesign.Palette.done)
-            Text(userContent: task.title)
-              .lineLimit(2)
-          }
-          .font(LorvexDesign.Typography.primaryText)
-        }
-      }
-      .accessibilityIdentifier("reviews.daily.moved")
+    if let summary = store.dayReviewEvidence, !summary.topCompleted.isEmpty {
+      LorvexReviewMovedList(
+        label: Copy.movedLabel, tasks: summary.topCompleted,
+        hiddenCount: summary.hiddenCompletedCount, moreLine: Copy.moreCount,
+        identifier: "reviews.daily.moved")
     }
   }
 

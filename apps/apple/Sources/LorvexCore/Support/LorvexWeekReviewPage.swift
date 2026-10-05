@@ -91,7 +91,8 @@ public struct LorvexWeekReviewPage: View {
     public var dayLabel: (String) -> String
     /// "Pushed 4 times".
     public var pushedCount: (Int) -> String
-    /// "2 more": the overdue tasks past the listed ones.
+    /// "2 more": the tasks of a capped list (finished, overdue) past the
+    /// listed ones.
     public var moreLine: (Int) -> String
     /// "12 ideas wait in Someday."; `nil` when Someday is empty.
     public var somedayLine: String?
@@ -190,19 +191,10 @@ public struct LorvexWeekReviewPage: View {
         }
       }
       if !review.topCompleted.isEmpty {
-        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-          LorvexPageLabel(words.movedLabel)
-          ForEach(review.topCompleted) { task in
-            HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(LorvexDesign.Palette.done)
-              Text(userContent: task.title)
-                .lineLimitUnlessAccessibilitySize(2)
-            }
-            .font(LorvexDesign.Typography.primaryText)
-          }
-        }
-        .accessibilityIdentifier("review.week.moved")
+        LorvexReviewMovedList(
+          label: words.movedLabel, tasks: review.topCompleted,
+          hiddenCount: review.hiddenCompletedCount, moreLine: words.moreLine,
+          identifier: "review.week.moved")
       }
       if !sortedDays.isEmpty {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {

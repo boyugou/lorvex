@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "Lorvex";
+"CFBundleName" = "Lorvex";
+"NSCalendarsWriteOnlyAccessUsageDescription" = "Lorvex আপনার তৈরি করা প্ল্যান ব্লক Apple ক্যালেন্ডারে যোগ করতে পারে।";
+"NSCalendarsFullAccessUsageDescription" = "Lorvex সময়সূচি ও অ্যাসিস্ট্যান্টের প্রসঙ্গ তৈরি করতে ইভেন্টের বিবরণ পড়তে পারে।";

@@ -10,6 +10,12 @@
             "value": "إلغاء المهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক বাতিল করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -80,6 +86,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일 취소"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य रद्द करा"
           }
         },
         "ms": {
@@ -172,6 +184,12 @@
             "value": "إلغاء هذا التكرار"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "একটি বার বাতিল করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -242,6 +260,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이번 반복 취소"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एक वेळ रद्द करा"
           }
         },
         "ms": {
@@ -334,6 +358,12 @@
             "value": "هل تريد إلغاء هذا التكرار من \"%@\"؟"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” টাস্কের একটি বার বাতিল করবেন?"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -404,6 +434,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@”의 이번 반복을 취소하시겠습니까?"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ या कार्याची एक वेळ रद्द करायची का?"
           }
         },
         "ms": {
@@ -496,6 +532,12 @@
             "value": "يلغي هذا التكرار من \"%@\""
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” টাস্কের একটি বার বাতিল করে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -566,6 +608,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@”의 이번 반복을 취소합니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ या कार्याची एक वेळ रद्द करते"
           }
         },
         "ms": {
@@ -658,6 +706,12 @@
             "value": "في المهام المتكررة، يُلغى هذا التكرار فقط وتستمر التكرارات اللاحقة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পুনরাবৃত্ত টাস্কের ক্ষেত্রে শুধু এইবার বাতিল হয়, পরবর্তী বারগুলি চলতে থাকে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -728,6 +782,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "반복되는 할 일은 이번 반복만 취소되고 이후 반복은 그대로 이어집니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पुनरावृत्ती होणाऱ्या कार्यांसाठी फक्त ही वेळ रद्द होते आणि पुढील वेळा सुरू राहतात."
           }
         },
         "ms": {
@@ -820,6 +880,12 @@
             "value": "إلغاء هذا التكرار"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "একটি বার বাতিল করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -890,6 +956,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이번 반복 취소"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "एक वेळ रद्द करा"
           }
         },
         "ms": {
@@ -982,6 +1054,12 @@
             "value": "وضع علامة على %@ كمكتملة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” সম্পূর্ণ হিসাবে চিহ্নিত করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1052,6 +1130,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” 완료로 표시"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ पूर्ण म्हणून चिन्हांकित करा"
           }
         },
         "ms": {
@@ -1144,6 +1228,12 @@
             "value": "يؤجل %@ إلى الغد"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” আগামীকাল পর্যন্ত পিছিয়ে দেয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1214,6 +1304,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” 할 일을 내일로 미룹니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ उद्यापर्यंत पुढे ढकलते"
           }
         },
         "ms": {
@@ -1306,6 +1402,12 @@
             "value": "إبقاء المهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক রেখে দিন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1376,6 +1478,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일 유지"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य ठेवा"
           }
         },
         "ms": {
@@ -1468,6 +1576,12 @@
             "value": "غدًا"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগামীকাল"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1538,6 +1652,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "내일"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "उद्या"
           }
         },
         "ms": {
@@ -1630,6 +1750,12 @@
             "value": "مهمة قيد الانتظار: %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অপেক্ষমাণ টাস্ক: %@"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1700,6 +1826,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "대기 중인 할 일: %@"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "प्रलंबित कार्य: %@"
           }
         },
         "ms": {
@@ -1792,6 +1924,12 @@
             "value": "جارٍ الإضافة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "যোগ করা হচ্ছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -1862,6 +2000,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "추가 중"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जोडत आहे"
           }
         },
         "ms": {
@@ -1954,6 +2098,12 @@
             "value": "مهمة جديدة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন টাস্ক"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2024,6 +2174,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "새 할 일"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "नवीन कार्य"
           }
         },
         "ms": {
@@ -2116,6 +2272,12 @@
             "value": "إضافة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দ্রুত যোগ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2186,6 +2348,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "추가"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "झटपट जोडा"
           }
         },
         "ms": {
@@ -2278,6 +2446,12 @@
             "value": "إضافة مهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক যোগ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2348,6 +2522,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일 추가"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्य जोडा"
           }
         },
         "ms": {
@@ -2440,6 +2620,12 @@
             "value": "عنوان المهمة الجديدة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন টাস্কের শিরোনাম"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2510,6 +2696,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "새 할 일 제목"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "नवीन कार्याचे शीर्षक"
           }
         },
         "ms": {
@@ -2602,6 +2794,12 @@
             "value": "تجاهل"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "খারিজ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2672,6 +2870,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "닫기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "डिस्मिस करा"
           }
         },
         "ms": {
@@ -2764,6 +2968,12 @@
             "value": "الإجراءات المحفوظة غير متاحة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সেভ করা অ্যাকশন উপলভ্য নয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2834,6 +3044,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "저장된 동작을 사용할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जतन केलेल्या कृती उपलब्ध नाहीत"
           }
         },
         "ms": {
@@ -2926,6 +3142,12 @@
             "value": "افتح Lorvex على iPhone، ثم أعد فتح تطبيق الساعة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone-এ Lorvex খুলুন, তারপর ওয়াচ অ্যাপ আবার খুলুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -2996,6 +3218,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone에서 Lorvex를 연 다음 Apple Watch 앱을 다시 여세요"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone वर Lorvex उघडा, नंतर वॉच ॲप पुन्हा उघडा"
           }
         },
         "ms": {
@@ -3119,6 +3347,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld قيد الانتظار"
+                }
+              }
+            }
+          }
+        },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lldটি অপেক্ষমাণ"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lldটি অপেক্ষমাণ"
                 }
               }
             }
@@ -3308,6 +3554,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "대기 중 %lld개"
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld प्रलंबित"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld प्रलंबित"
+                }
+              }
+            }
           }
         },
         "ms": {
@@ -3538,6 +3802,12 @@
             "value": "لم يتم تطبيق الإجراء %lld"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অ্যাকশন %lld প্রয়োগ করা যায়নি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3608,6 +3878,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "적용되지 않은 동작 %lld"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कृती %lld लागू झाली नाही"
           }
         },
         "ms": {
@@ -3700,6 +3976,12 @@
             "value": "تعذّرت قراءة هذا الإجراء على iPhone. حدّث Lorvex على كلا الجهازين."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আপনার iPhone এই অ্যাকশনটি পড়তে পারেনি। দুটি ডিভাইসেই Lorvex আপডেট করুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3770,6 +4052,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone에서 이 동작을 읽을 수 없습니다. 두 기기에서 모두 Lorvex를 업데이트하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तुमचा iPhone ही कृती वाचू शकला नाही. दोन्ही डिव्हाइसवर Lorvex अपडेट करा."
           }
         },
         "ms": {
@@ -3862,6 +4150,12 @@
             "value": "التسليم إلى iPhone"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ফোনে পাঠানো"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -3932,6 +4226,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone으로 전달"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "फोनवर पाठवणे"
           }
         },
         "ms": {
@@ -4024,6 +4324,12 @@
             "value": "يتعارض هذا الإجراء مع تغييرات أحدث."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই অ্যাকশনের সাথে আরও নতুন পরিবর্তনের বিরোধ রয়েছে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4094,6 +4400,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 동작이 더 최근의 변경 사항과 충돌합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ही कृती अधिक नवीन बदलांशी विसंगत आहे."
           }
         },
         "ms": {
@@ -4186,6 +4498,12 @@
             "value": "لم يتم تطبيق هذا الإجراء على iPhone."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই অ্যাকশনটি iPhone-এ প্রয়োগ করা যায়নি।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4256,6 +4574,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 동작은 iPhone에 적용되지 않았습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ही कृती iPhone वर लागू झाली नाही."
           }
         },
         "ms": {
@@ -4348,6 +4672,12 @@
             "value": "عنوان المهمة لم يعد صالحًا."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্কের শিরোনামটি আর বৈধ নয়।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4418,6 +4748,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일 제목이 더 이상 유효하지 않습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्याचे शीर्षक आता वैध नाही."
           }
         },
         "ms": {
@@ -4510,6 +4846,12 @@
             "value": "لم يعد هذا العنصر موجودًا على iPhone."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আইটেমটি iPhone-এ আর নেই।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4580,6 +4922,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 항목이 iPhone에 더 이상 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तो आयटम आता iPhone वर नाही."
           }
         },
         "ms": {
@@ -4672,6 +5020,12 @@
             "value": "هذا الإجراء المحفوظ قديم."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সেভ করা এই অ্যাকশনটি পুরোনো হয়ে গেছে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4742,6 +5096,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "저장된 동작이 최신 상태가 아닙니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "जतन केलेली ही कृती कालबाह्य झाली आहे."
           }
         },
         "ms": {
@@ -4834,6 +5194,12 @@
             "value": "لم يعد هذا الإجراء صالحًا."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই অ্যাকশনটি আর বৈধ নয়।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -4904,6 +5270,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 동작은 더 이상 유효하지 않습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ही कृती आता वैध नाही."
           }
         },
         "ms": {
@@ -4996,6 +5368,12 @@
             "value": "تم استبدال مساحة عمل iPhone قبل تطبيق هذا الإجراء."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই অ্যাকশন প্রয়োগের আগেই iPhone-এর ওয়ার্কস্পেস বদলে গেছে।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5066,6 +5444,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 동작이 적용되기 전에 iPhone의 데이터베이스가 교체되었습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ही कृती लागू होण्यापूर्वीच iPhone चे वर्कस्पेस बदलले गेले."
           }
         },
         "ms": {
@@ -5158,6 +5542,12 @@
             "value": "لم يتم حفظ هذا التغيير. حاول مرة أخرى."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পরিবর্তনটি সেভ হয়নি। আবার চেষ্টা করুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5228,6 +5618,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "변경 사항을 저장하지 못했습니다. 다시 시도하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तो बदल जतन झाला नाही. पुन्हा प्रयत्न करा."
           }
         },
         "ms": {
@@ -5320,6 +5716,12 @@
             "value": "افتح Lorvex على iPhone أو Mac لإضافة مهام جديدة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন টাস্ক যোগ করতে iPhone বা Mac-এ Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5390,6 +5792,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "새 할 일을 추가하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "नवीन कार्ये जोडण्यासाठी iPhone किंवा Mac वर Lorvex उघडा."
           }
         },
         "ms": {
@@ -5482,6 +5890,12 @@
             "value": "افتح Lorvex على iPhone أو Mac لتطبيق هذا الإجراء."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই অ্যাকশন প্রয়োগ করতে iPhone বা Mac-এ Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5552,6 +5966,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 동작을 적용하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ही कृती लागू करण्यासाठी iPhone किंवा Mac वर Lorvex उघडा."
           }
         },
         "ms": {
@@ -5644,6 +6064,12 @@
             "value": "أعد المحاولة، أو افتح Lorvex على iPhone إذا استمرت المشكلة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আবার চেষ্টা করুন, অথবা সমস্যাটি থেকে গেলে আপনার iPhone-এ Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5714,6 +6140,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "다시 시도하세요. 계속되면 iPhone에서 Lorvex를 여세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पुन्हा प्रयत्न करा, किंवा ही समस्या कायम राहिल्यास तुमच्या iPhone वर Lorvex उघडा."
           }
         },
         "ms": {
@@ -5806,6 +6238,12 @@
             "value": "تعذّر تحميل اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ লোড করা যায়নি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -5876,6 +6314,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘을 불러올 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज लोड करता आले नाही"
           }
         },
         "ms": {
@@ -5968,6 +6412,12 @@
             "value": "إعادة المحاولة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আবার চেষ্টা করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6038,6 +6488,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "다시 시도"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पुन्हा प्रयत्न करा"
           }
         },
         "ms": {
@@ -6130,6 +6586,12 @@
             "value": "يعيد تحميل اليوم من اللقطة أو من iPhone المقترن"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্ন্যাপশট বা যুক্ত করা iPhone থেকে আজ আবার লোড করে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6200,6 +6662,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "스냅샷 또는 페어링된 iPhone에서 오늘을 다시 불러옵니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्नॅपशॉट किंवा पेअर केलेल्या iPhone वरून आज पुन्हा लोड करते"
           }
         },
         "ms": {
@@ -6292,6 +6760,12 @@
             "value": "بيانات الساعة غير متاحة: %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ওয়াচের ডেটা উপলভ্য নয়: %@"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6362,6 +6836,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apple Watch 데이터를 사용할 수 없음: %@"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "वॉचचा डेटा उपलब्ध नाही: %@"
           }
         },
         "ms": {
@@ -6454,6 +6934,12 @@
             "value": "افتح Lorvex على iPhone للمزامنة، ثم أعد المحاولة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিঙ্ক করতে আপনার iPhone-এ Lorvex খুলুন, তারপর আবার চেষ্টা করুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6524,6 +7010,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone에서 Lorvex를 열어 동기화한 후 다시 시도하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिंक करण्यासाठी तुमच्या iPhone वर Lorvex उघडा, नंतर पुन्हा प्रयत्न करा."
           }
         },
         "ms": {
@@ -6616,6 +7108,12 @@
             "value": "اليوم غير متاح"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ উপলভ্য নয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6686,6 +7184,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘을 표시할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज उपलब्ध नाही"
           }
         },
         "ms": {
@@ -6777,6 +7281,12 @@
             "value": "العادات"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অভ্যাস"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -6847,6 +7357,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "습관"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सवयी"
           }
         },
         "ms": {
@@ -6939,6 +7455,12 @@
             "value": "حالة بيانات الساعة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ওয়াচ ডেটার স্টেটাস"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7009,6 +7531,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apple Watch 데이터 상태"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "वॉच डेटाचा स्टेटस"
           }
         },
         "ms": {
@@ -7101,6 +7629,12 @@
             "value": "بيانات اللقطة تالفة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্ন্যাপশট ডেটা ক্ষতিগ্রস্ত"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7171,6 +7705,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "스냅샷 데이터가 손상됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्नॅपशॉट डेटा खराब झाला आहे"
           }
         },
         "ms": {
@@ -7262,6 +7802,12 @@
             "value": "مباشر من Lorvex"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex থেকে লাইভ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7332,6 +7878,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex 실시간 데이터"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex कडून लाइव्ह"
           }
         },
         "ms": {
@@ -7423,6 +7975,12 @@
             "value": "لم يتم التحديث"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "রিফ্রেশ করা হয়নি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7493,6 +8051,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "새로 고치지 않음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रिफ्रेश केले नाही"
           }
         },
         "ms": {
@@ -7585,6 +8149,12 @@
             "value": "افتح Lorvex للمزامنة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিঙ্ক করতে Lorvex খুলুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7655,6 +8225,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 열어 동기화"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिंक करण्यासाठी Lorvex उघडा"
           }
         },
         "ms": {
@@ -7747,6 +8323,12 @@
             "value": "لقطة متزامنة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিঙ্ক করা স্ন্যাপশট"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7817,6 +8399,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "동기화된 스냅샷"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिंक केलेला स्नॅपशॉट"
           }
         },
         "ms": {
@@ -7909,6 +8497,12 @@
             "value": "تمت المزامنة %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিঙ্ক করা হয়েছে: %@"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -7979,6 +8573,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 동기화됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिंक केले: %@"
           }
         },
         "ms": {
@@ -8070,6 +8670,12 @@
             "value": "اللقطة غير متاحة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্ন্যাপশট উপলভ্য নয়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8140,6 +8746,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "스냅샷을 사용할 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्नॅपशॉट उपलब्ध नाही"
           }
         },
         "ms": {
@@ -8232,6 +8844,12 @@
             "value": "تعذّرت قراءة اللقطة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্ন্যাপশট পড়া যাচ্ছে না"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8302,6 +8920,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "스냅샷을 읽을 수 없음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्नॅपशॉट वाचता येत नाही"
           }
         },
         "ms": {
@@ -8394,6 +9018,12 @@
             "value": "حدّث Lorvex للمزامنة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিঙ্ক করতে Lorvex আপডেট করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8464,6 +9094,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex를 업데이트하여 동기화"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिंक करण्यासाठी Lorvex अपडेट करा"
           }
         },
         "ms": {
@@ -8556,6 +9192,12 @@
             "value": "محظورة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ব্লক করা হয়েছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8626,6 +9268,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "차단됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ब्लॉक केलेले"
           }
         },
         "ms": {
@@ -8718,6 +9366,12 @@
             "value": "افتح Lorvex على iPhone أو Mac لإضافة مهام جديدة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "নতুন টাস্ক যোগ করতে iPhone বা Mac-এ Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8788,6 +9442,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "새 할 일을 추가하려면 iPhone 또는 Mac에서 Lorvex를 여세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "नवीन कार्ये जोडण्यासाठी iPhone किंवा Mac वर Lorvex उघडा."
           }
         },
         "ms": {
@@ -8880,6 +9540,12 @@
             "value": "انتظر حتى ينتهي Lorvex من التحديث."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex-এর রিফ্রেশ শেষ হওয়া পর্যন্ত অপেক্ষা করুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -8950,6 +9616,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex가 새로 고침을 마칠 때까지 기다리세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex चे रिफ्रेश पूर्ण होईपर्यंत थांबा."
           }
         },
         "ms": {
@@ -9041,6 +9713,12 @@
             "value": "المكتملة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সম্পন্ন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9111,6 +9789,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "완료"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पूर्ण"
           }
         },
         "ms": {
@@ -9203,6 +9887,12 @@
             "value": "حتى %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ পর্যন্ত"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9273,6 +9963,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@까지"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ पर्यंत"
           }
         },
         "ms": {
@@ -9365,6 +10061,12 @@
             "value": "Lorvex اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex আজ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9435,6 +10137,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex 오늘"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex आज"
           }
         },
         "ms": {
@@ -9527,6 +10235,12 @@
             "value": "يعرض عدد المهام المتبقية اليوم والمهمة الأولى في القائمة."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ কতগুলি টাস্ক বাকি আছে এবং সবার উপরের টাস্কটি দেখায়।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9597,6 +10311,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 남은 할 일 수와 맨 위 할 일을 표시합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज किती कार्ये शिल्लक आहेत आणि सर्वात वरचे कार्य दाखवते."
           }
         },
         "ms": {
@@ -9688,6 +10408,12 @@
             "value": "تأجيل إلى الغد"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আগামীকাল পর্যন্ত পিছিয়ে দিন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9758,6 +10484,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "내일까지 미루기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "उद्यापर्यंत पुढे ढकला"
           }
         },
         "ms": {
@@ -9849,6 +10581,12 @@
             "value": "إيقاف مؤقت"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "পজ করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -9919,6 +10657,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "일시 정지"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पॉज करा"
           }
         },
         "ms": {
@@ -10010,6 +10754,12 @@
             "value": "يزيل %@ من المهام التي بدأ العمل عليها"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” শুরু হওয়া টাস্কের তালিকা থেকে সরায়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10080,6 +10830,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "시작된 할 일에서 “%@” 항목을 제외합니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ सुरू झालेल्या कार्यांमधून काढते"
           }
         },
         "ms": {
@@ -10171,6 +10927,12 @@
             "value": "بدء"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরু করুন"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10241,6 +11003,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "시작"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुरू करा"
           }
         },
         "ms": {
@@ -10332,6 +11100,12 @@
             "value": "يعلّم %@ كمهمة بدأ العمل عليها"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” শুরু হয়েছে বলে চিহ্নিত করে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10402,6 +11176,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” 항목을 시작됨으로 표시합니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ सुरू झाले म्हणून चिन्हांकित करते"
           }
         },
         "ms": {
@@ -10493,6 +11273,12 @@
             "value": "متبقية"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বাকি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10563,6 +11349,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "남음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शिल्लक"
           }
         },
         "ms": {
@@ -10654,6 +11446,12 @@
             "value": "د"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "মিনিট"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10724,6 +11522,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "분"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मि."
           }
         },
         "ms": {
@@ -10816,6 +11620,12 @@
             "value": "المتبقي %@"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ বাকি"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10886,6 +11696,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 남음"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ शिल्लक"
           }
         },
         "ms": {
@@ -10977,6 +11793,12 @@
             "value": "يعرض إجراءات هذه المهمة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই টাস্কের অ্যাকশন দেখায়"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -11047,6 +11869,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 할 일의 동작을 표시합니다"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "या कार्याच्या कृती दाखवते"
           }
         },
         "ms": {
@@ -11138,6 +11966,12 @@
             "value": "متأخرة"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বকেয়া"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -11208,6 +12042,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "기한 초과"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ओव्हरड्यू"
           }
         },
         "ms": {
@@ -11299,6 +12139,12 @@
             "value": "تم البدء"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শুরু হয়েছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -11369,6 +12215,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "시작됨"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुरू झाले"
           }
         },
         "ms": {
@@ -11460,6 +12312,12 @@
             "value": "تم إنجاز كل شيء"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সব হয়ে গেছে"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -11530,6 +12388,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "모두 완료"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सर्व झाले"
           }
         },
         "ms": {
@@ -11653,6 +12517,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld مكتملة اليوم"
+                }
+              }
+            }
+          }
+        },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ %lldটি সম্পন্ন"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ %lldটি সম্পন্ন"
                 }
               }
             }
@@ -11836,6 +12718,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 %lld개 완료"
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज %lld पूर्ण"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज %lld पूर्ण"
+                }
+              }
+            }
           }
         },
         "ms": {
@@ -12102,6 +13002,24 @@
             }
           }
         },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ আরও %lldটি"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ আরও %lldটি"
+                }
+              }
+            }
+          }
+        },
         "de": {
           "variations": {
             "plural": {
@@ -12280,6 +13198,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 %lld개 더 있음"
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज आणखी %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज आणखी %lld"
+                }
+              }
+            }
           }
         },
         "ms": {
@@ -12509,6 +13445,12 @@
             "value": "لم يتبقَّ شيء لليوم."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজকের জন্য আর কিছু বাকি নেই।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -12579,6 +13521,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 남은 할 일이 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आजसाठी काहीही शिल्लक नाही."
           }
         },
         "ms": {
@@ -12670,6 +13618,12 @@
             "value": "اليوم"
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "আজ"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -12740,6 +13694,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज"
           }
         },
         "ms": {
@@ -12831,6 +13791,12 @@
             "value": "افتح Lorvex على iPhone لتغيير المهام."
           }
         },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "টাস্ক বদলাতে iPhone-এ Lorvex খুলুন।"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -12901,6 +13867,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "할 일을 변경하려면 iPhone에서 Lorvex를 여세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कार्ये बदलण्यासाठी iPhone वर Lorvex उघडा."
           }
         },
         "ms": {
@@ -13023,6 +13995,24 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "لا توجد مهام متبقية اليوم"
+                }
+              }
+            }
+          }
+        },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ %lldটি টাস্ক বাকি"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "আজ %lldটি টাস্ক বাকি"
                 }
               }
             }
@@ -13212,6 +14202,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 남은 할 일 %lld개"
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज %lld कार्य शिल्लक"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "आज %lld कार्ये शिल्लक"
+                }
+              }
+            }
           }
         },
         "ms": {

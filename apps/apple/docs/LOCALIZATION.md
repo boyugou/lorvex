@@ -380,9 +380,10 @@ localize through two different catalogs:
 ## Language coverage
 
 English (`en`) is the source language. The shipped languages are English,
-Arabic (`ar`), German (`de`), Greek (`el`), Spanish (`es`), Persian (`fa`),
-French (`fr`), Hebrew (`he`), Hindi (`hi`), Indonesian (`id`), Italian (`it`),
-Japanese (`ja`), Korean (`ko`), Malay (`ms`), Dutch (`nl`), Polish (`pl`),
+Arabic (`ar`), Bengali (`bn`), German (`de`), Greek (`el`), Spanish (`es`),
+Persian (`fa`), French (`fr`), Hebrew (`he`), Hindi (`hi`), Indonesian (`id`),
+Italian (`it`), Japanese (`ja`), Korean (`ko`), Marathi (`mr`), Malay (`ms`),
+Dutch (`nl`), Polish (`pl`),
 Brazilian Portuguese (`pt-BR`), Romanian (`ro`), Russian (`ru`), Thai (`th`),
 Turkish (`tr`), Ukrainian (`uk`), Urdu (`ur`), Vietnamese (`vi`), Simplified
 Chinese (`zh-Hans`), and Traditional Chinese (`zh-Hant`).
@@ -2487,11 +2488,60 @@ Malay writes padam, tarikh, peranti, and jadual.
   ("Tidak muat" for Won’t fit, "+%lld lainnya" for a small widget's overflow,
   "sisa" as the caption under the remaining-tasks ring, "Item baru" in the
   checklist field of the Mac inspector). Accessibility labels may be longer.
-- The capture parser (`LorvexCaptureParser`) has no Indonesian vocabulary: it
-  reads English and Chinese words wherever the interface language is
-  Indonesian. The capture hint (`capture.footer.words`) therefore gives
-  English examples and says so ("Kata bahasa Inggris seperti “tomorrow”,
-  “3pm”, “every Monday”, “20 min”, atau “#list” mengisi detail tugas.").
+- The capture parser (`LorvexCaptureParser`) reads Indonesian day, date, time,
+  duration, repeat, and priority words for a user who reads Indonesian (id-ID
+  and any other region), so the Indonesian capture hint gives Indonesian
+  examples (“besok”, “jam 15.00”, “setiap Senin”, “20 menit”, “#daftar”).
+  Indonesian says a clock time with "jam" or "pukul" before the hour, so the
+  time example carries "jam". The language has no diacritics, so the line is
+  read as typed and the title keeps what was typed. A number before "jam" is
+  a length ("2 jam") and a number after it is the clock ("jam 2"), so "ruang 3
+  jam 10 pagi" is room 3 at 10 in the morning, and "2 jam tangan" (two
+  watches) is no length. Indonesian does not write a clock time with the
+  letter h, so "15h" and "2h" are lengths, as in English alone. Indonesian
+  counts the half hour toward the next hour, so "setengah empat" is 3:30, and
+  "kurang" and "lewat" take minutes off or add them ("jam 3 kurang 10" is
+  2:50, "jam 3 lewat 15" is 3:15). A bare "setengah empat" is a time only
+  where the line goes on with nothing or a word that can follow a time, so
+  "setengah empat kilo" stays in the title. An hour from 1 to 6 with no part of
+  the day is in the afternoon ("jam 3" is 3 PM) unless it is written with a
+  zero ("jam 03.00"), and a part of the day sets the hour, after it ("jam 8
+  malam" is 20:00, "jam 4 subuh" is 04:00) or before it ("malam jam 8"), as
+  does a meal on the line ("makan malam jam 7" is 19:00). "Malam" runs past
+  midnight, so "jam 12 malam" and "tengah malam" are 00:00 on the next day,
+  and "tengah hari" is noon. A clock time that names a bound ("sebelum jam
+  5", "sampai pukul 17.00") stays in the title, while the day before it is the
+  due day.
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("akhir pekan" is the coming Saturday, "akhir pekan depan" the
+  one after). A weekday name alone or after "pada", "di", or "hari" is the
+  coming one, "Selasa ini" is this week's, and "Selasa depan" is next week's.
+  "Minggu" is also the week ("minggu depan"), so it names Sunday only after
+  "hari" ("hari Minggu"), before a part of the day ("Minggu pagi"), or beside
+  another weekday ("Sabtu dan Minggu"); "Sekolah Minggu" stays in the title.
+  No past day is read ("kemarin", "Senin lalu", "minggu lalu", "semalam",
+  "tadi malam"), and neither is a phrase whose day cannot be named: "besok
+  lusa" means tomorrow or the day after, and "malam Jumat" is the night
+  before Friday. A list of weekdays ("Senin dan Rabu") names no one day, and
+  "Salat Jumat" and "Jumat Agung" are names, so each stays in the title.
+  "Sampai" names a deadline ("sampai Jumat") but is also the
+  "to" of a range, which needs the end to carry its month ("3 sampai 5 Mei");
+  two bare numbers after "dari" or "antara" are hours ("dari 3 sampai 5" is
+  15:00 to 17:00), and a side of a time range with no part of the day takes
+  the reading that fits the other ("jam 9 sampai 5 sore" is 09:00 to 17:00).
+  Counts of days and weeks are read ("3 hari lagi", "dalam 3 hari",
+  "seminggu lagi"), except after "kali" ("tiga kali dalam seminggu" is a
+  rate); months and years are not ("bulan depan", "sebulan lagi"). The
+  adjectives "harian", "mingguan", "bulanan", and "tahunan" repeat
+  a task only at the end of the line, or at its start before a colon or a
+  comma, since "buku harian" is a diary, and "penting", "mendesak", "urgent",
+  "darurat", and "segera" are priority words in the same two places, while a
+  negation turns them around ("tidak penting"). A count of times in a period
+  ("dua kali seminggu"), an interval of hours ("setiap 2 jam"), and every day
+  with a day left out ("setiap hari kecuali Minggu") name no
+  repeat the app can set, and an amount after "dalam", "setiap", or "setelah"
+  ("dalam 2 jam", "2 jam lagi") is a moment, not a length, so each stays in
+  the title.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
   name the app exactly once, after "di" ("Catat tugas di
   ${applicationName}") or after "ke" where the English says to ("Tambahkan
@@ -2593,11 +2643,73 @@ Indonesian writes hapus, tanggal, perangkat, and jadwal.
   "berbaki" as the caption under the remaining-tasks ring, "Item baharu" in
   the checklist field of the Mac inspector). Accessibility labels may be
   longer.
-- The capture parser (`LorvexCaptureParser`) has no Malay vocabulary: it reads
-  English and Chinese words wherever the interface language is Malay. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("Perkataan bahasa Inggeris seperti “tomorrow”, “3pm”, “every
-  Monday”, “20 min” atau “#list” melengkapkan butiran tugas.").
+- The capture parser (`LorvexCaptureParser`) reads Malay day, date, time,
+  duration, repeat, and priority words for a user who reads Malay (ms-MY,
+  ms-SG, ms-BN, and any other region), so the Malay capture hint gives Malay
+  examples (“esok”, “pukul 3 petang”, “setiap Isnin”, “20 minit”, “#senarai”).
+  Malay says a clock time with "pukul", "jam", or "pkl" before the hour, so
+  the time example carries "pukul". The language has no diacritics, so the line
+  is read as typed and the title keeps what was typed. A number before "jam" is
+  a length ("2 jam") and a number after it is the clock ("jam 2"), so "bilik 3
+  jam 10 pagi" is room 3 at 10 in the morning, and "2 jam tangan" (two
+  watches) is no length. Malay does not write a clock time with the letter h,
+  so "15h" and "2h" are lengths, as in English alone. PG and PTG, the 12-hour
+  clock's AM and PM that Apple's Malay writes, set the hour ("9.30 PG" is
+  09:30, "3.30 PTG" is 15:30). Malay puts the half hour after the hour ("pukul
+  tiga setengah" is 3:30), where Indonesian counts it toward the next one
+  ("setengah empat" is 3:30), so "setengah empat" and the quarter forms ("tiga
+  suku", "kurang suku"), which are said both ways, are left in the title. An
+  hour from 1 to 6 with no part of the day is in the afternoon ("pukul 3" is 3
+  PM) unless it is written with a zero ("pukul 03.00"), and a part of the day
+  sets the hour, after it ("pukul 8 malam" is 20:00, "pukul 4 subuh" is 04:00)
+  or before it ("malam pukul 8"), as does a meal, a prayer, or the fast on the
+  line ("makan malam pukul 7", "berbuka puasa pukul 7" are 19:00). "Malam" runs
+  past midnight, so "pukul 12 malam" and "tengah malam" are 00:00 on the next
+  day. "Tengah hari" is also the word for lunch, so it sets an hour ("pukul 1
+  tengah hari" is 13:00) but is no time of its own. A clock time that names a
+  bound ("sebelum pukul 5", "hingga jam 17.00") stays in the title, while the
+  day before it is the due day.
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("hujung minggu" is the coming Saturday, "hujung minggu depan"
+  the one after). A weekday name alone or after "pada" or "hari" is the coming
+  one, "Selasa ini" is this week's, and "Selasa depan" or "Selasa hadapan" is
+  next week's. "Minggu" is the week and never Sunday, which is "Ahad", so
+  "Minggu" alone stays in the title. A part of the day may come before or after
+  "esok" and a weekday ("esok pagi", "pagi esok", "Jumaat petang", "petang
+  Jumaat"), except that a part of the day that forms a noun with the word
+  before it stays with that noun ("Makan malam esok" is dinner tomorrow, and
+  "Kelas malam Jumaat" a class on Friday). No past day is read ("semalam",
+  "kelmarin", "Isnin lepas", "minggu lalu", "malam tadi"), and neither is a
+  phrase whose day cannot be named: "esok lusa" means tomorrow or the day
+  after, "malam Jumaat" is the night before Friday, "dalam seminggu" is as
+  often "per week" as "in a week", and a list of weekdays ("Isnin dan Rabu")
+  names no one day. "Solat Jumaat" and "Jumaat Agung" are names, so they stay
+  whole. Counts of days and weeks are read ("3 hari lagi", "dalam 3 hari",
+  "seminggu lagi"), except after "kali" ("tiga kali dalam seminggu" is a
+  rate); months and years are not ("bulan depan", "sebulan lagi"). A date has
+  its day number before the month ("15 Oktober", "15hb Oktober", "tarikh 15
+  Oktober"); "15/10" is a date only after "pada", "tarikh", or a deadline word,
+  "Mac" is the month unless a product name follows it ("2 Mac mini"), and
+  "2HB" is a pencil. "Sampai" and "hingga" name a deadline ("hingga Jumaat")
+  and are also the "to" of a range, which needs the end to carry its month ("3
+  hingga 5 Mei"); two bare numbers after "dari" or "antara" are hours ("dari 3
+  hingga 5" is 15:00 to 17:00), and a side of a time range with no part of the
+  day takes the reading that fits the other ("dari 9 hingga 5 petang" is 09:00
+  to 17:00). The adjectives "harian", "mingguan", "bulanan", and "tahunan"
+  repeat a task only at the end of the line, or at its start before a colon or
+  a comma, since "buku harian" is a diary, and "penting", "mendesak",
+  "urgent", and "segera" are priority words in the same two places, while a
+  negation turns them around ("tidak penting") and "mi segera" is food. A count
+  of times in a period ("dua kali seminggu"), an interval of hours ("setiap 2
+  jam"), and every day with a day left out ("setiap hari kecuali Ahad") name
+  no repeat the app can set, and an amount after "dalam", "setiap", or
+  "selepas" ("dalam 2 jam", "2 jam lagi") is a moment, not a length, so each
+  stays in the title. A device that reads Malay and Indonesian tries Malay
+  first; its rules leave the Indonesian-only phrases ("besok sore", "jam 3
+  sore", "tanggal 5 Oktober", "setengah empat", "jam 4 kurang 10") to the
+  Indonesian rules, so each is read whole, and the Indonesian words that differ
+  from Malay keep their Indonesian meaning there ("hari Minggu" is Sunday,
+  "menit" a minute).
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
   name the app exactly once, after "dalam" ("Catat tugas dalam
   ${applicationName}") or after "ke dalam" where the English says to ("Tambah
@@ -2698,11 +2810,62 @@ and in Shortcuts.
   "còn" as the caption under the remaining-tasks ring, "Đồng bộ iCloud" for
   the Cloud Sync tab of the Mac settings sidebar). Accessibility labels may be
   longer.
-- The capture parser (`LorvexCaptureParser`) has no Vietnamese vocabulary: it
-  reads English and Chinese words wherever the interface language is
-  Vietnamese. The capture hint (`capture.footer.words`) therefore gives
-  English examples and says so ("Các từ tiếng Anh như “tomorrow”, “3pm”,
-  “every Monday”, “20 min” hoặc “#list” sẽ điền chi tiết cho nhiệm vụ.").
+- The capture parser (`LorvexCaptureParser`) reads Vietnamese day, date, time,
+  duration, repeat, and priority words for a user who reads Vietnamese (vi-VN
+  and any other region), so the Vietnamese capture hint gives Vietnamese
+  examples (“ngày mai”, “3 giờ chiều”, “mỗi thứ Hai”, “20 phút”,
+  “#danhsách”). The list example is one word with its space left out, since a
+  `#` name ends at a space and a list matches ignoring case, accents, and
+  spaces ("#danhsách" finds "Danh sách"). A line may be typed with every tone
+  mark, with none ("ngay mai", "3 gio chieu"), or with the stroke of "đ"
+  written as "d", and each word is read in one of those whole spellings, so
+  "đem" (to bring) is not "đêm" (night), "tôi" (I) is not "tối" (evening) or
+  "tới" (next), and the name "Tuấn" is not "tuần" (week). The title keeps what
+  was typed, with the marks it was typed with. The words whose toneless
+  spelling is another everyday word are read with their marks only: "thứ Tư"
+  ("thứ tự" is an order), "tới", "mốt", "đúng", "khẩn", and "gấp" ("gặp" is to
+  meet). Vietnamese says a clock time with "giờ" or the letter h after the
+  hour ("3 giờ", "15h30"), so the time example carries "giờ". A bare "N giờ" is
+  a clock hour ("Họp 3 giờ" is 15:00) and "tiếng" is always a length, while
+  "giờ" is a length with "đồng hồ", after "mất" or another opener only a length
+  has, or with minutes counted in "phút" when nothing makes it a clock ("3 giờ
+  15 phút" is three hours fifteen minutes, "lúc 3 giờ 15 phút" is 15:15). An
+  hour past 12 with minutes ("15 giờ 30 phút", "18h30p") is a clock time and
+  never a length of 15 or 18 hours, unless an opener that only a length has
+  comes first ("mất 15 giờ 30 phút").
+  Vietnamese writes a clock time with the letter h, so beside English "15h" and
+  "2h" are times, where English alone reads them as lengths; a decimal
+  ("1,5h") or an hour count up to 12 with "p" or "m" minutes ("1h30p") is still
+  a length. Minutes
+  after "h" follow it directly or, with their unit, after a space; a number
+  after "h" and a space with no unit belongs to the next word ("18h 1 tiếng" is
+  18:00 and an hour). French, Portuguese, and German read "15h" before
+  Vietnamese does, so on a device that reads one of them and Vietnamese a "lúc"
+  before it stays in the title. An hour from 1 to 6 with no part of the day is
+  in the afternoon ("3 giờ" is 3 PM) unless it is written with a zero, and a
+  part of the day sets the hour, after it ("8 giờ tối" is 20:00) or before it
+  ("tối 8 giờ"), as does a meal ("ăn tối 7 giờ"); a word before the hour stays
+  in the title. "12 giờ đêm", "12 giờ tối", and "nửa đêm" are midnight at the
+  end of the named day, so they plan the next day, while "12 giờ sáng" and "12
+  giờ chiều", which people mean both ways, and an approximate hour ("khoảng 3
+  giờ") stay in the title. "SA" and "CH", the 12-hour clock's AM and PM that
+  Apple's Vietnamese writes, set the hour only when typed in capitals ("9:30
+  SA", "3:30 CH"). A clock time that names a bound ("trước 5 giờ chiều", "chậm
+  nhất 17h") stays in the title, while the day before it is the due day.
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("cuối tuần" is the coming Saturday, "cuối tuần sau" the one
+  after). A weekday name alone or after "vào" is the coming one, "thứ Ba tuần
+  này" is this week's, and "thứ Sáu tuần sau" and "tuần sau thứ Sáu" are next
+  week's. "Mai" alone is a name and the apricot blossom, and "mốt" alone is a
+  number word, so tomorrow is read after "ngày" or a part of the day only
+  ("ngày mai", "sáng mai") and the day after tomorrow after "ngày" only. No past
+  day is read ("hôm qua", "tuần trước", "thứ Hai tuần trước"), and neither is a
+  phrase whose day cannot be named: a list of weekdays, a month or a year
+  ahead, a count of working days, a bound at a period ("trước cuối tuần", "đến
+  tuần sau"), an ordinal ("lần thứ hai", "ngày thứ hai"), the abbreviations
+  "T2" to "T7" and "CN", the name of a day ("Thứ Sáu đen"), "3 ngày 2 đêm"
+  (three days and two nights), and a date of the lunar calendar ("15 tháng 8 âm
+  lịch", "mùng 5"), which the planner does not count in.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
   name the app exactly once, after "trong" ("Ghi nhanh nhiệm vụ trong
   ${applicationName}") or after "vào" where the English says to ("Thêm nhiệm
@@ -3368,3 +3531,23 @@ system (products in `.build/<triple>/<configuration>`) only copies the raw
 and accepts bundles the build already compiled, so `verify_all.sh` runs it after
 `swift build --build-tests` and before `swift test` under either system.
 Xcode/XcodeGen builds compile catalogs as part of the normal build.
+
+## Bengali and Marathi conventions
+
+The `bn` and `mr` catalogs cover every key in the nine string catalogs (the App
+Shortcuts catalog included), the Info.plist strings of the six localized
+targets, the language picker, and the localized sample content. Both read left
+to right, and both write literal digits as Latin digits. Their wording follows
+Apple's own Bengali and Marathi strings.
+
+- Bengali addresses the reader formally (আপনি), uses polite imperatives, and
+  glues the counter টি to counted numbers.
+- Marathi uses तुम्ही with -आ imperatives, takes no counter, and keeps verbs in
+  agreement with the gender of the noun they refer to.
+- Plural entries use the CLDR `one` and `other` categories. Bengali `one` also
+  selects 0, so an entry whose English `one` form drops the number carries a
+  zero form as well.
+- The language picker lists मराठी inside the Devanagari group before हिन्दी, and
+  বাংলা after that group.
+- Quick add has no Bengali or Marathi vocabulary yet, and the App Store listing
+  copy is not written.

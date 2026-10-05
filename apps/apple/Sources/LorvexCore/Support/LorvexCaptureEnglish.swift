@@ -45,10 +45,10 @@ extension LorvexCaptureVocabulary {
   static let english = englishVocabulary(readsHoursWithH: true)
 
   /// English for a line also read in a language that writes a clock time
-  /// with the letter h (French and Portuguese "15h", "15h30"): an hour count
-  /// written with h ("2h", "1.5h", "1h30m") is left to that language, which
-  /// reads it as a time or a length by the words around it. Every other word
-  /// reads as in ``english``.
+  /// with the letter h (French, Portuguese, German, and Vietnamese "15h",
+  /// "15h30"): an hour count written with h ("2h", "1.5h", "1h30m") is left to
+  /// that language, which reads it as a time or a length by the words around
+  /// it. Every other word reads as in ``english``.
   static let englishBesideHourClock = englishVocabulary(readsHoursWithH: false)
 
   private static func englishVocabulary(readsHoursWithH: Bool) -> LorvexCaptureVocabulary {

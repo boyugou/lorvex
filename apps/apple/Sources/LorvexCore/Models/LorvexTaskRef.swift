@@ -6,6 +6,9 @@ import UniformTypeIdentifiers
 ///
 /// Only carries the task `id` and `title` — the full `LorvexTask` stays in the
 /// store. The receiving drop handler resolves the task from the store by ID.
+/// Lorvex's own drop targets take the reference itself; any other app that
+/// receives the drag (Notes, Mail, Messages, Calendar, Reminders, a text field)
+/// gets the title as plain text.
 public struct LorvexTaskRef: Codable, Sendable, Hashable {
   public let id: String
   public let title: String
@@ -24,5 +27,6 @@ extension UTType {
 extension LorvexTaskRef: Transferable {
   public static var transferRepresentation: some TransferRepresentation {
     CodableRepresentation(contentType: .lorvexTask)
+    ProxyRepresentation(exporting: \.title)
   }
 }

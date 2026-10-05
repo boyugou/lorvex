@@ -35,8 +35,10 @@ Rules that follow from the table:
 - Counts and section leaders are neutral. A "3 planned" chip, a "Deferred"
   header, or a "Snoozed" header never borrows a status hue.
 - Warnings appear in Settings, diagnostics, editors, and banners, never on a
-  task row. A row never shows `dueSoon` either — its due date reads secondary
-  until the date passes, then red.
+  task row. The one row use of `dueSoon` is the due date itself: orange when
+  the deadline is today or tomorrow, red (`overdue`, with its own glyph) once
+  the day has passed, secondary otherwise — the same rule as the inspector's
+  Due row.
 - The accent is the platform accent (`Color.accentColor`). There is no second
   brand blue; `Palette.accent` is an alias so call sites read semantically. On
   watchOS, where `Color.accentColor` renders as a light grey without an asset

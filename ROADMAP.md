@@ -38,8 +38,9 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   Greek.
 - The App Store listing (`apps/apple/docs/APP_STORE_METADATA.md`) carries its
   name, subtitle, description, and keywords in App Store Connect for every
-  shipped language except Persian, Urdu, Hebrew, German, Dutch, Romanian,
-  Indonesian, Malay, and Vietnamese, whose listing copy is not written yet.
+  shipped language except Urdu, Hebrew, German, Dutch, Romanian, Indonesian,
+  Malay, and Vietnamese, whose listing copy is not written yet. Persian has no
+  listing: App Store Connect offers no Persian localization.
   Screenshots exist for English and Simplified Chinese; the other locales show
   the English ones until their own are captured and uploaded. The sample
   datasets translate into every shipped language (`LorvexSampleText`), so

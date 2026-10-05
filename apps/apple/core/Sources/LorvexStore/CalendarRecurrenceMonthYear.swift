@@ -136,16 +136,20 @@ extension CalendarRecurrence {
       day = min(d, maxDay)
     case .fromStart:
       return nil
-    case let .fromEnd(offset):
-      let clamped = min(offset, maxDay)
-      day = maxDay - clamped + 1
+    case let .fromEnd(offset) where offset <= maxDay:
+      day = maxDay - offset + 1
+    case .fromEnd:
+      return nil
     }
     return RDate.fromYMD(year, month, day)
   }
 
+  /// The dates of `month` the rule selects. A `BYDAY` ordinal ("2TU") counts
+  /// within the month, unless `ordinalsCountFromYear` leaves the ordinal check
+  /// to the caller because the ordinal counts within the year.
   static func monthCandidates(
     _ rule: [String: JSONValue], _ year: Int, _ month: UInt32, _ fallbackDay: UInt32,
-    _ applySetpos: Bool
+    _ applySetpos: Bool, ordinalsCountFromYear: Bool = false
   ) throws -> [RDate] {
     guard let maxDay = daysInMonth(year, month) else {
       throw StoreError.invariant(
@@ -168,7 +172,8 @@ extension CalendarRecurrence {
       // never clamped. A clamped Feb-28 instance is un-exportable: the EventKit
       // bridge (`daysOfTheMonth`) and the verbatim `BYMONTHDAY=31` RRULE both
       // skip, so the engine must skip too or expansion would disagree with every
-      // synced/exported calendar. Negative anchors resolve against month length.
+      // synced/exported calendar. Negative anchors resolve against month length,
+      // and one longer than the month (-31 in April) skips it the same way.
       // Multiple month-days (`[1, 15]`) each resolve independently; the sort +
       // dedup below merges them into a single ascending list for the month.
       candidates = anchors.compactMap { resolveBymonthdayForMonth($0, year, month, false) }
@@ -189,7 +194,7 @@ extension CalendarRecurrence {
           if date.numDaysFromSunday != token.dow {
             return false
           }
-          guard let ordinal = token.ordinal else { return true }
+          guard let ordinal = token.ordinal, !ordinalsCountFromYear else { return true }
           return nthWeekdayInMonth(year, month, token.dow, ordinal) == date
         }
       }
@@ -264,7 +269,8 @@ extension CalendarRecurrence {
 
     var candidates: [RDate] = []
     for month in months {
-      var monthDates = try monthCandidates(rule, year, month, base.day, false)
+      var monthDates = try monthCandidates(
+        rule, year, month, base.day, false, ordinalsCountFromYear: !hasBymonth)
       if let tokens = byday, !hasBymonth {
         monthDates = monthDates.filter { date in
           tokens.contains { token in

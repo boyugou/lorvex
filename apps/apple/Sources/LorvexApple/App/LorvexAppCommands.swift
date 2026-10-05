@@ -182,7 +182,7 @@ struct LorvexAppCommands: Commands {
     }
 
     if let shortcut = windowID.keyboardShortcut {
-      button.keyboardShortcut(shortcut, modifiers: [.command, .shift])
+      button.keyboardShortcut(shortcut, modifiers: LorvexWindowID.keyboardShortcutModifiers)
     } else {
       button
     }
@@ -191,6 +191,9 @@ struct LorvexAppCommands: Commands {
   private func taskCommandButton(_ command: TaskCommand) -> some View {
     Button(command.title(isStarted: taskCommandContext?.singleTaskIsStarted ?? false)) {
       guard let taskCommandContext else { return }
+      // ⌘⌫ reaches the menu before the focused text, which uses it to delete to
+      // the beginning of the line.
+      if command == .cancel, LorvexTextEditingShortcut.yieldCommandDelete() { return }
       command.perform(in: taskCommandContext) { taskID in
         openTaskDetail(taskID)
       }

@@ -14,7 +14,9 @@ Intended contents:
   suite can load and assert against. The `canonical_json` vectors pin the exact
   canonical bytes Apple's sync checksums are computed over, so Apple's own byte
   format can't drift across releases; a companion implementation aligns on the
-  same *semantics* rather than byte-locking to them.
+  same *semantics* rather than byte-locking to them. The `recurrence` vectors
+  pin the first occurrence and the successors of generated rules, as an
+  independent RFC 5545 implementation computes them.
 
 ## Two kinds of cross-implementation data movement
 

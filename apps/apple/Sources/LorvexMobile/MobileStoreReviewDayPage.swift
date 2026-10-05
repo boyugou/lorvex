@@ -103,20 +103,11 @@ struct MobileStoreReviewDayPage: View {
   @ViewBuilder
   private var dailyReviewFields: some View {
     let editable = store.selectedReviewDayIsEditable
-    if let moved = store.dayReviewEvidence?.topCompleted, !moved.isEmpty {
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
-        LorvexPageLabel(Copy.movedLabel)
-        ForEach(moved) { task in
-          HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-            Image(systemName: "checkmark.circle.fill")
-              .foregroundStyle(LorvexDesign.Palette.done)
-            Text(userContent: task.title)
-              .lineLimitUnlessAccessibilitySize(2)
-          }
-          .font(LorvexDesign.Typography.primaryText)
-        }
-      }
-      .accessibilityIdentifier("review.day.moved")
+    if let summary = store.dayReviewEvidence, !summary.topCompleted.isEmpty {
+      LorvexReviewMovedList(
+        label: Copy.movedLabel, tasks: summary.topCompleted,
+        hiddenCount: summary.hiddenCompletedCount, moreLine: Copy.moreCount,
+        identifier: "review.day.moved")
     }
 
     if let summary = store.dayReviewEvidence, !summary.dueOpenTasks.isEmpty {

@@ -41,6 +41,19 @@ func lorvexTaskRefHashableEquality() {
   #expect(Set([a, b]).count == 1)
 }
 
+/// Lorvex's drop targets read the reference; every other app receiving the drag
+/// reads the title as plain text.
+@Test
+func lorvexTaskRefExportsItsReferenceAndItsTitleAsText() async throws {
+  let ref = LorvexTaskRef(id: "task-abc", title: "Buy: milk & eggs — today")
+
+  let reference = try await ref.exported(as: .lorvexTask)
+  #expect(try JSONDecoder().decode(LorvexTaskRef.self, from: reference) == ref)
+
+  let text = try await ref.exported(as: .utf8PlainText)
+  #expect(String(decoding: text, as: UTF8.self) == "Buy: milk & eggs — today")
+}
+
 @Test
 func lorvexTaskUTTypeIdentifier() {
   #expect(UTType.lorvexTask.identifier == "com.lorvex.apple.task-ref")

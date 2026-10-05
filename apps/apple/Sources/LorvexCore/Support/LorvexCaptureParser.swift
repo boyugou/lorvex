@@ -75,7 +75,30 @@ public enum LorvexCaptureParser {
     }
   }
 
+  /// The longest line read for details, in UTF-16 code units: twice the longest
+  /// title a task can have (``ValidationLimits/maxTitleLength``). A longer line
+  /// would need more than half of its text to be details to fit in a title, and
+  /// every pattern scans the whole line, so reading a pasted page would stall the
+  /// field that parses its line on each keystroke.
+  public static let maxReadLength = 2 * ValidationLimits.maxTitleLength
+
+  /// Compiles every pattern a parse reads `languages` with, so the first line
+  /// typed does not wait for it.
+  ///
+  /// A parse compiles each pattern the first time it is used
+  /// (``LorvexCapturePatterns``), which takes up to a third of a second for a
+  /// language with many words, Hebrew and Persian among them. Left to the first
+  /// parse, that stalls the first keystroke of a capture field, which previews
+  /// its line as it is typed. Calling this from a background task once the app is
+  /// up moves the cost off the main thread. It is safe from any thread and cheap
+  /// once the patterns are compiled.
+  public static func warmUp(languages: [String] = Locale.preferredLanguages) {
+    _ = parse("Call tomorrow", lists: [], todayWeekday: 1, today: "2026-01-01", languages: languages)
+  }
+
   /// Parse one capture line.
+  ///
+  /// A line longer than ``maxReadLength`` is read as a title and nothing more.
   ///
   /// - Parameters:
   ///   - text: what the user typed.
@@ -95,6 +118,7 @@ public enum LorvexCaptureParser {
     languages: [String] = Locale.preferredLanguages
   ) -> LorvexCaptureParse {
     typealias Vocabulary = LorvexCaptureVocabulary
+    guard text.utf16.count <= maxReadLength else { return plainTitle(text) }
     var result = LorvexCaptureParse(
       title: text, plannedDayOffset: nil, dueDayOffset: nil, estimatedMinutes: nil,
       startMinutes: nil, recurrence: nil, recurrenceStartOffset: nil, listID: nil, listName: nil,
@@ -259,13 +283,17 @@ public enum LorvexCaptureParser {
     result.title = cleanTitle(remaining)
     // A line that is nothing but details keeps its text as the title rather than
     // creating a task with no name.
-    if result.title.isEmpty {
-      return LorvexCaptureParse(
-        title: text.trimmingCharacters(in: .whitespacesAndNewlines), plannedDayOffset: nil,
-        dueDayOffset: nil, estimatedMinutes: nil, startMinutes: nil, recurrence: nil,
-        recurrenceStartOffset: nil, listID: nil, listName: nil, priority: nil, tags: [], phrases: [])
-    }
+    if result.title.isEmpty { return plainTitle(text) }
     return result
+  }
+
+  /// A line read as a title alone: its text without the whitespace around it,
+  /// and no detail.
+  private static func plainTitle(_ text: String) -> LorvexCaptureParse {
+    LorvexCaptureParse(
+      title: text.trimmingCharacters(in: .whitespacesAndNewlines), plannedDayOffset: nil,
+      dueDayOffset: nil, estimatedMinutes: nil, startMinutes: nil, recurrence: nil,
+      recurrenceStartOffset: nil, listID: nil, listName: nil, priority: nil, tags: [], phrases: [])
   }
 
   /// Moves a line whose time falls after the midnight ending its day onto the

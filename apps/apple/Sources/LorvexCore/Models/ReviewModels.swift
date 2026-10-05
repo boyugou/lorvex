@@ -46,6 +46,10 @@ public struct WeeklyReviewSnapshot: Equatable, Sendable {
 }
 
 extension WeeklyReviewSnapshot {
+  /// How many of the week's finished tasks the capped ``topCompleted`` list
+  /// leaves out of ``completedThisWeek``.
+  public var hiddenCompletedCount: Int { max(0, completedThisWeek - topCompleted.count) }
+
   /// The window as a localized month-and-day range for a page's date line
   /// ("September 22 – 28", "September 29 – October 5"), read from the
   /// `"YYYY-MM-DD - YYYY-MM-DD"` form the core writes into `windowTitle`.
@@ -218,4 +222,10 @@ public struct DayReviewSummary: Equatable, Sendable {
     self.habitsTotal = habitsTotal
     self.eventCount = eventCount
   }
+}
+
+extension DayReviewSummary {
+  /// How many of the day's finished tasks the capped ``topCompleted`` list
+  /// leaves out of ``completedCount``.
+  public var hiddenCompletedCount: Int { max(0, completedCount - topCompleted.count) }
 }

@@ -365,10 +365,12 @@ struct HabitInspectorCopyTests {
     let display = HabitReminderTime.display
     #expect(HabitDetailFieldCopy.reminderValue([]) == nil)
     #expect(HabitDetailFieldCopy.reminderValue([Fixture.policy("08:00", enabled: false)]) == "Off")
-    #expect(
-      HabitDetailFieldCopy.reminderValue([
-        Fixture.policy("21:00"), Fixture.policy("12:00", enabled: false), Fixture.policy("08:00"),
-      ]) == "\(display("08:00")) · \(display("21:00"))")
+    let two = HabitDetailFieldCopy.reminderValue([
+      Fixture.policy("21:00"), Fixture.policy("12:00", enabled: false), Fixture.policy("08:00"),
+    ])
+    // Each time stays whole and the dot stays with the time before it, so a wrapped row never starts with a dot.
+    #expect(two == lorvexDotJoined([display("08:00"), display("21:00")].map(lorvexUnbreakable)))
+    #expect(two?.contains(" · ") == false)
     let many = ["13:00", "07:00", "11:00", "09:00"].map { Fixture.policy($0) }
     #expect(HabitDetailFieldCopy.reminderValue(many) == "4 times, \(display("07:00"))–\(display("13:00"))")
   }

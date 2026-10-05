@@ -113,6 +113,7 @@ extension MobileStore {
       Task { [weak self] in await self?.observeCalendarDayChange() },
     ]
     rescheduleLogicalDayBoundaryWake()
+    Task.detached(priority: .utility) { LorvexCaptureParser.warmUp() }
     #if canImport(EventKit)
       if eventKitCoordinator != nil {
         lifetimeObserverTasks.append(

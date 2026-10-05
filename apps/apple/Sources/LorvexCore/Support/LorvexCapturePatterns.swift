@@ -20,4 +20,10 @@ enum LorvexCapturePatterns {
     compiled.withLock { $0[pattern] = regex }
     return regex
   }
+
+  /// Whether `pattern` is already compiled, which tells a warmed cache
+  /// (``LorvexCaptureParser/warmUp(languages:)``) from a cold one.
+  static func isCompiled(_ pattern: String) -> Bool {
+    compiled.withLock { $0[pattern] != nil }
+  }
 }

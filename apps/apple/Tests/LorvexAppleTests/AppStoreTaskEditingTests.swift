@@ -81,6 +81,16 @@ func appStorePermanentDeleteRemovesTaskAndClearsSelection() async throws {
 
 @MainActor
 @Test
+func taskDetailTagsSummaryKeepsNamesWholeAndWrapsAfterItsDots() async throws {
+  let store = try await makeTaskEditingStore()
+  store.taskDetailTagsText = "work, q4 planning, , urgent"
+  #expect(store.taskDetailTagsSummary == "work\u{00A0}· q4\u{00A0}planning\u{00A0}· urgent")
+  store.taskDetailTagsText = " , "
+  #expect(store.taskDetailTagsSummary == nil)
+}
+
+@MainActor
+@Test
 func appStoreEditsSelectedPreviewTaskDetail() async throws {
   let store = try await makeTaskEditingStore()
 

@@ -391,13 +391,6 @@ extension LorvexCaptureVocabulary {
   /// since ICU reads a set that opens with "[:" as a POSIX class name.
   static let persianNoMoreDigits = #"(?![\p{N}%]|[.,:]\p{N})"#
 
-  /// The word just before `match`, as a reader compares it, or nil when the
-  /// match opens the line or punctuation comes first.
-  static func persianWordBefore(_ match: Match) -> String? {
-    guard let word = wordBefore(match).map(persianKey), !word.isEmpty else { return nil }
-    return word
-  }
-
   /// The text before `match`, as a reader compares it: in the reading form
   /// without vowel signs.
   static func persianTextBefore(_ match: Match) -> String {

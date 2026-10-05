@@ -21,9 +21,20 @@ enum MobileTaskField: String, Identifiable, CaseIterable {
 struct MobileTaskProperties: Equatable {
   struct Row: Identifiable, Equatable {
     let field: MobileTaskField
+    /// The value as plain text, which is also what leaves the app in shared text.
     let value: String
+    /// The parts of a value that is a list (a task's tags); nil for a value
+    /// that is one phrase.
+    var items: [String]? = nil
     var tint: Tint?
     var id: String { field.rawValue }
+
+    /// The value as the detail draws it. A list's parts stay whole and each
+    /// dot stays with the part before it, so a row that wraps breaks after a
+    /// dot and never starts a line with one.
+    var displayValue: String {
+      items.map { lorvexDotJoined($0.map(lorvexUnbreakable)) } ?? value
+    }
   }
 
   enum Tint: Equatable { case overdue, soon, high }
@@ -49,8 +60,12 @@ struct MobileTaskProperties: Equatable {
     typealias Copy = MobileTaskPropertyCopy
     var rows: [Row] = []
     var additions: [MobileTaskField] = []
-    func field(_ field: MobileTaskField, _ value: String?, tint: Tint? = nil) {
-      if let value { rows.append(Row(field: field, value: value, tint: tint)) } else { additions.append(field) }
+    func field(_ field: MobileTaskField, _ value: String?, items: [String]? = nil, tint: Tint? = nil) {
+      if let value {
+        rows.append(Row(field: field, value: value, items: items, tint: tint))
+      } else {
+        additions.append(field)
+      }
     }
     // A planned day after a deadline that has not passed yet says so in the
     // detail; text that leaves the app keeps only its dates, which stay true.
@@ -83,7 +98,7 @@ struct MobileTaskProperties: Equatable {
       .priority, task.priority == .p2 ? nil : task.priority.localizedName,
       tint: task.priority == .p1 ? .high : nil)
     field(.recurrence, task.recurrence?.localizedCadence(anchorDay: task.recurrenceAnchorDay(logicalDay: logicalDay)))
-    field(.tags, task.tags.isEmpty ? nil : task.tags.joined(separator: " · "))
+    field(.tags, task.tags.isEmpty ? nil : task.tags.joined(separator: " · "), items: task.tags)
     if task.dependsOn.isEmpty { additions.append(.waitsOn) }
     let hiddenUntil = task.availableFrom.flatMap {
       (lorvexDayOffset(from: logicalDay, to: $0) ?? 1) > 0 ? $0 : nil
@@ -152,7 +167,7 @@ struct MobileTaskPropertiesSection: View {
       .frame(width: iconWidth)
       .accessibilityHidden(true)
     let name = Text(MobileTaskPropertyCopy.label(row.field)).foregroundStyle(.secondary)
-    let value = Text(row.value)
+    let value = Text(row.displayValue)
       .foregroundStyle(tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.primary))
     return Group {
       if dynamicTypeSize.isAccessibilitySize {

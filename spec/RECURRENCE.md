@@ -22,9 +22,9 @@ are rejected at normalization time.
 |--------------|-----------------|-------|
 | `FREQ`       | string          | Required. `DAILY` / `WEEKLY` / `MONTHLY` / `YEARLY`. |
 | `INTERVAL`   | integer ≥ 1     | Defaults to 1. |
-| `BYDAY`      | array of codes  | `MO`…`SU`, optional ordinal prefix for MONTHLY/YEARLY. WEEKLY/MONTHLY/YEARLY only. |
+| `BYDAY`      | array of codes  | `MO`…`SU`, optional ordinal prefix for MONTHLY/YEARLY (`2TU`, `-1FR`). An ordinal counts within the month, except in a YEARLY rule without `BYMONTH`, where it counts within the year (`20MO` is the 20th Monday of the year). WEEKLY/MONTHLY/YEARLY only. |
 | `BYMONTH`    | array 1..12     | WEEKLY/MONTHLY/YEARLY only. |
-| `BYMONTHDAY` | array ±1..31    | MONTHLY/YEARLY only. Sorted + deduped (`[1,15]` = 1st and 15th). A bare integer is accepted on input for back-compat and normalizes to a one-element array. |
+| `BYMONTHDAY` | array ±1..31    | MONTHLY/YEARLY only. Sorted + deduped (`[1,15]` = 1st and 15th). A bare integer is accepted on input for back-compat and normalizes to a one-element array. A day the month lacks (`31` or `-31` in April) has no occurrence in that month; the month is skipped. In a YEARLY rule without `BYMONTH`, `BYMONTHDAY` applies to the month of the start date. |
 | `BYSETPOS`   | array ±1..366   | MONTHLY/YEARLY only. |
 | `WKST`       | weekday code    | |
 | `UNTIL`      | YYYY-MM-DD      | Mutually exclusive with `COUNT`. |
@@ -89,3 +89,27 @@ authoritative for both:
   parses the canonical JSON stored in `calendar_events.recurrence` into the
   object; the importer renders it back to that canonical string, which the
   normalizer re-validates, so the rule round-trips to the same stored form.
+
+## Test vectors
+
+`fixtures/recurrence/oracle-cases.json` holds vectors for rules of every `FREQ`
+and every `BYDAY` / `BYMONTH` / `BYMONTHDAY` / `BYSETPOS` / `WKST` / `UNTIL`
+combination the contract allows. Each vector is either the first occurrence on
+or after a target date (never before the start date, null when the series
+ended) or the successors of a start date, found one after another as a
+completed recurring task finds its successor. The expected values come from
+python-dateutil's `rrule`, an independent RFC 5545 implementation, so the
+vectors do not move when the engine under test changes.
+
+The generator stays inside the region where the contract and the RFC agree. A
+MONTHLY or YEARLY rule with no `BYMONTHDAY`, `BYDAY`, or `BYSETPOS` uses the
+start date's day of the month, which the contract clamps to the end of a short
+month and the RFC skips, so those vectors start on a day from 1 to 28. A YEARLY
+rule with `BYMONTHDAY` and no `BYMONTH` or `BYDAY` repeats in the month of its
+start date, and its vectors give the oracle that month as `BYMONTH`.
+
+`apps/apple/script/recurrence_oracle.py --fixture` regenerates the file, and
+`--cases N` writes a larger random corpus for exploration.
+`CalendarRecurrenceOracleTests` in `apps/apple/core` asserts the fixture, and
+the corpus named by the `LORVEX_RECURRENCE_ORACLE_CASES` environment variable
+when one is set.

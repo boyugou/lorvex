@@ -2078,11 +2078,44 @@ watch, widgets, and in Shortcuts.
   Days switch, "Passt nicht" for Won’t fit, "+%lld mehr" for a small widget's
   overflow, "Synchronisierung" for the Cloud Sync tab). Accessibility labels may
   be longer.
-- The capture parser (`LorvexCaptureParser`) has no German vocabulary: it reads
-  English and Chinese words wherever the interface language is German. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("Englische Wörter wie „tomorrow“, „3pm“, „every Monday“, „20 min“
-  oder „#list“").
+- The capture parser (`LorvexCaptureParser`) reads German day, date, time,
+  duration, repeat, and priority words for a user who reads German (de-DE,
+  de-AT, de-CH, and any other region), so the German capture hint gives German
+  examples („morgen“, „um 15 Uhr“, „jeden Montag“, „20 Min“, „#Liste“). German
+  says a clock time with "um" and usually "Uhr", so the time example carries
+  both. The umlauts and ß are optional: the parser reads ä, ö, ü, and ß as the
+  plain letter and the digraphs ae, oe, ue, and ss as the same letters
+  ("übermorgen", "uebermorgen", "ubermorgen"), and the title keeps the letters
+  that were typed. German counts a half hour toward the next hour, so "halb
+  vier" is 3:30, "viertel nach drei" is 3:15, and "Viertel vor vier" is 3:45;
+  "viertel vier", "dreiviertel vier", "fünf nach drei", and "zehn vor vier" are
+  times only after "um", since without it they could be words of a title. An
+  hour spelled as a word after "um" or "gegen" ("um drei", "gegen vier Uhr") is
+  a time, and a bare hour counts only before a word that can follow a time, so
+  "um 3 Kuchen" and "Preis um 5 erhöhen" stay in the title. An
+  hour from 1 to 6 with no part of the day is in the afternoon ("um 3 Uhr" is
+  3 PM) unless it is written with a zero ("06:30"), a part of the day sets the
+  hour ("morgens" the morning, "nachmittags" the afternoon, "abends" the
+  evening), and "nachts" runs past midnight, so "um 2 Uhr nachts" is 02:00 on
+  the next day. An hour count written with h follows the same split as the
+  other languages that write it: "15h" and "um 10h" are clock times, "2h" and
+  "1h30" are lengths, and "9h" to "12h" alone could be either, so they stay in
+  the title. The weeks start on Monday as the app's weeks do, and the weekend is
+  Saturday and Sunday ("am Wochenende" is the coming Saturday). A weekday name
+  alone or after "am" is the coming one, "diesen Freitag" is this week's, and
+  "nächsten Freitag" is next week's. The abbreviations Mo, Di, Mi, Do, Fr, Sa,
+  and So are ordinary words too ("so", "do"), so they name a day only after a
+  word that points at it ("am Mo", "von Mo bis Mi", "jeden Mo"). No past day is
+  read: "gestern", "vorgestern", and "letzten Montag" stay in the title, and so
+  does the capitalized noun "Morgen" (the morning) except at the start of the
+  line or before a part of the day ("Morgen früh"). "Bis" names a deadline
+  ("bis Freitag", "bis zum 15. Oktober") but is also the "to" of a range, so it
+  joins two days only after "vom" or "von", or after a first day that has its
+  ordinal dot ("3. bis 5. Mai"). A clock time that names a deadline ("bis 17
+  Uhr", "vor 17 Uhr", "nach 17 Uhr") stays in the title, while the day before it
+  is the due day. "Dringend" and "wichtig" are priority words only at the end of
+  the line or before a colon or a comma, since they are ordinary adjectives
+  elsewhere.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says
   to the assistant, so they are du imperatives that name the app exactly once
   and leave it undeclined ("Füge eine Aufgabe zu ${applicationName} hinzu",
@@ -2168,11 +2201,42 @@ reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   ("7 dagen" for the menu bar panel's Next 7 Days switch, "Past niet" for
   Won’t fit, "+%lld meer" for a small widget's overflow). Accessibility labels
   may be longer.
-- The capture parser (`LorvexCaptureParser`) has no Dutch vocabulary: it reads
-  English and Chinese words wherever the interface language is Dutch. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("Engelse woorden zoals ‘tomorrow’, ‘3pm’, ‘every Monday’, ‘20 min’
-  of ‘#list’").
+- The capture parser (`LorvexCaptureParser`) reads Dutch day, date, time,
+  duration, repeat, and priority words for a user who reads Dutch (nl-NL, nl-BE,
+  and any other region), so the Dutch capture hint gives Dutch examples
+  (‘morgen’, ‘om 15:00’, ‘elke maandag’, ‘20 min’, ‘#lijst’). Dutch says a clock
+  time with "om" and "uur" or a colon, so the time example carries "om". Accents
+  are optional: the parser reads é, ë, ï, and ó as the plain letter ("één" and
+  "een", "vóór" and "voor", "tweeënhalf" and "tweeenhalf"), and the title keeps
+  the letters that were typed. Dutch counts a half hour toward the next hour, so
+  "half vier" is 3:30, "kwart over drie" is 3:15, and "kwart voor vier" is 3:45;
+  "tien over drie" and "vijf voor half vier" are times only after "om", and "half
+  een" needs a word before it, since without one they could be words of a title.
+  A count of hours with "uur" is a length when it stands alone ("rapport 2 uur")
+  and a clock time after "om", a day, a date, or a part of the day ("om 3 uur",
+  "morgen 3 uur", "'s avonds 8 uur"); "3 uur lang" is always a length, and a
+  bare hour counts as a time only before a word that can follow one, so "om 3
+  koekjes" and "om 5 verhogen" stay in the title. An hour from 1 to 6 with no
+  part of the day is in the afternoon ("om 3 uur" is 3 PM) unless it is written
+  with a zero ("06:00"), a part of the day sets the hour ("'s ochtends" the
+  morning, "'s middags" the afternoon, "'s avonds" the evening), and "'s nachts"
+  runs past midnight, so "om 2 uur 's nachts" is 02:00 on the next day. Dutch
+  writes hours with "uur" or "u", so "15u" is a clock time and "2h" is a length
+  as in English. The weeks start on Monday as the app's weeks do, and the
+  weekend is Saturday and Sunday ("in het weekend" is the coming Saturday). A
+  weekday name alone or after "op" is the coming one, "deze vrijdag" is this
+  week's, and "volgende vrijdag" is next week's. The abbreviations ma, di, wo,
+  do, vr, za, and zo are ordinary words too ("zo", "do"), so they name a day
+  only after a word that points at it ("op ma", "van ma tot wo", "elke ma"). No
+  past day is read: "gisteren", "eergisteren", "vorige maandag", and "afgelopen
+  vrijdag" stay in the title. "Tot" names a deadline ("tot vrijdag") but is also
+  the "to" of a range, so it joins two days only after "van", while "t/m" and
+  "tot en met" need no "van". A clock time that names a deadline ("tot 17 uur",
+  "voor 17:00", "na 18 uur") stays in the title, while the day before it is the
+  due day. The adverbs "dagelijks" and "wekelijks" repeat a task only at the end
+  of the line, or at its start before a colon or a comma, since they are
+  adjectives before a noun ("Wekelijks overleg"), and "dringend" and
+  "belangrijk" are priority words in the same two places for the same reason.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are singular
   imperatives that name the app exactly once ("Voeg een taak toe aan
   ${applicationName}"). The phrase that opens the app reads "Open de app
@@ -2270,11 +2334,60 @@ widgets, and in Shortcuts.
   ("7 zile" for the menu bar panel's Next 7 Days switch, "Nu încape" for Won’t
   fit, "+%lld în plus" for a small widget's overflow). Accessibility labels may
   be longer.
-- The capture parser (`LorvexCaptureParser`) has no Romanian vocabulary: it
-  reads English and Chinese words wherever the interface language is Romanian.
-  The capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("Cuvinte englezești precum „tomorrow”, „3pm”, „every Monday”, „20
-  min” sau „#list”").
+- The capture parser (`LorvexCaptureParser`) reads Romanian day, date, time,
+  duration, repeat, and priority words for a user who reads Romanian (ro-RO,
+  ro-MD, and any other region), so the Romanian capture hint gives Romanian
+  examples („mâine”, „la 15:00”, „în fiecare luni”, „20 min”, „#listă”).
+  Romanian says a clock time with "la" or "ora", so the time example carries
+  "la". The diacritics are optional: the parser reads ă, â, and î as the plain
+  letter and both the comma-below forms (ș, ț) and the cedilla forms (ş, ţ) as
+  s and t ("mâine" and "maine", "marți", "marţi", and "marti"), and the title
+  keeps the letters that were typed. A letter typed as a base letter and a
+  separate combining accent is left as it is, so a detail word typed that way
+  is not read. Romanian adds to the hour it names, where German and Dutch
+  count a half hour toward the next one, so "la 3 și jumătate" is 3:30, "la 3
+  și un sfert" is 3:15, "la 3 fără un sfert" is 2:45, and "la 3 fără 10" is
+  2:50. These spoken forms need "la" or "ora" before the hour,
+  since "3 și jumătate" alone is as often an amount ("3 și jumătate kg"), and
+  minutes with a unit word ("la 3 și 10 minute") stay in the title whole. A
+  bare hour after "la" is a time only where the line goes on with nothing or a
+  word that can follow a time ("la 3 cu Ana"), so "la 3 prieteni" and
+  "Cumpără pâine la 3 lei" stay in the title. An hour from 1 to 6 with no part
+  of the day is in the afternoon ("la ora 3" is 3 PM) unless it is written
+  with a zero ("la 03:00"), a part of the day sets the hour ("dimineața" the
+  morning, "după-amiaza" the afternoon, "seara" the evening), "noaptea" runs
+  past midnight ("la 2 noaptea" is 02:00 on the next day, and "la 12 noaptea"
+  and "la miezul nopții" are 00:00 on the next day), and "la prânz" is noon.
+  Romanian does not write a clock time with the letter h, so "15h" and "2h"
+  are lengths, as in English alone. An amount after "peste", "în", "după", or
+  "acum" ("peste 2 ore", "în 10 minute") is a moment, not a length, so it
+  stays in the title.
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("în weekend" is the coming Saturday and "weekendul viitor" the
+  one after). A weekday name alone or after "la", "pe", "în", or "de" is the
+  coming one, "marți asta" is this week's, and "luni viitoare" is next week's.
+  "Luni" is also the plural of "lună", so after a count ("peste 3 luni", "două
+  luni") or before "de zile" it stays in the title, and "mai" is the month only
+  where no adverb of comparison follows it ("3 mai", but "3 mai multe" stays).
+  The definite forms "lunea", "martea", "miercurea", "joia", and "vinerea" name
+  a day or, in a list, a repeat ("lunea și joia"). "Sâmbăta" and "duminica"
+  read like "sâmbătă" and "duminică" once the diacritics are left out, so the
+  pair "sâmbătă și duminică" and the phrase "azi noapte", which names the night
+  just gone as often as the one to come, are left unread. No past day is read:
+  "ieri", "alaltăieri", "luni trecută", and "weekendul trecut" stay in the
+  title. "Până" names a deadline ("până vineri") but is also the "to" of a
+  range, so it joins two days only after "de la", "din", or "în perioada", or
+  after a first date that has its own month ("3 mai până la 5 mai"). "Pentru"
+  before a day is a deadline too ("tema pentru luni"), and "în 3 zile" is left
+  unread since it may mean within three days, while "peste 3 zile" is a day. A
+  clock time that names a deadline ("până la ora 17", "înainte de 17:00",
+  "după ora 18") stays in the title, while the day before it is the due day.
+  The adverbs "zilnic", "săptămânal", and "lunar" repeat a task only at the end
+  of the line, or at its start before a colon or a comma, since they are
+  adjectives before a noun ("ședință săptămânală"), and "urgent" and
+  "important" are priority words in the same two places for the same reason.
+  The feminine and plural forms ("urgentă", "importante") stay in the title,
+  since without diacritics they are the nouns "urgență" and "importanță".
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are what a person says
   to the assistant, so they are informal singular imperatives that name the app
   exactly once and leave it undeclined ("Adaugă o sarcină în

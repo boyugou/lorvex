@@ -357,9 +357,14 @@ extension TaskRepo.Read {
 
     let trimmed = query.text?.trimmingCharacters(in: .whitespacesAndNewlines)
     if let trimmed, !trimmed.isEmpty {
+      // Both sides are folded (`SearchFold`), so the match ignores case,
+      // accents, and letter variants in every script; plain LIKE folds case
+      // for ASCII only.
+      let fold = LorvexStore.searchFoldFunctionName
       out +=
-        " AND (title LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\' OR ai_notes LIKE ? ESCAPE '\\')"
-      let pattern = "%\(Parsing.escapeLike(trimmed))%"
+        " AND (\(fold)(title) LIKE ? ESCAPE '\\' OR \(fold)(body) LIKE ? ESCAPE '\\' "
+        + "OR \(fold)(ai_notes) LIKE ? ESCAPE '\\')"
+      let pattern = "%\(Parsing.escapeLike(SearchFold.fold(trimmed)))%"
       values.append(pattern)
       values.append(pattern)
       values.append(pattern)

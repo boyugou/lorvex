@@ -98,7 +98,7 @@ struct MobileTagTokenField: View {
     return suggestions.filter { suggestion in
       guard !existing.contains(suggestion.lowercased()) else { return false }
       guard !query.isEmpty else { return true }
-      return suggestion.localizedStandardContains(query)
+      return suggestion.containsSearchTerm(query)
     }
   }
 

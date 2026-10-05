@@ -45,8 +45,8 @@ struct LorvexMemoryEntityQuery: EntityQuery, EntityStringQuery {
     let entities = try await suggestedEntities(core: core)
     guard !query.isEmpty else { return entities }
     return entities.filter { entity in
-      entity.key.localizedStandardContains(query)
-        || MemoryEntry.displayTitle(forKey: entity.key).localizedStandardContains(query)
+      entity.key.containsSearchTerm(query)
+        || MemoryEntry.displayTitle(forKey: entity.key).containsSearchTerm(query)
     }
   }
 }

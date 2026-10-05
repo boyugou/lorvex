@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// The one catalog-search projection every read surface shares, so a query
 /// returns the same lists / habits / memory entries on macOS and on
@@ -22,7 +23,10 @@ import Foundation
 ///
 /// **Comparison** ignores case and accents and follows the user's language
 /// (`localizedStandardContains`), so "cafe" finds "Café" and "manana" finds
-/// "Mañana", as the store's full-text index does for tasks.
+/// "Mañana", as the store's full-text index does for tasks; a term the system
+/// comparison does not find is also compared in folded form
+/// (``String/containsSearchTerm(_:)``), so "lodz" finds "Łódź" as the store's
+/// search does.
 public enum LorvexCatalogSearch {
   /// Whether every whitespace-separated term in `query` is a substring of at
   /// least one non-nil entry in `fields`, ignoring case and accents. An empty
@@ -31,8 +35,13 @@ public enum LorvexCatalogSearch {
     let terms = query.split(whereSeparator: \.isWhitespace).map(String.init)
     guard !terms.isEmpty else { return true }
     let searchable = fields.compactMap { $0 }
+    // Built at most once, and only when a term is not found by the system
+    // comparison.
+    lazy var foldedFields = searchable.map(SearchFold.fold)
     return terms.allSatisfy { term in
-      searchable.contains { $0.localizedStandardContains(term) }
+      if searchable.contains(where: { $0.localizedStandardContains(term) }) { return true }
+      let needle = SearchFold.fold(term)
+      return !needle.isEmpty && foldedFields.contains { $0.contains(needle) }
     }
   }
 

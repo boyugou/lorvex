@@ -3,8 +3,9 @@ import GRDB
 import LorvexDomain
 
 extension TaskRepo {
-  /// Search-task read paths: FTS5 (`unicode61` BM25), trigram-FTS5 (CJK),
-  /// and LIKE fallback, with automatic strategy selection.
+  /// Search-task read paths: FTS5 (`unicode61` BM25), trigram-FTS5 (scripts
+  /// without word spaces), a folded scan, and LIKE fallback, with automatic
+  /// strategy selection.
   public enum Search {
 
     /// Result of a search query: matched rows and total matching count.
@@ -44,15 +45,18 @@ extension TaskRepo {
     // Dispatcher
     // -------------------------------------------------------------------
 
-    /// Full-text search with automatic LIKE fallback.
+    /// Full-text search with automatic fallbacks.
     ///
-    /// - CJK queries of 3+ chars go through `tasks_fts_trigram`; shorter CJK
-    ///   queries (and any trigram schema-missing error) fall to LIKE.
+    /// - Queries holding text of a script without word spaces (CJK, Thai, Lao,
+    ///   Burmese, Khmer) of 3+ chars go through `tasks_fts_trigram`; shorter
+    ///   ones (and any trigram schema-missing error) fall to LIKE.
     /// - Pure emoji/punctuation queries (zero alphanumerics) go straight to
     ///   LIKE.
-    /// - Latin-script queries go through `tasks_fts` (BM25). On zero FTS hits
-    ///   with a short trailing token, retry that token via LIKE. FTS
-    ///   schema-missing errors fall to LIKE.
+    /// - Other queries go through `tasks_fts` (BM25). On zero FTS hits, the
+    ///   folded scan (``searchTasksFolded(_:rawQuery:pred:page:countCap:)``)
+    ///   matches text written with other accents, case, or letter variants
+    ///   than the query; when it finds nothing either, a short trailing token
+    ///   is retried alone via LIKE. FTS schema-missing errors fall to LIKE.
     /// - Empty/whitespace queries return an empty result.
     public static func searchTasksWithFallback(
       _ db: Database, predicate pred: SearchPredicate, page: Pagination
@@ -61,7 +65,7 @@ extension TaskRepo {
         return Result(rows: [], totalMatching: 0)
       }
 
-      if Fts.containsCjk(pred.query) {
+      if Fts.containsUnspacedScript(pred.query) {
         if pred.query.count >= 3 {
           do {
             return try searchTasksTrigramCounted(
@@ -83,10 +87,11 @@ extension TaskRepo {
         do {
           let result = try searchTasksFtsCounted(
             db, sanitized: sanitized, pred: pred, page: page)
-          if result.totalMatching == 0 {
-            if let tok = Fts.shortTrailingTokenForLikeRetry(pred.query) {
-              return try searchTasksLike(db, rawQuery: tok, pred: pred, page: page)
-            }
+          if result.totalMatching > 0 { return result }
+          let folded = try searchTasksFolded(db, rawQuery: pred.query, pred: pred, page: page)
+          if folded.totalMatching > 0 { return folded }
+          if let tok = Fts.shortTrailingTokenForLikeRetry(pred.query) {
+            return try searchTasksLike(db, rawQuery: tok, pred: pred, page: page)
           }
           return result
         } catch {
@@ -266,6 +271,86 @@ extension TaskRepo {
         FROM tasks t \
         WHERE \(whereClause) \
         ORDER BY match_score DESC, \(TaskRepo.taskOrderByQualified("t")) \
+        LIMIT ?\(limitIdx) OFFSET ?\(offsetIdx)
+        """
+      let rows = try Row.fetchAll(db, sql: sql, arguments: StatementArguments(args))
+      return Result(rows: try rows.map(TaskRepo.rowToTaskRow), totalMatching: totalMatching)
+    }
+
+    // -------------------------------------------------------------------
+    // Folded scan
+    // -------------------------------------------------------------------
+
+    /// Substring search over the folded form (``SearchFold/fold(_:)``) of each
+    /// task's title, body, AI notes, and tag names. Every word of the query
+    /// must occur in at least one of them, so a query typed without the
+    /// accents, capitals, or letter variants of the stored text ("lodz" for
+    /// "Łódź", "все" for "всё", "isik" for "Işık") still finds it, which
+    /// neither the `unicode61` index nor LIKE does. Rows order like the FTS
+    /// path (status bucket first), then by where the query matches (a title
+    /// equal to it, a title containing it, a title containing every word, the
+    /// body, the notes), then canonically.
+    static func searchTasksFolded(
+      _ db: Database, rawQuery: String, pred: SearchPredicate, page: Pagination,
+      countCap: Int64 = likeFallbackCountCap
+    ) throws -> Result {
+      let tokens = SearchFold.tokens(Fts.capFtsQueryLength(rawQuery))
+      if tokens.isEmpty { return Result(rows: [], totalMatching: 0) }
+      let phrase = tokens.joined(separator: " ")
+      let fold = LorvexStore.searchFoldFunctionName
+
+      // ?1 is the folded phrase, ?2 the same escaped for LIKE, ?3... the
+      // escaped tokens.
+      var args: [any DatabaseValueConvertible] = [phrase, Parsing.escapeLike(phrase)]
+      var conditions = ["t.archived_at IS NULL"]
+      var titleHasEveryToken: [String] = []
+      for token in tokens {
+        args.append(Parsing.escapeLike(token))
+        let placeholder = "?\(args.count)"
+        let like = "LIKE '%' || \(placeholder) || '%' ESCAPE '\\'"
+        titleHasEveryToken.append("f.title \(like)")
+        conditions.append(
+          "(f.title \(like) OR f.body \(like) OR f.notes \(like) "
+            + "OR t.id IN (SELECT tt2.task_id FROM task_tags tt2 "
+            + "JOIN tags tg ON tg.id = tt2.tag_id WHERE \(fold)(tg.display_name) \(like)))")
+      }
+
+      applyStatusFilter(pred, &conditions, &args)
+      applyListFilter(pred, &conditions, &args)
+      applyTagFilterExists(pred, &conditions, &args)
+
+      // Each text is folded once per row here, not once per use below.
+      let foldedTexts =
+        "WITH f(rid, title, body, notes) AS MATERIALIZED "
+        + "(SELECT rowid, \(fold)(title), \(fold)(body), \(fold)(ai_notes) "
+        + "FROM tasks WHERE archived_at IS NULL) "
+      let fromClause =
+        "FROM tasks t JOIN f ON f.rid = t.rowid WHERE \(conditions.joined(separator: " AND "))"
+
+      let countSql =
+        foldedTexts + "SELECT COUNT(*) FROM (SELECT 1 \(fromClause) LIMIT \(countCap + 1))"
+      let totalMatching =
+        try Int64.fetchOne(db, sql: countSql, arguments: StatementArguments(args)) ?? 0
+
+      let limitIdx = args.count + 1
+      let offsetIdx = args.count + 2
+      args.append(Int64(page.limit))
+      args.append(Int64(page.offset))
+
+      let sql =
+        foldedTexts
+        + """
+        SELECT \(TaskRepo.taskColumnsQualified("t")), ( \
+            (CASE WHEN f.title = ?1 THEN 100 ELSE 0 END) \
+            + (CASE WHEN f.title LIKE '%' || ?2 || '%' ESCAPE '\\' THEN 50 ELSE 0 END) \
+            + (CASE WHEN \(titleHasEveryToken.joined(separator: " AND ")) THEN 25 ELSE 0 END) \
+            + (CASE WHEN f.body LIKE '%' || ?2 || '%' ESCAPE '\\' THEN 10 ELSE 0 END) \
+            + (CASE WHEN f.notes LIKE '%' || ?2 || '%' ESCAPE '\\' THEN 5 ELSE 0 END) \
+        ) AS match_score \
+        \(fromClause) \
+        ORDER BY CASE WHEN t.status IN (\(StatusName.actionableStatusSqlList)) THEN 0 \
+        WHEN t.status = '\(StatusName.someday)' THEN 1 ELSE 2 END, \
+        match_score DESC, \(TaskRepo.taskOrderByQualified("t")) \
         LIMIT ?\(limitIdx) OFFSET ?\(offsetIdx)
         """
       let rows = try Row.fetchAll(db, sql: sql, arguments: StatementArguments(args))

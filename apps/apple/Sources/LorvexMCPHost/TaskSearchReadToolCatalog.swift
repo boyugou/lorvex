@@ -10,7 +10,8 @@ extension TaskToolCatalog {
       "properties": .object([
         "query": .object([
           "type": .string("string"),
-          "description": .string("Search query matched against task text"),
+          "description": .string(
+            "Words to find in task text. Every word must appear in the title, notes, assistant context, or tags, in any order, and the last word may be the start of a longer word; double quotes require a phrase in order. Case, accents, and letter variants (ł as l, ß as ss, ё as е) are ignored, so write the query the way the user would type it. There is no stemming or synonym matching."),
         ]),
         "status": .object([
           "type": .string("string"),

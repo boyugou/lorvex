@@ -105,13 +105,15 @@ key so the highest-priority completed work leads.
 
 ### Task search
 
-Search is relevance-ranked, and the ranking key differs by search strategy. Both strategies fall back to the canonical task key (`priority_effective ASC, due_date ASC NULLS LAST, id ASC`) as the stable tiebreaker inside equal relevance.
+Search is relevance-ranked, and the ranking key differs by search strategy. Every strategy falls back to the canonical task key (`priority_effective ASC, due_date ASC NULLS LAST, id ASC`) as the stable tiebreaker inside equal relevance.
 
-**FTS5 (BM25, Latin script):** `status_bucket ASC (open → someday → other), bm25(...) ASC, priority_effective ASC, due_date ASC NULLS LAST, id ASC`
+**FTS5 (BM25, scripts with word spaces):** `status_bucket ASC (open → someday → other), bm25(...) ASC, priority_effective ASC, due_date ASC NULLS LAST, id ASC`
 
-**Trigram (CJK) / LIKE fallback:** `match_score DESC, priority_effective ASC, due_date ASC NULLS LAST, id ASC`
+**Trigram (scripts without word spaces: CJK, Thai, Lao, Burmese, Khmer) / LIKE fallback:** `match_score DESC, priority_effective ASC, due_date ASC NULLS LAST, id ASC`
 
-**Rationale:** Search must rank direct/relevant matches first, then fall back to the canonical task key for stable ordering inside equal scores. The FTS5 path additionally leads with an open-first status bucket so actionable matches surface above someday/done/archived ones, then ranks by BM25 relevance; SQLite's `bm25` returns smaller (more negative) values for stronger matches, so ascending order puts the best match first. The trigram/LIKE paths compute an integer `match_score` (title/body/tag/ai_notes hits) and order it descending; they carry no status bucket because their per-field scoring already privileges title matches. Using `updated_at` as any tiebreaker is disallowed: the HLC rewrites it on conflict resolution, so it can skip or duplicate rows across page boundaries after a sync.
+**Folded scan (runs when FTS5 found nothing):** `status_bucket ASC, match_score DESC, priority_effective ASC, due_date ASC NULLS LAST, id ASC`
+
+**Rationale:** Search must rank direct/relevant matches first, then fall back to the canonical task key for stable ordering inside equal scores. The FTS5 path additionally leads with an open-first status bucket so actionable matches surface above someday/done/archived ones, then ranks by BM25 relevance; SQLite's `bm25` returns smaller (more negative) values for stronger matches, so ascending order puts the best match first. The trigram/LIKE paths compute an integer `match_score` (title/body/tag/ai_notes hits) and order it descending; they carry no status bucket because their per-field scoring already privileges title matches. The folded scan compares each task's title, body, AI notes, and tag names after `SearchFold` (lowercase, no combining marks, ё/е, ł/l, đ/d, ß/ss, ı/i, Greek and Arabic-script variants unified), requiring every query word to occur in at least one of them, and so finds text typed with other accents, case, or letter variants than the query, which the `unicode61` index cannot; it leads with the same open-first status bucket as FTS5, then orders by the integer `match_score`: a title equal to the query scores highest, then a title containing the phrase, a title containing every word, a body containing the phrase, and AI notes containing the phrase. Using `updated_at` as any tiebreaker is disallowed: the HLC rewrites it on conflict resolution, so it can skip or duplicate rows across page boundaries after a sync.
 
 **Apple file:** `apps/apple/core/Sources/LorvexStore/TaskRepoSearch.swift`
 

@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 
 /// Reads a capture line: the details it names, and the title left once they
 /// are taken out.
@@ -7,8 +8,8 @@ import Foundation
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
 /// French, Portuguese, Spanish, Italian, Russian, Ukrainian, Polish, Arabic,
-/// Persian, Hindi, Urdu, and Hebrew for a user who reads them. Each vocabulary
-/// lists its words. The details are read one kind at a time:
+/// Persian, Hindi, Urdu, Hebrew, German, Dutch, and Romanian for a user who reads
+/// them. Each vocabulary lists its words. The details are read one kind at a time:
 ///
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
@@ -88,7 +89,7 @@ public enum LorvexCaptureParser {
   ///   - languages: the languages the user reads, as BCP 47 codes, which
   ///     decide whether Japanese, Korean, French, Portuguese, Spanish,
   ///     Italian, Russian, Ukrainian, Polish, Arabic, Persian, Hindi, Urdu,
-  ///     and Hebrew words are read.
+  ///     Hebrew, German, Dutch, and Romanian words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,
     languages: [String] = Locale.preferredLanguages
@@ -309,11 +310,11 @@ public enum LorvexCaptureParser {
   }
 
   /// A list name or `#word` reduced to what a match compares: its letters and
-  /// digits, with case and accents folded in the user's language, so "#manana"
-  /// finds the list "Mañana".
+  /// digits, folded the way search folds text (case, accents, and letter
+  /// variants such as ł and ß), so "#manana" finds the list "Mañana" and
+  /// "#lodz" finds "Łódź".
   private static func normalized(_ name: String) -> String {
-    name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-      .filter { $0.isLetter || $0.isNumber }
+    SearchFold.fold(name).filter { $0.isLetter || $0.isNumber }
   }
 
   /// Collapses the gaps removed phrases leave behind: repeated spaces, commas

@@ -148,11 +148,11 @@ enum CommandPaletteResults {
     let matchedDestinations =
       query.isEmpty
       ? destinations
-      : destinations.filter { names(of: $0).contains { $0.localizedStandardContains(query) } }
+      : destinations.filter { names(of: $0).contains { $0.containsSearchTerm(query) } }
     let matchedLists =
       query.isEmpty
       ? []
-      : lists.filter { !$0.isArchived && $0.displayName.localizedStandardContains(query) }
+      : lists.filter { !$0.isArchived && $0.displayName.containsSearchTerm(query) }
 
     var jumps: [CommandPaletteGroup] = []
     if !matchedDestinations.isEmpty {
@@ -198,7 +198,7 @@ enum CommandPaletteResults {
       query.isEmpty
       ? actions.map { CommandPaletteResult.action($0) }
       : actions
-        .filter { $0.title.localizedStandardContains(query) }
+        .filter { $0.title.containsSearchTerm(query) }
         .map { CommandPaletteResult.action($0) }
     if !actionResults.isEmpty {
       groups.append(CommandPaletteGroup(title: "Actions", results: actionResults))

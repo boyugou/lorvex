@@ -98,6 +98,22 @@ func captureParserMatchesListsIgnoringCaseAndAccents() {
 }
 
 @Test
+func captureParserMatchesListsIgnoringLetterVariants() {
+  let options = [
+    LorvexCaptureParser.ListOption(id: "list-lodz", name: "Łódź"),
+    LorvexCaptureParser.ListOption(id: "list-street", name: "Straße"),
+    LorvexCaptureParser.ListOption(id: "list-light", name: "Işık"),
+  ]
+  func listID(_ line: String) -> String? {
+    LorvexCaptureParser.parse(line, lists: options, todayWeekday: 3).listID
+  }
+  #expect(listID("Book a hotel #lodz") == "list-lodz")
+  #expect(listID("Pay the bill #STRASSE") == "list-street")
+  #expect(listID("Buy a lamp #isik") == "list-light")
+  #expect(listID("Buy a lamp #krakow") == nil)
+}
+
+@Test
 func captureParserLeavesOrdinaryWordsInTheTitle() {
   // Words that only look like details inside a title stay put.
   let memo = parse("Read Monday Morning Memo draft")

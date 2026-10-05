@@ -51,7 +51,7 @@ extension TaskToolCatalog {
         "text": .object([
           "type": .string("string"),
           "description": .string(
-            "Case-insensitive substring match over task title, body, and AI notes."
+            "Substring match over task title, body, and AI notes that ignores case, accents, and letter variants (ł as l, ß as ss, ё as е)."
           ),
         ]),
         "tags": .object([

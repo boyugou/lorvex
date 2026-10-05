@@ -98,33 +98,45 @@ final class FtsTests: XCTestCase {
     XCTAssertEqual(Fts.sanitizeFtsQuery("a OR b"), "\"a\" \"OR\" \"b\"*")
   }
 
-  // containsCjk
-  func testContainsCjkChinese() {
-    XCTAssertTrue(Fts.containsCjk("中文"))
-    XCTAssertTrue(Fts.containsCjk("写一个中文任务"))
-    XCTAssertTrue(Fts.containsCjk("buy 牛奶"))
+  // containsUnspacedScript
+  func testContainsUnspacedScriptChinese() {
+    XCTAssertTrue(Fts.containsUnspacedScript("中文"))
+    XCTAssertTrue(Fts.containsUnspacedScript("写一个中文任务"))
+    XCTAssertTrue(Fts.containsUnspacedScript("buy 牛奶"))
   }
 
-  func testContainsCjkJapanese() {
-    XCTAssertTrue(Fts.containsCjk("こんにちは"))
-    XCTAssertTrue(Fts.containsCjk("カタカナ"))
-    XCTAssertTrue(Fts.containsCjk("漢字"))
+  func testContainsUnspacedScriptJapanese() {
+    XCTAssertTrue(Fts.containsUnspacedScript("こんにちは"))
+    XCTAssertTrue(Fts.containsUnspacedScript("カタカナ"))
+    XCTAssertTrue(Fts.containsUnspacedScript("漢字"))
   }
 
-  func testContainsCjkKorean() {
-    XCTAssertTrue(Fts.containsCjk("한국어"))
+  func testContainsUnspacedScriptKorean() {
+    XCTAssertTrue(Fts.containsUnspacedScript("한국어"))
   }
 
-  func testContainsCjkRejectsLatin() {
-    XCTAssertFalse(Fts.containsCjk("hello world"))
-    XCTAssertFalse(Fts.containsCjk("groceries"))
-    XCTAssertFalse(Fts.containsCjk(""))
-    XCTAssertFalse(Fts.containsCjk("🎯 goals"))
+  func testContainsUnspacedScriptSoutheastAsian() {
+    XCTAssertTrue(Fts.containsUnspacedScript("ซื้อของ"))  // Thai
+    XCTAssertTrue(Fts.containsUnspacedScript("ຊື້ເຄື່ອງ"))  // Lao
+    XCTAssertTrue(Fts.containsUnspacedScript("ဈေးဝယ်"))  // Burmese
+    XCTAssertTrue(Fts.containsUnspacedScript("ទិញអីវ៉ាន់"))  // Khmer
+    XCTAssertTrue(Fts.containsUnspacedScript("buy ซื้อ"))
   }
 
-  func testContainsCjkMixed() {
-    XCTAssertTrue(Fts.containsCjk("buy 牛奶 tomorrow"))
-    XCTAssertTrue(Fts.containsCjk("task: 完成报告"))
+  func testContainsUnspacedScriptRejectsSpacedScripts() {
+    XCTAssertFalse(Fts.containsUnspacedScript("hello world"))
+    XCTAssertFalse(Fts.containsUnspacedScript("groceries"))
+    XCTAssertFalse(Fts.containsUnspacedScript(""))
+    XCTAssertFalse(Fts.containsUnspacedScript("🎯 goals"))
+    XCTAssertFalse(Fts.containsUnspacedScript("купить молоко"))
+    XCTAssertFalse(Fts.containsUnspacedScript("αγορά"))
+    XCTAssertFalse(Fts.containsUnspacedScript("اشتري الحليب"))
+    XCTAssertFalse(Fts.containsUnspacedScript("दूध खरीदें"))
+  }
+
+  func testContainsUnspacedScriptMixed() {
+    XCTAssertTrue(Fts.containsUnspacedScript("buy 牛奶 tomorrow"))
+    XCTAssertTrue(Fts.containsUnspacedScript("task: 完成报告"))
   }
 
   // length caps

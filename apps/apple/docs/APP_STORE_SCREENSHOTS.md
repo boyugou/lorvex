@@ -18,8 +18,7 @@ Companion material:
 
 - **Truthful.** Every shot is a real Lorvex surface listed in
   `docs/reference/FEATURES.md` as `[SHIPPED]`. Do not stage a screen the app does
-  not render. In particular, do **not** screenshot CarPlay: it is
-  provisioning-gated and not active in the shipped build.
+  not render.
 - **No personal data.** Capture against seeded demo content, not a real user's
   planner. `LorvexPreviewCoreFactory.makeSeeded()` produces clean sample data;
   the iOS surface has `MobileStoreDebugSeed` for the simulator. Use neutral,
@@ -117,12 +116,12 @@ the "assistant-run planner you review" story, then the everyday planner surfaces
 
 ## Localization and preview videos
 
-- Screenshots are per-localization. Lorvex ships twenty-six languages
-  (English, Arabic, German, Greek, Spanish, Persian, French, Hebrew, Hindi,
-  Indonesian, Italian, Japanese, Korean, Malay, Dutch, Polish, Brazilian
-  Portuguese, Romanian, Russian, Thai, Turkish, Ukrainian, Urdu, Vietnamese,
-  Simplified Chinese, and Traditional Chinese); add localized sets only
-  for locales whose listing you localize. The iOS and
+- Screenshots are per-localization. Lorvex ships twenty-eight languages
+  (English, Arabic, Bengali, German, Greek, Spanish, Persian, French, Hebrew,
+  Hindi, Indonesian, Italian, Japanese, Korean, Marathi, Malay, Dutch, Polish,
+  Brazilian Portuguese, Romanian, Russian, Thai, Turkish, Ukrainian, Urdu,
+  Vietnamese, Simplified Chinese, and Traditional Chinese); add localized sets
+  only for locales whose listing you localize. The iOS and
   watchOS capture scripts take `-AppleLanguages` launch arguments through
   `LORVEX_SIM_EXTRA_ARGS` and `LORVEX_WATCH_SIM_EXTRA_ARGS`.
 - App preview videos are optional. If added, they follow the same truthfulness

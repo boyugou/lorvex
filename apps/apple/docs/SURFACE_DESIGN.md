@@ -27,6 +27,17 @@ day, works through Today's list, and drives keyboard-first workflows.
 - Menu bar extra: today and the week ahead — date, a Today / Next 7 Days
   switch, quick-add, today's schedule, tasks, and habits with one-click
   complete and check-in, the agenda of the next seven days, and Open / Quit. ✅
+- Quick Capture: a floating one-field window over whatever app is frontmost,
+  opened by an optional system-wide shortcut (preset chords with Space, off by
+  default), File → Quick Capture (⌥⌘N), the Command Palette, or the Dock menu.
+  It takes the keyboard without activating Lorvex, reads the line like every
+  capture field, shows the recognized details under the field, and confirms the
+  list the task landed in before it closes. ✅
+- Open at Login: a switch in Settings → General, under the Quick Capture group,
+  that registers the app as a login item. It reads the system's state each time
+  the app becomes active, shows an item that waits for approval as on with a
+  row and a button to the Login Items pane, and, when a change did not take,
+  says so in the footer and shows where the item really is. ✅
 - Full command menus + keyboard shortcuts. ✅
 - Command Palette (⌘K): fuzzy command and navigation palette. ✅
 - Settings: a sidebar of seven panes (General, Permissions, Calendar, Cloud
@@ -170,7 +181,8 @@ deep editing. Tab-first with `NavigationStack`.
   time when it is planned that day, else its estimate, plus "Due" on its due
   day; nothing else. ✅
 - Quick capture is the round ＋ in the tab bar (a sheet), also raised from the
-  task empty-state and ⌘N — capture is an action, not a tab. ✅
+  task empty-state, ⌘N, the Home Screen action, and the Quick Capture control
+  — capture is an action, not a tab. ✅
 - Settings › Data Export exports the events from today through the next 30
   days as an `.ics` file (Export Calendar, then Share Calendar). ✅
 - Task detail lists the set fields as rows (icon, name, value; the same
@@ -296,10 +308,21 @@ A productivity app earns its home screen with more than one widget.
 - ControlWidget (iOS and macOS) names the task at the top of Today — a
   task whose time is running, else the first task on Today — shows "All
   clear" with nothing left, and opens the app to Today when tapped. ✅
+- The Quick Capture control (iOS and iPadOS) is a second button for Control
+  Center, the Lock Screen, and the Action button. It carries no task data, so
+  it has no snapshot and is never reloaded. Tapping it runs an intent that
+  opens the app and leaves one quick-capture request in the App Group handoff
+  store; the app takes the request when its scene becomes active and presents
+  the capture sheet, on a cold launch and on a resume alike, the same call the
+  Home Screen action makes. The Mac has no counterpart: its Quick Capture
+  window and shortcut already reach capture from any app. ✅
 - Today, Habits/streak, and daily-progress widgets, with `accessoryCircular`
   gauges and deep links. ✅ The Today widget's `AppIntentConfiguration` takes
   an optional list that narrows it to that list's tasks; filtered widgets use
   list-scoped counts. ✅
+- The widgets that support the small family appear on the CarPlay home screen
+  on iOS 26. The system draws them; Lorvex ships no CarPlay scene or
+  entitlement. ✅
 
 ## Menu bar (macOS) — Today at a glance
 
@@ -327,113 +350,25 @@ A productivity app earns its home screen with more than one widget.
 - The footer holds Open Lorvex and Quit. The status-item glyph carries the
   due-today/overdue count. ✅
 
-## CarPlay — hands-free Today
+## Quick Capture window (macOS) — a thought from any app
 
-Zero text entry. The car screen shows Today the way the Today page does, read
-against the clock: the lead task first when one leads, then the rest of
-Today's list in Today's order. A row tap opens a short action sheet — Done, Tomorrow instead,
-Open on iPhone (Handoff) — so a single tap can never accidentally close a
-task. Siri-driven voice intents are a tracked follow-up.
-
-**Status:** Code present, provisioning required. The controller and scene
-delegate are implemented and fully tested; the CarPlay scene is silently ignored
-at runtime until Apple approves the CarPlay entitlement for the Lorvex App ID.
-No further code changes are needed to activate CarPlay once the entitlement
-is granted and merged into the iOS app target. Apple's CarPlay categories name
-no task list, so approval is uncertain; the Lorvex widgets that support the
-small family appear on the CarPlay home screen on iOS 26 without any
-entitlement.
-
-### What the driver sees
-
-One `CPListTemplate` titled Today, with one section: Today's list in Today's
-order, the lead task first when one leads.
-
-| Row state | Detail |
-|---|---|
-| A saved time is running | "Until 11:00 AM" |
-| Timed, not yet running | "9:00 AM – 10:00 AM" |
-| Overdue | "Overdue" |
-| Started, untimed | "Started" or "Started · about 25 min" |
-| Neither, with an estimate | "About 25 min" |
-
-The lead task is a task whose saved time is running, else a started task,
-else the task whose saved time starts next; otherwise Today's order stands. Every row carries a state glyph with the meaning colors have
-everywhere else in Lorvex: blue once the task is started, a red exclamation
-mark when it is overdue, grey otherwise. Rows are capped to
-`CPListTemplate.maximumItemCount`, so the lead row always shows and the
-list's tail is what gets cut. A clear day uses the template's empty view
-("All clear" / "Nothing left for today.") rather than a fake row. The list
-re-renders at every minute boundary so a running time's "Until" detail and
-the lead row follow the clock without a database read, and refreshes
-(debounced 2 s) after every local database change.
-
-### What is built
-
-- `CarPlayTaskListController` (Sources/LorvexCarPlay/) — platform-independent
-  controller (no CarPlay import). `refresh()` reads Today's list and the day's
-  times through `LorvexCoreServicing` into `todayRows`, each task carrying its
-  time on the day when the schedule gives it one; `rows` orders them with the
-  lead task first, read against an injectable clock (`now`) in the day's
-  timezone. Mutations: `complete(id:)` and `deferToTomorrow(id:)` (defers to
-  the local next day, UTC-anchored per `PlannedDayBridge`). `CarPlayRowCopy
-  .detail(for:nowMinutes:)` produces each row's second line from the CarPlay
-  catalog. Fully tested headlessly (`CarPlayTaskListControllerTests`).
-- `LorvexCarPlaySceneDelegate` (Sources/LorvexCarPlay/) — `CPTemplateApplicationSceneDelegate`
-  presenting the list above plus a retry/error section when a load fails. A
-  row tap presents a `CPActionSheetTemplate` (Done / Tomorrow instead / Open
-  on iPhone / Cancel) whose message is the row's clock detail, rather than
-  mutating on tap. Failures map to driver-safe retry text and refresh the
-  template. Each CarPlay callback hops to the main actor explicitly because
-  `CPListItem`/`CPAlertAction` handlers are not `@MainActor`-isolated. Guarded
-  by `#if canImport(CarPlay) && os(iOS)`, so only the iOS build
-  (`script/ios_sim_build.sh`) compiles it; the source-level copy check is
-  `CarPlayLocalizationSourceTests`.
-- `Config/LorvexCarPlay.entitlements` — entitlement template; see provisioning
-  note below.
-- `Config/LorvexMobileApp-Info.plist` — documents the `CPSupportsTemplateApplicationScene`
-  and `UIApplicationSceneManifest` keys (in a comment block); uncomment once
-  the entitlement is approved.
-- `script/carplay_sim_enable.sh` — makes a simulator build CarPlay-capable
-  without Apple's approval and installs it on the iPhone simulator. It builds
-  with `LORVEX_IOS_CARPLAY=1` (`script/ios_sim_build.sh` then passes
-  `Config/CarPlaySimulator.xcconfig`, which signs only the `LorvexMobileApp`
-  target with `Config/LorvexMobileAppCarPlaySimulator.entitlements`), adds the
-  scene manifest and `CPSupportsTemplateApplicationScene` to the built app,
-  and re-signs it ad hoc with the empty entitlement dictionary Xcode uses for
-  simulator apps. The entitlement has to come from the build: a simulator
-  app's entitlements are read from the binary's `__TEXT,__entitlements`
-  section, and an entitlement placed inside the code signature instead makes
-  launchd refuse to spawn the process. The CarPlay display itself is opened
-  from Simulator.app (I/O → External Displays → CarPlay); a machine whose
-  Xcode ships without Simulator.app can verify the scene only through the
-  controller tests and the iOS build.
-
-### Provisioning checklist (Apple approval required)
-
-1. Request the CarPlay entitlement through the form at
-   developer.apple.com/contact/carplay for the iOS App ID `com.lorvex.apple`, in
-   the category that fits best (driving task is the closest; it covers tasks
-   that help with the drive itself, not a task list in general).
-2. Once approved, merge `Config/LorvexCarPlay.entitlements` keys into
-   `Config/LorvexMobileApp.entitlements`.
-3. Uncomment the `CPSupportsTemplateApplicationScene` block in
-   `Config/LorvexMobileApp-Info.plist`.
-4. Set `UISceneDelegateClassName` to
-   `LorvexCarPlay.LorvexCarPlaySceneDelegate` (module-qualified) or expose
-   the class into the app module.
-5. Rebuild and re-sign with an approved provisioning profile.
-
-Without step 1 the CarPlay scene is silently ignored. The code compiles and
-all tests pass without the entitlement.
-
-### SiriKit voice path (follow-up, not built)
-
-Wire `INCompleteTaskListIntentHandling` in a separate `LorvexSiriIntents` app
-extension target. The intent handler delegates to `CarPlayTaskListController`
-to resolve tasks by voice-matched title and calls `complete(id:)`. Phrases:
-"complete [task name] in Lorvex", "what's next in Lorvex". Tracked here; not
-blocked by the CarPlay entitlement.
+- A borderless, non-activating panel that floats above other windows and
+  Spaces and over full-screen apps; it becomes the key window so typing works
+  while the app the user came from stays frontmost behind it and gets the focus
+  back when the panel closes. It hangs from the upper fifth of the screen the
+  pointer is on. ✅
+- One field on a Liquid Glass card, with the recognized details (day, time,
+  length, list, priority, repeat) under it as the menu bar field shows them. The
+  card grows by the preview line and stays fixed at its top edge. ✅
+- Return writes the task through the shared capture path (an undated inbox task
+  unless the line names a day or a list), then the card swaps to a check and the
+  list's name for a moment and closes. A failed write keeps the line and says
+  why in the card. Escape discards the draft; clicking away keeps it. ✅
+- The system-wide shortcut is a Carbon hot key registered for this app only
+  (no Accessibility access). It is off by default; Settings → General offers
+  four modifier-plus-Space presets and says so under the picker when another app
+  already owns the chosen one. The `--ui-preview` tour and the tests never
+  register it. ✅
 
 ## Notifications & permissions — clear request, denied fallback, escape hatch
 
@@ -493,10 +428,9 @@ blocked by the CarPlay entitlement.
    workspace-specific layouts and keyboard ergonomics.
 3. **Widgets** — Today + Habits + progress widgets, configurable, interactive
    complete.
-4. **CarPlay** — new surface.
-5. **UI/UX polish** — loading states, error toast, reordering, calendar date
+4. **UI/UX polish** — loading states, error toast, reordering, calendar date
    nav, habit streaks.
-6. **Notifications/permissions** — denied-state recovery, iOS scheduling parity,
+5. **Notifications/permissions** — denied-state recovery, iOS scheduling parity,
    badge.
 
 ---

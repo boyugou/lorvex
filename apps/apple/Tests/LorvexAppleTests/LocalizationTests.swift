@@ -1,5 +1,4 @@
 import Foundation
-import LorvexCarPlay
 import Testing
 @testable import LorvexCore
 @testable import LorvexApple
@@ -1270,7 +1269,6 @@ struct LocalizationTests {
             ShippedCatalog(name: "LorvexWatch"),
             ShippedCatalog(name: "LorvexWidgetKitSupport"),
             ShippedCatalog(name: "LorvexWidgetViews"),
-            ShippedCatalog(name: "LorvexCarPlay"),
         ]
     }
 
@@ -1324,7 +1322,6 @@ struct LocalizationTests {
             ShippedBundle(name: "LorvexWatch", bundle: WatchL10n.bundle),
             ShippedBundle(name: "LorvexWidgetKitSupport", bundle: WidgetSupportL10n.bundle),
             ShippedBundle(name: "LorvexWidgetViews", bundle: WidgetL10n.bundle),
-            ShippedBundle(name: "LorvexCarPlay", bundle: CarPlayL10n.bundle),
             ShippedBundle(name: "LorvexCore", bundle: CoreL10n.bundle),
         ]
     }

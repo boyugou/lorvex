@@ -2353,7 +2353,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "झटपट जोडा"
+            "value": "त्वरित जोडा"
           }
         },
         "ms": {
@@ -13206,13 +13206,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आज आणखी %lld"
+                  "value": "आज %lld अधिक"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आज आणखी %lld"
+                  "value": "आज %lld अधिक"
                 }
               }
             }

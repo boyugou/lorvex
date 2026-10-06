@@ -17,6 +17,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     terminationStore = store
   }
 
+  /// Quick Capture's shortcut and window, made by the SwiftUI App after
+  /// bootstrap and started once the app has launched; the `--ui-preview` run
+  /// never starts it, so a capture tour registers no system-wide key.
+  private var quickCapture: QuickCaptureController?
+
+  @MainActor
+  func installQuickCapture(store: AppStore, settings: AppSettingsStore) {
+    let model = QuickCaptureModel(store: store)
+    quickCapture = QuickCaptureController(
+      settings: settings, model: model,
+      presenter: QuickCapturePanelPresenter(model: model, store: store),
+      hotKey: CarbonGlobalHotKey())
+  }
+
   func applicationDidFinishLaunching(_ notification: Notification) {
     #if DEBUG
       // The bare-executable `--ui-preview` run renders its windows without ever
@@ -40,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
       registerMetricKitDiagnostics()
       registerForRemoteNotifications()
     #endif
+    quickCapture?.start()
     Self.recoverWindowPlacementSoon()
     Self.presentMainWindowIfNeededSoon()
   }
@@ -181,9 +196,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     }
   }
 
+  /// The Dock menu's Quick Capture opens the floating capture window over
+  /// whatever is frontmost; every other item, and Quick Capture when the window
+  /// is not available, opens its deep link.
   func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
-    LorvexDockMenuBuilder.build { action in
-      NSWorkspace.shared.open(action.dockFallbackDeepLink)
+    LorvexDockMenuBuilder.build { [weak self] action in
+      if action == .quickCapture, let quickCapture = self?.quickCapture {
+        quickCapture.present()
+      } else {
+        NSWorkspace.shared.open(action.dockFallbackDeepLink)
+      }
     }
   }
 

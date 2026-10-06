@@ -13,6 +13,9 @@ struct LorvexWidgetBundle: WidgetBundle {
     // boundary (see the lorvexWidgets() docstring).
     if #available(iOS 18.0, macOS 26.0, *) {
       LorvexTodayControlWidget()
+      #if os(iOS)
+        LorvexCaptureControlWidget()
+      #endif
     }
   }
 }

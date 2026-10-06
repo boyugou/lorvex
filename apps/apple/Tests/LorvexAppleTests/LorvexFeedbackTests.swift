@@ -123,7 +123,7 @@ func createTaskEmitsCaptureSubmittedFeedback() async throws {
   defer { defaults.removePersistentDomain(forName: suiteName) }
   let store = try await makeStore(feedback: feedback, defaults: defaults)
 
-  await store.createTask(title: "Test capture", notes: "")
+  await store.captureLine("Test capture")
 
   #expect(feedback.recorded.contains(.captureSubmitted))
 }
@@ -156,7 +156,7 @@ func quickCaptureEmitsCaptureSubmittedFeedback() async throws {
   defer { defaults.removePersistentDomain(forName: suiteName) }
   let store = try await makeStore(feedback: feedback, defaults: defaults)
 
-  await store.createTask(title: "Quick capture feedback test", notes: "")
+  await store.captureLine("Quick capture feedback test")
 
   #expect(feedback.recorded.contains(.captureSubmitted))
 }
@@ -170,7 +170,7 @@ func multipleActionsAccumulateFeedback() async throws {
   let store = try await makeStore(feedback: feedback, defaults: defaults)
   await store.refresh()
 
-  await store.createTask(title: "First capture", notes: "")
+  await store.captureLine("First capture")
 
   guard let firstTask = store.today.tasks.first(where: { $0.status == .open }) else {
     Issue.record("No open tasks in preview data")

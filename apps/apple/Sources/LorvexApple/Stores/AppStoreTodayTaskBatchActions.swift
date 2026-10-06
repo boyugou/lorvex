@@ -12,8 +12,8 @@ extension AppStore {
 
   func markTodaySelectionSomeday() async { await markBatchSomeday(on: .today) }
 
-  func moveTodaySelection(toListID listID: LorvexList.ID) async {
-    await moveBatch(on: .today, toListID: listID)
+  func moveTodaySelection(toListID listID: LorvexList.ID, undoManager: UndoManager? = nil) async {
+    await moveBatch(on: .today, toListID: listID, undoManager: undoManager)
   }
 
   func cancelTodaySelection(

@@ -108,8 +108,11 @@ pane's own header.
   hosting `ListDetailPane`), Move Up/Down, Archive, and Delete. Delete always
   asks first: an empty list is deleted outright, while a list that still holds
   tasks cannot be, so the dialog offers Archive instead, which retires the list
-  and keeps its tasks. Dragging a task onto a list row moves it there, and
-  dragging a list row itself reorders the Lists section. An archived list's
+  and keeps its tasks. Dragging a task (or a multi-task selection) onto a list
+  row moves it there, with the row outlined while the drag is over it, a toast
+  naming the destination, and ⌘Z to undo; dragging onto the Today row plans the
+  tasks for today. Dragging a list row itself reorders the Lists section. The
+  task right-click menu offers the same move as Move to List. An archived list's
   row keeps Open in New Window and Delete, trading Edit/Archive for Unarchive;
   its Delete dialog, for a list that still holds tasks, explains that the list
   must be unarchived and emptied first and offers Unarchive.

@@ -58,7 +58,7 @@ func appStoreCreatesListAndMovesSelectedPreviewTask() async throws {
   #expect(store.selectedListDetail?.tasks.isEmpty == true)
 
   let listID = try #require(store.selectedListID)
-  await store.moveTask(id: selectedTaskID, toListID: listID)
+  await store.moveTasks(ids: [selectedTaskID], toListID: listID)
 
   #expect(store.selectedListDetail?.tasks.map(\.id) == [selectedTaskID])
   #expect(store.lists?.lists.first { $0.id == listID }?.openCount == 1)

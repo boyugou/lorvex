@@ -97,6 +97,7 @@ struct TasksReviewOptionsMenu: View {
 /// while more than one row is selected.
 struct TasksSelectionActionMenu: View {
   @Bindable var store: AppStore
+  @Environment(\.undoManager) private var undoManager
 
   var body: some View {
     Menu {
@@ -115,7 +116,9 @@ struct TasksSelectionActionMenu: View {
         cancel: { Task { await store.cancelTaskWorkspaceSelection() } },
         reopen: { Task { await store.reopenTaskWorkspaceSelection() } },
         moveToSomeday: { Task { await store.markTaskWorkspaceSelectionSomeday() } },
-        move: { listID in Task { await store.moveTaskWorkspaceSelection(toListID: listID) } }
+        move: { listID in
+          Task { await store.moveTaskWorkspaceSelection(toListID: listID, undoManager: undoManager) }
+        }
       )
     } label: {
       Label(

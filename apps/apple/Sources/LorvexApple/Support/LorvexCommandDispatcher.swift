@@ -18,6 +18,8 @@ struct LorvexCommandDispatcher {
         store.selection = .tasks
       }
       store.requestQuickAddFocus()
+    case .showQuickCapture:
+      NotificationCenter.default.post(name: QuickCaptureController.requestNotification, object: nil)
     case .refreshStore:
       Task { await store.refresh() }
     }

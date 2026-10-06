@@ -9,6 +9,7 @@ struct ListsWorkspaceView: View {
   /// The catalog row currently under a task drag, highlighted so the drop
   /// target reads clearly — mirrors the sidebar list rows' drop affordance.
   @State private var dropTargetedListID: LorvexList.ID?
+  @Environment(\.undoManager) private var undoManager
   /// Each list's first open tasks, previewed on its card.
   @State private var listPreviews: [LorvexList.ID: [LorvexTask]] = [:]
 
@@ -127,24 +128,8 @@ struct ListsWorkspaceView: View {
               moveUp: { moveCatalogList(list.id, by: -1) },
               moveDown: { moveCatalogList(list.id, by: 1) }
             )
-            .background {
-              if dropTargetedListID == list.id {
-                RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-                  .fill(.tint.opacity(0.16))
-              }
-            }
-            .dropDestination(for: LorvexTaskRef.self) { [store] refs, _ -> Bool in
-              let listID: LorvexList.ID = list.id
-              for ref in refs {
-                Task { await store.moveTask(id: ref.id, toListID: listID) }
-              }
-              return !refs.isEmpty
-            } isTargeted: { targeted in
-              if targeted {
-                dropTargetedListID = list.id
-              } else if dropTargetedListID == list.id {
-                dropTargetedListID = nil
-              }
+            .taskDropTarget(list.id, targeted: $dropTargetedListID) { ids in
+              Task { await store.moveTasks(ids: ids, toListID: list.id, undoManager: undoManager) }
             }
             .frame(maxWidth: OverviewMetrics.rowMaxWidth, alignment: .leading)
           }

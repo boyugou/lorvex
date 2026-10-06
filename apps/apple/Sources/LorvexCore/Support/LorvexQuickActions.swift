@@ -8,7 +8,7 @@ import Foundation
 /// when building the corresponding menu or shortcut item on each platform.
 public enum LorvexQuickAction: String, CaseIterable, Sendable {
   /// Presents quick task capture immediately: the capture sheet on iOS/iPadOS,
-  /// the focused inline quick-add field on macOS.
+  /// the floating Quick Capture window on macOS.
   case quickCapture = "com.lorvex.apple.quickCapture"
   /// Navigates to the Today view: the day's task list, schedule, and briefing.
   case openToday = "com.lorvex.apple.openToday"

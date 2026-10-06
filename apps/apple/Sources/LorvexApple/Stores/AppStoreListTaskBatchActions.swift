@@ -11,8 +11,10 @@ extension AppStore {
 
   func markSelectedListTaskSelectionSomeday() async { await markBatchSomeday(on: .selectedList) }
 
-  func moveSelectedListTaskSelection(toListID listID: LorvexList.ID) async {
-    await moveBatch(on: .selectedList, toListID: listID)
+  func moveSelectedListTaskSelection(
+    toListID listID: LorvexList.ID, undoManager: UndoManager? = nil
+  ) async {
+    await moveBatch(on: .selectedList, toListID: listID, undoManager: undoManager)
   }
 
   func cancelSelectedListTaskSelection(

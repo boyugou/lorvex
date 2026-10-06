@@ -535,6 +535,36 @@ final class CalendarIcsTests: XCTestCase {
     }
   }
 
+  // MARK: line breaks in text
+
+  /// A line break in a title, description, or location is written as one escaped
+  /// `\n` whether it was typed as LF, CR LF, or a lone CR. Swift reads CR LF as a
+  /// single `Character`, so a character-level `case "\n"` would write it raw and
+  /// end the content line early.
+  func test_exportCalendarIcs_escapesEveryKindOfLineBreak() {
+    var event = sampleEvent()
+    event.title = "Plan\r\nreview"
+    event.description = "one\ntwo\r\nthree\rfour\r\n\r\nfive"
+    event.location = "Room\r\nB"
+    let ics = try! exportCalendarIcs([event]).get()
+    XCTAssertTrue(ics.contains("SUMMARY:Plan\\nreview"), ics)
+    XCTAssertTrue(ics.contains("DESCRIPTION:one\\ntwo\\nthree\\nfour\\n\\nfive"), ics)
+    XCTAssertTrue(ics.contains("LOCATION:Room\\nB"), ics)
+    // Outside the CR LF that ends each content line, the file holds no CR or LF.
+    let structure = ics.replacingOccurrences(of: "\r\n", with: "")
+    XCTAssertFalse(structure.unicodeScalars.contains("\r"), ics)
+    XCTAssertFalse(structure.unicodeScalars.contains("\n"), ics)
+  }
+
+  func test_escapeIcsText_keepsTheOtherEscapesAlongsideLineBreaks() {
+    XCTAssertEqual(escapeIcsText("a;b,c\\d"), "a\\;b\\,c\\\\d")
+    XCTAssertEqual(escapeIcsText("a,\r\nb;"), "a\\,\\nb\\;")
+    XCTAssertEqual(escapeIcsText("\n"), "\\n")
+    XCTAssertEqual(escapeIcsText("\r\n"), "\\n")
+    XCTAssertEqual(escapeIcsText("\r"), "\\n")
+    XCTAssertEqual(escapeIcsText(""), "")
+  }
+
   // MARK: line folding
 
   func test_foldLine_multibyteUtf8NotCorrupted() {

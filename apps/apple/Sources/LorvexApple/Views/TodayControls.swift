@@ -50,6 +50,7 @@ struct TodayScheduleToolbar: ToolbarContent {
 /// `todaySelectedTasks`.
 struct TodaySelectionActionMenu: View {
   @Bindable var store: AppStore
+  @Environment(\.undoManager) private var undoManager
 
   var body: some View {
     Menu {
@@ -66,7 +67,9 @@ struct TodaySelectionActionMenu: View {
         cancel: { Task { await store.cancelTodaySelection() } },
         reopen: { Task { await store.reopenTodaySelection() } },
         moveToSomeday: { Task { await store.markTodaySelectionSomeday() } },
-        move: { listID in Task { await store.moveTodaySelection(toListID: listID) } }
+        move: { listID in
+          Task { await store.moveTodaySelection(toListID: listID, undoManager: undoManager) }
+        }
       )
     } label: {
       Label(

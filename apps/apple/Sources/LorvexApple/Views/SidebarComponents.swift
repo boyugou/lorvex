@@ -36,6 +36,16 @@ enum SidebarMetrics {
         bottom: rowSpacing,
         trailing: rowTrailingPadding
     )
+
+    /// How far a row's content sits inside the system's selection capsule: the
+    /// row's own insets plus the padding the native list adds. A task drop
+    /// highlight extends by this much so its outline lies on the capsule.
+    static let capsuleOutset = EdgeInsets(
+        top: rowSpacing,
+        leading: rowLeadingPadding + capsuleContentPadding,
+        bottom: rowSpacing,
+        trailing: rowTrailingPadding + capsuleContentPadding
+    )
 }
 
 enum SidebarTypography {

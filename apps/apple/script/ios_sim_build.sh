@@ -9,19 +9,12 @@
 #                           device on the newest iOS runtime with that name is used
 #        LORVEX_SIM_UDID    exact device UDID, overriding the name lookup
 #        LORVEX_XCODE_JOBS  xcodebuild -jobs (default: 4, keeps the machine responsive)
-#        LORVEX_IOS_CARPLAY 1 builds the app with Config/CarPlaySimulator.xcconfig, which
-#                           signs LorvexMobileApp with the simulator CarPlay entitlements
-#                           (script/carplay_sim_enable.sh); every other target is unchanged
 # Prints the built .app path on success.
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SCHEME=LorvexMobileApp
 DEVICE="${LORVEX_SIM_DEVICE:-iPhone 17 Pro}"
 JOBS="${LORVEX_XCODE_JOBS:-4}"
-EXTRA_ARGS=()
-if [[ "${LORVEX_IOS_CARPLAY:-0}" == "1" ]]; then
-  EXTRA_ARGS+=(-xcconfig "$ROOT_DIR/Config/CarPlaySimulator.xcconfig")
-fi
 PROJECT_DIR="$ROOT_DIR/dist/xcode-$SCHEME"
 PROJECT_PATH="$PROJECT_DIR/LorvexAppleNative.xcodeproj"
 DERIVED_DATA="$ROOT_DIR/dist/DerivedData-$SCHEME"
@@ -41,7 +34,6 @@ xcodebuild \
   -configuration Debug \
   -jobs "$JOBS" \
   "${XCODE_PINNED_RESOLUTION_FLAGS[@]}" \
-  ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
   build 2>&1 | grep -E 'error:|BUILD SUCCEEDED|BUILD FAILED' | tail -20
 STATUS=${PIPESTATUS[0]}
 set -o pipefail

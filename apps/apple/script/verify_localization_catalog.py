@@ -82,8 +82,6 @@ MODULE_CATALOGS = [
          ROOT / "Sources" / "LorvexWidgetIntents",
          ROOT / "Sources" / "LorvexWatch",
      ]),
-    ("CarPlayL10n", ROOT / "Sources" / "LorvexCarPlay" / "Resources" / "Localizable.xcstrings",
-     [ROOT / "Sources" / "LorvexCarPlay"]),
     ("CoreL10n", ROOT / "Sources" / "LorvexCore" / "Resources" / "Localizable.xcstrings",
      [ROOT / "Sources" / "LorvexCore"]),
 ]
@@ -1678,7 +1676,7 @@ def source_reference_failures(
 # somewhere in the app (or allowlisted in REQUIRED_KEYS), so dead keys can't
 # accumulate undetected. Scans the WHOLE tree — Sources (every module, not just
 # the four primary app surfaces) plus Tests — so a key used only
-# in CarPlay, a widget, the core, or a test is never falsely flagged.
+# in a widget, the core, or a test is never falsely flagged.
 DEAD_KEY_SCAN_ROOTS = [ROOT / "Sources", ROOT / "Tests"]
 
 
@@ -1746,7 +1744,6 @@ MODULE_RESOURCE_BUNDLE_TOKENS = {
     "SystemL10n": {"SystemL10n.bundle"},
     "WidgetSupportL10n": {"WidgetSupportL10n.bundle"},
     "WidgetL10n": {"WidgetL10n.bundle"},
-    "CarPlayL10n": {"CarPlayL10n.bundle"},
     "CoreL10n": {"CoreL10n.bundle"},
 }
 APP_RESOURCE_BUNDLE_TOKENS = {"LorvexL10n.bundle"}
@@ -1760,7 +1757,6 @@ NATIVE_STRING_BUNDLE_TOKENS = {
     "SystemL10n": {"SystemL10n.bundle"},
     "WidgetL10n": {"WidgetL10n.bundle"},
     "WidgetSupportL10n": {"WidgetSupportL10n.bundle"},
-    "CarPlayL10n": {"CarPlayL10n.bundle"},
     "CoreL10n": {"CoreL10n.bundle"},
 }
 

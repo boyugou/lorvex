@@ -130,11 +130,14 @@ extension LiveEventKitAccess {
   /// Recover the user-authored portion from a previously marked EventKit event
   /// before a preserve-only rewrite. The marker is always appended as its own
   /// line, so removing only an exact marker line cannot eat ordinary notes that
-  /// merely mention a similar prefix.
+  /// merely mention a similar prefix. Lines are joined back with LF; a CR LF
+  /// pair or a lone CR in the stored notes counts as one line break, so notes an
+  /// account saved with Windows line endings keep each break once.
   static func userNotes(fromMarkedNotes notes: String?, lorvexID: String) -> String? {
     guard let notes else { return nil }
     let marker = "\(lorvexCalendarEventPrefix)\(lorvexID)"
-    let preserved = notes.components(separatedBy: .newlines)
+    let preserved = notes
+      .split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
       .filter { $0 != marker }
       .joined(separator: "\n")
     return preserved.isEmpty ? nil : preserved

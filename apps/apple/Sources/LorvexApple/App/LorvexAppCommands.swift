@@ -103,6 +103,11 @@ struct LorvexAppCommands: Commands {
       }
       .keyboardShortcut(AppCommand.newTask.keyboardShortcut)
 
+      Button(AppCommand.quickCapture.title) {
+        AppCommand.quickCapture.perform(in: store)
+      }
+      .keyboardShortcut(AppCommand.quickCapture.keyboardShortcut)
+
       Button(String(localized: "app.commands.command_palette", defaultValue: "Command Palette", table: "Localizable", bundle: LorvexL10n.bundle)) {
         store.showCommandPalette.toggle()
         // Only surface the main window when opening the palette; toggling it off

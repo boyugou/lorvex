@@ -92,6 +92,12 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// Titles of the tasks created through the single-create entry points, in
   /// the order the core received them.
   var createdTaskTitles: [String] = []
+  /// When set, `createTask(_:)` throws this after recording the title,
+  /// modelling a failed write.
+  var createTaskError: LorvexCoreError?
+  /// Optional async barrier invoked inside `createTask(_:)` before the
+  /// delegated write, so a test can hold a capture mid-write.
+  var createTaskGate: (@Sendable () async -> Void)?
   /// When set, `getDueHabitReminderOccurrences` throws this, modelling a
   /// transient habit occurrence-read failure during a reminder reschedule.
   var dueHabitReminderOccurrencesError: LorvexCoreError?

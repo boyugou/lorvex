@@ -105,8 +105,11 @@ extension CalendarWeekGridView {
     // task drags from every other surface and arbitrary dropped text can't drive
     // `rescheduleScheduledTask(id:)`.
     .dropDestination(for: LorvexTaskRef.self) { refs, _ in
-      guard let ref = refs.first else { return false }
-      Task { await store.rescheduleScheduledTask(id: ref.id, to: day.date) }
+      let ids = refs.droppedTaskIDs
+      guard !ids.isEmpty else { return false }
+      Task {
+        for id in ids { await store.rescheduleScheduledTask(id: id, to: day.date) }
+      }
       return true
     } isTargeted: { targeted in
       dropTargetedDay = targeted ? day.date : (dropTargetedDay == day.date ? nil : dropTargetedDay)

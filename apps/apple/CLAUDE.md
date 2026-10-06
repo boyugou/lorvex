@@ -5,7 +5,7 @@ This app lives at `apps/apple` inside the Lorvex monorepo; start from the root
 for app behavior, workflow rules, sync semantics, and MCP tool contracts.
 
 This is the Apple-native Lorvex app: SwiftUI/AppKit/SwiftPM, targeting macOS,
-iOS, iPadOS, watchOS, and CarPlay, plus WidgetKit, App Intents,
+iOS, iPadOS, and watchOS, plus WidgetKit, App Intents,
 Shortcuts, Spotlight, CloudKit, and EventKit surfaces. The SQLite schema
 (`schema/`) and the `spec/` behavior contracts are the app's contracts; the
 archived Tauri implementation is historical context only.
@@ -55,7 +55,6 @@ Sources/
 ├── LorvexWatch/            # watchOS shared store + WatchConnectivity client
 ├── LorvexWatchApp/         # watchOS @main entry
 ├── LorvexWatchComplication/# watchOS complications (WidgetKit on watchOS)
-├── LorvexCarPlay/          # CarPlay scene delegate + templates
 ├── LorvexSystemIntents/    # Shared App Intents (Shortcuts, Siri, Spotlight)
 ├── LorvexWidgetKitSupport/ # Shared widget snapshot/timeline infrastructure
 ├── LorvexWidgetViews/      # Reusable SwiftUI widget views
@@ -79,7 +78,7 @@ peer-to-peer via CloudKit (HLC clocks + last-writer-wins), so no single device i
 authoritative. The watch is the exception — it has no DB and is a read-only
 snapshot client of its paired iPhone, forwarding mutations via WatchConnectivity
 (`LorvexWatchMutation`); the phone applies them and pushes a fresh snapshot (so
-"the phone is the source of truth" holds for the watch only). CarPlay and widgets
+"the phone is the source of truth" holds for the watch only). Widgets
 read the App-Group-shared snapshot file written by the host app on the same
 device.
 
@@ -188,7 +187,7 @@ device.
     controlling session explicitly asks for it.
 15. **The main app is the sole CloudSync owner on each device.** Only the
     macOS or iOS/iPadOS main app may construct or run
-    `CloudSyncController`. MCP, widgets, App Intents, watchOS, CarPlay,
+    `CloudSyncController`. MCP, widgets, App Intents, watchOS,
     and other helpers read or mutate the managed local store through
     `LorvexCoreServicing`; canonical mutations atomically enqueue outbox work
     for the main app to upload later. Those targets must not depend on
@@ -425,7 +424,7 @@ documentation freshness, feature ideation.
 - `docs/execution/CI_RELEASE_TRIGGER_POLICY.md` — Release tag/dispatch rules
 - `docs/reference/FEATURES.md` — Feature inventory and status
 - `docs/SURFACE_DESIGN.md` — Per-platform surface status (macOS, iOS,
-  iPadOS, watchOS, CarPlay, widgets, Spotlight,
+  iPadOS, watchOS, widgets, Spotlight,
   Shortcuts, CloudKit, EventKit, notifications, packaging)
 - `docs/architecture/` — Module boundaries and cross-target dependencies
 - `docs/design/DESIGN_SYSTEM.md` — Color, surface, type, and component contract every surface composes from; `script/verify_design_tokens.py` enforces it

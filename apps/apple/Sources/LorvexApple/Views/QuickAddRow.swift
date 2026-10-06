@@ -59,6 +59,7 @@ struct QuickAddRow: View {
         .font(LorvexDesign.Typography.primaryText)
         .focused($isFocused)
         .onSubmit(submitTitle)
+        .lorvexSingleLine($title)
         .accessibilityIdentifier("workspace.quickAdd.field")
     }
   }

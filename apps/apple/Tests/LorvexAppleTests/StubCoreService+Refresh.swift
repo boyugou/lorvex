@@ -36,6 +36,10 @@ extension StubCoreService {
   }
   func createTask(_ draft: TaskCreateDraft) async throws -> LorvexTask {
     createdTaskTitles.append(draft.title)
+    await createTaskGate?()
+    if let createTaskError {
+      throw createTaskError
+    }
     return try await preview.createTask(draft)
   }
   func batchCreateTasks(_ drafts: [TaskCreateDraft]) async throws -> [LorvexTask] {

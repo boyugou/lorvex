@@ -53,7 +53,7 @@ func nonEmptyQueryLeadsWithNewTaskAndMatchesTasks() {
   let groups = CommandPaletteResults.groups(query: "report", tasks: tasks)
 
   #expect(groups.first?.title == "New Task")
-  #expect(groups.first?.results == [.createTask(title: "report")])
+  #expect(groups.first?.results == [.createTask(line: "report", preview: .empty)])
 
   let taskGroup = groups.first { $0.title == "Tasks" }?.results ?? []
   #expect(
@@ -108,6 +108,55 @@ func taskMatchesAreCappedAtTheResultLimit() {
   #expect(taskGroup.count == CommandPaletteResults.taskResultLimit)
 }
 
+// 2026-09-22 is a Tuesday: weekday 3 in the Gregorian convention.
+private func capturePreview(_ line: String) -> LorvexCapturePreview {
+  LorvexCapturePreview(
+    parse: LorvexCaptureParser.parse(
+      line, lists: [], todayWeekday: 3, today: "2026-09-22", languages: ["en-US"]),
+    logicalDay: "2026-09-22")
+}
+
+@Test
+func theNewTaskRowNamesTheTitleAndDetailsTheLineWillCreate() throws {
+  let groups = CommandPaletteResults.groups(
+    query: "Call mom tomorrow 5pm", tasks: [], capturePreview: capturePreview)
+  let capture = try #require(groups.first?.results.first)
+
+  guard case .createTask(let line, let preview) = capture else {
+    Issue.record("expected a capture row, got \(capture)")
+    return
+  }
+  // The row creates what the line reads as: the title without its details,
+  // and the details as words, the same ones the quick-add rows show.
+  #expect(line == "Call mom tomorrow 5pm")
+  #expect(preview.title == "Call mom")
+  #expect(preview.words.map(\.id) == ["when", "time"])
+  #expect(capture.localizedTitle.contains("“Call mom”"))
+  #expect(!capture.localizedTitle.contains("tomorrow"))
+}
+
+@Test
+func aPlainTitleKeepsItsTypedTextInTheNewTaskRow() throws {
+  let groups = CommandPaletteResults.groups(
+    query: "Write report", tasks: [], capturePreview: capturePreview)
+  let capture = try #require(groups.first?.results.first)
+
+  #expect(capture == .createTask(line: "Write report", preview: .empty))
+  #expect(capture.localizedTitle.contains("“Write report”"))
+}
+
+@Test
+func aPastedLineBreakReadsAsASpaceInTheNewTaskRow() throws {
+  let groups = CommandPaletteResults.groups(
+    query: "Write report\nfor Maya\n", tasks: [], capturePreview: capturePreview)
+  let capture = try #require(groups.first?.results.first)
+
+  let title = capture.localizedTitle
+  let hasBreak = title.contains(where: \.isNewline)
+  #expect(title.contains("“Write report for Maya”"))
+  #expect(!hasBreak)
+}
+
 @Test
 func navigationFiltersByDestinationTitle() {
   let groups = CommandPaletteResults.groups(query: "calendar", tasks: [])
@@ -124,7 +173,7 @@ func flatResultsConcatenatesEveryGroupInOrder() {
     tasks: [makeTask(id: "1", title: "Write report")]
   )
   let flat = CommandPaletteResults.flatResults(groups)
-  #expect(flat.first == .createTask(title: "report"))
+  #expect(flat.first == .createTask(line: "report", preview: .empty))
   #expect(flat.contains(.openTask(id: "1", title: "Write report", subtitle: nil)))
   #expect(flat.count == groups.reduce(0) { $0 + $1.results.count })
 }

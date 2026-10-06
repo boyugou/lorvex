@@ -12,70 +12,49 @@ extension AppStore {
 
   /// Global quick capture from the command palette and the menu bar: get the
   /// thought out of the user's head and into the default list (the Inbox unless
-  /// the user chose another), undated, then leave them exactly where they were.
+  /// the user chose another), then leave them exactly where they were.
   ///
-  /// Captured work deliberately claims no place on today. A day surface only
-  /// means something if everything on it was actually committed to, so stamping
-  /// every stray thought with today's date would refill the day with untriaged
-  /// noise. The Today quick-add row, which does mean "today", uses
-  /// `createInlineTask(_:destination:)` with `.today`.
+  /// The line is read like every other capture line (``captureParse(_:)``): a
+  /// day, a time, a length, `#list`, tags, a priority, or a repeat written in
+  /// it becomes the task's field and leaves its title. A line that names no day
+  /// stays undated, and one with only a clock time is planned for today at that
+  /// time. A day surface only means something if everything on it was actually
+  /// committed to, so stamping every stray thought with today's date would
+  /// refill the day with untriaged noise; the Today quick-add row, which does
+  /// mean "today", uses `createInlineTask(_:destination:)` with `.today`.
   ///
   /// Because the new row may be invisible from wherever capture fired, the toast
   /// is the confirmation — this path neither navigates nor selects.
   ///
-  /// `isCreating` covers only the write and the reads that show the new row, so
-  /// a second submit in that window, a duplicate of the same capture, is
-  /// dropped. The fan-out that follows (Spotlight, reminders, badge, widget,
-  /// one sync cycle) runs after the flag is released; a slow cycle never holds
-  /// the capture field.
-  func createTask(title: String, notes: String) async {
-    guard !isCreating else { return }
-    isCreating = true
-    let outcome = await commitCapturedTask(title: title, notes: notes)
-    isCreating = false
-    guard let outcome else { return }
-    confirmCapture(outcome)
+  /// Lines captured back to back all land, in order, and never wait on the busy
+  /// flag the list and habit sheets share, so a capture typed while one of
+  /// those saves is not lost. The fan-out that follows (Spotlight, reminders,
+  /// badge, widget, one sync cycle) runs after the confirmation; a slow cycle
+  /// never holds the capture field.
+  func captureLine(_ line: String) async {
+    guard let receipt = await commitCapture(line) else { return }
+    toastMessage = Self.captureToastMessage(count: 1, listName: receipt.listName)
     await publishAfterTaskCreate()
   }
 
-  /// What a capture that lands out of sight created: how many tasks, and the
-  /// list the core filed them in.
-  struct CaptureOutcome: Equatable {
-    var count: Int
-    var listID: String?
+  /// Where a global capture landed.
+  struct CaptureReceipt: Equatable {
+    /// The shown name of the list the task was filed in.
+    var listName: String
   }
 
-  /// Write one captured task to the default list, undated, and reload the
-  /// surfaces that show it. Returns what was created, or `nil` when the write
-  /// failed (the error has already been presented).
-  private func commitCapturedTask(title: String, notes: String) async -> CaptureOutcome? {
-    guard
-      let task = await performCanonicalMutation({
-        try await core.createTask(title: title, notes: notes)
-      })
-    else { return nil }
-
-    await reconcileAfterCommittedMutation(source: "macos.task.create.reconcile") {
-      today = try await core.loadToday()
-      lists = try await core.loadLists()
-      try await reloadTaskWorkspaceIfLoadedReportingFailure()
-    }
-    return CaptureOutcome(count: 1, listID: task.listID)
-  }
-
-  /// The confirmation for a capture that lands out of sight: feedback plus a
-  /// toast naming what was created and where.
-  private func confirmCapture(_ outcome: CaptureOutcome) {
+  /// The write of ``captureLine(_:)``, without the toast and the
+  /// fan-out: the line is read, the task is created and shown in the surfaces
+  /// that list it, and the capture feedback plays. A caller with its own
+  /// confirmation, such as the Quick Capture window, shows it as soon as this
+  /// returns, then runs ``publishAfterTaskCreate()`` on its own time. Returns
+  /// `nil` for a blank line and when the write failed (the error has already
+  /// been presented).
+  func commitCapture(_ line: String) async -> CaptureReceipt? {
+    guard let trimmed = line.trimmedNilIfEmpty else { return nil }
+    guard let task = await commitSerialized(trimmed, destination: .inbox) else { return nil }
     feedbackProvider.playFeedback(.captureSubmitted)
-    toastMessage = Self.captureToastMessage(
-      count: outcome.count, listName: captureListName(outcome.listID))
-  }
-
-  /// The shown name of the list a capture landed in. The core files an
-  /// undirected capture in the default list, or in the Inbox when no valid
-  /// default is set, so a list this store has not loaded reads as the Inbox.
-  private func captureListName(_ listID: String?) -> String {
-    lists?.lists.first { $0.id == listID }?.displayName ?? LorvexListNaming.localizedInboxName
+    return CaptureReceipt(listName: listDisplayName(task.listID))
   }
 
   /// Confirmation for a capture that lands out of sight: the created count and
@@ -90,7 +69,7 @@ extension AppStore {
 
   /// Read a quick-add line against the user's lists and the logical today, the
   /// same parse the row previews while the user types and the one
-  /// `createInlineTask(_:destination:)` commits.
+  /// `createInlineTask(_:destination:)` and `captureLine(_:)` commit.
   func captureParse(_ text: String) -> LorvexCaptureParse {
     LorvexCaptureParser.parse(
       text,
@@ -133,27 +112,37 @@ extension AppStore {
   /// line.
   func createInlineTask(_ text: String, destination: InlineCaptureDestination) async {
     guard let trimmed = text.trimmedNilIfEmpty else { return }
+    guard await commitSerialized(trimmed, destination: destination) != nil else { return }
+    feedbackProvider.playFeedback(.captureSubmitted)
+    await publishAfterTaskCreate()
+  }
+
+  /// Commit `trimmed` after every capture line committed before it, so lines
+  /// typed back to back land in the order they were entered. Returns the
+  /// created task, or `nil` when the write failed (the error has already been
+  /// presented).
+  private func commitSerialized(
+    _ trimmed: String, destination: InlineCaptureDestination
+  ) async -> LorvexTask? {
     let previous = inlineCaptureCommitTail
     let commit = Task { @MainActor in
       await previous?.value
       return await self.commitInlineTask(trimmed, destination: destination)
     }
     inlineCaptureCommitTail = Task { @MainActor in _ = await commit.value }
-    guard await commit.value else { return }
-    feedbackProvider.playFeedback(.captureSubmitted)
-    await publishAfterTaskCreate()
+    return await commit.value
   }
 
-  /// Write one inline quick-add line and reload the surfaces that show it.
-  /// Returns `false` when the write failed (the error has already been
-  /// presented). Parsing happens here, after any earlier inline commit, so a
-  /// `#list` naming a list created a moment ago resolves.
+  /// Write one capture line and reload the surfaces that show it. Returns the
+  /// created task, or `nil` when the write failed (the error has already been
+  /// presented). Parsing happens here, after any earlier commit, so a `#list`
+  /// naming a list created a moment ago resolves.
   private func commitInlineTask(
     _ trimmed: String, destination: InlineCaptureDestination
-  ) async -> Bool {
+  ) async -> LorvexTask? {
     let parse = captureParse(trimmed)
     guard
-      await performCanonicalMutation({
+      let task = await performCanonicalMutation({
         var draft = TaskCreateDraft(title: parse.title)
         draft.priority = parse.priority ?? draft.priority
         draft.estimatedMinutes = parse.estimatedMinutes
@@ -172,8 +161,8 @@ extension AppStore {
         }
         draft.recurrence = parse.recurrence
         return try await core.createTask(draft)
-      }) != nil
-    else { return false }
+      })
+    else { return nil }
 
     await reconcileAfterCommittedMutation(source: "macos.task.create_inline.reconcile") {
       today = try await core.loadToday()
@@ -183,7 +172,7 @@ extension AppStore {
       try await loadSelectedListDetail()
       try await reloadTaskWorkspaceIfLoadedReportingFailure()
     }
-    return true
+    return task
   }
 
   /// The fan-out a durable task create owes the rest of the system: the

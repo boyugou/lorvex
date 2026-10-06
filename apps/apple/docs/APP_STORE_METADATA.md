@@ -178,9 +178,6 @@ call any AI service on its own.
 
 Optional iCloud sync uses the CloudKit private database and is off until the
 user enables it. There is no analytics, tracking, or advertising.
-
-The CarPlay capability is present in code but its entitlement is not included
-in this build; CarPlay is not activated pending Apple approval.
 ```
 
 Adjust to match the exact submitted build (for example, whether iCloud sync is

@@ -140,6 +140,7 @@ struct ListDetailPane: View {
 /// defer, cancel, reopen, Someday, and moving them to another list.
 private struct ListDetailSelectionActionMenu: View {
   @Bindable var store: AppStore
+  @Environment(\.undoManager) private var undoManager
 
   var body: some View {
     Menu {
@@ -158,7 +159,11 @@ private struct ListDetailSelectionActionMenu: View {
         cancel: { Task { await store.cancelSelectedListTaskSelection() } },
         reopen: { Task { await store.reopenSelectedListTaskSelection() } },
         moveToSomeday: { Task { await store.markSelectedListTaskSelectionSomeday() } },
-        move: { listID in Task { await store.moveSelectedListTaskSelection(toListID: listID) } },
+        move: { listID in
+          Task {
+            await store.moveSelectedListTaskSelection(toListID: listID, undoManager: undoManager)
+          }
+        },
         excludeListID: store.selectedListID
       )
     } label: {

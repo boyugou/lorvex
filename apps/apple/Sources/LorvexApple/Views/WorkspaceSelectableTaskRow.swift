@@ -61,7 +61,10 @@ struct WorkspaceSelectableTaskRow: View {
     TaskRowItem(
       store: store, task: task, isBlocked: isBlocked,
       showsOwningList: showsOwningList, timeLabel: timeLabel, timeIsRunning: timeIsRunning,
-      chips: chips, searchQuery: searchQuery)
+      chips: chips, searchQuery: searchQuery,
+      dragPayload: { store.taskDragPayload(for: task, on: selectionSurface) },
+      dragCount: isBatchSelected && batchIsActive
+        ? store.taskSelectionCount(on: selectionSurface) : 1)
       // macOS multi-select conventions: ⌘-click toggles a row in/out of the
       // batch, ⇧-click extends the range from the last plain-clicked anchor, a
       // plain click opens the task. Modifiers are read at click time via

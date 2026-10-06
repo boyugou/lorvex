@@ -124,34 +124,12 @@ extension AppStore {
     }
   }
 
-  /// Moves the task identified by `taskID` into the list identified by `listID`.
-  ///
-  /// Refreshes today snapshot and list catalog after the move. Intended for
-  /// drag-and-drop drop handlers where the task and list IDs come from transferred data.
-  /// No-ops when the task is already in `listID` (prevents redundant core writes
-  /// and surface republishing on self-drops).
-  func moveTask(id taskID: LorvexTask.ID, toListID listID: LorvexList.ID) async {
-    let alreadyInList =
-      today.tasks.first(where: { $0.id == taskID })?.listID == listID
-      || selectedListDetail?.tasks.first(where: { $0.id == taskID })?.listID == listID
-    guard !alreadyInList else { return }
-    await perform {
-      _ = try await core.moveTask(id: taskID, toListID: listID)
-      today = try await core.loadToday()
-      lists = try await core.loadLists()
-      if selectedListID == listID {
-        try await loadSelectedListDetail()
-      }
-      await republishSurfacesAfterLocalMutation()
-    }
-  }
-
   /// Moves the currently-selected task (in the detail inspector) into `listID`.
-  /// Unlike ``moveTask(id:toListID:)`` (scoped to the today/list-detail pools
-  /// for drag-and-drop), this routes through `afterSelectedTaskMutation()` so
-  /// every pool the inspector might have loaded the task from (today, list
-  /// detail, the Tasks workspace) picks up the new `listID`,
-  /// not just the two `moveTask` refreshes.
+  /// Routes through `afterSelectedTaskMutation()` so every pool the inspector
+  /// might have loaded the task from (today, list detail, the Tasks workspace)
+  /// picks up the new `listID`. Dragging tasks onto a list and the Move to List
+  /// menu go through ``moveTasks(ids:toListID:undoManager:)`` instead, which
+  /// also confirms the move and registers its undo.
   func moveSelectedTaskToList(_ listID: LorvexList.ID) async {
     guard let taskID = selectedTask?.id, selectedTask?.listID != listID else { return }
     await perform {

@@ -132,11 +132,43 @@ quick-add field — under today's tasks on Today, at the top of the Tasks list.
 Lorvex switches to Tasks first if you are on another workspace. Type a task title and press **Return** to
 save it; the field clears and keeps focus so you can add several in a row.
 
+### From Any App (macOS)
+
+Quick Capture is also a small window that opens over whatever app you are using,
+so a thought goes into Lorvex without switching to it. It stays off until you
+choose a shortcut: open **Settings → General → Quick Capture** and pick
+**⌃⌥Space**, **⌃Space**, **⌥Space**, or **⌃⇧Space**. Press the shortcut again,
+press **Escape**, or click another window to close it. ⌃Space and ⌃⌥Space are
+also the macOS shortcuts for switching input sources, so when those are turned
+on in System Settings, choose one of the other two. If another app already uses
+the shortcut you pick, Settings says so under the picker.
+
+Type a line and press **Return**. The line is read like any capture field's (a
+day, a time, a length, a `#list`, a priority), the details show under the field
+before you save, and the window names the list the task landed in before it
+closes. A line that names no day stays undated and goes to your default list
+(the Inbox unless you chose another) or the list you name. A line you started
+and then walked away from is still there the next time the window opens;
+**Escape** throws it away.
+
+**File → Quick Capture** (⌥⌘N), **Quick Capture** in the Command Palette (⌘K),
+and **Quick Capture** in the Dock menu open the same window without the global
+shortcut.
+
+The shortcut and the menu bar icon work while Lorvex is running. To have it open
+when you sign in to your Mac, turn on **Settings → General → Open at Login**.
+The switch shows what macOS has set, so it also follows a change you make in
+**System Settings → General → Login Items**. If you turned it on there but
+macOS still waits for your approval, a row under the switch says so, and **Open
+Login Items** takes you to the pane where you turn Lorvex on.
+
 ### Words Quick Capture Understands
 
 Every capture field reads a few details out of what you type and shows them
-under the field before you save; the rest becomes the title. English and
-Chinese both work. Chinese needs no spaces ("明天开会30分钟") and reads the same
+under the field before you save; the rest becomes the title. That covers the
+quick-add fields on Today, in the Tasks list, and on a list's page, the menu
+bar's field, the Quick Capture window, the **New Task** row of the Command
+Palette (⌘K), and the capture sheet on iPhone and iPad. English and Chinese both work. Chinese needs no spaces ("明天开会30分钟") and reads the same
 in Traditional characters ("後天開會", "下週三", "30分鐘"); the title keeps the
 characters you typed.
 
@@ -2022,8 +2054,10 @@ goes with the word.
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline
-quick-add field — type a title and press **Return** to save it to your inbox.
-Under it, **Today** shows the task you are on, the rest of the day's schedule
+quick-add field — type a line and press **Return** to save it to your inbox. The
+line is read like any capture field's: a day, a time, a length, a `#list`, or a
+priority you write in it becomes the task's own and shows under the field before
+you save, and a line that names no day stays undated. Under it, **Today** shows the task you are on, the rest of the day's schedule
 (events and timed tasks still ahead), then your other tasks and your habits;
 **Next 7 Days** shows the week ahead. Click a task or an event to open it in
 the main window: an event of today opens beside Today, one of a later day on
@@ -2034,7 +2068,8 @@ its day in the Calendar.
 On iPhone and iPad, long-press the Lorvex icon and choose **Quick Capture** from
 the context menu. This opens the capture sheet directly, bypassing the main app
 navigation. You can also add the **Capture Task** shortcut from the Shortcuts
-app to your Home Screen for single-tap capture.
+app to your Home Screen for single-tap capture, or the **Lorvex Capture**
+control to Control Center or the Lock Screen (see Control Center, below).
 
 The Shortcuts app also exposes **Create List**, **Update List**, **Delete List**,
 **Create Habit**, **Update Habit**, **Delete Habit**, **Create Event**,
@@ -2180,7 +2215,7 @@ workspace instead. Each list shows its open and total counts and its first
 three open tasks, each with its due day; click a task to open it in that list,
 or the card to open the whole list. The macOS workspace can create, edit, and delete empty lists
 through the same core list catalog used by MCP and mobile. Drag task rows onto a
-list to move them; lists with assigned tasks must be emptied before deletion.
+list card to move them; lists with assigned tasks must be emptied before deletion.
 
 ### Creating Tasks
 
@@ -2250,12 +2285,18 @@ list to move them; lists with assigned tasks must be emptied before deletion.
 
 ### Moving Between Lists
 
-Drag a task row onto a different list in the sidebar to move it. To reassign
-several at once, select multiple tasks and use the **Lists** submenu in the
-workspace selection menu — the batch menu that appears in the header while a
-selection is active. On iPhone and iPad, tap **Select** in the Tasks toolbar,
-tap the tasks, then choose **List** in the bottom bar and pick the list to
-file them in.
+On the Mac, drag a task row onto a list in the sidebar to move it; the list is
+outlined while the task is over it, the task leaves the pane it came from, and
+a short message names the list it landed in. Press ⌘Z (**Edit → Undo Move to
+List**) to put it back. Dragging a row that is part of a multi-task selection
+moves the whole selection, and dropping the tasks on **Today** instead plans
+them for today. To move one task without dragging, right-click it and choose
+**Move to List**; to reassign several at once, select them and use the **Lists**
+submenu in the workspace selection menu — the batch menu that appears in the
+header while a selection is active. Each of these moves shows the same message
+and can be undone with ⌘Z. On iPhone and iPad, tap **Select** in the Tasks
+toolbar, tap the tasks, then choose **List** in the bottom bar and pick the list
+to file them in.
 
 ### Recurrence
 
@@ -2579,12 +2620,17 @@ data.
 
 ### Control Center
 
-Lorvex provides a control for Control Center on iPhone, iPad, and Mac. It shows
+Lorvex provides two controls. **Lorvex Today**, on iPhone, iPad, and Mac, shows
 the task at the top of Today and opens Lorvex directly to Today when tapped.
-On iPhone or iPad, swipe down to open Control Center, long-press to enter edit
-mode, tap **＋ Add a Control**, and search for **Lorvex Today**. On a Mac, open
-Control Center from the menu bar, click **Edit Controls**, and search for
-**Lorvex Today**.
+**Lorvex Capture**, on iPhone and iPad, opens Lorvex with the capture sheet
+ready for a new task, so a thought is one swipe and one tap away from any app
+or from the Lock Screen. On iPhone or iPad, swipe down to open Control Center,
+long-press to enter edit mode, tap **＋ Add a Control**, and search for
+**Lorvex Today** or **Lorvex Capture**. On a Mac, open Control Center from the
+menu bar, click **Edit Controls**, and search for **Lorvex Today**. Either
+control can also replace one of the two buttons at the bottom of the iPhone
+Lock Screen, and an iPhone with an Action button can be set to run one from
+there.
 
 ### Watch App
 
@@ -2718,6 +2764,7 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 | Shortcut | Action |
 |---|---|
 | ⌘N | New task (focuses the quick-add field) |
+| ⌥⌘N | Quick Capture: the small capture window over the current app |
 | ⌘K | Command Palette: find a task, go somewhere, or capture |
 | ⌘F | Find: focus the search field in All Tasks or Memory; from any other workspace, open All Tasks and focus its search field |
 | ⌘1 | Today |
@@ -2765,6 +2812,10 @@ Tasks list; ⌘N (or File → New Task) focuses it.
 | Shortcut | Action |
 |---|---|
 | Return | Save the task and keep the field focused for the next one |
+
+Text pasted over several lines becomes one task: each line break reads as a
+space. The menu bar field, the command palette, and the Quick Capture window do
+the same.
 
 On iPhone and iPad, the **+** opens a capture sheet instead: fill in the title
 (and optional notes) and tap **Capture**, or tap **Cancel** to dismiss.

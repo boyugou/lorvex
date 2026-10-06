@@ -24,7 +24,6 @@ let package = Package(
         .library(name: "LorvexWidgetIntents", targets: ["LorvexWidgetIntents"]),
         .library(name: "LorvexWidgetViews", targets: ["LorvexWidgetViews"]),
         .library(name: "LorvexWidgetExtension", targets: ["LorvexWidgetExtension"]),
-        .library(name: "LorvexCarPlay", targets: ["LorvexCarPlay"]),
         .library(name: "LorvexWatch", targets: ["LorvexWatch"]),
         .executable(name: "LorvexApple", targets: ["LorvexApple"]),
         .executable(name: "LorvexMobileApp", targets: ["LorvexMobileApp"]),
@@ -132,11 +131,6 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .target(
-            name: "LorvexCarPlay",
-            dependencies: ["LorvexCore"],
-            resources: [.process("Resources")]
-        ),
-        .target(
             name: "LorvexWatch",
             dependencies: ["LorvexCore", "LorvexWidgetKitSupport"],
             resources: [.process("Resources")]
@@ -226,7 +220,6 @@ let package = Package(
                 "LorvexWidgetViews",
                 "LorvexWatch",
                 "LorvexWatchComplication",
-                "LorvexCarPlay",
                 .product(name: "LorvexSync", package: "core"),
                 .product(name: "LorvexDomain", package: "core"),
                 .product(name: "LorvexStore", package: "core"),

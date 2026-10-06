@@ -54,7 +54,7 @@ public enum DatabaseChangeSignal {
 
   /// Set `true` in an app process so every committed core write invalidates all
   /// independent stores in that process. This covers macOS windows plus
-  /// in-process App Intents, notification actions, and CarPlay/mobile writers.
+  /// in-process App Intents, notification actions, and mobile writers.
   /// Successful CloudKit apply reports use the explicit origin-tagged method
   /// below, without starting another sync stack per window.
   ///
@@ -74,8 +74,8 @@ public enum DatabaseChangeSignal {
   }
 
   /// Serializes the one-time observer registration. Multiple in-process entry
-  /// points call ``startObserving()`` (app bootstrap, the CarPlay scene, the
-  /// mobile CloudSync path), possibly from different executors.
+  /// points call ``startObserving()`` (app bootstrap, the mobile CloudSync
+  /// path), possibly from different executors.
   private static let isObserving = Mutex(false)
 
   /// Guards the short in-process invalidation throttle. A main-queue post keeps
@@ -137,8 +137,8 @@ public enum DatabaseChangeSignal {
   /// Relay Darwin change signals to ``didChangeNotification`` on the default
   /// `NotificationCenter`. Idempotent: the underlying `CFNotificationCenter`
   /// observer is registered exactly once per process, so repeated calls from
-  /// independent in-process entry points (app bootstrap, the CarPlay scene, the
-  /// mobile CloudSync path) never stack observers — a stacked observer would
+  /// independent in-process entry points (app bootstrap, the mobile CloudSync
+  /// path) never stack observers — a stacked observer would
   /// re-post ``didChangeNotification`` once per registration and multiply the
   /// refresh work every signal triggers.
   public static func startObserving() {

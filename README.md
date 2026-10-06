@@ -33,7 +33,7 @@ form-filling UI.
   data; there is nowhere for us to read it from.
 - **No embedded AI, no tracking.** Lorvex ships no model, no analytics, no
   ads. Intelligence comes from *your* assistant, connected on *your* terms.
-- **Native everywhere.** macOS, iPhone, iPad, Apple Watch, CarPlay, widgets,
+- **Native everywhere.** macOS, iPhone, iPad, Apple Watch, widgets,
   Shortcuts, Spotlight, and two-way EventKit calendar integration.
 
 ## How it works

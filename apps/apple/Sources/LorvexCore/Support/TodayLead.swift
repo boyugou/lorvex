@@ -2,7 +2,7 @@ import Foundation
 
 /// The task every glance leads with, when one deserves to lead.
 ///
-/// A glance (a widget, the menu bar, the watch, CarPlay, Control Center) puts
+/// A glance (a widget, the menu bar, the watch, Control Center) puts
 /// one task above the rest only when the day itself says it is the one that
 /// matters right now:
 ///
@@ -16,7 +16,7 @@ import Foundation
 /// Otherwise nothing leads, and a glance shows Today's list as it is: the top
 /// of the list is where the plan starts, not a task to do now. A day that is
 /// not today (no clock) leads only with a started task. Widgets, the menu bar,
-/// the watch, and CarPlay all apply this rule to the same list, so they name
+/// and the watch all apply this rule to the same list, so they name
 /// the same task.
 public enum TodayLead {
   /// Why a task leads.

@@ -194,3 +194,14 @@ func todayControlIntentOpensForegroundWithoutAuthentication() {
     #expect(OpenLorvexTodayIntent.supportedModes == .foreground)
   }
 }
+
+@Test
+func captureControlIntentOpensForegroundWithoutAuthentication() {
+  if #available(iOS 18.0, macOS 26.0, *) {
+    #expect(OpenLorvexCaptureIntent.authenticationPolicy == .alwaysAllowed)
+    #expect(OpenLorvexCaptureIntent.openAppWhenRun == true)
+  }
+  if #available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+    #expect(OpenLorvexCaptureIntent.supportedModes == .foreground)
+  }
+}

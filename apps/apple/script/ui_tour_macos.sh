@@ -42,10 +42,15 @@
 # each Settings category (general, permissions, calendar, cloudSync, mcpHost,
 # data, diagnostics; the Settings window in its own window), and, each in a
 # window of its own: menubar and menubar-week (the menu bar panel on Today
-# and on Next 7 Days), list-window (a detached
+# and on Next 7 Days), menubar-capture (the panel with a capture line typed,
+# its recognized details shown under the field), quick-capture (the Quick
+# Capture window with a capture line typed) and quick-capture-done (the same
+# window once the line is written, naming the list it landed in), list-window (a detached
 # list window, on the list tasks-list scopes to), palette-jump and
 # palette-search and palette-notes (the command palette on a list's name, on a
 # word that names no destination, and on a word only the notes hold),
+# palette-capture (the palette on a capture line with details, where the
+# New Task row names the task and its details),
 # task-editor-doOn, task-editor-due,
 # task-editor-estimate, task-editor-repeat, task-editor-reminders,
 # task-editor-tags, and task-editor-dependencies (the task detail's field popovers, on a task that

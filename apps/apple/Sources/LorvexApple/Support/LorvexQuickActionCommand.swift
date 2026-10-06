@@ -5,7 +5,7 @@ extension LorvexQuickAction {
   var commandAction: MainToolbarCommandAction {
     switch self {
     case .quickCapture:
-      .appCommand(.focusQuickAdd)
+      .appCommand(.showQuickCapture)
     case .openToday:
       .openWindow(.today)
     }
@@ -13,7 +13,7 @@ extension LorvexQuickAction {
 
   var dockFallbackDeepLink: URL {
     switch commandAction {
-    case .appCommand(.focusQuickAdd):
+    case .appCommand(.focusQuickAdd), .appCommand(.showQuickCapture):
       deepLinkURL
     case .appCommand(.refreshStore):
       // No deep-link surface for a refresh from the Dock — route the user to

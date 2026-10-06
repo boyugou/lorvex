@@ -11,11 +11,12 @@ extension LorvexSystemIntentRunner {
     return .set(try parsedIntentDate(trimmed))
   }
 
-  /// The entries of a comma-, space-, or newline-separated list, without
-  /// blanks.
+  /// The entries of a comma-, space-, or line-separated list, without blanks.
+  /// A line break is an LF, a CR LF, or a lone CR; a CR LF pair is one
+  /// `Character` that `== "\n"` misses, so the split asks `isNewline`.
   static func parsedTextList(_ value: String) -> [String] {
     value
-      .split(whereSeparator: { $0 == "," || $0 == "\n" || $0 == " " })
+      .split(whereSeparator: { $0 == "," || $0 == " " || $0.isNewline })
       .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
   }

@@ -17,8 +17,7 @@ func appStoreCreatesTaskThroughSharedCapturePath() async throws {
   await store.refresh()
   store.selection = .tasks
   store.selectedTaskID = nil
-  await store.createTask(
-    title: "Captured from native quick capture", notes: "Shared by palette and menu bar.")
+  await store.captureLine("Captured from native quick capture")
 
   // Global capture files the thought in the inbox, undated, and leaves the user
   // exactly where they were: no navigation and no selection change, so the toast
@@ -27,7 +26,6 @@ func appStoreCreatesTaskThroughSharedCapturePath() async throws {
     status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
   let captured = try #require(
     open.tasks.first { $0.title == "Captured from native quick capture" })
-  #expect(captured.notes == "Shared by palette and menu bar.")
   #expect(captured.plannedDate == nil)
   #expect(captured.dueDate == nil)
   #expect(!store.today.tasks.contains { $0.id == captured.id })
@@ -37,6 +35,27 @@ func appStoreCreatesTaskThroughSharedCapturePath() async throws {
   #expect(
     store.toastMessage
       == AppStore.captureToastMessage(count: 1, listName: landedIn.displayName))
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
+func aMultiLinePasteIsCapturedAsOneTaskWithAOneLineTitle() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let pasted = "Call the caterer\nabout the quote\r\ntomorrow"
+
+  await store.captureLine(pasted)
+
+  // A single-line field keeps the breaks of a paste; the task reads the line as
+  // one line, details included, and keeps the text as typed for the assistant.
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Call the caterer about the quote" })
+  let hasBreak = created.title.contains(where: \.isNewline)
+  #expect(!hasBreak)
+  #expect(created.plannedDate == (try store.storageDate(daysFromLogicalToday: 1)))
+  #expect(created.rawInput == pasted)
   #expect(store.errorMessage == nil)
 }
 
@@ -143,8 +162,8 @@ private final class CaptureFanOutProbe {
 }
 
 @MainActor
-@Test("quick capture releases the busy flag and confirms before the fan-out")
-func quickCaptureReleasesBusyFlagBeforeFanOut() async throws {
+@Test("global capture confirms before the fan-out and never raises the create flag")
+func globalCaptureConfirmsBeforeFanOut() async throws {
   let feedback = RecordingFeedbackProvider()
   let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = AppStore(core: core, feedbackProvider: feedback)
@@ -158,11 +177,11 @@ func quickCaptureReleasesBusyFlagBeforeFanOut() async throws {
     }
   }
 
-  await store.createTask(title: "Gate probe capture", notes: "")
+  await store.captureLine("Gate probe capture")
 
   // The fan-out ends with a sync cycle that can run for as long as CloudKit
-  // takes, so the capture must already be released and confirmed by the time the
-  // fan-out's badge read runs.
+  // takes, so the capture must already be confirmed by the time the fan-out's
+  // badge read runs.
   #expect(!probe.busyFlags.isEmpty)
   #expect(probe.busyFlags.allSatisfy { !$0 })
   #expect(probe.feedbackSeen.allSatisfy { $0 })
@@ -248,4 +267,108 @@ func inlineAddCreatesARepeatingTaskOnItsFirstOccurrence() async throws {
   #expect(created.recurrence?.freq == .daily)
   #expect(created.dueDate == (try store.storageDate(daysFromLogicalToday: 0)))
   #expect(created.plannedDate == nil)
+}
+
+@MainActor
+@Test
+func globalCaptureReadsDetailsLikeTheInlineRows() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+
+  // The menu bar and the palette capture through one path: the line's day,
+  // time and length become the task's fields and leave its title.
+  await store.captureLine("Call the caterer tomorrow 3pm 20 min")
+
+  #expect(store.errorMessage == nil)
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Call the caterer" })
+  #expect(created.plannedDate == (try store.storageDate(daysFromLogicalToday: 1)))
+  #expect(created.plannedTime == (15 * 60)..<(15 * 60 + 20))
+  #expect(created.estimatedMinutes == 20)
+  // Out of sight, so the toast names where it landed, and nothing navigates.
+  let landedIn = try #require(store.lists?.lists.first { $0.id == created.listID })
+  #expect(
+    store.toastMessage == AppStore.captureToastMessage(count: 1, listName: landedIn.displayName))
+}
+
+@MainActor
+@Test
+func globalCaptureWithoutADayStaysUndated() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+
+  await store.captureLine("  Renew the passport  ")
+
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Renew the passport" })
+  #expect(created.plannedDate == nil)
+  #expect(created.plannedTime == nil)
+  #expect(created.dueDate == nil)
+  #expect(!store.today.tasks.contains { $0.id == created.id })
+}
+
+@MainActor
+@Test
+func globalCaptureFilesTheTaskInTheListTheLineNames() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let named = try #require(store.orderedLists.first { !$0.isInbox })
+  let hashName = named.name.filter { $0.isLetter || $0.isNumber }
+
+  await store.captureLine("Pick up samples #\(hashName)")
+
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  let created = try #require(open.tasks.first { $0.title == "Pick up samples" })
+  #expect(created.listID == named.id)
+  #expect(store.toastMessage == AppStore.captureToastMessage(count: 1, listName: named.displayName))
+}
+
+@MainActor
+@Test
+func globalCaptureIsNotLostWhileAnotherCreateIsInFlight() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+
+  // A list or habit sheet is mid-save and holds the shared create flag; a
+  // capture typed in that window still lands instead of being dropped.
+  store.isCreating = true
+  await store.captureLine("Typed while a sheet saves")
+
+  let open = try await store.core.listTasks(
+    status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0)
+  #expect(open.tasks.contains { $0.title == "Typed while a sheet saves" })
+  #expect(store.isCreating, "the capture must leave the other create's flag alone")
+}
+
+@MainActor
+@Test
+func globalCapturesTypedBackToBackAllLandInOrder() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+
+  let first = Task { await store.captureLine("Menu bar one") }
+  let second = Task { await store.captureLine("Menu bar two") }
+  let inline = Task { await store.createInlineTask("Row three", destination: .inbox) }
+  _ = await (first.value, second.value, inline.value)
+
+  // One queue serves the global capture and the inline rows.
+  #expect(core.createdTaskTitles == ["Menu bar one", "Menu bar two", "Row three"])
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
+func aBlankGlobalCaptureCreatesNothing() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+
+  await store.captureLine("   \n ")
+
+  #expect(core.createdTaskTitles.isEmpty)
+  #expect(store.toastMessage == nil)
 }

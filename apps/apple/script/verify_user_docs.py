@@ -97,7 +97,7 @@ CHECKS = {
         "required": [
             "A Swift-native MCP host built on the official",
             "App Intents / Shortcuts / Siri",
-            "widget, CarPlay, and MCP surfaces all consume it",
+            "widget, and MCP surfaces all consume it",
         ],
     },
     APPLE_NATIVE_ARCH: {
@@ -184,7 +184,6 @@ CHECKS = {
             "3. [iOS/iPadOS — App Store Connect](#3-iosipados--app-store-connect)",
             "## 3. iOS/iPadOS — App Store Connect",
             "TODO: MAS archive script",
-            "`com.apple.developer.carplay-*` — required if CarPlay integration is added.",
             "`upload_testflight.sh` could wrap `xcrun notarytool` or the App Store Connect",
         ],
         "required": [
@@ -204,9 +203,6 @@ CHECKS = {
             "com.lorvex.apple.focus-filter",
             "a reused wildcard profile",
             "CloudKit production schema promotion remains a manual release gate",
-            "| iOS CarPlay approval template | `LorvexCarPlay.entitlements` | — | — | — | — | — | CarPlay entitlement template (`carplay-communication`, the messaging and VoIP entitlement); merge into the iOS app entitlements only if Apple approves a CarPlay capability for the iOS App ID |",
-            "The template declares\n`com.apple.developer.carplay-communication`, the entitlement Apple grants to\nmessaging and VoIP apps.",
-            "developer.apple.com/contact/carplay for the iOS App ID `com.lorvex.apple`.",
             "Do not use\n`xcrun notarytool` for IPA uploads; notarization is the Developer ID macOS\ndistribution path, not the TestFlight/App Store Connect path.",
         ],
     },

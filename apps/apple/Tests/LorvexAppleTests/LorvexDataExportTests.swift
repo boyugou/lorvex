@@ -244,6 +244,23 @@ func csvEscapeQuotesFieldWithNewline() {
   #expect(LorvexDataExporter.csvEscape("line1\nline2") == "\"line1\nline2\"")
 }
 
+/// Swift reads CR LF as one `Character` that is neither `"\n"` nor `"\r"`, so a
+/// check on characters leaves a Windows-style line break unquoted and splits the
+/// row in two.
+@Test
+func csvEscapeQuotesFieldWithAnyKindOfLineBreak() {
+  #expect(LorvexDataExporter.csvEscape("line1\r\nline2") == "\"line1\r\nline2\"")
+  #expect(LorvexDataExporter.csvEscape("line1\rline2") == "\"line1\rline2\"")
+}
+
+/// A comma or a quote that carries a combining mark is one `Character`, yet a CSV
+/// reader still ends the field at the comma and reads the quote as a delimiter.
+@Test
+func csvEscapeSeesADelimiterFollowedByACombiningMark() {
+  #expect(LorvexDataExporter.csvEscape("a,\u{301}b") == "\"a,\u{301}b\"")
+  #expect(LorvexDataExporter.csvEscape("\"\u{301}") == "\"\"\"\u{301}\"")
+}
+
 @Test
 func exportCSVEscapesTaskTitleWithComma() throws {
   let task = makeExportTask(title: "Buy milk, eggs")

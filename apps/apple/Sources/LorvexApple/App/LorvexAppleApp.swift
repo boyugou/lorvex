@@ -41,6 +41,7 @@ struct LorvexAppleApp: App {
       _store = State(initialValue: LorvexAppleBootstrap.makeStore(settings: settings))
     #endif
     appDelegate.installTerminationStore(store)
+    appDelegate.installQuickCapture(store: store, settings: settings)
   }
 
   var body: some Scene {

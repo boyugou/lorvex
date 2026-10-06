@@ -14,6 +14,7 @@ extension AppSettingsStore {
     eventKitIncludedCalendarIDs = []
     eventKitExcludedCalendarIDs = []
     appearance = .system
+    quickCaptureShortcut = .default
 
     // Persisted keys without a backing property: the EventKit grant latch and
     // the cached Lorvex-calendar identifier.

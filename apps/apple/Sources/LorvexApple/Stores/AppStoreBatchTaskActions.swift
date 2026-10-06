@@ -50,7 +50,7 @@ extension AppStore {
   /// Publishes a batch's new Today snapshot. A batch over a few tasks
   /// animates, so its rows settle into their new places; a batch over many
   /// replaces Today's rows at once (``TaskRowChangeAnimation``).
-  private func publishBatchToday(_ updatedToday: TodaySnapshot, taskCount: Int) {
+  func publishBatchToday(_ updatedToday: TodaySnapshot, taskCount: Int) {
     if TaskRowChangeAnimation.animates(batchOf: taskCount) {
       lorvexAnimated(TaskRowChangeAnimation.animation) { today = updatedToday }
     } else {
@@ -107,15 +107,15 @@ extension AppStore {
     }
   }
 
-  func moveBatch(on surface: AppStoreBatchCancelSurface, toListID listID: LorvexList.ID) async {
-    let ids = surface.selectedTasks(self).map(\.id)
-    guard !ids.isEmpty else { return }
-    await perform {
-      _ = try await core.batchMoveTasks(ids: ids, toListID: listID)
-      today = try await core.loadToday()
-      lists = try await core.loadLists()
-      try await finishBatchMutation(on: surface)
-    }
+  /// Moves the surface's selected tasks into `listID` through
+  /// ``moveTasks(ids:toListID:undoManager:)``, so a move from a selection menu
+  /// confirms itself and undoes like a drag onto the list does.
+  func moveBatch(
+    on surface: AppStoreBatchCancelSurface, toListID listID: LorvexList.ID,
+    undoManager: UndoManager? = nil
+  ) async {
+    await moveTasks(
+      ids: surface.selectedTasks(self).map(\.id), toListID: listID, undoManager: undoManager)
   }
 
   func reopenBatch(on surface: AppStoreBatchCancelSurface) async {

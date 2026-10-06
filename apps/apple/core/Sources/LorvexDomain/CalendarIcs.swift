@@ -581,18 +581,26 @@ func escapeAndCapIcsText(
 /// Escape an ICS TEXT value per RFC 5545 §3.3.11 and strip the bidi /
 /// zero-width / line-separator codepoints `UnicodeHygiene.sanitizeUserText`
 /// strips at write boundaries.
+///
+/// Every kind of line break (LF, CR LF, or a lone CR) becomes one `\n` escape,
+/// so none reaches the file raw, where it would end the content line early. The
+/// text is walked as Unicode scalars: Swift reads a CR LF pair as one
+/// `Character`, which a `case "\n"` or `case "\r"` on characters never matches.
 func escapeIcsText(_ text: String) -> String {
   let scrubbed = UnicodeHygiene.sanitizeUserText(text)
   var out = ""
   out.reserveCapacity(scrubbed.utf8.count)
-  for ch in scrubbed {
-    switch ch {
+  var afterCarriageReturn = false
+  for scalar in scrubbed.unicodeScalars {
+    let completesCarriageReturnPair = scalar == "\n" && afterCarriageReturn
+    afterCarriageReturn = scalar == "\r"
+    switch scalar {
     case "\\": out += "\\\\"
     case ";": out += "\\;"
     case ",": out += "\\,"
-    case "\n": out += "\\n"
-    case "\r": continue
-    default: out.append(ch)
+    case "\n": if !completesCarriageReturnPair { out += "\\n" }
+    case "\r": out += "\\n"
+    default: out.unicodeScalars.append(scalar)
     }
   }
   return out

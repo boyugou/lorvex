@@ -217,14 +217,10 @@ class VerifyUserDocsTests(unittest.TestCase):
             checks["required"],
         )
 
-    def test_distribution_contract_tracks_carplay_template_boundary(self) -> None:
+    def test_distribution_contract_tracks_current_sections_and_release_paths(self) -> None:
         self.assertIn(DISTRIBUTION, CHECKS)
         checks = CHECKS[DISTRIBUTION]
 
-        self.assertIn(
-            "`com.apple.developer.carplay-*` — required if CarPlay integration is added.",
-            checks["stale"],
-        )
         self.assertIn(
             "2. [macOS — Developer ID notarized](#2-macos--developer-id-notarized)",
             checks["stale"],
@@ -276,18 +272,6 @@ class VerifyUserDocsTests(unittest.TestCase):
         self.assertIn("a reused wildcard profile", checks["required"])
         self.assertIn(
             "CloudKit production schema promotion remains a manual release gate",
-            checks["required"],
-        )
-        self.assertIn(
-            "| iOS CarPlay approval template | `LorvexCarPlay.entitlements` | — | — | — | — | — | CarPlay entitlement template (`carplay-communication`, the messaging and VoIP entitlement); merge into the iOS app entitlements only if Apple approves a CarPlay capability for the iOS App ID |",
-            checks["required"],
-        )
-        self.assertIn(
-            "The template declares\n`com.apple.developer.carplay-communication`, the entitlement Apple grants to\nmessaging and VoIP apps.",
-            checks["required"],
-        )
-        self.assertIn(
-            "developer.apple.com/contact/carplay for the iOS App ID `com.lorvex.apple`.",
             checks["required"],
         )
         self.assertIn(

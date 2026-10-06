@@ -12,9 +12,9 @@ live documentation before a release.
   floor in force is macOS 26, iOS/iPadOS 26, and watchOS 26, and the shipped
   languages are English, Arabic, Bengali, German, Greek, Spanish, Persian,
   French, Hebrew, Hindi, Indonesian, Italian, Japanese, Korean, Marathi,
-  Malay, Dutch, Polish, Brazilian Portuguese, Romanian, Russian, Thai,
-  Turkish, Ukrainian, Urdu, Vietnamese, Simplified Chinese, and Traditional
-  Chinese.
+  Malay, Dutch, Polish, Brazilian Portuguese, Romanian, Russian, Tamil,
+  Telugu, Thai, Turkish, Ukrainian, Urdu, Vietnamese, Simplified Chinese, and
+  Traditional Chinese.
 - Source policy: Apple Developer Documentation, App Store Review Guidelines,
   App Store Connect Help, and Apple Support security/privacy documentation only
 - Copyright policy: paraphrases and short facts only; follow the source link for

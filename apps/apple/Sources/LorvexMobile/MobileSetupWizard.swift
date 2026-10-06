@@ -122,7 +122,7 @@ public struct MobileSetupWizard: View {
         title: String(localized: "setup.welcome.control.title", defaultValue: "You have the last word", table: "Localizable", bundle: MobileL10n.bundle),
         detail: String(localized: "setup.welcome.control.detail", defaultValue: "Your assistant suggests and plans; you decide what stays on your list.", table: "Localizable", bundle: MobileL10n.bundle))
     }
-    .safeAreaInset(edge: .bottom) {
+    .safeAreaBar(edge: .bottom) {
       actionStack { continueButton }
     }
   }
@@ -146,7 +146,7 @@ public struct MobileSetupWizard: View {
         title: String(localized: "setup.sync.off.title", defaultValue: "Off whenever you like", table: "Localizable", bundle: MobileL10n.bundle),
         detail: String(localized: "setup.sync.off.detail", defaultValue: "Turn syncing off anytime in Settings. Your data stays on this device.", table: "Localizable", bundle: MobileL10n.bundle))
     }
-    .safeAreaInset(edge: .bottom) {
+    .safeAreaBar(edge: .bottom) {
       actionStack {
         primaryButton(String(localized: "setup.sync.turn_on", defaultValue: "Turn On iCloud Sync", table: "Localizable", bundle: MobileL10n.bundle)) {
           turnOnCloudSync()
@@ -189,7 +189,7 @@ public struct MobileSetupWizard: View {
         .frame(maxWidth: .infinity)
     }
     .task { await permissionsViewModel.refresh() }
-    .safeAreaInset(edge: .bottom) {
+    .safeAreaBar(edge: .bottom) {
       notificationsActions
     }
   }
@@ -257,7 +257,7 @@ public struct MobileSetupWizard: View {
         title: String(localized: "setup.done.assistant.title", defaultValue: "Or let your assistant add it", table: "Localizable", bundle: MobileL10n.bundle),
         detail: String(localized: "setup.done.assistant.detail", defaultValue: "Connect Claude or another assistant in Lorvex’s settings on your Mac, and it adds tasks and plans your day with you.", table: "Localizable", bundle: MobileL10n.bundle))
     }
-    .safeAreaInset(edge: .bottom) {
+    .safeAreaBar(edge: .bottom) {
       actionStack {
         primaryButton(String(localized: "setup.get_started", defaultValue: "Get Started", table: "Localizable", bundle: MobileL10n.bundle)) {
           preferences.complete()
@@ -298,7 +298,8 @@ public struct MobileSetupWizard: View {
   /// rows (the notifications page adds its answer after them). The badge and
   /// the title sit at one height on every page. The content scrolls, so large
   /// text never pushes a row off the screen; the page's `actionStack` lives in
-  /// a `safeAreaInset`, so its buttons stay pinned at the bottom.
+  /// a `safeAreaBar`, so its buttons stay pinned at the bottom and a row that
+  /// scrolls beneath them fades out instead of being cut at their edge.
   private func setupPage<Content: View>(
     systemImage: String,
     iconTint: Color,

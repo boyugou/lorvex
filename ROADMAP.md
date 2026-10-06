@@ -21,26 +21,18 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
 - watchOS / Widgets design audits (need on-device).
 
 ### Localization
-- Grow from the twenty-eight shipped languages to thirty
-  (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"); the language count is
-  capped at about thirty, so the set is complete after the last batch. Each
-  batch is prepared on its own worktree
-  branch with `apps/apple/script/localization_transfer.py` and merges with
-  `localization_transfer.py import --from-checkout` once the catalog verifier,
-  `LocalizationTests`, and a headless capture review pass for every language
-  in it. Spanish (`es`), Hindi (`hi`), Arabic (`ar`), French (`fr`), Italian
-  (`it`), Brazilian Portuguese (`pt-BR`), Russian (`ru`), Ukrainian (`uk`),
-  Polish (`pl`), Japanese (`ja`), Korean (`ko`), Traditional Chinese
-  (`zh-Hant`), Persian (`fa`), Urdu (`ur`), Hebrew (`he`), German (`de`), Dutch
-  (`nl`), Romanian (`ro`), Indonesian (`id`), Malay (`ms`), Vietnamese (`vi`),
-  Turkish (`tr`), Thai (`th`), Greek (`el`), Bengali (`bn`), and Marathi (`mr`)
-  have shipped. The last batch, Telugu (`te`) and Tamil (`ta`), completes the set.
+- The shipped set of thirty languages is complete
+  (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"); the language count
+  is capped at about thirty. Every new string carries all thirty languages:
+  `apps/apple/script/localization_transfer.py` exports what a language lacks
+  and imports translations, and the catalog verifier and `LocalizationTests`
+  reject a partial language.
 - The App Store listing (`apps/apple/docs/APP_STORE_METADATA.md`) carries its
   name, subtitle, description, and keywords in App Store Connect for every
   shipped language except Urdu, Hebrew, German, Dutch, Romanian, Indonesian,
-  Malay, Vietnamese, Turkish, Thai, Greek, Bengali, and Marathi, whose listing
-  copy is not written yet. Persian has no listing: App Store Connect offers no Persian
-  localization.
+  Malay, Vietnamese, Turkish, Thai, Greek, Bengali, Marathi, Telugu, and Tamil,
+  whose listing copy is not written yet. Persian has no listing: App Store
+  Connect offers no Persian localization.
   Screenshots exist for English and Simplified Chinese; the other locales show
   the English ones until their own are captured and uploaded. The sample
   datasets translate into every shipped language (`LorvexSampleText`), so

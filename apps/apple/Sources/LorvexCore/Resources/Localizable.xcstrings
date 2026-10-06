@@ -131,6 +131,18 @@
             "value": "срок: %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ காலக்கெடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ గడువు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -303,6 +315,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "просрочено: %@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ காலக்கெடு முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ గడువు మీరింది"
           }
         },
         "th": {
@@ -479,6 +503,18 @@
             "value": "повторяется"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் நிகழும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమవుతుంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -651,6 +687,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "До %@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ வரை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ వరకు"
           }
         },
         "th": {
@@ -827,6 +875,18 @@
             "value": "События календаря"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "கேலண்டர் நிகழ்வுகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "క్యాలెండర్ ఇవెంట్‌లు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -999,6 +1059,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ежедневные брифинги"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி சுருக்கங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ సంగ్రహాలు"
           }
         },
         "th": {
@@ -1175,6 +1247,18 @@
             "value": "Итоги дня"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி மீள்பார்வைகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ సమీక్షలు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1347,6 +1431,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Привычки"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాట్లు"
           }
         },
         "th": {
@@ -1523,6 +1619,18 @@
             "value": "Списки"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பட்டியல்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జాబితాలు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1695,6 +1803,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Память"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நினைவகம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మెమరీ"
           }
         },
         "th": {
@@ -1871,6 +1991,18 @@
             "value": "Предпочтения"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "செயலி அமைப்புகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "యాప్ సెట్టింగ్‌లు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2043,6 +2175,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Теги"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "குறிச்சொற்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ట్యాగ్‌లు"
           }
         },
         "th": {
@@ -2219,6 +2363,18 @@
             "value": "Связи задач и событий"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணி–நிகழ்வு இணைப்புகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్–ఇవెంట్ లింక్‌లు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2391,6 +2547,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Задачи"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணிகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌లు"
           }
         },
         "th": {
@@ -2567,6 +2735,18 @@
             "value": "Календарь"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "கேலண்டர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "క్యాలెండర్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2739,6 +2919,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Планирование"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "திட்டமிடல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్లానింగ్"
           }
         },
         "th": {
@@ -2915,6 +3107,18 @@
             "value": "Итоги и ассистент"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீள்பார்வைகள் & அசிஸ்டென்ட்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సమీక్షలు & అసిస్టెంట్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3087,6 +3291,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Настройки"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அமைப்புகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సెట్టింగ్స్"
           }
         },
         "th": {
@@ -3263,6 +3479,18 @@
             "value": "чек-лист"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சரிபார்ப்புப் பட்டியல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చెక్‌లిస్ట్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3435,6 +3663,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "зависимости"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சார்புகள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "డిపెండెన్సీలు"
           }
         },
         "th": {
@@ -3611,6 +3851,18 @@
             "value": "история"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வரலாறு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చరిత్ర"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3783,6 +4035,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "список"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பட்டியல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జాబితా"
           }
         },
         "th": {
@@ -3959,6 +4223,18 @@
             "value": "запланированное время"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "திட்டமிட்ட நேரம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్లాన్ చేసిన సమయం"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4131,6 +4407,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "правило повтора"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடர்வு விதி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృత నియమం"
           }
         },
         "th": {
@@ -4307,6 +4595,18 @@
             "value": "напоминания"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நினைவூட்டல்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రిమైండర్‌లు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4479,6 +4779,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "статус"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிலை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్థితి"
           }
         },
         "th": {
@@ -4914,6 +5226,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "импортировано %lld"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld இம்போர்ட் செய்யப்பட்டது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld இம்போர்ட் செய்யப்பட்டன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ఇంపోర్ట్ చేయబడింది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ఇంపోర్ట్ చేయబడ్డాయి"
                 }
               }
             }
@@ -5575,6 +5923,62 @@
             }
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg தவிர்க்கப்பட்டது"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg தவிர்க்கப்பட்டன"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg దాటవేయబడింది"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg దాటవేయబడ్డాయి"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5822,6 +6226,18 @@
           }
         },
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "te": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -6260,6 +6676,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld импортированной записи"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld பதிவு இம்போர்ட் செய்யப்பட்டது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld பதிவுகள் இம்போர்ட் செய்யப்பட்டன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రికార్డ్ ఇంపోర్ట్ చేయబడింది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రికార్డ్‌లు ఇంపోర్ట్ చేయబడ్డాయి"
                 }
               }
             }
@@ -6927,6 +7379,62 @@
             }
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg ஏற்கெனவே உள்ளது"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg ஏற்கெனவே உள்ளன"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %#@skipped@"
+          },
+          "substitutions": {
+            "skipped": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg ఇప్పటికే ఉంది"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg ఇప్పటికే ఉన్నాయి"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7174,6 +7682,18 @@
           }
         },
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        },
+        "te": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@: %2$@"
@@ -7617,6 +8137,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "மேலும் %lld…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "மேலும் %lld…"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "మరో %lld…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "మరో %lld…"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7839,6 +8395,18 @@
             "value": "Не импортировано:"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இம்போர்ட் செய்யப்படவில்லை:"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇంపోర్ట్ చేయబడలేదు:"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8011,6 +8579,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "«%@»"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
           }
         },
         "th": {
@@ -8187,6 +8767,18 @@
             "value": "Восстановлено без этих данных:"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்த விவரங்கள் இல்லாமல் மீட்டெடுக்கப்பட்டவை:"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ వివరాలు లేకుండా పునరుద్ధరించబడినవి:"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8359,6 +8951,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "позже срока"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "காலக்கெடுவுக்குப் பிறகு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "గడువు తర్వాత"
           }
         },
         "th": {
@@ -8794,6 +9398,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld дня назад"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாளுக்கு முன்பு"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாட்களுக்கு முன்பு"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రోజు క్రితం"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రోజుల క్రితం"
                 }
               }
             }
@@ -9291,6 +9931,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாள் தாமதம்"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாட்கள் தாமதம்"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రోజు ఆలస్యం"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రోజులు ఆలస్యం"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9519,6 +10195,18 @@
             "value": "в тот же день"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அதே நாள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అదే రోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9691,6 +10379,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сегодня"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు"
           }
         },
         "th": {
@@ -9867,6 +10567,18 @@
             "value": "сегодня"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10039,6 +10751,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Завтра"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நாளை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రేపు"
           }
         },
         "th": {
@@ -10215,6 +10939,18 @@
             "value": "завтра"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நாளை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రేపు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10387,6 +11123,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вчера"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நேற்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిన్న"
           }
         },
         "th": {
@@ -10563,6 +11311,18 @@
             "value": "вчера"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நேற்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిన్న"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10735,6 +11495,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Эта база данных создана более новой версией Lorvex. Обновите Lorvex, чтобы открыть её."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தத் தரவுத்தளம் Lorvexஇன் புதிய பதிப்பால் உருவாக்கப்பட்டது. இதைத் திறக்க Lorvexஐப் புதுப்பிக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ డేటాబేస్ Lorvex కొత్త వెర్షన్‌తో సృష్టించబడింది. దీన్ని తెరవడానికి దయచేసి Lorvexను అప్‌డేట్ చేయండి."
           }
         },
         "th": {
@@ -10911,6 +11683,18 @@
             "value": "Что-то пошло не так. Повторите попытку."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஏதோ தவறாகிவிட்டது. மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఏదో తప్పు జరిగింది. దయచేసి మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -11083,6 +11867,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Этого элемента больше нет."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அந்த ஐட்டம் இனி இல்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఆ ఐటెమ్ ఇకపై లేదు."
           }
         },
         "th": {
@@ -11259,6 +12055,18 @@
             "value": "В этот день такого времени нет: часы переводятся вперёд на летнее время. Выберите более раннее или более позднее время."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பகலொளி சேமிப்பு நேரத்தின்போது கடிகாரங்கள் முன்னோக்கி நகர்வதால் அந்த நாளில் இந்த நேரம் இல்லை. இதற்கு முன் அல்லது பின் உள்ள நேரத்தைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "డేలైట్ సేవింగ్ టైమ్ వల్ల గడియారాలు ముందుకు జరుగుతాయి, కాబట్టి ఆ రోజు ఈ సమయం ఉండదు. దీనికి ముందు లేదా తర్వాత ఉన్న సమయాన్ని ఎంచుకోండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -11431,6 +12239,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Эта задача уже выполнена. Чтобы отменить её, сначала откройте её снова."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணி ஏற்கெனவே முடிந்துவிட்டது. ரத்துசெய்வதற்கு முன் அதை மீண்டும் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ ఇప్పటికే పూర్తయింది. రద్దు చేసే ముందు దాన్ని మళ్ళీ తెరవండి."
           }
         },
         "th": {
@@ -11607,6 +12427,18 @@
             "value": "Эта задача отменена. Чтобы выполнить её, сначала откройте её снова."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணி ரத்துசெய்யப்பட்டது. நிறைவுசெய்வதற்கு முன் அதை மீண்டும் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ రద్దు చేయబడింది. పూర్తి చేసే ముందు దాన్ని మళ్ళీ తెరవండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -11779,6 +12611,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "У этой привычки уже есть напоминание на это время. Выберите другое время."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பழக்கத்துக்கு அந்த நேரத்தில் ஏற்கெனவே நினைவூட்டல் உள்ளது. வேறொரு நேரத்தைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ అలవాటుకు ఆ సమయానికి ఇప్పటికే రిమైండర్ ఉంది. వేరే సమయాన్ని ఎంచుకోండి."
           }
         },
         "th": {
@@ -11955,6 +12799,18 @@
             "value": "Запись памяти с таким названием уже существует. Выберите другое название."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பெயரில் நினைவகப் பதிவு ஏற்கெனவே உள்ளது. வேறொரு பெயரைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ పేరుతో ఉన్న మెమరీ నమోదు ఇప్పటికే ఉంది. వేరే పేరును ఎంచుకోండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -12127,6 +12983,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Заметки слишком длинные. Сократите их и попробуйте ещё раз."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தக் குறிப்புகள் மிக நீளமாக உள்ளன. அவற்றைச் சுருக்கி, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ నోట్స్ చాలా పొడవుగా ఉన్నాయి. వాటిని తగ్గించి, మళ్ళీ ప్రయత్నించండి."
           }
         },
         "th": {
@@ -12303,6 +13171,18 @@
             "value": "Приостановить можно только задачу в работе."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "செயலிலுள்ள பணியை மட்டுமே இடைநிறுத்த முடியும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జరుగుతున్న టాస్క్‌ను మాత్రమే పాజ్ చేయవచ్చు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -12475,6 +13355,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Этот элемент слишком длинный для синхронизации. Сократите самый длинный текст и попробуйте ещё раз."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்த ஐட்டம் ஒத்திசைக்க மிக நீளமாக உள்ளது. அதில் மிக நீளமான உரையைச் சுருக்கி, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ ఐటెమ్ సింక్ చేయడానికి చాలా పొడవుగా ఉంది. దానిలోని అత్యంత పొడవైన టెక్స్ట్‌ను తగ్గించి, మళ్ళీ ప్రయత్నించండి."
           }
         },
         "th": {
@@ -12651,6 +13543,18 @@
             "value": "Эта задача отменена. Чтобы начать её, сначала откройте её снова."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணி ரத்துசெய்யப்பட்டது. தொடங்குவதற்கு முன் அதை மீண்டும் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ రద్దు చేయబడింది. ప్రారంభించే ముందు దాన్ని మళ్ళీ తెరవండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -12823,6 +13727,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Эта задача уже выполнена. Чтобы начать её, сначала откройте её снова."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணி ஏற்கெனவே முடிந்துவிட்டது. தொடங்குவதற்கு முன் அதை மீண்டும் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ ఇప్పటికే పూర్తయింది. ప్రారంభించే ముందు దాన్ని మళ్ళీ తెరవండి."
           }
         },
         "th": {
@@ -12999,6 +13915,18 @@
             "value": "Эта задача в разделе «Когда-нибудь». Чтобы начать её, сначала откройте её снова."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணி என்றாவது ஒரு நாள் பிரிவில் உள்ளது. தொடங்குவதற்கு முன் அதை மீண்டும் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ ఏదో ఒక రోజు విభాగంలో ఉంది. ప్రారంభించే ముందు దాన్ని మళ్ళీ తెరవండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -13171,6 +14099,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Тег с таким названием уже существует. Выберите другое название."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பெயரில் குறிச்சொல் ஏற்கெனவே உள்ளது. வேறொரு பெயரைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ పేరుతో ట్యాగ్ ఇప్పటికే ఉంది. వేరే పేరును ఎంచుకోండి."
           }
         },
         "th": {
@@ -13347,6 +14287,18 @@
             "value": "Один из тегов слишком длинный. Сократите его и попробуйте ещё раз."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒரு குறிச்சொல் மிக நீளமாக உள்ளது. அதைச் சுருக்கி, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఒక ట్యాగ్ చాలా పొడవుగా ఉంది. దాన్ని తగ్గించి, మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -13519,6 +14471,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Эта задача зависит от незавершённых задач. Сначала завершите или отмените их."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணி இன்னும் முடியாத பணிகளைச் சார்ந்துள்ளது. முதலில் அவற்றை நிறைவுசெய்யவும் அல்லது ரத்துசெய்யவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ ఇంకా పూర్తికాని టాస్క్‌లపై ఆధారపడి ఉంది. ముందుగా వాటిని పూర్తి చేయండి లేదా రద్దు చేయండి."
           }
         },
         "th": {
@@ -13695,6 +14659,18 @@
             "value": "Текст слишком длинный. Сократите его и попробуйте ещё раз."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்த உரை மிக நீளமாக உள்ளது. அதைச் சுருக்கி, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టెక్స్ట్ చాలా పొడవుగా ఉంది. దాన్ని తగ్గించి, మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -13867,6 +14843,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "У задачи должно быть название. Добавьте его и попробуйте ещё раз."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணிக்குத் தலைப்பு தேவை. ஒன்றைச் சேர்த்து, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌కు టైటిల్ అవసరం. ఒకటి జోడించి, మళ్ళీ ప్రయత్నించండి."
           }
         },
         "th": {
@@ -14043,6 +15031,18 @@
             "value": "Название слишком длинное. Сократите его и попробуйте ещё раз."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தத் தலைப்பு மிக நீளமாக உள்ளது. அதைச் சுருக்கி, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టైటిల్ చాలా పొడవుగా ఉంది. దాన్ని తగ్గించి, మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -14215,6 +15215,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex не может получить доступ к хранилищу данных, поэтому действие не выполнено. Перезапустите Lorvex."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex தனது தரவுச் சேமிப்பகத்தை அணுக முடியவில்லை, எனவே இதை முடிக்க இயலவில்லை. Lorvexஐ மீண்டும் தொடங்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex తన డేటా స్టోరేజ్‌ను యాక్సెస్ చేయలేకపోతోంది, కాబట్టి ఇది పూర్తి కాలేదు. దయచేసి Lorvexను రీస్టార్ట్ చేయండి."
           }
         },
         "th": {
@@ -14650,6 +15662,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld дня"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாள்"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாட்கள்"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రోజు"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld రోజులు"
                 }
               }
             }
@@ -15153,6 +16201,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மாதம்"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மாதங்கள்"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld నెల"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld నెలలు"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -15645,6 +16729,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld வாரம்"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld வாரங்கள்"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld వారం"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld వారాలు"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -15873,6 +16993,18 @@
             "value": "Эта резервная копия повреждена и не может быть импортирована. Экспортируйте её ещё раз на исходном устройстве и повторите попытку."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பேக்-அப் சேதமடைந்துள்ளது, எனவே இம்போர்ட் செய்ய முடியாது. இது எந்தச் சாதனத்திலிருந்து வந்ததோ அதில் மீண்டும் எக்ஸ்போர்ட் செய்து, பிறகு மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ బ్యాకప్ దెబ్బతింది, కాబట్టి దీన్ని ఇంపోర్ట్ చేయలేరు. ఇది ఏ డివైజ్ నుండి వచ్చిందో ఆ డివైజ్‌లో దీన్ని మళ్ళీ ఎక్స్‌పోర్ట్ చేసి, ఆపై మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -16045,6 +17177,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выбранный файл пуст."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தேர்ந்தெடுத்த கோப்பு காலியாக உள்ளது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఎంచుకున్న ఫైల్ ఖాళీగా ఉంది."
           }
         },
         "th": {
@@ -16221,6 +17365,18 @@
             "value": "Эта резервная копия создана более новой версией Lorvex. Обновите Lorvex на этом устройстве и повторите попытку."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பேக்-அப் Lorvexஇன் புதிய பதிப்பால் உருவாக்கப்பட்டது. இந்தச் சாதனத்தில் Lorvexஐப் புதுப்பித்து, மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ బ్యాకప్ Lorvex కొత్త వెర్షన్‌తో రూపొందించబడింది. ఈ డివైజ్‌లో Lorvexను అప్‌డేట్ చేసి, మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -16393,6 +17549,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "В этой резервной копии нет данных для импорта."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பேக்-அப்பில் இம்போர்ட் செய்ய தரவு எதுவும் இல்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ బ్యాకప్‌లో ఇంపోర్ట్ చేయడానికి డేటా ఏదీ లేదు."
           }
         },
         "th": {
@@ -16569,6 +17737,18 @@
             "value": "Этот файл не является резервной копией Lorvex или повреждён. Выберите файл, экспортированный из Lorvex."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தக் கோப்பு Lorvex பேக்-அப் அல்ல, அல்லது அது சேதமடைந்துள்ளது. Lorvexஇல் இருந்து எக்ஸ்போர்ட் செய்த கோப்பைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ ఫైల్ Lorvex బ్యాకప్ కాదు, లేదా ఇది దెబ్బతింది. Lorvex నుండి ఎక్స్‌పోర్ట్ చేసిన ఫైల్‌ను ఎంచుకోండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -16741,6 +17921,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Размер выбранного файла — %1$@. Резервная копия Lorvex не может превышать %2$@."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தேர்ந்தெடுத்த கோப்பின் அளவு %1$@. Lorvex பேக்-அப்பின் அதிகபட்ச அளவு %2$@."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఎంచుకున్న ఫైల్ సైజ్ %1$@. Lorvex బ్యాకప్ గరిష్ఠ సైజ్ %2$@."
           }
         },
         "th": {
@@ -16917,6 +18109,18 @@
             "value": "Входящие"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்பாக்ஸ்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇన్‌బాక్స్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -17089,6 +18293,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавится «%@»"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சேர்க்கும்: “%@”"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జోడిస్తుంది: “%@”"
           }
         },
         "th": {
@@ -17265,6 +18481,18 @@
             "value": "Срок: %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ காலக்கெடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ గడువు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -17437,6 +18665,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "После выполнения"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிறைவுசெய்த பிறகு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి చేసిన తర్వాత"
           }
         },
         "th": {
@@ -17613,6 +18853,18 @@
             "value": "Следующее повторение планируется от момента выполнения этого, поэтому позднее выполнение сдвигает его вперёд."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அடுத்தது நீங்கள் இதை நிறைவுசெய்யும் நேரத்தைப் பொறுத்து திட்டமிடப்படும், எனவே தாமதமாக முடித்தால் அது தள்ளிப்போகும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "తదుపరిది మీరు దీన్ని పూర్తి చేసిన సమయాన్ని బట్టి షెడ్యూల్ అవుతుంది, కాబట్టి ఆలస్యంగా పూర్తి చేస్తే అది తర్వాతి తేదీకి మారుతుంది."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -17785,6 +19037,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Регулярно"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அட்டவணைப்படி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "షెడ్యూల్ ప్రకారం"
           }
         },
         "th": {
@@ -17961,6 +19225,18 @@
             "value": "Повторяется по фиксированному расписанию независимо от того, когда вы выполните задачу."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நீங்கள் எப்போது முடித்தாலும், நிலையான அட்டவணைப்படி மீண்டும் நிகழும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీరు ఎప్పుడు పూర్తి చేసినా, నిర్ణీత షెడ్యూల్ ప్రకారం రిపీట్ అవుతుంది."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -18135,6 +19411,18 @@
             "value": "Каждый день"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினமும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రతిరోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -18307,6 +19595,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Каждый месяц"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒவ்வொரு மாதமும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రతి నెల"
           }
         },
         "th": {
@@ -18742,6 +20042,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Раз в %lld дня"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாளுக்கு ஒருமுறை"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நாட்களுக்கு ஒருமுறை"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld రోజు"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld రోజులు"
                 }
               }
             }
@@ -19239,6 +20575,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மாதத்துக்கு ஒருமுறை"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மாதங்களுக்கு ஒருமுறை"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld నెల"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld నెలలు"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -19726,6 +21098,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Раз в %lld недели"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld வாரத்துக்கு ஒருமுறை"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld வாரங்களுக்கு ஒருமுறை"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld వారం"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld వారాలు"
                 }
               }
             }
@@ -20223,6 +21631,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld வருடத்துக்கு ஒருமுறை"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld வருடங்களுக்கு ஒருமுறை"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld సంవత్సరం"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ప్రతి %lld సంవత్సరాలు"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -20451,6 +21895,18 @@
             "value": "Каждую неделю"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒவ்வொரு வாரமும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రతి వారం"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -20623,6 +22079,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Каждый год"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒவ்வொரு வருடமும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రతి సంవత్సరం"
           }
         },
         "th": {
@@ -20799,6 +22267,18 @@
             "value": "Ежедневно"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -20971,6 +22451,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ежемесячно"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மாதந்தோறும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నెలవారీ"
           }
         },
         "th": {
@@ -21147,6 +22639,18 @@
             "value": "Еженедельно"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வாரந்தோறும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వారంవారీ"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -21321,6 +22825,18 @@
             "value": "Ежегодно"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வருடந்தோறும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సంవత్సరంవారీ"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -21493,6 +23009,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "после выполнения"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிறைவுசெய்த பிறகு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి చేసిన తర్వాత"
           }
         },
         "th": {
@@ -21928,6 +23456,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld раза"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld முறை"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld முறை"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld సారి"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld సార్లు"
                 }
               }
             }
@@ -22425,6 +23989,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld தவிர்க்கப்பட்டது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld தவிர்க்கப்பட்டன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld దాటవేయబడింది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld దాటవేయబడ్డాయి"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -22647,6 +24247,18 @@
             "value": "до %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ வரை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ వరకు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -22819,6 +24431,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "посл. %@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "கடைசி %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చివరి %@"
           }
         },
         "th": {
@@ -22995,6 +24619,18 @@
             "value": "%1$@-й %2$@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -23167,6 +24803,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@-й %2$@ с конца"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "கடைசியிலிருந்து %1$@ %2$@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చివరి నుండి %1$@ %2$@"
           }
         },
         "th": {
@@ -23343,6 +24991,18 @@
             "value": "Отменена"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ரத்துசெய்யப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రద్దయింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -23515,6 +25175,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выполнена"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிறைவடைந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తయింది"
           }
         },
         "th": {
@@ -23691,6 +25363,18 @@
             "value": "В работе"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "செயலிலுள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జరుగుతోంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -23863,6 +25547,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не выполнена"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிலுவை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పెండింగ్"
           }
         },
         "th": {
@@ -24039,6 +25735,18 @@
             "value": "Когда-нибудь"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "என்றாவது ஒரு நாள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఏదో ఒక రోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -24211,6 +25919,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Высокий"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அதிகம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అధికం"
           }
         },
         "th": {
@@ -24387,6 +26107,18 @@
             "value": "Низкий"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "குறைவு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "తక్కువ"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -24559,6 +26291,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обычный"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இயல்பு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సాధారణం"
           }
         },
         "th": {
@@ -24735,6 +26479,18 @@
             "value": "Высокий приоритет"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அதிக முன்னுரிமை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అధిక ప్రాధాన్యత"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -24909,6 +26665,18 @@
             "value": "Низкий приоритет"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "குறைந்த முன்னுரிமை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "తక్కువ ప్రాధాన్యత"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -25081,6 +26849,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обычный приоритет"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இயல்பான முன்னுரிமை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సాధారణ ప్రాధాన్యత"
           }
         },
         "th": {

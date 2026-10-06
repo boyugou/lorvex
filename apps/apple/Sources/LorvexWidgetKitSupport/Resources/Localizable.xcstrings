@@ -131,6 +131,18 @@
             "value": "Открывает Lorvex, готовый к добавлению задачи."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியைச் சேர்க்கத் தயாராக Lorvexஐத் திறக்கும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను జోడించడానికి సిద్ధంగా Lorvexను తెరుస్తుంది."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -303,6 +315,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex Быстрый ввод"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex விரைவுச் சேர்த்தல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex త్వరిత జోడింపు"
           }
         },
         "th": {
@@ -479,6 +503,18 @@
             "value": "Быстрое добавление"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விரைவுச் சேர்த்தல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "త్వరిత జోడింపు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -650,6 +686,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показывает задачу, которая стоит первой в «Сегодня»."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பட்டியலில் மேலே உள்ள பணியைக் காட்டும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు జాబితాలో పైన ఉన్న టాస్క్‌ను చూపుతుంది."
           }
         },
         "th": {
@@ -825,6 +873,18 @@
             "value": "Lorvex Сегодня"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex ఈరోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -997,6 +1057,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Проверить спецификацию"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்பெக் மீள்பார்வை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్పెక్ సమీక్ష"
           }
         },
         "th": {
@@ -1437,6 +1509,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மீதமுள்ளது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மீதமுள்ளன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld మిగిలినది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld మిగిలినవి"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1659,6 +1767,18 @@
             "value": "около %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சுமார் %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సుమారు %@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1830,6 +1950,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Данные виджета недоступны."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விட்ஜெட் தரவு கிடைக்கவில்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విడ్జెట్ డేటా అందుబాటులో లేదు."
           }
         },
         "th": {
@@ -2005,6 +2137,18 @@
             "value": "Следите за прогрессом привычек на сегодня с одного взгляда."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பழக்கங்களின் முன்னேற்றத்தை ஒரே பார்வையில் பார்க்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు అలవాట్ల ప్రోగ్రెస్‌ను ఒక్క చూపులో చూడండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2176,6 +2320,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex, чтобы загрузить привычки."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கங்களை ஏற்ற Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాట్లను లోడ్ చేయడానికి Lorvexను తెరవండి."
           }
         },
         "th": {
@@ -2351,6 +2507,18 @@
             "value": "Привычки"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాట్లు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2522,6 +2690,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Привычки"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాట్లు"
           }
         },
         "th": {
@@ -2698,6 +2878,18 @@
             "value": "Открывает Lorvex, готовый к добавлению задачи."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியைச் சேர்க்கத் தயாராக Lorvexஐத் திறக்கும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను జోడించడానికి సిద్ధంగా Lorvexను తెరుస్తుంది."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2870,6 +3062,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Быстрое добавление"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விரைவுச் சேர்த்தல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "త్వరిత జోడింపు"
           }
         },
         "th": {
@@ -3045,6 +3249,18 @@
             "value": "Выполняет задачу Lorvex из виджета."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விட்ஜெட்டிலிருந்து Lorvex பணியை நிறைவுசெய்யவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విడ్జెట్ నుండి Lorvex టాస్క్‌ను పూర్తి చేయండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3216,6 +3432,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Задача «%@» выполнена."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” நிறைவுசெய்யப்பட்டது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” పూర్తి చేయబడింది."
           }
         },
         "th": {
@@ -3391,6 +3619,18 @@
             "value": "Выполнить задачу"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியை நிறைவுசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను పూర్తి చేయండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3562,6 +3802,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выполняет привычку Lorvex из виджета."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விட்ஜெட்டிலிருந்து Lorvex பழக்கத்தை நிறைவுசெய்யவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విడ్జెట్ నుండి Lorvex అలవాటును పూర్తి చేయండి."
           }
         },
         "th": {
@@ -3737,6 +3989,18 @@
             "value": "Привычка «%@» выполнена."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” நிறைவுசெய்யப்பட்டது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” పూర్తి చేయబడింది."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3910,6 +4174,18 @@
             "value": "Выполнить привычку"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கத்தை நிறைவுசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాటును పూర్తి చేయండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4081,6 +4357,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Задача"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్"
           }
         },
         "th": {
@@ -4257,6 +4545,18 @@
             "value": "ID привычки"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கத்தின் ID"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాటు ID"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4429,6 +4729,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Название привычки"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கத்தின் பெயர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాటు పేరు"
           }
         },
         "th": {
@@ -4605,6 +4917,18 @@
             "value": "Задача"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4776,6 +5100,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex готов."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex தயாராக உள்ளது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex సిద్ధంగా ఉంది."
           }
         },
         "th": {
@@ -4952,6 +5288,18 @@
             "value": "Медитировать"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தியானம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ధ్యానం"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5124,6 +5472,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Читать"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வாசிப்பு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చదవడం"
           }
         },
         "th": {
@@ -5300,6 +5660,18 @@
             "value": "Гулять"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நடைப்பயிற்சி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నడక"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5472,6 +5844,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пить воду"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தண்ணீர் குடித்தல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నీళ్ళు తాగడం"
           }
         },
         "th": {
@@ -5647,6 +6031,18 @@
             "value": "Следите за выполнением задач на сегодня с одного взгляда."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று எத்தனை பணிகள் முடிந்தன என்பதை ஒரே பார்வையில் பார்க்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు ఎన్ని టాస్క్‌లు పూర్తయ్యాయో ఒక్క చూపులో చూడండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5818,6 +6214,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex для загрузки."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஏற்ற Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "లోడ్ చేయడానికి Lorvexను తెరవండి."
           }
         },
         "th": {
@@ -5993,6 +6401,18 @@
             "value": "Прогресс за день"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தினசரி முன்னேற்றம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రోజువారీ ప్రోగ్రెస్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6164,6 +6584,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прогресс"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முன்னேற்றம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రోగ్రెస్"
           }
         },
         "th": {
@@ -6339,6 +6771,18 @@
             "value": "Прогресс недоступен"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முன்னேற்றம் கிடைக்கவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రోగ్రెస్ అందుబాటులో లేదు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6510,6 +6954,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex для обновления"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ரிஃப்ரெஷ் செய்ய Lorvexஐத் திறக்கவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రిఫ్రెష్ చేయడానికి Lorvexను తెరవండి"
           }
         },
         "th": {
@@ -6685,6 +7141,18 @@
             "value": "Данные снимка повреждены"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்னாப்ஷாட் தரவு சேதமடைந்துள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్నాప్‌షాట్ డేటా దెబ్బతింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6856,6 +7324,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Снимок недоступен"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்னாப்ஷாட் கிடைக்கவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్నాప్‌షాట్ అందుబాటులో లేదు"
           }
         },
         "th": {
@@ -7031,6 +7511,18 @@
             "value": "Время обновления недоступно"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "புதுப்பித்த நேரம் கிடைக்கவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అప్‌డేట్ సమయం అందుబాటులో లేదు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7202,6 +7694,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обновите Lorvex для загрузки данных"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ரிஃப்ரெஷ் செய்ய Lorvexஐப் புதுப்பிக்கவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రిఫ్రెష్ చేయడానికి Lorvexను అప్‌డేట్ చేయండి"
           }
         },
         "th": {
@@ -7377,6 +7881,18 @@
             "value": "Обновлено %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ புதுப்பிக்கப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ అప్‌డేట్ అయింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7548,6 +8064,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обновлено только что"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இப்போதுதான் புதுப்பிக்கப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇప్పుడే అప్‌డేట్ అయింది"
           }
         },
         "th": {
@@ -7723,6 +8251,18 @@
             "value": "На сегодня ничего не осталось."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைக்கு எதுவும் மீதமில்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజుకు ఇంకేమీ లేదు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7894,6 +8434,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показан последний сохранённый список."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "கடைசியாகச் சேமித்த பட்டியலைக் காட்டுகிறது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చివరిగా సేవ్ చేసిన జాబితాను చూపుతోంది."
           }
         },
         "th": {
@@ -8070,6 +8622,18 @@
             "value": "Заблокирована"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தடுக்கப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బ్లాక్ చేయబడింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8243,6 +8807,18 @@
             "value": "Частная задача"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தனிப்பட்ட பணி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రైవేట్ టాస్క్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8411,6 +8987,18 @@
           }
         },
         "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex"
+          }
+        },
+        "te": {
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex"
@@ -8589,6 +9177,18 @@
             "value": "Сегодня"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8760,6 +9360,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Задачи на сегодня с одного взгляда."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பணிகளை ஒரே பார்வையில் பார்க்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు టాస్క్‌లను ఒక్క చూపులో చూడండి."
           }
         },
         "th": {
@@ -8935,6 +9547,18 @@
             "value": "Сегодня"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9106,6 +9730,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "До %@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ வரை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ వరకు"
           }
         },
         "th": {
@@ -9282,6 +9918,18 @@
             "value": "Начата · около %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடங்கப்பட்டது · சுமார் %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభమైంది · సుమారు %@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9453,6 +10101,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Просрочено"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "காலக்கெடு முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "గడువు మీరింది"
           }
         },
         "th": {
@@ -9628,6 +10288,18 @@
             "value": "Начата"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடங்கப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభమైంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9799,6 +10471,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ответить на замечания по дизайну"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வடிவமைப்புக் கருத்துகளுக்குப் பதில்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "డిజైన్ ఫీడ్‌బ్యాక్‌కు సమాధానం"
           }
         },
         "th": {
@@ -9974,6 +10658,18 @@
             "value": "Заменить паспорт"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பாஸ்போர்ட் புதுப்பித்தல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పాస్‌పోర్ట్ రెన్యూవల్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10145,6 +10841,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Забронировать авиабилеты"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விமான முன்பதிவு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విమానాల బుకింగ్"
           }
         },
         "th": {
@@ -10320,6 +11028,18 @@
             "value": "Сегодня важнее всего проверить спецификацию; авиабилеты могут подождать до четверга."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று ஸ்பெக் மீள்பார்வைதான் மிக முக்கியம்; விமான முன்பதிவு வியாழக்கிழமை வரை காத்திருக்கலாம்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు స్పెక్ సమీక్ష చాలా ముఖ్యం; విమానాల బుకింగ్ గురువారం వరకు ఆగవచ్చు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10491,6 +11211,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Всё сделано"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "எல்லாம் முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అంతా క్లియర్"
           }
         },
         "th": {
@@ -10666,6 +11398,18 @@
             "value": "Открыть «Сегодня»"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பார்வையைத் திற"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు వీక్షణను తెరవండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10837,6 +11581,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открывает «Сегодня» в Lorvex."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexஐ இன்றைய பார்வையில் திறக்கும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు వీక్షణలో Lorvexను తెరుస్తుంది."
           }
         },
         "th": {
@@ -11272,6 +12028,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Осталось: %lld"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld மீதமுள்ளது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld மீதமுள்ளன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld మిగిలి ఉంది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld మిగిలి ఉన్నాయి"
                 }
               }
             }

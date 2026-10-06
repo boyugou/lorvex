@@ -85,6 +85,8 @@ public struct LorvexSampleText: Sendable {
     .ptBR: brazilianPortuguese,
     .ro: romanian,
     .ru: russian,
+    .ta: tamil,
+    .te: telugu,
     .th: thai,
     .tr: turkish,
     .uk: ukrainian,

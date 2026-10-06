@@ -131,6 +131,18 @@
             "value": "Выполнить задачу «%@»"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிறைவுசெய்: %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి చేయండి: %@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -568,6 +580,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld பணி மீதமுள்ளது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld பணிகள் மீதமுள்ளன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld టాస్క్ మిగిలి ఉంది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld టాస్క్‌లు మిగిలి ఉన్నాయి"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -796,6 +844,18 @@
             "value": "ост."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீதம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మిగిలినవి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -968,6 +1028,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "мин"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிமி."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిమి."
           }
         },
         "th": {
@@ -1144,6 +1216,18 @@
             "value": "Осталось %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ மீதமுள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ మిగిలి ఉంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1316,6 +1400,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Список"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பட்டியல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జాబితా"
           }
         },
         "th": {
@@ -1492,6 +1588,18 @@
             "value": "Выберите список, чтобы показывать только его задачи."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒரு பட்டியலைத் தேர்ந்தெடுத்தால், அந்தப் பட்டியலின் பணிகள் மட்டுமே காட்டப்படும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఒక జాబితాను ఎంచుకుంటే, ఆ జాబితాలోని టాస్క్‌లు మాత్రమే చూపబడతాయి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1664,6 +1772,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сегодня"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు"
           }
         },
         "th": {
@@ -1840,6 +1960,18 @@
             "value": "Привычек пока нет."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்னும் பழக்கங்கள் எதுவும் இல்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇంకా అలవాట్లు ఏవీ లేవు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2012,6 +2144,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Список"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பட்டியல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జాబితా"
           }
         },
         "th": {
@@ -2441,6 +2585,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "Выполнено: %lld"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld முடிந்தது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld முடிந்தன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld పూర్తి"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld పూర్తి"
                 }
               }
             }
@@ -2926,6 +3106,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று மேலும் %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று மேலும் %lld"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు మరో %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు మరో %lld"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3146,6 +3362,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Все привычки выполнены сегодня"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பழக்கங்கள் அனைத்தும் முடிந்தன"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు అలవాట్లన్నీ పూర్తయ్యాయి"
           }
         },
         "th": {
@@ -3761,6 +3989,62 @@
             }
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@habitcount@ முடிந்தவை %1$lld"
+          },
+          "substitutions": {
+            "habitcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg பழக்கத்தில்"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg பழக்கங்களில்"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@habitcount@ %1$lld పూర్తి"
+          },
+          "substitutions": {
+            "habitcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg అలవాటులో"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg అలవాట్లలో"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4028,6 +4312,18 @@
             "value": "Выполнить привычку «%@»"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிறைவுசெய்: %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి చేయండి: %@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4202,6 +4498,18 @@
             "value": "%1$@, %2$lld из %3$lld"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$lld/%3$lld"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %3$lldలో %2$lld"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4374,6 +4682,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Привычки"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాట్లు"
           }
         },
         "th": {
@@ -4982,6 +5302,62 @@
                     "stringUnit": {
                       "state": "translated",
                       "value": "%arg задачи выполнено сегодня"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@taskcount@ %1$lld"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg பணியில் இன்று முடிந்தவை"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg பணிகளில் இன்று முடிந்தவை"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@taskcount@ %1$lld"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg టాస్క్‌లో ఈరోజు పూర్తయినవి"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg టాస్క్‌లలో ఈరోజు పూర్తయినవి"
                     }
                   }
                 }
@@ -5691,6 +6067,62 @@
             }
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg பணி"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg பணிகள்"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%#@taskcount@"
+          },
+          "substitutions": {
+            "taskcount": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg టాస్క్"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg టాస్క్‌లు"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5957,6 +6389,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прогресс"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முன்னேற்றம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రోగ్రెస్"
           }
         },
         "th": {
@@ -6396,6 +6840,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மீதமுள்ளது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld மீதமுள்ளன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld మిగిలి ఉంది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld మిగిలి ఉన్నాయి"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6623,6 +7103,18 @@
             "value": "Всё сделано"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "எல்லாம் முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అంతా క్లియర్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6794,6 +7286,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "На сегодня ничего не осталось."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைக்கு எதுவும் மீதமில்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజుకు ఇంకేమీ లేదు."
           }
         },
         "th": {
@@ -7223,6 +7727,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "+%lld ещё"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "மேலும் %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "மேலும் %lld"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "మరో %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "మరో %lld"
                 }
               }
             }

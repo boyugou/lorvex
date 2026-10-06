@@ -59,6 +59,11 @@ struct AppLanguageTests {
     (["mr-IN"], "mr"),
     (["bn-BD"], "bn"),
     (["bn-IN"], "bn"),
+    (["ta-IN"], "ta"),
+    (["ta-LK"], "ta"),
+    (["ta-SG"], "ta"),
+    (["ta-MY"], "ta"),
+    (["te-IN"], "te"),
     (["ar-SA"], "ar"),
     (["fa-IR"], "fa"),
     (["fa-AF"], "fa"),
@@ -101,7 +106,7 @@ struct AppLanguageTests {
     #expect(
       AppLanguage.selectable == [
         .id, .ms, .de, .en, .es, .fr, .it, .nl, .pl, .ptBR, .ro, .vi, .tr, .el, .ru, .uk, .he,
-        .ur, .ar, .fa, .mr, .hi, .bn, .th, .ko, .ja, .zhHans, .zhHant,
+        .ur, .ar, .fa, .mr, .hi, .bn, .ta, .te, .th, .ko, .ja, .zhHans, .zhHant,
       ])
   }
 

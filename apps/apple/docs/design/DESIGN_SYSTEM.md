@@ -324,7 +324,14 @@ On iPhone and iPad a create or edit sheet titles itself inline, between
 its Cancel and its confirm button, so the title does not take a line of
 a short sheet's height. A dense form (a task, a habit, an event, a repeat
 rule) opens at full height; a form of a few fields (a list, a memory)
-opens at a half-height detent that expands.
+opens at a half-height detent that expands. In a regular-width window
+(iPad) these sheets show as cards, and the half-height detent is a card
+about 360 pt tall while the keyboard is up. Quick add, whose hint under
+the notes runs to several lines in a tall script such as Telugu, takes a
+card height of its own in place of that detent: 480 pt at the default text
+size, growing with Dynamic Type and limited by the room above the keyboard.
+The setup wizard keeps its buttons in a safe-area bar, so a row that
+scrolls beneath them fades out instead of being cut at their edge.
 
 A field editor (a popover from a property row) holds only its field and follows
 four rules. Presets come first and "Custom…" last, so the common answer is one

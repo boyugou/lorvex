@@ -5,6 +5,15 @@ import SwiftUI
 /// native Cancel / Capture bar actions rather than occupying a primary tab.
 struct MobileStoreCaptureSheet: View {
   @Bindable var store: MobileStore
+  /// True when the presenting window is regular width, where the sheet shows as
+  /// a card. The sheet's own size class reads compact there, so the presenter
+  /// passes it in.
+  var showsAsCard = false
+
+  /// Points the form needs as a card at the default text size: the title and a
+  /// two-line preview, the notes box, and the hint under it in a script whose
+  /// lines run tall, such as Telugu.
+  private static let cardHeight: CGFloat = 480
 
   var body: some View {
     NavigationStack {
@@ -64,6 +73,6 @@ struct MobileStoreCaptureSheet: View {
         }
       }
     }
-    .mobileCompactEditorSheetPresentation()
+    .mobileCompactEditorSheetPresentation(cardHeight: showsAsCard ? Self.cardHeight : nil)
   }
 }

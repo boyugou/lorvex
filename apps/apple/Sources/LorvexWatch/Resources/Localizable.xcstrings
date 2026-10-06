@@ -130,6 +130,18 @@
             "value": "Отменить задачу"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியை ரத்துசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను రద్దు చేయండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -302,6 +314,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отменить повторение"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நேர்வை ரத்துசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సందర్భాన్ని రద్దు చేయండి"
           }
         },
         "th": {
@@ -478,6 +502,18 @@
             "value": "Отменить это повторение задачи «%@»?"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” பணியின் இந்த நேர்வை ரத்துசெய்யவா?"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” టాస్క్ యొక్క ఈ సందర్భాన్ని రద్దు చేయాలా?"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -650,6 +686,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отменяет это повторение задачи «%@»"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” பணியின் இந்த நேர்வை ரத்துசெய்யும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” టాస్క్ యొక్క ఈ సందర్భాన్ని రద్దు చేస్తుంది"
           }
         },
         "th": {
@@ -826,6 +874,18 @@
             "value": "Для повторяющихся задач отменяется только это повторение, а следующие продолжаются."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடர் பணிகளுக்கு, இந்த நேர்வு மட்டுமே ரத்துசெய்யப்படும்; எதிர்கால நேர்வுகள் தொடரும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమయ్యే టాస్క్‌ల విషయంలో, ఈ సందర్భం మాత్రమే రద్దవుతుంది; భవిష్యత్తు సందర్భాలు కొనసాగుతాయి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -998,6 +1058,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отменить повторение"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நேர்வை ரத்துசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సందర్భాన్ని రద్దు చేయండి"
           }
         },
         "th": {
@@ -1174,6 +1246,18 @@
             "value": "Отметить задачу «%@» выполненной"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” பணியை முடிந்ததாகக் குறி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” టాస్క్‌ను పూర్తయినట్లుగా మార్క్ చేయండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1346,6 +1430,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откладывает задачу «%@» на завтра"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” பணியை நாளை வரை தள்ளிவைக்கும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” టాస్క్‌ను రేపటి వరకు వాయిదా వేస్తుంది"
           }
         },
         "th": {
@@ -1522,6 +1618,18 @@
             "value": "Оставить задачу"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியை வைத்திரு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను ఉంచండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1694,6 +1802,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Завтра"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நாளை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రేపు"
           }
         },
         "th": {
@@ -1870,6 +1990,18 @@
             "value": "Задача в очереди: %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிலுவைப் பணி: %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పెండింగ్ టాస్క్: %@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2042,6 +2174,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавление"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சேர்க்கிறது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "జోడిస్తోంది"
           }
         },
         "th": {
@@ -2218,6 +2362,18 @@
             "value": "Новая задача"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "புதிய பணி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొత్త టాస్క్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2390,6 +2546,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавить"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "விரைவுச் சேர்த்தல்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "త్వరిత జోడింపు"
           }
         },
         "th": {
@@ -2566,6 +2734,18 @@
             "value": "Добавить задачу"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணியைச் சேர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌ను జోడించండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2738,6 +2918,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Название новой задачи"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "புதிய பணித் தலைப்பு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొత్త టాస్క్ టైటిల్"
           }
         },
         "th": {
@@ -2914,6 +3106,18 @@
             "value": "Закрыть"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிராகரி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "తీసివేయండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3088,6 +3292,18 @@
             "value": "Сохранённые действия недоступны"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சேமித்த செயல்கள் கிடைக்கவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సేవ్ చేసిన చర్యలు అందుబాటులో లేవు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3260,6 +3476,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex на iPhone, затем снова откройте приложение на часах"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneஇல் Lorvexஐத் திறந்து, பிறகு வாட்ச் செயலியை மீண்டும் திறக்கவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneలో Lorvexను తెరిచి, ఆపై వాచ్ యాప్‌ను మళ్ళీ తెరవండి"
           }
         },
         "th": {
@@ -3700,6 +3928,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நிலுவையிலுள்ளது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld நிலுவையிலுள்ளவை"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld పెండింగ్‌లో ఉంది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld పెండింగ్‌లో ఉన్నాయి"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3922,6 +4186,18 @@
             "value": "Действие %lld не применено"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "செயல் %lld செயல்படுத்தப்படவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చర్య %lld వర్తింపజేయబడలేదు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4094,6 +4370,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "iPhone не смог прочитать это действие. Обновите Lorvex на обоих устройствах."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் செயலை உங்கள் iPhoneஆல் படிக்க முடியவில்லை. இரண்டு சாதனங்களிலும் Lorvexஐப் புதுப்பிக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ iPhone ఈ చర్యను చదవలేకపోయింది. రెండు డివైజ్‌లలోనూ Lorvexను అప్‌డేట్ చేయండి."
           }
         },
         "th": {
@@ -4270,6 +4558,18 @@
             "value": "Доставка на iPhone"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஃபோனுக்கு டெலிவரி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఫోన్‌కు డెలివరీ"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4442,6 +4742,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Это действие конфликтует с более новыми изменениями."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் செயல் புதிய மாற்றங்களுடன் முரண்படுகிறது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ చర్య కొత్త మార్పులతో విభేదిస్తోంది."
           }
         },
         "th": {
@@ -4618,6 +4930,18 @@
             "value": "Это действие не применено на iPhone."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் செயல் iPhoneஇல் செயல்படுத்தப்படவில்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ చర్య iPhoneలో వర్తింపజేయబడలేదు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -4790,6 +5114,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Название задачи стало недопустимым."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணித் தலைப்பு இனி செல்லுபடியாகாது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్ టైటిల్ ఇక చెల్లదు."
           }
         },
         "th": {
@@ -4966,6 +5302,18 @@
             "value": "Этого объекта больше нет на iPhone."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்த ஐட்டம் iPhoneஇல் இனி இல்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ ఐటెమ్ iPhoneలో ఇక లేదు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5138,6 +5486,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Это сохранённое действие устарело."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் சேமித்த செயல் காலாவதியாகிவிட்டது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ సేవ్ చేసిన చర్య పాతదైంది."
           }
         },
         "th": {
@@ -5314,6 +5674,18 @@
             "value": "Это действие стало недопустимым."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் செயல் இனி செல்லுபடியாகாது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ చర్య ఇక చెల్లదు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5486,6 +5858,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Рабочая область на iPhone была заменена до применения этого действия."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் செயல் செயல்படுத்தப்படுவதற்கு முன்பே iPhone பணியிடம் மாற்றப்பட்டது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ చర్య వర్తింపజేయబడక ముందే iPhone వర్క్‌స్పేస్ రీప్లేస్ చేయబడింది."
           }
         },
         "th": {
@@ -5662,6 +6046,18 @@
             "value": "Изменение не сохранено. Повторите попытку."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "அந்த மாற்றம் சேமிக்கப்படவில்லை. மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఆ మార్పు సేవ్ కాలేదు. మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -5834,6 +6230,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex на iPhone или Mac, чтобы добавлять новые задачи."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "புதிய பணிகளைச் சேர்க்க iPhone அல்லது Macஇல் Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొత్త టాస్క్‌లను జోడించడానికి iPhone లేదా Macలో Lorvexను తెరవండి."
           }
         },
         "th": {
@@ -6010,6 +6418,18 @@
             "value": "Откройте Lorvex на iPhone или Mac, чтобы применить это действие."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தச் செயலைச் செயல்படுத்த iPhone அல்லது Macஇல் Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ చర్యను వర్తింపజేయడానికి iPhone లేదా Macలో Lorvexను తెరవండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6182,6 +6602,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Повторите попытку или откройте Lorvex на iPhone, если проблема не исчезнет."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் முயலவும்; தொடர்ந்தால் உங்கள் iPhoneஇல் Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మళ్ళీ ప్రయత్నించండి, లేదా ఇది కొనసాగితే మీ iPhoneలో Lorvexను తెరవండి."
           }
         },
         "th": {
@@ -6358,6 +6790,18 @@
             "value": "Не удалось загрузить «Сегодня»"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பட்டியலை ஏற்ற முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు జాబితాను లోడ్ చేయడం వీలుపడలేదు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6530,6 +6974,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Повторить"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் முயல்க"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మళ్ళీ ప్రయత్నించండి"
           }
         },
         "th": {
@@ -6706,6 +7162,18 @@
             "value": "Перезагружает «Сегодня» из снимка или с сопряжённого iPhone"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்னாப்ஷாட் அல்லது இணைக்கப்பட்ட iPhoneஇல் இருந்து இன்றைய பட்டியலை மீண்டும் ஏற்றும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్నాప్‌షాట్ లేదా పెయిర్ చేసిన iPhone నుండి ఈరోజు జాబితాను మళ్ళీ లోడ్ చేస్తుంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -6878,6 +7346,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Данные часов недоступны: %@"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வாட்ச் தரவு கிடைக்கவில்லை: %@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వాచ్ డేటా అందుబాటులో లేదు: %@"
           }
         },
         "th": {
@@ -7054,6 +7534,18 @@
             "value": "Откройте Lorvex на iPhone для синхронизации и повторите попытку."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒத்திசைக்க உங்கள் iPhoneஇல் Lorvexஐத் திறந்து, பிறகு மீண்டும் முயலவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సింక్ చేయడానికి మీ iPhoneలో Lorvexను తెరవండి, ఆపై మళ్ళీ ప్రయత్నించండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7228,6 +7720,18 @@
             "value": "«Сегодня» недоступно"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைய பட்டியல் கிடைக்கவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు జాబితా అందుబాటులో లేదు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7399,6 +7903,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Привычки"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பழக்கங்கள்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అలవాట్లు"
           }
         },
         "th": {
@@ -7575,6 +8091,18 @@
             "value": "Состояние данных на часах"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "வாட்ச் தரவு நிலை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వాచ్ డేటా స్థితి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -7747,6 +8275,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Данные снимка повреждены"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்னாப்ஷாட் தரவு சேதமடைந்துள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్నాప్‌షాట్ డేటా దెబ్బతింది"
           }
         },
         "th": {
@@ -7922,6 +8462,18 @@
             "value": "Напрямую из Lorvex"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexஇல் இருந்து நேரலை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex నుండి లైవ్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8093,6 +8645,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не обновлено"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ரிஃப்ரெஷ் செய்யப்படவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రిఫ్రెష్ కాలేదు"
           }
         },
         "th": {
@@ -8269,6 +8833,18 @@
             "value": "Откройте Lorvex для синхронизации"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒத்திசைக்க Lorvexஐத் திறக்கவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సింక్ చేయడానికి Lorvexను తెరవండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8441,6 +9017,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Снимок синхронизирован"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒத்திசைந்த ஸ்னாப்ஷாட்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సింక్ అయిన స్నాప్‌షాట్"
           }
         },
         "th": {
@@ -8617,6 +9205,18 @@
             "value": "Синхронизировано %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ஒத்திசைந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ సింక్ అయింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -8788,6 +9388,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Снимок недоступен"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்னாப்ஷாட் கிடைக்கவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్నాప్‌షాట్ అందుబాటులో లేదు"
           }
         },
         "th": {
@@ -8964,6 +9576,18 @@
             "value": "Не удалось прочитать снимок"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஸ்னாப்ஷாட்டைப் படிக்க முடியவில்லை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్నాప్‌షాట్ చదవడం వీలుపడలేదు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9136,6 +9760,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Обновите Lorvex для синхронизации"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ஒத்திசைக்க Lorvexஐப் புதுப்பிக்கவும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సింక్ చేయడానికి Lorvexను అప్‌డేట్ చేయండి"
           }
         },
         "th": {
@@ -9312,6 +9948,18 @@
             "value": "Заблокирована"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தடுக்கப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బ్లాక్ చేయబడింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9484,6 +10132,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex на iPhone или Mac, чтобы добавлять новые задачи."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "புதிய பணிகளைச் சேர்க்க iPhone அல்லது Macஇல் Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొత్త టాస్క్‌లను జోడించడానికి iPhone లేదా Macలో Lorvexను తెరవండి."
           }
         },
         "th": {
@@ -9660,6 +10320,18 @@
             "value": "Подождите, пока Lorvex закончит обновление."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex ரிஃப்ரெஷ் செய்து முடிக்கும் வரை காத்திருக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex రిఫ్రెష్ చేయడం పూర్తయ్యే వరకు వేచి ఉండండి."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -9831,6 +10503,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выполнено"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి"
           }
         },
         "th": {
@@ -10007,6 +10691,18 @@
             "value": "До %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ வரை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ వరకు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10179,6 +10875,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lorvex Сегодня"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex ఈరోజు"
           }
         },
         "th": {
@@ -10355,6 +11063,18 @@
             "value": "Показывает, сколько задач осталось на сегодня и какая из них первая."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று எத்தனை பணிகள் மீதமுள்ளன என்பதையும், மேலே உள்ள பணியையும் காட்டும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు ఎన్ని టాస్క్‌లు మిగిలి ఉన్నాయో, పైన ఉన్న టాస్క్ ఏదో చూపుతుంది."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10526,6 +11246,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отложить на завтра"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நாளை வரை தள்ளிவை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రేపటి వరకు వాయిదా వేయండి"
           }
         },
         "th": {
@@ -10701,6 +11433,18 @@
             "value": "Пауза"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இடைநிறுத்து"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పాజ్"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -10872,6 +11616,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Убирает «%@» из начатых задач"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடங்கிய பணிகளிலிருந்து “%@” பணியை நீக்கும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభించిన టాస్క్‌ల నుండి “%@” టాస్క్‌ను తీసివేస్తుంది"
           }
         },
         "th": {
@@ -11047,6 +11803,18 @@
             "value": "Начать"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடங்கு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభించండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -11218,6 +11986,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отмечает «%@» как начатую"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” பணியைத் தொடங்கியதாகக் குறிக்கும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” టాస్క్‌ను ప్రారంభించినట్లు గుర్తు పెడుతుంది"
           }
         },
         "th": {
@@ -11393,6 +12173,18 @@
             "value": "ост."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீதம்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మిగిలినవి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -11564,6 +12356,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "мин"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "நிமி."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిమి."
           }
         },
         "th": {
@@ -11740,6 +12544,18 @@
             "value": "Осталось %@"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ மீதமுள்ளது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ మిగిలి ఉంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -11911,6 +12727,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показывает действия для этой задачи"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இந்தப் பணியின் செயல்களைக் காட்டும்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ టాస్క్ చర్యలను చూపుతుంది"
           }
         },
         "th": {
@@ -12086,6 +12914,18 @@
             "value": "Просрочено"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "காலக்கெடு முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "గడువు మీరింది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -12259,6 +13099,18 @@
             "value": "Начата"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "தொடங்கப்பட்டது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభమైంది"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -12430,6 +13282,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Всё сделано"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "எல்லாம் முடிந்தது"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అంతా క్లియర్"
           }
         },
         "th": {
@@ -12859,6 +13723,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld выполнено сегодня"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld முடிந்தது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld முடிந்தன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld పూర్తయింది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld పూర్తయ్యాయి"
                 }
               }
             }
@@ -13344,6 +14244,42 @@
             }
           }
         },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று மேலும் %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று மேலும் %lld"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు మరో %lld"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు మరో %lld"
+                }
+              }
+            }
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -13565,6 +14501,18 @@
             "value": "На сегодня ничего не осталось."
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்றைக்கு எதுவும் மீதமில்லை."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజుకు ఇంకేమీ లేదు."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -13738,6 +14686,18 @@
             "value": "Сегодня"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "இன்று"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -13909,6 +14869,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Откройте Lorvex на iPhone, чтобы изменять задачи."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "பணிகளை மாற்ற iPhoneஇல் Lorvexஐத் திறக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "టాస్క్‌లను మార్చడానికి iPhoneలో Lorvexను తెరవండి."
           }
         },
         "th": {
@@ -14343,6 +15315,42 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "На сегодня осталось %lld задачи"
+                }
+              }
+            }
+          }
+        },
+        "ta": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld பணி மீதமுள்ளது"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "இன்று %lld பணிகள் மீதமுள்ளன"
+                }
+              }
+            }
+          }
+        },
+        "te": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld టాస్క్ మిగిలి ఉంది"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ఈరోజు %lld టాస్క్‌లు మిగిలి ఉన్నాయి"
                 }
               }
             }

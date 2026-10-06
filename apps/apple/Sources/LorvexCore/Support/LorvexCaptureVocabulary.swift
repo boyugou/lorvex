@@ -44,9 +44,18 @@ struct LorvexCaptureVocabulary: Sendable {
   /// ``unaccentedForMatching(_:)`` does; for Romanian the same, which reads ă,
   /// â, and î as a, a, and i and both the comma-below and the cedilla forms of
   /// ș/ş and ț/ţ as s and t ("mâine" as "maine", "sâmbătă" as "sambata"); for
-  /// Indonesian and Malay, which are written without diacritics, and for
+  /// Turkish the line with ç, ğ, ö, ş, ü, â, î, and û read as c, g, o, s, u, a,
+  /// i, and u and the dotted and dotless i (ı, I, İ) read as i, so "Salı",
+  /// "SALI", and "sali" are one word and "persembe" reads as "perşembe", while
+  /// a letter typed as a base letter and a combining mark stays as typed
+  /// (``turkishForMatching(_:)``); for Greek the line with the accent and
+  /// diaeresis taken off its letters and the final sigma ς read as σ, so
+  /// "αύριο", "αυριο", and "ΑΥΡΙΟ" are one word, while a letter typed as a base
+  /// letter and a combining mark stays as typed (``greekForMatching(_:)``); for
+  /// Indonesian and Malay, which are written without diacritics, for
   /// Vietnamese, whose patterns spell each word with its tone and vowel marks,
-  /// without any, or with only the stroke of "đ" written as "d", the line as
+  /// without any, or with only the stroke of "đ" written as "d", and for Thai,
+  /// whose patterns spell each word with its vowel and tone marks, the line as
   /// typed. It must keep every character at its UTF-16 offset, so a match range
   /// in it is the same range in the typed line.
   var readingForm: @Sendable (String) -> String = { $0 }
@@ -82,10 +91,11 @@ struct LorvexCaptureVocabulary: Sendable {
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
   /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian,
   /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, Hebrew, German, Dutch,
-  /// Romanian, Malay, Indonesian, and Vietnamese when `languages` includes them
-  /// (any region of a language: "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL",
-  /// "ar-SA", "fa-IR", "fa-AF", "hi-IN", "ur-PK", "ur-IN", "he-IL", "de-AT",
-  /// "de-CH", "nl-BE", "ro-MD", "ms-MY", "ms-SG", "ms-BN", "id-ID", "vi-VN"),
+  /// Romanian, Malay, Indonesian, Vietnamese, Turkish, Thai, and Greek when
+  /// `languages` includes them (any region of a language: "es-MX", "es-419",
+  /// "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF", "hi-IN", "ur-PK",
+  /// "ur-IN", "he-IL", "de-AT", "de-CH", "nl-BE", "ro-MD", "ms-MY", "ms-SG",
+  /// "ms-BN", "id-ID", "vi-VN", "tr-TR", "tr-CY", "th-TH", "el-GR", "el-CY"),
   /// then Chinese and English, which every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
@@ -94,24 +104,27 @@ struct LorvexCaptureVocabulary: Sendable {
   /// English, so a part of the day or a word written before or after a clock
   /// time ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00", "o 15:00", "الساعة 3:30",
   /// "ساعت 3:30", "3:30 बजे", "3:30 بجے", "בשעה 3:30", "um 15:30", "abends
-  /// 7:30", "om 15:30", "'s avonds 7:30", "la 15:30", "seara 7:30") is read with
-  /// the time instead of being left in the title when the English pattern takes
-  /// "3:30" or "15:00". Persian goes after Arabic, so for a user who reads both,
-  /// a phrase the two could read is read the Arabic way; they share few words.
+  /// 7:30", "om 15:30", "'s avonds 7:30", "la 15:30", "seara 7:30", "15:00 น.")
+  /// is read with the time instead of being left in the title when the English
+  /// pattern takes "3:30" or "15:00". Persian goes after Arabic, so for a user
+  /// who reads both, a phrase the two could read is read the Arabic way; they
+  /// share few words.
   /// Urdu goes after Persian and Hindi, so for a user who
   /// reads Urdu and one of them, a phrase two of them could read is read the
   /// earlier way; Urdu shares its script with Arabic and Persian and its spoken
   /// words with Hindi, but few written words with any of them. Hebrew goes
   /// after them: its letters belong to no other vocabulary, so its position
   /// settles no phrase between it and another language. German, Dutch,
-  /// Romanian, Malay, Indonesian, and Vietnamese go last of the languages: their
-  /// words are written in Latin letters like the French, Portuguese, Spanish,
-  /// Italian, and Polish ones, but no phrase is the same in two of them ("um 15
-  /// Uhr", "om 15 uur", "la ora 15", "pukul 15", "3 giờ chiều", "jeden Montag",
-  /// "elke maandag", "în fiecare luni", "setiap Isnin", "mỗi thứ Hai"), and where
-  /// two of them share a word with one meaning ("morgen", "15 oktober", "15
-  /// august", "15/10/2026") either reads it alike, so their positions settle no
-  /// phrase either. Malay goes before Indonesian, which it
+  /// Romanian, Malay, Indonesian, Vietnamese, and Turkish go next: their words
+  /// are written in Latin letters like the French, Portuguese, Spanish,
+  /// Italian, and Polish ones, but no phrase is the same in two of them ("um 15 Uhr", "om 15 uur", "la ora 15", "pukul 15", "3 giờ
+  /// chiều", "saat 15:00", "jeden Montag", "elke maandag", "în fiecare luni",
+  /// "setiap Isnin", "mỗi thứ Hai", "her pazartesi"), and where two of them
+  /// share a word with one meaning ("morgen", "15 oktober", "15 august",
+  /// "15/10/2026") either reads it alike, so their positions settle no phrase
+  /// either. Thai and Greek go after them: like Hebrew, their letters belong to
+  /// no other vocabulary, so their positions settle no phrase between them and
+  /// another language. Malay goes before Indonesian, which it
   /// shares many words with ("hari ini", "setiap", "pukul", "jam", "lusa"): a
   /// word they read alike is read alike, a phrase only Malay reads ("pukul tiga
   /// setengah", "8 malam", "5hb") is read by Malay, and a phrase only Indonesian
@@ -130,10 +143,12 @@ struct LorvexCaptureVocabulary: Sendable {
   /// written with h to it (``englishBesideHourClock``), so "15h" is never read
   /// as fifteen hours.
   /// Spanish, Italian, Russian, Ukrainian, Polish, Arabic, Persian, Hindi,
-  /// Urdu, Hebrew, Dutch, Romanian, Malay, and Indonesian do not write a clock
-  /// time that way (Dutch writes its hours with "uur" or "u", Romanian with "ora"
-  /// before the hour, Malay and Indonesian with "pukul" or "jam" before it), so
-  /// "2h" beside them stays a length.
+  /// Urdu, Hebrew, Dutch, Romanian, Malay, Indonesian, Turkish, Thai, and Greek
+  /// do not write a clock time that way (Dutch writes its hours with "uur" or
+  /// "u", Romanian with "ora" before the hour, Malay and Indonesian with "pukul"
+  /// or "jam" before it, Turkish with "saat" before the hour or a case ending
+  /// after it, Thai with "โมง", "ทุ่ม", or "ตี" or with "น." after the time,
+  /// Greek with "στις" or "ώρα" before it), so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -157,6 +172,9 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("ms") { vocabularies.append(.malay) }
     if codes.contains("id") { vocabularies.append(.indonesian) }
     if codes.contains("vi") { vocabularies.append(.vietnamese) }
+    if codes.contains("tr") { vocabularies.append(.turkish) }
+    if codes.contains("th") { vocabularies.append(.thai) }
+    if codes.contains("el") { vocabularies.append(.greek) }
     let english = vocabularies.contains(where: \.writesClockTimesWithH) ? englishBesideHourClock : .english
     return vocabularies + [.chinese, english]
   }

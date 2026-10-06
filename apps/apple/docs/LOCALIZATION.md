@@ -117,8 +117,9 @@ the CLDR category automatically. The rules for writing count strings are under
 catalogs carry; see "Language coverage" below. A plural entry carries, for each
 language, the CLDR categories that language's integer counts select, as
 declared in `PLURAL_CATEGORIES` in `script/verify_localization_catalog.py`:
-English, German, Dutch, Turkish, Greek, and Marathi `one`/`other`, where `one`
-selects only 1; Spanish and Italian `one`/`other`, and French and Brazilian Portuguese
+English, German, Dutch, Turkish, Greek, Marathi, Tamil, and Telugu
+`one`/`other`, where `one` selects only 1; Spanish and Italian `one`/`other`,
+and French and Brazilian Portuguese
 `one`/`other` where `one` selects both 0 and 1, each with an optional `many`
 that only round millions select and that falls back to `other` when absent; Hindi, Bengali, and Persian `one`/`other`, where `one` selects both 0 and
 1; Urdu `one`/`other`, where `one` selects only 1; Hebrew `one`/`other` with an
@@ -141,7 +142,7 @@ Apple's lookup honors an explicit `zero` entry in every language.
 
 A `one` form may leave the number out ("Once a week") only in a language whose
 `one` means exactly 1, as in English, German, Dutch, Spanish, Italian, Romanian,
-Polish, Turkish, Greek, and Marathi. French,
+Polish, Turkish, Greek, Marathi, Tamil, and Telugu. French,
 Brazilian Portuguese, Hindi, Bengali, and Persian also use `one` for 0, and
 Russian and Ukrainian use it for 21, 31, 101, and so on, so their `one` forms
 show the count. A `zero` form takes 0 over from `one`, so an entry that defines
@@ -227,7 +228,8 @@ that its bundles ship, matched the way Foundation matches localizations:
   `it-CH` selects `it`; `ja-JP` selects `ja`; `ko-KR` selects `ko`; `mr-IN`
   selects `mr`; `ms-MY`, `ms-SG`, and `ms-BN` select `ms`; `nl-BE` selects
   `nl`; `pl-PL` selects `pl`; `ro-MD` selects `ro`; `ru-RU` and `ru-KZ` select
-  `ru`; `th-TH` selects `th`; `tr-TR` and `tr-CY` select `tr`; `uk-UA` selects
+  `ru`; `ta-IN`, `ta-LK`, `ta-SG`, and `ta-MY` select `ta`; `te-IN` selects
+  `te`; `th-TH` selects `th`; `tr-TR` and `tr-CY` select `tr`; `uk-UA` selects
   `uk`; `vi-VN` selects `vi`; `en-GB` selects `en`. `pt-PT` selects `pt-BR`,
   the one Portuguese variety shipped.
 - Chinese is matched by script, and a code with no script gets the script its
@@ -272,14 +274,14 @@ Settings > General > Language & Region > Applications). The in-app picker
 setting always agree; "System Default" removes it. It lists the languages by
 endonym in one order for every interface language: the Latin-script names
 alphabetically, then each other script as a group (Greek, Cyrillic, Hebrew,
-Arabic script, Devanagari, Bengali, Thai, Hangul, Han). The picker reads only
-the app's own domain: a plain `UserDefaults` lookup would fall through to launch
-arguments and to the system-wide list and report them as a choice. A bundle
-resolves its language once, at launch, so a change applies after a relaunch;
-both pickers show a note while the chosen language differs from the running
-one, and macOS offers Quit & Reopen. The app's widgets and the watch keep
-following the system language, because each runs in its own process with its
-own preferences.
+Arabic script, Devanagari, Bengali, Tamil, Telugu, Thai, Hangul, Han). The
+picker reads only the app's own domain: a plain `UserDefaults` lookup would fall
+through to launch arguments and to the system-wide list and report them as a
+choice. A bundle resolves its language once, at launch, so a change applies
+after a relaunch; both pickers show a note while the chosen language differs
+from the running one, and macOS offers Quit & Reopen. The app's widgets and the
+watch keep following the system language, because each runs in its own process
+with its own preferences.
 
 The layout direction follows the language the app shows, however that
 language was chosen. iOS mirrors an app running in a right-to-left language
@@ -384,31 +386,27 @@ English (`en`) is the source language. The shipped languages are English,
 Arabic (`ar`), Bengali (`bn`), German (`de`), Greek (`el`), Spanish (`es`),
 Persian (`fa`), French (`fr`), Hebrew (`he`), Hindi (`hi`), Indonesian (`id`),
 Italian (`it`), Japanese (`ja`), Korean (`ko`), Marathi (`mr`), Malay (`ms`),
-Dutch (`nl`), Polish (`pl`),
-Brazilian Portuguese (`pt-BR`), Romanian (`ro`), Russian (`ru`), Thai (`th`),
-Turkish (`tr`), Ukrainian (`uk`), Urdu (`ur`), Vietnamese (`vi`), Simplified
-Chinese (`zh-Hans`), and Traditional Chinese (`zh-Hant`).
+Dutch (`nl`), Polish (`pl`), Brazilian Portuguese (`pt-BR`), Romanian (`ro`),
+Russian (`ru`), Tamil (`ta`), Telugu (`te`), Thai (`th`), Turkish (`tr`),
+Ukrainian (`uk`), Urdu (`ur`), Vietnamese (`vi`), Simplified Chinese
+(`zh-Hans`), and Traditional Chinese (`zh-Hant`).
 
-The target set is thirty languages, because the language count is capped at
-about thirty: the 31 locales lorvex.app is published in, without Malayalam
-(`ml`). They are `en`, `zh-Hans`, `zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`,
-`pt-BR`, `ru`, `id`, `ur`, `de`, `ja`, `mr`, `te`, `tr`, `ta`, `vi`, `ko`, `fa`,
-`it`, `th`, `pl`, `uk`, `ms`, `nl`, `ro`, `el`, `he`. `PLURAL_CATEGORIES` declares
-the plural rules of every one of them and of `ml` (a regional identifier such as
+That is thirty languages, and the set is complete: the language count is capped
+at about thirty. `PLURAL_CATEGORIES` declares the plural rules of every shipped
+language and of `ml`, which no catalog carries (a regional identifier such as
 `pt-BR` uses its language's rules).
+
 Each identifier names the variety its translation is written in and covers
 the regions the system matches to it: neutral `es` serves every Spanish
 region, Brazilian Portuguese `pt-BR` also serves Portugal (Foundation falls
 back to a sibling region), and `zh-Hant` (Taiwan usage) serves Hong Kong and
 Macau. A language ships only when every catalog, every InfoPlist.strings
 target, and the language picker carry it; the verifier and `LocalizationTests`
-reject a partial language, so languages are added one batch at a time, each
-language in the batch complete before the batch merges. Arabic, Persian,
-Urdu, and Hebrew are right-to-left. Arabic's mirrored layout is captured and
-reviewed on the macOS preview tour, the iOS screens, and the iOS widget gallery;
-the Persian, Urdu, and Hebrew layouts are captured and reviewed on the macOS
-preview tour and the iPad screens. The watch surface has no
-capture in any right-to-left language.
+reject a partial language. Arabic, Persian, Urdu, and Hebrew are right-to-left.
+Arabic's mirrored layout is captured and reviewed on the macOS preview tour, the
+iOS screens, and the iOS widget gallery; the Persian, Urdu, and Hebrew layouts
+are captured and reviewed on the macOS preview tour and the iPad screens. The
+watch surface has no capture in any right-to-left language.
 
 ## Catalog location
 
@@ -2994,12 +2992,73 @@ and in Shortcuts.
   longer. A placeholder in a narrow sheet field stays about as long as the
   English one ("Bir teşvik sözü ekleyin" for "Add an encouraging line" on the
   habit sheet).
-- The capture parser (`LorvexCaptureParser`) has no Turkish vocabulary: it
-  reads English and Chinese words wherever the interface language is Turkish.
-  The capture hint (`capture.footer.words`) therefore gives English examples
-  and says so ("Satır başına bir görev. İngilizce “tomorrow”, “3pm”, “every
-  Monday”, “20 min” veya “#list” gibi sözcükler görevin ayrıntılarını
-  doldurur.").
+- The capture parser (`LorvexCaptureParser`) reads Turkish day, date, time,
+  duration, repeat, and priority words for a user who reads Turkish (tr-TR,
+  tr-CY, and any other region), so the Turkish capture hint gives Turkish
+  examples (“yarın”, “saat 15:00”, “her pazartesi”, “20 dk”, “#liste”).
+  Turkish names a clock time with "saat" before it or a locative ending after
+  it ("saat 3", "3'te"), so the time example carries "saat". The Turkish
+  letters are optional: the parser reads ç, ğ, ö, ş, ü, and the circumflex
+  vowels as the plain letter, and the dotted and dotless i in both cases as one
+  letter ("SALI", "Salı", "sali", and "SALİ" are one word, as are "perşembe"
+  and "persembe"), and the title keeps the letters that were typed. A letter
+  typed as a base letter and a separate combining mark is left as it is, so a
+  detail word typed that way is not read. A case ending is part of a detail
+  only where a rule lists it ("cumaya kadar", "15 Ekim'de", "saat 5'te"),
+  with a straight, curly, or no apostrophe, so "Cuma'nın", "yarından", and
+  "cumaya" alone stay in the title.
+  Turkish adds to the hour it names, where German and Dutch count a half hour
+  toward the next one, so "saat üç buçuk" is 3:30, "üçü çeyrek geçe" is 3:15,
+  "dörde çeyrek var" is 3:45, and "üçe on var" is 2:50. "Buçuk" is read with
+  "saat", a part of the day, or the "-ta" ending ("üç buçukta"), since "üç
+  buçuk" alone is as often an amount ("iki buçuk kilo"), and minutes with a
+  unit word ("üçü on dakika geçe") stay in the title whole. A bare number is a
+  time only after "saat", a part of the day, or a locative ending ("5'te"), so
+  "Toplantı 5" and "akşam 8 kişi" stay in the title. An hour from 1 to 6 with
+  no part of the day is in the afternoon ("saat 3" is 3 PM) unless it is
+  written with a zero ("saat 03:00"), a part of the day sets the hour ("sabah"
+  the morning, "öğleden sonra" and "akşam" the afternoon and evening), "gece"
+  runs past midnight ("gece 2'de" is 02:00 on the next day, and "gece 12" and
+  "gece yarısı" are 00:00 on the next day), and "öğlen" is noon. A dotted
+  number such as "17.30" is a clock time, but one whose minutes read as a month
+  ("15.10") is a date. The short forms "15.10" and "15/10" are dates only
+  after "tarih" or a deadline word, with a locative ending ("15/10'da"), or
+  before "kadar", since they are as often a time or a number, while the full
+  forms ("15.10.2026", "15.10.26", "15.10.") are always dates. Turkish does
+  not write a clock time with the letter h, so "15h" and "2h" are lengths, as
+  in English alone. An amount that names a moment or a bound ("30 dakika
+  sonra", "2 saat içinde", "en fazla 2 saat") is not a length, so it stays in
+  the title.
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("bu hafta sonu" is the coming Saturday and "önümüzdeki hafta
+  sonu" the one after). A weekday name alone is the coming one, a full week
+  ahead when it names today, "bu salı" is the coming one counting today (on a
+  Tuesday it is today, and "bu pazartesi" is the Monday ahead), "haftaya salı"
+  and "önümüzdeki hafta salı" are next week's, and "önümüzdeki salı" and
+  "gelecek salı" are the coming one. "Pazar" is also the market, so it names
+  Sunday only after "bu", "önümüzdeki", "gelecek", or "haftaya", or with
+  "günü" or a part of the day ("pazar akşamı"); the short forms "sal", "çar",
+  "per", "cum", and "paz" are words of their own and stay, while "pzt" and
+  "cmt" read. A month
+  abbreviation ("Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl",
+  "Eki", "Kas", "Ara") reads only when capitalized or followed by a period,
+  since "ara", "kas", "haz", and "eki" are ordinary words. "Hafta sonu" and
+  "hafta içi" alone are nouns of many titles and stay in the title. A span of
+  weekdays ("cumadan pazara kadar", "cuma-pazar") is a range, and Monday to
+  Friday is the working week, a repeat. No past day is read: "dün", "evvelsi
+  gün", "geçen cuma", and "geçen hafta sonu" stay in the title, and so does a
+  clock time right after one ("dün saat 3'te"). The two-word "bu gün" is also
+  left unread, since it is "this day" in many sentences. A day with the dative
+  ending before "kadar", "dek", or "değin" ("cumaya kadar"), a day before
+  "önce" ("cumadan önce"), and a day after "son tarih", "en geç", "teslim",
+  "termin", or "deadline" is a deadline. A clock time that names a bound ("saat
+  17:00'ye kadar", "en geç saat 5'te", "5'ten önce", "17:00'den sonra") stays
+  in the title, while the day before it is the due day.
+  The adverbs "günlük", "haftalık", "aylık", and "yıllık" repeat a task only at
+  the end of the line, at its start before a colon or a comma, or with
+  "olarak", since they are adjectives before a noun ("haftalık rapor"), and
+  "acil" and "önemli" are priority words in the same two places for the same
+  reason ("acil servis" stays).
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are imperatives that
   name the app exactly once and put the word uygulaması after it with the
   ending the verb needs, so the token never takes a suffix ("${applicationName}
@@ -3109,11 +3168,108 @@ Shortcuts.
   be longer. A placeholder in a narrow sheet field stays about as long as the
   English one ("เพิ่มประโยคให้กำลังใจ" for "Add an encouraging line" on the
   habit sheet).
-- The capture parser (`LorvexCaptureParser`) has no Thai vocabulary: it reads
-  English and Chinese words wherever the interface language is Thai. The
-  capture hint (`capture.footer.words`) therefore gives English examples and
-  says so ("หนึ่งบรรทัดต่อหนึ่งงาน คำภาษาอังกฤษอย่าง “tomorrow”, “3pm”, “every
-  Monday”, “20 min” หรือ “#list” จะเติมรายละเอียดของงานให้").
+- The capture parser (`LorvexCaptureParser`) reads Thai day, date, time,
+  duration, repeat, and priority words for a user who reads Thai (th-TH and
+  any other region), so the Thai capture hint gives Thai examples in “ ”
+  (“พรุ่งนี้”, “บ่ายสามโมง”, “ทุกวันจันทร์”, “20 นาที”, “#รายการ”). Thai names a
+  clock time with the traditional hour words ("โมง", "ทุ่ม", "ตี") or puts "น."
+  or "นาฬิกา" after a 24-hour time, so the time example is the spoken form,
+  which carries its part of the day. Thai is written without spaces, so the
+  parser finds a detail word by its syllables: a phrase starts only where no
+  leading vowel (เ แ โ ใ ไ) stands before it and ends only where no vowel sign
+  or tone mark of its last consonant follows it. "ประชุมพรุ่งนี้" plans
+  "ประชุม" for tomorrow, the glued and the spaced form of a phrase read alike,
+  and "สาม" inside "สามัคคี" is no hour. A phrase taken out from between two
+  Thai words leaves one space between them ("ส่งงานพรุ่งนี้ที่ห้องประชุม"
+  becomes "ส่งงาน ที่ห้องประชุม"), since only Chinese and Japanese titles close
+  the gap. A few words are also checked by name. A weekday name after "ดาว",
+  "ดวง", "พระ", "คุณ", "นาย", or "นาง" is no day ("ดาวศุกร์" is Venus,
+  "พระจันทร์" the moon), a part of the day glued to the word before it belongs
+  to that word ("ข้าวเย็น" is dinner, "ส่งคืน" is to return something), and
+  "ด่วน", "สำคัญ", and "เที่ยง" are read only as words of their own, with a
+  space, punctuation, or an end of the line on both sides ("ทางด่วน" is an
+  expressway, "เอกสารสำคัญ" a kind of document, "ข้าวเที่ยง" lunch). The longer
+  priority phrases ("ด่วนมาก", "เร่งด่วน", "สำคัญที่สุด") read glued to the
+  words around them, unless "กว่า" or "เท่า" follows and makes them a
+  comparison ("สำคัญมากกว่า" stays). The vowel "ำ" is also read when it is
+  typed as nikhahit and sara aa, as some keyboards write it, and the title
+  keeps the letters that were typed.
+  Digits are Arabic or Thai (๐-๙). A year of 2400 or more is Buddhist Era, the
+  Christian year plus 543 ("2569" is 2026), "พ.ศ." and "ค.ศ." name the era
+  outright, and a two-digit year is read only after "วันที่" or a deadline
+  word, as the one of the next ten years in either era ("วันที่ 15/10/69"). A
+  month is read after its day number, in full or abbreviated, with a year or
+  with "นี้" ("15 ตุลาคม", "15 ต.ค.", "15 ตุลาคมนี้", "15 ตุลาคม พ.ศ. 2569"). A
+  month with no day ("ตุลาคม", "เดือนตุลาคม"), a day the month lacks ("31
+  กุมภาพันธ์"), and a date already past ("1 กันยายน 2569") stay in the title.
+  The short form "15/10" is a date only after "วันที่" or a deadline word,
+  since Thai house numbers are written "99/9", while "15/10/2569" and
+  "15-10-2026" are always dates.
+  A time written with "น." or "นาฬิกา" is on the 24-hour clock, so "3.30 น." is
+  03:30 and "15.30 น." is 15:30. A colon or dotted number with neither
+  ("15:30", "15.30") is left to English, since it is as often an amount ("ราคา
+  10.30 บาท"). The traditional clock counts the way it is spoken: "ตี" the
+  small hours from one to five, "ทุ่ม" the evening hours from one (19:00) to
+  five (23:00), and "โมง" the hours of the day. An hour of "โมง" with no part
+  of the day is in the afternoon from 1 to 6 ("3 โมง" is 15:00, "6 โมง" is
+  18:00) and in the morning from 7 to 11; "เช้า" goes with 6 to 11, "บ่าย" with
+  1 to 6, and "เย็น" with 3 to 11, and an hour a part never goes with ("สองโมงเช้า")
+  is no time. A part of the day beside the day sets the hour of a bare "โมง"
+  ("พรุ่งนี้เย็น 7 โมง" is 19:00). "ครึ่ง" adds thirty minutes to the hour it
+  follows ("บ่ายสามครึ่ง", "3 โมงครึ่ง", and "ทุ่มครึ่ง" are 15:30, 15:30, and
+  19:30), where German and Dutch count a half hour toward the next one.
+  "เที่ยง" is noon, and "เที่ยงคืน" is the midnight that ends the day, so it
+  plans the day after the one named (tomorrow, when none is), as does an hour
+  of "ตี" after "คืนนี้" or another evening day. Minutes after an hour are
+  read with "นาที" ("3 โมง 15 นาที" is 15:15), so an amount of minutes right
+  after "โมง" belongs to the clock ("บ่ายสามโมง 30 นาที" is 15:30) and a length
+  beside a time needs "ใช้เวลา" ("บ่ายสามโมง ใช้เวลา 30 นาที") or hours ("บ่ายสามโมง
+  2 ชั่วโมง"). A time range ("10:00-11:00 น.", "9-11 โมงเช้า", "บ่ายสองถึงสี่โมง")
+  sets the start and the length, and two bare hours with no unit or part of
+  the day ("14-16") stay in the title, since they are as often an amount or
+  numbered items. Thai does not write a clock time with the letter h, so "15h"
+  and "2h" are lengths, as in English alone.
+  A length is minutes or hours ("30 นาที", "1 ชั่วโมง", "1 ชม.", "1.5 ชั่วโมง",
+  "ครึ่งชั่วโมง", "ชั่วโมงครึ่ง", "2 ชั่วโมง 30 นาที"), in digits or spelled out
+  ("สามสิบนาที"), maybe after "ใช้เวลา", "ระยะเวลา", "นาน", or "ประมาณ". An
+  amount that names a moment, a bound, the past, or a rate ("อีก 30 นาที",
+  "ภายใน 2 ชั่วโมง", "ทุก 30 นาที", "30 นาทีที่แล้ว", "วันละ 2 ชั่วโมง", "2-3
+  ชั่วโมง") is not a length and stays in the title, and so do a spelled single
+  minute and an amount over twenty-four hours.
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("สุดสัปดาห์" is the coming Saturday and "สุดสัปดาห์หน้า" the one
+  after). A weekday name with "วัน" alone is the coming one, a full week ahead
+  when it names today, "วันศุกร์นี้" counts today, and "วันศุกร์หน้า" and
+  "สัปดาห์หน้าวันศุกร์" are next week's. A name without "วัน" is a day only
+  with "นี้" or "หน้า" after it ("ศุกร์นี้", "ศุกร์หน้า") or after a deadline
+  word, since "จันทร์", "ศุกร์", and "อังคาร" also name the moon, Venus, and
+  Mars and "อาทิตย์" alone is a week, so Sunday is always written with "วัน".
+  No past day is read: "เมื่อวาน", "เมื่อคืน", "เมื่อเช้า", "วันศุกร์ที่แล้ว",
+  "สัปดาห์ที่แล้ว", and "3 วันก่อน" stay in the title, and so does a clock
+  time right after one. "ทุกวันนี้" (nowadays) and an ordinal weekday of the
+  month ("วันพุธที่สองของเดือน") stay whole. A span of days ("3-5 พฤษภาคม",
+  "ตั้งแต่ 3 ถึง 5 พฤษภาคม", "ตั้งแต่วันศุกร์ถึงวันอาทิตย์") is a range, planned
+  on its first day and due on its last; on its own a day after "ถึง" or
+  "ตั้งแต่" is the end or the start of a stretch of time and stays in the
+  title. A day after "ภายใน", "ไม่เกิน", "ก่อน", "จนถึง", "เดดไลน์", "deadline",
+  "กำหนดส่ง", or "ครบกำหนด" is a deadline, and a clock time that names a bound
+  ("ก่อน 5 โมงเย็น", "ภายใน 17:00 น.", "หลังเที่ยง", "ตั้งแต่ 9 โมงเป็นต้นไป")
+  stays in the title while the day before it is the due day.
+  A repeat is "ทุก" with a unit ("ทุกวัน", "ทุกสัปดาห์", "ทุก 2 สัปดาห์"), a
+  "เว้น" form ("วันเว้นวัน"), a "ละครั้ง" form ("สัปดาห์ละครั้ง"), a weekday
+  ("ทุกวันจันทร์", "ทุกวันจันทร์และวันพุธ"), the working days ("ทุกวันทำงาน",
+  "ทุกวันจันทร์ถึงวันศุกร์"), the weekend ("ทุกสุดสัปดาห์"), or a day of the
+  month ("ทุกวันที่ 15"); whole weeks counted in days are a weekly repeat
+  ("ทุก 14 วัน"). "ทุกวันหยุด", "ทุกวันเกิด", "สัปดาห์ละ 2 ครั้ง", and the
+  weekdays of a month ("ทุกวันศุกร์สุดท้ายของเดือน") name no repeat the app can
+  set and stay in the title. A priority is "ด่วน", "สำคัญ", "ด่วนมาก", or
+  "เร่งด่วน" (high), "ไม่ด่วน" or "ไม่สำคัญ" (low), or "ความสำคัญ" with "สูง",
+  "ปานกลาง", "ต่ำ", or a digit from 1 to 3; the repetition mark "ๆ" after a
+  word belongs to it ("ด่วนมากๆ"), and a polite particle after it ("ครับ")
+  stays in the title. Thai is tried after Turkish and before Greek. Its words
+  are in Thai letters that no other vocabulary reads, so adding Thai changes
+  no line written in another language, and an English phrase beside a Thai one
+  reads as it does alone ("ประชุมพรุ่งนี้ 3pm").
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are bare verb phrases
   that name the app exactly once, after ใน ("เพิ่มงานใน ${applicationName}",
   "ทำงานให้เสร็จใน ${applicationName}"); Apple's Thai puts the token after ใน
@@ -3251,12 +3407,77 @@ watch, widgets, and in Shortcuts.
   longer. A placeholder in a narrow sheet field stays about as long as the
   English one ("Προσθέστε ενθάρρυνση" for "Add an encouraging line" on the
   habit sheet).
-- The capture parser (`LorvexCaptureParser`) has no Greek vocabulary: it reads
-  English and Chinese words wherever the interface language is Greek. The
-  capture hint (`capture.footer.words`) therefore gives English examples in
-  « » and says so ("Μία εργασία ανά γραμμή. Αγγλικές λέξεις όπως «tomorrow»,
-  «3pm», «every Monday», «20 min» ή «#list» συμπληρώνουν τις λεπτομέρειές
-  της.").
+- The capture parser (`LorvexCaptureParser`) reads Greek day, date, time,
+  duration, repeat, and priority words for a user who reads Greek (el-GR,
+  el-CY, and any other region), so the Greek capture hint gives Greek examples
+  in « » («αύριο», «στις 15:00», «κάθε Δευτέρα», «20 λεπτά», «#λίστα»). Greek
+  names a clock time with "στις" (or "στη", "στην", "ώρα") before it, so the
+  time example carries "στις". The accents and the diaeresis are optional: the
+  parser reads every Greek letter without its mark and the final sigma ς as σ
+  ("αύριο", "αυριο", and "ΑΥΡΙΟ" are one word, as are "Τετάρτη" and "ΤΕΤΑΡΤΗ"),
+  and the title keeps the letters that were typed. A letter typed as a base
+  letter and a separate combining mark is left as it is, so a detail word typed
+  that way is not read. A word is a detail only with no letter, digit, or
+  combining mark touching it and no letter joined to it by a hyphen, so
+  "αυριανό", "σήμερα-αύριο", and "Δευτερόλεπτα" stay in the title.
+  Greek says a time with "και" and "παρά": "και μισή" and "και τέταρτο" add to
+  the hour they follow, so "στις 3 και μισή" is 3:30 and "στις τρεις και
+  τέταρτο" 3:15, while "παρά" takes minutes off the hour after it, so "στις 4
+  παρά τέταρτο" is 3:45 and "στις 4 παρά 10" is 3:50 (German and Dutch count a
+  half hour toward the next hour; Greek does not). The one-word halves follow
+  the same hour rule ("εννιάμισι" is 9:30, "δυόμισι" is 14:30). Minutes with a
+  unit word ("στις 3 και 10 λεπτά") stay in the title whole. A bare number is a time only after "στις", "στη", "στην", or
+  "ώρα", and only when the word after it is one that can follow a time, so
+  "Συνάντηση 5", "στις 3 άτομα", and "στις 3 ώρες" stay in the title. An hour
+  from 1 to 6 with no part of the day is in the afternoon ("στις 3" is 3 PM)
+  unless it is written with a zero ("στις 03:00"), a part of the day sets the
+  hour ("το πρωί" the morning, "το απόγευμα" and "το βράδυ" the afternoon and
+  evening, "τη νύχτα" the small hours of the next day), "π.μ." and "μ.μ."
+  count like AM and PM, and "τα μεσάνυχτα" is 00:00 on the next day. A colon time with no Greek word
+  ("15:30") is left to English. A dotted number such as "14.30" is a clock
+  time, but one whose minutes read as a month ("15.10") is a date. The short
+  forms "15.10" and "15/10" are dates only after "στις", "ημερομηνία", or a
+  deadline word, since they are as often a time or a number, while the full
+  forms ("15.10.2026", "15/10/2026", "15/10/26") are always dates. A month is
+  read after its day number in the genitive ("15 Οκτωβρίου"), in the colloquial
+  form ("15 Οκτώβρη"), or abbreviated ("15 Οκτ."), and the nominative ("Μάιος")
+  stays in the title. Greek does not write a clock time with the letter h, so
+  "15h" and "2h" are lengths, as in English alone. An amount that names a
+  moment or a bound ("σε 30 λεπτά", "μετά από 2 ώρες", "τουλάχιστον 2 ώρες")
+  is not a length, so it stays in the title, and "ένα τέταρτο" alone is a
+  length only at the end of the line or before a word that can follow a detail
+  ("ένα τέταρτο κιλό" stays).
+  The weeks start on Monday as the app's weeks do, and the weekend is Saturday
+  and Sunday ("το Σαββατοκύριακο" is the coming Saturday and "το
+  Σαββατοκύριακο της επόμενης εβδομάδας" the one after). A weekday name alone
+  is the coming one, a full week ahead when it names today, "αυτή την Τρίτη"
+  counts today, "την επόμενη Παρασκευή" is the coming one, and "Παρασκευή της
+  επόμενης εβδομάδας" and "την επόμενη εβδομάδα Παρασκευή" are next week's.
+  Τρίτη, Τετάρτη, and Πέμπτη are also "third", "fourth", and "fifth", so they
+  name a day with the article ("την Τρίτη") or capitalized after another word,
+  and "την τρίτη φορά" and "Τρίτη θέση" stay; Παρασκευή and Κυριακή are first
+  names, so "με την Κυριακή" and "την Κυριακή Παπαδοπούλου" stay. "Παρ." and
+  "Κυρ." read only with their period, "Δευ", "Τρι", "Τετ", "Πεμ", and "Σαβ" with
+  or without it. A list of days ("Δευτέρα και Τρίτη", "Δευτέρα, Τετάρτη")
+  names no single day and stays, and holidays and ordinal weekdays ("Μεγάλη
+  Παρασκευή", "Καθαρά Δευτέρα", "Κυριακή του Πάσχα", "κάθε πρώτη Δευτέρα του
+  μήνα") stay whole. A span of weekdays ("από Παρασκευή έως Κυριακή",
+  "Παρασκευή-Κυριακή") is a range, and Monday to Friday is the working week, a
+  repeat. No past day is read: "χθες", "προχθές", "την περασμένη Παρασκευή",
+  and "το περασμένο Σαββατοκύριακο" stay in the title, and so does a clock time
+  right after one. A day after "μέχρι" (or "μέχρι και"), "έως", "ως", "πριν
+  (από)", "προθεσμία", "παράδοση", or "deadline", before "το αργότερο", or
+  after "για" is a deadline, and a clock time that names a bound ("μέχρι τις
+  5", "πριν τις 17:00", "μετά τις 3", "στις 5 το αργότερο") stays in the title
+  while the day before it is the due day.
+  The adverbs "καθημερινά", "εβδομαδιαία", "μηνιαία", and "ετήσια" repeat a
+  task only at the end of the line, at its start before a colon or a comma,
+  before "στις", or with "βάση" ("σε εβδομαδιαία βάση"), since they are
+  adjectives before a noun ("εβδομαδιαία αναφορά"), and "επείγον" and
+  "σημαντικό" are priority words only at the end of the line or at its start
+  before a colon or a comma, for the same reason ("επείγον μήνυμα" stays).
+  "Ημερησίως", "εβδομαδιαίως", "μηνιαίως", and "ετησίως" repeat a task
+  anywhere in the line.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are verbal nouns that
   name the app exactly once, in guillemets after στο ("Προσθήκη εργασίας στο
   «${applicationName}»") or με ("Μετακίνηση εργασίας στο σήμερα με
@@ -3587,6 +3808,353 @@ whose English text is exactly X.
   set apart by a space, and none joins it with a hyphen or puts it in quotation
   marks.
 
+## Telugu conventions
+
+The `te` catalogs are Telugu in the Telugu script, as written in India; te-IN
+and every other Telugu locale select them. They follow Apple's Telugu usage
+(క్యాలెండర్, రిమైండర్, సెట్టింగ్స్) and keep one term per concept across every
+catalog, so a thing reads the same on the Mac, iPhone, watch, widgets, and in
+Shortcuts. The counts below are numbers of Apple's Telugu strings: the 387,802
+entries of the `te.lproj` strings tables in the iOS 26.5 runtime's system apps,
+frameworks, and extensions, normalized to Unicode NFC, where a word counts only
+when no other Telugu letter touches it (a zero-width non-joiner or joiner counts
+as a letter). "The strings that read X" are the Apple strings whose English text
+is exactly X.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | టాస్క్, జాబితా, ట్యాగ్ | Apple's words: టాస్క్ in all 14 strings that read Task or Tasks, జాబితా in all 73 strings that read List or Lists, ట్యాగ్ in all 49 strings that read Tag or Tags; a task's checklist is a చెక్‌లిస్ట్, as in Apple's Notes and Shortcuts (all 11 strings that read Checklist or Checklists), and its item a చెక్‌లిస్ట్ ఐటెమ్ (ఐటెమ్ is Apple's word in 20 of the 21 strings that read Item) |
+| Inbox (the seeded list) | ఇన్‌బాక్స్ | Apple's word, with a zero-width non-joiner after the virama, in all 14 strings that read Inbox; shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | ఈరోజు, రేపు, నిన్న | Apple's words in all 162, 28, and 79 strings that read them; ఈరోజు is one word, as Apple writes it (1,716 strings carry ఈరోజు, with or without an ending, and 429 carry the two words ఈ రోజు); the two words mean "this day" ("ఈ రోజు వరకు మీ జాబితాల్లో కనిపించదు."), and the system's relative-date text also writes today as two words |
+| Someday | ఏదో ఒక రోజు | the phrase of Apple's Shortcuts (its one string that reads Someday); inside a sentence it is followed by విభాగం ("ఏదో ఒక రోజు విభాగంలో"), and "ఏదో ఒక రోజుకు తరలించండి" moves a task there |
+| Due (the deadline field) | గడువు | Apple's word in 3 of the 4 strings that read Due; "గడువు మీరింది" is overdue and "గడువు మీరినవి" is the overdue section, where Apple's Wallet and Reminders write the participle గడువు మీరిన (3 of the 5 strings that read Overdue) |
+| Open (a task not yet done) | పెండింగ్ | Apple's word for Pending is పెండింగ్‌లో ఉంది (all 42 strings that read Pending); never తెరవండి or తెరవబడింది, which are Apple's words for Open (165 of the 175 strings that read Open) and mean an opened file or window |
+| In progress, started | జరుగుతోంది, ప్రారంభమైంది | జరుగుతోంది is Apple's word in 10 of the 12 strings that read In Progress or In progress; ప్రారంభమైంది is Apple's word in all 28 strings that read Started |
+| Blocked, cancelled, completed | బ్లాక్ చేయబడింది, రద్దయింది, పూర్తయింది | a status is a passive or intransitive past phrase, as in Apple's Telugu (బ్లాక్ చేయబడింది in 7 of the 12 strings that read Blocked, రద్దయింది in 3 of the 7 that read Cancelled and రద్దు చేయబడింది in 4 more, and పూర్తయింది in 22 of the 42 that read Completed) |
+| Done and complete | పూర్తి, పూర్తి చేయండి | పూర్తి closes a sheet and names a finished task (626 of the 632 strings that read Done); పూర్తి చేయండి completes a task |
+| Defer and snooze | వాయిదా వేయండి, స్నూజ్ | వాయిదా వేయండి moves a task to a later day ("రేపటికి వాయిదా వేయండి"); Apple's Telugu writes వాయిదా for deferred, postponed, and deferrals in 5 of the 8 strings whose English mentions defer or postpone, among them "వాయిదా వేయబడింది" for Postponed, though no Apple string reads Defer or Postpone; వాయిదా alone is also the word of Apple's Wallet for an installment (72 of the 73 strings whose English mentions installment), which the verb phrase avoids. Apple's Shortcuts writes the phrase "అంత వరకు ఆపండి" for Defer Until (its one string that reads Defer Until); స్నూజ్ snoozes a reminder (Apple's word in all 18 strings that read Snooze) |
+| Plan (verb) | ప్లాన్ చేయండి | ప్లాన్ చేయండి plans a task for a day ("ఒక రోజు తర్వాతకు ప్లాన్ చేయండి") and "ప్లాన్ చేసిన తేదీ" is its planned date; Apple's Telugu writes ప్లాన్ in 418 strings and ప్రణాళిక in 7 |
+| Schedule | షెడ్యూల్ | Apple's word in all 33 strings that read Schedule; షెడ్యూల్ చేయండి schedules a task for a day ("రేపటికి ఒక టాస్క్‌ను షెడ్యూల్ చేయండి") |
+| Capture (quick add) | త్వరిత జోడింపు | త్వరిత is the word of Apple's Reminders for Quick Creation ("త్వరిత సృష్టి", its one string that reads Quick Creation) and occurs in 160 of Apple's Telugu strings; జోడింపు is the noun of జోడించండి, Apple's word in all 217 strings that read Add; Apple's క్యాప్చర్ (all 10 strings that read Capture) names taking a picture or a measurement, so it is not used for adding a task |
+| Review (the day and the week) | సమీక్ష | రోజువారీ సమీక్ష and వారంవారీ సమీక్ష are its two modes; its fields are విజయాలు, అడ్డంకులు, నేర్చుకున్నవి; Apple's Books writes సంవత్సర సమీక్ష for Year in Review (2 of the 3 strings that read Year in Review), while Apple's Telugu writes రివ్యూ చేయండి for the verb Review (23 of the 31 strings that read Review) and రివ్యూలు for store reviews (all 4 strings that read Reviews) |
+| Memory | మెమరీ | one entry is a నమోదు (Apple's word in all 8 strings that read Entry); Apple's Telugu writes జ్ఞాపకం for Memory (all 7 strings that read Memory) and జ్ఞాపకాలు for the Photos feature Memories (all 17 strings that read Memories), so the app takes the loanword మెమరీ to keep its Memory apart from that feature (మెమరీ is in 32 of Apple's strings) |
+| Assistant | అసిస్టెంట్ | Apple's word in both strings that read Assistant; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone, goal | అలవాటు, చెక్ ఇన్, స్ట్రీక్, మైల్‌స్టోన్, లక్ష్యం | చెక్ ఇన్ is Apple's word in all 9 strings that read Check In, written as two words; స్ట్రీక్ is the word of Apple's Journal for a streak (all 6 strings that read Streak); మైల్‌స్టోన్ is Apple's word in its one string that reads Milestone; లక్ష్యం is Apple's word in all 3 strings that read Goal |
+| Celebrate (a milestone) | వేడుక | వేడుక is Apple's word in all 9 strings that read Celebration; the field label is "వేడుక లక్ష్యం" and the hints say "వేడుక చేసుకోవాల్సిన స్ట్రీక్" |
+| Reminder | రిమైండర్ | Apple's Reminders word (all 21 strings that read Reminder); its plural రిమైండర్‌లు takes a zero-width non-joiner before the ending (in 290 of Apple's strings), while the name of Apple's app is రిమైండర్స్ (51 of the 52 strings that read Reminders) |
+| Dependency | డిపెండెన్సీ | the loanword, which Apple's Telugu writes with the accusative ending in its one string whose English mentions dependency ("డిపెండెన్సీని పరిమితం చేయడం విఫలమైంది"); "వేచి ఉంది" ("is waiting") is the Waits on field, Apple's word in all 22 strings that read Waiting |
+| Recurrence | పునరావృతం | Apple's word in its one string that reads Recurrence; the adjective is "పునరావృతమయ్యే" ("ఈ పునరావృతమయ్యే ఇవెంట్‌ను డిలీట్ చేయాలా?"), while the Repeat field and verb are రిపీట్, Apple's word in 39 of the 40 strings that read Repeat |
+| Sync, snapshot | సింక్, స్నాప్‌షాట్ | సింక్ is Apple's word in all 8 strings that read Sync; స్నాప్‌షాట్ is Apple's word in its one string that reads Snapshot; "iCloud సింక్" names iCloud sync |
+| Event, calendar | ఇవెంట్, క్యాలెండర్ | Apple's words (ఇవెంట్ in all 47 strings that read Event or Events, క్యాలెండర్ in 79 of the 80 that read Calendar) |
+| All day | రోజంతా | Apple's word in all 13 strings that read All Day or All day |
+| Appearance (light, dark, system) | కనిపించే తీరు (లైట్, డార్క్, సిస్టమ్) | కనిపించే తీరు is Apple's word in all 34 strings that read Appearance; లైట్ and డార్క్ are Apple's transliterations (43 of the 65 strings that read Light, 19 of the 23 that read Dark), and సిస్టమ్ is its word for System (all 34 strings that read System) |
+| Priority, preferences | ప్రాధాన్యత, యాప్ సెట్టింగ్‌లు | ప్రాధాన్యత is Apple's word for Priority (16 of the 17 strings that read Priority); Apple's Telugu writes ప్రాధాన్యతలు for Preferences (all 7 strings that read Preferences), so the app's Preferences are యాప్ సెట్టింగ్‌లు, which keeps the two apart |
+| Widget | విడ్జెట్ | Apple's word in all 6 strings that read Widget |
+| Settings | సెట్టింగ్స్ | Apple's word in 354 of the 359 strings that read Settings |
+| Apple features | క్యాలెండర్, ఫోకస్, నోటిఫికేషన్స్, లాక్ స్క్రీన్, షార్ట్‌కట్స్, సిస్టమ్ సెట్టింగ్స్ | the names of Apple's own apps and settings follow Apple's Telugu: క్యాలెండర్ (79 of the 80 strings that read Calendar), ఫోకస్ (all 41 that read Focus), నోటిఫికేషన్స్ (109 of the 115 that read Notifications), లాక్ స్క్రీన్ (all 10 that read Lock Screen), షార్ట్‌కట్స్ (46 of the 48 that read Shortcuts), and సిస్టమ్ సెట్టింగ్స్ (all 15 that read System Settings); product names stay Latin: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight, Dock |
+
+- The reader is addressed formally, as మీరు, and never as నువ్వు. Apple's Telugu
+  carries మీరు, మీ, or one of their forms మీకు, మిమ్మల్ని, and మీతో in 50,637
+  strings and the informal నువ్వు, నీకు, or నిన్ను in 33. An instruction is a
+  polite imperative in -ండి ("తెరవండి", "మళ్ళీ ప్రయత్నించండి"), as in Apple's
+  చేయండి (29,942 of its strings). Retrying is "మళ్ళీ ప్రయత్నించండి": Apple
+  writes మళ్ళీ ప్రయత్నించండి in 2,439 strings and తిరిగి ప్రయత్నించండి in 10.
+- A button, menu item, tab, or intent title is a verb in -ండి ("జోడించండి",
+  "తెరవండి", "తొలగించండి"), a loanword followed by చేయండి ("డిలీట్ చేయండి",
+  "క్లియర్ చేయండి"), or a bare noun or loanword where Apple's Telugu writes it
+  bare ("డిలీట్", "క్లియర్", "సేవ్", "షేర్", "ఎడిట్", "రద్దు"). Delete, clear,
+  and remove are three words: డిలీట్ deletes an item (429 of the 452 strings
+  that read Delete), క్లియర్ clears a value or a selection ("తేదీని క్లియర్
+  చేయండి", "ఎంపికను క్లియర్ చేయండి"; 155 of the 164 that read Clear), and
+  తొలగించండి takes an item out of a place ("చెక్‌లిస్ట్ ఐటెమ్‌ను తొలగించండి";
+  229 of the 231 that read Remove). An intent's description is a polite
+  imperative ("Lorvex టాస్క్‌ను పూర్తి చేయండి.").
+- A confirmation after an action is a passive past statement ending in -బడింది
+  ("“%@” పూర్తి చేయబడింది.", "“%@” అప్‌డేట్ చేయబడింది."), a form that 9,669 of
+  Apple's strings carry; its subject decides the ending, so a plural subject
+  takes -బడ్డాయి ("“%@” టాస్క్ నోట్స్ అప్‌డేట్ చేయబడ్డాయి."; 1,962 of Apple's
+  strings). A confirmation question ends in లా? ("“%@” జాబితాను డిలీట్
+  చేయాలా?"), as 2,225 of Apple's strings do.
+- Telugu is written in the Telugu script. Product and technology names stay
+  Latin: Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, Claude, MCP,
+  Dock, and file formats such as JSON, CSV, ICS, and ZIP, as do iPhone, iPad,
+  and Mac (Apple's Telugu keeps Siri in Latin letters in 2,286 of the 2,287
+  strings whose English mentions it, and Dock in 81 of 89). A Latin word is set
+  apart from the next Telugu word by a plain space ("Lorvex టాస్క్"). Everyday
+  technology words that Apple's Telugu transliterates are written in Telugu
+  script (క్యాలెండర్, రిమైండర్, అసిస్టెంట్, ఇవెంట్, ట్యాగ్, సింక్, డివైజ్,
+  ఇంపోర్ట్, యాప్, ఫైల్, నోటిఫికేషన్); words with an established Telugu
+  equivalent stay Telugu (జాబితా, లక్ష్యం, అలవాటు, గడువు, ప్రాధాన్యత, సమీక్ష,
+  ఖాతా).
+- A zero-width non-joiner (U+200C) follows a virama (్) that ends a loanword
+  stem when an ending or another syllable of the same word comes next, so that
+  the next consonant is not stacked under the stem's last one ("టాస్క్‌లు",
+  "ఇన్‌బాక్స్", "చెక్‌లిస్ట్", "అప్‌డేట్"). Apple's Telugu carries it in 131,889
+  strings, and 227,921 of its 242,551 occurrences follow a virama. In the
+  catalogs it occurs in 743 values, each after a virama, and a zero-width joiner
+  occurs in none (Apple's Telugu has the joiner in 41 strings). A stem that ends
+  before a space takes none ("టాస్క్ జోడించండి").
+- One spelling serves each word across the catalogs, the one Apple's Telugu
+  writes: మళ్ళీ (4,736 strings; మళ్లీ in 36), ఇవెంట్ (532; ఈవెంట్ in 5), ఎనేబల్
+  (2,521; ఎనేబుల్ in none), డివైజ్ (2,967; డివైస్ in 5), అప్‌డేట్ (3,801;
+  అప్డేట్ in none), ఫైల్ (934; ఫైలు in none), ఖాతా for an account (2,831; అకౌంట్
+  in none), and యాప్ for an app (2,954; అప్లికేషన్ in 289).
+- A sentence ends with a full stop (.) wherever the English ends with a period
+  (73,397 of Apple's strings end in a full stop and none end in a danda), so the
+  danda (।) never appears; labels, buttons, and headings carry no end mark. A
+  question mark, exclamation mark, colon, comma, and parenthesis are the Latin
+  characters, an ellipsis is the single character … (4,924 strings against 72
+  with three dots), and a spaced en dash – stands for the English em dash (448
+  strings against 206 with a spaced em dash).
+- User content (task titles, list names, habit names, event titles) is quoted
+  with “ ” wherever the English quotes it. Of the 7,584 Apple strings whose
+  English quotes with curly double quotes, Apple's Telugu renders 7,371 with
+  curly double quotes, 85 with straight ones, and 424 with curly single ones.
+- A case ending after a Latin-script name or a digit is fused to it ("Lorvexలో",
+  "Lorvexను తెరవండి"), as in Apple's Telugu, which fuses లో to a Latin letter or
+  digit in 6,253 strings against 9 that set it apart by a space, and ను in 6,184
+  against 1. A postposition that is a word of its own takes a space ("Lorvex
+  నుండి"): నుండి follows a Latin letter or digit after a space in 1,678 strings
+  and is fused to it in none. An interpolated value that holds the user's text
+  never takes an ending, because the form of an ending depends on the last sound
+  of the word it follows, which such a value leaves unknown: the value is quoted
+  and a noun follows it ("“%@” జాబితాను డిలీట్ చేయాలా?"), or a postposition that
+  is a word of its own does ("%@ కోసం ప్లాన్ చేయబడింది"). Apple's Telugu fuses
+  లో, ను, కు, or తో to a placeholder in 9,627 strings (6,498 of them after a
+  zero-width non-joiner), and none joins one with a hyphen. An ending is
+  attached only to a number placeholder ("%2$lldలో %1$lld") and to the app-name
+  token of an App Shortcuts phrase.
+- Telugu takes no counter. A count is a number, a space, and the noun ("%lld
+  టాస్క్‌లు"), and a unit takes a space too ("%lld రోజులు"). A count of a total
+  reads "%2$lldలో %1$lld" (the total first), the form of 105 of Apple's 148
+  strings that read N of M (23 write N/M and 14 write M/N).
+- Numbers in catalog text use Latin digits only (Apple's Telugu has Latin digits
+  in 30,361 strings and Telugu digits in 1), a plain space separates a number
+  from its unit ("1 గంట స్నూజ్"), and సుమారు stands for "about" ("ప్రారంభమైంది ·
+  సుమారు %@"). The system formats the values the code passes in: lakh grouping
+  ("12,34,567.5"), weekday and month names from the calendar (సోమవారం,
+  అక్టోబర్), a clock time as "5:05 PM", a duration as "1 గం., 30 నిమి." when
+  compact and "1 గంట, 30 నిమిషాలు" when spoken, a relative time as "5 నిమిషాల
+  క్రితం" or "2 గంటల్లో" (abbreviated on a chip: "5 నిమి. క్రితం"), and a list
+  as "A, B మరియు C" (narrow "A, B, C"), so a sentence takes such a value as a
+  `%@` argument. Its ordinal is the number with వ, so `recurrence.weekday.nth`
+  ("%1$@ %2$@") reads "1వ సోమ", the last is "చివరి సోమ", and the second to last
+  "చివరి నుండి 2వ సోమ". The default numbering of te-IN is Latin digits. Where
+  the system numbering is Telugu (`te_IN@numbers=telu`), interpolated numbers
+  and dates appear in Telugu digits while a number written in a catalog string
+  stays Latin ("తదుపరి 7 రోజులకు ఏమీ ప్లాన్ చేయలేదు.", "1 గంట స్నూజ్"), so such
+  a screen shows both.
+- Telugu has the plural categories `one` and `other`, where `one` selects only
+  1, and a `one` form leaves the number out where the English does ("రోజుకు
+  ఒకసారి" beside "రోజుకు %lld సార్లు"); 0 takes `other`. Where the noun changes
+  with the number, the phrase that agrees sits inside the plural variation
+  ("ఈరోజుకు సరిపడని టాస్క్‌ను రేపటికి తరలించండి" beside "ఈరోజుకు సరిపడని %lld
+  టాస్క్‌లను రేపటికి తరలించండి").
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar buttons,
+  segmented controls, and App Shortcut short titles) use shorter wording than a
+  literal translation ("సరిపోదు" for Won’t fit, "మరో %lld" for a small widget's
+  overflow, "మిగిలినవి" for left on a watch complication, "అంతా క్లియర్" for All
+  clear). Accessibility labels may be longer.
+- A string that fills in several values uses positional specifiers (`%1$lld`,
+  `%2$@`) wherever the Telugu word order differs from the English, as in
+  "%2$lldలో %1$lld" and "%2$@ సమయానికి “%1$@” రిమైండర్ సెట్ చేయబడింది.", never
+  concatenation in code.
+- The capture parser (`LorvexCaptureParser`) has no Telugu vocabulary: it reads
+  English and Chinese words wherever the interface language is Telugu. The
+  capture hint (`capture.footer.words`) therefore gives English examples in “ ”
+  and says so ("ప్రతి లైన్‌కు ఒక టాస్క్. “tomorrow”, “3pm”, “every Monday”, “20
+  min” లేదా “#list” వంటి ఇంగ్లీష్ పదాలు దాని వివరాలను నింపుతాయి.").
+- The Return key is "రిటర్న్ కీ" ("రిటర్న్ కీ నొక్కండి"): all 5 Apple strings
+  whose English says the Return key write కీ after రిటర్న్.
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
+  that name the app exactly once, with the ending joined directly to the token
+  ("${applicationName}లో ఒక టాస్క్‌ను జోడించండి", "${applicationName}ను
+  తెరవండి"). A zero-width non-joiner never stands between the token and its
+  ending: the App Intents training step of an Xcode build
+  (`appintentsnltrainingprocessor`) fails to tokenize a phrase variable that one
+  follows and stops archiving the phrase-training assets of the languages it has
+  not yet reached. Apple's own Telugu phrases join an ending to the token in 113
+  of the 138 translated strings that carry it (56 of them directly and 57 after
+  a zero-width non-joiner), and none puts it in quotation marks.
+
+## Tamil conventions
+
+The `ta` catalogs are Tamil in the Tamil script, as written in India, Sri Lanka,
+Singapore, and Malaysia; ta-IN, ta-LK, ta-SG, ta-MY, and every other Tamil
+locale select them. They follow Apple's Tamil usage (கேலண்டர், நினைவூட்டல்,
+அமைப்புகள்) and keep one term per concept across every catalog, so a thing reads
+the same on the Mac, iPhone, watch, widgets, and in Shortcuts. The counts below
+are numbers of Apple's Tamil strings: the 387,720 entries of the `ta.lproj`
+strings tables in the iOS 26.5 runtime's system apps, frameworks, and
+extensions, normalized to Unicode NFC, where a word counts only when no other
+Tamil letter touches it (a zero-width non-joiner or joiner counts as a letter).
+"The strings that read X" are the Apple strings whose English text is exactly X.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | பணி, பட்டியல், குறிச்சொல் | Apple's words: பணி in all 14 strings that read Task or Tasks, பட்டியல் in all 73 strings that read List or Lists, குறிச்சொல் in 48 of the 49 strings that read Tag or Tags; a task's checklist is a சரிபார்ப்புப் பட்டியல், as in Apple's Notes and Shortcuts (10 of the 11 strings that read Checklist or Checklists), and its item a சரிபார்ப்புப் பட்டியல் ஐட்டம் (ஐட்டம் is Apple's word in 20 of the 21 strings that read Item) |
+| Inbox (the seeded list) | இன்பாக்ஸ் | Apple's word in all 14 strings that read Inbox; shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | இன்று, நாளை, நேற்று | Apple's words in all 162, 28, and 79 strings that read them |
+| Someday | என்றாவது ஒரு நாள் | Apple's Shortcuts writes the adverb என்றாவது for Someday (its one string that reads Someday), and the app adds ஒரு நாள் so that the phrase reads as a name; inside a sentence it is followed by பிரிவு ("என்றாவது ஒரு நாள் பிரிவில்"), and "என்றாவது ஒரு நாளுக்கு நகர்த்து" moves a task there |
+| Due (the deadline field) | காலக்கெடு | Apple's word in 3 of the 4 strings that read Due; "காலக்கெடு முடிந்தது" is overdue and "காலக்கெடு முடிந்தவை" is the overdue section, as in Apple's Wallet and Reminders (all 5 strings that read Overdue) |
+| Open (a task not yet done) | நிலுவை | நிலுவை is the stem of Apple's நிலுவையிலுள்ளது, its word for Pending (37 of the 42 strings that read Pending); never திற or திறந்துள்ளது, which are Apple's words for Open (170 of the 175 strings that read Open) and mean an opened file or window |
+| In progress, started | செயலிலுள்ளது, தொடங்கப்பட்டது | செயலிலுள்ளது is Apple's word in 9 of the 12 strings that read In Progress or In progress; தொடங்கப்பட்டது is Apple's word in 12 of the 28 strings that read Started |
+| Blocked, cancelled, completed | தடுக்கப்பட்டது, ரத்துசெய்யப்பட்டது, நிறைவடைந்தது | a status is a passive past phrase, as in Apple's Tamil (தடுக்கப்பட்டது in 4 of the 12 strings that read Blocked, ரத்துசெய்யப்பட்டது in all 7 that read Cancelled, and நிறைவடைந்தது in 21 of the 42 that read Completed, with முடிந்தது in 14 more) |
+| Done and complete | முடிந்தது, நிறைவுசெய் | முடிந்தது closes a sheet and names a finished task (630 of the 632 strings that read Done); நிறைவுசெய் completes a task, written as one word as Apple writes it (30 strings; நிறைவு செய் in 2) |
+| Defer and snooze | தள்ளிவை, ஒத்திவை | தள்ளிவை moves a task to a later day ("நாளைக்குத் தள்ளிவை"). Of the 8 strings whose English mentions defer or postpone, Apple's Tamil writes forms of தள்ளிவை in 2 (for example "தள்ளிவைத்தவை – %@" for Postponed) and forms of ஒத்திவை in 2 (Postponed in Videos and Defer Until in Shortcuts). ஒத்திவை is also Apple's word for Snooze (all 18 strings that read Snooze), so the app keeps ஒத்திவை for a reminder's snooze and uses தள்ளிவை for deferring a task |
+| Plan (verb) | திட்டமிடு | திட்டமிடு plans a task for a day ("ஒரு நாள் கழித்துத் திட்டமிடு") and "திட்டமிட்ட தேதி" is its planned date; Apple's Tamil writes திட்டம் in 2 of the 4 strings that read Plan |
+| Schedule | அட்டவணை | Apple's word in 11 of the 33 strings that read Schedule, next to திட்டமிடல் (10 of the 33 that read Schedule); அட்டவணை names the day pane |
+| Capture (quick add) | விரைவுச் சேர்த்தல் | விரைவு is the word of Apple's Reminders for Quick Creation ("விரைவு உருவாக்கம்", its one string that reads Quick Creation) and occurs in 49 of Apple's Tamil strings; சேர்த்தல் is the noun of சேர், Apple's word in 208 of the 217 strings that read Add; Apple's படம்பிடி (6 of the 10 strings that read Capture) names taking a picture or a measurement, so it is not used for adding a task |
+| Review (the day and the week) | மீள்பார்வை | தினசரி மீள்பார்வை and வாராந்தர மீள்பார்வை are its two modes; its fields are வெற்றிகள், தடைகள், கற்றவை; Apple's Books and Photos write ஆண்டு மீள்பார்வை for Year in Review (all 3 strings that read Year in Review), while Apple's Tamil writes சரிபாருங்கள் for the verb Review (13 of the 31 strings that read Review) and மதிப்பாய்வுகள் for store reviews (3 of the 4 strings that read Reviews) |
+| Memory | நினைவகம் | one entry is a பதிவு (Apple's word in all 8 strings that read Entry); Apple's Tamil writes நினைவு for Memory (6 of the 7 strings that read Memory) and நினைவுகள் for the Photos feature Memories (all 17 strings that read Memories), so the app takes நினைவகம் (7 of Apple's strings) to keep its Memory apart from those words |
+| Assistant | அசிஸ்டென்ட் | Apple's word in both strings that read Assistant; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone, goal | பழக்கம், செக்-இன், ஸ்ட்ரீக், மைல்ஸ்டோன், இலக்கு | செக்-இன் is Apple's word in all 9 strings that read Check In, with the verb செய் after it for the action; ஸ்ட்ரீக் is the word of Apple's Journal for a streak (all 6 strings that read Streak); மைல்ஸ்டோன் is Apple's word in its one string that reads Milestone; இலக்கு is Apple's word in all 3 strings that read Goal |
+| Celebrate (a milestone) | கொண்டாட்ட இலக்கு | கொண்டாட்டம் is Apple's word in all 9 strings that read Celebration; the app uses its stem before a noun ("கொண்டாட்ட இலக்கு") and the verb in hints ("கொண்டாட வேண்டிய ஸ்ட்ரீக்", "கொண்டாடவும்") |
+| Reminder | நினைவூட்டல் | Apple's Reminders word (all 21 strings that read Reminder); its plural நினைவூட்டல்கள் is also the name of Apple's app (all 52 strings that read Reminders) |
+| Dependency | சார்பு | the noun for a dependency, the stem of the compound சார்புநிலை that Apple's Tamil writes in its one string whose English mentions dependency ("சார்புநிலையைக் கட்டுப்படுத்த முடியவில்லை"); the app writes the bare stem சார்பு; "காத்திருக்கிறது" ("is waiting") is the Waits on field, Apple's word in all 22 strings that read Waiting |
+| Recurrence | தொடர்வு | the noun for recurrence; Apple's Tamil has தொடர்வு only inside பின்தொடர்வு ("follow up"), in 31 strings, and writes தொடர்ச்சியானது in its one string that reads Recurrence. "தொடர்வு விதி" is the recurrence rule, and தொடர் நிகழ்வு ("recurring event") names the Repeat field and verb, as in Apple's Tamil (14 of the 40 strings that read Repeat) |
+| Sync, snapshot | ஒத்திசைவு, ஒத்திசை, ஸ்னாப்ஷாட் | ஒத்திசைவு is the noun, in 223 of Apple's strings ("iCloud ஒத்திசைவு" in 34), and ஒத்திசை is the verb, Apple's word in 7 of the 8 strings that read Sync; ஸ்னாப்ஷாட் is Apple's word in its one string that reads Snapshot |
+| Event, calendar, agenda | நிகழ்வு, கேலண்டர், நிகழ்ச்சி நிரல் | Apple's words (நிகழ்வு in 45 of the 47 strings that read Event or Events, கேலண்டர் in 79 of the 80 that read Calendar); நிகழ்ச்சி in Apple's Tamil names a show in about half of its strings (the English of 182 of the 357 strings that carry it mentions a show) and an event or a concert in others, so the app keeps நிகழ்வு for an event; the agenda is "நிகழ்ச்சி நிரல்" |
+| All day | முழு நாளும் | Apple's word in all 13 strings that read All Day or All day |
+| Appearance (light, dark, system) | தோற்றம் (வெளிர், அடர், சிஸ்டம்) | தோற்றம் is Apple's word in all 34 strings that read Appearance; வெளிர் and அடர் are Apple's words for the two choices, as in its Display & Brightness settings (20 of the 65 strings that read Light, 21 of the 23 that read Dark), while லைட் is mostly the word for a lamp in Apple's Home (16 of its 24 strings), and சிஸ்டம் is Apple's word for System (all 34 strings that read System) |
+| Priority, preferences | முன்னுரிமை, செயலி அமைப்புகள் | முன்னுரிமை is Apple's word for Priority (16 of the 17 strings that read Priority); Apple's Tamil writes முன்னுரிமைகள் for Preferences (5 of the 7 strings that read Preferences), so the app's Preferences are செயலி அமைப்புகள், which keeps the two apart |
+| Widget | விட்ஜெட் | Apple's word in all 6 strings that read Widget |
+| Settings | அமைப்புகள் | Apple's word in 356 of the 359 strings that read Settings |
+| Apple features | கேலண்டர், ஃபோகஸ், அறிவிப்புகள், பூட்டுத் திரை, சுருக்கவழிகள், சிஸ்டம் அமைப்புகள் | the names of Apple's own apps and settings follow Apple's Tamil: கேலண்டர் (79 of the 80 strings that read Calendar), ஃபோகஸ் (all 41 that read Focus), அறிவிப்புகள் (all 115 that read Notifications), பூட்டுத் திரை (all 10 that read Lock Screen), சுருக்கவழிகள் (all 48 that read Shortcuts), and சிஸ்டம் அமைப்புகள் (all 15 that read System Settings); product names stay Latin: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight, Dock |
+
+- The reader is addressed formally, as நீங்கள், and never as நீ. Apple's Tamil
+  carries நீங்கள் or உங்கள் and their inflected forms in 39,437 strings and the
+  informal நீ or உன் forms in 4. An instruction is a polite imperative in -வும்
+  ("முயலவும்", "அழுத்தவும்"); a word that ends in -வும் occurs in 27,635 of
+  Apple's strings. Retrying is "மீண்டும் முயலவும்": Apple writes மீண்டும்
+  முயலவும் in 2,007 strings (all 146 that read Try Again), மீண்டும் முயல்க in
+  95, and மீண்டும் முயற்சிக்கவும் in 12.
+- A button, menu item, tab, or intent title is the bare imperative stem ("சேர்",
+  "நீக்கு", "திற", "அழி", "அகற்று"), or an object and the stem ("பணியைச் சேர்",
+  "தேதியை அழி"), as Apple's Tamil writes buttons. Delete, clear, and remove are
+  three words: நீக்கு deletes an item (419 of the 452 strings that read Delete),
+  அழி clears a value or a selection ("தேதியை அழி", "தேர்வை அழி"; 138 of the 164
+  that read Clear), and அகற்று takes an item out of a place ("சரிபார்ப்புப்
+  பட்டியல் ஐட்டத்தை அகற்று"; 227 of the 231 that read Remove). An intent's
+  description is a polite imperative in -வும் ("Lorvex பணியை நிறைவுசெய்யவும்.").
+- A confirmation after an action is a passive past statement ending in -ப்பட்டது
+  ("“%@” நிறைவுசெய்யப்பட்டது.", "“%@” புதுப்பிக்கப்பட்டது."), a form that 7,809
+  of Apple's strings carry; its subject decides the ending, so a plural subject
+  takes -ப்பட்டன ("“%@” பணியின் குறிப்புகள் புதுப்பிக்கப்பட்டன."; 1,115 of
+  Apple's strings). A confirmation question ends in வா? ("“%@” பட்டியலை
+  நீக்கவா?"), as 2,515 of Apple's strings do.
+- Tamil is written in the Tamil script. Product and technology names stay Latin:
+  Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, Claude, MCP, Dock, and
+  file formats such as JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and Mac
+  (Apple's Tamil keeps Siri in Latin letters in all 2,287 strings whose English
+  mentions it, and Dock in 83 of 89). A Latin word is set apart from the next
+  Tamil word by a plain space ("Lorvex பணி"). Everyday technology words that
+  Apple's Tamil transliterates are written in Tamil script (கேலண்டர்,
+  அசிஸ்டென்ட், ஸ்ட்ரீக், விட்ஜெட், ஃபோகஸ், ஸ்னாப்ஷாட்); words with an
+  established Tamil equivalent stay Tamil (நினைவூட்டல், ஒத்திசை, குறிச்சொல்,
+  பட்டியல், இலக்கு, பழக்கம், காலக்கெடு, முன்னுரிமை, மீள்பார்வை, அறிவிப்பு, செயலி
+  for an app, சாதனம் for a device, தரவு for data, கோப்பு for a file, கணக்கு for
+  an account).
+- Tamil text carries no zero-width characters: Apple's Tamil has a zero-width
+  non-joiner in 246 strings and a zero-width joiner in 28, and the catalogs have
+  none.
+- A hard consonant (க, ச, த, or ப) that starts the word after an accusative ஐ, a
+  dative க்கு, or a demonstrative இந்த, அந்த, or எந்த is doubled, and the
+  doubling sign (a consonant with a pulli) is joined to the first word ("பணியைச்
+  சேர்", "Lorvexக்குச் சொந்த", "இந்தப் பட்டியலை", "இந்தத் தொடர் நிகழ்வை"). After
+  a Latin letter or digit, Apple's Tamil doubles it after ஐ in 4,314 strings
+  against 236 that leave it out and after க்கு in 489 against 70; after the
+  demonstratives it doubles it in 8,237 strings against 2,566. The catalogs
+  double it in 25, 7, and 94 values for the same three cases and leave it out in
+  none.
+- One spelling serves each word across the catalogs, the one Apple's Tamil
+  writes most often: கேலண்டர் (510 strings; காலண்டர் in none), ரத்துசெய் as one
+  word (1,953; the two-word ரத்து செய் occurs in 17, always before more letters,
+  as in ரத்து செய்ய), ஸ்ட்ரீக் (152; ஸ்டிரீக் in none), விட்ஜெட் (58; வெட்ஜெட்
+  in none), செயலி for an app (2,362; ஆப் in 3), சாதனம் for a device (1,463;
+  டிவைஸ் in 14), தரவு for data (1,389; டேட்டா in 651), கணக்கு for an account
+  (2,179; அக்கவுண்ட் in none), கோப்பு for a file (561; ஃபைல் in 21), and
+  இருப்பிடம் for a location (1,180; லோகேஷன் in none).
+- A sentence ends with a full stop (.) wherever the English ends with a period
+  (74,204 of Apple's strings end in a full stop and none end in a danda), so the
+  danda (।) never appears; labels, buttons, and headings carry no end mark. A
+  question mark, exclamation mark, colon, comma, and parenthesis are the Latin
+  characters, an ellipsis is the single character … (4,921 strings against 78
+  with three dots), and a spaced en dash – stands for the English em dash (442
+  strings against 134 with a spaced em dash).
+- User content (task titles, list names, habit names, event titles) is quoted
+  with “ ” wherever the English quotes it. Of the 7,584 Apple strings whose
+  English quotes with curly double quotes, Apple's Tamil renders 7,428 with
+  curly double quotes, 15 with straight ones, and 12 with curly single ones.
+- A case ending after a Latin-script name or a digit is fused to it
+  ("Lorvexஇல்", "Lorvexஐத் திற"), as in Apple's Tamil, which fuses இல் to a
+  Latin letter or digit in 7,861 strings against 4 that join it with a hyphen
+  and 20 that set it apart by a space, and ஐ in 9,006 against 6 with a hyphen
+  and 4 with a space. A postposition that is a word of its own takes a space
+  ("Siri மூலம்"): உடன் follows a Latin letter or digit after a space in 2,371
+  strings and is fused to it in 81. An interpolated value that holds the user's
+  text never takes an ending, because the form of an ending depends on the last
+  sound of the word it follows, which such a value leaves unknown: the value is
+  quoted and a noun follows it ("“%@” பட்டியலை நீக்கவா?"), or a postposition
+  that is a word of its own does ("%@ அன்று திட்டமிடப்பட்டது"). Apple's Tamil
+  fuses இல், ஐ, or க்கு to a placeholder in 4,149 strings and joins one with a
+  hyphen in 1,516; the catalogs never use the hyphen. An ending is attached only
+  to a number placeholder ("%lldஆம் நாள்"), to the app-name token of an App
+  Shortcuts phrase, and to the app-name placeholder of the Quit menu item
+  ("%@இலிருந்து வெளியேறு").
+- Tamil takes no counter. A count is a number, a space, and the noun ("%lld
+  பணிகள்"), and a unit takes a space too ("%lld நாட்கள்"). A count of a total
+  reads "%1$lld/%2$lld" (the count first, then the total), the form of 140 of
+  Apple's 148 strings that read N of M (7 write N / M with spaces and 1 writes
+  M/N).
+- Numbers in catalog text use Latin digits only (Apple's Tamil has Latin digits
+  in 29,997 strings and Tamil digits in none), a plain space separates a number
+  from its unit ("1 மணிநேரம் ஒத்திவை"), and சுமார் stands for "about"
+  ("தொடங்கப்பட்டது · சுமார் %@"). The system formats the values the code passes
+  in. For ta-IN it writes lakh grouping ("12,34,567.5"; ta-SG and ta-MY group by
+  thousands, "1,234,567.5"), weekday names that carry a period when short
+  (திங்.) and month names from the calendar (அக்டோபர்), a clock time as "5:05
+  PM" (ta-LK uses the 24-hour clock), a duration as "1 ம. 30 நிமி." when compact
+  and "1 மணிநேரம், 30 நிமிடங்கள்" when spoken, a relative time as "5 நிமிடங்கள்
+  முன்" or "2 மணிநேரத்தில்" (abbreviated on a chip: "3 நா. முன்" and, for a
+  later day, the bare "3 நா."), and a list as "A, B மற்றும் C", so a sentence
+  takes such a value as a `%@` argument. Its ordinal is the number and a period
+  ("1."), so `recurrence.weekday.nth` ("%1$@ %2$@") reads "1. திங்.", the last
+  is "கடைசி திங்.", and the second to last "கடைசியிலிருந்து 2. திங்.". The
+  default numbering of ta-IN is Latin digits. Where the system numbering is
+  Tamil (`ta_IN@numbers=tamldec`), interpolated numbers and dates appear in
+  Tamil digits while a number written in a catalog string stays Latin ("அடுத்த 7
+  நாட்களுக்கு எதுவும் திட்டமிடப்படவில்லை.", "1 மணிநேரம் ஒத்திவை"), so such a
+  screen shows both.
+- Tamil has the plural categories `one` and `other`, where `one` selects only 1,
+  and a `one` form leaves the number out where the English does ("நாளுக்கு
+  ஒருமுறை" beside "நாளுக்கு %lld முறை"); 0 takes `other`. Where the noun changes
+  with the number, the phrase that agrees sits inside the plural variation
+  ("இன்றைக்குப் பொருந்தாத பணியை நாளைக்கு நகர்த்து" beside "இன்றைக்குப் பொருந்தாத
+  %lld பணிகளை நாளைக்கு நகர்த்து").
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar buttons,
+  segmented controls, and App Shortcut short titles) use shorter wording than a
+  literal translation ("பொருந்தாது" for Won’t fit, "மேலும் %lld" for a small
+  widget's overflow, "மீதம்" for left on a watch complication, "எல்லாம்
+  முடிந்தது" for All clear). Accessibility labels may be longer.
+- A string that fills in several values uses positional specifiers (`%1$lld`,
+  `%2$@`) wherever the Tamil word order differs from the English, as in "%2$@
+  நேரத்தில் “%1$@” நினைவூட்டல் அமைக்கப்பட்டது.", never concatenation in code.
+- The capture parser (`LorvexCaptureParser`) has no Tamil vocabulary: it reads
+  English and Chinese words wherever the interface language is Tamil. The
+  capture hint (`capture.footer.words`) therefore gives English examples in “ ”
+  and says so ("ஒவ்வொரு வரிக்கும் ஒரு பணி. “tomorrow”, “3pm”, “every Monday”,
+  “20 min”, “#list” போன்ற ஆங்கிலச் சொற்கள் அதன் விவரங்களை நிரப்பும்.").
+- The Return key is "ரிட்டர்ன் கீ" ("ரிட்டர்ன் கீயை அழுத்தவும்"), the form of 3
+  of the 5 Apple strings whose English says the Return key; the others write
+  ரிட்டர்ன் பட்டன், with an ending where the sentence needs one.
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
+  that name the app exactly once, with the ending fused to the token
+  ("${applicationName}இல் ஒரு பணியைச் சேர்", "${applicationName}ஐத் திற").
+  Apple's own Tamil phrases fuse an ending to the token in 40 of the 139
+  translated strings that carry it and join one with a hyphen in 18, and none
+  puts it in quotation marks.
+
 ## How to add a new locale
 
 Every catalog and every shipping bundle must carry the same language set, so a
@@ -3597,7 +4165,7 @@ several. The steps below name one language; "Translating a batch" after them
 shows the same commands for several.
 
 1. Make sure `PLURAL_CATEGORIES` in `script/verify_localization_catalog.py`
-   declares the language (the target set above is declared). Look up anything
+   declares the language (every shipped language is declared). Look up anything
    new in the CLDR plural rules and list only the categories integer counts
    select.
 2. Export what the language lacks:
@@ -3660,9 +4228,10 @@ shows the same commands for several.
    Simplified Chinese, Spanish, French, Italian, Brazilian Portuguese, Russian,
    Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, Arabic,
    Persian, Urdu, Hebrew, German, Dutch, Romanian, Indonesian, Malay,
-   Vietnamese, Turkish, Thai, Greek, Bengali, and Marathi ones: one term per
-   concept across every catalog, the form of address and the evidence for it,
-   punctuation and quotation marks, spacing around numbers and Latin words.
+   Vietnamese, Turkish, Thai, Greek, Bengali, Marathi, Telugu, and Tamil ones:
+   one term per concept across every catalog, the form of address and the
+   evidence for it, punctuation and quotation marks, spacing around numbers and
+   Latin words.
 8. Capture the macOS tour and the iOS screens in the language (see "Headless
    screenshots") and look for truncated, clipped, or overlapping text.
 

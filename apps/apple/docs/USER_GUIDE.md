@@ -158,7 +158,7 @@ shortcut.
 The shortcut and the menu bar icon work while Lorvex is running. To have it open
 when you sign in to your Mac, turn on **Settings → General → Open at Login**.
 The switch shows what macOS has set, so it also follows a change you make in
-**System Settings → General → Login Items**. If you turned it on there but
+**System Settings → General → Login Items & Extensions**. If you turned it on there but
 macOS still waits for your approval, a row under the switch says so, and **Open
 Login Items** takes you to the pane where you turn Lorvex on.
 
@@ -2050,6 +2050,402 @@ the title ("tài liệu quan trọng của dự án", "gấp quần áo"), and "
 "chưa khẩn cấp", and "không quan trọng" turn the word around, so they stay too,
 as does "quan trọng nhất". A full stop or an exclamation mark that ends the line
 goes with the word.
+
+Turkish words are read when Turkish is among your device's preferred languages,
+in any regional variant. A line may be typed with every Turkish letter, with
+none ("persembe", "aksam", "gunu"), or with the dotted and dotless i in either
+case ("SALI", "Salı", "sali", and "SALİ" are one word); the title keeps the
+letters you typed. A letter typed as a base letter and a separate combining mark
+is left alone, so a detail word typed that way is not read. A case ending
+belongs to a detail only where it is listed ("cumaya kadar", "15 Ekim'de",
+"saat 5'te"), with a straight, a curly, or no apostrophe, so "Cuma'nın",
+"yarından", and "cumaya" alone stay in the title.
+
+Turkish says a clock time with "saat" before the hour or a locative ending after
+it: "saat 15:00", "saat 3", "saat üç", "3'te", "15:30'da". "Buçuk" adds the half
+hour to the hour it follows ("saat üç buçuk" is 3:30, never 2:30), "çeyrek
+geçe" and "çeyrek var" add and take off a quarter ("üçü çeyrek geçe" is 3:15,
+"dörde çeyrek var" is 3:45), and "on geçe" and "on var" count minutes ("üçe on
+var" is 2:50). "Buçuk" is read with "saat", a part of the day, or the ending
+"-ta" ("üç buçukta"), since "üç buçuk" alone is as often an amount ("iki buçuk
+kilo"), and minutes with a unit word ("üçü on dakika geçe") stay in the title
+whole. A bare number is a time only after "saat", a part of the day, or a
+locative ending, so "Toplantı 5" and "akşam 8 kişi" stay in the title. An hour
+from 1 to 6 with no part of the day is in the afternoon ("saat 3" is 3 PM)
+unless it is written with a zero ("saat 03:00"), and a part of the day sets the
+hour: "sabah" is the morning, "öğleden sonra" and "akşam" the afternoon and the
+evening, "öğlen" noon, and "gece" runs past midnight ("gece 2'de" is 02:00 on
+the next day, and "gece 12" and "gece yarısı" are 00:00 on the next day). A
+clock time that names a bound ("saat 17:00'ye kadar", "en geç saat 5", "5'ten
+önce", "saat 9'dan sonra") stays in the title, while the day before it is the
+due day: "cuma saat 17:00'ye kadar" is due Friday, and "saat 17:00'ye kadar"
+stays.
+
+English is read beside Turkish, so "3pm", "17:30", and "30 min" work as they do
+alone, and a "15:30" with nothing around it is read as it is in English. Turkish
+does not write a clock time with the letter h, so "15h" and "2h" stay lengths,
+as in English alone.
+
+| Detail | Turkish |
+|---|---|
+| Day | bugün, bu akşam, bu gece, yarın, yarın sabah, yarın akşam, öbür gün, cuma, cuma günü, bu cuma, haftaya cuma, önümüzdeki cuma, cuma akşamı, haftaya, önümüzdeki hafta, bu hafta sonu, önümüzdeki hafta sonu, 3 gün sonra, bir hafta sonra |
+| Date | 15 Ekim, 15 Ekim 2026, 15 Ekim'de, 15 Eki., Cuma 16 Ekim, 15.10.2026, 15/10/2026, tarih 15.10, 15/10'da |
+| Date range | 3-5 Mayıs, 3 Mayıs - 5 Mayıs, 3 Mayıs'tan 5 Mayıs'a kadar, 3 ile 5 Mayıs arası, cumadan pazara kadar, cuma-pazar, cuma ile pazar arası |
+| Due day | cumaya kadar, yarına kadar, 15 Ekim'e kadar, cumadan önce, son tarih cuma, en geç cuma, teslim cuma, deadline cuma |
+| Time | saat 15:00, saat 15.00, 15:30'da, saat 3'te, akşam 8'de, sabah 9, öğleden sonra 3, gece 12, saat üç, saat üç buçuk, üç buçukta, üçü çeyrek geçe, dörde çeyrek var, üçe on var, gece yarısı; saat 14-16, 14.00-16.00, 10:00'dan 11:00'e kadar, saat 14 ile 16 arası |
+| Repeat | her gün, her sabah, her pazartesi, her pazartesi ve perşembe, pazartesi günleri, pazartesileri, pazartesi akşamları, her hafta, haftada bir, iki günde bir, iki haftada bir, her 3 hafta, ayda bir, her ay, yılda bir, her yıl, gün aşırı, her ikinci hafta, hafta içi her gün, iş günleri, hafta sonları, her hafta sonu, her ayın 15'inde; günlük, haftalık, aylık, yıllık at the end |
+| Length | 30 dakika, 30 dk, 1 saat, 2 saat, 1,5 saat, yarım saat, çeyrek saat, bir buçuk saat, 1 saat 30 dakika, 45 dakikalık, yaklaşık 30 dakika, tahmini süre 2 saat |
+| Priority | acil, önemli, çok önemli (at the end, or "Acil:" at the start), yüksek öncelik, orta öncelik, düşük öncelik, öncelik: yüksek, öncelik 1 |
+
+A weekday alone is the coming one, and a weekday that names today means a week
+ahead ("salı" on a Tuesday is next Tuesday). "Bu" before a weekday is the coming
+one counting today ("bu salı" on a Tuesday is today, "bu pazartesi" is the
+Monday ahead), "haftaya cuma" and "önümüzdeki hafta cuma" are next week's, and
+"önümüzdeki cuma" and "gelecek cuma" are the coming one. Weeks start on Monday,
+as the app's weeks do: "haftaya" plans the task seven days ahead, and the
+weekend is Saturday and Sunday ("bu hafta sonu" is the coming Saturday,
+"önümüzdeki hafta sonu" the one after). "Pazar" is also the market, so it names
+Sunday only after "bu", "önümüzdeki", "gelecek", or "haftaya", or with "günü" or
+a part of the day ("pazar günü", "pazar akşamı"); "pzt" and "cmt" read, while
+the other short forms ("sal", "çar", "per", "cum", "paz") are words of their own
+and stay. "Hafta sonu" and "hafta içi" alone are nouns of many titles and stay
+too, and so does the two-word "bu gün", which is "this day" in many sentences;
+"bugün" is today.
+
+No past day is read: "dün", "evvelsi gün", "geçen cuma", and "geçen hafta sonu"
+stay in the title, and so does a clock time right after one ("dün saat 3'te").
+
+A written date has its day number before the month ("15 Ekim", "15 Ekim 2026",
+"15 Ekim'de"), maybe with a weekday in front ("Cuma 16 Ekim"), or is in digits
+with the day first ("15.10.2026", "15/10/2026", "15.10."). The month
+abbreviations ("Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl",
+"Eki", "Kas", "Ara") read when they are capitalized or end in a period, since
+several are ordinary words ("ara", "kas", "haz"). Digits with no year ("15.10",
+"15/10") are a date only after "tarih" or a deadline word, with a locative
+ending ("15/10'da"), or before "kadar", since without one they could be a time,
+a score, or a version. A date without a year that has already passed means next
+year's, and a year written after the month places the date ("15 Ekim 2027").
+
+A date range plans the task on its first day and makes it due on its last:
+"3-5 Mayıs", "3 Mayıs - 5 Mayıs", "3 Mayıs'tan 5 Mayıs'a kadar", and "3 ile 5
+Mayıs arası" run from the first date to the last, and a month written once
+serves both days. A span of weekdays does the same: "cumadan pazara kadar",
+"cuma-pazar", and "cuma ile pazar arası" plan the coming first day and make the
+task due on the last day after it, while Monday to Friday ("pazartesi-cuma") is
+the working week, which repeats. A range names both the planned day and the due
+day, so another day in the same line stays in the title.
+
+A due day is a day with the dative ending before "kadar", "dek", or "değin"
+("cumaya kadar", "yarına kadar", "15 Ekim'e kadar"), a day before "önce"
+("cumadan önce"), or a day after "son tarih", "en geç", "teslim", "termin", or
+"deadline" ("son tarih cuma", "en geç cuma", "teslim: yarın").
+
+"Her" with a day, week, month, or year repeats the task ("her gün", "her hafta",
+"her ay", "her yıl"), and so do "her sabah", "her akşam", and "her gece" (each
+day). A weekday repeats every week ("her pazartesi", "pazartesi günleri",
+"pazartesileri", "cumaları", "pazartesi akşamları"), a list repeats on each of
+its days ("her pazartesi ve perşembe", "pazartesi ve perşembe günleri"), and
+"hafta içi her gün", "iş günleri", and "her iş günü" repeat on the working days,
+while "hafta sonları" and "her hafta sonu" repeat on Saturday and Sunday. The
+counted intervals are "iki günde bir", "3 haftada bir", "her 3 hafta", "her üç
+gün", "her ikinci hafta", "gün aşırı", "haftada bir", "ayda bir", and "yılda
+bir" (a weekday after a weekly interval fixes its day: "iki haftada bir cuma"),
+and "her ayın 15'inde" repeats on a day of the month. "Her iki gün" stays in the
+title, since it is "both days" as often as "every two days". "Günlük",
+"haftalık", "aylık", and "yıllık" repeat the task only at the end of the line,
+at its start before a colon or a comma, or with "olarak" ("rapor haftalık
+olarak"); before a noun they are adjectives and stay in the title ("haftalık
+rapor", "yıllık izin").
+
+A length says that it is one: "30 dakika", "30 dk", "2 saat", "1,5 saat", "yarım
+saat", "çeyrek saat", "bir buçuk saat", "1 saat 30 dakika", "iki saat", and the
+adjective forms ("45 dakikalık toplantı" is a length of 45 minutes), maybe after
+"yaklaşık", "tahmini süre", "süre:", or "toplam", and before "boyunca" or
+"kadar". An amount that names a moment, a bound, or an interval ("30 dakika
+sonra", "2 saat içinde", "en fazla 2 saat", "her 2 saat", "2 saat önce") is no
+length and stays in the title whole, and so does a range of amounts ("2-3
+saat").
+
+"Yüksek öncelik", "öncelik: yüksek", and "öncelik 1" are high priority, "orta
+öncelik" ("öncelik 2") the middle one, and "düşük öncelik" ("öncelik 3") the low
+one. "Acil", "önemli", and "çok önemli" are high priority only at the end of the
+line, or at its start before a colon or a comma ("Acil: rapor"); anywhere else
+they are ordinary adjectives and stay in the title ("Acil servis", "Önemli bir
+toplantı"), and "acil değil" turns the word around, so it stays too. A full stop
+or an exclamation mark that ends the line goes with the word.
+
+Greek words are read when Greek is among your device's preferred languages, in
+any regional variant. A line may be typed with or without accents and with the
+final sigma written either way ("αύριο", "αυριο", and "ΑΥΡΙΟ" are one word, as
+are "μέρες" and "μερεσ"); the title keeps the letters you typed. A letter typed
+as a base letter and a separate combining mark is left alone, so a detail word
+typed that way is not read. A word counts only as a whole word in Greek
+letters, so "αυριανό" (of tomorrow) and "Δευτερόλεπτα" (seconds) hold no day,
+and a word joined to another by a hyphen ("σήμερα-αύριο") stays in the title.
+
+Greek says a clock time with "στις" (or "στη", "στην", "ώρα") before the hour:
+"στις 15:00", "στις 3", "στις τρεις", "ώρα 15:00". "Και μισή" and "και
+τέταρτο" add to the hour they follow ("στις 3 και μισή" is 3:30, "στις τρεις
+και τέταρτο" is 3:15), "παρά" takes minutes off the hour after it ("στις 4 παρά
+τέταρτο" is 3:45, "στις 4 παρά 10" is 3:50), and "εννιάμισι" is 9:30. Minutes
+counted with a unit word ("στις 3 και 10 λεπτά") stay in the title whole. A bare
+number is a time only after "στις", "στη", "στην", or "ώρα", and only when the
+word after it can follow a time, so "Συνάντηση 5", "στις 3 άτομα", and "στις 3
+ώρες" stay in the title. An hour from 1 to 6 with no part of the day is in the
+afternoon ("στις 3" is 3 PM) unless it is written with a zero ("στις 03:00"),
+and a part of the day sets the hour: "το πρωί" is the morning, "το απόγευμα" and
+"το βράδυ" the afternoon and the evening, "π.μ." and "μ.μ." count like AM and
+PM, "στις 2 τη νύχτα" is 02:00 on the next day, and "τα μεσάνυχτα" (or "12 το
+βράδυ") is 00:00 on the next day. "Το μεσημέρι" alone stays in the title, while
+"στις 12 το μεσημέρι" is noon. A clock time that names a bound ("μέχρι τις 5",
+"πριν τις 17:00", "μετά τις 3", "στις 5 το αργότερο") stays in the title, while
+the day before it is the due day: "την Παρασκευή μέχρι τις 5" is due Friday, and
+"μέχρι τις 5" stays.
+
+English is read beside Greek, so "3pm", "17:30", and "30 min" work as they do
+alone, and a "15:30" with nothing around it is read as it is in English. Greek
+does not write a clock time with the letter h, so "15h" and "2h" stay lengths,
+as in English alone.
+
+| Detail | Greek |
+|---|---|
+| Day | σήμερα, απόψε, αύριο, αύριο το πρωί, αύριο βράδυ, μεθαύριο, Παρασκευή, την Παρασκευή, αυτή την Παρασκευή, την επόμενη Παρασκευή, Παρασκευή της επόμενης εβδομάδας, την επόμενη εβδομάδα, την άλλη εβδομάδα, το Σαββατοκύριακο, σε 3 μέρες, μετά από 3 μέρες, σε μία εβδομάδα |
+| Date | 15 Οκτωβρίου, 15 Οκτωβρίου 2026, 15 Οκτ., 1η Μαΐου, 25ης Μαρτίου, 15 Οκτώβρη, Παρασκευή 16 Οκτωβρίου, 15.10.2026, 15/10/2026, στις 15/10, ημερομηνία 15.10 |
+| Date range | 3-5 Μαΐου, 3 Μαΐου - 5 Μαΐου, από 3 έως 5 Μαΐου, από τις 3 μέχρι τις 5 Μαΐου, από Παρασκευή έως Κυριακή, Παρασκευή-Κυριακή |
+| Due day | μέχρι την Παρασκευή, έως Παρασκευή, ως αύριο, μέχρι και την Παρασκευή, μέχρι τις 15 Οκτωβρίου, πριν την Παρασκευή, προθεσμία Παρασκευή, παράδοση αύριο, deadline Παρασκευή, Παρασκευή το αργότερο, για αύριο |
+| Time | στις 15:00, στις 3, στις 3 το απόγευμα, 3 μ.μ., 9 π.μ., στις 3 και μισή, στις 3 και τέταρτο, στις 4 παρά τέταρτο, στις 4 παρά 10, στις τρεις και είκοσι, στις εννιάμισι, ώρα 15:00, το απόγευμα στις 7, τα μεσάνυχτα; στις 14-16, από τις 3 έως τις 5 |
+| Repeat | κάθε μέρα, κάθε πρωί, κάθε Δευτέρα, κάθε Δευτέρα και Πέμπτη, τις Δευτέρες, τα Σάββατα, κάθε εβδομάδα, κάθε μήνα, κάθε χρόνο, κάθε δύο μέρες, κάθε 2 εβδομάδες, κάθε δεύτερη Παρασκευή, μέρα παρά μέρα, εβδομάδα παρά εβδομάδα, μία φορά την εβδομάδα, τις καθημερινές, κάθε εργάσιμη μέρα, Δευτέρα-Παρασκευή, τα Σαββατοκύριακα, κάθε Σαββατοκύριακο, κάθε μήνα στις 15, κάθε 15 του μήνα; ημερησίως, εβδομαδιαίως, μηνιαίως, ετησίως; καθημερινά, εβδομαδιαία, μηνιαία, ετήσια at the end |
+| Length | 30 λεπτά, 30 λ, 1 ώρα, 2 ώρες, 1,5 ώρα, μισή ώρα, μιάμιση ώρα, δύο ώρες και μισή, 1 ώρα και 30 λεπτά, δυόμισι ώρες, ένα τέταρτο, τρία τέταρτα της ώρας, είκοσι λεπτά, για 2 ώρες, περίπου 30 λεπτά, διάρκεια: 2 ώρες |
+| Priority | επείγον, επείγουσα, σημαντικό, πολύ σημαντικό (at the end, or "Επείγον:" at the start), υψηλή προτεραιότητα, μεσαία προτεραιότητα, χαμηλή προτεραιότητα, προτεραιότητα: υψηλή, προτεραιότητα 1 |
+
+A weekday alone is the coming one, and a weekday that names today means a week
+ahead ("Τρίτη" on a Tuesday is next Tuesday). "Αυτή την" before a weekday is the
+coming one counting today ("αυτή την Τρίτη" on a Tuesday is today), "την
+επόμενη Παρασκευή" is the coming one, and "Παρασκευή της επόμενης εβδομάδας" and
+"την επόμενη εβδομάδα Παρασκευή" are next week's. Weeks start on Monday, as the
+app's weeks do: "την επόμενη εβδομάδα" plans the task seven days ahead, and the
+weekend is Saturday and Sunday ("το Σαββατοκύριακο" is the coming Saturday, "το
+Σαββατοκύριακο της επόμενης εβδομάδας" the one after). "Τρίτη", "Τετάρτη", and
+"Πέμπτη" are also "third", "fourth", and "fifth", so they name a day with the
+article ("την Τρίτη") or capitalized after another word ("Συνάντηση Τρίτη"),
+while "την τρίτη φορά" and "Τρίτη θέση" stay in the title. "Παρασκευή" and
+"Κυριακή" are also first names, so "με την Κυριακή" and "την Κυριακή
+Παπαδοπούλου" stay. "Παρ." and "Κυρ." read only with their period, and "Δευ",
+"Τρι", "Τετ", "Πεμ", and "Σαβ" with or without one. A list of days ("Δευτέρα και
+Τρίτη", "Δευτέρα, Τετάρτη") names no single day and stays, and so do holidays
+and ordinal weekdays ("Μεγάλη Παρασκευή", "Καθαρά Δευτέρα", "Κυριακή του
+Πάσχα", "κάθε πρώτη Δευτέρα του μήνα").
+
+No past day is read: "χθες", "προχθές", "την περασμένη Παρασκευή", and "το
+περασμένο Σαββατοκύριακο" stay in the title, and so does a clock time right
+after one ("χθες στις 3").
+
+A written date has its day number before the month in the genitive ("15
+Οκτωβρίου", "15 Οκτωβρίου 2026", "1η Μαΐου", "25ης Μαρτίου"), maybe with a
+weekday in front ("Παρασκευή 16 Οκτωβρίου"), or is in digits with the day first
+("15.10.2026", "15/10/2026", "15/10/26"). The colloquial month names ("Γενάρη",
+"Φλεβάρη", "Μάρτη", "Μάη", "Οκτώβρη") read like the full ones, and the
+abbreviations ("Ιαν", "Φεβ", "Μαρ", "Απρ", "Μαΐ", "Ιουν", "Ιουλ", "Αυγ", "Σεπ",
+"Οκτ", "Νοε", "Δεκ") read after a day number. A month alone or in the nominative
+("Μάιος") stays in the title. Digits with no year ("15.10", "15/10") are a date
+only after "στις", "ημερομηνία", or a deadline word, since without one they
+could be a time, a score, or a version. A date without a year that has already
+passed means next year's, a year written after the month places the date ("15
+Οκτωβρίου 2027"), and a year that is already past leaves the date in the title.
+
+A date range plans the task on its first day and makes it due on its last: "3-5
+Μαΐου", "3 Μαΐου - 5 Μαΐου", "από 3 έως 5 Μαΐου", and "από τις 3 μέχρι τις 5
+Μαΐου" run from the first date to the last, and a month written once serves
+both days. A span of weekdays does the same: "από Παρασκευή έως Κυριακή" and
+"Παρασκευή-Κυριακή" plan the coming first day and make the task due on the last
+day after it, while Monday to Friday ("Δευτέρα-Παρασκευή") is the working week,
+which repeats. A range names both the planned day and the due day, so another
+day in the same line stays in the title.
+
+A due day is a day after "μέχρι" (also "μέχρι και"), "έως", "ως", "πριν" (or
+"πριν από"), "προθεσμία", "παράδοση", or "deadline" ("μέχρι την Παρασκευή",
+"έως Παρασκευή", "ως αύριο", "προθεσμία: Παρασκευή"), a day before "το
+αργότερο" ("Παρασκευή το αργότερο"), or a day after "για" ("για αύριο", "για
+την Παρασκευή").
+
+"Κάθε" with a day, week, month, or year repeats the task ("κάθε μέρα", "κάθε
+εβδομάδα", "κάθε μήνα", "κάθε χρόνο"), and so do "κάθε πρωί", "κάθε απόγευμα",
+and "κάθε βράδυ" (each day). A weekday repeats every week ("κάθε Δευτέρα", "τις
+Δευτέρες", "τα Σάββατα"), a list repeats on each of its days ("κάθε Δευτέρα και
+Πέμπτη"), and "τις καθημερινές", "κάθε εργάσιμη μέρα", and "Δευτέρα-Παρασκευή"
+repeat on the working days, while "τα Σαββατοκύριακα" and "κάθε Σαββατοκύριακο"
+repeat on Saturday and Sunday. The counted intervals are "κάθε δύο μέρες", "κάθε
+2 εβδομάδες", "μέρα παρά μέρα", "εβδομάδα παρά εβδομάδα", and "κάθε δεύτερη
+Παρασκευή" (every other Friday), and "κάθε μήνα στις 15" or "κάθε 15 του μήνα"
+repeats on a day of the month. "Ημερησίως", "εβδομαδιαίως", "μηνιαίως", and
+"ετησίως" repeat the task anywhere in the line. "Καθημερινά", "εβδομαδιαία",
+"μηνιαία", and "ετήσια" repeat the task only at the end of the line, at its
+start before a colon or a comma, before "στις", or with "βάση" ("σε εβδομαδιαία
+βάση"); before a noun they are adjectives and stay in the title ("εβδομαδιαία
+αναφορά", "ετήσια άδεια").
+
+A length says that it is one: "30 λεπτά", "30 λ", "2 ώρες", "1,5 ώρα", "μισή
+ώρα", "μιάμιση ώρα", "δύο ώρες και μισή", "1 ώρα και 30 λεπτά", "δυόμισι
+ώρες", "ένα τέταρτο", maybe after "για", "περίπου", or "διάρκεια:". "Ένα
+τέταρτο" alone is a length only at the end of the line or before a word that can
+follow a detail, so "ένα τέταρτο κιλό" stays. An amount that names a moment, a
+bound, or a rate ("σε 30 λεπτά", "μετά από 2 ώρες", "τουλάχιστον 2 ώρες", "κάθε
+2 ώρες", "2 ώρες πριν", "2 ώρες τη μέρα") is no length and stays in the title
+whole, and so does a range of amounts ("2-3 ώρες").
+
+"Υψηλή προτεραιότητα", "προτεραιότητα: υψηλή", and "προτεραιότητα 1" are high
+priority, "μεσαία προτεραιότητα" ("προτεραιότητα 2") the middle one, and
+"χαμηλή προτεραιότητα" ("προτεραιότητα 3") the low one. "Επείγον", "επείγουσα",
+"σημαντικό", and "πολύ σημαντικό" are high priority only at the end of the line,
+or at its start before a colon or a comma ("Επείγον: αναφορά"); anywhere else
+they are ordinary adjectives and stay in the title ("Επείγον μήνυμα", "Σημαντική
+συνάντηση"), and "όχι επείγον" and "δεν είναι σημαντικό" turn the word around,
+so they stay too. A full stop or an exclamation mark that ends the line goes
+with the word.
+
+Thai words are read when Thai is among your device's preferred languages, in
+any regional variant. Thai is written without spaces, so a detail may be glued
+to the words around it or set apart from them: "ประชุมพรุ่งนี้" and "ประชุม
+พรุ่งนี้" both plan "ประชุม" for tomorrow. A word counts only where it begins and
+ends on a syllable of its own, so "สาม" inside "สามัคคี" is no hour. A detail
+taken out from between two Thai words leaves one space there: "ส่งงานพรุ่งนี้ที่ห้องประชุม"
+becomes the title "ส่งงาน ที่ห้องประชุม". Digits may be Arabic or Thai ("๑๕
+ตุลาคม", "๓๐ นาที"). A year of 2400 or more is Buddhist Era, the Christian year
+plus 543 ("2569" is 2026), and "พ.ศ." and "ค.ศ." name the era outright.
+
+Thai says a clock time in two ways. The traditional clock uses "โมง" for the
+hours of the day, "ทุ่ม" for the evening, and "ตี" for the small hours:
+"บ่ายสามโมง" is 15:00, "สองทุ่ม" is 20:00, and "ตีห้า" is 05:00. The 24-hour
+clock puts "น." or "นาฬิกา" after the time ("15:00 น.", "15.30 น.", "9 น.",
+"9 นาฬิกา"), and with that unit the hour is read as written, so "3.30 น." is
+03:30. A time with neither a Thai word nor a unit ("15:30", "3pm") is read by
+the English rules instead, and "เวลา" or "ตอน" before a time goes with it
+("เวลา 15:30").
+
+An hour of "โมง" with no part of the day is in the afternoon from 1 to 6 ("3
+โมง" is 15:00, "6 โมง" is 18:00) and in the morning from 7 to 11 ("8 โมง" is
+08:00). A part of the day fixes it: "เช้า" goes with 6 to 11, "บ่าย" with 1 to 6
+("บ่ายโมง" is 13:00), and "เย็น" with 3 to 11, and an hour that a part never goes
+with ("สองโมงเช้า") stays in the title. A part of the day beside the day sets the
+hour of a bare "โมง" too: "พรุ่งนี้เย็น 8 โมง" is 20:00 tomorrow and "คืนนี้ 8
+โมง" is 20:00 tonight. "ครึ่ง" adds half an hour to the hour it follows
+("บ่ายสามครึ่ง" and "3 โมงครึ่ง" are 15:30, "ทุ่มครึ่ง" is 19:30, "ตีสองครึ่ง" is
+02:30). Minutes after the hour are written with "นาที" ("3 โมง 15 นาที" is
+15:15), so a number of minutes right after "โมง" is part of the clock time:
+"บ่ายสามโมง 30 นาที" is 15:30, and a half-hour task at three is "บ่ายสามโมง
+ใช้เวลา 30 นาที".
+
+"เที่ยง" is noon when it stands alone or follows a day word or "ตอน" ("นัดพรุ่งนี้เที่ยง"),
+and it stays in the title inside another word ("ข้าวเที่ยง" is lunch).
+"เที่ยงคืน" is the midnight that ends the day, so it plans the day after the one
+named: "ดูบอลพรุ่งนี้เที่ยงคืน" is 00:00 on the day after tomorrow, and "ดูบอลเที่ยงคืน"
+with no day plans tomorrow at 00:00. An hour of "ตี" after "คืนนี้" is the small
+hours of the next day: "ดูบอลคืนนี้ตีหนึ่ง" is 01:00 tomorrow.
+
+A clock time that names a bound ("ก่อน 5 โมงเย็น", "ภายใน 17:00 น.", "หลังเที่ยง",
+"ตั้งแต่ 9 โมงเป็นต้นไป") stays in the title, while the day before it is the due
+day: "ส่งงานพรุ่งนี้ก่อน 5 โมงเย็น" is due tomorrow and keeps "ก่อน 5 โมงเย็น".
+
+English is read beside Thai, so "3pm", "17:30", and "30 min" work as they do
+alone. Thai does not write a clock time with the letter h, so "15h" and "2h"
+stay lengths, as in English alone.
+
+| Detail | Thai |
+|---|---|
+| Day | วันนี้, คืนนี้, เย็นนี้, พรุ่งนี้, พรุ่งนี้เช้า, พรุ่งนี้ตอนเย็น, มะรืนนี้, วันศุกร์, วันศุกร์นี้, วันศุกร์หน้า, ศุกร์นี้, ศุกร์หน้า, วันศุกร์ที่จะถึง, วันศุกร์ตอนเย็น, สัปดาห์หน้า, สัปดาห์หน้าวันพุธ, วันพุธสัปดาห์หน้า, สุดสัปดาห์, สุดสัปดาห์หน้า, เสาร์อาทิตย์, อีก 3 วัน, อีก 2 สัปดาห์, อีกสัปดาห์ |
+| Date | 15 ตุลาคม, 15 ต.ค., 15 ตุลาคมนี้, 15 ตุลาคม 2569, 15 ตุลาคม 2026, 15 ต.ค. พ.ศ. 2569, ๑๕ ตุลาคม ๒๕๖๙, วันศุกร์ที่ 16 ตุลาคม, 15/10/2569, 15-10-2026, 15.10.2569, วันที่ 15, วันที่ 15 ตุลาคม, วันที่ 15/10, วันอังคารที่ 29 |
+| Date range | 3-5 พฤษภาคม, 3 ถึง 5 พฤษภาคม, ตั้งแต่ 3 ถึง 5 พฤษภาคม, จาก 3 ถึง 5 พฤษภาคม, 30 พฤษภาคม - 2 มิถุนายน, 3-5 พ.ค. 2570, ตั้งแต่วันศุกร์ถึงวันอาทิตย์, วันศุกร์-อาทิตย์ |
+| Due day | ภายในวันศุกร์, ก่อนวันศุกร์, ไม่เกินวันศุกร์, จนถึงวันศุกร์, เดดไลน์วันศุกร์, deadline วันศุกร์, กำหนดส่ง 15/10, ครบกำหนดวันศุกร์, ภายในศุกร์, ภายในพรุ่งนี้, ภายในสัปดาห์หน้า, ภายใน 3 วัน, ภายใน 15 ตุลาคม |
+| Time | บ่ายสามโมง, สามโมงเย็น, หกโมงเช้า, 3 โมง, 3 โมงครึ่ง, 3 โมง 15 นาที, สามโมงสิบห้านาที, บ่ายโมง, บ่ายสามครึ่ง, สองทุ่ม, ห้าทุ่ม, ทุ่มครึ่ง, ตีห้า, ตี 5, เที่ยง, เที่ยงคืน, 15:00 น., 15.30 น., 9 น., 9 นาฬิกา, 15 นาฬิกา 30 นาที, เวลา 15:30, ตอนบ่ายสามโมง, 10:00-11:00 น., 9-11 โมงเช้า, บ่ายสองถึงสี่โมง, 9 โมงถึง 11 โมง |
+| Repeat | ทุกวัน, ทุกเช้า, ทุกเย็น, ทุกสัปดาห์, ทุกเดือน, ทุกปี, ทุกวันจันทร์, ทุกจันทร์, ทุกวันจันทร์และวันพุธ, ทุกจันทร์ พุธ ศุกร์, ทุกวันจันทร์ถึงวันศุกร์, ทุกวันทำงาน, ทุกสุดสัปดาห์, ทุกเสาร์อาทิตย์, ทุก 2 วัน, ทุกสองสัปดาห์, ทุก 3 เดือน, ทุก 2 สัปดาห์วันศุกร์, ทุก 14 วัน, วันเว้นวัน, สัปดาห์เว้นสัปดาห์, วันละครั้ง, สัปดาห์ละครั้ง, ทุกไตรมาส, ทุกครึ่งปี, ทุกวันที่ 15, ทุกเดือนวันที่ 15, วันที่ 15 ของทุกเดือน |
+| Length | 30 นาที, 1 ชั่วโมง, 1 ชม., 1.5 ชั่วโมง, ครึ่งชั่วโมง, ชั่วโมงครึ่ง, 1 ชั่วโมงครึ่ง, 2 ชั่วโมง 30 นาที, สามสิบนาที, หนึ่งชั่วโมง, ชั่วโมงนึง, ใช้เวลา 2 ชั่วโมง, ระยะเวลา 30 นาที, นาน 45 นาที, ประมาณ 20 นาที |
+| Priority | ด่วน, ด่วนมาก, ด่วนที่สุด, เร่งด่วน, สำคัญ, สำคัญมาก, สำคัญที่สุด, ไม่ด่วน, ไม่เร่งด่วน, ไม่สำคัญ, ความสำคัญสูง, ความสำคัญปานกลาง, ความสำคัญต่ำ, ลำดับความสำคัญ: สูง, ความสำคัญ 1, ความสำคัญ 2, ความสำคัญ 3 |
+
+A weekday is written with "วัน": "วันศุกร์" is the coming Friday, a full week
+ahead when it names today ("วันอังคาร" on a Tuesday is next Tuesday), and
+"วันศุกร์นี้" counts today ("วันอังคารนี้" on a Tuesday is today).
+"วันศุกร์หน้า", "สัปดาห์หน้าวันศุกร์", and "วันศุกร์สัปดาห์หน้า" are next
+week's. Without "วัน" a weekday is read only before "นี้" or "หน้า" ("ศุกร์นี้",
+"ศุกร์หน้า") or after a deadline word, because "จันทร์" (the moon), "ศุกร์"
+(Venus), and "อังคาร" (Mars) are also names of things and "อาทิตย์" alone is the
+word for a week, so a bare "ประชุมศุกร์" or "ประชุมอาทิตย์" stays in the title.
+A weekday after "ดาว", "ดวง", "พระ", "คุณ", "นาย", or "นาง" is a name or a body
+in the sky ("ดาวศุกร์", "คุณจันทร์โทรมา"), not a day. Weeks start on Monday, as
+the app's weeks do: "สัปดาห์หน้า" plans the task seven days ahead, and the
+weekend is Saturday and Sunday ("สุดสัปดาห์" is the coming Saturday and
+"สุดสัปดาห์หน้า" the one after). A list of days ("วันจันทร์และวันพุธ") names no
+single day and stays in the title.
+
+No past day is read: "เมื่อวาน", "เมื่อคืน", "เมื่อเช้า", "วันศุกร์ที่แล้ว",
+"สัปดาห์ที่แล้ว", and "3 วันก่อน" stay in the title, and so does a clock time
+right after one ("เมื่อวานนี้ 3 โมง"). "ทุกวันนี้" (nowadays) and an ordinal
+weekday of the month ("วันพุธที่สองของเดือน") stay whole.
+
+A written date has its day number before the month, in full or abbreviated,
+with a year of either era after it or "นี้" ("15 ตุลาคม", "15 ต.ค.", "15
+ตุลาคม 2569", "15 ต.ค. พ.ศ. 2569", "15 ตุลาคมนี้"), maybe with a weekday in
+front ("วันศุกร์ที่ 16 ตุลาคม"), or is in digits with the day first
+("15/10/2569", "15-10-2026", "15.10.2569"). "วันที่ 15" with no month is the next
+15th, and "วันอังคารที่ 29" is the next 29th that falls on a Tuesday. Digits with
+no year ("15/10") are a date only after "วันที่" or a deadline word
+("วันที่ 15/10"), since Thai addresses are written "99/9". A month alone
+("ตุลาคม", "เดือนตุลาคม") stays in the title, and so does a day the month lacks
+("31 กุมภาพันธ์"). A date without a year that has already passed means next
+year's, and a year that is already past leaves the date in the title.
+
+A date range plans the task on its first day and makes it due on its last: "3-5
+พฤษภาคม", "3 ถึง 5 พฤษภาคม", "ตั้งแต่ 3 ถึง 5 พฤษภาคม", and "30 พฤษภาคม - 2
+มิถุนายน" run from the first date to the last, and a month written once serves
+both days. A span of weekdays does the same: "ตั้งแต่วันศุกร์ถึงวันอาทิตย์" and
+"วันศุกร์-อาทิตย์" plan the coming first day and make the task due on the last
+day after it. A range names both the planned day and the due day, so another day
+in the same line stays in the title. With a space around the dash and a number
+before it ("Sprint 12 - 20 พฤษภาคม") the number belongs to the title and only the
+date is read. A day after "ถึง" or "ตั้งแต่" on its own ("ส่งงานถึงวันศุกร์") is
+the end or the start of a stretch of time and stays in the title.
+
+A due day is a day after "ภายใน", "ไม่เกิน", "ก่อน", "จนถึง", "เดดไลน์",
+"deadline", "กำหนดส่ง", or "ครบกำหนด" ("ภายในวันศุกร์", "ก่อนพรุ่งนี้", "เดดไลน์:
+วันศุกร์", "กำหนดส่ง 15/10", "ภายใน 3 วัน"). After one of these words a weekday
+may be written without "วัน" ("ภายในศุกร์") and the short date "15/10" is a date.
+
+"ทุก" with a day, week, month, or year repeats the task ("ทุกวัน", "ทุกสัปดาห์",
+"ทุกเดือน", "ทุกปี"), and so do "ทุกเช้า", "ทุกบ่าย", "ทุกเย็น", and "ทุกคืน"
+(each day). A weekday repeats every week ("ทุกวันจันทร์", "ทุกจันทร์"), a list
+repeats on each of its days ("ทุกวันจันทร์และวันพุธ", "ทุกจันทร์ พุธ ศุกร์"),
+"ทุกวันทำงาน" and "ทุกวันจันทร์ถึงวันศุกร์" repeat on the working days, and
+"ทุกสุดสัปดาห์" and "ทุกเสาร์อาทิตย์" on Saturday and Sunday. The counted
+intervals are "ทุก 2 วัน", "ทุกสองสัปดาห์", "ทุก 3 เดือน", "ทุก 2 สัปดาห์วันศุกร์",
+the alternating "วันเว้นวัน" and "สัปดาห์เว้นสัปดาห์", "ทุกไตรมาส" (every three
+months), and "ทุกครึ่งปี" (every six months); whole weeks counted in days ("ทุก
+14 วัน") are a weekly repeat. "วันละครั้ง", "สัปดาห์ละครั้ง", "เดือนละครั้ง",
+and "ปีละครั้ง" repeat the same way, and "ทุกวันที่ 15", "ทุกเดือนวันที่ 15",
+and "วันที่ 15 ของทุกเดือน" repeat on a day of the month. "ทุกวันหยุด" (every
+holiday), "ทุกวันเกิด" (every birthday), "ทุกวันนี้", "สัปดาห์ละ 2 ครั้ง", and
+the weekdays of a month ("ทุกวันพุธที่สองของเดือน", "ทุกวันศุกร์สุดท้ายของเดือน")
+name no repeat the app can set and stay in the title, and so do "ประจำสัปดาห์",
+"ประจำเดือน", and "ประจำปี" before a noun ("รายงานประจำเดือน").
+
+A length says that it is one: "30 นาที", "1 ชั่วโมง", "1 ชม.", "1.5 ชั่วโมง",
+"ครึ่งชั่วโมง", "ชั่วโมงครึ่ง", "2 ชั่วโมง 30 นาที", "สามสิบนาที", maybe after
+"ใช้เวลา", "ระยะเวลา", "นาน", or "ประมาณ". An amount that names a moment, a
+bound, the past, or a rate ("อีก 30 นาที", "ภายใน 2 ชั่วโมง", "ทุก 30 นาที",
+"30 นาทีที่แล้ว", "วันละ 2 ชั่วโมง", "2 ชั่วโมงต่อวัน") is no length and stays in
+the title whole, and so do a range of amounts ("2-3 ชั่วโมง"), a single spelled
+minute, and more than twenty-four hours. A time range ("10:00-11:00 น.",
+"บ่ายสองถึงสี่โมง") sets the start and the length together.
+
+"ด่วน" and "สำคัญ" are priority words only when they stand alone, with a space,
+punctuation, or the end of the line on both sides, so "ทางด่วน" (an expressway),
+"รถด่วน" (an express train), and "เอกสารสำคัญ" (an important document) stay in the
+title. The longer words "ด่วนมาก", "ด่วนที่สุด", "เร่งด่วน", "สำคัญมาก", and
+"สำคัญที่สุด" also work glued to the words around them ("ส่งรายงานด่วนมาก"),
+and the repetition mark "ๆ" after a priority word belongs to it ("ด่วนมากๆ").
+"ไม่ด่วน", "ไม่เร่งด่วน", and "ไม่สำคัญ" are low priority. "ความสำคัญสูง"
+("ลำดับความสำคัญ: สูง", "ความสำคัญ 1") is high, "ความสำคัญปานกลาง"
+("ความสำคัญ 2") the middle one, and "ความสำคัญต่ำ" ("ความสำคัญ 3") the low one.
+A word that goes on into a comparison ("สำคัญมากกว่า", "ไม่สำคัญเท่า") names no
+priority, and a polite particle after the word ("ครับ") stays in the title.
 
 ### From the Menu Bar Icon
 

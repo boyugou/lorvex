@@ -130,6 +130,18 @@
             "value": "Добавь задачу в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் ஒரு பணியைச் சேர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఒక టాస్క్‌ను జోడించండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -301,6 +313,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Добавь привычку в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் பழக்கத்தைச் சேர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో అలవాటును జోడించండి"
           }
         },
         "th": {
@@ -476,6 +500,18 @@
             "value": "Запиши задачу в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் பணியை விரைவாகச் சேர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో టాస్క్‌ను త్వరగా జోడించండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -647,6 +683,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Выполни задачу в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் ஒரு பணியை நிறைவுசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఒక టాస్క్‌ను పూర్తి చేయండి"
           }
         },
         "th": {
@@ -822,6 +870,18 @@
             "value": "Создай привычку в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் புதிய பழக்கத்தை உருவாக்கு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో కొత్త అలవాటును సృష్టించండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -993,6 +1053,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отложи задачу в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் ஒரு பணியைத் தள்ளிவை"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఒక టాస్క్‌ను వాయిదా వేయండి"
           }
         },
         "th": {
@@ -1168,6 +1240,18 @@
             "value": "Покажи задачи в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் பணிகளைப் பட்டியலிடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో టాస్క్‌ల జాబితాను చూపండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1339,6 +1423,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Отметь задачу выполненной в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் பணியை முடிந்ததாகக் குறி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో టాస్క్‌ను పూర్తయినట్లుగా మార్క్ చేయండి"
           }
         },
         "th": {
@@ -1514,6 +1610,18 @@
             "value": "Перенеси задачу на сегодня в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் ஒரு பணியை இன்றைக்கு நகர்த்து"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఒక టాస్క్‌ను ఈరోజుకు తరలించండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -1685,6 +1793,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Открой ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}ஐத் திற"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}ను తెరవండి"
           }
         },
         "th": {
@@ -1860,6 +1980,18 @@
             "value": "Открой сегодня в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் இன்றைய பார்வையைத் திற"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఈరోజు వీక్షణను తెరవండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2031,6 +2163,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запланируй задачу на сегодня в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் இன்றைக்கு ஒரு பணியைத் திட்டமிடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఈరోజు కోసం ఒక టాస్క్‌ను ప్లాన్ చేయండి"
           }
         },
         "th": {
@@ -2206,6 +2350,18 @@
             "value": "Прочитай обзор в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் மேலோட்டத்தைப் படி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో ఓవర్‌వ్యూను చదవండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2377,6 +2533,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прочитай итоги недели в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் வாராந்தர மீள்பார்வையைப் படி"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో వారంవారీ సమీక్షను చదవండి"
           }
         },
         "th": {
@@ -2552,6 +2720,18 @@
             "value": "Запланируй задачу на завтра в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் நாளைக்கு ஒரு பணியைத் திட்டமிடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో రేపటికి ఒక టాస్క్‌ను షెడ్యూల్ చేయండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -2723,6 +2903,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Найди задачи в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் பணிகளைத் தேடு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో టాస్క్‌లను శోధించండి"
           }
         },
         "th": {
@@ -2898,6 +3090,18 @@
             "value": "Покажи обзор Lorvex в ${applicationName}"
           }
         },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் Lorvex மேலோட்டத்தைக் காட்டு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో Lorvex ఓవర్‌వ్యూను చూపండి"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -3069,6 +3273,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Покажи итоги недели в ${applicationName}"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}இல் வாராந்தர மீள்பார்வையைக் காட்டு"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName}లో వారంవారీ సమీక్షను చూపండి"
           }
         },
         "th": {

@@ -8,9 +8,9 @@ import LorvexDomain
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
 /// French, Portuguese, Spanish, Italian, Russian, Ukrainian, Polish, Arabic,
-/// Persian, Hindi, Urdu, Hebrew, German, Dutch, Romanian, Malay, Indonesian, and
-/// Vietnamese for a user who reads them. Each vocabulary lists its words. The
-/// details are read one kind at a time:
+/// Persian, Hindi, Urdu, Hebrew, German, Dutch, Romanian, Malay, Indonesian,
+/// Vietnamese, Turkish, Thai, and Greek for a user who reads them. Each vocabulary
+/// lists its words. The details are read one kind at a time:
 ///
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
@@ -117,8 +117,8 @@ public enum LorvexCaptureParser {
   ///   - languages: the languages the user reads, as BCP 47 codes, which
   ///     decide whether Japanese, Korean, French, Portuguese, Spanish,
   ///     Italian, Russian, Ukrainian, Polish, Arabic, Persian, Hindi, Urdu,
-  ///     Hebrew, German, Dutch, Romanian, Malay, Indonesian, and Vietnamese words
-  ///     are read.
+  ///     Hebrew, German, Dutch, Romanian, Malay, Indonesian, Vietnamese,
+  ///     Turkish, Thai, and Greek words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,
     languages: [String] = Locale.preferredLanguages

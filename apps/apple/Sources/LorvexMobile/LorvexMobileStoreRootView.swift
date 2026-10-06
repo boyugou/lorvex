@@ -9,6 +9,7 @@ public struct LorvexMobileStoreRootView: View {
   @AppStorage(AppAppearance.preferenceKey) private var appearanceRaw = AppAppearance.system.rawValue
   private let setupPreferences: MobileSetupPreferences
   @State private var showSetupWizard = false
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   public init(
     store: MobileStore,
@@ -115,7 +116,7 @@ public struct LorvexMobileStoreRootView: View {
       .presentationDetents([.large])
     }
     .sheet(isPresented: $store.isPresentingCapture) {
-      MobileStoreCaptureSheet(store: store)
+      MobileStoreCaptureSheet(store: store, showsAsCard: horizontalSizeClass == .regular)
     }
     // Last, so the sheets presented from this view (capture, setup) inherit the
     // accent as the sheets inside the tabs do; without it their Cancel button

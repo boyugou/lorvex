@@ -35,6 +35,8 @@
 		<string>pt-BR</string>
 		<string>ro</string>
 		<string>ru</string>
+		<string>ta</string>
+		<string>te</string>
 		<string>th</string>
 		<string>tr</string>
 		<string>uk</string>
@@ -50,7 +52,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>84</string>
+	<string>85</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

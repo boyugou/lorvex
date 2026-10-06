@@ -7,7 +7,7 @@ enum LoginItemStatus: Equatable {
   /// Lorvex opens at login.
   case on
   /// The user turned it on, but it stays inactive until they allow Lorvex in
-  /// System Settings > General > Login Items.
+  /// System Settings > General > Login Items & Extensions.
   case needsApproval
 }
 
@@ -19,7 +19,7 @@ protocol LoginItemControlling: AnyObject {
   var status: LoginItemStatus { get }
   func register() throws
   func unregister() throws
-  /// Opens System Settings on the Login Items pane.
+  /// Opens System Settings on the Login Items & Extensions pane.
   func openSystemSettings()
 }
 

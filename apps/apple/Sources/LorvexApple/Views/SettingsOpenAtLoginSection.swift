@@ -95,7 +95,7 @@ struct SettingsOpenAtLoginFooter: View {
   nonisolated static var approvalCaption: String {
     String(
       localized: "settings.open_at_login.approval",
-      defaultValue: "Turn on Lorvex in System Settings > General > Login Items.",
+      defaultValue: "Turn on Lorvex in System Settings > General > Login Items & Extensions.",
       table: "Localizable", bundle: LorvexL10n.bundle)
   }
 
@@ -103,7 +103,7 @@ struct SettingsOpenAtLoginFooter: View {
     String(
       localized: "settings.open_at_login.failed",
       defaultValue:
-        "Lorvex couldn’t change this. Use System Settings > General > Login Items instead.",
+        "Lorvex couldn’t change this. Use System Settings > General > Login Items & Extensions instead.",
       table: "Localizable", bundle: LorvexL10n.bundle)
   }
 }

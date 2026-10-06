@@ -16,7 +16,7 @@ and as-built layout wireframes in [`wireframes/`](wireframes/INDEX.md).
 1. **macOS and iOS** — the two primary surfaces; polish these first.
 2. **iPadOS** — iPad-native design (principles below), never the macOS layout
    ported verbatim.
-3. watchOS, CarPlay, and widgets after the above.
+3. watchOS and widgets after the above.
 
 ## iPad-native design principles
 
@@ -224,7 +224,7 @@ code-level open findings are in [`POLISH_BACKLOG.md`](POLISH_BACKLOG.md).
   fixed — the macOS calendar block at 9 points, the macOS onboarding hero glyph
   — and a long tail of raw `.font(...)` calls still bypasses the `Typography`
   tokens.
-- **Per-platform audits not yet run:** watchOS, CarPlay, and widgets,
+- **Per-platform audits not yet run:** watchOS and widgets,
   each of which needs the device.
 - **Calendar MCP metadata parity.** Create and update carry recurrence,
   timezone, URL, color, event type, person name, and attendees; scoped recurring

@@ -4,7 +4,7 @@ import SwiftUI
 /// The sidebar's Lists section: the lists, then a quiet "New List" row that
 /// opens the create sheet (the Reminders pattern: creation sits where the
 /// lists end, not as a glyph on the header), per-row Edit / reorder / Delete context menus, drag-to-reorder via
-/// `.onMove`, and drag-a-task-onto-a-list drop targets. This is the
+/// `.onMove`, and drag-tasks-onto-a-list drop targets (``TaskDropTarget``). This is the
 /// Reminders/Notes pattern — lists are managed inline where they live. It is the
 /// scoped list picker in the Tasks workspace sidebar: each row selects a list to
 /// scope the task view.
@@ -26,12 +26,6 @@ extension SidebarView {
                 .listRowInsets(SidebarMetrics.rowInsets)
                 .tag(SidebarRowSelection.listScope(list.id))
                 .accessibilityIdentifier("sidebar.list.\(list.id)")
-                .background {
-                    if dropTargetedListID == list.id {
-                        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-                            .fill(.tint.opacity(0.16))
-                    }
-                }
                 .contextMenu {
                     Button {
                         store.prepareListDraft(for: list)
@@ -74,17 +68,11 @@ extension SidebarView {
                         }
                     }
                 }
-                .dropDestination(for: LorvexTaskRef.self) { [store] refs, _ in
-                    for ref in refs {
-                        Task { await store.moveTask(id: ref.id, toListID: list.id) }
-                    }
-                    return !refs.isEmpty
-                } isTargeted: { targeted in
-                    if targeted {
-                        dropTargetedListID = list.id
-                    } else if dropTargetedListID == list.id {
-                        dropTargetedListID = nil
-                    }
+                .taskDropTarget(
+                    SidebarRowSelection.listScope(list.id), targeted: $dropTargetedRow,
+                    outset: SidebarMetrics.capsuleOutset, cornerRadius: LorvexDesign.Radius.m
+                ) { ids in
+                    Task { await store.moveTasks(ids: ids, toListID: list.id, undoManager: undoManager) }
                 }
             }
             .onMove { source, destination in

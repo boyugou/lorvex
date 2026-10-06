@@ -2,15 +2,15 @@ import Foundation
 
 public enum LorvexSystemIntentRunner {}
 
-/// Cross-launch handoff for a single pending navigation target (a destination or
-/// a task id) written by an App Intent / widget control and drained by the app on
-/// scene-active.
+/// Cross-launch handoff for a single pending request (a destination, a task id,
+/// or a quick action such as presenting capture) written by an App Intent /
+/// widget control and drained by the app on scene-active.
 ///
 /// Suite resolution, in order: an explicitly injected `defaults`; the
 /// `withScopedSuiteName` task-local (test isolation); otherwise the shared
 /// App-Group suite so an out-of-process control reaches the app, falling back to
-/// `.standard` only when that suite is unavailable. Storing a destination clears
-/// any pending task id and vice versa — at most one target is ever pending.
+/// `.standard` only when that suite is unavailable. Storing one kind of request
+/// clears any pending request of another kind — at most one is ever pending.
 public struct LorvexIntentHandoffStore {
   @TaskLocal private static var scopedSuiteName: String?
 
@@ -59,13 +59,18 @@ public struct LorvexIntentHandoffStore {
   }
 
   public func storeDestination(_ rawDestination: String) {
+    clear()
     defaults.set(rawDestination, forKey: LorvexIntentHandoffKeys.destination)
-    defaults.removeObject(forKey: LorvexIntentHandoffKeys.taskID)
   }
 
   public func storeTask(_ taskID: LorvexTask.ID) {
+    clear()
     defaults.set(taskID, forKey: LorvexIntentHandoffKeys.taskID)
-    defaults.removeObject(forKey: LorvexIntentHandoffKeys.destination)
+  }
+
+  public func storeQuickAction(_ action: LorvexQuickAction) {
+    clear()
+    defaults.set(action.rawValue, forKey: LorvexIntentHandoffKeys.quickAction)
   }
 
   public func consumeDestination() -> String? {
@@ -84,8 +89,19 @@ public struct LorvexIntentHandoffStore {
     return taskID
   }
 
+  /// The quick action a control asked for, consumed once. A stored value that
+  /// names no action is dropped.
+  public func consumeQuickAction() -> LorvexQuickAction? {
+    guard let rawValue = defaults.string(forKey: LorvexIntentHandoffKeys.quickAction) else {
+      return nil
+    }
+    defaults.removeObject(forKey: LorvexIntentHandoffKeys.quickAction)
+    return LorvexQuickAction(rawValue: rawValue)
+  }
+
   public func clear() {
     defaults.removeObject(forKey: LorvexIntentHandoffKeys.destination)
     defaults.removeObject(forKey: LorvexIntentHandoffKeys.taskID)
+    defaults.removeObject(forKey: LorvexIntentHandoffKeys.quickAction)
   }
 }

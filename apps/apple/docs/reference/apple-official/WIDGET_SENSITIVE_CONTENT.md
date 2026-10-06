@@ -28,7 +28,9 @@ Confirmed correct:
   row title, and the large widget's briefing text are privacy-sensitive;
 - `LorvexTodayControlWidget` marks its label privacy-sensitive whenever the
   label shows task content (the lead task's title, or how many tasks are left
-  today).
+  today);
+- `LorvexCaptureControlWidget` shows a fixed label and symbol and no task
+  content, so it needs no privacy marking.
 
 Remaining gaps:
 

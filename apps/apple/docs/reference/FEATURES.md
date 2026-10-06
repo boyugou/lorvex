@@ -12,7 +12,9 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 |---|---|---|
 | macOS — sidebar + all workspaces | [SHIPPED] | Today, Calendar, All Tasks, Review, Habits (⌘1–⌘5), then the user's lists as task scopes and an Archived section; Memory (⌘6, no detached-window scene) and Settings sit in a pinned footer. Lists have no sidebar row — they are managed inline, with the catalog reached via ⌘K |
 | macOS — multi-window | [SHIPPED] | Detached list/workspace windows + floating task stickies |
-| macOS — menu bar extra | [SHIPPED] | Today / Next 7 Days panel: date, quick-add, today's schedule and tasks with one-click complete, habit check-in rings, the seven-day agenda, events that open in the main window, Open Lorvex and Quit; the icon carries the due-today/overdue count |
+| macOS — menu bar extra | [SHIPPED] | Today / Next 7 Days panel: date, quick-add (reads days, times, lengths, and #lists like every capture field), today's schedule and tasks with one-click complete, habit check-in rings, the seven-day agenda, events that open in the main window, Open Lorvex and Quit; the icon carries the due-today/overdue count |
+| macOS — Quick Capture window | [SHIPPED] | A floating one-field window over any app, opened by an optional system-wide shortcut (⌃⌥Space, ⌃Space, ⌥Space, or ⌃⇧Space, chosen in Settings → General; off by default), File → Quick Capture (⌥⌘N), the Command Palette, or the Dock menu. It reads the line like every capture field, shows the details under the field, confirms the list the task landed in, keeps a dismissed draft, and reports a shortcut another app already owns |
+| macOS — Open at Login | [SHIPPED] | A switch in Settings → General that makes Lorvex open when the user signs in (`SMAppService.mainApp`), so the menu bar icon and the Quick Capture shortcut are ready. It shows the system's state, follows a change made in System Settings, and, when macOS waits for approval, offers a button to the Login Items pane |
 | macOS — full command menus + keyboard shortcuts | [SHIPPED] | |
 | macOS — settings (General/Assistant/Calendar/CloudSync/Diagnostics/Data/Permissions) | [SHIPPED] | |
 | macOS — workspace loading states | [SHIPPED] | Primary async workspaces show a native loading overlay |
@@ -21,10 +23,10 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 | macOS — calendar date navigation | [SHIPPED] | Week/list navigation with previous, next, Today/This Week, and date picker controls |
 | macOS — habit inspector | [SHIPPED] | In-place editing (name, encouragement, and Repeat / Reminder / Goal popovers), streak metrics, a history grid, and the by-weekday pattern |
 | macOS — habit milestones | [SHIPPED] | Streak/count milestone waypoints (auto-ladder + optional user target), a progress bar, and a celebration when a waypoint is crossed |
-| macOS — Command Palette (⌘K) | [SHIPPED] | Fuzzy command/navigation palette |
+| macOS — Command Palette (⌘K) | [SHIPPED] | Fuzzy command/navigation palette; the New Task row reads the typed line like a capture field and names the task and details it will create |
 | macOS — Data export/import | [SHIPPED] | Settings → Data writes the version-1 Apple export: portable category JSON plus an independently versioned exact native task graph for same-app restore, including task-domain deletion high-waters and opaque future-field state. CloudKit account/transport state is never restored; JSON may carry the producing device ID only as non-applied provenance. ZIP v1 requires an exact closed manifest inventory and has no blob members. Exact task restore is used only for a fresh task domain with its list/tag roots; otherwise tasks use the portable merge path. With sync live, import runs one best-effort sync pass first and the imported rows upload through the outbox like any other change; with sync off, import is local-only. MCP/AI export stays portable, and cross-platform movement is AI-reconciled best-effort rather than a lossless interchange contract |
 | iPhone — Today, Calendar, Tasks, Review tabs | [SHIPPED] | Daily-driver surfaces are first-class tabs; Today is one ordered list of what's planned for today or earlier, due today or overdue, or already started, with optional planned times; there is no separate Focus tab |
-| iPhone — global quick-capture sheet | [SHIPPED] | Capture is an action, not a place: the round ＋ beside the tab bar (on every tab), ⌘N with a keyboard, and the Home Screen Quick Capture action raise one capture sheet and leave the current tab selected |
+| iPhone — global quick-capture sheet | [SHIPPED] | Capture is an action, not a place: the round ＋ beside the tab bar (on every tab), ⌘N with a keyboard, the Home Screen Quick Capture action, and the Quick Capture control raise one capture sheet and leave the current tab selected |
 | iPhone — task detail + edit sheet | [SHIPPED] | |
 | iPhone — create sheets (task/list/habit/event) | [SHIPPED] | |
 | iPhone — secondary workspace reach (Habits, Memory, Settings) | [SHIPPED] | Habits and Memory are rows at the bottom of the Tasks tab home and Settings a toolbar button on Today, all pushed as typed routes; Lists is merged into the Tasks tab home |
@@ -44,11 +46,11 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 | Apple Watch — background complication refresh | [SHIPPED] | Phone-pushed snapshots reload watch WidgetKit timelines; providers also use periodic refresh policies |
 | WidgetKit — Today widget (small/medium/large + accessory) | [SHIPPED] | Tapping the lead task's ring or a row's circle completes the task in place on the Home Screen families (small, medium, large); the Lock Screen accessory families draw the ring without the button |
 | WidgetKit — ControlWidget (iOS, macOS) | [SHIPPED] | Shows the task at the top of Today and opens the app to Today when tapped |
+| WidgetKit — Quick Capture control (iOS, iPadOS) | [SHIPPED] | A Control Center, Lock Screen, and Action button control that opens the app with the capture sheet ready, on a cold launch and on a resume. The tap leaves one request in the App Group handoff store and the app presents the sheet when its scene becomes active; the control carries no task data, so it has no snapshot to reload |
 | WidgetKit — Today tasks widget | [SHIPPED] | |
 | WidgetKit — Habits/streak widget | [SHIPPED] | |
 | WidgetKit — daily-progress ring widget | [SHIPPED] | |
 | WidgetKit — AppIntentConfiguration (user-configurable) | [SHIPPED] | Today widget can be scoped to a specific list with a native list picker |
-| CarPlay — Today list with clock details, row tap opens an action sheet (Done / Tomorrow instead / Open on iPhone / Cancel) | [PARTIAL] | Controller and scene delegate present; Apple entitlement approval required for runtime activation |
 
 ---
 

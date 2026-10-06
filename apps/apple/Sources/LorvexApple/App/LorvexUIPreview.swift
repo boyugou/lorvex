@@ -226,9 +226,12 @@
         // The menu bar panel is its own window: the tour announces its number
         // before the stop so the driver shoots the panel, not the main window.
         // It opens once on Today and once on Next 7 Days.
-        for (scope, stop) in [(MenuBarScope.today, "menubar"), (.week, "menubar-week")] {
+        for (scope, stop, typed) in [
+          (MenuBarScope.today, "menubar", ""), (.week, "menubar-week", ""),
+          (.today, "menubar-capture", Self.tourCaptureLine(in: store)),
+        ] {
           previewDefaults.set(scope.rawValue, forKey: "menubar.scope")
-          let panel = makeMenuBarPanelWindow(store: store, beside: window)
+          let panel = makeMenuBarPanelWindow(store: store, typed: typed, beside: window)
           panel.orderFrontRegardless()
           try? await Task.sleep(for: .seconds(2.5))
           emit("LORVEX_UI_PREVIEW_WINDOW=\(panel.windowNumber)")
@@ -236,6 +239,16 @@
           panel.orderOut(nil)
         }
         previewDefaults.removeObject(forKey: "menubar.scope")
+        // Quick Capture is a floating window of its own, shown here with a
+        // capture line typed so its recognized details sit under the field.
+        let quickCaptureModel = QuickCaptureModel(store: store)
+        quickCaptureModel.text = Self.tourCaptureLine(in: store)
+        let quickCapture = makeQuickCaptureWindow(model: quickCaptureModel, store: store, beside: window)
+        quickCapture.orderFrontRegardless()
+        try? await Task.sleep(for: .seconds(2.5))
+        emit("LORVEX_UI_PREVIEW_WINDOW=\(quickCapture.windowNumber)")
+        await emitStop("quick-capture")
+        quickCapture.orderOut(nil)
         // A detached list window, on the same list the tasks-list stop scoped
         // to, announced like the other windows of its own.
         if let list = Self.tourList(in: store) {
@@ -246,13 +259,17 @@
           await emitStop("list-window")
           listWindow.orderOut(nil)
         }
-        // The command palette on three typed queries: the start of a list's
+        // The command palette on four typed queries: the start of a list's
         // name, where the jump leads, a word that begins no destination or
-        // list, where capture leads over the matching tasks, and a word only
-        // the notes hold, where the task rows quote them.
+        // list, where capture leads over the matching tasks, a word only the
+        // notes hold, where the task rows quote them, and a capture line with
+        // details, where the capture row names the task and its details.
         let jumpQuery = Self.tourList(in: store)
           .map { String($0.displayName.prefix(4)) } ?? "Hab"
-        for (stop, query) in [("palette-jump", jumpQuery), ("palette-search", "offsite"), ("palette-notes", "team")] {
+        for (stop, query) in [
+          ("palette-jump", jumpQuery), ("palette-search", "offsite"), ("palette-notes", "team"),
+          ("palette-capture", Self.tourCaptureLine(in: store)),
+        ] {
           let palette = makeCommandPaletteWindow(store: store, query: query, beside: window)
           palette.orderFrontRegardless()
           try? await Task.sleep(for: .seconds(2.5))
@@ -325,6 +342,17 @@
           await emitStop(stop)
           sheetWindow.orderOut(nil)
         }
+        // Quick Capture once the line is written: the window names the list the
+        // task landed in. Last among the task-bearing stops, since it adds a task.
+        let writtenModel = QuickCaptureModel(store: store)
+        writtenModel.text = "Renew the passport"
+        await writtenModel.submit()
+        let written = makeQuickCaptureWindow(model: writtenModel, store: store, beside: window)
+        written.orderFrontRegardless()
+        try? await Task.sleep(for: .seconds(2))
+        emit("LORVEX_UI_PREVIEW_WINDOW=\(written.windowNumber)")
+        await emitStop("quick-capture-done")
+        written.orderOut(nil)
         // The first-run wizard in a window of its own, a stop per page.
         let wizardState = SetupWizardState()
         let wizard = makeSetupWizardWindow(
@@ -403,9 +431,12 @@
     /// the panel's preferred size drive the window recursed through Auto
     /// Layout until the stack overflowed.
     @MainActor
-    private static func makeMenuBarPanelWindow(store: AppStore, beside main: NSWindow) -> NSWindow {
+    private static func makeMenuBarPanelWindow(
+      store: AppStore, typed: String = "", beside main: NSWindow
+    ) -> NSWindow {
       let hostingView = NSHostingView(
-        rootView: MenuBarStatusView(store: store).defaultAppStorage(previewDefaults).lorvexClockLocale()
+        rootView: MenuBarStatusView(store: store, initialQuickAdd: typed)
+          .defaultAppStorage(previewDefaults).lorvexClockLocale()
           .lorvexProductTimeZone(from: store))
       hostingView.sizingOptions = []
       let size = hostingView.fittingSize
@@ -422,6 +453,37 @@
       panel.hasShadow = true
       panel.contentView = hostingView
       return panel
+    }
+
+    /// Quick Capture's content, hosted in a plain borderless window sized once
+    /// to the content and hung from the upper part of the main window's screen,
+    /// where the real window opens. The real window is transparent over
+    /// whatever app is frontmost, which a window capture cannot include, so the
+    /// content sits on a neutral backdrop. The hosting view gets no sizing
+    /// options for the reason the menu bar panel's does not.
+    @MainActor
+    private static func makeQuickCaptureWindow(
+      model: QuickCaptureModel, store: AppStore, beside main: NSWindow
+    ) -> NSWindow {
+      let hostingView = NSHostingView(
+        rootView: QuickCaptureCard(model: model)
+          .background(Color(nsColor: .windowBackgroundColor))
+          .defaultAppStorage(previewDefaults).lorvexClockLocale()
+          .lorvexProductTimeZone(from: store))
+      hostingView.sizingOptions = []
+      let size = hostingView.fittingSize
+      let screen = main.screen?.visibleFrame ?? main.frame
+      let origin = NSPoint(
+        x: screen.midX - size.width / 2,
+        y: screen.maxY - screen.height * QuickCaptureMetrics.topInsetFraction - size.height)
+      let window = NSWindow(
+        contentRect: NSRect(origin: origin, size: size),
+        styleMask: [.borderless],
+        backing: .buffered,
+        defer: false)
+      window.isReleasedWhenClosed = false
+      window.contentView = hostingView
+      return window
     }
 
     /// The preview-defaults key naming the category a Settings window opens
@@ -655,6 +717,15 @@
         return long
       }
       return lists.first { !$0.isInbox }
+    }
+
+    /// The capture line the tour's typed-capture stops show: a day, a clock
+    /// time, a length, and the tour list as a `#list`, so every kind of
+    /// recognized detail has a word under the field.
+    @MainActor
+    private static func tourCaptureLine(in store: AppStore) -> String {
+      let list = tourList(in: store).map { " #" + $0.name.filter { $0.isLetter || $0.isNumber } } ?? ""
+      return "Call the caterer tomorrow 3pm 20 min" + list
     }
 
     /// Announce a settled workspace, then keep it on screen until the capture

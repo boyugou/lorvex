@@ -120,11 +120,11 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
   }
 
   public var parsedTags: [String] {
-    Self.parseListText(tagsText)
+    LorvexListText.entries(in: tagsText)
   }
 
   public var parsedDependencies: [LorvexTask.ID] {
-    Self.parseListText(dependsOnText)
+    LorvexListText.entries(in: dependsOnText)
   }
 
   /// Structured view of `tagsText` for token-style entry. Reading parses the
@@ -180,17 +180,6 @@ public struct MobileTaskEditDraft: Equatable, Identifiable, Sendable {
       availableFrom: Self.patch(available, comparedWith: originalAvailableFrom),
       tags: tags == originalTags ? nil : tags,
       dependsOn: dependencies == originalDependencies ? nil : dependencies)
-  }
-
-  private static func parseListText(_ text: String) -> [String] {
-    var seen = Set<String>()
-    return text
-      .split(whereSeparator: { character in
-        character == "," || character == "\n" || character == "\t"
-      })
-      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-      .filter { !$0.isEmpty }
-      .filter { seen.insert($0).inserted }
   }
 
   private static func patch<T: Equatable>(_ value: T?, comparedWith original: T?) -> Patch<T> {

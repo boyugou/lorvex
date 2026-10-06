@@ -20,7 +20,7 @@ separately:
 
 | Surface | Display language follows | How it resolves |
 |---|---|---|
-| Main app UI (macOS / iOS / iPadOS) and CarPlay, which runs in the iOS app's process | the app's language: the system language, or the app's own language preference | in-process against the module bundle (`Text("key", bundle:)`, `String(localized: … bundle:)`) |
+| Main app UI (macOS / iOS / iPadOS) | the app's language: the system language, or the app's own language preference | in-process against the module bundle (`Text("key", bundle:)`, `String(localized: … bundle:)`) |
 | Widgets, Watch | their own process's language, which is the system language | in-process against the module bundle |
 | Notifications | the app/system language at the time the notification is scheduled | in-process, eager (e.g. `String(localized: "notification.snooze.body", table: "Localizable", bundle: MobileL10n.bundle)`) |
 | App Intents / Shortcuts / Siri / Spotlight | the **invoking request's** locale — which can differ from the app-process language | deferred `LocalizedStringResource`, resolved by the framework at presentation |
@@ -117,10 +117,10 @@ the CLDR category automatically. The rules for writing count strings are under
 catalogs carry; see "Language coverage" below. A plural entry carries, for each
 language, the CLDR categories that language's integer counts select, as
 declared in `PLURAL_CATEGORIES` in `script/verify_localization_catalog.py`:
-English, German, Dutch, Turkish, and Greek `one`/`other`, where `one` selects
-only 1; Spanish and Italian `one`/`other`, and French and Brazilian Portuguese
+English, German, Dutch, Turkish, Greek, and Marathi `one`/`other`, where `one`
+selects only 1; Spanish and Italian `one`/`other`, and French and Brazilian Portuguese
 `one`/`other` where `one` selects both 0 and 1, each with an optional `many`
-that only round millions select and that falls back to `other` when absent; Hindi and Persian `one`/`other`, where `one` selects both 0 and
+that only round millions select and that falls back to `other` when absent; Hindi, Bengali, and Persian `one`/`other`, where `one` selects both 0 and
 1; Urdu `one`/`other`, where `one` selects only 1; Hebrew `one`/`other` with an
 optional `two` for the dual, where `one` selects only 1 and `two` only 2; Chinese
 (Simplified and Traditional), Indonesian, Japanese, Korean, Malay, Thai, and
@@ -141,7 +141,7 @@ Apple's lookup honors an explicit `zero` entry in every language.
 
 A `one` form may leave the number out ("Once a week") only in a language whose
 `one` means exactly 1, as in English, German, Dutch, Spanish, Italian, Romanian,
-Polish, Turkish, and Greek. French,
+Polish, Turkish, Greek, and Marathi. French,
 Brazilian Portuguese, Hindi, Bengali, and Persian also use `one` for 0, and
 Russian and Ukrainian use it for 21, 31, 101, and so on, so their `one` forms
 show the count. A `zero` form takes 0 over from `one`, so an entry that defines
@@ -221,14 +221,15 @@ Each process shows the first language in the user's preferred-language list
 that its bundles ship, matched the way Foundation matches localizations:
 
 - A regional system language selects its language: `ar-SA` and `ar-EG` select
-  `ar`; `de-AT` and `de-CH` select `de`; `el-GR` and `el-CY` select `el`;
-  `es-MX`, `es-419`, and `es-ES` select `es`; `fr-CA` and `fr-CH` select `fr`;
-  `hi-IN` selects `hi`; `id-ID` selects `id`; `it-CH` selects `it`; `ja-JP`
-  selects `ja`; `ko-KR` selects `ko`; `ms-MY`, `ms-SG`, and `ms-BN` select
-  `ms`; `nl-BE` selects `nl`; `pl-PL` selects `pl`; `ro-MD` selects `ro`;
-  `ru-RU` and `ru-KZ` select `ru`; `th-TH` selects `th`; `tr-TR` and `tr-CY`
-  select `tr`; `uk-UA` selects `uk`; `vi-VN` selects `vi`; `en-GB` selects
-  `en`. `pt-PT` selects `pt-BR`, the one Portuguese variety shipped.
+  `ar`; `bn-BD` and `bn-IN` select `bn`; `de-AT` and `de-CH` select `de`;
+  `el-GR` and `el-CY` select `el`; `es-MX`, `es-419`, and `es-ES` select `es`;
+  `fr-CA` and `fr-CH` select `fr`; `hi-IN` selects `hi`; `id-ID` selects `id`;
+  `it-CH` selects `it`; `ja-JP` selects `ja`; `ko-KR` selects `ko`; `mr-IN`
+  selects `mr`; `ms-MY`, `ms-SG`, and `ms-BN` select `ms`; `nl-BE` selects
+  `nl`; `pl-PL` selects `pl`; `ro-MD` selects `ro`; `ru-RU` and `ru-KZ` select
+  `ru`; `th-TH` selects `th`; `tr-TR` and `tr-CY` select `tr`; `uk-UA` selects
+  `uk`; `vi-VN` selects `vi`; `en-GB` selects `en`. `pt-PT` selects `pt-BR`,
+  the one Portuguese variety shipped.
 - Chinese is matched by script, and a code with no script gets the script its
   region writes. `zh-Hant`, every `zh-Hant-*` code, and the Taiwan, Hong Kong,
   and Macau regions (`zh-TW`, `zh-HK`, `zh-MO`) select `zh-Hant`; `zh-Hans`,
@@ -271,8 +272,8 @@ Settings > General > Language & Region > Applications). The in-app picker
 setting always agree; "System Default" removes it. It lists the languages by
 endonym in one order for every interface language: the Latin-script names
 alphabetically, then each other script as a group (Greek, Cyrillic, Hebrew,
-Arabic script, Devanagari, Thai, Hangul, Han). The picker reads only the
-app's own domain: a plain `UserDefaults` lookup would fall through to launch
+Arabic script, Devanagari, Bengali, Thai, Hangul, Han). The picker reads only
+the app's own domain: a plain `UserDefaults` lookup would fall through to launch
 arguments and to the system-wide list and report them as a choice. A bundle
 resolves its language once, at launch, so a change applies after a relaunch;
 both pickers show a note while the chosen language differs from the running
@@ -388,11 +389,13 @@ Brazilian Portuguese (`pt-BR`), Romanian (`ro`), Russian (`ru`), Thai (`th`),
 Turkish (`tr`), Ukrainian (`uk`), Urdu (`ur`), Vietnamese (`vi`), Simplified
 Chinese (`zh-Hans`), and Traditional Chinese (`zh-Hant`).
 
-The target set is the 31 locales lorvex.app is published in: `en`, `zh-Hans`,
-`zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`, `pt-BR`, `ru`, `id`, `ur`, `de`, `ja`,
-`mr`, `te`, `tr`, `ta`, `vi`, `ko`, `fa`, `it`, `th`, `pl`, `uk`, `ms`, `ml`,
-`nl`, `ro`, `el`, `he`. `PLURAL_CATEGORIES` declares the plural rules of every
-one of them (a regional identifier such as `pt-BR` uses its language's rules).
+The target set is thirty languages, because the language count is capped at
+about thirty: the 31 locales lorvex.app is published in, without Malayalam
+(`ml`). They are `en`, `zh-Hans`, `zh-Hant`, `es`, `hi`, `ar`, `fr`, `bn`,
+`pt-BR`, `ru`, `id`, `ur`, `de`, `ja`, `mr`, `te`, `tr`, `ta`, `vi`, `ko`, `fa`,
+`it`, `th`, `pl`, `uk`, `ms`, `nl`, `ro`, `el`, `he`. `PLURAL_CATEGORIES` declares
+the plural rules of every one of them and of `ml` (a regional identifier such as
+`pt-BR` uses its language's rules).
 Each identifier names the variety its translation is written in and covers
 the regions the system matches to it: neutral `es` serves every Spanish
 region, Brazilian Portuguese `pt-BR` also serves Portugal (Foundation falls
@@ -404,12 +407,12 @@ language in the batch complete before the batch merges. Arabic, Persian,
 Urdu, and Hebrew are right-to-left. Arabic's mirrored layout is captured and
 reviewed on the macOS preview tour, the iOS screens, and the iOS widget gallery;
 the Persian, Urdu, and Hebrew layouts are captured and reviewed on the macOS
-preview tour and the iPad screens. The watch and CarPlay surfaces have no
+preview tour and the iPad screens. The watch surface has no
 capture in any right-to-left language.
 
 ## Catalog location
 
-There are eight catalogs — one per UI module, plus LorvexCore's for the words
+There are seven catalogs — one per UI module, plus LorvexCore's for the words
 that name shared data rather than a surface's controls — each resolved against
 its owning module bundle:
 
@@ -420,7 +423,6 @@ Sources/LorvexSystemIntents/Resources/Localizable.xcstrings   → LocalizedStrin
 Sources/LorvexWatch/Resources/Localizable.xcstrings           → Text("key", bundle: WatchL10n.bundle) / String(localized:…, bundle: WatchL10n.bundle)
 Sources/LorvexWidgetViews/Resources/Localizable.xcstrings     → Text("key", bundle: WidgetL10n.bundle) / String(localized:…, bundle: WidgetL10n.bundle)
 Sources/LorvexWidgetKitSupport/Resources/Localizable.xcstrings → String(localized:…, bundle: WidgetSupportL10n.bundle) / LocalizedStringResource(…, bundle: WidgetSupportL10n.bundle)
-Sources/LorvexCarPlay/Resources/Localizable.xcstrings         → String(localized:…, bundle: CarPlayL10n.bundle)
 Sources/LorvexCore/Resources/Localizable.xcstrings            → String(localized:…, bundle: CoreL10n.bundle)
 ```
 
@@ -454,7 +456,7 @@ source path. Framework calls MUST pass the owning module's `bundle:` explicitly:
 a bare `Text("…")` resolves against `Bundle.main` (the host app), not the
 framework catalog. All modules use native `Text` / `String(localized:)` or
 deferred `LocalizedStringResource` directly. `LorvexL10n`, `MobileL10n`,
-`SystemL10n`, `WatchL10n`, `WidgetSupportL10n`, `WidgetL10n`, `CarPlayL10n`,
+`SystemL10n`, `WatchL10n`, `WidgetSupportL10n`, `WidgetL10n`,
 and `CoreL10n` are resource-location facades only; native String Catalog APIs
 resolve every string at runtime. Widget configuration data is storage-only:
 `LorvexWidgetConfiguration` does not carry localized gallery copy and there is
@@ -679,7 +681,7 @@ so a thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
 | Depends on | Depende de | |
 | Recurrence | repetición | Repetir is the field, Se repite the state, Cada the interval |
 | Sync, snapshot | sincronización, instantánea | |
-| Apple features | Ajustes, Calendario, Recordatorios, Atajos, Siri, Spotlight, modo de concentración, pantalla bloqueada | product names stay: Lorvex, iCloud, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Ajustes, Calendario, Recordatorios, Atajos, Siri, Spotlight, modo de concentración, pantalla bloqueada | product names stay: Lorvex, iCloud, Apple Watch, Claude, MCP |
 
 - The reader is addressed as tú, never usted or vosotros. Instructions are
   imperatives ("Añade una tarea"); buttons, menu items, and intent titles are
@@ -704,7 +706,7 @@ so a thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   vary.
 - Status words agree with what they describe: Completada, Cancelada, and
   Bloqueada for a task; Archivados for habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation, because Spanish runs about a quarter longer than
   English ("Planificar hoy", "Abre Lorvex", "7 días" for the menu bar panel's
@@ -745,7 +747,7 @@ widgets, and in Shortcuts.
 | Recurrence | दोहराव | दोहराएँ is the field, हर the interval |
 | Sync, snapshot | सिंक, स्नैपशॉट | |
 | Settings | सेटिंग्ज़ | सेटिंग names one preference |
-| Apple features | कैलेंडर, रिमाइंडर, फ़ोकस, सूचनाएँ, लॉक स्क्रीन, डॉक, विजेट | product names stay Latin: Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | कैलेंडर, रिमाइंडर, फ़ोकस, सूचनाएँ, लॉक स्क्रीन, डॉक, विजेट | product names stay Latin: Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, Claude, MCP |
 
 - The reader is addressed as आप, never तुम or तू. Instructions, buttons, menu
   items, and intent titles are polite imperatives ("कार्य जोड़ें", "सूची
@@ -756,7 +758,7 @@ widgets, and in Shortcuts.
   ("“%@” पूर्ण किया गया।"), an आदत and a सूची are feminine ("आदत “%@” पूर्ण की
   गई।", "सूची “%@” बनाई गई।").
 - Hindi is written in Devanagari. Product and technology names stay Latin:
-  Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, CarPlay, Claude, MCP,
+  Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, Claude, MCP,
   and file formats such as JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and Mac.
   Everyday technology words that Apple's Hindi interfaces transliterate are
   written in Devanagari (कैलेंडर, रिमाइंडर, असिस्टेंट, इवेंट, टैग, सिंक, डिवाइस,
@@ -794,7 +796,7 @@ widgets, and in Shortcuts.
   and किए गए, है and हैं), the entry also carries a `zero` that repeats the
   `other` form, so 0 reads "0 महीने" and not "0 महीना". An entry whose
   English carries `zero` carries a Hindi `zero`.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation, and may drop the copula ("कुछ प्लान नहीं").
   Accessibility labels may be longer.
@@ -851,7 +853,7 @@ on the Mac, iPhone, watch, widgets, and in Shortcuts.
   nouns ("إضافة", "حذف", "تأجيل مهمة"); a confirmation after an action is تم
   or تمت with a verbal noun (`تم إكمال "%@".`, `تمت إضافة مهمة واحدة إلى %2$@.`).
 - Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
-  Spotlight, Apple Watch, CarPlay, Claude, MCP, and file formats such as JSON,
+  Spotlight, Apple Watch, Claude, MCP, and file formats such as JSON,
   CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. The conjunction و is written
   attached to the next word, Latin names and placeholders included ("Mac
   وiPhone وiPad", "و%2$@"). The one-letter prepositions ل and ب in front of a
@@ -902,7 +904,7 @@ on the Mac, iPhone, watch, widgets, and in Shortcuts.
   hint (`capture.footer.words`) needs none, since its examples hold no Latin
   text: a Latin word that follows a number inside Arabic text is laid out right
   to left together with the number ("20 min" would display as "min 20").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter wording
   than a literal translation ("سبعة أيام" for the menu bar panel's Next 7 Days
   switch, "تم البدء" for a started task). Accessibility labels may be longer.
@@ -945,7 +947,7 @@ watch, widgets, and in Shortcuts.
 | Depends on | Dépend de | |
 | Recurrence | répétition | Répéter is the field, Se répète the state, Tous les or Toutes les the interval; the modes are Régulièrement and Après achèvement |
 | Sync, snapshot | synchronisation, instantané | |
-| Apple features | Réglages, Calendrier, Rappels, Raccourcis, Siri, Spotlight, mode de concentration, Réglages Système, écran de verrouillage | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Réglages, Calendrier, Rappels, Raccourcis, Siri, Spotlight, mode de concentration, Réglages Système, écran de verrouillage | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as vous, never tu. Instructions are imperatives
   ("Activez l’accès au calendrier"); buttons, menu items, and intent titles are
@@ -972,7 +974,7 @@ watch, widgets, and in Shortcuts.
   ("%lld plus tôt").
 - Status words agree with what they describe: Terminée, Annulée, Bloquée, and
   Démarrée for a task; Archivées for lists and habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation, because
   French runs about a fifth longer than English ("Planifier aujourd’hui", "Ouvrez
@@ -1013,7 +1015,7 @@ watch, widgets, and in Shortcuts.
 | Depends on | Dipende da | |
 | Recurrence | ripetizione | Ripeti is the field, Si ripete the state, Ogni the interval; the modes are Regolarmente and Dopo il completamento |
 | Sync, snapshot | sincronizzazione, istantanea | |
-| Apple features | Impostazioni, Calendario, Promemoria, Comandi rapidi, Siri, Spotlight, modalità di concentrazione, Impostazioni di Sistema, schermata di blocco | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Impostazioni, Calendario, Promemoria, Comandi rapidi, Siri, Spotlight, modalità di concentrazione, Impostazioni di Sistema, schermata di blocco | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as tu, never Lei or voi. Instructions, buttons, menu
   items, and intent titles are imperatives ("Aggiungi un’attività", "Completa
@@ -1038,7 +1040,7 @@ watch, widgets, and in Shortcuts.
   "3 precedenti"), except a phrase whose words do not vary.
 - Status words agree with what they describe: Completata, Annullata, Bloccata,
   and Iniziata for a task; Archiviate for lists and habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation, because
   Italian runs about a fifth longer than English ("Pianifica oggi", "Apri
@@ -1081,7 +1083,7 @@ Shortcuts.
 | Depends on | Depende de | |
 | Recurrence | repetição | Repetir is the field, Repete the state, A cada the interval; the modes are Regularmente and Após a conclusão |
 | Sync, snapshot | sincronização, instantâneo | |
-| Apple features | Ajustes, Calendário, Lembretes, Atalhos, Siri, Spotlight, modo de Foco, Ajustes do Sistema, tela bloqueada | Siri takes the feminine article ("pela Siri"); product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Ajustes, Calendário, Lembretes, Atalhos, Siri, Spotlight, modo de Foco, Ajustes do Sistema, tela bloqueada | Siri takes the feminine article ("pela Siri"); product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as você, never tu. Instructions are imperatives in the
   você form ("Adicione uma tarefa"); buttons, menu items, and intent titles are
@@ -1110,7 +1112,7 @@ Shortcuts.
   except a phrase whose words do not vary.
 - Status words agree with what they describe: Concluída, Cancelada, Bloqueada,
   and Iniciada for a task; Arquivadas for lists and Arquivados for habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation, because
   Portuguese runs about a fifth longer than English ("Planejar hoje", "Abra o
@@ -1151,7 +1153,7 @@ Shortcuts.
 | Depends on | Зависит от | |
 | Recurrence | повтор | Повтор is the field, повторяется the state, Каждые the interval; the modes are Регулярно and После выполнения |
 | Sync, snapshot | синхронизация, снимок | |
-| Apple features | Настройки, Календарь, Напоминания, Быстрые команды, Siri, Spotlight, режим фокусирования, Системные настройки, экран блокировки | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Настройки, Календарь, Напоминания, Быстрые команды, Siri, Spotlight, режим фокусирования, Системные настройки, экран блокировки | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as вы, written lowercase, never ты. Instructions are
   plural imperatives ("Включите доступ к календарю"); buttons, menu items, and
@@ -1190,7 +1192,7 @@ Shortcuts.
 - Status words agree with what they describe: Не выполнена, В работе,
   Заблокирована, Отменена, and Выполнена for a task; Архивные for lists, and В
   архиве for the archived habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation,
   because Russian runs about a fifth longer than English, in wider letters
@@ -1236,7 +1238,7 @@ in Shortcuts.
 | Depends on | Залежить від | |
 | Recurrence | повторення | Повторення is the field, повторюється the state, Кожні the interval; the modes are Регулярно and Після виконання |
 | Sync, snapshot | синхронізація, знімок | |
-| Apple features | Параметри, Календар, Нагадування, Швидкі команди, Siri, Spotlight, режим фокусування, Системні параметри, екран блокування | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Параметри, Календар, Нагадування, Швидкі команди, Siri, Spotlight, режим фокусування, Системні параметри, екран блокування | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as ви, written lowercase, never ти. Instructions are
   plural imperatives ("Увімкніть доступ до календаря"); buttons, menu items, and
@@ -1279,7 +1281,7 @@ in Shortcuts.
 - Status words are neuter, agreeing with завдання: Не виконано, У роботі,
   Заблоковано, Скасовано, and Виконано for a task; Архівні for lists, and В
   архіві for the archived habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation,
   because Ukrainian runs about a fifth longer than English, in wider letters
@@ -1323,7 +1325,7 @@ thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
 | Depends on | Zależy od | |
 | Recurrence | powtarzanie | Powtarzanie is the field, "powtarza się" the state, Co the interval; the modes are Regularnie and Po ukończeniu |
 | Sync, snapshot | synchronizacja, migawka | a sync record is a rekord |
-| Apple features | Ustawienia, Kalendarz, Przypomnienia, Skróty, Siri, Spotlight, Fokus, Ustawienia systemowe, ekran blokady | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Ustawienia, Kalendarz, Przypomnienia, Skróty, Siri, Spotlight, Fokus, Ustawienia systemowe, ekran blokady | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed in the second person singular (ty), never as Pan or
   Pani, and a pronoun inside a sentence is lowercase ("na twoje konto iCloud").
@@ -1366,7 +1368,7 @@ thing reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   same in every form.
 - Status words agree with what they describe: Zablokowane, Anulowane, and
   Ukończone for a task; Zarchiwizowane for lists and habits.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation, because
   Polish runs about a fifth longer than English ("7 dni" for the menu bar
@@ -1419,7 +1421,7 @@ Shortcuts.
 | Depends on | 依存先 | the relation between tasks is a 依存関係 |
 | Repeat | 繰り返し | the modes are 定期 and 完了後 |
 | Sync, snapshot | 同期, スナップショット | |
-| Apple features | 設定, カレンダー, ショートカット, 集中モード, ロック画面, システム設定 | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | 設定, カレンダー, ショートカット, 集中モード, ロック画面, システム設定 | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - Sentences end in です or ます ("「%@」を完了しました。", "同期は一時停止のままです。"),
   and an instruction ends in ください ("繰り返しの間隔は、1〜10,000の整数にしてください。").
@@ -1450,7 +1452,7 @@ Shortcuts.
 - A third-party app is "App" in the iOS and watchOS catalogs ("他のカレンダーApp",
   "Apple WatchのApp") and アプリ in the macOS catalog
   ("アプリを再インストールしてください"), following each platform's system wording.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation ("枠なし"
   for Won't fit, "今後7日間" for the menu bar panel's Next 7 Days switch, "残り" as
@@ -1500,7 +1502,7 @@ the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
 | Depends on | 의존 대상 | the relation between tasks is a 의존 관계 |
 | Repeat | 반복 | the modes are 정기적으로 and 완료 후 |
 | Sync, snapshot | 동기화, 스냅샷 | |
-| Apple features | 설정, 캘린더, 단축어, 집중 모드, 잠금 화면, 시스템 설정 | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight; a third-party app is 앱 |
+| Apple features | 설정, 캘린더, 단축어, 집중 모드, 잠금 화면, 시스템 설정 | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight; a third-party app is 앱 |
 
 - Sentences end in 합니다 or 입니다 ("“%@” 할 일을 완료했습니다."), an instruction
   in 하세요 ("Apple Watch 앱을 다시 여세요"), and a question in 까요 ("중요해질
@@ -1532,7 +1534,7 @@ the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   number wherever the English forms show it. A range is written with ~
   ("%2$@~%3$@"), and an ellipsis is the single character … wherever the English
   has one.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation ("자리
   없음" for Won't fit, "앞으로 7일" for the menu bar panel's Next 7 Days switch,
@@ -1585,7 +1587,7 @@ widgets, and in Shortcuts. The text is written for Taiwan, not converted from
 | Depends on | 相依於 | the relation between tasks is a 相依關係 |
 | Repeat | 重複 | the modes are 定期 and 完成後 |
 | Sync, snapshot | 同步, 快照 | |
-| Apple features | 設定, 行事曆, 捷徑, 專注模式, 鎖定畫面, 系統設定 | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight; a third-party app is App |
+| Apple features | 設定, 行事曆, 捷徑, 專注模式, 鎖定畫面, 系統設定 | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight; a third-party app is App |
 
 - The reader is addressed as 你, never 您 ("依照你的行事曆"). A button, menu item,
   tab, section header, or intent title is a short verb phrase or noun ("新增任務",
@@ -1618,7 +1620,7 @@ widgets, and in Shortcuts. The text is written for Taiwan, not converted from
   安排在今天"); 計劃 and 計畫 are not used.
 - macOS text says 按一下 ("按一下 ＋") and iOS text says 點一下 ("點一下 ＋"). A
   third-party app is "App" ("Apple Watch 上的 App", "其他行事曆 App").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation ("排不下"
   for Won't fit, "未來 7 天" for the menu bar panel's Next 7 Days switch, "剩餘"
@@ -1682,7 +1684,7 @@ in Shortcuts.
   a compound ("برنامه‌ریزی", "همگام‌سازی", "تکمیل‌شده"). A word ending in a
   non-joining letter takes its suffix without it ("کارها").
 - Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
-  Spotlight, Apple Watch, CarPlay, Claude, MCP, and file formats such as JSON,
+  Spotlight, Apple Watch, Claude, MCP, and file formats such as JSON,
   CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. The prepositions stand apart
   from them ("در Lorvex", "از iCloud").
 - Punctuation is the Persian comma ، semicolon ؛ and question mark ؟. A sentence
@@ -1723,7 +1725,7 @@ in Shortcuts.
   left-to-right isolate (U+2066 and U+2069) around the keyboard shortcut on
   the last page of the first-run wizard (`setup.done.capture.detail`), which
   displays "⌘N" as "N⌘" otherwise.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter
   wording than a literal translation ("هفت روز آینده" for the menu bar panel's
   Next 7 Days switch, "همگام‌شده %@" for the watch's sync status). Accessibility
@@ -1792,7 +1794,7 @@ Shortcuts.
   text is plain Urdu; the system renders it in Nastaliq, whose letters stand
   taller and lower than Naskh letters.
 - Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
-  Spotlight, Apple Watch, CarPlay, Claude, MCP, AI, and file formats such as
+  Spotlight, Apple Watch, Claude, MCP, AI, and file formats such as
   JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. They sit in the sentence
   as they are ("ایپ Lorvex میں کھولیں", "اپنی iCloud ترتیبات کھولیں").
 - Punctuation is the Urdu full stop ۔ comma ، semicolon ؛ and question mark ؟. The
@@ -1831,7 +1833,7 @@ Shortcuts.
   character is written into a catalog, except one left-to-right isolate
   (U+2066 and U+2069) around the keyboard shortcut on the last page of the
   first-run wizard (`setup.done.capture.detail`).
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter
   wording than a literal translation ("اگلے 7 دن" for the menu bar panel's Next
   7 Days switch, "%@ سنک ہوا" for the watch's sync status). Accessibility labels
@@ -1912,7 +1914,7 @@ in Shortcuts.
   foreign sound ("דק׳", "מס׳", "ווידג׳ט") and the gershayim ״ (U+05F4) an acronym;
   neither is the ASCII apostrophe or quotation mark.
 - Product and technology names stay Latin: Lorvex, iCloud, CloudKit, Siri,
-  Spotlight, Apple Watch, CarPlay, Claude, MCP, AI, and file formats such as
+  Spotlight, Apple Watch, Claude, MCP, AI, and file formats such as
   JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and Mac. A one-letter prefix (ל, ב,
   ה, ו, מ, ש, כ) takes a hyphen before Latin text, a digit, or a placeholder
   that always opens with a digit or Latin text: a number, a clock time, an ISO
@@ -1961,7 +1963,7 @@ in Shortcuts.
   bidirectional control character is written into a catalog, except one
   left-to-right isolate (U+2066 and U+2069) around the keyboard shortcut on the
   last page of the first-run wizard (`setup.done.capture.detail`).
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, and App Shortcut short titles) use shorter
   wording than a literal translation ("7 הימים הקרובים" for the menu bar panel's
   Next 7 Days switch, "סונכרן %@" for the watch's sync status). Accessibility
@@ -2030,7 +2032,7 @@ watch, widgets, and in Shortcuts.
 | Sync, snapshot | Synchronisierung, Snapshot | uploading is Hochladen, fetching Abrufen, and a sync record a Datensatz |
 | Event | Ereignis | a calendar event is a Kalenderereignis |
 | App icon badge | Kennzeichen | the word Apple's German Mail uses ("Kennzeichen für ungelesene Mails"); macOS Reminders writes the loanword "Badge-Anzahl", which Lorvex does not use; the app icon is the App-Symbol |
-| Apple features | Einstellungen, Kalender, Erinnerungen, Kurzbefehle, Siri, Spotlight, Fokus, Systemeinstellungen, Sperrbildschirm | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Einstellungen, Kalender, Erinnerungen, Kurzbefehle, Siri, Spotlight, Fokus, Systemeinstellungen, Sperrbildschirm | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as du, never Sie. Apple's German system apps on macOS
   26 (among them Reminders, Calendar, Notes, Journal, Mail, Music, Maps, Photos,
@@ -2075,7 +2077,7 @@ watch, widgets, and in Shortcuts.
   a substitution's `one` still contains `%arg`. `other` also covers 0 ("0
   Aufgaben"). A verb agrees with the form ("%lld Aufgabe wartet auf andere
   Aufgaben", "%lld Aufgaben warten auf andere Aufgaben").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation,
   because German compounds are long ("7 Tage" for the menu bar panel's Next 7
@@ -2159,7 +2161,7 @@ reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
 | Event | activiteit | the word Apple's Agenda app uses |
 | App icon badge | Badge | Apple's Reminders writes "aantal badges"; the app icon is the appsymbool, as in Apple's Mail, Music, and TV |
 | Agenda (the mobile list mode) | Overzicht | Agenda is Apple's name for the Calendar app, so Lorvex's own Agenda mode takes another word |
-| Apple features | Instellingen, Agenda, Herinneringen, Opdrachten, Siri, Spotlight, focus, Systeeminstellingen, toegangsscherm | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Instellingen, Agenda, Herinneringen, Opdrachten, Siri, Spotlight, focus, Systeeminstellingen, toegangsscherm | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The reader is addressed as je and jouw, never u. Apple's Dutch system apps on
   macOS 26 (among them Reminders, Calendar, Notes, Journal, Mail, Music, Maps,
@@ -2199,7 +2201,7 @@ reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts.
   A verb agrees with the form ("%lld taak wacht op andere taken", "%lld taken
   wachten op andere taken"), and a counted noun that does not vary stays
   alike in both forms ("%1$@ is %2$lld keer voltooid.").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("7 dagen" for the menu bar panel's Next 7 Days switch, "Past niet" for
@@ -2279,7 +2281,7 @@ widgets, and in Shortcuts.
 | Sync, snapshot | sincronizare, instantaneu | uploading is încărcare, fetching preluare |
 | Event | eveniment | |
 | App icon badge | Insignă | Apple's Reminders writes "contor de insigne"; the app icon is the pictogramă |
-| Apple features | Configurări, Calendar, Mementouri, Scurtături, Siri, Spotlight, Concentrare, Configurări sistem, ecranul de blocare | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP |
+| Apple features | Configurări, Calendar, Mementouri, Scurtături, Siri, Spotlight, Concentrare, Configurări sistem, ecranul de blocare | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP |
 
 - The interface addresses the reader in the polite plural, and the Siri phrases
   use the informal singular. Apple's Romanian system apps on macOS 26 (among
@@ -2332,7 +2334,7 @@ widgets, and in Shortcuts.
 - A status word agrees with what it describes: Blocată, Anulată, Finalizată, and
   Începută for a task; the neuter obicei takes the feminine plural ("obiceiuri
   finalizate").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("7 zile" for the menu bar panel's Next 7 Days switch, "Nu încape" for Won’t
@@ -2436,7 +2438,7 @@ Malay writes padam, tarikh, peranti, and jadual.
 | Event | acara | the word Apple's Calendar uses |
 | App icon badge | lencana | Apple's Mail writes tanda for its unread badge, a word that also means any mark, so the badge on an app icon takes the more specific one |
 | Agenda (the mobile list mode) | Agenda | |
-| Apple features | Pengaturan, Kalender, Pengingat, Pintasan, Fokus, Pengaturan Sistem, layar kunci | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | Pengaturan, Kalender, Pengingat, Pintasan, Fokus, Pengaturan Sistem, layar kunci | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - The reader is addressed as Anda, with a capital A, and never as kamu.
   Apple's Indonesian system apps and frameworks on macOS 26 (among them Music,
@@ -2482,7 +2484,7 @@ Malay writes padam, tarikh, peranti, and jadual.
   reduplicated ("3 tugas", never "3 tugas-tugas"). An entry whose English forms
   leave the number out (the "kali selesai" under the goal ring's large number)
   is a substitution with only `other`.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("Tidak muat" for Won’t fit, "+%lld lainnya" for a small widget's overflow,
@@ -2584,7 +2586,7 @@ Indonesian writes hapus, tanggal, perangkat, and jadwal.
 | Event | peristiwa | the word Apple's Calendar uses |
 | App icon badge | lencana | Apple's Mail and Reminders word |
 | Agenda (the mobile list mode) | Agenda | |
-| Apple features | Seting, Kalendar, Peringatan, Pintasan, Fokus, Seting Sistem, skrin kunci | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | Seting, Kalendar, Peringatan, Pintasan, Fokus, Seting Sistem, skrin kunci | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - The reader is addressed as anda, in lowercase inside a sentence and with a
   capital only where a sentence starts ("Anda sudah bersedia."). Apple's Malay
@@ -2636,7 +2638,7 @@ Indonesian writes hapus, tanggal, perangkat, and jadwal.
   ("3 tugas", never "3 tugas-tugas"). An entry whose English forms leave the
   number out (the "kali selesai" under the goal ring's large number) is a
   substitution with only `other`.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("Tidak muat" for Won’t fit, "+%lld lagi" for a small widget's overflow,
@@ -2749,7 +2751,7 @@ and in Shortcuts.
 | Event | sự kiện | the word Apple's Calendar uses |
 | App icon badge | huy hiệu | Apple's Mail writes biểu tượng for its unread badge, a word that also names the icon itself, so the badge on an app icon takes the more specific one |
 | Agenda (the mobile list mode) | Lịch biểu | |
-| Apple features | Cài đặt, Lịch, Lời nhắc, Phím tắt, Tập trung, Cài đặt hệ thống, màn hình khóa | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | Cài đặt, Lịch, Lời nhắc, Phím tắt, Tập trung, Cài đặt hệ thống, màn hình khóa | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - The reader is addressed as bạn, and never as quý khách. Apple's Vietnamese
   system apps and frameworks on macOS 26 (among them Music, TV, Find My, Home,
@@ -2802,7 +2804,7 @@ and in Shortcuts.
   number. An entry whose English forms leave the number out (the "lần hoàn
   thành" under the goal ring's large number) is a substitution with only
   `other`.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("Không vừa" for Won’t fit, "+%lld nữa" for a small widget's overflow,
@@ -2907,7 +2909,7 @@ and in Shortcuts.
 | Appearance (light, dark, system) | Görünüş (Açık, Koyu, Sistem) | Görünüş names Apple's Appearance setting (41 strings, among them the Appearance pane of System Settings and its App Intents), and Açık and Koyu are its Light and Dark (28 and 27 strings); "Sistem saptanmışı" is System Default |
 | Widget | araç takımı | Apple's macOS 26 word (208 strings against 3 with widget) |
 | Agenda (the mobile list mode) | Ajanda | |
-| Apple features | Ayarlar, Takvim, Anımsatıcılar, Kestirmeler, Odak, Sistem Ayarları, Kilitli Ekran | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | Ayarlar, Takvim, Anımsatıcılar, Kestirmeler, Odak, Sistem Ayarları, Kilitli Ekran | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - The reader is addressed formally, in the second person plural, and never as
   sen. Apple's Turkish strings on macOS 26 (435,075 in the system apps,
@@ -2983,7 +2985,7 @@ and in Shortcuts.
   ring's count) is a substitution with `one` and `other`. A batch dialog that
   reports two counts joins its clauses with a semicolon ("3 görev tamamlandı;
   1 görev atlandı.").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("Sığmıyor" for Won’t fit, "+%lld daha" for a small widget's overflow,
@@ -3041,7 +3043,7 @@ Shortcuts.
 | App icon badge | ป้ายกำกับ | Apple's Reminders word |
 | Appearance (light, dark, system) | รูปแบบ (สว่าง, มืด, ระบบ) | รูปแบบ names Apple's Appearance setting (34 strings, among them the Appearance pane of System Settings and its App Intents), and สว่าง and มืด are its Light and Dark (26 strings each); รูปลักษณ์ is Image Playground's word for the look of a generated picture, and it is not used for the setting |
 | Agenda (the mobile list mode) | กำหนดการ | |
-| Apple features | การตั้งค่า, ปฏิทิน, เตือนความจำ, คำสั่งลัด, โฟกัส, การตั้งค่าระบบ, หน้าจอล็อค | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | การตั้งค่า, ปฏิทิน, เตือนความจำ, คำสั่งลัด, โฟกัส, การตั้งค่าระบบ, หน้าจอล็อค | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - The reader is addressed neutrally, with no politeness particle. Apple's
   Thai strings on macOS 26 (422,120 in the system apps, frameworks, and
@@ -3098,7 +3100,7 @@ Shortcuts.
   and เดือน for spans. An entry whose English forms leave the number out is a
   substitution with only `other`. A batch dialog that reports two counts is
   one plain numbered string ("ทำเสร็จ %1$lld รายการ ข้าม %2$lld รายการ").
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation
   ("ไม่พอดี" for Won’t fit, "อีก %lld" for a small widget's overflow, "เหลือ"
@@ -3155,7 +3157,7 @@ watch, widgets, and in Shortcuts.
 | Appearance (light, dark, system) | Εμφάνιση (Ανοιχτό, Σκούρο, Σύστημα) | Εμφάνιση names Apple's Appearance setting (41 strings, among them the Appearance pane of System Settings and its App Intents); the pane writes the feminine Ανοιχτόχρωμη and Σκούρα for Light and Dark, which do not fit under the picker's thumbnails, so the picker takes the neuter Ανοιχτό and Σκούρο that Apple's Appearance App Intents write for the values light and dark |
 | Widget | widget | in Latin letters, as in Apple's Greek (210 strings) |
 | Agenda (the mobile list mode) | Ατζέντα | |
-| Apple features | Ρυθμίσεις, Ημερολόγιο, Υπομνήσεις, Συντομεύσεις, Συγκέντρωση, Ρυθμίσεις συστήματος, οθόνη κλειδώματος | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, CarPlay, Claude, MCP, Siri, Spotlight |
+| Apple features | Ρυθμίσεις, Ημερολόγιο, Υπομνήσεις, Συντομεύσεις, Συγκέντρωση, Ρυθμίσεις συστήματος, οθόνη κλειδώματος | product names stay: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight |
 
 - The reader is addressed formally, in the second person plural, and never
   with σου. Apple's Greek strings on macOS 26 (434,998 in the system apps,
@@ -3240,7 +3242,7 @@ watch, widgets, and in Shortcuts.
   1, and a `one` form leaves the number out where the English does ("Μία φορά
   την ημέρα" beside "%lld φορές την ημέρα"). A phrase that needs the plural
   forms of a noun and its predicate puts both inside the variation.
-- Compact surfaces (the watch, widgets, CarPlay, the menu bar panel, toolbar
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
   buttons, segmented controls, the time column of suggested times, and App
   Shortcut short titles) use shorter wording than a literal translation ("Δεν
   χωράει" for Won’t fit, "+%lld ακόμη" for a small widget's overflow, "ακόμη"
@@ -3263,11 +3265,333 @@ watch, widgets, and in Shortcuts.
   translated strings that carry the token, 150 put it in guillemets and 81 open
   with a verbal noun, and none opens with a singular imperative.
 
+## Bengali conventions
+
+The `bn` catalogs are Bengali in the Bengali script, as written in Bangladesh and
+in India; bn-BD, bn-IN, and every other Bengali locale select them. They follow
+Apple's Bengali usage (ক্যালেন্ডার, রিমাইন্ডার, সেটিংস) and keep one term per
+concept across every catalog, so a thing reads the same on the Mac, iPhone,
+watch, widgets, and in Shortcuts. The counts below are numbers of Apple's
+Bengali strings: the 387,717 entries of the `bn.lproj` strings tables in the
+iOS 26.5 runtime's system apps, frameworks, and extensions, normalized to
+Unicode NFC, where a word counts only when no other Bengali letter touches it.
+"The strings that read X" are the Apple strings whose English text is exactly X.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | টাস্ক, তালিকা, ট্যাগ | Apple's words: টাস্ক in all 14 strings that read Task or Tasks, তালিকা in 71 of the 73 that read List or Lists, ট্যাগ in all 49 that read Tag or Tags; a task's checklist is a চেকলিস্ট, as in Apple's Notes and Shortcuts (all 11 strings that read Checklist or Checklists), and its item a চেকলিস্ট আইটেম |
+| Inbox (the seeded list) | ইনবক্স | Apple's word in all 14 strings that read Inbox; shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | আজ, আগামীকাল, গতকাল | Apple's words in all 162, 28, and 79 strings that read them |
+| Someday | কোনোদিন | the word of Apple's Shortcuts (its one string that reads Someday); inside a sentence it is quoted and followed by বিভাগে ("“কোনোদিন” বিভাগে"), and "কোনোদিনে সরান" moves a task there |
+| Due (the deadline field) | শেষ তারিখ | Apple's Shortcuts writes নির্ধারিত for Due (3 of the 4 strings that read it), which Apple's Bengali also writes for Scheduled (all 16 strings that read it contain it), so the due day and the planned day would share a word; বকেয়া is overdue, the word of Apple's Wallet (2 of the 5 strings that read Overdue) |
+| Open (a task not yet done) | বাকি | never খোলা or খুলুন, which are Apple's words for Open (174 of the 175 strings that read it) and mean an opened file or window; বাকি also reads "left", and Apple's বাকি আছে is its word for Pending (37 of the 42 strings that read it) and for Remaining (both strings that read it) |
+| In progress, started | চলমান, শুরু হয়েছে | চলমান is the short adjective, where Apple's প্রগতিতে রয়েছে (all 12 strings that read In Progress or In progress) is a full predicate |
+| Blocked, cancelled, completed | ব্লক করা হয়েছে, বাতিল হয়েছে, সম্পূর্ণ হয়েছে | a status is a passive past phrase, as in Apple's Bengali (all 12 strings that read Blocked, all 7 that read Cancelled, all 42 that read Completed) |
+| Done and complete | সম্পন্ন, সম্পূর্ণ করুন | সম্পন্ন closes a sheet and names a finished task (631 of the 632 strings that read Done); সম্পূর্ণ করুন completes a task |
+| Defer and snooze | পিছিয়ে দিন, স্নুজ করুন | পিছিয়ে দিন moves a task to a later day ("আগামীকালের জন্য পিছিয়ে দিন") and is the verb of Apple's Reminders for delaying alerts ("অ্যালার্টের সময় পিছিয়ে দিন", its one string that has it); স্নুজ করুন snoozes a reminder (all 18 strings that read Snooze carry স্নুজ) |
+| Plan (verb) | প্ল্যান | প্ল্যান করুন plans a task for a day and প্ল্যান করা তারিখ is its planned date; Apple's Bengali writes প্ল্যান in 613 strings and পরিকল্পনা in 68 |
+| Schedule | সময়সূচি, শিডিউল করুন | সময়সূচি names the day pane (30 of the 33 strings that read Schedule); শিডিউল করুন is the verb, as in Apple's Clock ("বেডটাইম রিমাইন্ডার শিডিউল করুন") |
+| Capture (quick add) | দ্রুত যোগ | দ্রুত is the word of Apple's Reminders for Quick Creation ("দ্রুত তৈরি করুন") and occurs in 793 of Apple's Bengali strings; Apple's ক্যাপচার করুন (9 of the 10 strings that read Capture) names taking a picture or a measurement, so it is not used for adding a task |
+| Review (the day and the week) | পর্যালোচনা | দৈনিক পর্যালোচনা and সাপ্তাহিক পর্যালোচনা are its two modes; its fields are সাফল্য, বাধা, শেখার বিষয়; Apple's Books writes পর্যালোচনা for Year in Review (2 of the 3 strings that read it), while Apple's Bengali writes রিভিউ করুন for the verb Review (all 31 strings that read it) and রিভিউ for store reviews (all 4 strings that read Reviews) |
+| Memory | মেমোরি | one entry is an এন্ট্রি; Apple's Bengali writes স্মৃতি for Memory (all 7 strings that read it) and for the Photos feature Memories (16 of the 17 strings that read Memories), so the app takes the loanword মেমোরি to keep its Memory apart from that feature |
+| Assistant | অ্যাসিস্ট্যান্ট | Apple's word in both strings that read Assistant; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone, goal | অভ্যাস, চেক-ইন, ধারা, মাইলস্টোন, লক্ষ্য | চেক-ইন is Apple's word in all 9 strings that read Check In; ধারা is the word of Apple's Journal for a streak ("লেখার ধারা", all 6 strings that read Streak); মাইলস্টোন is Apple's word in the one string that reads Milestone; লক্ষ্য is Apple's word in all 3 strings that read Goal; উদযাপন is celebrate ("উদযাপনের লক্ষ্য") |
+| Reminder | রিমাইন্ডার | Apple's Reminders word (72 of the 73 strings that read Reminder or Reminders) |
+| Dependency | নির্ভরতা | "নির্ভর করে" is the Waits on field |
+| Recurrence | পুনরাবৃত্তি | Apple's word in the one string that reads Recurrence, and the root of its Repeat verb ("পুনরাবৃত্তি করুন", 39 of the 40 strings that read Repeat); পুনরাবৃত্ত is the adjective ("এই পুনরাবৃত্ত ইভেন্টটি") |
+| Sync, snapshot | সিঙ্ক, স্ন্যাপশট | সিঙ্ক with the conjunct ঙ্ক, in 1,231 Apple strings against none for সিংক; "iCloud সিঙ্ক" names iCloud sync |
+| Event, calendar | ইভেন্ট, ক্যালেন্ডার | Apple's words (all 47 strings that read Event or Events, 79 of the 80 that read Calendar) |
+| All day | সারাদিন | Apple's word in all 13 strings that read All Day or All day |
+| Appearance (light, dark, system) | রূপ (লাইট, ডার্ক, সিস্টেম) | রূপ is Apple's word in all 34 strings that read Appearance; লাইট and ডার্ক are Apple's transliterations (40 of the 65 strings that read Light, 18 of the 23 that read Dark), and সিস্টেম is its word for System (30 of the 34 strings that read it) |
+| Priority, preferences | প্রাধান্য, অ্যাপ সেটিংস | প্রাধান্য is the word of Apple's Reminders for Priority (7 of the 17 strings that read it; অগ্রাধিকার in 9); Apple's Bengali also writes প্রাধান্য for Preferences (all 7 strings that read it), so the app's Preferences are অ্যাপ সেটিংস, which keeps the two apart |
+| Widget | উইজেট | Apple's word in all 6 strings that read Widget |
+| Settings | সেটিংস | Apple's word in 356 of the 359 strings that read Settings |
+| Apple features | ক্যালেন্ডার, রিমাইন্ডার, ফোকাস, নোটিফিকেশন, লক স্ক্রিন, শর্টকাট, সিস্টেম সেটিংস | product names stay Latin: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight, Dock |
+
+- The reader is addressed formally, as আপনি, and never as তুমি. Apple's Bengali
+  carries আপনি or আপনার in 49,129 strings and the informal তুমি or তোমার in 2.
+  An instruction is a polite imperative in -উন ("খুলুন", "আবার চেষ্টা
+  করুন"), the form of 62,112 of Apple's strings against 41 with করো, and "অনুগ্রহ
+  করে" stands where the English says Please (1,813 of Apple's strings; "দয়া করে"
+  in none). Retrying is "আবার চেষ্টা করুন": Apple writes আবার চেষ্টা in 2,526
+  strings and পুনরায় চেষ্টা in 97.
+- A button, menu item, tab, or intent title is the noun or loanword followed by
+  করুন ("যোগ করুন", "ডিলিট করুন", "বাতিল করুন", "শেয়ার করুন"), as in Apple's
+  Bengali (ডিলিট করুন in 2,091 strings against মুছে ফেলুন in 309 and মুছুন in 104;
+  সেভ করুন in 884 against সংরক্ষণ করুন in 19; এডিট করুন in 846 and সম্পাদনা করুন
+  in none). Delete, clear, and remove are three words: ডিলিট করুন deletes an item
+  (428 of the 452 strings that read Delete), মুছে ফেলুন clears a value or a
+  selection ("তারিখ মুছে ফেলুন", "নির্বাচন মুছে ফেলুন"; 104 of the 164 strings that
+  read Clear), and অপসারণ করুন takes an item out of a place ("চেকলিস্ট আইটেম
+  অপসারণ করা হয়েছে"; all 231 strings that read Remove). An intent's description
+  is a polite imperative ("একটি Lorvex টাস্ক সম্পূর্ণ করুন।"); a confirmation after
+  an action is a passive past statement ending in হয়েছে ("“%@” সম্পূর্ণ করা
+  হয়েছে।", "ক্যালেন্ডার এক্সপোর্ট করা হয়েছে।"), as 2,417 of Apple's strings do;
+  and a confirmation question ends in করবেন? ("“%@” অভ্যাসটি ডিলিট করবেন?"), as
+  1,049 of Apple's strings do. Bengali nouns take no gender, and the suffix টি or
+  টা makes a noun definite ("অভ্যাসটি", "ইভেন্টটি").
+- Bengali is written in the Bengali script. Product and technology names stay
+  Latin: Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, Claude,
+  MCP, Dock, and file formats such as JSON, CSV, ICS, and ZIP, as do iPhone, iPad,
+  and Mac (Apple's Bengali keeps Siri in Latin letters in 2,284 of the 2,287
+  strings whose English mentions it, and Dock in 73 of 89). A Latin word is set
+  apart from the next Bengali word by a plain space ("Lorvex টাস্ক"). Everyday
+  technology words that Apple's Bengali transliterates are written in Bengali
+  script (ক্যালেন্ডার, রিমাইন্ডার, অ্যাসিস্ট্যান্ট, ইভেন্ট, ট্যাগ, সিঙ্ক, ডিভাইস,
+  ইম্পোর্ট, এক্সপোর্ট, অ্যাপ, ফাইল, নোটিফিকেশন); words with an established
+  Bengali equivalent stay Bengali (তালিকা, লক্ষ্য, অভ্যাস, সময়সূচি, বাকি).
+- Catalog text is Unicode NFC. NFC writes ড়, ঢ়, and য় as the base letter
+  followed by the nukta sign (U+09BC), because the single code points U+09DC,
+  U+09DD, and U+09DF are composition exclusions. Apple's raw Bengali strings
+  contain those single code points in 114,743 strings and the nukta sign in
+  23,239 (8,746 contain both); the two spellings compare equal only after
+  normalization, so text from another source is normalized before it goes into a
+  catalog or a counted comparison.
+- One spelling serves each word across the catalogs, the one Apple's Bengali
+  writes: সিঙ্ক and লিঙ্ক with ঙ্ক (1,231 and 1,119 strings; সিংক and লিংক in
+  none), ডেটা (5,701; ডাটা in none), ইম্পোর্ট (375; ইমপোর্ট in 1), একসাথে (186;
+  একসঙ্গে in 68), and ইতিমধ্যেই for already (707; ইতিমধ্যে in 102). আরও is more
+  (5,650 strings), and a counted overflow reads "আরও %lldটি" or, where the
+  surface is narrow, "+%lld আরও".
+- A sentence ends with a danda (।, U+0964) and no space before it, wherever the
+  English ends with a period (73,157 of Apple's strings end in a danda and 455 in
+  a full stop); the look-alike ৷ (U+09F7, a currency sign) ends 268 of Apple's
+  strings and appears in none of the catalogs. Labels, buttons, and headings
+  carry no end mark. A question mark,
+  exclamation mark, colon, comma, and parenthesis are the Latin characters, an
+  ellipsis is the single character … (4,939 strings against 107 with three
+  dots), and a spaced en dash – stands for the English em dash (367 strings
+  against 164 with a spaced em dash).
+- User content (task titles, list names, habit names, event titles) is quoted
+  with “ ” wherever the English quotes it, and Lorvex's own view names inside a
+  sentence are quoted the same way (“কোনোদিন” বিভাগে). Of the 7,584 Apple
+  strings whose English quotes with curly double quotes, Apple's Bengali renders
+  7,307 with curly double quotes, 129 with straight ones, and 58 with curly
+  single ones.
+- A case ending or possessive after a Latin-script name, a digit, a closing
+  quotation mark, or an interpolated value is joined with a hyphen ("Lorvex-এর",
+  "Mac-এর", "10,000-এর", "“%@”-এর জন্য", "%@-এর বিষয়ে"), as in 35,195 of Apple's
+  strings against 350 with a space. An ending is never fused to any of them. A
+  postposition that is a word of its own takes a space ("iCloud থেকে"), and a
+  case ending on a Bengali noun is written fused ("সিস্টেম সেটিংসে",
+  "নোটিফিকেশনে").
+- টি is glued to a counted number of things ("%lldটি টাস্ক"), the form of 8,538 of
+  Apple's strings, and takes the genitive টির before মধ্যে. A unit of time and the
+  word বার ("times") take a space instead ("%lld সপ্তাহ", "দিনে %lld বার"). A count
+  of a total reads "%2$lldটির মধ্যে %1$lldটি" (the total first), the shape of
+  Apple's "M-এর মধ্যে N" (6 of its 148 strings that read N of M); the others
+  write N/M in 99 and "M-এর N" in 40.
+- Numbers in catalog text use Latin digits only (Apple's Bengali has Latin digits
+  in 30,304 strings and Bengali digits in 7), a plain space separates a number
+  from its unit ("12 ঘণ্টা (%@)", "1 ঘণ্টা স্নুজ করুন"), and "প্রায়" stands for
+  "about". The
+  system formats the values the code passes in: lakh grouping ("12,34,567.5"),
+  weekday and month names from the calendar (সোমবার, অক্টোবর), a clock time as
+  "5:05 PM", a duration as "1 ঘণ্টা, 30 মিনিট" (compact and spoken alike), a
+  relative time as "5 মিনিট আগে" or "2 ঘণ্টায়" (abbreviated on a chip: "3 দিন
+  আগে"), and a list as "A, B এবং C" (narrow "A, B, C"), so a sentence takes such
+  a value as a `%@` argument. Its ordinal is the bare number and a period
+  ("1."), so `recurrence.weekday.nth` ("%1$@ %2$@") reads "1. সোম", the last is
+  "শেষ সোম", and the second to last "শেষ থেকে 2. সোম". The default numbering of
+  bn-BD and bn-IN is Latin digits. Where the system numbering is Bengali
+  (`bn_BD@numbers=beng`), interpolated numbers and dates appear in Bengali digits
+  while a number written in a catalog string stays Latin ("গত 30 দিন", "পরবর্তী
+  7 দিন", "1 ঘণ্টা স্নুজ করুন"), so such a screen shows both.
+- Bengali has the plural categories `one` and `other`, where `one` selects both 0
+  and 1, so every `one` form shows the count, except a unit word set apart from
+  its number (see "Counts and plural forms"). Bengali nouns do not change with
+  the number, so `one` and `other` are identical, except where the English `one`
+  form leaves the number out ("Once a day"): there the entry also carries a
+  `zero` form that shows the count, repeating `other`, so 0 reads "দিনে 0 বার"
+  and not "দিনে একবার".
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
+  buttons, segmented controls, and App Shortcut short titles) use shorter
+  wording than a literal translation ("ধরবে না" for Won’t fit, "+%lld আরও" for a
+  small widget's overflow, "বাকি" for left on a watch complication, "সব হয়ে
+  গেছে" for All clear). Accessibility labels may be longer.
+- A string that fills in several values uses positional specifiers (`%1$lld`,
+  `%2$@`) wherever the Bengali word order differs from the English, as in
+  "%2$lldটির মধ্যে %1$lldটি", never concatenation in code.
+- The capture parser (`LorvexCaptureParser`) has no Bengali vocabulary: it reads
+  English and Chinese words wherever the interface language is Bengali. The
+  capture hint (`capture.footer.words`) therefore gives English examples in “ ”
+  and says so ("প্রতি লাইনে একটি টাস্ক। ইংরেজি শব্দ, যেমন “tomorrow”, “3pm”,
+  “every Monday”, “20 min” বা “#list”, টাস্কের বিবরণ পূরণ করে।").
+- The Return key is "রিটার্ন কী" ("রিটার্ন কী চাপুন"): all 8 Apple strings that
+  tell the reader to press Return put কী between the key name and the verb, and
+  none writes "রিটার্ন চাপুন".
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
+  that name the app exactly once, with its ending joined by a hyphen
+  ("${applicationName}-এ একটি টাস্ক যোগ করুন"), or in front of its verb
+  ("${applicationName} খুলুন"). Apple's own Bengali phrases take this form: of
+  the 138 translated strings that carry the token, 103 follow it with a hyphen
+  and none puts it in quotation marks.
+
+## Marathi conventions
+
+The `mr` catalogs are Marathi in Devanagari, as written in India; mr-IN and every
+other Marathi locale select them. They follow Apple's Marathi usage (दिनदर्शिका,
+रिमाइंडर, सेटिंग) and keep one term per concept across every catalog, so a thing
+reads the same on the Mac, iPhone, watch, widgets, and in Shortcuts. The counts
+below are numbers of Apple's Marathi strings: the 387,798 entries of the
+`mr.lproj` strings tables in the iOS 26.5 runtime's system apps, frameworks, and
+extensions, normalized to Unicode NFC, where a word counts only when no other
+Devanagari letter touches it. "The strings that read X" are the Apple strings
+whose English text is exactly X.
+
+| Concept | Term | Note |
+|---|---|---|
+| Task, list, tag | कार्य, यादी, टॅग | कार्य is the word of Apple's Shortcuts (all 4 strings that read Task) and occurs in 190 of Apple's Marathi strings against 24 for टास्क; its plural is कार्ये (20 strings), where 3 of the 10 strings that read Tasks write कार्य unchanged and 6 write टास्क; a list's plural is याद्या, as in 10 of the 11 strings that read Lists; टॅग is Apple's word in 44 of the 49 strings that read Tag or Tags; a task's checklist is a तपासणी यादी, as in Apple's Notes and Shortcuts (all 10 strings that read Checklist), and its item an आयटम |
+| Inbox (the seeded list) | इनबॉक्स | Apple's word in all 14 strings that read Inbox; shown while the list keeps its seeded name |
+| Today, tomorrow, yesterday | आज, उद्या, काल | Apple's words in all 162, 28, and 79 strings that read them |
+| Someday | कधीतरी | one word, where Apple's Shortcuts writes the phrase कोणत्यातरी दिवशी (its one string that reads Someday); inside a sentence it is quoted and followed by मध्ये ("‘कधीतरी’ मध्ये") |
+| Due (the deadline field) | देय | Apple's word in all 4 strings that read Due; ओव्हरड्यू is overdue, as in Apple's Reminders and Wallet (4 of the 5 strings that read Overdue) |
+| Open (a task not yet done) | प्रलंबित | Apple's word for Pending (all 42 strings that read Pending); never उघडा or उघडे, which are Apple's words for Open (169 of the 175 strings that read it) and mean an opened file or window; सुरू आहे is In Progress (all 12 strings that read In Progress or In progress) and सुरू झाले a started task |
+| Blocked, cancelled, completed | ब्लॉक केलेले, रद्द झाले, पूर्ण झाले | a status agrees with कार्य, which is neuter; Apple's words (11 of the 12 strings that read Blocked, 3 of the 7 that read Cancelled, with रद्द केले गेले in 3 more, and all 42 that read Completed) |
+| Done and complete | पूर्ण, पूर्ण करा | पूर्ण closes a sheet and names a finished task (631 of the 632 strings that read Done); पूर्ण करा completes a task |
+| Defer and snooze | पुढे ढकला, स्नूझ करा | पुढे ढकला moves a task to a later day ("उद्यासाठी पुढे ढकला") and is the verb of Apple's Shortcuts for Defer Until ("ह्यावेळेपर्यंत पुढे ढकला", its one string that has the verb); स्नूझ करा snoozes a reminder (all 18 strings that read Snooze carry स्नूझ) |
+| Plan (verb) | प्लॅन | प्लॅन करा plans a task for a day and "प्लॅन केलेला दिनांक" is its planned date; Apple's Marathi writes प्लॅन in 688 strings and प्लान in 2 |
+| Schedule | शेड्यूल | Apple's word in all 33 strings that read Schedule; शेड्यूल करा schedules a task for a day |
+| Capture (quick add) | त्वरित जोडा | त्वरित is the word of Apple's Reminders for Quick Creation ("त्वरित तयार करा") and Quick Reminders ("त्वरित रिमाइंडर्स") and occurs in 528 of Apple's Marathi strings (झटपट in 1); Apple's कॅप्चर करा (5 of the 10 strings that read Capture) names taking a picture or a measurement, so it is not used for adding a task |
+| Add | जोडा | the everyday verb, in 471 Apple strings; Apple's समाविष्ट करा (213 of the 217 strings that read Add) takes a word more |
+| Review (the day and the week) | आढावा | दैनिक आढावा and साप्ताहिक आढावा are its two modes; its fields are यश, अडथळे, शिकलेल्या गोष्टी; Apple's Maps and Health write आढावा घ्या for a recap or an overall view, while Apple's Marathi writes रिव्ह्यू करा for the verb Review (all 31 strings that read it) and रिव्ह्यू for store reviews (all 4 strings that read Reviews) |
+| Memory | मेमरी | one entry is a नोंद (633 Apple strings; एंट्री in 145); Apple's Photos writes स्मृती for Memory (4 of the 7 strings that read it) and आठवणी for its own Memories (all 17 strings that read Memories), which is a different feature, while मेमरी is the word of Apple's Calculator and developer settings (2 of the 7) |
+| Assistant | सहाय्यक | Apple's word in both strings that read Assistant; Claude and MCP stay as they are |
+| Habit, check-in, streak, milestone, goal | सवय, चेक-इन, स्ट्रीक, माइलस्टोन, ध्येय | स्ट्रीक is Apple's word in all 6 strings that read Streak, माइलस्टोन in the one that reads Milestone, and ध्येय in 2 of the 3 that read Goal; Apple writes check-in as चेक इन (306 strings against 4 with a hyphen), and the catalogs write चेक-इन in every entry, so that the noun and the verb phrase "चेक-इन करा" read as one unit |
+| Celebrate (a milestone) | उत्सव साजरा, सेलिब्रेशन | the hints use the verb phrase ("उत्सव साजरा केला जाईल"); the field label "सेलिब्रेशनचे ध्येय" takes the loanword that Apple's Photos writes ("%1$@ चे सेलिब्रेशन") |
+| Reminder | रिमाइंडर | Apple's Reminders word (70 of the 73 strings that read Reminder or Reminders) |
+| Dependency | अवलंबित्व | "यांवर अवलंबून" is the Waits on field |
+| Recurrence | पुनरावृत्ती | Apple's word in the one string that reads Recurrence; the adjective is "पुनरावृत्ती होणारा" ("हा पुनरावृत्ती होणारा इव्हेंट हटवायचा का?") |
+| Sync, snapshot | सिंक, स्नॅपशॉट | सिंक in 1,179 Apple strings |
+| Event, calendar | इव्हेंट, दिनदर्शिका | इव्हेंट in 44 of the 47 strings that read Event or Events; दिनदर्शिका is the word of Apple's Calendar (70 of the 80 strings that read Calendar; कॅलेंडर in 9) |
+| All day | दिवसभर | one word, where Apple writes पूर्ण दिवस (all 13 strings that read All Day or All day) |
+| Appearance (light, dark, system) | दिखावट (सौम्य, गडद, सिस्टीम) | दिखावट is Apple's word in 33 of the 34 strings that read Appearance; सौम्य is Apple's most frequent word for Light (24 of the 65 strings that read it, among them those of its Display & Brightness settings, Accessibility settings, CarPlay, and Apple TV settings), गडद for Dark (18 of the 23 strings that read it), and सिस्टीम for System (33 of the 34 strings that read it) |
+| Priority, preferences | प्राधान्य, ॲप सेटिंग | प्राधान्य is Apple's word for Priority (16 of the 17 strings that read it); Apple's Marathi writes प्राधान्ये for Preferences (all 7 strings that read it), so the app's Preferences are ॲप सेटिंग, which keeps the two apart |
+| Widget | विजेट | Apple's word in all 6 strings that read Widget |
+| Settings | सेटिंग | Apple's word in 356 of the 359 strings that read Settings |
+| Apple features | दिनदर्शिका, रिमाइंडर, फोकस, नोटिफिकेशन, लॉक स्क्रीन, शॉर्टकट, सिस्टीम सेटिंग | product names stay Latin: Lorvex, iCloud, CloudKit, Apple Watch, Claude, MCP, Siri, Spotlight, Dock |
+
+- The reader is addressed as तुम्ही, never तू. Apple's Marathi carries तुम्ही,
+  तुमचा, तुमची, तुमचे, तुमच्या, or तुम्हाला in 49,632 strings and the informal
+  तू, तुझा, तुझे, तुझ्या, or तुला in 138. An instruction is a
+  polite imperative in -आ ("उघडा", "पुन्हा प्रयत्न करा"), the form of 58,168 of
+  Apple's strings against 39 with कर, and "कृपया" stands where the English says
+  Please (1,819 of Apple's strings). Retrying is "पुन्हा प्रयत्न करा", which
+  Apple writes in 2,346 strings.
+- A button, menu item, tab, or intent title is a verb in the same form ("जोडा",
+  "हटवा", "जतन करा", "संपादित करा", "रद्द करा"), as in Apple's Marathi (हटवा in
+  2,157 strings, जतन करा in 954, संपादित करा in 887). Delete, clear, and
+  remove are three words: हटवा deletes an item (427 of the 452 strings that read
+  Delete), क्लिअर करा clears a value or a selection ("दिनांक क्लिअर करा"; 149 of
+  the 164 strings that read Clear), and काढून टाका takes an item out of a place
+  (230 of the 231 strings that read Remove). An intent's description is a polite
+  imperative ("एक Lorvex कार्य पूर्ण करा."), and a confirmation question ends in
+  का? with the infinitive agreeing in gender with the noun ("‘%@’ यादी हटवायची
+  का?"), as 5,517 of Apple's strings do.
+- Participles and infinitives agree in gender with what they describe, so a
+  confirmation is written for each noun and never shares one verb form, and the
+  noun stands before the quoted name: a कार्य is neuter ("कार्य ‘%@’ पूर्ण
+  केले."), a सवय and a यादी are feminine ("Lorvex मध्ये सवय ‘%@’ पूर्ण केली.",
+  "Lorvex मध्ये यादी ‘%@’ तयार केली."), and an इव्हेंट is masculine
+  ("दिनदर्शिका इव्हेंट ‘%@’ तयार केला."). A passive confirmation takes गेले, गेली,
+  or गेला the same way ("iCloud मधून Lorvex डेटा हटवला गेला.").
+- Marathi is written in Devanagari. Product and technology names stay Latin:
+  Lorvex, iCloud, CloudKit, Siri, Spotlight, Apple Watch, Claude, MCP,
+  Dock, and file formats such as JSON, CSV, ICS, and ZIP, as do iPhone, iPad, and
+  Mac (Apple's Marathi keeps Siri in Latin letters in all 2,287 strings whose
+  English mentions it, and Dock in 83 of 89). A Latin word is set apart from the
+  next Marathi word by a plain space ("Lorvex कार्य"). Everyday technology words
+  that Apple's Marathi transliterates are written in Devanagari (रिमाइंडर,
+  इव्हेंट, टॅग, सिंक, शेड्यूल, डिव्हाइस, इम्पोर्ट, एक्सपोर्ट, ॲप, फाइल,
+  नोटिफिकेशन); words with an established Marathi equivalent stay Marathi (कार्य,
+  यादी, सवय, ध्येय, प्राधान्य, दिनदर्शिका, आढावा).
+- The vowel of ॲप, ॲक्सेस, and ॲक्टिव्हिटी is ॲ (U+0972), which Apple's Marathi
+  writes in 19,880 strings against 5 that spell it अॅ. Catalog text is Unicode
+  NFC, which writes ऱ, ऩ, and ऴ as single code points (6,116 of Apple's raw
+  Marathi strings contain one of them; 46 contain the nukta sign U+093C). One
+  spelling serves each word across the catalogs, the one Apple's Marathi writes:
+  डिव्हाइस (3,324 strings; डिवाइस in 1), फाइल (1,672; फाईल in 14), रीस्टार्ट (265;
+  रिस्टार्ट in 28), इम्पोर्ट (359; इंपोर्ट in 11), पहा (1,081; पाहा in 100),
+  पुढील for next (2,451; पुढचे in 50 and पुढची in 9), अजून for yet (865; अद्याप in
+  179), and अधिक for a counted "more" (5,323 strings), which reads "+%lld अधिक" on
+  a small widget.
+- A sentence ends with a full stop (.) wherever the English ends with a period
+  (73,625 of Apple's strings end in a full stop and none ends in a danda), so the
+  danda (।) never appears; labels, buttons, and headings carry no end mark. A
+  question mark, exclamation mark, colon, comma, and parenthesis are the Latin
+  characters, an ellipsis is the single character … (4,932 strings against 89
+  with three dots), and a spaced en dash – stands for the English em dash (406
+  strings against 204 with a spaced em dash).
+- User content (task titles, list names, habit names, event titles) is quoted
+  with ‘ ’ wherever the English quotes it, and Lorvex's own view names inside a
+  sentence are quoted the same way (‘कधीतरी’ मध्ये). Of the 7,584 Apple strings
+  whose English quotes with curly double quotes, Apple's Marathi renders 7,217
+  with curly single quotes, 86 with curly double ones, and 16 with straight ones.
+- A postposition stands apart from a Latin-script name, a digit, or a quoted
+  value ("Lorvex च्या", "‘%@’ साठी", "iCloud मधून", "10,000 मधील"), and is never
+  fused to an interpolated value or joined with a hyphen: मध्ये follows a Latin
+  letter after a space in 2,265 of Apple's strings and joins it in 1, वर in 5,143
+  and 40, ला in 3,312 and 23. After a Devanagari noun the postposition fuses
+  with it ("सेटिंगमध्ये", "डिव्हाइसवरून", "यादीमध्ये"), and so it does to the
+  loanword चेक-इन ("चेक-इनची"), as Apple's Marathi fuses it to चेक इन
+  ("चेक इनला", "चेक इनसाठी").
+- Marathi takes no counter. A count is a number, a space, and the noun in the
+  form that the number selects ("%lld कार्य", "%lld कार्ये"), and a unit takes a
+  space too ("%lld आठवडे"). A count of a total reads "%2$lld पैकी %1$lld" (the
+  total first), the form of 103 of Apple's 148 strings that read N of M (38 write
+  N/M).
+- Numbers in catalog text use Latin digits only (Apple's Marathi has Latin digits
+  in 29,424 strings and Devanagari digits in 5), a plain space separates a number
+  from its unit ("12 तास (%@)", "1 तास स्नूझ करा"), and "सुमारे" stands for
+  "about". The
+  system formats the values the code passes in: lakh grouping ("12,34,567.5"),
+  weekday and month names from the calendar (सोमवार, ऑक्टोबर), a clock time as
+  "5:05 PM", a duration as "1 ता 30 मिनि" when compact and "1 तास, 30 मिनिटे" when
+  spoken, a relative time as "5 मिनिटांपूर्वी" or "2 तासांमध्ये" (abbreviated on a
+  chip: "3 दिवसांपूर्वी"), and a list as "A, B आणि C" (narrow the same), so a
+  sentence takes such a value as a `%@` argument. Its ordinal is the bare number
+  and a period ("1."), so `recurrence.weekday.nth` ("%1$@ %2$@") reads "1. सोम",
+  the last is "शेवटचा सोम" (masculine, as every Marathi weekday name is), and the
+  second to last "शेवटून 2. सोम". The default numbering of mr-IN is Latin digits.
+  Where the system numbering is Devanagari (`mr_IN@numbers=deva`), interpolated
+  numbers and dates appear in Devanagari digits while a number written in a
+  catalog string stays Latin ("मागील 30 दिवस", "पुढील 7 दिवस", "1 तास स्नूझ करा"),
+  so such a screen shows both.
+- Marathi has the plural categories `one` and `other`, where `one` selects only
+  1, and a `one` form leaves the number out where the English does ("दिवसातून
+  एकदा" beside "दिवसातून %lld वेळा"); 0 takes `other`. Where the noun or the
+  participle changes with the number, the phrase that agrees sits inside the
+  plural variation ("तुम्ही %lld कार्य पूर्ण केले." and "तुम्ही %lld कार्ये पूर्ण
+  केली.").
+- Compact surfaces (the watch, widgets, the menu bar panel, toolbar
+  buttons, segmented controls, and App Shortcut short titles) use shorter
+  wording than a literal translation ("बसणार नाही" for Won’t fit, "+%lld अधिक"
+  for a small widget's overflow, "शिल्लक" for left on a watch complication, "सर्व
+  झाले" for All clear). Accessibility labels may be longer.
+- A string that fills in several values uses positional specifiers (`%1$lld`,
+  `%2$@`) wherever the Marathi word order differs from the English, as in
+  "%2$lld पैकी %1$lld", never concatenation in code.
+- The capture parser (`LorvexCaptureParser`) has no Marathi vocabulary: it reads
+  English and Chinese words wherever the interface language is Marathi. The
+  capture hint (`capture.footer.words`) therefore gives English examples in ‘ ’
+  and says so ("प्रत्येक ओळीत एक कार्य. ‘tomorrow’, ‘3pm’, ‘every Monday’, ‘20 min’
+  किंवा ‘#list’ यांसारखे इंग्रजी शब्द कार्याचे तपशील भरतात.").
+- The Return key is named by the key alone ("रिटर्न दाबा"), as in Apple's
+  Calculator ("किंवा रिटर्न दाबा" for "or press Return"); where the English names
+  the Return key, Apple's Marathi adds की ("रिटर्न की दाबा").
+- Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives
+  that name the app exactly once, followed by its postposition set apart by a
+  space ("${applicationName} मध्ये एक कार्य जोडा"), or in front of its verb
+  ("${applicationName} उघडा"). Apple's own Marathi phrases take this form: of the
+  139 translated strings that carry the token, 101 follow it with a postposition
+  set apart by a space, and none joins it with a hyphen or puts it in quotation
+  marks.
+
 ## How to add a new locale
 
 Every catalog and every shipping bundle must carry the same language set, so a
 locale is added everywhere in one change. `script/localization_transfer.py`
-moves translations in and out of all eight String Catalogs, the App Shortcuts
+moves translations in and out of all seven String Catalogs, the App Shortcuts
 catalog, and the InfoPlist.strings targets, for one language or for a batch of
 several. The steps below name one language; "Translating a batch" after them
 shows the same commands for several.
@@ -3336,9 +3660,9 @@ shows the same commands for several.
    Simplified Chinese, Spanish, French, Italian, Brazilian Portuguese, Russian,
    Ukrainian, Polish, Japanese, Korean, Traditional Chinese, Hindi, Arabic,
    Persian, Urdu, Hebrew, German, Dutch, Romanian, Indonesian, Malay,
-   Vietnamese, Turkish, Thai, and Greek ones: one term per concept across every
-   catalog, the form of address and the evidence for it, punctuation and
-   quotation marks, spacing around numbers and Latin words.
+   Vietnamese, Turkish, Thai, Greek, Bengali, and Marathi ones: one term per
+   concept across every catalog, the form of address and the evidence for it,
+   punctuation and quotation marks, spacing around numbers and Latin words.
 8. Capture the macOS tour and the iOS screens in the language (see "Headless
    screenshots") and look for truncated, clipped, or overlapping text.
 
@@ -3474,16 +3798,15 @@ its own `UserDefaults` domain.
 
 6. Import translated `.xcloc`: `Editor → Import Localizations`.
 
-## Adding strings to mobile, intents, watch, widget, and CarPlay targets
+## Adding strings to mobile, intents, watch, and widget targets
 
 `LorvexMobile` (iOS/iPadOS), `LorvexWatch` (watchOS), and
 `LorvexWidgetViews` (home-screen widgets) each ship their own String Catalog
 under the target's `Resources/` directory. `LorvexSystemIntents` also ships a
-catalog for App Intents, Shortcuts, Siri, and Spotlight metadata, and
-`LorvexCarPlay` ships a catalog for driver-safe template text. Each catalog is
+catalog for App Intents, Shortcuts, Siri, and Spotlight metadata. Each catalog is
 reached through its own owning bundle — `MobileL10n.bundle`,
-`SystemL10n.bundle`, `WatchL10n.bundle`, `WidgetL10n.bundle`,
-`WidgetSupportL10n.bundle`, or `CarPlayL10n.bundle` — not
+`SystemL10n.bundle`, `WatchL10n.bundle`, `WidgetL10n.bundle`, or
+`WidgetSupportL10n.bundle` — not
 `LorvexL10n.bundle`, which owns the LorvexApple app-shell catalog.
 
 To add a translatable string to one of these surfaces:
@@ -3499,10 +3822,8 @@ To add a translatable string to one of these surfaces:
           table: "Localizable", bundle: WatchL10n.bundle)  // ✓ imperative/a11y
    LocalizedStringResource("system.open.title", defaultValue: "Open Lorvex",
                            table: "Localizable", bundle: SystemL10n.bundle)  // ✓ deferred intent
-   String(localized: "carplay.detail.started", defaultValue: "Started",
-          table: "Localizable", bundle: CarPlayL10n.bundle)  // ✓ CarPlay
    ```
-   For interpolation on an in-process surface (Mobile / Watch / Widget / CarPlay
+   For interpolation on an in-process surface (Mobile / Watch / Widget
    UI, notifications), interpolate typed values in `defaultValue` so native
    String Catalog resolution preserves argument order and plural selection.
    **App-Intent
@@ -3531,23 +3852,3 @@ system (products in `.build/<triple>/<configuration>`) only copies the raw
 and accepts bundles the build already compiled, so `verify_all.sh` runs it after
 `swift build --build-tests` and before `swift test` under either system.
 Xcode/XcodeGen builds compile catalogs as part of the normal build.
-
-## Bengali and Marathi conventions
-
-The `bn` and `mr` catalogs cover every key in the nine string catalogs (the App
-Shortcuts catalog included), the Info.plist strings of the six localized
-targets, the language picker, and the localized sample content. Both read left
-to right, and both write literal digits as Latin digits. Their wording follows
-Apple's own Bengali and Marathi strings.
-
-- Bengali addresses the reader formally (আপনি), uses polite imperatives, and
-  glues the counter টি to counted numbers.
-- Marathi uses तुम्ही with -आ imperatives, takes no counter, and keeps verbs in
-  agreement with the gender of the noun they refer to.
-- Plural entries use the CLDR `one` and `other` categories. Bengali `one` also
-  selects 0, so an entry whose English `one` form drops the number carries a
-  zero form as well.
-- The language picker lists मराठी inside the Devanagari group before हिन्दी, and
-  বাংলা after that group.
-- Quick add has no Bengali or Marathi vocabulary yet, and the App Store listing
-  copy is not written.

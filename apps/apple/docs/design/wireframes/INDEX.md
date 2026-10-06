@@ -23,5 +23,5 @@ a surface's layout changes materially, update its wireframe in the same change.
 
 These surfaces still need a wireframe; add them here as they are worked
 (macOS Tasks list/table, macOS Task detail, macOS Today, iPad split / adaptive
-list-detail, mobile Calendar day/week, mobile Task detail, watchOS, CarPlay,
+list-detail, mobile Calendar day/week, mobile Task detail, watchOS,
 Widgets).

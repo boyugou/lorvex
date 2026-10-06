@@ -231,7 +231,7 @@ calls `noteLocalChanges()` when its database changes, which hands unsynced
 outbox rows to the engine.
 
 ```text
-MCP / widgets / App Intents / watch handoff / CarPlay
+MCP / widgets / App Intents / watch handoff
   -> LorvexCoreServicing
   -> managed local SQLite transaction + audit + outbox
   -> database-change notification

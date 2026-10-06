@@ -247,6 +247,25 @@ struct WorkspaceTaskContextMenu: View {
       .disabled(task.status != .open)
     }
 
+    // Every list but the one the task is in. Makes the same move as dragging the
+    // row onto a list in the sidebar, for a pointer that cannot drag.
+    let moveTargets = store.orderedLists.filter {
+      $0.id != (task.listID ?? LorvexListNaming.inboxID)
+    }
+    Menu {
+      ForEach(moveTargets) { list in
+        Button {
+          Task { await store.moveTasks(ids: [task.id], toListID: list.id, undoManager: undoManager) }
+        } label: {
+          LorvexListMenuLabel(list: list)
+        }
+      }
+    } label: {
+      Label(AppStore.moveToListTitle, systemImage: "folder")
+    }
+    .disabled(moveTargets.isEmpty)
+    .accessibilityIdentifier("task.moveToList.\(task.id)")
+
     Divider()
 
     if let batchItem {

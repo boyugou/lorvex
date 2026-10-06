@@ -46,6 +46,13 @@ struct LorvexTaskRow: View {
   /// (``LorvexTask/searchMatch(for:visibleTagCount:)``), quoted under the
   /// title. `nil` outside a search and for a task whose title explains it.
   var searchMatch: LorvexTaskSearchMatch? = nil
+  /// What a drag of this row carries, read when the drag starts. `nil` drags the
+  /// task alone; a surface with a multi-task selection supplies the selection
+  /// when the row belongs to it.
+  var dragPayload: (() -> LorvexTaskRef)? = nil
+  /// How many tasks a drag of this row carries; the drag image shows a count
+  /// badge above one.
+  var dragCount: Int = 1
   /// Tap-to-complete from the leading circle. When `nil` the circle is read-only
   /// (e.g. previews, or surfaces that don't own a completion action).
   var onToggleComplete: (() -> Void)?
@@ -103,7 +110,9 @@ struct LorvexTaskRow: View {
     .padding(.horizontal, LorvexDesign.Spacing.s)
     .background(rowBackground)
     .contentShape(Rectangle())
-    .draggable(LorvexTaskRef(id: task.id, title: task.title))
+    .draggable(dragPayload?() ?? LorvexTaskRef(id: task.id, title: task.title)) {
+      TaskDragPreview(title: task.title, count: dragCount)
+    }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(
       taskAccessibilityLabel(
@@ -320,6 +329,10 @@ struct TaskRowItem: View {
   /// the title does not show when it holds a term of this query; empty outside a
   /// search.
   var searchQuery: String = ""
+  /// See ``LorvexTaskRow/dragPayload``.
+  var dragPayload: (() -> LorvexTaskRef)? = nil
+  /// See ``LorvexTaskRow/dragCount``.
+  var dragCount: Int = 1
   @Environment(\.undoManager) private var undoManager
 
   private var isSelected: Bool { store.selectedTaskID == task.id }
@@ -339,7 +352,8 @@ struct TaskRowItem: View {
       owningList: owningListLabel, timeLabel: timeLabel, timeIsRunning: timeIsRunning,
       chips: chips,
       searchMatch: searchQuery.isEmpty
-        ? nil : task.searchMatch(for: searchQuery, visibleTagCount: LorvexTaskRow.visibleTagCount)
+        ? nil : task.searchMatch(for: searchQuery, visibleTagCount: LorvexTaskRow.visibleTagCount),
+      dragPayload: dragPayload, dragCount: dragCount
     ) {
       Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
     }

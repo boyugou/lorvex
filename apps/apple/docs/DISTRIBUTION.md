@@ -485,28 +485,10 @@ entitlements onto all of them.
 | Widget extension (macOS) | `LorvexWidgetsMacOS.entitlements` | ✓ | ✓ | — | — | — | sandbox required for macOS extensions |
 | Today widget (iOS) | `LorvexWidgets.entitlements` | ✓ | — | — | — | — | no `app-sandbox` key (invalid on iOS) |
 | Focus Filter extension (iOS) | `LorvexFocusFilterExtension.entitlements` | ✓ | — | — | — | — | independent App ID/profile; App Group lets the filter update shared focus state |
-| iOS CarPlay approval template | `LorvexCarPlay.entitlements` | — | — | — | — | — | CarPlay entitlement template (`carplay-communication`, the messaging and VoIP entitlement); merge into the iOS app entitlements only if Apple approves a CarPlay capability for the iOS App ID |
 
 App Group ID: `group.com.lorvex.apple` (defined in `app_metadata.sh` as `APP_GROUP_ID`).
 
 CloudKit container: `iCloud.com.lorvex.apple` (defined as `CLOUDKIT_CONTAINER_ID`).
-
-### Provisioning-gated entitlement templates
-
-`Config/LorvexCarPlay.entitlements` is checked in because the CarPlay task-list
-controller, scene delegate, Info.plist activation block, localization catalog,
-and tests are already implemented. The template declares
-`com.apple.developer.carplay-communication`, the entitlement Apple grants to
-messaging and VoIP apps. Apple's CarPlay categories (audio, video, messaging
-and VoIP, navigation, EV charging, fueling, parking, public safety, quick food
-ordering, voice-based conversational, and driving task) name no task list, and
-the driving-task category covers tasks that help with the drive itself, so
-approval is uncertain. The request goes through the form at
-developer.apple.com/contact/carplay for the iOS App ID `com.lorvex.apple`. Do not
-merge the template into `LorvexMobileApp.entitlements` until Apple approves a
-CarPlay capability for that App ID, and then use the entitlement Apple
-approved. Presence without the matching portal capability causes codesign
-validation failures at App Store review.
 
 ### Entitlements not currently in the basic entitlement files
 

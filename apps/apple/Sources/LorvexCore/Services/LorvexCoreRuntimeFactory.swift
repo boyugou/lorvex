@@ -36,7 +36,7 @@ public enum LorvexCoreRuntimeFactory {
     surface: HlcSurface = .app
   ) -> any LorvexCoreServicing {
     // Every surface this factory serves — the app UI, App Intents / Shortcuts /
-    // Siri, interactive widgets, notification actions, mobile, CarPlay, and the
+    // Siri, interactive widgets, notification actions, mobile, and the
     // phone-side watch-mutation apply — is a human surface, so each service
     // declares `.user` provenance for its `ai_changelog` writes. The MCP host
     // constructs its own `.mcp` service directly (fail-closed default) and binds
@@ -66,7 +66,7 @@ public enum LorvexCoreRuntimeFactory {
 
   /// Returns the cached service for `surface`, building and storing one via
   /// `makeService` on first use. Thread-safe: the factory is reached from
-  /// multiple executors (widget intents, notification actions, CarPlay).
+  /// multiple executors (widget intents, notification actions).
   /// `makeService` only constructs the service — the store opens lazily on first
   /// use — so running it under the lock stays cheap.
   private static func cachedService(

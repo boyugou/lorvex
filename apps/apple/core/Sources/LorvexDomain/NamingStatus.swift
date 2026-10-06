@@ -42,7 +42,7 @@ public enum TaskStatus: String, Sendable, Hashable, Codable, CaseIterable, Custo
   /// `true` for `open` / `in_progress` — the "can be worked now" working set.
   /// The single Swift-level definition of actionability: every surface that
   /// shows the working set (Today / Upcoming pools, list health, reminders,
-  /// widget / watch / CarPlay / menu-bar / badge, the Tasks-workspace open lane,
+  /// widget / watch / menu-bar / badge, the Tasks-workspace open lane,
   /// batch eligibility) filters on this, and ``StatusName/actionableStatusSqlList``
   /// derives from it so the SQL and Swift checks cannot drift. Excludes the
   /// soft-parked `someday` and the terminal states.

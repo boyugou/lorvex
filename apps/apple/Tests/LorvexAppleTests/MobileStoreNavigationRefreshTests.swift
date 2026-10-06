@@ -62,6 +62,37 @@ func mobileIntentHandoffIgnoresInvalidDestinationsWithoutChangingNavigation() as
 
 @MainActor
 @Test
+func mobileStorePresentsCaptureForAPendingQuickActionHandoff() async throws {
+  let suiteName = "MobileQuickActionHandoffTests.\(UUID().uuidString)"
+  defer { UserDefaults.standard.removePersistentDomain(forName: suiteName) }
+  let seededCore = try await makeSeededInMemoryCore()
+  LorvexIntentHandoffStore.withScopedSuiteName(suiteName) {
+    MobileIntentHandoff.clear()
+    defer { MobileIntentHandoff.clear() }
+    let store = MobileStore(
+      core: seededCore,
+      selectedTab: .tasks,
+      todayString: { "2026-05-23" }
+    )
+
+    // The Quick Capture control leaves its request in the shared store; the app
+    // raises the capture sheet where the user already is, then forgets it.
+    LorvexIntentHandoffStore().storeQuickAction(.quickCapture)
+    store.applyPendingIntentHandoff()
+
+    #expect(store.isPresentingCapture)
+    #expect(store.selectedTab == .tasks)
+    #expect(MobileIntentHandoff.consumeQuickAction() == nil)
+
+    // Nothing is pending any more, so a later pass does not raise it again.
+    store.isPresentingCapture = false
+    store.applyPendingIntentHandoff()
+    #expect(!store.isPresentingCapture)
+  }
+}
+
+@MainActor
+@Test
 func mobileStoreRefreshLoadsCoreSnapshots() async throws {
   let core = try await makeSeededInMemoryCore()
   let logicalDay = try #require(try await core.loadToday().logicalDay)

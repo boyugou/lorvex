@@ -18,8 +18,10 @@ public struct LorvexChecklistItemRef: Codable, Sendable, Hashable {
 }
 
 extension UTType {
-  /// Private UTType for intra-app `LorvexChecklistItemRef` drag-and-drop.
-  public static let lorvexChecklistItem = UTType(exportedAs: "com.lorvex.apple.checklist-item-ref")
+  /// Private UTType for intra-app `LorvexChecklistItemRef` drag-and-drop,
+  /// declared in the macOS and iOS `Info.plist` like ``UTType/lorvexTask``.
+  public static let lorvexChecklistItem = UTType(
+    exportedAs: "com.lorvex.apple.checklist-item-ref", conformingTo: .data)
 }
 
 extension LorvexChecklistItemRef: Transferable {

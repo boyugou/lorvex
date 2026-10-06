@@ -17,6 +17,11 @@ public enum PendingInboxDrain {
   /// next sync tick re-drives the drain.
   static let maxDrainEntriesPerPass = 500
 
+  /// Most passes one drain call makes. Each pass after the first runs only when
+  /// the one before it replayed an entry, so the loop ends as soon as nothing
+  /// more unblocks.
+  static let maxDrainPasses = 4
+
   /// Minimum wall-clock gap between `attempt_count` bumps for a still-deferred
   /// entry (a SQLite datetime modifier). The drain fires once per inbound chunk,
   /// so a single large pull runs it dozens of times in seconds; gating the bump
@@ -58,6 +63,22 @@ public enum PendingInboxDrain {
     /// while leaving the shared record permanently inconsistent.
     public var repairObligations: [ApplyRepairObligation] = []
     public init() {}
+
+    /// Adds another pass's counters and collections to this summary.
+    mutating func formUnion(_ other: DrainSummary) {
+      replayed += other.replayed
+      discarded += other.discarded
+      remapped += other.remapped
+      stalledLogged += other.stalledLogged
+      errors += other.errors
+      skipped += other.skipped
+      for kind in other.replayedEntityTypes where !replayedEntityTypes.contains(kind) {
+        replayedEntityTypes.append(kind)
+      }
+      listDeleteRehomedTaskIds.append(contentsOf: other.listDeleteRehomedTaskIds)
+      absenceReemitTargets.append(contentsOf: other.absenceReemitTargets)
+      repairObligations.append(contentsOf: other.repairObligations)
+    }
   }
 
   // MARK: - drain
@@ -75,6 +96,21 @@ public enum PendingInboxDrain {
   /// `write` block always provides one.
   @discardableResult
   public static func drainPendingInbox(
+    _ db: Database, registry: EntityApplierRegistry
+  ) throws -> DrainSummary {
+    var summary = DrainSummary()
+    for _ in 0..<maxDrainPasses {
+      let pass = try drainPass(db, registry: registry)
+      summary.formUnion(pass)
+      if pass.replayed == 0 { break }
+    }
+    return summary
+  }
+
+  /// One visit of every parked entry, oldest first. An entry replayed late in the
+  /// pass (a redirect, a parent) can unblock one the pass already visited, so
+  /// ``drainPendingInbox(_:registry:)`` repeats the pass while it makes progress.
+  private static func drainPass(
     _ db: Database, registry: EntityApplierRegistry
   ) throws -> DrainSummary {
     var summary = DrainSummary()
@@ -266,7 +302,8 @@ public enum PendingInboxDrain {
         // reaches here: the apply re-homes it to inbox instead of deferring.
         if let missingType, let missingID,
           let tombstone = try Tombstone.getTombstone(
-            db, entityType: missingType, entityId: missingID)
+            db, entityType: missingType, entityId: missingID),
+          try !awaitsParkedRedirect(db, sourceType: missingType, sourceId: missingID)
         {
           try logFkUnresolvedDiscard(db, envelope: envelope, winnerVersion: tombstone.version)
           try PendingInbox.removePending(db, id: entry.id)
@@ -343,7 +380,8 @@ public enum PendingInboxDrain {
     // quarantine. A `.task` re-homes to inbox on an ordinary list tombstone and
     // never reaches this error path.
     if let missingType = entry.missingEntityType, let missingID = entry.missingEntityID,
-      let tombstone = try Tombstone.getTombstone(db, entityType: missingType, entityId: missingID)
+      let tombstone = try Tombstone.getTombstone(db, entityType: missingType, entityId: missingID),
+      try !awaitsParkedRedirect(db, sourceType: missingType, sourceId: missingID)
     {
       try logFkUnresolvedDiscard(db, envelope: envelope, winnerVersion: tombstone.version)
       try PendingInbox.removePending(db, id: entry.id)
@@ -416,6 +454,32 @@ public enum PendingInboxDrain {
   static func isTransientDatabaseFailure(_ error: ApplyError) -> Bool {
     if case .dbTransient = error { return true }
     return false
+  }
+
+  /// Whether a redirect that names `sourceType:sourceId` as its alias source sits
+  /// in the pending inbox, waiting for its target to arrive.
+  ///
+  /// A merge's alias-source delete leaves an ordinary tombstone on the loser. A
+  /// child that waits on the loser is dropped when its parent is permanently gone,
+  /// but while the loser's redirect is parked the parent is only renamed: the
+  /// child remaps onto the survivor as soon as the redirect applies, so it stays
+  /// parked. A redirect that never applies exhausts its own retry budget, and the
+  /// child exhausts its own with it.
+  static func awaitsParkedRedirect(
+    _ db: Database, sourceType: String, sourceId: String
+  ) throws -> Bool {
+    guard let kind = EntityKind.parse(sourceType) else { return false }
+    return try Int.fetchOne(
+      db,
+      sql: """
+        SELECT 1 FROM sync_pending_inbox
+         WHERE envelope_entity_type = ? AND envelope_entity_id = ?
+         LIMIT 1
+        """,
+      arguments: [
+        EntityName.entityRedirect,
+        EntityRedirect.wireEntityId(sourceType: kind, sourceId: sourceId),
+      ]) != nil
   }
 
   // MARK: - enqueue

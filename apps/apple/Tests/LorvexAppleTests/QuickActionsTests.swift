@@ -55,7 +55,7 @@ func quickActionDeepLinkURLsAreValidLorvexSchemeURLs() {
 
 @Test
 func quickActionsMapToStableAppleCommandActions() {
-  #expect(LorvexQuickAction.quickCapture.commandAction == .appCommand(.focusQuickAdd))
+  #expect(LorvexQuickAction.quickCapture.commandAction == .appCommand(.showQuickCapture))
   #expect(LorvexQuickAction.openToday.commandAction == .openWindow(.today))
 }
 

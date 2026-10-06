@@ -234,23 +234,11 @@ extension AppStore {
   }
 
   var parsedTaskDetailTags: [String] {
-    Self.parseListText(taskDetailTagsText)
+    LorvexListText.entries(in: taskDetailTagsText)
   }
 
   var parsedTaskDetailDependencies: [LorvexTask.ID] {
-    Self.parseListText(taskDetailDependsOnText)
-  }
-
-  private static func parseListText(_ text: String) -> [String] {
-    var seen = Set<String>()
-    return
-      text
-      .split(whereSeparator: { character in
-        character == "," || character == "\n" || character == "\t"
-      })
-      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-      .filter { !$0.isEmpty }
-      .filter { seen.insert($0).inserted }
+    LorvexListText.entries(in: taskDetailDependsOnText)
   }
 
   /// Turning the planned day off also drops the draft's time, which has no

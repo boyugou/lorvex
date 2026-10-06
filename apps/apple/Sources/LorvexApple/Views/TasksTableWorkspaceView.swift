@@ -20,6 +20,7 @@ private enum TasksTableMetrics {
 /// work identically in both view modes.
 struct TasksTableWorkspaceView: View {
   @Bindable var store: AppStore
+  @Environment(\.undoManager) private var undoManager
   let tasks: [LorvexTask]
   let sortOrder: Binding<[KeyPathComparator<LorvexTask>]>
   let selection: Binding<Set<LorvexTask.ID>>
@@ -130,7 +131,9 @@ struct TasksTableWorkspaceView: View {
           cancel: { Task { await store.cancelTaskWorkspaceSelection() } },
           reopen: { Task { await store.reopenTaskWorkspaceSelection() } },
           moveToSomeday: { Task { await store.markTaskWorkspaceSelectionSomeday() } },
-          move: { listID in Task { await store.moveTaskWorkspaceSelection(toListID: listID) } }
+          move: { listID in
+            Task { await store.moveTaskWorkspaceSelection(toListID: listID, undoManager: undoManager) }
+          }
         )
       }
     }

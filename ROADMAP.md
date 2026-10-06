@@ -18,13 +18,13 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   zone (`docs/decisions/cksyncengine-transport.md`). Still owed: two-device
   proof on TestFlight builds, including the iOS sync pass that runs inside a
   background task before the database suspends, and silent-push wakes.
-- CarPlay runtime activation: entitlement approval pending from Apple.
-- watchOS / CarPlay / Widgets design audits (need on-device).
+- watchOS / Widgets design audits (need on-device).
 
 ### Localization
-- Grow from the twenty-eight shipped languages to the 31 locales lorvex.app is
-  published in (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"), one
-  batch of languages at a time. Each batch is prepared on its own worktree
+- Grow from the twenty-eight shipped languages to thirty
+  (`apps/apple/docs/LOCALIZATION.md`, "Language coverage"); the language count is
+  capped at about thirty, so the set is complete after the last batch. Each
+  batch is prepared on its own worktree
   branch with `apps/apple/script/localization_transfer.py` and merges with
   `localization_transfer.py import --from-checkout` once the catalog verifier,
   `LocalizationTests`, and a headless capture review pass for every language
@@ -34,7 +34,7 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   (`zh-Hant`), Persian (`fa`), Urdu (`ur`), Hebrew (`he`), German (`de`), Dutch
   (`nl`), Romanian (`ro`), Indonesian (`id`), Malay (`ms`), Vietnamese (`vi`),
   Turkish (`tr`), Thai (`th`), Greek (`el`), Bengali (`bn`), and Marathi (`mr`)
-  have shipped. The rest, Telugu, Tamil, and Malayalam, follow as one batch.
+  have shipped. The last batch, Telugu (`te`) and Tamil (`ta`), completes the set.
 - The App Store listing (`apps/apple/docs/APP_STORE_METADATA.md`) carries its
   name, subtitle, description, and keywords in App Store Connect for every
   shipped language except Urdu, Hebrew, German, Dutch, Romanian, Indonesian,
@@ -44,7 +44,8 @@ cross-platform Tauri line was removed from this repository on 2026-09-17.
   Screenshots exist for English and Simplified Chinese; the other locales show
   the English ones until their own are captured and uploaded. The sample
   datasets translate into every shipped language (`LorvexSampleText`), so
-  those captures show sample content in their language.
+  those captures show sample content in their language. Listing work is on hold
+  until the owner resumes it.
 
 ### Shared
 - `schema/schema.sql` is the app's schema authority. Schema changes go through

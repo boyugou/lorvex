@@ -24,7 +24,7 @@ struct TodayView: View {
       }
       .cancelSelectedTaskOnDelete(store, on: .today)
       .dropDestination(for: LorvexTaskRef.self) { refs, _ in
-        let ids = refs.map(\.id)
+        let ids = refs.droppedTaskIDs
         guard !ids.isEmpty else { return false }
         // One batch write for the whole drop, so the dropped tasks land on
         // today together.

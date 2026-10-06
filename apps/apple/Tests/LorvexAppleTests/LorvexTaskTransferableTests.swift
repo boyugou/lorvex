@@ -59,6 +59,53 @@ func lorvexTaskUTTypeIdentifier() {
   #expect(UTType.lorvexTask.identifier == "com.lorvex.apple.task-ref")
 }
 
+// MARK: - A drag that carries several tasks
+
+@Test
+func lorvexTaskRefWithCompanionsRoundTripsAndListsEveryTask() throws {
+  let ref = LorvexTaskRef(
+    id: "a", title: "First",
+    companions: [LorvexTaskRef(id: "b", title: "Second"), LorvexTaskRef(id: "c", title: "Third")])
+
+  let decoded = try JSONDecoder().decode(LorvexTaskRef.self, from: JSONEncoder().encode(ref))
+
+  #expect(decoded == ref)
+  #expect(decoded.taskIDs == ["a", "b", "c"])
+  #expect(decoded.titles == ["First", "Second", "Third"])
+}
+
+@Test
+func lorvexTaskRefOfOneTaskListsOnlyThatTask() {
+  let ref = LorvexTaskRef(id: "a", title: "Only")
+
+  #expect(ref.taskIDs == ["a"])
+  #expect(ref.titles == ["Only"])
+}
+
+/// A drop handler acts on every dropped task once, in drop order, even when two
+/// references name the same task.
+@Test
+func droppedTaskIDsFlattensCompanionsAndDropsRepeats() {
+  let refs = [
+    LorvexTaskRef(id: "a", title: "A", companions: [LorvexTaskRef(id: "b", title: "B")]),
+    LorvexTaskRef(id: "b", title: "B"),
+    LorvexTaskRef(id: "c", title: "C"),
+  ]
+
+  #expect(refs.droppedTaskIDs == ["a", "b", "c"])
+}
+
+/// Another app receiving a multi-task drag gets one title per line.
+@Test
+func lorvexTaskRefWithCompanionsExportsOneTitlePerLine() async throws {
+  let ref = LorvexTaskRef(
+    id: "a", title: "Buy milk", companions: [LorvexTaskRef(id: "b", title: "Call Sam")])
+
+  let text = try await ref.exported(as: .utf8PlainText)
+
+  #expect(String(decoding: text, as: UTF8.self) == "Buy milk\nCall Sam")
+}
+
 // MARK: - AppStore drag-drop actions (integration with SwiftLorvexCoreService)
 
 @MainActor
@@ -69,7 +116,8 @@ func appStoreMoveTaskClearsErrorOnSuccess() async throws {
   store.errorMessage = "stale"
 
   // The seeded preview store has LorvexPreviewSeedID.venueTask in "inbox"; move it to LorvexPreviewSeedID.appleNativeList.
-  await store.moveTask(id: LorvexPreviewSeedID.venueTask, toListID: LorvexPreviewSeedID.appleNativeList)
+  await store.moveTasks(
+    ids: [LorvexPreviewSeedID.venueTask], toListID: LorvexPreviewSeedID.appleNativeList)
 
   #expect(store.errorMessage == nil)
 }

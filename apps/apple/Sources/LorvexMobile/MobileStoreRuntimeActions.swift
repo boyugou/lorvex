@@ -81,8 +81,8 @@ extension MobileStore {
       // Best-effort — preserve the already-published UI if any local read fails.
       _ = await loadLocalSurfaces(clearOnFailure: false)
     }
-    // Inbound apply bypasses the ordinary local-write funnel, so notify CarPlay
-    // and any independent same-process store here; the origin guard in the
+    // Inbound apply bypasses the ordinary local-write funnel, so notify any
+    // independent same-process store here; the origin guard in the
     // database-change observer keeps this already-reconciled store from
     // reloading itself.
     DatabaseChangeSignal.broadcastCommittedChangeInProcess(origin: self)

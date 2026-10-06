@@ -75,7 +75,7 @@ public struct LorvexTask: Identifiable, Equatable, Sendable {
     public var isResolved: Bool { domainStatus.isTerminal }
 
     /// The working set — `open` or `in_progress` (started). The surfaces that
-    /// show actionable work (Today lanes, reminders, widget / watch / CarPlay /
+    /// show actionable work (Today lanes, reminders, widget / watch /
     /// menu-bar / badge, the Tasks-workspace open lane, batch eligibility) filter
     /// on this so a started task behaves exactly like open work. Excludes
     /// soft-parked `someday` and the terminal states. Mirrors the SQL

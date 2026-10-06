@@ -38,7 +38,8 @@ struct CommandPaletteView: View {
       query: query, tasks: taskResults,
       lists: store.orderedLists + store.orderedArchivedLists,
       now: LorvexPreviewClock.now(in: .current),
-      timeZone: store.logicalTimeZone)
+      timeZone: store.logicalTimeZone,
+      capturePreview: { store.quickAddPreview($0) })
   }
 
   private var flatResults: [CommandPaletteResult] {
@@ -90,6 +91,7 @@ struct CommandPaletteView: View {
         .font(LorvexDesign.Typography.primaryText)
         .focused($fieldFocused)
         .onSubmit(activateHighlighted)
+        .lorvexSingleLine($query)
         .accessibilityIdentifier("commandPalette.field")
     }
     .padding(.horizontal, LorvexDesign.Spacing.m)
@@ -210,10 +212,8 @@ struct CommandPaletteView: View {
       }
     case .openList(let id, _, _, _):
       store.openTaskListScope(id)
-    case .createTask(let title):
-      // Create from the typed title directly rather than stomping the shared
-      // capture draft (read/written by Quick Capture and the menu-bar capture).
-      Task { await store.createTask(title: title, notes: "") }
+    case .createTask(let line, _):
+      Task { await store.captureLine(line) }
     case .action(let command):
       command.perform(in: store)
     }

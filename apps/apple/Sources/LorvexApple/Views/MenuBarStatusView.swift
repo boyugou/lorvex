@@ -22,13 +22,20 @@ struct MenuBarStatusView: View {
   @FocusState private var quickAddFocused: Bool
   /// The menu-bar capture's own draft, so half-typed text here never bleeds
   /// into a capture field in the main window.
-  @State private var quickAddText = ""
+  @State private var quickAddText: String
   /// The scope the panel last showed, kept across openings.
   @AppStorage("menubar.scope") private var scope: MenuBarScope = .today
 
   /// The tallest the scrolling body grows before it scrolls, which keeps the
   /// whole panel near 600pt.
   private static let bodyMaxHeight: CGFloat = 440
+
+  /// `initialQuickAdd` opens the panel with a capture line already typed; the
+  /// preview tour uses it to capture the recognized-details state.
+  init(store: AppStore, initialQuickAdd: String = "") {
+    self.store = store
+    _quickAddText = State(initialValue: initialQuickAdd)
+  }
 
   var body: some View {
     TimelineView(.everyMinute) { _ in
@@ -217,36 +224,50 @@ struct MenuBarStatusView: View {
 
   // MARK: - Quick add
 
-  /// One field: type a title and press Return to capture a task into the inbox.
-  /// No notes field and no separate button — the lightest possible capture.
+  /// One field: type a line and press Return to capture a task into the inbox.
+  /// The line may carry details ("Call mom tomorrow 5pm"); once one is
+  /// recognized, the words it will become show under the field, as in the
+  /// main window's quick-add rows. No notes field and no separate button — the
+  /// lightest possible capture.
   private var quickAdd: some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: "plus.circle.fill")
-        .foregroundStyle(.tint)
-      TextField(
-        String(
-          localized: "menubar.quick_add", defaultValue: "Add a task, then press Return",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        text: $quickAddText
-      )
-      .textFieldStyle(.plain)
-      .font(LorvexDesign.Typography.secondaryText)
-      .focused($quickAddFocused)
-      .onSubmit { submitQuickAdd() }
-      .accessibilityIdentifier("menubar.quickAdd")
+    let preview = store.quickAddPreview(quickAddText)
+    return VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        Image(systemName: "plus.circle.fill")
+          .foregroundStyle(.tint)
+        TextField(
+          String(
+            localized: "menubar.quick_add", defaultValue: "Add a task, then press Return",
+            table: "Localizable",
+            bundle: LorvexL10n.bundle),
+          text: $quickAddText
+        )
+        .textFieldStyle(.plain)
+        .font(LorvexDesign.Typography.secondaryText)
+        .focused($quickAddFocused)
+        .onSubmit { submitQuickAdd() }
+        .lorvexSingleLine($quickAddText)
+        .accessibilityIdentifier("menubar.quickAdd")
+      }
+      .padding(.horizontal, LorvexDesign.Spacing.s)
+      .padding(.vertical, LorvexDesign.Spacing.sm)
+      .background(.quaternary.opacity(0.5), in: Capsule())
+
+      if !preview.words.isEmpty {
+        QuickAddPreviewLine(preview: preview)
+          .padding(.horizontal, LorvexDesign.Spacing.s)
+          .transition(.opacity)
+      }
     }
-    .padding(.horizontal, LorvexDesign.Spacing.s)
-    .padding(.vertical, LorvexDesign.Spacing.sm)
-    .background(.quaternary.opacity(0.5), in: Capsule())
+    .reduceMotionAnimation(.snappy(duration: 0.18), value: preview.words.isEmpty)
   }
 
-  /// Capture the typed title (like the command palette), then clear the field.
+  /// Capture the typed line (like the command palette), then clear the field.
   private func submitQuickAdd() {
-    let title = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !title.isEmpty else { return }
+    let line = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !line.isEmpty else { return }
     quickAddText = ""
-    Task { await store.createTask(title: title, notes: "") }
+    Task { await store.captureLine(line) }
   }
 
   // MARK: - Habits

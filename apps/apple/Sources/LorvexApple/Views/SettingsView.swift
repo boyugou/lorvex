@@ -230,6 +230,8 @@ struct SettingsView: View {
       appearanceSection
       timeSection
       SettingsWorkingHoursRow(store: store)
+      SettingsQuickCaptureSection(settings: settings)
+      SettingsOpenAtLoginSection()
     case .permissions:
       SettingsPermissionsSection(store: store, settings: settings)
     case .calendar:

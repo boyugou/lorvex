@@ -15,7 +15,7 @@ extension LorvexSampleText {
     "urgent": "জরুরি",
     "engineering": "ইঞ্জিনিয়ারিং",
     "research": "গবেষণা",
-    "someday": "কোনো একদিন",
+    "someday": "কোনোদিন",
 
     // Lists.
     "Apple Native": "Apple ইকোসিস্টেম",
@@ -40,7 +40,7 @@ extension LorvexSampleText {
       "টিমের জন্য অগ্রগতি, বাধা ও পরবর্তী পদক্ষেপের সারসংক্ষেপ তৈরি করা।",
     "Look into a standing-desk setup": "স্ট্যান্ডিং ডেস্ক সেট আপ নিয়ে খোঁজখবর নেওয়া",
     "Keep this as a someday idea until the home office is sorted.":
-      "হোম অফিস গোছানো না হওয়া পর্যন্ত এটি “কোনো একদিন” ভাবনা হিসাবেই থাকুক।",
+      "হোম অফিস গোছানো না হওয়া পর্যন্ত এটি “কোনোদিন” ভাবনা হিসাবেই থাকুক।",
     "Pick the offsite dates": "অফসাইটের তারিখ ঠিক করা",
     "Cross-check the team calendar and lock the week.":
       "টিমের ক্যালেন্ডার মিলিয়ে দেখে সপ্তাহটি চূড়ান্ত করা।",
@@ -109,7 +109,7 @@ extension LorvexSampleText {
       "আগে লঞ্চ চেকলিস্ট; স্ট্যাটাস আপডেট ডিজাইন রিভিউয়ের পরে।",
 
     // Memory.
-    "notes_for_ai": "AI-এর জন্য নোট",
+    "notes_for_ai": "অ্যাসিস্ট্যান্টের জন্য নোট",
     "new_laptop": "নতুন ল্যাপটপ",
     "work_rhythm": "কাজের ছন্দ",
     "working_hours": "কাজের সময়",

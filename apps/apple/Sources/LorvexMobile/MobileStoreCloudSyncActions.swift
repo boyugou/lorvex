@@ -132,8 +132,8 @@ extension MobileStore {
   }
 
   /// Listens for `.lorvexCloudKitRemoteChange`, the in-process "sync now"
-  /// request (a push that arrived before this store attached, CarPlay
-  /// connecting), and refreshes on each one.
+  /// request (a push that arrived before this store attached), and refreshes
+  /// on each one.
   func observeSyncRequests() async {
     let stream = NotificationCenter.default.notifications(named: .lorvexCloudKitRemoteChange)
     for await _ in stream {
@@ -172,9 +172,9 @@ extension MobileStore {
       named: DatabaseChangeSignal.didChangeNotification)
     for await notification in stream {
       // A completed CloudKit apply posts an origin-tagged invalidation after it
-      // has already reconciled this store. CarPlay and any independent store
-      // still need the signal; refreshing the origin again would duplicate the
-      // entire fan-out and start another sync cycle.
+      // has already reconciled this store. Any independent store still needs
+      // the signal; refreshing the origin again would duplicate the entire
+      // fan-out and start another sync cycle.
       if databaseChangeOriginIsSelf(notification) { continue }
       // Await inline so this lifetime observer owns all of its work: cancelling
       // it during teardown cannot leave an untracked refresh task running. Core

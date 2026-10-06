@@ -20,13 +20,17 @@ MOBILE_CLOUDKIT_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexMobileAppCloudKit.e
 WATCH_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWatchApp.entitlements"
 WATCH_COMPLICATION_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWatchComplication.entitlements"
 WIDGET_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexWidgetsMacOS.entitlements"
-CARPLAY_ENTITLEMENTS_PATH = ROOT / "Config" / "LorvexCarPlay.entitlements"
 MOBILE_INFO_PLIST_PATH = ROOT / "Config" / "LorvexMobileApp-Info.plist"
 WATCH_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWatchApp-Info.plist"
 WATCH_COMPLICATION_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWatchComplication-Info.plist"
 WIDGET_INFO_PLIST_PATH = ROOT / "Config" / "LorvexWidgets-Info.plist"
 MCP_HOST_INFO_PLIST_PATH = ROOT / "Config" / "LorvexMCPHost-Info.plist"
 BUILD_AND_RUN_SCRIPT_PATH = ROOT / "script" / "build_and_run.sh"
+# The Swift files that declare the app's custom drag-and-drop content types.
+DRAG_TYPE_SWIFT_PATHS = [
+    ROOT / "Sources" / "LorvexCore" / "Models" / "LorvexTaskRef.swift",
+    ROOT / "Sources" / "LorvexCore" / "Models" / "LorvexChecklistItemRef.swift",
+]
 # Every shipped Info.plist — checked-in static files and the macOS app's
 # heredoc-generated plist in build_and_run.sh — must declare this export-
 # compliance key. Lorvex only uses SHA-256 hashing (idempotency keys, content
@@ -174,58 +178,6 @@ def verify_entitlements(
             )
 
 
-def verify_carplay_entitlements(path: Path, failures: list[str]) -> None:
-    if not path.is_file():
-        failures.append(f"missing CarPlay entitlements file: {display_path(path)}")
-        return
-
-    entitlements = load_entitlements(path)
-    expected_key = "com.apple.developer.carplay-communication"
-    if entitlements.get(expected_key) is not True:
-        failures.append(f"{display_path(path)} missing {expected_key}")
-
-    stale_keys = sorted(
-        key for key in entitlements
-        if key.startswith("com.apple.developer.carplay-") and key != expected_key
-    )
-    if stale_keys:
-        failures.append(
-            f"{display_path(path)} declares unsupported CarPlay entitlement(s): {stale_keys!r}"
-        )
-
-
-def verify_mobile_carplay_activation_template(path: Path, failures: list[str]) -> None:
-    if not path.is_file():
-        failures.append(f"missing mobile Info.plist: {display_path(path)}")
-        return
-
-    source = path.read_text(encoding="utf-8")
-    required_markers = [
-        "CarPlay activation template.",
-        "<key>CPSupportsTemplateApplicationScene</key>",
-        "<key>UIApplicationSceneManifest</key>",
-        "<key>CPTemplateApplicationSceneSessionRoleApplication</key>",
-        "<string>CPTemplateApplicationScene</string>",
-        "<string>LorvexCarPlay.LorvexCarPlaySceneDelegate</string>",
-        "Config/LorvexCarPlay.entitlements",
-    ]
-    for marker in required_markers:
-        if marker not in source:
-            failures.append(f"{display_path(path)} missing CarPlay activation marker {marker!r}")
-
-    active_keys = [
-        "CPSupportsTemplateApplicationScene",
-        "CPTemplateApplicationSceneSessionRoleApplication",
-        "LorvexCarPlay.LorvexCarPlaySceneDelegate",
-    ]
-    active_section = re.sub(r"<!--.*?-->", "", source, flags=re.DOTALL)
-    active_markers = [marker for marker in active_keys if marker in active_section]
-    if active_markers:
-        failures.append(
-            f"{display_path(path)} has active CarPlay scene keys before provisioning: {active_markers!r}"
-        )
-
-
 def verify_widget_info_plist(
     path: Path,
     metadata: dict[str, str],
@@ -371,6 +323,80 @@ def verify_macos_export_compliance_marker(path: Path, failures: list[str]) -> No
             f"{display_path(path)} must set ITSAppUsesNonExemptEncryption to false in the "
             "generated macOS Info.plist heredoc"
         )
+
+
+def drag_type_identifiers(failures: list[str]) -> list[str]:
+    """The identifiers of the app's custom drag-and-drop content types, read
+    from the ``UTType(exportedAs:)`` declarations in Swift."""
+    identifiers: list[str] = []
+    for path in DRAG_TYPE_SWIFT_PATHS:
+        if not path.is_file():
+            failures.append(f"missing drag type source: {display_path(path)}")
+            continue
+        found = re.findall(r'UTType\(\s*exportedAs:\s*"([^"]+)"', path.read_text(encoding="utf-8"))
+        if not found:
+            failures.append(f"{display_path(path)} declares no UTType(exportedAs:) drag type")
+        identifiers.extend(found)
+    return identifiers
+
+
+def verify_exported_type_declarations(
+    label: str, plist: dict, identifiers: list[str], failures: list[str]
+) -> None:
+    """Every custom drag type must be exported by the app's Info.plist as a
+    ``public.data`` type. For a custom type the system does not know, SwiftUI
+    accepts a drop over a ``dropDestination`` yet never decodes the payload, so
+    the drop handler does not run: a missing declaration silently disables every
+    drag-and-drop in the app."""
+    declared = {
+        entry.get("UTTypeIdentifier"): entry
+        for entry in plist.get("UTExportedTypeDeclarations", [])
+    }
+    for identifier in identifiers:
+        entry = declared.get(identifier)
+        if entry is None:
+            failures.append(
+                f"{label} must export {identifier} in UTExportedTypeDeclarations "
+                "(a drag of an undeclared type is never delivered to the drop handler)"
+            )
+        elif "public.data" not in entry.get("UTTypeConformsTo", []):
+            failures.append(f"{label} must declare {identifier} as conforming to public.data")
+
+
+def verify_drag_type_declarations_in_plist(
+    path: Path, identifiers: list[str], failures: list[str]
+) -> None:
+    if not path.is_file():
+        failures.append(f"missing Info.plist for drag type check: {display_path(path)}")
+        return
+    with path.open("rb") as file:
+        verify_exported_type_declarations(display_path(path), plistlib.load(file), identifiers, failures)
+
+
+def verify_macos_drag_type_declarations(
+    path: Path, identifiers: list[str], failures: list[str]
+) -> None:
+    """The macOS app's Info.plist is a heredoc in build_and_run.sh, so the
+    heredoc is extracted, its shell variables replaced with placeholders, and
+    parsed as a plist."""
+    if not path.is_file():
+        failures.append(f"missing build_and_run.sh: {display_path(path)}")
+        return
+    match = re.search(
+        r'<<PLIST\n(?P<body><\?xml.*?)\nPLIST\n', path.read_text(encoding="utf-8"), re.DOTALL
+    )
+    if match is None:
+        failures.append(f"{display_path(path)} has no Info.plist heredoc to check drag types in")
+        return
+    body = re.sub(r"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?", "x", match.group("body"))
+    try:
+        plist = plistlib.loads(body.encode("utf-8"))
+    except Exception as error:  # plistlib raises several unrelated error types
+        failures.append(f"{display_path(path)} Info.plist heredoc does not parse: {error}")
+        return
+    verify_exported_type_declarations(
+        f"{display_path(path)} Info.plist heredoc", plist, identifiers, failures
+    )
 
 
 def verify_privacy_manifest(path: Path, failures: list[str]) -> None:
@@ -615,8 +641,6 @@ def main() -> int:
         False,
         failures,
     )
-    verify_carplay_entitlements(CARPLAY_ENTITLEMENTS_PATH, failures)
-    verify_mobile_carplay_activation_template(MOBILE_INFO_PLIST_PATH, failures)
     verify_platform_app_info_plist(MOBILE_INFO_PLIST_PATH, shell_metadata, "MOBILE", failures)
     verify_watch_info_plist(WATCH_INFO_PLIST_PATH, shell_metadata, failures)
     verify_watch_complication_info_plist(WATCH_COMPLICATION_INFO_PLIST_PATH, shell_metadata, failures)
@@ -625,6 +649,9 @@ def main() -> int:
     for info_plist_path in EXPORT_COMPLIANCE_INFO_PLIST_PATHS:
         verify_export_compliance_key(info_plist_path, failures)
     verify_macos_export_compliance_marker(BUILD_AND_RUN_SCRIPT_PATH, failures)
+    drag_identifiers = drag_type_identifiers(failures)
+    verify_drag_type_declarations_in_plist(MOBILE_INFO_PLIST_PATH, drag_identifiers, failures)
+    verify_macos_drag_type_declarations(BUILD_AND_RUN_SCRIPT_PATH, drag_identifiers, failures)
     verify_privacy_manifest(PRIVACY_MANIFEST_PATH, failures)
     verify_privacy_manifest(MACOS_PRIVACY_MANIFEST_PATH, failures)
     if (

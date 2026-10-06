@@ -1,9 +1,12 @@
 import Foundation
 
 extension LorvexSystemIntentRunner {
+  /// The titles in a comma- or line-separated text, trimmed and without blanks.
+  /// A line break is an LF, a CR LF, or a lone CR; a CR LF pair is one
+  /// `Character` that `== "\n"` misses, so the split asks `isNewline`.
   public static func parsedTaskTitleList(_ value: String) throws -> [String] {
     let titles = value
-      .split(whereSeparator: { $0 == "," || $0 == "\n" })
+      .split(whereSeparator: { $0 == "," || $0.isNewline })
       .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
       .filter { !$0.isEmpty }
     guard !titles.isEmpty else {

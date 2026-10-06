@@ -177,18 +177,19 @@ final class AppStore {
   var showCommandPalette = false
 
   /// True while a create action is writing through the core and reading the
-  /// surfaces that show the new row. The capture panel and the list, habit, and
-  /// calendar sheets guard their actions on it and disable their confirm button
-  /// on it, so a double Return cannot start a duplicate create. It is released
-  /// before any post-commit fan-out (Spotlight, reminders, badge, widget, sync),
-  /// which can take as long as a CloudKit cycle. The inline quick-add rows never
-  /// raise it; they serialize through `inlineCaptureCommitTail` instead.
+  /// surfaces that show the new row. The list, habit, and calendar sheets guard
+  /// their actions on it and disable their confirm button on it, so a double
+  /// Return cannot start a duplicate create. It is released before any
+  /// post-commit fan-out (Spotlight, reminders, badge, widget, sync), which can
+  /// take as long as a CloudKit cycle. Task capture never raises it: the inline
+  /// quick-add rows and the global capture serialize through
+  /// `inlineCaptureCommitTail` instead.
   var isCreating = false
 
-  /// The most recent inline quick-add commit (`createInlineTask(_:destination:)`).
-  /// Each commit is a write plus the reads that show the new row; the next
-  /// commit awaits this one first, so lines typed back to back all land, in
-  /// order, without their reads interleaving.
+  /// The most recent task-capture commit (`createInlineTask(_:destination:)` or
+  /// `captureLine(_:)`). Each commit is a write plus the reads that show the new
+  /// row; the next commit awaits this one first, so lines typed back to back
+  /// all land, in order, without their reads interleaving.
   @ObservationIgnored var inlineCaptureCommitTail: Task<Void, Never>?
 
   /// Coalescing single-flight for the fan-out a task create owes the rest of
@@ -293,8 +294,20 @@ final class AppStore {
   /// Drives the auto-dismissing toast in `ContentView`. Set for transient
   /// action failures that don't require acknowledgement (e.g. export errors,
   /// reorder persistence failures). Cleared automatically after the toast
-  /// duration elapses or when the user taps it.
-  var toastMessage: String?
+  /// duration elapses or when the user taps it. When no window shows the toast
+  /// (the main window is closed), the store clears it itself after
+  /// ``toastLifetime`` so it does not surface hours later.
+  var toastMessage: String? {
+    didSet { scheduleToastExpiry() }
+  }
+
+  /// How long the store keeps a toast that no window has dismissed. Longer than
+  /// the toast view's own timer, so a toast on screen is cleared by the view
+  /// first.
+  @ObservationIgnored var toastLifetime = Duration.seconds(8)
+
+  /// The pending clear of ``toastMessage``; see ``scheduleToastExpiry()``.
+  @ObservationIgnored var toastExpiry: Task<Void, Never>?
 
   /// Drives the transient milestone-celebration overlay in `ContentView`. Set by
   /// a habit completion that just crossed a milestone waypoint; cleared when the

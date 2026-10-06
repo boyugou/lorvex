@@ -162,7 +162,7 @@ public struct InMemoryDbLocatorEnv: DbLocatorEnvironment {
 ///      ``DbLocatorEnvironment/allowsDbPathOverride`` is true — the dev override
 ///      is unsandboxed-only, so sandboxed Apple planes skip it)
 ///   2. Apple App Group container when available (shared by the app, widgets,
-///      App Intents, CarPlay, and the macOS MCP helper)
+///      App Intents, and the macOS MCP helper)
 ///   3. Platform default (`<dataDir>/Lorvex/db.sqlite`)
 ///   4. Home fallback (`<home>/.local/share/Lorvex/db.sqlite`)
 ///

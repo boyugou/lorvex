@@ -88,6 +88,18 @@ final class AppSettingsStore {
     didSet { defaults.set(appearance.rawValue, forKey: Key.appearance) }
   }
 
+  /// The system-wide shortcut that opens Quick Capture from any app. Defaults to
+  /// `.off`: Lorvex claims no key chord until the user picks one. It belongs to
+  /// this Mac, so it is not synced.
+  var quickCaptureShortcut: QuickCaptureShortcut {
+    didSet { defaults.set(quickCaptureShortcut.rawValue, forKey: Key.quickCaptureShortcut) }
+  }
+
+  /// Whether the system accepted ``quickCaptureShortcut``. `false` when another
+  /// app owns the chord; Settings says so beside the picker. Set by
+  /// ``QuickCaptureController``, not persisted.
+  var quickCaptureShortcutIsAvailable = true
+
   init(
     defaults: UserDefaults = .standard,
     environment: [String: String] = ProcessInfo.processInfo.environment
@@ -118,5 +130,8 @@ final class AppSettingsStore {
     appearance =
       defaults.string(forKey: Key.appearance)
       .flatMap(AppAppearance.init(rawValue:)) ?? .system
+    quickCaptureShortcut =
+      defaults.string(forKey: Key.quickCaptureShortcut)
+      .flatMap(QuickCaptureShortcut.init(rawValue:)) ?? .default
   }
 }

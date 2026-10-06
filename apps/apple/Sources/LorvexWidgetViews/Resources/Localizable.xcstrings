@@ -2788,13 +2788,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आज आणखी %lld"
+                  "value": "आज %lld अधिक"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आज आणखी %lld"
+                  "value": "आज %lld अधिक"
                 }
               }
             }
@@ -6892,13 +6892,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "+%lldটি আরও"
+                  "value": "+%lld আরও"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "+%lldটি আরও"
+                  "value": "+%lld আরও"
                 }
               }
             }
@@ -7090,13 +7090,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "+%lld आणखी"
+                  "value": "+%lld अधिक"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "+%lld आणखी"
+                  "value": "+%lld अधिक"
                 }
               }
             }

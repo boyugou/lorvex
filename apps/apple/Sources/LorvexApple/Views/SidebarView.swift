@@ -14,9 +14,10 @@ struct SidebarView: View {
     // module-internal rather than private (the AppStore multi-file split pattern).
     @State var isShowingCreateList = false
     @State var editingList: LorvexList?
-    @State var dropTargetedListID: LorvexList.ID?
+    @State var dropTargetedRow: SidebarRowSelection?
     @State var listPendingDeletion: LorvexList?
     @Environment(\.openWindow) var openWindow
+    @Environment(\.undoManager) var undoManager
 
     var body: some View {
         VStack(spacing: 0) {
@@ -109,15 +110,32 @@ struct SidebarView: View {
     private func destinationRows(_ kind: SidebarGroupKind) -> some View {
         if let group = SidebarSelection.sidebarGroups.first(where: { $0.kind == kind }) {
             ForEach(group.items) { item in
-                SidebarListRow {
-                    Image(systemName: item.systemImage)
-                } title: {
-                    Text(item.macOSLocalizedTitle)
-                }
-                .listRowInsets(SidebarMetrics.rowInsets)
-                .tag(SidebarRowSelection.destination(item))
-                .accessibilityIdentifier("sidebar.\(item.rawValue)")
+                destinationRow(item)
             }
+        }
+    }
+
+    /// One destination row. Today also takes dropped tasks, which are planned
+    /// for today; the other destinations are places to open, not to drop on.
+    @ViewBuilder
+    private func destinationRow(_ item: SidebarSelection) -> some View {
+        let row = SidebarListRow {
+            Image(systemName: item.systemImage)
+        } title: {
+            Text(item.macOSLocalizedTitle)
+        }
+        .listRowInsets(SidebarMetrics.rowInsets)
+        .tag(SidebarRowSelection.destination(item))
+        .accessibilityIdentifier("sidebar.\(item.rawValue)")
+        if item == .today {
+            row.taskDropTarget(
+                SidebarRowSelection.destination(.today), targeted: $dropTargetedRow,
+                outset: SidebarMetrics.capsuleOutset, cornerRadius: LorvexDesign.Radius.m
+            ) { ids in
+                Task { await store.planTasksForToday(ids: ids) }
+            }
+        } else {
+            row
         }
     }
 

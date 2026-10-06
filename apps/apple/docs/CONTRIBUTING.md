@@ -21,7 +21,6 @@ apps/apple/
 │   ├── LorvexWatch/            # watchOS shared store + WatchConnectivity client
 │   ├── LorvexWatchApp/         # watchOS companion entry point
 │   ├── LorvexWatchComplication/# watchOS complications (WidgetKit on watchOS)
-│   ├── LorvexCarPlay/          # CarPlay scene delegate + templates
 │   ├── LorvexMCPHost/          # MCP stdio server executable
 │   ├── LorvexWidgetKitSupport/ # Shared widget snapshot/timeline infrastructure
 │   ├── LorvexWidgetViews/      # Reusable SwiftUI widget views
@@ -80,7 +79,7 @@ dispatch, and idempotency membership are derived from those entries.
 policy, timeline entry construction, and render model projection. Widget code
 imports this instead of duplicating JSON decoding or stale-state logic.
 
-**Non-app surfaces** — `LorvexMCPHost`, widgets, App Intents, watchOS, CarPlay,
+**Non-app surfaces** — `LorvexMCPHost`, widgets, App Intents, watchOS,
 and other helpers never link `LorvexCloudSync` or import CloudKit. Their writes
 go through `LorvexCoreServicing` to the managed local database, where the
 canonical transaction also creates its audit and outbox records. The main app

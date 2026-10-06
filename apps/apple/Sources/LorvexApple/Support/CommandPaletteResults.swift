@@ -22,8 +22,11 @@ enum CommandPaletteResult: Identifiable, Equatable {
   /// Open a list in the Tasks workspace, as its sidebar row does. `icon` and
   /// `colorHex` are the list's own, so the row wears the sidebar's icon.
   case openList(id: LorvexList.ID, name: String, icon: String?, colorHex: String?)
-  /// Capture a new task from the current query text.
-  case createTask(title: String)
+  /// Capture a new task from the current query text. `line` is the typed text
+  /// the capture reads; `preview` is what the capture will create from it (the
+  /// title left once its details are read out, and the details as words), empty
+  /// when the line is a plain title.
+  case createTask(line: String, preview: LorvexCapturePreview)
   /// Run a global app command (refresh, new task window, …).
   case action(AppCommand)
 
@@ -53,7 +56,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
       return title
     case .openList(_, let name, _, _):
       return name
-    case .createTask(let title):
+    case .createTask(let line, let preview):
       return String(
         format: String(
           localized: "command_palette.result.create_task",
@@ -61,7 +64,7 @@ enum CommandPaletteResult: Identifiable, Equatable {
           table: "Localizable",
           bundle: LorvexL10n.bundle
         ),
-        title)
+        preview.words.isEmpty ? LorvexCaptureParser.singleLine(line) : preview.title)
     case .action(let command):
       return command.title
     }
@@ -138,7 +141,9 @@ enum CommandPaletteResults {
   /// is a jump, and those groups lead; any other query leads with capture.
   /// Task matches never lead, so capturing a title an existing task shares
   /// still creates the new task. A task's due day is counted from the day
-  /// `now` falls on in `timeZone`, the product time zone.
+  /// `now` falls on in `timeZone`, the product time zone. `capturePreview`
+  /// reads the query as a capture line, so the "New Task" row names the task
+  /// the line will create and the details it carries.
   static func groups(
     query rawQuery: String,
     tasks: [LorvexTask],
@@ -146,7 +151,8 @@ enum CommandPaletteResults {
     now: Date = Date(),
     timeZone: TimeZone = .current,
     destinations: [SidebarSelection] = SidebarSelection.mainNavigationItems,
-    actions: [AppCommand] = AppCommand.allCases
+    actions: [AppCommand] = AppCommand.allCases,
+    capturePreview: (String) -> LorvexCapturePreview = { _ in .empty }
   ) -> [CommandPaletteGroup] {
     let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
     let matchedDestinations =
@@ -176,7 +182,8 @@ enum CommandPaletteResults {
     if query.isEmpty {
       groups = jumps
     } else {
-      let capture = CommandPaletteGroup(title: "New Task", results: [.createTask(title: query)])
+      let capture = CommandPaletteGroup(
+        title: "New Task", results: [.createTask(line: query, preview: capturePreview(query))])
       let isJump =
         matchedDestinations.contains { names(of: $0).contains { beginsNameOrWord($0, query: query) } }
         || matchedLists.contains { beginsNameOrWord($0.displayName, query: query) }

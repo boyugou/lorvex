@@ -38,11 +38,10 @@ swift build --product LorvexWidgetBundle
 swift build --product LorvexWatchApp
 swift build --product LorvexWatchComplication
 swift build --product "$MCP_HOST_PRODUCT"
-# Realize every resource bundle the test suite loads before compiling catalogs.
-# The product builds above do not cover LorvexCarPlay (its `Localizable.xcstrings`
-# ships only as a LorvexAppleTests dependency), so `--build-tests` builds the full
-# test dependency closure and its `<Package>_<Target>.bundle` set. `swift test`
-# below reuses this build incrementally.
+# Realize every resource bundle the test suite loads before compiling catalogs:
+# `--build-tests` builds the full test dependency closure and its
+# `<Package>_<Target>.bundle` set. `swift test` below reuses this build
+# incrementally.
 swift build --build-tests
 # Make sure the freshly built resource bundles hold compiled per-language
 # `.lproj/*.strings` tables. Swift Build compiles the String Catalogs itself; the

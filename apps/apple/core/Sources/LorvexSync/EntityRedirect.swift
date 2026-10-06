@@ -329,6 +329,9 @@ public enum EntityRedirect {
       try PayloadShadow.mergeShadowIntoRedirect(
         db, fromEntityType: sourceType.asString, fromEntityID: sourceId,
         toEntityType: sourceType.asString, toEntityID: terminalTarget)
+      // Delete barriers the source's edges left behind still name the source.
+      try EdgeAliasFold.fold(
+        db, parentKind: sourceType, aliasSourceId: sourceId, targetId: terminalTarget)
     }
 
     guard
@@ -396,6 +399,8 @@ public enum EntityRedirect {
       throw ApplyError.store(
         "entity redirect target disappeared while joining competing aliases")
     }
+    try EdgeAliasFold.fold(
+      db, parentKind: sourceType, aliasSourceId: displacedId, targetId: winnerId)
     try Tombstone.createTombstone(
       db, entityType: sourceType.asString, entityId: displacedId,
       version: redirect.version, deletedAt: applyTs)

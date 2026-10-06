@@ -13,7 +13,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    CURRENT_PROJECT_VERSION: "82"
+    CURRENT_PROJECT_VERSION: "84"
     MARKETING_VERSION: "1.0.0"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
@@ -159,7 +159,6 @@ targets:
       - target: LorvexCloudSync
       - target: LorvexMarkdownUI
       - target: LorvexMobile
-      - target: LorvexCarPlay
       - target: LorvexSystemIntents
       # Widget sub-modules: the app embeds them so the widget extension
       # can link against the shared copies at runtime. Mirrors the Package.swift
@@ -222,9 +221,6 @@ targets:
         # The app icon ships in Config/Assets.xcassets; without naming it the
         # Home Screen icon renders blank.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # Use LorvexCarPlay.entitlements once Apple approves the CarPlay
-        # entitlement for this App ID. Until then, keep the base entitlements
-        # file which does not include the CarPlay keys.
         CODE_SIGN_ENTITLEMENTS: $(SRCROOT)/../../Config/LorvexMobileApp.entitlements
         INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexMobileApp-Info.plist
         GENERATE_INFOPLIST_FILE: NO
@@ -309,19 +305,6 @@ targets:
         INFOPLIST_FILE: $(SRCROOT)/../../Config/LorvexWidgets-Info.plist
         GENERATE_INFOPLIST_FILE: NO
         APPLICATION_EXTENSION_API_ONLY: YES
-
-  LorvexCarPlay:
-    type: framework
-    platform: iOS
-    sources:
-      - path: Sources/LorvexCarPlay
-    dependencies:
-      - target: LorvexCore
-      - target: LorvexMobile
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.lorvex.apple.carplay
-        GENERATE_INFOPLIST_FILE: YES
 
   LorvexSystemIntents:
     type: framework

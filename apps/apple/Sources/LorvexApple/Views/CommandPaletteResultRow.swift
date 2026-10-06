@@ -18,6 +18,13 @@ struct CommandPaletteResultRow: View {
     return nil
   }
 
+  /// What the capture reads out of the typed line, shown as tinted words under
+  /// a "Create task" row; `nil` for a plain title and for every other row.
+  private var captureDetails: LorvexCapturePreview? {
+    if case .createTask(_, let preview) = result, !preview.words.isEmpty { return preview }
+    return nil
+  }
+
   var body: some View {
     Button(action: activate) {
       HStack(spacing: LorvexDesign.Spacing.s) {
@@ -32,6 +39,10 @@ struct CommandPaletteResultRow: View {
               .foregroundStyle(.secondary)
           }
           if let excerpt { LorvexSearchExcerptLine(match: excerpt) }
+          if let captureDetails {
+            QuickAddPreviewLine(preview: captureDetails, showsTitle: false)
+              .padding(.top, 1)
+          }
         }
         Spacer(minLength: 0)
         if isHighlighted {

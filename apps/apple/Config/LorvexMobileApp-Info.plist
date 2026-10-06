@@ -50,7 +50,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>82</string>
+	<string>84</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -95,32 +95,29 @@
 		<string>com.lorvex.apple.openDestination</string>
 		<string>com.lorvex.apple.openList</string>
 	</array>
-	<!--
-	CarPlay activation template.
-
-	Do not uncomment this block until Apple approves the CarPlay entitlement
-	for the Lorvex iOS App ID and Config/LorvexCarPlay.entitlements has been
-	merged into the signed app target. Without the portal capability, enabling
-	the scene keys causes signing/App Store validation failures.
-
-	<key>CPSupportsTemplateApplicationScene</key>
-	<true/>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UISceneConfigurations</key>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
 		<dict>
-			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+			<key>UTTypeIdentifier</key>
+			<string>com.lorvex.apple.task-ref</string>
+			<key>UTTypeDescription</key>
+			<string>Lorvex Task Reference</string>
+			<key>UTTypeConformsTo</key>
 			<array>
-				<dict>
-					<key>UISceneClassName</key>
-					<string>CPTemplateApplicationScene</string>
-					<key>UISceneDelegateClassName</key>
-					<string>LorvexCarPlay.LorvexCarPlaySceneDelegate</string>
-				</dict>
+				<string>public.data</string>
 			</array>
 		</dict>
-	</dict>
-	-->
+		<dict>
+			<key>UTTypeIdentifier</key>
+			<string>com.lorvex.apple.checklist-item-ref</string>
+			<key>UTTypeDescription</key>
+			<string>Lorvex Checklist Item Reference</string>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationShortcutItems</key>
 	<array>
 		<dict>

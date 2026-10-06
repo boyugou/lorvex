@@ -23,7 +23,7 @@ struct LorvexMobileApp: App {
   #endif
 
   init() {
-    // App Intents and CarPlay can write the shared store without going through
+    // App Intents can write the shared store without going through
     // `MobileStore`. Route those committed writes through the same coalesced
     // invalidation observed by the open UI, and relay widget/MCP Darwin signals.
     DatabaseChangeSignal.configureApplicationProcess()

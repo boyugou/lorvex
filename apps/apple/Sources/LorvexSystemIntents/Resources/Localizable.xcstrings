@@ -1580,7 +1580,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "কোনো Lorvex টাস্কের সাথে লিংক করা ক্যালেন্ডার ইভেন্ট পড়ুন।"
+            "value": "কোনো Lorvex টাস্কের সাথে লিঙ্ক করা ক্যালেন্ডার ইভেন্ট পড়ুন।"
           }
         },
         "de": {
@@ -1792,13 +1792,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "টাস্ক “%1$@”-এর সাথে %2$lldটি ক্যালেন্ডার ইভেন্ট লিংক করা আছে।"
+                  "value": "টাস্ক “%1$@”-এর সাথে %2$lldটি ক্যালেন্ডার ইভেন্ট লিঙ্ক করা আছে।"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "টাস্ক “%1$@”-এর সাথে %2$lldটি ক্যালেন্ডার ইভেন্ট লিংক করা আছে।"
+                  "value": "টাস্ক “%1$@”-এর সাথে %2$lldটি ক্যালেন্ডার ইভেন্ট লিঙ্ক করা আছে।"
                 }
               }
             }
@@ -2251,7 +2251,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "টাস্কের লিংক করা Lorvex ইভেন্ট পড়ুন"
+            "value": "টাস্কের লিঙ্ক করা Lorvex ইভেন্ট পড়ুন"
           }
         },
         "de": {
@@ -2425,7 +2425,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "কোনো ক্যালেন্ডার ইভেন্টের সাথে লিংক করা Lorvex টাস্ক পড়ুন।"
+            "value": "কোনো ক্যালেন্ডার ইভেন্টের সাথে লিঙ্ক করা Lorvex টাস্ক পড়ুন।"
           }
         },
         "de": {
@@ -2637,13 +2637,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ইভেন্ট “%1$@”-এর সাথে %2$lldটি Lorvex টাস্ক লিংক করা আছে।"
+                  "value": "ইভেন্ট “%1$@”-এর সাথে %2$lldটি Lorvex টাস্ক লিঙ্ক করা আছে।"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "ইভেন্ট “%1$@”-এর সাথে %2$lldটি Lorvex টাস্ক লিংক করা আছে।"
+                  "value": "ইভেন্ট “%1$@”-এর সাথে %2$lldটি Lorvex টাস্ক লিঙ্ক করা আছে।"
                 }
               }
             }
@@ -3096,7 +3096,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "ইভেন্টের লিংক করা Lorvex টাস্ক পড়ুন"
+            "value": "ইভেন্টের লিঙ্ক করা Lorvex টাস্ক পড়ুন"
           }
         },
         "de": {
@@ -34669,13 +34669,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld"
+                  "value": "%lld अधिक"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld"
+                  "value": "%lld अधिक"
                 }
               }
             }
@@ -42555,7 +42555,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "টাস্ক–ইভেন্ট লিংক"
+            "value": "টাস্ক–ইভেন্ট লিঙ্ক"
           }
         },
         "de": {
@@ -80167,7 +80167,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "লেখা"
+            "value": "টেক্সট"
           }
         },
         "de": {
@@ -80245,7 +80245,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "मजकूर"
+            "value": "टेक्स्ट"
           }
         },
         "ms": {

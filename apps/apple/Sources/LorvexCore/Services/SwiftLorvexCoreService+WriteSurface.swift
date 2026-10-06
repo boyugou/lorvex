@@ -377,7 +377,7 @@ extension SwiftLorvexCoreService {
     /// the duration of a tool call via ``SwiftLorvexCoreService/currentInitiator``.
     public static let assistant = "assistant"
     /// A direct human mutation — app UI, App Intents / Shortcuts / Siri, an
-    /// interactive widget, a CarPlay action, or a watch mutation applied on the
+    /// interactive widget, or a watch mutation applied on the
     /// phone. The app's human surfaces declare it through the service's
     /// ``SwiftLorvexCoreService/writeInitiatorDefault`` at construction. The
     /// vocabulary distinguishes human from assistant, not the specific human

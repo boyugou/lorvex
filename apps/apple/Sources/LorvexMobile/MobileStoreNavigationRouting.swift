@@ -27,7 +27,7 @@ extension MobileStore {
   /// Applies a Home Screen / Dock quick action to the running mobile UI.
   ///
   /// `.quickCapture` presents the capture sheet immediately — matching the
-  /// action's label and the macOS `focusQuickAdd` command — rather than merely
+  /// action's label and the macOS Quick Capture window — rather than merely
   /// navigating. Every other action routes through its deep link to the
   /// corresponding tab or destination.
   public func performQuickAction(_ action: LorvexQuickAction) {
@@ -117,7 +117,14 @@ extension MobileStore {
     }
   }
 
+  /// Applies the one request a system intent left for the app: a quick action
+  /// (the Quick Capture control presents the capture sheet), a task, or a
+  /// destination.
   public func applyPendingIntentHandoff() {
+    if let action = MobileIntentHandoff.consumeQuickAction() {
+      performQuickAction(action)
+      return
+    }
     guard let target = MobileIntentHandoff.consumeNavigationTarget() else { return }
     openNavigationTarget(target)
   }

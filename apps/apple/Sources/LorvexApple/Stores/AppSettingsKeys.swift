@@ -11,5 +11,6 @@ extension AppSettingsStore {
     static let eventKitIncludedCalendarIDs = "eventKitIncludedCalendarIDs"
     static let eventKitExcludedCalendarIDs = "eventKitExcludedCalendarIDs"
     static let appearance = AppAppearance.preferenceKey
+    static let quickCaptureShortcut = "quickCaptureShortcut"
   }
 }

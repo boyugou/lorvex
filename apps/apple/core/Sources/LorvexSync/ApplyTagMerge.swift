@@ -87,29 +87,15 @@ enum ApplyTagMerge {
         read: { db, ids in try readTagMergeFields(db, ids: ids) },
         compare: divergentTagLoserFields),
       repointAndDeleteLoser: { db, loserId, winnerId, _, _ in
+        // A task-tag edge has its own LWW register that keeps the authored
+        // version and created_at of whichever operation won it; stamping it with
+        // the parent merge HLC or local apply time would make a late
+        // source-addressed edge (remapped through the permanent tag alias) lose
+        // on one peer but win on another. The registers under the loser id, live
+        // rows and delete barriers alike, are folded into the winner id.
+        try EdgeAliasFold.fold(
+          db, parentKind: .tag, aliasSourceId: loserId, targetId: winnerId)
         do {
-          // A task-tag edge has its own LWW register. Preserve the winning edge
-          // participant's authored version + created_at; stamping it with the
-          // parent merge HLC or local apply time makes a late source-addressed
-          // edge (remapped through the permanent tag alias) lose on one peer but
-          // win on another. Equal edge HLCs choose the byte-stable earlier
-          // created_at, so this UPSERT is commutative even for a corrupt/reused
-          // edge clock.
-          try db.execute(
-            sql: """
-              INSERT INTO task_tags (task_id, tag_id, created_at, version)
-               SELECT task_id, :winner_id, created_at, version
-                 FROM task_tags WHERE tag_id = :loser_id
-               ON CONFLICT(task_id, tag_id) DO UPDATE SET
-                   created_at = CASE
-                       WHEN excluded.version > task_tags.version THEN excluded.created_at
-                       WHEN excluded.version = task_tags.version
-                         THEN min(excluded.created_at, task_tags.created_at)
-                       ELSE task_tags.created_at END,
-                   version = max(task_tags.version, excluded.version)
-              """,
-            arguments: ["winner_id": winnerId, "loser_id": loserId])
-          try db.execute(sql: "DELETE FROM task_tags WHERE tag_id = ?", arguments: [loserId])
           try db.execute(sql: "DELETE FROM tags WHERE id = ?", arguments: [loserId])
         } catch { throw ApplyError.lift(error) }
       })

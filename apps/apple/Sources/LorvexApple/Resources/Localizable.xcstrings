@@ -2532,6 +2532,180 @@
         }
       }
     },
+    "app.commands.quick_capture": {
+      "comment": "Menu command and command palette action that opens the floating Quick Capture window.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة سريعة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "দ্রুত যোগ করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnelleingabe"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Γρήγορη προσθήκη"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Capture"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captura rápida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افزودن سریع"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajout rapide"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הוספה מהירה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "तुरंत जोड़ें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catat Cepat"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiunta rapida"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クイック入力"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠른 추가"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "त्वरित जोडा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catat Cepat"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snel vastleggen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szybkie dodawanie"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Captura rápida"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adăugare rapidă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрое добавление"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จดงาน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı ekle"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидке додавання"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فوری اضافہ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghi nhanh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速收集"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速新增"
+          }
+        }
+      }
+    },
     "app.commands.website": {
       "extractionState": "manual",
       "localizations": {
@@ -5205,13 +5379,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "दिवसभराचे आणखी %lld आयटम"
+                  "value": "%lld अधिक दिवसभराचे आयटम"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "दिवसभराचे आणखी %lld आयटम"
+                  "value": "%lld अधिक दिवसभराचे आयटम"
                 }
               }
             }
@@ -15388,13 +15562,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld इव्हेंट"
+                  "value": "%lld अधिक इव्हेंट"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld इव्हेंट"
+                  "value": "%lld अधिक इव्हेंट"
                 }
               }
             }
@@ -34232,7 +34406,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "अद्याप चेक-इन नाही"
+            "value": "अजून चेक-इन नाही"
           }
         },
         "ms": {
@@ -40239,7 +40413,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "दोन आठवड्यांच्या चेक-इननंतर तुमचा साप्ताहिक पॅटर्न येथे दिसेल."
+            "value": "दोन आठवडे चेक-इन केल्यानंतर तुमचा साप्ताहिक पॅटर्न येथे दिसेल."
           }
         },
         "ms": {
@@ -67741,13 +67915,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld प्रलंबित"
+                  "value": "%lld अधिक प्रलंबित"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld प्रलंबित"
+                  "value": "%lld अधिक प्रलंबित"
                 }
               }
             }
@@ -76466,7 +76640,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "একটি টাস্ক যোগ করে রিটার্ন চাপুন"
+            "value": "একটি টাস্ক যোগ করে রিটার্ন কী চাপুন"
           }
         },
         "de": {
@@ -90220,7 +90394,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "फिकट"
+            "value": "सौम्य"
           }
         },
         "ms": {
@@ -94818,7 +94992,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "আপনার iCloud অ্যাকাউন্ট থেকে Lorvex-এর প্রতিটি রেকর্ড ডিলিট করুন – এর সাথে সিঙ্ক হওয়া সব ডিভাইসের জন্য। এই Mac-এর লোকাল ডেটায় হাত দেওয়া হয় না। iCloud সিঙ্ক বন্ধ হয়ে যায় এবং আপনি আবার চালু না করা পর্যন্ত বন্ধ থাকে; চালু করলে এই Mac-এর ডেটা আবার আপলোড হবে।"
+            "value": "আপনার iCloud অ্যাকাউন্ট থেকে Lorvex-এর প্রতিটি রেকর্ড ডিলিট করুন – এর সাথে সিঙ্ক হওয়া সব ডিভাইসের জন্য। এই Mac-এর লোকাল ডেটাতে হাত দেওয়া হয় না। iCloud সিঙ্ক বন্ধ হয়ে যায় এবং আপনি আবার চালু না করা পর্যন্ত বন্ধ থাকে; চালু করলে এই Mac-এর ডেটা আবার আপলোড হবে।"
           }
         },
         "de": {
@@ -108012,7 +108186,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "1টি রেকর্ড"
+                  "value": "%lldটি রেকর্ড"
                 }
               },
               "other": {
@@ -108228,7 +108402,7 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "1 रेकॉर्ड"
+                  "value": "%lld रेकॉर्ड"
                 }
               },
               "other": {
@@ -112935,7 +113109,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "বন্ধ করে পুনরায় খুলুন"
+            "value": "বন্ধ করে আবার খুলুন"
           }
         },
         "de": {
@@ -116213,6 +116387,876 @@
         }
       }
     },
+    "settings.open_at_login": {
+      "comment": "Label of the switch in Settings that makes Lorvex open when the user signs in to the Mac. Matches the Dock menu's Open at Login wording.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح عند تسجيل الدخول"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "লগইনের সময় খুলুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Anmelden öffnen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Άνοιγμα κατά τη σύνδεση"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open at Login"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir al iniciar sesión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باز کردن هنگام ورود"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir à la connexion"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתיחה בעת התחברות"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लॉगिन पर खोलें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka saat Login"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri al login"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン時に開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 시 열기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लॉगिनवर उघडा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka semasa Log Masuk"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open bij inloggen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwieraj przy logowaniu"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir ao fazer login"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide la autentificare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открывать при входе"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดเมื่อเข้าสู่ระบบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Girişte Aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкривати під час входу"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لاگ اِن پر کھولیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở khi đăng nhập"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录时打开"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入時打開"
+          }
+        }
+      }
+    },
+    "settings.open_at_login.approval": {
+      "comment": "Shown beside a button while Lorvex's login item waits for the user to turn it on in System Settings. The path names the System Settings panes General and Login Items as the Mac shows them in the user's language.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعّل Lorvex في إعدادات النظام > عام > عناصر تسجيل الدخول."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "সিস্টেম সেটিংস > সাধারণ > লগইন আইটেম-এ Lorvex চালু করুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schalte Lorvex unter Systemeinstellungen > Allgemein > Anmeldeobjekte ein."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ενεργοποιήστε το Lorvex στις Ρυθμίσεις συστήματος > Γενικά > Στοιχεία σύνδεσης."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Lorvex in System Settings > General > Login Items."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa Lorvex en Ajustes del Sistema > General > Ítems de inicio de sesión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex را در تنظیمات سیستم > عمومی > موارد ورود روشن کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activez Lorvex dans Réglages Système > Général > Éléments de connexion."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "יש להפעיל את Lorvex בהגדרות המערכת > כללי > פריטי התחברות."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिस्टम सेटिंग्ज़ > सामान्य > लॉगिन आइटम में Lorvex चालू करें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktifkan Lorvex di Pengaturan Sistem > Umum > Item Login."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva Lorvex in Impostazioni di Sistema > Generali > Elementi login."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「システム設定」>「一般」>「ログイン項目」でLorvexをオンにしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 설정 > 일반 > 로그인 항목에서 Lorvex를 켜세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सिस्टीम सेटिंग > सामान्य > लॉगिन आयटम मध्ये Lorvex चालू करा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidupkan Lorvex dalam Seting Sistem > Am > Item Log Masuk."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet Lorvex aan in Systeeminstellingen > Algemeen > Inlogonderdelen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz Lorvex w Ustawieniach systemowych > Ogólne > Obiekty logowania."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative o Lorvex em Ajustes do Sistema > Geral > Itens de login."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activați Lorvex în Configurări sistem > General > Elemente de conectare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включите Lorvex в «Системные настройки» > «Основные» > «Объекты входа»."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด Lorvex ในการตั้งค่าระบบ > ทั่วไป > รายการเข้าสู่ระบบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Ayarları > Genel > Giriş Öğeleri’nde Lorvex’i açın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увімкніть Lorvex у «Системні параметри» > «Загальні» > «Елементи входу»."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سسٹم کی ترتیبات > عمومی > لاگ اِن آئٹمز میں Lorvex کو آن کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hãy bật Lorvex trong Cài đặt hệ thống > Cài đặt chung > Mục đăng nhập."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在“系统设置”>“通用”>“登录项”中打开 Lorvex。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請前往「系統設定」>「一般」>「登入項目」打開 Lorvex。"
+          }
+        }
+      }
+    },
+    "settings.open_at_login.detail": {
+      "comment": "Footer under the Open at Login switch in Settings. Quick Capture is the small window that opens over any app; its name is the command's name.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُفتح Lorvex عند تسجيل الدخول، فيكون شريط القوائم واختصار «إضافة سريعة» جاهزَين دائمًا."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "লগইনের সময় Lorvex খুলে যায়, তাই মেনু বার আর “দ্রুত যোগ করুন” শর্টকাট সবসময় তৈরি থাকে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex öffnet sich beim Anmelden, damit die Menüleiste und der Kurzbefehl für die Schnelleingabe immer bereit sind."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το Lorvex ανοίγει κατά τη σύνδεση, ώστε η γραμμή μενού και η συντόμευση της Γρήγορης προσθήκης να είναι πάντα έτοιμες."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex opens at login, so the menu bar and the Quick Capture shortcut are always ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex se abre al iniciar sesión, así que la barra de menús y el atajo de Captura rápida siempre están listos."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex هنگام ورود باز می‌شود، پس نوار منو و میان‌بر افزودن سریع همیشه آماده‌اند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex s’ouvre à la connexion, pour que la barre des menus et le raccourci d’ajout rapide soient toujours prêts."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex נפתח בעת ההתחברות, כך שסרגל התפריטים וקיצור ההוספה המהירה תמיד מוכנים."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लॉगिन करते ही Lorvex खुल जाता है, इसलिए मेन्यू बार और “तुरंत जोड़ें” शॉर्टकट हमेशा तैयार रहते हैं।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex terbuka saat login, sehingga bilah menu dan pintasan Catat Cepat selalu siap."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex si apre al login, così la barra dei menu e la scorciatoia per l’aggiunta rapida sono sempre pronte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン時にLorvexが開くので、メニューバーとクイック入力のショートカットをいつでも使えます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인할 때 Lorvex가 열려서 메뉴 막대와 빠른 추가 단축키를 언제든 쓸 수 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लॉगिन करताच Lorvex उघडते, त्यामुळे मेन्यू बार आणि “त्वरित जोडा” शॉर्टकट नेहमी तयार असतात."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex dibuka semasa log masuk, jadi bar menu dan pintasan Catat Cepat sentiasa sedia."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex opent bij het inloggen, zodat de menubalk en de sneltoets voor Snel vastleggen altijd klaarstaan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex otwiera się przy logowaniu, więc pasek menu i skrót Szybkiego dodawania są zawsze gotowe."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Lorvex abre ao fazer login, para que a barra de menus e o atalho de Captura rápida estejam sempre prontos."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex se deschide la autentificare, astfel încât bara de meniu și comanda rapidă Adăugare rapidă sunt mereu pregătite."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex открывается при входе в систему, поэтому строка меню и сочетание клавиш быстрого добавления всегда под рукой."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex จะเปิดเมื่อเข้าสู่ระบบ เมนูบาร์และทางลัดจดงานจึงพร้อมใช้เสมอ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex oturum açıldığında açılır; böylece menü çubuğu ve Hızlı ekle kısayolu her zaman hazır olur."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex відкривається під час входу в систему, тож рядок меню та комбінація клавіш швидкого додавання завжди напоготові."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لاگ اِن پر Lorvex کھل جاتا ہے، اس لیے مینو بار اور فوری اضافہ شارٹ کٹ ہمیشہ تیار رہتے ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex mở khi đăng nhập, nên thanh menu và phím tắt Ghi nhanh luôn sẵn sàng."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录时自动打开 Lorvex，菜单栏和“快速收集”快捷键随时可用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入時自動打開 Lorvex，選單列和「快速新增」快速鍵隨時可用。"
+          }
+        }
+      }
+    },
+    "settings.open_at_login.failed": {
+      "comment": "Footer under the Open at Login switch when changing it did not work. The path names the System Settings panes General and Login Items as the Mac shows them in the user's language.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر على Lorvex تغيير هذا الإعداد. استخدم إعدادات النظام > عام > عناصر تسجيل الدخول بدلًا من ذلك."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex এটি পরিবর্তন করতে পারেনি। এর বদলে সিস্টেম সেটিংস > সাধারণ > লগইন আইটেম ব্যবহার করুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex konnte das nicht ändern. Verwende stattdessen Systemeinstellungen > Allgemein > Anmeldeobjekte."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Το Lorvex δεν μπόρεσε να αλλάξει αυτή τη ρύθμιση. Χρησιμοποιήστε αντί γι’ αυτό τις Ρυθμίσεις συστήματος > Γενικά > Στοιχεία σύνδεσης."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex couldn’t change this. Use System Settings > General > Login Items instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex no pudo cambiar esto. Usa Ajustes del Sistema > General > Ítems de inicio de sesión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex نتوانست این مورد را تغییر دهد. به‌جای آن از تنظیمات سیستم > عمومی > موارد ورود استفاده کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex n’a pas pu modifier ce réglage. Utilisez plutôt Réglages Système > Général > Éléments de connexion."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex לא הצליח לשנות זאת. יש להשתמש במקום זאת בהגדרות המערכת > כללי > פריטי התחברות."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex इसे बदल नहीं सका। इसके बजाय सिस्टम सेटिंग्ज़ > सामान्य > लॉगिन आइटम का उपयोग करें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex tidak dapat mengubah ini. Gunakan Pengaturan Sistem > Umum > Item Login sebagai gantinya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile modificarlo. Usa invece Impostazioni di Sistema > Generali > Elementi login."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexでは変更できませんでした。代わりに「システム設定」>「一般」>「ログイン項目」を使用してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex에서 변경하지 못했습니다. 대신 시스템 설정 > 일반 > 로그인 항목을 이용하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex हे बदलू शकले नाही. त्याऐवजी सिस्टीम सेटिंग > सामान्य > लॉगिन आयटम वापरा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex tidak dapat mengubah ini. Gunakan Seting Sistem > Am > Item Log Masuk sebagai gantinya."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex kon dit niet wijzigen. Gebruik in plaats daarvan Systeeminstellingen > Algemeen > Inlogonderdelen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zmienić tego ustawienia. Użyj zamiast tego Ustawień systemowych > Ogólne > Obiekty logowania."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Lorvex não conseguiu alterar isso. Use Ajustes do Sistema > Geral > Itens de login."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex nu a putut modifica această setare. Folosiți în schimb Configurări sistem > General > Elemente de conectare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex не удалось изменить эту настройку. Используйте вместо этого «Системные настройки» > «Основные» > «Объекты входа»."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex เปลี่ยนค่านี้ไม่ได้ ให้ใช้การตั้งค่าระบบ > ทั่วไป > รายการเข้าสู่ระบบแทน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex bunu değiştiremedi. Bunun yerine Sistem Ayarları > Genel > Giriş Öğeleri’ni kullanın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex не вдалося змінити цей параметр. Скористайтеся натомість «Системні параметри» > «Загальні» > «Елементи входу»."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex اسے تبدیل نہیں کر سکا۔ اس کے بجائے سسٹم کی ترتیبات > عمومی > لاگ اِن آئٹمز استعمال کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex không thể thay đổi mục này. Hãy dùng Cài đặt hệ thống > Cài đặt chung > Mục đăng nhập."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 无法更改此设置。请改用“系统设置”>“通用”>“登录项”。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 無法變更此設定。請改用「系統設定」>「一般」>「登入項目」。"
+          }
+        }
+      }
+    },
+    "settings.open_at_login.open_settings": {
+      "comment": "Button that opens the Login Items pane of System Settings. Login Items is the pane's name as the Mac shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح عناصر تسجيل الدخول"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "লগইন আইটেম খুলুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldeobjekte öffnen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Άνοιγμα στοιχείων σύνδεσης"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Ítems de inicio de sesión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "باز کردن موارد ورود"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir Éléments de connexion"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פתיחת פריטי התחברות"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लॉगिन आइटम खोलें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Item Login"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri Elementi login"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン項目を開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 항목 열기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लॉगिन आयटम उघडा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Item Log Masuk"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Inlogonderdelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz Obiekty logowania"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Itens de login"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschideți Elemente de conectare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть Объекты входа"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดรายการเข้าสู่ระบบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş Öğeleri’ni aç"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити Елементи входу"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لاگ اِن آئٹمز کھولیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở Mục đăng nhập"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开登录项"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟登入項目"
+          }
+        }
+      }
+    },
     "settings.permissions.badge_due_tasks": {
       "comment": "Toggle label for showing due-task count on the Dock icon",
       "extractionState": "manual",
@@ -118474,6 +119518,876 @@
         }
       }
     },
+    "settings.quick_capture.detail.off": {
+      "comment": "Footer under the Quick Capture shortcut picker in Settings while the shortcut is off. Quick Capture is a small window that opens over any app.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر اختصارًا لإضافة مهمة من أي تطبيق دون الانتقال إلى Lorvex."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "যেকোনো অ্যাপ থেকে Lorvex-এ না গিয়েই একটি টাস্ক যোগ করতে একটি শর্টকাট বেছে নিন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle einen Tastaturkurzbefehl, um aus jeder App eine Aufgabe hinzuzufügen, ohne zu Lorvex zu wechseln."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Επιλέξτε μια συντόμευση πληκτρολογίου για να προσθέτετε εργασίες από οποιαδήποτε εφαρμογή χωρίς να μεταβαίνετε στο Lorvex."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a shortcut to add a task from any app without switching to Lorvex."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige un atajo de teclado para añadir una tarea desde cualquier app sin cambiar a Lorvex."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای افزودن یک کار از هر برنامه‌ای بدون رفتن به Lorvex، یک میان‌بر صفحه‌کلید انتخاب کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez un raccourci clavier pour ajouter une tâche depuis n’importe quelle app sans passer par Lorvex."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כדי להוסיף משימה מכל אפליקציה בלי לעבור ל-Lorvex, יש לבחור קיצור מקלדת."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "किसी भी ऐप से Lorvex पर गए बिना कार्य जोड़ने के लिए एक शॉर्टकट चुनें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pilih pintasan untuk menambahkan tugas dari app mana pun tanpa beralih ke Lorvex."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli una scorciatoia da tastiera per aggiungere un’attività da qualsiasi app senza passare a Lorvex."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キーボードショートカットを選ぶと、どのアプリからでもLorvexに切り替えずにタスクを追加できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키를 선택하면 어떤 앱에서든 Lorvex로 전환하지 않고 할 일을 추가할 수 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex वर न जाता कोणत्याही ॲपमधून कार्य जोडण्यासाठी एक शॉर्टकट निवडा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pilih pintasan untuk menambah tugas daripada mana-mana app tanpa beralih ke Lorvex."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een sneltoets om vanuit een willekeurige app een taak toe te voegen zonder naar Lorvex te schakelen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wybierz skrót klawiszowy, aby dodawać zadania z dowolnej aplikacji bez przełączania się na Lorvex."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha um atalho de teclado para adicionar uma tarefa de qualquer app sem mudar para o Lorvex."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alegeți o comandă rapidă de la tastatură pentru a adăuga o sarcină din orice aplicație fără a trece la Lorvex."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите сочетание клавиш, чтобы добавлять задачи из любого приложения, не переключаясь на Lorvex."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เลือกทางลัดแป้นพิมพ์เพื่อเพิ่มงานจากแอปใดก็ได้โดยไม่ต้องสลับไปที่ Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex’e geçmeden herhangi bir uygulamadan görev eklemek için bir klavye kısayolu seçin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виберіть комбінацію клавіш, щоб додавати завдання з будь-якої програми, не перемикаючись на Lorvex."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کسی بھی ایپ سے Lorvex پر جائے بغیر کام شامل کرنے کے لیے ایک شارٹ کٹ منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn một phím tắt để thêm nhiệm vụ từ bất kỳ ứng dụng nào mà không cần chuyển sang Lorvex."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择一个键盘快捷键，即可在任何 App 中添加任务，无需切换到 Lorvex。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇一個鍵盤快速鍵，即可在任何 App 中新增任務，無需切換到 Lorvex。"
+          }
+        }
+      }
+    },
+    "settings.quick_capture.detail.on": {
+      "comment": "Footer under the Quick Capture shortcut picker in Settings once a shortcut is chosen. Quick Capture is a small window that opens over any app.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على الاختصار في أي تطبيق لإضافة مهمة دون الانتقال إلى Lorvex."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "যেকোনো অ্যাপে শর্টকাট চাপুন এবং Lorvex-এ না গিয়েই একটি টাস্ক যোগ করুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drücke den Tastaturkurzbefehl in einer beliebigen App, um eine Aufgabe hinzuzufügen, ohne zu Lorvex zu wechseln."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Πατήστε τη συντόμευση πληκτρολογίου σε οποιαδήποτε εφαρμογή για να προσθέσετε μια εργασία χωρίς να μεταβείτε στο Lorvex."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Press the shortcut in any app to add a task without switching to Lorvex."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulsa el atajo de teclado en cualquier app para añadir una tarea sin cambiar a Lorvex."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای افزودن یک کار بدون رفتن به Lorvex، میان‌بر صفحه‌کلید را در هر برنامه‌ای فشار دهید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appuyez sur le raccourci clavier dans n’importe quelle app pour ajouter une tâche sans passer par Lorvex."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כדי להוסיף משימה בלי לעבור ל-Lorvex, יש ללחוץ על קיצור המקלדת בכל אפליקציה."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "किसी भी ऐप में शॉर्टकट दबाएँ और Lorvex पर गए बिना एक कार्य जोड़ें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekan pintasan di app mana pun untuk menambahkan tugas tanpa beralih ke Lorvex."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premi la scorciatoia da tastiera in qualsiasi app per aggiungere un’attività senza passare a Lorvex."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "どのアプリでもキーボードショートカットを押すと、Lorvexに切り替えずにタスクを追加できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어떤 앱에서든 단축키를 누르면 Lorvex로 전환하지 않고 할 일을 추가할 수 있습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex वर न जाता कोणत्याही ॲपमधून कार्य जोडण्यासाठी शॉर्टकट दाबा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekan pintasan dalam mana-mana app untuk menambah tugas tanpa beralih ke Lorvex."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Druk in een willekeurige app op de sneltoets om een taak toe te voegen zonder naar Lorvex te schakelen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naciśnij skrót klawiszowy w dowolnej aplikacji, aby dodać zadanie bez przełączania się na Lorvex."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pressione o atalho de teclado em qualquer app para adicionar uma tarefa sem mudar para o Lorvex."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apăsați comanda rapidă de la tastatură în orice aplicație pentru a adăuga o sarcină fără a trece la Lorvex."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите сочетание клавиш в любом приложении, чтобы добавить задачу, не переключаясь на Lorvex."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กดทางลัดแป้นพิมพ์ในแอปใดก็ได้ เพื่อเพิ่มงานโดยไม่ต้องสลับไปที่ Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex’e geçmeden görev eklemek için herhangi bir uygulamada klavye kısayoluna basın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть комбінацію клавіш у будь-якій програмі, щоб додати завдання, не перемикаючись на Lorvex."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کسی بھی ایپ میں شارٹ کٹ دبائیں اور Lorvex پر جائے بغیر ایک کام شامل کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhấn phím tắt trong bất kỳ ứng dụng nào để thêm nhiệm vụ mà không cần chuyển sang Lorvex."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何 App 中按下键盘快捷键，即可添加任务，无需切换到 Lorvex。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在任何 App 中按下鍵盤快速鍵，即可新增任務，無需切換到 Lorvex。"
+          }
+        }
+      }
+    },
+    "settings.quick_capture.key.space": {
+      "comment": "The Space key's name, written after the modifier symbols in the Quick Capture shortcut picker (for example ⌃⌥Space). Use the word macOS shows for the Space key in this language.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسافة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "স্পেস"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leertaste"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Διάστημα"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espacio"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فاصله"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espace"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "רווח"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्पेस"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spasi"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spazio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スペース"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스페이스"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्पेस"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Space"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spatiebalk"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spacja"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espaço"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spațiu"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробел"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เว้นวรรค"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boşluk"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробіл"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسپیس"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dấu cách"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空格"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空白鍵"
+          }
+        }
+      }
+    },
+    "settings.quick_capture.off": {
+      "comment": "Picker option in Settings: the Quick Capture keyboard shortcut is turned off.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "বন্ধ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ανενεργό"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خاموش"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כבוי"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बंद"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mati"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattivato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끔"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऑफ"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tak Aktif"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uit"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wył."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выкл."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимк."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بند"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
+          }
+        }
+      }
+    },
+    "settings.quick_capture.unavailable": {
+      "comment": "Footer under the Quick Capture shortcut picker when the chosen key combination is already taken by another app.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هناك تطبيق آخر يستخدم هذا الاختصار. اختر اختصارًا مختلفًا."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অন্য একটি অ্যাপ এই শর্টকাটটি ব্যবহার করছে। অন্য একটি শর্টকাট বেছে নিন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine andere App verwendet diesen Tastaturkurzbefehl. Wähle einen anderen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μια άλλη εφαρμογή χρησιμοποιεί αυτή τη συντόμευση. Επιλέξτε διαφορετική."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another app is using this shortcut. Choose a different one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra app está usando este atajo. Elige uno distinto."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برنامه دیگری از این میان‌بر استفاده می‌کند. میان‌بر دیگری را انتخاب کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une autre app utilise ce raccourci. Choisissez-en un autre."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "אפליקציה אחרת משתמשת בקיצור הזה. יש לבחור קיצור אחר."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कोई दूसरा ऐप यह शॉर्टकट इस्तेमाल कर रहा है। कोई दूसरा शॉर्टकट चुनें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App lain sedang menggunakan pintasan ini. Pilih pintasan yang berbeda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un’altra app sta usando questa scorciatoia. Scegline una diversa."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のアプリがこのショートカットを使用しています。別のショートカットを選択してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 앱에서 이 단축키를 사용하고 있습니다. 다른 단축키를 선택하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "दुसरे ॲप हा शॉर्टकट वापरत आहे. वेगळा शॉर्टकट निवडा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App lain sedang menggunakan pintasan ini. Pilih pintasan yang lain."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een andere app gebruikt deze sneltoets. Kies een andere."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inna aplikacja używa tego skrótu. Wybierz inny."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outro app está usando este atalho. Escolha um diferente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O altă aplicație folosește această comandă rapidă. Alegeți una diferită."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это сочетание клавиш уже используется другим приложением. Выберите другое."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แอปอื่นกำลังใช้ทางลัดนี้ เลือกทางลัดอื่น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir uygulama bu kısayolu kullanıyor. Farklı bir kısayol seçin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цю комбінацію клавіш уже використовує інша програма. Виберіть іншу."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کوئی اور ایپ یہ شارٹ کٹ استعمال کر رہی ہے۔ کوئی دوسرا شارٹ کٹ منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một ứng dụng khác đang dùng phím tắt này. Hãy chọn phím tắt khác."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另一个 App 正在使用此快捷键。请选择其他快捷键。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "另一個 App 正在使用此快速鍵。請選擇其他快速鍵。"
+          }
+        }
+      }
+    },
     "settings.reset.button": {
       "extractionState": "manual",
       "localizations": {
@@ -119351,7 +121265,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই Mac-এ Lorvex-এর পরিচালিত লোকাল ডেটা ও সেটিংস মুছে নতুন করে শুরু করুন। এটি শুধু লোকালি প্রযোজ্য: iCloud-এ ইতিমধ্যে সিঙ্ক হওয়া ডেটা iCloud-এ থেকে যায় এবং সিঙ্ক আবার চালু করলে আবার ডাউনলোড হতে পারে। সিস্টেম ক্যালেন্ডারের ইভেন্ট ডিলিট করা হয় না।"
+            "value": "এই Mac-এ Lorvex-এর পরিচালিত লোকাল ডেটা ও সেটিংস মুছে নতুন করে শুরু করুন। এটি শুধু লোকালি প্রযোজ্য: iCloud-এ ইতিমধ্যেই সিঙ্ক হওয়া ডেটা iCloud-এ থেকে যায় এবং সিঙ্ক আবার চালু করলে আবার ডাউনলোড হতে পারে। সিস্টেম ক্যালেন্ডারের ইভেন্ট ডিলিট করা হয় না।"
           }
         },
         "de": {
@@ -119870,7 +121784,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "লোকাল ডেটা মুছে ফেলা হয়েছে, কিন্তু Lorvex উইজেট ক্যাশ ক্লিয়ার করতে পারেনি। Lorvex রিস্টার্ট করে আবার লোকাল ডেটা মুছে ফেলুন।"
+            "value": "লোকাল ডেটা মুছে ফেলা হয়েছে, কিন্তু Lorvex উইজেট ক্যাশ মুছে ফেলতে পারেনি। Lorvex রিস্টার্ট করে আবার লোকাল ডেটা মুছে ফেলুন।"
           }
         },
         "de": {
@@ -129571,6 +131485,180 @@
         }
       }
     },
+    "task.action.move_to_list": {
+      "comment": "Label of the task context menu's list submenu and name of the Edit menu's undo item for moving tasks to another list",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقل إلى قائمة"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "তালিকায় সরান"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Liste verschieben"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μετακίνηση σε λίστα"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to List"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover a una lista"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتقال به فهرست"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déplacer vers une liste"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "העברה לרשימה"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सूची में ले जाएँ"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pindahkan ke Daftar"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sposta in lista"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストに移動"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목록으로 이동"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यादीमध्ये मूव्ह करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alih ke Senarai"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verplaats naar lijst"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przenieś do listy"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover para lista"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mutați în listă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переместить в список"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ย้ายไปลิสต์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listeye taşı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перемістити до списку"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فہرست میں منتقل کریں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di chuyển đến danh sách"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到列表"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移到清單"
+          }
+        }
+      }
+    },
     "task.action.move_to_open": {
       "extractionState": "manual",
       "localizations": {
@@ -130264,6 +132352,486 @@
         }
       }
     },
+    "task.move.toast": {
+      "comment": "Toast confirming tasks were moved to another list by drag and drop or the menu, naming the destination list",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل %1$lld مهام إلى %2$@."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل %1$lld مهمة إلى %2$@."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل مهمة واحدة إلى %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل %1$lld مهمة إلى %2$@."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم نقل مهمتين إلى %2$@."
+                }
+              },
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم يتم نقل أي مهمة إلى %2$@."
+                }
+              }
+            }
+          }
+        },
+        "bn": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "“%2$@” তালিকায় %1$lldটি টাস্ক সরানো হয়েছে।"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "“%2$@” তালিকায় %1$lldটি টাস্ক সরানো হয়েছে।"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Aufgabe nach „%2$@“ verschoben."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld Aufgaben nach „%2$@“ verschoben."
+                }
+              }
+            }
+          }
+        },
+        "el": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Μετακινήθηκε %1$lld εργασία στη λίστα %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Μετακινήθηκαν %1$lld εργασίες στη λίστα %2$@."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Moved %1$lld task to %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Moved %1$lld tasks to %2$@."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Se movió %1$lld tarea a “%2$@”."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Se movieron %1$lld tareas a “%2$@”."
+                }
+              }
+            }
+          }
+        },
+        "fa": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld کار به %2$@ منتقل شد."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld کار به %2$@ منتقل شد."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld tâche déplacée vers %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld tâches déplacées vers %2$@."
+                }
+              }
+            }
+          }
+        },
+        "he": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "משימה אחת הועברה לרשימה \"%2$@\"."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld משימות הועברו לרשימה \"%2$@\"."
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld कार्य “%2$@” में ले जाया गया।"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld कार्य “%2$@” में ले जाए गए।"
+                }
+              }
+            }
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld tugas dipindahkan ke %2$@."
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld attività spostata in %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld attività spostate in %2$@."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld件のタスクを「%2$@」に移動しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "할 일 %1$lld개를 “%2$@” 목록으로 이동했습니다."
+          }
+        },
+        "mr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld कार्य ‘%2$@’ यादीमध्ये मूव्ह केले गेले."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld कार्ये ‘%2$@’ यादीमध्ये मूव्ह केली गेली."
+                }
+              }
+            }
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld tugas dialihkan ke %2$@."
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld taak verplaatst naar ‘%2$@’."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld taken verplaatst naar ‘%2$@’."
+                }
+              }
+            }
+          }
+        },
+        "pl": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Przeniesiono %1$lld zadania do listy „%2$@”."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Przeniesiono %1$lld zadań do listy „%2$@”."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Przeniesiono %1$lld zadanie do listy „%2$@”."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Przeniesiono %1$lld zadania do listy „%2$@”."
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld tarefa movida para %2$@."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld tarefas movidas para %2$@."
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld sarcini mutate în „%2$@”."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld sarcină mutată în „%2$@”."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld de sarcini mutate în „%2$@”."
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "В список «%2$@» перемещены %1$lld задачи."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "В список «%2$@» перемещено %1$lld задач."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "В список «%2$@» перемещена %1$lld задача."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "В список «%2$@» перемещено %1$lld задачи."
+                }
+              }
+            }
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ย้าย %1$lld งานไปยัง %2$@ แล้ว"
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld görev %2$@ listesine taşındı."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld görev %2$@ listesine taşındı."
+                }
+              }
+            }
+          }
+        },
+        "uk": {
+          "variations": {
+            "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "До списку «%2$@» переміщено %1$lld завдання."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "До списку «%2$@» переміщено %1$lld завдань."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "До списку «%2$@» переміщено %1$lld завдання."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "До списку «%2$@» переміщено %1$lld завдання."
+                }
+              }
+            }
+          }
+        },
+        "ur": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld کام %2$@ میں منتقل کر دیا گیا۔"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$lld کام %2$@ میں منتقل کر دیے گئے۔"
+                }
+              }
+            }
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã chuyển %1$lld nhiệm vụ vào %2$@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已移动 %1$lld 项任务到“%2$@”。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已將 %1$lld 個任務移到「%2$@」。"
+          }
+        }
+      }
+    },
     "task.permanent_delete.action": {
       "extractionState": "manual",
       "localizations": {
@@ -130622,7 +133190,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এই টাস্ক এবং এর সব চেকলিস্ট আইটেম, রিমাইন্ডার ও লিংক চিরতরে সরিয়ে ফেলা হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না – রেকর্ড রেখে দিতে চাইলে বরং টাস্কটি বাতিল করুন।"
+            "value": "এই টাস্ক এবং এর সব চেকলিস্ট আইটেম, রিমাইন্ডার ও লিঙ্ক চিরতরে সরিয়ে ফেলা হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না – রেকর্ড রেখে দিতে চাইলে বরং টাস্কটি বাতিল করুন।"
           }
         },
         "de": {
@@ -138901,7 +141469,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "যে দিন এটি নিয়ে কাজ করার পরিকল্পনা আছে।"
+            "value": "যে দিন এটি নিয়ে কাজ করার প্ল্যান আছে।"
           }
         },
         "de": {
@@ -144237,7 +146805,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "এখনও কোনো ট্যাগ নেই। একটি লিখে রিটার্ন চাপুন।"
+            "value": "এখনও কোনো ট্যাগ নেই। একটি লিখে রিটার্ন কী চাপুন।"
           }
         },
         "de": {
@@ -144585,7 +147153,7 @@
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "যে শব্দ বিভিন্ন তালিকার টাস্ককে একসঙ্গে গোছায়।"
+            "value": "যে শব্দ বিভিন্ন তালিকার টাস্ককে একসাথে গোছায়।"
           }
         },
         "de": {
@@ -160843,7 +163411,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "आज बाकी: %@."
+            "value": "आज शिल्लक: %@."
           }
         },
         "ms": {
@@ -161017,7 +163585,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "आज बाकी: %1$@ आणि %2$@."
+            "value": "आज शिल्लक: %1$@ आणि %2$@."
           }
         },
         "ms": {
@@ -162712,13 +165280,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld कार्य बाकी"
+                  "value": "%lld कार्य शिल्लक"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld कार्ये बाकी"
+                  "value": "%lld कार्ये शिल्लक"
                 }
               }
             }
@@ -170806,13 +173374,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld"
+                  "value": "%lld अधिक"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "आणखी %lld"
+                  "value": "%lld अधिक"
                 }
               }
             }
@@ -177974,7 +180542,7 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "कोणतीही कार्ये बाकी नाहीत"
+            "value": "कोणतीही कार्ये शिल्लक नाहीत"
           }
         },
         "ms": {
@@ -178659,13 +181227,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "‘%1$@’, ‘%2$@’ आणि आणखी %3$lld उद्यासाठी मूव्ह केल्यास सुमारे %4$@ मोकळा वेळ मिळेल."
+                  "value": "‘%1$@’, ‘%2$@’ आणि %3$lld अधिक उद्यासाठी मूव्ह केल्यास सुमारे %4$@ मोकळा वेळ मिळेल."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "‘%1$@’, ‘%2$@’ आणि आणखी %3$lld उद्यासाठी मूव्ह केल्यास सुमारे %4$@ मोकळा वेळ मिळेल."
+                  "value": "‘%1$@’, ‘%2$@’ आणि %3$lld अधिक उद्यासाठी मूव्ह केल्यास सुमारे %4$@ मोकळा वेळ मिळेल."
                 }
               }
             }

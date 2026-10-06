@@ -51,6 +51,10 @@ import LorvexDomain
 /// at 00:00). Recognized phrases are removed from the title; between two
 /// characters of a script written without spaces (Chinese characters,
 /// Japanese kana) a phrase leaves no gap, elsewhere a space.
+///
+/// A capture line is one line: text pasted over several lines is read with each
+/// line break, and the whitespace around it, as one space, so the details are
+/// read across the breaks and the title never holds one.
 public enum LorvexCaptureParser {
   /// A list the parser can match a `#word` against.
   public struct ListOption: Sendable {
@@ -121,6 +125,7 @@ public enum LorvexCaptureParser {
   ) -> LorvexCaptureParse {
     typealias Vocabulary = LorvexCaptureVocabulary
     guard text.utf16.count <= maxReadLength else { return plainTitle(text) }
+    let text = singleLine(text)
     var result = LorvexCaptureParse(
       title: text, plannedDayOffset: nil, dueDayOffset: nil, estimatedMinutes: nil,
       startMinutes: nil, recurrence: nil, recurrenceStartOffset: nil, listID: nil, listName: nil,
@@ -160,21 +165,17 @@ public enum LorvexCaptureParser {
       }
       // Remove back to front so removing one leaves earlier ranges valid.
       for (matchRange, kind) in taken.reversed() {
-        guard let range = Range(matchRange, in: remaining), let matchableRange = Range(matchRange, in: matchable)
+        guard let range = Range(matchRange, in: remaining) else { continue }
+        let (span, replacement) = removal(of: range, in: remaining, at: matchRange, avoiding: claimed)
+        guard let removed = Range(span, in: remaining), let removedMatchable = Range(span, in: matchable)
         else { continue }
         let matched = String(remaining[range])
         found.append((range, .init(kind: kind, text: matched.trimmingCharacters(in: .whitespaces))))
-        // Between two characters of a script written without spaces the
-        // phrase leaves no gap; elsewhere a space keeps the words apart.
-        let joinsUnspaced =
-          range.lowerBound > remaining.startIndex && range.upperBound < remaining.endIndex
-          && isUnspaced(remaining[remaining.index(before: range.lowerBound)])
-          && isUnspaced(remaining[range.upperBound])
-        remaining.replaceSubrange(range, with: joinsUnspaced ? "" : " ")
-        matchable.replaceSubrange(matchableRange, with: joinsUnspaced ? "" : " ")
-        // Claimed spans after the phrase move up with the text.
-        let shrink = matchRange.length - (joinsUnspaced ? 0 : 1)
-        for index in claimed.indices where claimed[index].location >= NSMaxRange(matchRange) {
+        remaining.replaceSubrange(removed, with: replacement)
+        matchable.replaceSubrange(removedMatchable, with: replacement)
+        // Claimed spans after the removed span move up with the text.
+        let shrink = span.length - replacement.utf16.count
+        for index in claimed.indices where claimed[index].location >= NSMaxRange(span) {
           claimed[index].location -= shrink
         }
       }
@@ -289,13 +290,45 @@ public enum LorvexCaptureParser {
     return result
   }
 
-  /// A line read as a title alone: its text without the whitespace around it,
-  /// and no detail.
+  /// A line read as a title alone: its text on one line, without the
+  /// whitespace around it, and no detail.
   private static func plainTitle(_ text: String) -> LorvexCaptureParse {
     LorvexCaptureParse(
-      title: text.trimmingCharacters(in: .whitespacesAndNewlines), plannedDayOffset: nil,
-      dueDayOffset: nil, estimatedMinutes: nil, startMinutes: nil, recurrence: nil,
-      recurrenceStartOffset: nil, listID: nil, listName: nil, priority: nil, tags: [], phrases: [])
+      title: singleLine(text).trimmingCharacters(in: .whitespacesAndNewlines),
+      plannedDayOffset: nil, dueDayOffset: nil, estimatedMinutes: nil, startMinutes: nil,
+      recurrence: nil, recurrenceStartOffset: nil, listID: nil, listName: nil, priority: nil,
+      tags: [], phrases: [])
+  }
+
+  /// `text` with each line break, and the whitespace around it, replaced by one
+  /// space between the words it separated, and dropped at either end of the
+  /// text. A single-line field keeps the breaks of a multi-line paste, and a
+  /// title holds none. Text without a break comes back unchanged. A parse reads
+  /// its line this way, so a surface that shows the line before it is parsed
+  /// shows it the same way.
+  public static func singleLine(_ text: String) -> String {
+    guard text.contains(where: \.isNewline) else { return text }
+    var line = ""
+    var afterBreak = false
+    func dropTrailingWhitespace() {
+      while line.last?.isWhitespace == true { line.removeLast() }
+    }
+    for character in text {
+      if character.isNewline {
+        afterBreak = true
+      } else if afterBreak && character.isWhitespace {
+        continue
+      } else {
+        if afterBreak {
+          dropTrailingWhitespace()
+          if !line.isEmpty { line.append(" ") }
+          afterBreak = false
+        }
+        line.append(character)
+      }
+    }
+    if afterBreak { dropTrailingWhitespace() }
+    return line
   }
 
   /// Moves a line whose time falls after the midnight ending its day onto the
@@ -345,6 +378,65 @@ public enum LorvexCaptureParser {
   /// "#lodz" finds "Łódź".
   private static func normalized(_ name: String) -> String {
     SearchFold.fold(name).filter { $0.isLetter || $0.isNumber }
+  }
+
+  /// The characters that end a sentence. A phrase recognized right before one
+  /// ("Call mom tomorrow.") does not take it along.
+  private static let sentenceMarks: Set<Character> = [
+    ".", "!", "?", "…", "。", "！", "？", "।", "॥", "۔", "؟",
+  ]
+
+  /// The separators a title never starts or ends with; ``cleanTitle(_:)`` trims
+  /// them where a removed phrase strands one.
+  private static let strandedSeparators: Set<Character> = [
+    ",", ";", ":", "-", "–", "—", "，", "、", "：", "；", "،", "؛",
+  ]
+
+  /// True when removing `phrase` from `text` would put two characters of a
+  /// script written without spaces next to each other, where no space is
+  /// needed to keep words apart.
+  private static func joinsUnspaced(_ phrase: Range<String.Index>, in text: String) -> Bool {
+    phrase.lowerBound > text.startIndex && phrase.upperBound < text.endIndex
+      && isUnspaced(text[text.index(before: phrase.lowerBound)])
+      && isUnspaced(text[phrase.upperBound])
+  }
+
+  /// The span a recognized phrase takes out of `text`, and the text that
+  /// stands in for it.
+  ///
+  /// A phrase leaves a space where it stood, so the words around it stay
+  /// apart (nothing between two characters of a script written without
+  /// spaces). A sentence mark right after the phrase changes that, so the line
+  /// does not keep a gap in front of the mark:
+  /// - after a word ("Call mom tomorrow."), the whitespace before the phrase
+  ///   goes with it and the mark stays on the word ("Call mom.");
+  /// - after nothing, a separator, or another mark ("Tomorrow. Call mom"), the
+  ///   phrase was a sentence of its own, so the marks that close it go with it.
+  ///
+  /// `offsets` is the phrase's UTF-16 range in `text`. A span that would reach
+  /// into one of the `claimed` spans is not widened.
+  private static func removal(
+    of phrase: Range<String.Index>, in text: String, at offsets: NSRange, avoiding claimed: [NSRange]
+  ) -> (span: NSRange, replacement: String) {
+    let plain = (span: offsets, replacement: joinsUnspaced(phrase, in: text) ? "" : " ")
+    guard let mark = text[phrase.upperBound...].first, sentenceMarks.contains(mark) else { return plain }
+    let before = text[..<phrase.lowerBound]
+    let previous = before.last { !$0.isWhitespace }
+    let widened: NSRange
+    let replacement: String
+    if let previous, !sentenceMarks.contains(previous), !strandedSeparators.contains(previous) {
+      let gapStart = before.lastIndex { !$0.isWhitespace }.map { before.index(after: $0) } ?? text.startIndex
+      let gapLength = text[gapStart..<phrase.lowerBound].utf16.count
+      widened = NSRange(location: offsets.location - gapLength, length: offsets.length + gapLength)
+      replacement = ""
+    } else {
+      let marksEnd = text[phrase.upperBound...].firstIndex { !sentenceMarks.contains($0) } ?? text.endIndex
+      let marksLength = text[phrase.upperBound..<marksEnd].utf16.count
+      widened = NSRange(location: offsets.location, length: offsets.length + marksLength)
+      replacement = " "
+    }
+    guard !claimed.contains(where: { NSIntersectionRange($0, widened).length > 0 }) else { return plain }
+    return (widened, replacement)
   }
 
   /// Collapses the gaps removed phrases leave behind: repeated spaces, commas

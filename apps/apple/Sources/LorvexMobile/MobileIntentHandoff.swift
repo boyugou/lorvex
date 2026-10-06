@@ -26,6 +26,11 @@ public enum MobileIntentHandoff {
     return MobileNavigationTarget(destination: destination)
   }
 
+  /// The quick action a control asked for, consumed once.
+  public static func consumeQuickAction() -> LorvexQuickAction? {
+    LorvexIntentHandoffStore().consumeQuickAction()
+  }
+
   public static func clear() {
     LorvexIntentHandoffStore().clear()
   }

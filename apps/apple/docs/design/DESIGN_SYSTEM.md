@@ -438,7 +438,7 @@ that hides two items behind an extra hover.
   with `integer(from:)`, which accepts the digits of every script, since the
   Arabic number pad types Arabic-Indic digits and Chinese and Japanese input
   methods often type full-width ones.
-- **watchOS and CarPlay.** The same status colors and tiles at glance scale;
+- **watchOS.** The same status colors and tiles at glance scale;
   no new tokens.
 - **Widgets.** The same colors and tiles, with the widgets' own type scale
   (§4). A widget opens with its name in the accent ("Today", the list a

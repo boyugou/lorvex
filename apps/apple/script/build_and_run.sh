@@ -404,6 +404,29 @@ $LOCALIZATION_PLIST_ENTRIES
     <string>com.lorvex.apple.openDestination</string>
     <string>com.lorvex.apple.openList</string>
   </array>
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>com.lorvex.apple.task-ref</string>
+      <key>UTTypeDescription</key>
+      <string>Lorvex Task Reference</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+      </array>
+    </dict>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>com.lorvex.apple.checklist-item-ref</string>
+      <key>UTTypeDescription</key>
+      <string>Lorvex Checklist Item Reference</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+      </array>
+    </dict>
+  </array>
 </dict>
 </plist>
 PLIST

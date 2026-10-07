@@ -193,13 +193,6 @@ extension AppStore {
       || taskDetailEstimatedMinutesText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }
 
-  /// Whether the recurrence interval field holds a savable value: empty (an
-  /// omitted interval defaults to 1) or text that parses to a positive integer.
-  /// Drives the inline red-tint feedback that explains why Save is disabled.
-  var taskDetailRecurrenceIntervalIsValid: Bool {
-    parsedTaskDetailRecurrenceInterval != nil
-  }
-
   var taskDetailTitleIsValid: Bool {
     !taskDetailTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }

@@ -20,7 +20,9 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 | macOS — workspace loading states | [SHIPPED] | Primary async workspaces show a native loading overlay |
 | macOS — global error toast | [SHIPPED] | `ContentView.lorvexToast` handles transient app/notification-action failures |
 | macOS — list reordering | [SHIPPED] | Lists and habits support persisted drag reordering |
-| macOS — calendar date navigation | [SHIPPED] | Week/list navigation with previous, next, Today/This Week, and date picker controls |
+| macOS — calendar navigation and View menu | [SHIPPED] | Day, Week, and Month modes with previous, next, a Today / This Week / This Month reset, and a date picker. The View menu repeats the mode choice and holds the reset (⌘T) and the Unplanned Tasks column (⌥⌘U) while the Calendar is on screen |
+| macOS — calendar planning by drag | [SHIPPED] | A task dropped on a time in the week or day grid, on a day's all-day row, or on a month cell is planned there; a timed block moves by drag in 15-minute steps; the Unplanned Tasks rail lists open tasks with no planned day. Every placement is one undoable Plan Task (⌘Z); dragging or resizing an event is undoable too |
+| macOS — calendar context menus | [SHIPPED] | Right-clicking an event or a task on the week and month grids opens its menu (Open Details, Edit, Delete for a Lorvex event; the shared task menu for a task); a month day also offers Create Event |
 | macOS — habit inspector | [SHIPPED] | In-place editing (name, encouragement, and Repeat / Reminder / Goal popovers), streak metrics, a history grid, and the by-weekday pattern |
 | macOS — habit milestones | [SHIPPED] | Streak/count milestone waypoints (auto-ladder + optional user target), a progress bar, and a celebration when a waypoint is crossed |
 | macOS — Command Palette (⌘K) | [SHIPPED] | Fuzzy command/navigation palette; the New Task row reads the typed line like a capture field and names the task and details it will create |

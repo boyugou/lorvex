@@ -20,9 +20,13 @@ struct CalendarMonthGridView: View {
   @Bindable var store: AppStore
   let monthAnchor: Date
   let selectEvent: (CalendarTimelineEvent) -> Void
+  let editEvent: (CalendarTimelineEvent) -> Void
+  let requestDeleteEvent: (CalendarTimelineEvent) -> Void
   let openTask: (LorvexTask) -> Void
   /// Navigates the workspace to Day mode anchored at the clicked date.
   let openDay: (Date) -> Void
+  /// Opens the create-event sheet for a day, from its cell's context menu.
+  let createEvent: (Date) -> Void
 
   /// Reads `@Environment(\.calendar)`, matching `CalendarWeekGridView`, so a
   /// first-weekday / locale change (including mid-session) flows into the
@@ -97,11 +101,15 @@ struct CalendarMonthGridView: View {
     HStack(spacing: 0) {
       ForEach(Array(week.enumerated()), id: \.element.id) { index, day in
         CalendarMonthGridDayCell(
+          store: store,
           day: day,
           isToday: calendar.isDateInToday(day.date),
           maxVisibleChips: maxVisibleChips,
           eventColor: eventColor,
           onSelectEvent: selectEvent,
+          onEditEvent: editEvent,
+          onDeleteEvent: requestDeleteEvent,
+          onCreateEvent: { createEvent(day.date) },
           onOpenTask: openTask,
           onDropTasks: { ids in
             Task {

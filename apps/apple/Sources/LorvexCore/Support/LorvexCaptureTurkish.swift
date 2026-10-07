@@ -131,9 +131,6 @@ extension LorvexCaptureVocabulary {
   static let turkishStart = #"(?<![\p{Latin}\p{N}\p{M}]|\p{L}[-–])"#
   static let turkishEnd = #"(?![\p{Latin}\p{N}\p{M}]|[-–]\p{L}|['’ʼ]\p{L})"#
 
-  /// The apostrophes that set a case ending apart from a number or a name.
-  static let turkishApostrophe = #"['’ʼ]"#
-
   /// A matched word or phrase as a reader compares it: lowercased.
   static func turkishKey(_ text: String) -> String {
     text.lowercased()
@@ -147,11 +144,11 @@ extension LorvexCaptureVocabulary {
       .split(whereSeparator: \.isWhitespace).joined(separator: " ")
   }
 
-  // MARK: - Text around a match
+  // MARK: - Text before a match
 
-  /// How many characters before and after a match the rules that judge a match
-  /// by its surroundings look at. A bounded look-around keeps the time a line
-  /// takes linear in its length.
+  /// How many characters before a match the rules that judge a match by its
+  /// surroundings look at. A bounded look-behind keeps the time a line takes
+  /// linear in its length.
   static let turkishContextLength = 60
 
   /// The text of the line just before `match`: at most ``turkishContextLength``
@@ -162,13 +159,6 @@ extension LorvexCaptureVocabulary {
       match.source.index(start, offsetBy: -turkishContextLength, limitedBy: match.source.startIndex)
       ?? match.source.startIndex
     return String(match.source[from..<start])
-  }
-
-  /// The text of the line just after `match`: at most ``turkishContextLength``
-  /// characters, starting where the match ends.
-  static func turkishTextAfter(_ match: Match) -> String {
-    guard let end = Range(match.result.range, in: match.source)?.upperBound else { return "" }
-    return String(match.source[end...].prefix(turkishContextLength))
   }
 
   // MARK: - Counts

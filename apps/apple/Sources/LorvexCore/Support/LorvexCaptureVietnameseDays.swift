@@ -51,9 +51,6 @@ extension LorvexCaptureVocabulary {
 
   // MARK: - Weekdays
 
-  /// Each weekday's key, Sunday first.
-  private static let vietnameseWeekdayKeys = ["chu nhat", "thu hai", "thu ba", "thu tu", "thu nam", "thu sau", "thu bay"]
-
   /// The weekday names, as a pattern without groups: "thứ Hai", "thứ Ba", "thứ Tư",
   /// "thứ Năm", "thứ Sáu", "thứ Bảy", "thứ 2" to "thứ 7", and "Chủ nhật" ("Chúa
   /// nhật"). "Tư" is read only with its mark: "tu" is also "tự" ("thứ tự" is an

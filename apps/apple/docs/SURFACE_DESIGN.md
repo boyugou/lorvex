@@ -58,7 +58,12 @@ day, works through Today's list, and drives keyboard-first workflows.
   both macOS and the iPhone/iPad habit surfaces. ✅
 - List and habit drag reordering with persistence. ✅
 - Global transient error toast. ✅
-- Calendar week/list navigation with Today/This Week reset. ✅
+- Calendar opens in Day, Week, or Month, chosen with the toolbar's mode control,
+  stepped by the visible period, and reset with Today, This Week, or This Month.
+  The View menu repeats the mode choice and holds the reset (⌘T) and the
+  Unplanned Tasks column (⌥⌘U) while a window shows the Calendar. An event or
+  task on the week and month grids opens its context menu on a right-click; a
+  month day also offers Create Event. ✅
 - The Calendar day and week grids draw the day's timed tasks on the clock: each
   task's saved time sits in the day's lanes beside the calendar's events, in
   the accent tint (the block the clock is inside on today gets a heavier rail;

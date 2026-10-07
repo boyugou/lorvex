@@ -67,9 +67,8 @@ func calmTodayRunningTimeLeads() throws {
   #expect(lead.isRunning)
   #expect(lead.progress(nowMinutes: 9 * 60 + 15) == 0.25)
   #expect(lead.minutesLeft(nowMinutes: 9 * 60 + 15) == 45)
-  // The list itself keeps Today's order; glances open with the lead.
+  // The list itself keeps Today's order.
   #expect(page.items.map(\.id) == ["first", "timed"])
-  #expect(page.leadFirst.map(\.id) == ["timed", "first"])
 }
 
 @Test("with no time running, the list's first task leads")
@@ -104,7 +103,6 @@ func calmTodayOtherDayHasNoClock() {
     now: nil, workingHours: 9 * 60..<18 * 60)
 
   #expect(page.leadID == nil)
-  #expect(page.leadFirst.map(\.id) == ["first", "timed"])
   #expect(page.items.allSatisfy { !$0.isRunning })
   #expect(page.overbooked == nil)
 }

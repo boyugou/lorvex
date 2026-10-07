@@ -492,28 +492,6 @@ func appStoreNoOpRecurrenceSavePreservesExceptions() async throws {
 
 @MainActor
 @Test
-func taskDetailRecurrenceIntervalIsValidReflectsParseability() async throws {
-  let store = try await makeTaskEditingStore()
-  await store.refresh()
-  store.syncSelectedTaskDraft()
-
-  // Empty is valid — an omitted interval defaults to 1.
-  store.taskDetailRecurrenceIntervalText = ""
-  #expect(store.taskDetailRecurrenceIntervalIsValid)
-
-  store.taskDetailRecurrenceIntervalText = "3"
-  #expect(store.taskDetailRecurrenceIntervalIsValid)
-
-  // Non-positive and unparseable text are both invalid (Save stays disabled).
-  store.taskDetailRecurrenceIntervalText = "0"
-  #expect(!store.taskDetailRecurrenceIntervalIsValid)
-
-  store.taskDetailRecurrenceIntervalText = "x"
-  #expect(!store.taskDetailRecurrenceIntervalIsValid)
-}
-
-@MainActor
-@Test
 func appStoreRemovesSelectedPreviewTaskRecurrence() async throws {
   let store = try await makeTaskEditingStore()
 

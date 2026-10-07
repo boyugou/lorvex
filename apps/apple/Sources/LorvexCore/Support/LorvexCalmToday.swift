@@ -127,13 +127,6 @@ public struct LorvexCalmToday: Equatable, Sendable {
   /// The lead task's item.
   public var lead: Item? { items.first { $0.id == leadID } }
 
-  /// The list with the lead first and the rest in Today's order, for glance
-  /// surfaces that open with the lead.
-  public var leadFirst: [Item] {
-    guard let lead else { return items }
-    return [lead] + items.filter { $0.id != lead.id }
-  }
-
   public var facts: Facts {
     if items.isEmpty && remainingMeetings == 0 {
       return doneToday > 0 ? .allDone(done: doneToday) : .empty

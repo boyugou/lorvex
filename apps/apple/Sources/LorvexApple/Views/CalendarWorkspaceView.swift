@@ -125,10 +125,13 @@ struct CalendarWorkspaceView: View {
           store: store,
           monthAnchor: monthAnchor,
           selectEvent: { store.toggleCalendarEventSelection($0) },
+          editEvent: { eventActions.beginEditing($0, store: store) },
+          requestDeleteEvent: { eventActions.requestDelete($0) },
           openTask: { task in
             store.selectTaskFromList(task.id)
           },
-          openDay: { navigateToDay($0) }
+          openDay: { navigateToDay($0) },
+          createEvent: { createEvent(on: $0) }
         )
       }
     }
@@ -241,6 +244,17 @@ struct CalendarWorkspaceView: View {
 
   private func jumpToCurrent() {
     anchorDate = logicalTodayAnchor
+  }
+
+  /// Opens the create-event sheet for a month-grid day: an event today starts at
+  /// the next full hour, like the toolbar's, and one on another day at 9 AM.
+  private func createEvent(on day: Date) {
+    if calendar.isDate(day, inSameDayAs: logicalTodayAnchor) {
+      eventActions.beginCreating(store: store)
+    } else {
+      prepareCreateDraft(date: day, minutes: 9 * 60)
+      eventActions.activeSheet = .create
+    }
   }
 
   /// Opens a month-grid cell's day in Day mode.

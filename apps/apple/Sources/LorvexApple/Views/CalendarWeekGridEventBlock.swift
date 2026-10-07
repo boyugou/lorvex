@@ -168,40 +168,10 @@ extension CalendarWeekGridView {
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
     .accessibilityLabel(label)
-    .contextMenu { eventBlockContextMenu(block.event) }
-  }
-
-  /// Right-click actions for an event block. Editable (Lorvex-owned) events get
-  /// Edit + Delete; imported events only get "Open Details" since they can't be
-  /// mutated here.
-  @ViewBuilder
-  func eventBlockContextMenu(_ event: CalendarTimelineEvent) -> some View {
-    Button {
-      selectEvent(event)
-    } label: {
-      Label(
-        String(
-          localized: "calendar.event.open_details", defaultValue: "Open Details",
-          table: "Localizable", bundle: LorvexL10n.bundle),
-        systemImage: "sidebar.right")
-    }
-    if event.editable {
-      Button {
-        editEvent(event)
-      } label: {
-        Label(
-          String(
-            localized: "common.edit", defaultValue: "Edit", table: "Localizable",
-            bundle: LorvexL10n.bundle), systemImage: "pencil")
-      }
-      Button(role: .destructive) {
-        requestDeleteEvent(event)
-      } label: {
-        Label(
-          String(
-            localized: "common.delete", defaultValue: "Delete", table: "Localizable",
-            bundle: LorvexL10n.bundle), systemImage: "trash")
-      }
+    .contextMenu {
+      CalendarEventContextMenu(
+        event: block.event, select: selectEvent, edit: editEvent,
+        requestDelete: requestDeleteEvent)
     }
   }
 

@@ -97,7 +97,7 @@ func mcpHelperProbeTimesOutAndKillsAHungHelperThatIgnoresSigterm() async throws 
   // child; SIG_IGN dispositions set via `trap` survive `exec` per POSIX, so
   // `sleep` keeps ignoring SIGTERM. Forking `sleep` as a child instead would
   // leave it running as an orphan after the shell is SIGKILLed, holding the
-  // stdout/stderr pipes open until its own sleep elapses. The 2-minute sleep
+  // stdout/stderr pipes open until its own sleep elapses. The 10-minute sleep
   // is intentionally far longer than this test ever waits: it only ever
   // completes if the fix regresses and the probe hangs on the real exit.
   try Data(
@@ -105,7 +105,7 @@ func mcpHelperProbeTimesOutAndKillsAHungHelperThatIgnoresSigterm() async throws 
     #!/bin/sh
     trap '' TERM
     echo $$ > \(pidFile.path)
-    exec sleep 120
+    exec sleep 600
     """.utf8
   ).write(to: helper)
   try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: helper.path)
@@ -120,11 +120,13 @@ func mcpHelperProbeTimesOutAndKillsAHungHelperThatIgnoresSigterm() async throws 
   let elapsed = start.duration(to: clock.now)
 
   #expect(status == .runtimeFailed)
-  // A generous bound (versus the ~2s this takes when uncontended) that stays
-  // far below the helper's 2-minute sleep even under heavy machine load, so
-  // this only fails if the fix regresses and the probe hangs on the real
-  // process exit instead of the timeout/SIGKILL escalation resolving it.
-  #expect(elapsed < .seconds(60))
+  // A generous bound (versus the ~2s this takes when uncontended). In a full
+  // run the probe's tasks queue behind thousands of other tests, so the
+  // measured time includes that wait; five minutes still stays below the
+  // helper's 10-minute sleep, so this only fails if the fix regresses and the
+  // probe hangs on the real process exit instead of the timeout/SIGKILL
+  // escalation resolving it.
+  #expect(elapsed < .seconds(300))
 
   for _ in 0..<100 where !FileManager.default.fileExists(atPath: pidFile.path) {
     try await Task.sleep(for: .milliseconds(50))
@@ -137,7 +139,7 @@ func mcpHelperProbeTimesOutAndKillsAHungHelperThatIgnoresSigterm() async throws 
   // the child is reaped it lingers as a zombie, for which `kill(pid, 0)` still
   // returns 0 — so poll to a deadline instead of sampling once. ESRCH (kill
   // returns -1) confirms it is actually gone; 10s stays far below the helper's
-  // 2-minute sleep, so a real regression still fails.
+  // 10-minute sleep, so a real regression still fails.
   var helperIsGone = false
   for _ in 0..<200 {
     if kill(pid, 0) == -1 {

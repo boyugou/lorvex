@@ -38,11 +38,16 @@ private enum CalendarMonthGridDayCellMetrics {
 /// with ``TaskPlanTime/unchanged``, so a timed task keeps its time), and the
 /// cell tints while a task is over it.
 struct CalendarMonthGridDayCell: View {
+  let store: AppStore
   let day: CalendarMonthGridDay
   let isToday: Bool
   let maxVisibleChips: Int
   let eventColor: (CalendarTimelineEvent) -> Color
   let onSelectEvent: (CalendarTimelineEvent) -> Void
+  let onEditEvent: (CalendarTimelineEvent) -> Void
+  let onDeleteEvent: (CalendarTimelineEvent) -> Void
+  /// Opens the create-event sheet for this day.
+  let onCreateEvent: () -> Void
   let onOpenTask: (LorvexTask) -> Void
   /// Called with the ids of the tasks dropped on this day.
   let onDropTasks: ([LorvexTask.ID]) -> Void
@@ -96,6 +101,10 @@ struct CalendarMonthGridDayCell: View {
     .accessibilityLabel(dayAccessibilityLabel)
     .accessibilityAddTraits(.isButton)
     .accessibilityAction(.default, onOpenDay)
+    .accessibilityAction(named: Text(Self.createEventTitle), onCreateEvent)
+    .contextMenu {
+      Button(Self.createEventTitle, systemImage: "plus", action: onCreateEvent)
+    }
     .accessibilityIdentifier("calendar.month.day.\(day.dayKey)")
     .overlay {
       if isDropTargeted {
@@ -148,12 +157,17 @@ struct CalendarMonthGridDayCell: View {
       .calendarPointingHandCursor()
       .opacity(day.isCurrentMonth ? 1 : 0.55)
       .accessibilityLabel(calendarPillAccessibilityLabel(event))
+      .contextMenu {
+        CalendarEventContextMenu(
+          event: event, select: onSelectEvent, edit: onEditEvent, requestDelete: onDeleteEvent)
+      }
     case .task(let task):
       taskChip(
         title: task.title, time: nil, isDone: task.status == .completed,
         isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
       )
       .openingAndDraggable(task, open: onOpenTask)
+      .contextMenu { WorkspaceTaskContextMenu(store: store, task: task) }
       .opacity(day.isCurrentMonth ? 1 : 0.55)
     case .timedTask(let task, let time):
       taskChip(
@@ -161,6 +175,7 @@ struct CalendarMonthGridDayCell: View {
         isDone: task.status == .completed, isOverdue: false
       )
       .openingAndDraggable(task, open: onOpenTask)
+      .contextMenu { WorkspaceTaskContextMenu(store: store, task: task) }
       .opacity(day.isCurrentMonth ? 1 : 0.55)
       .accessibilityLabel(
         calendarTimedTaskAccessibilityLabel(
@@ -295,6 +310,12 @@ struct CalendarMonthGridDayCell: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+  }
+
+  private static var createEventTitle: String {
+    String(
+      localized: "calendar.create_event", defaultValue: "Create Event", table: "Localizable",
+      bundle: LorvexL10n.bundle)
   }
 
   private var dayAccessibilityLabel: String {

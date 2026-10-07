@@ -2785,7 +2785,10 @@ the all-day row to plan it for that day without a time. Right-click a task for
 be undone with ⌘Z (**Plan Task**), and a finished task stays where it is.
 
 Month view takes the same drops: drag a task chip onto another day and the task
-moves there, keeping its time if it has one. The side-panel button in the toolbar
+moves there, keeping its time if it has one. Right-click a day for **Create
+Event** on that day (at 9 AM, or at the next full hour for today), and
+right-click a chip for its menu: **Open Details**, **Edit**, and **Delete** for
+an event you own, and the same menu as in every task list for a task. The side-panel button in the toolbar
 (**Unplanned Tasks**) opens a column beside the calendar that lists the open
 tasks with no planned day, most important first, and ends with how many more
 there are. Drag one onto a time in a day, onto a day's all-day row, or onto a

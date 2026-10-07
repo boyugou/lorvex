@@ -92,6 +92,9 @@ enum TaskCommand: CaseIterable {
     }
   }
 
+  /// Runs the command on the context's selection. A completion or non-recurring
+  /// cancel registers its ⌘Z with the key window's undo manager, the one the
+  /// Edit menu's Undo item acts on.
   @MainActor
   func perform(
     in context: LorvexTaskCommandContext,
@@ -102,7 +105,8 @@ enum TaskCommand: CaseIterable {
         action,
         selectionSurface: context.selectionSurface,
         fallbackTaskID: context.fallbackTaskID,
-        openTaskDetail: openTaskDetail
+        openTaskDetail: openTaskDetail,
+        undoManager: NSApp?.keyWindow?.undoManager
       )
   }
 }

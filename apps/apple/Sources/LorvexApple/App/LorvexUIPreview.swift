@@ -174,19 +174,7 @@
             store.searchText = ""
           }
           if selection == .calendar {
-            // The workspace reads its persisted presentation from the preview
-            // defaults when it is created, so each grid is shown by setting
-            // the key and re-creating the workspace; the week, its default,
-            // is restored afterwards.
-            for mode in [CalendarPresentationMode.day, .month] {
-              store.selection = .today
-              previewDefaults.set(mode.rawValue, forKey: "calendar.workspace.mode")
-              try? await Task.sleep(for: .seconds(0.5))
-              store.selection = .calendar
-              try? await Task.sleep(for: .seconds(2.5))
-              await emitStop("calendar-\(mode.rawValue)")
-            }
-            previewDefaults.set(CalendarPresentationMode.week.rawValue, forKey: "calendar.workspace.mode")
+            await emitCalendarStops(store: store)
           }
           if selection == .habits {
             // The seeded habits' inspectors: the first is done today, the
@@ -731,7 +719,7 @@
     /// Announce a settled workspace, then keep it on screen until the capture
     /// driver says it is done shooting — or until ``captureAckTimeout`` passes
     /// when no driver is listening.
-    private static func emitStop(_ name: String) async {
+    static func emitStop(_ name: String) async {
       emit("LORVEX_UI_PREVIEW_STOP=\(name)")
       guard let directory = captureAckDirectory else {
         try? await Task.sleep(for: .seconds(0.5))

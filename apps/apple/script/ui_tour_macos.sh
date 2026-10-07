@@ -36,7 +36,8 @@
 # tasks-inspector, tasks-inspector-waiting (a task that waits on an unfinished
 # one, so its Start is unavailable), tasks-list (Tasks scoped to the first list
 # that is not the Inbox), tasks-search (Tasks searched for a word the notes
-# hold, where the rows quote the notes), lists, calendar, calendar-day, calendar-month, habits,
+# hold, where the rows quote the notes), lists, calendar, calendar-day,
+# calendar-month, calendar-rail (the week with the Unplanned Tasks rail open), habits,
 # habits-inspector and habits-inspector-open (a habit done today and one
 # still open), reviews, reviews-weekly, memory, settings-<category> for
 # each Settings category (general, permissions, calendar, cloudSync, mcpHost,

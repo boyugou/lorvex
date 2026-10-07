@@ -79,9 +79,11 @@ struct LorvexAppCommands: Commands {
     }
 
     // Give the sidebar the standard macOS toggle affordances — a View-menu item
-    // and ⌃⌘S — instead of only the bare toolbar button.
+    // and ⌃⌘S — instead of only the bare toolbar button. The Calendar's own
+    // view commands follow it while a window shows the Calendar.
     CommandGroup(replacing: .sidebar) {
       SidebarVisibilityCommandButton()
+      CalendarViewCommands()
     }
 
     // Find in the Edit menu, where macOS users look for it. The app adds no
@@ -151,6 +153,23 @@ struct LorvexAppCommands: Commands {
       ForEach(TaskCommand.allCases, id: \.self) { command in
         taskCommandButton(command)
       }
+
+      Divider()
+
+      // The key window's undo manager is the one the Edit menu's Undo item acts on.
+      Menu(AppStore.planTaskTitle) {
+        ForEach(TaskPlanDayChoice.allCases) { choice in
+          Button(choice.title) {
+            guard let taskCommandContext else { return }
+            let undoManager = NSApp.keyWindow?.undoManager
+            Task {
+              await taskCommandContext.planSelection(
+                daysFromToday: choice.daysFromToday, undoManager: undoManager)
+            }
+          }
+        }
+      }
+      .disabled(!(taskCommandContext?.canPlanSelection ?? false))
     }
   }
 

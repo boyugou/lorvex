@@ -33,6 +33,38 @@ enum CalendarPresentationMode: String, Hashable, CaseIterable {
       }
     return moved ?? anchor
   }
+
+  /// The accessibility label of the Day/Week/Month choice as a whole.
+  static var pickerLabel: String {
+    String(
+      localized: "calendar.nav.view_mode.a11y", defaultValue: "Calendar view mode",
+      table: "Localizable", bundle: LorvexL10n.bundle)
+  }
+
+  /// The mode's name in the Day/Week/Month toggle and the View menu.
+  var title: String {
+    switch self {
+    case .day:
+      String(localized: "calendar.mode.day", defaultValue: "Day", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      String(localized: "calendar.mode.week", defaultValue: "Week", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .month:
+      String(localized: "calendar.mode.month", defaultValue: "Month", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
+
+  /// The jump back to the period that holds today: "Today", "This Week" or
+  /// "This Month".
+  var currentPeriodTitle: String {
+    switch self {
+    case .day:
+      String(localized: "calendar.nav.today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .week:
+      String(localized: "calendar.nav.this_week", defaultValue: "This Week", table: "Localizable", bundle: LorvexL10n.bundle)
+    case .month:
+      String(localized: "calendar.nav.this_month", defaultValue: "This Month", table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+  }
 }
 
 /// The period a calendar mode shows around an anchor day, named by the mode

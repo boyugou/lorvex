@@ -247,6 +247,25 @@ struct WorkspaceTaskContextMenu: View {
       .disabled(task.status != .open)
     }
 
+    // The day choices of dragging the row onto the calendar, for a pointer or a
+    // keyboard that cannot drag. The task keeps its time of day.
+    Menu {
+      ForEach(TaskPlanDayChoice.allCases) { choice in
+        Button {
+          Task {
+            await store.planTasks(
+              ids: [task.id], daysFromToday: choice.daysFromToday, undoManager: undoManager)
+          }
+        } label: {
+          Label(choice.title, systemImage: choice.systemImage)
+        }
+      }
+    } label: {
+      Label(AppStore.planTaskTitle, systemImage: "calendar.badge.plus")
+    }
+    .disabled(!task.status.isActionable)
+    .accessibilityIdentifier("task.plan.\(task.id)")
+
     // Every list but the one the task is in. Makes the same move as dragging the
     // row onto a list in the sidebar, for a pointer that cannot drag.
     let moveTargets = store.orderedLists.filter {

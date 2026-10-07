@@ -271,3 +271,56 @@ func theSelectedTasksDetailAdoptsANewPlan() async throws {
   #expect(store.taskDetailPlannedTime == 16 * 60..<16 * 60 + 30)
   #expect(store.taskDetailHasPlannedDate)
 }
+
+/// The stored day `days` after the product's logical today.
+@MainActor
+private func logicalDay(_ days: Int, in store: AppStore) throws -> String {
+  try #require(LorvexDateFormatters.ymdUTCAddingDays(store.logicalTodayDateString, days: days))
+}
+
+@MainActor
+@Test
+func planningFromTheMenuCountsFromTheLogicalTodayAndKeepsTheTime() async throws {
+  let (store, core, id) = try await makeStore(estimate: 60)
+  await store.planTasks(ids: [id], on: try tomorrow(), time: .start(14 * 60))
+
+  await store.planTasks(ids: [id], daysFromToday: 3)
+
+  let task = try await core.loadTask(id: id)
+  #expect(day(of: task) == (try logicalDay(3, in: store)))
+  #expect(task.plannedTime == 14 * 60..<15 * 60)
+}
+
+@MainActor
+@Test
+func planningFromTheMenuForTodayUsesTheLogicalToday() async throws {
+  let (store, core, id) = try await makeStore()
+  await store.planTasks(ids: [id], on: try tomorrow(), time: .dayOnly)
+
+  await store.planTasks(ids: [id], daysFromToday: 0)
+
+  let task = try await core.loadTask(id: id)
+  #expect(day(of: task) == store.logicalTodayDateString)
+  #expect(task.plannedTime == nil)
+}
+
+@MainActor
+@Test
+func aMenuPlanIsUndoneAndNamedLikeADraggedOne() async throws {
+  let (store, core, id) = try await makeStore()
+  let before = try await core.loadTask(id: id)
+  let undoManager = UndoManager()
+  undoManager.groupsByEvent = false
+
+  undoManager.beginUndoGrouping()
+  await store.planTasks(ids: [id], daysFromToday: 1, undoManager: undoManager)
+  undoManager.endUndoGrouping()
+
+  #expect(day(of: try await core.loadTask(id: id)) == (try logicalDay(1, in: store)))
+  #expect(undoManager.undoActionName == AppStore.planTaskTitle)
+  undoManager.undo()
+  #expect(
+    try await waitUntil {
+      try await core.loadTask(id: id).plannedDate == before.plannedDate
+    })
+}

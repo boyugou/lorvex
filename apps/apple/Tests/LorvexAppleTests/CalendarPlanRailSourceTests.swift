@@ -24,6 +24,9 @@ func calendarWorkspaceHostsThePlanRail() throws {
   #expect(workspace.contains(".onDisappear { store.hideCalendarUnplannedTasks() }"))
   #expect(toolbar.contains("Toggle(isOn: $showsPlanRail)"))
   #expect(toolbar.contains("calendar.planRail.toggle"))
+  // A trailing-panel glyph, not a tray: a tray in a calendar toolbar reads as an
+  // invitations inbox.
+  #expect(toolbar.contains("systemImage: \"sidebar.trailing\""))
 }
 
 @Test("The rail's rows are the shared task row with its menu, and every task change reloads it")
@@ -54,4 +57,16 @@ func monthGridCellsDragAndAcceptTasks() throws {
   // A task dropped on a month cell keeps its time of day: the cell cannot say
   // which time on the day it meant.
   #expect(month.contains("time: .unchanged"))
+}
+
+@Test("The shared task menu offers Plan Task with day choices, for pointers that cannot drag")
+func taskContextMenuOffersPlanTaskDayChoices() throws {
+  let menu = try source("Sources/LorvexApple/Views/WorkspaceTaskViews.swift")
+
+  #expect(menu.contains("Label(AppStore.planTaskTitle, systemImage: \"calendar.badge.plus\")"))
+  #expect(menu.contains("ForEach(TaskPlanDayChoice.allCases)"))
+  #expect(menu.contains("ids: [task.id], daysFromToday: choice.daysFromToday, undoManager: undoManager"))
+  // A finished or cancelled task cannot be planned.
+  let plan = try #require(menu.range(of: "AppStore.planTaskTitle"))
+  #expect(menu[plan.upperBound...].prefix(160).contains(".disabled(!task.status.isActionable)"))
 }

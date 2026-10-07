@@ -50,10 +50,30 @@ extension AppStore {
   func planTasks(
     ids: [LorvexTask.ID], on day: Date, time: TaskPlanTime, undoManager: UndoManager? = nil
   ) async {
+    await planTasks(
+      ids: ids, onStorageDate: PlannedDayBridge.storageDate(forLocalInstant: day), time: time,
+      undoManager: undoManager)
+  }
+
+  /// Plans `ids` on the product day `days` after today (0 is today), each task
+  /// keeping its own time of day. This is the menu form of dropping a task on a
+  /// month cell, for a pointer or a keyboard that cannot drag: the day counts
+  /// from the product's logical today, so it follows the configured day start
+  /// and time zone. It registers the same undo as a drag.
+  func planTasks(ids: [LorvexTask.ID], daysFromToday days: Int, undoManager: UndoManager? = nil) async {
+    guard let plannedDate = try? storageDate(daysFromLogicalToday: days) else { return }
+    await planTasks(ids: ids, onStorageDate: plannedDate, time: .unchanged, undoManager: undoManager)
+  }
+
+  /// The shared body of every placement: `plannedDate` is already a storage-frame
+  /// day (midnight UTC of the calendar day).
+  private func planTasks(
+    ids: [LorvexTask.ID], onStorageDate plannedDate: Date, time: TaskPlanTime,
+    undoManager: UndoManager?
+  ) async {
     var seen = Set<LorvexTask.ID>()
     let ids = ids.filter { seen.insert($0).inserted }
     guard !ids.isEmpty else { return }
-    let plannedDate = PlannedDayBridge.storageDate(forLocalInstant: day)
     await perform {
       var before: [TaskPlanSnapshot] = []
       var after: [TaskPlanSnapshot] = []

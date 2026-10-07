@@ -1,3 +1,4 @@
+import Foundation
 import LorvexCore
 
 extension AppStore {
@@ -28,8 +29,10 @@ extension AppStore {
     }
   }
 
-  func completeTaskSelection(on surface: AppStoreBatchCancelSurface) async {
-    await completeBatch(on: surface)
+  func completeTaskSelection(
+    on surface: AppStoreBatchCancelSurface, undoManager: UndoManager? = nil
+  ) async {
+    await completeBatch(on: surface, undoManager: undoManager)
   }
 
   func deferTaskSelection(on surface: AppStoreBatchCancelSurface) async {

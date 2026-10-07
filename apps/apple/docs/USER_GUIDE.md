@@ -2785,12 +2785,22 @@ the all-day row to plan it for that day without a time. Right-click a task for
 be undone with ⌘Z (**Plan Task**), and a finished task stays where it is.
 
 Month view takes the same drops: drag a task chip onto another day and the task
-moves there, keeping its time if it has one. The tray button in the toolbar
+moves there, keeping its time if it has one. The side-panel button in the toolbar
 (**Unplanned Tasks**) opens a column beside the calendar that lists the open
 tasks with no planned day, most important first, and ends with how many more
 there are. Drag one onto a time in a day, onto a day's all-day row, or onto a
 month cell, and it leaves the column. The column stays as you left it the next
-time you open the Calendar.
+time you open the Calendar. To plan a task without dragging, right-click it in
+any task list, the column included, and choose **Plan Task**, then Today,
+Tomorrow, In 3 days, or Next Week. The **Task** menu in the menu bar has the same
+submenu for every selected task. A task keeps its time of day, and ⌘Z undoes
+the change.
+
+While the Calendar is open, the **View** menu carries its controls too. **Today**
+(⌘T; **This Week** or **This Month** in those views) goes back to the current
+period, **Day**, **Week**, and **Month** switch the view, and **Show Unplanned
+Tasks** or **Hide Unplanned Tasks** (⌥⌘U) opens or closes the column. These
+items appear only while a window shows the Calendar.
 
 An event that lasts 24 hours or more appears in the all-day row of each day it
 covers. A shorter event that runs past midnight appears on both days: the
@@ -3192,6 +3202,8 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 | ⌥⌘1–⌥⌘5 | Open Today, Calendar, All Tasks, Review, or Habits in its own window |
 | ⌘← / ⌘→ | Previous / next day, week, or month in Calendar, and day or week in Review (the keys swap in right-to-left languages) |
 | ⌃⌘S | Show or hide the sidebar |
+| ⌘T | Calendar: go back to today (or this week, or this month) |
+| ⌥⌘U | Calendar: show or hide the Unplanned Tasks column |
 | ⌘R | Refresh data |
 | ⌘, | Settings |
 
@@ -3219,6 +3231,11 @@ These act on the selected task.
 | ⌘⇧Return | Complete task |
 | ⌘⇧O | Reopen task |
 | ⌘⌫ | Cancel task (while you type in a text field or editor, it deletes to the start of the line instead) |
+
+Complete and Cancel (for a task that does not repeat) can be undone with ⌘Z,
+**Edit → Undo Complete Task** or **Undo Cancel Task**, however you started them:
+from the task's circle, from these shortcuts or the **Task** menu, or from a
+selection menu. Completing several selected tasks at once is one step to undo.
 
 ### Quick-Add Field (macOS)
 

@@ -122,3 +122,20 @@ func theRailListsTheFirstTasksAndCountsTheRest() async throws {
   #expect(store.calendarUnplannedTasks?.count == AppStore.calendarUnplannedLimit)
   #expect(store.calendarUnplannedTotal >= AppStore.calendarUnplannedLimit + 5)
 }
+
+@MainActor
+@Test
+func aStartedTaskWithNoPlannedDayIsListedToo() async throws {
+  let (store, core) = try await makeStore()
+  let started = try await core.createTask(title: "Already started", notes: "")
+  _ = try await core.startTask(id: started.id)
+  let waiting = try await core.createTask(title: "Wait a week", notes: "")
+  let nextWeek = try #require(Calendar.current.date(byAdding: .day, value: 7, to: Date()))
+  _ = try await core.batchDeferTasks(ids: [waiting.id], until: nextWeek)
+
+  await store.showCalendarUnplannedTasks()
+
+  let ids = Set((store.calendarUnplannedTasks ?? []).map(\.id))
+  #expect(ids.contains(started.id))
+  #expect(!ids.contains(waiting.id))
+}

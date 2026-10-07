@@ -111,7 +111,7 @@ struct TasksSelectionActionMenu: View {
           $0.status.isResolved
         },
         canMoveSelectionToSomeday: store.taskWorkspaceSelectedTasks.contains { $0.status == .open },
-        complete: { Task { await store.completeTaskWorkspaceSelection() } },
+        complete: { Task { await store.completeTaskWorkspaceSelection(undoManager: undoManager) } },
         deferToTomorrow: { Task { await store.deferTaskWorkspaceSelection() } },
         cancel: { Task { await store.cancelTaskWorkspaceSelection() } },
         reopen: { Task { await store.reopenTaskWorkspaceSelection() } },

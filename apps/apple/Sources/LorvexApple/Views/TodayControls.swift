@@ -62,7 +62,7 @@ struct TodaySelectionActionMenu: View {
           $0.status.isResolved
         },
         canMoveSelectionToSomeday: store.todaySelectedTasks.contains { $0.status == .open },
-        complete: { Task { await store.completeTodaySelection() } },
+        complete: { Task { await store.completeTodaySelection(undoManager: undoManager) } },
         deferToTomorrow: { Task { await store.deferTodaySelection() } },
         cancel: { Task { await store.cancelTodaySelection() } },
         reopen: { Task { await store.reopenTodaySelection() } },

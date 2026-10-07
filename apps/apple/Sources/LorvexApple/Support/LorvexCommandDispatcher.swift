@@ -25,11 +25,15 @@ struct LorvexCommandDispatcher {
     }
   }
 
+  /// Runs a task command on the selection. With an `undoManager`, completing
+  /// and cancelling a non-recurring task register ⌘Z reopens, as the row
+  /// controls do; the menu-bar panel has no window and passes none.
   func perform(
     _ action: TaskCommandAction,
     selectionSurface: AppStoreBatchCancelSurface? = nil,
     fallbackTaskID: LorvexTask.ID? = nil,
-    openTaskDetail: ((LorvexTask.ID) -> Void)? = nil
+    openTaskDetail: ((LorvexTask.ID) -> Void)? = nil,
+    undoManager: UndoManager? = nil
   ) {
     let selectedTasks = taskCommandSelection(
       on: selectionSurface,
@@ -61,10 +65,10 @@ struct LorvexCommandDispatcher {
       }
     case .completeSelectedTask:
       if let selectionSurface, selectedTasks.count > 1 {
-        Task { await store.completeTaskSelection(on: selectionSurface) }
+        Task { await store.completeTaskSelection(on: selectionSurface, undoManager: undoManager) }
       } else if let task = singleTask(in: selectedTasks) {
         activate(task, on: selectionSurface)
-        Task { await store.completeSelectedTask() }
+        Task { await store.completeSelectedTask(undoManager: undoManager) }
       }
     case .reopenSelectedTask:
       if let selectionSurface, selectedTasks.count > 1 {
@@ -82,7 +86,7 @@ struct LorvexCommandDispatcher {
         Task { await store.cancelTaskSelection(on: selectionSurface) }
       } else if let task = singleTask(in: selectedTasks) {
         activate(task, on: selectionSurface)
-        store.requestCancel(task)
+        store.requestCancel(task, undoManager: undoManager)
       }
     }
   }

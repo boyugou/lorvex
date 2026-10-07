@@ -4,7 +4,9 @@ import LorvexCore
 /// Tasks-workspace entry points for the shared batch operations
 /// (``AppStore/completeBatch(on:)`` & co. in `AppStoreBatchTaskActions`).
 extension AppStore {
-  func completeTaskWorkspaceSelection() async { await completeBatch(on: .taskWorkspace) }
+  func completeTaskWorkspaceSelection(undoManager: UndoManager? = nil) async {
+    await completeBatch(on: .taskWorkspace, undoManager: undoManager)
+  }
 
   func deferTaskWorkspaceSelection() async { await deferBatch(on: .taskWorkspace) }
 

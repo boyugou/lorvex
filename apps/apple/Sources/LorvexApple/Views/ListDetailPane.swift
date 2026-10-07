@@ -154,7 +154,7 @@ private struct ListDetailSelectionActionMenu: View {
           $0.status.isResolved
         },
         canMoveSelectionToSomeday: store.selectedListTasksForBatch.contains { $0.status == .open },
-        complete: { Task { await store.completeSelectedListTaskSelection() } },
+        complete: { Task { await store.completeSelectedListTaskSelection(undoManager: undoManager) } },
         deferToTomorrow: { Task { await store.deferSelectedListTaskSelection() } },
         cancel: { Task { await store.cancelSelectedListTaskSelection() } },
         reopen: { Task { await store.reopenSelectedListTaskSelection() } },

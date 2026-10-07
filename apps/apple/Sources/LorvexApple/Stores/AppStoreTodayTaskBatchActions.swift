@@ -6,7 +6,9 @@ import LorvexCore
 /// `.today` surface additionally prunes its selection to the rows still shown
 /// after each batch.
 extension AppStore {
-  func completeTodaySelection() async { await completeBatch(on: .today) }
+  func completeTodaySelection(undoManager: UndoManager? = nil) async {
+    await completeBatch(on: .today, undoManager: undoManager)
+  }
 
   func deferTodaySelection() async { await deferBatch(on: .today) }
 

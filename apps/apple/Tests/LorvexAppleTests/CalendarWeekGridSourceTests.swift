@@ -194,9 +194,11 @@ func calendarWorkspaceOffersDayWeekAndMonthModes() throws {
   #expect(grid.contains("dayCount: visibleDayCount"))
   #expect(workspace.contains("visibleDayCount: 1"))
   #expect(workspace.contains(".onChange(of: visiblePeriod)"))
-  #expect(nav.contains(#""calendar.mode.day""#))
-  #expect(nav.contains(#""calendar.mode.week""#))
-  #expect(nav.contains(#""calendar.mode.month""#))
+  #expect(model.contains(#""calendar.mode.day""#))
+  #expect(model.contains(#""calendar.mode.week""#))
+  #expect(model.contains(#""calendar.mode.month""#))
+  #expect(nav.contains("ForEach(CalendarPresentationMode.allCases"))
+  #expect(!model.contains(#""calendar.mode.list""#))
   #expect(!nav.contains(#""calendar.mode.list""#))
 }
 

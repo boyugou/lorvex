@@ -70,7 +70,7 @@ struct CalendarWorkspaceToolbar: ToolbarContent {
       .lorvexStepShortcut(.forward)
 
       if !isViewingCurrent {
-        Button(currentLabel, action: jumpToCurrent)
+        Button(mode.currentPeriodTitle, action: jumpToCurrent)
           .accessibilityIdentifier("calendar.nav.today")
       }
     }
@@ -81,7 +81,7 @@ struct CalendarWorkspaceToolbar: ToolbarContent {
 
     ToolbarItem(placement: .primaryAction) {
       Toggle(isOn: $showsPlanRail) {
-        Label(CalendarPlanRailCopy.title, systemImage: "tray.full")
+        Label(CalendarPlanRailCopy.title, systemImage: "sidebar.trailing")
       }
       .toggleStyle(.button)
       .help(CalendarPlanRailCopy.title)
@@ -131,16 +131,6 @@ struct CalendarWorkspaceToolbar: ToolbarContent {
     }
   }
 
-  private var currentLabel: String {
-    switch mode {
-    case .day:
-      String(localized: "calendar.nav.today", defaultValue: "Today", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .week:
-      String(localized: "calendar.nav.this_week", defaultValue: "This Week", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .month:
-      String(localized: "calendar.nav.this_month", defaultValue: "This Month", table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-  }
 }
 
 /// Day/Week/Month view-mode toggle.
@@ -149,17 +139,11 @@ private struct CalendarModePicker: View {
 
   var body: some View {
     Picker(selection: $mode) {
-      Text(String(localized: "calendar.mode.day", defaultValue: "Day", table: "Localizable", bundle: LorvexL10n.bundle))
-        .tag(CalendarPresentationMode.day)
-      Text(String(localized: "calendar.mode.week", defaultValue: "Week", table: "Localizable", bundle: LorvexL10n.bundle))
-        .tag(CalendarPresentationMode.week)
-      Text(String(localized: "calendar.mode.month", defaultValue: "Month", table: "Localizable", bundle: LorvexL10n.bundle))
-        .tag(CalendarPresentationMode.month)
+      ForEach(CalendarPresentationMode.allCases, id: \.self) { option in
+        Text(option.title)
+      }
     } label: {
-      Text(String(
-        localized: "calendar.nav.view_mode.a11y", defaultValue: "Calendar view mode",
-        table: "Localizable",
-        bundle: LorvexL10n.bundle))
+      Text(CalendarPresentationMode.pickerLabel)
     }
     .pickerStyle(.segmented)
     .labelsHidden()

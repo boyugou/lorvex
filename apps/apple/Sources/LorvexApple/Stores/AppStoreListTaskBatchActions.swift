@@ -5,7 +5,9 @@ import LorvexCore
 /// (``AppStore/completeBatch(on:)`` & co. in `AppStoreBatchTaskActions`). The
 /// `.selectedList` surface reloads the open list's detail pane after each batch.
 extension AppStore {
-  func completeSelectedListTaskSelection() async { await completeBatch(on: .selectedList) }
+  func completeSelectedListTaskSelection(undoManager: UndoManager? = nil) async {
+    await completeBatch(on: .selectedList, undoManager: undoManager)
+  }
 
   func deferSelectedListTaskSelection() async { await deferBatch(on: .selectedList) }
 

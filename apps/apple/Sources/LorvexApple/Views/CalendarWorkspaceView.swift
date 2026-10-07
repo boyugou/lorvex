@@ -72,6 +72,11 @@ struct CalendarWorkspaceView: View {
     }
     .onDisappear { store.hideCalendarUnplannedTasks() }
     .calendarEventActions(eventActions, store: store)
+    .focusedSceneValue(
+      \.lorvexCalendarCommandContext,
+      LorvexCalendarCommandContext(
+        mode: $mode, showsPlanRail: $showsPlanRail, isViewingCurrent: isViewingCurrent,
+        jumpToCurrent: jumpToCurrent))
   }
 
   private var calendarColumn: some View {

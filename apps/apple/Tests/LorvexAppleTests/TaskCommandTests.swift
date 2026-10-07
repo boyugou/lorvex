@@ -141,3 +141,58 @@ func mainInspectorTaskRemainsCommandTargetWithoutSurfaceSelection() async throws
   #expect(openedTaskID == task.id)
   #expect(store.taskWorkspaceSelectedTaskIDs == [task.id])
 }
+
+@Test
+func taskPlanDayChoicesCountFromTheLogicalToday() {
+  #expect(TaskPlanDayChoice.allCases.map(\.daysFromToday) == [0, 1, 3, 7])
+  #expect(TaskPlanDayChoice.allCases.map(\.title) == ["Today", "Tomorrow", "In 3 days", "Next Week"])
+}
+
+@MainActor
+@Test
+func planTaskIsDisabledWithoutASelection() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  let context = LorvexTaskCommandContext(store: store, selectionSurface: nil)
+
+  #expect(!context.canPlanSelection)
+}
+
+@MainActor
+@Test
+func planningTheSelectionPlansEverySelectedOpenTask() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  let ids = store.today.tasks.filter { $0.status.isActive }.prefix(2).map(\.id)
+  #expect(ids.count == 2)
+  store.setTodaySelection(Set(ids))
+  store.selection = .tasks
+  let context = LorvexTaskCommandContext(store: store, selectionSurface: .today)
+  #expect(context.canPlanSelection)
+
+  await context.planSelection(daysFromToday: 1, undoManager: nil)
+
+  let expected = try #require(
+    LorvexDateFormatters.ymdUTCAddingDays(store.logicalTodayDateString, days: 1))
+  for id in ids {
+    let task = try await core.loadTask(id: id)
+    #expect(task.plannedDate.map(LorvexDateFormatters.ymdUTC.string(from:)) == expected)
+  }
+}
+
+@Test
+func theTaskMenuOffersPlanTaskForTheSelection() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  let commands = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/App/LorvexAppCommands.swift"),
+    encoding: .utf8)
+  let plan = try #require(commands.range(of: "Menu(AppStore.planTaskTitle)"))
+  let body = commands[plan.upperBound...].prefix(600)
+  #expect(body.contains("ForEach(TaskPlanDayChoice.allCases)"))
+  #expect(body.contains("taskCommandContext.planSelection("))
+  #expect(body.contains("NSApp.keyWindow?.undoManager"))
+  #expect(body.contains(".disabled(!(taskCommandContext?.canPlanSelection ?? false))"))
+}

@@ -195,14 +195,34 @@ extension AppStore {
     }
   }
 
+  /// Reopens every task in `ids` in one core call, the inverse of a batch
+  /// completion. A task that is no longer finished is skipped by the core.
+  func reopenTasksForUndo(_ ids: [LorvexTask.ID]) async {
+    await perform {
+      today = try await core.batchReopenTasks(ids: ids).snapshot
+      try await afterSelectedTaskMutation()
+      syncSelectedTaskDraft()
+    }
+  }
+
   /// Registers a reopen of `id` as the undo for a complete/cancel, so an
   /// accidental complete or non-recurring cancel is recoverable with ⌘Z.
-  /// No-op without an `undoManager` (e.g. menu/keyboard-triggered actions, which
-  /// are deliberate keystrokes rather than mis-clicks).
+  /// No-op without an `undoManager`, which the menu-bar panel and the
+  /// background paths do not have.
   func registerReopenUndo(id: LorvexTask.ID, undoManager: UndoManager?, actionName: String) {
     guard let undoManager else { return }
     undoManager.registerUndo(withTarget: self) { store in
       Task { @MainActor in await store.reopenTaskForUndo(id) }
+    }
+    undoManager.setActionName(actionName)
+  }
+
+  /// Registers one undo that reopens all of `ids`, for a batch completion. No-op
+  /// without an `undoManager`.
+  func registerReopenUndo(ids: [LorvexTask.ID], undoManager: UndoManager?, actionName: String) {
+    guard let undoManager, !ids.isEmpty else { return }
+    undoManager.registerUndo(withTarget: self) { store in
+      Task { @MainActor in await store.reopenTasksForUndo(ids) }
     }
     undoManager.setActionName(actionName)
   }

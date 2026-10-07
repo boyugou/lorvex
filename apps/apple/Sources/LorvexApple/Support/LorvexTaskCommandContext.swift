@@ -39,6 +39,22 @@ struct LorvexTaskCommandContext {
   var singleTaskIsStarted: Bool {
     singleTask?.status == .inProgress
   }
+
+  /// True while the selection holds a task that can still be planned: one that is
+  /// neither finished nor cancelled.
+  @MainActor
+  var canPlanSelection: Bool {
+    selectedTasks.contains { $0.status.isActionable }
+  }
+
+  /// Plans the selected tasks on the product day `days` after today, each keeping
+  /// its own time of day. Tasks that are finished or cancelled are left alone. The
+  /// change registers one undo with `undoManager`.
+  @MainActor
+  func planSelection(daysFromToday days: Int, undoManager: UndoManager?) async {
+    await store.planTasks(
+      ids: selectedTasks.map(\.id), daysFromToday: days, undoManager: undoManager)
+  }
 }
 
 private struct LorvexTaskCommandContextKey: FocusedValueKey {

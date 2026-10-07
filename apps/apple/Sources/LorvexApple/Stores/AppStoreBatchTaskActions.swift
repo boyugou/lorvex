@@ -58,7 +58,9 @@ extension AppStore {
     }
   }
 
-  func completeBatch(on surface: AppStoreBatchCancelSurface) async {
+  /// Completes the surface's active selection. With an `undoManager`, one ⌘Z
+  /// ("Complete Task") reopens every task the batch finished.
+  func completeBatch(on surface: AppStoreBatchCancelSurface, undoManager: UndoManager? = nil) async {
     let ids = surface.selectedTasks(self)
       .filter { $0.status.isActive }
       .map(\.id)
@@ -68,6 +70,7 @@ extension AppStore {
       feedbackProvider.playFeedback(.taskCompleted)
       publishBatchToday(updatedToday, taskCount: ids.count)
       try await finishBatchMutation(on: surface)
+      registerReopenUndo(ids: ids, undoManager: undoManager, actionName: TaskCommand.complete.title)
     }
   }
 

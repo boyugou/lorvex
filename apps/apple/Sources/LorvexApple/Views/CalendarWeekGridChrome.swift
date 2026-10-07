@@ -102,13 +102,14 @@ extension CalendarWeekGridView {
       }
     }
     // Typed `LorvexTaskRef` (not a raw `String`) so the all-day strip accepts
-    // task drags from every other surface and arbitrary dropped text can't drive
-    // `rescheduleScheduledTask(id:)`.
+    // task drags from every other surface and arbitrary dropped text can't plan
+    // a task. A task dropped here takes the day and no time; one that had a time
+    // gives it up.
     .dropDestination(for: LorvexTaskRef.self) { refs, _ in
       let ids = refs.droppedTaskIDs
       guard !ids.isEmpty else { return false }
       Task {
-        for id in ids { await store.rescheduleScheduledTask(id: id, to: day.date) }
+        await store.planTasks(ids: ids, on: day.date, time: .dayOnly, undoManager: undoManager)
       }
       return true
     } isTargeted: { targeted in
@@ -192,24 +193,7 @@ extension CalendarWeekGridView {
         systemImage: isDone ? "arrow.uturn.backward.circle" : "checkmark.circle"
       ) { toggleCompletion(of: task) }
       Divider()
-      Button(
-        String(
-          localized: "calendar.task.plan_day_later", defaultValue: "Plan a Day Later",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        systemImage: "arrow.forward"
-      ) {
-        reschedule(task, byDays: 1, from: day.date)
-      }
-      Button(
-        String(
-          localized: "calendar.task.plan_week_later", defaultValue: "Plan a Week Later",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle),
-        systemImage: "arrow.forward.to.line"
-      ) {
-        reschedule(task, byDays: 7, from: day.date)
-      }
+      planLaterButtons(for: task, from: day.date)
     }
     .accessibilityAddTraits(.isButton)
     .accessibilityLabel(
@@ -295,9 +279,37 @@ extension CalendarWeekGridView {
     .buttonStyle(.plain)
   }
 
-  private func reschedule(_ task: LorvexTask, byDays days: Int, from day: Date) {
+  /// The context-menu items that plan `task` a day or a week after `day`, the
+  /// pointer-free counterpart of dragging it to another column. The task keeps
+  /// its own time, if it has one.
+  @ViewBuilder
+  func planLaterButtons(for task: LorvexTask, from day: Date) -> some View {
+    Button(
+      String(
+        localized: "calendar.task.plan_day_later", defaultValue: "Plan a Day Later",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      systemImage: "arrow.forward"
+    ) {
+      plan(task, byDays: 1, from: day)
+    }
+    Button(
+      String(
+        localized: "calendar.task.plan_week_later", defaultValue: "Plan a Week Later",
+        table: "Localizable",
+        bundle: LorvexL10n.bundle),
+      systemImage: "arrow.forward.to.line"
+    ) {
+      plan(task, byDays: 7, from: day)
+    }
+  }
+
+  private func plan(_ task: LorvexTask, byDays days: Int, from day: Date) {
     guard let target = calendar.date(byAdding: .day, value: days, to: day) else { return }
-    Task { await store.rescheduleScheduledTask(id: task.id, to: target) }
+    Task {
+      await store.planTasks(
+        ids: [task.id], on: target, time: .unchanged, undoManager: undoManager)
+    }
   }
 
   /// An event's pill in the all-day strip: the title, followed by `time`

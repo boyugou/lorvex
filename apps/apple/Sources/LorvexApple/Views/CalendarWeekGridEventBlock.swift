@@ -33,12 +33,12 @@ extension CalendarWeekGridView {
     // here would only run it under the next block.
     let baseHeight = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
     let color = eventColor(block.event)
-    let active = rescheduleDraft?.eventID == block.event.id ? rescheduleDraft : nil
+    let active = rescheduleDraft?.blockID == block.event.id ? rescheduleDraft : nil
     // The block whose inspector is open reads as selected: a stronger fill, a
     // full-color ring, and a soft lift. This gives the open inspector a visual
     // anchor and makes the tap-again-to-close toggle discoverable.
     let isSelected = store.selectedCalendarEventID == block.event.id
-    let preview = CalendarEventBlockPreview(draft: active)
+    let preview = CalendarBlockMovePreview(draft: active)
     // A resize in progress cannot shrink the block below a quarter hour.
     let renderedHeight =
       active == nil
@@ -270,7 +270,10 @@ extension CalendarWeekGridView {
   }
 }
 
-private struct CalendarEventBlockPreview {
+/// How far a block being dragged has moved and resized from where it lies in
+/// its column, read from the grid's reschedule draft. Event blocks use all
+/// three parts; a task block only moves.
+struct CalendarBlockMovePreview {
   let move: CGSize
   let resizeBottom: CGFloat
   let resizeTop: CGFloat

@@ -262,8 +262,11 @@ extension AppStore {
 
   /// Reloads the workspace once it has loaded, or retries a first load that
   /// failed, so a refresh after a sync or a change elsewhere also recovers a
-  /// workspace showing its load failure.
+  /// workspace showing its load failure. Every task change and every inbound
+  /// sync passes through here, so it also refreshes the Calendar's "Unplanned Tasks"
+  /// rail while that is shown.
   func reloadTaskWorkspaceIfLoaded() async {
+    await reloadCalendarUnplannedTasksIfShown()
     guard taskWorkspaceStorage.hasLoaded || taskWorkspaceStorage.loadFailureMessage != nil
     else { return }
     await loadTaskWorkspace()

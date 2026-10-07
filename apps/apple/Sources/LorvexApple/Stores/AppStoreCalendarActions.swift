@@ -155,16 +155,22 @@ extension AppStore {
   ///     midnight at the start of the next day (`dateAtMinute`), which is
   ///     stored as that day at 00:00.
   ///   - notes: Optional notes override. When nil, leaves notes unchanged.
+  ///   - undoManager: When given, the move registers its inverse so ⌘Z puts the
+  ///     event back at its previous times; the undo is itself redoable. Only the
+  ///     times are written back, so a title or location edited after the move
+  ///     survives the undo.
   func rescheduleCalendarEvent(
     _ event: CalendarTimelineEvent,
     newStart: Date,
     newEnd: Date,
-    notes: String? = nil
+    notes: String? = nil,
+    undoManager: UndoManager? = nil
   ) async {
     // Defense in depth: the view-side guard also keeps the gesture from firing.
     guard event.editable, !event.allDay, !event.supportsScopedMutation, !event.isMultiDay
     else { return }
     let timing = CalendarEventTiming(start: newStart, end: newEnd, allDay: false)
+    let previous = CalendarEventTiming(event: event, fallbackDay: newStart)
     // Passing `nil` to the core's `updateCalendarEvent(notes:)` keeps the
     // existing notes column UNCHANGED (the core maps nil → `.unset`).
     // Passing `""` would overwrite the column to empty and wipe whatever
@@ -192,7 +198,64 @@ extension AppStore {
         updated, notesPatch: notesPatch, taskID: nil, operation: "eventkit-reschedule",
         target: .keepExisting)
       try await refreshCurrentCalendarTimeline()
+      registerEventTimingUndo(
+        eventID: event.eventID, undo: previous, redo: timing, undoManager: undoManager)
     }
+  }
+
+  /// "Move Event": the name of the Edit menu's undo and redo item for dragging
+  /// an event to another time or resizing it.
+  static var moveEventTitle: String {
+    String(
+      localized: "calendar.action.move_event", defaultValue: "Move Event",
+      table: "Localizable", bundle: LorvexL10n.bundle)
+  }
+
+  /// Registers `undo` as the manager's next undo and `redo` as what undoing
+  /// re-registers, so ⌘Z and ⇧⌘Z move the event between the two timings. The
+  /// handler registers the opposite pair synchronously, while the manager is
+  /// still undoing, which is what makes it a redo rather than a new undo; the
+  /// write runs afterwards on the main actor.
+  private func registerEventTimingUndo(
+    eventID: CalendarTimelineEvent.ID, undo: LorvexCore.CalendarEventTiming,
+    redo: LorvexCore.CalendarEventTiming,
+    undoManager: UndoManager?
+  ) {
+    guard let undoManager else { return }
+    undoManager.registerUndo(withTarget: self) { store in
+      MainActor.assumeIsolated {
+        store.registerEventTimingUndo(
+          eventID: eventID, undo: redo, redo: undo, undoManager: undoManager)
+        Task { @MainActor in
+          await store.perform { try await store.applyEventTiming(undo, toEventWithID: eventID) }
+        }
+      }
+    }
+    undoManager.setActionName(Self.moveEventTitle)
+  }
+
+  /// Writes only the start and end of the stored event `id`, leaving its title,
+  /// location, and notes as they are now, and mirrors the change to Calendar. An
+  /// event that no longer exists is left alone.
+  private func applyEventTiming(
+    _ timing: LorvexCore.CalendarEventTiming, toEventWithID id: CalendarTimelineEvent.ID
+  ) async throws {
+    guard let stored = try await core.getCalendarEvent(id: id) else { return }
+    let updated = try await core.updateCalendarEvent(
+      id: id,
+      title: nil,
+      startDate: timing.startDate,
+      endDate: timing.endDate(updating: stored.endDate),
+      startTime: timing.startTime,
+      endTime: timing.endTime,
+      allDay: nil,
+      location: nil,
+      notes: nil
+    )
+    await writeBackToEventKit(
+      updated, notesPatch: .preserve, taskID: nil, operation: "eventkit-reschedule",
+      target: .keepExisting)
+    try await refreshCurrentCalendarTimeline()
   }
 
   func deleteCalendarEvent(_ event: CalendarTimelineEvent) async {
@@ -309,33 +372,6 @@ extension AppStore {
       try? await refreshCurrentCalendarTimeline()
     } else {
       try? await refreshCalendarTimeline()
-    }
-  }
-
-  /// Plan or re-plan a task onto `day` — the calendar's drag-to-reschedule
-  /// write-back. Works for already-scheduled tasks (move in the calendar) and
-  /// for unscheduled tasks dragged from Today/Tasks onto the all-day strip
-  /// (where `calendarScheduledTasks` doesn't carry them). Preserves every
-  /// other field and reloads the surfaces that place the task on a day.
-  func rescheduleScheduledTask(id: LorvexTask.ID, to day: Date) async {
-    let task = calendarScheduledTasks?.first(where: { $0.id == id })
-    await perform {
-      let resolved: LorvexTask
-      if let task {
-        resolved = task
-      } else {
-        resolved = try await core.loadTask(id: id)
-      }
-      _ = try await core.updateTask(
-        id: resolved.id, title: resolved.title, notes: resolved.notes,
-        priority: resolved.priority, estimatedMinutes: resolved.estimatedMinutes,
-        dueDate: resolved.dueDate,
-        plannedDate: PlannedDayBridge.storageDate(forLocalInstant: day),
-        availableFrom: resolved.availableFrom,
-        tags: resolved.tags, dependsOn: resolved.dependsOn)
-      try await refreshCurrentCalendarTimeline()
-      today = try await core.loadToday()
-      await republishSurfacesAfterLocalMutation()
     }
   }
 

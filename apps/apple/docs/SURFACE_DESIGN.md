@@ -144,7 +144,12 @@ deep editing. Tab-first with `NavigationStack`.
 - The grid draws each day's timed tasks as blocks beside the events — a dashed
   accent outline with a ring that completes the task, a solid frame while the
   block is running. A block opens its task; the day's times themselves are
-  suggested, saved, and cleared on Today. ✅
+  suggested, saved, and cleared on Today. On the Mac a block also moves by
+  drag, in 15-minute steps and across days, and a task dropped on a time in a
+  day column takes that time, keeping its length; every placement goes through
+  one undoable "Plan Task" action. A toolbar toggle shows a rail of the open
+  tasks with no planned day beside the grid; each row drags onto a time, a day's
+  all-day row, or a month cell. ✅
 - Today is one list read top to bottom: the date and a line of facts, the
   day's briefing when the assistant wrote one (`set_daily_briefing`), in the
   system face under the sparkles glyph — the same line the widgets show under

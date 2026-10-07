@@ -17,6 +17,9 @@ struct CalendarWorkspaceView: View {
   /// Persisted like the Tasks workspace's `isTableMode`, so the chosen view
   /// (Day/Week/Month) survives navigation and relaunch.
   @AppStorage("calendar.workspace.mode") private var mode: CalendarPresentationMode = .week
+  /// Whether the unplanned-tasks rail stands beside the grid. Persisted like the
+  /// mode, so it stays as the person left it.
+  @AppStorage("calendar.workspace.planRail") private var showsPlanRail = false
 
   /// The grid (`CalendarWeekGridView`) lays out from `@Environment(\.calendar)`,
   /// so the workspace's week math (step, week range, "is current") reads the same
@@ -39,6 +42,11 @@ struct CalendarWorkspaceView: View {
     HStack(spacing: 0) {
       calendarColumn
         .frame(maxWidth: .infinity)
+      if showsPlanRail {
+        Divider()
+        CalendarPlanRail(store: store, openTask: { store.selectTaskFromList($0.id) })
+          .transition(.move(edge: .trailing).combined(with: .opacity))
+      }
       if let event = store.selectedCalendarEvent {
         Divider()
         CalendarEventInspector(
@@ -52,6 +60,17 @@ struct CalendarWorkspaceView: View {
       }
     }
     .reduceMotionAnimation(.snappy(duration: 0.18), value: store.selectedCalendarEventID)
+    .reduceMotionAnimation(.snappy(duration: 0.18), value: showsPlanRail)
+    // The rail's tasks load when it is shown and stop reloading with every task
+    // change once it is hidden or the calendar leaves the screen.
+    .task(id: showsPlanRail) {
+      if showsPlanRail {
+        await store.showCalendarUnplannedTasks()
+      } else {
+        store.hideCalendarUnplannedTasks()
+      }
+    }
+    .onDisappear { store.hideCalendarUnplannedTasks() }
     .calendarEventActions(eventActions, store: store)
   }
 
@@ -113,6 +132,7 @@ struct CalendarWorkspaceView: View {
       CalendarWorkspaceToolbar(
         anchorDate: $anchorDate,
         mode: $mode,
+        showsPlanRail: $showsPlanRail,
         weekRangeTitle: weekRangeTitle,
         monthRangeTitle: monthRangeTitle,
         isViewingCurrent: isViewingCurrent,

@@ -6,14 +6,17 @@ import SwiftUI
 /// circle that completes the task, and the calendar task surface
 /// (`lorvexCalendarTaskSurface`, a hollow dashed outline) instead of an
 /// event's solid fill and rail, so time set aside for the user's own work never
-/// reads like a meeting. The block opens the task; the task's time is set in
-/// its detail or by suggested times on Today. A block in a lane that overlap
+/// reads like a meeting. The block opens the task. Dragging it moves the
+/// task's time and day (``taskMoveGesture(for:dayIndex:totalDays:columnWidth:)``);
+/// a time is also set in the task's detail or by suggested times on Today. A
+/// block in a lane that overlap
 /// has narrowed below ``LorvexDesign/CalendarMetrics/compactLaneWidth`` drops
 /// the circle and the time line and shows its title alone, with the full label
 /// as its tooltip; its context menu still completes the task.
 extension CalendarWeekGridView {
   func taskBlock(
-    _ block: CalendarGridTaskBlock, on day: CalendarGridDay, columnWidth: CGFloat
+    _ block: CalendarGridTaskBlock, on day: CalendarGridDay, dayIndex: Int, totalDays: Int,
+    columnWidth: CGFloat
   ) -> some View {
     let laneWidth = columnWidth / CGFloat(min(block.laneCount, maxDisplayedLanes))
     let y = CGFloat(block.startMin) / 60 * hourHeight
@@ -22,6 +25,8 @@ extension CalendarWeekGridView {
     let color = LorvexDesign.Palette.accent
     let isRunning = isRunningNow(block, on: day) && !block.isDone
     let isSelected = store.selectedTaskID == block.task.id
+    let active = rescheduleDraft?.blockID == block.id ? rescheduleDraft : nil
+    let preview = CalendarBlockMovePreview(draft: active)
     let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
     let isTight = height < LorvexDesign.CalendarMetrics.tightBlockHeight
     let label = calendarTimedTaskAccessibilityLabel(
@@ -63,12 +68,24 @@ extension CalendarWeekGridView {
       hidesContentBeneath: true)
     .calendarPointingHandCursor()
     .contentShape(Rectangle())
-    .zIndex(isSelected ? 2 : 1)
-    .offset(x: CGFloat(block.lane) * laneWidth, y: y)
+    .zIndex(active != nil || isSelected ? 2 : 1)
+    .offset(
+      x: CGFloat(block.lane) * laneWidth + preview.move.width,
+      y: y + preview.move.height)
+    .opacity(active == nil ? 1 : 0.85)
     .shadow(
-      color: isSelected ? color.opacity(0.35) : .clear,
-      radius: isSelected ? CalendarEventBlockMetrics.selectedShadowRadius : 0,
+      color: active != nil ? .black.opacity(0.16) : (isSelected ? color.opacity(0.35) : .clear),
+      radius: active != nil
+        ? CalendarEventBlockMetrics.activeShadowRadius
+        : (isSelected ? CalendarEventBlockMetrics.selectedShadowRadius : 0),
       y: 2)
+    // A finished task's time is the day's record, so its block stays put.
+    .gesture(
+      block.isDone
+        ? nil
+        : taskMoveGesture(
+          for: block, dayIndex: dayIndex, totalDays: totalDays, columnWidth: columnWidth)
+    )
     .onTapGesture { openTask(block.task) }
     .focusable(true)
     .onKeyPress(.return) {
@@ -88,6 +105,10 @@ extension CalendarWeekGridView {
         taskCompletionLabel(isDone: block.isDone),
         systemImage: block.isDone ? "arrow.uturn.backward.circle" : "checkmark.circle"
       ) { toggleCompletion(of: block.task) }
+      if !block.isDone {
+        Divider()
+        planLaterButtons(for: block.task, from: day.date)
+      }
     }
     .help(isCompact ? label : "")
     .accessibilityAddTraits(.isButton)

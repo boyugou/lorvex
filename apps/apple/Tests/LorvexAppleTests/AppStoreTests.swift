@@ -125,7 +125,7 @@ func appStoreCreateTaskPlannedTodayLandsInTodayWithoutNavigating() async throws 
 
 @MainActor
 @Test
-func appStoreReschedulesScheduledTaskToAnotherDay() async throws {
+func appStorePlansScheduledTaskOnAnotherDay() async throws {
   let core = try await makeSeededInMemoryCore()
   let suiteName = "AppStoreRescheduleScheduledTask.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
@@ -137,7 +137,7 @@ func appStoreReschedulesScheduledTaskToAnotherDay() async throws {
   let task = try #require(store.calendarScheduledTasks?.first { $0.title == "Drag me elsewhere" })
 
   let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: Date()))
-  await store.rescheduleScheduledTask(id: task.id, to: tomorrow)
+  await store.planTasks(ids: [task.id], on: tomorrow, time: .dayOnly)
 
   #expect(store.errorMessage == nil)
   let formatter = DateFormatter()

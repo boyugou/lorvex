@@ -344,3 +344,63 @@ func calendarNowLineRunsUnderOpaqueBlocks() throws {
     #expect(source.contains(".zIndex("), "\(path) no longer lifts its block above the now line")
   }
 }
+
+@Test("Every task placement in the week grid goes through planTasks")
+func calendarWeekGridPlansTasksThroughOneStoreAction() throws {
+  let root = packageRoot()
+  let grid = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridView.swift"),
+    encoding: .utf8)
+  let chrome = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridChrome.swift"),
+    encoding: .utf8)
+  let gestures = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridGestures.swift"),
+    encoding: .utf8)
+  let taskBlock = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridTaskBlock.swift"),
+    encoding: .utf8)
+
+  // The time axis takes drops through a delegate, which is the only SwiftUI
+  // drop API that reports where the pointer is.
+  #expect(grid.contains(".onDrop("))
+  #expect(grid.contains("of: [.lorvexTask]"))
+  #expect(grid.contains("TaskTimeDropDelegate("))
+  #expect(grid.contains("time: .start(startMinute)"))
+  // The all-day strip, the block drag, and the pills' menu items share the action.
+  #expect(chrome.contains("time: .dayOnly"))
+  #expect(chrome.contains("time: .unchanged"))
+  #expect(gestures.contains("store.planTasks("))
+  #expect(chrome.contains("store.planTasks("))
+  // A finished task's block does not move; its block carries no drag gesture.
+  let gesture = try #require(taskBlock.range(of: ".gesture("))
+  let gestureBody = taskBlock[gesture.upperBound...].prefix(160)
+  #expect(gestureBody.contains("block.isDone"))
+  #expect(gestureBody.contains("? nil"))
+  #expect(gestureBody.contains("taskMoveGesture("))
+  #expect(taskBlock.contains("planLaterButtons(for: block.task"))
+  // SwiftUI reports the pointer over the column once more while a drop completes,
+  // so the indicator is cleared after the payload has loaded, not only on release.
+  let delegate = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridTimeDrop.swift"),
+    encoding: .utf8)
+  let load = try #require(delegate.range(of: "loadTransferable(type: LorvexTaskRef.self)"))
+  #expect(delegate[load.upperBound...].prefix(400).contains("hover(nil)"))
+  // The earlier one-purpose action is gone.
+  for source in [grid, chrome, gestures, taskBlock] {
+    #expect(!source.contains("rescheduleScheduledTask"))
+  }
+}
+
+@Test("Moving and resizing an event pass the window's undo manager, so ⌘Z puts it back")
+func calendarWeekGridEventGesturesRegisterUndo() throws {
+  let gestures = try String(
+    contentsOf: packageRoot().appending(path: "Sources/LorvexApple/Views/CalendarWeekGridGestures.swift"),
+    encoding: .utf8)
+  // Move, resize at the bottom edge, and resize at the top edge.
+  let calls = gestures.components(separatedBy: "store.rescheduleCalendarEvent(").dropFirst()
+  #expect(calls.count == 3)
+  for call in calls {
+    #expect(call.prefix(160).contains("undoManager: undoManager"))
+  }
+}

@@ -29,6 +29,7 @@ struct CalendarMonthGridView: View {
   /// grid layout rather than freezing whatever `Calendar.current` was at the
   /// workspace's init.
   @Environment(\.calendar) private var calendar
+  @Environment(\.undoManager) private var undoManager
   /// Day cell whose overflow "+N" popover is open, threaded into
   /// `CalendarMonthGridDayCell` via `isOverflowPresented` / `onShowOverflow`.
   @State private var overflowDayID: CalendarMonthGridDay.ID? = nil
@@ -102,6 +103,12 @@ struct CalendarMonthGridView: View {
           eventColor: eventColor,
           onSelectEvent: selectEvent,
           onOpenTask: openTask,
+          onDropTasks: { ids in
+            Task {
+              await store.planTasks(
+                ids: ids, on: day.date, time: .unchanged, undoManager: undoManager)
+            }
+          },
           onOpenDay: { openDay(day.date) },
           isOverflowPresented: Binding(
             get: { overflowDayID == day.id },

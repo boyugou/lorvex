@@ -8,6 +8,15 @@ struct AppStoreCalendarStorage {
   /// The loaded window's tasks, planned (or, unplanned, due) in it; a task
   /// with a time is drawn on the time axis of its planned day.
   var calendarScheduledTasks: [LorvexTask]?
+  /// The open tasks with no planned day that the Calendar's "Unplanned Tasks" rail lists
+  /// (the first ``AppStore/calendarUnplannedLimit``, in the canonical task
+  /// order). Nil while the rail is hidden and until its first load succeeds.
+  var calendarUnplannedTasks: [LorvexTask]?
+  /// The rail is on screen, so task changes reload its tasks.
+  var calendarUnplannedRailIsShown = false
+  /// How many open tasks have no planned day in all, which can exceed what the
+  /// rail lists.
+  var calendarUnplannedTotal = 0
   /// Monotonic generation stamp for in-flight timeline loads. A load captures it
   /// at entry and only commits its results if it is still the latest, so two
   /// overlapping loads (week navigation, the EventKit observer, the today
@@ -72,6 +81,9 @@ struct AppStoreCalendarStorage {
     stashedDraft = nil
     calendarTimeline = nil
     calendarScheduledTasks = nil
+    calendarUnplannedTasks = nil
+    calendarUnplannedRailIsShown = false
+    calendarUnplannedTotal = 0
     selectedCalendarEventID = nil
     calendarPendingDayKey = nil
     draftCalendarTitle = ""

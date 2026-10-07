@@ -96,6 +96,14 @@ extension AppStore {
     set { calendarStorage.calendarScheduledTasks = newValue }
   }
 
+  var calendarUnplannedTasks: [LorvexTask]? {
+    calendarStorage.calendarUnplannedTasks
+  }
+
+  var calendarUnplannedTotal: Int {
+    calendarStorage.calendarUnplannedTotal
+  }
+
   /// Today's calendar events — the day's fixed commitments (Lorvex-owned events
   /// plus the mirrored EventKit external calendar) filtered out of the loaded
   /// timeline window and agenda-ordered. Backs the Today "Schedule" section.

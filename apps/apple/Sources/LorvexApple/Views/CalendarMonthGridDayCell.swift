@@ -32,6 +32,11 @@ private enum CalendarMonthGridDayCellMetrics {
 /// grouping (rather than `.combine`) keeps every chip and the overflow badge
 /// independently reachable to VoiceOver alongside the cell's own "open day"
 /// action.
+///
+/// A task chip drags by id and the whole cell is a drop target: a task dropped
+/// on a day is planned for it (``AppStore/planTasks(ids:on:time:undoManager:)``
+/// with ``TaskPlanTime/unchanged``, so a timed task keeps its time), and the
+/// cell tints while a task is over it.
 struct CalendarMonthGridDayCell: View {
   let day: CalendarMonthGridDay
   let isToday: Bool
@@ -39,7 +44,10 @@ struct CalendarMonthGridDayCell: View {
   let eventColor: (CalendarTimelineEvent) -> Color
   let onSelectEvent: (CalendarTimelineEvent) -> Void
   let onOpenTask: (LorvexTask) -> Void
+  /// Called with the ids of the tasks dropped on this day.
+  let onDropTasks: ([LorvexTask.ID]) -> Void
   @Environment(\.calendar) private var calendar
+  @State private var isDropTargeted = false
   let onOpenDay: () -> Void
   @Binding var isOverflowPresented: Bool
   let onShowOverflow: () -> Void
@@ -89,6 +97,17 @@ struct CalendarMonthGridDayCell: View {
     .accessibilityAddTraits(.isButton)
     .accessibilityAction(.default, onOpenDay)
     .accessibilityIdentifier("calendar.month.day.\(day.dayKey)")
+    .overlay {
+      if isDropTargeted {
+        Rectangle().fill(.tint.opacity(0.14)).allowsHitTesting(false)
+      }
+    }
+    .dropDestination(for: LorvexTaskRef.self) { refs, _ in
+      let ids = refs.droppedTaskIDs
+      guard !ids.isEmpty else { return false }
+      onDropTasks(ids)
+      return true
+    } isTargeted: { isDropTargeted = $0 }
     .popover(isPresented: $isOverflowPresented) {
       overflowPopover
     }
@@ -130,26 +149,18 @@ struct CalendarMonthGridDayCell: View {
       .opacity(day.isCurrentMonth ? 1 : 0.55)
       .accessibilityLabel(calendarPillAccessibilityLabel(event))
     case .task(let task):
-      Button {
-        onOpenTask(task)
-      } label: {
-        taskChip(
-          title: task.title, time: nil, isDone: task.status == .completed,
-          isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone))
-      }
-      .buttonStyle(.plain)
-      .calendarPointingHandCursor()
+      taskChip(
+        title: task.title, time: nil, isDone: task.status == .completed,
+        isOverdue: task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
+      )
+      .openingAndDraggable(task, open: onOpenTask)
       .opacity(day.isCurrentMonth ? 1 : 0.55)
     case .timedTask(let task, let time):
-      Button {
-        onOpenTask(task)
-      } label: {
-        taskChip(
-          title: task.title, time: lorvexClockTimeLabel(minutes: time.lowerBound),
-          isDone: task.status == .completed, isOverdue: false)
-      }
-      .buttonStyle(.plain)
-      .calendarPointingHandCursor()
+      taskChip(
+        title: task.title, time: lorvexClockTimeLabel(minutes: time.lowerBound),
+        isDone: task.status == .completed, isOverdue: false
+      )
+      .openingAndDraggable(task, open: onOpenTask)
       .opacity(day.isCurrentMonth ? 1 : 0.55)
       .accessibilityLabel(
         calendarTimedTaskAccessibilityLabel(
@@ -296,5 +307,31 @@ struct CalendarMonthGridDayCell: View {
           bundle: LorvexL10n.bundle),
         base)
       : base
+  }
+}
+
+extension View {
+  /// A task chip's behavior: a click opens the task, an open task drags by id
+  /// to another day, and VoiceOver reads it as a button that opens the task. A
+  /// finished or cancelled task opens but does not drag, since a plan change
+  /// would not move it.
+  @ViewBuilder
+  fileprivate func openingAndDraggable(
+    _ task: LorvexTask, open: @escaping (LorvexTask) -> Void
+  ) -> some View {
+    let base = self
+      .contentShape(Rectangle())
+      .onTapGesture { open(task) }
+      .calendarPointingHandCursor()
+      .accessibilityElement(children: .combine)
+      .accessibilityAddTraits(.isButton)
+      .accessibilityAction(.default) { open(task) }
+    if task.status.isActionable {
+      base.draggable(LorvexTaskRef(id: task.id, title: task.title)) {
+        TaskDragPreview(title: task.title, count: 1)
+      }
+    } else {
+      base
+    }
   }
 }

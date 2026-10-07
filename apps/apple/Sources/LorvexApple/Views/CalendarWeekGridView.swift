@@ -38,7 +38,7 @@ struct CalendarWeekGridView: View {
   @Environment(\.undoManager) var undoManager
   /// Drag-to-move and drag-to-resize snap to this granularity (matching the
   /// 15-minute increments most calendar UIs use).
-  static let snapMinutes: Int = 15
+  static let snapMinutes: Int = CalendarGridMove.snapMinutes
   /// Minimum drag distance before a move gesture is recognised, so a tap
   /// still selects the event instead of starting a drag.
   static let dragMinimumDistance: CGFloat = 6
@@ -49,6 +49,9 @@ struct CalendarWeekGridView: View {
 
   @State var rescheduleDraft: RescheduleDraft? = nil
   @State var createDraft: CreateDraft? = nil
+  /// Where a task dragged over the time grid would start if it were dropped
+  /// now, driving the drop indicator; nil while no task is over the grid.
+  @State var timeDropTarget: TimeDropTarget? = nil
   /// Day column currently hovered by a dragged task pill (all-day strip),
   /// driving the drop-target highlight.
   @State var dropTargetedDay: Date? = nil
@@ -64,11 +67,20 @@ struct CalendarWeekGridView: View {
   @State var allDayOverflowDayID: CalendarGridDay.ID? = nil
 
   struct RescheduleDraft: Equatable {
-    let eventID: String
+    /// The id of the block being dragged: an event block's event id or a task
+    /// block's ``CalendarGridTaskBlock/id``.
+    let blockID: String
     let kind: Kind
     var translation: CGSize
     var columnWidth: CGFloat
     enum Kind { case move, resize, resizeTop }
+  }
+
+  /// A task dragged over a day column of the time grid: the column and the
+  /// start, in minutes, that dropping it there would give it.
+  struct TimeDropTarget: Equatable {
+    let dayIndex: Int
+    var startMinute: Int
   }
 
   /// Drag-to-create preview state: which day column the user pressed on, and
@@ -167,11 +179,13 @@ struct CalendarWeekGridView: View {
           createDraft = nil
           rescheduleDraft = nil
           dropTargetedDay = nil
+          timeDropTarget = nil
         }
         .onDisappear {
           createDraft = nil
           rescheduleDraft = nil
           dropTargetedDay = nil
+          timeDropTarget = nil
         }
       }
       .overlay(alignment: .top) {
@@ -206,6 +220,14 @@ struct CalendarWeekGridView: View {
           ForEach(0..<24, id: \.self) { _ in
             CalendarWeekGridHourCell(hourHeight: hourHeight)
           }
+        }
+
+        // A task dragged over this column tints it, and the indicator below
+        // marks the start it would take.
+        if timeDropTarget?.dayIndex == dayIndex {
+          Rectangle()
+            .fill(.tint.opacity(0.07))
+            .allowsHitTesting(false)
         }
 
         // The now line sits under the blocks (their zIndex lifts them above
@@ -273,7 +295,12 @@ struct CalendarWeekGridView: View {
         }
 
         ForEach(day.taskBlocks.filter { $0.lane < maxDisplayedLanes }) { block in
-          taskBlock(block, on: day, columnWidth: width)
+          taskBlock(
+            block, on: day, dayIndex: dayIndex, totalDays: totalDays, columnWidth: width)
+        }
+
+        if let target = timeDropTarget, target.dayIndex == dayIndex {
+          timeDropIndicator(startMinute: target.startMinute)
         }
 
         overflowBadge(for: day)
@@ -289,8 +316,47 @@ struct CalendarWeekGridView: View {
           .zIndex(3)
         }
       }
+      // A task dragged from the all-day strip, another window, or any task row
+      // starts at the minute under the pointer when it is dropped here.
+      .onDrop(
+        of: [.lorvexTask],
+        delegate: TaskTimeDropDelegate(
+          hourHeight: hourHeight,
+          hover: { startMinute in
+            let target = startMinute.map { TimeDropTarget(dayIndex: dayIndex, startMinute: $0) }
+            if target == nil, timeDropTarget?.dayIndex != dayIndex { return }
+            if timeDropTarget != target { timeDropTarget = target }
+          },
+          drop: { startMinute, taskIDs in
+            Task {
+              await store.planTasks(
+                ids: taskIDs, on: day.date, time: .start(startMinute), undoManager: undoManager)
+            }
+          }))
     }
     .frame(maxWidth: .infinity)
+  }
+
+  /// The mark of where a dragged task would start: a line across the column at
+  /// the snapped minute, with that time at its leading edge.
+  private func timeDropIndicator(startMinute: Int) -> some View {
+    ZStack(alignment: .topLeading) {
+      Rectangle()
+        .fill(.tint)
+        .frame(height: 2)
+      Text(lorvexClockTimeLabel(minutes: startMinute))
+        .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+        .foregroundStyle(.white)
+        .padding(.horizontal, LorvexDesign.Spacing.xs)
+        .padding(.vertical, 1)
+        .background(Capsule().fill(.tint))
+        .padding(.leading, LorvexDesign.Spacing.xxs)
+        .padding(.top, LorvexDesign.Spacing.xxs)
+    }
+    .offset(y: CGFloat(startMinute) / 60 * hourHeight - 1)
+    .zIndex(2)
+    .allowsHitTesting(false)
+    .accessibilityHidden(true)
   }
 
   @ViewBuilder

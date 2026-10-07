@@ -2775,6 +2775,23 @@ day to list its events and tasks under or beside the month, swipe to change
 months, and tap **Today** to come back. To move a task to another day, drag it
 from that list onto the day.
 
+On the Mac, the week and day grids show a task planned for a day as a pill in
+the all-day row, or as a block at its time. Drag a pill onto a time in any
+column to give the task that time: the column marks where it will start, and
+the task keeps its length (its estimate, or half an hour when it has none). Drag
+a block to another time or day to move it in 15-minute steps, and drop a task on
+the all-day row to plan it for that day without a time. Right-click a task for
+**Plan a Day Later** and **Plan a Week Later**. Every one of these changes can
+be undone with ⌘Z (**Plan Task**), and a finished task stays where it is.
+
+Month view takes the same drops: drag a task chip onto another day and the task
+moves there, keeping its time if it has one. The tray button in the toolbar
+(**Unplanned Tasks**) opens a column beside the calendar that lists the open
+tasks with no planned day, most important first, and ends with how many more
+there are. Drag one onto a time in a day, onto a day's all-day row, or onto a
+month cell, and it leaves the column. The column stays as you left it the next
+time you open the Calendar.
+
 An event that lasts 24 hours or more appears in the all-day row of each day it
 covers. A shorter event that runs past midnight appears on both days: the
 first shows when it starts, and the second shows when it ends. Month view reads
@@ -2806,7 +2823,10 @@ To move an event, drag it in the grid; on iPhone and iPad, touch and hold it
 first. On the Mac, drag an event's top or bottom edge to change when it starts
 or ends. Repeating events and events that continue past midnight into the next
 day can't be dragged; open them to change their times. An event that ends at
-exactly midnight counts as a one-day event and drags like any other.
+exactly midnight counts as a one-day event and drags like any other. On the
+Mac, press ⌘Z (**Edit → Undo Move Event**) to put a dragged or resized event back
+at its earlier times. Only the times are restored, so a title or location you
+changed afterwards stays.
 
 When you edit one occurrence of a repeating event and change how many days it
 spans, the change applies to this event or to this and the following events;

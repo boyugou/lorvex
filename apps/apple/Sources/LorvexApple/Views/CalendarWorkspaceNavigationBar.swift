@@ -27,10 +27,12 @@ struct CalendarWorkspaceHeader: View {
 /// shows the visible range and the owning view re-anchors to the period
 /// containing the picked day. ⌘ with the arrow key that matches each chevron
 /// steps the visible period, mirrored in a right-to-left layout
-/// (``View/lorvexStepShortcut(_:isEnabled:)``).
+/// (``View/lorvexStepShortcut(_:isEnabled:)``). A toggle beside Create Event
+/// shows and hides the unplanned-tasks rail (``CalendarPlanRail``).
 struct CalendarWorkspaceToolbar: ToolbarContent {
   @Binding var anchorDate: Date
   @Binding var mode: CalendarPresentationMode
+  @Binding var showsPlanRail: Bool
   let weekRangeTitle: String
   let monthRangeTitle: String
   let isViewingCurrent: Bool
@@ -75,6 +77,15 @@ struct CalendarWorkspaceToolbar: ToolbarContent {
 
     ToolbarItem(placement: .principal) {
       CalendarModePicker(mode: $mode)
+    }
+
+    ToolbarItem(placement: .primaryAction) {
+      Toggle(isOn: $showsPlanRail) {
+        Label(CalendarPlanRailCopy.title, systemImage: "tray.full")
+      }
+      .toggleStyle(.button)
+      .help(CalendarPlanRailCopy.title)
+      .accessibilityIdentifier("calendar.planRail.toggle")
     }
 
     ToolbarItem(placement: .primaryAction) {

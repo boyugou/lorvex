@@ -69,7 +69,7 @@ extension CalendarWeekGridView {
 
   /// Move gesture: vertical drag shifts the start time; horizontal drag spans
   /// adjacent day columns. Visual preview updates `rescheduleDraft` while the
-  /// finger is down; release commits via `store.rescheduleCalendarEvent`.
+  /// finger is down; release commits via `store.rescheduleCalendarEvent`, so ⌘Z puts the event back.
   func moveGesture(
     for block: CalendarGridTimedBlock,
     dayIndex: Int,
@@ -79,36 +79,75 @@ extension CalendarWeekGridView {
     DragGesture(minimumDistance: Self.dragMinimumDistance)
       .onChanged { value in
         rescheduleDraft = RescheduleDraft(
-          eventID: block.event.id,
+          blockID: block.event.id,
           kind: .move,
           translation: value.translation,
           columnWidth: columnWidth)
       }
       .onEnded { value in
-        let snap = Self.snapMinutes
         let totalMinutes = block.endMin - block.startMin
-        let rawDeltaMin = Int((value.translation.height / hourHeight * 60).rounded())
-        let snapped = (rawDeltaMin / snap) * snap
-        let clampedStart = max(0, min(24 * 60 - totalMinutes, block.startMin + snapped))
-        let deltaDays = columnWidth > 0
-          ? Int((value.translation.width / columnWidth).rounded()) : 0
-        let newDayIndex = max(0, min(totalDays - 1, dayIndex + deltaDays))
-        let dayShift = newDayIndex - dayIndex
+        let landing = CalendarGridMove.landing(
+          startMinute: block.startMin, duration: totalMinutes, translation: value.translation,
+          hourHeight: hourHeight, columnWidth: columnWidth, dayIndex: dayIndex,
+          dayCount: totalDays)
         clearRescheduleDraft()
 
         // Build the new start / end Dates from the displayed date + minute-of-day.
-        let originalDayDate = calendar.date(
-          byAdding: .day, value: dayIndex, to: weekStart) ?? weekStart
-        let targetDayDate = calendar.date(
-          byAdding: .day, value: dayShift, to: originalDayDate) ?? originalDayDate
-        let startDate = dateAtMinute(of: targetDayDate, minute: clampedStart)
-        let endDate = dateAtMinute(of: targetDayDate, minute: clampedStart + totalMinutes)
+        let targetDayDate = dayDate(dayIndex + landing.dayShift)
+        let startDate = dateAtMinute(of: targetDayDate, minute: landing.startMinute)
+        let endDate = dateAtMinute(
+          of: targetDayDate, minute: landing.startMinute + totalMinutes)
         // Drop a zero-movement drop so an accidental nudge doesn't fire a write.
-        guard snapped != 0 || dayShift != 0 else { return }
+        guard !landing.isUnchanged else { return }
         Task { @MainActor in
-          await store.rescheduleCalendarEvent(block.event, newStart: startDate, newEnd: endDate)
+          await store.rescheduleCalendarEvent(
+            block.event, newStart: startDate, newEnd: endDate, undoManager: undoManager)
         }
       }
+  }
+
+  /// Move gesture for a timed task's block: the same drag as an event's. A
+  /// vertical drag shifts the task's start in quarter hours, a horizontal drag
+  /// moves it to another day column, and the block keeps its length. Release
+  /// plans the task there through `store.planTasks`, so ⌘Z puts it back. The
+  /// preview stays where it was dropped until the write has landed and the grid
+  /// has reloaded, so the block does not flash back to its old time first.
+  func taskMoveGesture(
+    for block: CalendarGridTaskBlock,
+    dayIndex: Int,
+    totalDays: Int,
+    columnWidth: CGFloat
+  ) -> some Gesture {
+    DragGesture(minimumDistance: Self.dragMinimumDistance)
+      .onChanged { value in
+        rescheduleDraft = RescheduleDraft(
+          blockID: block.id,
+          kind: .move,
+          translation: value.translation,
+          columnWidth: columnWidth)
+      }
+      .onEnded { value in
+        let landing = CalendarGridMove.landing(
+          startMinute: block.startMin, duration: block.endMin - block.startMin,
+          translation: value.translation, hourHeight: hourHeight, columnWidth: columnWidth,
+          dayIndex: dayIndex, dayCount: totalDays)
+        guard !landing.isUnchanged else {
+          clearRescheduleDraft()
+          return
+        }
+        let targetDay = dayDate(dayIndex + landing.dayShift)
+        Task { @MainActor in
+          await store.planTasks(
+            ids: [block.task.id], on: targetDay, time: .start(landing.startMinute),
+            undoManager: undoManager)
+          clearRescheduleDraft()
+        }
+      }
+  }
+
+  /// The date of the visible column `index`, counted from the first column.
+  func dayDate(_ index: Int) -> Date {
+    calendar.date(byAdding: .day, value: index, to: weekStart) ?? weekStart
   }
 
   /// The drag preview's release: whether the drop commits (a real move/resize)
@@ -118,7 +157,7 @@ extension CalendarWeekGridView {
   /// react to differently. Animating this clear keeps that snap-back a settle
   /// rather than an abrupt disappearance, matching the rest of the app's
   /// motion bar for every other cleared draft state.
-  private func clearRescheduleDraft() {
+  func clearRescheduleDraft() {
     lorvexAnimated(.snappy(duration: 0.18)) {
       rescheduleDraft = nil
     }
@@ -131,7 +170,7 @@ extension CalendarWeekGridView {
     DragGesture(minimumDistance: Self.dragMinimumDistance)
       .onChanged { value in
         rescheduleDraft = RescheduleDraft(
-          eventID: block.event.id,
+          blockID: block.event.id,
           kind: .resize,
           translation: CGSize(width: 0, height: value.translation.height),
           columnWidth: 0)
@@ -153,7 +192,8 @@ extension CalendarWeekGridView {
         let startDate = dateAtMinute(of: parsedDay, minute: block.startMin)
         let endDate = dateAtMinute(of: parsedDay, minute: newEndMin)
         Task { @MainActor in
-          await store.rescheduleCalendarEvent(block.event, newStart: startDate, newEnd: endDate)
+          await store.rescheduleCalendarEvent(
+            block.event, newStart: startDate, newEnd: endDate, undoManager: undoManager)
         }
       }
   }
@@ -167,7 +207,7 @@ extension CalendarWeekGridView {
     DragGesture(minimumDistance: Self.dragMinimumDistance)
       .onChanged { value in
         rescheduleDraft = RescheduleDraft(
-          eventID: block.event.id,
+          blockID: block.event.id,
           kind: .resizeTop,
           translation: CGSize(width: 0, height: value.translation.height),
           columnWidth: 0)
@@ -189,7 +229,8 @@ extension CalendarWeekGridView {
         let startDate = dateAtMinute(of: parsedDay, minute: newStartMin)
         let endDate = dateAtMinute(of: parsedDay, minute: block.endMin)
         Task { @MainActor in
-          await store.rescheduleCalendarEvent(block.event, newStart: startDate, newEnd: endDate)
+          await store.rescheduleCalendarEvent(
+            block.event, newStart: startDate, newEnd: endDate, undoManager: undoManager)
         }
       }
   }

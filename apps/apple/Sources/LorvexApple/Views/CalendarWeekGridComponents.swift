@@ -100,6 +100,7 @@ struct CalendarWeekAuthorizeOverlay: View {
         .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
         .foregroundStyle(LorvexDesign.Palette.warning)
         .frame(width: 20)
+        .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(LocalizedStringResource("calendar.week.unauthorized.title", defaultValue: "Calendar Access Off", table: "Localizable", bundle: LorvexL10n.bundle))

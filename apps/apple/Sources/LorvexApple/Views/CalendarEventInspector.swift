@@ -188,6 +188,7 @@ struct CalendarEventInspector: View {
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
         .frame(width: 18)
+        .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(title)
           .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))

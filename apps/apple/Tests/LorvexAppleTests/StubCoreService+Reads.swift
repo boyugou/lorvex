@@ -42,7 +42,9 @@ extension StubCoreService {
     try await preview.getCalendarEventForExternalProjection(id: id)
   }
   func loadDailyReview(date: String?) async throws -> DailyReviewEntry? {
-    try await preview.loadDailyReview(date: date)
+    let review = try await preview.loadDailyReview(date: date)
+    await loadDailyReviewGate?()
+    return review
   }
   func loadDaySummary(date: String, completedLimit: Int) async throws -> DayReviewSummary {
     try await preview.loadDaySummary(date: date, completedLimit: completedLimit)
@@ -94,7 +96,8 @@ extension StubCoreService {
     date: String?, summary: String, mood: Int?, energyLevel: Int?, wins: String?,
     blockers: String?, learnings: String?
   ) async throws -> DailyReviewEntry {
-    try await preview.upsertDailyReviewPreservingLinks(
+    await upsertDailyReviewGate?()
+    return try await preview.upsertDailyReviewPreservingLinks(
       date: date, summary: summary, mood: mood, energyLevel: energyLevel,
       wins: wins, blockers: blockers, learnings: learnings)
   }

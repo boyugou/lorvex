@@ -32,6 +32,7 @@ struct LorvexListIconView: View {
       .font(font)
       .frame(width: size, height: size)
       .background(backgroundView)
+      .accessibilityHidden(true)
   }
 
   @ViewBuilder

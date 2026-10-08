@@ -108,11 +108,9 @@ extension MobileStore {
       let weekDigestToDay = weeklyReviewAnchor ?? date
       let weekDigestFromDay =
         LorvexDateFormatters.ymdUTCAddingDays(weekDigestToDay, days: -6) ?? weekDigestToDay
-      let dailyReviewDraftAtStart = dailyReviewDraft
-      let dailyReviewWasCleanAtStart =
-        dailyReviewDraftAtStart == MobileDailyReviewDraft(review: dailyReview)
-      async let loadedDailyReview = core.loadDailyReview(date: selectedReviewDate)
-      async let loadedDayEvidence = try? core.loadDaySummary(date: selectedReviewDate)
+      let reviewDate = selectedReviewDate
+      async let loadedDailyReview = core.loadDailyReview(date: reviewDate)
+      async let loadedDayEvidence = try? core.loadDaySummary(date: reviewDate)
       async let loadedWeeklyReview = core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
       async let loadedWeekDigest = (try? await core.getReviewHistory(
         from: weekDigestFromDay, to: weekDigestToDay, limit: 7)) ?? []
@@ -126,15 +124,10 @@ extension MobileStore {
       // set-aside database be silent if a later load fails. A fatal open instead
       // throws into `catch` and is presented via the `unrecoverable` category.
       surfaceDatabaseRecoveryNoticeIfNeeded()
-      dailyReview = try await loadedDailyReview
-      // The read above suspends the main actor. Adopt into the editor only when
-      // it was clean at the start AND the user did not type while the fan-out was
-      // in flight; the previous one-bit snapshot could clobber such mid-refresh
-      // edits.
-      if dailyReviewWasCleanAtStart, dailyReviewDraft == dailyReviewDraftAtStart {
-        dailyReviewDraft = MobileDailyReviewDraft(review: dailyReview)
-      }
-      dayReviewEvidence = await loadedDayEvidence
+      // The reads above suspend the main actor, so the editor may have moved or
+      // been typed in since they started; adoption checks both.
+      adoptLoadedDailyReview(try await loadedDailyReview, readFor: reviewDate)
+      adoptDayReviewEvidence(await loadedDayEvidence, readFor: reviewDate)
       weekReviewDigest = await loadedWeekDigest
       let planningError = await loadPlanningSnapshotsPreservingLoadedState(date: date)
       // Keep an already-open Memory workspace fresh after an out-of-band write

@@ -27,15 +27,8 @@ struct QuickAddPreviewLine: View {
           .truncationMode(.middle)
       }
       ForEach(preview.words) { word in
-        Text(word.label)
-          .font(LorvexDesign.Typography.secondaryText.weight(.medium))
-          .foregroundStyle(word.tint)
-          .fixedSize()
-          .padding(.horizontal, 5)
-          .padding(.vertical, 1)
-          .background(
-            RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
-              .fill(word.tint.opacity(0.1)))
+        LorvexCapturePreviewWordView(
+          word: word, horizontalPadding: 5, verticalPadding: 1, washOpacity: 0.1)
       }
     }
     .accessibilityElement(children: .combine)

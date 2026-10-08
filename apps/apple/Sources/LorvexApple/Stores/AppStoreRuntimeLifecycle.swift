@@ -399,9 +399,10 @@ extension AppStore {
       surfaceDatabaseRecoveryNoticeIfNeeded()
       // The Reviews surface's Day scope may be showing a past day (editable or
       // read-only); refresh reloads the selected day, not today's.
-      async let loadedDailyReview = core.loadDailyReview(date: dailyReviewEditorDate)
+      let reviewDate = dailyReviewEditorDate
+      async let loadedDailyReview = core.loadDailyReview(date: reviewDate)
       // Objective evidence for the selected day, backing the right-hand panel.
-      async let loadedDayEvidence = try? core.loadDaySummary(date: selectedReviewDate)
+      async let loadedDayEvidence = try? core.loadDaySummary(date: reviewDate)
       // Preserve the viewed week across a full refresh; `nil` anchor is the
       // live trailing week.
       async let loadedWeeklyReview = core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
@@ -414,11 +415,9 @@ extension AppStore {
 
       // Keep an in-progress daily review the user is typing — only adopt the
       // freshly-loaded values when the draft has no unsaved edits.
-      let dailyReviewWasClean = dailyReviewDraftMatchesLoaded
-      dailyReview = try await loadedDailyReview
-      if dailyReviewWasClean { syncDailyReviewDraft() }
+      adoptLoadedDailyReview(try await loadedDailyReview, readFor: reviewDate)
       weeklyReview = try await loadedWeeklyReview
-      dayReviewEvidence = await loadedDayEvidence
+      adoptDayReviewEvidence(await loadedDayEvidence, readFor: reviewDate)
       await reloadWeekReviewDigestKeepingOnFailure()
       lists = try await loadedLists
       archivedLists = await loadedArchivedLists

@@ -88,6 +88,7 @@ struct SettingsSidebar: View {
           Text(group.title)
             .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
             .foregroundStyle(.secondary)
+            .accessibilityAddTraits(.isHeader)
         }
       }
     }
@@ -115,6 +116,7 @@ private struct SettingsSidebarRow: View {
       Image(systemName: category.systemImage)
         .foregroundStyle(.secondary)
         .frame(width: 22, alignment: .center)
+        .accessibilityHidden(true)
       Text(category.title)
         .font(LorvexDesign.Typography.primaryEmphasis)
         .foregroundStyle(.primary)

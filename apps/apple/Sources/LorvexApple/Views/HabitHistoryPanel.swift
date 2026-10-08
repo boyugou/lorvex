@@ -67,6 +67,7 @@ struct HabitHistoryPanel: View {
           )
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(1)
+          .accessibilityAddTraits(.isHeader)
           Spacer(minLength: LorvexDesign.Spacing.s)
           if habit.targetCount > 1 {
             legend
@@ -104,9 +105,17 @@ struct HabitHistoryPanel: View {
       }
     }
     .tint(identity)
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel(accessibilitySummary)
-    .accessibilityIdentifier("habit.detail.history.grid")
+    // The layout places the weeks that do not fit 100,000pt outside its
+    // bounds, and one accessibility element made of its cells would take that
+    // whole span as its frame. The cells are hidden and an overlay the size of
+    // the grid carries the summary.
+    .accessibilityHidden(true)
+    .overlay {
+      Color.clear
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
+        .accessibilityIdentifier("habit.detail.history.grid")
+    }
   }
 
   /// The grid's footprint while the detail loads: the same layout over empty

@@ -69,20 +69,20 @@ extension AppStore {
       case .reviews:
         // Preserve an in-progress daily-review draft: only adopt freshly-loaded
         // values when the editor has no unsaved edits, mirroring `performLocalRefresh`.
-        let dailyReviewWasClean = dailyReviewDraftMatchesLoaded
+        let reviewDate = dailyReviewEditorDate
         // do/catch, not `try?`: the read returns an optional whose `nil` is a
         // legitimate remote CLEAR that must be reflected. `try?` would fold that
         // nil into the failure case and keep a stale review. Only a thrown read
         // error keeps the old value.
         do {
-          dailyReview = try await core.loadDailyReview(date: dailyReviewEditorDate)
-          if dailyReviewWasClean { syncDailyReviewDraft() }
+          adoptLoadedDailyReview(try await core.loadDailyReview(date: reviewDate), readFor: reviewDate)
         } catch {}
         if let loaded = try? await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor) {
           weeklyReview = loaded
         }
-        if let loaded = try? await core.loadDaySummary(date: selectedReviewDate) {
-          dayReviewEvidence = loaded
+        let evidenceDate = selectedReviewDate
+        if let loaded = try? await core.loadDaySummary(date: evidenceDate) {
+          adoptDayReviewEvidence(loaded, readFor: evidenceDate)
         }
         await reloadWeekReviewDigestKeepingOnFailure()
       case .habits:

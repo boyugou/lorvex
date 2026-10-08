@@ -28,7 +28,12 @@
 # It adds the stops tasks-inspector-tags, tasks-inspector-checklist,
 # tasks-inspector-dependencies, and habits-inspector-long, and points the list
 # stops (tasks-list, list-window, palette-jump, sheet-editList) at the list with
-# the very long name.
+# the very long name. `-uiPreviewDumpAX` prints the accessibility tree that
+# VoiceOver reads at every stop, between `AXDUMP STOP <name>` and `AXDUMP END
+# <name>` lines in the log: one `AXDUMP E` line per element with its depth,
+# frame, role, label, value, help text, identifier, and actions. It needs the
+# terminal that runs this script to be trusted for Accessibility; otherwise
+# each stop logs one `AXDUMP SKIPPED` line.
 # Requires a debug build first: `swift build -j 4 --product LorvexApple`.
 # Output: <outdir>/<workspace>-<appearance>.png for today, today-suggestion
 # (Today with suggested times waiting in the schedule pane), today-event (a

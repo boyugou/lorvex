@@ -39,6 +39,7 @@ private struct TaskDetailAINotesPanel: View {
               ))
               .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
               .foregroundStyle(.secondary)
+              .accessibilityAddTraits(.isHeader)
               Spacer(minLength: LorvexDesign.Spacing.s)
               Button(role: .destructive) {
                 confirmClear = true
@@ -146,6 +147,7 @@ private struct TaskDetailNotesPanel: View {
             systemImage: "note.text"
           )
           .font(LorvexDesign.Typography.primaryEmphasis)
+          .accessibilityAddTraits(.isHeader)
 
           Spacer()
 

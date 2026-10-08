@@ -56,6 +56,16 @@ public struct MobileDailyReviewDraft: Equatable, Sendable {
     !trimmedSummary.isEmpty && isValidRating(mood) && isValidRating(energy)
   }
 
+  /// True when saving this draft would leave `review` (`nil` for a day with no
+  /// entry) as it is. A save stores every section trimmed, so a section that
+  /// differs from the stored copy only by whitespace around its text is the
+  /// same entry, and a blank section is the same as none.
+  public func isStored(as review: DailyReviewEntry?) -> Bool {
+    DailyReviewEntry.isStored(
+      summary: summary, wins: wins, blockers: blockers, learnings: learnings,
+      mood: mood, energy: energy, as: review)
+  }
+
   private func isValidRating(_ value: Int?) -> Bool {
     value.map { (1...5).contains($0) } ?? true
   }

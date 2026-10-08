@@ -13,7 +13,10 @@ extension SidebarView {
     var listScopeSection: some View {
         Section {
             ForEach(store.orderedLists) { list in
-                SidebarListRow(count: list.openCount > 0 ? list.openCount : nil) {
+                SidebarListRow(
+                    count: list.openCount > 0 ? list.openCount : nil,
+                    spokenLabel: list.spokenSummary
+                ) {
                     SidebarListIcon(
                         icon: list.icon,
                         tint: isSelected(.listScope(list.id))

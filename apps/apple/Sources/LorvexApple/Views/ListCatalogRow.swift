@@ -69,7 +69,7 @@ struct ListCatalogRow: View {
     .onHover { isShowingActions = $0 }
     .help(String(localized: "list_row.open_scope.help", defaultValue: "Open Tasks in This List", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityElement(children: .contain)
-    .accessibilityLabel(accessibilityLabelText)
+    .accessibilityLabel(list.spokenSummary)
     // The row opens its Tasks scope on tap / Return / Space, but a raw
     // `.onTapGesture` is invisible to VoiceOver. Announce it as a button and
     // expose the same open affordance as the default accessibility action so VO
@@ -244,20 +244,6 @@ struct ListCatalogRow: View {
     return String(
       localized: "list_row.counts",
       defaultValue: "\(list.openCount) open · \(list.totalCount) total",
-      table: "Localizable", bundle: LorvexL10n.bundle)
-  }
-
-  /// What VoiceOver reads for the card: "Work: 4 open tasks, 10 total", or
-  /// "Work: no tasks".
-  private var accessibilityLabelText: String {
-    guard list.totalCount > 0 else {
-      return String(
-        localized: "a11y.list.empty", defaultValue: "\(list.displayName): no tasks",
-        table: "Localizable", bundle: LorvexL10n.bundle)
-    }
-    return String(
-      localized: "a11y.list.format",
-      defaultValue: "\(list.displayName): \(list.openCount) open tasks, \(list.totalCount) total",
       table: "Localizable", bundle: LorvexL10n.bundle)
   }
 

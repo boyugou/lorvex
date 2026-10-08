@@ -26,6 +26,7 @@ struct HabitProgressPanel: View {
           systemImage: "chart.line.uptrend.xyaxis"
         )
         .font(LorvexDesign.Typography.primaryEmphasis)
+        .accessibilityAddTraits(.isHeader)
 
         Grid(alignment: .leading, horizontalSpacing: LorvexDesign.Spacing.m, verticalSpacing: LorvexDesign.Spacing.m) {
           GridRow(alignment: .lastTextBaseline) {

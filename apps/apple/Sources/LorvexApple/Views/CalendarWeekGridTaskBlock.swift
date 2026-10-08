@@ -46,8 +46,10 @@ extension CalendarWeekGridView {
     // The grips start past the completion circle, so a click on its upper half
     // still completes the task rather than starting a resize.
     let gripInset = isCompact ? 0 : CalendarEventBlockMetrics.taskCircleInset
-    let label = calendarTimedTaskAccessibilityLabel(
-      title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin)
+    let label = blockAccessibilityLabel(
+      calendarTimedTaskAccessibilityLabel(
+        title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin),
+      on: day, totalDays: totalDays)
 
     return Group {
       if isCompact {
@@ -153,9 +155,20 @@ extension CalendarWeekGridView {
       }
     }
     .help(isCompact ? label : "")
+    // One stop per block, as the Today rows are: the completion circle, the
+    // title and the time line would each read the label. Opening the task is
+    // the default action and completing it a named one.
+    .accessibilityElement(children: .ignore)
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
     .accessibilityLabel(label)
+    .accessibilityAction { openTask(block.task) }
+    .accessibilityAction(named: taskCompletionLabel(isDone: block.isDone)) {
+      toggleCompletion(of: block.task)
+    }
+    .accessibilitySortPriority(
+      Self.accessibilitySortPriority(
+        dayIndex: dayIndex, totalDays: totalDays, startMinutes: block.startMin))
     .accessibilityIdentifier("calendar.weekgrid.taskBlock")
   }
 

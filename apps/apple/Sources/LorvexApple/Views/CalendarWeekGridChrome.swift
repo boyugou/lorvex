@@ -41,10 +41,48 @@ extension CalendarWeekGridView {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
           "\(headerAccessibilityLabel(day.date)), \(caption?.sentence ?? CalendarWeekDayLoadCaption.nothingPlanned)")
+        .accessibilityAddTraits(.isHeader)
       }
     }
     .padding(.vertical, CalendarWeekGridMetrics.headerVerticalPadding)
     .fixedSize(horizontal: false, vertical: true)
+  }
+
+  // MARK: Day grouping
+
+  /// One day's column of the all-day strip as an accessibility container named
+  /// by its day, so VoiceOver reads one day's pills before the next day's and
+  /// says which day they belong to. A day with nothing in `column` is hidden,
+  /// so it is no stop. A single-day grid needs no grouping: its header already
+  /// names the day.
+  @ViewBuilder
+  func groupedByDay<Column: View>(
+    _ column: Column, day: CalendarGridDay, totalDays: Int, isEmpty: Bool
+  ) -> some View {
+    if totalDays > 1 {
+      column
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(headerAccessibilityLabel(day.date))
+        .accessibilityHidden(isEmpty)
+    } else {
+      column
+    }
+  }
+
+  /// The sort priority VoiceOver orders the grid's blocks by, higher first: an
+  /// earlier day reads before a later one, and within a day the block that
+  /// starts earliest reads first; blocks that start together keep the grid's
+  /// own order. Events and task blocks share one scale, so the week reads day
+  /// by day in time order whatever each block is. The day columns are not
+  /// containers, so the priorities order every block of the grid at once.
+  static func accessibilitySortPriority(dayIndex: Int, totalDays: Int, startMinutes: Int) -> Double {
+    Double((totalDays - dayIndex) * 2 * 24 * 60 + 24 * 60 - startMinutes)
+  }
+
+  /// `label` for a block of the grid, followed by its day when the grid shows
+  /// more than one, since its column header is not beside it for VoiceOver.
+  func blockAccessibilityLabel(_ label: String, on day: CalendarGridDay, totalDays: Int) -> String {
+    totalDays > 1 ? "\(label), \(headerAccessibilityLabel(day.date))" : label
   }
 
   // MARK: All-day strip
@@ -63,7 +101,9 @@ extension CalendarWeekGridView {
         .frame(width: gutterWidth, alignment: .trailing)
         .padding(.trailing, LorvexDesign.Spacing.sm)
       ForEach(columns) { day in
-        allDayColumn(day)
+        groupedByDay(
+          allDayColumn(day), day: day, totalDays: columns.count,
+          isEmpty: day.allDayEvents.isEmpty && day.scheduledTasks.isEmpty)
       }
     }
     .padding(.vertical, hasContent ? CalendarWeekGridMetrics.allDayStripContentPadding : CalendarWeekGridMetrics.allDayStripEmptyPadding)
@@ -143,8 +183,10 @@ extension CalendarWeekGridView {
     allDayPill(title: event.title, time: event.pillTimeLabel(on: day.dayKey), color: eventColor(event))
       .onTapGesture { selectEvent(event) }
       .calendarPointingHandCursor()
+      .accessibilityElement(children: .ignore)
       .accessibilityAddTraits(.isButton)
       .accessibilityLabel(calendarPillAccessibilityLabel(event))
+      .accessibilityAction { selectEvent(event) }
   }
 
   /// A task in the all-day strip speaks the timed blocks' task vocabulary,
@@ -195,6 +237,9 @@ extension CalendarWeekGridView {
       Divider()
       planLaterButtons(for: task, from: day.date)
     }
+    // One stop per pill: the circle would otherwise read the pill's label too.
+    // Opening the task is the default action and completing it a named one.
+    .accessibilityElement(children: .ignore)
     .accessibilityAddTraits(.isButton)
     .accessibilityLabel(
       String(
@@ -208,6 +253,8 @@ extension CalendarWeekGridView {
       isOverdue
         ? String(localized: "task_detail.pill.overdue", defaultValue: "Overdue", table: "Localizable", bundle: LorvexL10n.bundle)
         : "")
+    .accessibilityAction { openTask(task) }
+    .accessibilityAction(named: taskCompletionLabel(isDone: isDone)) { toggleCompletion(of: task) }
   }
 
   /// The "+N more" pill capping a busy all-day column. Opens a popover listing
@@ -345,6 +392,9 @@ extension CalendarWeekGridView {
       }
     }
     .frame(width: gutter)
+    // Twenty-four labels would be twenty-four stops, and each block already
+    // names its own time.
+    .accessibilityHidden(true)
   }
 
   /// The now line across one day column, centered on `now`'s time of day: red

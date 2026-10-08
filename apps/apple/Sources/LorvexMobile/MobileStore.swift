@@ -41,6 +41,10 @@ public final class MobileStore {
   /// that spawns no load of its own — otherwise the flag could strand `true` and
   /// wedge the Review tab on its skeleton.
   var reviewDraftLoadToken = 0
+  /// The day whose review the last committed `loadDailyReviewDraft` put on the
+  /// page. A reload of that same day keeps the page on screen instead of
+  /// returning to the loading state.
+  var reviewDraftDate: String?
   public var listDraft: MobileListDraft
   public internal(set) var isCreatingList = false
   public internal(set) var isUpdatingList = false

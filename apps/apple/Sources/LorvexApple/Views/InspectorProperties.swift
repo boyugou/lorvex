@@ -161,6 +161,7 @@ struct InspectorProperties<Editor: View, MenuItems: View>: View {
   private func additionLabel(_ addition: InspectorPropertyAddition) -> some View {
     HStack(spacing: LorvexDesign.Spacing.xxs) {
       Image(systemName: "plus").imageScale(.small)
+        .accessibilityHidden(true)
       Text(addition.label).fixedSize()
     }
     .font(LorvexDesign.Typography.secondaryText)
@@ -288,6 +289,7 @@ private struct InspectorPropertyRowLabel: View {
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(row.tint.map(AnyShapeStyle.init) ?? AnyShapeStyle(.secondary))
         .frame(width: 18)
+        .accessibilityHidden(true)
       Text(row.label)
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)

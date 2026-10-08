@@ -15,6 +15,7 @@ extension TaskDetailView {
             systemImage: "checklist"
           )
           .font(LorvexDesign.Typography.primaryEmphasis)
+          .accessibilityAddTraits(.isHeader)
 
           Spacer()
 
@@ -31,7 +32,9 @@ extension TaskDetailView {
         }
 
         if totalCount > 0 {
+          // The count beside the title says the same in words.
           LorvexProgressBar(value: completionFraction)
+            .accessibilityHidden(true)
             .accessibilityIdentifier("task.detail.checklist.progress")
         }
 

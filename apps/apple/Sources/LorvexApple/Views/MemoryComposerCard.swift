@@ -114,6 +114,7 @@ struct MemoryComposerCard: View {
       Image(systemName: "pencil.circle")
         .symbolRenderingMode(.hierarchical)
         .foregroundStyle(LorvexDesign.Palette.warning)
+        .accessibilityHidden(true)
       Text(
         String(
           format: String(

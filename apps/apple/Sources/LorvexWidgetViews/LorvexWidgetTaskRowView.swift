@@ -161,8 +161,9 @@ struct WidgetLeadBlock: View {
 }
 
 /// One task under the lead: a circle that completes it, tinted by the task's
-/// priority, its title (a link into the task), and its time, state, or
-/// estimate at the trailing edge, as the app's task rows read.
+/// priority (and marked with it while Differentiate Without Color is on), its
+/// title (a link into the task), and its time, state, or estimate at the
+/// trailing edge, as the app's task rows read.
 ///
 /// Under a lead task the circle sits centered in a column as wide as the lead
 /// ring (`leadRingDiameter`), so the circles share the ring's axis and the
@@ -172,13 +173,14 @@ struct WidgetLeadBlock: View {
 struct WidgetTaskRowView: View {
   let row: WidgetTaskRenderRow
   var leadRingDiameter: CGFloat?
+  @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
 
   var body: some View {
     // 12pt after a lead-width column is the lead block's ring-to-title gap.
     HStack(spacing: leadRingDiameter == nil ? 0 : 12) {
       WidgetActionButton(
         intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
-        systemName: "circle",
+        systemName: (row.priority ?? .p3).circleGlyph(differentiating: differentiateWithoutColor),
         accessibilityLabel: String(
           localized: "widget.action.complete.a11y",
           defaultValue: "Complete \(row.title)",

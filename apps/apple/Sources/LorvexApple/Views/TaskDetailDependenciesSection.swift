@@ -176,9 +176,8 @@ private struct TaskDetailDependencyRow: View {
     return Button {
       toggleCompletion(task)
     } label: {
-      Image(systemName: task.statusCircleGlyph)
+      LorvexTaskStatusCircle(task: task)
         .font(LorvexDesign.Typography.secondaryText)
-        .foregroundStyle(task.statusCircleStyle)
         .contentTransition(.symbolEffect(.replace))
         .frame(width: 16)
         .contentShape(Circle())

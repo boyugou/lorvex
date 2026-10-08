@@ -7,12 +7,15 @@ import SwiftUI
 /// (`lorvexCalendarTaskSurface`, a hollow dashed outline) instead of an
 /// event's solid fill and rail, so time set aside for the user's own work never
 /// reads like a meeting. The block opens the task. Dragging it moves the
-/// task's time and day (``taskMoveGesture(for:dayIndex:totalDays:columnWidth:)``);
-/// a time is also set in the task's detail or by suggested times on Today. A
-/// block in a lane that overlap
-/// has narrowed below ``LorvexDesign/CalendarMetrics/compactLaneWidth`` drops
-/// the circle and the time line and shows its title alone, with the full label
-/// as its tooltip; its context menu still completes the task.
+/// task's time and day (``taskMoveGesture(for:dayIndex:totalDays:columnWidth:)``),
+/// and dragging its top or bottom edge changes its start or end
+/// (``taskResizeGesture(for:dayIndex:edge:)``); both leave a finished task's
+/// block alone. A time is also set in the task's detail or by suggested times
+/// on Today. While a drag is under way the block reads the time its release
+/// would give it. A block in a lane that overlap has narrowed below
+/// ``LorvexDesign/CalendarMetrics/compactLaneWidth`` drops the circle and the
+/// time line and shows its title alone, with the full label as its tooltip; its
+/// context menu still completes the task.
 extension CalendarWeekGridView {
   func taskBlock(
     _ block: CalendarGridTaskBlock, on day: CalendarGridDay, dayIndex: Int, totalDays: Int,
@@ -21,14 +24,28 @@ extension CalendarWeekGridView {
     let laneWidth = columnWidth / CGFloat(min(block.laneCount, maxDisplayedLanes))
     let y = CGFloat(block.startMin) / 60 * hourHeight
     // The drawn end carries the model's minimum; see `eventBlock`.
-    let height = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
+    let baseHeight = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
     let color = LorvexDesign.Palette.accent
     let isRunning = isRunningNow(block, on: day) && !block.isDone
     let isSelected = store.selectedTaskID == block.task.id
     let active = rescheduleDraft?.blockID == block.id ? rescheduleDraft : nil
     let preview = CalendarBlockMovePreview(draft: active)
+    // A resize in progress cannot shrink the block below a quarter hour.
+    let renderedHeight =
+      active == nil
+      ? baseHeight
+      : max(baseHeight + preview.resizeBottom - preview.resizeTop, hourHeight / 4)
+    // While a drag is under way the block reads the time its release would give it.
+    let landed = active?.landedTime(
+      of: block.startMin..<block.endMin, hourHeight: hourHeight,
+      minimumLength: CalendarGridMove.snapMinutes)
+    let isResizable = !block.isDone
+    let showsResizeGrips = isSelected || hoveredBlockID == block.id
     let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
-    let isTight = height < LorvexDesign.CalendarMetrics.tightBlockHeight
+    let isTight = baseHeight < LorvexDesign.CalendarMetrics.tightBlockHeight
+    // The grips start past the completion circle, so a click on its upper half
+    // still completes the task rather than starting a resize.
+    let gripInset = isCompact ? 0 : CalendarEventBlockMetrics.taskCircleInset
     let label = calendarTimedTaskAccessibilityLabel(
       title: block.task.title, startMinutes: block.startMin, endMinutes: block.endMin)
 
@@ -39,8 +56,10 @@ extension CalendarWeekGridView {
       } else {
         LorvexCalendarBlockText(
           title: block.task.title,
-          time: lorvexClockTimeLabel(minutes: block.startMin),
-          range: lorvexClockRangeLabel(startMinutes: block.startMin, endMinutes: block.endMin),
+          time: lorvexClockTimeLabel(minutes: landed?.lowerBound ?? block.startMin),
+          range: lorvexClockRangeLabel(
+            startMinutes: landed?.lowerBound ?? block.startMin,
+            endMinutes: landed?.upperBound ?? block.endMin),
           isDone: block.isDone,
           verticalPadding: CalendarEventBlockMetrics.verticalPadding
         ) {
@@ -56,7 +75,7 @@ extension CalendarWeekGridView {
     )
     .frame(
       width: max(laneWidth - CalendarEventBlockMetrics.laneGap, 8),
-      height: height,
+      height: renderedHeight,
       alignment: .topLeading
     )
     .clipped()
@@ -67,11 +86,34 @@ extension CalendarWeekGridView {
       lineWidth: isSelected ? 1.5 : 1,
       hidesContentBeneath: true)
     .calendarPointingHandCursor()
+    .onHover { inside in
+      if inside {
+        hoveredBlockID = block.id
+      } else if hoveredBlockID == block.id {
+        hoveredBlockID = nil
+      }
+    }
+    .overlay(alignment: .top) {
+      if isResizable && baseHeight > 24 {
+        resizeHandle(
+          alignment: .top, color: color, visible: showsResizeGrips, leadingInset: gripInset,
+          gesture: taskResizeGesture(for: block, dayIndex: dayIndex, edge: .start),
+          select: { openTask(block.task) })
+      }
+    }
+    .overlay(alignment: .bottom) {
+      if isResizable {
+        resizeHandle(
+          alignment: .bottom, color: color, visible: showsResizeGrips, leadingInset: gripInset,
+          gesture: taskResizeGesture(for: block, dayIndex: dayIndex, edge: .end),
+          select: { openTask(block.task) })
+      }
+    }
     .contentShape(Rectangle())
     .zIndex(active != nil || isSelected ? 2 : 1)
     .offset(
       x: CGFloat(block.lane) * laneWidth + preview.move.width,
-      y: y + preview.move.height)
+      y: y + preview.move.height + preview.resizeTop)
     .opacity(active == nil ? 1 : 0.85)
     .shadow(
       color: active != nil ? .black.opacity(0.16) : (isSelected ? color.opacity(0.35) : .clear),

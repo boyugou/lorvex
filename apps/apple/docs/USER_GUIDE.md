@@ -2613,6 +2613,20 @@ or the card to open the whole list. The macOS workspace can create, edit, and de
 through the same core list catalog used by MCP and mobile. Drag task rows onto a
 list card to move them; lists with assigned tasks must be emptied before deletion.
 
+### The Circle on a Task Row
+
+The circle at the start of a task row checks the task off when you click or tap
+it. Its color says how much the task matters: red for high priority, orange
+for normal, and gray for low. A done task's circle is a green check, a
+cancelled task's is an ×, and a Someday task's is a moon.
+
+With **Differentiate Without Color** turned on (System Settings ▸
+Accessibility ▸ Display on Mac, Settings ▸ Accessibility ▸ Display & Text Size
+on iPhone and iPad), an open task's circle also carries a mark, so the priority
+does not depend on color: an exclamation point for high priority, a down arrow
+for low priority, and a plain ring for normal. VoiceOver reads a priority other
+than normal after the task's title.
+
 ### Creating Tasks
 
 - **Quick Capture:** ⌘N, type, **Return**.
@@ -2779,10 +2793,13 @@ On the Mac, the week and day grids show a task planned for a day as a pill in
 the all-day row, or as a block at its time. Drag a pill onto a time in any
 column to give the task that time: the column marks where it will start, and
 the task keeps its length (its estimate, or half an hour when it has none). Drag
-a block to another time or day to move it in 15-minute steps, and drop a task on
-the all-day row to plan it for that day without a time. Right-click a task for
-**Plan a Day Later** and **Plan a Week Later**. Every one of these changes can
-be undone with ⌘Z (**Plan Task**), and a finished task stays where it is.
+a block to another time or day to move it in 15-minute steps. Drag a block's top
+or bottom edge to change when the task starts or ends, down to 15 minutes; the
+task's estimate stays as it is. Either drag shows the block's new time as you
+go. Drop a task on the all-day row to plan it for that day without a time.
+Right-click a task for **Plan a Day Later** and **Plan a Week Later**. Every one
+of these changes can be undone with ⌘Z (**Plan Task**), and a finished task
+stays where it is.
 
 Month view takes the same drops: drag a task chip onto another day and the task
 moves there, keeping its time if it has one. Right-click a day for **Create
@@ -2834,10 +2851,10 @@ next day. An event can't be saved while its end is not after its start.
 
 To move an event, drag it in the grid; on iPhone and iPad, touch and hold it
 first. On the Mac, drag an event's top or bottom edge to change when it starts
-or ends. Repeating events and events that continue past midnight into the next
-day can't be dragged; open them to change their times. An event that ends at
-exactly midnight counts as a one-day event and drags like any other. On the
-Mac, press ⌘Z (**Edit → Undo Move Event**) to put a dragged or resized event back
+or ends; the block shows its new time as you drag. Repeating events and events
+that continue past midnight into the next day can't be dragged; open them to
+change their times. An event that ends at exactly midnight counts as a one-day
+event and drags like any other. On the Mac, press ⌘Z (**Edit → Undo Move Event**) to put a dragged or resized event back
 at its earlier times. Only the times are restored, so a title or location you
 changed afterwards stays.
 

@@ -17,7 +17,8 @@ import SwiftUI
 /// - on Today, the task's time leading the metadata line, and status chips the
 ///   host supplies ("Until 3:00 PM", "Pushed 4 times").
 ///
-/// Priority is carried by the circle's tint and status by its glyph, so the row
+/// Priority is carried by the circle's tint (and, with Differentiate Without
+/// Color on, by a mark inside the ring) and status by its glyph, so the row
 /// needs no redundant "Open" / "P2" status or priority text.
 struct LorvexTaskRow: View {
   let task: LorvexTask
@@ -142,10 +143,9 @@ struct LorvexTaskRow: View {
     Button {
       onToggleComplete?()
     } label: {
-      Image(systemName: task.statusCircleGlyph)
+      LorvexTaskStatusCircle(task: task)
         .font(LorvexDesign.Typography.primaryText)
         .imageScale(.large)
-        .foregroundStyle(task.statusCircleStyle)
         // Native symbol cross-fade when the glyph flips on complete / reopen,
         // so checking a task off animates in place rather than snapping — plus a
         // small bounce on the state change so completion feels rewarding.

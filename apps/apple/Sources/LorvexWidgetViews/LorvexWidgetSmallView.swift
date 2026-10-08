@@ -176,12 +176,13 @@ struct SmallSystemWidgetView: View {
 /// title, a link into the task. No metadata column; the tile is too narrow.
 private struct SmallTaskRow: View {
   let row: WidgetTaskRenderRow
+  @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
 
   var body: some View {
     HStack(spacing: 0) {
       WidgetActionButton(
         intent: WidgetCompleteTaskIntent(taskID: row.id, title: row.title),
-        systemName: "circle",
+        systemName: (row.priority ?? .p3).circleGlyph(differentiating: differentiateWithoutColor),
         accessibilityLabel: String(
           localized: "widget.action.complete.a11y",
           defaultValue: "Complete \(row.title)",

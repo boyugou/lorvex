@@ -29,10 +29,9 @@ struct MenuBarTaskRow: View {
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       Button(action: complete) {
-        Image(systemName: task.statusCircleGlyph)
+        LorvexTaskStatusCircle(task: task)
           .font(LorvexDesign.Typography.primaryText.weight(.semibold))
           .imageScale(.large)
-          .foregroundStyle(task.statusCircleStyle)
           .frame(width: 18)
           .contentShape(Circle())
       }

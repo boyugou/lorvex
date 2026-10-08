@@ -82,6 +82,62 @@ func aDropEarlyEnoughToEndByMidnightKeepsTheBlockInTheDay() {
   #expect(CalendarGridMove.dropStart(atY: 24 * 60 - 1, hourHeight: hour, duration: 60) == 1380)
 }
 
+private let nineToTen = 9 * 60..<10 * 60
+
+private func resized(
+  _ edge: CalendarGridMove.Edge, of time: Range<Int> = nineToTen, dy: CGFloat,
+  minimumLength: Int = CalendarGridMove.snapMinutes
+) -> Range<Int> {
+  CalendarGridMove.resized(
+    time, edge: edge, translationHeight: dy, hourHeight: hour, minimumLength: minimumLength)
+}
+
+@Test
+func draggingTheBottomEdgeMovesTheEndInWholeQuarterHours() {
+  #expect(resized(.end, dy: 15) == 9 * 60..<10 * 60 + 15)
+  #expect(resized(.end, dy: 29) == 9 * 60..<10 * 60 + 15)
+  #expect(resized(.end, dy: 45) == 9 * 60..<10 * 60 + 45)
+  #expect(resized(.end, dy: -15) == 9 * 60..<10 * 60 - 15)
+  #expect(resized(.end, dy: -29) == 9 * 60..<10 * 60 - 15)
+}
+
+@Test
+func draggingTheTopEdgeMovesTheStartInWholeQuarterHours() {
+  #expect(resized(.start, dy: -30) == 8 * 60 + 30..<10 * 60)
+  #expect(resized(.start, dy: 15) == 9 * 60 + 15..<10 * 60)
+  #expect(resized(.start, dy: 29) == 9 * 60 + 15..<10 * 60)
+}
+
+@Test
+func aResizeShorterThanOneSnapStepChangesNothing() {
+  #expect(resized(.end, dy: 14) == nineToTen)
+  #expect(resized(.start, dy: -14) == nineToTen)
+}
+
+@Test
+func aShortDragLeavesABlockShorterThanTheMinimumAsItWas() {
+  let tenMinutes = 9 * 60..<9 * 60 + 10
+  #expect(resized(.end, of: tenMinutes, dy: 5, minimumLength: 20) == tenMinutes)
+  #expect(resized(.start, of: tenMinutes, dy: -5, minimumLength: 20) == tenMinutes)
+}
+
+@Test
+func aResizeStopsOneMinimumShortOfTheOppositeEdge() {
+  #expect(resized(.end, dy: -600) == 9 * 60..<9 * 60 + 15)
+  #expect(resized(.start, dy: 600) == 9 * 60 + 45..<10 * 60)
+  #expect(resized(.end, dy: -600, minimumLength: 20) == 9 * 60..<9 * 60 + 20)
+}
+
+@Test
+func aResizeStopsAtTheBoundsOfTheDay() {
+  #expect(resized(.end, dy: 6_000) == 9 * 60..<24 * 60)
+  #expect(resized(.start, dy: -6_000) == 0..<10 * 60)
+  let lateBlock = 23 * 60 + 50..<24 * 60
+  #expect(resized(.end, of: lateBlock, dy: 15) == lateBlock, "the block already ends at midnight")
+  let lastQuarter = 23 * 60 + 45..<24 * 60
+  #expect(resized(.end, of: lastQuarter, dy: -600) == lastQuarter, "and never drops below the minimum")
+}
+
 private func task(estimate: Int?, time: Range<Int>?) -> LorvexTask {
   LorvexTask(
     id: "t", title: "Write the brief", notes: "", priority: .p2, status: .open, dueDate: nil,

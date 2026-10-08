@@ -148,6 +148,20 @@ Rules that follow from the table:
   still hears the count on a folding header either way. A count that is part
   of a sentence ("3 more today") is copy, not a badge, and stays.
 
+- A hue is never the only carrier of a state. Done, cancelled, someday,
+  overdue, and sync states carry a glyph or a word beside their color. The one
+  state a row tells by tint alone is a task's priority, so while the system's
+  Differentiate Without Color setting is on, an open task's circle marks it
+  inside the ring (`LorvexTask.Priority.circleGlyph(differentiating:)`: an
+  exclamation mark for P1, an arrow pointing down for P3, the plain ring for
+  P2). Every task row, detail page, widget row, and watch row draws the circle
+  through `LorvexTaskStatusCircle` or the same glyph function. A view reads the
+  setting with `@LorvexDifferentiateWithoutColor`, not the environment key
+  itself: SwiftUI exposes the key read-only, so the wrapper adds the DEBUG launch
+  argument `-lorvexDifferentiateWithoutColor`, the only way a headless capture
+  can show these cues (`LORVEX_TOUR_EXTRA_ARGS` on the Mac tour,
+  `LORVEX_SIM_EXTRA_ARGS` on the iOS captures).
+
 Severity for system state (Settings status rows, diagnostics, permissions,
 sync) uses `neutral`, `success`, `warning`, `error`.
 

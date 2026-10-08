@@ -10,12 +10,16 @@ struct LorvexWatchTaskRow: View {
   let canComplete: Bool
   let complete: () async -> Bool
   let openActions: () -> Void
+  @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       LorvexWatchCompleteButton(
-        title: task.title, style: .circle(tint: task.priority.priorityTint), isEnabled: canComplete,
-        complete: complete)
+        title: task.title,
+        style: .circle(
+          tint: task.priority.priorityTint,
+          glyph: task.priority.circleGlyph(differentiating: differentiateWithoutColor)),
+        isEnabled: canComplete, complete: complete)
       Button(action: openActions) {
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
           Text(userContent: task.title)

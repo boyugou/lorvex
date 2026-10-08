@@ -1909,7 +1909,7 @@ RULES = [
     # --- taskRowGivesSomedayTasksADormantTreatment ---
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'isSomeday'),
     ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'isDormant'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'Image(systemName: task.statusCircleGlyph)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexTaskRow.swift'), 'LorvexTaskStatusCircle(task: task)'),
     ('contains', ('file', 'Sources/LorvexCore/Models/TaskStatusPresentation.swift'), 'case .someday: "moon.circle"'),
     # --- macOSLorvexCardSurfaceUsesTheCardDesignTokens ---
     ('contains', ('file', 'Sources/LorvexCore/Support/LorvexCard.swift'), 'public func lorvexCard(padding: CGFloat = LorvexDesign.Spacing.cardPadding)'),

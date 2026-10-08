@@ -166,4 +166,15 @@ extension MobileStore {
     else { return }
     _ = await commitDailyReviewDraft(playsFeedback: false)
   }
+
+  /// Writes the drafts that save on their own, as the app leaves the foreground.
+  /// The daily review saves when a field loses focus, its mood or energy
+  /// changes, or its page disappears; moving the app to the background does none
+  /// of these, and iOS can end a suspended process without further notice, so
+  /// text typed in the last field would be lost. Runs before the sync pass of
+  /// the same background window, which then sends the saved entry to the
+  /// other devices.
+  public func flushAutosaveDraftsBeforeSuspension() async {
+    await flushDailyReviewDraftIfNeeded()
+  }
 }

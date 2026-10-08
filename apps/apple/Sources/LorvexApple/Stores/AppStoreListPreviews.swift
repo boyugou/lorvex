@@ -5,6 +5,20 @@ extension AppStore {
   /// How many open tasks a Lists catalog card previews.
   static let listPreviewTaskCount = 3
 
+  /// What the Lists catalog's previews depend on; the catalog re-reads them when
+  /// it changes. The lists snapshot moves with every change to a count. The
+  /// task-data revision also covers the changes that rename or reorder a list's
+  /// first open tasks without moving a count: a new title, priority or due date
+  /// from the assistant or another device.
+  struct ListPreviewKey: Equatable {
+    var lists: ListCatalogSnapshot?
+    var taskDataGeneration: UInt64
+  }
+
+  var listPreviewKey: ListPreviewKey {
+    ListPreviewKey(lists: lists, taskDataGeneration: taskDataGeneration)
+  }
+
   /// Each list's first open tasks in the canonical order, for the Lists
   /// catalog's cards. A list whose read fails is left out, so its card shows
   /// only its counts.

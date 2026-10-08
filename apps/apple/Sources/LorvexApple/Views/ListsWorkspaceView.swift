@@ -139,9 +139,7 @@ struct ListsWorkspaceView: View {
       }
     }
     .accessibilityIdentifier("lists.overview")
-    // The lists snapshot changes with every task change that moves a count,
-    // so the previews follow it.
-    .task(id: store.lists) { await reloadListPreviews() }
+    .task(id: store.listPreviewKey) { await reloadListPreviews() }
     .overlay {
       if let listsEmptyState {
         LorvexEmptyStatePanel(model: listsEmptyState)

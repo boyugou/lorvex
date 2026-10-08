@@ -57,14 +57,7 @@ extension AppStore {
       selectedTaskID = nil
     case .habits:
       selectedTaskID = nil
-      // Drop a habit-inspector selection whose habit no longer exists after the
-      // refresh (deleted on another device / import), so the inspector doesn't
-      // hang on a "Habit Not Found" placeholder.
-      if let selectedHabitID,
-        (habits?.habits ?? []).contains(where: { $0.id == selectedHabitID }) != true
-      {
-        self.selectedHabitID = nil
-      }
+      closeHabitInspectorIfHabitIsGone()
     case .reviews, .memory:
       selectedTaskID = nil
     }

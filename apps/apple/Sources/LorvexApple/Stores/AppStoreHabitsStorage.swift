@@ -9,6 +9,10 @@ struct AppStoreHabitsStorage {
   /// Archived habits, loaded on demand for the restore surface. Empty until the
   /// habits workspace appears (kept separate from the active `habits` catalog).
   var archivedHabits: [LorvexHabit] = []
+  /// True once the archived habits have been read. From then on a full refresh
+  /// and the habits reload of an inbound sync re-read them too, so a change made
+  /// elsewhere reaches the restore section. Until then the list stays unread.
+  var archivedHabitsLoaded = false
   var draftHabitName = ""
   var draftHabitCue = ""
   var draftHabitTargetCountText = "1"
@@ -46,6 +50,7 @@ struct AppStoreHabitsStorage {
   mutating func reset() {
     habits = nil
     archivedHabits = []
+    archivedHabitsLoaded = false
     draftHabitName = ""
     draftHabitCue = ""
     draftHabitTargetCountText = "1"

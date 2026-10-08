@@ -84,6 +84,7 @@ extension MobileStore {
         }
       case .habits:
         if let loaded = try? await core.loadHabits(date: date) { habits = loaded }
+        await reloadArchivedHabitsIfLoaded()
       case .memory:
         if let loaded = try? await core.loadMemory() {
           memory = loaded

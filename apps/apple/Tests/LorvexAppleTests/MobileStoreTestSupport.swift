@@ -41,6 +41,38 @@ final class RecordingMobileWidgetSnapshotPublisher: MobileWidgetSnapshotPublishi
   }
 }
 
+/// A widget publisher that suspends one publication on request, so a test can
+/// act while a mutation's post-write surfaces are still publishing. Every
+/// publication, held or not, is projected and counted.
+@MainActor
+final class GatedMobileWidgetSnapshotPublisher: MobileWidgetSnapshotPublishing {
+  private var holdsNextPublication = false
+  private var heldPublication: CheckedContinuation<Void, Never>?
+
+  /// Publications started so far.
+  private(set) var publicationCount = 0
+
+  /// Whether a publication is suspended at the gate.
+  var isHolding: Bool { heldPublication != nil }
+
+  /// The next publication suspends until ``release()``; later ones pass through.
+  func holdNextPublication() { holdsNextPublication = true }
+
+  func release() {
+    heldPublication?.resume()
+    heldPublication = nil
+  }
+
+  func publish(source: WidgetSnapshotSource) async throws -> WidgetSnapshot {
+    publicationCount += 1
+    if holdsNextPublication {
+      holdsNextPublication = false
+      await withCheckedContinuation { heldPublication = $0 }
+    }
+    return try await NoopMobileWidgetSnapshotPublisher().publish(source: source)
+  }
+}
+
 // MARK: - Helper
 
 @MainActor

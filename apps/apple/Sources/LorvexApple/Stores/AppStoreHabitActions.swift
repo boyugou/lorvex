@@ -91,7 +91,20 @@ extension AppStore {
     await perform {
       habitsStorage.archivedHabits =
         try await core.loadArchivedHabits(date: logicalTodayDateString).habits
+      habitsStorage.archivedHabitsLoaded = true
     }
+  }
+
+  /// Re-reads the archived habits once the Habits workspace has loaded them, so an
+  /// archive, restore, rename, or deletion made elsewhere (the assistant, another
+  /// device) shows in the restore section while the workspace is open. The
+  /// workspace itself reads them only when it appears. Before the first load the
+  /// list stays unread. A failed read keeps the list shown.
+  func reloadArchivedHabitsIfLoaded() async {
+    guard habitsStorage.archivedHabitsLoaded,
+      let loaded = try? await core.loadArchivedHabits(date: logicalTodayDateString)
+    else { return }
+    habitsStorage.archivedHabits = loaded.habits
   }
 
   /// Real stats for a habit's card (nil until `loadAllHabitStats` runs).
@@ -246,20 +259,48 @@ extension AppStore {
   /// covered. No-ops the cache on error and surfaces the message.
   func loadHabitDetail(id: LorvexHabit.ID) async {
     await perform {
-      let to = logicalTodayDateString
-      let from = LorvexDateFormatters.ymdUTCAddingDays(to, days: -370) ?? to
-      // A year-plus window has at most ~371 daily rows; the bound guards against
-      // pathological data while covering the full heatmap window.
-      async let completions = core.getHabitCompletions(
-        id: id, from: from, to: to, limit: 400)
-      async let stats = core.getHabitStats(id: id)
-      async let policies = core.getHabitReminderPolicies(id: id)
-      habitsStorage.detailsByHabitID[id] = HabitDetail(
-        completions: try await completions,
-        stats: try await stats,
-        reminderPolicies: try await policies
-      )
+      habitsStorage.detailsByHabitID[id] = try await readHabitDetail(id: id)
     }
+  }
+
+  private func readHabitDetail(id: LorvexHabit.ID) async throws -> HabitDetail {
+    let to = logicalTodayDateString
+    let from = LorvexDateFormatters.ymdUTCAddingDays(to, days: -370) ?? to
+    // A year-plus window has at most ~371 daily rows; the bound guards against
+    // pathological data while covering the full heatmap window.
+    async let completions = core.getHabitCompletions(
+      id: id, from: from, to: to, limit: 400)
+    async let stats = core.getHabitStats(id: id)
+    async let policies = core.getHabitReminderPolicies(id: id)
+    return HabitDetail(
+      completions: try await completions,
+      stats: try await stats,
+      reminderPolicies: try await policies
+    )
+  }
+
+  /// Re-reads the selected habit's cached detail (its history, stats, and
+  /// reminder policies) once the inspector has loaded it, so a change made
+  /// elsewhere (the assistant, another device) reaches an inspector that is
+  /// already open. The inspector loads the detail only when its habit changes.
+  /// Quiet: a habit that no longer exists, or a failed read, keeps what is shown.
+  func reloadSelectedHabitDetailIfLoaded() async {
+    guard let id = selectedHabitID, habitsStorage.detailsByHabitID[id] != nil,
+      habits?.habits.contains(where: { $0.id == id }) == true,
+      let detail = try? await readHabitDetail(id: id)
+    else { return }
+    habitsStorage.detailsByHabitID[id] = detail
+  }
+
+  /// Closes the habit inspector once the loaded catalog no longer holds its habit
+  /// (another device or the assistant archived or deleted it), so the inspector
+  /// does not hang on a "Habit Not Found" placeholder. The store's own archive and
+  /// delete actions close it directly.
+  func closeHabitInspectorIfHabitIsGone() {
+    guard let id = selectedHabitID,
+      (habits?.habits ?? []).contains(where: { $0.id == id }) != true
+    else { return }
+    selectedHabitID = nil
   }
 
   func refreshHabitDetailIfLoaded(id: LorvexHabit.ID) async {

@@ -19,7 +19,7 @@ import SwiftUI
 /// the day, and a task dropped on it is planned on it; a task chip drags to
 /// another day. VoiceOver reads the cell as one button: the date, then how
 /// many events and tasks the day has.
-struct MobileCalendarMonthDayCell: View {
+struct MobileCalendarMonthDayCell: View, Equatable {
   /// The vertical room a titled cell keeps around its stack: an inset at the
   /// top and a margin at the bottom.
   nonisolated static let titledInsets: CGFloat = 6
@@ -43,6 +43,16 @@ struct MobileCalendarMonthDayCell: View {
   let createEvent: () -> Void
   let dropTasks: ([LorvexTaskRef]) -> Void
   @State private var isDropTarget = false
+
+  /// Two cells draw the same when they hold the same day in the same state at
+  /// the same size. The closures they carry do the same thing for equal days,
+  /// so they are not compared; this lets SwiftUI skip a cell whose page was
+  /// evaluated again for another day's change.
+  nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.day == rhs.day && lhs.isToday == rhs.isToday && lhs.isSelected == rhs.isSelected
+      && lhs.style == rhs.style && lhs.dayNumberSize == rhs.dayNumberSize
+      && lhs.chipHeight == rhs.chipHeight && lhs.calendar == rhs.calendar
+  }
 
   var body: some View {
     content

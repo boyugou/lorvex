@@ -20,8 +20,8 @@ extension AppStore {
   /// `calendarIdentifier`; nil selects the dedicated Lorvex calendar. Bound by
   /// the event form's calendar picker.
   var draftCalendarTargetCalendarID: String? {
-    get { calendarStorage.draftCalendarTargetCalendarID }
-    set { calendarStorage.draftCalendarTargetCalendarID = newValue }
+    get { calendarDraftStorage.draftCalendarTargetCalendarID }
+    set { calendarDraftStorage.draftCalendarTargetCalendarID = newValue }
   }
 
   /// The draft's calendar choice as an ``EventKitWriteTarget`` for the write

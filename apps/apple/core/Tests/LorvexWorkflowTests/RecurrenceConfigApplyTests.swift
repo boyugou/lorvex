@@ -423,10 +423,9 @@ final class RecurrenceConfigApplyTests: XCTestCase {
         recurrencePatch: .unset, dueDatePatch: .set("2026-04-15"),
         today: "2026-04-01", version: version, now: now)
     ) { error in
-      guard case StoreError.validation(let message) = error else {
-        return XCTFail("expected a validation error, got \(error)")
-      }
-      XCTAssertTrue(message.contains("2026-04-15"))
+      XCTAssertEqual(
+        error as? RecurrenceScheduleError,
+        .occurrenceDateTaken(taskId: "open-one", date: "2026-04-15"))
     }
 
     try store.writer.read { db in

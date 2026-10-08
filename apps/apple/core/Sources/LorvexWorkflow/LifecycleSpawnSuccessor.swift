@@ -155,8 +155,8 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
     }
     let spawnedFromVersion: String? = row[3]
     guard spawnedFromVersion == snapshot.lifecycleVersion else {
-      throw StoreError.validation(
-        "Cannot reopen task \(taskId.asString): successor \(successorId) belongs to a different lifecycle generation")
+      throw TaskLifecycleError.reopenBlockedByOtherGeneration(
+        taskId: taskId.asString, successorId: successorId)
     }
     guard status.isActive, successorRollover == .none || successorRollover == .revoked else {
       throw TaskLifecycleError.reopenBlockedByAdvancedSuccessor(
@@ -175,8 +175,7 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
         + "WHERE t.status IN (\(StatusName.activeStatusSqlList)))",
       arguments: [successorId])) ?? 0
     guard activeDescendantExists == 0 else {
-      throw StoreError.validation(
-        "Cannot reopen task \(taskId.asString): a later recurrence descendant is still active")
+      throw TaskLifecycleError.reopenBlockedByLaterOccurrence(taskId: taskId.asString)
     }
 
     let result = try LifecycleStatus.cancelRecurrenceSuccessorForReopen(

@@ -73,9 +73,10 @@ struct MobileCalendarDayColumn: View {
   /// Whether a day column is narrower than a full block layout needs — the
   /// seven-day week on a phone — so the all-day strip goes compact as the
   /// timed blocks do (``LorvexDesign/CalendarMetrics/compactLaneWidth``).
-  private var hasNarrowColumns: Bool {
+  /// `gutter` is the hour gutter's width.
+  private func hasNarrowColumns(gutter: CGFloat) -> Bool {
     pageWidth > 0
-      && (pageWidth - gutterWidth) / CGFloat(dayCount) < LorvexDesign.CalendarMetrics.compactLaneWidth
+      && (pageWidth - gutter) / CGFloat(dayCount) < LorvexDesign.CalendarMetrics.compactLaneWidth
   }
 
   struct DragState: Equatable {
@@ -105,12 +106,13 @@ struct MobileCalendarDayColumn: View {
     let anchorHour = CalendarGridModel.initialScrollAnchorHour(
       for: columns, todayKey: todayKey, nowMinute: nowMinute)
     let scrollSignature = scrollAnchorSignature(columns: columns, anchorHour: anchorHour)
+    let gutter = gutterWidth
     VStack(spacing: 0) {
       if dayCount > 1 && showsHeaders {
         MobileCalendarColumnHeaders(
           columns: columns,
           calendar: calendar,
-          gutterWidth: gutterWidth,
+          gutterWidth: gutter,
           circlesToday: circlesTodayInHeaders,
           onOpenDay: onOpenDay
         )
@@ -119,8 +121,8 @@ struct MobileCalendarDayColumn: View {
       if showsAllDayStrip(columns) {
         MobileCalendarAllDayStrip(
           columns: columns,
-          gutterWidth: gutterWidth,
-          isCompact: hasNarrowColumns,
+          gutterWidth: gutter,
+          isCompact: hasNarrowColumns(gutter: gutter),
           eventColor: eventColor,
           onTapEvent: onTapEvent,
           onDeleteEvent: onDeleteEvent,
@@ -137,7 +139,7 @@ struct MobileCalendarDayColumn: View {
           HStack(alignment: .top, spacing: 0) {
             MobileCalendarHourGutter(
               calendar: calendar,
-              gutterWidth: gutterWidth,
+              gutterWidth: gutter,
               hourHeight: hourHeight,
               anchorHour: anchorHour
             )

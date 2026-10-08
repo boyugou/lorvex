@@ -2,11 +2,17 @@ import LorvexCore
 import SwiftUI
 
 extension MobileCalendarDayView {
-  /// Pages to `day` with the page animation, as Today and the week strip's
-  /// day buttons do: Day mode to that day, Week mode to its week, focused on
-  /// it.
+  /// Pages to `day`, as Today and the week strip's day buttons do: Day mode to
+  /// that day, Week mode to its week, focused on it. A page within
+  /// ``MobileLivePages/keptEachSide`` slides there with the page animation; a
+  /// farther one replaces the visible page at once.
   func jump(to day: Date) {
-    lorvexAnimated { dayOffset = offset(showing: day) }
+    let target = offset(showing: day)
+    if MobileLivePages.slides(from: dayOffset, to: target) {
+      lorvexAnimated { dayOffset = target }
+    } else {
+      dayOffset = target
+    }
     focusWeek(on: day)
   }
 

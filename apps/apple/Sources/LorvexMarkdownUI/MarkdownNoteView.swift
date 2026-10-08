@@ -1,6 +1,19 @@
 import LorvexCore
 import SwiftUI
 
+/// VoiceOver phrasing for GFM task-list rows, supplied by the caller so this
+/// catalog-less rendering module stays localized by whichever surface hosts it.
+/// Each format takes a single `%@` — the task item's source text.
+public struct MarkdownTaskItemAccessibilityLabels: Sendable, Equatable {
+    public let completedFormat: String
+    public let todoFormat: String
+
+    public init(completedFormat: String = "Completed: %@", todoFormat: String = "To do: %@") {
+        self.completedFormat = completedFormat
+        self.todoFormat = todoFormat
+    }
+}
+
 /// Renders a markdown string as native SwiftUI, the single rendered-markdown
 /// surface across the Lorvex Apple app.
 ///
@@ -13,20 +26,9 @@ import SwiftUI
 /// re-render on every keystroke (an editor preview) should parse once into their
 /// own `@State` and pass the parsed note via ``init(note:)`` so the
 /// swift-markdown AST is not rebuilt per render. The `String` initializers parse
-/// eagerly and suit one-shot rendering of stable content.
-/// VoiceOver phrasing for GFM task-list rows, supplied by the caller so this
-/// catalog-less rendering module stays localized by whichever surface hosts it.
-/// Each format takes a single `%@` — the task item's source text.
-public struct MarkdownTaskItemAccessibilityLabels: Sendable {
-    public let completedFormat: String
-    public let todoFormat: String
-
-    public init(completedFormat: String = "Completed: %@", todoFormat: String = "To do: %@") {
-        self.completedFormat = completedFormat
-        self.todoFormat = todoFormat
-    }
-}
-
+/// eagerly and suit one-shot rendering of stable content. A parent that redraws
+/// for other reasons, such as a detail view beside an editor, draws stable source
+/// through ``MarkdownSourceView``, which parses it only when it changes.
 public struct MarkdownNoteView: View {
     let note: MarkdownNote
     let taskItemAccessibility: MarkdownTaskItemAccessibilityLabels

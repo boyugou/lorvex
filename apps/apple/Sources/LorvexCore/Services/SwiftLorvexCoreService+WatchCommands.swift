@@ -155,7 +155,8 @@ extension SwiftLorvexCoreService: LorvexWatchCommandServicing {
       (code, message) = ("validation_failed", "The command is no longer valid.")
     case LorvexCoreError.conflict:
       (code, message) = ("conflict", "The command conflicts with current data.")
-    case is ValidationError, is TaskLifecycleError, is HabitReminderError:
+    case is ValidationError, is TaskLifecycleError, is RecurrenceScheduleError,
+      is HabitReminderError:
       (code, message) = ("validation_failed", "The command is no longer valid.")
     case StoreError.notFound:
       (code, message) = ("not_found", "The target no longer exists.")

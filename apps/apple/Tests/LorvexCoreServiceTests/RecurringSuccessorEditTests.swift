@@ -1,6 +1,7 @@
 import Foundation
 import GRDB
 import LorvexStore
+import LorvexWorkflow
 import XCTest
 
 @testable import LorvexCore
@@ -115,6 +116,31 @@ final class RecurringSuccessorEditTests: XCTestCase {
       status: "open", listID: nil, priority: nil, text: nil, limit: 50, offset: 0
     ).tasks.count
     XCTAssertEqual(openAfter, openBefore - 1)
+  }
+
+  func testMovingAnOccurrenceOntoADayAnotherOccurrenceHoldsIsRefused() async throws {
+    let service = try makeService()
+    let first = try await makeGeneratedOccurrence(service)
+    let firstDay = try XCTUnwrap(columns(service, of: first).occurrenceDate)
+    _ = try await service.completeTaskReturningTask(id: first)
+    let second = try service.read { db in
+      try XCTUnwrap(
+        String.fetchOne(
+          db, sql: "SELECT recurrence_successor_id FROM tasks WHERE id = ?", arguments: [first]))
+    }
+    let secondBefore = try columns(service, of: second)
+    let takenDay = try XCTUnwrap(LorvexDateFormatters.ymdUTC.date(from: firstDay))
+
+    do {
+      _ = try await service.updateTask(TaskUpdateDraft(id: second, dueDate: .set(takenDay)))
+      XCTFail("expected the move onto \(firstDay) to be refused")
+    } catch let error as RecurrenceScheduleError {
+      XCTAssertEqual(error, .occurrenceDateTaken(taskId: second, date: firstDay))
+    }
+
+    let secondAfter = try columns(service, of: second)
+    XCTAssertEqual(secondAfter.occurrenceDate, secondBefore.occurrenceDate)
+    XCTAssertEqual(secondAfter.instanceKey, secondBefore.instanceKey)
   }
 
   func testMovingTheDueDateOfAGeneratedOccurrenceKeepsItsInstanceKeyConsistent() async throws {

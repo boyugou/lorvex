@@ -319,7 +319,7 @@ struct MobileCalendarHourGutter: View {
   /// scale it with the footnote style, as the labels scale.
   static func baseWidth(calendar: Calendar) -> CGFloat {
     #if os(iOS)
-      let labels = (0..<24).map { hourLabel($0, calendar: calendar) }
+      let labels = LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)
       let key = labels.joined(separator: "\u{1F}")
       if let cached = baseWidths[key] { return cached }
       let font = UIFont.preferredFont(
@@ -341,9 +341,10 @@ struct MobileCalendarHourGutter: View {
   let anchorHour: Int
 
   var body: some View {
+    let labels = LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)
     VStack(spacing: 0) {
       ForEach(0..<24, id: \.self) { hour in
-        Text(Self.hourLabel(hour, calendar: calendar))
+        Text(labels[hour])
           .font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
           .frame(width: gutterWidth - Self.labelInset, height: hourHeight, alignment: .topTrailing)
           .modifier(MobileDayAnchorModifier(hour: hour, anchorHour: anchorHour))
@@ -351,19 +352,6 @@ struct MobileCalendarHourGutter: View {
     }
     .frame(width: gutterWidth)
   }
-
-  static func hourLabel(_ hour: Int, calendar: Calendar) -> String {
-    var components = DateComponents(calendar: calendar)
-    components.year = 2001
-    components.month = 1
-    components.day = 1
-    components.hour = hour
-    guard let date = calendar.date(from: components) else {
-      return "\(hour)"
-    }
-    return LorvexDateFormatters.hourLabel(date, timeZone: calendar.timeZone)
-  }
-
 }
 
 enum MobileDayScrollAnchor: Hashable {

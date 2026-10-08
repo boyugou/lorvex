@@ -7,6 +7,7 @@ extension AppStore {
     dailyReviewStorage.reset()
     listsStorage.reset()
     calendarStorage.reset()
+    calendarDraftStorage.reset()
     taskDetailStorage.reset()
     habitsStorage.reset()
     memoryStorage.reset()

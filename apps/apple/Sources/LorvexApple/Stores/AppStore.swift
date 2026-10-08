@@ -15,6 +15,7 @@ final class AppStore {
   var dailyReviewStorage = AppStoreDailyReviewStorage()
   var listsStorage = AppStoreListsStorage()
   var calendarStorage = AppStoreCalendarStorage()
+  var calendarDraftStorage = AppStoreCalendarDraftStorage()
   var taskDetailStorage = AppStoreTaskDetailStorage()
   var taskWorkspaceStorage = AppStoreTaskWorkspaceStorage()
   var habitsStorage = AppStoreHabitsStorage()

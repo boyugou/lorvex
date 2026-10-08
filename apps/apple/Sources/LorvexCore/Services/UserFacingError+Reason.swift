@@ -25,6 +25,8 @@ extension UserFacingError {
   ///   pausing a task that is not in progress, or reopening or completing an
   ///   occurrence of a repeating task whose next occurrence has already moved
   ///   on;
+  /// - a ``RecurrenceScheduleError`` for moving an occurrence of a repeating
+  ///   task to a day another occurrence of its series already holds;
   /// - a ``HabitReminderError/timeTaken(habitId:time:)`` for a second habit
   ///   reminder at the same time.
   ///
@@ -69,6 +71,9 @@ extension UserFacingError {
     /// Completing an occurrence of a repeating task again after its next
     /// occurrence has already moved on.
     case completingAdvancedRepeat
+    /// Moving an occurrence of a repeating task to a day another occurrence of
+    /// the same series already holds.
+    case repeatDayTaken
     /// A habit reminder at a time the habit already has one.
     case habitReminderTimeTaken
     /// A record whose combined content is too long to sync.
@@ -119,9 +124,15 @@ extension UserFacingError {
           self = .cancelingDoneTask
         case .finishedTaskTransition: return nil
         case .pauseRequiresStartedTask: self = .pausingUnstartedTask
-        case .reopenBlockedByAdvancedSuccessor: self = .reopeningAdvancedRepeat
+        case .reopenBlockedByAdvancedSuccessor, .reopenBlockedByOtherGeneration,
+          .reopenBlockedByLaterOccurrence:
+          self = .reopeningAdvancedRepeat
         case .completeBlockedByAdvancedSuccessor: self = .completingAdvancedRepeat
         }
+        return
+      }
+      if case RecurrenceScheduleError.occurrenceDateTaken = error {
+        self = .repeatDayTaken
         return
       }
       if case HabitReminderError.timeTaken = error {
@@ -225,6 +236,12 @@ extension UserFacingError {
           localized: "error.reason.completing_advanced_repeat",
           defaultValue:
             "This repeating task has already moved on to its next occurrence, so it can’t be completed again.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .repeatDayTaken:
+        String(
+          localized: "error.reason.repeat_day_taken",
+          defaultValue:
+            "Another occurrence of this repeating task already falls on that day. Choose a different day.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .habitReminderTimeTaken:
         String(

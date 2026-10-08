@@ -107,22 +107,17 @@ extension MobileStore {
     reviewRoutePath.removeAll { $0 == route }
   }
 
+  /// Moves task `taskID` to list `listID`; the lists' counts follow, since a
+  /// task mutation reloads them.
   public func moveTask(_ taskID: LorvexTask.ID, toListID listID: LorvexList.ID) async {
-    let moved = await mutateTaskReturningTask(id: taskID) {
+    await mutateTaskReturningTask(id: taskID) {
       try await self.core.moveTask(id: taskID, toListID: listID)
-    }
-    guard moved else { return }
-    do {
-      lists = try await core.loadLists()
-      errorMessage = nil
-    } catch {
-      await presentUserFacingError(error)
     }
   }
 
-  /// Moves every task in `ids` to list `listID` in one core call, then reloads
-  /// the list catalog so each list's counts follow. A task already in the list
-  /// stays where it is. Returns whether the move committed.
+  /// Moves every task in `ids` to list `listID` in one core call; the lists'
+  /// counts follow, since a task mutation reloads them. A task already in the
+  /// list stays where it is. Returns whether the move committed.
   @discardableResult
   public func moveTasks(_ ids: [LorvexTask.ID], toListID listID: LorvexList.ID) async -> Bool {
     let uniqueIDs = stableUniqueTaskIDs(ids)
@@ -131,13 +126,7 @@ extension MobileStore {
       _ = try await self.core.batchMoveTasks(ids: uniqueIDs, toListID: listID)
       return try await self.core.loadToday()
     }
-    guard moved else { return false }
-    feedbackProvider.playFeedback(.taskMoved)
-    do {
-      lists = try await core.loadLists()
-    } catch {
-      await presentUserFacingError(error)
-    }
-    return true
+    if moved { feedbackProvider.playFeedback(.taskMoved) }
+    return moved
   }
 }

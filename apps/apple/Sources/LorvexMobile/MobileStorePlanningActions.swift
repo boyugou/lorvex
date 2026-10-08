@@ -37,7 +37,7 @@ extension MobileStore {
       try await core.getScheduledTasks(
         from: calendarFrom,
         to: calendarTo,
-        limit: 500)
+        limit: CalendarGridModel.windowTaskLimit)
     }
 
     let results = await (loadedLists, loadedHabits, loadedCalendar, loadedScheduledTasks)

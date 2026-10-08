@@ -88,6 +88,39 @@ func completeSelectedTaskEmitsTaskCompletedFeedback() async throws {
   #expect(feedback.recorded.contains(.taskCompleted))
 }
 
+/// Records how many times the stub core had listed lists when a task-completed
+/// feedback played, which marks where the feedback falls among the reloads that
+/// follow a mutation.
+private final class ReloadCountAtFeedbackProvider: LorvexFeedbackProviding {
+  nonisolated(unsafe) var listLoadsAtCompletion: Int?
+  nonisolated(unsafe) var listLoadCount: (() -> Int)?
+
+  nonisolated func playFeedback(_ kind: LorvexFeedbackKind) {
+    if kind == .taskCompleted { listLoadsAtCompletion = listLoadCount?() }
+  }
+}
+
+@MainActor
+@Test
+func completeTaskPlaysItsFeedbackBeforeTheReloadsThatFollow() async throws {
+  // The haptic answers the click, so it plays as soon as the core call returns
+  // and does not wait for the awaited reloads of every surface.
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let feedback = ReloadCountAtFeedbackProvider()
+  let (defaults, suiteName) = makeIsolatedDefaults("feedbackBeforeReloads")
+  defer { defaults.removePersistentDomain(forName: suiteName) }
+  let store = AppStore(core: core, feedbackProvider: feedback, defaults: defaults)
+  await store.refresh()
+  let task = try #require(store.today.tasks.first { $0.status == .open })
+  let listLoadsBefore = core.loadListsCallCount
+  feedback.listLoadCount = { core.loadListsCallCount }
+
+  await store.completeTask(id: task.id)
+
+  #expect(feedback.listLoadsAtCompletion == listLoadsBefore)
+  #expect(core.loadListsCallCount > listLoadsBefore, "the reloads after the mutation still ran")
+}
+
 @MainActor
 @Test
 func reopenSelectedTaskEmitsTaskReopenedFeedback() async throws {

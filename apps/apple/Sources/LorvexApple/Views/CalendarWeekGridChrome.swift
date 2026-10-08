@@ -331,18 +331,20 @@ extension CalendarWeekGridView {
   // MARK: Hour gutter
 
   func hourGutter() -> some View {
-    VStack(spacing: 0) {
+    let labels = LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)
+    let gutter = CalendarWeekGridMetrics.gutterWidth(fitting: labels)
+    return VStack(spacing: 0) {
       ForEach(0..<24, id: \.self) { hour in
-        Text(hourLabel(hour))
+        Text(labels[hour])
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .frame(
-            width: gutterWidth - CalendarWeekGridMetrics.gutterLabelInset, height: hourHeight,
+            width: gutter - CalendarWeekGridMetrics.gutterLabelInset, height: hourHeight,
             alignment: .topTrailing)
           .modifier(WeekGridAnchorModifier(hour: hour))
       }
     }
-    .frame(width: gutterWidth)
+    .frame(width: gutter)
   }
 
   /// The now line across one day column, centered on `now`'s time of day: red
@@ -372,18 +374,6 @@ extension CalendarWeekGridView {
   }
 
   func isToday(_ date: Date) -> Bool { calendar.isDateInToday(date) }
-
-  func hourLabel(_ hour: Int) -> String {
-    var components = DateComponents(calendar: calendar)
-    components.year = 2001
-    components.month = 1
-    components.day = 1
-    components.hour = hour
-    guard let date = calendar.date(from: components) else {
-      return "\(hour)"
-    }
-    return LorvexDateFormatters.hourLabel(date, timeZone: calendar.timeZone)
-  }
 
   func eventColor(_ event: CalendarTimelineEvent) -> Color {
     Color(lorvexHex: event.color) ?? .accentColor

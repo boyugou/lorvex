@@ -91,7 +91,7 @@ extension MobileStore {
   public func completeTasks(_ ids: [LorvexTask.ID]) async -> Bool {
     let uniqueIDs = stableUniqueTaskIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
-    let didMutate = await mutateTaskReturningToday {
+    let didMutate = await mutateTaskReturningToday(affectedIDs: uniqueIDs) {
       try await core.batchCompleteTasks(ids: uniqueIDs).snapshot
     }
     if didMutate {
@@ -104,7 +104,7 @@ extension MobileStore {
   public func reopenTasks(_ ids: [LorvexTask.ID]) async -> Bool {
     let uniqueIDs = stableUniqueTaskIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
-    let didMutate = await mutateTaskReturningToday {
+    let didMutate = await mutateTaskReturningToday(affectedIDs: uniqueIDs) {
       try await core.batchReopenTasks(ids: uniqueIDs).snapshot
     }
     if didMutate {
@@ -117,7 +117,7 @@ extension MobileStore {
   public func deferTasksToTomorrow(_ ids: [LorvexTask.ID]) async -> Bool {
     let uniqueIDs = stableUniqueTaskIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
-    let didMutate = await mutateTaskReturningToday {
+    let didMutate = await mutateTaskReturningToday(affectedIDs: uniqueIDs) {
       try await core.batchDeferTasks(ids: uniqueIDs, until: storageDate(daysFromToday: 1))
     }
     if didMutate {

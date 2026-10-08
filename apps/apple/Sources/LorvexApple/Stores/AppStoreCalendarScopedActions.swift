@@ -47,8 +47,8 @@ extension AppStore {
       draftCalendarNotes = ""
       draftCalendarColor = nil
       draftCalendarRecurrence = nil
-      calendarStorage.draftCalendarRecurrenceWasEdited = false
-      calendarStorage.draftCalendarRecurrenceBaseline = .known(nil)
+      calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
+      calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
       selection = .calendar
     }
   }

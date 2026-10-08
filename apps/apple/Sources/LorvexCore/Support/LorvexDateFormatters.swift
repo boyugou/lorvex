@@ -200,6 +200,16 @@ public enum LorvexDateFormatters {
       .string(from: date)
   }
 
+  /// The 24 labels of a time grid's hour gutter, hour 0 through 23, each as
+  /// ``hourLabel(_:timeZone:locale:)`` writes it. A grid reads them on every
+  /// pass, so they are built once for a locale and time zone and kept.
+  public static func hourLabels(
+    timeZone: TimeZone = .autoupdatingCurrent,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> [String] {
+    displayFormatters.hourLabels(timeZone: timeZone, locale: locale)
+  }
+
   /// `date` relative to `reference`: "4 minutes ago" or "in 2 hours" with
   /// `.full` units, "4 min. ago" with `.abbreviated`; a `.named` style writes
   /// "yesterday" or "now" where the language has a word for the distance.
@@ -334,6 +344,7 @@ public enum LorvexDateFormatters {
     private var dateFormatters: [String: DateFormatter] = [:]
     private var intervalFormatters: [String: DateIntervalFormatter] = [:]
     private var relativeFormatters: [String: RelativeDateTimeFormatter] = [:]
+    private var hourLabelSets: [String: [String]] = [:]
 
     /// A process meets a handful of keys; a full cache means settings churned.
     private static let capacity = 64
@@ -367,6 +378,24 @@ public enum LorvexDateFormatters {
         dateFormatters[key] = formatter
         return formatter
       }
+    }
+
+    func hourLabels(timeZone: TimeZone, locale: Locale) -> [String] {
+      let key = Self.key(locale, timeZone.identifier, "hourLabels")
+      if let cached = lock.withLock({ hourLabelSets[key] }) { return cached }
+      let formatter = formatter(.template("j", .inline), timeZone: timeZone, locale: locale)
+      var calendar = Calendar(identifier: .gregorian)
+      calendar.timeZone = timeZone
+      let labels: [String] = (0..<24).map { hour in
+        guard let date = calendar.date(from: DateComponents(year: 2001, month: 1, day: 1, hour: hour))
+        else { return "\(hour)" }
+        return formatter.string(from: date)
+      }
+      lock.withLock {
+        if hourLabelSets.count >= Self.capacity { hourLabelSets.removeAll() }
+        hourLabelSets[key] = labels
+      }
+      return labels
     }
 
     func intervalFormatter(template: String, timeZone: TimeZone, locale: Locale)

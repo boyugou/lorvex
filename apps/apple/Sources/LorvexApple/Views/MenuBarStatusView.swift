@@ -238,6 +238,7 @@ struct MenuBarStatusView: View {
       HStack(spacing: LorvexDesign.Spacing.s) {
         Image(systemName: "plus.circle.fill")
           .foregroundStyle(.tint)
+          .accessibilityHidden(true)
         TextField(
           String(
             localized: "menubar.quick_add", defaultValue: "Add a task, then press Return",

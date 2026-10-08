@@ -34,11 +34,16 @@ struct MemoryEntryRow: View {
       lorvexAnimated(.easeOut(duration: 0.12)) { isHovering = hovering }
       if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }
     }
-    .help(String(localized: "memory.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityElement(children: .combine)
     .accessibilityLabel(accessibilityLabel)
     .accessibilityValue(spokenUpdatedDay)
+    // After the combine, so the tooltip is the one help text of the row; above
+    // it every text in the row would carry its own copy and the row would read
+    // "Edit, Edit, Edit".
+    .help(String(localized: "memory.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle))
+    .accessibilityAddTraits(.isButton)
     .accessibilityIdentifier("memory.row.\(entry.key)")
+    .accessibilityAction { edit() }
     .accessibilityAction(
       named: Text(String(localized: "memory.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle)),
       edit)

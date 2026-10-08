@@ -106,6 +106,24 @@ public struct DailyReviewEntry: Equatable, Sendable {
     self.linkedTaskIDs = linkedTaskIDs
     self.linkedListIDs = linkedListIDs
   }
+
+  /// True when saving a review with these editor fields would leave `review`
+  /// (`nil` for a day with no entry) as it is. A save stores every text section
+  /// trimmed, so a section that differs from the stored copy only by whitespace
+  /// around its text is the same entry, and a blank section is the same as none.
+  /// Each editor that autosaves a review decides "has unsaved edits" through
+  /// this, so the Mac and the phone agree on what counts as an edit.
+  public static func isStored(
+    summary: String, wins: String, blockers: String, learnings: String,
+    mood: Int?, energy: Int?, as review: DailyReviewEntry?
+  ) -> Bool {
+    summary.trimmedNilIfEmpty == review?.summary.trimmedNilIfEmpty
+      && wins.trimmedNilIfEmpty == review?.wins.trimmedNilIfEmpty
+      && blockers.trimmedNilIfEmpty == review?.blockers.trimmedNilIfEmpty
+      && learnings.trimmedNilIfEmpty == review?.learnings.trimmedNilIfEmpty
+      && mood == review?.mood
+      && energy == review?.energyLevel
+  }
 }
 
 /// Partial overrides applied by `amendDailyReview`. Only non-nil fields replace the existing value.

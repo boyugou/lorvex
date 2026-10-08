@@ -84,6 +84,7 @@ struct LorvexDateChip: View {
         Image(systemName: includesTime ? "bell" : "calendar")
           .symbolRenderingMode(.hierarchical)
           .foregroundStyle(date == nil ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
+          .accessibilityHidden(true)
         Text(chipTitle)
           .font(LorvexDesign.Typography.primaryText)
           .lineLimit(1)

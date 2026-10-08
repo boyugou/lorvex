@@ -98,6 +98,15 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// Optional async barrier invoked inside `createTask(_:)` before the
   /// delegated write, so a test can hold a capture mid-write.
   var createTaskGate: (@Sendable () async -> Void)?
+  /// Optional async barrier invoked inside `upsertDailyReviewPreservingLinks`
+  /// before the delegated write, so a test can hold a daily-review save
+  /// mid-write.
+  var upsertDailyReviewGate: (@Sendable () async -> Void)?
+  /// Optional async barrier invoked inside `loadDailyReview` AFTER the entry has
+  /// been read, so a test can model a read that completes after the editor moved
+  /// on or the user typed (the caller observes the data as of entry, then
+  /// suspends).
+  var loadDailyReviewGate: (@Sendable () async -> Void)?
   /// When set, `getDueHabitReminderOccurrences` throws this, modelling a
   /// transient habit occurrence-read failure during a reminder reschedule.
   var dueHabitReminderOccurrencesError: LorvexCoreError?

@@ -120,6 +120,7 @@ private struct TaskDetailRemindersPanel: View {
               Image(systemName: "bell.fill")
                 .foregroundStyle(LorvexDesign.Palette.accent)
                 .frame(width: 18)
+                .accessibilityHidden(true)
               Text(
                 lorvexReminderDayTime(reminder, logicalDay: logicalDay, timeZone: timeZone)
                   ?? reminder.displaySummary(timeZone: timeZone)

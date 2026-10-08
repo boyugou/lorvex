@@ -13,6 +13,7 @@ struct DraftSheetHeader: View {
         .foregroundStyle(.tint)
         .frame(width: 28, height: 28)
         .background(.tint.opacity(0.10), in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.s))
+        .accessibilityHidden(true)
 
       VStack(alignment: .leading, spacing: 4) {
         Text(title)

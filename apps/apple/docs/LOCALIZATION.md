@@ -3633,11 +3633,84 @@ Unicode NFC, where a word counts only when no other Bengali letter touches it.
 - A string that fills in several values uses positional specifiers (`%1$lld`,
   `%2$@`) wherever the Bengali word order differs from the English, as in
   "%2$lldটির মধ্যে %1$lldটি", never concatenation in code.
-- The capture parser (`LorvexCaptureParser`) has no Bengali vocabulary: it reads
-  English and Chinese words wherever the interface language is Bengali. The
-  capture hint (`capture.footer.words`) therefore gives English examples in “ ”
-  and says so ("প্রতি লাইনে একটি টাস্ক। ইংরেজি শব্দ, যেমন “tomorrow”, “3pm”,
-  “every Monday”, “20 min” বা “#list”, টাস্কের বিবরণ পূরণ করে।").
+- The capture parser (`LorvexCaptureParser`) reads Bengali day, date, time,
+  duration, repeat, and priority words for a user who reads Bengali (bn-BD,
+  bn-IN, and any other region), so the Bengali capture hint gives Bengali
+  examples in “ ” (“আগামীকাল”, “বিকেল 5টায়”, “প্রতি সোমবার”, “20 মিনিট”,
+  “#তালিকা”). The words are Apple's: আজ, আগামীকাল, and গতকাল read Today,
+  Tomorrow, and Yesterday in all 162, 28, and 79 strings that carry them (আজকে
+  stands in 315 more), প্রাধান্য reads Priority in 7 of 17 (the parser reads
+  অগ্রাধিকার too, which stands in 9), প্রতিদিন reads Every Day and Daily in all
+  16 and 19, and সাপ্তাহিক, মাসিক, and বার্ষিক read Weekly, Monthly, and Yearly
+  in all 13, 10, and 6. The Due field is শেষ তারিখ and Apple's Deadline is
+  অন্তিম তারিখ (1 string); the parser reads both, and ডেডলাইন and সময়সীমা,
+  as labels before a due day, so what the app writes for a deadline can be
+  typed back ("শেষ তারিখ: শুক্রবার"). নির্ধারিত, Apple's word for Due in 3 of 4
+  strings, is no deadline word: Apple's Bengali writes it for Scheduled too, so
+  a day beside it is read as a planned day. Bengali glues its case endings to
+  the word ("সোমবারে", "১৫ অক্টোবরে", "৫টায়", "৩০ মিনিটের"), so each rule lists
+  the endings it reads, and a word with any other ending, or a genitive, is
+  another word and stays in the title ("সোমবারের মিটিং", "আজকের কাজ"). A
+  hyphen between two Bengali words joins them ("আজ-কাল"), so "আজকাল" and
+  "কালো" hold no day; the hyphenated endings the catalogs write after a digit
+  or a Latin name, and the same form after a month, are read where a rule lists
+  them ("২০২৬-এর মধ্যে", "মে-র মধ্যে"). The hour takes the classifier টা, টে,
+  or টো, as in Apple's clock-face strings (9 of its 12 end the hour in টা, as
+  in "সাড়ে আটটা বাজে", and 3 in টে, as in "সাড়ে তিনটে" and "আড়াইটে বাজে"),
+  and the locative টায় makes it a time by itself ("5টায়"); with no ending it
+  is a time only after a part of the day, as a fraction, or as a range, since
+  "৫টা বই" and "দুটো ডিম" count things. A fraction counts up from the hour it
+  names, as Apple's Bengali counts it ("সাড়ে আটটা" is 8:30, "দেড়টা" 1:30,
+  "আড়াইটে" 2:30, and its "পৌনে পাঁচ" is four and three quarters), so "সাড়ে
+  ৫টায়" is 5:30, "সোয়া ৫টায়" 5:15, "পৌনে ৬টায়" 5:45, "দেড়টায়" 1:30, and
+  "আড়াইটায়" 2:30; an hour with no part of the day follows the afternoon rule
+  of the other languages ("5টায়" is 17:00). The
+  parts of the day are Apple's: সকাল, দুপুর, বিকেল (বিকাল in 1 of 4), সন্ধ্যা,
+  রাত্রি (27 of the 28 strings that read Night; the parser reads রাত too), and
+  মধ্যরাত্রি, with or without the locative ("আজ রাত" and "আজ সন্ধ্যায়" are
+  Apple's Tonight and This Evening); রাত runs past midnight, so "রাত ১২টায়" is
+  00:00 of the next day, and the part of the day sets the hour of a bare time
+  elsewhere in the line ("আগামীকাল সকালে মিটিং ৬টায়" is 06:00). কাল means
+  both tomorrow and yesterday, and Apple's Bengali writes it for both ("due
+  tomorrow" and "Schedule ended yesterday"), and পরশু, which stands in none of
+  Apple's strings, names the day after tomorrow and the day before yesterday;
+  the parser reads both as the coming day and never reads গতকাল or another past
+  day, so a line with a past-tense form (ছিল, করেছি, গিয়েছিলাম, হলো) or a word
+  that makes the day past or ordinal just before it (গত, গেল, আগের, বিগত,
+  পরবর্তী, শেষ, প্রথম) stays unread. A weekday needs its full name in বার; the
+  short forms the system writes (রবি, সোম, মঙ্গল, বুধ, বৃহস্পতি, শুক্র, শনি) and
+  its one-letter forms are ordinary words, names, and planets, and stay in the
+  title. The weekend is Saturday and Sunday: Apple's Bengali writes Weekends as
+  সপ্তাহান্ত (7 of 11 strings) and "সপ্তাহান্তের দিন" (2), and the catalog
+  picker says "এই সপ্তাহান্তে"; the parser reads সপ্তাহান্ত and উইকেন্ড (Apple's
+  "এই উইকেন্ডে", 1 string), "সপ্তাহের শেষে", and "শনিবার ও রবিবার", while the
+  genitive "সপ্তাহান্তের দিন" is left in the title. The weekend of Bangladesh
+  (Friday and Saturday) is not modeled; the week starts on Monday as in the
+  other languages. A date is read with the Gregorian month names, their
+  spellings, and the short forms the system writes next to a day ("15 অক্টো",
+  and the visarga forms of bn-IN), after a day number only, since a short
+  month is a word's first letters too ("আগ"); the months of the Bengali
+  calendar (বৈশাখ, আষাঢ়) are not read. A repeat is প্রতি or প্রত্যেক with a
+  unit, a weekday ("প্রতি সোমবার"), or প্রতিদিন, রোজ, or প্রত্যহ; রোজ means
+  every day in at least 3 of the 63 strings that carry it, where the others
+  are mostly the transliteration of rose, and it is read as every day, while
+  "রোজা", "রোজকার", and "প্রতিদিনের" are other words. জরুরি reads Urgent in all
+  8 strings but stands in 674 mostly as "emergency" (জরুরি পরিষেবা), so it is a
+  priority only at the end of a line or before a colon or comma; the same
+  holds for the cadence adjectives দৈনিক, সাপ্তাহিক,
+  মাসিক, and বার্ষিক ("দৈনিক রিপোর্ট" is a daily report). "আজ পর্যন্ত" means
+  "so far" and is not read as a deadline. Apple writes ঘণ্টা in 1,509 strings
+  and ঘন্টা in 80, and the parser reads both. The parser reads the Bengali
+  digits as Latin ones, the precomposed ড়, ঢ়, and য় as their base letters,
+  accepts a nukta typed as a separate sign or left out, ো and ৌ typed as one
+  sign or two, a candrabindu left out, and a joiner before an ending, and the
+  title keeps what was typed. Bengali written in Latin letters is not read.
+  Bengali does not write a clock time with the letter h, so "2h" beside it
+  stays a length. Bengali is tried after Hindi and before Urdu; its script
+  shares no letter with the vocabularies around it, so each language's lines
+  read as they do alone. The examples are Bengali script with Latin digits,
+  written left to right like the rest of the string, so the hint needs no
+  bidirectional isolate.
 - The Return key is "রিটার্ন কী" ("রিটার্ন কী চাপুন"): all 8 Apple strings that
   tell the reader to press Return put কী between the key name and the verb, and
   none writes "রিটার্ন চাপুন".
@@ -3792,11 +3865,48 @@ whose English text is exactly X.
 - A string that fills in several values uses positional specifiers (`%1$lld`,
   `%2$@`) wherever the Marathi word order differs from the English, as in
   "%2$lld पैकी %1$lld", never concatenation in code.
-- The capture parser (`LorvexCaptureParser`) has no Marathi vocabulary: it reads
-  English and Chinese words wherever the interface language is Marathi. The
-  capture hint (`capture.footer.words`) therefore gives English examples in ‘ ’
-  and says so ("प्रत्येक ओळीत एक कार्य. ‘tomorrow’, ‘3pm’, ‘every Monday’, ‘20 min’
-  किंवा ‘#list’ यांसारखे इंग्रजी शब्द कार्याचे तपशील भरतात.").
+- The capture parser (`LorvexCaptureParser`) reads Marathi day, date, time,
+  duration, repeat, and priority words for a user who reads Marathi (mr-IN and
+  any other region), so the Marathi capture hint gives Marathi examples in ‘ ’
+  (‘उद्या’, ‘संध्याकाळी 5 वाजता’, ‘दर सोमवारी’, ‘20 मिनिटे’, ‘#यादी’). The words
+  are Apple's: आज, उद्या, and काल read Today, Tomorrow, and Yesterday in all 162,
+  28, and 79 strings that carry them, प्राधान्य reads Priority in 16 of 17
+  (the parser reads प्राथमिकता too), देय reads Due in all 4, दररोज and प्रत्येक
+  carry the repeats (241 and 1,878 strings), and "वाजता" follows the hour in 794
+  strings, so the time example carries it. Marathi glues its case endings and
+  postpositions to the word ("उद्याला", "सोमवारी", "शुक्रवारपर्यंत", "30
+  मिनिटांची"), so each rule lists the endings it reads, and a word with any
+  other ending, or a genitive, is another word and stays in the title
+  ("उद्यादेखील", "सोमवारची मीटिंग"). A word needs a boundary of Devanagari
+  letters, signs, digits, and joiners on both sides, so "आजकाल" and "उद्यान" hold
+  no day. A fraction counts up from the hour it names, as Apple's Marathi
+  counts it (four and a quarter is "सव्वा चार", four and three quarters "पावणे
+  पाच", and its clock faces at 1:30 and 2:30 read "दीड वाजला" and "अडीच
+  वाजले"), so "साडेपाच" is 5:30, "सव्वापाच" 5:15, "पावणेसहा" 5:45, "दीड" 1:30,
+  and "अडीच" 2:30; an hour with no part of the day follows the afternoon rule
+  of the other languages ("5 वाजता" is 17:00). परवा names the day after
+  tomorrow and the day before yesterday; the parser reads it as the day after
+  tomorrow and reads no past day, so काल and a line in the past tense stay
+  unread. The weekend is Saturday and Sunday: Apple's Marathi writes "Weekend"
+  as आठवडाअखेर (3 of 3 strings) and the phrase as "आठवडा अखेर", "आठवडाअखेर",
+  and "आठवडाखेर" (37, 25, and 11 strings), and the parser reads all three, with
+  "वीकेंड" and "शनिवार-रविवार". A weekday needs its full name in वार; the short
+  forms the system writes (रवि, सोम, मंगळ, बुध, गुरु, शुक्र, शनि) are ordinary
+  words and names and stay in the title. A date is read with the Gregorian
+  month names and the short forms the system writes next to a day ("15 ऑक्टो."),
+  and the months of the Marathi calendar (चैत्र, श्रावण) are not read. The
+  parser reads the Devanagari digits as Latin ones, the precomposed nukta
+  letters as their base consonants, the candrabindu as the anusvara, the
+  eyelash ra (ऱ) as ra, and the candra o (ऑ) as aa, accepts a nukta typed as a
+  separate sign or left out and a joiner before an ending, and the title keeps
+  what was typed. Marathi written in Latin letters is not read. Marathi does
+  not write a clock time with the letter h, so "2h" beside it stays a length.
+  Marathi is tried before Hindi; for a user who reads both, it leaves the day,
+  repeat, priority, and range words that the two languages share to Hindi
+  whenever a Hindi word follows them ("आज की रात", "प्रत्येक सोमवार को"), so each
+  language's lines read as they do alone. The examples are Devanagari, written
+  left to right like the rest of the string, so the hint needs no bidirectional
+  isolate.
 - The Return key is named by the key alone ("रिटर्न दाबा"), as in Apple's
   Calculator ("किंवा रिटर्न दाबा" for "or press Return"); where the English names
   the Return key, Apple's Marathi adds की ("रिटर्न की दाबा").
@@ -3959,11 +4069,127 @@ is exactly X.
   `%2$@`) wherever the Telugu word order differs from the English, as in
   "%2$lldలో %1$lld" and "%2$@ సమయానికి “%1$@” రిమైండర్ సెట్ చేయబడింది.", never
   concatenation in code.
-- The capture parser (`LorvexCaptureParser`) has no Telugu vocabulary: it reads
-  English and Chinese words wherever the interface language is Telugu. The
-  capture hint (`capture.footer.words`) therefore gives English examples in “ ”
-  and says so ("ప్రతి లైన్‌కు ఒక టాస్క్. “tomorrow”, “3pm”, “every Monday”, “20
-  min” లేదా “#list” వంటి ఇంగ్లీష్ పదాలు దాని వివరాలను నింపుతాయి.").
+- The capture parser (`LorvexCaptureParser`) reads Telugu day, date, time,
+  duration, repeat, and priority words for a user who reads Telugu (te-IN and
+  any other region), so the Telugu capture hint gives Telugu examples in “ ”
+  (“రేపు”, “సాయంత్రం 5 గంటలకు”, “ప్రతి సోమవారం”, “20 నిమిషాలు”, “#జాబితా”). The
+  words are Apple's: ఈరోజు, రేపు, and నిన్న read Today, Tomorrow, and Yesterday
+  in all 162, 28, and 79 strings that carry them, and the parser reads ఈ రోజు
+  (429 strings), ఇవాళ (8), and నేడు (2) as today too. ఎల్లుండి, the word for the
+  day after tomorrow, and మొన్న, the day before yesterday, stand in none of
+  Apple's strings; the parser reads ఎల్లుండి as the day after tomorrow, its only
+  meaning, and never reads నిన్న, మొన్న, or another past day. A line that says
+  its day is past stays unread: a past-tense form anywhere in it (చేశాను,
+  వెళ్లాను, జరిగింది, పంపాను, ముగిసింది, and the other forms the parser lists),
+  or గత, పోయిన, మునుపటి, ఆ, ఆఖరి, చివరి, or an ordinal just before the day (“గత
+  శుక్రవారం”, “మొదటి శుక్రవారం”). Telugu glues its case endings to the word
+  (“సోమవారానికి”, “15న”, “రేపే”, “గంటలకు”), so each rule lists the endings it
+  reads, and a word with any other ending, or a genitive, is another word and
+  stays in the title (“రేపటి మీటింగ్”, “సోమవారపు మీటింగ్”). A day followed by
+  నాటి (“of that day”) describes a noun too: Apple writes “%@ నాటి ఇవెంట్‌ను
+  క్యాలెండర్‌కు జోడించండి” for Add event on a date (14 strings carry నాటి as a
+  word), so “శుక్రవారం నాటి మీటింగ్” is Friday's meeting and not a plan. The
+  genitive రేపటి is read before వరకు (Apple's “రేపటి వరకు” for until tomorrow;
+  58 strings carry రేపటి as a word) and before నుండి (“రేపటి నుండి”). A hyphen
+  between two Telugu words joins them. ప్రాధాన్యత reads Priority in 16 of 17
+  strings. అత్యవసరం reads Urgent in all 8 strings but stands in 38, mostly as
+  Emergency, and ముఖ్యం stands in 78 as a plain adjective, so these two and the
+  loanword అర్జెంట్ (in none) are a priority only at the end of a line or before
+  a colon or comma. గడువు reads Due in 3 of 4 strings and Deadline in its one
+  string, and “గడువు తేదీ” is Apple's Due Date (101 strings carry it); the
+  parser reads both, చివరి తేదీ, ఆఖరి తేదీ, and డెడ్‌లైన్ as labels before a due
+  day, and గడువు after a day as the app writes Due Friday (“శుక్రవారం గడువు”),
+  so what the app writes for a deadline can be typed back (“గడువు: శుక్రవారం”).
+  గడువు stands in 779 strings, 314 of them as “గడువు ముగిసింది” (expired), so a
+  line that says a deadline has passed (గడువు ముగిసింది, గడువు మీరింది, which is
+  the app's own overdue wording, or గడువు దాటింది) is a past statement and is
+  not read. After a day, వరకు (2,532 strings), లోగా (101), లోపు (263), and
+  నాటికి (25) are the words for until and by; Apple's నాటికి names the date a
+  payment is scheduled for, and the parser reads it as a deadline, which is what
+  the word means. కల్లా stands in none of Apple's strings and is the spoken by
+  (“శుక్రవారానికల్లా”). “ఈరోజు వరకు” means so far and is not a deadline. The
+  hour takes the dative of గంట: Apple writes “N గంటలకు” for N o'clock in 30 of
+  its 36 strings that read N o'clock on a friend circle, “1 గంటలకు” for one
+  among them, and the parser reads గంటలకి and గంటలకే too, and గంటకు after ఒంటి.
+  “5 గంటలు” is an amount of hours (గంటలు stands in 508 of Apple's strings, as in
+  “%d గంటలు”), so it reads as a length and not as a time. Apple's clock faces
+  write the hours as the numeral and గంటలు (“%d ఐదు గంటలు”) and one o'clock as
+  “ఒంటి గంట”, so one is ఒంటి and never ఒకటి before గంట. They write all twelve
+  half hours with న్నర, eleven fused to the numeral (“ఐదున్నర”, “ఎనిమిదిన్నర”,
+  “పదకొండున్నర”) and 1:30 as “ఒంటి గంటన్నర”, so a half-hour word counts up from
+  the hour it names (“ఐదున్నర” is 5:30); it is also a number (“ఐదున్నర కిలోలు”),
+  so it is a time only with an ending (“ఐదున్నరకు”) or after a part of the day.
+  An hour with no part of the day follows the afternoon rule of the other
+  languages (“5 గంటలకు” is 17:00, “7 గంటలకు” is 07:00). The spoken dative of an
+  hour (“ఐదింటికి”) is also the dative of “the five of them”, so it is read only
+  after a part of the day. “5 గంటల 30 నిమిషాలకు” is 5:30, while “5 గంటల 30
+  నిమిషాలు” is five hours and thirty minutes. The clock quarters (“పావు తక్కువ
+  ఆరు”) are never read, and a clock time that names a bound (“5 గంటలలోగా”,
+  “సాయంత్రం 6 గంటల లోపు”, “5 గంటలకు ముందు”, “18:00 వరకు”) stays in the title.
+  The parts of the day are Apple's: ఉదయం (Morning in all 6 strings; ఉదయము stands
+  in none), మధ్యాహ్నం (Afternoon in all 4), సాయంత్రం (Evening in all 6), రాత్రి
+  (Night in all 28), అర్ధరాత్రి (Midnight in 3 of 5; the others keep మిడ్‌నైట్),
+  మిట్ట మధ్యాహ్నం (Noon in all 7), and వేకువజాము (Dawn in both strings); the
+  parser also reads తెల్లవారుజామున, which stands in none, as the everyday word
+  for the early morning. “ఈరోజు రాత్రి”, “ఈ రాత్రి”, and “ఈ సాయంత్రం” are
+  Apple's Tonight (5 and 1 of its 6 strings) and This Evening (both strings),
+  and Apple writes a weekday before its part of the day (“శుక్రవారం సాయంత్రం”).
+  రాత్రి runs past midnight, so “రాత్రి 12 గంటలకు” is 00:00 of the next day, and
+  the part of the day sets the hour of a bare time elsewhere in the line (“రేపు
+  ఉదయం మీటింగ్ 6 గంటలకు” is 06:00). A weekday needs its full name in వారం; the
+  short forms the system writes (ఆది, సోమ, మంగళ, బుధ, గురు, శుక్ర, శని) and its
+  one-letter forms are ordinary words, names, and planets, and stay in the
+  title. “ఈ శుక్రవారం” is Apple's This Friday (both strings), and Next Week
+  reads “వచ్చే వారం” in one string and “తదుపరి వారం” in another. The week starts
+  on Monday as in the other languages: వచ్చే and రాబోయే before a weekday name
+  the coming one, and తదుపరి, తర్వాతి, and తరువాతి name next week's. “ఈ వారం”
+  alone names no single day. The weekend is Saturday and Sunday: Apple writes
+  Weekend as వారాంతం (3 strings) and Weekends as వారాంతాలు (11), This Weekend as
+  “ఈ వారాంతం” (all 4), and Next Weekend as “తదుపరి వారాంతం” in 2 of 3 strings
+  and “వచ్చే వారాంతం” in the third. The parser reads వారాంతం and వీకెండ్
+  (Apple's “వీకెండ్ ట్రిప్”, 16 strings), “శని ఆదివారాలు”, and “శనివారం మరియు
+  ఆదివారం”, with తదుపరి before it meaning the weekend a week later, and వచ్చే or
+  రాబోయే the coming one, the meaning the same word has before a weekday. A date
+  is read with the Gregorian month names, in the spellings people type (జులై and
+  జూలై, ఆగస్టు and ఆగష్టు, అక్టోబర్ and అక్టోబరు) and with the short forms the
+  system writes next to a day (“15 అక్టో”: జన, ఫిబ్ర, ఏప్రి, ఆగ, సెప్టెం, అక్టో,
+  నవం, డిసెం), after a day number only, since a short month is the first letters
+  of other words too (“ఆగండి” begins with ఆగ); the months of the Telugu calendar
+  (వైశాఖం, కార్తీకం) are not read. A repeat is ప్రతి or ప్రతీ with a unit
+  (“ప్రతి వారం” is Apple's Every Week in all 4 strings, “ప్రతి నెల” Every Month
+  in all 3, “ప్రతి సంవత్సరం” Every Year in both, and “ప్రతి పనిరోజు” Every
+  weekday in its one string), a counted interval (Apple's “ప్రతి %d రోజులు”,
+  “ప్రతి రెండవ రోజు” for Every Other Day, and “ప్రతి రెండవ వారం” for Every Other
+  Week), a weekday (“ప్రతి సోమవారం”, Apple's Every Monday), or ప్రతిరోజు or
+  రోజూ: Apple's Every Day reads ప్రతిరోజు in 15 of 16 strings and its Daily
+  reads ప్రతిరోజు, ప్రతిరోజూ, or ప్రతి రోజూ in 16 of 19, while రోజూ stands in 42
+  strings. రోజువారీ, వారంవారీ, నెలవారీ, and సంవత్సరంవారీ read Daily (3 of 19
+  strings), Weekly (12 of 13), Monthly (8 of 10), and Yearly (4 of 6), but they
+  are ordinary adjectives too (260, 118, and 145 strings carry the first three:
+  “రోజువారీ పఠన లక్ష్యం” is a daily reading goal), so they are a repeat only at
+  the end of a line, before a colon or comma, or with ప్రాతిపదికన or గా. “రోజుకు
+  ఒకసారి”, “వారానికి ఒకసారి”, and “నెలకు ఒకసారి” (2, 8, and 4 strings carry
+  them) are read; an interval shorter than a day (“ప్రతి 2 గంటలకు”) and a count
+  of weekends or working days (“3 వారాంతాల్లో”) are not. ప్రతి is also the word
+  for a rate, so “ప్రతి రోజు 500 రూపాయలు” reads as a daily repeat. Apple's Hour,
+  Hours, Minute, and Minutes read గంట, గంటలు, నిమిషం, and నిమిషాలు in all 13,
+  27, 7, and 20 strings that carry them, “1 hour” reads “1 గంట” in 8 of 9, and
+  “30 minutes” reads “30 నిమిషాలు” in 5 of 6. The parser reads the system's
+  compact duration “1 గం., 30 నిమి.” and its spoken “1 గంట, 30 నిమిషాలు”, అరగంట
+  and అర గంట (Apple's Half hour), అర్ధ గంట (Half an hour), “ఒకటిన్నర గంటలు” (One
+  and a half hours), and the everyday గంటన్నర, పావు గంట, and ముప్పావు గంట. An
+  amount before తర్వాత, క్రితం, లోపు, or వరకు is a moment or a bound and stays
+  in the title whole, like the system's relative times (“2 గంటల్లో”, “5 నిమిషాల
+  క్రితం”). The parser reads the Telugu digits as Latin ones and accepts the
+  vowel sign ై typed as one sign or as the two signs it is made of (the one
+  Telugu sign with a canonical decomposition), a zero-width joiner or non-joiner
+  after a virama or before an ending, and composed or decomposed input; the
+  title keeps what was typed. Telugu written in Latin letters is not read.
+  Telugu does not write a clock time with the letter h, so “2h” beside it stays
+  a length. Telugu is tried after Bengali and before Urdu; its script shares no
+  letter with the vocabularies around it, so each language's lines read as they
+  do alone. The examples are Telugu script with Latin digits, written left to
+  right like the rest of the string, so the hint needs no bidirectional isolate.
 - The Return key is "రిటర్న్ కీ" ("రిటర్న్ కీ నొక్కండి"): all 5 Apple strings
   whose English says the Return key write కీ after రిటర్న్.
 - Siri and Shortcuts phrases in `AppShortcuts.xcstrings` are polite imperatives

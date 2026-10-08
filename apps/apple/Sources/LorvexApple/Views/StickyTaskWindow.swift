@@ -216,6 +216,7 @@ private struct StickyTaskView: View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "plus.circle")
         .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
       TextField(
         String(localized: "sticky.add_subitem", defaultValue: "Add sub-item", table: "Localizable", bundle: LorvexL10n.bundle),
         text: $store.taskDetailNewChecklistText

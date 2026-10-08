@@ -76,6 +76,7 @@ private struct PermissionRequestRow: View {
       Image(systemName: icon)
         .frame(width: Self.iconWidth)
         .foregroundStyle(.tint)
+        .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: 2) {
         Text(title).fontWeight(.medium)
         Text(description)

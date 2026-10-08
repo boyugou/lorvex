@@ -24,10 +24,17 @@ struct LorvexCaptureVocabulary: Sendable {
   /// forms read as one letter each (``arabicForMatching(_:)``); for Persian the
   /// line with its digits read as ASCII ones, its alefs with hamza or madda read
   /// as the bare alef, and its Arabic yeh, kaf, and teh marbuta forms read as
-  /// the Persian yeh, kaf, and heh (``persianForMatching(_:)``); for Hindi the
+  /// the Persian yeh, kaf, and heh (``persianForMatching(_:)``); for Marathi
+  /// the line with its digits read as ASCII ones, its precomposed nukta letters
+  /// read as the base consonants, the candrabindu read as the anusvara, the
+  /// eyelash ra (ऱ) read as ra, and the candra o (ऑ) read as aa
+  /// (``marathiForMatching(_:)``); for Hindi the
   /// line with its digits read as ASCII ones, its precomposed nukta letters
   /// read as the base consonants, and the candrabindu read as the anusvara
-  /// (``hindiForMatching(_:)``); for Urdu the line with its Arabic-Indic and
+  /// (``hindiForMatching(_:)``); for Bengali the line with its digits read as
+  /// ASCII ones and its precomposed ড়, ঢ়, and য় read as the letters ড, ঢ, and য
+  /// (``bengaliForMatching(_:)``); for Telugu the line with its digits read as
+  /// ASCII ones (``teluguForMatching(_:)``); for Urdu the line with its Arabic-Indic and
   /// Extended Arabic-Indic digits read as ASCII ones, its alefs with hamza or
   /// madda read as the bare alef, its Arabic yeh forms read as the Urdu choti
   /// yeh, its Arabic kaf read as the Urdu kaf, its heh forms read as one heh,
@@ -90,25 +97,43 @@ struct LorvexCaptureVocabulary: Sendable {
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
   /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian,
-  /// Ukrainian, Polish, Arabic, Persian, Hindi, Urdu, Hebrew, German, Dutch,
-  /// Romanian, Malay, Indonesian, Vietnamese, Turkish, Thai, and Greek when
-  /// `languages` includes them (any region of a language: "es-MX", "es-419",
-  /// "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF", "hi-IN", "ur-PK",
-  /// "ur-IN", "he-IL", "de-AT", "de-CH", "nl-BE", "ro-MD", "ms-MY", "ms-SG",
-  /// "ms-BN", "id-ID", "vi-VN", "tr-TR", "tr-CY", "th-TH", "el-GR", "el-CY"),
-  /// then Chinese and English, which every line is read with.
+  /// Ukrainian, Polish, Arabic, Persian, Marathi, Hindi, Bengali, Telugu, Urdu,
+  /// Hebrew, German, Dutch, Romanian, Malay, Indonesian, Vietnamese, Turkish,
+  /// Thai, and Greek when `languages` includes them (any region of a language:
+  /// "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF",
+  /// "mr-IN", "hi-IN", "bn-BD", "bn-IN", "te-IN", "ur-PK", "ur-IN", "he-IL",
+  /// "de-AT", "de-CH", "nl-BE", "ro-MD", "ms-MY", "ms-SG", "ms-BN", "id-ID",
+  /// "vi-VN", "tr-TR", "tr-CY", "th-TH", "el-GR", "el-CY"), then Chinese and
+  /// English, which every line is read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
   /// Japanese particle ("10月5日に"). Every other language goes before
   /// English, so a part of the day or a word written before or after a clock
   /// time ("下午3:30", "오후 3:30", "a las 3:30", "в 15:00", "o 15:00", "الساعة 3:30",
-  /// "ساعت 3:30", "3:30 बजे", "3:30 بجے", "בשעה 3:30", "um 15:30", "abends
-  /// 7:30", "om 15:30", "'s avonds 7:30", "la 15:30", "seara 7:30", "15:00 น.")
-  /// is read with the time instead of being left in the title when the English
-  /// pattern takes "3:30" or "15:00". Persian goes after Arabic, so for a user
-  /// who reads both, a phrase the two could read is read the Arabic way; they
-  /// share few words.
+  /// "ساعت 3:30", "3:30 वाजता", "3:30 बजे", "সকাল 3:30", "3:30 بجے", "בשעה 3:30", "um 15:30",
+  /// "abends 7:30", "om 15:30", "'s avonds 7:30", "la 15:30", "seara 7:30",
+  /// "15:00 น.") is read with the time instead of being left in the title when
+  /// the English pattern takes "3:30" or "15:00". Persian goes after Arabic, so
+  /// for a user who reads both, a phrase the two could read is read the Arabic
+  /// way; they share few words.
+  /// Marathi goes before Hindi. Both write Devanagari and share a few day words
+  /// (आज, the weekday names, मार्च and जून, वीकेंड) and cadence words (प्रत्येक,
+  /// रोज, नित्य), and Hindi writes the words that go with them as separate
+  /// words ("आज की रात", "सोमवार को", "प्रत्येक सोमवार को"), which Marathi would
+  /// leave behind in the title if it took the shared word alone. For a user who
+  /// reads both, Marathi therefore leaves a shared word to Hindi whenever such a
+  /// Hindi word follows it, or precedes a weekday (``marathiBesideHindi``), so
+  /// each language's lines read as they do alone; the words only Marathi has
+  /// ("उद्या", "वाजता", "दर सोमवारी") are read by Marathi.
+  /// Bengali goes after Hindi: its letters, digits, and words belong to no other
+  /// vocabulary, so its position settles no phrase between it and another
+  /// language. A Bengali rule that could take a phrase English reads with the
+  /// words around it ("at 3:30 PM") reads it only beside a Bengali word.
+  /// Telugu goes after Bengali for the same reason: its script, digits, and
+  /// words belong to no other vocabulary, and a Telugu rule that could take a
+  /// phrase English reads with the words around it reads it only beside a
+  /// Telugu word.
   /// Urdu goes after Persian and Hindi, so for a user who
   /// reads Urdu and one of them, a phrase two of them could read is read the
   /// earlier way; Urdu shares its script with Arabic and Persian and its spoken
@@ -142,13 +167,16 @@ struct LorvexCaptureVocabulary: Sendable {
   /// (French, Portuguese, German, and Vietnamese), English leaves hour counts
   /// written with h to it (``englishBesideHourClock``), so "15h" is never read
   /// as fifteen hours.
-  /// Spanish, Italian, Russian, Ukrainian, Polish, Arabic, Persian, Hindi,
-  /// Urdu, Hebrew, Dutch, Romanian, Malay, Indonesian, Turkish, Thai, and Greek
-  /// do not write a clock time that way (Dutch writes its hours with "uur" or
-  /// "u", Romanian with "ora" before the hour, Malay and Indonesian with "pukul"
-  /// or "jam" before it, Turkish with "saat" before the hour or a case ending
-  /// after it, Thai with "โมง", "ทุ่ม", or "ตี" or with "น." after the time,
-  /// Greek with "στις" or "ώρα" before it), so "2h" beside them stays a length.
+  /// Spanish, Italian, Russian, Ukrainian, Polish, Arabic, Persian, Marathi,
+  /// Hindi, Bengali, Telugu, Urdu, Hebrew, Dutch, Romanian, Malay, Indonesian,
+  /// Turkish, Thai, and Greek do not write a clock time that way (Marathi
+  /// writes its hours with "वाजता" after the hour, Bengali with the classifier
+  /// "টা" after the hour, Telugu with "గంటలకు" after it, Dutch with "uur" or
+  /// "u", Romanian with "ora"
+  /// before the hour, Malay and Indonesian with "pukul" or "jam" before it,
+  /// Turkish with "saat" before the hour or a case ending after it, Thai with
+  /// "โมง", "ทุ่ม", or "ตี" or with "น." after the time, Greek with "στις" or
+  /// "ώρα" before it), so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -163,7 +191,10 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("pl") { vocabularies.append(.polish) }
     if codes.contains("ar") { vocabularies.append(.arabic) }
     if codes.contains("fa") { vocabularies.append(.persian) }
+    if codes.contains("mr") { vocabularies.append(codes.contains("hi") ? .marathiBesideHindi : .marathi) }
     if codes.contains("hi") { vocabularies.append(.hindi) }
+    if codes.contains("bn") { vocabularies.append(.bengali) }
+    if codes.contains("te") { vocabularies.append(.telugu) }
     if codes.contains("ur") { vocabularies.append(.urdu) }
     if codes.contains("he") { vocabularies.append(.hebrew) }
     if codes.contains("de") { vocabularies.append(.german) }

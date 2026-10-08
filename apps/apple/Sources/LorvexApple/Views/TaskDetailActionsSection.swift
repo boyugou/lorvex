@@ -41,6 +41,9 @@ extension TaskDetailView {
     HStack(spacing: LorvexDesign.Spacing.xs) {
       Image(systemName: systemImage)
         .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
+        // Beside a title the symbol is decoration; a menu would expose it as a
+        // stop of its own. Alone it is the control's only content.
+        .accessibilityHidden(title != nil)
       if let title {
         Text(title)
           .font(LorvexDesign.Typography.tertiaryText.weight(.medium))

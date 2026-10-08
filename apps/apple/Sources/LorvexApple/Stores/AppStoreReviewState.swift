@@ -36,6 +36,14 @@ extension AppStore {
     set { dailyReviewStorage.dailyReviewEnergy = newValue }
   }
 
+  /// The daily-review editor's fields as they stand now.
+  var dailyReviewDraftValues: DailyReviewDraftValues {
+    DailyReviewDraftValues(
+      summary: dailyReviewSummaryDraft, wins: dailyReviewWinsDraft,
+      blockers: dailyReviewBlockersDraft, learnings: dailyReviewLearningsDraft,
+      mood: dailyReviewMood, energy: dailyReviewEnergy)
+  }
+
   var weeklyReview: WeeklyReviewSnapshot? {
     get { dailyReviewStorage.weeklyReview }
     set { dailyReviewStorage.weeklyReview = newValue }

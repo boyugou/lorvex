@@ -217,6 +217,231 @@ func appStoreDailyReviewKeepsMoodUnsetWhenNotRated() async throws {
   #expect(store.errorMessage == nil)
 }
 
+/// The autosave fires after a pause, which can come right after a space or a
+/// line break. The save stores a body section trimmed, and the editor must not
+/// take the whitespace out of what the user is typing in response.
+@MainActor
+@Test
+func appStoreDailyReviewAutosaveKeepsWhitespaceTypedAtTheEndOfASection() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+
+  store.dailyReviewSummaryDraft = "Good day "
+  store.dailyReviewWinsDraft = "Shipped the launch "
+  store.dailyReviewBlockersDraft = "Waiting on legal\n"
+  store.dailyReviewLearningsDraft = "Ask earlier "
+  await store.saveDailyReviewDraft()
+
+  #expect(store.dailyReview?.summary == "Good day")
+  #expect(store.dailyReview?.wins == "Shipped the launch")
+  #expect(store.dailyReview?.blockers == "Waiting on legal")
+  #expect(store.dailyReviewSummaryDraft == "Good day ")
+  #expect(store.dailyReviewWinsDraft == "Shipped the launch ")
+  #expect(store.dailyReviewBlockersDraft == "Waiting on legal\n")
+  #expect(store.dailyReviewLearningsDraft == "Ask earlier ")
+  // The whitespace is not an unsaved edit: Quit has nothing left to wait for,
+  // and a refresh that adopts the loaded review leaves the text alone.
+  #expect(store.dailyReviewDraftMatchesLoaded)
+  #expect(!store.hasPendingAutosaveDraftForTermination)
+  await store.refresh()
+  #expect(store.dailyReviewWinsDraft == "Shipped the launch ")
+  #expect(store.dailyReviewBlockersDraft == "Waiting on legal\n")
+}
+
+/// Space or a line break typed into the empty note of a day is not a review:
+/// nothing is saved, so the day does not gain an entry with no words in it.
+@MainActor
+@Test
+func appStoreDailyReviewBlankNoteDoesNotCreateAnEntry() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+
+  store.dailyReviewSummaryDraft = "  \n"
+  #expect(store.dailyReviewDraftMatchesLoaded)
+  await store.flushDailyReviewDraftIfNeeded()
+
+  #expect(try await core.loadDailyReview(date: store.dailyReviewEditorDate) == nil)
+  #expect(store.dailyReview == nil)
+}
+
+/// Whitespace left in a section is kept only for the day it was typed on:
+/// opening another day shows that day's entry exactly, a blank section blank.
+@MainActor
+@Test
+func appStoreDailyReviewDaySwitchReplacesTheEditorTextExactly() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let yesterday = try #require(
+    LorvexDateFormatters.ymdUTCAddingDays(store.dailyReviewEditorDate, days: -1))
+
+  store.dailyReviewWinsDraft = "   "
+  #expect(store.dailyReviewDraftMatchesLoaded)
+  await store.selectReviewDay(yesterday)
+
+  #expect(store.selectedReviewDate == yesterday)
+  #expect(store.dailyReviewWinsDraft.isEmpty)
+}
+
+/// Text typed while the write is in flight is not in the saved entry. It stays
+/// in the editor as an unsaved edit that the next save picks up.
+@MainActor
+@Test
+func appStoreDailyReviewSaveKeepsTextTypedWhileItRuns() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let gate = ReviewGate()
+  core.upsertDailyReviewGate = { await gate.hold() }
+  let store = AppStore(core: core)
+  await store.refresh()
+
+  store.dailyReviewSummaryDraft = "First"
+  let save = Task { await store.saveDailyReviewDraft() }
+  await gate.waitUntilHeld()
+  store.dailyReviewSummaryDraft = "First and more"
+  await gate.release()
+  await save.value
+
+  let stored = try await core.loadDailyReview(date: store.dailyReviewEditorDate)
+  #expect(stored?.summary == "First")
+  #expect(store.dailyReviewSummaryDraft == "First and more")
+  #expect(!store.dailyReviewDraftMatchesLoaded)
+
+  await store.saveDailyReviewDraft()
+
+  #expect(store.dailyReview?.summary == "First and more")
+  #expect(store.dailyReviewDraftMatchesLoaded)
+}
+
+/// A save belongs to the day the editor was on when it started. Moving the
+/// editor to another day while it runs must not show this entry as that day's.
+@MainActor
+@Test
+func appStoreDailyReviewSaveDoesNotLandOnADayTheEditorMovedOffDuringIt() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let gate = ReviewGate()
+  core.upsertDailyReviewGate = { await gate.hold() }
+  let store = AppStore(core: core)
+  await store.refresh()
+  let today = store.dailyReviewEditorDate
+  let yesterday = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -1))
+
+  store.dailyReviewSummaryDraft = "Written on the day that was open"
+  let save = Task { await store.saveDailyReviewDraft() }
+  await gate.waitUntilHeld()
+  store.selectedReviewDate = yesterday
+  await gate.release()
+  await save.value
+
+  #expect(try await core.loadDailyReview(date: today)?.summary == "Written on the day that was open")
+  #expect(store.dailyReview == nil)
+}
+
+/// A refresh reads the loaded review before it adopts it. Text typed in between
+/// is not in that read, so it stays in the editor as an unsaved edit.
+@MainActor
+@Test
+func appStoreRefreshKeepsTextTypedWhileItReadsTheReview() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  store.dailyReviewSummaryDraft = "Saved text"
+  await store.saveDailyReviewDraft()
+  #expect(store.dailyReviewDraftMatchesLoaded)
+
+  let gate = ReviewGate()
+  core.loadDailyReviewGate = { await gate.hold() }
+  let refresh = Task { await store.refresh() }
+  await gate.waitUntilHeld()
+  core.loadDailyReviewGate = nil
+  store.dailyReviewSummaryDraft = "Saved text and more"
+  await gate.release()
+  await refresh.value
+
+  #expect(store.dailyReviewSummaryDraft == "Saved text and more")
+  #expect(!store.dailyReviewDraftMatchesLoaded)
+}
+
+/// A refresh that read one day must not put that day into an editor that has
+/// since moved to another one.
+@MainActor
+@Test
+func appStoreRefreshDoesNotAdoptADayTheEditorMovedOffDuringIt() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  let yesterday = try #require(
+    LorvexDateFormatters.ymdUTCAddingDays(store.dailyReviewEditorDate, days: -1))
+  _ = try await core.upsertDailyReview(
+    date: yesterday, summary: "Yesterday's note", mood: nil, energyLevel: nil, wins: nil,
+    blockers: nil, learnings: nil, linkedTaskIDs: [], linkedListIDs: [])
+
+  let gate = ReviewGate()
+  core.loadDailyReviewGate = { await gate.hold() }
+  let refresh = Task { await store.refresh() }
+  await gate.waitUntilHeld()
+  core.loadDailyReviewGate = nil
+  await store.selectReviewDay(yesterday)
+  await gate.release()
+  await refresh.value
+
+  #expect(store.selectedReviewDate == yesterday)
+  #expect(store.dailyReview?.summary == "Yesterday's note")
+  #expect(store.dailyReviewSummaryDraft == "Yesterday's note")
+  #expect(store.dayReviewEvidence?.date == yesterday)
+}
+
+/// Two day selections overlap when the first one's read is slow. The editor
+/// belongs to the day selected last, whichever read finishes last.
+@MainActor
+@Test
+func appStoreDaySwitchDropsASlowerReadOfADayTheEditorLeft() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  let today = store.dailyReviewEditorDate
+  let dayA = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -1))
+  let dayB = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -2))
+  for (date, text) in [(dayA, "Note of A"), (dayB, "Note of B")] {
+    _ = try await core.upsertDailyReview(
+      date: date, summary: text, mood: nil, energyLevel: nil, wins: nil, blockers: nil,
+      learnings: nil, linkedTaskIDs: [], linkedListIDs: [])
+  }
+
+  let gate = ReviewGate()
+  core.loadDailyReviewGate = { await gate.hold() }
+  let first = Task { await store.selectReviewDay(dayA) }
+  await gate.waitUntilHeld()
+  core.loadDailyReviewGate = nil
+  await store.selectReviewDay(dayB)
+  await gate.release()
+  await first.value
+
+  #expect(store.selectedReviewDate == dayB)
+  #expect(store.dailyReview?.summary == "Note of B")
+  #expect(store.dailyReviewSummaryDraft == "Note of B")
+  #expect(store.dayReviewEvidence?.date == dayB)
+}
+
+/// "Back to Today" selects today like any other day, so the day's evidence moves
+/// with the entry instead of staying on the day that was open.
+@MainActor
+@Test
+func appStoreBackToTodayLoadsTodaysEvidence() async throws {
+  let store = AppStore(core: try await makeSeededInMemoryCore())
+  await store.refresh()
+  let today = store.dailyReviewEditorDate
+  let yesterday = try #require(LorvexDateFormatters.ymdUTCAddingDays(today, days: -1))
+  await store.selectReviewDay(yesterday)
+  #expect(store.dailyReviewEditingDate == yesterday)
+  #expect(store.dayReviewEvidence?.date == yesterday)
+
+  await store.endEditingDailyReview()
+
+  #expect(store.selectedReviewDate == today)
+  #expect(store.dailyReviewEditingDate == nil)
+  #expect(store.dayReviewEvidence?.date == today)
+}
+
 @MainActor
 @Test
 func appStoreRefreshReloadsMemoryWithoutClobberingComposerDraft() async throws {

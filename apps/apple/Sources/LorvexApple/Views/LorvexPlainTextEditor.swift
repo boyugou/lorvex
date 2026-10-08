@@ -21,8 +21,10 @@ struct LorvexPlainTextEditor: View {
 
   var body: some View {
     ZStack(alignment: .topLeading) {
-      PlainTextNSEditor(text: $text, fontSize: fontSize, onFocusChange: onFocusChange)
-        .frame(minHeight: minHeight, maxHeight: maxHeight)
+      PlainTextNSEditor(
+        text: $text, placeholder: placeholder, fontSize: fontSize, onFocusChange: onFocusChange
+      )
+      .frame(minHeight: minHeight, maxHeight: maxHeight)
       if text.isEmpty && !placeholder.isEmpty {
         Text(placeholder)
           // Must track the caller-supplied `fontSize` exactly: this overlay only
@@ -33,6 +35,9 @@ struct LorvexPlainTextEditor: View {
           .foregroundStyle(LorvexDesign.Palette.placeholderText)
           .padding(.top, 1)
           .allowsHitTesting(false)
+          // The text view carries the placeholder as its accessibility
+          // placeholder value; this copy would be a stop of its own.
+          .accessibilityHidden(true)
       }
     }
   }
@@ -40,6 +45,7 @@ struct LorvexPlainTextEditor: View {
 
 private struct PlainTextNSEditor: NSViewRepresentable {
   @Binding var text: String
+  var placeholder: String
   var fontSize: CGFloat
   var onFocusChange: @MainActor @Sendable (Bool) -> Void
 
@@ -63,6 +69,7 @@ private struct PlainTextNSEditor: NSViewRepresentable {
     textView.isAutomaticQuoteSubstitutionEnabled = false
     textView.isAutomaticDashSubstitutionEnabled = false
     textView.string = text
+    textView.setAccessibilityPlaceholderValue(placeholder)
 
     let scroll = NSScrollView()
     scroll.documentView = textView
@@ -75,6 +82,9 @@ private struct PlainTextNSEditor: NSViewRepresentable {
   func updateNSView(_ scroll: NSScrollView, context: Context) {
     guard let textView = scroll.documentView as? NSTextView else { return }
     context.coordinator.onFocusChange = onFocusChange
+    if textView.accessibilityPlaceholderValue() != placeholder {
+      textView.setAccessibilityPlaceholderValue(placeholder)
+    }
     // Only push external changes (e.g. a draft sync) into the view; never while
     // the user is the source of the change, to avoid fighting the caret.
     if textView.string != text {

@@ -2447,6 +2447,397 @@ and the repetition mark "ๆ" after a priority word belongs to it ("ด่วน
 A word that goes on into a comparison ("สำคัญมากกว่า", "ไม่สำคัญเท่า") names no
 priority, and a polite particle after the word ("ครับ") stays in the title.
 
+Marathi words are read when Marathi is among your device's preferred languages,
+in any regional variant. A word counts only as a whole word in Devanagari, so
+"आजकाल" (nowadays) and "उद्यान" (a garden) hold no day, and a hyphen between two
+Devanagari words joins them. Marathi glues its endings to the word, and Lorvex
+reads the endings that go with a detail: "उद्याला", "सोमवारी", "शुक्रवारपर्यंत",
+"5 मेपासून", "30 मिनिटांची मीटिंग". A word with any other ending stays in the
+title ("उद्यादेखील"), and so does a day that a genitive follows, since the day
+then describes a noun ("सोमवारची मीटिंग", "उद्याची मीटिंग"). The Devanagari
+digits ("५") read as the digits they stand for, the candrabindu and the
+anusvara are one sign ("पाँच" and "पांच"), "ऑगस्ट" and "आगस्ट" are one word, and
+a nasal conjunct may be spelled either way ("सप्टेंबर" and "सप्टेम्बर"); a
+nukta typed after its consonant is accepted, and the title keeps what you
+typed. Marathi written in Latin letters ("udya sakali") is not read. English is
+read beside Marathi, so "3pm", "17:30", and "30 min" work as they do alone, and
+Marathi does not write a clock time with the letter h, so "2h" stays a length.
+If Hindi is among your preferred languages too, Marathi leaves the words the
+two languages share ("आज", "सोमवार", "मार्च") to Hindi when a Hindi word that
+goes with them follows ("आज की रात", "सोमवार को"), so each language reads as it
+does alone.
+
+"परवा" means both the day after tomorrow and the day before yesterday. Lorvex
+reads it as the day after tomorrow, and it never reads "काल" (yesterday) or any
+other past day. A day stays in the title when its line says that it is past: a
+past-tense word anywhere in the line ("उद्या मीटिंग होती", "परवा गेलो होतो",
+"आज बैठक झाली"), or "गेल्या", "मागील", "मागच्या", or an ordinal just before it
+("गेल्या शुक्रवारी", "पहिल्या शुक्रवारी"). A past statement without such a
+word ("परवा मी फोन केला") is read as the day after tomorrow.
+
+Marathi says a clock time with "वाजता" after the hour: "5 वाजता", "5:30
+वाजता", "साडेपाच वाजता" (5:30), "सव्वापाच वाजता" (5:15), "पावणेसहा वाजता"
+(5:45), "दीड वाजता" (1:30), and "अडीच वाजता" (2:30). The hour may be a number
+word before "वाजता" ("पाच वाजता"), while a number word anywhere else is a count
+("तीन लोक"). An hour from 1 to 6 with no part of the day is in the afternoon
+("5 वाजता" is 5 PM) unless it is written with a zero ("06:30 वाजता"), and a
+part of the day sets the hour: "सकाळी" and "पहाटे" are the morning, "दुपारी" is
+noon at 12 and the afternoon from 1 to 6, "संध्याकाळी" is the evening, and
+"रात्री" runs past midnight, so "रात्री 2 वाजता" is 02:00 on the next day and
+"रात्री 10 वाजता" is 22:00. "मध्यरात्री" is the midnight that ends the day. The
+part of the day stands before the hour ("सकाळी 9 वाजता", "संध्याकाळच्या 6
+वाजता", "सकाळी लवकर 6 वाजता"); one after "वाजता" stays in the title and still
+sets the hour. An hour with no part of the day of its own takes the one part of
+the day the line names elsewhere: in its day phrase ("उद्या सकाळी मीटिंग 6
+वाजता" is 06:00), after "रोज", "दर", or "प्रत्येक" ("रोज सकाळी 6 वाजता योग"), or
+in a noun ("रात्रीचे जेवण 8 वाजता" is 20:00, "सकाळची सैर 6 वाजता" is 06:00). A
+line that names two different parts of the day leaves the hour as it reads
+alone, and an hour written on the 24-hour clock ("20:00 वाजता", "06:30
+वाजता") is read as written. The ending "ला" also makes a time: "साडेतीनला"
+(3:30), "दीडला", and, after a part of the day, "संध्याकाळी सहाला", "सकाळी 7 ला".
+A clock time that names a bound ("5 वाजेपर्यंत", "संध्याकाळी 5 वाजेपूर्वी", "18:00
+पर्यंत", "5 वाजल्यानंतर") stays in the title.
+
+| Detail | Marathi |
+|---|---|
+| Day | आज, आज रात्री, उद्या, उद्या सकाळी, परवा, सोमवारी, या शुक्रवारी, पुढच्या सोमवारी, पुढच्या आठवड्यात, या वीकेंडला, 3 दिवसांनी, एका आठवड्याने |
+| Date | 5 मे, 5 मे 2027, तारीख 5 मे, 15 ऑक्टो., 15 तारखेला, 15/10/2026, 15.10., सोमवार 5 ऑक्टोबर |
+| Date range | 3 ते 5 मार्च, 3 मार्च ते 5 मार्च, 3 मार्चपासून 5 मार्चपर्यंत, 30 जानेवारी ते 2 फेब्रुवारी, 3-5 मार्च, सोमवार ते बुधवार |
+| Due day | शुक्रवारपर्यंत, उद्या संध्याकाळपर्यंत, 5 मेपर्यंत, अंतिम तारीख: 5 मे, डेडलाइन शुक्रवार, शुक्रवारी देय |
+| Time | 5 वाजता, 5:30 वाजता, साडेपाच वाजता, पावणेसहा वाजता, दीड वाजता, पाच वाजता, सकाळी 9 वाजता, संध्याकाळी 5 वाजता, रात्रीच्या 10 वाजता, संध्याकाळी 5:30, मध्यरात्री; 3 ते 5 वाजता, सकाळी 9 ते 11 वाजता, 3 वाजेपासून 5 वाजेपर्यंत, 14:00 ते 16:00 |
+| Repeat | रोज, दररोज, रोज सकाळी, दर सोमवारी, दर सोमवारी आणि गुरुवारी, दर दुसऱ्या सोमवारी, दर आठवड्याला, दर 2 दिवसांनी, दर महिन्याला, दर महिन्याच्या 5 तारखेला, दरवर्षी, दर वीकेंडला, कामाच्या दिवशी, दर सोमवार ते शुक्रवार, दिवसाआड |
+| Length | 30 मिनिटे, 2 तास, 1.5 तास, 1 तास 30 मिनिटे, अर्धा तास, पाऊण तास, दीड तास, साडेतीन तास, दोन तास, 30 मिनिटांसाठी |
+| Priority | उच्च प्राधान्य, मध्यम प्राधान्य, निम्न प्राधान्य, प्राधान्य: उच्च, तातडीचे (at the end, or "तातडीचे:" at the start) |
+
+A weekday is a day only with its full name in "वार" (सोमवार, मंगळवार, बुधवार,
+गुरुवार, शुक्रवार, शनिवार, रविवार): the short forms "रवि", "सोम", "मंगळ",
+"बुध", "गुरु", "शुक्र", and "शनि" are ordinary words and names ("मंगळ ग्रह
+पाहणे") and stay in the title. A weekday alone is the coming one, a week ahead
+when it names today; "या" and "ह्या" make it this week's, "पुढच्या" and
+"पुढील" next week's (weeks start on Monday), and "येत्या" the coming one. "या
+आठवड्यात" alone names no single day. The weekend is Saturday and Sunday:
+"वीकेंड", "आठवडा अखेर", "आठवड्याच्या शेवटी", and "शनिवार-रविवार" mean the
+coming Saturday, and today on a Saturday or a Sunday.
+
+A date range plans the task on its first day and makes it due on its last: "3
+ते 5 मार्च", "3 मार्च ते 5 मार्च", and "3 मार्चपासून 5 मार्चपर्यंत" run from
+March 3 to March 5, and a month written once serves both days. The end must come
+after the start ("5 ते 3 मार्च" stays in the title), and the end names a month,
+so "3 ते 5" is never a range of days. A span of weekdays does the same: "सोमवार
+ते बुधवार" plans the task on the coming Monday and makes it due on the Wednesday
+after it, while "सोमवार ते शुक्रवार" alone stays in the title, since it is a
+week of work as often as it is the working week. As in English, a number alone
+before a spaced dash belongs to the title ("Sprint 12 - 20 मार्च" is planned for
+March 20), while "12-20 मार्च" is a range. A range in the past tense, or one
+that a genitive follows ("5 ते 8 मेची सुट्टी"), stays in the title whole, since
+it may be an event the task only prepares for. "3 ते 5 वाजता" is a time range:
+its end carries "वाजता", so "3 ते 5" alone stays in the title.
+
+A date needs its day number before the month name (जानेवारी, फेब्रुवारी,
+मार्च, एप्रिल, मे, जून, जुलै, ऑगस्ट, सप्टेंबर, ऑक्टोबर, नोव्हेंबर, डिसेंबर, in the
+spellings people type, and the short forms the system writes, such as
+"ऑक्टो."). A month without a day, a month before its day, a date in digits with
+no label and no ending ("5/10"), a date the calendar lacks ("31 एप्रिल"), and a
+month of the Marathi calendar ("चैत्र", "श्रावण") stay in the title. A date in
+digits with the day first ("15/10/2026", "15.10.2026", "15.10.") is a date, and
+"15/10" is a date only after "तारीख" or "दिनांक" or before "ला". A date without
+a year that has already passed means next year's.
+
+A due day is a day before "पर्यंत", "पूर्वी", "आधी", or "अगोदर", or after a
+deadline label ("अंतिम तारीख", "शेवटचा दिनांक", "देय तारीख", "डेडलाइन"), or before
+"देय" ("शुक्रवारपर्यंत", "अंतिम तारीख: 5 मे", "शुक्रवारी देय"). "आजपर्यंत" means
+"so far" and is not read, and a clock time before a deadline word ("शुक्रवारी
+संध्याकाळी 5 वाजेपर्यंत") makes the day the due day while the time stays in the
+title.
+
+A repeat is "दर" or "प्रत्येक" with a unit ("दर आठवड्याला", "दर महिन्याला",
+"दरवर्षी"), "रोज", "दररोज", or "नित्य" (every day), a weekday ("दर सोमवारी", "दर
+सोमवारी आणि गुरुवारी", "दर दुसऱ्या सोमवारी"), the working days ("कामाच्या
+दिवशी", "दर सोमवार ते शुक्रवार"), the weekend ("दर वीकेंडला"), a counted
+interval ("दर 2 दिवसांनी", "दर तीन महिन्यांनी"), "दिवसाआड" and its forms for
+the other units, "आठवड्यातून एकदा" and its forms, or a day of the month ("दर
+महिन्याच्या 5 तारखेला"). An interval shorter than a day ("दर 2 तासांनी") and a
+cadence word that describes a noun ("रोजचे काम", "दर महिन्याचा खर्च") name no
+repeat and stay in the title, and "रोजगार" and "रोजा" are other words. "दर" also
+means a price rate, so "मजुरी दर दिवस 500 रुपये" is read as a daily repeat.
+
+A length says that it is one: "30 मिनिटे", "2 तास", "1.5 तास", "अर्धा तास",
+"दीड तास", "साडेतीन तास", maybe with a genitive or "साठी" glued to the unit
+("30 मिनिटांची मीटिंग" is a 30-minute meeting). An amount that names a moment,
+an interval, or a bound ("2 तास आधी", "दर 2 तास", "2 तासांच्या आत", "दिवसातून
+2 तास", "किमान 2 तास") is no length and stays in the title whole, and so does a
+range of amounts ("2 ते 3 तास").
+
+A priority is "उच्च प्राधान्य", "मध्यम प्राधान्य", or "निम्न प्राधान्य" (also
+with "प्राथमिकता"), or an urgent word at the end of the line ("तातडीचे",
+"अत्यावश्यक", "अर्जंट", "महत्त्वाचे") or at its start before a colon or a comma
+("तातडीचे: रिपोर्ट पाठवा"). Anywhere else these are ordinary adjectives and stay
+in the title ("तातडीची औषधे आणणे", "रिपोर्ट पाठवा तातडीचे आहे").
+
+Bengali words are read when Bengali is among your device's preferred languages,
+in any regional variant. A word counts only as a whole word in the Bengali
+script, so "আজকাল" (nowadays) and "কালো" (black) hold no day, and a hyphen
+between two Bengali words joins them ("আজ-কাল"). Bengali glues its endings to
+the word, and Lorvex reads the endings that go with a detail: "সোমবারে",
+"কালকে", "15 অক্টোবরে", "5টায়", "30 মিনিটের মিটিং". A word with any other
+ending stays in the title, and so does a day that a genitive follows, since the
+day then describes a noun ("সোমবারের মিটিং", "আজকের কাজ"). The Bengali digits
+("৫") read as the digits they stand for, the letters য়, ড়, and ঢ় read the same
+typed as one character, as a letter and a nukta, or without the nukta, a joiner
+typed before an ending changes nothing, and the title keeps what you typed.
+Bengali written in Latin letters ("kal sokale") is not read. English is read
+beside Bengali, so "3pm", "17:30", and "30 min" work as they do alone, and
+Bengali does not write a clock time with the letter h, so "2h" stays a length.
+
+"কাল" and "পরশু" look both ways: "কাল" means tomorrow and yesterday, and "পরশু"
+the day after tomorrow and the day before yesterday. Lorvex reads them as the
+coming day, and it never reads "গতকাল" (yesterday) or any other past day. A day
+stays in the title when its line says that it is past: a past-tense word
+anywhere in the line ("কাল মিটিং ছিল", "পরশু গিয়েছিলাম", "আজ বৈঠক হয়েছিল"), or
+"গত", "গেল", "আগের", "বিগত", or an ordinal just before it ("গত শুক্রবার",
+"প্রথম শুক্রবার"). A past statement without such a word ("পরশু আমি ফোন
+দিলাম") is read as the day after tomorrow.
+
+Bengali says a clock time with "টা" after the hour and an ending: "5টায়",
+"5:30টায়", "সাড়ে 5টায়" (5:30), "সোয়া 5টায়" (5:15), "পৌনে 6টায়" (5:45),
+"দেড়টায়" (1:30), and "আড়াইটায়" (2:30). The hour may be a number word
+("পাঁচটায়"), while a number word anywhere else is a count ("তিন জন"). The hour
+with "টা" and no ending counts things, as in "5টা বই", so it is a time only
+after a part of the day ("সকাল 9টা"), as a fraction, or as a range. An hour from
+1 to 6 with no part of the day is in the afternoon ("5টায়" is 5 PM) unless it
+is written with a zero ("06:30টায়"), and a part of the day sets the hour:
+"সকাল" and "ভোর" are the morning, "দুপুর" is noon at 12 and the afternoon from
+1 to 6, "বিকেল" and "সন্ধ্যা" are the evening, and "রাত" runs past midnight, so
+"রাত 2টায়" is 02:00 on the next day and "রাত 10টায়" is 22:00. "মধ্যরাতে" is the
+midnight that ends the day. The part of the day stands before the hour ("সকাল
+9টা", "বিকেল 5টায়"); one after the hour stays in the title and still sets the
+hour. An hour with no part of the day of its own takes the one part the line
+names elsewhere: in its day phrase ("আগামীকাল সকালে মিটিং 6টায়" is 06:00),
+after "রোজ" or "প্রতি" ("রোজ সকালে 6টায় যোগব্যায়াম"), or in a noun ("রাতের
+খাবার 8টায়" is 20:00, "সকালের হাঁটা 6টায়" is 06:00). A line that names two
+different parts of the day leaves the hour as it reads alone, and an hour
+written on the 24-hour clock ("20:00টায়", "06:30টায়") is read as written. The
+minutes may follow the hour: "সকাল 10টা 30 মিনিটে" is 10:30. A clock time that
+names a bound ("5টার মধ্যে", "সন্ধ্যা 6টার আগে", "18:00 পর্যন্ত") stays in the
+title.
+
+| Detail | Bengali |
+|---|---|
+| Day | আজ, আজ রাতে, আগামীকাল, আগামীকাল সকালে, পরশু, সোমবার, এই শুক্রবার, পরের সোমবার, পরের সপ্তাহে, এই উইকেন্ডে, 3 দিন পর, 1 সপ্তাহ পর |
+| Date | 5 মে, 5 মে 2027, তারিখ 5 মে, 15 অক্টো, 15 তারিখে, 15/10/2026, 15.10., সোমবার 5 অক্টোবর |
+| Date range | 3 থেকে 5 মার্চ, 3 মার্চ থেকে 5 মার্চ, 3 মার্চ থেকে 5 মার্চ পর্যন্ত, 30 জানুয়ারি থেকে 2 ফেব্রুয়ারি, 3-5 মার্চ, সোমবার থেকে বুধবার |
+| Due day | শুক্রবার পর্যন্ত, কাল সন্ধ্যা পর্যন্ত, 5 মে পর্যন্ত, শুক্রবারের মধ্যে, শেষ তারিখ: 5 মে, ডেডলাইন শুক্রবার |
+| Time | 5টায়, 5:30টায়, সাড়ে 5টায়, সোয়া 5টায়, পৌনে 6টায়, দেড়টায়, পাঁচটায়, সকাল 9টা, বিকেল 5টায়, রাত 10টায়, সকাল 9:30, মধ্যরাতে; 3টা থেকে 5টা, সকাল 9টা থেকে 11টা, 14:00 থেকে 16:00 |
+| Repeat | প্রতিদিন, রোজ, রোজ সকালে, প্রতি সোমবার, প্রতি সোমবার ও বৃহস্পতিবার, প্রতি দ্বিতীয় সোমবারে, প্রতি সপ্তাহে, প্রতি 2 দিনে, প্রতি মাসে, প্রতি মাসের 5 তারিখে, প্রতি বছর, প্রতি উইকেন্ডে, কর্মদিবসে, প্রতি সোমবার থেকে শুক্রবার, 2 দিন অন্তর, সপ্তাহে একবার |
+| Length | 30 মিনিট, 2 ঘণ্টা, 1.5 ঘণ্টা, 1 ঘণ্টা 30 মিনিট, আধ ঘণ্টা, পৌনে এক ঘণ্টা, দেড় ঘণ্টা, সাড়ে তিন ঘণ্টা, দুই ঘণ্টা, 30 মিনিটের জন্য |
+| Priority | উচ্চ প্রাধান্য, মধ্যম প্রাধান্য, নিম্ন প্রাধান্য, প্রাধান্য: উচ্চ, জরুরি (at the end, or "জরুরি:" at the start) |
+
+A weekday is a day only with its full name in "বার" (রবিবার, সোমবার, মঙ্গলবার,
+বুধবার, বৃহস্পতিবার, শুক্রবার, শনিবার): the short forms "রবি", "সোম", "মঙ্গল",
+"বুধ", "বৃহস্পতি", "শুক্র", and "শনি" are ordinary words and names ("মঙ্গল গ্রহ
+দেখা") and stay in the title. A weekday alone is the coming one, a week ahead
+when it names today; "এই" makes it this week's, "পরের" next week's (weeks start
+on Monday), and "আগামী", "আসছে", "সামনের", and "আসন্ন" the coming one. "এই
+সপ্তাহে" alone names no single day. The weekend is Saturday and Sunday:
+"উইকেন্ড", "সপ্তাহান্ত", "সপ্তাহের শেষে", and "শনিবার ও রবিবার" mean the coming
+Saturday, and today on a Saturday or a Sunday.
+
+A date range plans the task on its first day and makes it due on its last: "3
+থেকে 5 মার্চ", "3 মার্চ থেকে 5 মার্চ", and "3-5 মার্চ" run from March 3 to March
+5, with "হতে" for "থেকে" and "পর্যন্ত" after the end if you like, and a month
+written once serves both days. The end must come after the start ("5 থেকে 3
+মার্চ" stays in the title), and the end names a month, so "3 থেকে 5" is never a
+range of days. A span of weekdays does the same: "সোমবার থেকে বুধবার" plans the
+task on the coming Monday and makes it due on the Wednesday after it, while
+"সোমবার থেকে শুক্রবার" alone stays in the title, since it is a week of work as
+often as it is the working week. As in English, a number alone before a spaced
+dash belongs to the title ("Sprint 12 - 20 মার্চ" is planned for March 20),
+while "12-20 মার্চ" is a range. A range in the past tense, or one that a genitive
+follows ("3 থেকে 5 মার্চের ছুটি"), stays in the title whole, since it may be an
+event the task only prepares for. "3টা থেকে 5টা" is a time range: its end
+carries "টা", so "3 থেকে 5" alone stays in the title.
+
+A date needs its day number beside the month name (জানুয়ারি, ফেব্রুয়ারি, মার্চ,
+এপ্রিল, মে, জুন, জুলাই, আগস্ট, সেপ্টেম্বর, অক্টোবর, নভেম্বর, ডিসেম্বর, in the
+spellings people type, and the short forms the system writes next to a day,
+such as "অক্টো"); "5ই মে" and "1লা মে" read too. A month without a day, a
+short month before its day, a date in digits with no label and no ending
+("5/10"), a date the calendar lacks ("31 এপ্রিল"), and a month of the Bengali
+calendar ("বৈশাখ", "আষাঢ়") stay in the title. A date in digits with the day
+first ("15/10/2026", "15.10.2026", "15.10.") is a date, and "15/10" is a date
+only after "তারিখ" or before "এ". A date without a year that has already passed
+means next year's.
+
+A due day is a day before "পর্যন্ত" or "অবধি", a day with a genitive before
+"মধ্যে", "আগে", or "পূর্বে", or a day after a deadline label ("শেষ তারিখ",
+"অন্তিম তারিখ", "ডেডলাইন", "সময়সীমা"): "শুক্রবার পর্যন্ত", "শুক্রবারের
+মধ্যে", "শেষ তারিখ: 5 মে". "আজ পর্যন্ত" means "so far" and is not read, and a
+clock time before a deadline word ("শুক্রবার সন্ধ্যা 5টার মধ্যে") makes the day
+the due day while the time stays in the title. "নির্ধারিত" names a planned day
+as much as a due one, so it is not a deadline word.
+
+A repeat is "প্রতি" or "প্রত্যেক" with a unit ("প্রতি সপ্তাহে", "প্রতি মাসে",
+"প্রতি বছর"), "প্রতিদিন", "রোজ", or "প্রত্যহ" (every day), a weekday ("প্রতি
+সোমবার", "প্রতি সোমবার ও বৃহস্পতিবার", "প্রতি দ্বিতীয় সোমবারে"), the working
+days ("কর্মদিবসে", "প্রতি সোমবার থেকে শুক্রবার"), the weekend ("প্রতি
+উইকেন্ডে"), a counted interval ("প্রতি 2 দিনে", "প্রতি তিন মাসে", "2 দিন
+অন্তর", "3 মাস পর পর"), "একদিন অন্তর" and its forms for the other units,
+"সপ্তাহে একবার" and its forms, or a day of the month ("প্রতি মাসের 5 তারিখে").
+"দৈনিক", "সাপ্তাহিক", "মাসিক", and "বার্ষিক" are read only at the end of the
+line, before a colon or a comma, or with "ভিত্তিতে" or "হিসেবে" after them,
+since they are ordinary adjectives too ("দৈনিক রিপোর্ট" is a daily report). An
+interval shorter than a day ("প্রতি 2 ঘণ্টায়") and a cadence word that
+describes a noun ("প্রতিদিনের কাজ", "প্রতি মাসের খরচ") name no repeat and stay
+in the title, and "রোজা" and "রোজকার" are other words. "প্রতি" also means a
+price rate, so "মজুরি প্রতি দিন 500 টাকা" is read as a daily repeat.
+
+A length says that it is one: "30 মিনিট", "2 ঘণ্টা", "1.5 ঘণ্টা", "আধ ঘণ্টা",
+"দেড় ঘণ্টা", "সাড়ে তিন ঘণ্টা", maybe with a genitive or "জন্য" after the unit
+("30 মিনিটের মিটিং" is a 30-minute meeting). An amount that names a moment, an
+interval, or a bound ("2 ঘণ্টা পর", "প্রতি 2 ঘণ্টা", "2 ঘণ্টার মধ্যে", "দিনে 2
+ঘণ্টা", "অন্তত 2 ঘণ্টা") is no length and stays in the title whole, and so does
+a range of amounts ("2 থেকে 3 ঘণ্টা").
+
+A priority is "উচ্চ প্রাধান্য", "মধ্যম প্রাধান্য", or "নিম্ন প্রাধান্য" (also with
+"অগ্রাধিকার"), or an urgent word at the end of the line ("জরুরি", "অতি জরুরি",
+"আর্জেন্ট", "গুরুত্বপূর্ণ") or at its start before a colon or a comma ("জরুরি:
+রিপোর্ট পাঠান"). Anywhere else these are ordinary adjectives and stay in the
+title ("জরুরি বিভাগে যান", "রিপোর্ট জরুরি আছে").
+
+Telugu words are read when Telugu is among your device's preferred languages, in
+any regional variant. A word counts only as a whole word in the Telugu script,
+so "ఈరోజుల్లో" (nowadays) holds no day, and a hyphen between two Telugu words
+joins them ("రేపు-ఎల్లుండి"). Telugu glues its endings to the word, and Lorvex
+reads the endings that go with a detail: "సోమవారానికి", "రేపే", "15న", "సాయంత్రం
+5కి", "30 నిమిషాల మీటింగ్". A word with any other ending stays in the title, and
+so does a day in its genitive form or followed by "నాటి", since the day then
+describes a noun ("రేపటి మీటింగ్", "సోమవారపు మీటింగ్", "శుక్రవారం నాటి
+మీటింగ్"). "రేపటి నుండి" and "రేపటి లోపు" are still read. The Telugu digits
+("౫") read as the digits they stand for, the vowel sign ై reads the same typed
+as one sign or as the two signs it is made of, a joiner typed before an ending
+changes nothing, and the title keeps what you typed. Telugu written in Latin
+letters ("repu udayam") is not read. English is read beside Telugu, so "3pm",
+"17:30", and "30 min" work as they do alone, and Telugu does not write a clock
+time with the letter h, so "2h" stays a length.
+
+Telugu has one word each for yesterday ("నిన్న"), the day before ("మొన్న"),
+tomorrow ("రేపు"), and the day after ("ఎల్లుండి"), so Lorvex never reads a past
+day. A day stays in the title when its line says that it is past: a past-tense
+word anywhere in the line ("రేపు మీటింగ్ జరిగింది", "శుక్రవారం రిపోర్ట్ పంపాను",
+"శుక్రవారం గడువు ముగిసింది"), or "గత", "పోయిన", "మునుపటి", "ఆ", "ఆఖరి", "చివరి",
+or an ordinal just before it ("గత శుక్రవారం", "మొదటి శుక్రవారం"). Only the
+past-tense forms of the common verbs that Lorvex lists are recognised, so a past
+statement that uses another verb is still read as a plan.
+
+Telugu says a clock time with "గంటలకు" after the hour: "5 గంటలకు", "5:30
+గంటలకు", "ఒంటి గంటకు" (one o'clock), and the half hours "ఐదున్నరకు" (5:30) and
+"ఒంటి గంటన్నరకు" (1:30). The hour may be a number word ("ఐదు గంటలకు"), while a
+number word anywhere else is only a count ("మూడు పుస్తకాలు"). "5 గంటలు" without
+the ending is an amount of hours, which Lorvex reads as a length, and "ఐదున్నర"
+without an ending is a time only after a part of the day. An hour from 1 to 6
+with no part of the day is in the afternoon ("5 గంటలకు" is 5 PM) unless it is
+written with a zero ("06:30 గంటలకు"), and a part of the day sets the hour:
+"ఉదయం" is the morning, "మధ్యాహ్నం" is noon at 12 and the afternoon from 1 to 6,
+"సాయంత్రం" is the evening, and "రాత్రి" runs past midnight, so "రాత్రి 2 గంటలకు"
+is 02:00 on the next day and "రాత్రి 10 గంటలకు" is 22:00. "అర్ధరాత్రి" is the
+midnight that ends the day. The part of the day stands before the hour ("ఉదయం 9
+గంటలకు", "సాయంత్రం 5కి"); one after the hour stays in the title and still sets
+the hour ("మీటింగ్ 7 గంటలకు సాయంత్రం" is 19:00). An hour with no part of the day
+of its own takes the one part the line names elsewhere: in its day phrase ("రేపు
+ఉదయం మీటింగ్ 6 గంటలకు" is 06:00), after "ప్రతి" or "రోజూ" ("రోజూ ఉదయం 6 గంటలకు
+యోగా"), or in a noun ("రాత్రి భోజనం 8 గంటలకు" is 20:00). A line that names two
+different parts of the day leaves the hour as it reads alone, and an hour
+written on the 24-hour clock ("20:00 గంటలకు", "06:30 గంటలకు") is read as
+written. The minutes may follow the hour: "ఉదయం 10 గంటల 30 నిమిషాలకు" is 10:30.
+A clock time that names a bound ("5 గంటలలోగా", "సాయంత్రం 6 గంటల లోపు", "5 గంటలకు
+ముందు", "18:00 వరకు") stays in the title.
+
+| Detail | Telugu |
+|---|---|
+| Day | ఈరోజు, ఈ రాత్రి, రేపు, రేపు ఉదయం, ఎల్లుండి, సోమవారం, ఈ శుక్రవారం, తదుపరి సోమవారం, వచ్చే వారం, ఈ వారాంతం, 3 రోజుల్లో, 1 వారం తర్వాత |
+| Date | 5 మే, 5 మే 2027, తేదీ 5 మే, 15 అక్టో, 15వ తేదీన, 15/10/2026, 15.10., సోమవారం 5 అక్టోబర్ |
+| Date range | 3 నుండి 5 మార్చి, 3 మార్చి నుండి 5 మార్చి వరకు, 30 జనవరి నుండి 2 ఫిబ్రవరి, 3-5 మార్చి, సోమవారం నుండి బుధవారం వరకు |
+| Due day | శుక్రవారం వరకు, రేపు సాయంత్రం వరకు, 5 మే లోగా, శుక్రవారం లోపు, శుక్రవారానికల్లా, గడువు: 5 మే, శుక్రవారం గడువు, డెడ్‌లైన్ శుక్రవారం |
+| Time | 5 గంటలకు, 5:30 గంటలకు, ఐదున్నరకు, ఒంటి గంటకు, సాయంత్రం 5 గంటలకు, రాత్రి 10 గంటలకు, ఉదయం 9:30, సాయంత్రం 5కి, 17:30కి, అర్ధరాత్రి; 9 గంటల నుండి 11 గంటల వరకు, ఉదయం 9 నుండి 11 వరకు, 14:00 నుండి 16:00 వరకు |
+| Repeat | ప్రతిరోజు, రోజూ, ప్రతి ఉదయం, ప్రతి సోమవారం, ప్రతి సోమవారం మరియు గురువారం, ప్రతి వారం, ప్రతి 2 రోజులకు, ప్రతి నెల, ప్రతి నెల 5వ తేదీన, ప్రతి సంవత్సరం, ప్రతి వారాంతం, పనిదినాల్లో, ప్రతి సోమవారం నుండి శుక్రవారం, 2 రోజులకోసారి, వారానికి ఒకసారి |
+| Length | 30 నిమిషాలు, 2 గంటలు, 1.5 గంటలు, 1 గంట 30 నిమిషాలు, అరగంట, పావు గంట, గంటన్నర, రెండున్నర గంటలు, రెండు గంటలు, 30 నిమిషాల పాటు |
+| Priority | అధిక ప్రాధాన్యత, సాధారణ ప్రాధాన్యత, తక్కువ ప్రాధాన్యత, ప్రాధాన్యత: అధికం, అత్యవసరం (at the end, or "అత్యవసరం:" at the start) |
+
+A weekday is a day only with its full name in "వారం" (ఆదివారం, సోమవారం,
+మంగళవారం, బుధవారం, గురువారం, శుక్రవారం, శనివారం): the short forms "ఆది", "సోమ",
+"మంగళ", "బుధ", "గురు", "శుక్ర", and "శని" are ordinary words, names, and planets
+("శుక్ర గ్రహం చూడాలి") and stay in the title. A weekday alone is the coming one,
+a week ahead when it names today; "ఈ" makes it this week's, "తదుపరి" next week's
+(weeks start on Monday), and "వచ్చే" and "రాబోయే" the coming one. "ఈ వారం" alone
+names no single day. The weekend is Saturday and Sunday: "వారాంతం", "వీకెండ్",
+"శని ఆదివారాలు", and "శనివారం మరియు ఆదివారం" mean the coming Saturday, and today
+on a Saturday or a Sunday, and "తదుపరి వారాంతం" is the one after.
+
+A date range plans the task on its first day and makes it due on its last: "3
+నుండి 5 మార్చి", "3 మార్చి నుండి 5 మార్చి వరకు", and "3-5 మార్చి" run from March
+3 to March 5, with "నుంచి" for "నుండి" and "వరకు", "వరకూ", or "దాకా" after the
+end if you like, and a month written once serves both days. The end must come
+after the start ("5 నుండి 3 మార్చి" stays in the title), and the range names a
+month, so "3 నుండి 5" is never a range of days. A span of weekdays does the
+same: "సోమవారం నుండి బుధవారం" plans the task on the coming Monday and makes it
+due on the Wednesday after it, while "సోమవారం నుండి శుక్రవారం" alone stays in
+the title, since it is a week of work as often as it is the working week. As in
+English, a number alone before a spaced dash belongs to the title ("Sprint 12 -
+20 మార్చి" is planned for March 20), while "12-20 మార్చి" is a range. A range in
+the past tense stays in the title whole, since it may be an event the task only
+prepares for, and so does one whose end carries an ending other than "న", "కి",
+or "కు" ("3 నుండి 5 మార్చిలో"). "9 గంటల నుండి 11 గంటల వరకు" is a time range: it
+carries "గంటల" or a part of the day, so "3 నుండి 5 వరకు" alone stays in the
+title.
+
+A date needs its day number beside the month name (జనవరి, ఫిబ్రవరి, మార్చి,
+ఏప్రిల్, మే, జూన్, జులై, ఆగస్టు, సెప్టెంబర్, అక్టోబర్, నవంబర్, డిసెంబర్, in the
+spellings people type, and the short forms the system writes next to a day, such
+as "అక్టో"). A month without a day, a short month before its day, a date in
+digits with no label and no ending ("15/10"), a date the calendar lacks ("31
+ఏప్రిల్"), and a month of the Telugu calendar ("వైశాఖం", "కార్తీకం") stay in the
+title. A date in digits with the day first ("15/10/2026", "15.10.2026",
+"15.10.") is a date, and "15/10" is a date only after "తేదీ" or before an ending
+such as "న", "కి", "కు", or "నుండి". A date without a year that has already
+passed means next year's.
+
+A due day is a day before "వరకు", "దాకా", "లోగా", "లోపు", "కల్లా", or "నాటికి",
+a day after a deadline label ("గడువు", "గడువు తేదీ", "చివరి తేదీ", "డెడ్‌లైన్"),
+or a day before "గడువు" as the app writes it: "శుక్రవారం వరకు", "శుక్రవారంలోగా",
+"శుక్రవారానికల్లా", "గడువు: 5 మే", "శుక్రవారం గడువు". "ఈరోజు వరకు" means "so
+far" and is not read, and neither is a day in a line that says a deadline has
+passed ("శుక్రవారం గడువు ముగిసింది"). A clock time before a deadline word
+("శుక్రవారం సాయంత్రం 5 గంటలలోగా") makes the day the due day while the time stays
+in the title.
+
+A repeat is "ప్రతి" with a unit ("ప్రతి వారం", "ప్రతి నెల", "ప్రతి సంవత్సరం"),
+"ప్రతిరోజు" or "రోజూ" (every day), a weekday ("ప్రతి సోమవారం", "ప్రతి సోమవారం
+మరియు గురువారం"), the working days ("పనిదినాల్లో", "పనిరోజుల్లో", "ప్రతి సోమవారం
+నుండి శుక్రవారం"), the weekend ("ప్రతి వారాంతం"), a counted interval ("ప్రతి 2
+రోజులకు", "ప్రతి మూడు నెలలకు", "2 రోజులకోసారి", "ప్రతి రెండవ రోజు"), "రోజు
+విడిచి రోజు" and its forms for the other units, "వారానికి ఒకసారి" and its forms,
+or a day of the month ("ప్రతి నెల 5వ తేదీన"). "రోజువారీ", "వారంవారీ", "నెలవారీ",
+and "సంవత్సరంవారీ" are read only at the end of the line, before a colon or a
+comma, or with "ప్రాతిపదికన" or "గా" after them, since they are ordinary
+adjectives too ("రోజువారీ రిపోర్ట్" is a daily report). An interval shorter than
+a day ("ప్రతి 2 గంటలకు") and a count of weekends or working days ("3
+వారాంతాల్లో") name no repeat and stay in the title. "ప్రతి" also means a price
+rate, so "ప్రతి రోజు 500 రూపాయలు" is read as a daily repeat.
+
+A length says that it is one: "30 నిమిషాలు", "2 గంటలు", "1.5 గంటలు", "అరగంట",
+"పావు గంట", "గంటన్నర", "రెండున్నర గంటలు", maybe with "పాటు" or "సేపు" after the
+unit ("2 గంటల పాటు") or the unit in its form before a noun ("30 నిమిషాల మీటింగ్"
+is a 30-minute meeting). An amount that names a moment, an interval, or a bound
+("2 గంటల తర్వాత", "ప్రతి 2 గంటలు", "2 గంటల లోపు", "రోజుకు 2 గంటలు", "కనీసం 2
+గంటలు") is no length and stays in the title whole, and so does a range of
+amounts ("2 నుండి 3 గంటలు").
+
+A priority is "అధిక ప్రాధాన్యత", "సాధారణ ప్రాధాన్యత", or "తక్కువ ప్రాధాన్యత"
+(also written "ప్రాధాన్యత: అధికం"), or an urgent word at the end of the line
+("అత్యవసరం", "ముఖ్యం", "అర్జెంట్", "ముఖ్యమైనది") or at its start before a colon
+or a comma ("అత్యవసరం: రిపోర్ట్ పంపండి"). Anywhere else these are ordinary words
+and stay in the title ("అత్యవసర విభాగానికి వెళ్ళండి", "రిపోర్ట్ ముఖ్యం కాదు").
+
 ### From the Menu Bar Icon
 
 Click the Lorvex icon in the menu bar. The compact menu shows an inline

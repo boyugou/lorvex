@@ -62,17 +62,13 @@ extension MobileStore {
         // do/catch, not `try?`: the read returns an optional whose nil is a
         // legitimate remote clear that must be reflected; only a thrown read
         // error keeps the old value.
-        let dailyReviewDraftAtStart = dailyReviewDraft
-        let dailyReviewWasCleanAtStart =
-          dailyReviewDraftAtStart == MobileDailyReviewDraft(review: dailyReview)
+        let reviewDate = selectedReviewDate
         do {
-          dailyReview = try await core.loadDailyReview(date: selectedReviewDate)
-          if dailyReviewWasCleanAtStart, dailyReviewDraft == dailyReviewDraftAtStart {
-            dailyReviewDraft = MobileDailyReviewDraft(review: dailyReview)
-          }
+          adoptLoadedDailyReview(try await core.loadDailyReview(date: reviewDate), readFor: reviewDate)
         } catch {}
-        if let loaded = try? await core.loadDaySummary(date: selectedReviewDate) {
-          dayReviewEvidence = loaded
+        let evidenceDate = selectedReviewDate
+        if let loaded = try? await core.loadDaySummary(date: evidenceDate) {
+          adoptDayReviewEvidence(loaded, readFor: evidenceDate)
         }
         let weekDigestToDay = weeklyReviewAnchor ?? date
         let weekDigestFromDay =

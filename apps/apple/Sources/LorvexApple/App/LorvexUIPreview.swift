@@ -721,6 +721,7 @@
     /// when no driver is listening.
     static func emitStop(_ name: String) async {
       emit("LORVEX_UI_PREVIEW_STOP=\(name)")
+      await MacAccessibilityDump.dump(stop: name)
       guard let directory = captureAckDirectory else {
         try? await Task.sleep(for: .seconds(0.5))
         return

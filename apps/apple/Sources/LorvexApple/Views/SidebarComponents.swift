@@ -88,17 +88,25 @@ struct SidebarListIcon: View {
 /// desaturation to the native `.sidebar` list. Titles and the bare-symbol icon
 /// use hierarchical styles (`.primary` / `.secondary`) so the list inverts them
 /// against the selection fill; a colored `SidebarListIcon` keeps its own tint.
+///
+/// The icon is decoration and is hidden from VoiceOver. A row with a count
+/// passes `spokenLabel`, which makes the whole row one element that reads it
+/// (a bare number beside a name says nothing about what it counts); a row
+/// without one reads its title.
 struct SidebarListRow<Icon: View, Title: View>: View {
     let count: Int?
+    let spokenLabel: String?
     let icon: Icon
     let title: Title
 
     init(
         count: Int? = nil,
+        spokenLabel: String? = nil,
         @ViewBuilder icon: () -> Icon,
         @ViewBuilder title: () -> Title
     ) {
         self.count = count
+        self.spokenLabel = spokenLabel
         self.icon = icon()
         self.title = title()
     }
@@ -108,6 +116,7 @@ struct SidebarListRow<Icon: View, Title: View>: View {
             icon
                 .frame(width: SidebarMetrics.iconWidth, alignment: .center)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             title
                 .foregroundStyle(.primary)
                 .lineLimit(1)
@@ -127,6 +136,20 @@ struct SidebarListRow<Icon: View, Title: View>: View {
         .font(SidebarTypography.title)
         .frame(maxWidth: .infinity, minHeight: SidebarMetrics.rowHeight, alignment: .leading)
         .contentShape(Rectangle())
+        .sidebarSpokenLabel(spokenLabel)
+    }
+}
+
+private extension View {
+    /// One accessibility element that reads `label`, or the view unchanged
+    /// without one.
+    @ViewBuilder
+    func sidebarSpokenLabel(_ label: String?) -> some View {
+        if let label {
+            accessibilityElement(children: .ignore).accessibilityLabel(label)
+        } else {
+            self
+        }
     }
 }
 
@@ -155,6 +178,7 @@ struct SidebarFooterRow<Icon: View, Title: View>: View {
             icon
                 .frame(width: SidebarMetrics.iconWidth, alignment: .center)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             title
                 .foregroundStyle(.primary)
                 .lineLimit(1)

@@ -33,6 +33,13 @@ struct TodayScheduleToolbar: ToolbarContent {
         }
       }
       .help(TodayCalmCopy.suggestTimesHelp(workingHours: workingHours))
+      // The split button's menu segment has no name of its own, so Clear
+      // Times is also offered as an action of the control.
+      .accessibilityActions {
+        if canClear {
+          Button(TodayCalmCopy.clearTimes, action: clear)
+        }
+      }
       .accessibilityIdentifier("today.schedule.suggest")
     }
   }

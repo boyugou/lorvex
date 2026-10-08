@@ -140,6 +140,7 @@ struct CommandPaletteView: View {
     HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
       Image(systemName: "exclamationmark.triangle.fill")
         .foregroundStyle(LorvexDesign.Palette.warning)
+        .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
         Text(LocalizedStringResource("common.error", defaultValue: "Error", table: "Localizable", bundle: LorvexL10n.bundle))
           .font(LorvexDesign.Typography.secondaryText.weight(.semibold))

@@ -58,6 +58,7 @@ struct HabitWeekdayPanel: View {
         Label(Self.title, systemImage: Self.titleSymbol)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(1)
+          .accessibilityAddTraits(.isHeader)
         Spacer(minLength: LorvexDesign.Spacing.s)
         windowCaption
       }
@@ -71,6 +72,7 @@ struct HabitWeekdayPanel: View {
         Image(systemName: Self.titleSymbol)
       }
       .font(LorvexDesign.Typography.primaryEmphasis)
+      .accessibilityAddTraits(.isHeader)
     }
   }
 

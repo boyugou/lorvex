@@ -73,15 +73,9 @@ struct MobileCapturePreviewLine: View {
         .foregroundStyle(.secondary)
         .lineLimitUnlessAccessibilitySize(1)
       ForEach(preview.words) { word in
-        Text(word.label)
-          .font(LorvexDesign.Typography.secondaryText.weight(.medium))
-          .foregroundStyle(word.tint)
-          .fixedSize()
-          .padding(.horizontal, LorvexDesign.Spacing.sm)
-          .padding(.vertical, LorvexDesign.Spacing.xxs)
-          .background(
-            RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
-              .fill(word.tint.opacity(0.12)))
+        LorvexCapturePreviewWordView(
+          word: word, horizontalPadding: LorvexDesign.Spacing.sm,
+          verticalPadding: LorvexDesign.Spacing.xxs, washOpacity: 0.12)
       }
     }
     .accessibilityElement(children: .combine)

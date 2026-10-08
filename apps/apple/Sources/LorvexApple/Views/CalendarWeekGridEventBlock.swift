@@ -20,6 +20,7 @@ enum CalendarEventBlockMetrics {
 extension CalendarWeekGridView {
   func eventBlock(
     _ block: CalendarGridTimedBlock,
+    on day: CalendarGridDay,
     dayIndex: Int,
     totalDays: Int,
     columnWidth: CGFloat
@@ -55,7 +56,8 @@ extension CalendarWeekGridView {
     // shows the title alone, and the tooltip carries the rest.
     let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
     let isTight = baseHeight < LorvexDesign.CalendarMetrics.tightBlockHeight
-    let label = calendarEventAccessibilityLabel(block.event)
+    let label = blockAccessibilityLabel(
+      calendarEventAccessibilityLabel(block.event), on: day, totalDays: totalDays)
     // While a drag is under way the block reads the time its release would give
     // it.
     let landed = active?.landedTime(
@@ -175,9 +177,16 @@ extension CalendarWeekGridView {
       return .handled
     }
     .help(isCompact ? label : "")
+    // One stop per block: its title and time lines would each read the label.
+    // A tap gesture has no press action of its own, so the block offers one.
+    .accessibilityElement(children: .ignore)
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
     .accessibilityLabel(label)
+    .accessibilityAction { selectEvent(block.event) }
+    .accessibilitySortPriority(
+      Self.accessibilitySortPriority(
+        dayIndex: dayIndex, totalDays: totalDays, startMinutes: block.startMin))
     .contextMenu {
       CalendarEventContextMenu(
         event: block.event, select: selectEvent, edit: editEvent,

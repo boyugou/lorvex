@@ -311,6 +311,7 @@ struct CalendarWeekGridView: View {
         ForEach(day.timedBlocks.filter { $0.lane < maxDisplayedLanes }) { block in
           eventBlock(
             block,
+            on: day,
             dayIndex: dayIndex,
             totalDays: totalDays,
             columnWidth: width)

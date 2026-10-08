@@ -63,14 +63,42 @@ public struct MarkdownNote: Equatable, Sendable {
     public var blocks: [Block]
     var renderedBlocks: [RenderedBlock]
 
+    /// Parses `source` and reduces it to the block kinds Lorvex renders. The work
+    /// runs on a thread with a stack deep enough for the deepest nesting a note
+    /// can have (see ``MarkdownDeepStack``), so a pathologically nested note
+    /// renders instead of overflowing the caller's stack.
     public init(_ source: String) {
+        let built = MarkdownDeepStack.run { Self.build(source) }
+        blocks = built.blocks
+        renderedBlocks = built.renderedBlocks
+    }
+
+    /// The longest source, in Unicode scalars, that is parsed as markdown. It is
+    /// twice the longest note the product accepts (50,000 characters), so every
+    /// note that passed validation parses. A longer one comes only from an import
+    /// or a sync peer that skipped the limit; beyond this length the nesting a
+    /// note can carry outgrows ``MarkdownDeepStack`` and parsing time has no
+    /// bound, so such a source is shown verbatim as a code block instead.
+    static let maxParsedScalars = 100_000
+
+    /// True when `source` is longer than ``maxParsedScalars``. A source's byte
+    /// count is at least its scalar count, so only one with more bytes than the
+    /// limit is counted scalar by scalar.
+    private static func exceedsParseLimit(_ source: String) -> Bool {
+        source.utf8.count > maxParsedScalars && source.unicodeScalars.count > maxParsedScalars
+    }
+
+    private static func build(_ source: String) -> (blocks: [Block], renderedBlocks: [RenderedBlock]) {
+        guard !exceedsParseLimit(source) else {
+            return ([.code(language: nil, text: source)], [.code(language: nil, text: source)])
+        }
         let document = Document(parsing: source)
-        blocks = document.children.compactMap(Self.block(from:))
+        var blocks = document.children.compactMap(Self.block(from:))
         if blocks.isEmpty {
             let trimmed = source.trimmingCharacters(in: .whitespacesAndNewlines)
             blocks = trimmed.isEmpty ? [] : [.paragraph(trimmed)]
         }
-        renderedBlocks = blocks.map(Self.renderedBlock(from:))
+        return (blocks, blocks.map(Self.renderedBlock(from:)))
     }
 
     private static func block(from markup: Markup) -> Block? {

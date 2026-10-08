@@ -272,6 +272,91 @@ func theSelectedTasksDetailAdoptsANewPlan() async throws {
   #expect(store.taskDetailHasPlannedDate)
 }
 
+@MainActor
+@Test
+func aTimedTaskResizedToAnExactTimeKeepsItsDayAndItsEstimate() async throws {
+  let (store, core, id) = try await makeStore(estimate: 60)
+  let column = try tomorrow()
+  await store.planTasks(ids: [id], on: column, time: .start(9 * 60))
+
+  await store.planTasks(ids: [id], on: column, time: .exactly(9 * 60..<11 * 60 + 15))
+
+  let task = try await core.loadTask(id: id)
+  #expect(day(of: task) == storedDay(of: column))
+  #expect(task.plannedTime == 9 * 60..<11 * 60 + 15)
+  #expect(task.estimatedMinutes == 60)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
+func aResizeIsUndoneAndRedoneAsAPlanChange() async throws {
+  let (store, core, id) = try await makeStore(estimate: 60)
+  let column = try tomorrow()
+  await store.planTasks(ids: [id], on: column, time: .start(9 * 60))
+  let undoManager = UndoManager()
+  undoManager.groupsByEvent = false
+
+  undoManager.beginUndoGrouping()
+  await store.planTasks(
+    ids: [id], on: column, time: .exactly(8 * 60 + 30..<10 * 60), undoManager: undoManager)
+  undoManager.endUndoGrouping()
+
+  #expect(undoManager.undoActionName == AppStore.planTaskTitle)
+  #expect(try await core.loadTask(id: id).plannedTime == 8 * 60 + 30..<10 * 60)
+
+  undoManager.undo()
+  #expect(
+    try await waitUntil { try await core.loadTask(id: id).plannedTime == 9 * 60..<10 * 60 })
+
+  undoManager.redo()
+  #expect(
+    try await waitUntil {
+      try await core.loadTask(id: id).plannedTime == 8 * 60 + 30..<10 * 60
+    })
+}
+
+@MainActor
+@Test
+func anExactTimeReachingOutsideTheDayIsCutToTheDay() async throws {
+  let (store, core, id) = try await makeStore()
+  let column = try tomorrow()
+
+  await store.planTasks(ids: [id], on: column, time: .exactly(-30..<90))
+  #expect(try await core.loadTask(id: id).plannedTime == 0..<90)
+
+  await store.planTasks(ids: [id], on: column, time: .exactly(23 * 60..<25 * 60))
+  #expect(try await core.loadTask(id: id).plannedTime == 23 * 60..<24 * 60)
+}
+
+@MainActor
+@Test
+func anExactTimeWithNoMinutesInTheDayChangesNothing() async throws {
+  let (store, core, id) = try await makeStore()
+  let column = try tomorrow()
+  await store.planTasks(ids: [id], on: column, time: .start(9 * 60))
+  let undoManager = UndoManager()
+
+  await store.planTasks(
+    ids: [id], on: column, time: .exactly(25 * 60..<26 * 60), undoManager: undoManager)
+
+  #expect(!undoManager.canUndo)
+  #expect(try await core.loadTask(id: id).plannedTime == 9 * 60..<9 * 60 + 30)
+}
+
+@MainActor
+@Test
+func aFinishedTaskKeepsItsTimeWhenAnExactOneIsSet() async throws {
+  let (store, core, id) = try await makeStore()
+  let column = try tomorrow()
+  await store.planTasks(ids: [id], on: column, time: .start(9 * 60))
+  _ = try await core.completeTask(id: id)
+
+  await store.planTasks(ids: [id], on: column, time: .exactly(9 * 60..<12 * 60))
+
+  #expect(try await core.loadTask(id: id).plannedTime == 9 * 60..<9 * 60 + 30)
+}
+
 /// The stored day `days` after the product's logical today.
 @MainActor
 private func logicalDay(_ days: Int, in store: AppStore) throws -> String {

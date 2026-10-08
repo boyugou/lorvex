@@ -57,9 +57,8 @@ extension TaskDetailView {
     Button {
       Task { await store.toggleTaskCompletion(task, undoManager: undoManager) }
     } label: {
-      Image(systemName: task.statusCircleGlyph)
+      LorvexTaskStatusCircle(task: task)
         .font(LorvexDesign.Typography.screenTitle.weight(.regular))
-        .foregroundStyle(task.statusCircleStyle)
         .contentTransition(.symbolEffect(.replace))
         .reduceMotionBounce(value: isDone)
         // As tall as the title's first line, so the circle sits on that line

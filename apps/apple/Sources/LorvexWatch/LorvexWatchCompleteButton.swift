@@ -8,11 +8,14 @@ import SwiftUI
 /// A task's completion control on the wrist. Tapping it fills it green with a
 /// check and completes the task once that lands (300 ms), so the row does not
 /// vanish under the finger; the success haptic follows, or the failure one if
-/// the action could not be sent. A row draws the circle in its priority tint;
+/// the action could not be sent. A row draws the circle in its priority tint
+/// and, with Differentiate Without Color on, with its priority's mark inside;
 /// a running lead draws its ring, which fills as the task's time passes.
 struct LorvexWatchCompleteButton: View {
   enum Style {
-    case circle(tint: Color)
+    /// `glyph` is the open circle's symbol: the plain ring, or the one that
+    /// marks the task's priority while Differentiate Without Color is on.
+    case circle(tint: Color, glyph: String = "circle")
     case ring(progress: Double, diameter: CGFloat)
   }
 
@@ -26,8 +29,8 @@ struct LorvexWatchCompleteButton: View {
   var body: some View {
     Button(action: trigger) {
       switch style {
-      case .circle(let tint):
-        Image(systemName: isCompleting ? "checkmark.circle.fill" : "circle")
+      case .circle(let tint, let glyph):
+        Image(systemName: isCompleting ? "checkmark.circle.fill" : glyph)
           .font(.title3)
           .foregroundStyle(isCompleting ? LorvexDesign.Palette.done : tint)
           .contentTransition(.symbolEffect(.replace))

@@ -12,6 +12,9 @@ enum CalendarEventBlockMetrics {
   static let selectedShadowRadius: CGFloat = 5
   static let resizeHandleHitHeight: CGFloat = 8
   static let resizeHandleWidth: CGFloat = 18
+  /// How far from the leading edge a task block's completion circle reaches:
+  /// its own padding, the circle, and a little slack.
+  static let taskCircleInset: CGFloat = 24
 }
 
 extension CalendarWeekGridView {
@@ -47,12 +50,17 @@ extension CalendarWeekGridView {
     let isEditable =
       block.event.editable && !block.event.allDay && !block.event.supportsScopedMutation
       && !block.event.isMultiDay
-    let showsResizeGrips = isSelected || hoveredEventID == block.event.id
+    let showsResizeGrips = isSelected || hoveredBlockID == block.event.id
     // Overlap can leave a lane too narrow for a time line or a word: it then
     // shows the title alone, and the tooltip carries the rest.
     let isCompact = laneWidth < LorvexDesign.CalendarMetrics.compactLaneWidth
     let isTight = baseHeight < LorvexDesign.CalendarMetrics.tightBlockHeight
     let label = calendarEventAccessibilityLabel(block.event)
+    // While a drag is under way the block reads the time its release would give
+    // it.
+    let landed = active?.landedTime(
+      of: block.startMin..<block.endMin, hourHeight: hourHeight,
+      minimumLength: Self.minimumBlockMinutes)
 
     return Group {
       if isCompact {
@@ -61,8 +69,10 @@ extension CalendarWeekGridView {
       } else {
         LorvexCalendarBlockText(
           title: block.event.title,
-          time: block.timeLabel,
-          range: block.rangeLabel,
+          time: landed.map { lorvexClockTimeLabel(minutes: $0.lowerBound) } ?? block.timeLabel,
+          range: landed.map {
+            lorvexClockRangeLabel(startMinutes: $0.lowerBound, endMinutes: $0.upperBound)
+          } ?? block.rangeLabel,
           verticalPadding: CalendarEventBlockMetrics.verticalPadding
         )
       }
@@ -101,9 +111,9 @@ extension CalendarWeekGridView {
     .calendarPointingHandCursor()
     .onHover { inside in
       if inside {
-        hoveredEventID = block.event.id
-      } else if hoveredEventID == block.event.id {
-        hoveredEventID = nil
+        hoveredBlockID = block.event.id
+      } else if hoveredBlockID == block.event.id {
+        hoveredBlockID = nil
       }
     }
     .overlay(alignment: .topTrailing) {
@@ -118,7 +128,7 @@ extension CalendarWeekGridView {
           color: color,
           visible: showsResizeGrips,
           gesture: resizeTopGesture(for: block),
-          block: block)
+          select: { selectEvent(block.event) })
       }
     }
     .overlay(alignment: .bottom) {
@@ -128,7 +138,7 @@ extension CalendarWeekGridView {
           color: color,
           visible: showsResizeGrips,
           gesture: resizeGesture(for: block),
-          block: block)
+          select: { selectEvent(block.event) })
       }
     }
     .contentShape(Rectangle())
@@ -209,19 +219,28 @@ extension CalendarWeekGridView {
     .accessibilityIdentifier("calendar.weekgrid.editSheetHint")
   }
 
-  /// One edge grip. `visible` fades the mark itself; the transparent hit area
-  /// above it is always present so the resize cursor and gesture do not wait on
-  /// the grip's appearance.
-  private func resizeHandle(
+  /// One edge grip of a timed block. `visible` fades the mark itself, which is
+  /// centered on the block's edge; the transparent hit area behind it is always
+  /// present so the resize cursor and gesture do not wait on the grip's
+  /// appearance. A click on the hit area without a drag calls `select`, as a
+  /// click on the block does. `leadingInset` keeps the hit area off the block's
+  /// leading edge, where a task block's completion circle sits; the mark does
+  /// not move.
+  func resizeHandle(
     alignment: VerticalAlignment,
     color: Color,
     visible: Bool,
+    leadingInset: CGFloat = 0,
     gesture: some Gesture,
-    block: CalendarGridTimedBlock
+    select: @escaping () -> Void
   ) -> some View {
     Color.clear
       .frame(height: CalendarEventBlockMetrics.resizeHandleHitHeight)
       .contentShape(Rectangle())
+      .calendarResizeCursor()
+      .gesture(gesture)
+      .simultaneousGesture(TapGesture().onEnded { select() })
+      .padding(.leading, leadingInset)
       .overlay(alignment: alignment == .top ? .top : .bottom) {
         Rectangle()
           .fill(color.opacity(0.55))
@@ -230,19 +249,15 @@ extension CalendarWeekGridView {
           .padding(alignment == .top ? .top : .bottom, 1)
           .opacity(visible ? 1 : 0)
           .reduceMotionAnimation(.easeInOut(duration: 0.12), value: visible)
+          .allowsHitTesting(false)
       }
-      .calendarResizeCursor()
-      .gesture(gesture)
-      .simultaneousGesture(
-        TapGesture().onEnded { selectEvent(block.event) }
-      )
       .accessibilityHidden(true)
   }
 }
 
 /// How far a block being dragged has moved and resized from where it lies in
-/// its column, read from the grid's reschedule draft. Event blocks use all
-/// three parts; a task block only moves.
+/// its column, read from the grid's reschedule draft. Event blocks and timed
+/// task blocks use all three parts.
 struct CalendarBlockMovePreview {
   let move: CGSize
   let resizeBottom: CGFloat

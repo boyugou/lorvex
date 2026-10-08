@@ -36,9 +36,10 @@ extension LorvexTask.Status {
 }
 
 /// A task row's leading status circle, derived from the task's status and
-/// priority. Every task row on macOS, iOS, and iPadOS draws it, as do the
-/// tappable completion circles and the rows listing the tasks a task waits on,
-/// so each shows the same symbol and tint for every state.
+/// priority. Every task row on macOS, iOS, and iPadOS draws it through
+/// ``LorvexTaskStatusCircle``, as do the tappable completion circles and the
+/// rows listing the tasks a task waits on, so each shows the same symbol and
+/// tint for every state.
 extension LorvexTask {
   /// SF Symbol for the leading status circle: a filled check when completed, an
   /// × for cancelled, a moon for someday, a hollow circle for anything still
@@ -50,6 +51,17 @@ extension LorvexTask {
     case .someday: "moon.circle"
     case .open, .inProgress: "circle"
     }
+  }
+
+  /// The leading status circle's glyph, with an open task's priority marked
+  /// inside the ring when `differentiatingPriority` is true (the person has
+  /// turned on Differentiate Without Color; see
+  /// ``LorvexTask/Priority/circleGlyph(differentiating:)``). A completed,
+  /// cancelled, or someday task keeps ``statusCircleGlyph`` either way: its
+  /// state is already told by its shape, and its priority no longer orders it.
+  public func statusCircleGlyph(differentiatingPriority: Bool) -> String {
+    guard status.isActionable else { return statusCircleGlyph }
+    return priority.circleGlyph(differentiating: differentiatingPriority)
   }
 
   /// Foreground style for the leading status circle: the done color when

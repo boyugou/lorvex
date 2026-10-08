@@ -145,6 +145,42 @@ extension CalendarWeekGridView {
       }
   }
 
+  /// Resize gesture for a timed task's block, from its top grip (`edge` is
+  /// ``CalendarGridMove/Edge/start``) or its bottom grip (``CalendarGridMove/Edge/end``):
+  /// a vertical drag moves that edge in quarter hours and leaves the other where
+  /// it is, and the block never gets shorter than one quarter hour. Release sets
+  /// the task's time through `store.planTasks`, so ⌘Z restores the old one, and
+  /// the task's estimate stays as it was. As with a move, the preview stays
+  /// where it was dropped until the write has landed and the grid has reloaded.
+  func taskResizeGesture(
+    for block: CalendarGridTaskBlock, dayIndex: Int, edge: CalendarGridMove.Edge
+  ) -> some Gesture {
+    DragGesture(minimumDistance: Self.dragMinimumDistance)
+      .onChanged { value in
+        rescheduleDraft = RescheduleDraft(
+          blockID: block.id,
+          kind: edge == .end ? .resize : .resizeTop,
+          translation: CGSize(width: 0, height: value.translation.height),
+          columnWidth: 0)
+      }
+      .onEnded { value in
+        let current = block.startMin..<block.endMin
+        let resized = CalendarGridMove.resized(
+          current, edge: edge, translationHeight: value.translation.height,
+          hourHeight: hourHeight)
+        guard resized != current else {
+          clearRescheduleDraft()
+          return
+        }
+        Task { @MainActor in
+          await store.planTasks(
+            ids: [block.task.id], on: dayDate(dayIndex), time: .exactly(resized),
+            undoManager: undoManager)
+          clearRescheduleDraft()
+        }
+      }
+  }
+
   /// The date of the visible column `index`, counted from the first column.
   func dayDate(_ index: Int) -> Date {
     calendar.date(byAdding: .day, value: index, to: weekStart) ?? weekStart
@@ -176,21 +212,18 @@ extension CalendarWeekGridView {
           columnWidth: 0)
       }
       .onEnded { value in
-        let snap = Self.snapMinutes
-        let rawDeltaMin = Int((value.translation.height / hourHeight * 60).rounded())
-        let snapped = (rawDeltaMin / snap) * snap
-        let newEndMin = max(
-          block.startMin + Self.minimumBlockMinutes,
-          min(24 * 60, block.endMin + snapped))
+        let resized = CalendarGridMove.resized(
+          block.startMin..<block.endMin, edge: .end, translationHeight: value.translation.height,
+          hourHeight: hourHeight, minimumLength: Self.minimumBlockMinutes)
         clearRescheduleDraft()
-        guard newEndMin != block.endMin else { return }
+        guard resized.upperBound != block.endMin else { return }
         let dayDate = calendar.date(byAdding: .day, value: 0, to: weekStart) ?? weekStart
         // Resize handles are disabled for multi-day clipped blocks; for
         // editable single-day blocks the event's own startDate remains the
         // authoritative day.
         let parsedDay = AppStore.ymdFormatter.date(from: block.event.startDate) ?? dayDate
         let startDate = dateAtMinute(of: parsedDay, minute: block.startMin)
-        let endDate = dateAtMinute(of: parsedDay, minute: newEndMin)
+        let endDate = dateAtMinute(of: parsedDay, minute: resized.upperBound)
         Task { @MainActor in
           await store.rescheduleCalendarEvent(
             block.event, newStart: startDate, newEnd: endDate, undoManager: undoManager)
@@ -213,20 +246,16 @@ extension CalendarWeekGridView {
           columnWidth: 0)
       }
       .onEnded { value in
-        let snap = Self.snapMinutes
-        let rawDeltaMin = Int((value.translation.height / hourHeight * 60).rounded())
-        let snapped = (rawDeltaMin / snap) * snap
-        // Negative drag (up) → earlier start; positive drag (down) → later start.
-        let newStartMin = max(
-          0,
-          min(
-            block.endMin - Self.minimumBlockMinutes,
-            block.startMin + snapped))
+        // Dragging up gives an earlier start, dragging down a later one.
+        let resized = CalendarGridMove.resized(
+          block.startMin..<block.endMin, edge: .start,
+          translationHeight: value.translation.height, hourHeight: hourHeight,
+          minimumLength: Self.minimumBlockMinutes)
         clearRescheduleDraft()
-        guard newStartMin != block.startMin else { return }
+        guard resized.lowerBound != block.startMin else { return }
         let parsedDay =
           AppStore.ymdFormatter.date(from: block.event.startDate) ?? weekStart
-        let startDate = dateAtMinute(of: parsedDay, minute: newStartMin)
+        let startDate = dateAtMinute(of: parsedDay, minute: resized.lowerBound)
         let endDate = dateAtMinute(of: parsedDay, minute: block.endMin)
         Task { @MainActor in
           await store.rescheduleCalendarEvent(

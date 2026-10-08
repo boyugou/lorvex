@@ -16,7 +16,8 @@ import SwiftUI
 ///   runs out of room, wrapping instead at accessibility text sizes; rendered
 ///   only when there's something to say.
 ///
-/// Priority is carried by the circle's tint and status by its glyph, so the row
+/// Priority is carried by the circle's tint (and, with Differentiate Without
+/// Color on, by a mark inside the ring) and status by its glyph, so the row
 /// needs no redundant "p1" / "Open" text. The row opens the task without a
 /// trailing disclosure chevron: a task row is plainly tappable, and the
 /// chevron would only crowd the title.
@@ -104,9 +105,8 @@ struct MobileTaskRowContent: View, Equatable {
   var body: some View {
     HStack(alignment: .top, spacing: LorvexDesign.Spacing.m) {
       if showsLeadingCircle {
-        Image(systemName: task.statusCircleGlyph)
+        LorvexTaskStatusCircle(task: task)
           .font(.title3)
-          .foregroundStyle(task.statusCircleStyle)
           .mobileTaskCircleFrame()
           .accessibilityHidden(true)
       }
@@ -285,9 +285,8 @@ struct MobileTaskCompletionCircle: View {
 
   var body: some View {
     Button(action: triggerComplete) {
-      Image(systemName: showsCheck ? "checkmark.circle.fill" : task.statusCircleGlyph)
+      LorvexTaskStatusCircle(task: task, isCompleting: isCompleting)
         .font(.title3)
-        .foregroundStyle(showsCheck ? AnyShapeStyle(LorvexDesign.Palette.done) : task.statusCircleStyle)
         .contentTransition(.symbolEffect(.replace))
         .reduceMotionBounce(value: isCompleting)
         .reduceMotionPop(isActive: isCompleting)
@@ -315,12 +314,6 @@ struct MobileTaskCompletionCircle: View {
     case .open, .inProgress, .someday:
       MobileTaskActionCopy.complete
     }
-  }
-
-  /// The circle reads as checked while the completion animation plays and once
-  /// the task is actually resolved.
-  private var showsCheck: Bool {
-    isCompleting || task.status == .completed
   }
 
   private func triggerComplete() {

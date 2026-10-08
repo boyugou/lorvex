@@ -55,12 +55,13 @@ struct CalendarWeekGridView: View {
   /// Day column currently hovered by a dragged task pill (all-day strip),
   /// driving the drop-target highlight.
   @State var dropTargetedDay: Date? = nil
-  /// Event under the pointer. Resize grips are drawn only for it and for the
-  /// selected block, so a dense week grid is not peppered with permanent marks
-  /// that read as stray rules rather than affordances. The grips' transparent
-  /// hit area stays live either way, so the resize cursor and the drag arm the
-  /// moment the pointer reaches a block edge.
-  @State var hoveredEventID: String? = nil
+  /// Block under the pointer: an event's id or a task block's
+  /// ``CalendarGridTaskBlock/id``. Resize grips are drawn only for it and for
+  /// the selected block, so a dense week grid is not peppered with permanent
+  /// marks that read as stray rules rather than affordances. The grips'
+  /// transparent hit area stays live either way, so the resize cursor and the
+  /// drag arm the moment the pointer reaches a block edge.
+  @State var hoveredBlockID: String? = nil
   @State private var overflowPopoverDayID: CalendarGridDay.ID? = nil
   /// Day column whose all-day "+N more" popover is open. Internal (not private)
   /// so the all-day strip in `CalendarWeekGridChrome` can drive it.
@@ -74,6 +75,24 @@ struct CalendarWeekGridView: View {
     var translation: CGSize
     var columnWidth: CGFloat
     enum Kind { case move, resize, resizeTop }
+
+    /// The time of day a block that spans `time` lands on if this drag is
+    /// released now: the whole block moved for a move, its end for a bottom
+    /// resize, its start for a top resize. `minimumLength` is the shortest
+    /// block a resize leaves.
+    func landedTime(of time: Range<Int>, hourHeight: CGFloat, minimumLength: Int) -> Range<Int> {
+      switch kind {
+      case .move:
+        let landing = CalendarGridMove.landing(
+          startMinute: time.lowerBound, duration: time.count, translation: translation,
+          hourHeight: hourHeight, columnWidth: 0, dayIndex: 0, dayCount: 1)
+        return landing.startMinute..<landing.startMinute + time.count
+      case .resize, .resizeTop:
+        return CalendarGridMove.resized(
+          time, edge: kind == .resize ? .end : .start, translationHeight: translation.height,
+          hourHeight: hourHeight, minimumLength: minimumLength)
+      }
+    }
   }
 
   /// A task dragged over a day column of the time grid: the column and the

@@ -79,8 +79,7 @@ struct MobileTaskDependenciesSection: View {
     NavigationLink(value: MobileRoute.task(dependency.id)) {
       HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
         if completeDependency == nil {
-          Image(systemName: dependency.statusCircleGlyph)
-            .foregroundStyle(dependency.statusCircleStyle)
+          LorvexTaskStatusCircle(task: dependency)
             .accessibilityHidden(true)
         }
         VStack(alignment: .leading, spacing: 2) {

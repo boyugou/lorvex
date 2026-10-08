@@ -406,3 +406,42 @@ func calendarWeekGridEventGesturesRegisterUndo() throws {
     #expect(call.prefix(160).contains("undoManager: undoManager"))
   }
 }
+
+@Test("A timed task's block resizes from both edges, never over its completion circle")
+func calendarWeekGridTaskBlocksResizeFromTheirEdges() throws {
+  let root = packageRoot()
+  let taskBlock = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridTaskBlock.swift"),
+    encoding: .utf8)
+  let gestures = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridGestures.swift"),
+    encoding: .utf8)
+
+  // Both edges carry a grip, a finished task's block carries neither, and the
+  // grips start past the circle so its upper half still completes the task.
+  #expect(taskBlock.contains("let isResizable = !block.isDone"))
+  #expect(taskBlock.contains("taskResizeGesture(for: block, dayIndex: dayIndex, edge: .start)"))
+  #expect(taskBlock.contains("taskResizeGesture(for: block, dayIndex: dayIndex, edge: .end)"))
+  #expect(taskBlock.contains("CalendarEventBlockMetrics.taskCircleInset"))
+  #expect(taskBlock.components(separatedBy: "leadingInset: gripInset").count == 3)
+  // A resize sets the task's time through the one placement action, so ⌘Z
+  // restores it, and leaves the estimate alone.
+  let resize = try #require(gestures.range(of: "func taskResizeGesture("))
+  let body = gestures[resize.upperBound...].prefix(1_400)
+  #expect(body.contains("store.planTasks("))
+  #expect(body.contains("time: .exactly(resized)"))
+  #expect(body.contains("undoManager: undoManager"))
+  #expect(!body.contains("estimat"))
+  // Events and tasks resize through the same pure function.
+  #expect(gestures.components(separatedBy: "CalendarGridMove.resized(").count == 4)
+  // The inset narrows the hit area: it is applied after the gesture, since a
+  // padding applied before the content shape would be hit too.
+  let eventBlock = try String(
+    contentsOf: root.appending(path: "Sources/LorvexApple/Views/CalendarWeekGridEventBlock.swift"),
+    encoding: .utf8)
+  let handle = try #require(eventBlock.range(of: "func resizeHandle("))
+  let handleBody = String(eventBlock[handle.upperBound...].prefix(1_400))
+  let gestureAt = try #require(handleBody.range(of: ".gesture(gesture)"))
+  let paddingAt = try #require(handleBody.range(of: ".padding(.leading, leadingInset)"))
+  #expect(gestureAt.lowerBound < paddingAt.lowerBound)
+}

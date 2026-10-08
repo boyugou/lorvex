@@ -9,8 +9,12 @@ import Markdown
 /// its own characters, so a struck word that also appears as plain text is no
 /// longer struck everywhere — the failure mode of patching the rendered string
 /// by text search.
-public enum MarkdownInline {
-    public static func attributedString(_ source: String) -> AttributedString {
+///
+/// Parsing and the walk over the result recurse once per level of nesting, so
+/// this runs only while a ``MarkdownNote`` is being built, on the deep stack
+/// ``MarkdownDeepStack`` provides.
+enum MarkdownInline {
+    static func attributedString(_ source: String) -> AttributedString {
         var result = AttributedString()
         append(Document(parsing: source), into: &result, intent: [], link: nil)
         return result

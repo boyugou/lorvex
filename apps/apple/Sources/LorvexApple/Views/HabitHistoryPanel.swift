@@ -32,7 +32,7 @@ struct HabitHistoryPanel: View {
 
   @State private var cache: HistoryCache
   @ScaledMetric(relativeTo: .caption) private var weekdayLabelWidth: CGFloat = 12
-  @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+  @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
 
   /// The weeks the grid holds; the layout shows the newest that fit.
   static let weeks = 53

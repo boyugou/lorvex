@@ -21,6 +21,9 @@ enum TaskPlanTime: Equatable, Sendable {
   case start(Int)
   /// The task keeps its own time on the new day, and has none if it had none.
   case unchanged
+  /// The task takes exactly this time, in minutes since midnight, whatever
+  /// length it had. A time reaching outside the day is cut to the day's bounds.
+  case exactly(Range<Int>)
 }
 
 extension AppStore {
@@ -35,7 +38,8 @@ extension AppStore {
   /// Plans `ids` on `day` with the time of day `time` says. Every calendar
   /// gesture that places a task goes through here: dropping tasks on a day's
   /// all-day strip, on a time in a day column, or on a month cell, dragging a
-  /// timed block to another time or day, and the pills' Plan a Day Later items.
+  /// timed block to another time or day or by one of its edges, and the pills'
+  /// Plan a Day Later items.
   ///
   /// `day` is any instant of the displayed day. With ``TaskPlanTime/start(_:)``
   /// several tasks are stacked one after another from that minute, in the order
@@ -90,6 +94,11 @@ extension AppStore {
           let range = task.time(startingAt: cursor ?? startMinute)
           cursor = range.upperBound
           planned = range
+        case .exactly(let range):
+          let start = max(0, range.lowerBound)
+          let end = min(24 * 60, range.upperBound)
+          guard start < end else { continue }
+          planned = start..<end
         }
         let target = TaskPlanSnapshot(id: id, plannedDate: plannedDate, plannedTime: planned)
         let current = TaskPlanSnapshot(

@@ -46,6 +46,39 @@ public enum CalendarGridMove {
     return Landing(startMinute: start, dayShift: dayShift, isUnchanged: delta == 0 && dayShift == 0)
   }
 
+  /// The edge of a block that a resize drags: the top edge moves the start, the
+  /// bottom edge moves the end.
+  public enum Edge: Sendable {
+    case start
+    case end
+  }
+
+  /// The time a block that spans `time` lands on after its `edge` is dragged by
+  /// `translationHeight` points.
+  ///
+  /// The vertical travel becomes minutes the way a move reads it: rounded to the
+  /// nearest minute and cut toward zero to a multiple of `snap`. The edge moves
+  /// by that many minutes, and stops `minimumLength` minutes short of the
+  /// opposite edge and at the bounds of the day. A drag that moves the edge by
+  /// less than one snap step returns `time` as it was, so a short drag never
+  /// stretches a block that is already shorter than `minimumLength`.
+  public static func resized(
+    _ time: Range<Int>, edge: Edge, translationHeight: CGFloat, hourHeight: CGFloat,
+    minimumLength: Int = snapMinutes, snap: Int = snapMinutes
+  ) -> Range<Int> {
+    let travelled = Int((translationHeight / hourHeight * 60).rounded())
+    let delta = (travelled / snap) * snap
+    guard delta != 0 else { return time }
+    switch edge {
+    case .start:
+      let start = max(0, min(time.upperBound - minimumLength, time.lowerBound + delta))
+      return start..<time.upperBound
+    case .end:
+      let end = min(24 * 60, max(time.lowerBound + minimumLength, time.upperBound + delta))
+      return time.lowerBound..<end
+    }
+  }
+
   /// The minute `y` points below the top of a day column stands for, kept
   /// inside the day (a point past the bottom reads as 23:59).
   public static func minute(atY y: CGFloat, hourHeight: CGFloat) -> Int {

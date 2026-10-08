@@ -53,8 +53,7 @@ struct WeeklyReviewPage: View {
     }
     .background(.background)
     .accessibilityIdentifier("reviews.weekly")
-    // Reloaded with the week's snapshot, which every task change refreshes.
-    .task(id: store.weeklyReview) {
+    .task(id: store.weekReviewReadKey) {
       if let loaded = await store.loadWeekShape() { shape = loaded }
       guard store.isViewingCurrentWeek else { return }
       if let loaded = await store.loadWeekAheadAgenda() { weekAhead = loaded }

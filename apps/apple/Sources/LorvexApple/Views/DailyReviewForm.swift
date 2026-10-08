@@ -26,13 +26,6 @@ struct DailyReviewForm: View {
   /// Tomorrow's agenda, loaded only while the review is of today.
   @State private var tomorrow: LorvexAgendaDay?
 
-  /// What the page's own reads follow: the reviewed day, and its evidence,
-  /// which every task or habit change reloads.
-  private struct ReadKey: Equatable {
-    var date: String
-    var evidence: DayReviewSummary?
-  }
-
   private typealias Copy = ReviewCalmCopy
 
   var body: some View {
@@ -64,9 +57,7 @@ struct DailyReviewForm: View {
       .frame(maxWidth: .infinity)
     }
     .background(.background)
-    .task(id: ReadKey(date: store.selectedReviewDate, evidence: store.dayReviewEvidence)) {
-      await loadPageReads()
-    }
+    .task(id: store.dayReviewReadKey) { await loadPageReads() }
   }
 
   private var isReviewingToday: Bool {

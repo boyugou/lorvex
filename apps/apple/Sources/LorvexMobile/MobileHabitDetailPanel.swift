@@ -51,7 +51,7 @@ struct MobileHabitDetailPanel: View {
         lifecycleActions
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(LorvexDesign.Spacing.xl)
+      .mobileDetailPanelPadding()
     }
     // Offset and growth only, not alignment: a page shorter than the screen
     // still starts at the top.
@@ -99,6 +99,7 @@ struct MobileHabitDetailPanel: View {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
         Text(userContent: habit.name)
           .font(LorvexDesign.Typography.detailTitle)
+          .accessibilityAddTraits(.isHeader)
         if let encouragement = habit.cue, !encouragement.isEmpty {
           // The encouragement — a motivating line, set as an inspiring callout
           // (a sparkle + italic), not a dry context label.
@@ -106,6 +107,7 @@ struct MobileHabitDetailPanel: View {
             Image(systemName: "sparkles")
               .font(.footnote)
               .foregroundStyle(habit.tileTint)
+              .accessibilityHidden(true)
             Text(userContent: encouragement)
               .font(LorvexDesign.Typography.primaryText)
               .italic()

@@ -84,6 +84,7 @@ extension AppStore {
         if let loaded = try? await core.loadDaySummary(date: selectedReviewDate) {
           dayReviewEvidence = loaded
         }
+        await reloadWeekReviewDigestKeepingOnFailure()
       case .habits:
         if let loaded = try? await core.loadHabits(date: date) { habits = loaded }
         await loadAllHabitStats()

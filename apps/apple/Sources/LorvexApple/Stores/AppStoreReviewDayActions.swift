@@ -5,6 +5,19 @@ import LorvexCore
 /// stood on the reviewed day, tomorrow's agenda for the review of today, and
 /// planning the day's still-open tasks for tomorrow.
 extension AppStore {
+  /// What the day review page's own reads (``loadReviewHabits(date:)`` and
+  /// ``loadTomorrowAgenda()``) follow; the page re-reads when it changes.
+  var dayReviewReadKey: DayReviewReadKey {
+    DayReviewReadKey(
+      date: selectedReviewDate, evidence: dayReviewEvidence, taskRevision: taskDataGeneration)
+  }
+
+  /// What the week review page's own reads (``loadWeekAheadAgenda()`` and
+  /// ``loadWeekShape()``) follow; the page re-reads when it changes.
+  var weekReviewReadKey: WeekReviewReadKey {
+    WeekReviewReadKey(review: weeklyReview, taskRevision: taskDataGeneration)
+  }
+
   /// The active habits that count in `date`'s review
   /// (``LorvexHabit/isReviewed(on:)``), with their completions that day, or
   /// nil when the read fails, so the page keeps what it shows.

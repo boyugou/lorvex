@@ -440,7 +440,11 @@ private struct MobileCalendarMonthPager<Page: View>: View {
   var body: some View {
     TabView(selection: $monthOffset) {
       ForEach(pageRange, id: \.self) { offset in
-        page(offset).tag(offset)
+        page(offset)
+          // Only the visible month is in VoiceOver's reach: a neighboring
+          // grid is laid out beside it and would read its days a second time.
+          .accessibilityHidden(offset != monthOffset)
+          .tag(offset)
       }
     }
     #if os(iOS)

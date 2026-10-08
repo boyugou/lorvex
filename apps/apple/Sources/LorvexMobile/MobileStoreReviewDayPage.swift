@@ -19,13 +19,6 @@ struct MobileStoreReviewDayPage: View {
   /// Tomorrow's agenda, loaded only while the review is of today.
   @State private var tomorrow: LorvexAgendaDay?
 
-  /// What the page's own reads follow: the reviewed day, and its evidence,
-  /// which every task or habit change reloads.
-  private struct ReadKey: Equatable {
-    var date: String
-    var evidence: DayReviewSummary?
-  }
-
   private enum Field { case summary, wins, blockers, learnings }
 
   private typealias Copy = MobileReviewCalmCopy
@@ -53,9 +46,7 @@ struct MobileStoreReviewDayPage: View {
     .onChange(of: store.dailyReviewDraft.energy) { flush() }
     .onChange(of: focusedField) { old, _ in if old != nil { flush() } }
     .onDisappear { flush() }
-    .task(id: ReadKey(date: store.selectedReviewDate, evidence: store.dayReviewEvidence)) {
-      await loadPageReads()
-    }
+    .task(id: store.dayReviewReadKey) { await loadPageReads() }
     .accessibilityIdentifier("review.day")
   }
 

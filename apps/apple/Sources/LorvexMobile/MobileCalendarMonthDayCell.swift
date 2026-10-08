@@ -242,14 +242,8 @@ struct MobileCalendarMonthDayCell: View, Equatable {
       bundle: MobileL10n.bundle)
   }
 
-  /// The full date, after "Today," on today.
   private var accessibilityDate: String {
-    let date = LorvexDateFormatters.string(day.date, dateStyle: .full, timeZone: calendar.timeZone)
-    guard isToday else { return date }
-    return String(
-      format: String(
-        localized: "calendar.week.today_prefix", defaultValue: "Today, %@", table: "Localizable",
-        bundle: MobileL10n.bundle), date)
+    MobileCalendarDayName.spoken(day.date, isToday: isToday, calendar: calendar)
   }
 
   /// How many events and tasks the day has ("2 events and 1 task"), leaving

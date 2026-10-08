@@ -254,6 +254,33 @@ func appStoreKeepsTheInboxActiveWhenArchivingItIsAttempted() async throws {
 
 @MainActor
 @Test
+func appStoreUnarchivingTheSelectedListRefreshesItsHeader() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  store.draftListName = "Archive then restore"
+  await store.createDraftList()
+  let created = try #require(store.lists?.lists.first { $0.name == "Archive then restore" })
+
+  // An assistant archives the list the Lists workspace shows. An archived list
+  // stays a valid selection, so its detail stays on screen with the archived header.
+  _ = try await core.archiveList(id: created.id)
+  await store.refresh()
+  #expect(store.selectedListID == created.id)
+  let archived = try #require(store.archivedLists?.lists.first { $0.id == created.id })
+  #expect(store.selectedListDetail?.list.archivedAt != nil)
+
+  await store.unarchiveList(archived)
+
+  #expect(store.lists?.lists.contains { $0.id == created.id } == true)
+  #expect(store.archivedLists?.lists.contains { $0.id == created.id } != true)
+  #expect(store.selectedListDetail?.list.id == created.id)
+  #expect(store.selectedListDetail?.list.archivedAt == nil)
+  #expect(store.errorMessage == nil)
+}
+
+@MainActor
+@Test
 func appStoreRejectsDeletingListWithTasks() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
 

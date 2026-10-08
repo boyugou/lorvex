@@ -42,6 +42,11 @@ struct MobileCalendarDayColumn: View {
   /// Today shows as running — which draws it with a solid frame.
   var isRunningNow: (CalendarGridTaskBlock, CalendarGridDay) -> Bool = { _, _ in false }
 
+  /// The width of the page the column fills, as the pager measures it. The
+  /// all-day strip goes compact when the day columns it spans are narrow. It
+  /// is 0 until the pager has measured, which keeps the strip full-size.
+  var pageWidth: CGFloat = 0
+
   let hourHeight: CGFloat = 56
   /// Widens with the footnote style of the hour labels, so "10 AM" and the
   /// all-day label stay on one line at every size the grid draws.
@@ -57,8 +62,8 @@ struct MobileCalendarDayColumn: View {
   /// `ScrollView`'s vertical pan or the day-pager's horizontal swipe.
   @State var dragState: DragState? = nil
   @State private var userHasScrolledTimeAxis = false
-  @State private var pageWidth: CGFloat = 0
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+  @Environment(\.displayScale) private var displayScale
 
   /// Whether the page shows its all-day strip. A single day on a phone shows
   /// it only when the day has something in it, as Calendar does, so an empty
@@ -116,6 +121,7 @@ struct MobileCalendarDayColumn: View {
           circlesToday: circlesTodayInHeaders,
           onOpenDay: onOpenDay
         )
+        .mobileCalendarPageReachability()
         Divider()
       }
       if showsAllDayStrip(columns) {
@@ -130,19 +136,20 @@ struct MobileCalendarDayColumn: View {
           onToggleTask: onToggleTask,
           onDropTask: onDropTask
         )
-        // The strip spans the page, so its width is the page's.
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
         Divider()
       }
       ScrollViewReader { proxy in
         ScrollView {
           HStack(alignment: .top, spacing: 0) {
+            // The hour labels are a picture of the time axis: every block
+            // says its own time, and 24 extra stops would sit between them.
             MobileCalendarHourGutter(
               calendar: calendar,
               gutterWidth: gutter,
               hourHeight: hourHeight,
               anchorHour: anchorHour
             )
+            .accessibilityHidden(true)
             ForEach(Array(columns.enumerated()), id: \.element.id) { index, day in
               timeColumn(day, dayIndex: index, allDays: columns)
               if index < columns.count - 1 { Divider() }
@@ -167,6 +174,7 @@ struct MobileCalendarDayColumn: View {
           }
         }
       }
+      .mobileCalendarPageReachability()
     }
   }
 
@@ -178,21 +186,7 @@ struct MobileCalendarDayColumn: View {
     GeometryReader { geo in
       let width = geo.size.width
       ZStack(alignment: .topLeading) {
-        VStack(spacing: 0) {
-          ForEach(0..<24, id: \.self) { hour in
-            Rectangle()
-              .fill(Color.clear)
-              .frame(height: hourHeight)
-              .contentShape(Rectangle())
-              .overlay(alignment: .top) { Divider().opacity(0.5) }
-              .onTapGesture { onTapEmpty(day.date, hour * 60) }
-          }
-        }
-        // Tap-an-empty-hour to create is a pointer/touch shortcut only. Exposing
-        // 24 blank slots per day as VoiceOver create-actions would bury the real
-        // content (event blocks, now-line) in noise; the toolbar ＋ ("New Event")
-        // is the accessible create path.
-        .accessibilityHidden(true)
+        hourLines(tapping: day.date)
         if isToday(day.date) {
           // Under the blocks (their zIndex lifts them above it), which are
           // opaque, so the line runs through the free time and never across a
@@ -226,8 +220,37 @@ struct MobileCalendarDayColumn: View {
           .zIndex(2)
         }
       }
+      // One container per day, so the blocks' sort priorities order a day's
+      // blocks among themselves and never across the columns of a week.
+      .accessibilityElement(children: .contain)
     }
     .frame(maxWidth: .infinity)
+  }
+
+  /// The column's 24 hour lines, drawn as one shape, and the tap on an empty
+  /// hour that starts a new event there. The lines are one shape and the tap
+  /// one gesture, not a view and a gesture per hour: the pager builds a page
+  /// ahead of the swipe that shows it, and a seven-day page would otherwise
+  /// hold 168 of each. Not a `Canvas`: it draws the same lines but made the
+  /// swipe that first shows its page measurably slower.
+  private func hourLines(tapping date: Date) -> some View {
+    MobileHourLinesShape(hourHeight: hourHeight, thickness: 1 / displayScale)
+      .fill(.separator.opacity(0.5))
+      .contentShape(Rectangle())
+      .onTapGesture { point in
+        onTapEmpty(date, Self.hour(atY: point.y, hourHeight: hourHeight) * 60)
+      }
+      // Tap-an-empty-hour to create is a pointer/touch shortcut only. Exposing
+      // 24 blank slots per day as VoiceOver create-actions would bury the real
+      // content (event blocks, now-line) in noise; the toolbar ＋ ("New Event")
+      // is the accessible create path.
+      .accessibilityHidden(true)
+  }
+
+  /// The hour whose row holds the point `y` below the top of a day column,
+  /// held to the day's 24 hours.
+  nonisolated static func hour(atY y: CGFloat, hourHeight: CGFloat) -> Int {
+    min(max(Int(y / hourHeight), 0), 23)
   }
 
   /// The now line across the column, centered on `now`'s time of day. Drawn
@@ -267,4 +290,22 @@ struct MobileCalendarDayColumn: View {
   }
 
   private static var keyFormatter: DateFormatter { LorvexDateFormatters.ymd }
+}
+
+/// The hairlines at the top of a day column's 24 hour rows, one rectangle of
+/// `thickness` per hour across the shape's width.
+private struct MobileHourLinesShape: Shape {
+  let hourHeight: CGFloat
+  let thickness: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    var lines = Path()
+    for hour in 0..<24 {
+      lines.addRect(
+        CGRect(
+          x: rect.minX, y: rect.minY + CGFloat(hour) * hourHeight, width: rect.width,
+          height: thickness))
+    }
+    return lines
+  }
 }

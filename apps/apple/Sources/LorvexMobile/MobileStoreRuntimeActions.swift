@@ -97,11 +97,13 @@ extension MobileStore {
     isLoading = true
     defer { isLoading = false }
     do {
-      let hadLogicalDay = snapshot.today.logicalDay != nil
+      let previousLogicalDay = snapshot.today.logicalDay
       let loadedToday = try await core.loadToday()
       let date = loadedToday.logicalDay ?? todayString()
-      if !hadLogicalDay || selectedReviewDate > date {
+      if previousLogicalDay == nil || selectedReviewDate > date {
         selectedReviewDate = date
+      } else if let previousLogicalDay {
+        await carryReviewToNewLogicalDay(from: previousLogicalDay, to: date)
       }
       let weekDigestToDay = weeklyReviewAnchor ?? date
       let weekDigestFromDay =

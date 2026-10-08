@@ -471,15 +471,23 @@ struct MobileTodayDoneRow: View {
           .font(.title3)
           .foregroundStyle(LorvexDesign.Palette.done)
           .mobileTaskCircleFrame()
-          .contentShape(Circle())
+          .padding(MobileTaskCircleFrame.tapOutset)
+          .contentShape(Rectangle())
           .padding(.top, LorvexDesign.Spacing.xs)
       }
       .buttonStyle(.borderless)
+      .padding(-MobileTaskCircleFrame.tapOutset)
       .disabled(isMutating)
-      .accessibilityLabel(MobileTodayCalmCopy.reopen)
+      .accessibilityLabel(Self.reopenLabel(for: task))
       MobileTaskRow(task: task, showsLeadingCircle: false, timeZone: productTimeZone)
         .equatable()
     }
     .accessibilityIdentifier("today.done.row")
+  }
+
+  /// The check to VoiceOver: the Reopen action followed by the task's title, so
+  /// a run of finished tasks says which one each check reopens.
+  static func reopenLabel(for task: LorvexTask) -> String {
+    "\(MobileTodayCalmCopy.reopen), \(task.title)"
   }
 }

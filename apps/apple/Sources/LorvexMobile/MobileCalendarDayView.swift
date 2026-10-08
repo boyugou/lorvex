@@ -48,6 +48,9 @@ public struct MobileCalendarDayView: View {
   /// the picker draws rather than stored, because it also depends on the
   /// size class, which can settle after the width is first measured.
   @State private var calendarWidth: CGFloat = 0
+  /// The pager's width, handed to each page so its column is drawn once, at
+  /// its final width, when it is built. 0 until measured.
+  @State private var pagerWidth: CGFloat = 0
 
   let calendar = Calendar.current
   /// Bounded rolling page window so we never materialize an unbounded range.
@@ -319,7 +322,7 @@ public struct MobileCalendarDayView: View {
   /// `startDate`, wired to the store's mutation callbacks.
   private func column(
     startDate: Date, dayCount: Int, showsHeaders: Bool, events: [CalendarTimelineEvent],
-    tasks: [LorvexTask]
+    tasks: [LorvexTask], pageWidth: CGFloat
   ) -> MobileCalendarDayColumn {
     MobileCalendarDayColumn(
       startDate: startDate,
@@ -365,7 +368,8 @@ public struct MobileCalendarDayView: View {
         guard day.dayKey == store.logicalTodayString, let now = store.nowMinutesInProductDay
         else { return false }
         return block.startMin <= now && now < block.endMin
-      }
+      },
+      pageWidth: pageWidth
     )
   }
 
@@ -381,10 +385,11 @@ public struct MobileCalendarDayView: View {
     let inputs = MobileCalendarDayPage.Inputs(
       startDate: startDate, dayCount: dayCount, showsHeaders: true,
       circlesTodayInHeaders: !showsWeekStrip, opensDays: weekMode, events: events, tasks: tasks,
-      calendar: calendar)
+      pageWidth: pagerWidth, calendar: calendar)
     return MobileCalendarDayPage(inputs: inputs) {
       column(
-        startDate: startDate, dayCount: dayCount, showsHeaders: true, events: events, tasks: tasks)
+        startDate: startDate, dayCount: dayCount, showsHeaders: true, events: events, tasks: tasks,
+        pageWidth: pagerWidth)
     }
   }
 
@@ -404,12 +409,14 @@ public struct MobileCalendarDayView: View {
       ForEach(pageRange, id: \.self) { offset in
         page(forOffset: offset, dayCount: dayCount, events: events, tasks: tasks)
           .equatable()
+          .environment(\.mobileCalendarPageIsReachable, offset == dayOffset)
           .tag(offset)
       }
     }
     #if os(iOS)
       .tabViewStyle(.page(indexDisplayMode: .never))
     #endif
+    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pagerWidth = $0 }
   }
 
   // MARK: Actions

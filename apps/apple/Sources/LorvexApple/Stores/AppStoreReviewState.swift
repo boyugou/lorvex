@@ -61,11 +61,15 @@ extension AppStore {
     set { dailyReviewStorage.weekReviewDigest = newValue }
   }
 
-  /// The day the Reviews surface's Day scope is showing. Defaults to today when
-  /// the strip has not selected a specific day yet.
+  /// The day the Reviews surface's Day scope is showing. It follows today until
+  /// the strip selects another day, and selecting today goes back to following
+  /// it: a Mac app stays open across midnight, and a stored copy of the day
+  /// that was today would keep the page on a day that has ended.
   var selectedReviewDate: String {
     get { dailyReviewStorage.selectedReviewDate ?? logicalTodayDateString }
-    set { dailyReviewStorage.selectedReviewDate = newValue }
+    set {
+      dailyReviewStorage.selectedReviewDate = newValue == logicalTodayDateString ? nil : newValue
+    }
   }
 
   /// True when the selected Day-scope day is still inside the interactive write

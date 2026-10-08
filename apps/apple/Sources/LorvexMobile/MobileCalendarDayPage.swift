@@ -29,6 +29,9 @@ struct MobileCalendarDayPage: View, Equatable {
     let events: [CalendarTimelineEvent]
     /// The window's scheduled tasks.
     let tasks: [LorvexTask]
+    /// The pager's width, which the column's all-day strip reads to go compact
+    /// over narrow day columns; 0 until the pager has measured it.
+    let pageWidth: CGFloat
     let calendar: Calendar
   }
 

@@ -48,16 +48,14 @@ struct MobileCaptureSections: View {
         placeholder: String(
           localized: "capture.notes_placeholder", defaultValue: "Notes", table: "Localizable",
           bundle: MobileL10n.bundle),
+        accessibilityLabel: String(
+          localized: "capture.notes.a11y", defaultValue: "Task notes", table: "Localizable",
+          bundle: MobileL10n.bundle),
         minHeight: 72
       )
       .focused($focusedField, equals: .notes)
       .submitLabel(.done)
       .onSubmit { submit() }
-      .accessibilityLabel(
-        String(
-          localized: "capture.notes.a11y", defaultValue: "Task notes", table: "Localizable",
-          bundle: MobileL10n.bundle)
-      )
       .accessibilityIdentifier("mobileCapture.notes")
     } footer: {
       // Surface the capture vocabulary: one task per line, details in words.

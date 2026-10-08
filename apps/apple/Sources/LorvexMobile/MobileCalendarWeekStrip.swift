@@ -40,7 +40,9 @@ struct MobileCalendarWeekStrip: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(accessibleDate(day))
+        .accessibilityLabel(
+          MobileCalendarDayName.spoken(day, isToday: isToday(day), calendar: calendar)
+        )
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
       }
     }
@@ -56,15 +58,6 @@ struct MobileCalendarWeekStrip: View {
 
   private func dayNumber(_ date: Date) -> String {
     LorvexDateFormatters.dayNumber(date, timeZone: calendar.timeZone)
-  }
-
-  private func accessibleDate(_ date: Date) -> String {
-    let base = LorvexDateFormatters.string(date, dateStyle: .full, timeZone: calendar.timeZone)
-    guard isToday(date) else { return base }
-    return String(
-      format: String(
-        localized: "calendar.week.today_prefix", defaultValue: "Today, %@", table: "Localizable",
-        bundle: MobileL10n.bundle), base)
   }
 }
 
@@ -92,6 +85,10 @@ struct MobileCalendarWeekStripPager: View {
             visibleDate: sameWeekday(inWeek: week), calendar: calendar, selectDay: selectDay
           )
           .containerRelativeFrame(.horizontal)
+          // The weeks beside the visible one are only there to be swiped to,
+          // each with its own copy of the selected weekday. VoiceOver reaches
+          // the visible week alone, and moves weeks with its scroll gesture.
+          .accessibilityHidden(week != visibleWeek)
         }
       }
       .scrollTargetLayout()

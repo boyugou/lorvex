@@ -75,6 +75,21 @@ extension MobileStore {
     await selectReviewDay(logicalTodayString)
   }
 
+  /// Moves the Day review to `newDay` when it was showing `previousDay`, the
+  /// logical day that has just ended, so a phone that kept the app alive
+  /// overnight opens the review on today instead of on a read-only yesterday.
+  /// Text typed on the ended day and not yet saved is written to that day first,
+  /// while it is still editable; if that write fails the review stays on its
+  /// day with the text intact. A review the user opened on another day stays
+  /// there. Call it before the Today snapshot of `newDay` replaces the previous
+  /// one, which is what makes the ended day stop being editable.
+  func carryReviewToNewLogicalDay(from previousDay: String, to newDay: String) async {
+    guard selectedReviewDate == previousDay, newDay > previousDay else { return }
+    await flushDailyReviewDraftIfNeeded()
+    guard dailyReviewDraftMatchesLoaded else { return }
+    selectedReviewDate = newDay
+  }
+
   public func loadWeekReviewDigest(weekOf anchor: String?) async {
     let toDay = anchor ?? logicalTodayString
     let fromDay = LorvexDateFormatters.ymdUTCAddingDays(toDay, days: -6) ?? toDay

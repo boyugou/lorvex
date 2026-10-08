@@ -41,6 +41,9 @@ public struct LorvexReviewMovedList: View {
         HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
           Image(systemName: "checkmark.circle.fill")
             .foregroundStyle(LorvexDesign.Palette.done)
+            // The section's label already says these are done; the glyph
+            // would read "Selected" before each title.
+            .accessibilityHidden(true)
           Text(userContent: task.title)
             .lineLimitUnlessAccessibilitySize(2)
         }

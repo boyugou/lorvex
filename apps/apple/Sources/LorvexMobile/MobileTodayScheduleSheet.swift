@@ -78,7 +78,9 @@ struct MobileTodayScheduleList: View {
   private var header: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       LorvexPageLabel(MobileTodayCalmCopy.scheduleTitle)
-      MobileTodayScheduleMenu(store: store)
+      // The glyph is 20pt across: 12pt each way makes the target 44pt wide and
+      // as tall as the header row's margins allow.
+      MobileTodayScheduleMenu(store: store, tapOutset: 12)
     }
     .padding(.horizontal, LorvexTimelineMetrics.horizontalPadding)
     .padding(.top, LorvexDesign.Spacing.m)
@@ -93,6 +95,10 @@ struct MobileTodayScheduleList: View {
 /// menu to undo it from.
 struct MobileTodayScheduleMenu: View {
   @Bindable var store: MobileStore
+  /// How far the tap target reaches past the glyph on every side, without
+  /// moving it. A menu in a toolbar leaves this at zero, since the toolbar sizes
+  /// its own button; one in a list header, which draws only the glyph, sets it.
+  var tapOutset: CGFloat = 0
   @State private var isConfirmingClear = false
 
   private var unfinishedTasks: [LorvexTask] {
@@ -130,8 +136,13 @@ struct MobileTodayScheduleMenu: View {
           .accessibilityIdentifier("today.schedule.clear")
         }
       } label: {
+        // The label's padding widens the tap target, and the negative padding
+        // outside the menu gives the layout the glyph's own size back.
         Image(systemName: "ellipsis.circle")
+          .padding(tapOutset)
+          .contentShape(Rectangle())
       }
+      .padding(-tapOutset)
       .accessibilityLabel(MobileTodayCalmCopy.scheduleMenuLabel)
       .accessibilityIdentifier("today.schedule.menu")
       .confirmationDialog(

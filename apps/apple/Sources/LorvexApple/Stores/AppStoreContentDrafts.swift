@@ -98,14 +98,33 @@ extension AppStore {
   /// snapshot covers: the six days before `weekOf` through `weekOf` (or today
   /// for the live week). Best-effort: a failed read falls back to empty.
   func loadWeekReviewDigest(weekOf anchor: String?) async {
-    let toDay = anchor ?? logicalTodayDateString
-    let fromDay = LorvexDateFormatters.ymdUTCAddingDays(toDay, days: -6) ?? toDay
+    let window = weekReviewDigestWindow(weekOf: anchor)
     do {
-      weekReviewDigest = try await core.getReviewHistory(from: fromDay, to: toDay, limit: 7)
+      weekReviewDigest = try await core.getReviewHistory(
+        from: window.from, to: window.to, limit: 7)
     } catch {
       weekReviewDigest = []
       await presentUserFacingError(error)
     }
+  }
+
+  /// Re-read the digest of the week being viewed after a change the Week scope
+  /// did not start itself: a review saved from the Day scope, or one written by
+  /// an assistant or another device that reaches a refresh. A failed read keeps
+  /// the entries on screen.
+  func reloadWeekReviewDigestKeepingOnFailure() async {
+    let window = weekReviewDigestWindow(weekOf: weeklyReviewAnchor)
+    if let loaded = try? await core.getReviewHistory(from: window.from, to: window.to, limit: 7) {
+      weekReviewDigest = loaded
+    }
+  }
+
+  /// The seven days a week's digest covers: the six days before the week's last
+  /// day, through that day. The last day is `anchor`, or today for the live week.
+  private func weekReviewDigestWindow(weekOf anchor: String?) -> (from: String, to: String) {
+    let toDay = anchor ?? logicalTodayDateString
+    let fromDay = LorvexDateFormatters.ymdUTCAddingDays(toDay, days: -6) ?? toDay
+    return (fromDay, toDay)
   }
 
   /// Persist the daily-review draft when it differs from the loaded entry,
@@ -116,6 +135,18 @@ extension AppStore {
   func flushDailyReviewDraftIfNeeded() async {
     guard !dailyReviewDraftMatchesLoaded else { return }
     await saveDailyReviewDraft()
+  }
+
+  /// Writes a review typed on the day that is ending to that day, before the
+  /// Today snapshot of `newDay` is adopted. A Day scope that follows today reads
+  /// the new day as its editor date the moment the snapshot changes, so an
+  /// unsaved draft would otherwise be saved onto the new day. A scope showing a
+  /// chosen past day is unaffected and needs no write.
+  func flushDailyReviewDraftBeforeLogicalDayChange(to newDay: String?) async {
+    guard let newDay, newDay != logicalTodayDateString,
+      dailyReviewStorage.selectedReviewDate == nil
+    else { return }
+    await flushDailyReviewDraftIfNeeded()
   }
 
   private func reloadDailyReviewForEditor() async {
@@ -137,8 +168,9 @@ extension AppStore {
         learnings: dailyReviewLearningsDraft.trimmedNilIfEmpty
       )
       syncDailyReviewDraft()
-      weeklyReview = try await core.loadWeeklyReview()
+      weeklyReview = try await core.getWeeklyReviewSnapshot(weekOf: weeklyReviewAnchor)
     }
+    await reloadWeekReviewDigestKeepingOnFailure()
   }
 
   /// True when the daily-review draft fields still match the loaded review —

@@ -163,7 +163,8 @@ struct MobileCalendarAgendaPanel: View {
 
   /// A day's name over its date. Both take the section header's own color:
   /// a List header already draws in the secondary style, and a hierarchical
-  /// `.secondary` inside it would compound to about 2.3:1.
+  /// `.secondary` inside it would compound to about 2.3:1. VoiceOver reads the
+  /// two lines as one heading.
   private func header(for day: MobileCalendarAgendaDay) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       Text(dayTitle(day))
@@ -172,6 +173,8 @@ struct MobileCalendarAgendaPanel: View {
         .font(LorvexDesign.Typography.tertiaryText)
     }
     .textCase(nil)
+    .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(.isHeader)
   }
 
   /// The day's date, without the year inside the current year: the week

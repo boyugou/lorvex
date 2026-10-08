@@ -108,23 +108,12 @@ struct WorkspaceSelectableTaskRow: View {
         .padding(.top, WorkspaceSelectableTaskRowMetrics.batchControlTopPadding)
         .padding(.trailing, WorkspaceSelectableTaskRowMetrics.batchControlTrailingPadding)
       }
-      // VoiceOver / Full Keyboard Access: the default activation opens the
-      // task detail inspector, matching a plain mouse click. The "Complete"
-      // named action remains on the row via `LorvexTaskRow`'s accessibilityAction.
+      // VoiceOver: the default activation opens the task detail inspector,
+      // matching a plain mouse click. The "Complete" named action remains on
+      // the row via `LorvexTaskRow`'s accessibilityAction.
       .accessibilityAction(.default, openTask)
-      // Full Keyboard Access: a keyboard-only user tabbing through the row
-      // list needs a focus ring and a way to trigger the row's primary action,
-      // matching the pattern already used on calendar event blocks and habit
-      // cards (`CalendarWeekGridEventBlock`, `HabitMomentumCard`).
-      .focusable(true)
-      .onKeyPress(.return) {
-        openTask()
-        return .handled
-      }
-      .onKeyPress(.space) {
-        openTask()
-        return .handled
-      }
+      // Full Keyboard Access: Tab reaches the row and Return or Space opens it.
+      .lorvexKeyboardActivation(openTask)
       .onHover { isHovering = $0 }
       .contextMenu {
         WorkspaceTaskContextMenu(store: store, task: task, batchItem: batchMenuItem)

@@ -178,6 +178,39 @@ func mobileNotificationTaskActionsLogFailuresInsteadOfSilentlyDroppingThem() thr
   #expect(source.contains("Defer notification action failed"))
 }
 
+@Test
+func mobileNotificationTaskActionsTakeTheStoreBackBeforeWriting() throws {
+  let source = try String(
+    contentsOf: packageRoot()
+      .appending(path: "Sources/LorvexMobileApp/LorvexMobileAppDelegate.swift"),
+    encoding: .utf8
+  )
+
+  // Complete and Defer each write through the one helper that brackets the
+  // write; Snooze touches no database.
+  let bracket = "DatabaseSuspension.withBackgroundAccess(BackgroundDatabaseWork.access)"
+  #expect(source.components(separatedBy: bracket).count - 1 == 1)
+  #expect(source.components(separatedBy: "await Self.runTaskWrite {").count - 1 == 2)
+  // The outcome is reported after the write returns: a success post starts a
+  // refresh that must not overlap the interrupt the store's suspension sends.
+  let write = try #require(source.range(of: "runTaskWrite(\n"))
+  let helperEnd = try #require(source.range(of: "func application(", range: write.upperBound..<source.endIndex))
+  let helper = source[write.lowerBound..<helperEnd.lowerBound]
+  #expect(!helper.contains("postBackgroundMutationApplied"))
+  #expect(!helper.contains("postNotificationActionFailure"))
+}
+
+@Test
+func mobileAppInstallsItsBackgroundDatabaseAccessAtLaunch() throws {
+  let source = try String(
+    contentsOf: packageRoot().appending(path: "Sources/LorvexMobileApp/LorvexMobileApp.swift"),
+    encoding: .utf8
+  )
+
+  #expect(
+    source.contains("DatabaseSuspension.installBackgroundAccess(BackgroundDatabaseWork.access)"))
+}
+
 private func packageRoot() -> URL {
   var url = URL(fileURLWithPath: #filePath)
   while url.lastPathComponent != "apps" {

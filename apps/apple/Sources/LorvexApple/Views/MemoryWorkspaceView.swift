@@ -12,7 +12,6 @@ struct MemoryWorkspaceView: View {
   @Bindable var store: AppStore
   @State private var isComposerPresented = false
   @State private var entryPendingDeletion: MemoryEntry?
-  /// The note drawn highlighted after another page asked to reveal it.
 
   var body: some View {
     VStack(spacing: 0) {

@@ -23,6 +23,13 @@ struct LorvexMobileApp: App {
   #endif
 
   init() {
+    #if canImport(UIKit)
+      // The system runs App Intents in this process while it is in the
+      // background, where the store's connections may still be suspended from
+      // the app's last trip there. Each intent takes the store back through
+      // this before it uses it.
+      DatabaseSuspension.installBackgroundAccess(BackgroundDatabaseWork.access)
+    #endif
     // App Intents can write the shared store without going through
     // `MobileStore`. Route those committed writes through the same coalesced
     // invalidation observed by the open UI, and relay widget/MCP Darwin signals.

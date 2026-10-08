@@ -507,15 +507,16 @@ extension LorvexCaptureVocabulary {
   /// 7 is no length: ``marathiLength(_:)`` declines it and a keep rule claims
   /// it, so the amount stays whole in the title. Any other ending glued to
   /// the unit ("2 तासांनी", "30 मिनिटांमध्ये") leaves the unit unread. The amount
-  /// may not follow a digit, a colon, or a separator, and it may not be a side
-  /// of a range ("2-3 तास", "2 ते 3 तास", "5 मिनिटे ते 10 मिनिटे").
+  /// may not follow a digit, a colon, a slash, or a separator ("1/2 तास" is a
+  /// fraction, not 2 hours), and it may not be a side of a range ("2-3 तास", "2
+  /// ते 3 तास", "5 मिनिटे ते 10 मिनिटे").
   static var marathiLengthPattern: String {
     let ending = #"(?:ां|ा)·(?:चा|ची|चे|च्या|साठी)"#
     let hourNoun = #"तास(?:\#(ending))?"#
     let minuteNoun = #"मिन[िी]ट(?:\#(ending)|े|ं)?"#
     let opener =
       #"(?:(?:(सुमारे|साधारण|जवळपास|अंदाजे)|(किमान|कमीत\s*कमी|जास्तीत\s*जास्त|कमाल|दर|प्रत्येक|(?:दिवसा|आठवड्या|महिन्या|वर्षा)तून))\s+)?"#
-    let boundaries = #"(?<![\p{N}:.,])(?<!\p{N}\s?[-–—]\s?)"#
+    let boundaries = #"(?<![\p{N}:.,/])(?<!\p{N}\s?[-–—]\s?)"#
     let hours =
       #"(\d+(?:\.\d+)?)\s*\#(hourNoun)(?:\s+(?:आणि\s+)?(\d{1,2})\s*\#(minuteNoun))?"#
     let minutes = #"(\d+)\s*\#(minuteNoun)"#

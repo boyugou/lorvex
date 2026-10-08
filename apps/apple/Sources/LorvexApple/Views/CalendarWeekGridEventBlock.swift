@@ -167,15 +167,7 @@ extension CalendarWeekGridView {
         : nil
     )
     .onTapGesture { selectEvent(block.event) }
-    .focusable(true)
-    .onKeyPress(.return) {
-      selectEvent(block.event)
-      return .handled
-    }
-    .onKeyPress(.space) {
-      selectEvent(block.event)
-      return .handled
-    }
+    .lorvexKeyboardActivation { selectEvent(block.event) }
     .help(isCompact ? label : "")
     // One stop per block: its title and time lines would each read the label.
     // A tap gesture has no press action of its own, so the block offers one.

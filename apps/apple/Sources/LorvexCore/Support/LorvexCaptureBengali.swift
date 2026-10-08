@@ -483,14 +483,15 @@ extension LorvexCaptureVocabulary {
   /// ``bengaliLength(_:)`` declines it and a keep rule claims it, so the amount
   /// stays whole in the title. Any other ending glued to the unit ("২ ঘণ্টায়",
   /// "৩০ মিনিটে") leaves the unit unread. The amount may not follow a digit, a
-  /// colon, or a separator, and it may not be a side of a range ("২-৩ ঘণ্টা", "২
-  /// থেকে ৩ ঘণ্টা", "৫ মিনিট থেকে ১০ মিনিট").
+  /// colon, a slash, or a separator ("১/২ ঘণ্টা" is a fraction, not 2 hours),
+  /// and it may not be a side of a range ("২-৩ ঘণ্টা", "২ থেকে ৩ ঘণ্টা", "৫ মিনিট
+  /// থেকে ১০ মিনিট").
   static var bengaliLengthPattern: String {
     let hourNoun = #"ঘ[ণন]্টা"#
     let minuteNoun = #"মিনিট"#
     let opener =
       #"(?:(?:(প্রায়|আনুমানিক|মোটামুটি)|(অন্তত|কমপক্ষে|কম\s+পক্ষে|বড়জোর|সর্বোচ্চ|সর্বাধিক|প্রতি|দিনে|সপ্তাহে|মাসে))\s+)?"#
-    let boundaries = #"(?<![\p{N}:.,])(?<!\p{N}\s?[-–—]\s?)"#
+    let boundaries = #"(?<![\p{N}:.,/])(?<!\p{N}\s?[-–—]\s?)"#
     let hours =
       #"(\d+(?:\.\d+)?)\s*\#(hourNoun)(?:\s+(?:(?:এবং|ও)\s+)?(\d{1,2})\s*\#(minuteNoun))?"#
     let minutes = #"(\d+)\s*\#(minuteNoun)"#

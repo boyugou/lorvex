@@ -12142,7 +12142,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This task is already done. Reopen it before canceling it."
+            "value": "This task is already done. Reopen it before you cancel it."
           }
         },
         "es": {
@@ -12514,7 +12514,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This task was canceled. Reopen it before completing it."
+            "value": "This task was cancelled. Reopen it before completing it."
           }
         },
         "es": {
@@ -14002,7 +14002,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This task was canceled. Reopen it before starting it."
+            "value": "This task was cancelled. Reopen it before starting it."
           }
         },
         "es": {

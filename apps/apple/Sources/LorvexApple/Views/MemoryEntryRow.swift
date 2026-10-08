@@ -5,8 +5,10 @@ import SwiftUI
 /// One memory entry as a native macOS list row: the entry's title
 /// (``MemoryEntry/displayTitle``), the remembered content, and a last-updated
 /// footer. It carries no leading glyph: every entry is the same kind of note,
-/// so a glyph would repeat on each row what the page title already says. Edit and Delete appear on hover
-/// and in the row's context menu, and the whole row taps to edit. Memory is
+/// so a glyph would repeat on each row what the page title already says. Edit
+/// and Delete appear on hover and in the row's context menu, and the whole row
+/// taps to edit. With the keyboard, the row takes a focus stop: Return or Space
+/// edits it, and Delete starts the same removal the context menu does. Memory is
 /// AI-managed context the assistant keeps about the user; the app edits it as the
 /// AI actor. VoiceOver reads the title and content as the row's label and the
 /// day it was last updated as its value.
@@ -30,6 +32,15 @@ struct MemoryEntryRow: View {
     .padding(.vertical, LorvexDesign.Spacing.xs)
     .contentShape(Rectangle())
     .onTapGesture(perform: edit)
+    .lorvexKeyboardActivation(edit)
+    .onKeyPress(.delete) {
+      delete()
+      return .handled
+    }
+    .onKeyPress(.deleteForward) {
+      delete()
+      return .handled
+    }
     .onHover { hovering in
       lorvexAnimated(.easeOut(duration: 0.12)) { isHovering = hovering }
       if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }

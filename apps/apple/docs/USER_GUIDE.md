@@ -2496,7 +2496,8 @@ alone, and an hour written on the 24-hour clock ("20:00 वाजता", "06:30
 वाजता") is read as written. The ending "ला" also makes a time: "साडेतीनला"
 (3:30), "दीडला", and, after a part of the day, "संध्याकाळी सहाला", "सकाळी 7 ला".
 A clock time that names a bound ("5 वाजेपर्यंत", "संध्याकाळी 5 वाजेपूर्वी", "18:00
-पर्यंत", "5 वाजल्यानंतर") stays in the title.
+पर्यंत", "5 वाजल्यानंतर") stays in the title. A number right after a slash is a
+fraction or a date, so "5/6 वाजता" and "1/2 तास" stay in the title.
 
 | Detail | Marathi |
 |---|---|
@@ -2619,7 +2620,8 @@ different parts of the day leaves the hour as it reads alone, and an hour
 written on the 24-hour clock ("20:00টায়", "06:30টায়") is read as written. The
 minutes may follow the hour: "সকাল 10টা 30 মিনিটে" is 10:30. A clock time that
 names a bound ("5টার মধ্যে", "সন্ধ্যা 6টার আগে", "18:00 পর্যন্ত") stays in the
-title.
+title. A number right after a slash is a fraction or a date, so "5/6টায়" and
+"1/2 ঘণ্টা" stay in the title.
 
 | Detail | Bengali |
 |---|---|
@@ -2740,7 +2742,10 @@ written with a zero ("06:30 గంటలకు"), and a part of the day sets the
 "ఉదయం" is the morning, "మధ్యాహ్నం" is noon at 12 and the afternoon from 1 to 6,
 "సాయంత్రం" is the evening, and "రాత్రి" runs past midnight, so "రాత్రి 2 గంటలకు"
 is 02:00 on the next day and "రాత్రి 10 గంటలకు" is 22:00. "అర్ధరాత్రి" is the
-midnight that ends the day. The part of the day stands before the hour ("ఉదయం 9
+midnight that ends the day, and so is "మిడ్‌నైట్" with an ending ("మిడ్‌నైట్‌కి")
+or with no other Telugu word after it ("కారు మిడ్‌నైట్"), since the system
+starts its colour names with it ("మిడ్‌నైట్ బ్లూ" is no time). The part of the
+day stands before the hour ("ఉదయం 9
 గంటలకు", "సాయంత్రం 5కి"); one after the hour stays in the title and still sets
 the hour ("మీటింగ్ 7 గంటలకు సాయంత్రం" is 19:00). An hour with no part of the day
 of its own takes the one part the line names elsewhere: in its day phrase ("రేపు
@@ -2750,7 +2755,8 @@ different parts of the day leaves the hour as it reads alone, and an hour
 written on the 24-hour clock ("20:00 గంటలకు", "06:30 గంటలకు") is read as
 written. The minutes may follow the hour: "ఉదయం 10 గంటల 30 నిమిషాలకు" is 10:30.
 A clock time that names a bound ("5 గంటలలోగా", "సాయంత్రం 6 గంటల లోపు", "5 గంటలకు
-ముందు", "18:00 వరకు") stays in the title.
+ముందు", "18:00 వరకు") stays in the title. A number right after a slash is a
+fraction or a date, so "1/2 గంట" and "5/6 గంటలకు" stay in the title.
 
 | Detail | Telugu |
 |---|---|
@@ -2837,6 +2843,157 @@ A priority is "అధిక ప్రాధాన్యత", "సాధారణ
 ("అత్యవసరం", "ముఖ్యం", "అర్జెంట్", "ముఖ్యమైనది") or at its start before a colon
 or a comma ("అత్యవసరం: రిపోర్ట్ పంపండి"). Anywhere else these are ordinary words
 and stay in the title ("అత్యవసర విభాగానికి వెళ్ళండి", "రిపోర్ట్ ముఖ్యం కాదు").
+
+Tamil words are read when Tamil is among your device's preferred languages, in
+any regional variant. A word counts only as a whole word in the Tamil script, so
+"நாளைய" (tomorrow's) holds no day, and a hyphen between two Tamil words joins
+them. Tamil glues its endings to the word, and Lorvex reads the endings that go
+with a detail: "திங்களுக்கு", "நாளையே", "15ஆம் தேதி", "மாலை 5க்கு", "30 நிமிட
+கூட்டம்". A word with any other ending stays in the title, and so does a day in
+its genitive or adjective form, since the day then describes a noun ("நாளைய
+கூட்டம்", "திங்கட்கிழமையின் கூட்டம்"). Tamil doubles a hard consonant before a
+word that starts with it, and Lorvex reads the doubled consonant with the word
+it ends ("நாளைக்குத் தள்ளிவை", "இந்தச் சனிக்கிழமை"). The Tamil digits ("௫") read
+as the digits they stand for, the vowel signs ொ, ோ, and ௌ read the same typed as
+one sign or as the two signs they are made of, a zero-width joiner or non-joiner
+typed after a pulli or before an ending changes nothing, and the title keeps
+what you typed. Tamil written in Latin letters ("naalai kaalai 9 manikku
+koottam") is not read. English is read beside Tamil, so "3pm", "17:30", and "30
+min" work as they do alone, and Tamil does not write a clock time with the
+letter h, so "2h" stays a length.
+
+Tamil has one word each for yesterday ("நேற்று"), the day before ("முந்தாநாள்"),
+tomorrow ("நாளை"), and the day after ("நாளை மறுநாள்"), so Lorvex never reads a
+past day. A day stays in the title when its line says that it is past: a
+past-tense word anywhere in the line ("நாளை கூட்டம் நடந்தது", "வெள்ளிக்கிழமை
+அறிக்கை அனுப்பினேன்", "வெள்ளிக்கிழமை கூட்டம் நடந்தது"), or "கடந்த", "சென்ற",
+"போன", "முந்தைய", "அந்த", "கடைசி", "இறுதி", or an ordinal just before it ("கடந்த
+வெள்ளிக்கிழமை கூட்டம்", "முதல் வெள்ளிக்கிழமை கூட்டம்"). Only the past-tense
+forms of the common verbs that Lorvex lists are recognised, so a past statement
+that uses another verb is still read as a plan. "நாளை" is also a form of "நாள்"
+(day), so after a number or a determiner it names no day ("ஒரு நாளைக்கு 3 முறை
+மருந்து சாப்பிடு", "இந்த நாளை நினைவில் வை").
+
+Tamil says a clock time with "மணிக்கு" after the hour: "5 மணிக்கு", "5:30
+மணிக்கு", "ஒரு மணிக்கு" (one o'clock), and the half hours and quarters
+"ஐந்தரைக்கு" (5:30) and "ஐந்தேகாலுக்கு" (5:15). The hour may be a number word
+("ஐந்து மணிக்கு"), while a number word anywhere else is only a count ("ஐந்து
+புத்தகங்கள் வாங்கு"). "ஐந்து மணி நேரம்" is an amount of hours, which Lorvex
+reads as a length. The half-hour and quarter words are numbers too ("ஐந்தரை கிலோ
+அரிசி"), so "ஐந்தரை" is a time only with "மணி", with an ending, or after a part
+of the day ("ஐந்தரை மணிக்கு", "மாலை ஐந்தரை"). An hour from 1 to 6 with no part
+of the day is in the afternoon ("கூட்டம் 5 மணிக்கு" is 5 PM) unless it is
+written with a zero ("06:30 மணிக்கு"), and a part of the day sets the hour:
+"காலை" is the morning, "மதியம்" is noon at 12 and the afternoon from 1 to 6,
+"மாலை" is the evening, and "இரவு" runs past midnight, so "இரவு 2 மணிக்கு" is
+02:00 on the next day and "இரவு 10 மணிக்கு" is 22:00. "நள்ளிரவு" is the midnight
+that ends the day, and so is "மிட்நைட்" with an ending ("மிட்நைட்டில்") or with
+no other Tamil word after it, since the system starts its colour names with it
+("மிட்நைட் புளூ" is no time and sets no day or hour: "மிட்நைட் புளூ கார் 8
+மணிக்கு" is 08:00). The part of the day stands before the hour ("காலை
+9 மணிக்கு", "மாலை 5க்கு"); one after the hour stays in the title and still sets
+the hour ("கூட்டம் 7 மணிக்கு மாலை" is 19:00). An hour with no part of the day of
+its own takes the one part the line names elsewhere: in its day phrase ("நாளை
+காலை கூட்டம் 6 மணிக்கு" is 06:00), after "தினமும்" or "ஒவ்வொரு" ("தினமும் காலை 6
+மணிக்கு யோகா"), or in a noun ("இரவு உணவு 8 மணிக்கு" is 20:00). A line that names
+two different parts of the day leaves the hour as it reads alone, and an hour
+written on the 24-hour clock ("இரவு உணவு 20:00 மணிக்கு", "06:30 மணிக்கு") is
+read as written. The minutes may follow the hour: "10 மணி 30 நிமிடத்திற்கு" is
+10:30. A clock time that names a bound ("5 மணிக்குள்", "மாலை 6க்குள்", "5
+மணிக்கு முன்", "18:00 வரை") stays in the title.
+
+| Detail | Tamil |
+|---|---|
+| Day | இன்று, இன்று இரவு, நாளை, நாளை காலை, நாளை மறுநாள், திங்கட்கிழமை, இந்த வெள்ளிக்கிழமை, அடுத்த திங்கட்கிழமை, அடுத்த வாரம், இந்த வார இறுதி, 3 நாட்களில், 1 வாரம் கழித்து |
+| Date | 5 மே, 5 மே 2027, தேதி 5 மே, 15 அக்., 15ஆம் தேதி, 15/10/2026, 15.10., திங்கட்கிழமை 5 அக்டோபர் |
+| Date range | 3 முதல் 5 மார்ச், 3 மார்ச் முதல் 5 மார்ச் வரை, 30 ஜனவரி முதல் 2 பிப்ரவரி, 3-5 மார்ச், திங்கள் முதல் புதன் வரை |
+| Due day | வெள்ளிக்கிழமை வரை, நாளை மாலை வரை, 5 மே வரை, வெள்ளிக்கிழமைக்குள், நாளைக்குள், காலக்கெடு: 5 மே, வெள்ளிக்கிழமை காலக்கெடு, டெட்லைன் வெள்ளிக்கிழமை |
+| Time | 5 மணிக்கு, 5:30 மணிக்கு, ஐந்தரைக்கு, ஒரு மணிக்கு, மாலை 5 மணிக்கு, இரவு 10 மணிக்கு, காலை 9:30, மாலை 5க்கு, 17:30க்கு, நள்ளிரவு; 9 மணி முதல் 11 மணி வரை, காலை 9 முதல் 11 வரை, 14:00 முதல் 16:00 வரை |
+| Repeat | தினமும், ஒவ்வொரு நாளும், தினமும் காலை, ஒவ்வொரு திங்கட்கிழமை, ஒவ்வொரு திங்கள் மற்றும் வியாழன், ஒவ்வொரு வாரமும், ஒவ்வொரு 2 நாட்களுக்கும், ஒவ்வொரு மாதமும், ஒவ்வொரு மாதமும் 5ஆம் தேதி, ஒவ்வொரு வருடமும், ஒவ்வொரு வார இறுதியும், வேலை நாட்களில், ஒவ்வொரு திங்கள் முதல் வெள்ளி வரை, 2 நாட்களுக்கு ஒருமுறை, வாரத்திற்கு ஒருமுறை, வாரந்தோறும் |
+| Length | 30 நிமிடங்கள், 2 மணி நேரம், 1.5 மணி நேரம், 1 மணி நேரம் 30 நிமிடங்கள், அரை மணி நேரம், கால் மணி நேரம், ஒன்றரை மணி நேரம், இரண்டரை மணி நேரம், இரண்டு மணி நேரம், 2 மணி நேரத்திற்கு |
+| Priority | அதிக முன்னுரிமை, இயல்பான முன்னுரிமை, குறைந்த முன்னுரிமை, முன்னுரிமை: அதிகம், அவசரம் (at the end, or "அவசரம்:" at the start) |
+
+A weekday is a day by its full name in "கிழமை" (ஞாயிற்றுக்கிழமை, திங்கட்கிழமை,
+செவ்வாய்க்கிழமை, புதன்கிழமை, வியாழக்கிழமை, வெள்ளிக்கிழமை, சனிக்கிழமை), by its
+bare name ("திங்கள்"), or by the short form with a period that the system writes
+("திங்."). The bare names are also words for planets and silver, so a bare name
+is a day only where no such word follows ("புதன் கிரகம் பார்" and "வெள்ளி நகை
+வாங்கு" stay in the title), and the one-letter forms ("ஞா", "தி", "செ", "பு",
+"வி", "வெ", "ச") are ordinary syllables and are not read. A weekday alone is the
+coming one, a week ahead when it names today; "இந்த" makes it this week's,
+"அடுத்த" next week's (weeks start on Monday), and "வரும்" and "வருகிற" the
+coming one. "இந்த வாரம்" alone names no single day, and "அடுத்த வாரம்" is seven
+days ahead. The weekend is Saturday and Sunday: "வார இறுதி", "வீக்கெண்ட்", "சனி
+ஞாயிறு", and "சனிக்கிழமை மற்றும் ஞாயிற்றுக்கிழமை" mean the coming Saturday, and
+today on a Saturday or a Sunday, and "அடுத்த வார இறுதி" is the one after.
+
+A date range plans the task on its first day and makes it due on its last: "3
+முதல் 5 மார்ச்", "3 மார்ச் முதல் 5 மார்ச் வரை", and "3-5 மார்ச்" run from March
+3 to March 5, with "வரை" after the end if you like, and a month written once
+serves both days. The end must come after the start ("5 முதல் 3 மார்ச்" stays in
+the title), and the range names a month, so "3 முதல் 5" is never a range of
+days. A span of weekdays does the same: "திங்கள் முதல் புதன் வரை" plans the task
+on the coming Monday and makes it due on the Wednesday after it, while "திங்கள்
+முதல் வெள்ளி வரை" alone stays in the title, since it is a week of work as often
+as it is the working week. As in English, a number alone before a spaced dash
+belongs to the title ("Sprint 12 - 20 மார்ச்" is planned for March 20), while
+"12-20 மார்ச்" is a range. A range in the past tense stays in the title whole,
+since it may be an event the task only prepares for. "9 மணி முதல் 11 மணி வரை" is
+a time range: it carries "மணி" or a part of the day, so "3 முதல் 5 வரை" alone
+stays in the title.
+
+A date needs its day number beside the month name (ஜனவரி, பிப்ரவரி, மார்ச்,
+ஏப்ரல், மே, ஜூன், ஜூலை, ஆகஸ்ட், செப்டம்பர், அக்டோபர், நவம்பர், டிசம்பர், in the
+spellings people type, and the short forms the system writes with a period, such
+as "அக்."). A month without a day, a short month without its period ("5 ஜன"), a
+date in digits with no label and no ending ("5/10"), a date the calendar lacks
+("31 ஏப்ரல்"), and a month of the Tamil calendar ("5 ஆடி") stay in the title. A
+date in digits with the day first ("15/10/2026", "15.10.2026", "15.10.") is a
+date, and "15/10" is a date only after "தேதி" or before an ending such as "க்கு"
+or "இல்". A date without a year that has already passed means next year's.
+
+A due day is a day before "வரை", "வரைக்கும்", or "வரையில்", a day with "க்குள்"
+glued to it, a day after a deadline label ("காலக்கெடு", "காலக்கெடு தேதி", "கடைசி
+தேதி", "இறுதி தேதி", "டெட்லைன்"), or a day before "காலக்கெடு" as the app writes
+it: "வெள்ளிக்கிழமை வரை", "வெள்ளிக்கிழமைக்குள்", "நாளைக்குள்", "காலக்கெடு: 5 மே",
+"வெள்ளிக்கிழமை காலக்கெடு". "இன்று வரை" means "so far" and is not read, and
+neither is a day in a line that says a deadline has passed ("நாளை காலக்கெடு
+முடிந்தது"). A day before a clock deadline ("வெள்ளிக்கிழமை மாலை 5 மணிக்குள்") is
+the due day, and the clock time with its part of the day stays in the title.
+
+A repeat is "ஒவ்வொரு" with a unit ("ஒவ்வொரு வாரமும்", "ஒவ்வொரு மாதமும்",
+"ஒவ்வொரு வருடமும்"), "தினமும்" or "ஒவ்வொரு நாளும்" (every day), a weekday
+("ஒவ்வொரு திங்கட்கிழமை", "ஒவ்வொரு திங்கள் மற்றும் வியாழன்"), the working days
+("வேலை நாட்களில்", "வார நாட்களில்", "ஒவ்வொரு திங்கள் முதல் வெள்ளி வரை"), the
+weekend ("ஒவ்வொரு வார இறுதியும்"), a counted interval ("ஒவ்வொரு 2
+நாட்களுக்கும்", "ஒவ்வொரு மூன்று மாதங்களுக்கும்", "2 நாட்களுக்கு ஒருமுறை", "நாள்
+விட்டு நாள்"), "வாரத்திற்கு ஒருமுறை" and its forms, "வாரந்தோறும்" and its forms,
+or a day of the month ("ஒவ்வொரு மாதமும் 5ஆம் தேதி"). "தினசரி", "வாராந்திர",
+"மாதாந்திர", and "வருடாந்திர" are read only at the end of the line, before a
+colon or a comma, or with "அடிப்படையில்" after them, since they are ordinary
+adjectives too ("வாராந்திர அறிக்கை" is a weekly report). An interval shorter
+than a day ("ஒவ்வொரு 2 மணி நேரத்திற்கும்") and a count of weekends or working
+days ("3 வார இறுதிகளில்") name no repeat and stay in the title. "ஒவ்வொரு" also
+means a price rate, so "ஒவ்வொரு நாளும் 500 ரூபாய்" is read as a daily repeat.
+
+A length says that it is one: "30 நிமிடங்கள்", "2 மணி நேரம்", "1.5 மணி நேரம்",
+"அரை மணி நேரம்", "ஒரு அரை மணி நேரம்", "கால் மணி நேரம்", "ஒன்றரை மணி நேரம்",
+"இரண்டரை மணி நேரம்", "ஒரு மணி நேரம் முப்பது நிமிடங்கள்", maybe with the unit in
+its dative ("2 மணி நேரத்திற்கு" is for 2 hours) or in its form before a noun
+("30 நிமிட கூட்டம்" is a 30-minute meeting). An amount that names a moment, an
+interval, or a bound ("2 மணி நேரம் கழித்து", "ஒவ்வொரு 2 மணி நேரம்", "2 மணி
+நேரத்தில்", "ஒரு நாளைக்கு 30 நிமிடங்கள்", "குறைந்தது 2 மணி நேரம்") is no length
+and stays in the title whole, and so does a range of amounts ("2 முதல் 3 மணி
+நேரம்"). "ஒரு மணிநேரத்திற்கு" and "ஒரு நிமிடத்திற்கு" before a number mean "per
+hour" and "per minute", so "ஒரு மணிநேரத்திற்கு 5 மைல்கள்" is no length either,
+while "ஒரு மணிநேரத்திற்கு ஒப்புதல் அளிக்கவும்" is 60 minutes. A fraction ("1/2
+மணிநேரம்") is not read.
+
+A priority is "அதிக முன்னுரிமை", "இயல்பான முன்னுரிமை", or "குறைந்த முன்னுரிமை"
+(also written "முன்னுரிமை: அதிகம்"), or an urgent word at the end of the line
+("அவசரம்", "முக்கியம்", "அர்ஜென்ட்", "முக்கியமானது") or at its start before a
+colon or a comma ("அவசரம்: அறிக்கையை அனுப்பு"). Anywhere else these are ordinary
+words and stay in the title ("அவசர சிகிச்சை", "முக்கியம் இல்லை").
 
 ### From the Menu Bar Icon
 

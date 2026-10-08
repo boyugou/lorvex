@@ -147,13 +147,15 @@ extension LorvexCaptureVocabulary {
   /// the one the line names elsewhere (``marathiLinePartOfDay(beside:)``), and
   /// otherwise reads as ``bareTime(hour:minute:hasLeadingZero:)`` does. AM and
   /// PM after the hour are the system's own writing of a time ("3:30 PM
-  /// वाजता"). A part of the day after वाजता is not read.
+  /// वाजता"). A part of the day after वाजता is not read. An hour in digits may
+  /// not follow a colon, a dot, a comma, or a slash, since "5/6 वाजता" holds a
+  /// fraction or a date.
   /// Groups: 1 the part of the day before the hour, 2 the fraction word, 3 the
   /// hour in digits, 4 its minutes, 5 the hour in words, 6 AM or PM.
   static var marathiTimePattern: String {
     let approximate = #"(?:(?:ठीक|साधारण|सुमारे|जवळपास|अंदाजे)\s+)?"#
     let fraction = #"(?:(साडे|सव्वा|पावणे)\s*)?"#
-    let hour = #"(?:(?<![:.,])(\d{1,2})(?:[:.](\d{2}))?|(\#(marathiTimeWords)))"#
+    let hour = #"(?:(?<![:.,/])(\d{1,2})(?:[:.](\d{2}))?|(\#(marathiTimeWords)))"#
     let meridiem = #"(?:(am|pm|a\.m\.|p\.m\.)\s*)?"#
     return
       #"\#(devanagariStart)\#(approximate)\#(marathiPartLead(capturing: true))?\#(fraction)\#(hour)\s*\#(meridiem)वाजता(?:·(?:चा|ची|चे|च्या))?\#(marathiTimeEnd)"#
@@ -232,9 +234,9 @@ extension LorvexCaptureVocabulary {
   /// day, 2 the hour, 3 the minutes; 4 the hour and 5 the minutes after "रोज"
   /// and its part.
   static var marathiPartColonTimePattern: String {
-    let own = #"\#(marathiPartLead(capturing: true))(?<![:.,])(\d{1,2})[:.](\d{2})"#
+    let own = #"\#(marathiPartLead(capturing: true))(?<![:.,/])(\d{1,2})[:.](\d{2})"#
     let afterEvery =
-      #"(?<=\#(marathiEveryOrDaily)\s(?:\#(marathiPartLeadWords))\s)(?<![:.,])(\d{1,2})[:.](\d{2})"#
+      #"(?<=\#(marathiEveryOrDaily)\s(?:\#(marathiPartLeadWords))\s)(?<![:.,/])(\d{1,2})[:.](\d{2})"#
     return #"\#(devanagariStart)(?:\#(own)|\#(afterEvery))\#(marathiTimeEnd)"#
   }
 
@@ -261,7 +263,7 @@ extension LorvexCaptureVocabulary {
   /// The side of a range, as a pattern: an hour in digits with maybe minutes,
   /// or an hour in words.
   private static var marathiRangeSide: String {
-    #"((?<![:.,])\d{1,2}(?:[:.]\d{2})?|\#(marathiCountWords))"#
+    #"((?<![:.,/])\d{1,2}(?:[:.]\d{2})?|\#(marathiCountWords))"#
   }
 
   /// The words between the two sides of a range: "ते", a dash, or the
@@ -283,7 +285,7 @@ extension LorvexCaptureVocabulary {
   /// same groups as ``marathiTimeRangePattern``. A range joined by a dash with
   /// no वाजता ("14:00-16:00") is English's.
   static var marathiColonTimeRangePattern: String {
-    #"\#(devanagariStart)\#(marathiPartLead(capturing: true))?((?<![:.,])\d{1,2}:\d{2})\s+ते\s+\#(marathiPartLead(capturing: true))?(\d{1,2}:\d{2})(?:(?:·|\s+)पर्यंत)?+\#(marathiTimeEnd)"#
+    #"\#(devanagariStart)\#(marathiPartLead(capturing: true))?((?<![:.,/])\d{1,2}:\d{2})\s+ते\s+\#(marathiPartLead(capturing: true))?(\d{1,2}:\d{2})(?:(?:·|\s+)पर्यंत)?+\#(marathiTimeEnd)"#
   }
 
   static func marathiTimeRange(_ match: Match) -> ClockTime? {

@@ -131,15 +131,7 @@ extension CalendarWeekGridView {
           for: block, dayIndex: dayIndex, totalDays: totalDays, columnWidth: columnWidth)
     )
     .onTapGesture { openTask(block.task) }
-    .focusable(true)
-    .onKeyPress(.return) {
-      openTask(block.task)
-      return .handled
-    }
-    .onKeyPress(.space) {
-      openTask(block.task)
-      return .handled
-    }
+    .lorvexKeyboardActivation { openTask(block.task) }
     .contextMenu {
       Button(
         String(localized: "calendar.task.open", defaultValue: "Open Task", table: "Localizable", bundle: LorvexL10n.bundle),

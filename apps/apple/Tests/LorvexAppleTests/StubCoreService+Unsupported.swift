@@ -97,7 +97,8 @@ extension StubCoreService {
       rawInput: rawInput)
   }
   func updateTask(_ draft: TaskUpdateDraft) async throws -> LorvexTask {
-    try await preview.updateTask(draft)
+    await updateTaskGate?()
+    return try await preview.updateTask(draft)
   }
   func markTaskSomeday(id: LorvexTask.ID) async throws -> LorvexTask {
     try await preview.markTaskSomeday(id: id)

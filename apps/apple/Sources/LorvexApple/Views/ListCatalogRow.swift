@@ -42,13 +42,9 @@ struct ListCatalogRow: View {
     rowContent
     .contentShape(Rectangle())
     .onTapGesture(perform: select)
-    // Full Keyboard Access: a keyboard-only user tabbing through the catalog
-    // needs a focus ring and a way to trigger the row's primary open action,
-    // matching the pattern already used on task rows and habit cards
-    // (`WorkspaceSelectableTaskRow`, `HabitMomentumCard`).
-    .focusable()
-    .onKeyPress(.return) { select(); return .handled }
-    .onKeyPress(.space) { select(); return .handled }
+    // Full Keyboard Access: Tab reaches the row and Return or Space opens its
+    // Tasks scope.
+    .lorvexKeyboardActivation(select)
     .padding(.horizontal, ListCatalogRowMetrics.horizontalPadding)
     .padding(.vertical, ListCatalogRowMetrics.verticalPadding)
     .background {

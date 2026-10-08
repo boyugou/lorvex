@@ -25,20 +25,22 @@ struct LorvexCaptureVocabulary: Sendable {
   /// line with its digits read as ASCII ones, its alefs with hamza or madda read
   /// as the bare alef, and its Arabic yeh, kaf, and teh marbuta forms read as
   /// the Persian yeh, kaf, and heh (``persianForMatching(_:)``); for Marathi
-  /// the line with its digits read as ASCII ones, its precomposed nukta letters
-  /// read as the base consonants, the candrabindu read as the anusvara, the
-  /// eyelash ra (ऱ) read as ra, and the candra o (ऑ) read as aa
-  /// (``marathiForMatching(_:)``); for Hindi the
-  /// line with its digits read as ASCII ones, its precomposed nukta letters
-  /// read as the base consonants, and the candrabindu read as the anusvara
-  /// (``hindiForMatching(_:)``); for Bengali the line with its digits read as
-  /// ASCII ones and its precomposed ড়, ঢ়, and য় read as the letters ড, ঢ, and য
-  /// (``bengaliForMatching(_:)``); for Telugu the line with its digits read as
-  /// ASCII ones (``teluguForMatching(_:)``); for Urdu the line with its Arabic-Indic and
-  /// Extended Arabic-Indic digits read as ASCII ones, its alefs with hamza or
-  /// madda read as the bare alef, its Arabic yeh forms read as the Urdu choti
-  /// yeh, its Arabic kaf read as the Urdu kaf, its heh forms read as one heh,
-  /// and its noon ghunna read as the noon (``urduForMatching(_:)``); for
+  /// the line with its digits read as ASCII ones, its precomposed nukta
+  /// letters read as the base consonants, the candrabindu read as the
+  /// anusvara, the eyelash ra (ऱ) read as ra, and the candra o (ऑ) read as
+  /// aa (``marathiForMatching(_:)``); for Hindi the line with its digits
+  /// read as ASCII ones, its precomposed nukta letters read as the base
+  /// consonants, and the candrabindu read as the anusvara
+  /// (``hindiForMatching(_:)``); for Bengali the line with its digits read
+  /// as ASCII ones and its precomposed ড়, ঢ়, and য় read as the letters ড,
+  /// ঢ, and য (``bengaliForMatching(_:)``); for Telugu the line with its
+  /// digits read as ASCII ones (``teluguForMatching(_:)``); for Tamil the
+  /// line with its digits read as ASCII ones (``tamilForMatching(_:)``); for
+  /// Urdu the line with its Arabic-Indic and Extended Arabic-Indic digits
+  /// read as ASCII ones, its alefs with hamza or madda read as the bare
+  /// alef, its Arabic yeh forms read as the Urdu choti yeh, its Arabic kaf
+  /// read as the Urdu kaf, its heh forms read as one heh, and its noon
+  /// ghunna read as the noon (``urduForMatching(_:)``); for
   /// Hebrew the line with its final letters read as the regular ones, its
   /// maqaf and other hyphens read as the hyphen, and its apostrophe-like and
   /// double-quote-like marks read as the geresh and the gershayim
@@ -97,14 +99,15 @@ struct LorvexCaptureVocabulary: Sendable {
   /// The vocabularies a line is read with for a user who reads `languages`
   /// (BCP 47 codes such as "ja-JP"), in the order each kind of detail tries
   /// them: Japanese, Korean, French, Portuguese, Spanish, Italian, Russian,
-  /// Ukrainian, Polish, Arabic, Persian, Marathi, Hindi, Bengali, Telugu, Urdu,
-  /// Hebrew, German, Dutch, Romanian, Malay, Indonesian, Vietnamese, Turkish,
-  /// Thai, and Greek when `languages` includes them (any region of a language:
-  /// "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR", "fa-AF",
-  /// "mr-IN", "hi-IN", "bn-BD", "bn-IN", "te-IN", "ur-PK", "ur-IN", "he-IL",
-  /// "de-AT", "de-CH", "nl-BE", "ro-MD", "ms-MY", "ms-SG", "ms-BN", "id-ID",
-  /// "vi-VN", "tr-TR", "tr-CY", "th-TH", "el-GR", "el-CY"), then Chinese and
-  /// English, which every line is read with.
+  /// Ukrainian, Polish, Arabic, Persian, Marathi, Hindi, Bengali, Telugu, Tamil,
+  /// Urdu, Hebrew, German, Dutch, Romanian, Malay, Indonesian, Vietnamese,
+  /// Turkish, Thai, and Greek when `languages` includes them (any region of a
+  /// language: "es-MX", "es-419", "it-CH", "uk-UA", "pl-PL", "ar-SA", "fa-IR",
+  /// "fa-AF", "mr-IN", "hi-IN", "bn-BD", "bn-IN", "te-IN", "ta-IN", "ta-LK",
+  /// "ta-SG", "ta-MY", "ur-PK", "ur-IN", "he-IL", "de-AT", "de-CH", "nl-BE",
+  /// "ro-MD", "ms-MY", "ms-SG", "ms-BN", "id-ID", "vi-VN", "tr-TR", "tr-CY",
+  /// "th-TH", "el-GR", "el-CY"), then Chinese and English, which every line is
+  /// read with.
   ///
   /// The order settles a phrase two vocabularies could both read. Japanese
   /// goes before Chinese, so a date the two write alike is taken with its
@@ -134,6 +137,9 @@ struct LorvexCaptureVocabulary: Sendable {
   /// words belong to no other vocabulary, and a Telugu rule that could take a
   /// phrase English reads with the words around it reads it only beside a
   /// Telugu word.
+  /// Tamil goes after Telugu for the same reason: its script, digits, and words
+  /// belong to no other vocabulary, and a Tamil rule that could take a phrase
+  /// English reads with the words around it reads it only beside a Tamil word.
   /// Urdu goes after Persian and Hindi, so for a user who
   /// reads Urdu and one of them, a phrase two of them could read is read the
   /// earlier way; Urdu shares its script with Arabic and Persian and its spoken
@@ -168,15 +174,15 @@ struct LorvexCaptureVocabulary: Sendable {
   /// written with h to it (``englishBesideHourClock``), so "15h" is never read
   /// as fifteen hours.
   /// Spanish, Italian, Russian, Ukrainian, Polish, Arabic, Persian, Marathi,
-  /// Hindi, Bengali, Telugu, Urdu, Hebrew, Dutch, Romanian, Malay, Indonesian,
-  /// Turkish, Thai, and Greek do not write a clock time that way (Marathi
-  /// writes its hours with "वाजता" after the hour, Bengali with the classifier
-  /// "টা" after the hour, Telugu with "గంటలకు" after it, Dutch with "uur" or
-  /// "u", Romanian with "ora"
-  /// before the hour, Malay and Indonesian with "pukul" or "jam" before it,
-  /// Turkish with "saat" before the hour or a case ending after it, Thai with
-  /// "โมง", "ทุ่ม", or "ตี" or with "น." after the time, Greek with "στις" or
-  /// "ώρα" before it), so "2h" beside them stays a length.
+  /// Hindi, Bengali, Telugu, Tamil, Urdu, Hebrew, Dutch, Romanian, Malay,
+  /// Indonesian, Turkish, Thai, and Greek do not write a clock time that way
+  /// (Marathi writes its hours with "वाजता" after the hour, Bengali with the
+  /// classifier "টা" after the hour, Telugu with "గంటలకు" after it, Tamil with
+  /// "மணி" after it, Dutch with "uur" or "u", Romanian with "ora" before the
+  /// hour, Malay and Indonesian with "pukul" or "jam" before it, Turkish with
+  /// "saat" before the hour or a case ending after it, Thai with "โมง", "ทุ่ม",
+  /// or "ตี" or with "น." after the time, Greek with "στις" or "ώρα" before
+  /// it), so "2h" beside them stays a length.
   static func vocabularies(for languages: [String]) -> [LorvexCaptureVocabulary] {
     let codes = Set(languages.compactMap { $0.split(whereSeparator: { $0 == "-" || $0 == "_" }).first?.lowercased() })
     var vocabularies: [LorvexCaptureVocabulary] = []
@@ -195,6 +201,7 @@ struct LorvexCaptureVocabulary: Sendable {
     if codes.contains("hi") { vocabularies.append(.hindi) }
     if codes.contains("bn") { vocabularies.append(.bengali) }
     if codes.contains("te") { vocabularies.append(.telugu) }
+    if codes.contains("ta") { vocabularies.append(.tamil) }
     if codes.contains("ur") { vocabularies.append(.urdu) }
     if codes.contains("he") { vocabularies.append(.hebrew) }
     if codes.contains("de") { vocabularies.append(.german) }

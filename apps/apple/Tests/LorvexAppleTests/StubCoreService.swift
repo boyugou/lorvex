@@ -98,6 +98,9 @@ final class StubCoreService: @unchecked Sendable, LorvexCoreServicing, EnvelopeS
   /// Optional async barrier invoked inside `createTask(_:)` before the
   /// delegated write, so a test can hold a capture mid-write.
   var createTaskGate: (@Sendable () async -> Void)?
+  /// Optional async barrier invoked inside `updateTask(_:)` (the draft form)
+  /// before the delegated write, so a test can hold a task write mid-flight.
+  var updateTaskGate: (@Sendable () async -> Void)?
   /// Optional async barrier invoked inside `upsertDailyReviewPreservingLinks`
   /// before the delegated write, so a test can hold a daily-review save
   /// mid-write.

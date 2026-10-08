@@ -203,7 +203,7 @@ extension UserFacingError {
       case .startingCanceledTask:
         String(
           localized: "error.reason.starting_canceled_task",
-          defaultValue: "This task was canceled. Reopen it before starting it.",
+          defaultValue: "This task was cancelled. Reopen it before starting it.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .startingSomedayTask:
         String(
@@ -213,12 +213,12 @@ extension UserFacingError {
       case .completingCanceledTask:
         String(
           localized: "error.reason.completing_canceled_task",
-          defaultValue: "This task was canceled. Reopen it before completing it.",
+          defaultValue: "This task was cancelled. Reopen it before completing it.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .cancelingDoneTask:
         String(
           localized: "error.reason.canceling_done_task",
-          defaultValue: "This task is already done. Reopen it before canceling it.",
+          defaultValue: "This task is already done. Reopen it before you cancel it.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .pausingUnstartedTask:
         String(

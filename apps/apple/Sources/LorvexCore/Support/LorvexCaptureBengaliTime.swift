@@ -165,7 +165,9 @@ extension LorvexCaptureVocabulary {
   /// only with the locative, since "৫টা ৩০ মিনিট" is an hour and a length. An
   /// hour with no part of the day of its own takes the one the
   /// line names elsewhere (``bengaliLinePartOfDay(beside:)``), and otherwise
-  /// reads as ``bareTime(hour:minute:hasLeadingZero:)`` does.
+  /// reads as ``bareTime(hour:minute:hasLeadingZero:)`` does. An hour in digits
+  /// may not follow a colon, a dot, a comma, or a slash, since "৫/৬টায়" holds a
+  /// fraction or a date.
   /// Groups: 1 the part of the day before the hour, 2 the fraction word, 3 the
   /// hour in digits, 4 its minutes after a colon, 5 the hour in words, 6 the
   /// classifier, 7 the words that make it a time after it, 8 the minutes with
@@ -173,7 +175,7 @@ extension LorvexCaptureVocabulary {
   static var bengaliTimePattern: String {
     let approximate = #"(?:(?:ঠিক|প্রায়|আনুমানিক|মোটামুটি)\s+)?"#
     let fraction = #"(?:(সাড়ে|সোয়া|সওয়া|পৌনে)\s*)?"#
-    let hour = #"(?:(?<![:.,])(\d{1,2})(?:[:.](\d{2}))?|(\#(bengaliTimeWords))['’]?)"#
+    let hour = #"(?:(?<![:.,/])(\d{1,2})(?:[:.](\d{2}))?|(\#(bengaliTimeWords))['’]?)"#
     let anchor = #"((?:·র\s+(?:সময়|দিকে)|\s+নাগাদ)\#(bengaliEnd))?"#
     let minutes =
       #"(?:(?<![\x{09AF}\x{09BC}])\s+(\d{1,2}|\#(bengaliRoundCountWords))\s*মিনিটে(?=\s|$|[.,;:!?।]))?"#
@@ -236,7 +238,7 @@ extension LorvexCaptureVocabulary {
     let approximate = #"(?:(?:ঠিক|প্রায়|আনুমানিক|মোটামুটি)\s+)?"#
     let meridiem = #"(?:\s*(am|pm|a\.m\.|p\.m\.))?"#
     return
-      #"\#(bengaliStart)\#(approximate)\#(bengaliPartLead(capturing: true))?(?<![:.,])(\d{1,2})[:.](\d{2})\#(meridiem)((?:\s*[-‐‑–]\s*|\s*)এ)?\#(bengaliTimeEnd)"#
+      #"\#(bengaliStart)\#(approximate)\#(bengaliPartLead(capturing: true))?(?<![:.,/])(\d{1,2})[:.](\d{2})\#(meridiem)((?:\s*[-‐‑–]\s*|\s*)এ)?\#(bengaliTimeEnd)"#
   }
 
   static func bengaliColonTime(_ match: Match) -> ClockTime? {
@@ -262,7 +264,7 @@ extension LorvexCaptureVocabulary {
   /// The side of a range, as a pattern: an hour in digits with maybe minutes,
   /// or an hour in words.
   private static var bengaliRangeSide: String {
-    #"((?<![:.,])\d{1,2}(?:[:.]\d{2})?|\#(bengaliHourStemWords))"#
+    #"((?<![:.,/])\d{1,2}(?:[:.]\d{2})?|\#(bengaliHourStemWords))"#
   }
 
   /// The words between the two sides of a range: "থেকে" or "হতে", or a dash.
@@ -282,7 +284,7 @@ extension LorvexCaptureVocabulary {
   /// "পর্যন্ত" after it. The same groups as ``bengaliTimeRangePattern``. A range
   /// joined by a dash ("১৪:০০-১৬:০০") is English's.
   static var bengaliColonTimeRangePattern: String {
-    #"\#(bengaliStart)\#(bengaliPartLead(capturing: true))?((?<![:.,])\d{1,2}[:.]\d{2})\s+(?:থেকে|হতে)\s+\#(bengaliPartLead(capturing: true))?(\d{1,2}[:.]\d{2})(?:\#(bengaliUntilWords))?+\#(bengaliTimeEnd)"#
+    #"\#(bengaliStart)\#(bengaliPartLead(capturing: true))?((?<![:.,/])\d{1,2}[:.]\d{2})\s+(?:থেকে|হতে)\s+\#(bengaliPartLead(capturing: true))?(\d{1,2}[:.]\d{2})(?:\#(bengaliUntilWords))?+\#(bengaliTimeEnd)"#
   }
 
   static func bengaliTimeRange(_ match: Match) -> ClockTime? {

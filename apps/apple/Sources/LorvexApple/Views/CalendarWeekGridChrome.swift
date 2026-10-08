@@ -182,6 +182,7 @@ extension CalendarWeekGridView {
   private func allDayEventPill(_ event: CalendarTimelineEvent, on day: CalendarGridDay) -> some View {
     allDayPill(title: event.title, time: event.pillTimeLabel(on: day.dayKey), color: eventColor(event))
       .onTapGesture { selectEvent(event) }
+      .lorvexKeyboardActivation { selectEvent(event) }
       .calendarPointingHandCursor()
       .accessibilityElement(children: .ignore)
       .accessibilityAddTraits(.isButton)
@@ -194,7 +195,7 @@ extension CalendarWeekGridView {
   /// on the calendar task surface. A finished task stays, struck through and
   /// faded, as the day's record. A task past its due day ends with the
   /// overdue clock Today's rows use, since the circle's tint already speaks
-  /// for priority. The pill opens the task.
+  /// for priority. The pill opens the task on a click, Return, or Space.
   private func allDayTaskPill(_ task: LorvexTask, on day: CalendarGridDay) -> some View {
     let isDone = task.status == .completed
     let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
@@ -221,6 +222,7 @@ extension CalendarWeekGridView {
     .lorvexCalendarTaskSurface(isDone: isDone, cornerRadius: LorvexDesign.Radius.s)
     .contentShape(Rectangle())
     .onTapGesture { openTask(task) }
+    .lorvexKeyboardActivation { openTask(task) }
     .calendarPointingHandCursor()
     .draggable(LorvexTaskRef(id: task.id, title: task.title))
     // Pointer-free counterpart to drag-to-reschedule: the same moves,

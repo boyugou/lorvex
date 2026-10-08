@@ -23,9 +23,20 @@ import LorvexCore
   /// Background work can overlap (a silent push arriving while the sync flush
   /// that runs on leaving the app is still going), so users are counted: the
   /// database is suspended only when the last one leaves.
+  ///
+  /// Work that other modules start — an App Intent, a notification's Complete
+  /// or Defer button — reaches this through ``access``, which the app installs
+  /// at launch (`DatabaseSuspension/installBackgroundAccess(_:)`) and the
+  /// notification handler passes explicitly.
   @MainActor
   enum BackgroundDatabaseWork {
     private static var activeUsers = 0
+
+    /// ``begin()`` and ``end()`` as the calls
+    /// `DatabaseSuspension.withBackgroundAccess` makes around such work.
+    nonisolated static let access = DatabaseSuspension.BackgroundAccess(
+      begin: { await BackgroundDatabaseWork.begin() },
+      end: { await BackgroundDatabaseWork.end() })
 
     static func run<T>(_ body: () async throws -> T) async rethrows -> T {
       begin()

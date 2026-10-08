@@ -5,10 +5,10 @@ import SwiftUI
 /// day, in the canonical task order, beside the grid. Each row drags by id, so a
 /// task goes from here onto a time in a day column, a day's all-day strip, or a
 /// month cell without leaving the calendar; planning it removes it from the
-/// rail. A row opens its task on a click and carries the same context menu as
-/// every other task list. Its metadata line leaves out the owning list, so the
-/// due day and the estimate, which decide where a task goes, never get cut off
-/// in the narrow column.
+/// rail. A row opens its task on a click, Return, or Space and carries the same
+/// context menu as every other task list. Its metadata line leaves out the
+/// owning list, so the due day and the estimate, which decide where a task goes,
+/// never get cut off in the narrow column.
 ///
 /// The rail lists the first ``AppStore/calendarUnplannedLimit`` tasks and ends
 /// with "N more" when there are others. It is empty only when every open task
@@ -104,6 +104,7 @@ struct CalendarPlanRail: View {
           openTask(task)
         }
       }
+      .lorvexKeyboardActivation { openTask(task) }
       .accessibilityAction(.default) { openTask(task) }
       .contextMenu { WorkspaceTaskContextMenu(store: store, task: task) }
   }

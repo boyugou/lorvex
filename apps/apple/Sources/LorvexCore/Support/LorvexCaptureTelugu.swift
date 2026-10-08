@@ -535,22 +535,24 @@ extension LorvexCaptureVocabulary {
   /// followed by minutes with an ending ("5 గంటల 30 నిమిషాలకు" is 5:30): they
   /// are left to the time rules, which read the time or keep the bound. Any
   /// other ending glued to the unit ("2 గంటల్లో", "30 నిమిషాలకు") leaves the
-  /// unit unread. The amount may not follow a digit, a colon, or a separator,
-  /// and it may not be a side of a range ("2-3 గంటలు", "2 నుండి 3 గంటలు", "5
-  /// నిమిషాలు నుండి 10 నిమిషాలు").
+  /// unit unread. The amount may not follow a digit, a colon, a slash, or a
+  /// separator ("1/2 గంట" is a fraction, not 2 hours), and it may not be a side
+  /// of a range ("2-3 గంటలు", "2 నుండి 3 గంటలు", "5 నిమిషాలు నుండి 10
+  /// నిమిషాలు"). The half and quarter hours may follow "ఒక" ("ఒక అర గంట",
+  /// "ఒక పావు గంట"), which goes with them.
   static var teluguLengthPattern: String {
     let hourNoun = #"(?:గంటలు|గంటల|గంట|గం\.?)"#
     let minuteNoun = #"(?:నిమిషాలు|నిమిషాల|నిమిషం|నిమిషము|నిముషాలు|నిముషాల|నిముషం|నిముషము|నిమి\.?)"#
     let opener =
       #"(?:(?:(సుమారుగా|సుమారు|దాదాపుగా|దాదాపు|అంచనా)|(కనీసం|గరిష్టంగా|గరిష్ఠంగా|అత్యధికంగా|ప్రతి|రోజుకు|రోజుకి|వారానికి|నెలకు))\s+)?"#
-    let boundaries = #"(?<![\p{N}:.,])(?<!\p{N}\s?[-–—]\s?)"#
+    let boundaries = #"(?<![\p{N}:.,/])(?<!\p{N}\s?[-–—]\s?)"#
     let hours =
       #"(\d+(?:\.\d+)?)\s*\#(hourNoun)(?:,?\s+(?:(?:మరియు|&)\s+)?(\d{1,2})\s*\#(minuteNoun))?"#
     let minutes = #"(\d+)\s*\#(minuteNoun)"#
     let amount = teluguAlternation(of: teluguAmountSpellings.flatMap { $0.1 })
     let roundAmount = teluguRoundCountWords
     let words =
-      #"((?:అర|అర్ధ|అర్థ)\s*గంట|(?:ముప్పావు|పావు)\s*గంట|(?<!ఒంటి\s)గంటన్నర|గంట\s*(?:సేపు|పాటు|పాటూ)|(?:\#(teluguHalfWordPattern))\s*\#(hourNoun)|(?:\#(amount))\s*\#(hourNoun)|(?:\#(roundAmount))\s*\#(minuteNoun))"#
+      #"((?:ఒక\s+)?(?:(?:అర|అర్ధ|అర్థ)\s*గంట|(?:ముప్పావు|పావు)\s*గంట)|(?<!ఒంటి\s)గంటన్నర|గంట\s*(?:సేపు|పాటు|పాటూ)|(?:\#(teluguHalfWordPattern))\s*\#(hourNoun)|(?:\#(amount))\s*\#(hourNoun)|(?:\#(roundAmount))\s*\#(minuteNoun))"#
     let ending = #"(?:\s*(?:పాటు|పాటూ|సేపు))?"#
     let minutesAt = #"\s+(?:\d{1,2}|\#(roundAmount))\s*(?:నిమిషాలకు|నిమిషాలకి|నిమిషాలకే|నిముషాలకు|నిముషాలకి)"#
     let notAnHour =
@@ -587,10 +589,13 @@ extension LorvexCaptureVocabulary {
     return teluguWordsLength(phrase.replacingOccurrences(of: " ", with: ""))
   }
 
-  /// The minutes a length written in words names: `compact` is a phrase as
+  /// The minutes a length written in words names: `text` is a phrase as
   /// ``teluguPhrase(_:)`` leaves it with its spaces taken out, an amount word or
-  /// a fraction word before a unit.
-  private static func teluguWordsLength(_ compact: String) -> Int? {
+  /// a fraction word before a unit, where "ఒక" before a half or quarter hour
+  /// ("ఒక అర గంట") adds nothing.
+  private static func teluguWordsLength(_ text: String) -> Int? {
+    let compact = text.replacingOccurrences(
+      of: "^\(teluguCompactKey("ఒక"))(?=అర|పావు|ముప్పావు)", with: "", options: .regularExpression)
     switch compact {
     case teluguCompactKey("అరగంట"), teluguCompactKey("అర్ధగంట"), teluguCompactKey("అర్థగంట"): return 30
     case teluguCompactKey("పావుగంట"): return 15

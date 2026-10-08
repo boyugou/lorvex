@@ -45,6 +45,36 @@ class SourceHygieneVerifierTests(unittest.TestCase):
             vsh.source_hygiene_failures([("order", ("file", "Package.swift"), "ZZZ_B", "ZZZ_A")])
         )
 
+    def test_paired_flags_unpaired_literals_and_stale_exemptions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            views = root / "Views"
+            views.mkdir()
+            (views / "Paired.swift").write_text(
+                "view.onTapGesture { a() }.keyboard { a() }\n", encoding="utf-8"
+            )
+            (views / "Bare.swift").write_text("view.onTapGesture { b() }\n", encoding="utf-8")
+            (views / "Commented.swift").write_text(
+                "// a bare .onTapGesture is out of reach of the keyboard\n", encoding="utf-8"
+            )
+            (views / "Exempt.swift").write_text("view.onTapGesture { c() }\n", encoding="utf-8")
+            (views / "Stale.swift").write_text("let x = 1\n", encoding="utf-8")
+            rule = (
+                "paired", ("dir", "Views", False), ".onTapGesture", ".keyboard",
+                {"Views/Exempt.swift": 1, "Views/Stale.swift": 1},
+            )
+            original = vsh.ROOT
+            try:
+                vsh.ROOT = root
+                failures = vsh.source_hygiene_failures([rule])
+            finally:
+                vsh.ROOT = original
+        # Paired, Commented and Exempt hold; Bare has a tap with no partner, and
+        # Stale carries an exemption its file no longer needs.
+        self.assertEqual(len(failures), 2)
+        self.assertTrue(any("Bare.swift" in f and "1x more" in f for f in failures))
+        self.assertTrue(any("Stale.swift" in f and "no longer needed" in f for f in failures))
+
     def test_missing_required_file_flagged(self) -> None:
         failures = vsh.source_hygiene_failures(
             [("contains", ("file", "Sources/NoSuchFile.swift"), "x")]

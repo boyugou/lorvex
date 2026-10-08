@@ -133,9 +133,7 @@ struct HabitMomentumCard: View {
     .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.m, style: .continuous))
     .onTapGesture { select() }
     .onHover { h in lorvexAnimated(.easeOut(duration: 0.14)) { hovering = h } }
-    .focusable()
-    .onKeyPress(.return) { select(); return .handled }
-    .onKeyPress(.space) { select(); return .handled }
+    .lorvexKeyboardActivation(select)
     .accessibilityElement(children: .contain)
     // The card opens the inspector on tap / Return / Space, but a raw
     // `.onTapGesture` is invisible to VoiceOver. Expose the same affordance as

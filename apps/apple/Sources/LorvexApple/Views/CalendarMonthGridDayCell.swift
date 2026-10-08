@@ -88,15 +88,7 @@ struct CalendarMonthGridDayCell: View {
     .contentShape(Rectangle())
     .onTapGesture(perform: onOpenDay)
     .calendarPointingHandCursor()
-    .focusable(true)
-    .onKeyPress(.return) {
-      onOpenDay()
-      return .handled
-    }
-    .onKeyPress(.space) {
-      onOpenDay()
-      return .handled
-    }
+    .lorvexKeyboardActivation(onOpenDay)
     .accessibilityElement(children: .contain)
     .accessibilityLabel(dayAccessibilityLabel)
     .accessibilityAddTraits(.isButton)

@@ -50,12 +50,14 @@ struct LorvexAppearancePicker: View {
     )
   }
 
-  /// Curated icons filtered by the search box (case-insensitive substring on the
-  /// SF Symbol name). Empty query shows the whole set.
+  /// Curated icons filtered by the search box: every word typed must occur in
+  /// an icon's name or keywords in the user's language, or in its SF Symbol
+  /// name (``LorvexIconNames/matches(_:query:)``). An empty query shows the
+  /// whole set.
   private var filteredIcons: [String] {
-    let query = iconQuery.trimmingCharacters(in: .whitespaces).lowercased()
+    let query = iconQuery.trimmingCharacters(in: .whitespaces)
     guard !query.isEmpty else { return Self.iconChoices }
-    return Self.iconChoices.filter { $0.contains(query) }
+    return Self.iconChoices.filter { LorvexIconNames.matches($0, query: query) }
   }
 
   /// The icons shown in the grid: the filtered set, with a current icon that is
@@ -165,6 +167,9 @@ struct LorvexAppearancePicker: View {
 
   private func iconButton(name: String?) -> some View {
     let isSelected = icon == name
+    let label =
+      name.map { LorvexIconNames.name(for: $0) ?? $0 }
+      ?? String(localized: "appearance.icon.default", defaultValue: "Default icon", table: "Localizable", bundle: LorvexL10n.bundle)
     return Button {
       icon = name
     } label: {
@@ -183,8 +188,8 @@ struct LorvexAppearancePicker: View {
         .contentShape(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous))
     }
     .buttonStyle(.plain)
-    .help(name ?? String(localized: "appearance.icon.default", defaultValue: "Default icon", table: "Localizable", bundle: LorvexL10n.bundle))
-    .accessibilityLabel(name ?? String(localized: "appearance.icon.default", defaultValue: "Default icon", table: "Localizable", bundle: LorvexL10n.bundle))
+    .help(label)
+    .accessibilityLabel(label)
     .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     .accessibilityIdentifier("\(idPrefix).icon.\(name ?? "default")")
   }

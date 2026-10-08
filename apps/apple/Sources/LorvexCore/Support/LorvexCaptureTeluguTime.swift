@@ -12,7 +12,8 @@ extension LorvexCaptureVocabulary {
   /// the plain word ("ఉదయం", "ఉదయము"), the adverbs ("ఉదయాన్నే", "ఉదయాన") and
   /// the dative ("ఉదయానికి"). తెల్లవారుజామున and వేకువజామున are the small hours
   /// of the morning, మిట్ట మధ్యాహ్నం the noon, సాయంకాలం another word for the
-  /// evening, and the night includes అర్ధరాత్రి and Apple's మిడ్‌నైట్.
+  /// evening, and the night includes అర్ధరాత్రి. The loanword మిడ్‌నైట్ names the
+  /// night too, under the condition of ``teluguMidnightLoanword``.
   private static let teluguPartForms: [(part: PartOfDay, words: [String])] = [
     (
       .morning,
@@ -38,10 +39,26 @@ extension LorvexCaptureVocabulary {
       .night,
       [
         "రాత్రి", "రాత్రికి", "రాత్రే", "రాత్రిపూట", "రాత్రి పూట", "అర్ధరాత్రి", "అర్థరాత్రి", "అర్ధ రాత్రి", "అర్ధరాత్రికి",
-        "అర్థరాత్రికి", "మిడ్‌నైట్", "మిడ్ నైట్",
+        "అర్థరాత్రికి",
       ]
     ),
   ]
+
+  /// The words after a midnight that make it a bound or a point beside it:
+  /// "అర్ధరాత్రి వరకు" is a deadline and "అర్ధరాత్రి తర్వాత" a time after it. A
+  /// pattern without groups.
+  private static let teluguMidnightBoundWords =
+    #"(?:వరకు|వరకూ|దాకా|తర్వాత|తరువాత|ముందు|లోపు|లోగా|లోపల|కల్లా|నాటికి|అనంతరం)"#
+
+  /// The loanword "మిడ్‌నైట్" for midnight, spaced or joined, as a pattern
+  /// without groups. The system starts its colour names with it ("మిడ్‌నైట్
+  /// బ్లూ", "మిడ్‌నైట్ బ్లాక్"; 6 of the 8 strings of Apple's Telugu that hold
+  /// it), so it names the night only with a dative ending glued to it
+  /// ("మిడ్‌నైట్‌కి"), with a word of ``teluguMidnightBoundWords`` after it
+  /// ("శుక్రవారం మిడ్‌నైట్ వరకు"), or with no other Telugu word after it ("కారు
+  /// మిడ్‌నైట్", "మిడ్‌నైట్ 12 గంటలకు").
+  private static let teluguMidnightLoanword =
+    #"మిడ్\s*నైట్(?=కి|కు|కే|(?!\s+(?!\#(teluguMidnightBoundWords)\#(teluguEnd))\p{Telugu}))"#
 
   /// The genitive forms of the parts of the day, which name the part a line is
   /// about ("ఉదయపు నడక 6 గంటలకు") but are not a part of a day phrase.
@@ -56,12 +73,15 @@ extension LorvexCaptureVocabulary {
       for word in words { parts[teluguCompactKey(word)] = part }
     }
     for (part, word) in teluguPartGenitives { parts[teluguCompactKey(word)] = part }
+    parts[teluguCompactKey("మిడ్‌నైట్")] = .night
     return parts
   }()
 
   /// The words that name a part of the day after a day word or before an hour,
-  /// as a pattern without groups, longest first.
-  static let teluguDayPartWords = teluguAlternation(of: teluguPartForms.flatMap { $0.words })
+  /// as a pattern without groups: the words of ``teluguPartForms`` longest
+  /// first, then the loanword for midnight.
+  static let teluguDayPartWords =
+    teluguAlternation(of: teluguPartForms.flatMap { $0.words }) + "|" + teluguMidnightLoanword
 
   /// The part of the day a matched word names.
   static func teluguPartOfDay(_ text: String) -> PartOfDay? {
@@ -205,7 +225,7 @@ extension LorvexCaptureVocabulary {
   /// day before the hour, 2 the hour in digits, 3 its minutes after a colon, 4
   /// the hour in words, 5 the minutes written after "గంటల".
   static var teluguHourPattern: String {
-    let hour = #"(?:(?<![\p{N}:.,])(\d{1,2})(?:[:.](\d{2}))?|(\#(teluguHourWordPattern)))"#
+    let hour = #"(?:(?<![\p{N}:.,/])(\d{1,2})(?:[:.](\d{2}))?|(\#(teluguHourWordPattern)))"#
     let minutes =
       #"\s*గంటల\s+(\d{1,2}|\#(teluguRoundCountWords))\s*(?:నిమిషాలకు|నిమిషాలకి|నిమిషాలకే|నిముషాలకు|నిముషాలకి)"#
     return
@@ -263,7 +283,7 @@ extension LorvexCaptureVocabulary {
   static var teluguDativeTimePattern: String {
     let meridiem = #"(?:\s*(am|pm|a\.m\.|p\.m\.)\s*)?"#
     return
-      #"\#(teluguStart)\#(teluguApproximate)\#(teluguPartLead(capturing: true))?(?:(?<![\p{N}:.,])(\d{1,2})\#(meridiem)·(?:కి|కు|కే)|(\#(teluguDativeHourWords)))\#(teluguTimeEnd)"#
+      #"\#(teluguStart)\#(teluguApproximate)\#(teluguPartLead(capturing: true))?(?:(?<![\p{N}:.,/])(\d{1,2})\#(meridiem)·(?:కి|కు|కే)|(\#(teluguDativeHourWords)))\#(teluguTimeEnd)"#
   }
 
   static func teluguDativeTime(_ match: Match) -> ClockTime? {
@@ -290,7 +310,7 @@ extension LorvexCaptureVocabulary {
   static var teluguColonTimePattern: String {
     let meridiem = #"(?:\s*(am|pm|a\.m\.|p\.m\.))?"#
     return
-      #"\#(teluguStart)\#(teluguApproximate)\#(teluguPartLead(capturing: true))?(?<![\p{N}:.,])(\d{1,2})[:.](\d{2})\#(meridiem)(?:\s*·(కి|కు|కే))?\#(teluguTimeEnd)"#
+      #"\#(teluguStart)\#(teluguApproximate)\#(teluguPartLead(capturing: true))?(?<![\p{N}:.,/])(\d{1,2})[:.](\d{2})\#(meridiem)(?:\s*·(కి|కు|కే))?\#(teluguTimeEnd)"#
   }
 
   static func teluguColonTime(_ match: Match) -> ClockTime? {
@@ -308,16 +328,17 @@ extension LorvexCaptureVocabulary {
   /// "అర్ధరాత్రి", "అర్ధరాత్రికి", "ఈ అర్ధరాత్రి", "సరిగ్గా అర్ధరాత్రి", "మిడ్‌నైట్": the
   /// midnight that ends the day. "ఈ" goes with it so a day phrase does not
   /// leave it behind. "అర్ధరాత్రి వరకు" is a deadline and "అర్ధరాత్రి తర్వాత" a time
-  /// after it, so neither is read.
+  /// after it, so neither is read. The loanword is a time only under the
+  /// condition of ``teluguMidnightLoanword``: "మిడ్‌నైట్ బ్లూ" is a colour.
   static let teluguMidnightPattern =
-    #"\#(teluguStart)(?:ఈ\s+)?(?:సరిగ్గా\s+)?(?:అర్ధరాత్రి|అర్థరాత్రి|అర్ధ\s*రాత్రి|మిడ్\s*నైట్)(?:కి|కు|కే)?\#(teluguEnd)(?!\s+(?:వరకు|వరకూ|దాకా|తర్వాత|తరువాత|ముందు|లోపు|లోగా|లోపల|కల్లా|నాటికి|అనంతరం)\#(teluguEnd))"#
+    #"\#(teluguStart)(?:ఈ\s+)?(?:సరిగ్గా\s+)?(?:అర్ధరాత్రి|అర్థరాత్రి|అర్ధ\s*రాత్రి|\#(teluguMidnightLoanword))(?:కి|కు|కే)?\#(teluguEnd)(?!\s+\#(teluguMidnightBoundWords)\#(teluguEnd))"#
 
   // MARK: - Time range
 
   /// The side of a range, as a pattern: an hour in digits with maybe minutes,
   /// or an hour in words.
   private static var teluguRangeSide: String {
-    #"((?<![\p{N}:.,])\d{1,2}(?:[:.]\d{2})?|\#(teluguHourWordPattern))"#
+    #"((?<![\p{N}:.,/])\d{1,2}(?:[:.]\d{2})?|\#(teluguHourWordPattern))"#
   }
 
   /// The words between the two sides of a range: "నుండి", "నుంచి", or "నించి"
@@ -345,7 +366,7 @@ extension LorvexCaptureVocabulary {
   /// "వరకు" after it. The same groups as ``teluguTimeRangePattern``. A range
   /// joined by a dash ("14:00-16:00") is English's.
   static var teluguColonTimeRangePattern: String {
-    #"\#(teluguStart)\#(teluguPartLead(capturing: true))?((?<![\p{N}:.,])\d{1,2}[:.]\d{2})\s+\#(teluguFromWords)\s+\#(teluguPartLead(capturing: true))?(\d{1,2}[:.]\d{2})(?:\s+(?:వరకు|వరకూ|దాకా))?+\#(teluguTimeEnd)"#
+    #"\#(teluguStart)\#(teluguPartLead(capturing: true))?((?<![\p{N}:.,/])\d{1,2}[:.]\d{2})\s+\#(teluguFromWords)\s+\#(teluguPartLead(capturing: true))?(\d{1,2}[:.]\d{2})(?:\s+(?:వరకు|వరకూ|దాకా))?+\#(teluguTimeEnd)"#
   }
 
   /// Whether a part of the day stands right before `match`, where the range's

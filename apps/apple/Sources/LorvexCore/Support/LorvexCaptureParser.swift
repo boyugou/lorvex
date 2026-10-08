@@ -8,7 +8,7 @@ import LorvexDomain
 /// (``LorvexCaptureVocabulary/vocabularies(for:)``): English and Chinese, in
 /// Simplified or Traditional characters, always, and Japanese, Korean,
 /// French, Portuguese, Spanish, Italian, Russian, Ukrainian, Polish, Arabic,
-/// Persian, Marathi, Hindi, Bengali, Telugu, Urdu, Hebrew, German, Dutch,
+/// Persian, Marathi, Hindi, Bengali, Telugu, Tamil, Urdu, Hebrew, German, Dutch,
 /// Romanian, Malay, Indonesian, Vietnamese, Turkish, Thai, and Greek for a user
 /// who reads them. Each vocabulary lists its words. The details are read one
 /// kind at a time:
@@ -16,7 +16,7 @@ import LorvexDomain
 /// 1. `#words`, read as typed. A `#word` names a list when it matches a
 ///    list's name or alias by its letters and digits, ignoring case and
 ///    accents ("#offsite2026", "#manana" for "Mañana"); any other `#word` is
-///    a tag. A word's combining marks (Devanagari, Bengali, Telugu, and Thai
+///    a tag. A word's combining marks (Devanagari, Bengali, Telugu, Tamil, and Thai
 ///    vowel signs, Arabic harakat, Hebrew niqqud) and joiners (Persian, Urdu,
 ///    Indic) are part of it.
 /// 2. Text that looks like a detail but is none ("до 18:00", a deadline that
@@ -118,7 +118,7 @@ public enum LorvexCaptureParser {
   ///   - languages: the languages the user reads, as BCP 47 codes, which
   ///     decide whether Japanese, Korean, French, Portuguese, Spanish,
   ///     Italian, Russian, Ukrainian, Polish, Arabic, Persian, Marathi, Hindi,
-  ///     Bengali, Telugu, Urdu, Hebrew, German, Dutch, Romanian, Malay,
+  ///     Bengali, Telugu, Tamil, Urdu, Hebrew, German, Dutch, Romanian, Malay,
   ///     Indonesian, Vietnamese, Turkish, Thai, and Greek words are read.
   public static func parse(
     _ text: String, lists: [ListOption], todayWeekday: Int, today: String? = nil,

@@ -191,15 +191,7 @@ struct TodayEventRow: View {
     }
     .contentShape(Rectangle())
     .onTapGesture(perform: open)
-    .focusable(true)
-    .onKeyPress(.return) {
-      open()
-      return .handled
-    }
-    .onKeyPress(.space) {
-      open()
-      return .handled
-    }
+    .lorvexKeyboardActivation(open)
     .reduceMotionAnimation(.snappy(duration: 0.16), value: isSelected)
     .accessibilityElement(children: .combine)
     .accessibilityLabel(Text(verbatim: calendarEventAccessibilityLabel(event)), isEnabled: !event.allDay)

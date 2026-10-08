@@ -3704,7 +3704,9 @@ Unicode NFC, where a word counts only when no other Bengali letter touches it.
   digits as Latin ones, the precomposed ড়, ঢ়, and য় as their base letters,
   accepts a nukta typed as a separate sign or left out, ো and ৌ typed as one
   sign or two, a candrabindu left out, and a joiner before an ending, and the
-  title keeps what was typed. Bengali written in Latin letters is not read.
+  title keeps what was typed. A number right after a slash is a fraction, a
+  date, or a rate, so Apple's “1/2 ঘণ্টা” (its 1/2 hour) and “৫/৬টায়” are not
+  read as 2 hours or 6 o'clock. Bengali written in Latin letters is not read.
   Bengali does not write a clock time with the letter h, so "2h" beside it
   stays a length. Bengali is tried after Hindi and before Urdu; its script
   shares no letter with the vocabularies around it, so each language's lines
@@ -3899,7 +3901,10 @@ whose English text is exactly X.
   letters as their base consonants, the candrabindu as the anusvara, the
   eyelash ra (ऱ) as ra, and the candra o (ऑ) as aa, accepts a nukta typed as a
   separate sign or left out and a joiner before an ending, and the title keeps
-  what was typed. Marathi written in Latin letters is not read. Marathi does
+  what was typed. A number right after a slash is a fraction, a date, or a
+  rate, so Apple's "1/2 तास" and "1 आणि 1/2 तास" (its 1/2 hour and 1 and 1/2
+  hours) and "5/6 वाजता" are not read as 2 hours or 6 o'clock. Marathi written
+  in Latin letters is not read. Marathi does
   not write a clock time with the letter h, so "2h" beside it stays a length.
   Marathi is tried before Hindi; for a user who reads both, it leaves the day,
   repeat, priority, and range words that the two languages share to Hindi
@@ -4131,7 +4136,15 @@ is exactly X.
   (Night in all 28), అర్ధరాత్రి (Midnight in 3 of 5; the others keep మిడ్‌నైట్),
   మిట్ట మధ్యాహ్నం (Noon in all 7), and వేకువజాము (Dawn in both strings); the
   parser also reads తెల్లవారుజామున, which stands in none, as the everyday word
-  for the early morning. “ఈరోజు రాత్రి”, “ఈ రాత్రి”, and “ఈ సాయంత్రం” are
+  for the early morning. The loanword మిడ్‌నైట్ is the Midnight of the other 2
+  of those 5 strings, and Apple starts 6 colour names with it (“మిడ్‌నైట్
+  బ్లూ”, “మిడ్‌నైట్ బ్లాక్”, “మిడ్‌నైట్ స్కై”; 6 of the 8 strings that hold it),
+  so the parser reads it as the midnight that ends the day only with a dative
+  ending glued to it (“మిడ్‌నైట్‌కి”), before a word for until or after
+  (“శుక్రవారం మిడ్‌నైట్ వరకు”), or with no other Telugu word after it (“కారు
+  మిడ్‌నైట్”). A colour name names no part of the day, so it sets no day phrase
+  and no half of the day for a bare hour in its line (“మిడ్‌నైట్ బ్లూ కారు 8
+  గంటలకు” is 08:00). “ఈరోజు రాత్రి”, “ఈ రాత్రి”, and “ఈ సాయంత్రం” are
   Apple's Tonight (5 and 1 of its 6 strings) and This Evening (both strings),
   and Apple writes a weekday before its part of the day (“శుక్రవారం సాయంత్రం”).
   రాత్రి runs past midnight, so “రాత్రి 12 గంటలకు” is 00:00 of the next day, and
@@ -4177,10 +4190,13 @@ is exactly X.
   “30 minutes” reads “30 నిమిషాలు” in 5 of 6. The parser reads the system's
   compact duration “1 గం., 30 నిమి.” and its spoken “1 గంట, 30 నిమిషాలు”, అరగంట
   and అర గంట (Apple's Half hour), అర్ధ గంట (Half an hour), “ఒకటిన్నర గంటలు” (One
-  and a half hours), and the everyday గంటన్నర, పావు గంట, and ముప్పావు గంట. An
+  and a half hours), and the everyday గంటన్నర, పావు గంట, and ముప్పావు గంట,
+  where ఒక before a half or quarter hour (“ఒక అరగంట”) goes with the length. An
   amount before తర్వాత, క్రితం, లోపు, or వరకు is a moment or a bound and stays
   in the title whole, like the system's relative times (“2 గంటల్లో”, “5 నిమిషాల
-  క్రితం”). The parser reads the Telugu digits as Latin ones and accepts the
+  క్రితం”). A number right after a slash is a fraction, a date, or a rate, so
+  “1/2 గంట” and “5/6 గంటలకు” are not read as 2 hours or 6 o'clock. The parser
+  reads the Telugu digits as Latin ones and accepts the
   vowel sign ై typed as one sign or as the two signs it is made of (the one
   Telugu sign with a canonical decomposition), a zero-width joiner or non-joiner
   after a virama or before an ending, and composed or decomposed input; the
@@ -4366,11 +4382,217 @@ Tamil letter touches it (a zero-width non-joiner or joiner counts as a letter).
 - A string that fills in several values uses positional specifiers (`%1$lld`,
   `%2$@`) wherever the Tamil word order differs from the English, as in "%2$@
   நேரத்தில் “%1$@” நினைவூட்டல் அமைக்கப்பட்டது.", never concatenation in code.
-- The capture parser (`LorvexCaptureParser`) has no Tamil vocabulary: it reads
-  English and Chinese words wherever the interface language is Tamil. The
-  capture hint (`capture.footer.words`) therefore gives English examples in “ ”
-  and says so ("ஒவ்வொரு வரிக்கும் ஒரு பணி. “tomorrow”, “3pm”, “every Monday”,
-  “20 min”, “#list” போன்ற ஆங்கிலச் சொற்கள் அதன் விவரங்களை நிரப்பும்.").
+- The capture parser (`LorvexCaptureParser`) reads Tamil day, date, time,
+  duration, repeat, and priority words for a user who reads Tamil (ta-IN, ta-LK,
+  ta-SG, ta-MY, and any other region), so the Tamil capture hint gives Tamil
+  examples in “ ” (“நாளை”, “மாலை 5 மணிக்கு”, “ஒவ்வொரு திங்கட்கிழமை”, “20
+  நிமிடங்கள்”, “#பட்டியல்”). The words are Apple's: இன்று, நாளை, and நேற்று read
+  Today, Tomorrow, and Yesterday in all 162, 28, and 79 strings that carry them,
+  இன்றிரவு reads Tonight in all 6 (172 strings carry the word), and “இன்று
+  காலை”, “இன்று மதியம்”, and “இன்று மாலை” read This Morning, This Afternoon, and
+  This Evening in both strings of each. இன்றைக்கு stands in 9 strings
+  (“இன்றைக்கு நிகழ்வுகள் எதுவுமில்லை” is No Events Today) and its spoken forms
+  இன்னைக்கு and இன்னிக்கு in none; the parser reads all three. நாளை மறுநாள், the
+  day after tomorrow, and முந்தாநாள், the day before yesterday, stand in none of
+  Apple's strings; the parser reads நாளை மறுநாள் as the day after tomorrow, its
+  only meaning, and never reads நேற்று, முந்தாநாள், or another past day. A line
+  that says its day is past stays unread: a past-tense form anywhere in it
+  (செய்தேன், சென்றோம், வந்தார், முடிந்தது, நடந்தது, and the other forms the
+  parser lists), or கடந்த, சென்ற, போன, முந்தைய, அந்த, கடைசி, இறுதி, an ordinal,
+  ஒரு, ஒவ்வொரு, எந்த, or எல்லா just before the day (“கடந்த வெள்ளிக்கிழமை”,
+  “முதல் வெள்ளிக்கிழமை”). நாளை is also a form of நாள் (day), so after a number
+  or a determiner it names no tomorrow: Apple writes per day as “ஒரு நாளைக்கு”
+  (112 strings carry it), “1 நாளைக்கு முன்பு” for 1 day before, and “இந்த நாளை
+  எப்படிக் கொண்டாடுகிறீர்கள்?” for How are you celebrating this day (நாளை stands
+  in 243 strings and நாளைக்கு in 116), so “ஒரு நாளைக்கு 3 முறை மருந்து சாப்பிடு”
+  stays unread. Tamil glues its case endings to the word (“திங்களுக்கு”, “15ஆம்
+  தேதி”, “5க்கு”, “மணிக்கு”), so each rule lists the endings it reads, and a
+  word with any other ending is another word and stays in the title. A day in
+  its genitive or adjective form describes a noun and is never a plan: Apple
+  writes “இன்றைய பார்வை” for Today View (இன்றைய stands in 232 strings, நேற்றைய
+  in 33, நாளைய in 11), so “நாளைய கூட்டம்” is tomorrow's meeting and
+  “திங்கட்கிழமையின் கூட்டம்” is Monday's. A hyphen between two Tamil words joins
+  them. Tamil doubles a hard consonant (க், ச், த், or ப்) at the end of a word
+  before a word that starts with the same one (“இந்தச் சனிக்கிழமை”, “நாளைக்குத்
+  தள்ளிவை”, “ஒரு நாள் கழித்துத் திட்டமிடு”, the app's own commands for deferring
+  and planning a task); the parser reads the doubled consonant with the word it
+  ends, only before a word that starts with it, and reads a word typed without
+  it alike. முன்னுரிமை reads Priority in 16 of 17 strings. Apple writes High
+  priority as அதிக முன்னுரிமை, low priority as குறைந்த முன்னுரிமை, and Medium
+  priority as நடுத்தர முன்னுரிமை (the app's Normal priority is இயல்பான
+  முன்னுரிமை), and its field values read அதிகம் (High, 43 of 49 strings),
+  நடுத்தரம் (Medium, 56 of 77), and குறைவு (Low, 48 of 51), so “முன்னுரிமை:
+  அதிகம்” is read as well as the level before the word. அவசரம் reads Urgent in
+  all 8 strings but stands in 19, mostly as Emergency, and முக்கியம் reads
+  Important in all 6 but stands in 88 as a plain adjective, so these two, their
+  forms (அவசரமாக, முக்கியமானது), and the loanword அர்ஜென்ட் (in one string, as
+  Argent) are a priority only at the end of a line or before a colon or comma.
+  காலக்கெடு reads Due in 3 of 4 strings and Deadline in its one string, and
+  “காலக்கெடு தேதி” is Due Date in all 11. Apple writes Due Today as “இன்று
+  காலக்கெடு” (all 5 strings), Due Tomorrow as “காலக்கெடு நாளை”, and a deadline
+  that has passed as “காலக்கெடு முடிந்தது” (3 of the 5 strings that read
+  Overdue). The parser reads the label before a due day (“காலக்கெடு:
+  வெள்ளிக்கிழமை”; also கடைசி தேதி, இறுதி தேதி, and டெட்லைன், the last two in
+  none of Apple's strings) and காலக்கெடு after a day as the app writes Due
+  Friday (“வெள்ளி காலக்கெடு”), so what the app writes for a deadline can be
+  typed back. A line that says a deadline has passed (“காலக்கெடு முடிந்தது”,
+  “காலக்கெடு கடந்தது”) is a past statement and is not read. After a day, வரை
+  (2,172 strings), வரையில் (23), and the ending க்குள் (441) are the words for
+  until and by: Apple writes Until %@ as “%@ வரை” (6 of 9 strings) and a
+  reminder about tasks due tomorrow with “நாளைக்குள்” (10 strings), and
+  “இன்றைக்குள்” stands in 2. வரைக்கும், the spoken form, stands in none of
+  Apple's strings and is read too. “இன்று வரை” means so far and is not a
+  deadline. Apple writes N o'clock as the numeral and மணி (“N மணி” in all 36 of
+  its o'clock strings on a friend circle, “காலை 9 மணி” for 9AM) and at a time as
+  the ending க்கு glued to the time (“%@க்கு” for At %@ in 9 of 10 strings,
+  “இன்று %@க்கு” for Today at %@ in all 6), so “5 மணி” with no ending is a clock
+  time and “5:05 PMக்கு” is read. மணி is also the word for a bell, and the hour
+  as a unit is மணிநேரம் (649 strings), so மணி alone is no time (“மணி அடி” stays
+  in the title) and “5 மணி நேரம்” is an amount of hours, which the parser reads
+  as a length. The hour may be a number word (“ஐந்து மணிக்கு”; Apple's clock
+  faces write “%d ஐந்து மணி”), while a number word anywhere else is a count.
+  Apple's clock faces write half past as the numeral word, முப்பது, and மணி
+  (“எட்டு முப்பது மணி”, for all twelve hours), which the parser reads as 8:30.
+  The everyday half-hour words (“ஐந்தரை”, “ஆறரை”) and quarters (“ஐந்தேகால்”,
+  “ஐந்தே முக்கால்”) count up from the hour they name, and “ஐந்தரை” is 5:30;
+  ஒன்றரை stands in 8 of Apple's strings, ஒன்றேகால் in 21, and ஐந்தரை and இரண்டரை
+  in none. They are numbers too (“ஐந்தரை கிலோ”), so each is a time only with
+  மணி, an ending, or a part of the day. An hour with no part of the day follows
+  the afternoon rule of the other languages (“5 மணிக்கு” is 17:00, “7 மணிக்கு”
+  is 07:00). “10 மணி 30 நிமிடத்திற்கு” is 10:30, while “5 மணி நேரம் 30
+  நிமிடங்கள்” is five hours and thirty minutes. A clock time that names a bound
+  (“5 மணிக்குள்”, “மாலை 6க்குள்”, “5 மணிக்கு முன்”, “18:00 வரை”) stays in the
+  title, and the day before it is the due day. The parts of the day are Apple's:
+  காலை (Morning in all 6 strings), மதியம் (Afternoon in all 4), மாலை (Evening in
+  all 6), இரவு (Night in all 28), நள்ளிரவு (Midnight in 3 of 5; the others keep
+  மிட்நைட்), நண்பகல் (Noon in all 7), and விடியல் (Dawn in both). “இன்று
+  அதிகாலை” and “இன்று பிற்பகல்” (அதிகாலை stands in 5 strings and பிற்பகல் in 13)
+  name the early morning and the afternoon, and Apple writes a weekday before
+  its part of the day (“வெள்ளிக்கிழமை மாலை” is Friday Evening). சாயங்காலம்
+  stands in one of Apple's strings, and சாயந்திரம், ராத்திரி, and மத்தியானம் in
+  none; the parser reads them as the everyday words. இரவு runs past midnight, so
+  “இரவு 12 மணிக்கு” is 00:00 of the next day and “இரவு 2 மணிக்கு” is 02:00 of
+  the next day; நள்ளிரவு is the midnight that ends the day, and so is மிட்நைட்
+  when an ending is glued to it (“மிட்நைட்டில்”) or no other Tamil word
+  follows it; after a weekday it keeps its place before a word for until
+  (“வெள்ளிக்கிழமை மிட்நைட் வரை” is due Friday). Apple starts its colour names
+  with மிட்நைட் (“மிட்நைட் புளூ”, “மிட்நைட் பிளாக்”, “மிட்நைட் ஸ்கை”; 6 of its
+  8 strings), so those are no time and name no part of the day: they set no day
+  phrase and no half of the day for a bare hour in their line (“மிட்நைட் புளூ
+  கார் 8 மணிக்கு” is 08:00). The part
+  of the day sets the half of the day of a bare hour elsewhere in the line
+  (“நாளை காலை கூட்டம் 6 மணிக்கு” is 06:00, “இரவு உணவு 8 மணிக்கு” is 20:00), and
+  the form of a part of the day before a noun (“மதிய உணவு”) names the part the
+  line is about without being a day phrase. A weekday is read by its full name
+  in கிழமை, by its bare name, or by the short form with a period that the system
+  writes (“திங்.”). Apple writes Monday as திங்கட்கிழமை in 7 strings and திங்கள்
+  in 6, Sunday as ஞாயிற்றுக்கிழமை in 6, ஞாயிறு in 6, and ஞாயிறுக்கிழமை in 1,
+  Every Monday as “ஒவ்வொரு திங்கள்கிழமையும்” (all 3 strings), This Friday as
+  “இந்த வெள்ளிக்கிழமை” (both), and Visited on Mon as “திங்கள் அன்று சென்றது”, so
+  the bare name with அன்று is read as a day (the past-tense verb after it leaves
+  that whole line unread). The bare names are also planets and a metal, and each
+  of the seven stands in 69 to 86 of Apple's strings as a word: Apple's Mars is
+  “செவ்வாய் கிரகம்” (6 strings), Mercury “புதன் கிரகம்” (3), Jupiter “வியாழன்
+  கிரகம்” (9), Saturn “சனி கிரகம்” (10), and Venus “வெள்ளி கிரகம்” (2), and
+  வெள்ளி is silver, so a bare name followed by a word for a planet, a god,
+  silver goods, or the like stays in the title, while the name with கிழமை is
+  always a day. The one-letter forms the system writes for the shortest weekday
+  names (ஞா, தி, செ, பு, வி, வெ, ச) are ordinary syllables (the one string that
+  reads Mon is the syllable “தி.”), and சனி has no short form with a period, so
+  none of them is read. The week starts on Monday as in the other languages:
+  இந்த before a weekday names this week's, அடுத்த next week's, and வரும் or
+  வருகிற the coming one. “இந்த வாரம்” (Apple's This Week, in all 29 strings)
+  alone names no single day, and “அடுத்த வாரம்” (Next Week, in both strings) is
+  seven days ahead. Apple writes Weekend as வார இறுதி, வாரயிறுதி, or வாரஇறுதி
+  (one string each), Weekends as வாரயிறுதிகள் (7 of 11 strings) or வார இறுதிகள்
+  (4), This Weekend as “இந்த வார இறுதியில்” (3 of 4) or “இந்த வார இறுதி”, Next
+  Weekend as “அடுத்த வார இறுதி” (all 3), and Every weekend as “ஒவ்வொரு
+  வாரயிறுதியும்” (both strings), its Weekdays as வாரநாட்கள் (all 12), and Every
+  weekday as “ஒவ்வொரு வாரநாளும்”. The parser reads all of these spellings,
+  வீக்கெண்ட் (in none of Apple's strings), “சனி ஞாயிறு”, and “சனிக்கிழமை மற்றும்
+  ஞாயிற்றுக்கிழமை” as the weekend: the coming Saturday, today on a Saturday or a
+  Sunday, and a week later after அடுத்த. A date is read with the Gregorian month
+  names, which Apple writes in one spelling each (ஜனவரி, பிப்ரவரி, மார்ச்,
+  ஏப்ரல், மே, ஜூன், ஜூலை, ஆகஸ்ட், செப்டம்பர், அக்டோபர், நவம்பர், டிசம்பர்; 5
+  strings each, 6 for மே) and the short names with a period (ஜன., பிப்., மார்.,
+  ஏப்., ஆக., செப்., அக்., நவ., டிச.; ஜூன் and ஜூலை need none). The other
+  spellings people type (பெப்ரவரி, மார்ச்சு, ஏப்ரில், ஜுன், ஜுலை, ஆகஸ்டு,
+  ஆகஸ்ட்டு, செப்டெம்பர்) stand in none of Apple's strings and are read too. A
+  short month is read only with its period after a day number, since ஆக (“as,
+  become”) stands in 503 strings as a word of its own; the months of the Tamil
+  calendar (ஆடி, கார்த்திகை, மார்கழி) are not read. A day number with தேதி
+  (“15ஆம் தேதி”) is the next such day of the month, and “15/10” in digits is
+  read only after தேதி or before an ending. Apple's Every Day reads தினமும் in
+  all 16 strings and Daily reads தினசரி in 15 of 19 and தினமும் in 4; Weekly,
+  Monthly, and Yearly read வாரந்தோறும் (13 of 13), மாதந்தோறும் (10 of 10), and
+  வருடந்தோறும் (6 of 6), and Every Week, Every Month, and Every Year read
+  “ஒவ்வொரு வாரமும்”, “ஒவ்வொரு மாதமும்”, and “ஒவ்வொரு வருடமும்” in all 4, 3, and
+  2 strings. An interval reads “%d நாட்களுக்கு ஒருமுறை” (Every %d days),
+  “இருநாட்களுக்கு ஒருமுறை” (Every Other Day), “இரண்டு வாரங்களுக்கு ஒரு முறை”
+  (Every Other Week, in both strings), and “%d வாரத்திற்கு ஒருமுறை”, “%d
+  மாதத்திற்கு ஒருமுறை”, and “%d வருடத்திற்கு ஒருமுறை” (Every %d weeks, months,
+  and years); the parser reads these with the unit in the plural or the
+  singular, ஒருமுறை or “ஒரு முறை”, and the number in digits or words (இரு,
+  இரண்டு), and reads “நாள் விட்டு நாள்” (every other day), which stands in none
+  of Apple's strings, as the everyday phrase. தினசரி (258 strings: “தினசரி
+  வாசிப்பு இலக்கு” is a daily reading goal), வாராந்தர (83; Apple writes வாராந்தர
+  and never வாராந்திர), மாதாந்திர (2), and வருடாந்திர (5) are ordinary
+  adjectives too, so they are a repeat only at the end of a line, before a colon
+  or comma, or with அடிப்படையில். “ஒரு நாளைக்கு” is per day, so “ஒரு நாளைக்கு 3
+  முறை” is no repeat; an interval shorter than a day (Apple's Every 2 hours is
+  “2 மணிநேரத்திற்கு ஒருமுறை”, and Hourly is மணிதோறும்) and a count of weekends
+  or working days (“3 வார இறுதிகளில்”) are none either. ஒவ்வொரு stands in 1,308
+  strings and is also the word for a rate, so “ஒவ்வொரு நாளும் 500 ரூபாய்” reads
+  as a daily repeat. Apple's Hour and Hours read மணிநேரம் in 12 of 13 and 20 of
+  28 strings (7 more are Opening hours, “திறந்திருக்கும் நேரம்”), Minute reads
+  நிமிடம் in all 7, Minutes reads நிமிடங்கள் in 20 of 21, “1 hour” reads “1
+  மணிநேரம்” in 7 of 9, “30 minutes” reads “30 நிமிடங்கள்” in 5 of 6, and min
+  reads நிமி. in 32 of 33. The parser reads மணிநேரம் and மணி நேரம் (the spelling
+  of 5 of Apple's strings), நிமிடம், நிமிடங்கள், and நிமிஷங்கள், the system's
+  compact duration “1 ம. 30 நிமி.” and its spoken “1 மணிநேரம், 30 நிமிடங்கள்”,
+  and the half and quarter hours: Apple writes Half hour as “அரை மணிநேரம்”, Half
+  an hour as “அரை மணி நேரம்”, A half hour as “ஒரு அரை மணிநேரம்”, One and a half
+  hours as “ஒன்றரை மணி நேரம்”, “1 and 1 half hours” as “1 மற்றும் அரை மணிநேரம்”,
+  and One hour and thirty minutes as “ஒரு மணி நேரம் முப்பது நிமிடங்கள்”, which
+  read as 30, 30, 30, 90, 90, and 90 minutes. “கால் மணி நேரம்” (15) and
+  “முக்கால் மணி நேரம்” (45) are the everyday forms. An amount before கழித்து,
+  முன், or வரை, or after ஒவ்வொரு, is a moment, an interval, or a bound and stays
+  in the title whole, like the system's relative times (“5 நிமிடங்கள் முன்”, “2
+  மணிநேரத்தில்”). Apple writes per hour and per minute as “ஒரு மணிநேரத்திற்கு”
+  and “ஒரு நிமிடத்திற்கு” before the amount (“ஒரு மணிநேரத்திற்கு %lu மைல்கள்” is
+  %lu miles per hour, “ஒரு நிமிடத்திற்கு %d துடிப்புகள்” is %d beats per minute;
+  the two words stand before a number or a placeholder in 14 of the 115 and 18
+  of the 31 strings that carry them), so each with a number or a placeholder
+  after it is a rate and no length, while “ஒரு மணிநேரத்திற்கு ஒப்புதல்
+  அளிக்கவும்” (Approve for an hour) is 60 minutes, and the dative after a number
+  in digits (“2 மணி நேரத்திற்கு 500 ரூபாய்”) is for that long and stays a
+  length. A number after a slash (“1/2 மணிநேரம்”, “5/6 மணிக்கு”) belongs to a
+  fraction or a date and is no amount of time. The parser reads the Tamil digits
+  as Latin ones (Apple's Tamil has Tamil digits in none of its strings; the
+  system writes them only where its numbering is Tamil) and accepts the vowel
+  signs ொ, ோ, and ௌ and the letter ஔ typed as one character or as the parts they
+  are made of (Apple's strings carry ொ in 43,903 strings against 19 with ெ and
+  ா, ோ in 71,380 against 26 with ே and ா, ௌ in 608 against none, and ஔ in 1), a
+  zero-width non-joiner or joiner after a pulli or between a digit, a Latin
+  name, or a month and an ending (Apple's strings carry a non-joiner after a
+  pulli in 238 strings, mostly between க் and ஷ, and a joiner in 28 strings,
+  none of them beside a Tamil letter), and composed or decomposed input (47 of
+  Apple's strings are not in NFC); the title keeps what was typed. Tamil written
+  in Latin letters is not read. Tamil does not write a clock time with the
+  letter h, so “2h” beside it stays a length. A few collisions with ordinary
+  words are accepted: an hour from 1 to 6 with no part of the day is the
+  afternoon; an urgent word at the end of a line is the priority whatever else
+  the line says (“இந்த வேலை முக்கியம்”); வெள்ளி with no planet or metal word
+  after it is Friday (“வெள்ளி வாங்கு”); the first day phrase of a line is its
+  day (“இன்று இல்லை நாளை கூட்டம்” reads today); a past statement whose verb is
+  not in the parser's list (“வெள்ளிக்கிழமை கூட்டம் தொடங்கியது”) still reads its
+  day as a plan, since a rule for every past ending would take ordinary words
+  with it; and the app's own “இன்றைக்குப் பொருந்தாத பணிகள்” and “நாளைக்குப்
+  பொருந்தாத பணிகள்” name today and tomorrow. Tamil is tried after Telugu and
+  before Urdu; its script shares no letter with the vocabularies around it, so
+  each language's lines read as they do alone. The examples are Tamil script
+  with Latin digits, written left to right like the rest of the string, so the
+  hint needs no bidirectional isolate.
 - The Return key is "ரிட்டர்ன் கீ" ("ரிட்டர்ன் கீயை அழுத்தவும்"), the form of 3
   of the 5 Apple strings whose English says the Return key; the others write
   ரிட்டர்ன் பட்டன், with an ending where the sentence needs one.

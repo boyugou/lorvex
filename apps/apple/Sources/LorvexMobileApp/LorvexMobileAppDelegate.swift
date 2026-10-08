@@ -55,6 +55,31 @@ import LorvexSystemIntents
         name: .lorvexNotificationActionError, object: nil, userInfo: userInfo)
     }
 
+    /// Runs the database write behind a task reminder's Complete or Defer button
+    /// and returns the failure's classification, or `nil` when it succeeded.
+    ///
+    /// The system delivers a button tap to a process that may be in the
+    /// background, where the connection the notification surface opened earlier
+    /// can still be suspended from the app's last trip there, so the write takes
+    /// the store back first (`DatabaseSuspension.withBackgroundAccess`) and the
+    /// store is suspended again when it returns. The caller reports the outcome
+    /// afterwards, not inside the write: a success post starts a refresh, which
+    /// must not overlap the interrupt that suspending sends to every open
+    /// connection.
+    nonisolated private static func runTaskWrite(
+      _ write: () async throws -> Void
+    ) async -> UserFacingError.Classification? {
+      await DatabaseSuspension.withBackgroundAccess(BackgroundDatabaseWork.access) {
+        () async -> UserFacingError.Classification? in
+        do {
+          try await write()
+          return nil
+        } catch {
+          return UserFacingError.classify(error)
+        }
+      }
+    }
+
     func application(
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -153,30 +178,32 @@ import LorvexSystemIntents
       await handleLorvexNotificationAction(
         response: response,
         completeTask: { taskID in
-          do {
+          let failure = await Self.runTaskWrite {
             _ = try await LorvexSystemIntentRunner.completeTask(
               id: taskID, core: LorvexCoreRuntimeFactory.makeForNotification())
-            Self.postBackgroundMutationApplied()
-          } catch {
-            let failure = UserFacingError.classify(error)
-            Self.log.error(
-              "Complete notification action failed for task \(taskID, privacy: .public): \(failure.technicalDetail, privacy: .private)"
-            )
-            Self.postNotificationActionFailure(failure)
           }
+          guard let failure else {
+            Self.postBackgroundMutationApplied()
+            return
+          }
+          Self.log.error(
+            "Complete notification action failed for task \(taskID, privacy: .public): \(failure.technicalDetail, privacy: .private)"
+          )
+          Self.postNotificationActionFailure(failure)
         },
         deferTask: { taskID in
-          do {
+          let failure = await Self.runTaskWrite {
             _ = try await LorvexSystemIntentRunner.deferTaskUntilTomorrow(
               id: taskID, core: LorvexCoreRuntimeFactory.makeForNotification())
-            Self.postBackgroundMutationApplied()
-          } catch {
-            let failure = UserFacingError.classify(error)
-            Self.log.error(
-              "Defer notification action failed for task \(taskID, privacy: .public): \(failure.technicalDetail, privacy: .private)"
-            )
-            Self.postNotificationActionFailure(failure)
           }
+          guard let failure else {
+            Self.postBackgroundMutationApplied()
+            return
+          }
+          Self.log.error(
+            "Defer notification action failed for task \(taskID, privacy: .public): \(failure.technicalDetail, privacy: .private)"
+          )
+          Self.postNotificationActionFailure(failure)
         },
         snoozeTask: { taskID in
           let title = response.notification.request.content.title

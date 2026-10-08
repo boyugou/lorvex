@@ -272,6 +272,32 @@ func theSelectedTasksDetailAdoptsANewPlan() async throws {
   #expect(store.taskDetailHasPlannedDate)
 }
 
+/// A plan is written task by task. Text typed into the inspector while the
+/// writes run is not in the saved task, so the new plan must not replace it.
+@MainActor
+@Test
+func aPlanWrittenWhileTheInspectorIsEditedKeepsTheTypedText() async throws {
+  let core = StubCoreService(preview: try await makeSeededInMemoryCore())
+  let store = AppStore(core: core)
+  await store.refresh()
+  let id = try await core.createTask(title: "Write the launch note", notes: "").id
+  store.selectTaskFromList(id)
+  await store.loadSelectedTaskDetail()
+  let column = try tomorrow()
+
+  let gate = ReviewGate()
+  core.updateTaskGate = { await gate.hold() }
+  let plan = Task { await store.planTasks(ids: [id], on: column, time: .start(16 * 60)) }
+  await gate.waitUntilHeld()
+  core.updateTaskGate = nil
+  store.taskDetailTitle = "Write the launch note, second draft"
+  await gate.release()
+  await plan.value
+
+  #expect(store.taskDetailTitle == "Write the launch note, second draft")
+  #expect(try await core.loadTask(id: id).plannedTime == 16 * 60..<16 * 60 + 30)
+}
+
 @MainActor
 @Test
 func aTimedTaskResizedToAnExactTimeKeepsItsDayAndItsEstimate() async throws {

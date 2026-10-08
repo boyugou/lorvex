@@ -42,25 +42,32 @@ extension LorvexIntentFailure {
   /// failure, an internal error, anything but a validation sentence — is also
   /// written to the diagnostics log through `core` with its technical detail,
   /// best effort, so a failed Siri or Shortcuts action can be traced.
+  ///
+  /// The whole run, the diagnostics write included, happens inside
+  /// ``DatabaseSuspension/withBackgroundAccess(_:)``: the system runs an App
+  /// Intent in a backgrounded process too, where the store's connection may
+  /// still be suspended from the app's last trip to the background.
   static func rewording<Value>(
     core: any LorvexCoreServicing,
     _ work: () async throws -> Value
   ) async throws -> Value {
-    do {
-      return try await work()
-    } catch let cancellation as CancellationError {
-      throw cancellation
-    } catch let failure as LorvexIntentFailure {
-      throw failure
-    } catch {
-      let failure = LorvexIntentFailure(error)
-      if failure.userFacingClassification.category != .validation {
-        try? await core.appendDiagnosticLog(
-          source: "intent.action_failed", level: "error",
-          message: "A Siri or Shortcuts action failed.",
-          details: failure.userFacingClassification.technicalDetail)
+    try await DatabaseSuspension.withBackgroundAccess { () async throws -> Value in
+      do {
+        return try await work()
+      } catch let cancellation as CancellationError {
+        throw cancellation
+      } catch let failure as LorvexIntentFailure {
+        throw failure
+      } catch {
+        let failure = LorvexIntentFailure(error)
+        if failure.userFacingClassification.category != .validation {
+          try? await core.appendDiagnosticLog(
+            source: "intent.action_failed", level: "error",
+            message: "A Siri or Shortcuts action failed.",
+            details: failure.userFacingClassification.technicalDetail)
+        }
+        throw failure
       }
-      throw failure
     }
   }
 

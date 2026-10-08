@@ -43,6 +43,11 @@ FORBIDDEN_TOKEN = "".join(["sc", "rat", "ch", "pa", "d"])
 #   ("absent_except", scope, literal, [relpath, ...])
 #                                     like absent, but the listed files are exempt
 #   ("count_ge", scope, literal, n)   literal occurs at least n times
+#   ("paired", scope, literal, partner, {relpath: n})
+#                                     each file holds at least as many partner
+#                                     fragments as literals, except that the listed
+#                                     files hold exactly n more literals; lines that
+#                                     hold only a comment are not counted
 #   ("order", ("file", p), a, b)      a appears before b in the file
 #   ("file_missing", relpath)         file must NOT exist (relative to apps/apple)
 #   ("tree_absent_token",)            the cross-tree FORBIDDEN_TOKEN scan
@@ -402,9 +407,28 @@ RULES = [
     # matching WorkspaceSelectableTaskRow / HabitMomentumCard.
     ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.accessibilityAddTraits(.isButton)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.accessibilityAction { select() }'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.focusable()'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.onKeyPress(.return) { select(); return .handled }'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.onKeyPress(.space) { select(); return .handled }'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/ListCatalogRow.swift'), '.lorvexKeyboardActivation(select)'),
+    # --- everyClickOnlyViewHasAKeyboardPath ---
+    # A view that reacts only to a click takes a focus stop and Return/Space
+    # through lorvexKeyboardActivation, which carries all three pieces itself.
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexKeyboardActivation.swift'), 'focusable(true)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexKeyboardActivation.swift'), '.onKeyPress(.return)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/LorvexKeyboardActivation.swift'), '.onKeyPress(.space)'),
+    # Every `.onTapGesture` in the Mac app is paired with a keyboard activation in
+    # its file. The listed files hold one tap each that needs none: the month cell's
+    # task chips sit inside a cell that is itself the focus stop, the week grid's
+    # empty-area tap creates an event (New Event is the keyboard path), the quick-add
+    # row's tap only focuses a field that Tab reaches, and the toast and the
+    # milestone card dismiss themselves.
+    ('paired', ('dir', 'Sources/LorvexApple', True), '.onTapGesture', '.lorvexKeyboardActivation', {
+        'Sources/LorvexApple/Views/CalendarMonthGridDayCell.swift': 1,
+        'Sources/LorvexApple/Views/CalendarWeekGridView.swift': 1,
+        'Sources/LorvexApple/Views/HabitMilestoneCelebrationView.swift': 1,
+        'Sources/LorvexApple/Views/LorvexToast.swift': 1,
+        'Sources/LorvexApple/Views/QuickAddRow.swift': 1,
+    }),
+    ('contains', ('file', 'Sources/LorvexApple/Views/MemoryEntryRow.swift'), '.onKeyPress(.delete)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/MemoryEntryRow.swift'), '.onKeyPress(.deleteForward)'),
     # --- macOSInboxOffersNeitherArchiveNorDelete ---
     # The Inbox is the list every task falls back to; the catalog card (hover
     # button and context menu) and the sidebar row's context menu leave out
@@ -2133,6 +2157,11 @@ def _scope_texts(scope) -> list[tuple[str, str]]:
     raise ValueError(f"unknown scope {scope!r}")
 
 
+def _without_comment_lines(text: str) -> str:
+    """`text` without the lines that hold only a `//` or `///` comment."""
+    return "\n".join(line for line in text.split("\n") if not line.lstrip().startswith("//"))
+
+
 def token_scan_failures() -> list[str]:
     failures: list[str] = []
     for rel in TOKEN_SCAN_ROOTS:
@@ -2191,6 +2220,18 @@ def source_hygiene_failures(rules=RULES) -> list[str]:
                     got = text.count(rule[2])
                     if got != rule[3]:
                         failures.append(f"{label}: fragment {rule[2]!r} occurs {got}x, need == {rule[3]}")
+            elif kind == "paired":
+                exempt = rule[4]
+                for label, text in _scope_texts(rule[1]):
+                    code = _without_comment_lines(text)
+                    unpaired = code.count(rule[2]) - code.count(rule[3])
+                    allowed = exempt.get(label, 0)
+                    if unpaired > allowed:
+                        failures.append(
+                            f"{label}: {rule[2]!r} occurs {unpaired - allowed}x more than {rule[3]!r}")
+                    elif label in exempt and unpaired < allowed:
+                        failures.append(
+                            f"{label}: the exemption for {rule[2]!r} without {rule[3]!r} is no longer needed")
             elif kind == "order":
                 (label, text), = _scope_texts(rule[1])
                 bi, ai = text.find(rule[2]), text.find(rule[3])

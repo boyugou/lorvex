@@ -133,9 +133,9 @@ extension AppStore {
 
   /// Writes each snapshot's day and time to its task and reloads what shows the
   /// tasks. The selected task's detail adopts the new plan unless it holds
-  /// edits that are not saved yet.
+  /// edits that are not saved yet, which include text typed while the writes ran.
   private func applyPlans(_ plans: [TaskPlanSnapshot]) async throws {
-    let detailWasClean = !selectedTaskHasUnsavedEditorState
+    let detail = taskDetailReloadSnapshot()
     var updated: [LorvexTask] = []
     for plan in plans {
       updated.append(
@@ -145,8 +145,11 @@ extension AppStore {
             plannedDate: plan.plannedDate.map { .set($0) } ?? .clear,
             plannedTime: plan.plannedTime.map { .set($0) } ?? .clear)))
     }
+    // Decided before the new records replace the old ones: afterward every
+    // draft differs from its record.
+    let detailHasEdits = dirtyTaskIDToPreserve(after: detail) != nil
     for task in updated { replaceTask(task) }
-    if let selectedID = selectedTaskID, detailWasClean, plans.contains(where: { $0.id == selectedID }) {
+    if let selectedID = selectedTaskID, !detailHasEdits, plans.contains(where: { $0.id == selectedID }) {
       syncSelectedTaskDraft(force: true)
     }
     today = try await core.loadToday()

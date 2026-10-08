@@ -4,19 +4,21 @@ import LorvexMobile
 #if canImport(UIKit)
   import UIKit
 
-  /// Finishes the app's sync work as it leaves the foreground, then suspends
-  /// the database.
+  /// Finishes the app's save and sync work as it leaves the foreground, then
+  /// suspends the database.
   ///
   /// The managed store must give up its locks before iOS suspends the process:
   /// holding one across suspension is what iOS terminates as `0xdead10cc`
   /// (see `DatabaseSuspension`). Suspending at once, though, would leave an
-  /// edit made just before leaving the app queued until the next launch, so
-  /// the flush runs one sync pass inside a background task first and suspends
-  /// the database when that pass ends or the task's time runs out, whichever
-  /// comes first. Other background work still using the database at that
-  /// point keeps it open until it ends too. Returning to the foreground before then resumes the database
-  /// as usual, and the late suspension is skipped because the app is no longer
-  /// in the background.
+  /// edit made just before leaving the app queued until the next launch, and
+  /// would lose a daily review entry still being typed. So the flush first
+  /// writes the drafts that save on their own, then runs one sync pass inside a
+  /// background task, and suspends the database when that pass ends or the
+  /// task's time runs out, whichever comes first. Other background work still
+  /// using the database at that point keeps it open until it ends too.
+  /// Returning to the foreground before then resumes the database as usual, and
+  /// the late suspension is skipped because the app is no longer in the
+  /// background.
   @MainActor
   enum BackgroundSyncFlush {
     static func flushThenSuspend(store: MobileStore) {
@@ -30,6 +32,7 @@ import LorvexMobile
         return
       }
       Task {
+        await store.flushAutosaveDraftsBeforeSuspension()
         await store.flushCloudSyncBeforeSuspension()
         flush.finish()
       }

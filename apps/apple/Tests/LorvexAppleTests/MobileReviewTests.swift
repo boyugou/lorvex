@@ -246,6 +246,58 @@ func mobileStoreSelectReviewDayFlushesUnsavedDailyReviewDraft() async throws {
   #expect(store.dailyReview?.summary == "Older day")
 }
 
+// Moving the app to the background does not change focus or make the page
+// disappear, the two events that save the daily review on their own, and iOS can
+// end a suspended process, so the background flush writes the draft itself.
+@MainActor
+@Test
+func mobileStoreFlushesTheUnsavedDailyReviewDraftBeforeSuspension() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  await store.loadDailyReviewDraft()
+  store.dailyReviewDraft = MobileDailyReviewDraft(
+    summary: "Typed before leaving the app",
+    wins: "Still in the last field",
+    mood: nil,
+    energy: nil
+  )
+
+  await store.flushAutosaveDraftsBeforeSuspension()
+
+  let saved = try #require(try await core.loadDailyReview(date: mobileReviewToday))
+  #expect(saved.summary == "Typed before leaving the app")
+  #expect(saved.wins == "Still in the last field")
+  #expect(store.dailyReviewDraftMatchesLoaded)
+}
+
+@MainActor
+@Test
+func mobileStoreSuspensionFlushWritesNothingWhenTheDailyReviewIsUnedited() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = MobileStore(core: core, todayString: { mobileReviewToday })
+  await store.loadDailyReviewDraft()
+  let before = try await core.loadDailyReview(date: mobileReviewToday)
+
+  await store.flushAutosaveDraftsBeforeSuspension()
+
+  #expect(try await core.loadDailyReview(date: mobileReviewToday) == before)
+}
+
+@Test
+func backgroundFlushWritesAutosaveDraftsBeforeItsSyncPass() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  let source = try String(
+    contentsOf: root.appending(path: "Sources/LorvexMobileApp/BackgroundSyncFlush.swift"),
+    encoding: .utf8)
+  let drafts = try #require(source.range(of: "store.flushAutosaveDraftsBeforeSuspension()"))
+  let sync = try #require(source.range(of: "store.flushCloudSyncBeforeSuspension()"))
+
+  #expect(drafts.lowerBound < sync.lowerBound)
+}
+
 // A body-only edit — a mood/energy rating with no summary — has `canSave ==
 // false` (a summary is the manual-Save rule), but it is still a valid review the
 // core accepts. Switching day must persist it via the auto-flush and must NOT be

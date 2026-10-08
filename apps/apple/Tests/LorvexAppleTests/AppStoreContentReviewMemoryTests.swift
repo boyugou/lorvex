@@ -237,6 +237,45 @@ func appStoreRefreshReloadsMemoryWithoutClobberingComposerDraft() async throws {
   #expect(store.memoryContentDraft == "unsaved composer text")
 }
 
+@MainActor
+@Test
+func appStoreDeletingTheEntryBeingEditedResetsTheComposer() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  await store.loadMemory()
+  let editing = try #require(store.memoryEntries.first)
+  store.beginEditingMemory(editing)
+  store.memoryContentDraft = "unsaved composer text"
+
+  let deleted = await store.deleteMemoryEntry(editing)
+
+  #expect(deleted)
+  #expect(store.memoryEntries.contains { $0.key == editing.key } == false)
+  #expect(store.memoryEditingKey == nil)
+  #expect(store.memoryKeyDraft.isEmpty)
+  #expect(store.memoryContentDraft.isEmpty)
+}
+
+@MainActor
+@Test
+func appStoreDeletingAnotherEntryKeepsTheComposerDraft() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  await store.loadMemory()
+  let editing = try #require(store.memoryEntries.first)
+  let other = try #require(store.memoryEntries.first { $0.key != editing.key })
+  store.beginEditingMemory(editing)
+  store.memoryContentDraft = "unsaved composer text"
+
+  let deleted = await store.deleteMemoryEntry(other)
+
+  #expect(deleted)
+  #expect(store.memoryEditingKey == editing.key)
+  #expect(store.memoryContentDraft == "unsaved composer text")
+}
+
 /// The daily review's still-open rows complete their task in place: on the
 /// Review page the task moves from Still open to What moved forward, and ⌘Z
 /// moves it back.

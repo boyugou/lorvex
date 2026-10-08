@@ -115,6 +115,11 @@ extension AppStore {
       lorvexAnimated(.snappy(duration: 0.18)) {
         memoryStorage.memory = reloaded
       }
+      // The composer was editing the deleted entry: reset it, so a later Save
+      // cannot recreate the entry or rename a key that no longer exists.
+      if memoryStorage.memoryEditingKey == entry.key {
+        clearMemoryDraft()
+      }
       errorMessage = nil
       return true
     } catch {

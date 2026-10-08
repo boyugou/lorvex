@@ -87,6 +87,9 @@ extension AppStore {
       case .habits:
         if let loaded = try? await core.loadHabits(date: date) { habits = loaded }
         await loadAllHabitStats()
+        await reloadArchivedHabitsIfLoaded()
+        closeHabitInspectorIfHabitIsGone()
+        await reloadSelectedHabitDetailIfLoaded()
       case .memory:
         if let loaded = try? await core.loadMemory() {
           adoptReloadedMemoryPreservingDraft(loaded)

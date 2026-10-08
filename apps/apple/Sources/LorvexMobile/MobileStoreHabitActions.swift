@@ -4,33 +4,27 @@ import LorvexCore
 extension MobileStore {
   @discardableResult
   public func completeHabit(_ habit: LorvexHabit) async -> Bool {
-    let succeeded = await mutateHabit {
+    await mutateHabit {
       habits = try await core.completeHabit(id: habit.id, date: logicalTodayString)
-    }
-    if succeeded {
-      await refreshHabitDetailIfLoaded(id: habit.id)
+    } afterWrite: {
       // A crossing plays the celebratory milestone feedback (and stages the
       // badge) in place of the ordinary completion note, so a single crisp haptic
       // marks the moment rather than two success taps in a row.
       if !stageMilestoneCelebrationIfReached(habitID: habit.id) {
         feedbackProvider.playFeedback(.habitCompleted)
       }
+      await refreshHabitDetailIfLoaded(id: habit.id)
     }
-    return succeeded
   }
 
   @discardableResult
   public func uncompleteHabit(_ habit: LorvexHabit) async -> Bool {
-    let succeeded = await mutateHabit {
+    await mutateHabit {
       habits = try await core.uncompleteHabit(id: habit.id, date: logicalTodayString)
-    }
-    if succeeded {
+    } afterWrite: {
+      feedbackProvider.playFeedback(.habitReset)
       await refreshHabitDetailIfLoaded(id: habit.id)
     }
-    if succeeded {
-      feedbackProvider.playFeedback(.habitReset)
-    }
-    return succeeded
   }
 
   /// Check `habit` in on `date` (`YYYY-MM-DD`) by the shared rule
@@ -43,7 +37,7 @@ extension MobileStore {
   public func checkInHabit(_ habit: LorvexHabit, on date: String) async -> Bool {
     let action = LorvexHabitCheckIn.action(for: habit)
     guard action != .none else { return false }
-    let succeeded = await mutateHabit {
+    return await mutateHabit {
       switch action {
       case .complete: _ = try await core.completeHabit(id: habit.id, date: date)
       case .uncomplete: _ = try await core.uncompleteHabit(id: habit.id, date: date)
@@ -51,27 +45,26 @@ extension MobileStore {
       case .none: break
       }
       habits = try await core.loadHabits(date: logicalTodayString)
+    } afterWrite: {
+      if action == .uncomplete {
+        feedbackProvider.playFeedback(.habitReset)
+      } else if date != logicalTodayString
+        || !stageMilestoneCelebrationIfReached(habitID: habit.id)
+      {
+        feedbackProvider.playFeedback(.habitCompleted)
+      }
+      await refreshHabitDetailIfLoaded(id: habit.id)
+      await reloadReviewEvidenceAfterTaskMutation()
     }
-    guard succeeded else { return false }
-    await refreshHabitDetailIfLoaded(id: habit.id)
-    if action == .uncomplete {
-      feedbackProvider.playFeedback(.habitReset)
-    } else if date != logicalTodayString || !stageMilestoneCelebrationIfReached(habitID: habit.id) {
-      feedbackProvider.playFeedback(.habitCompleted)
-    }
-    await reloadReviewEvidenceAfterTaskMutation()
-    return true
   }
 
   @discardableResult
   public func completeHabits(_ ids: [LorvexHabit.ID]) async -> Bool {
     let uniqueIDs = stableUniqueHabitIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
-    let succeeded = await mutateHabit {
+    return await mutateHabit {
       habits = try await core.batchCompleteHabits(ids: uniqueIDs, date: logicalTodayString)
-    }
-    if succeeded {
-      await refreshLoadedHabitDetails(ids: uniqueIDs)
+    } afterWrite: {
       // A batch can cross several milestones at once; celebrate the most
       // significant crossing (largest reached value) rather than dropping every
       // one, mirroring the single-complete paths. When nothing crossed, the
@@ -81,8 +74,8 @@ extension MobileStore {
       } else {
         feedbackProvider.playFeedback(.habitCompleted)
       }
+      await refreshLoadedHabitDetails(ids: uniqueIDs)
     }
-    return succeeded
   }
 
   /// The id of the batch-completed habit with the largest just-reached milestone
@@ -106,18 +99,14 @@ extension MobileStore {
     let uniqueIDs = stableUniqueHabitIDs(ids)
     guard !uniqueIDs.isEmpty else { return false }
     let date = logicalTodayString
-    let succeeded = await mutateHabit {
+    return await mutateHabit {
       for id in uniqueIDs {
         habits = try await core.uncompleteHabit(id: id, date: date)
       }
-    }
-    if succeeded {
+    } afterWrite: {
+      feedbackProvider.playFeedback(.habitReset)
       await refreshLoadedHabitDetails(ids: uniqueIDs)
     }
-    if succeeded {
-      feedbackProvider.playFeedback(.habitReset)
-    }
-    return succeeded
   }
 
   public var canCreateHabitDraft: Bool {
@@ -149,8 +138,9 @@ extension MobileStore {
     await reconcileAfterCommittedMutation(source: "ios.habit.create.reconcile") {
       habits = try await core.loadHabits(date: logicalTodayString)
     }
-    // Republish so the new habit appears in the iOS Habits widget promptly; a
-    // local write's in-process signal is self-suppressed, so nothing else does.
+    // Republish so the new habit appears in the iOS Habits widget now rather
+    // than when the full refresh that the write's change signal starts reaches
+    // its own publish.
     await publishMobileSyncSurfaces()
     return true
   }
@@ -225,8 +215,9 @@ extension MobileStore {
       }
       errorMessage = nil
       // The deleted habit is gone from the widget snapshot and its armed
-      // reminders must be reaped. A local write's in-process signal is
-      // self-suppressed, so do both here — matching every other habit mutation.
+      // reminders must be reaped. Do both here, as every other habit mutation
+      // does, instead of waiting for the full refresh that the write's change
+      // signal starts.
       await publishMobileSyncSurfaces()
       await rescheduleReminders()
       return true
@@ -285,6 +276,18 @@ extension MobileStore {
       return
     }
     archivedHabits = loaded.habits
+    archivedHabitsAreLoaded = true
+  }
+
+  /// Re-reads the archived habits once the Habits screen has loaded them, so an
+  /// archive, restore, rename, or deletion made elsewhere (the assistant, another
+  /// device) shows in the restore section while the screen is open. The screen
+  /// itself re-reads them only when the set of active habits changes, which a
+  /// rename or a deletion of an archived habit does not do. Before the first load
+  /// the list stays unread.
+  func reloadArchivedHabitsIfLoaded() async {
+    guard archivedHabitsAreLoaded else { return }
+    await loadArchivedHabits()
   }
 
   /// Archives a habit, or restores an archived one. Archiving keeps the habit's
@@ -292,21 +295,20 @@ extension MobileStore {
   /// widget, and reminder planning; restoring brings all of that back.
   @discardableResult
   public func setHabitArchived(_ habit: LorvexHabit, archived: Bool) async -> Bool {
-    let succeeded = await mutateHabit {
+    await mutateHabit {
       _ = try await core.updateHabit(
         id: habit.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
         archived: archived)
       habits = try await core.loadHabits(date: logicalTodayString)
-    }
-    guard succeeded else { return false }
-    if archived {
-      habitDetailsByID[habit.id] = nil
-      if selectedHabitID == habit.id {
-        selectedHabitID = nil
+    } afterWrite: {
+      if archived {
+        habitDetailsByID[habit.id] = nil
+        if selectedHabitID == habit.id {
+          selectedHabitID = nil
+        }
       }
+      await loadArchivedHabits()
     }
-    await loadArchivedHabits()
-    return true
   }
 
   /// Authoritatively re-read the habits list for a `.habit` route whose target
@@ -361,30 +363,53 @@ extension MobileStore {
     return LorvexDateFormatters.ymdUTCAddingDays(dayString, days: -heatmapDays) ?? dayString
   }
 
+  /// Runs one habit write and returns whether it committed.
+  ///
+  /// ``isMutatingHabit`` is held for `operation`, the write and the snapshot read
+  /// that shows it, and for `afterWrite`, the work that shows the result:
+  /// feedback, the milestone check, and the detail reads. The two run back to
+  /// back, so the milestone stamp on `habits` is still the write's own when
+  /// `afterWrite` reads it.
+  ///
+  /// The flag is released before the best-effort surfaces. The App-Group
+  /// snapshot is republished so the Habits widget shows the completion, and the
+  /// reminder plan is rebuilt so a done habit stops nudging and a cadence change
+  /// re-arms the right days. Both go through ``habitSurfacesFlight``, so a tap
+  /// is never dropped behind them and overlapping writes share one trailing pass
+  /// rather than re-planning the reminders in parallel. The call returns once a
+  /// pass that saw its write has finished.
   @discardableResult
-  private func mutateHabit(_ operation: () async throws -> Void) async -> Bool {
+  private func mutateHabit(
+    _ operation: () async throws -> Void,
+    afterWrite: () async -> Void = {}
+  ) async -> Bool {
+    guard await commitHabitWrite(operation, afterWrite: afterWrite) else { return false }
+    await habitSurfacesFlight.run {
+      await publishMobileSyncSurfaces()
+      await rescheduleReminders()
+    }
+    return true
+  }
+
+  /// The guarded part of ``mutateHabit(_:afterWrite:)``: false when another habit
+  /// write holds the flag, or when `operation` throws, which presents the error.
+  private func commitHabitWrite(
+    _ operation: () async throws -> Void,
+    afterWrite: () async -> Void
+  ) async -> Bool {
     guard !isMutatingHabit else { return false }
     isMutatingHabit = true
     defer { isMutatingHabit = false }
     do {
       try await operation()
-      invalidateHabitDetailViews()
-      // Republish the App-Group snapshot so the iOS Habits widget reflects the
-      // completion immediately, mirroring the task mutation path. Without this
-      // the widget stayed stale until the next full refresh.
-      await publishMobileSyncSurfaces()
-      // Re-plan reminders so a just-completed habit stops nudging and a cadence
-      // change re-arms the right days. `rescheduleReminders` reaps delivered
-      // reminders for completed occurrences; without it a done habit kept firing
-      // its "time to do X" until the next foreground refresh. Matches the task
-      // mutation path and the macOS habit path.
-      await rescheduleReminders()
-      errorMessage = nil
-      return true
     } catch {
       await presentUserFacingError(error)
       return false
     }
+    errorMessage = nil
+    invalidateHabitDetailViews()
+    await afterWrite()
+    return true
   }
 
   private func stableUniqueHabitIDs(_ ids: [LorvexHabit.ID]) -> [LorvexHabit.ID] {

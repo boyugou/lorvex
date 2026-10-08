@@ -51,6 +51,11 @@ public final class MobileStore {
   /// Archived habits for the Habits screen's restore section, loaded when that
   /// screen appears and refreshed after an archive, restore, or delete.
   public internal(set) var archivedHabits: [LorvexHabit] = []
+  /// True once ``loadArchivedHabits()`` has read the archived habits. From then
+  /// on the full refresh and the habits reload of an inbound sync re-read them
+  /// too, so a change made elsewhere reaches the restore section. Until then the
+  /// list stays unread: the Habits screen reads it when it appears.
+  @ObservationIgnored var archivedHabitsAreLoaded = false
   /// The milestone a completion just crossed, staged for the floating
   /// celebration overlay. Set by ``stageMilestoneCelebrationIfReached(habitID:)``
   /// on a crossing and cleared when the overlay dismisses (tap / auto-timeout).
@@ -125,6 +130,10 @@ public final class MobileStore {
   /// completes. Flipped by `LorvexMobileStoreRootView`'s wizard-completion
   /// handler.
   public var isSetupCompleted: Bool
+  /// True while one habit write runs, including the reads that show its result.
+  /// Habit controls disable on it, and a write that starts while it is set is
+  /// dropped. It is released before the widget snapshot and the reminder plan
+  /// that follow the write, so those never hold a tap back.
   public internal(set) var isMutatingHabit = false
   /// Guards the immediate habit-reminder policy mutations (add / retime /
   /// toggle / remove) so overlapping taps in the detail editor serialize.
@@ -205,6 +214,12 @@ public final class MobileStore {
   /// True while the `refresh()` fan-out loop is in flight. Read by the queued
   /// sync-mode drain to hold a mode change until the refresh finishes.
   var isRefreshing: Bool { refreshFlight.isRunning }
+
+  /// Coalesces the best-effort surfaces a habit write refreshes once it has
+  /// committed: the widget snapshot and the reminder plan. A write that lands
+  /// while a pass is in flight arms one trailing pass instead of re-planning
+  /// the reminders in parallel against the same notification center.
+  @ObservationIgnored let habitSurfacesFlight = RefreshSingleFlight<Void>()
 
   let core: any LorvexCoreServicing
   let feedbackProvider: any LorvexFeedbackProviding

@@ -441,6 +441,8 @@ extension AppStore {
       // refresh (CloudKit push, ⌘R, core swap) — otherwise stats reload only on
       // a habit mutation or the Habits surface's own .task.
       await loadAllHabitStats()
+      await reloadArchivedHabitsIfLoaded()
+      await reloadSelectedHabitDetailIfLoaded()
       runtimeDiagnostics = await loadedRuntimeDiagnostics
       // Memory is loaded lazily when its workspace first opens. Once loaded it
       // is part of the store's live surface and must participate in a database-

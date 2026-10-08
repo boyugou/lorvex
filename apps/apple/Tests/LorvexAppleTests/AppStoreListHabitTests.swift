@@ -552,6 +552,72 @@ func appStoreArchivesAndRestoresHabit() async throws {
 
 @MainActor
 @Test
+func appStoreRefreshKeepsLoadedArchivedHabitsCurrent() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  await store.loadArchivedHabits()
+  #expect(store.archivedHabits.isEmpty)
+  let first = try #require(store.habits?.habits.first)
+
+  // An assistant archives a habit while the Habits workspace is open.
+  _ = try await core.updateHabit(
+    id: first.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
+    archived: true)
+  await store.refresh()
+  #expect(store.archivedHabits.map(\.id) == [first.id])
+
+  _ = try await core.updateHabit(
+    id: first.id, name: "Renamed elsewhere", cue: .unset, color: nil, icon: nil,
+    targetCount: nil, archived: nil)
+  await store.refresh()
+  #expect(store.archivedHabits.map(\.name) == ["Renamed elsewhere"])
+
+  _ = try await core.deleteHabit(id: first.id)
+  await store.refresh()
+  #expect(store.archivedHabits.isEmpty)
+}
+
+@MainActor
+@Test
+func appStoreHabitsReloadFromAPeerKeepsLoadedArchivedHabitsCurrent() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  await store.loadArchivedHabits()
+  let first = try #require(store.habits?.habits.first)
+
+  _ = try await core.updateHabit(
+    id: first.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
+    archived: true)
+  await store.performSelectiveInboundReload([.habits])
+  #expect(store.archivedHabits.map(\.id) == [first.id])
+
+  _ = try await core.deleteHabit(id: first.id)
+  await store.performSelectiveInboundReload([.habits])
+  #expect(store.archivedHabits.isEmpty)
+}
+
+@MainActor
+@Test
+func appStoreLeavesArchivedHabitsUnreadUntilTheWorkspaceLoadsThem() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  let first = try #require(store.habits?.habits.first)
+  _ = try await core.updateHabit(
+    id: first.id, name: nil, cue: .unset, color: nil, icon: nil, targetCount: nil,
+    archived: true)
+
+  await store.refresh()
+  #expect(store.archivedHabits.isEmpty)
+
+  await store.loadArchivedHabits()
+  #expect(store.archivedHabits.map(\.id) == [first.id])
+}
+
+@MainActor
+@Test
 func listPreviewsShowEachListsOpenTasksInCanonicalOrder() async throws {
   let store = AppStore(core: try await makeSeededInMemoryCore())
 
@@ -580,4 +646,28 @@ func listPreviewsThrowOnceTheirLoadIsCancelled() async throws {
   load.cancel()
 
   await #expect(throws: CancellationError.self) { try await load.value }
+}
+
+/// A new title from the assistant moves no list count, so the lists snapshot
+/// stays equal; the previews still quote the old title unless their key moves
+/// with the task data.
+@MainActor
+@Test
+func listPreviewKeyMovesWhenAnAssistantRenamesAPreviewedTask() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let store = AppStore(core: core)
+  await store.refresh()
+  let listsBefore = store.lists
+  let keyBefore = store.listPreviewKey
+
+  _ = try await core.updateTask(
+    TaskUpdateDraft(id: LorvexPreviewSeedID.agendaTask, title: "Renamed by the assistant"))
+  await store.refresh()
+
+  #expect(store.lists == listsBefore)
+  #expect(store.listPreviewKey != keyBefore)
+  let previews = try await store.loadListPreviews(ids: [LorvexPreviewSeedID.appleNativeList])
+  #expect(
+    previews[LorvexPreviewSeedID.appleNativeList]?.map(\.title).contains("Renamed by the assistant")
+      == true)
 }

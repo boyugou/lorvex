@@ -53,6 +53,9 @@ struct MenuBarStatusView: View {
     .onChange(of: store.today) {
       Task { await store.loadDoneTodayCount() }
     }
+    .onChange(of: store.taskDataGeneration) {
+      Task { await store.loadDoneTodayCount() }
+    }
     .onChange(of: scope) { _, newScope in
       guard newScope == .week else { return }
       Task { await ensureWeekLoaded() }

@@ -158,13 +158,9 @@ public struct LifecycleRecurrenceSpawnHandler: RecurrenceSpawnHandler {
       throw StoreError.validation(
         "Cannot reopen task \(taskId.asString): successor \(successorId) belongs to a different lifecycle generation")
     }
-    guard status.isActive else {
-      throw StoreError.validation(
-        "Cannot reopen task \(taskId.asString): recurrence successor \(successorId) has already advanced")
-    }
-    guard successorRollover == .none || successorRollover == .revoked else {
-      throw StoreError.validation(
-        "Cannot reopen task \(taskId.asString): recurrence successor \(successorId) has already advanced")
+    guard status.isActive, successorRollover == .none || successorRollover == .revoked else {
+      throw TaskLifecycleError.reopenBlockedByAdvancedSuccessor(
+        taskId: taskId.asString, successorId: successorId)
     }
 
     let activeDescendantExists = (try Int.fetchOne(
@@ -427,8 +423,8 @@ enum SpawnSuccessor {
           "deterministic successor id \(successorId) belongs to a different parent")
       }
       guard status.isActive || (status == .cancelled && rollover == .ended) else {
-        throw StoreError.validation(
-          "Cannot re-complete task \(parentId): successor \(successorId) has already advanced")
+        throw TaskLifecycleError.completeBlockedByAdvancedSuccessor(
+          taskId: parentId, successorId: successorId)
       }
       let existingVersion: String = existing[3]
       guard version > existingVersion else {

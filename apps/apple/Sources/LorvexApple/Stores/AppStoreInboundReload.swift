@@ -98,6 +98,7 @@ extension AppStore {
     // Drop an inspector selection a remote change made invalid, the same way the
     // full fan-out does — only when a task-bearing surface actually reloaded.
     if reloadsTaskBearingDomain {
+      await refreshSelectedTaskRecord()
       reconcileSelectedTaskAfterRefresh(
         preservingDirtyTaskID: dirtyTaskIDToPreserve(after: taskDetailReload))
     }

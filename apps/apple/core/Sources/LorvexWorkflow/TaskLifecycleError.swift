@@ -24,6 +24,14 @@ public enum TaskLifecycleError: Error, Equatable, Sendable, CustomStringConverti
   /// Pausing a task whose status is not `in_progress`; only a started task can
   /// be paused.
   case pauseRequiresStartedTask(status: TaskStatus)
+  /// Reopening `taskId`, a finished occurrence of a repeating task, was refused
+  /// because its next occurrence `successorId` has already been finished or
+  /// changed hands, and reopening `taskId` would fork the series.
+  case reopenBlockedByAdvancedSuccessor(taskId: String, successorId: String)
+  /// Completing `taskId` again was refused because the next occurrence
+  /// `successorId` that its earlier completion generated has already been
+  /// finished, and completing `taskId` would fork the series.
+  case completeBlockedByAdvancedSuccessor(taskId: String, successorId: String)
 
   public var description: String {
     switch self {
@@ -36,6 +44,10 @@ public enum TaskLifecycleError: Error, Equatable, Sendable, CustomStringConverti
       return "Cannot start a \(status.asString) task; reopen it to open first."
     case let .pauseRequiresStartedTask(status):
       return "Cannot pause a \(status.asString) task; only an in-progress task can be paused."
+    case let .reopenBlockedByAdvancedSuccessor(taskId, successorId):
+      return "Cannot reopen task \(taskId): recurrence successor \(successorId) has already advanced"
+    case let .completeBlockedByAdvancedSuccessor(taskId, successorId):
+      return "Cannot re-complete task \(taskId): successor \(successorId) has already advanced"
     }
   }
 

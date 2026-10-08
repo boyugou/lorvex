@@ -37,12 +37,15 @@ extension AppStoreBatchCancelSurface {
 }
 
 extension AppStore {
-  /// The refresh tail every batch operation shares: reload the owning surface
-  /// and the Tasks workspace (if loaded), prune the
+  /// The refresh tail every batch operation shares: reload the owning surface,
+  /// the Tasks workspace (if loaded), and the calendar window (if the Calendar
+  /// is on screen), re-read the selected task for the inspector, prune the
   /// selection where applicable, then publish the Apple sync surfaces.
   private func finishBatchMutation(on surface: AppStoreBatchCancelSurface) async throws {
     try await surface.refreshOwningSurface(self)
     await reloadTaskWorkspaceIfLoaded()
+    await reloadCalendarTimelineIfShown()
+    await reloadSelectedTaskAfterMutation()
     surface.pruneSelection(self)
     await republishSurfacesAfterLocalMutation()
   }

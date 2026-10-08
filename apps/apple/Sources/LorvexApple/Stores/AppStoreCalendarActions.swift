@@ -351,6 +351,15 @@ extension AppStore {
     try await refreshCalendarTimeline(anchorDate: from, dayCount: dayCount)
   }
 
+  /// Re-loads the calendar window while the Calendar is on screen. A task
+  /// change that leaves Today's own list as it was (a task planned for another
+  /// day is completed, deferred, or cancelled) would otherwise leave the grid
+  /// drawing the task as it was. A failed read keeps what is shown.
+  func reloadCalendarTimelineIfShown() async {
+    guard selection == .calendar else { return }
+    try? await refreshCurrentCalendarTimeline()
+  }
+
   /// Ensure today's schedule is loaded and freshly ingested for the Today
   /// surface. Today reads `provider_calendar_events` (the EventKit mirror) both
   /// to display the day's events and — through suggested times — to place

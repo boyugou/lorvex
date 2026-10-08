@@ -315,13 +315,14 @@ final class RecurrenceConfigApplyTests: XCTestCase {
         sql:
           "INSERT INTO tasks (id, title, status, list_id, due_date, recurrence, "
           + "spawned_from, spawned_from_version, recurrence_group_id, "
-          + "canonical_occurrence_date, schedule_version, lifecycle_version, "
+          + "canonical_occurrence_date, recurrence_instance_key, "
+          + "schedule_version, lifecycle_version, "
           + "version, created_at, updated_at) VALUES ("
           + "?1, 'Child', 'open', 'L1', '2026-04-16', "
-          + "'{\"FREQ\":\"DAILY\"}', ?2, ?3, ?4, '2026-04-16', "
+          + "'{\"FREQ\":\"DAILY\"}', ?2, ?3, ?4, '2026-04-16', ?5, "
           + "?3, ?3, ?3, '2026-04-15T10:00:00.000Z', "
           + "'2026-04-15T10:00:00.000Z')",
-        arguments: [childId, parentId, baseVersion, groupId])
+        arguments: [childId, parentId, baseVersion, groupId, "\(groupId):2026-04-16"])
     }
 
     let result = try store.writer.write { db in
@@ -336,13 +337,16 @@ final class RecurrenceConfigApplyTests: XCTestCase {
       let child = try Row.fetchOne(
         db,
         sql:
-          "SELECT recurrence, recurrence_group_id, spawned_from, spawned_from_version "
+          "SELECT recurrence, recurrence_group_id, spawned_from, spawned_from_version, "
+          + "recurrence_instance_key, canonical_occurrence_date "
           + "FROM tasks WHERE id = ?1",
         arguments: [childId])!
       XCTAssertNil(child[0] as String?)
       XCTAssertNil(child[1] as String?)
       XCTAssertNil(child[2] as String?)
       XCTAssertNil(child[3] as String?)
+      XCTAssertNil(child[4] as String?)
+      XCTAssertNil(child[5] as String?)
       let parent = try Row.fetchOne(
         db,
         sql:
@@ -352,6 +356,114 @@ final class RecurrenceConfigApplyTests: XCTestCase {
       XCTAssertEqual(parent[0] as String?, "ended")
       XCTAssertNil(parent[1] as String?)
       XCTAssertEqual(parent[2] as String?, version)
+    }
+  }
+
+  /// An open generated occurrence of group `g-key` due 2026-04-16 whose key
+  /// is `g-key:2026-04-16`, after a completed occurrence on 2026-04-15.
+  private func insertGeneratedOccurrencePair(_ store: LorvexStore) throws {
+    let baseVersion = "0000000000001_0000_3333333333333333"
+    try store.writer.write { db in
+      try self.insertList(db, id: "L1")
+      try db.execute(
+        sql:
+          "INSERT INTO tasks (id, title, status, list_id, due_date, recurrence, "
+          + "recurrence_group_id, canonical_occurrence_date, recurrence_instance_key, "
+          + "completed_at, recurrence_rollover_state, recurrence_successor_id, "
+          + "version, created_at, updated_at) VALUES ("
+          + "'done', 'Done', 'completed', 'L1', '2026-04-15', "
+          + "'{\"FREQ\":\"DAILY\"}', 'g-key', '2026-04-15', 'g-key:2026-04-15', "
+          + "'2026-04-15T10:00:00.000Z', 'authorized', 'open-one', ?1, "
+          + "'2026-01-01T00:00:00.000Z', '2026-04-15T10:00:00.000Z')",
+        arguments: [baseVersion])
+      try db.execute(
+        sql:
+          "INSERT INTO tasks (id, title, status, list_id, due_date, recurrence, "
+          + "spawned_from, spawned_from_version, recurrence_group_id, "
+          + "canonical_occurrence_date, recurrence_instance_key, "
+          + "schedule_version, lifecycle_version, version, created_at, updated_at) VALUES ("
+          + "'open-one', 'Open', 'open', 'L1', '2026-04-16', "
+          + "'{\"FREQ\":\"DAILY\"}', 'done', ?1, 'g-key', '2026-04-16', "
+          + "'g-key:2026-04-16', ?1, ?1, ?1, "
+          + "'2026-04-15T10:00:00.000Z', '2026-04-15T10:00:00.000Z')",
+        arguments: [baseVersion])
+    }
+  }
+
+  func testRescheduleOfAGeneratedOccurrenceMovesItsInstanceKeyWithItsDate() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try insertGeneratedOccurrencePair(store)
+
+    _ = try RecurrenceConfig.applyRecurrenceChange(
+      store.writer, taskId: TaskId(trusted: "open-one"),
+      recurrencePatch: .unset, dueDatePatch: .set("2026-05-20"),
+      today: "2026-04-01", version: version, now: now)
+
+    try store.writer.read { db in
+      let row = try Row.fetchOne(
+        db,
+        sql:
+          "SELECT due_date, canonical_occurrence_date, recurrence_instance_key, "
+          + "recurrence_group_id, spawned_from FROM tasks WHERE id = 'open-one'")!
+      XCTAssertEqual(row[0] as String?, "2026-05-20")
+      XCTAssertEqual(row[1] as String?, "2026-05-20")
+      XCTAssertEqual(row[2] as String?, "g-key:2026-05-20")
+      XCTAssertEqual(row[3] as String?, "g-key")
+      XCTAssertEqual(row[4] as String?, "done")
+    }
+  }
+
+  func testRescheduleOntoADateAnotherOccurrenceHoldsIsRefusedAndChangesNothing() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try insertGeneratedOccurrencePair(store)
+
+    XCTAssertThrowsError(
+      try RecurrenceConfig.applyRecurrenceChange(
+        store.writer, taskId: TaskId(trusted: "open-one"),
+        recurrencePatch: .unset, dueDatePatch: .set("2026-04-15"),
+        today: "2026-04-01", version: version, now: now)
+    ) { error in
+      guard case StoreError.validation(let message) = error else {
+        return XCTFail("expected a validation error, got \(error)")
+      }
+      XCTAssertTrue(message.contains("2026-04-15"))
+    }
+
+    try store.writer.read { db in
+      let row = try Row.fetchOne(
+        db,
+        sql:
+          "SELECT due_date, canonical_occurrence_date, recurrence_instance_key "
+          + "FROM tasks WHERE id = 'open-one'")!
+      XCTAssertEqual(row[0] as String?, "2026-04-16")
+      XCTAssertEqual(row[1] as String?, "2026-04-16")
+      XCTAssertEqual(row[2] as String?, "g-key:2026-04-16")
+    }
+  }
+
+  func testRescheduleOfATaskTheUserMadeRecurringKeepsNoInstanceKey() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try store.writer.write { db in
+      try self.insertTask(db, id: "t1", dueDate: "2026-04-15")
+    }
+    _ = try RecurrenceConfig.applyRecurrenceChange(
+      store.writer, taskId: TaskId(trusted: "t1"),
+      recurrencePatch: .set("{\"FREQ\":\"DAILY\"}"), dueDatePatch: .unset,
+      today: "2026-04-01", version: version, now: now)
+
+    _ = try RecurrenceConfig.applyRecurrenceChange(
+      store.writer, taskId: TaskId(trusted: "t1"),
+      recurrencePatch: .unset, dueDatePatch: .set("2026-06-01"),
+      today: "2026-04-01", version: "9999913599999_0000_b0b0b0b0b0b0b0b0", now: now)
+
+    try store.writer.read { db in
+      let row = try Row.fetchOne(
+        db,
+        sql:
+          "SELECT canonical_occurrence_date, recurrence_instance_key "
+          + "FROM tasks WHERE id = 't1'")!
+      XCTAssertEqual(row[0] as String?, "2026-06-01")
+      XCTAssertNil(row[1] as String?)
     }
   }
 

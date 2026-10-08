@@ -957,11 +957,15 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
         now: "2026-04-02T11:00:00Z",
         version: "0000000000003_0000_2222222222222222")
     ) { error in
-      guard case StoreError.validation(let message) = error else {
-        XCTFail("expected validation, got \(error)")
+      guard
+        case TaskLifecycleError.reopenBlockedByAdvancedSuccessor(
+          let blockedTaskId, let blockingSuccessorId) = error
+      else {
+        XCTFail("expected reopenBlockedByAdvancedSuccessor, got \(error)")
         return
       }
-      XCTAssertTrue(message.contains("already advanced"))
+      XCTAssertEqual(blockedTaskId, "advanced-parent")
+      XCTAssertEqual(blockingSuccessorId, successorId)
     }
 
     let parent = try store.writer.read { db in
@@ -974,6 +978,53 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
     XCTAssertEqual(parent?[0] as String?, "completed")
     XCTAssertEqual(parent?[1] as String?, "authorized")
     XCTAssertEqual(parent?[2] as String?, successorId)
+  }
+
+  func testRecompleteRejectsASuccessorThatAlreadyAdvanced() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try seedTimezonePreference(store.writer, "UTC")
+    try seedTask(
+      store.writer,
+      SeedTask(
+        id: "recomplete-parent", title: "Parent",
+        dueDate: "2026-04-01",
+        canonicalOccurrenceDate: "2026-04-01",
+        recurrence: #"{"FREQ":"DAILY","INTERVAL":1}"#,
+        recurrenceGroupId: "recomplete-group"))
+    let first = try runCompletion(
+      store, taskId: "recomplete-parent", now: "2026-04-01T10:00:00Z",
+      version: "0000000000001_0000_4444444444444444")
+    let successorId = try XCTUnwrap(first.spawnedSuccessorId)
+    _ = try runReopen(
+      store, taskId: "recomplete-parent", oldStatus: .completed,
+      now: "2026-04-01T11:00:00Z",
+      version: "0000000000002_0000_4444444444444444")
+    // Another device finished the reserved successor while this parent was open.
+    try store.writer.write { db in
+      let advancedVersion = "0000000000003_0000_4444444444444444"
+      try db.execute(
+        sql:
+          "UPDATE tasks SET status = 'completed', "
+          + "completed_at = '2026-04-02T10:00:00Z', lifecycle_version = ?1, "
+          + "version = ?1 WHERE id = ?2",
+        arguments: [advancedVersion, successorId])
+    }
+
+    XCTAssertThrowsError(
+      try runCompletion(
+        store, taskId: "recomplete-parent", now: "2026-04-02T12:00:00Z",
+        version: "0000000000004_0000_4444444444444444")
+    ) { error in
+      guard
+        case TaskLifecycleError.completeBlockedByAdvancedSuccessor(
+          let blockedTaskId, let blockingSuccessorId) = error
+      else {
+        XCTFail("expected completeBlockedByAdvancedSuccessor, got \(error)")
+        return
+      }
+      XCTAssertEqual(blockedTaskId, "recomplete-parent")
+      XCTAssertEqual(blockingSuccessorId, successorId)
+    }
   }
 
   func testSomedaySuccessorIsRewindableAndCancelled() throws {

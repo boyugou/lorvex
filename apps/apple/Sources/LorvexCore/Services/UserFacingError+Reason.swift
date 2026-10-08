@@ -21,8 +21,10 @@ extension UserFacingError {
   ///   event starting inside a daylight-saving gap;
   /// - a ``TaskLifecycleError`` for a status change the task refuses: starting
   ///   a task whose dependencies are not finished, starting a done, canceled,
-  ///   or Someday task, completing a canceled task, canceling a done task, or
-  ///   pausing a task that is not in progress;
+  ///   or Someday task, completing a canceled task, canceling a done task,
+  ///   pausing a task that is not in progress, or reopening or completing an
+  ///   occurrence of a repeating task whose next occurrence has already moved
+  ///   on;
   /// - a ``HabitReminderError/timeTaken(habitId:time:)`` for a second habit
   ///   reminder at the same time.
   ///
@@ -61,6 +63,12 @@ extension UserFacingError {
     case cancelingDoneTask
     /// Pausing a task that is not in progress.
     case pausingUnstartedTask
+    /// Reopening an occurrence of a repeating task whose next occurrence has
+    /// already moved on.
+    case reopeningAdvancedRepeat
+    /// Completing an occurrence of a repeating task again after its next
+    /// occurrence has already moved on.
+    case completingAdvancedRepeat
     /// A habit reminder at a time the habit already has one.
     case habitReminderTimeTaken
     /// A record whose combined content is too long to sync.
@@ -111,6 +119,8 @@ extension UserFacingError {
           self = .cancelingDoneTask
         case .finishedTaskTransition: return nil
         case .pauseRequiresStartedTask: self = .pausingUnstartedTask
+        case .reopenBlockedByAdvancedSuccessor: self = .reopeningAdvancedRepeat
+        case .completeBlockedByAdvancedSuccessor: self = .completingAdvancedRepeat
         }
         return
       }
@@ -203,6 +213,18 @@ extension UserFacingError {
         String(
           localized: "error.reason.pausing_unstarted_task",
           defaultValue: "Only a task in progress can be paused.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .reopeningAdvancedRepeat:
+        String(
+          localized: "error.reason.reopening_advanced_repeat",
+          defaultValue:
+            "This repeating task has already moved on to its next occurrence, so it can’t be reopened.",
+          table: "Localizable", bundle: CoreL10n.bundle)
+      case .completingAdvancedRepeat:
+        String(
+          localized: "error.reason.completing_advanced_repeat",
+          defaultValue:
+            "This repeating task has already moved on to its next occurrence, so it can’t be completed again.",
           table: "Localizable", bundle: CoreL10n.bundle)
       case .habitReminderTimeTaken:
         String(

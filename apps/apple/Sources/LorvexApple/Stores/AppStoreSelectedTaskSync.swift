@@ -29,6 +29,33 @@ extension AppStore {
     }
   }
 
+  /// Re-reads the selected task from the core into the store's own copy of it.
+  ///
+  /// The inspector reads ``selectedTask``, which falls back to this copy once a
+  /// change has taken the task out of every list the store loads: a completed,
+  /// deferred, parked, or moved task is in none of them. Without a re-read the
+  /// inspector keeps showing the task as it was when it was opened. A failed
+  /// read, such as for a task another device just deleted, leaves the copy as it
+  /// was; the selection check that follows a refresh handles that case.
+  func refreshSelectedTaskRecord() async {
+    guard let id = selectedTaskID, let task = try? await core.loadTask(id: id),
+      selectedTaskID == id
+    else { return }
+    replaceTask(task)
+  }
+
+  /// ``refreshSelectedTaskRecord()`` for a local change to a task, then the
+  /// inspector's draft adopts the stored values, so a changed day or status
+  /// shows in its fields. A draft with unsaved edits is kept: whether the
+  /// draft is clean is read before the record changes, because afterward every
+  /// draft differs from a record a change has touched.
+  func reloadSelectedTaskAfterMutation() async {
+    let snapshot = taskDetailReloadSnapshot()
+    await refreshSelectedTaskRecord()
+    guard let id = selectedTaskID, dirtyTaskIDToPreserve(after: snapshot) != id else { return }
+    syncSelectedTaskDraft(force: true)
+  }
+
   func syncSelectedTaskDraft() {
     syncSelectedTaskDraft(force: false)
   }
@@ -41,6 +68,7 @@ extension AppStore {
     let isNewTask = taskDetailDraftTaskID != task.id
     guard force || isNewTask else { return }
     taskDetailDraftTaskID = task.id
+    taskDetailStorage.taskDetailDraftSource = task
     taskDetailTitle = task.title
     taskDetailNotes = task.notes
     taskDetailPriority = task.priority
@@ -99,6 +127,9 @@ extension AppStore {
   /// items adopt the server text and items that no longer exist are dropped. A
   /// blind rebuild would revert a half-typed checklist label whenever a sibling
   /// action (toggle / reorder / add / remove) refreshes the task.
+  ///
+  /// The draft's source record takes the same checklist, so the items the merge
+  /// adopted do not read as edits and the ones still being typed do.
   func syncSelectedTaskChecklistDrafts() {
     guard let task = selectedTask else { return }
     let previous = taskDetailChecklistDrafts
@@ -110,6 +141,10 @@ extension AppStore {
         return (item.id, item.text)
       }
     )
+    if var source = taskDetailStorage.taskDetailDraftSource, source.id == task.id {
+      source.checklistItems = task.checklistItems
+      taskDetailStorage.taskDetailDraftSource = source
+    }
   }
 
   func clearSelectedTaskDraft() {

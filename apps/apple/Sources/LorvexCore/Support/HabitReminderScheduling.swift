@@ -61,9 +61,7 @@ public struct ScheduledHabitReminder: Equatable, Sendable {
       LorvexNotificationRoute.deepLinkUserInfoKey: LorvexDeepLinkRoute.habit(habitID).url
         .absoluteString
     ]
-    let components = Calendar.current.dateComponents(
-      [.year, .month, .day, .hour, .minute, .second], from: fireDate)
-    let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+    let trigger = UNCalendarNotificationTrigger.oneShot(at: fireDate)
     return UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
   }
 

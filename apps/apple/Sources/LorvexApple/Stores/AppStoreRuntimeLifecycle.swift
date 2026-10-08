@@ -455,6 +455,9 @@ extension AppStore {
       // showing stale rows. Reload it before reconciling selection so the
       // reconcile sees the fresh pools.
       await reloadTaskWorkspaceIfLoaded()
+      // A selected task that is in none of the loaded lists (finished or moved
+      // away by a peer, say) would otherwise keep its older record.
+      await refreshSelectedTaskRecord()
       let dirtyTaskDraftIDToPreserve = dirtyTaskIDToPreserve(after: taskDetailReload)
       reconcileSelectedTaskAfterRefresh(preservingDirtyTaskID: dirtyTaskDraftIDToPreserve)
       // The Apple system surfaces run in parallel, each from its own read, so a

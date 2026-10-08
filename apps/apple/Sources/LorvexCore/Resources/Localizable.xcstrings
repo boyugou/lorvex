@@ -12297,6 +12297,192 @@
         }
       }
     },
+    "error.reason.completing_advanced_repeat": {
+      "comment": "Alert shown when a person completes an occurrence of a repeating task again after its next occurrence has already moved on.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المهمة المتكررة انتقلت بالفعل إلى تكرارها التالي، لذا لا يمكن إكمالها مرة أخرى."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই পুনরাবৃত্ত টাস্কটি ইতিমধ্যেই পরবর্তী বারে চলে গেছে, তাই এটি আবার সম্পন্ন করা যাবে না।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese sich wiederholende Aufgabe ist bereits bei der nächsten Wiederholung angekommen und kann deshalb nicht noch einmal erledigt werden."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η επαναλαμβανόμενη εργασία έχει ήδη περάσει στην επόμενη επανάληψή της, επομένως δεν μπορεί να ολοκληρωθεί ξανά."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repeating task has already moved on to its next occurrence, so it can’t be completed again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea recurrente ya ha pasado a su siguiente repetición, así que no se puede completar de nuevo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این کار تکرارشونده از قبل به تکرار بعدی خود رفته است، بنابراین نمی‌توان آن را دوباره تکمیل کرد."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche récurrente est déjà passée à son occurrence suivante et ne peut donc pas être terminée à nouveau."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המשימה החוזרת הזו כבר עברה למופע הבא שלה, ולכן אי אפשר להשלים אותה שוב."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह दोहराया जाने वाला कार्य पहले ही अगली बार के लिए आगे बढ़ चुका है, इसलिए इसे दोबारा पूरा नहीं किया जा सकता।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas berulang ini sudah berlanjut ke kejadian berikutnya, sehingga tidak dapat diselesaikan lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività ricorrente è già passata alla sua occorrenza successiva, quindi non può essere completata di nuovo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この繰り返しタスクはすでに次回分に進んでいるため、もう一度完了にすることはできません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 반복 할 일은 이미 다음 반복으로 넘어갔기 때문에 다시 완료할 수 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "हे पुनरावृत्ती होणारे कार्य आधीच पुढच्या वेळेकडे सरकले आहे, त्यामुळे ते पुन्हा पूर्ण करता येत नाही."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas berulang ini sudah beralih ke kejadian seterusnya, jadi tidak boleh diselesaikan lagi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze terugkerende taak is al doorgegaan naar de volgende herhaling en kan daarom niet nog een keer worden voltooid."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie cykliczne przeszło już do kolejnego wystąpienia, więc nie można go ukończyć ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa recorrente já passou para a próxima ocorrência, então não pode ser concluída novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină repetitivă a trecut deja la următoarea apariție, deci nu poate fi finalizată din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта повторяющаяся задача уже перешла к следующему повторению, поэтому её нельзя выполнить ещё раз."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் நிகழும் இந்தப் பணி ஏற்கெனவே அடுத்த நேர்வுக்குச் சென்றுவிட்டது, எனவே அதை மீண்டும் முடிக்க முடியாது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమయ్యే ఈ టాస్క్ ఇప్పటికే తదుపరి సందర్భానికి వెళ్ళిపోయింది, కాబట్టి దాన్ని మళ్ళీ పూర్తి చేయలేరు."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานทำประจำนี้ไปถึงครั้งถัดไปแล้ว จึงทำให้เสร็จอีกครั้งไม่ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yinelenen görev zaten sonraki yinelemeye geçti, bu yüzden yeniden tamamlanamaz."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це повторюване завдання вже перейшло до наступного повторення, тому його не можна виконати ще раз."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ دہرایا جانے والا کام پہلے ہی اگلی تکرار پر جا چکا ہے، اس لیے اسے دوبارہ مکمل نہیں کیا جا سکتا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ lặp lại này đã chuyển sang lần lặp tiếp theo, nên không thể hoàn thành lần nữa."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个重复任务已经进入下一次，所以无法再次完成。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個重複任務已經進入下一次，所以無法再次完成。"
+          }
+        }
+      }
+    },
     "error.reason.completing_canceled_task": {
       "comment": "Alert shown when a person completes a task that was canceled, for example from a reminder's Complete button.",
       "extractionState": "manual",
@@ -13409,6 +13595,192 @@
           "stringUnit": {
             "state": "translated",
             "value": "內容太長，無法同步，請縮短最長的部分後再試。"
+          }
+        }
+      }
+    },
+    "error.reason.reopening_advanced_repeat": {
+      "comment": "Alert shown when a person reopens an occurrence of a repeating task whose next occurrence has already moved on.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه المهمة المتكررة انتقلت بالفعل إلى تكرارها التالي، لذا لا يمكن إعادة فتحها."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই পুনরাবৃত্ত টাস্কটি ইতিমধ্যেই পরবর্তী বারে চলে গেছে, তাই এটি আবার খোলা যাবে না।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese sich wiederholende Aufgabe ist bereits bei der nächsten Wiederholung angekommen und kann deshalb nicht wieder geöffnet werden."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αυτή η επαναλαμβανόμενη εργασία έχει ήδη περάσει στην επόμενη επανάληψή της, επομένως δεν μπορεί να ανοιχτεί ξανά."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This repeating task has already moved on to its next occurrence, so it can’t be reopened."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarea recurrente ya ha pasado a su siguiente repetición, así que no se puede reabrir."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این کار تکرارشونده از قبل به تکرار بعدی خود رفته است، بنابراین نمی‌توان آن را بازگشایی کرد."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette tâche récurrente est déjà passée à son occurrence suivante et ne peut donc pas être rouverte."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "המשימה החוזרת הזו כבר עברה למופע הבא שלה, ולכן אי אפשר לפתוח אותה מחדש."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह दोहराया जाने वाला कार्य पहले ही अगली बार के लिए आगे बढ़ चुका है, इसलिए इसे फिर से नहीं खोला जा सकता।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas berulang ini sudah berlanjut ke kejadian berikutnya, sehingga tidak dapat dibuka kembali."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa attività ricorrente è già passata alla sua occorrenza successiva, quindi non può essere riaperta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この繰り返しタスクはすでに次回分に進んでいるため、未完了に戻せません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 반복 할 일은 이미 다음 반복으로 넘어갔기 때문에 다시 열 수 없습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "हे पुनरावृत्ती होणारे कार्य आधीच पुढच्या वेळेकडे सरकले आहे, त्यामुळे ते पुन्हा उघडता येत नाही."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tugas berulang ini sudah beralih ke kejadian seterusnya, jadi tidak boleh dibuka semula."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze terugkerende taak is al doorgegaan naar de volgende herhaling en kan daarom niet worden heropend."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To zadanie cykliczne przeszło już do kolejnego wystąpienia, więc nie można go ponownie otworzyć."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tarefa recorrente já passou para a próxima ocorrência, então não pode ser reaberta."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această sarcină repetitivă a trecut deja la următoarea apariție, deci nu poate fi redeschisă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта повторяющаяся задача уже перешла к следующему повторению, поэтому её нельзя открыть снова."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் நிகழும் இந்தப் பணி ஏற்கெனவே அடுத்த நேர்வுக்குச் சென்றுவிட்டது, எனவே அதை மீண்டும் திறக்க முடியாது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమయ్యే ఈ టాస్క్ ఇప్పటికే తదుపరి సందర్భానికి వెళ్ళిపోయింది, కాబట్టి దాన్ని మళ్ళీ తెరవలేరు."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานทำประจำนี้ไปถึงครั้งถัดไปแล้ว จึงเปิดงานใหม่ไม่ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yinelenen görev zaten sonraki yinelemeye geçti, bu yüzden yeniden açılamaz."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це повторюване завдання вже перейшло до наступного повторення, тому його не можна відкрити знову."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یہ دہرایا جانے والا کام پہلے ہی اگلی تکرار پر جا چکا ہے، اس لیے اسے دوبارہ نہیں کھولا جا سکتا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nhiệm vụ lặp lại này đã chuyển sang lần lặp tiếp theo, nên không thể mở lại."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个重复任务已经进入下一次，所以无法重新打开。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個重複任務已經進入下一次，所以無法重新開啟。"
           }
         }
       }

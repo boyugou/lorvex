@@ -89,5 +89,8 @@ extension AppStore {
     doneTodayTasks = source.completedTodayTasks.sorted {
       ($0.completedAt ?? "") > ($1.completedAt ?? "")
     }
+    // The Done section is part of what Today lists, so a selected row that left
+    // it (a finished task that was reopened) leaves the selection too.
+    pruneTodaySelection()
   }
 }

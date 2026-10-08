@@ -5,13 +5,17 @@ import SwiftUI
 
 extension AppStore {
   /// The refresh tail shared by the single-task mutations: refresh the list
-  /// surfaces, reload the Tasks workspace if it is loaded and the review's
-  /// task lists if Review is on screen, then publish the Apple sync surfaces. Defined once so callers can't drift on which surfaces
-  /// they reload; animation and selection-draft sync stay with the caller.
+  /// surfaces, reload the Tasks workspace if it is loaded, the review's task
+  /// lists if Review is on screen, and the calendar window if the Calendar is,
+  /// re-read the selected task for the inspector, then publish the Apple sync
+  /// surfaces. Defined once so callers can't drift on which surfaces they
+  /// reload; animation stays with the caller.
   func afterSelectedTaskMutation() async throws {
     try await refreshListSurfaces()
     await reloadTaskWorkspaceIfLoaded()
     await reloadReviewEvidenceIfShown()
+    await reloadCalendarTimelineIfShown()
+    await reloadSelectedTaskAfterMutation()
     await republishSurfacesAfterLocalMutation()
   }
 
@@ -43,30 +47,14 @@ extension AppStore {
 
   func saveTaskDetailDraft(id: LorvexTask.ID, preserveSelection: LorvexTask.ID?) async {
     let draftFingerprint = taskDetailDraftFingerprint
-    guard taskDetailTitleIsValid else {
+    // Only the fields the user edited are written (`taskDetailUpdateDraft`).
+    guard taskDetailTitleIsValid, let draft = taskDetailUpdateDraft(id: id) else {
       if selectedTaskID != preserveSelection {
         selectedTaskID = preserveSelection
       }
       syncSelectedTaskDraft()
       return
     }
-    // Every field is written as the draft holds it. The time is written
-    // whenever the draft has one, so moving the task to another day keeps its
-    // time, and cleared only when the stored task has one to clear.
-    let time = taskDetailPlannedTimeForSave
-    let storedTime = taskForDetailDraft(id: id)?.plannedTime
-    let draft = TaskUpdateDraft(
-      id: id,
-      title: taskDetailTitle,
-      notes: taskDetailNotes,
-      priority: taskDetailPriority,
-      estimatedMinutes: Self.setOrClear(taskDetailEstimateForSave(taskID: id)),
-      dueDate: Self.setOrClear(taskDetailDueDateForSave),
-      plannedDate: Self.setOrClear(taskDetailPlannedDateForSave),
-      plannedTime: time.map { .set($0) } ?? (storedTime == nil ? .unset : .clear),
-      availableFrom: Self.setOrClear(taskDetailAvailableFromForSave),
-      tags: parsedTaskDetailTags,
-      dependsOn: parsedTaskDetailDependencies)
     await perform {
       let updated = try await core.updateTask(draft)
       today = try await core.loadToday()
@@ -92,11 +80,6 @@ extension AppStore {
         syncSelectedTaskDraft()
       }
     }
-  }
-
-  /// A draft field as a patch that writes it: its value, or a clear.
-  private static func setOrClear<T: Sendable>(_ value: T?) -> Patch<T> {
-    value.map { .set($0) } ?? .clear
   }
 
   func clearSelectedTaskAINotes() async {
@@ -244,10 +227,7 @@ extension AppStore {
     guard let id = selectedTask?.id else { return }
     do {
       today = try await core.cancelTask(id: id)
-      try await refreshListSurfaces()
-      await reloadTaskWorkspaceIfLoaded()
-      await loadSelectedTaskDetail()
-      await republishSurfacesAfterLocalMutation()
+      try await afterSelectedTaskMutation()
       syncSelectedTaskDraft()
       errorMessage = nil
       registerReopenUndo(id: id, undoManager: undoManager, actionName: TaskCommand.cancel.title)
@@ -289,10 +269,7 @@ extension AppStore {
       if let snapshot = try await applyRecurringCancelScope(scope, taskID: id) {
         today = snapshot
       }
-      try await refreshListSurfaces()
-      await reloadTaskWorkspaceIfLoaded()
-      await loadSelectedTaskDetail()
-      await republishSurfacesAfterLocalMutation()
+      try await afterSelectedTaskMutation()
       syncSelectedTaskDraft()
     }
   }
@@ -331,7 +308,9 @@ extension AppStore {
       }
       try await refreshListSurfaces()
       await reloadTaskWorkspaceIfLoaded()
+      await reloadCalendarTimelineIfShown()
       selectedTaskID = id
+      await refreshSelectedTaskRecord()
       taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
       syncSelectedTaskDraft()
@@ -352,7 +331,9 @@ extension AppStore {
       }
       try await refreshListSurfaces()
       await reloadTaskWorkspaceIfLoaded()
+      await reloadCalendarTimelineIfShown()
       selectedTaskID = id
+      await refreshSelectedTaskRecord()
       taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
       syncSelectedTaskDraft()
@@ -372,7 +353,9 @@ extension AppStore {
       }
       try await refreshListSurfaces()
       await reloadTaskWorkspaceIfLoaded()
+      await reloadCalendarTimelineIfShown()
       selectedTaskID = id
+      await refreshSelectedTaskRecord()
       taskDetailDraftTaskID = nil
       await republishSurfacesAfterLocalMutation()
       syncSelectedTaskDraft()

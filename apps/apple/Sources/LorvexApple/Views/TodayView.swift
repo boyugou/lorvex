@@ -51,7 +51,12 @@ struct TodayView: View {
       _ = await todaySchedule
       _ = await doneCount
     }
+    // The Done section lists tasks outside Today's own list, so it reloads
+    // whenever task data does, not only when Today's list changes.
     .onChange(of: store.today) {
+      Task { await store.loadDoneTodayCount() }
+    }
+    .onChange(of: store.taskDataGeneration) {
       Task { await store.loadDoneTodayCount() }
     }
   }

@@ -161,28 +161,36 @@ func appStoreEditsSelectedTaskDueDate() async throws {
 
 @MainActor
 @Test
-func taskDetailEstimateForSaveKeepsExistingOnMalformedInput() async throws {
+func taskDetailUpdateLeavesTheEstimateAloneOnMalformedInput() async throws {
   let store = try await makeTaskEditingStore()
+  let task = try await store.core.createTask(
+    TaskCreateDraft(title: "Estimated subject", estimatedMinutes: 30))
   await store.refresh()
-  let task = try #require(store.today.tasks.first)
   store.selectedTaskID = task.id
-  store.syncSelectedTaskDraft()
+  await store.loadSelectedTaskDetail()
+  #expect(store.taskDetailUpdateDraft(id: task.id) == nil)
 
   store.taskDetailEstimatedMinutesText = "45"
-  #expect(store.taskDetailEstimateForSave(taskID: task.id) == 45)
+  #expect(store.taskDetailUpdateDraft(id: task.id)?.estimatedMinutes == .set(45))
 
   store.taskDetailEstimatedMinutesText = ""  // blank clears the estimate
-  #expect(store.taskDetailEstimateForSave(taskID: task.id) == nil)
+  #expect(store.taskDetailUpdateDraft(id: task.id)?.estimatedMinutes == .clear)
 
-  store.taskDetailEstimatedMinutesText = "30m"  // unparseable → keep existing
-  #expect(!store.taskDetailEstimateIsValid)
-  #expect(store.taskDetailEstimateForSave(taskID: task.id) == task.estimatedMinutes)
-
-  for invalid in ["0", "1441"] {
+  // Text that is not a valid estimate is not an edit: the stored estimate stays
+  // and the rest of the draft still saves.
+  store.taskDetailTitle = "Retitled while the estimate is mid-edit"
+  for invalid in ["30m", "0", "1441"] {
     store.taskDetailEstimatedMinutesText = invalid
     #expect(!store.taskDetailEstimateIsValid)
-    #expect(store.taskDetailEstimateForSave(taskID: task.id) == task.estimatedMinutes)
+    let update = try #require(store.taskDetailUpdateDraft(id: task.id))
+    #expect(update.estimatedMinutes == .unset)
+    #expect(update.title == "Retitled while the estimate is mid-edit")
   }
+
+  store.taskDetailTitle = task.title
+  store.taskDetailEstimatedMinutesText = "30m"
+  #expect(store.taskDetailUpdateDraft(id: task.id) == nil)
+  #expect(!store.taskDetailDraftHasChanges(for: task.id))
 }
 
 @MainActor
@@ -245,7 +253,7 @@ func taskDetailPlannedDateSavePathDoesNotFallbackToToday() throws {
     encoding: .utf8)
 
   #expect(stateSource.contains("var taskDetailPlannedDateForSave: Date?"))
-  #expect(actionsSource.contains("plannedDate: Self.setOrClear(taskDetailPlannedDateForSave)"))
+  #expect(stateSource.contains("Self.setOrClear(taskDetailPlannedDateForSave)"))
   #expect(!stateSource.contains("taskDetailPlannedDate ?? Date()"))
   #expect(!actionsSource.contains("taskDetailPlannedDate ?? Date()"))
 }

@@ -290,6 +290,8 @@ struct UserFacingErrorTests {
       (.finishedTaskTransition(taskId: id, from: .completed, to: .cancelled), .cancelingDoneTask),
       (.pauseRequiresStartedTask(status: .completed), .pausingUnstartedTask),
       (.pauseRequiresStartedTask(status: .someday), .pausingUnstartedTask),
+      (.reopenBlockedByAdvancedSuccessor(taskId: id, successorId: id), .reopeningAdvancedRepeat),
+      (.completeBlockedByAdvancedSuccessor(taskId: id, successorId: id), .completingAdvancedRepeat),
     ]
     for (error, reason) in cases {
       let classification = UserFacingError.classify(error)
@@ -310,6 +312,13 @@ struct UserFacingErrorTests {
     #expect(
       TaskLifecycleError.finishedTaskTransition(taskId: id, from: .cancelled, to: .completed)
         .description == "Cannot transition task \(id) from cancelled to completed; reopen it first")
+    #expect(
+      TaskLifecycleError.reopenBlockedByAdvancedSuccessor(taskId: id, successorId: "next")
+        .description
+        == "Cannot reopen task \(id): recurrence successor next has already advanced")
+    #expect(
+      TaskLifecycleError.completeBlockedByAdvancedSuccessor(taskId: id, successorId: "next")
+        .description == "Cannot re-complete task \(id): successor next has already advanced")
   }
 
   @Test("a classification survives an encode and decode unchanged")
@@ -369,6 +378,7 @@ struct UserFacingErrorTests {
       "error.reason.starting_canceled_task", "error.reason.starting_someday_task",
       "error.reason.completing_canceled_task", "error.reason.canceling_done_task",
       "error.reason.pausing_unstarted_task", "error.reason.record_too_long_to_sync",
+      "error.reason.reopening_advanced_repeat", "error.reason.completing_advanced_repeat",
     ]
     #expect(keys.count == reasons.count, "a reason is missing from this key list")
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))

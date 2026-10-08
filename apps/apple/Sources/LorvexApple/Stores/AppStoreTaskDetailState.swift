@@ -2,6 +2,23 @@ import Foundation
 import LorvexCore
 import LorvexDomain
 
+/// The inspector's scalar draft fields, as a set of the ones that differ from a
+/// task record.
+private struct TaskDetailEditedFields: OptionSet {
+  let rawValue: Int
+
+  static let title = TaskDetailEditedFields(rawValue: 1 << 0)
+  static let notes = TaskDetailEditedFields(rawValue: 1 << 1)
+  static let priority = TaskDetailEditedFields(rawValue: 1 << 2)
+  static let estimate = TaskDetailEditedFields(rawValue: 1 << 3)
+  static let plannedDay = TaskDetailEditedFields(rawValue: 1 << 4)
+  static let plannedTime = TaskDetailEditedFields(rawValue: 1 << 5)
+  static let dueDay = TaskDetailEditedFields(rawValue: 1 << 6)
+  static let availableFrom = TaskDetailEditedFields(rawValue: 1 << 7)
+  static let tags = TaskDetailEditedFields(rawValue: 1 << 8)
+  static let dependencies = TaskDetailEditedFields(rawValue: 1 << 9)
+}
+
 extension AppStore {
   /// Captures enough editor state to decide whether a reload may safely adopt
   /// the refreshed selected task. The snapshot is taken before the first await:
@@ -46,7 +63,7 @@ extension AppStore {
 
   var selectedTaskDraftHasChanges: Bool {
     guard let task = selectedTask else { return false }
-    return taskDetailDraftHasChanges(comparedTo: task)
+    return taskDetailDraftHasChanges(comparedTo: taskDetailDraftBaseline(for: task))
   }
 
   /// Any unsaved editor state in the task inspector, including checklist-row
@@ -55,12 +72,13 @@ extension AppStore {
   /// out-of-band write can never erase half-typed checklist text.
   var selectedTaskHasUnsavedEditorState: Bool {
     guard let task = selectedTask else { return false }
-    if taskDetailDraftHasChanges(comparedTo: task) { return true }
+    let baseline = taskDetailDraftBaseline(for: task)
+    if taskDetailDraftHasChanges(comparedTo: baseline) { return true }
     if taskDetailRecurrenceDraft.hasChanges { return true }
     if !taskDetailNewChecklistText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
       return true
     }
-    return task.checklistItems.contains { item in
+    return baseline.checklistItems.contains { item in
       (taskDetailChecklistDrafts[item.id] ?? item.text) != item.text
     }
   }
@@ -94,25 +112,90 @@ extension AppStore {
 
   func taskDetailDraftHasChanges(for taskID: LorvexTask.ID) -> Bool {
     guard let task = taskForDetailDraft(id: taskID) else { return false }
-    return taskDetailDraftHasChanges(comparedTo: task)
+    return taskDetailDraftHasChanges(comparedTo: taskDetailDraftBaseline(for: task))
+  }
+
+  /// The record the draft of `task` is measured against: the one the draft was
+  /// last filled from, which stays fixed while the stored task changes. A draft
+  /// then counts as edited only when the user changed it. Measured against the
+  /// live task, an untouched draft would read as edited after any change made
+  /// elsewhere (a defer from a menu, a batch action, another device, the
+  /// assistant), and the inspector's autosave would write its old values back
+  /// over that change. A draft with no recorded source falls back to `task`.
+  private func taskDetailDraftBaseline(for task: LorvexTask) -> LorvexTask {
+    guard let source = taskDetailStorage.taskDetailDraftSource, source.id == task.id else {
+      return task
+    }
+    return source
   }
 
   private func taskDetailDraftHasChanges(comparedTo task: LorvexTask) -> Bool {
-    guard taskDetailDraftTaskID == task.id else { return false }
-    let plannedDate = taskDetailPlannedDateForSave
-    if taskDetailTitle != task.title
-      || taskDetailNotes != task.notes
-      || taskDetailPriority != task.priority
-      || parsedTaskDetailEstimate != task.estimatedMinutes
-      || plannedDate != task.plannedDate
-      || taskDetailPlannedTimeForSave != task.plannedTime
-      || taskDetailDueDateForSave != task.dueDate
-      || taskDetailAvailableFromForSave != task.availableFrom
-    {
-      return true
+    !taskDetailEditedFields(comparedTo: task).isEmpty
+  }
+
+  /// The scalar draft fields whose values differ from `task`. With the record
+  /// the draft was filled from as `task`, these are the fields the user edited.
+  /// Empty when the draft belongs to another task. Estimate text that is not a
+  /// valid number never counts, because saving leaves the estimate as it is.
+  private func taskDetailEditedFields(comparedTo task: LorvexTask) -> TaskDetailEditedFields {
+    guard taskDetailDraftTaskID == task.id else { return [] }
+    var edited: TaskDetailEditedFields = []
+    if taskDetailTitle != task.title { edited.insert(.title) }
+    if taskDetailNotes != task.notes { edited.insert(.notes) }
+    if taskDetailPriority != task.priority { edited.insert(.priority) }
+    if taskDetailEstimateIsValid, parsedTaskDetailEstimate != task.estimatedMinutes {
+      edited.insert(.estimate)
     }
-    if parsedTaskDetailTags != task.tags { return true }
-    return parsedTaskDetailDependencies != task.dependsOn
+    if taskDetailPlannedDateForSave != task.plannedDate { edited.insert(.plannedDay) }
+    if taskDetailPlannedTimeForSave != task.plannedTime { edited.insert(.plannedTime) }
+    if taskDetailDueDateForSave != task.dueDate { edited.insert(.dueDay) }
+    if taskDetailAvailableFromForSave != task.availableFrom { edited.insert(.availableFrom) }
+    if parsedTaskDetailTags != task.tags { edited.insert(.tags) }
+    if parsedTaskDetailDependencies != task.dependsOn { edited.insert(.dependencies) }
+    return edited
+  }
+
+  /// The update that saves the inspector's draft of task `id`, or nil when the
+  /// user changed nothing. It carries only the fields the user edited, measured
+  /// against the record the draft was filled from, so the core applies them on
+  /// top of the task as stored now: a change made elsewhere to a field the user
+  /// left alone (the assistant re-prioritizing the task, another device moving
+  /// its day) survives the save. A day's time belongs to its day: it is written
+  /// when it changed and whenever the day changes while the draft keeps a time,
+  /// because moving a task to another day would otherwise clear the time.
+  func taskDetailUpdateDraft(id: LorvexTask.ID) -> TaskUpdateDraft? {
+    guard let stored = taskForDetailDraft(id: id) else { return nil }
+    let edited = taskDetailEditedFields(comparedTo: taskDetailDraftBaseline(for: stored))
+    guard !edited.isEmpty else { return nil }
+    let time = taskDetailPlannedTimeForSave
+    let timePatch: Patch<Range<Int>>
+    if let time, edited.contains(.plannedTime) || edited.contains(.plannedDay) {
+      timePatch = .set(time)
+    } else if time == nil, edited.contains(.plannedTime) {
+      timePatch = .clear
+    } else {
+      timePatch = .unset
+    }
+    return TaskUpdateDraft(
+      id: id,
+      title: edited.contains(.title) ? taskDetailTitle : nil,
+      notes: edited.contains(.notes) ? taskDetailNotes : nil,
+      priority: edited.contains(.priority) ? taskDetailPriority : nil,
+      estimatedMinutes: edited.contains(.estimate)
+        ? Self.setOrClear(parsedTaskDetailEstimate) : .unset,
+      dueDate: edited.contains(.dueDay) ? Self.setOrClear(taskDetailDueDateForSave) : .unset,
+      plannedDate: edited.contains(.plannedDay)
+        ? Self.setOrClear(taskDetailPlannedDateForSave) : .unset,
+      plannedTime: timePatch,
+      availableFrom: edited.contains(.availableFrom)
+        ? Self.setOrClear(taskDetailAvailableFromForSave) : .unset,
+      tags: edited.contains(.tags) ? parsedTaskDetailTags : nil,
+      dependsOn: edited.contains(.dependencies) ? parsedTaskDetailDependencies : nil)
+  }
+
+  /// A draft field as a patch that writes it: its value, or a clear.
+  private static func setOrClear<T: Sendable>(_ value: T?) -> Patch<T> {
+    value.map { .set($0) } ?? .clear
   }
 
   func taskForDetailDraft(id: LorvexTask.ID) -> LorvexTask? {
@@ -121,17 +204,6 @@ extension AppStore {
       ?? selectedListDetail?.tasks.first { $0.id == id }
       ?? taskWorkspaceTask(id: id)
       ?? taskDetailStorage.loadedTasksByID[id]
-  }
-
-  /// The estimate to persist for `taskID`: the parsed input when it is valid
-  /// (a number, or `nil` to clear when the field is blank), or the task's
-  /// existing estimate when the field holds non-empty unparseable text (e.g.
-  /// "30m"). This keeps an auto-save on navigation from discarding the user's
-  /// title / notes / priority edits just because the estimate field is mid-edit
-  /// or malformed.
-  func taskDetailEstimateForSave(taskID: LorvexTask.ID) -> Int? {
-    if taskDetailEstimateIsValid { return parsedTaskDetailEstimate }
-    return taskForDetailDraft(id: taskID)?.estimatedMinutes
   }
 
   var taskDetailPlannedDateForSave: Date? {

@@ -202,6 +202,9 @@ extension RecurrenceConfig {
     if actions.clearCanonicalOccurrenceDate {
       setClauses.append("canonical_occurrence_date = NULL")
     }
+    if actions.clearRecurrenceInstanceKey {
+      setClauses.append("recurrence_instance_key = NULL")
+    }
     // An explicit due_date reschedule on a task that stays recurring re-anchors
     // the cadence to the new due date, so future occurrences follow the new day
     // (e.g. a monthly task moved from the 6th to the 15th recurs on the 15th).
@@ -215,6 +218,29 @@ extension RecurrenceConfig {
     {
       setClauses.append("canonical_occurrence_date = ?")
       args.append(rescheduledDue)
+      // A generated occurrence names its slot in the series by its instance
+      // key, which the schema ties to the occurrence date, so the key moves
+      // with the date.
+      if old.recurrenceInstanceKey != nil, let groupId = old.recurrenceGroupId {
+        guard
+          let key = Recurrence.generateInstanceKey(
+            recurrenceGroupID: groupId, canonicalOccurrenceDate: rescheduledDue)
+        else {
+          throw StoreError.invariant(
+            "could not derive recurrence instance key for task \(taskId.asString)")
+        }
+        let claimedBy = try String.fetchOne(
+          db,
+          sql: "SELECT id FROM tasks WHERE recurrence_instance_key = ?1 AND id <> ?2",
+          arguments: [key, taskId.asString])
+        guard claimedBy == nil else {
+          throw StoreError.validation(
+            "Another occurrence of this repeating task already falls on \(rescheduledDue). "
+              + "Choose a different date.")
+        }
+        setClauses.append("recurrence_instance_key = ?")
+        args.append(key)
+      }
     }
     if let due = actions.setDueDate {
       setClauses.append("due_date = ?")
@@ -335,7 +361,7 @@ extension RecurrenceConfig {
         db,
         sql:
           "SELECT recurrence, recurrence_group_id, canonical_occurrence_date, "
-          + "due_date FROM tasks WHERE id = ?1",
+          + "recurrence_instance_key, due_date FROM tasks WHERE id = ?1",
         arguments: [taskId.asString])
     else {
       throw StoreError.notFound(entity: EntityKind.task.rawValue, id: taskId.asString)
@@ -344,7 +370,8 @@ extension RecurrenceConfig {
       recurrence: row[0],
       recurrenceGroupId: row[1],
       canonicalOccurrenceDate: row[2],
-      dueDate: row[3])
+      recurrenceInstanceKey: row[3],
+      dueDate: row[4])
   }
 
   private struct LoadedRolloverState {

@@ -202,11 +202,7 @@ public struct ScheduledTaskReminder: Equatable, Sendable {
       LorvexNotificationRoute.deepLinkUserInfoKey: LorvexDeepLinkRoute.task(taskID).url
         .absoluteString,
     ]
-    let components = Calendar.current.dateComponents(
-      [.year, .month, .day, .hour, .minute, .second],
-      from: fireDate
-    )
-    let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+    let trigger = UNCalendarNotificationTrigger.oneShot(at: fireDate)
     return UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
   }
 

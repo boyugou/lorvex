@@ -32,6 +32,11 @@ struct AppStoreTaskDetailStorage {
   var taskDetailRecurrenceDraft = TaskRecurrenceEditorDraft()
   var isSavingTaskRecurrence = false
   var taskDetailDraftTaskID: LorvexTask.ID?
+  /// The task record the draft's fields were last filled from. The draft counts
+  /// as edited when it differs from this record, never from the live task: a
+  /// change made elsewhere moves the live task out from under an untouched
+  /// draft, which would then read as the user's own edit.
+  var taskDetailDraftSource: LorvexTask?
 
   mutating func reset() {
     loadedTasksByID = [:]
@@ -62,6 +67,7 @@ struct AppStoreTaskDetailStorage {
     taskDetailRecurrenceDraft = TaskRecurrenceEditorDraft()
     isSavingTaskRecurrence = false
     taskDetailDraftTaskID = nil
+    taskDetailDraftSource = nil
   }
 
   /// A sensible future default for the reminder picker — tomorrow at 9am in

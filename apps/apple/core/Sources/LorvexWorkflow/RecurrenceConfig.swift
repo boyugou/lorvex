@@ -10,7 +10,14 @@ import LorvexDomain
 /// recurrence IS NULL
 /// OR (due_date IS NOT NULL AND recurrence_group_id IS NOT NULL
 ///     AND canonical_occurrence_date IS NOT NULL)
+///
+/// recurrence_instance_key IS NULL
+/// OR (recurrence_group_id IS NOT NULL AND canonical_occurrence_date IS NOT NULL
+///     AND recurrence_instance_key = recurrence_group_id || ':' || canonical_occurrence_date)
 /// ```
+///
+/// The instance key is the natural identity of a generated occurrence, so it
+/// leaves with its group id and follows its occurrence date.
 ///
 /// The planner classifies each recurrence change into one of four
 /// transitions and outputs the exact column actions needed. Surfaces apply
@@ -36,6 +43,9 @@ public enum RecurrenceConfig {
     public var setDueDate: String?
     public var clearRecurrenceGroupId: Bool
     public var clearCanonicalOccurrenceDate: Bool
+    /// Clears the generated occurrence's instance key, which cannot outlive the
+    /// group id and occurrence date it is made of.
+    public var clearRecurrenceInstanceKey: Bool
     public var clearRecurrenceExceptions: Bool
 
     public init(
@@ -44,6 +54,7 @@ public enum RecurrenceConfig {
       setDueDate: String? = nil,
       clearRecurrenceGroupId: Bool = false,
       clearCanonicalOccurrenceDate: Bool = false,
+      clearRecurrenceInstanceKey: Bool = false,
       clearRecurrenceExceptions: Bool = false
     ) {
       self.setRecurrenceGroupId = setRecurrenceGroupId
@@ -51,6 +62,7 @@ public enum RecurrenceConfig {
       self.setDueDate = setDueDate
       self.clearRecurrenceGroupId = clearRecurrenceGroupId
       self.clearCanonicalOccurrenceDate = clearCanonicalOccurrenceDate
+      self.clearRecurrenceInstanceKey = clearRecurrenceInstanceKey
       self.clearRecurrenceExceptions = clearRecurrenceExceptions
     }
   }
@@ -60,15 +72,19 @@ public enum RecurrenceConfig {
     public var recurrence: String?
     public var recurrenceGroupId: String?
     public var canonicalOccurrenceDate: String?
+    /// Set on a generated occurrence, nil on a task the user made recurring.
+    public var recurrenceInstanceKey: String?
     public var dueDate: String?
 
     public init(
       recurrence: String? = nil, recurrenceGroupId: String? = nil,
-      canonicalOccurrenceDate: String? = nil, dueDate: String? = nil
+      canonicalOccurrenceDate: String? = nil, recurrenceInstanceKey: String? = nil,
+      dueDate: String? = nil
     ) {
       self.recurrence = recurrence
       self.recurrenceGroupId = recurrenceGroupId
       self.canonicalOccurrenceDate = canonicalOccurrenceDate
+      self.recurrenceInstanceKey = recurrenceInstanceKey
       self.dueDate = dueDate
     }
   }
@@ -102,6 +118,7 @@ public enum RecurrenceConfig {
         ColumnActions(
           clearRecurrenceGroupId: true,
           clearCanonicalOccurrenceDate: true,
+          clearRecurrenceInstanceKey: true,
           clearRecurrenceExceptions: true)
       )
     } else {

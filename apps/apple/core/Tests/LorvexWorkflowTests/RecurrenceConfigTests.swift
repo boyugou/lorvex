@@ -54,6 +54,7 @@ final class RecurrenceConfigTests: XCTestCase {
     XCTAssertEqual(transition, .disable)
     XCTAssertTrue(actions.clearRecurrenceGroupId)
     XCTAssertTrue(actions.clearCanonicalOccurrenceDate)
+    XCTAssertTrue(actions.clearRecurrenceInstanceKey)
   }
 
 }

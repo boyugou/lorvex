@@ -174,6 +174,10 @@ struct MCPEnvelopeContractTests {
     #expect(
       ToolRegistry.errorCode(for: HabitReminderError.timeTaken(habitId: "h", time: "08:00"))
         == "validation")
+    #expect(
+      ToolRegistry.errorCode(
+        for: RecurrenceScheduleError.occurrenceDateTaken(taskId: "a", date: "2031-03-14"))
+        == "validation")
     #expect(ToolRegistry.errorCode(for: LorvexCoreError.taskNotFound) == "not_found")
     #expect(ToolRegistry.errorCode(for: LorvexCoreError.emptyTitle) == "validation")
     #expect(

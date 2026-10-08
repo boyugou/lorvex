@@ -79,7 +79,9 @@ struct MobileCalendarMonthGrid: View {
       openEvent: openEvent,
       openTask: openTask,
       createEvent: { createEvent(day.date) },
-      dropTasks: { dropTasks($0, day.date) })
+      dropTasks: { dropTasks($0, day.date) }
+    )
+    .equatable()
   }
 
   /// The style every cell of a grid takes: `.titled` where a cell is at least

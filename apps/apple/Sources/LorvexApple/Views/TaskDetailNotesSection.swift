@@ -56,7 +56,7 @@ private struct TaskDetailAINotesPanel: View {
               .controlSize(.small)
               .accessibilityIdentifier("task.detail.aiNotes.clear")
             }
-            MarkdownNoteView(aiNotes, taskItemAccessibility: .init(
+            MarkdownSourceView(aiNotes, taskItemAccessibility: .init(
               completedFormat: String(
                 localized: "markdown.task.completed_a11y", defaultValue: "Completed: %@",
                 table: "Localizable",

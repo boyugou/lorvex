@@ -15,16 +15,16 @@ extension AppStore {
     if let raw = event.recurrenceRule {
       if let rule = TaskRecurrenceRule.bridgeRule(from: raw) {
         draftCalendarRecurrence = rule
-        calendarStorage.draftCalendarRecurrenceBaseline = .known(rule)
+        calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(rule)
       } else {
         draftCalendarRecurrence = nil
-        calendarStorage.draftCalendarRecurrenceBaseline = .opaque
+        calendarDraftStorage.draftCalendarRecurrenceBaseline = .opaque
       }
     } else {
       draftCalendarRecurrence = nil
-      calendarStorage.draftCalendarRecurrenceBaseline = .known(nil)
+      calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
     }
-    calendarStorage.draftCalendarRecurrenceWasEdited = false
+    calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
     // Default to the Lorvex calendar; the edit-open path resolves the mirror's
     // actual calendar asynchronously (`resolveDraftTargetCalendar(for:)`).
     draftCalendarTargetCalendarID = nil
@@ -44,8 +44,8 @@ extension AppStore {
     draftCalendarNotes = ""
     draftCalendarColor = nil
     draftCalendarRecurrence = nil
-    calendarStorage.draftCalendarRecurrenceWasEdited = false
-    calendarStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
+    calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
     draftCalendarTargetCalendarID = nil
   }
 
@@ -90,8 +90,8 @@ extension AppStore {
     draftCalendarNotes = ""
     draftCalendarColor = nil
     draftCalendarRecurrence = nil
-    calendarStorage.draftCalendarRecurrenceWasEdited = false
-    calendarStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
+    calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
     selection = .calendar
   }
 
@@ -129,8 +129,8 @@ extension AppStore {
       draftCalendarNotes = ""
       draftCalendarColor = nil
       draftCalendarRecurrence = nil
-      calendarStorage.draftCalendarRecurrenceWasEdited = false
-      calendarStorage.draftCalendarRecurrenceBaseline = .known(nil)
+      calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
+      calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
       selection = .calendar
     }
   }
@@ -286,16 +286,20 @@ extension AppStore {
   /// EventKit provider events are NOT merged in memory here: the coordinator
   /// ingests them into `provider_calendar_events` (tier-redacted at ingest), and
   /// `loadCalendarTimeline`'s SQL union surfaces them in the same snapshot as
-  /// canonical Lorvex events, which is how they reach the week grid.
+  /// canonical Lorvex events, which is how they reach the week grid. A caller
+  /// whose change added or moved no calendar event (a task mutation) passes
+  /// `ingestingEventKit: false` to read the window from the store as it stands,
+  /// without fetching EventKit again.
   func refreshCalendarTimeline(
-    anchorDate: Date? = nil, dayCount: Int = 14, requestCalendarAccess: Bool = false
+    anchorDate: Date? = nil, dayCount: Int = 14, requestCalendarAccess: Bool = false,
+    ingestingEventKit: Bool = true
   ) async throws {
     let from =
       anchorDate.map { Self.ymdFormatter.string(from: $0) } ?? logicalTodayDateString
     let to = LorvexDateFormatters.ymdUTCAddingDays(from, days: dayCount) ?? from
     calendarStorage.timelineLoadToken &+= 1
     let loadToken = calendarStorage.timelineLoadToken
-    if let coordinator = eventKitCoordinator,
+    if ingestingEventKit, let coordinator = eventKitCoordinator,
       let instantRange = PlannedDayBridge.instantRange(
         fromLogicalDay: from,
         throughLogicalDay: to,
@@ -333,12 +337,13 @@ extension AppStore {
   /// Re-loads whatever window is currently on screen (day, week, or month) at
   /// its own span, so a mutation-triggered refresh (create/edit/delete/drag)
   /// can't silently shrink a wider window — e.g. narrowing the month grid's
-  /// ~42-day span back down to the day/week default of 14.
-  func refreshCurrentCalendarTimeline() async throws {
+  /// ~42-day span back down to the day/week default of 14. `ingestingEventKit`
+  /// carries through to the load, as ``refreshCalendarTimeline`` takes it.
+  func refreshCurrentCalendarTimeline(ingestingEventKit: Bool = true) async throws {
     guard let timeline = calendarTimeline,
       let from = Self.ymdFormatter.date(from: timeline.from)
     else {
-      try await refreshCalendarTimeline()
+      try await refreshCalendarTimeline(ingestingEventKit: ingestingEventKit)
       return
     }
     let dayCount: Int
@@ -348,16 +353,20 @@ extension AppStore {
     } else {
       dayCount = 14
     }
-    try await refreshCalendarTimeline(anchorDate: from, dayCount: dayCount)
+    try await refreshCalendarTimeline(
+      anchorDate: from, dayCount: dayCount, ingestingEventKit: ingestingEventKit)
   }
 
   /// Re-loads the calendar window while the Calendar is on screen. A task
   /// change that leaves Today's own list as it was (a task planned for another
   /// day is completed, deferred, or cancelled) would otherwise leave the grid
-  /// drawing the task as it was. A failed read keeps what is shown.
+  /// drawing the task as it was. A task change adds no calendar event, so the
+  /// window is read from the store without fetching EventKit again; the EventKit
+  /// observer ingests when the app's own write-back changes EventKit. A failed
+  /// read keeps what is shown.
   func reloadCalendarTimelineIfShown() async {
     guard selection == .calendar else { return }
-    try? await refreshCurrentCalendarTimeline()
+    try? await refreshCurrentCalendarTimeline(ingestingEventKit: false)
   }
 
   /// Ensure today's schedule is loaded and freshly ingested for the Today

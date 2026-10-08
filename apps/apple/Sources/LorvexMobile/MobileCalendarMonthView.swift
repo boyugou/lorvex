@@ -127,13 +127,6 @@ struct MobileCalendarMonthView: View {
       // appear opens on its own.
       store.calendarPendingDayKey = nil
     }
-    .onChange(of: monthOffset) { _, offset in
-      // A swipe to another month chooses a day in it; a tap on a day of the
-      // next or previous month has already chosen that day.
-      let start = monthStart(forOffset: offset)
-      guard !calendar.isDate(selectedDay, equalTo: start, toGranularity: .month) else { return }
-      selectedDay = Self.defaultSelection(forMonthStarting: start, today: today, calendar: calendar)
-    }
     .lorvexSensoryFeedback(.selection, trigger: chooseCount)
     .sheet(isPresented: $isShowingCreateEvent) {
       MobileStoreCreateCalendarEventSheet(store: store, isPresented: $isShowingCreateEvent)
@@ -172,7 +165,14 @@ struct MobileCalendarMonthView: View {
   /// cells have fixed geometry, so at accessibility sizes day numbers would
   /// overflow their circles. The agenda keeps growing.
   private func monthColumn(events: [CalendarTimelineEvent], fillsHeight: Bool) -> some View {
-    VStack(spacing: 0) {
+    let source = MobileCalendarMonthPageSource(
+      events: events, tasks: store.calendarScheduledTasks, currentMonthStart: currentMonthStart,
+      weeks: Self.gridWeeks, todayKey: store.logicalTodayString, calendar: calendar)
+    let actions = gridActions
+    let currentMonthIndex = Self.monthIndex(of: currentMonthStart, calendar: calendar)
+    let chosenMonthIndex = Self.monthIndex(of: selectedDay, calendar: calendar)
+    let selectedKey = selectedKey
+    return VStack(spacing: 0) {
       MobileCalendarHeaderRow(
         title: LorvexDateFormatters.string(
           monthStart(forOffset: monthOffset), template: "yMMMM", timeZone: calendar.timeZone,
@@ -181,10 +181,19 @@ struct MobileCalendarMonthView: View {
         goToToday: { choose(today) })
       weekdayRow
       MobileCalendarMonthPager(
-        monthOffset: $monthOffset, pageRange: pageRange, weeks: Self.gridWeeks,
-        fillsHeight: fillsHeight
+        monthOffset: Binding(get: { monthOffset }, set: { page(to: $0) }),
+        pageRange: pageRange, weeks: Self.gridWeeks, fillsHeight: fillsHeight
       ) { offset in
-        page(forOffset: offset, events: events)
+        let holdsGrid = MobileLivePages.holdsContent(offset: offset, visibleOffset: monthOffset)
+        MobileCalendarMonthPage(
+          offset: offset, source: holdsGrid ? source : nil,
+          selectedKey: holdsGrid
+            ? MobileCalendarMonthPage.selectedKey(
+              selectedKey, chosenMonthIndex: chosenMonthIndex, offset: offset,
+              currentMonthIndex: currentMonthIndex)
+            : "",
+          actions: actions
+        ).equatable()
       }
     }
     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
@@ -210,17 +219,10 @@ struct MobileCalendarMonthView: View {
     .accessibilityHidden(true)
   }
 
-  /// The month `offset` months from today's, wired to the store's actions.
-  private func page(forOffset offset: Int, events: [CalendarTimelineEvent]) -> some View {
-    let days = CalendarMonthGridModel.buildDays(
-      monthAnchor: monthStart(forOffset: offset), calendar: calendar, events: events,
-      tasks: store.calendarScheduledTasks, minimumWeeks: Self.gridWeeks,
-      dayKeyFor: { Self.keyFormatter.string(from: $0) })
-    return MobileCalendarMonthGrid(
-      days: days,
-      todayKey: store.logicalTodayString,
-      selectedKey: selectedKey,
-      calendar: calendar,
+  /// What taps, drops, and menu choices on the month grid do, wired to the
+  /// store. Every page of the pager shares this one value.
+  private var gridActions: MobileCalendarMonthGridActions {
+    MobileCalendarMonthGridActions(
       choose: { day in
         chooseCount &+= 1
         choose(day.date)
@@ -272,12 +274,28 @@ struct MobileCalendarMonthView: View {
   static var keyFormatter: DateFormatter { LorvexDateFormatters.ymd }
 
   /// Chooses `day` and pages to its month, which a day of the next or
-  /// previous month needs.
+  /// previous month needs. A month within ``MobileLivePages/keptEachSide``
+  /// slides there with the page animation; a farther one replaces the
+  /// visible page at once.
   private func choose(_ day: Date) {
     selectedDay = calendar.startOfDay(for: day)
     let target = offset(showing: day)
     guard target != monthOffset else { return }
-    lorvexAnimated { monthOffset = target }
+    if MobileLivePages.slides(from: monthOffset, to: target) {
+      lorvexAnimated { monthOffset = target }
+    } else {
+      monthOffset = target
+    }
+  }
+
+  /// Pages to the month `offset` months from today's, which a swipe does, and
+  /// chooses a day in it unless the chosen day is already there. Both change
+  /// in one update, so the month view is evaluated once for a swipe.
+  private func page(to offset: Int) {
+    monthOffset = offset
+    let start = monthStart(forOffset: offset)
+    guard !calendar.isDate(selectedDay, equalTo: start, toGranularity: .month) else { return }
+    selectedDay = Self.defaultSelection(forMonthStarting: start, today: today, calendar: calendar)
   }
 
   /// The page of the month containing `day`, within the pager's range.
@@ -297,14 +315,61 @@ struct MobileCalendarMonthView: View {
     store.switchCalendarPresentationMode(to: mode, onDayKey: selectedKey)
   }
 
-  /// Loads the calendar window for the visible month and both neighbors.
+  /// Loads the calendar window around the visible month when it does not hold
+  /// every month a swipe can reveal (``windowLoad(loaded:visibleMonthStart:weeks:calendar:dayKey:)``),
+  /// two months each way, so the next swipes find their months already loaded.
   private func loadWindow() async {
+    let visible = monthStart(forOffset: monthOffset)
+    let loaded = store.calendarWindowToReload.map { (from: $0.from, to: $0.to) }
+    switch Self.windowLoad(
+      loaded: loaded, visibleMonthStart: visible, weeks: Self.gridWeeks, calendar: calendar,
+      dayKey: { Self.keyFormatter.string(from: $0) })
+    {
+    case .none:
+      return
+    case .now:
+      break
+    case .afterSettling:
+      try? await Task.sleep(for: .milliseconds(350))
+      guard !Task.isCancelled else { return }
+    }
     let window = Self.loadWindow(
-      forMonthStarting: monthStart(forOffset: monthOffset), weeks: Self.gridWeeks,
-      calendar: calendar)
+      forMonthStarting: visible, weeks: Self.gridWeeks, neighborMonths: 2, calendar: calendar)
     await store.refreshCalendarTimeline(
       from: Self.keyFormatter.string(from: window.from),
       to: Self.keyFormatter.string(from: window.through))
+  }
+
+  /// When the view loads the calendar window after the visible month changes.
+  enum WindowLoad: Equatable {
+    /// The loaded window holds the visible month and both months a swipe
+    /// reveals; nothing loads.
+    case none
+    /// The visible month's own days are not loaded, so its marks and agenda are
+    /// empty until the load lands; it loads at once.
+    case now
+    /// Only a neighboring month is missing. The load waits for the swipe to
+    /// settle so the store's update does not land on its animation.
+    case afterSettling
+  }
+
+  /// What to do about the calendar window, given the window the store holds
+  /// (`loaded`, as `yyyy-MM-dd` bounds, nil before any load) and the visible
+  /// month. `dayKey` renders a day as `yyyy-MM-dd`.
+  nonisolated static func windowLoad(
+    loaded: (from: String, to: String)?, visibleMonthStart: Date, weeks: Int, calendar: Calendar,
+    dayKey: (Date) -> String
+  ) -> WindowLoad {
+    guard let loaded else { return .now }
+    func covers(_ window: (from: Date, through: Date)) -> Bool {
+      loaded.from <= dayKey(window.from) && dayKey(window.through) <= loaded.to
+    }
+    let visible = loadWindow(
+      forMonthStarting: visibleMonthStart, weeks: weeks, neighborMonths: 0, calendar: calendar)
+    guard covers(visible) else { return .now }
+    let revealed = loadWindow(
+      forMonthStarting: visibleMonthStart, weeks: weeks, neighborMonths: 1, calendar: calendar)
+    return covers(revealed) ? .none : .afterSettling
   }
 
   /// The page of the month containing `day`, in months from the month that
@@ -325,15 +390,25 @@ struct MobileCalendarMonthView: View {
       ? calendar.startOfDay(for: today) : monthStart
   }
 
+  /// The month containing `date` as a number of months, so the distance
+  /// between two months is a subtraction.
+  nonisolated static func monthIndex(of date: Date, calendar: Calendar) -> Int {
+    let parts = calendar.dateComponents([.year, .month], from: date)
+    return (parts.year ?? 0) * 12 + (parts.month ?? 1) - 1
+  }
+
   /// The days the calendar window spans for the month starting on
-  /// `monthStart`: from the first day of the previous month's grid through
-  /// the last day of the next month's, each grid `weeks` rows long, so a
-  /// swipe either way lands on a month already loaded.
+  /// `monthStart`: from the first day of the grid `neighborMonths` months
+  /// before it through the last day of the grid that many months after it,
+  /// each grid `weeks` rows long, so a swipe either way lands on a month
+  /// already loaded.
   nonisolated static func loadWindow(
-    forMonthStarting monthStart: Date, weeks: Int, calendar: Calendar
+    forMonthStarting monthStart: Date, weeks: Int, neighborMonths: Int = 1, calendar: Calendar
   ) -> (from: Date, through: Date) {
-    let previousMonth = calendar.date(byAdding: .month, value: -1, to: monthStart) ?? monthStart
-    let nextMonth = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? monthStart
+    let previousMonth =
+      calendar.date(byAdding: .month, value: -neighborMonths, to: monthStart) ?? monthStart
+    let nextMonth =
+      calendar.date(byAdding: .month, value: neighborMonths, to: monthStart) ?? monthStart
     let previous = CalendarMonthGridModel.gridRange(
       forMonthContaining: previousMonth, calendar: calendar, minimumWeeks: weeks)
     let next = CalendarMonthGridModel.gridRange(
@@ -357,6 +432,11 @@ private struct MobileCalendarMonthPager<Page: View>: View {
   /// of marks under it.
   @ScaledMetric(relativeTo: .subheadline) private var rowHeight: CGFloat = 46
 
+  /// The page ids stay the same however the visible month moves: a change to
+  /// the list of pages makes the paging view animate a batch of insertions and
+  /// removals and lay out its pages again on every swipe. The pager keeps the
+  /// months it has shown in its list, so `page` decides which of them hold a
+  /// grid.
   var body: some View {
     TabView(selection: $monthOffset) {
       ForEach(pageRange, id: \.self) { offset in

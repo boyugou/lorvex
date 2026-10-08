@@ -113,53 +113,53 @@ extension AppStore {
   }
 
   var draftCalendarTitle: String {
-    get { calendarStorage.draftCalendarTitle }
-    set { calendarStorage.draftCalendarTitle = newValue }
+    get { calendarDraftStorage.draftCalendarTitle }
+    set { calendarDraftStorage.draftCalendarTitle = newValue }
   }
 
   /// When the draft event starts and ends. The create and edit form's Start
   /// and End rows edit it, so an event can run overnight or across days.
   var draftCalendarTiming: CalendarEventTiming {
-    get { calendarStorage.draftCalendarTiming }
-    set { calendarStorage.draftCalendarTiming = newValue }
+    get { calendarDraftStorage.draftCalendarTiming }
+    set { calendarDraftStorage.draftCalendarTiming = newValue }
   }
 
   var draftCalendarLocation: String {
-    get { calendarStorage.draftCalendarLocation }
-    set { calendarStorage.draftCalendarLocation = newValue }
+    get { calendarDraftStorage.draftCalendarLocation }
+    set { calendarDraftStorage.draftCalendarLocation = newValue }
   }
 
   var draftCalendarNotes: String {
-    get { calendarStorage.draftCalendarNotes }
-    set { calendarStorage.draftCalendarNotes = newValue }
+    get { calendarDraftStorage.draftCalendarNotes }
+    set { calendarDraftStorage.draftCalendarNotes = newValue }
   }
 
   var draftCalendarColor: String? {
-    get { calendarStorage.draftCalendarColor }
-    set { calendarStorage.draftCalendarColor = newValue }
+    get { calendarDraftStorage.draftCalendarColor }
+    set { calendarDraftStorage.draftCalendarColor = newValue }
   }
 
   /// The draft event's typed repeat rule, or nil for a one-off event. Edited by
   /// the create/edit form's Repeat row and serialized to canonical recurrence
   /// JSON at the service boundary on create / update / scoped save.
   var draftCalendarRecurrence: TaskRecurrenceRule? {
-    get { calendarStorage.draftCalendarRecurrence }
+    get { calendarDraftStorage.draftCalendarRecurrence }
     set {
-      calendarStorage.draftCalendarRecurrence = newValue
-      calendarStorage.draftCalendarRecurrenceWasEdited = true
+      calendarDraftStorage.draftCalendarRecurrence = newValue
+      calendarDraftStorage.draftCalendarRecurrenceWasEdited = true
     }
   }
 
   var draftCalendarRecurrenceIsOpaque: Bool {
-    if case .opaque = calendarStorage.draftCalendarRecurrenceBaseline { return true }
+    if case .opaque = calendarDraftStorage.draftCalendarRecurrenceBaseline { return true }
     return false
   }
 
   var draftCalendarRecurrencePatch: CalendarEventRecurrencePatch {
-    switch calendarStorage.draftCalendarRecurrenceBaseline {
+    switch calendarDraftStorage.draftCalendarRecurrenceBaseline {
     case .opaque:
       if let draftCalendarRecurrence { return .set(draftCalendarRecurrence) }
-      return calendarStorage.draftCalendarRecurrenceWasEdited ? .clear : .unset
+      return calendarDraftStorage.draftCalendarRecurrenceWasEdited ? .clear : .unset
     case .known(nil):
       return draftCalendarRecurrence.map(CalendarEventRecurrencePatch.set) ?? .unset
     case .known(let original?):
@@ -180,15 +180,15 @@ extension AppStore {
   /// would write them onto the edited event. Restored by
   /// ``restoreStashedCalendarDraft()`` when the create sheet dismisses.
   func stashCalendarDraftForCreate() {
-    calendarStorage.stashedDraft = AppStoreCalendarStorage.CalendarDraftSnapshot(
+    calendarDraftStorage.stashedDraft = AppStoreCalendarDraftStorage.CalendarDraftSnapshot(
       title: draftCalendarTitle,
       timing: draftCalendarTiming,
       location: draftCalendarLocation,
       notes: draftCalendarNotes,
       color: draftCalendarColor,
       recurrence: draftCalendarRecurrence,
-      recurrenceWasEdited: calendarStorage.draftCalendarRecurrenceWasEdited,
-      recurrenceBaseline: calendarStorage.draftCalendarRecurrenceBaseline,
+      recurrenceWasEdited: calendarDraftStorage.draftCalendarRecurrenceWasEdited,
+      recurrenceBaseline: calendarDraftStorage.draftCalendarRecurrenceBaseline,
       targetCalendarID: draftCalendarTargetCalendarID)
   }
 
@@ -196,16 +196,16 @@ extension AppStore {
   /// nothing was stashed). Called when the create sheet dismisses so the inline
   /// editor's draft is the edited event's again, not the create form's leftovers.
   func restoreStashedCalendarDraft() {
-    guard let stashed = calendarStorage.stashedDraft else { return }
-    calendarStorage.stashedDraft = nil
+    guard let stashed = calendarDraftStorage.stashedDraft else { return }
+    calendarDraftStorage.stashedDraft = nil
     draftCalendarTitle = stashed.title
     draftCalendarTiming = stashed.timing
     draftCalendarLocation = stashed.location
     draftCalendarNotes = stashed.notes
     draftCalendarColor = stashed.color
     draftCalendarRecurrence = stashed.recurrence
-    calendarStorage.draftCalendarRecurrenceWasEdited = stashed.recurrenceWasEdited
-    calendarStorage.draftCalendarRecurrenceBaseline = stashed.recurrenceBaseline
+    calendarDraftStorage.draftCalendarRecurrenceWasEdited = stashed.recurrenceWasEdited
+    calendarDraftStorage.draftCalendarRecurrenceBaseline = stashed.recurrenceBaseline
     draftCalendarTargetCalendarID = stashed.targetCalendarID
   }
 }

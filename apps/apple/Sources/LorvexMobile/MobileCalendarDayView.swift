@@ -315,16 +315,19 @@ public struct MobileCalendarDayView: View {
 
   // MARK: Pager
 
-  /// One full-width calendar page (1, 2, 3, or 7 days) wired to the store's
-  /// mutation callbacks.
-  private func column(forOffset offset: Int, dayCount: Int, showsHeaders: Bool) -> some View {
+  /// One full-width calendar column (1, 2, 3, or 7 days) starting on
+  /// `startDate`, wired to the store's mutation callbacks.
+  private func column(
+    startDate: Date, dayCount: Int, showsHeaders: Bool, events: [CalendarTimelineEvent],
+    tasks: [LorvexTask]
+  ) -> MobileCalendarDayColumn {
     MobileCalendarDayColumn(
-      startDate: date(forOffset: offset),
+      startDate: startDate,
       dayCount: dayCount,
       showsHeaders: showsHeaders,
       circlesTodayInHeaders: !showsWeekStrip,
-      events: filteredEvents,
-      tasks: store.calendarScheduledTasks,
+      events: events,
+      tasks: tasks,
       calendar: calendar,
       onOpenDay: weekMode ? { day in openInDayMode(day) } : nil,
       onTapEvent: { event in
@@ -366,15 +369,41 @@ public struct MobileCalendarDayView: View {
     )
   }
 
-  /// The grid's pager, one page per day (or per week in week mode). The
-  /// now-line ticks inside each column's own scoped `TimelineView`, so the
-  /// per-minute refresh never re-instantiates the pages or re-runs the
-  /// lane-packer (`CalendarGridModel.buildDays`) — only the thin now-line
-  /// overlay rebuilds.
+  /// The page at `offset` of the grid's pager: a column while the page is
+  /// near the visible one, an empty placeholder otherwise (``MobileLivePages``).
+  private func page(
+    forOffset offset: Int, dayCount: Int, events: [CalendarTimelineEvent], tasks: [LorvexTask]
+  ) -> MobileCalendarDayPage {
+    guard MobileLivePages.holdsContent(offset: offset, visibleOffset: dayOffset) else {
+      return MobileCalendarDayPage()
+    }
+    let startDate = date(forOffset: offset)
+    let inputs = MobileCalendarDayPage.Inputs(
+      startDate: startDate, dayCount: dayCount, showsHeaders: true,
+      circlesTodayInHeaders: !showsWeekStrip, opensDays: weekMode, events: events, tasks: tasks,
+      calendar: calendar)
+    return MobileCalendarDayPage(inputs: inputs) {
+      column(
+        startDate: startDate, dayCount: dayCount, showsHeaders: true, events: events, tasks: tasks)
+    }
+  }
+
+  /// The grid's pager, one page per day (or per week in week mode). Every
+  /// page of the range stays in the pager's list so a page keeps its
+  /// identity; only the pages near the visible one hold a column
+  /// (``MobileLivePages``), and a page whose inputs did not change is skipped
+  /// when the pager is evaluated again. The now-line ticks inside each
+  /// column's own scoped `TimelineView`, so the per-minute refresh never
+  /// re-instantiates the pages or re-runs the lane-packer
+  /// (`CalendarGridModel.buildDays`) — only the thin now-line overlay
+  /// rebuilds.
   private func pager(dayCount: Int) -> some View {
-    TabView(selection: $dayOffset) {
+    let events = filteredEvents
+    let tasks = store.calendarScheduledTasks
+    return TabView(selection: $dayOffset) {
       ForEach(pageRange, id: \.self) { offset in
-        column(forOffset: offset, dayCount: dayCount, showsHeaders: true)
+        page(forOffset: offset, dayCount: dayCount, events: events, tasks: tasks)
+          .equatable()
           .tag(offset)
       }
     }

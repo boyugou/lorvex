@@ -291,6 +291,8 @@ struct UserFacingErrorTests {
       (.pauseRequiresStartedTask(status: .completed), .pausingUnstartedTask),
       (.pauseRequiresStartedTask(status: .someday), .pausingUnstartedTask),
       (.reopenBlockedByAdvancedSuccessor(taskId: id, successorId: id), .reopeningAdvancedRepeat),
+      (.reopenBlockedByOtherGeneration(taskId: id, successorId: id), .reopeningAdvancedRepeat),
+      (.reopenBlockedByLaterOccurrence(taskId: id), .reopeningAdvancedRepeat),
       (.completeBlockedByAdvancedSuccessor(taskId: id, successorId: id), .completingAdvancedRepeat),
     ]
     for (error, reason) in cases {
@@ -317,8 +319,34 @@ struct UserFacingErrorTests {
         .description
         == "Cannot reopen task \(id): recurrence successor next has already advanced")
     #expect(
+      TaskLifecycleError.reopenBlockedByOtherGeneration(taskId: id, successorId: "next")
+        .description
+        == "Cannot reopen task \(id): successor next belongs to a different lifecycle generation")
+    #expect(
+      TaskLifecycleError.reopenBlockedByLaterOccurrence(taskId: id).description
+        == "Cannot reopen task \(id): a later recurrence descendant is still active")
+    #expect(
       TaskLifecycleError.completeBlockedByAdvancedSuccessor(taskId: id, successorId: "next")
         .description == "Cannot re-complete task \(id): successor next has already advanced")
+  }
+
+  @Test("a day another occurrence holds shows the app's own sentence; the detail keeps the date")
+  func aTakenOccurrenceDayClassifiesToItsReason() {
+    let error = RecurrenceScheduleError.occurrenceDateTaken(
+      taskId: "0192f3a1-7c4b-7def-9abc-1234567890ab", date: "2031-03-14")
+    let classification = UserFacingError.classify(error)
+    #expect(classification.reason == .repeatDayTaken)
+    #expect(classification.category == .validation)
+    #expect(
+      UserFacingError.message(for: classification, copy: copy)
+        == UserFacingError.Reason.repeatDayTaken.localizedMessage)
+    #expect(classification.technicalDetail == error.description)
+    // The MCP boundary keeps the English sentence with the date.
+    #expect(
+      error.description
+        == "Another occurrence of this repeating task already falls on 2031-03-14. "
+        + "Choose a different date.")
+    #expect(error.localizedDescription == error.description)
   }
 
   @Test("a classification survives an encode and decode unchanged")
@@ -379,6 +407,7 @@ struct UserFacingErrorTests {
       "error.reason.completing_canceled_task", "error.reason.canceling_done_task",
       "error.reason.pausing_unstarted_task", "error.reason.record_too_long_to_sync",
       "error.reason.reopening_advanced_repeat", "error.reason.completing_advanced_repeat",
+      "error.reason.repeat_day_taken",
     ]
     #expect(keys.count == reasons.count, "a reason is missing from this key list")
     let lproj = try #require(CoreL10n.bundle.url(forResource: "zh-Hans", withExtension: "lproj"))

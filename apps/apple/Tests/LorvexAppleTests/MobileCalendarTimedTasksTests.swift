@@ -78,7 +78,10 @@ func mobileDayGridWiresTimedTasksThroughToTheGridModel() throws {
 
   #expect(column.contains("tasks: tasks,"))
   #expect(column.contains("ForEach(day.taskBlocks)"))
-  #expect(dayView.contains("tasks: store.calendarScheduledTasks,"))
+  // The pager reads the window's tasks once and hands them to every page's
+  // column.
+  #expect(dayView.contains("let tasks = store.calendarScheduledTasks"))
+  #expect(dayView.contains("tasks: tasks,"))
   #expect(block.contains(".accessibilityIdentifier(\"mobileCalendar.taskBlock\")"))
   // Task blocks open the task and complete it; they are never drag targets.
   #expect(!block.contains("rescheduleGesture"))

@@ -43,7 +43,7 @@ func mobileStoreSelectedTaskResolvesCorrectTaskWhenIDIsSet() async throws {
 
 @MainActor
 @Test
-func mobileTaskStatusMutationDoesNotReloadPlanningCorpus() async throws {
+func mobileTaskStatusMutationReloadsOnlyTheListCounts() async throws {
   let core = StubCoreService(preview: try await makeSeededInMemoryCore())
   let store = MobileStore(core: core, todayString: { "2026-05-23" })
   await store.refresh()
@@ -58,7 +58,10 @@ func mobileTaskStatusMutationDoesNotReloadPlanningCorpus() async throws {
   // Completed tasks leave the open-only Today snapshot.
   #expect(!store.snapshot.today.tasks.contains { $0.id == task.id })
   #expect(try await core.preview.loadTask(id: task.id).status == .completed)
-  #expect(core.loadListsCallCount == 0)
+  // Finishing a task moves it between its list's open and completed counts, so
+  // the list catalog is read again; the habits, the calendar timeline, and the
+  // task pages are not.
+  #expect(core.loadListsCallCount == 1)
   #expect(core.loadHabitsCallCount == 0)
   #expect(core.loadCalendarTimelineCallCount == 0)
   #expect(core.listTasksCallCount == 0)

@@ -103,11 +103,11 @@ extension AppStore {
   func completeTask(id: LorvexTask.ID, undoManager: UndoManager? = nil) async {
     do {
       let updatedToday = try await core.completeTask(id: id)
+      feedbackProvider.playFeedback(.taskCompleted)
       lorvexAnimated(.snappy(duration: 0.18)) {
         today = updatedToday
       }
       try await afterSelectedTaskMutation()
-      feedbackProvider.playFeedback(.taskCompleted)
       errorMessage = nil
       registerReopenUndo(id: id, undoManager: undoManager, actionName: TaskCommand.complete.title)
     } catch {
@@ -146,11 +146,14 @@ extension AppStore {
   /// acts on its current status, then behaves exactly like
   /// `toggleTaskCompletion`. The visible calendar window reloads afterwards so
   /// a block on another day, which Today does not cover, picks up the new
-  /// status.
+  /// status: the mutation's own tail does it while the Calendar is selected,
+  /// and this reloads it otherwise.
   func toggleCalendarTaskCompletion(id: LorvexTask.ID, undoManager: UndoManager? = nil) async {
     guard let task = try? await core.loadTask(id: id) else { return }
     await toggleTaskCompletion(task, undoManager: undoManager)
-    try? await refreshCurrentCalendarTimeline()
+    if selection != .calendar {
+      try? await refreshCurrentCalendarTimeline(ingestingEventKit: false)
+    }
   }
 
   /// Defer a specific task to `date` from a list-row control, without changing

@@ -13785,6 +13785,192 @@
         }
       }
     },
+    "error.reason.repeat_day_taken": {
+      "comment": "Alert shown when a person moves an occurrence of a repeating task to a day that another occurrence of the same series already holds.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوجد بالفعل تكرار آخر لهذه المهمة المتكررة في ذلك اليوم. اختر يومًا آخر."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই পুনরাবৃত্ত টাস্কের আরেকটি বার ইতিমধ্যেই ওই দিনে পড়েছে। অন্য একটি দিন বেছে নিন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An diesem Tag liegt bereits eine andere Wiederholung dieser sich wiederholenden Aufgabe. Wähle einen anderen Tag."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Μια άλλη επανάληψη αυτής της επαναλαμβανόμενης εργασίας πέφτει ήδη εκείνη την ημέρα. Επιλέξτε άλλη ημέρα."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Another occurrence of this repeating task already falls on that day. Choose a different day."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra repetición de esta tarea recurrente ya cae ese día. Elige otro día."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک تکرار دیگر از این کار تکرارشونده همان روز قرار دارد. روز دیگری را انتخاب کنید."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une autre occurrence de cette tâche récurrente tombe déjà ce jour-là. Choisissez un autre jour."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מופע אחר של המשימה החוזרת הזו כבר חל באותו יום. יש לבחור יום אחר."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इस दोहराए जाने वाले कार्य की एक और बार उसी दिन पहले से है। कोई दूसरा दिन चुनें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kejadian lain dari tugas berulang ini sudah jatuh pada hari itu. Pilih hari lain."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un’altra occorrenza di questa attività ricorrente cade già in quel giorno. Scegli un altro giorno."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この繰り返しタスクの別の回がすでにその日にあります。別の日を選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 반복 할 일의 다른 반복이 이미 그날에 있습니다. 다른 날짜를 선택하세요."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "या पुनरावृत्ती होणाऱ्या कार्याची दुसरी वेळ आधीच त्या दिवशी आहे. दुसरा दिवस निवडा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kejadian lain bagi tugas berulang ini sudah jatuh pada hari itu. Pilih hari lain."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een andere herhaling van deze terugkerende taak valt al op die dag. Kies een andere dag."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inne wystąpienie tego zadania cyklicznego przypada już na ten dzień. Wybierz inny dzień."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outra ocorrência desta tarefa recorrente já cai nesse dia. Escolha outro dia."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O altă apariție a acestei sarcini repetitive are loc deja în ziua respectivă. Alegeți altă zi."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другое повторение этой повторяющейся задачи уже приходится на этот день. Выберите другой день."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "மீண்டும் நிகழும் இந்தப் பணியின் மற்றொரு நேர்வு ஏற்கெனவே அந்த நாளில் உள்ளது. வேறொரு நாளைத் தேர்ந்தெடுக்கவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పునరావృతమయ్యే ఈ టాస్క్‌కు చెందిన మరొక సందర్భం ఇప్పటికే ఆ రోజున ఉంది. మరొక రోజును ఎంచుకోండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "งานทำประจำนี้มีอีกครั้งในวันนั้นอยู่แล้ว เลือกวันอื่น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu yinelenen görevin başka bir yinelemesi zaten o güne denk geliyor. Başka bir gün seçin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Інше повторення цього повторюваного завдання вже припадає на цей день. Виберіть інший день."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اس دہرائے جانے والے کام کی ایک اور تکرار پہلے ہی اسی دن ہے۔ کوئی دوسرا دن منتخب کریں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Một lần lặp khác của nhiệm vụ lặp lại này đã rơi vào ngày đó. Hãy chọn ngày khác."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个重复任务的另一次已经在那一天，请选择其他日期。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這個重複任務的另一次已經在那一天，請選擇其他日期。"
+          }
+        }
+      }
+    },
     "error.reason.starting_canceled_task": {
       "comment": "Alert shown when a person starts a task that was canceled.",
       "extractionState": "manual",

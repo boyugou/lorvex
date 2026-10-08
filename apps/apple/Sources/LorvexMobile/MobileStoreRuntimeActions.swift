@@ -285,6 +285,9 @@ extension MobileStore {
   ) async -> Bool {
     guard beginTaskMutation(id: taskID) else { return false }
     defer { endTaskMutation(id: taskID) }
+    let namedIDs = stableUniqueTaskIDs(
+      [taskID, selectedTaskID].compactMap { $0 } + affectedIDs)
+    let placementsBefore = taskPlacements(of: namedIDs)
     do {
       snapshot.today = try await operation()
       if let taskID, let mutatedTask = try? await core.loadTask(id: taskID) {
@@ -304,6 +307,8 @@ extension MobileStore {
       {
         replaceKnownTask(selectedTask)
       }
+      await reloadSurfacesAfterTaskMutation(
+        ifPlacementsChangedFrom: placementsBefore, of: namedIDs)
       invalidateTaskViews()
       await reloadReviewEvidenceAfterTaskMutation()
       await publishMobileSyncSurfaces()
@@ -324,10 +329,14 @@ extension MobileStore {
   ) async -> Bool {
     guard beginTaskMutation(id: taskID) else { return false }
     defer { endTaskMutation(id: taskID) }
+    let namedIDs = stableUniqueTaskIDs([taskID, selectedTaskID].compactMap { $0 })
+    let placementsBefore = taskPlacements(of: namedIDs)
     do {
       let updated = try await operation()
       snapshot.today = try await core.loadToday()
       replaceKnownTask(updated)
+      await reloadSurfacesAfterTaskMutation(
+        ifPlacementsChangedFrom: placementsBefore, of: namedIDs)
       invalidateTaskViews()
       await reloadReviewEvidenceAfterTaskMutation()
       await publishMobileSyncSurfaces()

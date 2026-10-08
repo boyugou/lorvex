@@ -287,11 +287,17 @@ func calendarWeekGridHourLabelsDoNotFallbackToDateNow() throws {
       .appending(path: "Sources/LorvexApple/Views/CalendarWeekGridChrome.swift"),
     encoding: .utf8
   )
+  let formatters = try String(
+    contentsOf: packageRoot()
+      .appending(path: "Sources/LorvexCore/Support/LorvexDateFormatters.swift"),
+    encoding: .utf8
+  )
 
-  #expect(source.contains("DateComponents(calendar: calendar)"))
-  #expect(source.contains("components.year = 2001"))
-  #expect(source.contains("guard let date = calendar.date(from: components)"))
-  #expect(!source.contains("calendar.date(from: components) ?? Date()"))
+  // The gutter reads the shared hour labels, which build each hour's date from
+  // components and name the bare hour when that fails, never the current time.
+  #expect(source.contains("LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)"))
+  #expect(formatters.contains("else { return \"\\(hour)\" }"))
+  #expect(!formatters.contains("?? Date()"))
 }
 
 @Test

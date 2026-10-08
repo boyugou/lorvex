@@ -131,7 +131,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
         isDependencyMutating: isDependencyMutating)
       if let aiNotes = task.aiNotes, !aiNotes.isEmpty {
         Section(MobileTaskPropertyCopy.assistantContext) {
-          MarkdownNoteView(aiNotes,
+          MarkdownSourceView(aiNotes,
             taskItemAccessibility: .init(
               completedFormat: String(
                 localized: "markdown.task.completed_a11y", defaultValue: "Completed: %@",

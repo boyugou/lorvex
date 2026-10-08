@@ -234,9 +234,8 @@ extension RecurrenceConfig {
           sql: "SELECT id FROM tasks WHERE recurrence_instance_key = ?1 AND id <> ?2",
           arguments: [key, taskId.asString])
         guard claimedBy == nil else {
-          throw StoreError.validation(
-            "Another occurrence of this repeating task already falls on \(rescheduledDue). "
-              + "Choose a different date.")
+          throw RecurrenceScheduleError.occurrenceDateTaken(
+            taskId: taskId.asString, date: rescheduledDue)
         }
         setClauses.append("recurrence_instance_key = ?")
         args.append(key)

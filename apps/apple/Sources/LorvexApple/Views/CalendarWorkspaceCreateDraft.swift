@@ -19,8 +19,8 @@ extension CalendarWorkspaceView {
     store.draftCalendarNotes = ""
     store.draftCalendarColor = nil
     store.draftCalendarRecurrence = nil
-    store.calendarStorage.draftCalendarRecurrenceWasEdited = false
-    store.calendarStorage.draftCalendarRecurrenceBaseline = .known(nil)
+    store.calendarDraftStorage.draftCalendarRecurrenceWasEdited = false
+    store.calendarDraftStorage.draftCalendarRecurrenceBaseline = .known(nil)
     store.draftCalendarTargetCalendarID = nil
   }
 }

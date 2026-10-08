@@ -980,6 +980,96 @@ final class LifecycleSpawnSuccessorTests: XCTestCase {
     XCTAssertEqual(parent?[2] as String?, successorId)
   }
 
+  func testReopenRejectsASuccessorFromAnotherLifecycleGeneration() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try seedTimezonePreference(store.writer, "UTC")
+    try seedTask(
+      store.writer,
+      SeedTask(
+        id: "generation-parent", title: "Parent",
+        dueDate: "2026-04-01",
+        canonicalOccurrenceDate: "2026-04-01",
+        recurrence: #"{"FREQ":"DAILY","INTERVAL":1}"#,
+        recurrenceGroupId: "generation-group"))
+    let completion = try runCompletion(
+      store, taskId: "generation-parent", now: "2026-04-01T10:00:00Z",
+      version: "0000000000001_0000_6666666666666666")
+    let successorId = try XCTUnwrap(completion.spawnedSuccessorId)
+    // The parent's lifecycle moved on without the open successor following it,
+    // as when another device's change to the parent arrives first.
+    try store.writer.write { db in
+      let otherVersion = "0000000000002_0000_6666666666666666"
+      try db.execute(
+        sql:
+          "UPDATE tasks SET lifecycle_version = ?1, version = ?1 "
+          + "WHERE id = 'generation-parent'",
+        arguments: [otherVersion])
+    }
+
+    XCTAssertThrowsError(
+      try runReopen(
+        store, taskId: "generation-parent", oldStatus: .completed,
+        now: "2026-04-01T11:00:00Z",
+        version: "0000000000003_0000_6666666666666666")
+    ) { error in
+      guard
+        case TaskLifecycleError.reopenBlockedByOtherGeneration(
+          let blockedTaskId, let blockingSuccessorId) = error
+      else {
+        XCTFail("expected reopenBlockedByOtherGeneration, got \(error)")
+        return
+      }
+      XCTAssertEqual(blockedTaskId, "generation-parent")
+      XCTAssertEqual(blockingSuccessorId, successorId)
+    }
+  }
+
+  func testReopenRejectsASuccessorWhoseOwnSuccessorIsStillActive() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    try seedTimezonePreference(store.writer, "UTC")
+    try seedTask(
+      store.writer,
+      SeedTask(
+        id: "descendant-parent", title: "Parent",
+        dueDate: "2026-04-01",
+        canonicalOccurrenceDate: "2026-04-01",
+        recurrence: #"{"FREQ":"DAILY","INTERVAL":1}"#,
+        recurrenceGroupId: "descendant-group"))
+    let first = try runCompletion(
+      store, taskId: "descendant-parent", now: "2026-04-01T10:00:00Z",
+      version: "0000000000001_0000_7777777777777777")
+    let successorId = try XCTUnwrap(first.spawnedSuccessorId)
+    let second = try runCompletion(
+      store, taskId: successorId, now: "2026-04-02T10:00:00Z",
+      version: "0000000000002_0000_7777777777777777")
+    XCTAssertNotNil(second.spawnedSuccessorId)
+    // The next occurrence is open again while the occurrence after it is
+    // still active, as when a peer's reopen of it has not yet reached the
+    // occurrence after it.
+    try store.writer.write { db in
+      try db.execute(
+        sql:
+          "UPDATE tasks SET status = 'open', completed_at = NULL, "
+          + "recurrence_rollover_state = 'none', recurrence_successor_id = NULL "
+          + "WHERE id = ?1",
+        arguments: [successorId])
+    }
+
+    XCTAssertThrowsError(
+      try runReopen(
+        store, taskId: "descendant-parent", oldStatus: .completed,
+        now: "2026-04-02T11:00:00Z",
+        version: "0000000000003_0000_7777777777777777")
+    ) { error in
+      guard case TaskLifecycleError.reopenBlockedByLaterOccurrence(let blockedTaskId) = error
+      else {
+        XCTFail("expected reopenBlockedByLaterOccurrence, got \(error)")
+        return
+      }
+      XCTAssertEqual(blockedTaskId, "descendant-parent")
+    }
+  }
+
   func testRecompleteRejectsASuccessorThatAlreadyAdvanced() throws {
     let store = try WorkflowTestSupport.freshStore()
     try seedTimezonePreference(store.writer, "UTC")

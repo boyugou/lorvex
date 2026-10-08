@@ -1,3 +1,4 @@
+import Foundation
 import LorvexCore
 
 extension MobileStore {
@@ -51,16 +52,25 @@ extension MobileStore {
     if let index = snapshot.today.tasks.firstIndex(where: { $0.id == task.id }) {
       snapshot.today.tasks[index] = task
     }
-    // Calendar lane membership is planned-first (`planned_date ?? due_date`).
-    let actionDate = task.plannedDate ?? task.dueDate
+    // Calendar lane membership is planned-first (`planned_date ?? due_date`)
+    // within the loaded window, as the core's window query reads it.
+    let isInWindow = calendarWindowContains(task.plannedDate ?? task.dueDate)
     if let index = calendarScheduledTasks.firstIndex(where: { $0.id == task.id }) {
-      if actionDate == nil {
-        calendarScheduledTasks.remove(at: index)
-      } else {
+      if isInWindow {
         calendarScheduledTasks[index] = task
+      } else {
+        calendarScheduledTasks.remove(at: index)
       }
-    } else if actionDate != nil {
+    } else if isInWindow {
       calendarScheduledTasks.append(task)
     }
+  }
+
+  /// Whether `day`, a storage-frame date, lies in the window whose events the
+  /// store holds; false when there is no day or no window has loaded.
+  private func calendarWindowContains(_ day: Date?) -> Bool {
+    guard let day, let timeline = calendarTimeline else { return false }
+    let key = LorvexDateFormatters.ymdUTC.string(from: day)
+    return timeline.from <= key && key <= timeline.to
   }
 }

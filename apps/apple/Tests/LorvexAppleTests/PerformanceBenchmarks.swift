@@ -126,7 +126,8 @@ func appStoreRefreshParallelizesIndependentCoreLoads() throws {
 
   // Today must load first because it owns the product logical day/timezone used
   // to key every independent day-scoped read in the parallel fan-out below.
-  #expect(source.contains("today = try await core.loadToday()"))
+  #expect(source.contains("let loadedToday = try await core.loadToday()"))
+  #expect(source.contains("today = loadedToday"))
   #expect(source.contains("let date = logicalTodayDateString"))
   for load in [
     "async let loadedDailyReview",

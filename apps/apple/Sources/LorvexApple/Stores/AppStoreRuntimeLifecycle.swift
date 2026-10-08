@@ -391,7 +391,9 @@ extension AppStore {
       // first, then fan out every other day-scoped read using that exact key;
       // deriving `date` from the Mac clock could pair a Jul-21 Today snapshot
       // with Jul-20 habits when the configured zone crosses midnight first.
-      today = try await core.loadToday()
+      let loadedToday = try await core.loadToday()
+      await flushDailyReviewDraftBeforeLogicalDayChange(to: loadedToday.logicalDay)
+      today = loadedToday
       rescheduleLogicalDayBoundaryWake()
       let date = logicalTodayDateString
       surfaceDatabaseRecoveryNoticeIfNeeded()
@@ -417,6 +419,7 @@ extension AppStore {
       if dailyReviewWasClean { syncDailyReviewDraft() }
       weeklyReview = try await loadedWeeklyReview
       dayReviewEvidence = await loadedDayEvidence
+      await reloadWeekReviewDigestKeepingOnFailure()
       lists = try await loadedLists
       archivedLists = await loadedArchivedLists
       // Preserve the viewed week across a full refresh (⌘R, window open, CloudKit

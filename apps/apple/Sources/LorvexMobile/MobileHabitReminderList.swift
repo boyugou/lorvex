@@ -18,6 +18,8 @@ struct MobileHabitReminderList: View {
   @State private var timeSheet: MobileHabitReminderTimeContext?
   /// The bell's column, grown with the body style the bell is set in.
   @ScaledMetric(relativeTo: .body) private var bellWidth: CGFloat = 22
+  /// The vertical padding that takes Add Reminder's one line to a 44pt tap target.
+  private static let addTapPadding: CGFloat = 12
 
   private var isInteractive: Bool { addReminder != nil }
   private var sortedPolicies: [HabitReminderPolicy] {
@@ -29,6 +31,7 @@ struct MobileHabitReminderList: View {
       VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
         Label(String(localized: "habits.detail.reminders", defaultValue: "Reminders", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "bell")
           .font(LorvexDesign.Typography.sectionHeader)
+          .accessibilityAddTraits(.isHeader)
 
         VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
           if sortedPolicies.isEmpty {
@@ -46,10 +49,17 @@ struct MobileHabitReminderList: View {
               timeSheet = MobileHabitReminderTimeContext(
                 policy: nil, time: MobileHabitReminderTime.defaultTime())
             } label: {
+              // The words are one line tall. The label's padding lifts the tap
+              // target to 44pt, and the negative padding outside the button
+              // gives the card that height back.
               Label(
                 String(localized: "habits.reminders.add", defaultValue: "Add Reminder", table: "Localizable", bundle: MobileL10n.bundle),
                 systemImage: "plus.circle.fill")
+                .padding(.vertical, Self.addTapPadding)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.borderless)
+            .padding(.vertical, -Self.addTapPadding)
             .disabled(isMutating)
             .accessibilityIdentifier("mobileHabits.detail.reminders.add")
           }

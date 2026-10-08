@@ -295,11 +295,12 @@ struct MobileCalendarPagerTests {
   }
 
   private static func dayInputs(
-    startDate: Date, dayCount: Int = 1, events: [CalendarTimelineEvent] = [], calendar: Calendar
+    startDate: Date, dayCount: Int = 1, events: [CalendarTimelineEvent] = [],
+    pageWidth: CGFloat = 0, calendar: Calendar
   ) -> MobileCalendarDayPage.Inputs {
     MobileCalendarDayPage.Inputs(
       startDate: startDate, dayCount: dayCount, showsHeaders: true, circlesTodayInHeaders: true,
-      opensDays: false, events: events, tasks: [], calendar: calendar)
+      opensDays: false, events: events, tasks: [], pageWidth: pageWidth, calendar: calendar)
   }
 
   private static func dayPage(
@@ -328,6 +329,9 @@ struct MobileCalendarPagerTests {
       page
         != Self.dayPage(
           Self.dayInputs(startDate: start, events: [Self.event("standup")], calendar: calendar)))
+    // A page is built for the width its pager measured, so a new width redraws it.
+    #expect(
+      page != Self.dayPage(Self.dayInputs(startDate: start, pageWidth: 402, calendar: calendar)))
   }
 
   @Test("A day page without a column differs from one with a column and equals another without")

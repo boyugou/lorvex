@@ -1,5 +1,7 @@
+import CoreGraphics
 import Foundation
 import Testing
+@testable import LorvexMobile
 
 @Test
 func mobileCalendarDayColumnDoesNotReanchorAfterUserScrollsTimeAxis() throws {
@@ -94,4 +96,42 @@ func mobileCalendarAgendaPanelIncludesScheduledTasks() throws {
       "date: date, key: key, events: agendaEvents(from: events, on: key), tasks: dayTasks"))
   #expect(dayViewAgenda.contains("MobileCalendarAgendaDay.days("))
   #expect(dayViewAgenda.contains("store.calendarScheduledTasks"))
+}
+
+@Test
+func mobileCalendarDayColumnBuildsNoViewPerHourAndNoSecondPass() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  let source = try String(
+    contentsOf: root.appending(path: "Sources/LorvexMobile/MobileCalendarDayColumn.swift"),
+    encoding: .utf8
+  )
+
+  // The hour lines are one shape and one tap gesture per day column; a view
+  // and a gesture per hour made every seven-day page build 168 of them while
+  // the pager laid it out ahead of the swipe, and a Canvas stalled the first
+  // swipe that brought its page in.
+  #expect(source.contains("MobileHourLinesShape(hourHeight:"))
+  #expect(!source.contains("Canvas {"))
+  #expect(!source.contains("ForEach(0..<24"))
+  // The pager hands the column its width, so a page is drawn once when it is
+  // built; a width the column measured and stored in its own state would
+  // draw every new page a second time.
+  #expect(source.contains("var pageWidth: CGFloat = 0"))
+  #expect(!source.contains("@State private var pageWidth"))
+  #expect(!source.contains("onGeometryChange"))
+}
+
+@MainActor
+@Test
+func mobileCalendarDayColumnMapsATapToTheHourUnderIt() {
+  let hourHeight: CGFloat = 56
+  let cases: [(y: CGFloat, hour: Int)] = [
+    (-3, 0), (0, 0), (55.9, 0), (56, 1), (673, 12), (1343.5, 23), (1344, 23), (5000, 23),
+  ]
+  for (y, hour) in cases {
+    #expect(MobileCalendarDayColumn.hour(atY: y, hourHeight: hourHeight) == hour)
+  }
 }

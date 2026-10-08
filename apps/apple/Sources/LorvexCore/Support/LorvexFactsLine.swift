@@ -33,6 +33,7 @@ public struct LorvexFactsLine: View {
       factPerLine
     }
     .accessibilityElement(children: .ignore)
+    .accessibilityAddTraits(.isStaticText)
     .accessibilityLabel(Text(verbatim: ListFormatter.localizedString(byJoining: facts)))
   }
 

@@ -18,6 +18,13 @@ struct MobileTaskEditSheet: View {
     case notes
   }
 
+  /// The title field's placeholder, which also names it for VoiceOver.
+  private var titleLabel: String {
+    String(
+      localized: "task_edit.title_placeholder", defaultValue: "Title", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
   var body: some View {
     NavigationStack {
       Form {
@@ -27,11 +34,12 @@ struct MobileTaskEditSheet: View {
             bundle: MobileL10n.bundle)
         ) {
           TextField(
-            String(
-              localized: "task_edit.title_placeholder", defaultValue: "Title", table: "Localizable",
-              bundle: MobileL10n.bundle), text: $draft.title, axis: .vertical
+            titleLabel, text: $draft.title, axis: .vertical
           )
           .lineLimit(1...)
+          // A TextField that grows vertically exposes its placeholder as a
+          // value, not as the name VoiceOver reads before it.
+          .accessibilityLabel(titleLabel)
           .focused($focusedField, equals: .title)
           .submitLabel(.next)
           .onSubmit { focusedField = .notes }

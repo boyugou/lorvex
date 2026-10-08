@@ -55,8 +55,7 @@ struct MobileStoreReviewWeekPage: View {
     .refreshable { await store.refresh() }
     .mobileReviewScrollAnchor()
     .accessibilityIdentifier("review.week")
-    // Reloaded with the week's snapshot, which every task change refreshes.
-    .task(id: store.snapshot.weeklyReview) {
+    .task(id: store.weekReviewReadKey) {
       if let loaded = await store.loadWeekShape() { shape = loaded }
       guard store.weeklyReviewAnchor == nil else { return }
       if let loaded = await store.loadWeekAheadAgenda() { weekAhead = loaded }

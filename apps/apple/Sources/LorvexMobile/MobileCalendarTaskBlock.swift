@@ -77,21 +77,28 @@ extension MobileCalendarDayColumn {
     // rather than a second 24pt element to hunt for inside the block.
     .accessibilityElement(children: .ignore)
     .accessibilityAddTraits(.isButton)
-    .accessibilityLabel(taskBlockAccessibilityLabel(block))
+    .accessibilityLabel(taskBlockAccessibilityLabel(block, namingDayOf: dayCount > 1 ? day : nil))
     .accessibilityAction { onTapTask(block.task) }
     .accessibilityAction(named: Text(toggleLabel)) { onToggleTask(block.task) }
+    .accessibilitySortPriority(Self.accessibilitySortPriority(startMin: block.startMin))
     .accessibilityIdentifier("mobileCalendar.taskBlock")
   }
 
-  private func taskBlockAccessibilityLabel(_ block: CalendarGridTaskBlock) -> String {
-    String(
-      format: String(
-        localized: "calendar.task_block.a11y",
-        defaultValue: "Task %@, %@ to %@",
-        table: "Localizable",
-        bundle: MobileL10n.bundle),
-      block.task.title,
-      lorvexClockTimeLabel(minutes: block.startMin),
-      lorvexClockTimeLabel(minutes: block.endMin))
+  /// The block's VoiceOver label: task, start and end, followed by the day when
+  /// `namingDayOf` is given (``MobileCalendarBlockLabel``).
+  private func taskBlockAccessibilityLabel(
+    _ block: CalendarGridTaskBlock, namingDayOf day: CalendarGridDay?
+  ) -> String {
+    MobileCalendarBlockLabel.appendingDay(
+      String(
+        format: String(
+          localized: "calendar.task_block.a11y",
+          defaultValue: "Task %@, %@ to %@",
+          table: "Localizable",
+          bundle: MobileL10n.bundle),
+        block.task.title,
+        lorvexClockTimeLabel(minutes: block.startMin),
+        lorvexClockTimeLabel(minutes: block.endMin)),
+      of: day?.date, calendar: calendar)
   }
 }

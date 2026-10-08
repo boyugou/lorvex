@@ -25,7 +25,7 @@ struct MobileMemoryDetailPanel: View {
         actions
       }
       .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(LorvexDesign.Spacing.xl)
+      .mobileDetailPanelPadding()
     }
     .mobileReadableScrollMargins()
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -40,6 +40,7 @@ struct MobileMemoryDetailPanel: View {
       Text(userContent: entry.displayTitle)
         .font(LorvexDesign.Typography.detailTitle)
         .textSelection(.enabled)
+        .accessibilityAddTraits(.isHeader)
     }
   }
 

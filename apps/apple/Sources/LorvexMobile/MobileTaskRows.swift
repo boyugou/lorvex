@@ -291,19 +291,22 @@ struct MobileTaskCompletionCircle: View {
         .reduceMotionBounce(value: isCompleting)
         .reduceMotionPop(isActive: isCompleting)
         .mobileTaskCircleFrame()
-        .contentShape(Circle())
+        .padding(MobileTaskCircleFrame.tapOutset)
+        .contentShape(Rectangle())
         .padding(.top, LorvexDesign.Spacing.xs)
     }
     .buttonStyle(.borderless)
+    .padding(-MobileTaskCircleFrame.tapOutset)
     .disabled(isMutating || task.status.isResolved)
     .lorvexSensoryFeedback(.success, trigger: isCompleting) { _, now in now }
-    .accessibilityLabel(spokenLabel)
+    .accessibilityLabel(Self.spokenLabel(for: task))
     .accessibilityIdentifier("mobile.task.complete.\(task.id)")
   }
 
-  /// The circle to VoiceOver: the Complete action while the task can still be
-  /// completed, else the state its glyph shows.
-  private var spokenLabel: String {
+  /// The circle to VoiceOver: the Complete action, naming the task, while the
+  /// task can still be completed, else the state its glyph shows. A list of
+  /// circles read one after another says which task each completes.
+  static func spokenLabel(for task: LorvexTask) -> String {
     switch task.status {
     case .completed:
       String(
@@ -312,7 +315,10 @@ struct MobileTaskCompletionCircle: View {
     case .cancelled:
       LorvexTask.Status.cancelled.localizedName
     case .open, .inProgress, .someday:
-      MobileTaskActionCopy.complete
+      String(
+        format: String(
+          localized: "task.row.complete.named.a11y", defaultValue: "Complete %@",
+          table: "Localizable", bundle: MobileL10n.bundle), task.title)
     }
   }
 

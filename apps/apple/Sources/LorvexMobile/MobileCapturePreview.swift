@@ -71,7 +71,7 @@ struct MobileCapturePreviewLine: View {
       Text(preview.addsLine)
         .font(LorvexDesign.Typography.secondaryText)
         .foregroundStyle(.secondary)
-        .lineLimit(1)
+        .lineLimitUnlessAccessibilitySize(1)
       ForEach(preview.words) { word in
         Text(word.label)
           .font(LorvexDesign.Typography.secondaryText.weight(.medium))

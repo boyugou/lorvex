@@ -5,6 +5,19 @@ import LorvexCore
 /// tomorrow's agenda for the review of today, and the week review's week
 /// ahead and finished count per day.
 extension MobileStore {
+  /// What the day review page's own reads (``loadReviewHabits(date:)`` and
+  /// ``loadTomorrowAgenda()``) follow; the page re-reads when it changes.
+  var dayReviewReadKey: DayReviewReadKey {
+    DayReviewReadKey(
+      date: selectedReviewDate, evidence: dayReviewEvidence, taskRevision: taskWorkspaceRevision)
+  }
+
+  /// What the week review page's own reads (``loadWeekAheadAgenda()`` and
+  /// ``loadWeekShape()``) follow; the page re-reads when it changes.
+  var weekReviewReadKey: WeekReviewReadKey {
+    WeekReviewReadKey(review: snapshot.weeklyReview, taskRevision: taskWorkspaceRevision)
+  }
+
   /// The active habits that count in `date`'s review
   /// (``LorvexHabit/isReviewed(on:)``), with their completions that day, or
   /// nil when the read fails, so the page keeps what it shows.

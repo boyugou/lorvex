@@ -8,11 +8,12 @@ struct AppStoreDailyReviewStorage {
   /// Date (`YYYY-MM-DD`) the daily editor is anchored to; `nil` means today.
   /// Only dates inside the staleness write window are ever set here.
   var dailyReviewEditingDate: String?
-  /// The day (`YYYY-MM-DD`) the Reviews surface's Day scope is showing. Drives
-  /// both the date strip's selected card and which day's review / evidence is
-  /// loaded. Defaults to today; a past day still inside the write window keeps
-  /// `dailyReviewEditingDate` in sync (editable), while an older day loads the
-  /// saved review read-only with `dailyReviewEditingDate` left `nil`.
+  /// The past day (`YYYY-MM-DD`) the Reviews surface's Day scope is showing, or
+  /// `nil` while it shows today, whichever day that is. Drives both the date
+  /// strip's selected card and which day's review / evidence is loaded. A past
+  /// day still inside the write window keeps `dailyReviewEditingDate` in sync
+  /// (editable), while an older day loads the saved review read-only with
+  /// `dailyReviewEditingDate` left `nil`.
   var selectedReviewDate: String?
   /// Objective evidence for the selected Day-scope day (counts of completed,
   /// unfinished, habits, events, created). `nil` until first load.

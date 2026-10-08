@@ -94,6 +94,7 @@ struct MobileTaskDetailContent<Actions: View, PaneActions: View>: View {
           Text(userContent: task.title)
             .font(LorvexDesign.Typography.detailTitle)
             .fixedSize(horizontal: false, vertical: true)
+            .accessibilityAddTraits(.isHeader)
           if let statusChip {
             detailChip(statusChip.text, systemImage: statusChip.icon, tint: statusChip.tint)
           }

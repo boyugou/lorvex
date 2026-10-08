@@ -12,6 +12,7 @@ struct MobileHabitVisualizationSection: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
       Label(String(localized: "habits.detail.visualization.title", defaultValue: "Progress", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "chart.xyaxis.line")
         .font(LorvexDesign.Typography.sectionHeader)
+        .accessibilityAddTraits(.isHeader)
 
       if let detail {
         MobileHabitMomentumPanel(habit: habit, stats: detail.stats, timeZone: productTimeZone)
@@ -477,9 +478,17 @@ private struct MobileHabitHeatmapPanel: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(LorvexDesign.Spacing.l)
     .background(LorvexDesign.Palette.card, in: RoundedRectangle(cornerRadius: LorvexDesign.Radius.card, style: .continuous))
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel(heatmapAccessibilityLabel)
-    .accessibilityIdentifier("mobileHabits.detail.heatmap")
+    // The grid places the weeks that do not fit 100,000pt outside its
+    // bounds, and one VoiceOver element made of the panel's content would
+    // take that whole span as its frame. The content is hidden from
+    // VoiceOver and an overlay the size of the card carries the label.
+    .accessibilityHidden(true)
+    .overlay {
+      Color.clear
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(heatmapAccessibilityLabel)
+        .accessibilityIdentifier("mobileHabits.detail.heatmap")
+    }
     .onChange(of: detail) { _, _ in
       refreshCachedGrid()
     }

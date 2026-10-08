@@ -79,8 +79,17 @@ extension MobileCalendarDayColumn {
         }
       }
     }
-    .accessibilityAddTraits(.isButton)
-    .accessibilityLabel(blockAccessibilityLabel(block))
+    // One VoiceOver element per block, as for a task block: the label on a
+    // container with several texts would land on the title and on the time
+    // separately and read the block twice. An event that cannot be edited
+    // opens nothing, so it is not a button.
+    .accessibilityElement(children: .ignore)
+    .accessibilityAddTraits(block.event.editable ? .isButton : [])
+    .accessibilityLabel(
+      blockAccessibilityLabel(block, namingDayOf: allDays.count > 1 ? day : nil)
+    )
+    .accessibilityAction { if block.event.editable { onTapEvent(block.event) } }
+    .accessibilitySortPriority(Self.accessibilitySortPriority(startMin: block.startMin))
     // Haptic pickup when the long-press latches this block for reschedule, via
     // SwiftUI's native feedback (the same idiom the mobile task/habit rows use)
     // rather than a hand-rolled generator.
@@ -149,7 +158,11 @@ extension MobileCalendarDayColumn {
     Color(lorvexHex: event.color) ?? .accentColor
   }
 
-  private func blockAccessibilityLabel(_ block: CalendarGridTimedBlock) -> String {
+  /// The block's VoiceOver label: title, times and place, followed by the
+  /// day when `namingDayOf` is given (``MobileCalendarBlockLabel``).
+  private func blockAccessibilityLabel(
+    _ block: CalendarGridTimedBlock, namingDayOf day: CalendarGridDay?
+  ) -> String {
     var parts = [block.event.title]
     if let start = block.event.startTime {
       parts.append(
@@ -172,6 +185,7 @@ extension MobileCalendarDayColumn {
             localized: "calendar.block.at.a11y", defaultValue: "at %@", table: "Localizable",
             bundle: MobileL10n.bundle), location))
     }
-    return parts.joined(separator: " ")
+    return MobileCalendarBlockLabel.appendingDay(
+      parts.joined(separator: " "), of: day?.date, calendar: calendar)
   }
 }

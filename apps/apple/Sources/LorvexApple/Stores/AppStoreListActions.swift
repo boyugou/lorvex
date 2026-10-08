@@ -116,11 +116,17 @@ extension AppStore {
     }
   }
 
+  /// Returns an archived list to the active set. An archived list can stay
+  /// selected, so when it is the one shown its detail is re-read to drop the
+  /// archived header.
   func unarchiveList(_ list: LorvexList) async {
     await perform {
       _ = try await core.unarchiveList(id: list.id)
       lists = try await core.loadLists()
       archivedLists = try await core.loadArchivedLists()
+      if selectedListID == list.id {
+        try await loadSelectedListDetail()
+      }
     }
   }
 

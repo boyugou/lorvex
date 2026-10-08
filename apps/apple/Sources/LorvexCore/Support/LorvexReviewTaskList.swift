@@ -87,6 +87,10 @@ public struct LorvexReviewTaskList: View {
   private let deferral: Deferral?
   private let openTask: (String) -> Void
 
+  /// The vertical padding that takes the section action's one line of text to
+  /// a tap target of about 44pt.
+  private static let actionTapPadding: CGFloat = 13
+
   @State private var hoveredTaskID: String?
   @State private var completingTaskIDs: Set<String> = []
   @State private var movingTaskIDs: Set<String> = []
@@ -139,10 +143,18 @@ public struct LorvexReviewTaskList: View {
       // text size. Beside the label it keeps its ideal width: an HStack
       // offers each of two flexible children half the row, which would wrap
       // or cut the action even where the row has room.
-      let action = Button(deferral.sectionLabel(movable.count)) {
+      let action = Button {
         Task { await move(movable.map(\.id), with: deferral) }
+      } label: {
+        // The words are one line tall. The label's padding lifts the tap
+        // target to about 44pt, and the negative padding outside the button
+        // gives the layout that height back.
+        Text(deferral.sectionLabel(movable.count))
+          .padding(.vertical, Self.actionTapPadding)
+          .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
+      .padding(.vertical, -Self.actionTapPadding)
       .font(LorvexDesign.Typography.pageLabel)
       .foregroundStyle(LorvexDesign.Palette.accent)
       .disabled(!movingTaskIDs.isEmpty)

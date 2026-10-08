@@ -20,6 +20,9 @@ struct MobileHabitCompletionRing: View {
   /// completion lands and the fill animates to its new value.
   @State private var pulse = false
 
+  /// How far the tap target reaches past the ring, to make it 44pt across.
+  private var tapOutset: CGFloat { max(0, (44 - size) / 2) }
+
   var body: some View {
     Button(action: trigger) {
       MobileProgressRing(
@@ -30,9 +33,13 @@ struct MobileHabitCompletionRing: View {
         symbol: showsSymbol ? habit.tileSymbol : nil
       )
       .reduceMotionPop(isActive: pulse)
+      .padding(tapOutset)
       .contentShape(Circle())
     }
     .buttonStyle(.plain)
+    // The layout keeps the ring's own size; the tap target reaches `tapOutset`
+    // past it on every side.
+    .padding(-tapOutset)
     .disabled(isMutating)
     .lorvexSensoryFeedback(.success, trigger: pulse) { _, now in now }
     .accessibilityLabel(

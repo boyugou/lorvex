@@ -5,9 +5,14 @@ import SwiftUI
 /// starts on the row's own leading edge, in line with a neighboring
 /// `TextField`'s, and the placeholder stands where the first typed character
 /// will.
+///
+/// VoiceOver reaches the editor alone, named by `accessibilityLabel` (the
+/// placeholder when none is given); the placeholder is a picture of that name
+/// and is not a second element.
 public struct MobilePlainTextEditor: View {
   @Binding private var text: String
   private let placeholder: String
+  private let accessibilityLabel: String?
   private let minHeight: CGFloat
 
   /// How far the editor's text container sits in from the view's edge on each
@@ -20,10 +25,12 @@ public struct MobilePlainTextEditor: View {
   public init(
     text: Binding<String>,
     placeholder: String = "",
+    accessibilityLabel: String? = nil,
     minHeight: CGFloat = 80
   ) {
     self._text = text
     self.placeholder = placeholder
+    self.accessibilityLabel = accessibilityLabel
     self.minHeight = minHeight
   }
 
@@ -34,12 +41,14 @@ public struct MobilePlainTextEditor: View {
         .frame(minHeight: minHeight)
         .scrollContentBackground(.hidden)
         .padding(.horizontal, -Self.textInset)
+        .accessibilityLabel(accessibilityLabel ?? placeholder)
       if text.isEmpty && !placeholder.isEmpty {
         Text(placeholder)
           .font(LorvexDesign.Typography.primaryText)
           .foregroundStyle(LorvexDesign.Palette.placeholderText)
           .padding(.top, Self.textTopInset)
           .allowsHitTesting(false)
+          .accessibilityHidden(true)
       }
     }
   }

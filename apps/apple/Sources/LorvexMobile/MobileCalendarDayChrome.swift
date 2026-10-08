@@ -28,14 +28,21 @@ struct MobileCalendarColumnHeaders: View {
       // the header to fill and centers the labels in a tall floating band.
       Color.clear.frame(width: gutterWidth, height: 1)
       ForEach(columns) { day in
+        let spokenDay = MobileCalendarDayName.spoken(
+          day.date, isToday: isToday(day.date), calendar: calendar)
         if let onOpenDay {
           Button { onOpenDay(day.date) } label: { label(for: day) }
             .buttonStyle(.plain)
-            .accessibilityLabel(
-              LorvexDateFormatters.string(day.date, dateStyle: .full, timeZone: calendar.timeZone))
-            .accessibilityAddTraits(isToday(day.date) ? [.isButton, .isSelected] : .isButton)
+            .accessibilityLabel(spokenDay)
+            .accessibilityAddTraits(.isButton)
         } else {
+          // The weekday and the date are one stop that names the day, so a
+          // swipe reads the columns left to right rather than every weekday
+          // and then every date.
           label(for: day)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(spokenDay)
+            .accessibilityAddTraits(.isHeader)
         }
       }
     }
@@ -152,7 +159,9 @@ struct MobileCalendarAllDayStrip: View {
       .multilineTextAlignment(.trailing)
       .frame(width: gutterWidth, alignment: .trailing)
       .padding(.trailing, 6)
+      .mobileCalendarPageReachability()
       ForEach(columns) { day in
+        let isFree = day.allDayEvents.isEmpty && day.scheduledTasks.isEmpty
         VStack(spacing: 3) {
           ForEach(day.allDayEvents) { event in
             allDayPill(
@@ -180,11 +189,15 @@ struct MobileCalendarAllDayStrip: View {
                   }
                 }
               }
-              .accessibilityAddTraits(.isButton)
-              .accessibilityLabel(allDayEventAccessibilityLabel(event))
+              .accessibilityElement(children: .ignore)
+              .accessibilityAddTraits(event.editable ? .isButton : [])
+              .accessibilityLabel(
+                allDayEventAccessibilityLabel(event, namingDayOf: columns.count > 1 ? day : nil)
+              )
+              .accessibilityAction { if event.editable { onTapEvent(event) } }
           }
           ForEach(day.scheduledTasks) { task in
-            allDayTaskPill(task)
+            allDayTaskPill(task, namingDayOf: columns.count > 1 ? day : nil)
           }
         }
         .frame(maxWidth: .infinity, minHeight: cellMinHeight, alignment: .topLeading)
@@ -205,6 +218,9 @@ struct MobileCalendarAllDayStrip: View {
         } isTargeted: { targeted in
           dropTargetedDay = targeted ? day.date : (dropTargetedDay == day.date ? nil : dropTargetedDay)
         }
+        // A day with nothing in it is only a drop target, which would stand
+        // as a nameless stop for VoiceOver.
+        .mobileCalendarPageReachability(hidden: isFree)
       }
     }
     .padding(.vertical, hasContent ? 5 : 2)
@@ -219,7 +235,7 @@ struct MobileCalendarAllDayStrip: View {
   /// priority. The pill opens the task. A compact pill (`isCompact`) keeps
   /// only its title, in the overdue color when the task is overdue; its
   /// context menu still completes it.
-  private func allDayTaskPill(_ task: LorvexTask) -> some View {
+  private func allDayTaskPill(_ task: LorvexTask, namingDayOf day: CalendarGridDay?) -> some View {
     let isDone = task.status == .completed
     let isOverdue = task.isOverdue(now: LorvexPreviewClock.now(in: calendar), timeZone: calendar.timeZone)
     let toggleLabel = MobileTaskActionCopy.completionToggle(isDone: isDone)
@@ -267,11 +283,14 @@ struct MobileCalendarAllDayStrip: View {
     .accessibilityElement(children: .ignore)
     .accessibilityAddTraits(.isButton)
     .accessibilityLabel(
-      String(
-        format: String(
-          localized: "calendar.scheduled_task.a11y", defaultValue: "Scheduled task %@",
-          table: "Localizable", bundle: MobileL10n.bundle),
-        task.title))
+      MobileCalendarBlockLabel.appendingDay(
+        String(
+          format: String(
+            localized: "calendar.scheduled_task.a11y", defaultValue: "Scheduled task %@",
+            table: "Localizable", bundle: MobileL10n.bundle),
+          task.title),
+        of: day?.date, calendar: calendar)
+    )
     .accessibilityValue(
       isOverdue
         ? String(localized: "calendar.task.overdue", defaultValue: "Overdue", table: "Localizable", bundle: MobileL10n.bundle)
@@ -297,13 +316,18 @@ struct MobileCalendarAllDayStrip: View {
 
   /// An all-day event reads as one ("All day event Offsite"); a timed event of
   /// a day or more, which the strip also holds, reads with its span.
-  private func allDayEventAccessibilityLabel(_ event: CalendarTimelineEvent) -> String {
-    guard event.allDay else { return calendarEventAccessibilityLabel(event) }
-    return String(
-      format: String(
-        localized: "calendar.all_day_event.a11y", defaultValue: "All day event %@",
-        table: "Localizable", bundle: MobileL10n.bundle),
-      event.title)
+  private func allDayEventAccessibilityLabel(
+    _ event: CalendarTimelineEvent, namingDayOf day: CalendarGridDay?
+  ) -> String {
+    let label =
+      event.allDay
+      ? String(
+        format: String(
+          localized: "calendar.all_day_event.a11y", defaultValue: "All day event %@",
+          table: "Localizable", bundle: MobileL10n.bundle),
+        event.title)
+      : calendarEventAccessibilityLabel(event)
+    return MobileCalendarBlockLabel.appendingDay(label, of: day?.date, calendar: calendar)
   }
 }
 

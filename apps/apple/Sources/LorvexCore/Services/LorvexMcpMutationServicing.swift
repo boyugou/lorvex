@@ -52,17 +52,21 @@ public struct McpHabitBatchCompletionReceipt: Sendable {
   public var completedIDs: [LorvexHabit.ID]
   public var notFoundIDs: [LorvexHabit.ID]
   public var alreadyCompleteIDs: [LorvexHabit.ID]
+  /// Habits that exist but are archived, so no completion was written for them.
+  public var archivedIDs: [LorvexHabit.ID]
 
   public init(
     snapshot: HabitCatalogSnapshot,
     completedIDs: [LorvexHabit.ID],
     notFoundIDs: [LorvexHabit.ID],
-    alreadyCompleteIDs: [LorvexHabit.ID]
+    alreadyCompleteIDs: [LorvexHabit.ID],
+    archivedIDs: [LorvexHabit.ID] = []
   ) {
     self.snapshot = snapshot
     self.completedIDs = completedIDs
     self.notFoundIDs = notFoundIDs
     self.alreadyCompleteIDs = alreadyCompleteIDs
+    self.archivedIDs = archivedIDs
   }
 }
 

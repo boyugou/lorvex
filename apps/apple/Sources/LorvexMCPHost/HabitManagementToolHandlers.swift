@@ -35,7 +35,10 @@ extension ToolRegistry {
 
     let date = try await logicalDay(nil)
     let deleted = try await deleteHabitPayload(id: id, date: date)
-    return successResult(text: "Deleted habit: \(id)", value: deleted)
+    let text =
+      Self.reportsRemoval(deleted)
+      ? "Deleted habit: \(id)" : "Habit \(id) not found; nothing was deleted."
+    return successResult(text: text, value: deleted)
   }
 
   func reorderHabitsResult(arguments: [String: Value]) async throws -> CallTool.Result {

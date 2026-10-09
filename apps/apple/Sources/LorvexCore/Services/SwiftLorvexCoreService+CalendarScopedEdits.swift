@@ -68,6 +68,10 @@ extension SwiftLorvexCoreService {
     /// Decisions whose occurrence falls on or after `splitDate` (the "following"
     /// tail of a `this_and_following` operation).
     case onOrAfter(String)
+    /// Replacement decisions only. Cancelled and inherit decisions stay, so an
+    /// occurrence that was skipped is not revived by a series edit that leaves
+    /// the occurrence grid unchanged.
+    case replacements
   }
 
   struct DecisionSweepResult {
@@ -92,6 +96,9 @@ extension SwiftLorvexCoreService {
     case .onOrAfter(let date):
       predicate = " AND recurrence_instance_date >= ?"
       arguments.append(date)
+    case .replacements:
+      predicate = " AND occurrence_state = ?"
+      arguments.append(CalendarOccurrenceState.replacement.rawValue)
     }
     let rows = try Row.fetchAll(
       db,

@@ -33,6 +33,7 @@ extension CoreBridgeClient {
     let completedIDs = Set(receipt.completedIDs)
     let notFoundIDs = Set(receipt.notFoundIDs)
     let alreadyCompleteIDs = Set(receipt.alreadyCompleteIDs)
+    let archivedIDs = Set(receipt.archivedIDs)
 
     var completed: [Value] = []
     var skipped: [Value] = []
@@ -41,7 +42,9 @@ extension CoreBridgeClient {
         skipped.append(.object(["id": .string(id), "reason": .string("not found")]))
         continue
       }
-      if alreadyCompleteIDs.contains(id) {
+      if archivedIDs.contains(id) {
+        skipped.append(.object(["id": .string(id), "reason": .string("archived")]))
+      } else if alreadyCompleteIDs.contains(id) {
         skipped.append(.object(["id": .string(id), "reason": .string("already complete")]))
       } else if completedIDs.contains(id), let after = afterByID[id] {
         completed.append(Self.habitCompletionValue(from: after))

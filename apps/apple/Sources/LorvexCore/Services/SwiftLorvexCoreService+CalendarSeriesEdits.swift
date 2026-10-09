@@ -395,8 +395,7 @@ extension SwiftLorvexCoreService {
       color: Self.patchString(updates.color),
       eventType: try Self.patchEventType(updates.eventType),
       personName: Self.patchString(updates.personName),
-      attendees: Self.patchAttendees(updates.attendees),
-      resetOccurrenceDecisions: true)
+      attendees: Self.patchAttendees(updates.attendees))
     let result = try CalendarEventUpdate.updateCalendarEvent(
       db, hlc: hlc, input: input, before: before,
       beforeRecurrence: master.recurrence,
@@ -411,8 +410,16 @@ extension SwiftLorvexCoreService {
         entityId: result.eventId, summary: result.summary,
         before: result.before, after: result.event),
       deviceId: deviceId)
+    // The update starts a new recurrence generation exactly when the start date or
+    // the recurrence pattern changed, which orphans every decision, so all of them
+    // are swept. An edit that keeps the occurrence grid discards the per-occurrence
+    // replacements (the series values apply to every remaining occurrence) and keeps
+    // skipped occurrences skipped.
+    let generationAfter = try CalendarTimelineQueries.getStoredCalendarEvent(db, id: master.id)?
+      .recurrenceGeneration
     let sweep = try sweepSeriesDecisions(
-      db, hlc: hlc, deviceId: deviceId, seriesId: master.id, scope: .all)
+      db, hlc: hlc, deviceId: deviceId, seriesId: master.id,
+      scope: generationAfter == master.recurrenceGeneration ? .replacements : .all)
     return ScopedCalendarEventEditResult(
       seriesID: master.id,
       replacementEvent: try SwiftLorvexCalendarDeserializers.event(result.event),
@@ -483,6 +490,25 @@ extension SwiftLorvexCoreService {
           field: "occurrence_date",
           message: "This calendar-series boundary was previously deleted and cannot be reused.")
       }
+      // Occurrences the user skipped in the tail stay skipped on the new segment while
+      // the split keeps the occurrence grid, so they are read before the sweep removes
+      // the old decisions.
+      let skippedTail: [String]
+      if let oldRecurrence = master.recurrence, let newRecurrence = replacementRecurrence,
+        let generation = master.recurrenceGeneration, timing.startDate == occurrenceDate,
+        CalendarEventRecurrence.recurrenceSkeletonMatches(oldRecurrence, newRecurrence)
+      {
+        skippedTail = try String.fetchAll(
+          db,
+          sql: "SELECT recurrence_instance_date FROM calendar_events "
+            + "WHERE series_id = ? AND occurrence_state = ? AND recurrence_generation = ? "
+            + "AND recurrence_instance_date >= ? ORDER BY recurrence_instance_date",
+          arguments: [
+            master.id, CalendarOccurrenceState.cancelled.rawValue, generation, occurrenceDate,
+          ])
+      } else {
+        skippedTail = []
+      }
       let sweep = try self.sweepSeriesDecisions(
         db, hlc: hlc, deviceId: deviceId, seriesId: master.id,
         scope: .onOrAfter(occurrenceDate))
@@ -544,6 +570,19 @@ extension SwiftLorvexCoreService {
           before: before,
           after: event),
         deviceId: deviceId)
+      for date in skippedTail {
+        let tailContext: CalendarSeriesContext
+        do {
+          tailContext = try Self.seriesContext(db, eventID: cutover.id, occurrenceDate: date)
+        } catch let error as LorvexCoreError {
+          // A date the new segment's rule no longer produces (an earlier end) has nothing to skip.
+          guard case .validation = error else { throw error }
+          continue
+        }
+        _ = try self.upsertOccurrenceDecision(
+          db, hlc: hlc, deviceId: deviceId, context: tailContext,
+          occurrenceDate: date, state: .cancelled)
+      }
       return ScopedCalendarEventEditResult(
         seriesID: master.id,
         originalEvent: SwiftLorvexCalendarDeserializers.event(master),

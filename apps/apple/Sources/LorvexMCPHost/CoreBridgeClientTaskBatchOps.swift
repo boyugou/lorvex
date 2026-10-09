@@ -34,11 +34,22 @@ extension CoreBridgeClient {
 
   func batchMoveTasks(taskIDs: [String], listID: String) async throws -> Value {
     let result = try await service.batchMoveTasks(ids: taskIDs, toListID: listID)
+    let notFound = Set(result.skipped)
+    let alreadyInList = Set(result.alreadyInList.map(\.id))
+    let unmoved = taskIDs.compactMap { id -> Value? in
+      if notFound.contains(id) {
+        return .object(["id": .string(id), "reason": .string("not found")])
+      }
+      if alreadyInList.contains(id) {
+        return .object(["id": .string(id), "reason": .string("already in the list")])
+      }
+      return nil
+    }
     return .object([
       "results": Self.taskValues(from: result.moved),
       "count": .int(result.moved.count),
       "list_id": .string(listID),
-      "skipped": Self.skippedObjects(result.skipped, reason: "not found"),
+      "skipped": .array(unmoved),
     ])
   }
 

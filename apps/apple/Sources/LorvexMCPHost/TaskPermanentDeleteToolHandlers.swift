@@ -18,8 +18,11 @@ extension ToolRegistry {
         isError: false
       )
     } catch {
+      // A task that does not exist is a lookup miss; every other refusal (a task
+      // that is not in the Trash yet) is a state conflict.
+      let code = Self.errorCode(for: error)
       return Self.errorResult(
-        code: "conflict",
+        code: code == "not_found" ? code : "conflict",
         message: "Could not permanently delete task '\(id)': \(error.localizedDescription)",
         toolName: "permanent_delete_task"
       )

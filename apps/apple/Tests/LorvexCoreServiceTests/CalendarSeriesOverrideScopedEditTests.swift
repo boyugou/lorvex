@@ -317,6 +317,80 @@ final class CalendarSeriesOverrideScopedEditTests: XCTestCase {
     XCTAssertEqual(Set(result.invalidatedReplacementEventIDs), Set([firstID, secondID]))
   }
 
+  func testEditAllKeepsSkippedOccurrencesSkippedWhenTheGridIsUnchanged() async throws {
+    let service = try makeService()
+    let event = try await makeRecurringEvent(service)
+    _ = try await service.deleteScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-23", scope: "this_only")
+    let custom = try await service.editScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-24", scope: "this_only",
+      updates: ScopedCalendarEventUpdates(title: "Customized"))
+    let customID = try XCTUnwrap(custom.replacementEvent?.id)
+
+    let result = try await service.editScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-22", scope: "all_in_series",
+      updates: ScopedCalendarEventUpdates(title: "Renamed series"))
+
+    XCTAssertEqual(result.invalidatedReplacementEventIDs, [customID])
+    let timeline = try await service.loadCalendarTimeline(from: "2026-06-22", to: "2026-06-25")
+    let shown = timeline.events.filter { $0.eventID == event.id }
+      .sorted { ($0.occurrenceDate ?? "") < ($1.occurrenceDate ?? "") }
+    XCTAssertEqual(shown.map(\.occurrenceDate), ["2026-06-22", "2026-06-24", "2026-06-25"])
+    XCTAssertTrue(shown.allSatisfy { $0.title == "Renamed series" })
+  }
+
+  func testEditThisAndFollowingKeepsSkippedTailOccurrencesSkipped() async throws {
+    let service = try makeService()
+    let event = try await makeRecurringEvent(service)
+    _ = try await service.deleteScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-25", scope: "this_only")
+
+    _ = try await service.editScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-24", scope: "this_and_following",
+      updates: ScopedCalendarEventUpdates(title: "Tail standup"))
+
+    let timeline = try await service.loadCalendarTimeline(from: "2026-06-22", to: "2026-06-27")
+    let shown = timeline.events.sorted { ($0.occurrenceDate ?? "") < ($1.occurrenceDate ?? "") }
+    XCTAssertEqual(
+      shown.map(\.occurrenceDate),
+      ["2026-06-22", "2026-06-23", "2026-06-24", "2026-06-26", "2026-06-27"])
+    XCTAssertEqual(
+      shown.map(\.title),
+      ["Daily standup", "Daily standup", "Tail standup", "Tail standup", "Tail standup"])
+  }
+
+  func testEditThisAndFollowingThatMovesTheGridDropsSkippedTailOccurrences() async throws {
+    let service = try makeService()
+    let event = try await makeRecurringEvent(service)
+    _ = try await service.deleteScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-26", scope: "this_only")
+
+    _ = try await service.editScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-24", scope: "this_and_following",
+      updates: ScopedCalendarEventUpdates(
+        recurrence: .set(TaskRecurrenceRule(freq: .daily, interval: 2))))
+
+    let timeline = try await service.loadCalendarTimeline(from: "2026-06-24", to: "2026-06-28")
+    let dates = timeline.events.compactMap(\.occurrenceDate).sorted()
+    XCTAssertEqual(dates, ["2026-06-24", "2026-06-26", "2026-06-28"])
+  }
+
+  func testEditAllThatMovesTheGridResetsEveryDecision() async throws {
+    let service = try makeService()
+    let event = try await makeRecurringEvent(service)
+    _ = try await service.deleteScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-24", scope: "this_only")
+
+    _ = try await service.editScopedCalendarEvent(
+      eventID: event.id, occurrenceDate: "2026-06-22", scope: "all_in_series",
+      updates: ScopedCalendarEventUpdates(
+        recurrence: .set(TaskRecurrenceRule(freq: .daily, interval: 2))))
+
+    let timeline = try await service.loadCalendarTimeline(from: "2026-06-22", to: "2026-06-26")
+    let dates = timeline.events.filter { $0.eventID == event.id }.compactMap(\.occurrenceDate).sorted()
+    XCTAssertEqual(dates, ["2026-06-22", "2026-06-24", "2026-06-26"])
+  }
+
   func testDeleteThisAndFollowingReportsOnlyInvalidatedTailReplacementIDs() async throws {
     let service = try makeService()
     let event = try await makeRecurringEvent(service)

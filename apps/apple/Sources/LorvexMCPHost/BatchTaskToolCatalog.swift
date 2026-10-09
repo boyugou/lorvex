@@ -96,7 +96,7 @@ enum BatchTaskToolCatalog {
                 "completed_at": .object([
                   "type": .string("string"),
                   "description": .string(
-                    "Historical completion timestamp (ISO-8601) to preserve when re-creating a completed task."),
+                    "Historical completion timestamp (ISO-8601) to preserve when re-creating a completed task. Needs status completed."),
                 ]),
               ]),
               "required": .array([.string("title")]),

@@ -27,10 +27,14 @@ enum CalendarLinksToolCatalog {
         "end_date": .object([
           "type": .string("string"),
           "description": .string(
-            "YYYY-MM-DD. Set to a date after start_date for a multi-day event."),
+            "YYYY-MM-DD. Set to a date after start_date for a multi-day event. A timed multi-day event also needs end_time."),
         ]),
         "start_time": .object(["type": .string("string")]),
-        "end_time": .object(["type": .string("string")]),
+        "end_time": .object([
+          "type": .string("string"),
+          "description": .string(
+            "HH:MM. Required when end_date is after start_date, unless the event is all-day."),
+        ]),
         "all_day": .object(["type": .string("boolean")]),
         "recurrence": RecurrenceRuleSchema.calendarRecurrencePatchProperty,
         "timezone": .object(["type": .string("string")]),

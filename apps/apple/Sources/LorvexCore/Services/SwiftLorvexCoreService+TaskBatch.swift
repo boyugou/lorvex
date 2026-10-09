@@ -393,9 +393,11 @@ extension SwiftLorvexCoreService {
     -> TaskBatchMoveResult
   {
     try withWrite { db, hlc, deviceId in
+      try TaskClassification.validateTaskListExists(db, listId: ListId(trusted: listID))
       let now = SyncTimestampFormat.syncTimestampNow()
       var movedIds: [LorvexTask.ID] = []
       var moved: [JSONValue] = []
+      var unchanged: [JSONValue] = []
       var skipped: [LorvexTask.ID] = []
       moved.reserveCapacity(ids.count)
       for id in ids {
@@ -404,7 +406,7 @@ extension SwiftLorvexCoreService {
           continue
         }
         guard row.core.listId != listID else {
-          skipped.append(id)
+          unchanged.append(try TaskResponse.loadEnrichedTaskJSON(db, taskId: TaskId(trusted: id)))
           continue
         }
         let version = hlc.nextVersionString()
@@ -436,7 +438,8 @@ extension SwiftLorvexCoreService {
       }
       return TaskBatchMoveResult(
         moved: try SwiftLorvexTaskDeserializers.tasks(moved),
-        skipped: skipped)
+        skipped: skipped,
+        alreadyInList: try SwiftLorvexTaskDeserializers.tasks(unchanged))
     }
   }
 }

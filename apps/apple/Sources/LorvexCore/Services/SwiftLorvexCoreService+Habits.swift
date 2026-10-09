@@ -301,16 +301,17 @@ extension SwiftLorvexCoreService {
       try db.execute(
         sql: "UPDATE habits SET \(setClauses.joined(separator: ", ")) WHERE id = ? AND ? > version",
         arguments: StatementArguments(args))
+      // An unknown id changed no row above; it must be refused here, before the
+      // weekday rebuild inserts child rows that name a habit that does not exist.
+      guard let row = try Self.habitColumnRow(db, id: id) else {
+        throw LorvexCoreError.notFound(entity: .habit, id: id)
+      }
       // Rebuild the weekday materialization when the cadence changed. Local
       // mutations always win the LWW gate above, so the rebuild tracks the new
       // cadence; a non-weekly cadence yields an empty set that clears the child.
       if let frequency = validated.frequency {
         try Self.replaceHabitWeekdays(
           db, habitId: id, weekdays: frequency.toFields().weekdays ?? [])
-      }
-
-      guard let row = try Self.habitColumnRow(db, id: id) else {
-        throw LorvexCoreError.notFound(entity: .habit, id: id)
       }
       try self.enqueueUpsert(db, hlc: hlc, deviceId: deviceId, kind: .habit, entityId: id)
       try self.writeChangelogRow(

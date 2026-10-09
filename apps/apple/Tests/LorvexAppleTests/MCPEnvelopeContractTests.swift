@@ -178,6 +178,17 @@ struct MCPEnvelopeContractTests {
       ToolRegistry.errorCode(
         for: RecurrenceScheduleError.occurrenceDateTaken(taskId: "a", date: "2031-03-14"))
         == "validation")
+    // A rejected calendar field is the caller's input to fix; a wrapped store
+    // error keeps its own class.
+    #expect(ToolRegistry.errorCode(for: CalendarEventOpError.validation("bad")) == "validation")
+    #expect(
+      ToolRegistry.errorCode(
+        for: CalendarEventOpError.startTimeSkipped(
+          time: "02:30", date: "2031-03-09", timezone: "America/New_York")) == "validation")
+    #expect(
+      ToolRegistry.errorCode(
+        for: CalendarEventOpError.store(.notFound(entity: "calendar_event", id: "x")))
+        == "not_found")
     #expect(ToolRegistry.errorCode(for: LorvexCoreError.taskNotFound) == "not_found")
     #expect(ToolRegistry.errorCode(for: LorvexCoreError.emptyTitle) == "validation")
     #expect(

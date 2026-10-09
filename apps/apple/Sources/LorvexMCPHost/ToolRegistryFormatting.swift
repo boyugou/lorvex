@@ -28,6 +28,13 @@ extension ToolRegistry {
     return taskID
   }
 
+  /// Whether a delete tool's payload reports that a row was removed. A payload
+  /// without a `deleted` flag counts as removed, matching the tools that only
+  /// return after a successful delete.
+  static func reportsRemoval(_ payload: Value) -> Bool {
+    payload.objectValue?["deleted"]?.boolValue ?? true
+  }
+
   static func priorityNumber(from value: Value?) -> Int? {
     if let number = value?.intValue {
       return (1...3).contains(number) ? number : nil
@@ -72,6 +79,11 @@ extension ToolRegistry {
     case is ValidationError, is TaskLifecycleError, is RecurrenceScheduleError,
       is HabitReminderError:
       return "validation"
+    case let calendarError as CalendarEventOpError:
+      // A rejected calendar field (shape rule, skipped daylight-saving start)
+      // is the caller's input to fix; a wrapped store error keeps its own class.
+      if case .store(let storeError) = calendarError { return errorCode(for: storeError) }
+      return "validation"
     case let applyError as ApplyError:
       if case .dependencyCycleRejected = applyError { return "dependency_cycle" }
       return "tool_error"
@@ -109,6 +121,38 @@ extension ToolRegistry {
     // `localizedDescription` yields for a plain `Error`.
     return String(describing: error)
   }
+
+  /// `result` with a closing text note naming the arguments the call sent that its
+  /// tool's schema does not declare. A handler ignores such an argument, so
+  /// without the note a caller that believes one took effect (a `list_id` passed
+  /// to `update_task`, which cannot move a task) is never told. Errors carry the
+  /// note too: a "required argument missing" refusal is often the same misspelled
+  /// name. The structured payload is left as it is, and the whole sentence is
+  /// fenced because it echoes caller-chosen names.
+  static func noting(undeclaredArgumentsOf params: CallTool.Parameters, in result: CallTool.Result)
+    -> CallTool.Result
+  {
+    guard let definition = ToolDefinitionRegistry.byName[params.name],
+      let arguments = params.arguments
+    else { return result }
+    let names = ToolArgumentNormalization.undeclaredArgumentNames(
+      arguments, schema: definition.tool.inputSchema)
+    guard !names.isEmpty else { return result }
+    let shown = names.prefix(Self.maxNamedUndeclaredArguments).joined(separator: ", ")
+    let more =
+      names.count > Self.maxNamedUndeclaredArguments
+      ? " and \(names.count - Self.maxNamedUndeclaredArguments) more" : ""
+    let note = SecurityFencing.fence(
+      "Ignored argument(s) that \(params.name) does not accept: \(shown)\(more). "
+        + "Check the tool's input schema for the parameters it takes.")
+    return CallTool.Result(
+      content: result.content + [.text(text: note, annotations: nil, _meta: nil)],
+      structuredContent: result.structuredContent,
+      isError: result.isError,
+      _meta: result._meta)
+  }
+
+  private static let maxNamedUndeclaredArguments = 8
 
   static func errorResult(code: String, message: String, toolName: String? = nil) -> CallTool.Result {
     let fencedMessage = SecurityFencing.fence(message)

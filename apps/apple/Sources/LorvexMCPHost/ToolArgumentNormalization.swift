@@ -38,6 +38,55 @@ enum ToolArgumentNormalization {
       .replacingOccurrences(of: closeToken, with: "")
   }
 
+  /// The arguments the caller sent that the schema does not declare, sorted, each
+  /// named by its path (`list_id`, `tasks[2].priorty`). A handler ignores such an
+  /// argument, so a caller that believes it took effect is never told otherwise.
+  /// The check covers the top-level object and the objects inside arrays (batch
+  /// items). A nested object under a plain property (a recurrence rule) is left
+  /// to its own parser, and an object whose schema lists no `properties`, or
+  /// allows `additionalProperties`, accepts any name.
+  static func undeclaredArgumentNames(_ arguments: [String: Value], schema: Value) -> [String] {
+    var names: [String] = []
+    collectUndeclared(arguments, schema: schema, path: "", into: &names)
+    return names.sorted()
+  }
+
+  private static func collectUndeclared(
+    _ object: [String: Value], schema: Value?, path: String, into names: inout [String]
+  ) {
+    let schemaObject = schema?.objectValue
+    guard let properties = schemaObject?["properties"]?.objectValue else { return }
+    if let additional = schemaObject?["additionalProperties"], additional != .bool(false) { return }
+    for (key, value) in object {
+      let childPath = path.isEmpty ? key : "\(path).\(key)"
+      guard let propertySchema = properties[key] else {
+        names.append(childPath)
+        continue
+      }
+      collectUndeclaredInArray(value, schema: propertySchema, path: childPath, into: &names)
+    }
+  }
+
+  private static func collectUndeclaredInArray(
+    _ value: Value, schema: Value, path: String, into names: inout [String]
+  ) {
+    guard case .array(let elements) = value else { return }
+    let items = schema.objectValue?["items"]
+    for (index, element) in elements.enumerated() {
+      let elementPath = "\(path)[\(index)]"
+      switch element {
+      case .object(let object):
+        collectUndeclared(object, schema: items, path: elementPath, into: &names)
+      case .array:
+        if let items {
+          collectUndeclaredInArray(element, schema: items, path: elementPath, into: &names)
+        }
+      default:
+        break
+      }
+    }
+  }
+
   private static let openToken =
     "\(SecurityFencing.openSentinel)user\(SecurityFencing.closeSentinel)"
   private static let closeToken =

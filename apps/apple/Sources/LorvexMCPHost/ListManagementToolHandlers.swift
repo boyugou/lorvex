@@ -49,7 +49,10 @@ extension ToolRegistry {
     }
 
     let deleted = try await deleteListPayload(id: id)
-    return successResult(text: "Deleted list \(id).", value: deleted)
+    let text =
+      Self.reportsRemoval(deleted)
+      ? "Deleted list \(id)." : "List \(id) not found; nothing was deleted."
+    return successResult(text: text, value: deleted)
   }
 
   func archiveListResult(arguments: [String: Value]) async throws -> CallTool.Result {

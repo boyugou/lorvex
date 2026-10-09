@@ -169,6 +169,52 @@ final class CalendarEventTests: XCTestCase {
     }
   }
 
+  func testCreateRejectsMultiDayTimedEventWithoutEndTime() {
+    var input = createInput()
+    input.endDate = "2026-05-03"
+    input.endTime = nil
+    XCTAssertThrowsError(try CalendarNormalization.normalizeCalendarCreate(input)) {
+      error in
+      guard case CalendarEventOpError.validation(let msg) = error else {
+        return XCTFail("expected validation error, got \(error)")
+      }
+      XCTAssertTrue(msg.contains("end_time is required"), msg)
+    }
+  }
+
+  func testCreateAcceptsMultiDayTimedEventWithEndTime() throws {
+    var input = createInput()
+    input.endDate = "2026-05-03"
+    input.endTime = "10:00"
+    let normalized = try CalendarNormalization.normalizeCalendarCreate(input)
+    XCTAssertEqual(normalized.endTime, "10:00")
+  }
+
+  func testCreateAcceptsMultiDayAllDayEventWithoutTimes() throws {
+    var input = createInput()
+    input.allDay = true
+    input.startTime = nil
+    input.endTime = nil
+    input.endDate = "2026-05-03"
+    let normalized = try CalendarNormalization.normalizeCalendarCreate(input)
+    XCTAssertNil(normalized.endTime)
+  }
+
+  func testUpdateRejectsClearingEndTimeOfMultiDayTimedEvent() {
+    var existing = existingFixture()
+    existing.endDate = "2026-05-03"
+    var input = updateInput()
+    input.endTime = .clear
+    XCTAssertThrowsError(
+      try CalendarNormalization.normalizeCalendarUpdate(input, existing: existing)
+    ) { error in
+      guard case CalendarEventOpError.validation(let msg) = error else {
+        return XCTFail("expected validation error, got \(error)")
+      }
+      XCTAssertTrue(msg.contains("end_time is required"), msg)
+    }
+  }
+
   func testCreateAcceptsZeroDurationTimedEvent() throws {
     var input = createInput()
     input.endTime = input.startTime
@@ -308,6 +354,36 @@ final class CalendarEventTests: XCTestCase {
       }
       XCTAssertTrue(msg.contains("BYDAY"), msg)
     }
+  }
+
+  func testUpdateRefusesTimesOnAnAllDayEventThatStaysAllDay() throws {
+    let existing = CalendarUpdateExisting(startDate: "2026-05-01", allDay: true)
+    for (field, patch) in [("start_time", "09:31"), ("end_time", "11:20")] {
+      var input = updateInput()
+      if field == "start_time" { input.startTime = .set(patch) } else { input.endTime = .set(patch) }
+      XCTAssertThrowsError(
+        try CalendarNormalization.normalizeCalendarUpdate(input, existing: existing)
+      ) { error in
+        guard case CalendarEventOpError.validation(let msg) = error else {
+          return XCTFail("expected validation error, got \(error)")
+        }
+        XCTAssertTrue(msg.contains(field) && msg.contains("all_day"), msg)
+      }
+    }
+
+    // Flipping all_day to false in the same patch makes it a timed event.
+    var timed = updateInput()
+    timed.allDay = false
+    timed.startTime = .set("09:31")
+    timed.endTime = .set("11:20")
+    let normalized = try CalendarNormalization.normalizeCalendarUpdate(timed, existing: existing)
+    XCTAssertEqual(normalized.startTime, .set("09:31"))
+    XCTAssertEqual(normalized.allDay, false)
+
+    // Clearing a time on an all-day event is harmless and stays allowed.
+    var cleared = updateInput()
+    cleared.endTime = .clear
+    XCTAssertNoThrow(try CalendarNormalization.normalizeCalendarUpdate(cleared, existing: existing))
   }
 
   func testUpdateLeavesRecurrenceUnsetWhenStartDateUnchanged() throws {

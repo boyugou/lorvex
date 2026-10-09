@@ -66,6 +66,20 @@
       return URL(fileURLWithPath: arguments[index + 1])
     }
 
+    /// `-uiPreviewWindowSize <width>x<height>` sizes the tour's main window, in
+    /// points, instead of the default 1440 x 900 (never larger than the roomiest
+    /// display). `1000x600`, the main window's minimum content size, captures
+    /// the smallest layout a person can resize the window to.
+    static var tourWindowSize: NSSize? {
+      let arguments = CommandLine.arguments
+      guard let index = arguments.firstIndex(of: "-uiPreviewWindowSize"),
+        index + 1 < arguments.count
+      else { return nil }
+      let parts = arguments[index + 1].split(separator: "x").compactMap { Double($0) }
+      guard parts.count == 2, parts.allSatisfy({ $0 > 0 }) else { return nil }
+      return NSSize(width: parts[0], height: parts[1])
+    }
+
     /// How long a stop waits to be acknowledged before it gives up on the
     /// driver and advances anyway.
     private static let captureAckTimeout = Duration.seconds(30)
@@ -374,7 +388,7 @@
       // workspace, and inspector), the inspector captures show the inspector
       // in the sidebar's place, as the app does for anyone on that display
       // (`MainWindowLayout`); the roomiest display shows all three when it can.
-      let preferred = NSSize(width: 1440, height: 900)
+      let preferred = tourWindowSize ?? NSSize(width: 1440, height: 900)
       let screen =
         NSScreen.screens
         .map(\.visibleFrame)

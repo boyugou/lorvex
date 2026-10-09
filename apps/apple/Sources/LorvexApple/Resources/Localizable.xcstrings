@@ -29110,7 +29110,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Danh sách kiểm tra"
+            "value": "Checklist"
           }
         },
         "zh-Hans": {
@@ -120765,73 +120765,73 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا توجد ملاحظات"
+            "value": "لا توجد إدخالات في الذاكرة"
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "কোনো নোট নেই"
+            "value": "কোনো মেমোরি এন্ট্রি নেই"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Notizen"
+            "value": "Keine Gedächtniseinträge"
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Καμία σημείωση"
+            "value": "Καμία καταχώριση μνήμης"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Notes"
+            "value": "No Memory Entries"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No hay notas"
+            "value": "No hay recuerdos"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "بدون یادداشت"
+            "value": "موردی در حافظه وجود ندارد"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucune note"
+            "value": "Aucun souvenir"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "אין הערות"
+            "value": "אין רשומות זיכרון"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "कोई नोट नहीं"
+            "value": "कोई मेमोरी एंट्री नहीं"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tidak Ada Catatan"
+            "value": "Tidak Ada Entri Memori"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nessuna nota"
+            "value": "Nessun ricordo"
           }
         },
         "ja": {
@@ -120849,91 +120849,91 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "नोट्स नाहीत"
+            "value": "मेमरी नोंदी नाहीत"
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tiada Nota"
+            "value": "Tiada Entri Memori"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geen notities"
+            "value": "Geen geheugenitems"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brak notatek"
+            "value": "Brak wpisów"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhuma nota"
+            "value": "Nenhuma memória"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicio notiță"
+            "value": "Nicio înregistrare din memorie"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нет заметок"
+            "value": "Нет записей"
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "குறிப்புகள் இல்லை"
+            "value": "நினைவகப் பதிவுகள் இல்லை"
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "నోట్స్ లేవు"
+            "value": "మెమరీ నమోదులు లేవు"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่มีโน้ต"
+            "value": "ไม่มีรายการหน่วยความจำ"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not yok"
+            "value": "Bellek girdisi yok"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Немає нотаток"
+            "value": "Немає записів"
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "کوئی نوٹ نہیں"
+            "value": "کوئی حافظہ اندراج نہیں"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không có ghi chú"
+            "value": "Không có mục ghi nhớ"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "没有笔记"
+            "value": "暂无记忆条目"
           }
         },
         "zh-Hant": {
@@ -121505,73 +121505,73 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ما يتذكره المساعد عنك. يمكنك أيضًا إضافة الملاحظات أو تعديلها."
+            "value": "ما يتذكره المساعد عنك. يمكنك أيضًا إضافة الإدخالات أو تعديلها."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "আপনার সম্পর্কে অ্যাসিস্ট্যান্ট যা মনে রাখে। আপনিও নোট যোগ বা এডিট করতে পারেন।"
+            "value": "আপনার সম্পর্কে অ্যাসিস্ট্যান্ট যা মনে রাখে। আপনিও এন্ট্রি যোগ বা এডিট করতে পারেন।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was sich der Assistent über dich merkt. Du kannst auch selbst Notizen hinzufügen oder bearbeiten."
+            "value": "Was sich der Assistent über dich merkt. Du kannst auch selbst Einträge hinzufügen oder bearbeiten."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Όσα θυμάται ο βοηθός για εσάς. Μπορείτε επίσης να προσθέτετε ή να επεξεργάζεστε σημειώσεις."
+            "value": "Όσα θυμάται ο βοηθός για εσάς. Μπορείτε επίσης να προσθέτετε ή να επεξεργάζεστε καταχωρίσεις."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What the assistant remembers about you. You can add or edit notes too."
+            "value": "What the assistant remembers about you. You can add or edit entries too."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lo que el asistente recuerda sobre ti. También puedes añadir o editar notas."
+            "value": "Lo que el asistente recuerda sobre ti. También puedes añadir o editar recuerdos."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "آنچه دستیار درباره شما به یاد دارد. شما هم می‌توانید یادداشت‌ها را اضافه یا ویرایش کنید."
+            "value": "آنچه دستیار درباره شما به یاد دارد. شما هم می‌توانید موارد را اضافه یا ویرایش کنید."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce que l’assistant retient à votre sujet. Vous pouvez aussi ajouter ou modifier des notes."
+            "value": "Ce que l’assistant retient à votre sujet. Vous pouvez aussi ajouter ou modifier des souvenirs."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "מה שהעוזר זוכר עליך. אפשר גם להוסיף הערות או לערוך אותן."
+            "value": "מה שהעוזר זוכר עליך. אפשר גם להוסיף רשומות או לערוך אותן."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "आपके बारे में असिस्टेंट को जो याद है। आप भी नोट जोड़ या संपादित कर सकते हैं।"
+            "value": "आपके बारे में असिस्टेंट को जो याद है। आप भी एंट्री जोड़ या संपादित कर सकते हैं।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apa yang diingat asisten tentang Anda. Catatan juga dapat ditambahkan atau diedit."
+            "value": "Apa yang diingat asisten tentang Anda. Entri juga dapat ditambahkan atau diedit."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ciò che l’assistente ricorda di te. Puoi anche aggiungere o modificare note."
+            "value": "Ciò che l’assistente ricorda di te. Puoi anche aggiungere o modificare ricordi."
           }
         },
         "ja": {
@@ -121589,91 +121589,91 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "सहाय्यक तुमच्याबद्दल काय लक्षात ठेवतो. तुम्ही स्वतःही नोट्स जोडू किंवा संपादित करू शकता."
+            "value": "सहाय्यक तुमच्याबद्दल काय लक्षात ठेवतो. तुम्ही स्वतःही नोंदी जोडू किंवा संपादित करू शकता."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apa yang diingati pembantu AI tentang anda. Anda juga boleh menambah atau mengedit nota."
+            "value": "Apa yang diingati pembantu AI tentang anda. Anda juga boleh menambah atau mengedit entri."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wat de assistent over jou onthoudt. Je kunt ook zelf notities toevoegen of wijzigen."
+            "value": "Wat de assistent over jou onthoudt. Je kunt ook zelf items toevoegen of wijzigen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "To, co asystent o tobie pamięta. Notatki możesz też dodawać i edytować samodzielnie."
+            "value": "To, co asystent o tobie pamięta. Wpisy możesz też dodawać i edytować samodzielnie."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O que o assistente lembra sobre você. Você também pode adicionar ou editar notas."
+            "value": "O que o assistente lembra sobre você. Você também pode adicionar ou editar memórias."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce reține asistentul despre dvs. Puteți adăuga sau edita și notițe."
+            "value": "Ce reține asistentul despre dvs. Puteți adăuga sau edita și înregistrări din memorie."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Что ассистент помнит о вас. Вы тоже можете добавлять и изменять заметки."
+            "value": "Что ассистент помнит о вас. Вы тоже можете добавлять и изменять записи."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "உங்களைப் பற்றி அசிஸ்டென்ட் நினைவில் வைத்திருப்பவை. குறிப்புகளை நீங்களும் சேர்க்கலாம் அல்லது திருத்தலாம்."
+            "value": "உங்களைப் பற்றி அசிஸ்டென்ட் நினைவில் வைத்திருப்பவை. பதிவுகளை நீங்களும் சேர்க்கலாம் அல்லது திருத்தலாம்."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "మీ గురించి అసిస్టెంట్‌కు గుర్తున్నవి. మీరు కూడా నోట్స్ జోడించవచ్చు లేదా ఎడిట్ చేయవచ్చు."
+            "value": "మీ గురించి అసిస్టెంట్‌కు గుర్తున్నవి. మీరు కూడా నమోదులు జోడించవచ్చు లేదా ఎడిట్ చేయవచ్చు."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "สิ่งที่ผู้ช่วยจดจำเกี่ยวกับคุณ คุณสามารถเพิ่มหรือแก้ไขโน้ตได้เช่นกัน"
+            "value": "สิ่งที่ผู้ช่วยจดจำเกี่ยวกับคุณ คุณสามารถเพิ่มหรือแก้ไขรายการได้เช่นกัน"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Asistanın sizin hakkınızda hatırladıkları. Siz de not ekleyebilir veya düzenleyebilirsiniz."
+            "value": "Asistanın sizin hakkınızda hatırladıkları. Siz de bellek girdisi ekleyebilir veya düzenleyebilirsiniz."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Що асистент пам’ятає про вас. Ви також можете додавати й змінювати нотатки."
+            "value": "Що асистент пам’ятає про вас. Ви також можете додавати й змінювати записи."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "اسسٹنٹ آپ کے بارے میں کیا یاد رکھتا ہے۔ آپ بھی نوٹس شامل یا ان میں ترمیم کر سکتے ہیں۔"
+            "value": "اسسٹنٹ آپ کے بارے میں کیا یاد رکھتا ہے۔ آپ بھی اندراجات شامل یا ان میں ترمیم کر سکتے ہیں۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Những điều trợ lý ghi nhớ về bạn. Bạn cũng có thể thêm hoặc sửa ghi chú."
+            "value": "Những điều trợ lý ghi nhớ về bạn. Bạn cũng có thể thêm hoặc sửa mục ghi nhớ."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "助手记住的关于你的信息。你也可以添加或编辑笔记。"
+            "value": "助手记住的关于你的信息。你也可以添加或编辑条目。"
           }
         },
         "zh-Hant": {
@@ -243050,73 +243050,73 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا توجد ملاحظات مطابقة"
+            "value": "لا توجد إدخالات مطابقة في الذاكرة"
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "কোনো মিলে যাওয়া নোট নেই"
+            "value": "কোনো মিলে যাওয়া মেমোরি এন্ট্রি নেই"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine passenden Notizen"
+            "value": "Keine passenden Gedächtniseinträge"
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Καμία αντίστοιχη σημείωση"
+            "value": "Καμία αντίστοιχη καταχώριση μνήμης"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No Matching Notes"
+            "value": "No Matching Memory Entries"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ninguna nota coincide"
+            "value": "Ningún recuerdo coincide"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "یادداشتی منطبق نیست"
+            "value": "موردی منطبق در حافظه نیست"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucune note correspondante"
+            "value": "Aucun souvenir correspondant"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "אין הערות תואמות"
+            "value": "אין רשומות זיכרון תואמות"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "कोई मेल खाता नोट नहीं"
+            "value": "कोई मेल खाती मेमोरी एंट्री नहीं"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tidak Ada Catatan yang Cocok"
+            "value": "Tidak Ada Entri Memori yang Cocok"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nessuna nota corrispondente"
+            "value": "Nessun ricordo corrispondente"
           }
         },
         "ja": {
@@ -243134,91 +243134,91 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "जुळणाऱ्या नोट्स नाहीत"
+            "value": "जुळणाऱ्या मेमरी नोंदी नाहीत"
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tiada Nota Sepadan"
+            "value": "Tiada Entri Memori Sepadan"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geen overeenkomende notities"
+            "value": "Geen overeenkomende geheugenitems"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brak pasujących notatek"
+            "value": "Brak pasujących wpisów"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhuma nota correspondente"
+            "value": "Nenhuma memória correspondente"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicio notiță potrivită"
+            "value": "Nicio înregistrare potrivită din memorie"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нет подходящих заметок"
+            "value": "Нет подходящих записей"
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "பொருந்தும் குறிப்புகள் இல்லை"
+            "value": "பொருந்தும் நினைவகப் பதிவுகள் இல்லை"
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "సరిపోలే నోట్స్ లేవు"
+            "value": "సరిపోలే మెమరీ నమోదులు లేవు"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่มีโน้ตที่ตรงกัน"
+            "value": "ไม่มีรายการหน่วยความจำที่ตรงกัน"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eşleşen not yok"
+            "value": "Eşleşen bellek girdisi yok"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Немає відповідних нотаток"
+            "value": "Немає відповідних записів"
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "کوئی مطابقت رکھنے والا نوٹ نہیں"
+            "value": "کوئی مطابقت رکھنے والا حافظہ اندراج نہیں"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không có ghi chú phù hợp"
+            "value": "Không có mục ghi nhớ phù hợp"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "没有匹配的笔记"
+            "value": "没有匹配的记忆条目"
           }
         },
         "zh-Hant": {
@@ -243235,73 +243235,73 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا توجد ملاحظة تطابق بحثك."
+            "value": "لا يوجد إدخال في الذاكرة يطابق بحثك."
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "আপনার সার্চের সাথে কোনো নোট মেলেনি।"
+            "value": "আপনার সার্চের সাথে কোনো মেমোরি এন্ট্রি মেলেনি।"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Notiz entspricht deiner Suche."
+            "value": "Kein Gedächtniseintrag entspricht deiner Suche."
           }
         },
         "el": {
           "stringUnit": {
             "state": "translated",
-            "value": "Καμία σημείωση δεν ταιριάζει με την αναζήτησή σας."
+            "value": "Καμία καταχώριση μνήμης δεν ταιριάζει με την αναζήτησή σας."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No note matches your search."
+            "value": "No memory entry matches your search."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ninguna nota coincide con tu búsqueda."
+            "value": "Ningún recuerdo coincide con tu búsqueda."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "هیچ یادداشتی با جست‌وجوی شما مطابقت ندارد."
+            "value": "هیچ موردی در حافظه با جست‌وجوی شما مطابقت ندارد."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucune note ne correspond à votre recherche."
+            "value": "Aucun souvenir ne correspond à votre recherche."
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "אף הערה אינה תואמת את החיפוש שלך."
+            "value": "אף רשומת זיכרון אינה תואמת את החיפוש שלך."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "आपकी खोज से कोई नोट मेल नहीं खाता।"
+            "value": "आपकी खोज से कोई मेमोरी एंट्री मेल नहीं खाती।"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tidak ada catatan yang cocok dengan pencarian."
+            "value": "Tidak ada entri memori yang cocok dengan pencarian."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nessuna nota corrisponde alla tua ricerca."
+            "value": "Nessun ricordo corrisponde alla tua ricerca."
           }
         },
         "ja": {
@@ -243319,91 +243319,91 @@
         "mr": {
           "stringUnit": {
             "state": "translated",
-            "value": "तुमच्या सर्चशी कोणतीही नोट जुळत नाही."
+            "value": "तुमच्या सर्चशी कोणतीही मेमरी नोंद जुळत नाही."
           }
         },
         "ms": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tiada nota yang sepadan dengan carian."
+            "value": "Tiada entri memori yang sepadan dengan carian."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geen notitie komt overeen met je zoekopdracht."
+            "value": "Geen geheugenitem komt overeen met je zoekopdracht."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Żadna notatka nie pasuje do wyszukiwania."
+            "value": "Żaden wpis nie pasuje do wyszukiwania."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhuma nota corresponde à sua busca."
+            "value": "Nenhuma memória corresponde à sua busca."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicio notiță nu corespunde căutării."
+            "value": "Nicio înregistrare din memorie nu corespunde căutării."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ни одна заметка не соответствует запросу."
+            "value": "Ни одна запись не соответствует запросу."
           }
         },
         "ta": {
           "stringUnit": {
             "state": "translated",
-            "value": "உங்கள் தேடலுக்குப் பொருந்தும் குறிப்பு இல்லை."
+            "value": "உங்கள் தேடலுக்குப் பொருந்தும் நினைவகப் பதிவு இல்லை."
           }
         },
         "te": {
           "stringUnit": {
             "state": "translated",
-            "value": "మీ శోధనకు సరిపోలే నోట్ లేదు."
+            "value": "మీ శోధనకు సరిపోలే మెమరీ నమోదు లేదు."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่มีโน้ตที่ตรงกับคำค้นหาของคุณ"
+            "value": "ไม่มีรายการหน่วยความจำที่ตรงกับคำค้นหาของคุณ"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aramanızla eşleşen not yok."
+            "value": "Aramanızla eşleşen bellek girdisi yok."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Жодна нотатка не відповідає запиту."
+            "value": "Жоден запис не відповідає запиту."
           }
         },
         "ur": {
           "stringUnit": {
             "state": "translated",
-            "value": "کوئی نوٹ آپ کی تلاش سے مطابقت نہیں رکھتا۔"
+            "value": "کوئی حافظہ اندراج آپ کی تلاش سے مطابقت نہیں رکھتا۔"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không có ghi chú nào khớp với tìm kiếm."
+            "value": "Không có mục ghi nhớ nào khớp với tìm kiếm."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "没有与搜索匹配的笔记。"
+            "value": "没有与搜索匹配的记忆条目。"
           }
         },
         "zh-Hant": {

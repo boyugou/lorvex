@@ -100,3 +100,54 @@ func memoryRowExposesHoverPointerAndContextMenu() throws {
   // AI-managed, so there is no ownership gate on the write actions.
   #expect(source.contains("if isHovering {"))
 }
+
+// MARK: - Empty-state copy
+
+/// The authored `strings` table of a module's `Localizable.xcstrings`.
+private func memoryCatalogStrings(_ module: String) throws -> [String: Any] {
+  let data = Data(try memorySource("Sources/\(module)/Resources/Localizable.xcstrings").utf8)
+  let catalog = try #require(
+    try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+    "\(module) catalog is not valid JSON")
+  return try #require(catalog["strings"] as? [String: Any])
+}
+
+/// The `stringUnit.value` of `key` in every language, keyed by language ID.
+private func memoryValues(_ key: String, in strings: [String: Any]) throws -> [String: String] {
+  let entry = try #require(strings[key] as? [String: Any], "catalog has no entry for \(key)")
+  let localizations = try #require(entry["localizations"] as? [String: Any])
+  var values: [String: String] = [:]
+  for (language, localization) in localizations {
+    let unit = try #require(
+      (localization as? [String: Any])?["stringUnit"] as? [String: Any],
+      "\(key) has no \(language) stringUnit")
+    values[language] = try #require(unit["value"] as? String)
+  }
+  return values
+}
+
+// The Memory workspace and the iPhone/iPad app both call these entries "memory
+// entries", so the empty title reads the same on both in every language.
+@Test
+func memoryEmptyStateCopyMatchesMobileInEveryLanguage() throws {
+  let mac = try memoryCatalogStrings("LorvexApple")
+  let phone = try memoryCatalogStrings("LorvexMobile")
+
+  let macTitle = try memoryValues("memory.empty.title", in: mac)
+  let phoneTitle = try memoryValues("memory.empty.no_entries", in: phone)
+  #expect(!phoneTitle.isEmpty)
+  #expect(Set(macTitle.keys) == Set(phoneTitle.keys))
+  for (language, value) in phoneTitle {
+    #expect(macTitle[language] == value, "\(language): Mac empty title differs from the iPhone title")
+  }
+
+  let english = [
+    "memory.empty.title": "No Memory Entries",
+    "memory.empty.search_title": "No Matching Memory Entries",
+    "memory.empty.search_description": "No memory entry matches your search.",
+  ]
+  for (key, text) in english {
+    let values = try memoryValues(key, in: mac)
+    #expect(values["en"] == text, "\(key) English text")
+  }
+}

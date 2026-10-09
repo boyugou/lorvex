@@ -206,7 +206,7 @@ struct SystemWidgetView: View {
       Spacer(minLength: 0)
       Text(model.statusText)
         .font(WidgetType.foot)
-        .foregroundStyle(.tertiary)
+        .foregroundStyle(Color.secondary)
         .lineLimit(1)
     }
   }

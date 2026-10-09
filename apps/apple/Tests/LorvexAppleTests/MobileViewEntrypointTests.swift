@@ -208,6 +208,59 @@ func mobileHabitSheetsSetTheDailyGoalWithAStepper() throws {
 
 @MainActor
 @Test
+func theMilestoneGoalClearButtonDrawsAPlainGrayGlyph() throws {
+  // The clear button is a borderless button, which hands its label the accent
+  // tint. A hierarchical `.secondary` style resolves against that tint and
+  // draws a faint blue disc (about 2:1 on the row) instead of gray; a plain
+  // color stays gray inside any button.
+  let source = try mobileSourceFile("Sources/LorvexMobile/MobileHabitMilestoneGoalField.swift")
+  #expect(source.contains(".foregroundStyle(Color.secondary)"))
+  #expect(!source.contains(".foregroundStyle(.secondary)"))
+}
+
+@MainActor
+@Test
+func theDependencyPickerRowsReadInThePrimaryStyle() throws {
+  // A List tints a button's whole label, and a hierarchical style inside it
+  // takes its level from that tint, so the candidate titles and their facts
+  // drew in the accent. The primary style belongs on the button, after the
+  // label's content, so every level inside resolves against the label color.
+  let source = try mobileSourceFile("Sources/LorvexMobile/MobileDependencyPicker.swift")
+  let factsStart = try #require(source.range(of: "MobileDependencyFacts(task: task"))
+  let valueModifier = try #require(source.range(of: ".accessibilityValue("))
+  #expect(factsStart.upperBound < valueModifier.lowerBound)
+  let buttonModifiers = source[factsStart.upperBound..<valueModifier.lowerBound]
+  #expect(buttonModifiers.contains(".foregroundStyle(.primary)"))
+}
+
+@MainActor
+@Test
+func theHabitReminderMenuDrawsAPlainGrayGlyph() throws {
+  // A menu's label takes the accent tint. A hierarchical `.secondary` style
+  // resolves against it and draws a faint blue ring (about 2:1 on the card)
+  // instead of gray; a plain color stays gray inside any control.
+  let source = try mobileSourceFile("Sources/LorvexMobile/MobileHabitReminderList.swift")
+  let glyph = try #require(source.range(of: "Image(systemName: \"ellipsis.circle\")"))
+  let modifiers = source[glyph.upperBound...].prefix(80)
+  #expect(modifiers.contains(".foregroundStyle(Color.secondary)"))
+  #expect(!modifiers.contains(".foregroundStyle(.secondary)"))
+}
+
+@MainActor
+@Test
+func theBatchActionBarDimsADisabledActionOnlyOnce() throws {
+  // `.disabled` already dims a control's label, so a disabled action takes the
+  // plain secondary color. A further `.opacity(0.6)` on top of the system's
+  // dimming drew the labels at about 1.7:1 on the dark bar; one dimming leaves
+  // them at about 2.5:1 beside the 8:1 or better of the enabled actions.
+  let source = try mobileSourceFile("Sources/LorvexMobile/MobileTaskBatchActionBar.swift")
+  #expect(source.contains("enabled ? Color.accentColor : Color.secondary)"))
+  #expect(source.contains("enabled && !isMutating ? tint : Color.secondary)"))
+  #expect(!source.contains("Color.secondary.opacity"))
+}
+
+@MainActor
+@Test
 func mobileNameAndTitleFieldsWrapInsteadOfTruncating() throws {
   // A long list, habit, task, or event name stays fully visible while it is edited:
   // the field has a vertical axis, so it wraps, and Return still moves on as

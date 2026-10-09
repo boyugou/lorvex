@@ -57,12 +57,16 @@ struct MobileDependencyPicker: View {
               VStack(alignment: .leading, spacing: 2) {
                 Text(userContent: task.title)
                   .font(LorvexDesign.Typography.primaryText)
-                  .foregroundStyle(.primary)
                 if let facts = MobileDependencyFacts(task: task, timeZone: productTimeZone) {
                   facts
                 }
               }
             }
+            // A List tints a button's whole label, and a hierarchical style
+            // inside it takes its level from that tint. The primary style on the
+            // button itself makes the title and the secondary facts resolve
+            // against the label color, not the accent.
+            .foregroundStyle(.primary)
             .accessibilityValue(taskDependencyAccessibilityValue(task, timeZone: productTimeZone))
           }
         }

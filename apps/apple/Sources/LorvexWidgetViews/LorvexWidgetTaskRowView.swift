@@ -248,7 +248,9 @@ extension WidgetTaskRenderRow {
 /// The foot every Home Screen family shares: how many tasks follow the ones
 /// on screen and how many got done today, as one line of facts, and the stale
 /// capsule once the list is old. Says each fact once and stays silent when
-/// there is nothing to say.
+/// there is nothing to say. The facts are counts, so they read in the
+/// secondary style, as the stale capsule beside them does; the tertiary style
+/// is for marks a reader can skip, and measures about 2.5:1 on a dark widget.
 struct WidgetFootLine: View {
   let model: WidgetRenderModel
   var showsDone = false
@@ -261,7 +263,7 @@ struct WidgetFootLine: View {
       if let facts {
         Text(facts)
           .font(WidgetType.foot)
-          .foregroundStyle(.tertiary)
+          .foregroundStyle(.secondary)
       }
       Spacer(minLength: 0)
       if let staleAgeLabel = model.staleAgeLabel {

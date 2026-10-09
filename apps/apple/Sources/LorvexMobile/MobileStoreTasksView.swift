@@ -192,8 +192,8 @@ public struct MobileStoreTasksView: View {
           } else if page.tasks.isEmpty {
             MobileStoreTaskEmptyState(
               store: store,
-              title: scope.baseStatus.emptyTitle,
-              message: scope.baseStatus.emptyMessage
+              title: scope.emptyTitle,
+              message: scope.emptyMessage
             )
           } else {
             let timeLabels = store.todayTimeLabels

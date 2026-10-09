@@ -65,13 +65,18 @@ extension LorvexTask {
   }
 
   /// Foreground style for the leading status circle: the done color when
-  /// completed, quiet tertiary / secondary for cancelled / someday, otherwise
-  /// the priority tint.
+  /// completed, the quiet tertiary gray when cancelled, the someday gray when
+  /// parked, otherwise the priority tint.
+  ///
+  /// The someday gray is the ``LorvexDesign/Palette/someday`` color, not the
+  /// hierarchical `.secondary` style: a hierarchical style takes its level from
+  /// the tint of the control around the circle, so inside a tappable circle it
+  /// would draw accent blue at half strength instead of gray.
   public var statusCircleStyle: AnyShapeStyle {
     switch status {
     case .completed: AnyShapeStyle(LorvexDesign.Palette.done)
     case .cancelled: AnyShapeStyle(.tertiary)
-    case .someday: AnyShapeStyle(.secondary)
+    case .someday: AnyShapeStyle(LorvexDesign.Palette.someday)
     case .open, .inProgress: AnyShapeStyle(priority.priorityTint)
     }
   }

@@ -30,8 +30,11 @@ struct MobileHabitMilestoneGoalField: View {
           Button {
             text = ""
           } label: {
+            // A plain color, not the hierarchical `.secondary` style: inside a
+            // borderless button that style takes its level from the button's
+            // accent tint and draws a faint blue disc instead of gray.
             Image(systemName: "xmark.circle.fill")
-              .foregroundStyle(.secondary)
+              .foregroundStyle(Color.secondary)
           }
           .buttonStyle(.borderless)
           .accessibilityLabel(

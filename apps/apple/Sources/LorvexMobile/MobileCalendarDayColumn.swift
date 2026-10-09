@@ -54,7 +54,6 @@ struct MobileCalendarDayColumn: View {
   @ScaledMetric(relativeTo: .footnote) private var gutterScale: CGFloat = 1
   /// Wide enough for the widest hour label on one line at any text size.
   private var gutterWidth: CGFloat { MobileCalendarHourGutter.baseWidth(calendar: calendar) * gutterScale }
-  static let snapMinutes: Int = 15
 
   /// Tracks an in-flight drag on a block: the event being moved + its
   /// in-progress translation in points. Long-press latches the gesture
@@ -159,10 +158,9 @@ struct MobileCalendarDayColumn: View {
         }
         // A scroll to the anchor hour stops this far below the divider.
         .contentMargins(.top, MobileDayScrollAnchor.topClearance, for: .scrollContent)
-        .simultaneousGesture(
-          DragGesture(minimumDistance: 8)
-            .onChanged { _ in userHasScrolledTimeAxis = true }
-        )
+        .onScrollPhaseChange { _, phase in
+          if phase == .interacting { userHasScrolledTimeAxis = true }
+        }
         .onAppear { proxy.scrollTo(MobileDayScrollAnchor.hour(anchorHour), anchor: .top) }
         .onChange(of: startDate) { _, _ in userHasScrolledTimeAxis = false }
         .onChange(of: dayCount) { _, _ in userHasScrolledTimeAxis = false }

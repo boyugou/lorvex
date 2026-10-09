@@ -95,7 +95,7 @@ extension LorvexCaptureVocabulary {
     if let hours = match.group(1).flatMap(number), let rest = match.group(2).flatMap(number) {
       return readsHoursWithH ? taskLength(minutes: hours * 60 + rest) : nil
     }
-    if let amount = match.group(3).flatMap(LorvexNumberInput.decimal(from:)),
+    if let amount = match.group(3).flatMap(boundedDecimal),
       let unit = (match.group(4) ?? match.group(5))?.lowercased()
     {
       if !readsHoursWithH, match.group(5)?.lowercased() == "h" { return nil }

@@ -87,7 +87,7 @@ extension LorvexCaptureVocabulary {
     #"(?<![\p{Latin}\p{N}.])(\d+(?:\.\d+)?)\s*(分钟|个?小时|个?钟头)(?![\p{Latin}\p{N}])|(一个半小时|一个半钟头|一个小时|一个钟头|一小时|两个小时|两个钟头|两小时|半个?小时|半个钟头)"#
 
   private static func chineseLength(_ match: Match) -> Int? {
-    if let amount = match.group(1).flatMap(LorvexNumberInput.decimal(from:)), let unit = match.group(2) {
+    if let amount = match.group(1).flatMap(boundedDecimal), let unit = match.group(2) {
       let isHours = unit.hasSuffix("小时") || unit.hasSuffix("钟头")
       return taskLength(minutes: Int((isHours ? amount * 60 : amount).rounded()))
     }

@@ -84,5 +84,6 @@ func mobileDayGridWiresTimedTasksThroughToTheGridModel() throws {
   #expect(dayView.contains("tasks: tasks,"))
   #expect(block.contains(".accessibilityIdentifier(\"mobileCalendar.taskBlock\")"))
   // Task blocks open the task and complete it; they are never drag targets.
-  #expect(!block.contains("rescheduleGesture"))
+  #expect(!block.contains("rescheduleLift"))
+  #expect(!block.contains("lorvexEventLift"))
 }

@@ -363,11 +363,25 @@ extension LorvexCaptureVocabulary {
     return match.source[end...].allSatisfy { $0.isWhitespace || $0.isPunctuation }
   }
 
+  /// The largest number a rule reads. A matched number feeds hour and minute
+  /// arithmetic and conversions to `Int`, so a number beyond this is read as
+  /// this one: it stays outside every range a rule accepts (an hour of the day,
+  /// a day of the month, a length of at most 24 hours), and no sum or product
+  /// of matched numbers can overflow.
+  static let numberCeiling = 1_000_000
+
+  /// The amount `text` spells (``LorvexNumberInput/decimal(from:)``), limited
+  /// to ±``numberCeiling``.
+  static func boundedDecimal(_ text: some StringProtocol) -> Double? {
+    let limit = Double(numberCeiling)
+    return LorvexNumberInput.decimal(from: text).map { max(-limit, min($0, limit)) }
+  }
+
   /// The amount a matched number spells, with a comma or a point before its
   /// fraction ("1,5", "1.5"), since French, Portuguese, Spanish, and Italian
-  /// write either.
+  /// write either. Limited to ±``numberCeiling``.
   static func decimalAmount(_ text: String) -> Double? {
-    LorvexNumberInput.decimal(from: text.replacingOccurrences(of: ",", with: "."))
+    boundedDecimal(text.replacingOccurrences(of: ",", with: "."))
   }
 
   /// A matched phrase as a reader compares it: lowercased, with a curly
@@ -424,11 +438,12 @@ extension LorvexCaptureVocabulary {
       rule: TaskRecurrenceRule(freq: .monthly, interval: interval, byMonthDay: day.map { [$0] }), monthDay: day)
   }
 
-  /// The whole number a matched run of digits spells. The patterns' `\d`
-  /// matches the decimal digits of every script (a full-width "３" from a
-  /// Chinese input method, an Arabic-Indic "٣"), which `Int(_:)` cannot read.
+  /// The whole number a matched run of digits spells, limited to
+  /// ±``numberCeiling``. The patterns' `\d` matches the decimal digits of every
+  /// script (a full-width "３" from a Chinese input method, an Arabic-Indic
+  /// "٣"), which `Int(_:)` cannot read.
   static func number(_ text: some StringProtocol) -> Int? {
-    LorvexNumberInput.integer(from: text)
+    LorvexNumberInput.integer(from: text).map { max(-numberCeiling, min($0, numberCeiling)) }
   }
 
   /// The value of a numeral written in Han characters, from 0 to 59, as

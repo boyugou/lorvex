@@ -39,6 +39,10 @@ public enum ValidationLimits {
   /// Maximum reminder window in seconds (1 year).
   public static let maxReminderWindowSeconds: Int64 = 365 * 24 * 3600
 
+  /// Largest per-day target (`target_count`) the assistant and Shortcuts
+  /// surfaces give a habit. The apps' steppers stop at 99.
+  public static let maxHabitTargetCount: Int64 = 1_000
+
   /// Mood / energy_level scale bounds (daily reviews).
   public static let moodMin: Int64 = 1
   public static let moodMax: Int64 = 5

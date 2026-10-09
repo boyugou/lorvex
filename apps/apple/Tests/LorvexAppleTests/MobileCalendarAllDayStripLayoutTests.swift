@@ -122,11 +122,11 @@
     }
   }
 
-  /// The height cap itself: the subview is offered at most the cap, and the
-  /// layout takes the height the subview reports.
-  @Suite("Height cap layout")
+  /// The scroll cap itself: a scroll view takes its content's height up to the
+  /// cap, and scrolls within the cap beyond it.
+  @Suite("Scroll cap layout")
   @MainActor
-  struct MobileHeightCapLayoutTests {
+  struct MobileScrollCapLayoutTests {
     private final class Reading {
       var height: CGFloat = -1
     }
@@ -154,33 +154,32 @@
       return reading.height
     }
 
-    @Test("a subview shorter than the cap keeps its height, however much room is offered")
+    private func scrolling(height: CGFloat) -> some View {
+      ScrollView(.vertical) { Color.red.frame(height: height) }
+    }
+
+    @Test("a scroll view shorter than the cap keeps its content's height, however much room is offered")
     func shortContentKeepsItsHeight() {
-      let layout = MobileHeightCapLayout(maxHeight: 120) { Color.red.frame(height: 30) }
+      let layout = MobileScrollCapLayout(maxHeight: 120) { scrolling(height: 30) }
       #expect(laidOutHeight(layout, offered: 500) == 30)
     }
 
-    @Test("a subview that takes all the room it is offered takes the cap")
-    func greedyContentTakesTheCap() {
-      let layout = MobileHeightCapLayout(maxHeight: 120) { Color.red }
+    @Test("a scroll view taller than the cap takes the cap")
+    func tallContentTakesTheCap() {
+      let layout = MobileScrollCapLayout(maxHeight: 120) { scrolling(height: 300) }
       #expect(laidOutHeight(layout, offered: 500) == 120)
     }
 
-    @Test("a subview taller than the cap is offered the cap, so a view that fits falls back")
-    func tallContentGetsTheCap() {
-      let layout = MobileHeightCapLayout(maxHeight: 120) {
-        ViewThatFits(in: .vertical) {
-          Color.red.frame(height: 300)
-          Color.blue
-        }
-      }
-      #expect(laidOutHeight(layout, offered: 500) == 120)
+    @Test("a scroll view offered less room than the cap takes the room offered")
+    func offeredRoomBelowTheCapWins() {
+      let layout = MobileScrollCapLayout(maxHeight: 120) { scrolling(height: 300) }
+      #expect(laidOutHeight(layout, offered: 80) == 80)
     }
 
     @Test("the ideal height is the content's, up to the cap")
     func idealHeightIsCapped() {
-      #expect(fittingHeight(MobileHeightCapLayout(maxHeight: 120) { Color.red }) == 120)
-      #expect(fittingHeight(MobileHeightCapLayout(maxHeight: 120) { Color.red.frame(height: 30) }) == 30)
+      #expect(fittingHeight(MobileScrollCapLayout(maxHeight: 120) { scrolling(height: 300) }) == 120)
+      #expect(fittingHeight(MobileScrollCapLayout(maxHeight: 120) { scrolling(height: 30) }) == 30)
     }
   }
 #endif

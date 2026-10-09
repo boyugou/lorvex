@@ -42,16 +42,22 @@ public extension WidgetSnapshot {
     /// The habit's chosen `#RRGGBB` color, nil when it uses its automatic
     /// hue; ``LorvexHabitPalette/baseColor(id:color:)`` resolves either.
     public let color: String?
+    /// Today was set aside for the habit: neither done nor missed. A check-in
+    /// lifts it, so it is never true together with ``isDoneToday``. A snapshot
+    /// written without the value reads as false.
+    public let isSkipped: Bool
 
     enum CodingKeys: String, CodingKey {
       case id, name, icon
       case completedToday = "completed_today"
       case target
       case color
+      case isSkipped = "is_skipped"
     }
 
     public init(
-      id: String, name: String, icon: String?, completedToday: Int, target: Int, color: String? = nil
+      id: String, name: String, icon: String?, completedToday: Int, target: Int,
+      color: String? = nil, isSkipped: Bool = false
     ) {
       self.id = id
       self.name = name
@@ -59,10 +65,26 @@ public extension WidgetSnapshot {
       self.completedToday = completedToday
       self.target = max(1, target)
       self.color = color
+      self.isSkipped = isSkipped
+    }
+
+    public init(from decoder: Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      id = try container.decode(String.self, forKey: .id)
+      name = try container.decode(String.self, forKey: .name)
+      icon = try container.decodeIfPresent(String.self, forKey: .icon)
+      completedToday = try container.decode(Int.self, forKey: .completedToday)
+      target = try container.decode(Int.self, forKey: .target)
+      color = try container.decodeIfPresent(String.self, forKey: .color)
+      isSkipped = try container.decodeIfPresent(Bool.self, forKey: .isSkipped) ?? false
     }
 
     /// True when the habit's today completions meet or exceed its target.
     public var isDoneToday: Bool { completedToday >= target }
+
+    /// True while the habit still asks for a check-in today: its count is not
+    /// met and the day was not set aside.
+    public var isOpenToday: Bool { !isDoneToday && !isSkipped }
   }
 
   struct Stats: Codable, Equatable, Sendable {

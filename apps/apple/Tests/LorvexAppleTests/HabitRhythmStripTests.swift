@@ -64,6 +64,32 @@ struct HabitRhythmStripTests {
         .isEmpty)
   }
 
+  @Test("A skipped day of a daily strip is a skipped cell; a check-in outranks the skip")
+  func dailySkippedCells() {
+    let cells = HabitRhythmStrip.cells(
+      completions: ["2026-06-22"], skips: ["2026-06-22", "2026-06-23", "2026-06-24"],
+      habit: habit(frequencyType: "daily"), today: date("2026-06-24"), timeZone: calendar().timeZone)
+    #expect(cells[4] == HabitRhythmStrip.Cell(filled: true, isCurrent: false, isSkipped: false))
+    #expect(cells[5] == HabitRhythmStrip.Cell(filled: false, isCurrent: false, isSkipped: true))
+    // Today, skipped, keeps the current-period mark.
+    #expect(cells[6] == HabitRhythmStrip.Cell(filled: false, isCurrent: true, isSkipped: true))
+    #expect(cells.filter(\.isSkipped).count == 2)
+  }
+
+  @Test("A weekly or monthly strip never shows a skipped cell: a skip excuses one day, not a period")
+  func longerPeriodsHaveNoSkippedCells() {
+    for habit in [
+      habit(frequencyType: "weekly", weekdays: [2]),
+      habit(frequencyType: "times_per_week", perPeriodTarget: 3),
+      habit(frequencyType: "monthly"),
+    ] {
+      let cells = HabitRhythmStrip.cells(
+        completions: [], skips: ["2026-06-24", "2026-06-23"], habit: habit,
+        today: date("2026-06-24"), timeZone: calendar().timeZone)
+      #expect(cells.allSatisfy { !$0.isSkipped })
+    }
+  }
+
   @Test("Weekly buckets into 8 rolling weeks")
   func weekly() {
     // A completion three weeks before today fills a non-current week cell.
@@ -129,15 +155,25 @@ struct HabitPeriodProgressTests {
 
   private func habit(
     freq: String, weekdays: [Int]? = nil, perPeriodTarget: Int? = nil, dayOfMonth: Int? = nil,
-    target: Int = 1, today: Int = 0
+    target: Int = 1, today: Int = 0, isSkipped: Bool = false
   ) -> LorvexHabit {
     LorvexHabit(
       id: "h", name: "H", icon: nil, color: nil, cue: nil, frequencyType: freq,
       targetCount: target, completionsToday: today, totalCompletions: 0, completionRate30d: 0,
-      archived: false, weekdays: weekdays, perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth)
+      archived: false, weekdays: weekdays, perPeriodTarget: perPeriodTarget, dayOfMonth: dayOfMonth,
+      isSkipped: isSkipped)
   }
 
   // today = 2026-06-24 (Wed); current Mon–Sun week is 2026-06-22…06-28; month June.
+
+  private func weeklyRequirement(
+    _ habit: LorvexHabit, skips: [String], completions: [String] = []
+  ) -> Int {
+    HabitPeriodProgress.current(
+      habit: habit, recentCompletions: completions, recentSkips: skips,
+      today: date("2026-06-24"), timeZone: calendar().timeZone
+    ).required
+  }
 
   @Test("The counted period is the day for any per-day target, else the cadence's own")
   func periodFollowsTargetThenCadence() {
@@ -226,5 +262,71 @@ struct HabitPeriodProgressTests {
       recentCompletions: [], today: date("2026-06-24"), timeZone: calendar().timeZone)
     #expect(met == HabitPeriodProgress.Value(completed: 3, required: 3))
     #expect(met.isComplete)
+  }
+
+  @Test("A skipped pinned weekday lowers the week's requirement by one")
+  func skippedPinnedDayLowersTheWeeklyRequirement() {
+    let pinned = habit(freq: "weekly", weekdays: [0, 2, 4])  // Mon, Wed, Fri
+    #expect(weeklyRequirement(pinned, skips: []) == 3)
+    #expect(weeklyRequirement(pinned, skips: ["2026-06-24"]) == 2)
+    #expect(weeklyRequirement(pinned, skips: ["2026-06-22", "2026-06-24"]) == 1)
+
+    // The lowered requirement is what completes the week.
+    let value = HabitPeriodProgress.current(
+      habit: pinned, recentCompletions: ["2026-06-22", "2026-06-26"], recentSkips: ["2026-06-24"],
+      today: date("2026-06-24"), timeZone: calendar().timeZone)
+    #expect(value == HabitPeriodProgress.Value(completed: 2, required: 2))
+    #expect(value.isComplete)
+  }
+
+  @Test("A skip on a day the week did not ask for, in another week, or twice changes nothing more")
+  func skipsThatExcuseNothingExtra() {
+    let pinned = habit(freq: "weekly", weekdays: [0, 2, 4])
+    #expect(weeklyRequirement(pinned, skips: ["2026-06-23"]) == 3, "Tuesday is not a pinned day")
+    #expect(weeklyRequirement(pinned, skips: ["2026-06-17"]) == 3, "last week's Wednesday")
+    #expect(weeklyRequirement(pinned, skips: ["2026-07-01"]) == 3, "next week's Wednesday")
+    #expect(weeklyRequirement(pinned, skips: ["2026-06-24", "2026-06-24"]) == 2)
+  }
+
+  @Test("Skipping every pinned day leaves a requirement of one, never zero")
+  func weeklyRequirementKeepsAFloorOfOne() {
+    let pinned = habit(freq: "weekly", weekdays: [0, 2, 4])
+    let all = ["2026-06-22", "2026-06-24", "2026-06-26"]
+    #expect(weeklyRequirement(pinned, skips: all) == 1)
+    #expect(weeklyRequirement(habit(freq: "weekly", weekdays: [2]), skips: ["2026-06-24"]) == 1)
+  }
+
+  @Test("An every-day weekly habit loses one required day per skipped day")
+  func everyDayWeeklyHabit() {
+    let everyDay = habit(freq: "weekly", weekdays: [])
+    #expect(weeklyRequirement(everyDay, skips: ["2026-06-23", "2026-06-24"]) == 5)
+  }
+
+  @Test("A skip changes no other cadence's count")
+  func otherCadencesIgnoreSkips() {
+    let quota = habit(freq: "times_per_week", perPeriodTarget: 3)
+    #expect(weeklyRequirement(quota, skips: ["2026-06-22", "2026-06-23"]) == 3)
+
+    let monthly = HabitPeriodProgress.current(
+      habit: habit(freq: "monthly", dayOfMonth: 1), recentCompletions: [],
+      recentSkips: ["2026-06-24"], today: date("2026-06-24"), timeZone: calendar().timeZone)
+    #expect(monthly == HabitPeriodProgress.Value(completed: 0, required: 1))
+
+    let daily = HabitPeriodProgress.current(
+      habit: habit(freq: "daily", target: 2, isSkipped: true), recentCompletions: [],
+      recentSkips: ["2026-06-24"], today: date("2026-06-24"), timeZone: calendar().timeZone)
+    #expect(daily == HabitPeriodProgress.Value(completed: 0, required: 2))
+  }
+
+  @Test("Only a dial that counts today stands aside for a skipped day")
+  func setAsideFollowsThePeriod() {
+    #expect(HabitPeriodProgress.isSetAside(habit(freq: "daily", isSkipped: true)))
+    #expect(!HabitPeriodProgress.isSetAside(habit(freq: "daily")))
+    #expect(
+      HabitPeriodProgress.isSetAside(habit(freq: "weekly", weekdays: [0], target: 3, isSkipped: true)),
+      "a per-day target above one counts today's check-ins")
+    #expect(!HabitPeriodProgress.isSetAside(habit(freq: "weekly", weekdays: [0, 2], isSkipped: true)))
+    #expect(!HabitPeriodProgress.isSetAside(habit(freq: "times_per_week", perPeriodTarget: 3, isSkipped: true)))
+    #expect(!HabitPeriodProgress.isSetAside(habit(freq: "monthly", dayOfMonth: 1, isSkipped: true)))
   }
 }

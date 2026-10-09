@@ -17,7 +17,8 @@ import LorvexWorkflow
 /// habits in one transaction and skips unknown and archived ids.
 ///
 /// A day counts as "completed" when its `habit_completions.value >=
-/// target_count`.
+/// target_count`. A write that logs or raises a completion also removes the
+/// habit's skip for that day (see `skipHabit(id:date:)`).
 extension SwiftLorvexCoreService {
 
   // MARK: - Reads
@@ -85,6 +86,7 @@ extension SwiftLorvexCoreService {
         arguments: [id, date, next, version, now, now])
       try self.enqueueHabitCompletionUpsert(
         db, hlc: hlc, deviceId: deviceId, habitId: id, completedDate: date)
+      try self.removeHabitSkipInTx(db, hlc: hlc, deviceId: deviceId, habitId: id, date: date)
 
       let newMetric = try Self.habitMilestoneMetricValue(
         db, habitId: id, metric: context.metric, cadence: context.cadence,
@@ -183,6 +185,7 @@ extension SwiftLorvexCoreService {
           arguments: [id, date, next, version, now, now])
         try self.enqueueHabitCompletionUpsert(
           db, hlc: hlc, deviceId: deviceId, habitId: id, completedDate: date)
+        try self.removeHabitSkipInTx(db, hlc: hlc, deviceId: deviceId, habitId: id, date: date)
         let newMetric = try Self.habitMilestoneMetricValue(
           db, habitId: id, metric: context.metric, cadence: context.cadence,
           targetCount: context.targetCount, totalCompletions: totalBefore + (next - current),
@@ -245,19 +248,19 @@ extension SwiftLorvexCoreService {
   /// key like "2026-6-9" or "June 9" would otherwise miscount lexicographic
   /// streaks, coexist with the canonical row for the same day, and ship the bad
   /// key to peers as the sync edge id.
-  private static func validateCompletionDate(_ date: String) throws {
+  static func validateCompletionDate(_ date: String) throws {
     if case .failure(let error) = IsoDate.parseIsoDate(date) {
       throw LorvexCoreError.validation(field: "date", message: error.description)
     }
   }
 
-  /// The row of a habit whose completions a write logs or edits. An unknown id
-  /// is not-found. An archived habit is rejected before anything is written:
-  /// it is hidden from every surface and absent from the catalog snapshot a
-  /// completion write returns, so a completion logged against it could not be
-  /// shown back to the caller, and the caller would see an error for a write
-  /// that had already committed.
-  private static func activeHabitRow(_ db: Database, id: LorvexHabit.ID) throws -> Row {
+  /// The row of a habit whose check-ins or skipped days a write logs or edits.
+  /// An unknown id is not-found. An archived habit is rejected before anything
+  /// is written: it is hidden from every surface and absent from the catalog
+  /// snapshot a completion or skip write returns, so a day recorded against it
+  /// could not be shown back to the caller, and the caller would see an error
+  /// for a write that had already committed.
+  static func activeHabitRow(_ db: Database, id: LorvexHabit.ID) throws -> Row {
     guard let row = try habitColumnRow(db, id: id) else {
       throw LorvexCoreError.notFound(entity: .habit, id: id)
     }
@@ -266,7 +269,7 @@ extension SwiftLorvexCoreService {
       let name: String = row["name"]
       throw LorvexCoreError.validation(
         field: "id",
-        message: "Habit '\(name)' is archived. Restore it before changing its completions.")
+        message: "Habit '\(name)' is archived. Restore it before changing its check-ins or skipped days.")
     }
     return row
   }
@@ -347,6 +350,7 @@ extension SwiftLorvexCoreService {
           arguments: [id, date, next, version, now, now])
         try self.enqueueHabitCompletionUpsert(
           db, hlc: hlc, deviceId: deviceId, habitId: id, completedDate: date)
+        try self.removeHabitSkipInTx(db, hlc: hlc, deviceId: deviceId, habitId: id, date: date)
         completedIds.append(id)
 
         let newMetric = try Self.habitMilestoneMetricValue(

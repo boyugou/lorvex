@@ -93,6 +93,7 @@ struct MobileStoreRouteView: View {
               },
               complete: { await store.completeHabit(habit) },
               reset: { await store.uncompleteHabit(habit) },
+              toggleSkip: { await store.toggleHabitSkip(habit) },
               addReminder: { time in await store.addHabitReminder(habitID: habit.id, time: time) },
               setReminderTime: { policy, time in
                 await store.setHabitReminderTime(policy: policy, to: time)

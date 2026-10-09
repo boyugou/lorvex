@@ -25,7 +25,7 @@ struct AppKitFeedbackProvider: LorvexFeedbackProviding {
       // macOS vends only three system patterns; `.levelChange` is the most
       // pronounced, so a milestone reuses it as the strongest available note.
       performer.perform(.levelChange, performanceTime: .now)
-    case .habitReset:
+    case .habitReset, .habitSkipped:
       performer.perform(.alignment, performanceTime: .default)
     case .captureSubmitted:
       performer.perform(.alignment, performanceTime: .default)

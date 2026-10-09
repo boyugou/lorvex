@@ -105,18 +105,22 @@
           guard calendarFilter.allows(calendarID: event.calendar?.calendarIdentifier) else {
             continue
           }
-          events.append(Self.fetchedEvent(from: event))
+          if let fetched = Self.fetchedEvent(from: event) { events.append(fetched) }
         }
         windowStart = windowEnd
       }
       return events
     }
 
-    static func fetchedEvent(from event: EKEvent) -> EventKitFetchedEvent {
+    /// The Lorvex form of `event`, or nil when EventKit reports it without a
+    /// start date: `EKEvent.startDate` is an implicitly unwrapped optional, and
+    /// reading it as a plain `Date` traps when it is nil.
+    static func fetchedEvent(from event: EKEvent) -> EventKitFetchedEvent? {
+      guard let start = event.startDate else { return nil }
       let eventTimeZone = event.timeZone ?? .current
-      let startDate = AllDayEventSpan.dayKey(for: event.startDate, timeZone: eventTimeZone)
+      let startDate = AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone)
       let startTime =
-        event.isAllDay ? nil : clockTimeKey(for: event.startDate, timeZone: eventTimeZone)
+        event.isAllDay ? nil : clockTimeKey(for: start, timeZone: eventTimeZone)
       return EventKitFetchedEvent(
         key: stableKey(for: event, startDate: startDate, startTime: startTime),
         title: event.title?.isEmpty == false ? event.title : nil,

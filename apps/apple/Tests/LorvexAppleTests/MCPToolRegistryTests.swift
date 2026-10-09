@@ -14,7 +14,7 @@ struct ToolListingTests {
     let definitionNames = definitions.map { $0.tool.name }
     let listedNames = ToolRegistry.listTools().map(\.name)
 
-    #expect(definitions.count == 114)
+    #expect(definitions.count == 116)
     #expect(definitionNames == listedNames)
     #expect(Set(definitionNames).count == definitions.count)
     #expect(ToolDefinitionRegistry.byName.count == definitions.count)

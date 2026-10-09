@@ -506,6 +506,8 @@ struct MCPResponseFencingSweepTests {
     // Habits
     _ = try await call("adjust_habit_completion", ["id": .string(data.habit), "delta": 1])
     _ = try await call("uncomplete_habit", ["id": .string(data.habit)])
+    _ = try await call("skip_habit", ["id": .string(data.habit)])
+    _ = try await call("unskip_habit", ["id": .string(data.habit)])
     _ = try await call(
       "batch_complete_habits",
       ["habit_ids": .array([.string(data.habit)]), "date": .string(data.reviewDate)])

@@ -25,6 +25,9 @@ public enum LorvexFeedbackKind: Sendable {
   case habitMilestoneReached
   /// Fired when today's habit completion is reset.
   case habitReset
+  /// Fired when a habit is set aside for the day (a skip). Taking the skip back
+  /// plays ``habitReset``.
+  case habitSkipped
   /// Fired when a Quick Capture entry is submitted.
   case captureSubmitted
   /// Fired when review content is saved.

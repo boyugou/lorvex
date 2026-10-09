@@ -102,12 +102,23 @@ func liveAccessMapsAllDayEndToTheLastOccupiedDay() throws {
   components.second = 59
   event.endDate = calendar.date(from: components)
 
-  let fetched = LiveEventKitAccess.fetchedEvent(from: event)
+  let fetched = try #require(LiveEventKitAccess.fetchedEvent(from: event))
 
   #expect(fetched.startDate == "2030-05-24")
   #expect(fetched.endDate == "2030-05-26")
   #expect(fetched.startTime == nil)
   #expect(fetched.endTime == nil)
+}
+
+/// `EKEvent.startDate` is nil until it is set, and an event read back without
+/// one is skipped instead of trapping the calendar load.
+@Test
+func liveAccessMapsAnEventWithoutAStartDateToNothing() {
+  let event = FakeEKEventStore().makeEvent()
+  event.isAllDay = false
+  event.endDate = Date(timeIntervalSince1970: 1_900_000_000)
+
+  #expect(LiveEventKitAccess.fetchedEvent(from: event) == nil)
 }
 
 @Test
@@ -129,7 +140,7 @@ func liveAccessMapsTimedEventInItsOwnTimezoneAcrossMidnight() throws {
   event.endDate = try eventKitTestDate(
     year: 2030, month: 5, day: 25, hour: 0, minute: 30, timeZone: eventTimeZone)
 
-  let fetched = LiveEventKitAccess.fetchedEvent(from: event)
+  let fetched = try #require(LiveEventKitAccess.fetchedEvent(from: event))
 
   #expect(fetched.startDate == "2030-05-24")
   #expect(fetched.startTime == "23:30")
@@ -152,7 +163,7 @@ func liveAccessMapsTimedEventAcrossDstGapWithoutChangingItsInstants() throws {
   event.endDate = try eventKitTestDate(
     year: 2024, month: 3, day: 10, hour: 3, minute: 30, timeZone: newYork)
 
-  let fetched = LiveEventKitAccess.fetchedEvent(from: event)
+  let fetched = try #require(LiveEventKitAccess.fetchedEvent(from: event))
 
   #expect(fetched.startDate == "2024-03-10")
   #expect(fetched.startTime == "01:30")

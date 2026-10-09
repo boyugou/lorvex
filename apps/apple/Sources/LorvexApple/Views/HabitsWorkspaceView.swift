@@ -34,7 +34,8 @@ struct HabitsWorkspaceView: View {
     let habits = store.orderedHabits
     let groups = habitGroups(habits)
     return VStack(spacing: 0) {
-      HabitsWorkspaceHeader(stats: stats(habits: habits, onTrack: onTrackByHabitID(habits)))
+      HabitsWorkspaceHeader(
+        stats: HabitsWorkspaceStats(habits: habits, onTrack: onTrackByHabitID(habits)))
       Divider()
 
       ScrollView {
@@ -110,6 +111,7 @@ struct HabitsWorkspaceView: View {
         HabitPeriodProgress.current(
           habit: habit,
           recentCompletions: store.habitStats(for: habit.id)?.recentCompletions ?? [],
+          recentSkips: store.habitStats(for: habit.id)?.recentSkips ?? [],
           timeZone: store.logicalTimeZone
         ).isComplete
       )
@@ -130,6 +132,7 @@ struct HabitsWorkspaceView: View {
           isSelected: store.selectedHabitID == habit.id,
           adjust: { delta in Task { await store.adjustHabitCompletion(habit, delta: delta) } },
           reset: { Task { await store.uncompleteHabit(habit) } },
+          toggleSkip: { Task { await store.toggleHabitSkip(habit) } },
           // Re-clicking the open habit collapses its detail (toggle), matching
           // the inspector's ✕.
           select: { store.selectedHabitID = store.selectedHabitID == habit.id ? nil : habit.id },
@@ -178,23 +181,4 @@ struct HabitsWorkspaceView: View {
     let destination = delta > 0 ? neighborGlobal + 1 : neighborGlobal
     Task { await store.moveHabits(fromOffsets: IndexSet(integer: fromGlobal), toOffset: destination) }
   }
-
-  private func stats(habits: [LorvexHabit], onTrack: [LorvexHabit.ID: Bool]) -> HabitsWorkspaceStats {
-    // Tally completion per cadence bucket against each habit's own period.
-    var counts: [HabitCadenceBucket: (completed: Int, total: Int)] = [:]
-    for habit in habits {
-      let bucket = HabitCadenceBucket(frequencyType: habit.frequencyType)
-      var entry = counts[bucket] ?? (0, 0)
-      entry.total += 1
-      if onTrack[habit.id] == true { entry.completed += 1 }
-      counts[bucket] = entry
-    }
-    let buckets = HabitCadenceBucket.allCases.compactMap { bucket -> HabitsWorkspaceStats.Bucket? in
-      guard let entry = counts[bucket], entry.total > 0 else { return nil }
-      return HabitsWorkspaceStats.Bucket(
-        cadence: bucket, completed: entry.completed, total: entry.total)
-    }
-    return HabitsWorkspaceStats(buckets: buckets)
-  }
-
 }

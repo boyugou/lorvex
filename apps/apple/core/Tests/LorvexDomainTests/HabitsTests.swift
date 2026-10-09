@@ -89,6 +89,22 @@ final class HabitsTests: XCTestCase {
     XCTAssertEqual(habitRequiredCompletionsPerPeriod(cadence, targetCount: 2), 6)
   }
 
+  func testRequiredCompletionsSaturateInsteadOfOverflowing() {
+    XCTAssertEqual(
+      habitRequiredCompletionsPerPeriod(.timesPerWeek(count: 5), targetCount: Int64.max), Int64.max)
+    XCTAssertEqual(
+      habitRequiredCompletionsPerPeriod(
+        .weekly(days: [.mon, .tue, .wed, .thu, .fri, .sat, .sun]), targetCount: Int64.max / 2),
+      Int64.max)
+    XCTAssertEqual(
+      habitRequiredCompletionsPerPeriod(.timesPerWeek(count: Int64.max), targetCount: 2), Int64.max)
+    // Daily and monthly have one slot, so any target passes through.
+    XCTAssertEqual(
+      habitRequiredCompletionsPerPeriod(.daily, targetCount: Int64.max), Int64.max)
+    XCTAssertEqual(
+      habitRequiredCompletionsPerPeriod(.timesPerWeek(count: 3), targetCount: 1_000), 3_000)
+  }
+
   func testFromFieldsWeeklyDaysSortsAndDedups() throws {
     let cadence = try HabitCadence.fromFields(fields("weekly", weekdays: [.wed, .mon, .wed]))
     XCTAssertEqual(cadence, .weekly(days: [.mon, .wed]))

@@ -376,6 +376,7 @@ enum ApplyLww {
     case .taskCalendarEventLink:
       return edge("task_calendar_event_links", "task_id", "calendar_event_id")
     case .habitCompletion: return edge("habit_completions", "habit_id", "completed_date")
+    case .habitSkip: return edge("habit_skips", "habit_id", "skipped_date")
     case .aiChangelog, .entityRedirect, .deviceState, .importSession, .dailySchedule: return nil
     }
   }
@@ -457,6 +458,11 @@ enum ApplyFk {
       let (habitId, date) = try splitEdgeId(entityType, entityId)
       try requireEdgeFieldMatches(entityType, obj, "habit_id", habitId)
       try requireEdgeFieldMatches(entityType, obj, "completed_date", date)
+      return [(.habit, habitId)]
+    case .habitSkip:
+      let (habitId, date) = try splitEdgeId(entityType, entityId)
+      try requireEdgeFieldMatches(entityType, obj, "habit_id", habitId)
+      try requireEdgeFieldMatches(entityType, obj, "skipped_date", date)
       return [(.habit, habitId)]
     case .taskReminder, .taskChecklistItem:
       let taskId = try requiredFkStr(obj, entityType, "task_id")

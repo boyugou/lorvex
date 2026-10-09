@@ -71,6 +71,13 @@ enum LorvexWatchCalmCopy {
     String(localized: "watch.calm.done", defaultValue: "Done", table: "Localizable", bundle: WatchL10n.bundle)
   }
 
+  /// A habit set aside for today, read by VoiceOver on its ring.
+  static var skippedToday: String {
+    String(
+      localized: "watch.habit.skipped_today", defaultValue: "Skipped today", table: "Localizable",
+      bundle: WatchL10n.bundle)
+  }
+
   /// The empty Today page's headline, the same words the widgets use.
   static var allClear: String {
     String(localized: "watch.today.all_clear", defaultValue: "All clear", table: "Localizable", bundle: WatchL10n.bundle)

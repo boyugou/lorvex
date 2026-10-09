@@ -11,10 +11,15 @@
       "002": {
         "name": "002_retire_custom_sync_transport.sql",
         "sha256": "d730e60c6da3837ee69015652eaa8ad8d76a0f84ada6274f98965ec1d5489b77"
+      },
+      "003": {
+        "name": "003_habit_skips.sql",
+        "sha256": "76d49e9d3d8871f7dc40cad8ea2ff754639761181754e83a6e3477f39b261e00"
       }
     },
     "sync_payload_contracts": {
-      "001": "8486a2ad7ce86060dde606245d51bbc8fd0c4ebbd8f097425d1693dc91f72a85"
+      "001": "8486a2ad7ce86060dde606245d51bbc8fd0c4ebbd8f097425d1693dc91f72a85",
+      "002": "f3c5c2ca7c7ef5bc21e7a34a9f6ca78d7595df54830424386637e43d1dd1ebce"
     }
   }
 }

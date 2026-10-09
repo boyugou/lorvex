@@ -3,7 +3,10 @@ import SwiftUI
 
 /// A small determinate circular progress ring: a neutral track, an arc in
 /// `tint` for the completed fraction, and at the center a check once complete
-/// or, until then, an optional SF Symbol in `tint`.
+/// or, until then, an optional SF Symbol in `tint`. A ring that is skipped (a
+/// habit set aside for the day) draws its track as dots and carries the skip
+/// glyph in the secondary style, so the day reads as excused by shape and not
+/// by color alone.
 ///
 /// The track is the neutral tertiary style, not a faint wash of `tint`. The ring
 /// is a habit's check-in control, and while nothing is logged its track is the
@@ -24,16 +27,25 @@ struct MobileProgressRing: View {
   /// SF Symbol drawn at the center until the ring is complete, for a ring that
   /// is the only mark identifying what it tracks. Nil leaves the center empty.
   var symbol: String? = nil
+  /// Draws the ring as set aside for the day. Ignored once the ring is complete.
+  var isSkipped: Bool = false
+
+  private var isShownSkipped: Bool { isSkipped && !isComplete }
 
   var body: some View {
     ZStack {
-      Circle()
-        .stroke(.tertiary, lineWidth: lineWidth)
-      LorvexProgressArc(fraction: value, style: tint, lineWidth: lineWidth)
-      if let center = isComplete ? "checkmark" : symbol {
+      if isShownSkipped {
+        LorvexDottedRing(dotDiameter: lineWidth)
+          .fill(.tertiary)
+      } else {
+        Circle()
+          .stroke(.tertiary, lineWidth: lineWidth)
+        LorvexProgressArc(fraction: value, style: tint, lineWidth: lineWidth)
+      }
+      if let center = isComplete ? "checkmark" : (isShownSkipped ? LorvexHabitSkip.glyph : symbol) {
         Image(systemName: center)
           .font(.system(size: size * (isComplete ? 0.42 : 0.4), weight: isComplete ? .bold : .semibold))  // lorvex-design-token: allow
-          .foregroundStyle(tint)
+          .foregroundStyle(isShownSkipped ? Color.secondary : tint)
           .contentTransition(.symbolEffect(.replace))
       }
     }

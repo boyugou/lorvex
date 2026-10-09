@@ -10,7 +10,7 @@ final class NamingTests: XCTestCase {
   }
 
   func testAllEdgeTypesHasCorrectCount() {
-    XCTAssertEqual(EdgeName.allEdgeTypes.count, 4)
+    XCTAssertEqual(EdgeName.allEdgeTypes.count, 5)
   }
 
   func testAllSyncableTypesIsSupersetOfEntitiesAndEdges() {
@@ -197,7 +197,7 @@ final class NamingTests: XCTestCase {
     }
     let noSimplePk: [EntityKind] = [
       .aiChangelog, .entityRedirect, .taskTag, .taskDependency, .taskCalendarEventLink,
-      .habitCompletion,
+      .habitCompletion, .habitSkip,
       .deviceState, .importSession, .dailySchedule,
     ]
     for kind in noSimplePk {
@@ -216,6 +216,7 @@ final class NamingTests: XCTestCase {
       (.taskTag, "task_tags"), (.taskDependency, "task_dependencies"),
       (.taskCalendarEventLink, "task_calendar_event_links"),
       (.habitCompletion, "habit_completions"),
+      (.habitSkip, "habit_skips"),
       (.aiChangelog, "ai_changelog"),
       (.entityRedirect, "sync_entity_redirects"),
       (.deviceState, "device_state"),

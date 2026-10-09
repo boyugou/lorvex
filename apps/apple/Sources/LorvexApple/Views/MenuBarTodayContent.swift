@@ -168,7 +168,8 @@ struct MenuBarTodayContent: View {
 
   /// A habit: its ring in the habit's color, which checks it in and fills
   /// with today's count, its name, and the count when the habit is counted
-  /// more than once a day.
+  /// more than once a day. A habit set aside for today draws its ring as
+  /// skipped and quiets its name.
   private func habitRow(_ habit: LorvexHabit) -> some View {
     let target = max(habit.targetCount, 1)
     let isMet = habit.completionsToday >= target
@@ -178,17 +179,19 @@ struct MenuBarTodayContent: View {
       } label: {
         LorvexHabitCheckRing(
           fraction: min(Double(habit.completionsToday) / Double(target), 1),
-          tint: isMet ? LorvexDesign.Palette.done : LorvexHabitPalette.baseColor(for: habit))
+          tint: isMet ? LorvexDesign.Palette.done : LorvexHabitPalette.baseColor(for: habit),
+          isSkipped: habit.isSkipped)
       }
       .buttonStyle(.plain)
       .disabled(isMet && target > 1)
       .help(MenuBarCopy.checkIn)
       .accessibilityLabel(habit.name)
-      .accessibilityValue("\(habit.completionsToday)/\(target)")
+      .accessibilityValue(
+        habit.isSkipped ? HabitSkipText.skippedToday : "\(habit.completionsToday)/\(target)")
       .accessibilityAddTraits(isMet ? .isSelected : [])
       Text(habit.name)
         .font(LorvexDesign.Typography.primaryText)
-        .foregroundStyle(isMet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+        .foregroundStyle(isMet || habit.isSkipped ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
         .lineLimit(1)
       Spacer(minLength: 0)
       if target > 1 {

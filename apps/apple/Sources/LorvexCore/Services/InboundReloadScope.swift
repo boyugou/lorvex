@@ -87,9 +87,10 @@ public enum InboundReloadScope {
         // occurrence decisions, and therefore have the same rendered blast
         // radius as the segment events they partition.
         domains.formUnion([.calendar, .today, .tasks, .reviews])
-      case .habit, .habitCompletion:
-        // Review evidence joins habits and completions, so a peer completion,
-        // rename, or delete changes both the habit cards and daily/weekly review.
+      case .habit, .habitCompletion, .habitSkip:
+        // Review evidence joins habits and completions, and a skipped day leaves
+        // both the open list and the review, so a peer completion, skip, rename,
+        // or delete changes both the habit cards and daily/weekly review.
         domains.formUnion([.habits, .reviews])
       case .habitReminderPolicy:
         domains.insert(.habits)

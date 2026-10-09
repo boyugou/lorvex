@@ -203,9 +203,12 @@ struct MenuBarStatusView: View {
 
   private var scopePicker: some View {
     Picker(MenuBarScope.pickerLabel, selection: $scope) {
-      ForEach(MenuBarScope.allCases) { scope in
-        Text(scope.title).tag(scope)
-      }
+      // One segment per scope, written out rather than a `ForEach`: the date
+      // row builds this picker in each of its `ViewThatFits` candidates, and a
+      // `ForEach` closure SwiftUI runs for a candidate it has not chosen can
+      // trap off the main thread.
+      Text(MenuBarScope.today.title).tag(MenuBarScope.today)
+      Text(MenuBarScope.week.title).tag(MenuBarScope.week)
     }
     .pickerStyle(.segmented)
     .labelsHidden()

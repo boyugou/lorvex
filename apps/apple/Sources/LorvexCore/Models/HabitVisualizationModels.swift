@@ -10,6 +10,9 @@ public enum HabitHeatmapModel {
     case none
     case partial
     case met
+    /// A day with no check-in that the user set the habit aside for: neither
+    /// done nor missed.
+    case skipped
   }
 
   public struct Cell: Equatable, Identifiable, Sendable {
@@ -53,12 +56,15 @@ public enum HabitHeatmapModel {
   /// begins, on or before `endDate`, and names that month the way `locale`
   /// abbreviates it: Gregorian months in most regions, Hijri months where the
   /// locale's calendar is Islamic, as every other date in the app is shown.
+  /// A day in `skips` (`YYYY-MM-DD`) with no check-in is a skipped cell; a
+  /// check-in on the day outranks the skip.
   public static func makeGrid(
     completions: [HabitCompletionEntry],
     targetCount: Int,
     weeks: Int,
     endDate: Date,
     calendar: Calendar,
+    skips: Set<String> = [],
     locale: Locale = LorvexClockFormat.displayLocale
   ) -> Grid {
     guard weeks > 0 else { return .empty }
@@ -105,6 +111,8 @@ public enum HabitHeatmapModel {
           intensity = .met
         } else if value > 0 {
           intensity = .partial
+        } else if skips.contains(key) {
+          intensity = .skipped
         } else {
           intensity = .none
         }
@@ -208,19 +216,25 @@ public enum HabitRhythmStrip {
   public struct Cell: Equatable, Sendable {
     public let filled: Bool
     public let isCurrent: Bool
+    /// Whether the cell is a day the user set the habit aside for. Only a
+    /// daily strip's cells are single days, so only they can be skipped.
+    public let isSkipped: Bool
 
-    public init(filled: Bool, isCurrent: Bool) {
+    public init(filled: Bool, isCurrent: Bool, isSkipped: Bool = false) {
       self.filled = filled
       self.isCurrent = isCurrent
+      self.isSkipped = isSkipped
     }
   }
 
   /// The strip's cells, oldest first: the last 7 days, 8 weeks, or 6 months,
   /// each filled when its met days reach the habit's per-period target.
   /// Periods are Gregorian days, ISO weeks, and months in `timeZone`, the
-  /// calendar the completion keys are written in.
+  /// calendar the completion keys are written in. A day of a daily strip that
+  /// is in `skips` (`YYYY-MM-DD`) and not filled is a skipped cell.
   public static func cells(
     completions: Set<String>,
+    skips: Set<String> = [],
     habit: LorvexHabit,
     today: Date,
     timeZone: TimeZone = .current
@@ -236,11 +250,17 @@ public enum HabitRhythmStrip {
     }
     return (0..<count).map { index in
       let periodsAgo = count - 1 - index
-      return Cell(
-        filled: completionCount(
+      let filled =
+        completionCount(
           completions: completions, granularity: granularity, periodsAgo: periodsAgo,
-          today: today, calendar: calendar) >= requiredMetDays,
-        isCurrent: periodsAgo == 0)
+          today: today, calendar: calendar) >= requiredMetDays
+      var skipped = false
+      if !filled, granularity == .day,
+        let day = calendar.date(byAdding: .day, value: -periodsAgo, to: today)
+      {
+        skipped = skips.contains(ymd(day, calendar))
+      }
+      return Cell(filled: filled, isCurrent: periodsAgo == 0, isSkipped: skipped)
     }
   }
 
@@ -320,7 +340,7 @@ public enum HabitPeriodProgress {
     }
   }
 
-  /// The period ``current(habit:recentCompletions:today:timeZone:)`` counts
+  /// The period ``current(habit:recentCompletions:recentSkips:today:timeZone:)`` counts
   /// over: the day for a habit with a per-day target above one, whatever its
   /// cadence, otherwise the cadence's own day, week, or month.
   public static func period(for habit: LorvexHabit) -> HabitRhythmStrip.Granularity {
@@ -328,12 +348,27 @@ public enum HabitPeriodProgress {
     return HabitRhythmStrip.granularity(forFrequencyType: habit.frequencyType)
   }
 
+  /// Whether today was set aside for `habit` and the dial for its period has
+  /// nothing to count: the period is the day, and a skipped day holds no
+  /// check-in (a check-in lifts the skip). A week's or a month's dial keeps its
+  /// count, since the days around today still add to it.
+  public static func isSetAside(_ habit: LorvexHabit) -> Bool {
+    habit.isSkipped && period(for: habit) == .day
+  }
+
   /// The met days of the period `today` falls in, against the habit's target.
   /// Weeks are ISO weeks and months Gregorian months in `timeZone`, the
   /// calendar the completion keys are written in.
+  ///
+  /// `recentSkips` are the days the user set the habit aside. Each skipped day
+  /// the week's schedule made due lowers a weekly habit's requirement by one,
+  /// to a floor of one, the way the streak math excuses it. No other cadence's
+  /// count changes: a times-per-week or monthly quota belongs to its period, and
+  /// a skip only sets the habit aside for the day.
   public static func current(
     habit: LorvexHabit,
     recentCompletions: [String],
+    recentSkips: [String] = [],
     today: Date = Date(),
     timeZone: TimeZone = .current
   ) -> Value {
@@ -343,9 +378,13 @@ public enum HabitPeriodProgress {
     case .day:
       return Value(completed: max(habit.completionsToday, 0), required: target)
     case .week:
+      let excused =
+        habit.frequencyType == "weekly"
+        ? scheduledSkipsInCurrentWeek(habit, skips: recentSkips, today: today, calendar: calendar)
+        : 0
       return Value(
         completed: completionsInCurrentWeek(recentCompletions, today: today, calendar: calendar),
-        required: requiredMetDaysPerPeriod(habit: habit))
+        required: max(requiredMetDaysPerPeriod(habit: habit) - excused, 1))
     case .month:
       return Value(
         completed: completionsInCurrentMonth(recentCompletions, today: today, calendar: calendar),
@@ -353,16 +392,39 @@ public enum HabitPeriodProgress {
     }
   }
 
-  private static func completionsInCurrentWeek(
-    _ completions: [String], today: Date, calendar: Calendar
-  ) -> Int {
+  /// The ISO week `today` falls in, Monday first, with the calendar that
+  /// numbers it.
+  private static func currentWeekInterval(today: Date, calendar: Calendar) -> (
+    calendar: Calendar, interval: DateInterval
+  )? {
     var weekCalendar = calendar
     weekCalendar.firstWeekday = 2
     weekCalendar.minimumDaysInFirstWeek = 4
-    guard let interval = weekCalendar.dateInterval(of: .weekOfYear, for: today) else { return 0 }
+    guard let interval = weekCalendar.dateInterval(of: .weekOfYear, for: today) else { return nil }
+    return (weekCalendar, interval)
+  }
+
+  private static func completionsInCurrentWeek(
+    _ completions: [String], today: Date, calendar: Calendar
+  ) -> Int {
+    guard let week = currentWeekInterval(today: today, calendar: calendar) else { return 0 }
     return completions.filter { string in
-      guard let date = date(string, weekCalendar) else { return false }
-      return interval.contains(date)
+      guard let date = date(string, week.calendar) else { return false }
+      return week.interval.contains(date)
+    }.count
+  }
+
+  /// How many distinct days of the current week the user skipped on which the
+  /// habit's schedule made it due.
+  private static func scheduledSkipsInCurrentWeek(
+    _ habit: LorvexHabit, skips: [String], today: Date, calendar: Calendar
+  ) -> Int {
+    guard let week = currentWeekInterval(today: today, calendar: calendar) else { return 0 }
+    return Set(skips).filter { string in
+      guard let date = date(string, week.calendar), week.interval.contains(date) else {
+        return false
+      }
+      return habit.isDue(on: string)
     }.count
   }
 

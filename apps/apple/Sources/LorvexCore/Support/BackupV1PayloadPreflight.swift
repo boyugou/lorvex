@@ -92,6 +92,7 @@ enum BackupV1PayloadPreflight {
       try requireUnique(
         habit.completions.map(\.completedDate),
         label: "habit \(habit.id) completion date")
+      try requireUnique(habit.skips.map(\.skippedDate), label: "habit \(habit.id) skip date")
       habitReminderPolicyIDs.append(contentsOf: habit.reminderPolicies.map(\.id))
       try requireUnique(
         habit.reminderPolicies.map(\.reminderTime),

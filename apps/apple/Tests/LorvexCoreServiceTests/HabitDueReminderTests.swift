@@ -267,6 +267,70 @@ struct HabitDueReminderTests {
     #expect(occurrences.isEmpty)
   }
 
+  // MARK: - Skipped days
+
+  @Test("A skipped day gets no reminder, and taking the skip back restores it")
+  func skippedDayHasNoReminder() async throws {
+    let service = try makeService()
+    try await seedUTC(service)
+    let habit = try await service.createHabit(name: "Stretch", cue: nil, targetCount: 1)
+    try await addPolicy(service, habitID: habit.id, habitName: habit.name, time: "18:00")
+    let now = iso("2026-03-29T12:00:00Z")
+
+    _ = try await service.skipHabit(id: habit.id, date: "2026-03-29")
+    _ = try await service.skipHabit(id: habit.id, date: "2026-03-31")
+    let skipped = try await service.getDueHabitReminderOccurrences(
+      now: now, horizonDays: 3, deviceZone: utc)
+    #expect(Set(skipped.map { fireDayString($0.fireDate) }) == ["2026-03-30"])
+
+    _ = try await service.unskipHabit(id: habit.id, date: "2026-03-29")
+    let restored = try await service.getDueHabitReminderOccurrences(
+      now: now, horizonDays: 3, deviceZone: utc)
+    #expect(Set(restored.map { fireDayString($0.fireDate) }) == ["2026-03-29", "2026-03-30"])
+  }
+
+  @Test("Skipping one habit leaves another habit's reminder for the day alone")
+  func skipIsPerHabit() async throws {
+    let service = try makeService()
+    try await seedUTC(service)
+    let cardio = try await service.createHabit(name: "Cardio", cue: nil, targetCount: 1)
+    let read = try await service.createHabit(name: "Read", cue: nil, targetCount: 1)
+    try await addPolicy(service, habitID: cardio.id, habitName: cardio.name, time: "18:00")
+    try await addPolicy(service, habitID: read.id, habitName: read.name, time: "18:00")
+
+    _ = try await service.skipHabit(id: cardio.id, date: "2026-03-29")
+    let occurrences = try await service.getDueHabitReminderOccurrences(
+      now: iso("2026-03-29T12:00:00Z"), horizonDays: 1, deviceZone: utc)
+
+    #expect(occurrences.map(\.policy.habitID) == [read.id])
+  }
+
+  @Test("A reminder that would have fired on a skipped day is not recorded as delivered")
+  func skippedDayElapsedFireIsNotDelivered() async throws {
+    let service = try makeService()
+    try await seedUTC(service)
+    // Daily-scheduled weekly habit, target 1/week: an elapsed fire on Monday would
+    // debounce the whole week, so a phantom delivery on the skipped Monday shows.
+    let habit = try await service.createHabit(
+      name: "Read", cue: nil, icon: nil, color: nil, targetCount: 1,
+      cadence: HabitCadenceInput(frequencyType: "weekly"))
+    try await addPolicy(service, habitID: habit.id, habitName: habit.name, time: "08:00")
+    let policyID = try await service.getHabitReminderPolicies(id: habit.id)[0].id
+    _ = try await service.skipHabit(id: habit.id, date: "2026-03-30")
+
+    let now = iso("2026-03-30T10:00:00Z")  // Monday, after its 08:00 fire time
+    try await service.replaceArmedHabitReminders(
+      armedThroughByPolicyID: [policyID: now], asOf: now)
+    try await service.reconcileDeliveredHabitReminders(asOf: now, deviceZone: utc)
+
+    let occurrences = try await service.getDueHabitReminderOccurrences(
+      now: now, horizonDays: 4, deviceZone: utc)
+    // The week is still below target and was never debounced.
+    #expect(
+      Set(occurrences.map { fireDayString($0.fireDate) })
+        == ["2026-03-31", "2026-04-01", "2026-04-02"])
+  }
+
   // MARK: - Enabled / debounce
 
   @Test("A disabled policy contributes no occurrences")

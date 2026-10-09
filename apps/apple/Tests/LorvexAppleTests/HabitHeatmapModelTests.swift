@@ -270,3 +270,26 @@ func historyPanelCachesGridOutsideBody() throws {
   // The grid is built in one place, the cache builder, never per body pass.
   #expect(source.components(separatedBy: "HabitHeatmapModel.makeGrid(").count == 2)
 }
+
+@Test
+func heatmapDrawsASkippedDayWithoutCheckInAsSkipped() {
+  let cal = calendar()
+  let grid = HabitHeatmapModel.makeGrid(
+    completions: [entry("2026-05-26")],
+    targetCount: 1,
+    weeks: 12,
+    endDate: date("2026-05-28", cal),
+    calendar: cal,
+    skips: ["2026-05-26", "2026-05-27", "2026-05-29"]
+  )
+  let cells = grid.columns.flatMap { $0 }
+  // A check-in outranks a skip on the same day; a day with none is skipped.
+  #expect(cells.first { $0.date == "2026-05-26" }?.intensity == .met)
+  let skipped = cells.first { $0.date == "2026-05-27" }
+  #expect(skipped?.intensity == .skipped)
+  #expect(skipped?.value == 0)
+  #expect(skipped?.level == 0)
+  #expect(cells.first { $0.date == "2026-05-25" }?.intensity == HabitHeatmapModel.Intensity.none)
+  // A skip on a day after the grid's last day leaves that cell absent.
+  #expect(cells.filter { $0.intensity == .skipped }.count == 1)
+}

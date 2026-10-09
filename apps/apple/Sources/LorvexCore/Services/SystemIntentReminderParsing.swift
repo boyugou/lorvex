@@ -34,6 +34,6 @@ extension LorvexSystemIntentRunner {
       throw LorvexCoreError.validation(
         field: "horizon", message: "Reminder horizon must be greater than zero.")
     }
-    return hours
+    return min(hours, SwiftLorvexCoreService.maxReminderHorizonHours)
   }
 }

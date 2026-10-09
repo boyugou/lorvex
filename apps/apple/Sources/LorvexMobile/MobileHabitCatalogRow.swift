@@ -45,7 +45,8 @@ struct MobileHabitCatalogRow: View {
           value: habit.todayProgressValue,
           tint: habit.isCompleteToday ? LorvexDesign.Palette.done : habit.tileTint,
           size: 32,
-          isComplete: habit.isCompleteToday
+          isComplete: habit.isCompleteToday,
+          isSkipped: habit.isSkipped
         )
         .accessibilityHidden(true)
       }

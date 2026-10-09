@@ -339,6 +339,11 @@
         ("Drink two liters of water", nil, "drop.fill", "#0A84FF", .daily),
         ("Lights out by eleven", "Phone on the charger across the room", "moon.stars.fill", "#AF52DE", .daily),
       ]
+      // Excused days, as days before today by habit position: the first habit
+      // is set aside today and five days ago (inside its broken streak), Floss
+      // today and four days ago, the water habit today and six days ago, the
+      // lights-out habit two days ago.
+      let skippedOffsets: [Int: [Int]] = [0: [0, 5], 6: [0, 4], 8: [0, 6], 9: [2]]
       for (index, spec) in habits.enumerated() {
         let (name, cue, icon, color, cadence) = spec
         guard
@@ -348,12 +353,18 @@
               milestoneTarget: nil)
           })
         else { continue }
+        let skipped = skippedOffsets[index] ?? []
         // A broken streak on the first habit; recent runs on the daily others.
         let offsets: [Int] =
           index == 0 ? [0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13] : (cadence == .daily ? Array(0..<(index % 5 + 1)) : [])
-        for offset in offsets {
+        for offset in offsets where !skipped.contains(offset) {
           _ = await stressSeed("habit completion") {
             try await core.completeHabit(id: habit.id, date: days.key(-offset))
+          }
+        }
+        for offset in skipped {
+          _ = await stressSeed("habit skip") {
+            try await core.skipHabit(id: habit.id, date: days.key(-offset))
           }
         }
       }

@@ -26,7 +26,7 @@ Flow:
   returns its rich created object, not a bare {success:true}) ->
   assert the on-disk DB file exists.
 
-Coverage rationale: the surface is 118 tools, far too many to exercise here;
+Coverage rationale: the surface is 116 tools, far too many to exercise here;
 `verify_mcp_tool_manifest.py` locks every tool's input-schema shape statically,
 so this smoke instead proves the *runtime* contracts that static lock can't —
 the security fence, the canonical pagination envelope, the error envelope, and

@@ -502,7 +502,7 @@ final class SyncPayloadContractTests: XCTestCase {
         case .dailyReview, .dailyBriefing: entityID = "2026-07-14"
         case .taskTag, .taskDependency, .taskCalendarEventLink:
           entityID = "\(uuid(1000 + index)):\(uuid(2000 + index))"
-        case .habitCompletion:
+        case .habitCompletion, .habitSkip:
           entityID = "\(uuid(1000 + index)):2026-07-14"
         default: entityID = uuid(1000 + index)
         }

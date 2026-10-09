@@ -33,8 +33,10 @@ struct MCPArchivedHabitCompletionTests {
   }
 
   @Test(
-    "complete, uncomplete and adjust refuse an archived habit and change nothing",
-    arguments: ["complete_habit", "uncomplete_habit", "adjust_habit_completion"])
+    "complete, uncomplete, adjust, skip and unskip refuse an archived habit and change nothing",
+    arguments: [
+      "complete_habit", "uncomplete_habit", "adjust_habit_completion", "skip_habit", "unskip_habit",
+    ])
   func singleWritesRefuseAnArchivedHabit(tool: String) async throws {
     let registry = try mcpInMemoryRegistry()
     let id = try await archivedHabit(registry)

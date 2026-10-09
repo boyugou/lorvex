@@ -18,6 +18,7 @@ missing/forbidden fragment are printed to stderr).
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -48,6 +49,9 @@ FORBIDDEN_TOKEN = "".join(["sc", "rat", "ch", "pa", "d"])
 #                                     fragments as literals, except that the listed
 #                                     files hold exactly n more literals; lines that
 #                                     hold only a comment are not counted
+#   ("view_that_fits_no_foreach", scope)
+#                                     no ViewThatFits candidate holds a ForEach, in
+#                                     its own block or through a same-file member
 #   ("order", ("file", p), a, b)      a appears before b in the file
 #   ("file_missing", relpath)         file must NOT exist (relative to apps/apple)
 #   ("tree_absent_token",)            the cross-tree FORBIDDEN_TOKEN scan
@@ -2089,6 +2093,13 @@ RULES = [
     ('contains', ('file', 'Sources/LorvexWatch/LorvexWatchStore.swift'), '$0.isListed(on: dateString)'),
     ('contains', ('file', 'Sources/LorvexMobile/MobileStoreReviewDayReads.swift'), '.reviewed(on: date)'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreReviewDayActions.swift'), '.reviewed(on: date)'),
+    # --- viewThatFitsCandidatesHoldNoForEach ---
+    # SwiftUI evaluates a ViewThatFits candidate it has not chosen during
+    # animation frames, possibly off the main thread, and a main-actor ForEach
+    # content closure run there traps (the iPad Today screen crashed this way).
+    # Candidates are built from static branches; a dynamic list takes a single
+    # container, such as one scroll view inside a custom Layout, instead.
+    ('view_that_fits_no_foreach', ('dir', 'Sources', True)),
     # --- widgetButtonsAreDrawnByWidgetKit ---
     # WidgetKit draws only SwiftUI-rendered views. On macOS the borderless
     # button style is an AppKit control, so a widget shows its unsupported-view
@@ -2167,6 +2178,110 @@ def _without_comment_lines(text: str) -> str:
     return "\n".join(line for line in text.split("\n") if not line.lstrip().startswith("//"))
 
 
+def _code_only(text: str) -> str:
+    """`text` with each `//` comment and the inside of each one-line string cut away."""
+    lines = []
+    for line in text.split("\n"):
+        kept = []
+        in_string = False
+        escaped = False
+        for index, char in enumerate(line):
+            if escaped:
+                escaped = False
+            elif in_string and char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = not in_string
+                kept.append(char)
+            elif not in_string:
+                if line.startswith("//", index):
+                    break
+                kept.append(char)
+        lines.append("".join(kept))
+    return "\n".join(lines)
+
+
+def _braced_block(text: str, start: int) -> str | None:
+    """The `{ ... }` block whose opening brace is the first one at or after `start`."""
+    open_index = text.find("{", start)
+    if open_index < 0:
+        return None
+    depth = 0
+    for index in range(open_index, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_index:index + 1]
+    return None
+
+
+def _member_body(code: str, declaration: re.Match[str]) -> str | None:
+    """The body of the `func` or `var` that `declaration` matched, or None when it has none."""
+    if declaration.group(1) == "var":
+        # A computed property opens its body on its own line, before any `=`.
+        opening = re.compile(r"[^\n=]*\{").match(code, declaration.end())
+        return _braced_block(code, declaration.end()) if opening else None
+    paren = code.find("(", declaration.end())
+    if paren < 0 or paren - declaration.end() > 80:
+        return None
+    depth = 0
+    close = -1
+    for index in range(paren, len(code)):
+        if code[index] == "(":
+            depth += 1
+        elif code[index] == ")":
+            depth -= 1
+            if depth == 0:
+                close = index
+                break
+    if close < 0:
+        return None
+    brace = code.find("{", close)
+    if brace < 0:
+        return None
+    gap = code[close + 1:brace]
+    if len(gap) > 160 or "\n\n" in gap or ";" in gap:
+        return None
+    return _braced_block(code, close)
+
+
+def view_that_fits_foreach_failures(files: list[tuple[str, str]]) -> list[str]:
+    """Each ViewThatFits candidate that reaches a ForEach.
+
+    A candidate reaches one when its block holds a `ForEach`, or names a `func` or
+    `var` of the same file whose body holds one. A helper view defined in another
+    file is out of reach of this scan, so a candidate keeps its dynamic content
+    out of such views too.
+    """
+    failures: list[str] = []
+    for label, text in files:
+        if "ViewThatFits" not in text:
+            continue
+        code = _code_only(text)
+        foreach_members = set()
+        for declaration in re.finditer(r"\b(func|var)\s+([A-Za-z_]\w*)", code):
+            body = _member_body(code, declaration)
+            if body is not None and re.search(r"\bForEach\b", body):
+                foreach_members.add(declaration.group(2))
+        for match in re.finditer(r"\bViewThatFits\b", code):
+            block = _braced_block(code, match.end())
+            if block is None:
+                continue
+            line = code.count("\n", 0, match.start()) + 1
+            if re.search(r"\bForEach\b", block):
+                failures.append(f"{label}:{line}: a ViewThatFits candidate holds a ForEach")
+                continue
+            reached = sorted(
+                name for name in foreach_members if re.search(rf"\b{re.escape(name)}\b", block))
+            if reached:
+                failures.append(
+                    f"{label}:{line}: a ViewThatFits candidate reaches a ForEach through "
+                    + ", ".join(reached))
+    return failures
+
+
 def token_scan_failures() -> list[str]:
     failures: list[str] = []
     for rel in TOKEN_SCAN_ROOTS:
@@ -2237,6 +2352,8 @@ def source_hygiene_failures(rules=RULES) -> list[str]:
                     elif label in exempt and unpaired < allowed:
                         failures.append(
                             f"{label}: the exemption for {rule[2]!r} without {rule[3]!r} is no longer needed")
+            elif kind == "view_that_fits_no_foreach":
+                failures.extend(view_that_fits_foreach_failures(_scope_texts(rule[1])))
             elif kind == "order":
                 (label, text), = _scope_texts(rule[1])
                 bi, ai = text.find(rule[2]), text.find(rule[3])

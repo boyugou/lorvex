@@ -246,7 +246,7 @@ func dryRunEnablesNativeTaskSyncStateWithoutLiveTasks() throws {
       NativeTaskPayloadShadowSnapshot(
         entityType: .taskCalendarEventLink,
         entityID: "\(linkedTaskID):\(linkedEventID)", baseVersion: version,
-        payloadSchemaVersion: 2,
+        payloadSchemaVersion: LorvexVersion.payloadSchemaVersion + 1,
         rawPayloadJSON: "{\"future_user_field\":\"preserve me\"}",
         sourceDeviceID: "future-peer", updatedAt: "2026-01-01T00:00:00.000Z")
     ])

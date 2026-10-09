@@ -6,5 +6,9 @@
   "002": {
     "name": "002_retire_custom_sync_transport.sql",
     "sha256": "d730e60c6da3837ee69015652eaa8ad8d76a0f84ada6274f98965ec1d5489b77"
+  },
+  "003": {
+    "name": "003_habit_skips.sql",
+    "sha256": "76d49e9d3d8871f7dc40cad8ea2ff754639761181754e83a6e3477f39b261e00"
   }
 }

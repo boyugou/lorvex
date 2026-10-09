@@ -139,11 +139,35 @@ extension SwiftLorvexCoreService {
         db, id: habit.id, from: nil, to: nil,
         limit: LorvexDataExportWindow.habitCompletionLimit
       ).completions.map(ExportHabitCompletion.init(from:))
+      let skips = try habitSkipsForDataExport(db, id: habit.id)
       let reminderPolicies = try habitReminderPoliciesForDataExport(db, id: habit.id)
         .map(ExportHabitReminderPolicy.init(from:))
       return ExportHabit(
         from: habit, createdAt: createdAtByID[habit.id], completions: completions,
-        reminderPolicies: reminderPolicies)
+        skips: skips, reminderPolicies: reminderPolicies)
+    }
+  }
+
+  /// Every skipped day of one habit, ascending by date.
+  static func habitSkipsForDataExport(
+    _ db: Database, id: String
+  ) throws -> [ExportHabitSkip] {
+    let count =
+      try Int.fetchOne(
+        db, sql: "SELECT COUNT(*) FROM habit_skips WHERE habit_id = ?", arguments: [id]) ?? 0
+    try validateExportRowCount(
+      category: "habit_skips:\(id)", count: count,
+      limit: LorvexDataExportWindow.habitCompletionLimit)
+    return try Row.fetchAll(
+      db,
+      sql: """
+        SELECT skipped_date, created_at, updated_at FROM habit_skips
+        WHERE habit_id = ? ORDER BY skipped_date ASC
+        """,
+      arguments: [id]
+    ).map {
+      ExportHabitSkip(
+        skippedDate: $0["skipped_date"], createdAt: $0["created_at"], updatedAt: $0["updated_at"])
     }
   }
 

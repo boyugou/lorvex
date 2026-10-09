@@ -9,16 +9,20 @@ import SwiftUI
 /// habit's color and carrying its symbol, over its name
 /// (``LorvexHabitRingTile``). A habit kept several times a day draws one arc
 /// per check-in. Tapping the ring of a habit not yet done checks it in without
-/// opening the app; a done habit's ring is green with a check.
+/// opening the app; a done habit's ring is green with a check. A habit set
+/// aside for today draws its ring as dots around a skip mark and quiets its
+/// name; a tap still checks it in, which lifts the skip.
 ///
-/// A header names the widget and counts the habits done today. Small's grid
+/// A header names the widget and counts the habits done today, over those the
+/// day asks about: a habit set aside is in neither count. Small's grid
 /// has two columns, medium's four, and both hold two rows, which share the
 /// height under the header. Where two rows of full-size rings do not fit (a
 /// smaller widget, a larger text size, a script whose line height is taller
 /// than the Latin one) the rings shrink to 85% and then to 70%, and where even
 /// those do not fit the grid keeps one row. With more habits than tiles, the last
 /// tile counts the rest and the habits not yet done take the tiles first, so
-/// what is left to do stays in view; otherwise the habits keep their order.
+/// what is left to do stays in view (a habit set aside is not left to do);
+/// otherwise the habits keep their order.
 ///
 /// The view draws inside WidgetKit's content margins and adds none of its own.
 public struct HabitsWidgetView: View {
@@ -32,9 +36,9 @@ public struct HabitsWidgetView: View {
     self.staleAgeLabel = staleAgeLabel
   }
 
-  private var completedCount: Int { habits.filter(\.isDoneToday).count }
+  private var progress: (done: Int, total: Int) { HabitsWidgetLayout.progress(habits) }
 
-  private var isAllDone: Bool { !habits.isEmpty && completedCount == habits.count }
+  private var isAllDone: Bool { progress.total > 0 && progress.done == progress.total }
 
   private var columnCount: Int { HabitsWidgetLayout.columnCount(family: family) }
 
@@ -98,8 +102,8 @@ public struct HabitsWidgetView: View {
               localized: "widget.habits.all_done", defaultValue: "All habits done today",
               table: "Localizable", bundle: WidgetL10n.bundle))
       }
-      if !habits.isEmpty {
-        Text("\(completedCount)/\(habits.count)")
+      if progress.total > 0 {
+        Text("\(progress.done)/\(progress.total)")
           .font(WidgetType.meta)
           .monospacedDigit()
           .foregroundStyle(.secondary)
@@ -196,13 +200,21 @@ public enum HabitsWidgetLayout {
     case more(Int)
   }
 
+  /// The habits met today over the habits the day asks about. A habit set aside
+  /// for today is neither done nor owed, so it is in neither count.
+  public static func progress(_ habits: [WidgetSnapshot.HabitSummary]) -> (done: Int, total: Int) {
+    let asked = habits.filter { !$0.isSkipped }
+    return (asked.filter(\.isDoneToday).count, asked.count)
+  }
+
   /// The tiles `capacity` holds. Every habit when they fit, in order;
-  /// otherwise the last tile counts the habits left out, and the habits not yet
-  /// done today take the other tiles first, each group in order.
+  /// otherwise the last tile counts the habits left out, and the habits still
+  /// open today (not done, not set aside) take the other tiles first, each
+  /// group in order.
   public static func tiles(_ habits: [WidgetSnapshot.HabitSummary], capacity: Int) -> [Tile] {
     guard habits.count > capacity else { return habits.map(Tile.habit) }
     guard capacity > 1 else { return [.more(habits.count)] }
-    let ordered = habits.filter { !$0.isDoneToday } + habits.filter(\.isDoneToday)
+    let ordered = habits.filter(\.isOpenToday) + habits.filter { !$0.isOpenToday }
     let shown = ordered.prefix(capacity - 1)
     return shown.map(Tile.habit) + [.more(habits.count - shown.count)]
   }
@@ -225,7 +237,8 @@ struct HabitTileView: View {
       diameter: ringDiameter,
       nameFont: WidgetType.tile,
       nameLines: 1,
-      segments: habit.target)
+      segments: habit.target,
+      isSkipped: habit.isSkipped)
       // A habit name is the user's content, and the widget shows on StandBy,
       // visible on a locked device: redact the tile when the device locks.
       .privacySensitive()
@@ -245,7 +258,7 @@ struct HabitTileView: View {
         String(
           localized: "widget.habits.complete.a11y", defaultValue: "Complete \(habit.name)",
           table: "Localizable", bundle: WidgetL10n.bundle))
-      .accessibilityValue(progressLabel)
+      .accessibilityValue(habit.isSkipped ? HabitSkippedLabel.text : progressLabel)
     }
   }
 
@@ -253,6 +266,15 @@ struct HabitTileView: View {
     String(
       localized: "widget.habits.row.progress.a11y",
       defaultValue: "\(habit.name), \(habit.completedToday) of \(habit.target)",
+      table: "Localizable", bundle: WidgetL10n.bundle)
+  }
+}
+
+/// The words VoiceOver reads for a habit set aside for today.
+enum HabitSkippedLabel {
+  static var text: String {
+    String(
+      localized: "widget.habits.skipped.a11y", defaultValue: "Skipped today",
       table: "Localizable", bundle: WidgetL10n.bundle)
   }
 }

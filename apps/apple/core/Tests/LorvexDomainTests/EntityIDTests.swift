@@ -101,3 +101,23 @@ final class SyncEntityIdCanonicalUuidTests: XCTestCase {
     XCTAssertFalse(SyncEntityId.isCanonicalUuid(""))
   }
 }
+
+final class EntityIDClockTests: XCTestCase {
+  func testClockBeforeTheEpochReadsAsZeroInsteadOfTrapping() {
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: -1), 0)
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: -1.0e12), 0)
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: .nan), 0)
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: -.infinity), 0)
+  }
+
+  func testClockReadsAsWholeMilliseconds() {
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: 0), 0)
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: 1.5), 1_500)
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: 1_900_000_000), 1_900_000_000_000)
+  }
+
+  func testClockStaysInsideTheTimestampField() {
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: .infinity), 0xFFFF_FFFF_FFFF)
+    XCTAssertEqual(EntityID.unixMilliseconds(secondsSince1970: 1.0e30), 0xFFFF_FFFF_FFFF)
+  }
+}

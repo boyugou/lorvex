@@ -4,8 +4,8 @@ import SwiftUI
 /// A habit's detail: who it is, what to do about it today, where it stands,
 /// and its reminders.
 ///
-/// The header and the day's actions come first so completing the habit never
-/// needs a scroll. Every number then appears once: the cadence and lifetime
+/// The header and the day's actions come first so completing or skipping the
+/// habit never needs a scroll. Every number then appears once: the cadence and lifetime
 /// count as a line under the name, the period's progress, streaks, and 30-day
 /// rate in the momentum card, and the next milestone in its own card. Archiving
 /// and deleting the habit are the last things on the page, away from the
@@ -23,6 +23,9 @@ struct MobileHabitDetailPanel: View {
   let archiveHabit: () async -> Bool
   let complete: () async -> Bool
   let reset: () async -> Bool
+  /// Skip Today, or Undo Skip once today is set aside
+  /// (``MobileStore/toggleHabitSkip(_:)``).
+  let toggleSkip: () async -> Bool
   // Reminder-editing closures. When supplied the reminders block is interactive
   // (add / retime / enable-disable / remove); when nil it renders read-only.
   var addReminder: ((String) async -> Void)? = nil
@@ -31,6 +34,8 @@ struct MobileHabitDetailPanel: View {
   var removeReminder: ((HabitReminderPolicy) async -> Void)? = nil
 
   @State private var isConfirmingDelete = false
+
+  private static let skipTapPadding: CGFloat = 12
 
   var body: some View {
     ScrollView {
@@ -120,6 +125,12 @@ struct MobileHabitDetailPanel: View {
           .foregroundStyle(.secondary)
           .monospacedDigit()
           .accessibilityIdentifier("mobileHabits.detail.facts")
+        if habit.isSkipped {
+          Label(MobileHabitSkipCopy.skippedToday, systemImage: LorvexHabitSkip.glyph)
+            .font(LorvexDesign.Typography.secondaryText.weight(.medium))
+            .foregroundStyle(.secondary)
+            .accessibilityIdentifier("mobileHabits.detail.skipped")
+        }
       }
     }
   }
@@ -139,17 +150,20 @@ struct MobileHabitDetailPanel: View {
   }
 
   /// Complete (or Reset) and Edit side by side, stacked when a large text size
-  /// leaves no room for both on one line.
+  /// leaves no room for both on one line, over the quiet Skip Today line.
   private var primaryActions: some View {
-    ViewThatFits(in: .horizontal) {
-      HStack(spacing: LorvexDesign.Spacing.m) {
-        completeAction
-        editAction
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+      ViewThatFits(in: .horizontal) {
+        HStack(spacing: LorvexDesign.Spacing.m) {
+          completeAction
+          editAction
+        }
+        VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
+          completeAction
+          editAction
+        }
       }
-      VStack(alignment: .leading, spacing: LorvexDesign.Spacing.m) {
-        completeAction
-        editAction
-      }
+      skipAction
     }
   }
 
@@ -179,6 +193,32 @@ struct MobileHabitDetailPanel: View {
       button.buttonStyle(.bordered)
     } else {
       button.buttonStyle(.borderedProminent)
+    }
+  }
+
+  /// Skip Today, or Undo Skip once today is set aside, as a quiet line under
+  /// the main buttons: setting a day aside is the occasional choice, Complete
+  /// the everyday one. Absent while today holds a check-in, which a skip cannot
+  /// share the day with.
+  @ViewBuilder
+  private var skipAction: some View {
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button {
+        Task { _ = await toggleSkip() }
+      } label: {
+        // The words are one line tall. The label's padding lifts the tap target
+        // to 44pt, and the negative padding outside the button gives the page
+        // that height back.
+        Label(
+          MobileHabitSkipCopy.title(for: action),
+          systemImage: MobileHabitSkipCopy.systemImage(for: action))
+          .padding(.vertical, Self.skipTapPadding)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.borderless)
+      .padding(.vertical, -Self.skipTapPadding)
+      .disabled(isMutating)
+      .accessibilityIdentifier("mobileHabits.detail.skip")
     }
   }
 

@@ -17,15 +17,19 @@ extension LiveEventKitAccess {
     return event.eventIdentifier ?? event.calendarItemIdentifier
   }
 
-  static func fetchedEvent(from event: EKEvent) -> EventKitFetchedEvent {
+  /// The Lorvex form of `event`, or nil when EventKit reports it without a
+  /// start date: `EKEvent.startDate` is an implicitly unwrapped optional, and
+  /// reading it as a plain `Date` traps when it is nil.
+  static func fetchedEvent(from event: EKEvent) -> EventKitFetchedEvent? {
+    guard let start = event.startDate else { return nil }
     let eventTimeZone = event.timeZone ?? .current
     return EventKitFetchedEvent(
       key: stableKey(for: event),
       title: event.title?.isEmpty == false ? event.title : nil,
       notes: event.notes,
-      startDate: AllDayEventSpan.dayKey(for: event.startDate, timeZone: eventTimeZone),
+      startDate: AllDayEventSpan.dayKey(for: start, timeZone: eventTimeZone),
       startTime: event.isAllDay
-        ? nil : clockTimeKey(for: event.startDate, timeZone: eventTimeZone),
+        ? nil : clockTimeKey(for: start, timeZone: eventTimeZone),
       endDate: lorvexEndDate(from: event, timeZone: eventTimeZone),
       endTime: event.isAllDay
         ? nil : event.endDate.map { clockTimeKey(for: $0, timeZone: eventTimeZone) },

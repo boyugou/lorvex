@@ -288,6 +288,44 @@ public enum PayloadLoaders {
     ).map(habitCompletionPayloadFromRow)
   }
 
+  // MARK: - habit_skip
+
+  public static let habitSkipSelectColumns =
+    "habit_id, skipped_date, version, created_at, updated_at"
+
+  public static func habitSkipPayload(
+    habitId: String, skippedDate: String, version: String, createdAt: String, updatedAt: String
+  ) -> JSONValue {
+    .object([
+      "habit_id": .string(habitId),
+      "skipped_date": .string(skippedDate),
+      "version": .string(version),
+      "created_at": .string(createdAt),
+      "updated_at": .string(updatedAt),
+    ])
+  }
+
+  static func habitSkipPayloadFromRow(_ row: Row) -> JSONValue {
+    .object([
+      "habit_id": str(row, 0),
+      "skipped_date": str(row, 1),
+      "version": str(row, 2),
+      "created_at": str(row, 3),
+      "updated_at": str(row, 4),
+    ])
+  }
+
+  public static func loadHabitSkipSyncPayload(
+    _ db: Database, habitId: String, skippedDate: String
+  ) throws -> JSONValue? {
+    try Row.fetchOne(
+      db,
+      sql:
+        "SELECT \(habitSkipSelectColumns) FROM habit_skips WHERE habit_id = ?1 AND skipped_date = ?2",
+      arguments: [habitId, skippedDate]
+    ).map(habitSkipPayloadFromRow)
+  }
+
   // MARK: - habit_reminder_policy
 
   public static let habitReminderPolicySelectColumns =

@@ -17,6 +17,10 @@ import LorvexWorkflow
 /// occurrences due across the habit's active window — the trailing 30 days, or
 /// fewer for a habit younger than 30 days (see
 /// ``completionRate30d(_:habitId:cadence:targetCount:today:)``).
+///
+/// Days the user skipped a daily or weekly habit are excused: they neither add to
+/// nor end a streak and are not counted as due in the rate (see
+/// ``habitExcusedDates(_:habitId:cadence:from:through:)``).
 extension SwiftLorvexCoreService {
 
   public func getHabitStats(id: LorvexHabit.ID) async throws -> HabitStats {
@@ -44,12 +48,16 @@ extension SwiftLorvexCoreService {
       let dates = dateStrings.compactMap { Self.lorvexDate($0) }
       let today = Self.lorvexDate(todayStr)
         ?? LorvexDate(ymd: IsoDate.YMD(year: 1970, month: 1, day: 1))
+      let excused = try Self.habitExcusedDates(
+        db, habitId: id, cadence: cadence, through: todayStr
+      ).compactMap { Self.lorvexDate($0) }
       let streakFreq = HabitStreakFrequency.fromWireString(frequencyType)
       let requiredPerPeriod = habitRequiredMetDaysPerStreakPeriod(cadence)
       let current = computeHabitCurrentStreak(
-        dates: dates, today: today, frequency: streakFreq, targetCount: requiredPerPeriod)
+        dates: dates, today: today, frequency: streakFreq, targetCount: requiredPerPeriod,
+        excused: excused)
       let best = computeHabitLongestStreak(
-        dates: dates, frequency: streakFreq, targetCount: requiredPerPeriod)
+        dates: dates, frequency: streakFreq, targetCount: requiredPerPeriod, excused: excused)
 
       let totalCompletions = try Int.fetchOne(
         db, sql: "SELECT COALESCE(SUM(value), 0) FROM habit_completions WHERE habit_id = ?",
@@ -63,6 +71,11 @@ extension SwiftLorvexCoreService {
       // six-cell monthly strip still displays March.
       let recentCutoff = Self.habitVisualizationHistoryCutoff(today: todayStr)
       let recentCompletions = dateStrings.filter { $0 >= recentCutoff && $0 <= todayStr }.sorted()
+      // Skipped days reach back a year, as far as the longest history grid.
+      let recentSkips = try Self.habitSkipDates(
+        db, habitId: id,
+        from: LorvexDateFormatters.ymdUTCAddingDays(todayStr, days: -371) ?? recentCutoff,
+        through: todayStr)
 
       // The milestone metric reading is the streak length for streak cadences,
       // the total completion count for cumulative cadences — the same split
@@ -82,6 +95,7 @@ extension SwiftLorvexCoreService {
         completionRate30d: rate,
         progressKind: habitProgressKind(targetCount: targetCount).rawValue,
         recentCompletions: recentCompletions,
+        recentSkips: recentSkips,
         milestoneTarget: milestoneTarget,
         metric: HabitMilestoneProjection.metricString(for: metric),
         nextMilestone: standing.nextMilestone,
@@ -110,6 +124,55 @@ extension SwiftLorvexCoreService {
       guard let date = lorvexDate(raw) else { return false }
       return isHabitScheduledOnDay(cadence, date)
     }
+  }
+
+  /// The dates in `from...through` the user skipped a habit, ascending, whatever
+  /// its cadence. A day that also holds a check-in is left out: the check-in
+  /// outranks the skip, so the day reads as kept.
+  static func habitSkipDates(
+    _ db: Database, habitId: String, from: String, through: String
+  ) throws -> [String] {
+    try String.fetchAll(
+      db,
+      sql: """
+        SELECT s.skipped_date FROM habit_skips s
+        WHERE s.habit_id = ?1 AND s.skipped_date >= ?2 AND s.skipped_date <= ?3
+          AND NOT EXISTS (
+            SELECT 1 FROM habit_completions c
+            WHERE c.habit_id = s.habit_id AND c.completed_date = s.skipped_date
+              AND c.value > 0)
+        ORDER BY s.skipped_date ASC
+        """,
+      arguments: [habitId, from, through])
+  }
+
+  /// The skipped dates that excuse a streak or the adherence rate: those of
+  /// ``habitSkipDates(_:habitId:from:through:)`` on which a daily or weekly habit
+  /// was scheduled. A monthly or times-per-week habit excuses nothing, since its
+  /// quota belongs to a period and a skip only sets the habit aside for the day.
+  /// `from` nil reaches back to the habit's first skip.
+  static func habitExcusedDates(
+    _ db: Database, habitId: String, cadence: HabitCadence,
+    from: String? = nil, through today: String
+  ) throws -> [String] {
+    switch cadence {
+    case .daily, .weekly: break
+    case .monthly, .timesPerWeek: return []
+    }
+    return try habitSkipDates(
+      db, habitId: habitId, from: from ?? "0000-01-01", through: today
+    ).filter { raw in
+      guard let date = lorvexDate(raw) else { return false }
+      return isHabitScheduledOnDay(cadence, date)
+    }
+  }
+
+  /// Whether the habit has a skip row for `date`.
+  static func habitIsSkipped(_ db: Database, habitId: String, date: String) throws -> Bool {
+    try Int.fetchOne(
+      db,
+      sql: "SELECT 1 FROM habit_skips WHERE habit_id = ? AND skipped_date = ?",
+      arguments: [habitId, date]) != nil
   }
 
   static func habitVisualizationHistoryCutoff(today: String) -> String {
@@ -143,6 +206,9 @@ extension SwiftLorvexCoreService {
   /// spurious `0`. Daily, weekly-every-day, and `times_per_week` habits always
   /// have at least one due occurrence in a non-empty window, so this only applies
   /// to schedule-pinned cadences whose first occurrence has not yet come round.
+  /// A day the user skipped a daily or weekly habit is not due, so a skip is not
+  /// counted as a miss; a window whose every due day was skipped reads `1.0` the
+  /// same way.
   static func completionRate30d(
     _ db: Database, habitId: String, cadence: HabitCadence, targetCount: Int64, today: String
   ) throws -> Double {
@@ -165,8 +231,11 @@ extension SwiftLorvexCoreService {
       let fromDate = Self.lorvexDate(fromStr),
       let toDate = Self.lorvexDate(today)
     else { return 0 }
+    let excused = try Self.habitExcusedDates(
+      db, habitId: habitId, cadence: cadence, from: fromStr, through: today
+    ).compactMap { Self.lorvexDate($0) }
     let expected = habitScheduledOccurrencesDue(
-      cadence, targetCount: targetCount, from: fromDate, to: toDate)
+      cadence, targetCount: targetCount, from: fromDate, to: toDate, excused: excused)
     guard expected > 0 else { return 1.0 }
     return min(1.0, Double(completedValue) / expected)
   }

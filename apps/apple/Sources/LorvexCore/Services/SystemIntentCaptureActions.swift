@@ -26,7 +26,7 @@ extension LorvexSystemIntentRunner {
     return try await core.createHabit(
       name: trimmedName,
       cue: cue.trimmedNilIfEmpty,
-      targetCount: max(1, targetCount ?? 1)
+      targetCount: clampedHabitTargetCount(targetCount ?? 1)
     )
   }
 

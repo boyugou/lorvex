@@ -33,7 +33,8 @@ extension LorvexHabit {
 
   /// Whether the habit belongs on `day`'s list of open habits. It does when it
   /// was checked in that day, so a check-in stays on the list, can be undone
-  /// there, and counts as kept; otherwise by its cadence:
+  /// there, and counts as kept, and when it was skipped that day, so a skip stays
+  /// on the list and can be undone there; otherwise by its cadence:
   ///
   /// - a daily habit always;
   /// - a weekly habit on its pinned weekdays (every day when none is pinned);
@@ -47,7 +48,7 @@ extension LorvexHabit {
   /// be read, or a `day` that is not a date, is listed, so a malformed row
   /// never hides a habit.
   public func isListed(on day: String) -> Bool {
-    if completionsToday > 0 { return true }
+    if completionsToday > 0 || isSkipped { return true }
     guard case .success(let date) = LorvexDate.parse(day), let cadence = domainCadence else {
       return true
     }
@@ -66,10 +67,11 @@ extension LorvexHabit {
   /// Whether the habit counts in `day`'s review: it was due that day
   /// (``isDue(on:)``) or it was checked in that day, so a check-in made on a
   /// day the habit was not due is counted as kept, and a day it was not due is
-  /// never counted against it. `completionsToday` is read against the day the
-  /// habit was loaded for, so `day` is that day.
+  /// never counted against it. A day the user skipped the habit is excused: it
+  /// is not counted, for or against. `completionsToday` and `isSkipped` are read
+  /// against the day the habit was loaded for, so `day` is that day.
   public func isReviewed(on day: String) -> Bool {
-    completionsToday > 0 || isDue(on: day)
+    completionsToday > 0 || (isDue(on: day) && !isSkipped)
   }
 
   /// The habit's cadence as the domain type, or nil when its stored fields do

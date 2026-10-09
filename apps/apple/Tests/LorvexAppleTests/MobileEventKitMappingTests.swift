@@ -35,13 +35,24 @@ final class MobileEventKitMappingTests: XCTestCase {
     oneDay.endDate = try day(24)
 
     for event in [stored, flaggedLater] {
-      let fetched = MobileLiveEventKitAccess.fetchedEvent(from: event)
+      let fetched = try XCTUnwrap(MobileLiveEventKitAccess.fetchedEvent(from: event))
       XCTAssertEqual(fetched.startDate, "2030-05-24")
       XCTAssertEqual(fetched.endDate, "2030-05-26")
       XCTAssertNil(fetched.startTime)
       XCTAssertNil(fetched.endTime)
     }
-    XCTAssertEqual(MobileLiveEventKitAccess.fetchedEvent(from: oneDay).endDate, "2030-05-24")
+    XCTAssertEqual(
+      try XCTUnwrap(MobileLiveEventKitAccess.fetchedEvent(from: oneDay)).endDate, "2030-05-24")
+  }
+
+  /// `EKEvent.startDate` is nil until it is set, and an event read back without
+  /// one is skipped instead of trapping the calendar load.
+  func testEventWithoutAStartDateMapsToNothing() {
+    let event = EKEvent(eventStore: EKEventStore())
+    event.isAllDay = false
+    event.endDate = Date(timeIntervalSince1970: 1_900_000_000)
+
+    XCTAssertNil(MobileLiveEventKitAccess.fetchedEvent(from: event))
   }
 
   func testTimedEventMapsInItsOwnTimezoneAcrossMidnight() throws {
@@ -61,7 +72,7 @@ final class MobileEventKitMappingTests: XCTestCase {
     event.endDate = try date(
       year: 2030, month: 5, day: 25, hour: 0, minute: 30, timeZone: eventTimeZone)
 
-    let fetched = MobileLiveEventKitAccess.fetchedEvent(from: event)
+    let fetched = try XCTUnwrap(MobileLiveEventKitAccess.fetchedEvent(from: event))
 
     XCTAssertEqual(fetched.startDate, "2030-05-24")
     XCTAssertEqual(fetched.startTime, "23:30")
@@ -80,7 +91,7 @@ final class MobileEventKitMappingTests: XCTestCase {
     event.endDate = try date(
       year: 2024, month: 3, day: 10, hour: 3, minute: 30, timeZone: newYork)
 
-    let fetched = MobileLiveEventKitAccess.fetchedEvent(from: event)
+    let fetched = try XCTUnwrap(MobileLiveEventKitAccess.fetchedEvent(from: event))
 
     XCTAssertEqual(fetched.startDate, "2024-03-10")
     XCTAssertEqual(fetched.startTime, "01:30")

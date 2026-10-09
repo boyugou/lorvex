@@ -827,7 +827,7 @@ final class OutboxEnqueuePayloadTests: XCTestCase {
   func testEntityTypeToTableCoversAllSinglePkSyncableTypes() throws {
     let edges = [
       EdgeName.taskTag, EdgeName.taskDependency, EdgeName.taskCalendarEventLink,
-      EdgeName.habitCompletion,
+      EdgeName.habitCompletion, EdgeName.habitSkip,
     ]
     let dedicatedKinds = [EntityName.aiChangelog, EntityName.entityRedirect]
     for et in EntityKind.allSyncableTypes {

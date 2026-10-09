@@ -29,6 +29,11 @@ public enum LorvexHabitCheckIn: Equatable, Sendable {
 /// filled is two of three done. Two to twelve segments are drawn apart; any
 /// other count draws one continuous ring.
 ///
+/// A habit set aside for the day (`isSkipped`) draws a ring of dots in place of
+/// the track and carries the skip glyph (``LorvexHabitSkip/glyph``) at its
+/// center, in the secondary style: set apart by shape rather than by color,
+/// and quiet, since nothing is asked of the habit that day.
+///
 /// The stroke and the center glyphs grow with `diameter`, so the same ring
 /// reads at a row's size and at a grid tile's.
 public struct LorvexHabitCheckRing: View {
@@ -37,15 +42,18 @@ public struct LorvexHabitCheckRing: View {
   public var diameter: CGFloat
   public var symbol: String?
   public var segments: Int
+  public var isSkipped: Bool
 
   public init(
-    fraction: Double, tint: Color, diameter: CGFloat = 18, symbol: String? = nil, segments: Int = 1
+    fraction: Double, tint: Color, diameter: CGFloat = 18, symbol: String? = nil, segments: Int = 1,
+    isSkipped: Bool = false
   ) {
     self.fraction = fraction
     self.tint = tint
     self.diameter = diameter
     self.symbol = symbol
     self.segments = segments
+    self.isSkipped = isSkipped
   }
 
   /// 2pt on a row's ring, about a tenth of the diameter on a larger one.
@@ -72,7 +80,9 @@ public struct LorvexHabitCheckRing: View {
 
   public var body: some View {
     ZStack {
-      if segmentCount > 1 {
+      if isSkipped {
+        LorvexDottedRing(dotDiameter: lineWidth).fill(.tertiary)
+      } else if segmentCount > 1 {
         ForEach(0..<segmentCount, id: \.self) { index in
           LorvexProgressArc(
             from: Double(index) / Double(segmentCount) + segmentGap / 2,
@@ -89,6 +99,10 @@ public struct LorvexHabitCheckRing: View {
           .font(checkFont)
           .imageScale(diameter < 24 ? .small : .medium)
           .foregroundStyle(tint)
+      } else if isSkipped {
+        Image(systemName: LorvexHabitSkip.glyph)
+          .font(.system(size: diameter * 0.42, weight: .semibold))  // lorvex-design-token: allow
+          .foregroundStyle(Color.secondary)
       } else if let symbol {
         Image(systemName: symbol)
           .font(.system(size: diameter * 0.4, weight: .semibold))  // lorvex-design-token: allow
@@ -104,7 +118,8 @@ public struct LorvexHabitCheckRing: View {
 /// A habit as a habit grid draws it: its check-in ring, carrying the habit's
 /// symbol until the day's count is met, over its name. The ring takes the
 /// habit's identity color, and the done color with a check once met, when the
-/// name quiets to secondary.
+/// name quiets to secondary. A skipped habit's ring is set aside
+/// (``LorvexHabitCheckRing``) and its name is quiet too.
 public struct LorvexHabitRingTile: View {
   private let name: String
   private let symbol: String?
@@ -115,17 +130,19 @@ public struct LorvexHabitRingTile: View {
   private let nameLines: Int
   private let detail: String?
   private let segments: Int
+  private let isSkipped: Bool
 
   /// `fraction` is the day's count over its target, `tint` the habit's
   /// identity color (``LorvexHabitPalette``), and `symbol` a resolved SF
   /// Symbol name (``LorvexSymbol``). `segments` is the day's target, so a
   /// habit kept several times a day draws one arc per check-in
   /// (``LorvexHabitCheckRing``). `detail`, when set, is a quiet line under the
-  /// name, such as that habit's count in numbers.
+  /// name, such as that habit's count in numbers. `isSkipped` marks a habit
+  /// set aside for the day.
   public init(
     name: String, symbol: String?, fraction: Double, tint: Color, diameter: CGFloat,
     nameFont: Font = LorvexDesign.Typography.tertiaryText, nameLines: Int = 2,
-    detail: String? = nil, segments: Int = 1
+    detail: String? = nil, segments: Int = 1, isSkipped: Bool = false
   ) {
     self.name = name
     self.symbol = symbol
@@ -136,6 +153,7 @@ public struct LorvexHabitRingTile: View {
     self.nameLines = nameLines
     self.detail = detail
     self.segments = segments
+    self.isSkipped = isSkipped
   }
 
   private var isMet: Bool { fraction >= 1 }
@@ -144,11 +162,12 @@ public struct LorvexHabitRingTile: View {
     VStack(spacing: LorvexDesign.Spacing.xs) {
       LorvexHabitCheckRing(
         fraction: fraction, tint: isMet ? LorvexDesign.Palette.done : tint, diameter: diameter,
-        symbol: symbol, segments: segments)
+        symbol: symbol, segments: segments, isSkipped: isSkipped)
       VStack(spacing: 0) {
         Text(userContent: name)
           .font(nameFont)
-          .foregroundStyle(isMet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+          .foregroundStyle(
+            isMet || isSkipped ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
           .lineLimit(nameLines)
           // Every name in a grid keeps the one font, so the names read as one
           // row of labels; a long name tightens its letters, then truncates.

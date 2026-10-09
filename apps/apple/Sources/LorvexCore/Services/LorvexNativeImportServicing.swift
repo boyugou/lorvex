@@ -249,8 +249,8 @@ public protocol LorvexNativeImportServicing: Sendable {
     id: LorvexTask.ID, status: LorvexTask.Status
   ) async throws
 
-  /// Restore one exported habit and all of its completions and reminder policies
-  /// atomically in one transaction. Returns `true` when the habit was imported,
+  /// Restore one exported habit and all of its completions, skipped days and
+  /// reminder policies atomically in one transaction. Returns `true` when the habit was imported,
   /// `false` when a habit with the same id already existed (a concurrent create
   /// won the gap) or the id is tombstoned (the user deleted it after the backup).
   /// Throws on any failure, having rolled the record back.
@@ -267,6 +267,12 @@ public protocol LorvexNativeImportServicing: Sendable {
   func importHabitCompletion(
     habitID: String,
     completion: ExportHabitCompletion
+  ) async throws
+
+  /// Restore one skipped day of an existing habit.
+  func importHabitSkip(
+    habitID: String,
+    skip: ExportHabitSkip
   ) async throws
 
   func importHabitReminderPolicy(

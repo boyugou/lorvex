@@ -105,7 +105,9 @@
           .init(id: "preview-meditate", name: text("Meditate"), icon: "brain.head.profile", completedToday: 0, target: 1),
           .init(id: "preview-run", name: text("Morning run"), icon: "figure.run", completedToday: 1, target: 1),
           .init(id: "preview-read", name: text("Read 30 min"), icon: "book.fill", completedToday: 1, target: 1),
-          .init(id: "preview-review", name: text("Review the day"), icon: "checklist", completedToday: 0, target: 1),
+          .init(
+            id: "preview-review", name: text("Review the day"), icon: "checklist", completedToday: 0,
+            target: 1, isSkipped: true),
         ])
     }
   }

@@ -61,6 +61,17 @@ public protocol LorvexHabitServicing: Sendable {
 
   func uncompleteHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot
 
+  /// Excuse a habit for `date` (a skipped day): the day is neither kept nor
+  /// missed, so it does not end a daily or weekly streak and is not counted as
+  /// due in the adherence rate. Skipping an already skipped day is a no-op. A day
+  /// that already has a check-in cannot be skipped; undo the check-in first. A
+  /// later check-in on the day removes the skip. Returns a fresh catalog snapshot.
+  func skipHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot
+
+  /// Lift the skip for `date`, returning the day to an ordinary open day. A day
+  /// that holds no skip is a no-op. Returns a fresh catalog snapshot.
+  func unskipHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot
+
   /// Adjust a habit's completion `value` for `date` by `delta`, clamped to
   /// `[0, target_count]`. `delta == 0` toggles the day (a met day clears to 0, an
   /// unmet day jumps straight to `target_count`); a non-zero delta is a relative

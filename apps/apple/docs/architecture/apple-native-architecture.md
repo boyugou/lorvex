@@ -297,7 +297,7 @@ built on the official Swift MCP SDK (`modelcontextprotocol/swift-sdk`). Real MCP
 clients — Claude, Codex, and other stdio clients — drive it as Lorvex's primary
 write interface.
 
-- It exposes 114 tools spanning tasks, day planning, lists, habits, calendar,
+- It exposes 116 tools spanning tasks, day planning, lists, habits, calendar,
   reviews, memory, and system diagnostics. `script/expected_mcp_tools.py` is the
   authoritative tool-name set, and `script/verify_mcp_tool_catalog.py` enforces
   that the typed definition registry matches it. The same definitions drive

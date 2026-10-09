@@ -13,9 +13,8 @@ import LorvexWorkflow
 /// endpoint parks the envelope in `sync_pending_inbox`) happens upstream in
 /// ``ApplyFk/checkFkDependencies(_:entityType:entityId:payload:)``.
 ///
-/// Ported in full: `task_tag`, `task_calendar_event_link`,
-/// `habit_completion`, and `task_dependency` including the cycle-break upsert
-/// path.
+/// Covers `task_tag`, `task_calendar_event_link`, `habit_completion`,
+/// `habit_skip`, and `task_dependency` including the cycle-break upsert path.
 enum ApplyEdge {
 
   private static func splitCompositeId(_ entityId: String) throws -> (String, String) {
@@ -152,6 +151,38 @@ enum ApplyEdge {
     try ApplyLww.lwwGatedDelete(
       db, table: "habit_completions", pkColumns: ["habit_id", "completed_date"],
       pkValues: [habitId, completedDate], incomingVersion: version)
+  }
+
+  // MARK: - habit_skip
+
+  static func applyHabitSkipUpsert(
+    _ db: Database, entityId: String, payload: String, version: String, tieBreak: LwwTieBreak
+  ) throws {
+    let (habitId, skippedDate) = try splitCompositeId(entityId)
+    let val = try ApplyJSON.parseObject(payload)
+    let createdAt = try ApplyJSON.requiredStr(val, "created_at", entity: "habit_skip")
+    let updatedAt = try ApplyJSON.requiredStr(val, "updated_at", entity: "habit_skip")
+
+    let sql = LwwUpsertSpec(
+      table: "habit_skips",
+      columns: SyncEntityDescriptor.require(.habitSkip).plainColumns,
+      conflict: ["habit_id", "skipped_date"], tieBreak: tieBreak
+    ).buildSQL()
+    do {
+      try db.execute(
+        sql: sql,
+        arguments: [
+          "habit_id": habitId, "skipped_date": skippedDate, "created_at": createdAt,
+          "updated_at": updatedAt, "version": version,
+        ])
+    } catch { throw ApplyError.lift(error) }
+  }
+
+  static func applyHabitSkipDelete(_ db: Database, entityId: String, version: String) throws {
+    let (habitId, skippedDate) = try splitCompositeId(entityId)
+    try ApplyLww.lwwGatedDelete(
+      db, table: "habit_skips", pkColumns: ["habit_id", "skipped_date"],
+      pkValues: [habitId, skippedDate], incomingVersion: version)
   }
 
   // MARK: - task_dependency
@@ -436,6 +467,26 @@ public struct HabitCompletionApplier: EntityApplier {
     -> EntityApplyOutcome
   {
     try ApplyEdge.applyHabitCompletionDelete(
+      db, entityId: envelope.entityId, version: envelope.version.description)
+    return .applied
+  }
+}
+
+public struct HabitSkipApplier: EntityApplier {
+  public init() {}
+  public var handledEntityTypes: [String] { [EntityKind.habitSkip.asString] }
+  public func applyUpsert(
+    _ db: Database, envelope: SyncEnvelope, tieBreak: LwwTieBreak, applyTs: String
+  ) throws -> EntityApplyOutcome {
+    try ApplyEdge.applyHabitSkipUpsert(
+      db, entityId: envelope.entityId, payload: envelope.payload,
+      version: envelope.version.description, tieBreak: tieBreak)
+    return .applied
+  }
+  public func applyDelete(_ db: Database, envelope: SyncEnvelope, applyTs: String) throws
+    -> EntityApplyOutcome
+  {
+    try ApplyEdge.applyHabitSkipDelete(
       db, entityId: envelope.entityId, version: envelope.version.description)
     return .applied
   }

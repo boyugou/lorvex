@@ -996,6 +996,7 @@ NON_COUNT_INTEGER_ARGUMENTS: dict[str, dict[int, str]] = {
     "habit_detail.weekdays.share": {2: _NUMERATOR},
     "habits.cadence.day_of_month_value": {1: _DAY_OF_MONTH},
     "habits.detail.momentum.a11y": {1: _RATIO, 2: _RATIO, 3: _LABEL_VALUE, 4: _LABEL_VALUE},
+    "habits.detail.momentum.skipped.a11y": {1: _LABEL_VALUE, 2: _LABEL_VALUE},
     "habits.detail.rhythm.a11y": {1: _NUMERATOR},
     "habits.header.done.month": {1: _RATIO, 2: _RATIO},
     "habits.header.done.today": {1: _RATIO, 2: _RATIO},

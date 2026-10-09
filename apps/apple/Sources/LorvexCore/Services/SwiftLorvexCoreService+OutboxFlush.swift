@@ -194,6 +194,18 @@ extension SwiftLorvexCoreService {
       entityId: "\(habitId):\(completedDate)", payload: payload)
   }
 
+  /// Enqueue an Upsert for one `habit_skips` edge (`{habit_id}:{skipped_date}`),
+  /// building the payload from the live row.
+  func enqueueHabitSkipUpsert(
+    _ db: Database, hlc: HlcSession, deviceId: String, habitId: String, skippedDate: String
+  ) throws {
+    let payload = try PayloadLoaders.loadHabitSkipSyncPayload(
+      db, habitId: habitId, skippedDate: skippedDate)
+    try enqueueEdgeUpsert(
+      db, hlc: hlc, deviceId: deviceId, kind: .habitSkip,
+      entityId: "\(habitId):\(skippedDate)", payload: payload)
+  }
+
   /// Enqueue an Upsert for one `task_calendar_event_links` edge
   /// (`{task_id}:{calendar_event_id}`), building the payload from the live row.
   func enqueueTaskCalendarEventLinkUpsert(

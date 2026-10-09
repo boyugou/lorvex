@@ -112,8 +112,8 @@ extension EntityApplierRegistry {
   /// roots (`task`, `list`, `habit`, `tag` with duplicate-tag
   /// merge, `calendar_event` with attendee reconciliation, `memory`,
   /// `preference`), the day-scoped aggregates (`daily_briefing`,
-  /// `daily_review`), the four composite edges (`task_tag`,
-  /// `task_calendar_event_link`, `habit_completion`, and
+  /// `daily_review`), the composite edges (`task_tag`,
+  /// `task_calendar_event_link`, `habit_completion`, `habit_skip`, and
   /// `task_dependency` with its cycle-break upsert), and the independent
   /// children (`task_reminder`, `task_checklist_item`, `habit_reminder_policy`).
   /// The recurrence-instance-key dedup tail runs inside `TaskApplier`'s upsert,
@@ -122,6 +122,7 @@ extension EntityApplierRegistry {
     [
       TaskApplier(), ListApplier(), HabitApplier(), TagApplier(),
       TaskTagApplier(), TaskCalendarEventLinkApplier(), HabitCompletionApplier(),
+      HabitSkipApplier(),
       TaskDependencyApplier(),
       TaskReminderApplier(), TaskChecklistItemApplier(),
       HabitReminderPolicyApplier(),

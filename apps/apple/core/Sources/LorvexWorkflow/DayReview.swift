@@ -95,7 +95,9 @@ public enum DayReview {
   /// month's last day (``effectiveMonthlyDay(_:year:month:)``); a
   /// times-per-week habit for no particular day, since its quota belongs to the
   /// week. The SQL restates ``isHabitReminderDay(_:_:)`` over the stored
-  /// columns and `habit_weekdays`.
+  /// columns and `habit_weekdays`. A habit the user skipped on the day is
+  /// excused and leaves the count, unless it also has a check-in that day, which
+  /// outranks the skip.
   static let habitSummarySQL = """
     SELECT
       (SELECT COUNT(*) FROM habits h
@@ -108,7 +110,11 @@ public enum DayReview {
               OR (h.frequency_type = 'monthly'
                   AND ?3 = MIN(MAX(COALESCE(h.day_of_month, 1), 1), ?4))
               OR EXISTS (SELECT 1 FROM habit_completions hc
-                         WHERE hc.habit_id = h.id AND hc.completed_date = ?1 AND hc.value > 0))),
+                         WHERE hc.habit_id = h.id AND hc.completed_date = ?1 AND hc.value > 0))
+         AND (EXISTS (SELECT 1 FROM habit_completions hc
+                      WHERE hc.habit_id = h.id AND hc.completed_date = ?1 AND hc.value > 0)
+              OR NOT EXISTS (SELECT 1 FROM habit_skips hs
+                             WHERE hs.habit_id = h.id AND hs.skipped_date = ?1))),
       (SELECT COUNT(DISTINCT h.id) FROM habits h
        INNER JOIN habit_completions hc ON h.id = hc.habit_id AND hc.completed_date = ?1
        WHERE h.archived = 0 AND hc.value >= h.target_count)

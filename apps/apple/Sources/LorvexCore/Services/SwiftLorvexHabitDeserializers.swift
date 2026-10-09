@@ -86,7 +86,8 @@ enum SwiftLorvexHabitDeserializers {
     totalCompletions: Int,
     completionRate30d: Double,
     milestoneTarget: Int?,
-    milestone: HabitMilestoneInfo?
+    milestone: HabitMilestoneInfo?,
+    isSkipped: Bool = false
   ) -> LorvexHabit {
     let frequencyType: String = row["frequency_type"]
     let perPeriodTarget = row["per_period_target"] as Int64
@@ -112,7 +113,8 @@ enum SwiftLorvexHabitDeserializers {
       dayOfMonth: frequencyType == "monthly" ? dayOfMonth : nil,
       milestoneTarget: milestoneTarget,
       milestone: milestone,
-      periodMetDays: periodMetDays)
+      periodMetDays: periodMetDays,
+      isSkipped: isSkipped)
   }
 
   /// Map a `habit_completions` row onto a `HabitCompletionEntry`.

@@ -8,7 +8,7 @@ import MCP
 /// objects while the implementation stays pure Swift.
 extension CoreBridgeClient {
   static func habitValue(from habit: LorvexHabit) -> Value {
-    .object([
+    var fields: [String: Value] = [
       "id": .string(habit.id),
       "name": .string(habit.name),
       "cue": habit.cue.map(Value.string) ?? .null,
@@ -24,17 +24,22 @@ extension CoreBridgeClient {
       "day_of_month": habit.dayOfMonth.map(Value.int) ?? .null,
       "target_count": .int(habit.targetCount),
       "completions_today": .int(habit.completionsToday),
+      // True when the habit was set aside for the loaded day (an excused day: neither
+      // done nor missed). A check-in on that day outranks a skip, so this is false
+      // whenever `completions_today` is above zero.
+      "skipped_today": .bool(habit.isSkipped),
       "total_completions": .int(habit.totalCompletions),
       "archived": .bool(habit.archived),
-      // Milestone standing: `milestone_metric` says which reading `milestone_value`
-      // holds (streak length vs cumulative count); `next_milestone` +
-      // `progress_to_next` track the run toward the next ladder rung / user target.
-      "milestone_target": habit.milestoneTarget.map(Value.int) ?? .null,
-      "milestone_metric": .string(habit.milestone?.metric ?? "streak"),
-      "milestone_value": .int(habit.milestone?.value ?? 0),
-      "next_milestone": .int(habit.milestone?.nextMilestone ?? 0),
-      "progress_to_next": .double(habit.milestone?.progressToNext ?? 0),
-    ])
+    ]
+    // Milestone standing: `milestone_metric` says which reading `milestone_value`
+    // holds (streak length vs cumulative count); `next_milestone` +
+    // `progress_to_next` track the run toward the next ladder rung / user target.
+    fields["milestone_target"] = habit.milestoneTarget.map(Value.int) ?? .null
+    fields["milestone_metric"] = .string(habit.milestone?.metric ?? "streak")
+    fields["milestone_value"] = .int(habit.milestone?.value ?? 0)
+    fields["next_milestone"] = .int(habit.milestone?.nextMilestone ?? 0)
+    fields["progress_to_next"] = .double(habit.milestone?.progressToNext ?? 0)
+    return .object(fields)
   }
 
   /// The habit object for a completion response: the full habit plus

@@ -27,9 +27,10 @@ struct InboundReloadScopeTests {
     #expect(domains?.contains(.reviews) == true)
   }
 
-  @Test("habit completions refresh reviews; reminder policy stays habit-only")
+  @Test("habit completions and skips refresh reviews; reminder policy stays habit-only")
   func habitEdgeBlastRadius() {
     #expect(InboundReloadScope.domains(for: [.habitCompletion]) == [.habits, .reviews])
+    #expect(InboundReloadScope.domains(for: [.habitSkip]) == [.habits, .reviews])
     #expect(InboundReloadScope.domains(for: [.habitReminderPolicy]) == [.habits])
   }
 

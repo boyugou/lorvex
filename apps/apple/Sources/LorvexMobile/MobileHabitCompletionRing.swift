@@ -7,6 +7,11 @@ import SwiftUI
 /// owns only its own hit area — the rest of the row still selects/opens the
 /// habit. Shared by the compact habit row, the regular/iPad catalog row, and
 /// Today's habit strip so all give the same completion moment.
+///
+/// A habit set aside for today draws as a skipped ring. Tapping it still checks
+/// the habit in, which lifts the skip: a day holds a check-in or a skip, and the
+/// check-in outranks it. Taking the skip back without checking in is the
+/// Undo Skip command of the row and detail menus.
 struct MobileHabitCompletionRing: View {
   let habit: LorvexHabit
   let isMutating: Bool
@@ -30,7 +35,8 @@ struct MobileHabitCompletionRing: View {
         tint: habit.isCompleteToday ? LorvexDesign.Palette.done : habit.tileTint,
         size: size,
         isComplete: habit.isCompleteToday,
-        symbol: showsSymbol ? habit.tileSymbol : nil
+        symbol: showsSymbol ? habit.tileSymbol : nil,
+        isSkipped: habit.isSkipped
       )
       .reduceMotionPop(isActive: pulse)
       .padding(tapOutset)
@@ -46,7 +52,7 @@ struct MobileHabitCompletionRing: View {
       habit.isCompleteToday
         ? String(format: String(localized: "habits.reset.a11y", defaultValue: "Reset %@", table: "Localizable", bundle: MobileL10n.bundle), habit.name)
         : String(format: String(localized: "habits.complete.a11y", defaultValue: "Complete %@", table: "Localizable", bundle: MobileL10n.bundle), habit.name))
-    .accessibilityValue(habit.todayProgressText)
+    .accessibilityValue(habit.isSkipped ? MobileHabitSkipCopy.skippedToday : habit.todayProgressText)
     .accessibilityIdentifier("mobileHabits.completionRing.\(habit.id)")
   }
 

@@ -187,9 +187,10 @@ actor LiveEventKitAccess: EventKitAccessing {
         guard calendarFilter.allows(calendarID: ekEvent.calendar?.calendarIdentifier) else {
           continue
         }
+        guard let fetched = Self.fetchedEvent(from: ekEvent) else { continue }
         occurrences.append(
           EventKitOccurrence(
-            event: Self.fetchedEvent(from: ekEvent),
+            event: fetched,
             isDetached: ekEvent.isDetached,
             occurrenceYmd: ekEvent.occurrenceDate.map {
               Self.ymdString(from: $0, timeZone: ekEvent.timeZone ?? .current)

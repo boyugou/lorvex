@@ -44,5 +44,11 @@ enum HabitToolDefinitions {
     .write(91, ListHabitToolCatalog.adjustHabitCompletionTool) {
       try await $0.adjustHabitCompletionResult(arguments: $1)
     },
+    .write(114, ListHabitToolCatalog.skipHabitTool) {
+      try await $0.skipHabitResult(arguments: $1)
+    },
+    .write(115, ListHabitToolCatalog.unskipHabitTool) {
+      try await $0.unskipHabitResult(arguments: $1)
+    },
   ]
 }

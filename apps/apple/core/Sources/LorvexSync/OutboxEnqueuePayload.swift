@@ -148,6 +148,9 @@ extension OutboxEnqueue {
       case .habitCompletion:
         payload = try PayloadLoaders.loadHabitCompletionSyncPayload(
           db, habitId: left, completedDate: right)
+      case .habitSkip:
+        payload = try PayloadLoaders.loadHabitSkipSyncPayload(
+          db, habitId: left, skippedDate: right)
       default:
         throw EnqueueError.unknownEntityType(kind.asString)
       }

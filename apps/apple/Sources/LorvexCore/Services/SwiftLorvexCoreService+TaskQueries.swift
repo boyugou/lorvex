@@ -237,12 +237,22 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  /// The most hours ahead an upcoming-reminder query reads: a hundred years. A
+  /// larger request reads as that, which keeps the horizon's arithmetic far
+  /// from overflow.
+  static let maxReminderHorizonHours = 100 * 366 * 24
+
+  private static func reminderHorizon(from now: Date, hoursAhead: Int) -> Date {
+    let hours = min(max(1, hoursAhead), maxReminderHorizonHours)
+    return now.addingTimeInterval(TimeInterval(hours * 3600))
+  }
+
   public func getUpcomingTaskReminders(hoursAhead: Int, limit: Int) async throws
     -> [TaskReminderWithTask]
   {
     try read { db in
       let now = Date()
-      let horizon = now.addingTimeInterval(TimeInterval(max(1, hoursAhead) * 3600))
+      let horizon = Self.reminderHorizon(from: now, hoursAhead: hoursAhead)
       let result = try TaskRepo.Reminders.getUpcomingTaskRemindersUntil(
         db,
         now: SyncTimestampFormat.formatSyncTimestamp(now),
@@ -257,7 +267,7 @@ extension SwiftLorvexCoreService {
   {
     try read { db in
       let now = Date()
-      let horizon = now.addingTimeInterval(TimeInterval(max(1, hoursAhead) * 3600))
+      let horizon = Self.reminderHorizon(from: now, hoursAhead: hoursAhead)
       let result = try TaskRepo.Reminders.getUpcomingTaskRemindersUntil(
         db,
         now: SyncTimestampFormat.formatSyncTimestamp(now),

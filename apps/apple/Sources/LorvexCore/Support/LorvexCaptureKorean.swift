@@ -92,7 +92,7 @@ extension LorvexCaptureVocabulary {
       return taskLength(minutes: hours * 60 + minutes)
     }
     let words = ["한": 1.0, "두": 2.0, "세": 3.0]
-    if let hours = match.group(3).flatMap(LorvexNumberInput.decimal(from:)) ?? match.group(4).flatMap({ words[$0] }) {
+    if let hours = match.group(3).flatMap(boundedDecimal) ?? match.group(4).flatMap({ words[$0] }) {
       return taskLength(minutes: Int((hours * 60).rounded()) + (match.group(5) == nil ? 0 : 30))
     }
     if match.group(6) != nil { return 30 }

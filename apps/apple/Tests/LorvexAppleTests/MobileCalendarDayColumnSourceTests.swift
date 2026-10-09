@@ -14,11 +14,48 @@ func mobileCalendarDayColumnDoesNotReanchorAfterUserScrollsTimeAxis() throws {
 
   #expect(source.contains("let scrollSignature = scrollAnchorSignature"))
   #expect(source.contains("@State private var userHasScrolledTimeAxis = false"))
-  #expect(source.contains(".onChanged { _ in userHasScrolledTimeAxis = true }"))
+  #expect(source.contains("if phase == .interacting { userHasScrolledTimeAxis = true }"))
   #expect(source.contains(".onChange(of: startDate) { _, _ in userHasScrolledTimeAxis = false }"))
   #expect(source.contains(".onChange(of: dayCount) { _, _ in userHasScrolledTimeAxis = false }"))
   #expect(source.contains(".onChange(of: scrollSignature)"))
   #expect(source.contains("if !userHasScrolledTimeAxis"))
+}
+
+@Test
+func mobileCalendarGridLeavesSidewaysSwipesToTheDayPager() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  func source(_ name: String) throws -> String {
+    try String(
+      contentsOf: root.appending(path: "Sources/LorvexMobile/\(name).swift"), encoding: .utf8)
+  }
+  let column = try source("MobileCalendarDayColumn")
+  let eventBlock = try source("MobileCalendarEventBlock")
+  let taskBlock = try source("MobileCalendarTaskBlock")
+  let lift = try source("MobileCalendarEventLift")
+
+  // A SwiftUI drag-type gesture that is able to begin on a view takes every
+  // touch that lands on it, so a swipe across the time grid or a block never
+  // reached the pager that turns the day or week. Nothing the grid draws
+  // carries one: the grid reads its scroll position from the scroll phase, and
+  // an event block lifts through a UIKit long press, which fails when the
+  // finger moves early and so leaves a swipe to the pager.
+  for text in [column, eventBlock, taskBlock] {
+    #expect(!text.contains("DragGesture"))
+    #expect(!text.contains("LongPressGesture"))
+    #expect(!text.contains("simultaneousGesture"))
+  }
+  #expect(column.contains(".onScrollPhaseChange"))
+  #expect(eventBlock.contains(".lorvexEventLift("))
+  #expect(lift.contains("UILongPressGestureRecognizer()"))
+  #expect(lift.contains("recognizer.allowableMovement = Self.allowableMovement"))
+  // A context menu on the same view holds back the lift's press, so a block
+  // that lifts shows its menu items empty and offers Delete as a VoiceOver
+  // action instead.
+  #expect(eventBlock.contains("if block.event.editable && !isReschedulable {"))
+  #expect(eventBlock.contains("if block.event.editable && isReschedulable { deleteButton("))
 }
 
 @Test

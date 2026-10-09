@@ -50,16 +50,13 @@ extension MobileCalendarDayColumn {
     .offset(x: CGFloat(block.lane) * laneWidth + dragOffsetX, y: y + dragOffsetY)
     .opacity(active ? 0.82 : 1)
     .shadow(color: active ? .black.opacity(0.18) : .clear, radius: 6, y: 2)
-    .gesture(
-      isReschedulable
-        ? rescheduleGesture(
-          for: block, day: day, dayIndex: dayIndex,
-          allDays: allDays, columnWidth: columnWidth)
-        : nil
-    )
     .onTapGesture { if block.event.editable { onTapEvent(block.event) } }
+    // A block that lifts for rescheduling carries an empty menu, which attaches
+    // no menu interaction: a real one would hold back the lift's press
+    // (`MobileCalendarEventLift`). Its editor offers Delete, and VoiceOver gets
+    // Delete as an action below.
     .contextMenu {
-      if block.event.editable {
+      if block.event.editable && !isReschedulable {
         Button {
           onTapEvent(block.event)
         } label: {
@@ -69,16 +66,14 @@ extension MobileCalendarDayColumn {
               bundle: MobileL10n.bundle), systemImage: "pencil")
         }
 
-        Button(role: .destructive) {
-          Task { _ = await onDeleteEvent(block.event) }
-        } label: {
-          Label(
-            String(
-              localized: "common.delete", defaultValue: "Delete", table: "Localizable",
-              bundle: MobileL10n.bundle), systemImage: "trash")
-        }
+        deleteButton(for: block.event)
       }
     }
+    .lorvexEventLift(
+      rescheduleLift(
+        for: block, dayIndex: dayIndex, allDays: allDays, columnWidth: columnWidth,
+        isEnabled: isReschedulable)
+    )
     // One VoiceOver element per block, as for a task block: the label on a
     // container with several texts would land on the title and on the time
     // separately and read the block twice. An event that cannot be edited
@@ -89,6 +84,9 @@ extension MobileCalendarDayColumn {
       blockAccessibilityLabel(block, namingDayOf: allDays.count > 1 ? day : nil)
     )
     .accessibilityAction { if block.event.editable { onTapEvent(block.event) } }
+    .accessibilityActions {
+      if block.event.editable && isReschedulable { deleteButton(for: block.event) }
+    }
     .accessibilitySortPriority(Self.accessibilitySortPriority(startMin: block.startMin))
     // Haptic pickup when the long-press latches this block for reschedule, via
     // SwiftUI's native feedback (the same idiom the mobile task/habit rows use)
@@ -111,47 +109,45 @@ extension MobileCalendarDayColumn {
     }
   }
 
-  /// Long-press-then-drag gesture: vertical translation shifts start time;
-  /// horizontal translation snaps to adjacent visible-day columns on 3-day mode.
-  func rescheduleGesture(
+  /// The block's reschedule lift: a finger that rests on the block lifts it,
+  /// vertical travel then shifts its start time, and on a page of several days
+  /// horizontal travel moves it to another day's column. The block is written
+  /// only when it lands somewhere new (``CalendarGridMove/landing``).
+  func rescheduleLift(
     for block: CalendarGridTimedBlock,
-    day: CalendarGridDay,
     dayIndex: Int,
     allDays: [CalendarGridDay],
-    columnWidth: CGFloat
-  ) -> some Gesture {
-    let lp = LongPressGesture(minimumDuration: 0.30)
-    let drag = DragGesture(minimumDistance: 0)
-    return lp.sequenced(before: drag)
-      .onChanged { value in
-        switch value {
-        case .first:
-          if dragState?.eventID != block.event.id {
-            dragState = DragState(eventID: block.event.id, translationX: 0, translationY: 0)
-          }
-        case .second(_, let dragValue):
-          let dx = allDays.count > 1 ? (dragValue?.translation.width ?? 0) : 0
-          let dy = dragValue?.translation.height ?? 0
-          dragState = DragState(eventID: block.event.id, translationX: dx, translationY: dy)
-        }
-      }
-      .onEnded { value in
+    columnWidth: CGFloat,
+    isEnabled: Bool
+  ) -> MobileCalendarEventLift {
+    MobileCalendarEventLift(
+      isEnabled: isEnabled,
+      onMove: { travel in
+        dragState = DragState(
+          eventID: block.event.id, translationX: allDays.count > 1 ? travel.width : 0,
+          translationY: travel.height)
+      },
+      onDrop: { travel in
         defer { dragState = nil }
-        guard case .second(_, let dragValue) = value, let dragValue else { return }
-        let totalMinutes = block.endMin - block.startMin
-        let rawDelta = Int((dragValue.translation.height / hourHeight * 60).rounded())
-        let snappedMinutes = (rawDelta / Self.snapMinutes) * Self.snapMinutes
-        let columnDelta =
-          allDays.count > 1 && columnWidth > 0
-          ? Int((dragValue.translation.width / columnWidth).rounded()) : 0
-        let newColumnIndex = max(0, min(allDays.count - 1, dayIndex + columnDelta))
-        let dayShifted = newColumnIndex != dayIndex
-        guard snappedMinutes != 0 || dayShifted else { return }
-        let clampedStart = max(
-          0, min(24 * 60 - totalMinutes, block.startMin + snappedMinutes))
-        let targetDay = allDays[newColumnIndex].date
-        onReschedule?(block.event, targetDay, clampedStart)
-      }
+        let landing = CalendarGridMove.landing(
+          startMinute: block.startMin, duration: block.endMin - block.startMin,
+          translation: travel, hourHeight: hourHeight, columnWidth: columnWidth,
+          dayIndex: dayIndex, dayCount: allDays.count)
+        guard !landing.isUnchanged else { return }
+        onReschedule?(block.event, allDays[dayIndex + landing.dayShift].date, landing.startMinute)
+      },
+      onCancel: { dragState = nil })
+  }
+
+  private func deleteButton(for event: CalendarTimelineEvent) -> some View {
+    Button(role: .destructive) {
+      Task { _ = await onDeleteEvent(event) }
+    } label: {
+      Label(
+        String(
+          localized: "common.delete", defaultValue: "Delete", table: "Localizable",
+          bundle: MobileL10n.bundle), systemImage: "trash")
+    }
   }
 
   func eventColor(_ event: CalendarTimelineEvent) -> Color {

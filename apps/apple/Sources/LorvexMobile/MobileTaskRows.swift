@@ -93,7 +93,7 @@ struct MobileTaskRowContent: View, Equatable {
 
   /// The tags the metadata line shows. A search match in one of these needs no
   /// excerpt, because the row already shows it.
-  static let visibleTagCount = 2
+  nonisolated static let visibleTagCount = 2
 
   private var isDone: Bool { task.status == .completed }
   private var isCancelled: Bool { task.status == .cancelled }

@@ -20,14 +20,51 @@ public enum MobileTasksScope: Hashable, Sendable {
   /// Open tasks in a specific list.
   case list(LorvexList.ID)
 
-  /// The underlying status filter this scope queries (and the empty-state copy
-  /// it borrows).
+  /// The underlying status filter this scope queries.
   var baseStatus: MobileTaskWorkspaceStatus {
     switch self {
     case .all, .scheduled, .priority, .list: .open
     case .someday: .someday
     case .completed: .completed
     case .cancelled: .cancelled
+    }
+  }
+
+  /// The empty-state title for this scope. Scheduled and Priority can be empty
+  /// while open tasks exist (none has a due date, none is high priority), so
+  /// they name what they hold; every other scope shows its status lane's title.
+  var emptyTitle: String {
+    switch self {
+    case .scheduled:
+      String(
+        localized: "tasks.empty.scheduled.title", defaultValue: "No Scheduled Tasks",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .priority:
+      String(
+        localized: "tasks.empty.priority.title", defaultValue: "No High-Priority Tasks",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .all, .someday, .completed, .cancelled, .list:
+      baseStatus.emptyTitle
+    }
+  }
+
+  /// The empty-state message for this scope, paired with ``emptyTitle``.
+  /// Scheduled and Priority explain which open tasks they collect; every other
+  /// scope shows its status lane's message.
+  var emptyMessage: String {
+    switch self {
+    case .scheduled:
+      String(
+        localized: "tasks.empty.scheduled.message",
+        defaultValue: "Open tasks that have a due date appear here.",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .priority:
+      String(
+        localized: "tasks.empty.priority.message",
+        defaultValue: "Open tasks with high priority appear here.",
+        table: "Localizable", bundle: MobileL10n.bundle)
+    case .all, .someday, .completed, .cancelled, .list:
+      baseStatus.emptyMessage
     }
   }
 

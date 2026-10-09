@@ -128,8 +128,11 @@ struct MobileHabitReminderList: View {
         Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
       }
     } label: {
+      // A plain color, not the hierarchical `.secondary` style: a menu's label
+      // takes the accent tint, and that style would draw a faint blue ring
+      // instead of gray.
       Image(systemName: "ellipsis.circle")
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Color.secondary)
         .accessibilityLabel(String(localized: "habits.reminders.options", defaultValue: "Reminder options", table: "Localizable", bundle: MobileL10n.bundle))
     }
     .disabled(isMutating)

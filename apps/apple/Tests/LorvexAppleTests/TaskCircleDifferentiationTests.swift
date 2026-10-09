@@ -99,6 +99,20 @@ func theCircleViewReadsTheSettingAndComposesTheCoreGlyph() throws {
 }
 
 @Test
+func aParkedTaskCircleIsTheSomedayGrayNotAHierarchicalStyle() throws {
+  // A hierarchical `.secondary` style takes its level from the tint of the
+  // control around the circle: inside the borderless completion button it draws
+  // accent blue at half strength (about 2:1 on the card). The someday gray is a
+  // plain color, so the moon stays gray in every container.
+  let presentation = try #require(
+    try swiftSources(under: "Sources/LorvexCore/Models").first {
+      $0.path == "TaskStatusPresentation.swift"
+    })
+  #expect(presentation.text.contains("case .someday: AnyShapeStyle(LorvexDesign.Palette.someday)"))
+  #expect(!presentation.text.contains("case .someday: AnyShapeStyle(.secondary)"))
+}
+
+@Test
 func everyTaskRowCirclePassesThroughTheSharedView() throws {
   let expected: [(directory: String, file: String, uses: Int)] = [
     ("Sources/LorvexApple/Views", "LorvexTaskRow.swift", 1),

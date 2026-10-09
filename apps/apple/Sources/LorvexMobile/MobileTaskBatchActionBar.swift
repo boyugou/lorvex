@@ -109,7 +109,7 @@ struct MobileTaskBatchActionBar: View {
           table: "Localizable", bundle: MobileL10n.bundle),
         systemImage: "folder"
       )
-      .foregroundStyle(enabled ? Color.accentColor : Color.secondary.opacity(0.6))
+      .foregroundStyle(enabled ? Color.accentColor : Color.secondary)
     }
     .disabled(!enabled)
     .accessibilityIdentifier("mobileTasks.batch.list")
@@ -127,7 +127,7 @@ struct MobileTaskBatchActionBar: View {
       actionLabel(label, systemImage: systemImage)
     }
     .buttonStyle(.plain)
-    .foregroundStyle(enabled && !isMutating ? tint : Color.secondary.opacity(0.6))
+    .foregroundStyle(enabled && !isMutating ? tint : Color.secondary)
     .disabled(!enabled || isMutating)
     .accessibilityIdentifier("mobileTasks.batch.\(identifier)")
   }

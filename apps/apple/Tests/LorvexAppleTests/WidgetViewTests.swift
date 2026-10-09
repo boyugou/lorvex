@@ -114,6 +114,37 @@ func widgetStaleAgeLabelParticipatesInLayout() throws {
 }
 
 @Test
+func theFootLineFactsReadInTheSecondaryStyle() throws {
+  // The facts count the tasks the widget does not list and the ones done, so
+  // they are at least secondary text like the Habits widget's count; the
+  // tertiary style is for marks a reader can skip (about 2.5:1 on a dark
+  // widget). Only the span from the facts text to its modifiers is inspected,
+  // so the tertiary dots elsewhere in the file are not matched.
+  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetTaskRowView.swift")
+  let footStart = try #require(source.firstRange(of: "struct WidgetFootLine"))
+  let afterFoot = source[footStart.upperBound...]
+  let factsStart = try #require(afterFoot.firstRange(of: "Text(facts)"))
+  let modifiers = afterFoot[factsStart.upperBound...].prefix(120)
+
+  #expect(modifiers.contains(".foregroundStyle(.secondary)"))
+  #expect(!modifiers.contains(".tertiary"))
+}
+
+@Test
+func theUnavailableStatusLineReadsInTheSecondaryColor() throws {
+  // The status line under an unavailable widget's message carries the
+  // instruction ("Open Lorvex to refresh"), so it is at least secondary text
+  // like the message above it; the tertiary style is for marks a reader can
+  // skip (about 2.5:1 on a dark widget).
+  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetSystemView.swift")
+  let statusStart = try #require(source.firstRange(of: "Text(model.statusText)"))
+  let modifiers = source[statusStart.upperBound...].prefix(120)
+
+  #expect(modifiers.contains(".foregroundStyle(Color.secondary)"))
+  #expect(!modifiers.contains(".tertiary"))
+}
+
+@Test
 @MainActor
 func lorvexWidgetViewCanBeInstantiatedForAllFamilies() {
   let families: [WidgetFamilyKind] = [

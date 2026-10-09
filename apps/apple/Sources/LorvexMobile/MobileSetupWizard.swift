@@ -398,10 +398,14 @@ public struct MobileSetupWizard: View {
     .buttonStyle(.borderedProminent)
   }
 
-  /// The quieter choice under a page's main action, such as declining it.
+  /// The quieter choice under a page's main action, such as declining it. A
+  /// borderless button answers taps only inside its label's shape, so the label
+  /// is a full-width row 44 points tall instead of the height of its words.
   private func secondaryButton(_ label: String, action: @escaping () -> Void) -> some View {
     Button(action: action) {
-      Text(label).frame(maxWidth: .infinity)
+      Text(label)
+        .frame(maxWidth: .infinity, minHeight: 44)
+        .contentShape(Rectangle())
     }
     .buttonStyle(.borderless)
   }

@@ -99,6 +99,64 @@ struct MobileEmptyStateTests {
     }
     #expect(!(try mobileSource("MobileStoreTasksHomeView.swift")).contains("pointsAtToolbarAdd"))
   }
+
+  @Test("Scheduled and Priority name what they hold, apart from each other and from the Open lane")
+  func smartCollectionScopesHaveTheirOwnEmptyCopy() {
+    let open = MobileTaskWorkspaceStatus.open
+    let copy = [
+      MobileTasksScope.scheduled.emptyTitle, MobileTasksScope.scheduled.emptyMessage,
+      MobileTasksScope.priority.emptyTitle, MobileTasksScope.priority.emptyMessage,
+    ]
+    #expect(copy.allSatisfy { !$0.isEmpty })
+    #expect(Set(copy).count == copy.count)
+    #expect(!copy.contains(open.emptyTitle))
+    #expect(!copy.contains(open.emptyMessage))
+  }
+
+  @Test("every other scope shows its status lane's empty copy unchanged")
+  func otherScopesShowTheirStatusLaneCopy() {
+    let lanes: [(scope: MobileTasksScope, lane: MobileTaskWorkspaceStatus)] = [
+      (.all, .open), (.list(LorvexPreviewSeedID.appleNativeList), .open),
+      (.someday, .someday), (.completed, .completed), (.cancelled, .cancelled),
+    ]
+    for (scope, lane) in lanes {
+      #expect(scope.baseStatus == lane, "\(scope)")
+      #expect(scope.emptyTitle == lane.emptyTitle, "\(scope)")
+      #expect(scope.emptyMessage == lane.emptyMessage, "\(scope)")
+    }
+  }
+
+  @Test("every shipped translation of the Scheduled and Priority copy exists and differs from the Open lane's")
+  func smartCollectionCopyIsDistinctInEveryLanguage() throws {
+    let keys = [
+      "tasks.empty.scheduled.title", "tasks.empty.scheduled.message",
+      "tasks.empty.priority.title", "tasks.empty.priority.message",
+    ]
+    for language in AppLanguage.selectable.map(\.rawValue) {
+      let bundle = try #require(
+        MobileL10n.bundle.url(forResource: language, withExtension: "lproj")
+          .flatMap { Bundle(url: $0) },
+        "the Mobile bundle has no \(language).lproj")
+      func text(_ key: String) -> String {
+        bundle.localizedString(forKey: key, value: nil, table: "Localizable")
+      }
+      let own = keys.map(text)
+      for (key, value) in zip(keys, own) {
+        #expect(value != key, "\(language) has no \(key)")
+      }
+      #expect(Set(own).count == own.count, "\(language) repeats a string across the four keys")
+      let open = [text("tasks.empty.open.title"), text("tasks.empty.open.message")]
+      #expect(Set(own).isDisjoint(with: open), "\(language) reuses the Open lane's copy")
+    }
+  }
+
+  @Test("the Tasks list reads its empty copy from the scope, not from the scope's status lane")
+  func tasksListReadsTheScopesEmptyCopy() throws {
+    let source = try mobileSource("MobileStoreTasksView.swift")
+    #expect(source.contains("title: scope.emptyTitle"))
+    #expect(source.contains("message: scope.emptyMessage"))
+    #expect(!source.contains("baseStatus.empty"))
+  }
 }
 
 @Suite("Mobile settings sections")

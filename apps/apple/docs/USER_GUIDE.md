@@ -3834,6 +3834,48 @@ On iPhone and iPad, the **+** opens a capture sheet instead: fill in the title
 
 ---
 
+## Accessibility
+
+Lorvex follows the accessibility settings of your device. It has no separate
+settings for them.
+
+### Text Size
+
+On iPhone and iPad, all text follows **Larger Text** (Settings ▸ Accessibility ▸
+Display & Text Size ▸ Larger Text), including the larger accessibility sizes.
+As text grows, rows use more lines instead of cutting words. A pair of buttons
+moves onto two lines when it no longer fits on one. A segmented picker becomes
+one row per choice, and Today's strip of habit rings becomes one row per habit.
+A few grids keep a fixed shape, so their text stops growing at the largest
+regular size. The iPhone day grid is one of them.
+
+### VoiceOver
+
+Lorvex labels its buttons, fields, and switches for VoiceOver. After a task's
+title, VoiceOver reads the task's priority when the priority is not normal.
+
+### Motion
+
+With **Reduce Motion** turned on, Lorvex shows each change at once instead of
+sliding, scaling, or fading it. The setting is in System Settings ▸
+Accessibility ▸ Display on Mac, in Settings ▸ Accessibility ▸ Motion on iPhone
+and iPad, and in Settings ▸ Accessibility on Apple Watch.
+
+### Color
+
+A task's status always has its own symbol: a check, an ×, or a moon. With
+**Differentiate Without Color** turned on, an open task's circle also carries a
+mark for its priority. See The Circle on a Task Row.
+
+### Right-to-Left Languages
+
+In Arabic, Hebrew, Persian, and Urdu, the layout mirrors to follow the reading
+direction. Arrows, disclosure triangles, and progress rings turn with it. On
+Mac, the shortcuts for stepping through days, weeks, and months swap ⌘← and ⌘→
+to match.
+
+---
+
 ## Handoff & Spotlight
 
 ### Continuing on Another Device

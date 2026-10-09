@@ -192,4 +192,73 @@ struct MCPNoOpHonestyTests {
     #expect(skipped.first?.objectValue?["id"]?.stringValue == "ghost-habit")
     #expect(skipped.first?.objectValue?["reason"]?.stringValue == "not found")
   }
+
+  @Test("archive_list and unarchive_list on a list already in that state write no changelog row")
+  func listArchiveNoOpsWriteNoChangelog() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let created = try await mcpRegistryCall(
+      registry, tool: "create_list", arguments: ["name": .string("Projects")])
+    let listID = try #require(created.structuredContent?.objectValue?["id"]?.stringValue)
+
+    // A new list is active, so unarchiving it changes nothing.
+    let unarchive = try await mcpRegistryCall(
+      registry, tool: "unarchive_list", arguments: ["id": .string(listID)])
+    #expect(unarchive.structuredContent?.objectValue?["archived"]?.boolValue == false)
+    #expect(try await mcpChangelogTools(registry, entityID: listID) == ["create_list"])
+
+    _ = try await mcpRegistryCall(
+      registry, tool: "archive_list", arguments: ["id": .string(listID)])
+    let afterArchive = try await mcpChangelogTools(registry, entityID: listID)
+    #expect(afterArchive == ["archive_list", "create_list"])
+
+    // Archiving an archived list changes nothing either.
+    let again = try await mcpRegistryCall(
+      registry, tool: "archive_list", arguments: ["id": .string(listID)])
+    #expect(again.structuredContent?.objectValue?["archived"]?.boolValue == true)
+    #expect(try await mcpChangelogTools(registry, entityID: listID) == afterArchive)
+  }
+
+  @Test("set_task_reminders with no reminders on a task without any writes no changelog row")
+  func clearingNoRemindersWritesNoChangelog() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let task = try await mcpRegistryCall(
+      registry, tool: "create_task", arguments: ["title": .string("No reminders")])
+    let taskID = try #require(task.structuredContent?.objectValue?["id"]?.stringValue)
+    let changelogBefore = try await mcpChangelogTools(registry, entityID: taskID)
+
+    let result = try await mcpRegistryCall(
+      registry, tool: "set_task_reminders",
+      arguments: ["task_id": .string(taskID), "reminders": .array([])])
+
+    #expect(result.isError != true)
+    #expect(result.structuredContent?.objectValue?["id"]?.stringValue == taskID)
+    #expect(try await mcpChangelogTools(registry, entityID: taskID) == changelogBefore)
+  }
+
+  @Test("delete tools say so when there was nothing to delete")
+  func deleteToolsSayNothingWasDeleted() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let unknownID = "01a11e52-1169-72c5-a925-f36e5d8937ba"
+
+    let list = try await mcpRegistryCall(
+      registry, tool: "delete_list", arguments: ["id": .string(unknownID)])
+    #expect(list.structuredContent?.objectValue?["deleted"]?.boolValue == false)
+    #expect(mcpTextContent(list).contains("nothing was deleted"))
+
+    let habit = try await mcpRegistryCall(
+      registry, tool: "delete_habit", arguments: ["id": .string(unknownID)])
+    #expect(habit.structuredContent?.objectValue?["deleted"]?.boolValue == false)
+    #expect(mcpTextContent(habit).contains("nothing was deleted"))
+
+    let event = try await mcpRegistryCall(
+      registry, tool: "delete_calendar_event", arguments: ["event_id": .string(unknownID)])
+    #expect(event.structuredContent?.objectValue?["deleted"]?.boolValue == false)
+    #expect(mcpTextContent(event).contains("nothing was deleted"))
+
+    // `language` is a known preference key that a fresh store has not set.
+    let preference = try await mcpRegistryCall(
+      registry, tool: "delete_preference", arguments: ["key": .string("language")])
+    #expect(preference.structuredContent?.objectValue?["deleted"]?.boolValue == false)
+    #expect(mcpTextContent(preference).contains("was not set"))
+  }
 }

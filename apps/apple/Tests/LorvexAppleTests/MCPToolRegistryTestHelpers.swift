@@ -46,6 +46,15 @@ func mcpTextContent(_ result: CallTool.Result) -> String {
   }.joined()
 }
 
+/// The `mcp_tool` of every `ai_changelog` row recorded for `entityID`, newest first.
+func mcpChangelogTools(_ registry: ToolRegistry, entityID: String) async throws -> [String] {
+  let log = try await mcpRegistryCall(
+    registry, tool: "get_ai_changelog",
+    arguments: ["limit": .int(100), "entity_id": .string(entityID)])
+  return (log.structuredContent?.objectValue?["entries"]?.arrayValue ?? [])
+    .compactMap { $0.objectValue?["mcp_tool"]?.stringValue }
+}
+
 func expectMCPStructuredError(
   _ result: CallTool.Result,
   code: String,

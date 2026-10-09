@@ -133,6 +133,17 @@ extension SwiftLorvexCoreService {
       updatedAt, field: "task updatedAt")
     let typedId = TaskId(trusted: id)
     let before = try TaskResponse.loadEnrichedTaskJSON(db, taskId: typedId)
+    // A completion time belongs to a completed task only: the schema holds
+    // `completed_at` non-null exactly when the status is `completed`.
+    if canonicalCompletedAt != nil {
+      guard case .object(let object) = before, case .string(let status)? = object["status"],
+        status == StatusName.completed
+      else {
+        throw LorvexCoreError.validation(
+          field: "completed_at",
+          message: "completed_at is only valid together with status \"completed\".")
+      }
+    }
     var assignments: [String] = []
     var values: [DatabaseValueConvertible?] = []
     var registerIntent: TaskRegisterIntent = []

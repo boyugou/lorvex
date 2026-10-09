@@ -60,6 +60,13 @@ three states: `replacement`, `cancelled`, or `inherit`. The generation prevents
 old decisions from reviving after an all-series recurrence reset. These rows
 are synced final state, not an undo history.
 
+An edit of the whole current series (`all_in_series`) keeps skipped
+occurrences skipped and discards `replacement` decisions, so every remaining
+occurrence follows the series values. An edit that changes the start date or
+the recurrence grid (frequency, interval, week start, or any BY rule; `UNTIL`
+and `COUNT` do not move the grid) starts a new generation and discards every
+decision, skipped occurrences included.
+
 Monthly recurrence distinguishes a literal day-of-month from a month-end
 anchor. A series anchored on the last day of a month whose length that
 anchor cannot exceed (the 29th of February in a leap year, the 30th of

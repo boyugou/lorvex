@@ -278,15 +278,25 @@ extension SwiftLorvexCoreService {
   /// Set or clear a whole list's archive state. Archiving keeps the list and all
   /// its tasks (completed history under the list name) but drops it from the
   /// active catalog; unarchiving restores it. Bumps version + emits the list
-  /// upsert/changelog like any other list write. The inbox is never archived:
-  /// it is the list a task falls back to and the starting `default_list_id`, so
-  /// retiring it would hide the list new tasks are filed under.
+  /// upsert/changelog like any other list write. A list already in the requested
+  /// state is returned as it is, with no version bump, sync upsert, or changelog
+  /// row. The inbox is never archived: it is the list a task falls back to and
+  /// the starting `default_list_id`, so retiring it would hide the list new
+  /// tasks are filed under.
   private func setListArchived(id: LorvexList.ID, archived: Bool) throws -> LorvexList {
     if archived && id == inboxListId {
       throw LorvexCoreError.unsupportedOperation(
         "Cannot archive the inbox list: it is the canonical fallback for tasks and must stay active.")
     }
     return try withWrite { db, hlc, deviceId in
+      guard let current = try ListRepo.getList(db, id: ListId(trusted: id)) else {
+        throw LorvexCoreError.notFound(entity: .list, id: id)
+      }
+      if (current.archivedAt != nil) == archived {
+        let counts = try Self.listCounts(db, id: id)
+        return SwiftLorvexListDeserializers.list(
+          current, openCount: counts.open, totalCount: counts.total)
+      }
       let version = hlc.nextVersionString()
       let now = SyncTimestampFormat.syncTimestampNow()
       guard
@@ -338,6 +348,15 @@ extension SwiftLorvexCoreService {
           "Cannot delete the inbox list: it is the canonical fallback for tasks and must "
             + "always exist.")
       }
+      // An id that names no list has nothing to delete, so it is answered before
+      // the guards below: they protect rows that exist and must not blame an
+      // unknown id for "the last list".
+      let previous = try ListRepo.getList(db, id: ListId(trusted: id)).map { row in
+        let counts = try Self.listCounts(db, id: id)
+        return SwiftLorvexListDeserializers.list(
+          row, openCount: counts.open, totalCount: counts.total)
+      }
+      guard previous != nil else { return McpDeletionReceipt(previous: nil) }
       // At least one list must always exist for task creation. This mirrors the
       // sync-apply ApplyList invariant so a local delete can't drain the
       // workspace to zero lists and leave `default_list_id` dangling, which
@@ -372,11 +391,6 @@ extension SwiftLorvexCoreService {
         id == inboxListId
         ? []
         : try String.fetchAll(db, sql: "SELECT id FROM tasks WHERE list_id = ?", arguments: [id])
-      let previous = try ListRepo.getList(db, id: ListId(trusted: id)).map { row in
-        let counts = try Self.listCounts(db, id: id)
-        return SwiftLorvexListDeserializers.list(
-          row, openCount: counts.open, totalCount: counts.total)
-      }
       // Any other error propagates and rolls back the whole withWrite transaction,
       // so we never permanently delete the row without emitting its sync tombstone.
       let deleted = try ListRepo.deleteList(db, id: ListId(trusted: id))
@@ -420,8 +434,10 @@ extension SwiftLorvexCoreService {
 
   public func moveTask(id: LorvexTask.ID, toListID listID: LorvexList.ID) async throws -> LorvexTask
   {
-    let moved = try await batchMoveTasks(ids: [id], toListID: listID)
-    guard let task = moved.moved.first else { throw LorvexCoreError.taskNotFound }
+    let result = try await batchMoveTasks(ids: [id], toListID: listID)
+    guard let task = result.moved.first ?? result.alreadyInList.first else {
+      throw LorvexCoreError.taskNotFound
+    }
     return task
   }
 }

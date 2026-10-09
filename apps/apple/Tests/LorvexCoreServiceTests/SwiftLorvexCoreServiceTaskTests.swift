@@ -408,7 +408,8 @@ final class SwiftLorvexCoreServiceTaskTests: XCTestCase {
     let after = try mutationCounts(service)
 
     XCTAssertTrue(unchanged.moved.isEmpty)
-    XCTAssertEqual(unchanged.skipped, [task.id])
+    XCTAssertTrue(unchanged.skipped.isEmpty)
+    XCTAssertEqual(unchanged.alreadyInList.map(\.id), [task.id])
     XCTAssertEqual(after.outbox, before.outbox)
     XCTAssertEqual(after.changelog, before.changelog)
   }

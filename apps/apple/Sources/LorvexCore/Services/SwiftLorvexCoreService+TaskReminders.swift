@@ -104,6 +104,11 @@ extension SwiftLorvexCoreService {
           ORDER BY id
           """,
         arguments: [taskID])
+      // Clearing a task that has no active reminder changes nothing: no write,
+      // sync upsert, or changelog row.
+      if activeRows.isEmpty && reminderAts.isEmpty {
+        return try SwiftLorvexTaskDeserializers.task(before)
+      }
       var cancelledIds: [String] = []
       cancelledIds.reserveCapacity(activeRows.count)
       for row in activeRows {

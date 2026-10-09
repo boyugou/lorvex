@@ -147,10 +147,16 @@ public struct TaskBatchLifecycleResult: Equatable, Sendable {
 
 public struct TaskBatchMoveResult: Equatable, Sendable {
   public var moved: [LorvexTask]
+  /// Ids that matched no task, or whose move a newer stored version refused.
   public var skipped: [LorvexTask.ID]
+  /// Tasks that were already in the target list, returned as they are.
+  public var alreadyInList: [LorvexTask]
 
-  public init(moved: [LorvexTask], skipped: [LorvexTask.ID]) {
+  public init(
+    moved: [LorvexTask], skipped: [LorvexTask.ID], alreadyInList: [LorvexTask] = []
+  ) {
     self.moved = moved
     self.skipped = skipped
+    self.alreadyInList = alreadyInList
   }
 }

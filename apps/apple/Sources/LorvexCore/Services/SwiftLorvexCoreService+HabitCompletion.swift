@@ -10,10 +10,11 @@ import LorvexWorkflow
 ///
 /// Completion mutations write the `habit_completions` table directly (the same
 /// drop-to-SQL pattern habit CRUD uses) and funnel through `withWrite` for HLC +
-/// changelog + local-change-seq. `completeHabit` / `uncompleteHabit` share the
-/// `habitCompletionMutation` funnel, which guards habit existence, writes the
-/// changelog row, and returns a fresh catalog snapshot. `batchCompleteHabits`
-/// applies the same upsert across many habits in one transaction.
+/// changelog + local-change-seq. Every single-habit write resolves its habit
+/// through `activeHabitRow`, which rejects an unknown or archived habit before
+/// anything is written, and returns a fresh catalog snapshot after the
+/// changelog row. `batchCompleteHabits` applies the same upsert across many
+/// habits in one transaction and skips unknown and archived ids.
 ///
 /// A day counts as "completed" when its `habit_completions.value >=
 /// target_count`.
@@ -49,9 +50,7 @@ extension SwiftLorvexCoreService {
   public func completeHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot {
     try Self.validateCompletionDate(date)
     return try withWrite { db, hlc, deviceId in
-      guard let habitRow = try Self.habitColumnRow(db, id: id) else {
-        throw LorvexCoreError.notFound(entity: .habit, id: id)
-      }
+      let habitRow = try Self.activeHabitRow(db, id: id)
       let context = try Self.habitMilestoneContext(db, id: id, row: habitRow)
       let targetCount = Int(context.targetCount)
       let existing = try Row.fetchOne(
@@ -143,9 +142,7 @@ extension SwiftLorvexCoreService {
   {
     try Self.validateCompletionDate(date)
     return try withWrite { db, hlc, deviceId in
-      guard let habitRow = try Self.habitColumnRow(db, id: id) else {
-        throw LorvexCoreError.notFound(entity: .habit, id: id)
-      }
+      let habitRow = try Self.activeHabitRow(db, id: id)
       let context = try Self.habitMilestoneContext(db, id: id, row: habitRow)
       let target = Int(context.targetCount)
       let existing = try Row.fetchOne(
@@ -254,6 +251,26 @@ extension SwiftLorvexCoreService {
     }
   }
 
+  /// The row of a habit whose completions a write logs or edits. An unknown id
+  /// is not-found. An archived habit is rejected before anything is written:
+  /// it is hidden from every surface and absent from the catalog snapshot a
+  /// completion write returns, so a completion logged against it could not be
+  /// shown back to the caller, and the caller would see an error for a write
+  /// that had already committed.
+  private static func activeHabitRow(_ db: Database, id: LorvexHabit.ID) throws -> Row {
+    guard let row = try habitColumnRow(db, id: id) else {
+      throw LorvexCoreError.notFound(entity: .habit, id: id)
+    }
+    let archived: Int64 = row["archived"]
+    guard archived == 0 else {
+      let name: String = row["name"]
+      throw LorvexCoreError.validation(
+        field: "id",
+        message: "Habit '\(name)' is archived. Restore it before changing its completions.")
+    }
+    return row
+  }
+
   public func batchCompleteHabits(ids: [LorvexHabit.ID], date: String) async throws
     -> HabitCatalogSnapshot
   {
@@ -275,18 +292,25 @@ extension SwiftLorvexCoreService {
       var completedIds: [LorvexHabit.ID] = []
       var notFoundIds: [LorvexHabit.ID] = []
       var alreadyCompleteIds: [LorvexHabit.ID] = []
+      var archivedIds: [LorvexHabit.ID] = []
       var reachedByID: [LorvexHabit.ID: Int] = [:]
       for id in ids {
-        // An unknown habit id is skipped, not written. `batchCompleteHabits` is
-        // skip-and-report, like `batchCompleteTasks` / `batchCancelTasks`: the
-        // `CoreBridgeClient` adapter detects the id's absence from the returned
-        // snapshot and reports it as skipped `not found`. Writing a completion
-        // row for a missing habit would violate the `habit_id` foreign key and
-        // roll back the whole batch (dropping the valid habits too), so the guard
-        // both mirrors the single-write `completeHabit` rejection and keeps the
-        // rest of the batch intact.
+        // An unknown or archived habit id is skipped, not written.
+        // `batchCompleteHabits` is skip-and-report, like `batchCompleteTasks` /
+        // `batchCancelTasks`: the receipt lists each skipped id under its reason.
+        // Writing a completion row for a missing habit would violate the
+        // `habit_id` foreign key and roll back the whole batch (dropping the
+        // valid habits too), and a completion logged against an archived habit
+        // would be invisible in the returned catalog, so the guard mirrors the
+        // single-write `completeHabit` rejection and keeps the rest of the batch
+        // intact.
         guard let habitRow = try Self.habitColumnRow(db, id: id) else {
           notFoundIds.append(id)
+          continue
+        }
+        let archived: Int64 = habitRow["archived"]
+        guard archived == 0 else {
+          archivedIds.append(id)
           continue
         }
         let context = try Self.habitMilestoneContext(db, id: id, row: habitRow)
@@ -351,7 +375,7 @@ extension SwiftLorvexCoreService {
       }
       return McpHabitBatchCompletionReceipt(
         snapshot: snapshot, completedIDs: completedIds, notFoundIDs: notFoundIds,
-        alreadyCompleteIDs: alreadyCompleteIds)
+        alreadyCompleteIDs: alreadyCompleteIds, archivedIDs: archivedIds)
     }
   }
 
@@ -386,9 +410,7 @@ extension SwiftLorvexCoreService {
   ) throws -> HabitCatalogSnapshot {
     try Self.validateCompletionDate(date)
     return try withWrite { db, hlc, deviceId in
-      guard try Self.habitColumnRow(db, id: id) != nil else {
-        throw LorvexCoreError.notFound(entity: .habit, id: id)
-      }
+      _ = try Self.activeHabitRow(db, id: id)
       let changed = try mutate(db, hlc, deviceId)
       guard changed else { return try Self.loadHabitsSnapshot(db, date: date) }
       try self.writeChangelogRow(

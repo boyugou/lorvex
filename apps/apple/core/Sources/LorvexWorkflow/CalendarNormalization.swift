@@ -113,6 +113,19 @@ public enum CalendarNormalization {
       try validateRecurrenceUntilAfterStart(rec, startDate: effectiveStartDate)
     }
 
+    // An event that stays all-day holds no times. A time patch that does not also
+    // flip `all_day` to false would reach the schema's shape CHECK, and silently
+    // dropping it would tell the caller the time was set, so it is refused.
+    if input.allDay == nil, existing.allDay {
+      for (field, patch) in [("start_time", startTime), ("end_time", endTime)] {
+        if case .set = patch {
+          throw CalendarEventOpError.validation(
+            "This event is all-day, so it cannot have a \(field). Set all_day to false "
+              + "together with the times to make it a timed event.")
+        }
+      }
+    }
+
     let (resolvedStartTime, resolvedEndTime): (Patch<String>, Patch<String>) =
       input.allDay == true ? (.clear, .clear) : (startTime, endTime)
 
@@ -447,6 +460,12 @@ public enum CalendarNormalization {
         throw CalendarEventOpError.validation(
           "end_time cannot be before start_time for same-day events")
       }
+    }
+    // A timed event that ends on a later day needs an end time: the schema
+    // admits an open end only for an all-day event or one that ends the day it starts.
+    if parsedEnd == nil, let endDay, compareYMD(endDay, startDay) > 0 {
+      throw CalendarEventOpError.validation(
+        "end_time is required when end_date is after start_date, unless the event is all-day.")
     }
   }
 

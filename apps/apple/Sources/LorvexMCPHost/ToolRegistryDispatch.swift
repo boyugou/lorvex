@@ -46,16 +46,18 @@ extension ToolRegistry {
       try await SwiftLorvexCoreService.$currentInitiator.withValue(
         SwiftLorvexCoreService.ChangelogInitiator.assistant
       ) {
+        let result: CallTool.Result
         do {
-          return try await routeWithIdempotency(params)
+          result = try await routeWithIdempotency(params)
         } catch is CancellationError {
           throw CancellationError()
         } catch {
-          return Self.errorResult(
+          result = Self.errorResult(
             code: Self.errorCode(for: error),
             message: Self.errorMessage(for: error),
             toolName: params.name)
         }
+        return Self.noting(undeclaredArgumentsOf: params, in: result)
       }
     }
   }

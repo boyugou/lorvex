@@ -76,7 +76,11 @@ extension ToolRegistry {
     case .error(let result): return result
     }
     let value = try await deleteCalendarEventPayload(id: eventID)
-    return successResult(text: "Deleted calendar event \(eventID).", value: value)
+    let text =
+      Self.reportsRemoval(value)
+      ? "Deleted calendar event \(eventID)."
+      : "Calendar event \(eventID) not found; nothing was deleted."
+    return successResult(text: text, value: value)
   }
 
   func searchCalendarEventsResult(arguments: [String: Value]) async throws -> CallTool.Result {

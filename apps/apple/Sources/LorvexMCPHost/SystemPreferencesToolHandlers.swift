@@ -89,13 +89,16 @@ extension ToolRegistry {
     let receipt = try await coreBridge.mcpMutations.deletePreferenceForMcp(key: key)
     let value = Value.object([
       "key": .string(key),
-      "deleted": .bool(true),
+      "deleted": .bool(receipt.deleted),
       "previous": SecurityFencing.fencePreferenceValue(
         key: key, value: receipt.previous.map(CoreBridgeClient.jsonStringValue(_:)) ?? .null),
     ])
+    let text =
+      receipt.deleted
+      ? "Deleted preference '\(key)'." : "Preference '\(key)' was not set; nothing was deleted."
     return CallTool.Result(
       content: [
-        .text(text: "Deleted preference '\(key)'.", annotations: nil, _meta: nil)
+        .text(text: text, annotations: nil, _meta: nil)
       ],
       structuredContent: Optional.some(value),
       isError: false

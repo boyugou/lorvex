@@ -96,7 +96,7 @@ extension TaskMutationToolCatalog {
         "completed_at": .object([
           "type": .string("string"),
           "description": .string(
-            "Historical completion timestamp (ISO-8601) to preserve when re-creating an already-completed task. Omit unless restoring history."),
+            "Historical completion timestamp (ISO-8601) to preserve when re-creating an already-completed task. Needs status completed. Omit unless restoring history."),
         ]),
         IdempotencyKeySchema.propertyName: IdempotencyKeySchema.property,
       ]),

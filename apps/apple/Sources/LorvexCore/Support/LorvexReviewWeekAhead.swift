@@ -7,8 +7,8 @@ import SwiftUI
 /// tapped. Each item shows only its start time, which is what a look across a
 /// week needs, so the titles keep the row's width; an event that began on an
 /// earlier day shows when it ends ("Until 1:30 AM"). A day shows its first
-/// ``itemsPerDay`` items and counts the rest. An empty week reads one quiet
-/// line saying so.
+/// ``itemsPerDay`` items and counts the rest, each item as a
+/// ``LorvexReviewAheadRow``. An empty week reads one quiet line saying so.
 ///
 /// The day sits in a column beside its items, or above them from `.xxLarge`
 /// up (``SwiftUI/DynamicTypeSize/stacksTimeColumn``). The section's
@@ -144,41 +144,19 @@ public struct LorvexReviewWeekAhead: View {
   }
 
   private func eventRow(_ event: CalendarTimelineEvent, dayKey: String) -> some View {
-    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-      marker {
-        Capsule()
-          .fill(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral)
-          .frame(width: 3, height: 14)
-      }
-      Text(userContent: event.title)
-        .font(LorvexDesign.Typography.primaryText)
-        .lineLimitUnlessAccessibilitySize(2)
-      Spacer(minLength: LorvexDesign.Spacing.s)
-      timeText(eventTime(event, dayKey: dayKey))
-    }
-    .padding(.vertical, LorvexDesign.Spacing.xxs)
+    LorvexReviewAheadRow(
+      mark: .event(Color(lorvexHex: event.color) ?? LorvexDesign.Palette.neutral),
+      title: event.title, time: eventTime(event, dayKey: dayKey)
+    )
     .accessibilityElement(children: .combine)
   }
 
   private func taskRow(_ task: LorvexTask, dayKey: String) -> some View {
     Button { openTask(task.id) } label: {
-      HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
-        marker {
-          Circle()
-            .strokeBorder(.secondary, lineWidth: 1.5)
-            .frame(width: 7, height: 7)
-        }
-        Text(userContent: task.title)
-          .font(LorvexDesign.Typography.primaryText)
-          .foregroundStyle(.primary)
-          .multilineTextAlignment(.leading)
-          .lineLimitUnlessAccessibilitySize(2)
-        Spacer(minLength: LorvexDesign.Spacing.s)
-        if let time = task.time(on: dayKey) {
-          timeText(words.timeRange(time.lowerBound, nil))
-        }
-      }
-      .padding(.vertical, LorvexDesign.Spacing.xxs)
+      LorvexReviewAheadRow(
+        mark: .task, title: task.title,
+        time: task.time(on: dayKey).map { words.timeRange($0.lowerBound, nil) }
+      )
       // The fill reaches past the row on both sides, and the negative padding
       // gives that reach back, so the row stays aligned with the day's column.
       .padding(.horizontal, LorvexDesign.Spacing.s)
@@ -202,25 +180,6 @@ public struct LorvexReviewWeekAhead: View {
       }
     #endif
     .accessibilityIdentifier("\(identifier).\(task.id)")
-  }
-
-  /// A row's leading mark, centered in a fixed column on the title's first
-  /// line so event bars and task dots stack in one line.
-  private func marker(@ViewBuilder _ content: () -> some View) -> some View {
-    content()
-      .frame(width: 14)
-      .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
-      .accessibilityHidden(true)
-  }
-
-  private func timeText(_ text: String) -> some View {
-    Text(text)
-      .font(LorvexDesign.Typography.secondaryText)
-      .foregroundStyle(.secondary)
-      .monospacedDigit()
-      .lineLimit(1)
-      // The title wraps; the time keeps its whole width.
-      .fixedSize()
   }
 
   private func eventTime(_ event: CalendarTimelineEvent, dayKey: String) -> String {

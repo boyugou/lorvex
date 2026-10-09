@@ -66,7 +66,7 @@ enum MobileReviewCalmCopy {
   static var checkIn: String { String(localized: "review.calm.check_in", defaultValue: "Check In", table: "Localizable", bundle: MobileL10n.bundle) }
   static var tomorrowLabel: String { String(localized: "review.calm.tomorrow", defaultValue: "Tomorrow", table: "Localizable", bundle: MobileL10n.bundle) }
   static var allDay: String { String(localized: "calendar.all_day_short", defaultValue: "All day", table: "Localizable", bundle: MobileL10n.bundle) }
-  static var weekAheadLabel: String { String(localized: "review.calm.week_ahead", defaultValue: "The Week Ahead", table: "Localizable", bundle: MobileL10n.bundle) }
+  static var weekAheadLabel: String { String(localized: "review.calm.week_ahead", defaultValue: "The week ahead", table: "Localizable", bundle: MobileL10n.bundle) }
   static var weekAheadEmpty: String { String(localized: "review.calm.week_ahead.empty", defaultValue: "Nothing planned for the next seven days.", table: "Localizable", bundle: MobileL10n.bundle) }
   static var shapeLabel: String { String(localized: "review.calm.week_shape", defaultValue: "Finished each day", table: "Localizable", bundle: MobileL10n.bundle) }
   /// "Monday, 2" for the week shape's VoiceOver sentence.

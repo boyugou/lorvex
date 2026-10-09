@@ -130812,7 +130812,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The Week Ahead"
+            "value": "The week ahead"
           }
         },
         "es": {
@@ -130968,7 +130968,7 @@
       }
     },
     "review.calm.week_ahead.empty": {
-      "comment": "Shown under The Week Ahead when the next seven days hold no events or scheduled tasks.",
+      "comment": "Shown under the week-ahead heading when the next seven days hold no events or scheduled tasks.",
       "extractionState": "manual",
       "localizations": {
         "ar": {

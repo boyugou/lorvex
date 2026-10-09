@@ -67,7 +67,7 @@ enum ReviewCalmCopy {
   static var habitsLabel: String { String(localized: "review.calm.habits", defaultValue: "Habits", table: "Localizable", bundle: LorvexL10n.bundle) }
   static var checkIn: String { String(localized: "review.calm.check_in", defaultValue: "Check In", table: "Localizable", bundle: LorvexL10n.bundle) }
   static var tomorrowLabel: String { String(localized: "review.calm.tomorrow", defaultValue: "Tomorrow", table: "Localizable", bundle: LorvexL10n.bundle) }
-  static var weekAheadLabel: String { String(localized: "review.calm.week_ahead", defaultValue: "The Week Ahead", table: "Localizable", bundle: LorvexL10n.bundle) }
+  static var weekAheadLabel: String { String(localized: "review.calm.week_ahead", defaultValue: "The week ahead", table: "Localizable", bundle: LorvexL10n.bundle) }
   static var weekAheadEmpty: String { String(localized: "review.calm.week_ahead.empty", defaultValue: "Nothing planned for the next seven days.", table: "Localizable", bundle: LorvexL10n.bundle) }
   static var shapeLabel: String { String(localized: "review.calm.week_shape", defaultValue: "Finished each day", table: "Localizable", bundle: LorvexL10n.bundle) }
   /// "Monday, 2" for the week shape's VoiceOver sentence.

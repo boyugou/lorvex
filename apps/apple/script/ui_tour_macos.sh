@@ -33,7 +33,9 @@
 # <name>` lines in the log: one `AXDUMP E` line per element with its depth,
 # frame, role, label, value, help text, identifier, and actions. It needs the
 # terminal that runs this script to be trusted for Accessibility; otherwise
-# each stop logs one `AXDUMP SKIPPED` line.
+# each stop logs one `AXDUMP SKIPPED` line. `-uiPreviewWindowSize 1000x600`
+# sizes the main window in points (default 1440x900, never larger than the
+# roomiest display); 1000x600 is the smallest window a person can resize to.
 # Requires a debug build first: `swift build -j 4 --product LorvexApple`.
 # Output: <outdir>/<workspace>-<appearance>.png for today, today-suggestion
 # (Today with suggested times waiting in the schedule pane), today-event (a

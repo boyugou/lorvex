@@ -1,3 +1,4 @@
+import AppKit
 import LorvexCore
 import SwiftUI
 
@@ -31,7 +32,7 @@ struct HabitHistoryPanel: View {
   let timeZone: TimeZone
 
   @State private var cache: HistoryCache
-  @ScaledMetric(relativeTo: .caption) private var weekdayLabelWidth: CGFloat = 12
+  @ScaledMetric(relativeTo: .caption) private var weekdayLabelWidth: CGFloat = HabitHistoryLabelMetrics.minimumWidth
   @LorvexDifferentiateWithoutColor private var differentiateWithoutColor
 
   /// The weeks the grid holds; the layout shows the newest that fit.
@@ -96,7 +97,7 @@ struct HabitHistoryPanel: View {
   // MARK: Grid
 
   private var grid: some View {
-    HabitHistoryGridLayout(labelWidth: weekdayLabelWidth, weeks: cache.grid.columns.count) {
+    HabitHistoryGridLayout(labelWidth: weekdayColumnWidth, weeks: cache.grid.columns.count) {
       weekdayColumn
       ForEach(Array(cache.grid.columns.enumerated()), id: \.offset) { _, column in
         weekColumn(column)
@@ -122,7 +123,7 @@ struct HabitHistoryPanel: View {
   /// The grid's footprint while the detail loads: the same layout over empty
   /// weeks, so it takes the height the grid will.
   private var placeholder: some View {
-    HabitHistoryGridLayout(labelWidth: weekdayLabelWidth, weeks: Self.weeks) {
+    HabitHistoryGridLayout(labelWidth: weekdayColumnWidth, weeks: Self.weeks) {
       Color.clear
       ForEach(0..<Self.weeks, id: \.self) { _ in Color.clear }
     }
@@ -134,16 +135,30 @@ struct HabitHistoryPanel: View {
     .accessibilityLabel(String(localized: "habits.heatmap.loading_a11y", defaultValue: "Loading habit history", table: "Localizable", bundle: LorvexL10n.bundle))
   }
 
-  /// The weekday initials beside the rows, on every other row (Monday,
-  /// Wednesday, Friday, Sunday). Each keeps its text size and centers on its
-  /// row, overhanging the empty rows beside it rather than shrinking to a
-  /// row's height.
+  /// The weekday initials the column names, one per row from the grid's first
+  /// weekday: every other row (Monday, Wednesday, Friday, Sunday) carries its
+  /// initial and the rows between are empty.
+  private var shownWeekdayInitials: [String] {
+    HabitHeatmapModel.weekdayInitials(calendar: Self.calendar(timeZone)).enumerated()
+      .map { $0.offset.isMultiple(of: 2) ? $0.element : "" }
+  }
+
+  /// The weekday column's width: the one-letter width, widened where a
+  /// language writes an initial with more letters, so none runs into the first
+  /// week's cells. It scales with the text size as the initials do.
+  private var weekdayColumnWidth: CGFloat {
+    HabitHistoryLabelMetrics.width(fitting: shownWeekdayInitials) * weekdayLabelWidth
+      / HabitHistoryLabelMetrics.minimumWidth
+  }
+
+  /// The weekday initials beside the rows. Each keeps its text size and
+  /// centers on its row, overhanging the empty rows beside it rather than
+  /// shrinking to a row's height.
   private var weekdayColumn: some View {
     VStack(alignment: .leading, spacing: HabitHistoryGridLayout.spacing) {
       Color.clear.frame(height: HabitHistoryGridLayout.monthRowHeight)
-      ForEach(Array(HabitHeatmapModel.weekdayInitials(calendar: Self.calendar(timeZone)).enumerated()), id: \.offset) {
-        index, symbol in
-        Text(verbatim: index.isMultiple(of: 2) ? symbol : "")
+      ForEach(Array(shownWeekdayInitials.enumerated()), id: \.offset) { _, symbol in
+        Text(verbatim: symbol)
           .font(LorvexDesign.Typography.tertiaryText)
           .foregroundStyle(.secondary)
           .fixedSize()
@@ -343,6 +358,25 @@ struct HabitHistoryPanel: View {
     let parts = key.split(separator: "-").compactMap { Int($0) }
     guard parts.count == 3 else { return nil }
     return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
+  }
+}
+
+/// The width of the History grid's weekday-initials column.
+enum HabitHistoryLabelMetrics {
+  /// The narrowest column, which fits one-letter initials ("M").
+  static let minimumWidth: CGFloat = 12
+  /// The widest the column grows, so the weeks keep their room.
+  static let maximumWidth: CGFloat = 28
+
+  /// The column's width at the default text size for `labels`: the widest
+  /// label on one line in the label font, between ``minimumWidth`` and
+  /// ``maximumWidth``. A language that writes an initial with two letters (the
+  /// Tamil "ஞா", the Thai "พฤ") needs more than the one-letter minimum.
+  /// Callers scale the result with the text, as the labels scale.
+  @MainActor static func width(fitting labels: [String]) -> CGFloat {
+    let font = NSFont.preferredFont(forTextStyle: .subheadline)
+    let widest = labels.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+    return min(maximumWidth, max(minimumWidth, widest.rounded(.up)))
   }
 }
 

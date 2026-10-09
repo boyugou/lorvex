@@ -14,8 +14,9 @@ import SwiftUI
 /// A header names the widget and counts the habits done today. Small's grid
 /// has two columns, medium's four, and both hold two rows, which share the
 /// height under the header. Where two rows of full-size rings do not fit (a
-/// smaller widget, a larger text size) the rings shrink, and where even those
-/// do not fit the grid keeps one row. With more habits than tiles, the last
+/// smaller widget, a larger text size, a script whose line height is taller
+/// than the Latin one) the rings shrink to 85% and then to 70%, and where even
+/// those do not fit the grid keeps one row. With more habits than tiles, the last
 /// tile counts the rest and the habits not yet done take the tiles first, so
 /// what is left to do stays in view; otherwise the habits keep their order.
 ///
@@ -46,6 +47,7 @@ public struct HabitsWidgetView: View {
     ViewThatFits(in: .vertical) {
       content(rows: HabitsWidgetLayout.maxRows, ringDiameter: ringDiameter)
       content(rows: HabitsWidgetLayout.maxRows, ringDiameter: (ringDiameter * 0.85).rounded())
+      content(rows: HabitsWidgetLayout.maxRows, ringDiameter: (ringDiameter * 0.7).rounded())
       content(rows: 1, ringDiameter: ringDiameter)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -81,6 +83,7 @@ public struct HabitsWidgetView: View {
         .font(WidgetType.label)
         .foregroundStyle(LorvexDesign.Palette.accent)
         .lineLimit(1)
+        .minimumScaleFactor(0.85)
         .widgetAccentable()
       Spacer(minLength: 6)
       if let staleAgeLabel {

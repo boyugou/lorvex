@@ -61,6 +61,7 @@ struct SystemWidgetView: View {
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .widgetTypesetting()
     // No padding and no opaque fill: the view draws inside WidgetKit's content
     // margins, and the entry view's `.containerBackground` supplies the
     // widget's backing material.

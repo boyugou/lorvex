@@ -114,6 +114,61 @@ func widgetStaleAgeLabelParticipatesInLayout() throws {
 }
 
 @Test
+func theHabitsWidgetShrinksItsRingsInTwoStepsBeforeDroppingARow() throws {
+  // A script whose line height is taller than the Latin one (Tamil, Thai) pushes
+  // the two-row grid past the small widget's height at 85% rings; the 70% step
+  // keeps both rows for it. The one-row candidate stays last, since
+  // `ViewThatFits` draws the first candidate that fits.
+  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexHabitsWidgetView.swift")
+  let fullSize = try #require(
+    source.firstRange(of: "content(rows: HabitsWidgetLayout.maxRows, ringDiameter: ringDiameter)"))
+  let eightyFive = try #require(source.firstRange(of: "ringDiameter * 0.85"))
+  let seventy = try #require(source.firstRange(of: "ringDiameter * 0.7"))
+  let oneRow = try #require(source.firstRange(of: "content(rows: 1, ringDiameter: ringDiameter)"))
+
+  #expect(fullSize.lowerBound < eightyFive.lowerBound)
+  #expect(eightyFive.lowerBound < seventy.lowerBound)
+  #expect(seventy.lowerBound < oneRow.lowerBound)
+}
+
+@Test
+func theHabitsWidgetTitleScalesDownBeforeItTruncates() throws {
+  // The small widget's header holds the title beside the count. German
+  // "Gewohnheiten" is a little wider than the room left, and a word cut to
+  // "Gewohnheit…" reads worse than the same word at 90% size.
+  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexHabitsWidgetView.swift")
+  let titleStart = try #require(source.firstRange(of: "Text(\"widget.habits.title\""))
+  let modifiers = source[titleStart.upperBound...].prefix(240)
+
+  #expect(modifiers.contains(".lineLimit(1)"))
+  #expect(modifiers.contains(".minimumScaleFactor("))
+}
+
+@Test
+func theTodayWidgetTypesetsAsEnglishInScriptsWithTallLineMetrics() throws {
+  // Under Tamil, Thai, Arabic, Vietnamese and the other tall-line languages
+  // every line gets a taller line box, and a medium widget has only a few
+  // points to spare for its second row, so the widget typesets its own text as
+  // English there.
+  for localization in [
+    "ta", "te", "th", "hi", "mr", "bn", "ar", "fa", "vi", "ta-IN", "ar-SA", "vi-VN",
+  ] {
+    #expect(WidgetTypesetting.typesetsAsLatin(localization: localization), "\(localization)")
+  }
+
+  // Ideographs and Urdu's Nastaliq follow the typesetting language, and the
+  // Latin, Cyrillic, Greek and Hebrew interfaces already have Latin-height
+  // lines, so they keep their own typesetting.
+  for localization in ["en", "de", "ja", "zh-Hans", "zh-Hant", "ko", "ur", "he", "ru", "el", ""] {
+    #expect(!WidgetTypesetting.typesetsAsLatin(localization: localization), "\(localization)")
+  }
+  #expect(!WidgetTypesetting.typesetsAsLatin(localization: nil))
+
+  let source = try appleSourceFile("Sources/LorvexWidgetViews/LorvexWidgetSystemView.swift")
+  #expect(source.contains(".widgetTypesetting()"))
+}
+
+@Test
 func theFootLineFactsReadInTheSecondaryStyle() throws {
   // The facts count the tasks the widget does not list and the ones done, so
   // they are at least secondary text like the Habits widget's count; the

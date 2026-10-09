@@ -84,7 +84,7 @@ struct MemoryWorkspaceView: View {
         title: String(localized: "sidebar.item.memory", defaultValue: "Memory", table: "Localizable", bundle: LorvexL10n.bundle),
         subtitle: String(
           localized: "memory.workspace.subtitle",
-          defaultValue: "What the assistant remembers about you. You can add or edit notes too.",
+          defaultValue: "What the assistant remembers about you. You can add or edit entries too.",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
         icon: SidebarSelection.memory.systemImage,
@@ -130,7 +130,7 @@ struct MemoryWorkspaceView: View {
       .frame(maxHeight: .infinity, alignment: .top)
     } else if store.memoryEntries.isEmpty {
       LorvexEmptyStatePanel(
-        title: String(localized: "memory.empty.title", defaultValue: "No Notes", table: "Localizable", bundle: LorvexL10n.bundle),
+        title: String(localized: "memory.empty.title", defaultValue: "No Memory Entries", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
           localized: "memory.empty.description",
           defaultValue: "Click ＋ to save something your assistant should remember.",
@@ -141,10 +141,10 @@ struct MemoryWorkspaceView: View {
       )
     } else if store.filteredMemoryEntries.isEmpty {
       LorvexEmptyStatePanel(
-        title: String(localized: "memory.empty.search_title", defaultValue: "No Matching Notes", table: "Localizable", bundle: LorvexL10n.bundle),
+        title: String(localized: "memory.empty.search_title", defaultValue: "No Matching Memory Entries", table: "Localizable", bundle: LorvexL10n.bundle),
         message: String(
           localized: "memory.empty.search_description",
-          defaultValue: "No note matches your search.",
+          defaultValue: "No memory entry matches your search.",
           table: "Localizable",
           bundle: LorvexL10n.bundle),
         systemImage: "magnifyingglass",

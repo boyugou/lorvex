@@ -5,7 +5,7 @@ import LorvexDomain
 ///
 /// Sync relation edges use `left:right` IDs for two-column primary keys
 /// (`task_tag`, `task_dependency`, `task_calendar_event_link`,
-/// `habit_completion`). Parsing is strict and centralized so FK preflight,
+/// `habit_completion`, `habit_skip`). Parsing is strict and centralized so FK preflight,
 /// apply handlers, version lookup, and pending-inbox remaps all reject
 /// malformed IDs identically: exactly one `:` separator and non-empty halves.
 public enum CompositeEdge {
@@ -21,11 +21,11 @@ public enum CompositeEdge {
     }
   }
 
-  /// True when `entityType` is one of the four composite-key edge types.
+  /// True when `entityType` is one of the composite-key edge types.
   public static func isCompositeEdgeEntityType(_ entityType: String) -> Bool {
     switch entityType {
     case EdgeName.taskTag, EdgeName.taskDependency, EdgeName.taskCalendarEventLink,
-      EdgeName.habitCompletion:
+      EdgeName.habitCompletion, EdgeName.habitSkip:
       return true
     default:
       return false

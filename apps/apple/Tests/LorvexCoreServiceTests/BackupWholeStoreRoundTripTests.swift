@@ -25,7 +25,8 @@ final class BackupWholeStoreRoundTripTests: XCTestCase {
   private static let backedUpTables: Set<String> = [
     "lists", "tasks", "habits", "tags", "calendar_series_cutovers", "calendar_events",
     "preferences", "memories", "daily_reviews", "daily_briefings", "task_tags",
-    "task_dependencies", "task_calendar_event_links", "habit_completions", "habit_weekdays",
+    "task_dependencies", "task_calendar_event_links", "habit_completions", "habit_skips",
+    "habit_weekdays",
     "task_recurrence_exceptions", "daily_review_task_links", "daily_review_list_links",
     "task_reminders", "task_checklist_items", "habit_reminder_policies",
   ]
@@ -253,6 +254,7 @@ final class BackupWholeStoreRoundTripTests: XCTestCase {
       firstHabit = firstHabit ?? habit
     }
     let reminded = try XCTUnwrap(firstHabit)
+    _ = try await core.skipHabit(id: reminded.id, date: day(-3))
     _ = try await core.upsertHabitReminderPolicy(
       id: reminded.id,
       policy: HabitReminderPolicy(

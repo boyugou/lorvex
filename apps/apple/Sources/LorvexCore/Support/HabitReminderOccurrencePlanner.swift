@@ -24,22 +24,29 @@ public enum HabitReminderOccurrencePlanner {
     /// `nil` when the period has not been delivered (the in-memory fake, which
     /// has no delivery-state table, always passes `nil`).
     public var lastDeliveredAt: Date?
+    /// The days (`YYYY-MM-DD`) the habit is set aside for. A skipped day is
+    /// excused, so no reminder fires on it, and a reminder that would have
+    /// fired on one is not counted as delivered. Days outside the planning
+    /// window are ignored, so a backend may pass every skip it holds near it.
+    public var skippedDays: Set<String>
 
     public init(
       policy: HabitReminderPolicy, cadence: HabitCadence, targetCount: Int64,
-      lastDeliveredAt: Date? = nil
+      lastDeliveredAt: Date? = nil, skippedDays: Set<String> = []
     ) {
       self.policy = policy
       self.cadence = cadence
       self.targetCount = targetCount
       self.lastDeliveredAt = lastDeliveredAt
+      self.skippedDays = skippedDays
     }
   }
 
   /// Expand `inputs` into the occurrences that should fire over the next
-  /// `horizonDays` days from `now`, in the supplied `zone`. `progressInRange`
+  /// `horizonDays` days from `now`, in the supplied `zone`. A day in an input's
+  /// ``PolicyInput/skippedDays`` produces no occurrence. `progressInRange`
   /// returns the summed completion `value` for a habit over an inclusive
-  /// `[startDay, endDay]` range (the backend's only data dependency).
+  /// `[startDay, endDay]` range (the backend's only other data dependency).
   public static func plan(
     inputs: [PolicyInput],
     now: Date,
@@ -59,7 +66,9 @@ public enum HabitReminderOccurrencePlanner {
           now: now, timezoneName: zone.identifier, offsetDays: dayOffset, systemFallback: zone)
         guard case .success(let ymd) = IsoDate.parseIsoDate(dayString) else { continue }
         let day = LorvexDate(ymd: ymd)
-        guard isHabitReminderDay(input.cadence, day) else { continue }
+        guard isHabitReminderDay(input.cadence, day),
+          !input.skippedDays.contains(ymd.canonicalString)
+        else { continue }
         guard let fireDate = fireInstant(ymd: ymd, hour: hour, minute: minute, zone: zone),
           fireDate > now
         else { continue }
@@ -122,6 +131,7 @@ public enum HabitReminderOccurrencePlanner {
       if cursor.canonicalString > todayCanonical { break }
       let day = LorvexDate(ymd: cursor)
       if isHabitReminderDay(input.cadence, day),
+        !input.skippedDays.contains(cursor.canonicalString),
         let fire = fireInstant(ymd: cursor, hour: hour, minute: minute, zone: zone),
         fire <= now
       {

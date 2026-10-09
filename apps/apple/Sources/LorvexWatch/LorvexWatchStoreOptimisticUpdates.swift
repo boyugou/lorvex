@@ -23,6 +23,7 @@ extension LorvexWatchStore {
         !habits[index].isDoneToday
       else { break }
       let current = habits[index]
+      // A check-in lifts a skip, so the updated summary carries none.
       habits[index] = WidgetSnapshot.HabitSummary(
         id: current.id, name: current.name, icon: current.icon,
         completedToday: current.completedToday + 1, target: current.target, color: current.color)

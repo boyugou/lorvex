@@ -25,7 +25,8 @@ import LorvexStore
 /// only one side completed re-points outright; a date BOTH sides completed is a
 /// genuine content collision, HLC-arbitrated (independently of the habit-root
 /// content policy) with the discarded `value`/`note` logged as an `lww` conflict —
-/// and `habit_reminder_policies` move to the winner: policies colliding in the
+/// `habit_skips` (the days a habit is excused) union onto the winner through
+/// ``ApplyHabitSkipMerge``, and `habit_reminder_policies` move to the winner: policies colliding in the
 /// same `(winner, reminder_time)` slot are themselves min-id/max-HLC merged, so
 /// the newer `enabled` content survives and the identity loser is tombstoned with
 /// a redirect to the canonical policy. One `tag_merge`
@@ -136,6 +137,10 @@ enum ApplyHabitMerge {
         // by ``ApplyHabitCompletionMerge/mergeHabitCompletions(_:winnerId:loserId:mergeVersion:applyTs:)``.
         try ApplyHabitCompletionMerge.mergeHabitCompletions(
           db, winnerId: winnerId, loserId: loserId, mergeVersion: mergeVersion, applyTs: now)
+
+        // habit_skips — composite edge PK `(habit_id, skipped_date)` with no
+        // content, so the two sides' excused days simply union onto the winner.
+        try ApplyHabitSkipMerge.mergeHabitSkips(db, winnerId: winnerId, loserId: loserId)
 
         do {
           // habit_reminder_policies — independent child, UNIQUE(habit_id, reminder_time).

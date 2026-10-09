@@ -63,6 +63,23 @@ struct LorvexWatchStoreMutationForwardingTests {
     #expect(forwarder.forwarded.count == 1)
   }
 
+  @Test("completeHabit on a habit set aside for today checks it in and lifts the skip")
+  func completeHabitLiftsTheSkip() async throws {
+    let task = try await makeWatchTask(title: "Habit host")
+    let forwarder = RecordingMutationForwarder()
+    let store = makeSnapshotStore(tasks: [task], forwarder: forwarder, date: "2026-05-25")
+    store.habits = [
+      WidgetSnapshot.HabitSummary(
+        id: "h1", name: "Hydrate", icon: nil, completedToday: 0, target: 1, isSkipped: true)
+    ]
+
+    await store.completeHabit(id: "h1")
+
+    #expect(forwarder.forwarded == [.completeHabit(id: "h1", date: "2026-05-25")])
+    #expect(store.habits.first?.completedToday == 1)
+    #expect(store.habits.first?.isSkipped == false)
+  }
+
   @Test("cancelTask forwards cancelTask mutation")
   func cancelTaskForwards() async throws {
     let task = try await makeWatchTask(title: "Forward cancel")

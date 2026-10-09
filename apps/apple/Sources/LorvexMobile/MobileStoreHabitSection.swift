@@ -13,6 +13,7 @@ struct MobileStoreHabitsSection: View {
   let archiveHabit: (LorvexHabit) async -> Bool
   let complete: (LorvexHabit) async -> Bool
   let reset: (LorvexHabit) async -> Bool
+  let toggleSkip: (LorvexHabit) async -> Bool
   let searchQuery: String
   let detailRoute: (LorvexHabit) -> MobileRoute
 
@@ -38,6 +39,7 @@ struct MobileStoreHabitsSection: View {
             archiveHabit: { await archiveHabit(habit) },
             complete: { await complete(habit) },
             reset: { await reset(habit) },
+            toggleSkip: { await toggleSkip(habit) },
             detailRoute: detailRoute(habit)
           )
         }
@@ -49,9 +51,9 @@ struct MobileStoreHabitsSection: View {
 
 /// One habit in the Habits list: icon tile, name, today's progress, the
 /// milestone line, and the trailing completion ring. Tapping the row opens
-/// the habit's detail. Edit rides the leading swipe and Delete (confirmed)
-/// and Archive the trailing one; the context menu offers the same actions
-/// plus complete / reset.
+/// the habit's detail. Skip Today (Undo Skip once skipped) and Edit ride the
+/// leading swipe and Delete (confirmed) and Archive the trailing one; the
+/// context menu offers the same actions plus complete / reset.
 struct MobileHabitRow: View {
   let habit: LorvexHabit
   let isMutating: Bool
@@ -60,6 +62,7 @@ struct MobileHabitRow: View {
   let archiveHabit: () async -> Bool
   let complete: () async -> Bool
   let reset: () async -> Bool
+  let toggleSkip: () async -> Bool
   let detailRoute: MobileRoute
 
   @State private var isConfirmingDelete = false
@@ -95,6 +98,9 @@ struct MobileHabitRow: View {
         .accessibilityIdentifier("mobileHabits.archive.\(habit.id)")
     }
     .swipeActions(edge: .leading, allowsFullSwipe: false) {
+      skipButton
+        .accessibilityIdentifier("mobileHabits.skip.\(habit.id)")
+
       Button {
         editHabit()
       } label: {
@@ -121,6 +127,8 @@ struct MobileHabitRow: View {
           systemImage: habit.isCompleteToday ? "arrow.counterclockwise" : "checkmark.circle")
       }
       .disabled(isMutating)
+
+      skipButton
 
       Button {
         editHabit()
@@ -151,6 +159,24 @@ struct MobileHabitRow: View {
       Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle), role: .cancel) {}
     } message: {
       Text(String(localized: "habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: MobileL10n.bundle))
+    }
+  }
+
+  /// Skip Today, or Undo Skip once today is set aside; absent while today holds
+  /// a check-in, which a skip cannot share the day with. Untinted, so the swipe
+  /// button takes the system's neutral gray: the day is set aside, not lost.
+  @ViewBuilder
+  private var skipButton: some View {
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button {
+        Task { _ = await toggleSkip() }
+      } label: {
+        Label(
+          MobileHabitSkipCopy.title(for: action),
+          systemImage: MobileHabitSkipCopy.systemImage(for: action))
+      }
+      .tint(action == .unskip ? LorvexDesign.Palette.dueSoon : nil)
+      .disabled(isMutating)
     }
   }
 

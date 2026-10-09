@@ -94,7 +94,15 @@ public enum EntityID {
   // MARK: - Internals
 
   private static func currentUnixMilliseconds() -> UInt64 {
-    UInt64(Date().timeIntervalSince1970 * 1000.0)
+    unixMilliseconds(secondsSince1970: Date().timeIntervalSince1970)
+  }
+
+  /// `seconds` since the Unix epoch as whole milliseconds within the 48-bit
+  /// timestamp field. A clock set before 1970 reads as 0, so minting an ID
+  /// never traps on the conversion.
+  static func unixMilliseconds(secondsSince1970 seconds: TimeInterval) -> UInt64 {
+    guard !seconds.isNaN, seconds > 0 else { return 0 }
+    return UInt64(min(seconds * 1000.0, Double(0xFFFF_FFFF_FFFF)))
   }
 
   private static func randomTen() -> [UInt8] {

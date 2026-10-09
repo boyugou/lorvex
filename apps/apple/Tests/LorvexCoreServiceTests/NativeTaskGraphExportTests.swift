@@ -173,10 +173,10 @@ final class NativeTaskGraphExportTests: XCTestCase {
           INSERT INTO sync_payload_shadow (
             entity_type, entity_id, base_version, payload_schema_version,
             raw_payload_json, source_device_id, updated_at
-          ) VALUES (?, ?, ?, 2, ?, 'future-peer', ?)
+          ) VALUES (?, ?, ?, ?, ?, 'future-peer', ?)
           """,
         arguments: [
-          EntityName.task, childID, Self.v2,
+          EntityName.task, childID, Self.v2, Int(LorvexVersion.payloadSchemaVersion) + 1,
           "{\"future_user_field\":\"preserve me\"}", Self.now,
         ])
     }
@@ -249,7 +249,7 @@ final class NativeTaskGraphExportTests: XCTestCase {
       [
         NativeTaskPayloadShadowSnapshot(
           entityType: .task, entityID: fixture.childID,
-          baseVersion: try clock(Self.v2), payloadSchemaVersion: 2,
+          baseVersion: try clock(Self.v2), payloadSchemaVersion: LorvexVersion.payloadSchemaVersion + 1,
           rawPayloadJSON: "{\"future_user_field\":\"preserve me\"}",
           sourceDeviceID: "future-peer", updatedAt: Self.now)
       ])
@@ -554,7 +554,7 @@ final class NativeTaskGraphExportTests: XCTestCase {
       payloadShadows: [
         NativeTaskPayloadShadowSnapshot(
           entityType: .task, entityID: task.id, baseVersion: version,
-          payloadSchemaVersion: 2,
+          payloadSchemaVersion: LorvexVersion.payloadSchemaVersion + 1,
           rawPayloadJSON:
             "{\"future\":\""
             + String(

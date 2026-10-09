@@ -32,7 +32,7 @@ public struct UIKitFeedbackProvider: LorvexFeedbackProviding {
     case .habitMilestoneReached:
       let gen = UINotificationFeedbackGenerator()
       gen.notificationOccurred(.success)
-    case .habitReset:
+    case .habitReset, .habitSkipped:
       let gen = UIImpactFeedbackGenerator(style: .light)
       gen.impactOccurred()
     case .captureSubmitted:

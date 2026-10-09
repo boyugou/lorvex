@@ -1,7 +1,15 @@
 import Foundation
+import LorvexDomain
 import MCP
 
 extension ToolRegistry {
+  /// The per-day targets `create_habit` and `update_habit` accept.
+  static let habitTargetCountRange = 1...Int(ValidationLimits.maxHabitTargetCount)
+
+  static var habitTargetCountMessage: String {
+    "target_count must be between 1 and \(ValidationLimits.maxHabitTargetCount)."
+  }
+
   func createHabitResult(arguments: [String: Value]) async throws -> CallTool.Result {
     guard
       let name = arguments["name"]?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -12,12 +20,13 @@ extension ToolRegistry {
     let cue = try StrictScalarArguments.optionalString(arguments["cue"], field: "cue")
     let icon = try StrictScalarArguments.optionalString(arguments["icon"], field: "icon")
     let color = try StrictScalarArguments.optionalString(arguments["color"], field: "color")
-    // Reject target_count < 1 rather than silently clamping, matching update_habit.
+    // Reject a target_count outside the range rather than silently clamping,
+    // matching update_habit.
     let targetCount = try StrictScalarArguments.int(
       arguments["target_count"], field: "target_count", default: 1)
-    if targetCount < 1 {
+    if !Self.habitTargetCountRange.contains(targetCount) {
       return Self.errorResult(
-        code: "validation", message: "target_count must be at least 1.", toolName: "create_habit")
+        code: "validation", message: Self.habitTargetCountMessage, toolName: "create_habit")
     }
     let frequencyType = try StrictScalarArguments.string(
       arguments["frequency_type"], field: "frequency_type", default: "daily")

@@ -30,6 +30,25 @@ extension MobileStoreHabitsView {
     }
   }
 
+  /// The swipe/context-menu skip action: Skip Today, or Undo Skip once today is
+  /// set aside. Absent while today holds a check-in, which a skip cannot share
+  /// the day with. Untinted, so the swipe button takes the system's neutral
+  /// gray: the day is set aside, not lost.
+  @ViewBuilder
+  func habitSkipAction(_ habit: LorvexHabit) -> some View {
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button {
+        Task { await store.toggleHabitSkip(habit) }
+      } label: {
+        Label(
+          MobileHabitSkipCopy.title(for: action),
+          systemImage: MobileHabitSkipCopy.systemImage(for: action))
+      }
+      .tint(action == .unskip ? LorvexDesign.Palette.dueSoon : nil)
+      .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+    }
+  }
+
   func habitEditAction(_ habit: LorvexHabit) -> some View {
     Button {
       store.prepareHabitDraft(for: habit)

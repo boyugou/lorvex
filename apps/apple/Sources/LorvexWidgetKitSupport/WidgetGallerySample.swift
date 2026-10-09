@@ -95,7 +95,8 @@
     }
 
     /// Five habits: one done, one part-way through a count of three, one with
-    /// a chosen color, and the rest on their automatic hues.
+    /// a chosen color, one set aside for today, and the rest on their
+    /// automatic hues.
     public static var habits: [WidgetSnapshot.HabitSummary] {
       [
         .init(id: "h1", name: "Meditate", icon: "brain.head.profile", completedToday: 1, target: 1),
@@ -104,11 +105,14 @@
           id: "h3", name: "Drink water", icon: "drop.fill", completedToday: 2, target: 3,
           color: "#3B82F6"),
         .init(id: "h4", name: "Morning run", icon: "figure.run", completedToday: 0, target: 1),
-        .init(id: "h5", name: "Stretch", icon: "figure.mind.and.body", completedToday: 0, target: 2),
+        .init(
+          id: "h5", name: "Stretch", icon: "figure.mind.and.body", completedToday: 0, target: 2,
+          isSkipped: true),
       ]
     }
 
-    /// Three habits, every one met today.
+    /// Four habits: three met today and one set aside, so the count reads 3/3
+    /// and the seal shows.
     public static var allDoneHabits: [WidgetSnapshot.HabitSummary] {
       [
         .init(id: "h1", name: "Meditate", icon: "brain.head.profile", completedToday: 1, target: 1),
@@ -116,6 +120,9 @@
         .init(
           id: "h3", name: "Drink water", icon: "drop.fill", completedToday: 3, target: 3,
           color: "#3B82F6"),
+        .init(
+          id: "h4", name: "Morning run", icon: "figure.run", completedToday: 0, target: 1,
+          isSkipped: true),
       ]
     }
 

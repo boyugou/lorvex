@@ -9,17 +9,24 @@ import SwiftUI
 /// vanishes on the card for deep hues in dark mode and for every hue in light
 /// mode. The stroke and the center glyphs scale with `diameter`, so the ring
 /// reads the same at the card's 46 pt and the header's smaller size.
+///
+/// A habit set aside for today (`isSkipped`) draws its track as dots and shows
+/// the skip glyph (``LorvexHabitSkip/glyph``) in place of its icon, until the
+/// period is complete: set apart by shape rather than by color. Any period
+/// progress from earlier days still fills the arc.
 struct HabitProgressRing: View {
   let completed: Int
   let target: Int
   let tint: Color
   let icon: String
   var diameter: CGFloat = 46
+  var isSkipped = false
   let action: () -> Void
 
   @State private var hovering = false
 
   private var isComplete: Bool { completed >= max(target, 1) }
+  private var showsSkipped: Bool { isSkipped && !isComplete }
   /// 4 pt on the card's 46 pt ring.
   private var lineWidth: CGFloat { (diameter * 0.087).rounded(.toNearestOrEven) }
   private var fraction: Double {
@@ -30,13 +37,22 @@ struct HabitProgressRing: View {
   var body: some View {
     Button(action: action) {
       ZStack {
-        Circle()
-          .stroke(.tertiary, lineWidth: lineWidth)
+        if showsSkipped {
+          LorvexDottedRing(dotDiameter: lineWidth)
+            .fill(.tertiary)
+        } else {
+          Circle()
+            .stroke(.tertiary, lineWidth: lineWidth)
+        }
         LorvexProgressArc(fraction: fraction, style: tint.gradient, lineWidth: lineWidth)
         if isComplete {
           Image(systemName: "checkmark")
             .font(.system(size: diameter * 0.35, weight: .bold))  // lorvex-design-token: allow
             .foregroundStyle(tint)
+        } else if showsSkipped {
+          Image(systemName: LorvexHabitSkip.glyph)
+            .font(.system(size: diameter * 0.33, weight: .medium))  // lorvex-design-token: allow
+            .foregroundStyle(hovering ? AnyShapeStyle(tint) : AnyShapeStyle(.secondary))
         } else {
           Image(systemName: icon)
             .font(.system(size: diameter * 0.33, weight: .medium))  // lorvex-design-token: allow
@@ -56,6 +72,9 @@ struct HabitProgressRing: View {
 /// One habit tile in the momentum board: the habit's color identity up top, a
 /// 7-day rhythm strip, a streak chip, and the completion ring as the focal
 /// action. Clicking the body opens the habit inspector; the ring checks it in.
+/// A habit set aside for today says so under its name, draws its ring as
+/// skipped (``HabitProgressRing``), and offers Undo Skip in its context menu
+/// where it otherwise offers Skip Today.
 struct HabitMomentumCard: View {
   let habit: LorvexHabit
   /// Real per-habit stats (streak + recent completions). Nil only briefly before
@@ -68,6 +87,9 @@ struct HabitMomentumCard: View {
   let adjust: (Int) -> Void
   /// Clear today's count to zero (the context-menu "Reset today").
   let reset: () -> Void
+  /// Set today aside for the habit, or take that back (the context menu's
+  /// Skip Today and Undo Skip).
+  let toggleSkip: () -> Void
   let select: () -> Void
   let edit: () -> Void
   let archive: () -> Void
@@ -89,7 +111,8 @@ struct HabitMomentumCard: View {
   /// logged once today.
   private var progress: HabitPeriodProgress.Value {
     HabitPeriodProgress.current(
-      habit: habit, recentCompletions: stats?.recentCompletions ?? [], timeZone: productTimeZone)
+      habit: habit, recentCompletions: stats?.recentCompletions ?? [],
+      recentSkips: stats?.recentSkips ?? [], timeZone: productTimeZone)
   }
   private var isComplete: Bool { progress.isComplete }
   /// A habit whose per-day target is more than one check-in (e.g. "8 glasses of
@@ -105,6 +128,7 @@ struct HabitMomentumCard: View {
   private var rhythmCells: [HabitRhythmStrip.Cell] {
     HabitRhythmStrip.cells(
       completions: Set(stats?.recentCompletions ?? []),
+      skips: Set(stats?.recentSkips ?? []),
       habit: habit,
       today: Date(),
       timeZone: productTimeZone)
@@ -172,6 +196,12 @@ struct HabitMomentumCard: View {
           .font(LorvexDesign.Typography.primaryEmphasis)
           .foregroundStyle(.primary)
           .lineLimit(2)
+        if habit.isSkipped {
+          Label(HabitSkipText.skippedToday, systemImage: LorvexHabitSkip.glyph)
+            .font(LorvexDesign.Typography.tertiaryText)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
         if let cue = habit.cue, !cue.isEmpty {
           Text(userContent: cue)
             .font(LorvexDesign.Typography.tertiaryText)
@@ -188,10 +218,12 @@ struct HabitMomentumCard: View {
         target: progress.required,
         tint: tint,
         icon: LorvexSymbol.name(for: habit.icon, fallback: "repeat.circle"),
+        isSkipped: habit.isSkipped,
         action: ringTapped
       )
       .help(ringAction.label(for: habit))
       .accessibilityLabel(ringAction.label(for: habit))
+      .accessibilityValue(habit.isSkipped ? HabitSkipText.skippedToday : "")
       .accessibilityIdentifier(ringAction.cardIdentifier)
     }
   }
@@ -219,10 +251,16 @@ struct HabitMomentumCard: View {
       ForEach(Array(rhythmCells.enumerated()), id: \.offset) { index, cell in
         VStack(spacing: LorvexDesign.Spacing.xs) {
           Capsule()
-            .fill(cell.filled ? AnyShapeStyle(tint) : AnyShapeStyle(Color.secondary.opacity(0.18)))
+            // A skipped day's track is not filled: its dashed outline stands in.
+            .fill(cell.filled ? AnyShapeStyle(tint) : AnyShapeStyle(Color.secondary.opacity(cell.isSkipped ? 0 : 0.18)))
             .frame(height: 6)
             .overlay {
-              if cell.isCurrent {  // the current period gets a ring
+              if cell.isSkipped {
+                // The day was set aside, neither done nor missed.
+                Capsule().strokeBorder(
+                  cell.isCurrent ? tint.opacity(0.6) : Color.secondary.opacity(0.55),
+                  style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+              } else if cell.isCurrent {  // the current period gets a ring
                 Capsule().strokeBorder(tint.opacity(cell.filled ? 0 : 0.6), lineWidth: 1)
               }
             }
@@ -337,6 +375,11 @@ struct HabitMomentumCard: View {
       }
     }
     .disabled(habit.completionsToday == 0)
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button(
+        HabitSkipText.title(for: action), systemImage: HabitSkipText.systemImage(for: action),
+        action: toggleSkip)
+    }
     Divider()
     Button(String(localized: "habits.row.move_up", defaultValue: "Move Up", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "chevron.up", action: moveUp)
       .disabled(!canMoveUp)

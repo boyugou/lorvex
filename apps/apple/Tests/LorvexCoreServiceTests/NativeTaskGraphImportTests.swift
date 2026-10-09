@@ -402,7 +402,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
       payloadShadows: [
         NativeTaskPayloadShadowSnapshot(
           entityType: .task, entityID: liveTaskID, baseVersion: v1,
-          payloadSchemaVersion: 2, rawPayloadJSON: futureJSON,
+          payloadSchemaVersion: LorvexVersion.payloadSchemaVersion + 1, rawPayloadJSON: futureJSON,
           sourceDeviceID: "future-peer", updatedAt: Self.now)
       ])
 
@@ -466,7 +466,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
         row["source_device_id"], row["updated_at"])
     }
     XCTAssertEqual(shadowState.0, Self.v1)
-    XCTAssertEqual(shadowState.1, 2)
+    XCTAssertEqual(shadowState.1, Int(LorvexVersion.payloadSchemaVersion) + 1)
     XCTAssertEqual(shadowState.2, futureJSON)
     XCTAssertEqual(shadowState.3, "future-peer")
     XCTAssertEqual(shadowState.4, Self.now)
@@ -481,7 +481,7 @@ final class NativeTaskGraphImportTests: XCTestCase {
           arguments: [EntityName.task, liveTaskID]))
       return (row["payload_schema_version"], row["payload"])
     }
-    XCTAssertEqual(liveOutbox.0, 2)
+    XCTAssertEqual(liveOutbox.0, Int(LorvexVersion.payloadSchemaVersion) + 1)
     guard case .object(let emitted)? = JSONValue.parse(liveOutbox.1) else {
       return XCTFail("restored task outbox payload must remain a JSON object")
     }

@@ -390,21 +390,33 @@ struct MobileTodayPage: View {
       reset: { await store.uncompleteHabit(habit) })
   }
 
-  /// A habit's name, which quiets to secondary once the day's count is met,
-  /// as a habit's name does on the reviews (``LorvexHabitRingTile``), so what
-  /// is still to do reads first.
+  /// A habit's name, which quiets to secondary once the day's count is met or
+  /// the habit is skipped for the day, as a habit's name does on the reviews
+  /// (``LorvexHabitRingTile``), so what is still to do reads first.
   private func habitName(_ habit: LorvexHabit) -> some View {
-    let isMet = habit.completionsToday >= max(habit.targetCount, 1)
+    let isQuiet = habit.isSkipped || habit.completionsToday >= max(habit.targetCount, 1)
     return Text(userContent: habit.name)
       .font(LorvexDesign.Typography.tertiaryText)
-      .foregroundStyle(isMet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
+      .foregroundStyle(isQuiet ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
       .fixedSize(horizontal: false, vertical: true)
       // The ring's label already names the habit.
       .accessibilityHidden(true)
   }
 
+  /// A habit's long-press menu: its details, and Skip Today (Undo Skip once
+  /// skipped) while today holds no check-in.
+  @ViewBuilder
   private func habitMenu(_ habit: LorvexHabit) -> some View {
     Button(MobileTodayCalmCopy.openDetails, systemImage: "pencil") { editHabit(habit) }
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button(
+        MobileHabitSkipCopy.title(for: action),
+        systemImage: MobileHabitSkipCopy.systemImage(for: action)
+      ) {
+        Task { await store.toggleHabitSkip(habit) }
+      }
+      .disabled(store.isMutatingHabit)
+    }
   }
 
   private static let habitSpacing = LorvexDesign.Spacing.s

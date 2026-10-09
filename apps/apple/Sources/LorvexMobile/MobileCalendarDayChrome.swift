@@ -102,9 +102,10 @@ struct MobileCalendarAllDayStrip: View {
   /// pills' text.
   @ScaledMetric(relativeTo: .caption) private var baseMaxHeight: CGFloat =
     LorvexDesign.CalendarMetrics.allDayStripMaxHeight
-  /// Whether the strip, once it scrolls, has rows below the visible ones. It
-  /// starts true: a strip scrolls only when its rows overflow, from the top.
-  @State private var hasRowsBelow = true
+  /// Whether the strip has rows below the visible ones, which fades the last
+  /// visible rows. It starts false: a strip that fits has nothing below, and one
+  /// that overflows reports it as soon as it is laid out.
+  @State private var hasRowsBelow = false
   /// The day whose column a dragged task is over, which draws a wash behind it.
   @State private var dropTargetedDay: Date?
   /// A column's least height, a one-line pill's: a day with nothing in it
@@ -121,28 +122,31 @@ struct MobileCalendarAllDayStrip: View {
   /// has, and an empty or one-row strip leaves them all the rest. While rows
   /// lie below the visible ones, the last rows fade, so a cut row reads as
   /// "more below" rather than as the end.
+  ///
+  /// The rows are built once, inside the one scroll view the layout sizes. A
+  /// `ViewThatFits` that swapped the bare rows for a scroll view would build
+  /// them in two candidates, and a `ForEach` inside a candidate SwiftUI has not
+  /// chosen can be run off the main thread, where its main-actor closure traps.
   var body: some View {
     let hasContent = Self.hasContent(columns)
-    MobileHeightCapLayout(maxHeight: baseMaxHeight * (horizontalSizeClass == .regular ? 2 : 1)) {
-      ViewThatFits(in: .vertical) {
-        rows(hasContent: hasContent)
-        ScrollView(.vertical) { rows(hasContent: hasContent) }
-          .onScrollGeometryChange(for: Bool.self) { scroll in
-            scroll.contentOffset.y + scroll.containerSize.height < scroll.contentSize.height - 1
-          } action: { _, hasMore in
-            hasRowsBelow = hasMore
+    MobileScrollCapLayout(maxHeight: baseMaxHeight * (horizontalSizeClass == .regular ? 2 : 1)) {
+      ScrollView(.vertical) { rows(hasContent: hasContent) }
+        .scrollBounceBehavior(.basedOnSize)
+        .onScrollGeometryChange(for: Bool.self) { scroll in
+          scroll.contentOffset.y + scroll.containerSize.height < scroll.contentSize.height - 1
+        } action: { _, hasMore in
+          hasRowsBelow = hasMore
+        }
+        .mask {
+          VStack(spacing: 0) {
+            Color.black
+            LinearGradient(
+              colors: [.black, hasRowsBelow ? .clear : .black], startPoint: .top,
+              endPoint: .bottom
+            )
+            .frame(height: 16)
           }
-          .mask {
-            VStack(spacing: 0) {
-              Color.black
-              LinearGradient(
-                colors: [.black, hasRowsBelow ? .clear : .black], startPoint: .top,
-                endPoint: .bottom
-              )
-              .frame(height: 16)
-            }
-          }
-      }
+        }
     }
   }
 

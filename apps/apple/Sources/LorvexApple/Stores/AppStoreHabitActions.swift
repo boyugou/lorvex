@@ -192,6 +192,47 @@ extension AppStore {
     }
   }
 
+  /// Sets `habit` aside for today (a skip): an excused day, neither done nor
+  /// missed. A day that already has a check-in cannot be skipped.
+  func skipHabit(_ habit: LorvexHabit) async {
+    await setHabitSkip(habit, skipped: true)
+  }
+
+  /// Takes today's skip of `habit` back, returning the day to an ordinary open
+  /// day.
+  func unskipHabit(_ habit: LorvexHabit) async {
+    await setHabitSkip(habit, skipped: false)
+  }
+
+  /// The skip command the habit's menus offer (``LorvexHabitSkip``): Skip Today
+  /// or Undo Skip. Nothing is written when today holds a check-in.
+  func toggleHabitSkip(_ habit: LorvexHabit) async {
+    switch LorvexHabitSkip.action(for: habit) {
+    case .skip: await skipHabit(habit)
+    case .unskip: await unskipHabit(habit)
+    case nil: break
+    }
+  }
+
+  private func setHabitSkip(_ habit: LorvexHabit, skipped: Bool) async {
+    do {
+      let updatedHabits =
+        skipped
+        ? try await core.skipHabit(id: habit.id, date: logicalTodayDateString)
+        : try await core.unskipHabit(id: habit.id, date: logicalTodayDateString)
+      lorvexAnimated(.snappy(duration: 0.18)) {
+        habits = updatedHabits
+      }
+      feedbackProvider.playFeedback(skipped ? .habitSkipped : .habitReset)
+      errorMessage = nil
+      await refreshHabitDetailIfLoaded(id: habit.id)
+      await loadAllHabitStats()
+      await republishSurfacesAfterLocalMutation()
+    } catch {
+      await presentUserFacingError(error)
+    }
+  }
+
   /// Bump today's completion count for a habit by `delta` (e.g. +1/−1 on the
   /// accumulative stepper), clamped to `[0, target_count]` by the core. `delta
   /// == 0` toggles the day. Backs the card's per-step controls so an

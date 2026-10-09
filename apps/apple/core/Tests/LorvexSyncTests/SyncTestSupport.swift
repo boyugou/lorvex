@@ -248,7 +248,7 @@ enum SyncTestSupport {
       object["key"] = .string(entityId)
     case .dailyReview, .dailyBriefing:
       object["date"] = .string(entityId)
-    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion:
+    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion, .habitSkip:
       guard case .success(let pair) = CompositeEdge.splitCompositeEdgeId(entityId) else { return }
       switch entityType {
       case .taskTag:
@@ -263,6 +263,9 @@ enum SyncTestSupport {
       case .habitCompletion:
         object["habit_id"] = .string(pair.0)
         object["completed_date"] = .string(pair.1)
+      case .habitSkip:
+        object["habit_id"] = .string(pair.0)
+        object["skipped_date"] = .string(pair.1)
       default:
         break
       }

@@ -75,6 +75,69 @@ class SourceHygieneVerifierTests(unittest.TestCase):
         self.assertTrue(any("Bare.swift" in f and "1x more" in f for f in failures))
         self.assertTrue(any("Stale.swift" in f and "no longer needed" in f for f in failures))
 
+    def test_view_that_fits_candidates_with_a_foreach_are_flagged(self) -> None:
+        direct = """
+        struct A: View {
+          var body: some View {
+            ViewThatFits(in: .horizontal) {
+              HStack { ForEach(items) { Text($0) } }
+              Text("short")
+            }
+          }
+        }
+        """
+        helper = """
+        struct B: View {
+          var body: some View {
+            ViewThatFits(in: .vertical) {
+              rows
+              ScrollView { rows }
+            }
+          }
+          private var rows: some View {
+            VStack { ForEach(items) { Text($0) } }
+          }
+        }
+        """
+        helper_function = """
+        struct C: View {
+          var body: some View {
+            ViewThatFits { line(0) }
+          }
+          private func line(_ index: Int) -> some View {
+            HStack { ForEach(items) { Text($0) } }
+          }
+        }
+        """
+        failures = vsh.view_that_fits_foreach_failures(
+            [("A.swift", direct), ("B.swift", helper), ("C.swift", helper_function)]
+        )
+        self.assertEqual(len(failures), 3)
+        self.assertIn("A.swift:4: a ViewThatFits candidate holds a ForEach", failures[0])
+        self.assertIn("B.swift:4", failures[1])
+        self.assertIn("through rows", failures[1])
+        self.assertIn("through line", failures[2])
+
+    def test_view_that_fits_with_static_candidates_passes(self) -> None:
+        static = """
+        /// Built from static branches, not a ForEach, which ViewThatFits does not run reliably.
+        struct D: View {
+          let stored = 3
+          var body: some View {
+            ViewThatFits(in: .horizontal) {
+              Text("a") // a ForEach would trap here
+              if stored > 1 { Text("b") }
+              Text("https://example.com/ForEach")
+            }
+          }
+          var unrelated: some View {
+            VStack { ForEach(items) { Text($0) } }
+          }
+        }
+        """
+        self.assertEqual(vsh.view_that_fits_foreach_failures([("D.swift", static)]), [])
+        self.assertEqual(vsh.view_that_fits_foreach_failures([("E.swift", "let x = 1\n")]), [])
+
     def test_missing_required_file_flagged(self) -> None:
         failures = vsh.source_hygiene_failures(
             [("contains", ("file", "Sources/NoSuchFile.swift"), "x")]

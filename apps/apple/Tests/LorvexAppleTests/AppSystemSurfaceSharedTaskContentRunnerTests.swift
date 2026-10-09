@@ -58,3 +58,22 @@ func sharedSystemIntentRunnerMutatesTaskContentRemindersRecurrenceAndHierarchy()
     itemID: item.id, core: core)
   #expect(!checklistRemoved.checklistItems.contains { $0.id == item.id })
 }
+
+@Test
+func upcomingReminderHorizonHoldsToACenturyInsteadOfOverflowing() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let task = try await core.createTask(title: "Far reminder probe", notes: "")
+  let added = try await LorvexSystemIntentRunner.addTaskReminder(
+    taskID: task.id, reminderAt: "2030-05-23T17:00:00Z", core: core)
+  let reminder = try #require(added.reminders.last)
+
+  // A horizon of `Int.max` hours overflows the seconds arithmetic unless it is
+  // held back first.
+  let hours = try LorvexSystemIntentRunner.validatedHoursAhead(Int.max)
+  #expect(hours >= 40_000 && hours <= Int.max / 3600)
+  let reminders = try await LorvexSystemIntentRunner.readUpcomingTaskReminders(
+    hoursAhead: Int.max, limit: 10, core: core)
+  #expect(reminders.map(\.id).contains(reminder.id))
+  let tasks = try await core.getTasksWithUpcomingReminders(hoursAhead: Int.max, limit: 10)
+  #expect(tasks.map(\.id).contains(task.id))
+}

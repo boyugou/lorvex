@@ -175,6 +175,7 @@ public struct MobileStoreHabitsView: View {
             archiveHabit: { await store.setHabitArchived($0, archived: true) },
             complete: { await store.completeHabit($0) },
             reset: { await store.uncompleteHabit($0) },
+            toggleSkip: { await store.toggleHabitSkip($0) },
             searchQuery: searchQuery,
             detailRoute: { .habit($0.id) }
           )
@@ -224,6 +225,7 @@ public struct MobileStoreHabitsView: View {
             habitCatalogRow(habit)
               .lorvexRowHoverEffect()
               .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                habitSkipAction(habit)
                 habitEditAction(habit)
               }
               .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -233,6 +235,7 @@ public struct MobileStoreHabitsView: View {
               }
               .contextMenu {
                 habitCompletionAction(habit)
+                habitSkipAction(habit)
                 habitEditAction(habit)
                 habitArchiveAction(habit)
                 habitDeleteAction(habit)
@@ -302,6 +305,7 @@ public struct MobileStoreHabitsView: View {
       archiveHabit: { await store.setHabitArchived(habit, archived: true) },
       complete: { await store.completeHabit(habit) },
       reset: { await store.uncompleteHabit(habit) },
+      toggleSkip: { await store.toggleHabitSkip(habit) },
       addReminder: { time in await store.addHabitReminder(habitID: habit.id, time: time) },
       setReminderTime: { policy, time in
         await store.setHabitReminderTime(policy: policy, to: time)

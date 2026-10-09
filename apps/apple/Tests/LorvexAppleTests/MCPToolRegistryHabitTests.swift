@@ -60,6 +60,29 @@ struct HabitToolTests {
     #expect(result.isError == true)
   }
 
+  @Test("create_habit and update_habit accept a target up to 1000 and reject a larger one")
+  func habitToolsBoundTheTarget() async throws {
+    let registry = try mcpInMemoryRegistry()
+    let id = try await makeHabit(registry, name: "Bounded")
+
+    let edge = try await mcpRegistryCall(
+      registry, tool: "create_habit",
+      arguments: ["name": .string("Edge"), "target_count": .int(1_000)])
+    #expect(edge.isError != true)
+    #expect(edge.structuredContent?.objectValue?["target_count"]?.intValue == 1_000)
+    let tooMany = try await mcpRegistryCall(
+      registry, tool: "create_habit",
+      arguments: ["name": .string("Many"), "target_count": .int(1_001)])
+    #expect(tooMany.isError == true)
+
+    let updatedEdge = try await mcpRegistryCall(
+      registry, tool: "update_habit", arguments: ["id": .string(id), "target_count": .int(1_000)])
+    #expect(updatedEdge.isError != true)
+    let updatedTooMany = try await mcpRegistryCall(
+      registry, tool: "update_habit", arguments: ["id": .string(id), "target_count": .int(1_001)])
+    #expect(updatedTooMany.isError == true)
+  }
+
   @Test("create_habit rejects a non-integer weekday rather than dropping it")
   func createHabitRejectsNonIntegerWeekday() async throws {
     let registry = try mcpInMemoryRegistry()

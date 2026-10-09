@@ -1070,7 +1070,7 @@
       "offset": "integer",
       "query": "string",
       "shape": "enum[compact,full]",
-      "status": "enum[all,cancelled,completed,in_progress,open,someday]"
+      "status": "enum[actionable,all,cancelled,completed,in_progress,open,someday]"
     },
     "required": [
       "query"
@@ -1157,6 +1157,17 @@
       "id"
     ]
   },
+  "skip_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
+    ]
+  },
   "start_task": {
     "advertises_idempotency_key": true,
     "properties": {
@@ -1232,6 +1243,17 @@
     "required": [
       "provider_event_id",
       "task_id"
+    ]
+  },
+  "unskip_habit": {
+    "advertises_idempotency_key": true,
+    "properties": {
+      "date": "string",
+      "id": "string",
+      "idempotency_key": "string"
+    },
+    "required": [
+      "id"
     ]
   },
   "update_calendar_event": {

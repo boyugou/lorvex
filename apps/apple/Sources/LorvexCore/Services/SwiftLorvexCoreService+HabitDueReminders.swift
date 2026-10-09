@@ -9,13 +9,13 @@ import LorvexWorkflow
 /// "Due habit reminders over a horizon" query over the pure-Swift core.
 ///
 /// Loads each enabled `habit_reminder_policies` row with its habit's cadence,
-/// target, and `habit_reminder_delivery_state.last_delivered_at`, then hands the set
-/// to ``HabitReminderOccurrencePlanner`` — the shared expansion that walks the
-/// rolling horizon and applies the scheduled-day / period-progress / future /
-/// same-period-debounce filters across the horizon rather than at a single
-/// "due now" tick. The only backend-specific work here is the SQL: the cadence
-/// join, the period progress sum over a `[start, end]` day range, and the
-/// delivery-state read.
+/// target, skipped days, and `habit_reminder_delivery_state.last_delivered_at`,
+/// then hands the set to ``HabitReminderOccurrencePlanner`` — the shared
+/// expansion that walks the rolling horizon and applies the scheduled-day /
+/// skipped-day / period-progress / future / same-period-debounce filters across
+/// the horizon rather than at a single "due now" tick. The only backend-specific
+/// work here is the SQL: the cadence join, the skipped days, the period progress
+/// sum over a `[start, end]` day range, and the delivery-state read.
 ///
 /// Both functions take `deviceZone` rather than reading the DB-anchored
 /// `PREF_TIMEZONE` value (unlike the other timezone-consuming call sites in
@@ -43,7 +43,9 @@ extension SwiftLorvexCoreService {
             policy: SwiftLorvexHabitDeserializers.reminderPolicy(row),
             cadence: cadence,
             targetCount: habit.targetCount,
-            lastDeliveredAt: lastDelivered))
+            lastDeliveredAt: lastDelivered,
+            skippedDays: try Self.reminderSkippedDays(
+              db, habitId: row.habitId, now: now, zone: zone)))
       }
 
       // Cache the per-habit period sums keyed by (habit, range) so a multi-time
@@ -96,7 +98,9 @@ extension SwiftLorvexCoreService {
           policy: SwiftLorvexHabitDeserializers.reminderPolicy(row),
           cadence: cadence,
           targetCount: habit.targetCount,
-          lastDeliveredAt: stored)
+          lastDeliveredAt: stored,
+          skippedDays: try Self.reminderSkippedDays(
+            db, habitId: row.habitId, now: now, zone: zone))
         let delivered = try HabitReminderOccurrencePlanner.mostRecentDeliveredOccurrence(
           input: input, now: min(now, armedThrough), zone: zone
         ) { habitID, startDay, endDay in
@@ -147,6 +151,19 @@ extension SwiftLorvexCoreService {
       perPeriodTarget: row["per_period_target"] as Int64,
       dayOfMonth: (row["day_of_month"] as Int64?).map { Int($0) },
       targetCount: row["target_count"] as Int64)
+  }
+
+  /// The days the habit is set aside for, from `lookbackDays` before `now`'s
+  /// day in `zone` onward, including days still ahead. The look-back reaches past
+  /// the longest period (a calendar month) the delivered-reminder walk covers, so
+  /// a skip anywhere the planner reads is present.
+  private static func reminderSkippedDays(
+    _ db: Database, habitId: String, now: Date, zone: TimeZone
+  ) throws -> Set<String> {
+    let lookbackDays = 45
+    let from = Timezone.datePlusDaysYmdForTimezoneName(
+      now: now, timezoneName: zone.identifier, offsetDays: -lookbackDays, systemFallback: zone)
+    return Set(try habitSkipDates(db, habitId: habitId, from: from, through: "9999-12-31"))
   }
 
   /// Summed completion `value` for `habitId` over the inclusive `[startDay,

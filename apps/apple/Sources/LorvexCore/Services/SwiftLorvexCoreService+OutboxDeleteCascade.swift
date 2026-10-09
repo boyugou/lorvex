@@ -103,8 +103,8 @@ extension SwiftLorvexCoreService {
 
   // MARK: - Habit permanent-delete child/edge tombstones
 
-  /// Stamp DELETE envelopes for every `habit_completions` edge + every
-  /// `habit_reminder_policies` child owned by `habitId` BEFORE the `habits`
+  /// Stamp DELETE envelopes for every `habit_completions` and `habit_skips` edge
+  /// + every `habit_reminder_policies` child owned by `habitId` BEFORE the `habits`
   /// DELETE fires its `ON DELETE CASCADE`. MUST run BEFORE the parent DELETE.
   func enqueueHabitDeleteCascade(
     _ db: Database, hlc: HlcSession, deviceId: String, habitId: String
@@ -123,6 +123,23 @@ extension SwiftLorvexCoreService {
         version: row["version"], createdAt: row["created_at"], updatedAt: row["updated_at"])
       try enqueueDelete(
         db, hlc: hlc, deviceId: deviceId, kind: .habitCompletion, entityId: "\(hId):\(date)",
+        payload: payload)
+    }
+
+    let skipRows = try Row.fetchAll(
+      db,
+      sql: """
+        SELECT habit_id, skipped_date, version, created_at, updated_at
+        FROM habit_skips WHERE habit_id = ?
+        """,
+      arguments: [habitId])
+    for row in skipRows {
+      let hId: String = row["habit_id"], date: String = row["skipped_date"]
+      let payload = PayloadLoaders.habitSkipPayload(
+        habitId: hId, skippedDate: date, version: row["version"],
+        createdAt: row["created_at"], updatedAt: row["updated_at"])
+      try enqueueDelete(
+        db, hlc: hlc, deviceId: deviceId, kind: .habitSkip, entityId: "\(hId):\(date)",
         payload: payload)
     }
 

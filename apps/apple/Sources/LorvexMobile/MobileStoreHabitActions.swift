@@ -27,6 +27,41 @@ extension MobileStore {
     }
   }
 
+  /// Sets `habit` aside for today (a skip): an excused day, neither done nor
+  /// missed. A day that already has a check-in cannot be skipped.
+  @discardableResult
+  public func skipHabit(_ habit: LorvexHabit) async -> Bool {
+    await mutateHabit {
+      habits = try await core.skipHabit(id: habit.id, date: logicalTodayString)
+    } afterWrite: {
+      feedbackProvider.playFeedback(.habitSkipped)
+      await refreshHabitDetailIfLoaded(id: habit.id)
+    }
+  }
+
+  /// Takes today's skip of `habit` back, returning the day to an ordinary open
+  /// day.
+  @discardableResult
+  public func unskipHabit(_ habit: LorvexHabit) async -> Bool {
+    await mutateHabit {
+      habits = try await core.unskipHabit(id: habit.id, date: logicalTodayString)
+    } afterWrite: {
+      feedbackProvider.playFeedback(.habitReset)
+      await refreshHabitDetailIfLoaded(id: habit.id)
+    }
+  }
+
+  /// The skip command the habit's menus offer (``LorvexHabitSkip``): Skip Today
+  /// or Undo Skip. False, and nothing written, when today holds a check-in.
+  @discardableResult
+  public func toggleHabitSkip(_ habit: LorvexHabit) async -> Bool {
+    switch LorvexHabitSkip.action(for: habit) {
+    case .skip: await skipHabit(habit)
+    case .unskip: await unskipHabit(habit)
+    case nil: false
+    }
+  }
+
   /// Check `habit` in on `date` (`YYYY-MM-DD`) by the shared rule
   /// (``LorvexHabitCheckIn``), the way the day review checks in on the day it
   /// reviews. Today's habits reload after it, since any day's check-in moves

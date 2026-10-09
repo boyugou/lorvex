@@ -251,6 +251,22 @@ struct BackupV1HabitCompletion: Codable, Sendable, Equatable {
   }
 }
 
+struct BackupV1HabitSkip: Codable, Sendable, Equatable {
+  var skippedDate: String
+  var createdAt: String
+  var updatedAt: String
+
+  init(current: ExportHabitSkip) {
+    skippedDate = current.skippedDate
+    createdAt = current.createdAt
+    updatedAt = current.updatedAt
+  }
+
+  var current: ExportHabitSkip {
+    ExportHabitSkip(skippedDate: skippedDate, createdAt: createdAt, updatedAt: updatedAt)
+  }
+}
+
 struct BackupV1HabitReminderPolicy: Codable, Sendable, Equatable {
   var id: String
   var reminderTime: String
@@ -289,6 +305,9 @@ struct BackupV1Habit: Codable, Sendable {
   var position: Int64
   var createdAt: String?
   var completions: [BackupV1HabitCompletion]
+  /// Absent when the habit has no skipped days, so a backup of such a habit is
+  /// the same as one written before skipped days existed.
+  var skips: [BackupV1HabitSkip]?
   var reminderPolicies: [BackupV1HabitReminderPolicy]
 
   init(current: ExportHabit) {
@@ -307,6 +326,7 @@ struct BackupV1Habit: Codable, Sendable {
     position = current.position
     createdAt = current.createdAt
     completions = current.completions.map(BackupV1HabitCompletion.init(current:))
+    skips = current.skips.isEmpty ? nil : current.skips.map(BackupV1HabitSkip.init(current:))
     reminderPolicies = current.reminderPolicies.map(BackupV1HabitReminderPolicy.init(current:))
   }
 
@@ -318,6 +338,7 @@ struct BackupV1Habit: Codable, Sendable {
       targetCount: targetCount, milestoneTarget: milestoneTarget,
       archived: archived, position: position, createdAt: createdAt,
       completions: completions.map(\.current),
+      skips: (skips ?? []).map(\.current),
       reminderPolicies: reminderPolicies.map(\.current))
   }
 }

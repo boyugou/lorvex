@@ -155,6 +155,7 @@ final class SyncControlSchemaIntegrityTests: XCTestCase {
         "daily_reviews.version",
         "habit_completions.version",
         "habit_reminder_policies.version",
+        "habit_skips.version",
         "habits.version",
         "lists.version",
         "memories.version",

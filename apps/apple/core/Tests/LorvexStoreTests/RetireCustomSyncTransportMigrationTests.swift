@@ -278,7 +278,7 @@ final class RetireCustomSyncTransportMigrationTests: XCTestCase {
     try migrated.writer.read { db in
       let rows = try Row.fetchAll(
         db, sql: "SELECT version, name, checksum FROM schema_migrations ORDER BY version")
-      XCTAssertEqual(rows.map { $0["version"] as Int }, [1, 2])
+      XCTAssertEqual(rows.map { $0["version"] as Int }, [1, 2, 3])
       XCTAssertEqual(rows[0]["checksum"] as String, fixture.schemaChecksum)
       XCTAssertEqual(rows[1]["name"] as String, "retire_custom_sync_transport")
       XCTAssertEqual(
@@ -289,7 +289,7 @@ final class RetireCustomSyncTransportMigrationTests: XCTestCase {
     let reopened = try fixture.openWithLadder()
     XCTAssertNil(reopened.recovery)
     try reopened.writer.read { db in
-      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM schema_migrations"), 2)
+      XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM schema_migrations"), 3)
       XCTAssertEqual(try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sync_outbox"), 1)
     }
   }

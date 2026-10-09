@@ -125,6 +125,11 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
   /// Populated by the storage layer on reads and mutation returns; nil on
   /// value-only constructions (seed data, export fixtures) that don't project it.
   public var milestone: HabitMilestoneInfo?
+  /// Whether the day the habit was loaded for is excused: the user set the habit
+  /// aside for that day (a skipped day). It never holds on a day with a
+  /// check-in, which always counts as kept, and is false for value-only
+  /// constructions that do not project it.
+  public var isSkipped: Bool
 
   public init(
     id: String,
@@ -144,7 +149,8 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
     dayOfMonth: Int? = nil,
     milestoneTarget: Int? = nil,
     milestone: HabitMilestoneInfo? = nil,
-    periodMetDays: Int = 0
+    periodMetDays: Int = 0,
+    isSkipped: Bool = false
   ) {
     self.id = id
     self.name = name
@@ -164,6 +170,7 @@ public struct LorvexHabit: Identifiable, Equatable, Sendable {
     self.position = position
     self.milestoneTarget = milestoneTarget
     self.milestone = milestone
+    self.isSkipped = isSkipped
   }
 
   /// The cadence detail as a reusable input value (e.g. to pre-fill an editor).
@@ -225,6 +232,11 @@ public struct HabitStats: Equatable, Sendable {
   /// Completed-day strings (YYYY-MM-DD) within the trailing window, ascending.
   /// Lets a habit card render a real recent-activity strip without a second read.
   public var recentCompletions: [String]
+  /// Excused-day strings (YYYY-MM-DD) over the trailing year, ascending: the
+  /// days the user set the habit aside, for the activity strip and the history
+  /// grid to draw as skipped rather than missed. A day that also holds a
+  /// check-in is left out.
+  public var recentSkips: [String]
   /// Optional user-set milestone goal; nil when unset.
   public var milestoneTarget: Int?
   /// Which reading the milestone tracks — `"streak"` (streak length, for daily /
@@ -247,6 +259,7 @@ public struct HabitStats: Equatable, Sendable {
     completionRate30d: Double,
     progressKind: String,
     recentCompletions: [String] = [],
+    recentSkips: [String] = [],
     milestoneTarget: Int? = nil,
     metric: String = "streak",
     nextMilestone: Int = 0,
@@ -261,6 +274,7 @@ public struct HabitStats: Equatable, Sendable {
     self.completionRate30d = completionRate30d
     self.progressKind = progressKind
     self.recentCompletions = recentCompletions
+    self.recentSkips = recentSkips
     self.milestoneTarget = milestoneTarget
     self.metric = metric
     self.nextMilestone = nextMilestone

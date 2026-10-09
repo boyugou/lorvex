@@ -201,6 +201,12 @@ extension StubCoreService {
   func uncompleteHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot {
     throw unsupportedStubCoreOperation()
   }
+  func skipHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot {
+    throw unsupportedStubCoreOperation()
+  }
+  func unskipHabit(id: LorvexHabit.ID, date: String) async throws -> HabitCatalogSnapshot {
+    throw unsupportedStubCoreOperation()
+  }
   func adjustHabitCompletion(id: LorvexHabit.ID, date: String, delta: Int) async throws
     -> HabitCatalogSnapshot
   {

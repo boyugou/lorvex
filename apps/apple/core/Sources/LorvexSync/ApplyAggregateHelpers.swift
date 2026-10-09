@@ -243,7 +243,7 @@ enum ApplyAggregate {
   }
 
   /// Tombstone composite-edge child rows (`{parentId}:{otherId}` shape: task_tag,
-  /// task_dependency, task_calendar_event_link, habit_completion). The
+  /// task_dependency, task_calendar_event_link, habit_completion, habit_skip). The
   /// `composeId` closure lets the caller flip the order (task delete fans out
   /// task_dependency in both directions). Each tombstone is stamped at
   /// `max(version, rowVersion)`.

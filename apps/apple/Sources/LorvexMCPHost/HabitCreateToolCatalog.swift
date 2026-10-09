@@ -1,3 +1,4 @@
+import LorvexDomain
 import MCP
 
 extension ListHabitToolCatalog {
@@ -24,7 +25,7 @@ extension ListHabitToolCatalog {
         ]),
         "target_count": .object([
           "type": .string("integer"),
-          "description": .string("Per-day accumulative goal: the number of check-ins that complete one scheduled day (e.g. 8 for 'drink 8 glasses of water'). Fully independent of the cadence. Defaults to 1."),
+          "description": .string("Per-day accumulative goal: the number of check-ins that complete one scheduled day (e.g. 8 for 'drink 8 glasses of water'). Fully independent of the cadence. Defaults to 1; at most \(ValidationLimits.maxHabitTargetCount)."),
         ]),
         "frequency_type": .object([
           "type": .string("string"),
@@ -90,7 +91,7 @@ extension ListHabitToolCatalog {
         ]),
         "target_count": .object([
           "type": .string("integer"),
-          "description": .string("Per-day accumulative goal (independent of the cadence)."),
+          "description": .string("Per-day accumulative goal (independent of the cadence), at most \(ValidationLimits.maxHabitTargetCount)."),
         ]),
         "frequency_type": .object([
           "type": .string("string"),

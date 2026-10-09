@@ -59,9 +59,9 @@
     @MainActor
     private static func card(_ habit: LorvexHabit, _ stats: HabitStats) -> some View {
       HabitMomentumCard(
-        habit: habit, stats: stats, isSelected: false, adjust: { _ in }, reset: {}, select: {},
-        edit: {}, archive: {}, delete: {}, canMoveUp: false, canMoveDown: false, moveUp: {},
-        moveDown: {}
+        habit: habit, stats: stats, isSelected: false, adjust: { _ in }, reset: {},
+        toggleSkip: {}, select: {}, edit: {}, archive: {}, delete: {}, canMoveUp: false,
+        canMoveDown: false, moveUp: {}, moveDown: {}
       )
       .frame(width: 340)
     }

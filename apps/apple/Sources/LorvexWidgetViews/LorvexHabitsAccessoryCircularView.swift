@@ -1,11 +1,14 @@
+import LorvexCore
 import LorvexWidgetKitSupport
 import SwiftUI
 import WidgetKit
 
 /// A circular accessory (Lock Screen / watch-style) widget showing how many of
 /// today's habits are complete as a gauge arc — habits met (`completedToday >=
-/// target`) over the total. Renders a "no habits tracked" glyph instead of the
-/// gauge when `habits` is empty, rather than a misleading 0-of-1 ratio.
+/// target`) over the habits the day asks about, which leaves out a habit set
+/// aside for today. Renders a "no habits tracked" glyph instead of the gauge
+/// when `habits` is empty, rather than a misleading 0-of-1 ratio, and the skip
+/// glyph when every habit was set aside.
 public struct HabitsAccessoryCircularView: View {
   let habits: [WidgetSnapshot.HabitSummary]
 
@@ -26,9 +29,12 @@ public struct HabitsAccessoryCircularView: View {
             defaultValue: "No habits tracked yet.",
             table: "Localizable",
             bundle: WidgetL10n.bundle))
+    } else if HabitsWidgetLayout.progress(habits).total == 0 {
+      Image(systemName: LorvexHabitSkip.glyph)
+        .widgetAccentable()
+        .accessibilityLabel(HabitSkippedLabel.text)
     } else {
-      let done = habits.filter(\.isDoneToday).count
-      let total = habits.count
+      let (done, total) = HabitsWidgetLayout.progress(habits)
       Gauge(value: Double(done), in: 0...Double(total)) {
         EmptyView()
       } currentValueLabel: {

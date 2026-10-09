@@ -215,7 +215,11 @@ struct MobileAccessibilityStructureTests {
 
   @Test("the heatmap's element is an overlay of the card, not its far-flung content")
   func heatmapElementHasTheCardsFrame() throws {
-    let panel = try Self.source("Sources/LorvexMobile/MobileHabitVisualizationSection.swift")
+    let source = try Self.source("Sources/LorvexMobile/MobileHabitVisualizationSection.swift")
+    // The panels above the heatmap hide glyphs of their own, so the pin reads
+    // the heatmap panel's code alone.
+    let start = try #require(source.range(of: "private struct MobileHabitHeatmapPanel"))
+    let panel = String(source[start.lowerBound...])
     #expect(Self.follows(".overlay {", ".accessibilityHidden(true)", in: panel, within: 200))
     #expect(Self.follows(".accessibilityLabel(heatmapAccessibilityLabel)", "Color.clear", in: panel, within: 200))
   }

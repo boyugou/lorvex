@@ -71,6 +71,13 @@ final class DayReviewTests: XCTestCase {
       arguments: [habitId, date, value, Self.version])
   }
 
+  private func insertHabitSkip(_ db: Database, habitId: String, date: String) throws {
+    try db.execute(
+      sql: "INSERT INTO habit_skips (habit_id, skipped_date, version, created_at, updated_at) "
+        + "VALUES (?, ?, ?, '2026-04-05T12:00:00Z', '2026-04-05T12:00:00Z')",
+      arguments: [habitId, date, Self.version])
+  }
+
   private func insertCalendarEvent(
     _ db: Database, id: String, startDate: String, endDate: String?, allDay: Int = 0
   ) throws {
@@ -364,6 +371,33 @@ final class DayReviewTests: XCTestCase {
     // on the 25th.
     XCTAssertEqual(summary.habitsTotal, 2)
     XCTAssertEqual(summary.habitsCompleted, 2)
+  }
+
+  /// A skipped day is excused: the habit leaves the day's total, so a skip is
+  /// neither a miss nor a completion. A check-in the same day outranks the skip,
+  /// and a skip on another day changes nothing. 2026-04-07 is a Tuesday.
+  func testLoadDaySummaryExcusesASkippedHabit() throws {
+    let store = try WorkflowTestSupport.freshStore()
+    let tuesday = "2026-04-07"
+    try store.writer.write { db in
+      try setLosAngelesTimezone(db)
+      try insertHabit(db, id: "water", target: 1)
+      try insertHabit(db, id: "cardio", target: 1)
+      try insertHabit(db, id: "stretch", target: 1)
+      try insertHabit(db, id: "gym", target: 1, frequencyType: "weekly", weekdays: [1])
+      try insertHabitSkip(db, habitId: "cardio", date: tuesday)
+      try insertHabitSkip(db, habitId: "stretch", date: tuesday)
+      try insertHabitCompletion(db, habitId: "stretch", date: tuesday, value: 1)
+      try insertHabitSkip(db, habitId: "water", date: "2026-04-06")
+    }
+    let summary = try store.writer.read { db in
+      try DayReview.loadDaySummary(db, date: tuesday, completedLimit: 5, dueOpenLimit: 5)
+    }
+
+    // water (its skip is for Monday), stretch (the check-in outranks its skip) and
+    // gym (pinned to Tuesday) count; cardio is excused.
+    XCTAssertEqual(summary.habitsTotal, 3)
+    XCTAssertEqual(summary.habitsCompleted, 1)  // stretch met its target
   }
 
   func testLoadDaySummaryRejectsOutOfRangeLimit() throws {

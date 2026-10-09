@@ -97,7 +97,7 @@ extension LorvexDataImporter {
     var skipped = 0
     var errors: [LorvexImportIssue] = []
     // Restore each habit record atomically when the backend supports it: a
-    // presence + tombstone guard, then upsert + completions + reminder policies,
+    // presence + tombstone guard, then upsert + completions + skipped days + reminder policies,
     // all in one transaction. So the restore never overwrites a habit a concurrent
     // create landed nor resurrects one the user deleted after the backup (either
     // would mint a dominating HLC and re-propagate the habit fleet-wide), and a
@@ -129,8 +129,8 @@ extension LorvexDataImporter {
   }
 
   /// Best-effort per-operation habit restore for a backend without the
-  /// transactional record seam: upsert the habit, then its completions and
-  /// reminder policies as independent operations.
+  /// transactional record seam: upsert the habit, then its completions, skipped
+  /// days and reminder policies as independent operations.
   private static func applyHabitPerOperation(
     _ habit: ExportHabit, using core: any LorvexCoreServicing
   ) async throws {
@@ -157,6 +157,15 @@ extension LorvexDataImporter {
       for completion in habit.completions {
         try await completionImporter.importHabitCompletion(
           habitID: habit.id, completion: completion)
+      }
+    }
+    if !habit.skips.isEmpty {
+      guard let skipImporter = core as? any LorvexNativeImportServicing else {
+        throw LorvexCoreError.unsupportedOperation(
+          "Habit skipped-day restore is not supported by this backend.")
+      }
+      for skip in habit.skips {
+        try await skipImporter.importHabitSkip(habitID: habit.id, skip: skip)
       }
     }
     if !habit.reminderPolicies.isEmpty {

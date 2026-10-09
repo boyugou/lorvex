@@ -1,4 +1,5 @@
 import Foundation
+import LorvexDomain
 import MCP
 
 extension ToolRegistry {
@@ -17,9 +18,9 @@ extension ToolRegistry {
     }
     let targetCount = try StrictScalarArguments.optionalInt(
       arguments["target_count"], field: "target_count")
-    if let targetCount, targetCount < 1 {
+    if let targetCount, !Self.habitTargetCountRange.contains(targetCount) {
       return Self.errorResult(
-        code: "validation", message: "target_count must be at least 1.", toolName: "update_habit")
+        code: "validation", message: Self.habitTargetCountMessage, toolName: "update_habit")
     }
 
     let habit = try await updateHabitPayload(id: id, arguments: arguments)

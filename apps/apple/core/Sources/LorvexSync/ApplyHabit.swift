@@ -15,8 +15,8 @@ import LorvexStore
 /// On the insert-collision merge path the staged incoming's weekdays are rebuilt
 /// during staging (before the merge) so the merge's max-HLC content carry can copy
 /// the surviving row's weekday set; the merge then owns the winner's final set. The
-/// delete is LWW-gated and cascades tombstones onto `habit_completions`
-/// (composite edge) and `habit_reminder_policies` (single-PK child) ahead of
+/// delete is LWW-gated and cascades tombstones onto `habit_completions` and
+/// `habit_skips` (composite edges) and `habit_reminder_policies` (single-PK child) ahead of
 /// SQLite's `ON DELETE CASCADE`, each stamped at `max(parentVersion,
 /// rowVersion)`; `habit_weekdays` is device-local and cascades unstamped.
 public struct HabitApplier: EntityApplier {
@@ -238,6 +238,12 @@ enum ApplyHabit {
         db,
         selectSQL: "SELECT completed_date, version FROM habit_completions WHERE habit_id = ?",
         parentId: entityId, entityType: EdgeName.habitCompletion,
+        composeId: { other in "\(entityId):\(other)" },
+        version: version, deletedAt: applyTs)
+      try ApplyAggregate.tombstoneCompositeEdges(
+        db,
+        selectSQL: "SELECT skipped_date, version FROM habit_skips WHERE habit_id = ?",
+        parentId: entityId, entityType: EdgeName.habitSkip,
         composeId: { other in "\(entityId):\(other)" },
         version: version, deletedAt: applyTs)
       try ApplyAggregate.tombstoneChildRows(

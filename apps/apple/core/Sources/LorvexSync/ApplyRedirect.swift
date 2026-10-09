@@ -98,14 +98,14 @@ enum ApplyRedirect {
 
   /// Parent entity types of a composite edge's two halves, or `nil` when
   /// `entityType` is not a composite edge. The right entry is `nil` when the
-  /// right half is not an entity reference (`habit_completion`'s right half is a
-  /// `YYYY-MM-DD` date, which never merges/redirects).
+  /// right half is not an entity reference (`habit_completion`'s and
+  /// `habit_skip`'s right half is a `YYYY-MM-DD` date, which never merges/redirects).
   private static func compositeEdgeParentTypes(_ entityType: String) -> (String, String?)? {
     switch entityType {
     case EdgeName.taskTag: return (EntityName.task, EntityName.tag)
     case EdgeName.taskDependency: return (EntityName.task, EntityName.task)
     case EdgeName.taskCalendarEventLink: return (EntityName.task, EntityName.calendarEvent)
-    case EdgeName.habitCompletion: return (EntityName.habit, nil)
+    case EdgeName.habitCompletion, EdgeName.habitSkip: return (EntityName.habit, nil)
     default: return nil
     }
   }
@@ -236,6 +236,7 @@ enum ApplyRedirect {
     case .taskDependency: fields = ["task_id", "depends_on_task_id"]
     case .taskCalendarEventLink: fields = ["task_id", "calendar_event_id"]
     case .habitCompletion: fields = ["habit_id", "completed_date"]
+    case .habitSkip: fields = ["habit_id", "skipped_date"]
     case .taskReminder, .taskChecklistItem: fields = ["task_id"]
     case .habitReminderPolicy: fields = ["habit_id"]
     case .aiChangelog, .entityRedirect, .deviceState, .importSession, .dailySchedule:

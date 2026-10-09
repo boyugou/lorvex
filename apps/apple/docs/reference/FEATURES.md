@@ -2,7 +2,7 @@
 
 Status tags: `[SHIPPED]` = present and functional, `[PARTIAL]` = code present but incomplete or has known gaps, `[PLANNED]` = not yet built.
 
-MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple Swift is the only Apple ecosystem shipping line for macOS App Store, iOS, iPadOS, watchOS, CloudKit/iCloud, WidgetKit, and App Intents.
+MCP tool count: 116. Scoped calendar edit/delete tools are Apple-specific. Apple Swift is the only Apple ecosystem shipping line for macOS App Store, iOS, iPadOS, watchOS, CloudKit/iCloud, WidgetKit, and App Intents.
 
 ---
 
@@ -24,6 +24,7 @@ MCP tool count: 114. Scoped calendar edit/delete tools are Apple-specific. Apple
 | macOS — calendar planning by drag | [SHIPPED] | A task dropped on a time in the week or day grid, on a day's all-day row, or on a month cell is planned there; a timed block moves by drag in 15-minute steps, and its top or bottom edge sets when the task starts or ends (the estimate stays as it is), showing the new time as you drag; the Unplanned Tasks rail lists open tasks with no planned day. Every placement and resize is one undoable Plan Task (⌘Z); dragging or resizing an event is undoable too |
 | macOS — calendar context menus | [SHIPPED] | Right-clicking an event or a task on the week and month grids opens its menu (Open Details, Edit, Delete for a Lorvex event; the shared task menu for a task); a month day also offers Create Event |
 | macOS — habit inspector | [SHIPPED] | In-place editing (name, encouragement, and Repeat / Reminder / Goal popovers), streak metrics, a history grid, and the by-weekday pattern |
+| macOS, iPhone, iPad — habit skip days | [SHIPPED] | Skip Today sets a habit aside for one day as an excused day, neither done nor missed: it bridges daily and weekly streaks, leaves the 30-day rate, silences that day's reminder, and draws as a dotted ring with a skip mark, a dashed cell in the rhythm strip and history grid. Reachable from the card/row menus, the swipe, the detail page, and the assistant (`skip_habit`, `unskip_habit`); a check-in on a skipped day lifts the skip |
 | macOS — habit milestones | [SHIPPED] | Streak/count milestone waypoints (auto-ladder + optional user target), a progress bar, and a celebration when a waypoint is crossed |
 | macOS — Command Palette (⌘K) | [SHIPPED] | Fuzzy command/navigation palette; the New Task row reads the typed line like a capture field and names the task and details it will create |
 | macOS — Data export/import | [SHIPPED] | Settings → Data writes the version-1 Apple export: portable category JSON plus an independently versioned exact native task graph for same-app restore, including task-domain deletion high-waters and opaque future-field state. CloudKit account/transport state is never restored; JSON may carry the producing device ID only as non-applied provenance. ZIP v1 requires an exact closed manifest inventory and has no blob members. Exact task restore is used only for a fresh task domain with its list/tag roots; otherwise tasks use the portable merge path. With sync live, import runs one best-effort sync pass first and the imported rows upload through the outbox like any other change; with sync off, import is local-only. MCP/AI export stays portable, and cross-platform movement is AI-reconciled best-effort rather than a lossless interchange contract |
@@ -88,7 +89,7 @@ All tools are implemented in `LorvexMCPHost`. The host runs `SwiftLorvexCoreServ
 `create_calendar_event`, `batch_create_calendar_events`, `update_calendar_event`, `delete_calendar_event`, `edit_scoped_calendar_event`, `delete_scoped_calendar_event`, `search_calendar_events`, `get_calendar_timeline`, `export_calendar_ics`, `add_calendar_event_exception`, `remove_calendar_event_exception`, `link_task_to_event`, `unlink_task_from_event`, `link_task_to_provider_event`, `unlink_task_from_provider_event`, `get_linked_events_for_task`, `get_linked_tasks_for_event`
 
 ### Habit Tools
-`get_habits`, `create_habit`, `update_habit`, `delete_habit`, `reorder_habits`, `complete_habit`, `uncomplete_habit`, `adjust_habit_completion`, `batch_complete_habits`, `get_habit_stats`, `get_habit_completions`, `get_habit_reminder_policies`, `upsert_habit_reminder_policy`, `delete_habit_reminder_policy`
+`get_habits`, `create_habit`, `update_habit`, `delete_habit`, `reorder_habits`, `complete_habit`, `uncomplete_habit`, `skip_habit`, `unskip_habit`, `adjust_habit_completion`, `batch_complete_habits`, `get_habit_stats`, `get_habit_completions`, `get_habit_reminder_policies`, `upsert_habit_reminder_policy`, `delete_habit_reminder_policy`
 
 ### Memory Tools
 `read_memory`, `write_memory`, `rename_memory`, `delete_memory`

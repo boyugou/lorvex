@@ -193,6 +193,11 @@ extension SwiftLorvexCoreService {
         try self.upsertImportedHabitCompletionInTx(
           db, hlc: hlc, deviceId: deviceId, habitID: habit.id, completion: completion)
       }
+      for skip in habit.skips {
+        try Self.validateImportedHabitSkip(habitID: habit.id, skip: skip)
+        try self.upsertImportedHabitSkipInTx(
+          db, hlc: hlc, deviceId: deviceId, habitID: habit.id, skip: skip)
+      }
       for policy in habit.reminderPolicies {
         try Self.validateImportedHabitReminderPolicy(habitID: habit.id, policy: policy)
         try self.upsertImportedHabitReminderPolicyInTx(
@@ -237,6 +242,7 @@ extension SwiftLorvexCoreService {
   ) throws {
     let completionDates = habit.completions.map(\.completedDate)
     try requireUniqueImportedValues(completionDates, field: "habit completion date")
+    try requireUniqueImportedValues(habit.skips.map(\.skippedDate), field: "habit skip date")
 
     let policyIDs = habit.reminderPolicies.map(\.id)
     try requireUniqueImportedValues(policyIDs, field: "habit reminder policy ID")

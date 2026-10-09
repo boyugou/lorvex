@@ -3131,14 +3131,24 @@ the habit has milestones, how close it is to the next one ("Next at 14 days").
 Click the ring to check it in; click the card to open the habit in the
 inspector. A card's **Edit** opens the inspector with the name ready to type.
 
+On a day you cannot do a habit, choose **Skip Today** from its card's context
+menu or from the inspector. A skipped day is neither done nor missed: it keeps
+a daily or weekly streak alive, it leaves the 30-day share, and no reminder
+fires that day. The card draws the ring as dots with a skip mark and says
+"Skipped today". **Undo Skip** takes it back, and checking the habit in on a
+skipped day lifts the skip. A day that already has a check-in cannot be
+skipped. On a weekly habit kept on chosen weekdays, a skipped weekday also
+lowers that week's goal by one day. The assistant can skip and unskip a day too.
+
 The inspector edits a habit in place, the way the task inspector edits a task:
 
 - **Header:** the check-in ring, the name, and an encouragement line. Click the
   name or the line to type; changes save as you go.
 - **Standing:** whether this day, week, or month is done ("1 of 3 this
   week"). A habit counted several times a day shows a stepper for today's
-  count instead. The **…** menu holds the check-in commands, Icon and Color,
-  Archive Habit, and Delete Habit.
+  count instead. A skipped habit reads "Skipped today" in its place. **Skip
+  Today** (or **Undo Skip**) sits beside the **…** menu, which holds the
+  check-in commands, Icon and Color, Archive Habit, and Delete Habit.
 - **Repeat, Reminder, and Goal:** click a row to change it in a popover, or a
   dashed **+ Reminder** or **+ Goal** to add one. A goal is a streak length
   (days or weeks) or a number of completions, depending on how the habit
@@ -3146,7 +3156,8 @@ The inspector edits a habit in place, the way the task inspector edits a task:
 - **Progress:** the current and best streaks, the check-ins logged in all,
   the share of the last 30 days kept, and the next milestone.
 - **History:** recent weeks as a grid of days, Monday to Sunday, shaded by how
-  much of the day's count you did. Hover a day for its date and count.
+  much of the day's count you did. Hover a day for its date and count. A day
+  you skipped has a dashed outline and no shade.
 - **By Weekday:** how much of each weekday's plan you kept over the last
   twelve weeks, naming your strongest and weakest day. It appears for a habit
   planned on more than one weekday and fills in after two weeks of check-ins.
@@ -3223,8 +3234,10 @@ than normal after the task's title.
   tooltip does. Finishing the last of them makes Start available again.
 - **Mobile Today habits:** When you have habits, the iPhone and iPad Today tab
   shows them as rings. Tap a ring to complete the habit for today or tap a
-  completed one to reset it; touch and hold one to open its details. Creating
-  habits, events, and lists lives on their own tabs, not in Today.
+  completed one to reset it; touch and hold one to open its details or to skip
+  it for today. A skipped habit's ring is drawn as dots with a skip mark, and
+  its name is quiet. Creating habits, events, and lists lives on their own
+  tabs, not in Today.
 - **Mobile Lists:** On iPhone and iPad, lists live in the **Tasks** tab. The
   Tasks home lists them as rows below the smart collections; tap one to open its
   task list, which shows the list's description under its name. Edit or delete
@@ -3235,6 +3248,12 @@ than normal after the task's title.
 - **Mobile Habit Creation:** Open **Habits** from its row on the **Tasks** tab,
   below the lists, then tap the **+** in its toolbar to create a core-backed
   daily habit with a cue and target count.
+- **Mobile Habit Skipping:** On the **Habits** screen, swipe a habit's row to
+  the right, or touch and hold it, for **Skip Today** (**Undo Skip** once
+  skipped). A habit's own page has the same command as a quiet line under
+  **Complete Today** and **Edit**, and says "Skipped today" under its facts; the
+  Progress card's dial for today becomes dots around the skip mark. The rhythm
+  strip and the heatmap draw a skipped day with a dashed outline.
 - **Mobile Calendar Creation:** Tap **New Event** in the **Calendar** tab to
   create a canonical Lorvex event; swipe an editable event row to edit or delete
   it. Today's schedule has no New Event footer.
@@ -3478,7 +3497,9 @@ The **Review** workspace opens on today's review, one page per day:
   appears when you point at the row). A moved task stays listed, since it is
   still due that day, and says when it is planned.
 - **Habits**: every habit as it stood that day. Tap a habit to check it in on
-  that day, so a check-in you forgot can be made up from the review.
+  that day, so a check-in you forgot can be made up from the review. A habit
+  you skipped that day is left out of the list and of the count of habits you
+  kept.
 - Two one-tap scales, **How did it feel?** and **Energy**. The level you pick
   is named under its dot, from **Rough** to **Great** and from **Drained** to
   **Full**.
@@ -3564,7 +3585,7 @@ The MCP host exposes tools across these domains:
 | **Lists & tags** | `create_list`, `update_list`, `delete_list`, `archive_list`, `unarchive_list`, `get_lists`, `get_list`, `get_list_health_snapshot`, `list_all_tags`, `rename_tag` |
 | **Calendar** | `create_calendar_event`, `update_calendar_event`, `delete_calendar_event`, `get_calendar_timeline`, `search_calendar_events`, `batch_create_calendar_events`, `edit_scoped_calendar_event`, `delete_scoped_calendar_event`, `export_calendar_ics`, `add_calendar_event_exception`, `remove_calendar_event_exception`, `link_task_to_event`, `unlink_task_from_event`, `link_task_to_provider_event`, `unlink_task_from_provider_event`, `get_linked_events_for_task`, `get_linked_tasks_for_event` |
 | **ICS export** | `export_calendar_ics` |
-| **Habits** | `create_habit`, `update_habit`, `delete_habit`, `complete_habit`, `uncomplete_habit`, `batch_complete_habits`, `get_habits`, `get_habit_completions`, `get_habit_stats`, `get_habit_reminder_policies`, `upsert_habit_reminder_policy` |
+| **Habits** | `create_habit`, `update_habit`, `delete_habit`, `complete_habit`, `uncomplete_habit`, `skip_habit`, `unskip_habit`, `batch_complete_habits`, `get_habits`, `get_habit_completions`, `get_habit_stats`, `get_habit_reminder_policies`, `upsert_habit_reminder_policy` |
 | **Reviews** | `get_daily_review`, `add_daily_review`, `amend_daily_review`, `get_weekly_brief`, `get_review_history` |
 | **Memory** | `read_memory`, `write_memory`, `delete_memory` |
 | **Checklists** | `add_task_checklist_item`, `update_task_checklist_item`, `toggle_task_checklist_item`, `reorder_task_checklist_items`, `remove_task_checklist_item` |

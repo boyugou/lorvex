@@ -90,12 +90,14 @@ public enum SyncEntityId {
     }
   }
 
-  private static func validateHabitCompletion(_ value: String) -> Result<Void, ValidationError> {
+  /// The identity of a habit's per-day edge (`habit_completion`, `habit_skip`):
+  /// the habit's canonical UUID and the local calendar day, joined by one colon.
+  private static func validateHabitDayEdge(_ value: String) -> Result<Void, ValidationError> {
     switch splitComposite(value, "canonical habit UUID:YYYY-MM-DD") {
     case .failure(let e): return .failure(e)
-    case .success(let (habitId, completedDate)):
+    case .success(let (habitId, day)):
       if case .failure(let e) = validateCanonicalUuid(habitId) { return .failure(e) }
-      return validateDate(completedDate)
+      return validateDate(day)
     }
   }
 
@@ -134,8 +136,8 @@ public enum SyncEntityId {
       return validateUuidUuidEdge(entityId, "canonical task UUID:dependency task UUID")
     case .taskCalendarEventLink:
       return validateUuidUuidEdge(entityId, "canonical task UUID:calendar event UUID")
-    case .habitCompletion:
-      return validateHabitCompletion(entityId)
+    case .habitCompletion, .habitSkip:
+      return validateHabitDayEdge(entityId)
     case .entityRedirect:
       return validateRedirectIdentity(entityId)
     case .deviceState, .importSession, .dailySchedule:

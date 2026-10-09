@@ -72,6 +72,7 @@ extension SwiftLorvexCoreService {
       perPeriodTarget: row["per_period_target"] as Int64,
       dayOfMonth: (row["day_of_month"] as Int64?).map { Int($0) })
     let completionsToday = try habitValueOnDate(db, habitId: id, date: date)
+    let isSkipped = try completionsToday == 0 && habitIsSkipped(db, habitId: id, date: date)
     let periodMetDays = try habitPeriodMetDays(
       db, habitId: id, cadence: cadence, targetCount: targetCount, through: date)
     let totalCompletions = try Int.fetchOne(
@@ -89,7 +90,8 @@ extension SwiftLorvexCoreService {
     return SwiftLorvexHabitDeserializers.habit(
       row, weekdays: weekdays, completionsToday: completionsToday,
       periodMetDays: periodMetDays, totalCompletions: totalCompletions,
-      completionRate30d: rate, milestoneTarget: milestoneTarget, milestone: milestone)
+      completionRate30d: rate, milestoneTarget: milestoneTarget, milestone: milestone,
+      isSkipped: isSkipped)
   }
 
   /// How many days of the period `day` falls in have a completion that met the
@@ -137,12 +139,15 @@ extension SwiftLorvexCoreService {
         db, habitId: habitId, cadence: cadence,
         targetCount: targetCount, through: today)
       let dates = dateStrings.compactMap { lorvexDate($0) }
+      let excused = try habitExcusedDates(
+        db, habitId: habitId, cadence: cadence, through: today
+      ).compactMap { lorvexDate($0) }
       let todayDate =
         lorvexDate(today) ?? LorvexDate(ymd: IsoDate.YMD(year: 1970, month: 1, day: 1))
       let streak = computeHabitCurrentStreak(
         dates: dates, today: todayDate,
         frequency: HabitStreakFrequency.fromWireString(cadence.toFields().frequencyType),
-        targetCount: habitRequiredMetDaysPerStreakPeriod(cadence))
+        targetCount: habitRequiredMetDaysPerStreakPeriod(cadence), excused: excused)
       return Int(streak)
     }
   }

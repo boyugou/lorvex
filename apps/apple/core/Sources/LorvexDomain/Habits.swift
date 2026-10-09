@@ -403,6 +403,10 @@ private func daysInGregorianMonth(year: Int, month: Int) -> Int {
   return range.count
 }
 
+/// Completions one period of `cadence` needs: the scheduled slots in the
+/// period times the per-day `targetCount` (at least 1). The product saturates
+/// at `Int64.max` rather than overflowing, so a habit stored with an extreme
+/// target or times-per-week count still plans its reminders.
 public func habitRequiredCompletionsPerPeriod(
   _ cadence: HabitCadence, targetCount: Int64
 ) -> Int64 {
@@ -416,7 +420,8 @@ public func habitRequiredCompletionsPerPeriod(
   case let .timesPerWeek(count):
     scheduledSlots = max(count, 1)
   }
-  return scheduledSlots * targetCount
+  let (required, overflowed) = scheduledSlots.multipliedReportingOverflow(by: targetCount)
+  return overflowed ? Int64.max : required
 }
 
 /// Number of independently met calendar dates required for one streak period.
@@ -464,9 +469,15 @@ public func habitRequiredMetDaysPerStreakPeriod(_ cadence: HabitCadence) -> Int6
 ///   young week therefore reads a real fraction (1 of 3 → ⅓) rather than a
 ///   saturated 100%.
 ///
+/// `excused` lists days the user deliberately set aside for the habit. A daily or
+/// weekly occurrence that falls on an excused day is not due, so a skipped day is
+/// not counted as missed. Monthly and `times_per_week` cadences ignore it: their
+/// quota belongs to a period, not to one particular day.
+///
 /// `from` and `to` are inclusive; a reversed range (`from > to`) yields 0.
 public func habitScheduledOccurrencesDue(
-  _ cadence: HabitCadence, targetCount: Int64, from: LorvexDate, to: LorvexDate
+  _ cadence: HabitCadence, targetCount: Int64, from: LorvexDate, to: LorvexDate,
+  excused: [LorvexDate] = []
 ) -> Double {
   let perOccurrence = Double(max(targetCount, 1))
   let fromDay = IsoDate.dayNumber(from.ymd)
@@ -483,10 +494,18 @@ public func habitScheduledOccurrencesDue(
     }
     return Double(max(count, 1)) * perOccurrence * Double(weeks.count)
   case .daily, .weekly, .monthly:
+    var excusedDays: Set<Int> = []
+    if case .monthly = cadence {
+      // A monthly occurrence belongs to the month, so no single day is excused.
+    } else {
+      excusedDays = Set(excused.map { IsoDate.dayNumber($0.ymd) })
+    }
     var dueDays = 0
     var day = fromDay
     while day <= toDay {
-      if isHabitReminderDay(cadence, LorvexDate(ymd: IsoDate.ymdFromDayNumber(day))) {
+      if !excusedDays.contains(day),
+        isHabitReminderDay(cadence, LorvexDate(ymd: IsoDate.ymdFromDayNumber(day)))
+      {
         dueDays += 1
       }
       day += 1
@@ -520,40 +539,88 @@ public enum HabitStreakFrequency: Sendable, Equatable, Hashable {
   }
 }
 
+/// The streak that is alive as of `today`, over `dates` (one entry per day whose
+/// completion met the habit's target). `targetCount` is the number of met days a
+/// week needs for the weekly branch and the monthly requirement for the monthly
+/// branch.
+///
+/// `excused` lists the days the user deliberately set aside while the habit was
+/// scheduled. An excused day never lengthens a streak and never ends one:
+/// - daily: the day is left out of the calendar, so the days on either side of it
+///   count as consecutive;
+/// - weekly: a week needs that many fewer met days, and a week whose every
+///   required day is excused neither adds to the streak nor ends it;
+/// - monthly: ignored, since a monthly requirement belongs to the month.
 public func computeHabitCurrentStreak(
   dates: [LorvexDate], today: LorvexDate,
-  frequency: HabitStreakFrequency, targetCount: Int64
+  frequency: HabitStreakFrequency, targetCount: Int64,
+  excused: [LorvexDate] = []
 ) -> Int64 {
   switch frequency {
   case .daily:
     let sorted = dates.sorted(by: >)
-    return dailyCurrentStreak(sorted, today: today)
+    return dailyCurrentStreak(sorted, today: today, excused: excusedDayNumbers(excused))
   case .weekly:
-    return weeklyCurrentStreak(dates, today: today, targetCount: targetCount)
+    return weeklyCurrentStreak(dates, today: today, targetCount: targetCount, excused: excused)
   case .monthly:
     return monthlyCurrentStreak(dates, today: today, targetCount: targetCount)
   }
 }
 
+/// The longest streak anywhere in `dates`, with `excused` days treated as in
+/// ``computeHabitCurrentStreak(dates:today:frequency:targetCount:excused:)``.
 public func computeHabitLongestStreak(
-  dates: [LorvexDate], frequency: HabitStreakFrequency, targetCount: Int64
+  dates: [LorvexDate], frequency: HabitStreakFrequency, targetCount: Int64,
+  excused: [LorvexDate] = []
 ) -> Int64 {
   let sorted = dates.sorted(by: <)
   switch frequency {
-  case .daily: return dailyLongestStreak(sorted)
-  case .weekly: return weeklyLongestStreak(sorted, targetCount: targetCount)
+  case .daily: return dailyLongestStreak(sorted, excused: excusedDayNumbers(excused))
+  case .weekly: return weeklyLongestStreak(sorted, targetCount: targetCount, excused: excused)
   case .monthly: return monthlyLongestStreak(sorted, targetCount: targetCount)
   }
 }
 
-private func dailyCurrentStreak(_ datesDesc: [LorvexDate], today: LorvexDate) -> Int64 {
+private func excusedDayNumbers(_ excused: [LorvexDate]) -> Set<Int> {
+  Set(excused.map { IsoDate.dayNumber($0.ymd) })
+}
+
+/// Whether some day strictly between `older` and `newer` is not excused, so the
+/// two days are not adjacent once excused days are left out of the calendar.
+private func hasUnexcusedDay(
+  between older: LorvexDate, and newer: LorvexDate, excused: Set<Int>
+) -> Bool {
+  var day = IsoDate.dayNumber(older.ymd) + 1
+  let end = IsoDate.dayNumber(newer.ymd)
+  while day < end {
+    if !excused.contains(day) { return true }
+    day += 1
+  }
+  return false
+}
+
+/// `newer` follows `older` by at least a day and every day between them is
+/// excused.
+private func daysAreLinked(
+  _ older: LorvexDate, _ newer: LorvexDate, excused: Set<Int>
+) -> Bool {
+  guard daysBetween(from: older, to: newer) >= 1 else { return false }
+  return !hasUnexcusedDay(between: older, and: newer, excused: excused)
+}
+
+private func dailyCurrentStreak(
+  _ datesDesc: [LorvexDate], today: LorvexDate, excused: Set<Int>
+) -> Int64 {
   guard !datesDesc.isEmpty else { return 0 }
-  let daysSince = daysBetween(from: datesDesc[0], to: today)
-  if daysSince > 1 { return 0 }
+  if daysBetween(from: datesDesc[0], to: today) > 1,
+    hasUnexcusedDay(between: datesDesc[0], and: today, excused: excused)
+  {
+    return 0
+  }
   var streak: Int64 = 1
   var i = 1
   while i < datesDesc.count {
-    if daysBetween(from: datesDesc[i], to: datesDesc[i - 1]) == 1 {
+    if daysAreLinked(datesDesc[i], datesDesc[i - 1], excused: excused) {
       streak += 1
     } else {
       break
@@ -563,12 +630,12 @@ private func dailyCurrentStreak(_ datesDesc: [LorvexDate], today: LorvexDate) ->
   return streak
 }
 
-private func dailyLongestStreak(_ datesAsc: [LorvexDate]) -> Int64 {
+private func dailyLongestStreak(_ datesAsc: [LorvexDate], excused: Set<Int>) -> Int64 {
   guard !datesAsc.isEmpty else { return 0 }
   var longest: Int64 = 1
   var current: Int64 = 1
   for i in 1..<datesAsc.count {
-    if daysBetween(from: datesAsc[i - 1], to: datesAsc[i]) == 1 {
+    if daysAreLinked(datesAsc[i - 1], datesAsc[i], excused: excused) {
       current += 1
       longest = max(longest, current)
     } else {
@@ -578,8 +645,31 @@ private func dailyLongestStreak(_ datesAsc: [LorvexDate]) -> Int64 {
   return longest
 }
 
+/// How one ISO week stands against the streak requirement once its excused days
+/// are taken off what it needs.
+private enum WeekOutcome {
+  case met
+  /// Every required day of the week was excused: it neither adds nor ends.
+  case bridged
+  case missed
+}
+
+private func weekOutcome(count: Int64, excused: Int64, target: Int64) -> WeekOutcome {
+  let required = max(target - excused, 0)
+  if count > 0 && count >= required { return .met }
+  return required == 0 ? .bridged : .missed
+}
+
+private func excusedWeekCounts(_ excused: [LorvexDate]) -> [ISOWeekKey: Int64] {
+  var counts: [ISOWeekKey: Int64] = [:]
+  for day in Set(excused.map { IsoDate.dayNumber($0.ymd) }) {
+    counts[isoWeekKey(LorvexDate(ymd: IsoDate.ymdFromDayNumber(day))), default: 0] += 1
+  }
+  return counts
+}
+
 private func weeklyCurrentStreak(
-  _ dates: [LorvexDate], today: LorvexDate, targetCount: Int64
+  _ dates: [LorvexDate], today: LorvexDate, targetCount: Int64, excused: [LorvexDate]
 ) -> Int64 {
   guard !dates.isEmpty else { return 0 }
   var weekCounts: [ISOWeekKey: Int64] = [:]
@@ -587,25 +677,32 @@ private func weeklyCurrentStreak(
     let k = isoWeekKey(d)
     weekCounts[k, default: 0] += 1
   }
+  let excusedWeeks = excusedWeekCounts(excused)
   let target = max(targetCount, 1)
   let todayWeek = isoWeekKey(today)
-  let currentWeekCount = weekCounts[todayWeek] ?? 0
-  var streak: Int64 = currentWeekCount >= target ? 1 : 0
+  let currentOutcome = weekOutcome(
+    count: weekCounts[todayWeek] ?? 0, excused: excusedWeeks[todayWeek] ?? 0, target: target)
+  var streak: Int64 = currentOutcome == .met ? 1 : 0
 
   var cursor = addDays(isoWeekStart(year: todayWeek.year, week: todayWeek.week), -1)
-  while true {
+  var weeksWalked = 0
+  while weeksWalked < 10_000 {
     let week = isoWeekKey(cursor)
-    let count = weekCounts[week] ?? 0
-    if count < target { break }
-    streak += 1
+    switch weekOutcome(
+      count: weekCounts[week] ?? 0, excused: excusedWeeks[week] ?? 0, target: target)
+    {
+    case .missed: return streak
+    case .met: streak += 1
+    case .bridged: break
+    }
     cursor = addDays(isoWeekStart(year: week.year, week: week.week), -1)
-    if streak > 10_000 { break }
+    weeksWalked += 1
   }
   return streak
 }
 
 private func weeklyLongestStreak(
-  _ datesAsc: [LorvexDate], targetCount: Int64
+  _ datesAsc: [LorvexDate], targetCount: Int64, excused: [LorvexDate]
 ) -> Int64 {
   guard !datesAsc.isEmpty else { return 0 }
   var weekCounts: [ISOWeekKey: Int64] = [:]
@@ -613,18 +710,18 @@ private func weeklyLongestStreak(
     let k = isoWeekKey(d)
     weekCounts[k, default: 0] += 1
   }
+  let excusedWeeks = excusedWeekCounts(excused)
   let target = max(targetCount, 1)
   var longest: Int64 = 0
   var current: Int64 = 0
   var prevKey: ISOWeekKey? = nil
 
-  // Iterate in ascending sorted order over week keys.
-  let orderedKeys = weekCounts.keys.sorted { (lhs, rhs) in
+  // Iterate in ascending order over every week that has a met day or an excused day.
+  let orderedKeys = Set(weekCounts.keys).union(excusedWeeks.keys).sorted { (lhs, rhs) in
     if lhs.year != rhs.year { return lhs.year < rhs.year }
     return lhs.week < rhs.week
   }
   for key in orderedKeys {
-    let count = weekCounts[key]!
     let isConsecutive: Bool
     if let prev = prevKey {
       let prevStart = isoWeekStart(year: prev.year, week: prev.week)
@@ -633,10 +730,16 @@ private func weeklyLongestStreak(
     } else {
       isConsecutive = false
     }
-    if count >= target {
-      current = isConsecutive ? current + 1 : 1
+    if !isConsecutive { current = 0 }
+    switch weekOutcome(
+      count: weekCounts[key] ?? 0, excused: excusedWeeks[key] ?? 0, target: target)
+    {
+    case .met:
+      current += 1
       longest = max(longest, current)
-    } else {
+    case .bridged:
+      break
+    case .missed:
       current = 0
     }
     prevKey = key

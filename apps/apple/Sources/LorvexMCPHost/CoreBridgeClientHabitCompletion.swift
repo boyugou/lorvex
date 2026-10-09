@@ -16,6 +16,16 @@ extension CoreBridgeClient {
     return try habitValue(in: snapshot, id: id)
   }
 
+  func skipHabit(id: String, date: String) async throws -> Value {
+    let snapshot = try await service.skipHabit(id: id, date: date)
+    return try habitValue(in: snapshot, id: id)
+  }
+
+  func unskipHabit(id: String, date: String) async throws -> Value {
+    let snapshot = try await service.unskipHabit(id: id, date: date)
+    return try habitValue(in: snapshot, id: id)
+  }
+
   func adjustHabitCompletion(id: String, date: String, delta: Int) async throws -> Value {
     let snapshot = try await service.adjustHabitCompletion(id: id, date: date, delta: delta)
     guard let habit = snapshot.habits.first(where: { $0.id == id }) else {

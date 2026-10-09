@@ -4,7 +4,7 @@ extension ListHabitToolCatalog {
   static let getHabitsTool = Tool(
     name: "get_habits",
     title: "Get Habits",
-    description: "Return all active habits with today's completion count and progress toward target_count. Use at the start of a session to see which habits are done, in progress, or not yet started. Optionally pass a date to check completion state for a different day. Returns {habits} where each habit includes completions_today, target_count, and total_completions. For one habit's streak/rate detail, call get_habit_stats; for the same enrichment across every habit in one review sweep, pass include_stats: true (each row then also carries current_streak, best_streak, completion_rate_30d, and progress_kind).",
+    description: "Return all active habits with today's completion count and progress toward target_count. Use at the start of a session to see which habits are done, in progress, or not yet started. Optionally pass a date to check completion state for a different day. Returns {habits} where each habit includes completions_today, skipped_today (true when the user set the habit aside for that day with skip_habit), target_count, and total_completions. For one habit's streak/rate detail, call get_habit_stats; for the same enrichment across every habit in one review sweep, pass include_stats: true (each row then also carries current_streak, best_streak, completion_rate_30d, and progress_kind).",
     inputSchema: .object([
       "type": .string("object"),
       "properties": .object([

@@ -1,4 +1,12 @@
+import LorvexDomain
+
 extension LorvexSystemIntentRunner {
+  /// `value` held to the range a habit's per-day target takes, at least 1 and
+  /// at most ``ValidationLimits/maxHabitTargetCount``.
+  static func clampedHabitTargetCount(_ value: Int) -> Int {
+    min(max(1, value), Int(ValidationLimits.maxHabitTargetCount))
+  }
+
   public static func updateHabit(
     id: LorvexHabit.ID,
     name: String?,
@@ -14,7 +22,7 @@ extension LorvexSystemIntentRunner {
       cue: cue.trimmedNilIfEmpty.map { .set($0) } ?? .unset,
       color: nil,
       icon: nil,
-      targetCount: targetCount.map { max(1, $0) }
+      targetCount: targetCount.map(clampedHabitTargetCount)
     )
   }
 

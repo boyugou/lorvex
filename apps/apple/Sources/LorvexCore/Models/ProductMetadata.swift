@@ -53,7 +53,7 @@ public enum LorvexProductMetadata {
   public static let appGroupIdentifier = "group.com.lorvex.apple"
   public static let cloudKitContainerIdentifier = "iCloud.com.lorvex.apple"
   public static let marketingVersion = "1.0.0"
-  public static let buildVersion = "102"
+  public static let buildVersion = "103"
   public static let minimumSystemVersion = "26.0"
   public static let minimumMobileSystemVersion = "26.0"
   public static let minimumWatchSystemVersion = "26.0"

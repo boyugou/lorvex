@@ -4,7 +4,8 @@ import SwiftUI
 /// The Habits board header: the identity and one line under it saying how
 /// many habits are done in each period that has any ("1 of 2 done today · 2
 /// of 3 done this week"). Each cadence counts against its own period, since a
-/// weekly habit is not today's task. An empty board shows the title alone,
+/// weekly habit is not today's task, and a daily habit set aside for today is
+/// left out of the day's count. An empty board shows the title alone,
 /// since the empty-state panel below already speaks for it. The create action
 /// rides in the window toolbar (`HabitsWorkspaceView`).
 struct HabitsWorkspaceHeader: View {
@@ -56,4 +57,27 @@ struct HabitsWorkspaceStats: Equatable {
   }
 
   let buckets: [Bucket]
+}
+
+extension HabitsWorkspaceStats {
+  /// The tally for `habits`, a habit counted done when `onTrack` holds its id.
+  /// A daily habit set aside for today is excused: nothing is asked of it, so
+  /// it counts toward neither the done nor the total. A weekly or monthly habit
+  /// still counts, since a skipped day leaves the rest of its period.
+  init(habits: [LorvexHabit], onTrack: [LorvexHabit.ID: Bool]) {
+    var counts: [HabitCadenceBucket: (completed: Int, total: Int)] = [:]
+    for habit in habits {
+      let bucket = HabitCadenceBucket(frequencyType: habit.frequencyType)
+      if bucket == .daily, habit.isSkipped { continue }
+      var entry = counts[bucket] ?? (0, 0)
+      entry.total += 1
+      if onTrack[habit.id] == true { entry.completed += 1 }
+      counts[bucket] = entry
+    }
+    self.init(
+      buckets: HabitCadenceBucket.allCases.compactMap { bucket in
+        guard let entry = counts[bucket], entry.total > 0 else { return nil }
+        return Bucket(cadence: bucket, completed: entry.completed, total: entry.total)
+      })
+  }
 }

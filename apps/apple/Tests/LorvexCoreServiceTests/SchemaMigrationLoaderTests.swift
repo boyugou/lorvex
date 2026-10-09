@@ -29,12 +29,13 @@ import Testing
   }
 
   /// The production resolver against the real repo artifacts: the canonical
-  /// ladder holds exactly `002_retire_custom_sync_transport`, and resolving it
-  /// (lock + migrations directory + validation) succeeds.
-  @Test func productionLadderResolvesTheRetireCustomSyncTransportMigration() throws {
+  /// ladder holds exactly `002_retire_custom_sync_transport` and
+  /// `003_habit_skips`, and resolving them (lock + migrations directory +
+  /// validation) succeeds.
+  @Test func productionLadderResolvesTheShippedMigrations() throws {
     let migrations = try SwiftLorvexCoreService.resolveSchemaMigrations()
-    #expect(migrations.map(\.version) == [2])
-    #expect(migrations.map(\.name) == ["retire_custom_sync_transport"])
+    #expect(migrations.map(\.version) == [2, 3])
+    #expect(migrations.map(\.name) == ["retire_custom_sync_transport", "habit_skips"])
   }
 
   /// The ladder applied to the baseline schema yields the production shape:

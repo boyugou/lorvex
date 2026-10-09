@@ -9,14 +9,19 @@ import SwiftUI
 /// today", "1 of 3 this week", "Not done yet today"); the header's ring is the
 /// control that changes it. A habit counted several times a day shows the
 /// day's count between a remove-one and an add-one button instead, since the
-/// ring only adds.
+/// ring only adds. A habit set aside for today says "Skipped today" in place
+/// of either, since nothing is asked of it that day.
 ///
-/// The overflow menu holds the rest: the check-in commands the ring and the
-/// buttons also offer (so the keyboard and VoiceOver reach them), Reset Today,
-/// Icon and Color…, Archive Habit, and Delete Habit…, which asks first. A
-/// reset that would clear more than one check-in asks first too. The menu wears
-/// the task inspector's quiet chip (``InspectorActionChip``), as tall as the
-/// row's other control.
+/// Between the standing and the overflow menu sits the skip chip: Skip Today,
+/// or Undo Skip once the day is set aside, absent while today holds a
+/// check-in, which a skip cannot share the day with.
+///
+/// The overflow menu holds the rest: the check-in and skip commands the ring
+/// and the buttons also offer (so the keyboard and VoiceOver reach them),
+/// Reset Today, Icon and Color…, Archive Habit, and Delete Habit…, which asks
+/// first. A reset that would clear more than one check-in asks first too. The
+/// menu and the skip button wear the task inspector's quiet chip
+/// (``InspectorActionChip``), as tall as the row's other control.
 struct HabitDetailActions: View {
   let store: AppStore
   let habit: LorvexHabit
@@ -31,12 +36,15 @@ struct HabitDetailActions: View {
 
   var body: some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
-      if isMultiCount {
+      if habit.isSkipped {
+        skippedStanding
+      } else if isMultiCount {
         dayCountStepper
       } else {
         standing
       }
       Spacer(minLength: 0)
+      skipChip
       overflowMenu
     }
     // The overflow chip fills the row's height, which is the tallest control's.
@@ -85,6 +93,20 @@ struct HabitDetailActions: View {
     .foregroundStyle(
       progress.isComplete ? AnyShapeStyle(LorvexDesign.Palette.done) : AnyShapeStyle(.secondary))
     .accessibilityIdentifier("habit.detail.standing")
+  }
+
+  /// The statement of a habit set aside for today, in the quiet secondary
+  /// style: nothing is asked of it, so it is neither green nor open.
+  private var skippedStanding: some View {
+    Label {
+      Text(HabitSkipText.skippedToday)
+        .fixedSize()
+    } icon: {
+      Image(systemName: LorvexHabitSkip.glyph)
+    }
+    .font(LorvexDesign.Typography.secondaryText.weight(.medium))
+    .foregroundStyle(.secondary)
+    .accessibilityIdentifier("habit.detail.skipped")
   }
 
   private var standingText: String {
@@ -145,6 +167,25 @@ struct HabitDetailActions: View {
     .accessibilityIdentifier(identifier)
   }
 
+  // MARK: - Skip
+
+  /// Skip Today or Undo Skip, by the shared rule (``LorvexHabitSkip``).
+  @ViewBuilder
+  private var skipChip: some View {
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button {
+        Task { await store.toggleHabitSkip(habit) }
+      } label: {
+        InspectorActionChip(
+          systemImage: HabitSkipText.systemImage(for: action),
+          title: HabitSkipText.title(for: action))
+      }
+      .buttonStyle(.plain)
+      .help(HabitSkipText.title(for: action))
+      .accessibilityIdentifier("habit.detail.skip")
+    }
+  }
+
   // MARK: - Overflow menu
 
   private var overflowMenu: some View {
@@ -191,7 +232,8 @@ struct HabitDetailActions: View {
 
   /// The check-in commands: Complete Today or Reset Today for a habit checked
   /// in once a day, Add One, Remove One, and Reset Today for one counted
-  /// several times a day.
+  /// several times a day; then Skip Today or Undo Skip while today holds no
+  /// check-in.
   @ViewBuilder
   private var checkInItems: some View {
     if isMultiCount {
@@ -240,6 +282,14 @@ struct HabitDetailActions: View {
           systemImage: "checkmark.circle")
       }
       .disabled(ringAction == .none)
+    }
+    if let action = LorvexHabitSkip.action(for: habit) {
+      Button {
+        Task { await store.toggleHabitSkip(habit) }
+      } label: {
+        Label(HabitSkipText.title(for: action), systemImage: HabitSkipText.systemImage(for: action))
+      }
+      .accessibilityIdentifier("habit.detail.skipItem")
     }
   }
 }

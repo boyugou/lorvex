@@ -18,10 +18,13 @@ import SwiftUI
 /// check-in to the full color for the target met. A habit on chosen weekdays
 /// draws its other days fainter, so its pattern shows. Today has an outline,
 /// and every day names its date and count in a help tag. With Differentiate
-/// Without Color on, a slash marks a partial day and a dot a met one.
+/// Without Color on, a slash marks a partial day and a dot a met one. A day
+/// the habit was set aside for has a dashed outline and no fill, in the
+/// ramp's place: it was neither done nor missed.
 ///
 /// A habit counted several times a day explains its ramp with a "Less…More"
 /// legend; a habit done once a day has only the two ends, which need none.
+/// Once the year holds a skipped day, the legend also shows the skipped cell.
 /// The grid waits for the inspector's detail behind a placeholder laid out
 /// like it, so the panel keeps its height when the detail arrives.
 struct HabitHistoryPanel: View {
@@ -71,7 +74,7 @@ struct HabitHistoryPanel: View {
           .lineLimit(1)
           .accessibilityAddTraits(.isHeader)
           Spacer(minLength: LorvexDesign.Spacing.s)
-          if habit.targetCount > 1 {
+          if habit.targetCount > 1 || hasSkippedDays {
             legend
           }
         }
@@ -201,7 +204,11 @@ struct HabitHistoryPanel: View {
           }
         }
         .overlay {
-          if cell.date == cache.todayKey {
+          if cell.intensity == .skipped {
+            shape.strokeBorder(
+              cell.date == cache.todayKey ? Color.primary.opacity(0.55) : Color.secondary.opacity(0.6),
+              style: Self.skippedOutline)
+          } else if cell.date == cache.todayKey {
             shape.strokeBorder(Color.primary.opacity(0.55), lineWidth: 1)
           }
         }
@@ -231,7 +238,11 @@ struct HabitHistoryPanel: View {
     }
   }
 
+  /// The outline of a skipped day's cell, which has no fill.
+  private static let skippedOutline = StrokeStyle(lineWidth: 1, dash: [2.5, 2])
+
   private func fill(for cell: HabitHeatmapModel.Cell, row: Int) -> AnyShapeStyle {
+    if cell.intensity == .skipped { return AnyShapeStyle(Color.clear) }
     if cell.level == 0, let scheduled = cache.scheduledRows, !scheduled.contains(row) {
       return AnyShapeStyle(.quaternary.opacity(0.4))
     }
@@ -251,15 +262,28 @@ struct HabitHistoryPanel: View {
     }
   }
 
+  private var hasSkippedDays: Bool {
+    cache.grid.columns.contains { column in column.contains { $0.intensity == .skipped } }
+  }
+
   private var legend: some View {
     HStack(spacing: LorvexDesign.Spacing.xs) {
-      Text(LocalizedStringResource("habits.heatmap.legend.less", defaultValue: "Less", table: "Localizable", bundle: LorvexL10n.bundle))
-      ForEach(0...4, id: \.self) { level in
-        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
-          .fill(Self.fill(forLevel: level))
-          .frame(width: HabitHistoryGridLayout.minimumCell, height: HabitHistoryGridLayout.minimumCell)
+      if habit.targetCount > 1 {
+        Text(LocalizedStringResource("habits.heatmap.legend.less", defaultValue: "Less", table: "Localizable", bundle: LorvexL10n.bundle))
+        ForEach(0...4, id: \.self) { level in
+          RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
+            .fill(Self.fill(forLevel: level))
+            .frame(width: HabitHistoryGridLayout.minimumCell, height: HabitHistoryGridLayout.minimumCell)
+        }
+        Text(LocalizedStringResource("habits.heatmap.legend.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle))
       }
-      Text(LocalizedStringResource("habits.heatmap.legend.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle))
+      if hasSkippedDays {
+        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s, style: .continuous)
+          .strokeBorder(Color.secondary.opacity(0.6), style: Self.skippedOutline)
+          .frame(width: HabitHistoryGridLayout.minimumCell, height: HabitHistoryGridLayout.minimumCell)
+          .padding(.leading, habit.targetCount > 1 ? LorvexDesign.Spacing.s : 0)
+        Text(LocalizedStringResource("habits.heatmap.legend.skipped", defaultValue: "Skipped", table: "Localizable", bundle: LorvexL10n.bundle))
+      }
     }
     .font(LorvexDesign.Typography.tertiaryText)
     .foregroundStyle(.secondary)
@@ -312,7 +336,8 @@ struct HabitHistoryPanel: View {
       targetCount: habit.targetCount,
       weeks: weeks,
       endDate: now,
-      calendar: calendar)
+      calendar: calendar,
+      skips: Set(detail.stats.recentSkips))
     let target = max(habit.targetCount, 1)
     var help: [Int: String] = [:]
     for cell in grid.columns.joined() where cell.intensity != .absent {
@@ -325,14 +350,19 @@ struct HabitHistoryPanel: View {
     return HistoryCache(grid: grid, help: help, scheduledRows: scheduledRows, todayKey: todayKey)
   }
 
-  /// "Wed, Sep 30 · Done", "Wed, Sep 30 · 3 of 8", or "Wed, Sep 30 · No
-  /// check-in".
+  /// "Wed, Sep 30 · Done", "Wed, Sep 30 · 3 of 8", "Wed, Sep 30 · Skipped", or
+  /// "Wed, Sep 30 · No check-in".
   private static func helpText(
     for cell: HabitHeatmapModel.Cell, target: Int, calendar: Calendar
   ) -> String {
     var style = Date.FormatStyle().weekday(.abbreviated).month(.abbreviated).day()
     style.timeZone = calendar.timeZone
     let day = date(fromKey: cell.date, calendar).map { $0.formatted(style) } ?? cell.date
+    if cell.intensity == .skipped {
+      return String(
+        format: String(localized: "habit_detail.history.cell.skipped", defaultValue: "%@ · Skipped", table: "Localizable", bundle: LorvexL10n.bundle),
+        day)
+    }
     if cell.value <= 0 {
       return String(
         format: String(localized: "habit_detail.history.cell.none", defaultValue: "%@ · No check-in", table: "Localizable", bundle: LorvexL10n.bundle),

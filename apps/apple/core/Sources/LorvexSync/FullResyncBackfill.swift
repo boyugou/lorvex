@@ -340,6 +340,13 @@ extension Outbox {
       ) { db, a, b, _ in
         try PayloadLoaders.loadHabitCompletionSyncPayload(db, habitId: a, completedDate: b)
       }
+    case .habitSkip:
+      try backfillEdgeRows(
+        db, kind: kind, deviceId: deviceId, into: &report,
+        sql: "SELECT habit_id AS a, skipped_date AS b, version FROM habit_skips"
+      ) { db, a, b, _ in
+        try PayloadLoaders.loadHabitSkipSyncPayload(db, habitId: a, skippedDate: b)
+      }
     default:
       return
     }

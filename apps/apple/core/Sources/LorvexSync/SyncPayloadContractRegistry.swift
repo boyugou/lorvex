@@ -328,7 +328,7 @@ enum SyncPayloadContractRegistry {
       return mismatch("key", envelope.entityId)
     case .dailyReview, .dailyBriefing:
       return mismatch("date", envelope.entityId)
-    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion:
+    case .taskTag, .taskDependency, .taskCalendarEventLink, .habitCompletion, .habitSkip:
       guard case .success(let pair) = CompositeEdge.splitCompositeEdgeId(envelope.entityId) else {
         return ["\(envelope.entityType.asString) entity_id is not a canonical composite identity"]
       }
@@ -338,6 +338,7 @@ enum SyncPayloadContractRegistry {
       case .taskDependency: fields = ("task_id", "depends_on_task_id")
       case .taskCalendarEventLink: fields = ("task_id", "calendar_event_id")
       case .habitCompletion: fields = ("habit_id", "completed_date")
+      case .habitSkip: fields = ("habit_id", "skipped_date")
       default: return []
       }
       return mismatch(fields.0, pair.0) + mismatch(fields.1, pair.1)

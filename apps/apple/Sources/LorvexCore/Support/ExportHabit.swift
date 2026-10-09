@@ -28,6 +28,9 @@ public struct ExportHabit: Codable, Sendable {
   /// instead of its real creation day.
   public var createdAt: String?
   public var completions: [ExportHabitCompletion]
+  /// The days the user set the habit aside (skipped days). Empty when there are
+  /// none, and absent from archives written before skipped days existed.
+  public var skips: [ExportHabitSkip]
   public var reminderPolicies: [ExportHabitReminderPolicy]
 
   public init(
@@ -46,6 +49,7 @@ public struct ExportHabit: Codable, Sendable {
     position: Int64 = 0,
     createdAt: String? = nil,
     completions: [ExportHabitCompletion] = [],
+    skips: [ExportHabitSkip] = [],
     reminderPolicies: [ExportHabitReminderPolicy] = []
   ) {
     self.id = id
@@ -63,6 +67,7 @@ public struct ExportHabit: Codable, Sendable {
     self.position = position
     self.createdAt = createdAt
     self.completions = completions
+    self.skips = skips
     self.reminderPolicies = reminderPolicies
   }
 
@@ -72,6 +77,7 @@ public struct ExportHabit: Codable, Sendable {
     from habit: LorvexHabit,
     createdAt: String? = nil,
     completions: [ExportHabitCompletion] = [],
+    skips: [ExportHabitSkip] = [],
     reminderPolicies: [ExportHabitReminderPolicy] = []
   ) {
     id = habit.id
@@ -89,12 +95,13 @@ public struct ExportHabit: Codable, Sendable {
     position = habit.position
     self.createdAt = createdAt
     self.completions = completions
+    self.skips = skips
     self.reminderPolicies = reminderPolicies
   }
 
   enum CodingKeys: String, CodingKey {
     case id, name, cue, icon, color, frequencyType, weekdays, perPeriodTarget, dayOfMonth
-    case targetCount, milestoneTarget, archived, position, createdAt, completions
+    case targetCount, milestoneTarget, archived, position, createdAt, completions, skips
     case reminderPolicies
   }
 
@@ -115,8 +122,32 @@ public struct ExportHabit: Codable, Sendable {
     position = try container.decode(Int64.self, forKey: .position)
     createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
     completions = try container.decode([ExportHabitCompletion].self, forKey: .completions)
+    skips = try container.decodeIfPresent([ExportHabitSkip].self, forKey: .skips) ?? []
     reminderPolicies = try container.decode(
       [ExportHabitReminderPolicy].self, forKey: .reminderPolicies)
+  }
+
+  /// `skips` is written only when the habit has skipped days, so an archive of a
+  /// habit without any is the same as one written before skipped days existed.
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: .id)
+    try container.encode(name, forKey: .name)
+    try container.encode(cue, forKey: .cue)
+    try container.encodeIfPresent(icon, forKey: .icon)
+    try container.encodeIfPresent(color, forKey: .color)
+    try container.encode(frequencyType, forKey: .frequencyType)
+    try container.encode(weekdays, forKey: .weekdays)
+    try container.encodeIfPresent(perPeriodTarget, forKey: .perPeriodTarget)
+    try container.encodeIfPresent(dayOfMonth, forKey: .dayOfMonth)
+    try container.encode(targetCount, forKey: .targetCount)
+    try container.encodeIfPresent(milestoneTarget, forKey: .milestoneTarget)
+    try container.encode(archived, forKey: .archived)
+    try container.encode(position, forKey: .position)
+    try container.encodeIfPresent(createdAt, forKey: .createdAt)
+    try container.encode(completions, forKey: .completions)
+    if !skips.isEmpty { try container.encode(skips, forKey: .skips) }
+    try container.encode(reminderPolicies, forKey: .reminderPolicies)
   }
 
   /// Bridge an export/import cadence back into the domain ``HabitCadence``.
@@ -169,7 +200,7 @@ public struct ExportHabit: Codable, Sendable {
   static let columns = [
     "id", "name", "cue", "icon", "color", "frequencyType", "weekdays", "perPeriodTarget",
     "dayOfMonth", "targetCount", "milestoneTarget", "archived", "position", "createdAt",
-    "completions", "reminderPolicies",
+    "completions", "skips", "reminderPolicies",
   ]
 
   /// CSV row. `weekdays` is a hyphen-joined list of Monday-first ints (empty
@@ -181,7 +212,7 @@ public struct ExportHabit: Codable, Sendable {
       weekdays.map(String.init).joined(separator: "-"),
       perPeriodTarget.map(String.init) ?? "", dayOfMonth.map(String.init) ?? "",
       String(targetCount), milestoneTarget.map(String.init) ?? "", archived ? "true" : "false",
-      String(position), createdAt ?? "", Self.encode(completions),
+      String(position), createdAt ?? "", Self.encode(completions), Self.encode(skips),
       Self.encode(reminderPolicies),
     ]
   }
@@ -224,6 +255,20 @@ public struct ExportHabitCompletion: Codable, Sendable, Equatable {
     note = entry.note
     createdAt = entry.createdAt
     updatedAt = entry.updatedAt
+  }
+}
+
+/// One synced `habit_skips` edge row embedded under its parent habit in ordinary
+/// data exports: a day the user set the habit aside.
+public struct ExportHabitSkip: Codable, Sendable, Equatable {
+  public var skippedDate: String
+  public var createdAt: String
+  public var updatedAt: String
+
+  public init(skippedDate: String, createdAt: String, updatedAt: String) {
+    self.skippedDate = skippedDate
+    self.createdAt = createdAt
+    self.updatedAt = updatedAt
   }
 }
 

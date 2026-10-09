@@ -131,6 +131,12 @@ public enum VersionStamp {
         + "WHERE habit_id = ?2 AND completed_date = ?3 AND ?1 > version"
       readVersionSql =
         "SELECT version FROM habit_completions WHERE habit_id = ?1 AND completed_date = ?2"
+    case .habitSkip:
+      updateSql =
+        "UPDATE habit_skips SET version = ?1 "
+        + "WHERE habit_id = ?2 AND skipped_date = ?3 AND ?1 > version"
+      readVersionSql =
+        "SELECT version FROM habit_skips WHERE habit_id = ?1 AND skipped_date = ?2"
     case .taskTag:
       updateSql =
         "UPDATE task_tags SET version = ?1 WHERE task_id = ?2 AND tag_id = ?3 AND ?1 > version"
@@ -187,8 +193,8 @@ public enum VersionStamp {
       return
     case .some(.none):
       // Row exists with a NULL version. Unreachable for every composite entity
-      // routed here — task_tags, task_dependencies, habit_completions, and
-      // task_calendar_event_links all declare `version TEXT NOT NULL` — so this
+      // routed here — task_tags, task_dependencies, habit_completions, habit_skips,
+      // and task_calendar_event_links all declare `version TEXT NOT NULL` — so this
       // is a defensive no-op, not a stamping path.
       return
     case .none:

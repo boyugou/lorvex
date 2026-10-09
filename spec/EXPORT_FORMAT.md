@@ -194,12 +194,16 @@ Both active and archived lists are included.
 | `archived` | bool | |
 | `position` | int | |
 | `completions` | [object] | **Always present** (`[]` when none). |
+| `skips` | [object] | Omitted when the habit has no skipped days; an archive without the key restores no skipped days. |
 | `reminderPolicies` | [object] | **Always present** (`[]` when none). |
 
 `completions` item (`ExportHabitCompletion`): `completedDate`, `value` (int),
-`note?`, `createdAt`, `updatedAt`. `reminderPolicies` item
-(`ExportHabitReminderPolicy`): `id`, `reminderTime`, `enabled` (bool),
-`createdAt`, `updatedAt`. Both active and archived habits are included.
+`note?`, `createdAt`, `updatedAt`. `skips` item (`ExportHabitSkip`):
+`skippedDate`, `createdAt`, `updatedAt`; each is a day the user set the habit
+aside, and a day never appears in both `completions` and `skips`.
+`reminderPolicies` item (`ExportHabitReminderPolicy`): `id`, `reminderTime`,
+`enabled` (bool), `createdAt`, `updatedAt`. Both active and archived habits are
+included.
 
 ### `calendarEvents` — `ExportCalendarEvent` (`Support/ExportCalendarEvent.swift`)
 

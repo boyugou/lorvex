@@ -80,6 +80,55 @@ struct HabitReminderOccurrencePlannerTests {
     #expect(fired == nil)
   }
 
+  /// A skipped day is excused: the planner emits no reminder for it, and the
+  /// days around it still fire.
+  @Test("plan emits no reminder on a skipped day and still fires the days around it")
+  func planSkipsASkippedDay() {
+    var input = dailyInput(reminderTime: "09:00")
+    input.skippedDays = ["2026-06-26"]
+
+    let occurrences = HabitReminderOccurrencePlanner.plan(
+      inputs: [input], now: utcInstant(hour: 6), horizonDays: 3, zone: Self.utc
+    ) { _, _, _ in 0 }
+
+    let days = occurrences.map { Self.day(of: $0.fireDate) }
+    #expect(days == ["2026-06-25", "2026-06-27"])
+  }
+
+  /// A skip outside the planning window changes nothing.
+  @Test("plan ignores skipped days outside the horizon")
+  func planIgnoresSkipsOutsideTheHorizon() {
+    var input = dailyInput(reminderTime: "09:00")
+    input.skippedDays = ["2026-06-24", "2026-07-30"]
+
+    let occurrences = HabitReminderOccurrencePlanner.plan(
+      inputs: [input], now: utcInstant(hour: 6), horizonDays: 2, zone: Self.utc
+    ) { _, _, _ in 0 }
+
+    #expect(occurrences.count == 2)
+  }
+
+  /// A reminder that would have fired on a skipped day was never armed, so it
+  /// is not an elapsed delivery the same-period debounce should remember.
+  @Test("mostRecentDeliveredOccurrence ignores an elapsed firing on a skipped day")
+  func mostRecentFiredIgnoresASkippedDay() {
+    var input = dailyInput(reminderTime: "08:00")
+    input.skippedDays = ["2026-06-25"]
+
+    let fired = HabitReminderOccurrencePlanner.mostRecentDeliveredOccurrence(
+      input: input, now: utcInstant(hour: 12), zone: Self.utc
+    ) { _, _, _ in 0 }
+
+    #expect(fired == nil)
+  }
+
+  private static func day(of date: Date) -> String {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = utc
+    let parts = calendar.dateComponents([.year, .month, .day], from: date)
+    return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+  }
+
   private func isoUTC(_ raw: String) -> Date {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime]

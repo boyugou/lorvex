@@ -217,6 +217,29 @@ struct MobileStoreFactoryTests {
     #expect(projected.listStats.isEmpty)
   }
 
+  @Test("Watch projection keeps a habit's skip for today")
+  func watchProjectionKeepsASkippedHabit() throws {
+    let valid = watchSnapshotFixture()
+    let source = WidgetSnapshot(
+      generatedAt: valid.generatedAt,
+      timezone: valid.timezone,
+      logicalDay: valid.logicalDay,
+      stats: valid.stats,
+      briefing: valid.briefing,
+      tasks: [],
+      habits: [
+        .init(
+          id: snapshotIdentifier(3), name: "Cardio", icon: nil, completedToday: 0, target: 1,
+          isSkipped: true),
+        .init(id: snapshotIdentifier(4), name: "Read", icon: nil, completedToday: 0, target: 1),
+      ])
+
+    let data = try WatchReplicaSnapshotProjector().encodedSnapshot(from: source)
+    let projected = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+
+    #expect(projected.habits.map(\.isSkipped) == [true, false])
+  }
+
   @Test("Watch projection rejects rather than truncates a mutation identity")
   func watchProjectionFailsClosedForMalformedIdentity() throws {
     let valid = watchSnapshotFixture()

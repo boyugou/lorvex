@@ -33,8 +33,9 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
   private let schemaChecksumProvider: @Sendable () throws -> String?
   /// Resolves the versioned-migration ladder (versions 2+) from the bundled
   /// byte-copies of the canonical `schema/migrations/` directory, validated
-  /// against `checksums.lock`. `{ [] }` for explicit-schema callers (tests /
-  /// embedders own their schema's identity, ladder included).
+  /// against `checksums.lock`. Explicit-baseline callers (tests / embedders)
+  /// get the same ladder; only the store-injection initializer, whose store
+  /// is already open, carries none.
   private let schemaMigrationsProvider: @Sendable () throws -> [LorvexStore.SchemaMigration]
   /// Serializes store open/close state and coordinates live operation borrows.
   /// `NSCondition` retains the ordinary `lock`/`unlock` API while allowing a
@@ -334,11 +335,13 @@ public final class SwiftLorvexCoreService: LorvexCoreServicing, LorvexNativeImpo
     self.writeInitiatorDefault = writeInitiatorDefault
     self.wallClock = wallClock
     if let schemaSQL {
-      // An explicitly-supplied schema (tests / embedders) opts out of the
-      // bookkeeping contract — the caller owns the schema's identity.
+      // An explicitly-supplied baseline (tests / embedders) opts out of the
+      // bookkeeping contract — the caller owns the baseline's identity — but
+      // still receives the canonical ladder, so the store it opens has the
+      // current schema rather than only the version-1 tables.
       self.schemaSQLProvider = { schemaSQL }
       self.schemaChecksumProvider = { nil }
-      self.schemaMigrationsProvider = { [] }
+      self.schemaMigrationsProvider = SwiftLorvexCoreService.resolveSchemaMigrations
     } else {
       self.schemaSQLProvider = SwiftLorvexCoreService.resolveSchemaSQL
       self.schemaChecksumProvider = SwiftLorvexCoreService.resolveSchemaChecksum

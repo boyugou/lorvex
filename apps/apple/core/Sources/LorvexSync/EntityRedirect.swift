@@ -702,6 +702,8 @@ public enum EntityRedirect {
         "SELECT COUNT(*) FROM task_calendar_event_links WHERE task_id = ? AND calendar_event_id = ?"
     case .habitCompletion:
       sql = "SELECT COUNT(*) FROM habit_completions WHERE habit_id = ? AND completed_date = ?"
+    case .habitSkip:
+      sql = "SELECT COUNT(*) FROM habit_skips WHERE habit_id = ? AND skipped_date = ?"
     default:
       return false
     }

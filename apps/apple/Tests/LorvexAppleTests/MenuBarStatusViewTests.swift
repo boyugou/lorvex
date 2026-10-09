@@ -16,6 +16,15 @@ func menuBarSecondaryEntriesExposeCompactNativeOrder() {
   #expect(MenuBarStatusAction.quit.title == "Quit Lorvex")
 }
 
+/// The scope switch lists its segments by hand, because a `ForEach` inside a
+/// `ViewThatFits` candidate can trap. This pins the hand-written list to the
+/// enum, so a scope added later is not silently left out of the switch.
+@Test
+func menuBarScopeSwitchOffersEveryScopeInOrder() {
+  #expect(MenuBarScope.allCases == [.today, .week])
+  #expect(MenuBarScope.allCases.map(\.title).count == Set(MenuBarScope.allCases.map(\.title)).count)
+}
+
 @MainActor
 @Test
 func todayAndTheMenuBarPanelReadTheWholeDayWhileAllTasksSearches() async throws {

@@ -151,3 +151,20 @@ func sharedSystemIntentCalendarUpdatesKeepNightAndMultiDayEventsWhole() async th
   #expect(movedTrip.endDate == "2026-06-03")
   #expect(movedTrip.allDay)
 }
+
+@Test
+func sharedSystemIntentRunnerHoldsAHabitTargetToTheSupportedRange() async throws {
+  let core = try await makeSeededInMemoryCore()
+  let huge = try await LorvexSystemIntentRunner.createHabit(
+    name: "Huge target", cue: nil, targetCount: Int.max, core: core)
+  #expect(huge.targetCount == 1_000)
+  let negative = try await LorvexSystemIntentRunner.createHabit(
+    name: "Negative target", cue: nil, targetCount: -4, core: core)
+  #expect(negative.targetCount == 1)
+  let updated = try await LorvexSystemIntentRunner.updateHabit(
+    id: negative.id, name: nil, cue: nil, targetCount: Int.max, core: core)
+  #expect(updated.targetCount == 1_000)
+  let lowered = try await LorvexSystemIntentRunner.updateHabit(
+    id: negative.id, name: nil, cue: nil, targetCount: 0, core: core)
+  #expect(lowered.targetCount == 1)
+}

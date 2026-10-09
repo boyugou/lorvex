@@ -137,11 +137,13 @@ struct HabitDetailHeader: View {
       tint: ringTint,
       icon: LorvexSymbol.name(for: shownIcon, fallback: "repeat.circle"),
       diameter: 34,
+      isSkipped: habit.isSkipped,
       action: ringTapped
     )
     .padding(.top, 2)
     .help(ringAction.label(for: habit))
     .accessibilityLabel(ringAction.label(for: habit))
+    .accessibilityValue(habit.isSkipped ? HabitSkipText.skippedToday : "")
     .accessibilityIdentifier("habit.detail.ring")
     .popover(isPresented: $isChoosingAppearance, arrowEdge: .bottom) {
       LorvexAppearancePicker(icon: $icon, color: $color, idPrefix: "habit.detail.appearance")

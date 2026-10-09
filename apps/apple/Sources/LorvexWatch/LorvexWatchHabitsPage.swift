@@ -8,7 +8,8 @@ import SwiftUI
 /// Today's habits as rings, two to a row (one at accessibility text sizes, so
 /// names have the width to read): an open habit shows its own symbol in its
 /// ring, a tap checks it off with a haptic, and a done habit fills green with
-/// a check.
+/// a check. A habit set aside for today draws its ring as dots around a skip
+/// mark; a tap still checks it off, which lifts the skip.
 struct LorvexWatchHabitsPage: View {
   @Bindable var store: LorvexWatchStore
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -52,17 +53,22 @@ struct LorvexWatchHabitsPage: View {
       VStack(spacing: LorvexDesign.Spacing.xs) {
         // An open habit carries its own symbol in the ring, so it never
         // shows a check before it is done; a done one fills green with one.
-        LorvexTaskRing(
-          progress: habit.target > 0 ? Double(habit.completedToday) / Double(habit.target) : 0,
-          isDone: habit.isDoneToday, diameter: 40, showsCheckHint: false)
-          .overlay {
-            if !habit.isDoneToday {
-              Image(systemName: LorvexSymbol.name(for: habit.icon, fallback: "repeat"))
-                .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
-                .foregroundStyle(LorvexDesign.Palette.accent)
-                .accessibilityHidden(true)
+        if habit.isSkipped && !habit.isDoneToday {
+          LorvexHabitCheckRing(
+            fraction: 0, tint: LorvexDesign.Palette.accent, diameter: 40, isSkipped: true)
+        } else {
+          LorvexTaskRing(
+            progress: habit.target > 0 ? Double(habit.completedToday) / Double(habit.target) : 0,
+            isDone: habit.isDoneToday, diameter: 40, showsCheckHint: false)
+            .overlay {
+              if !habit.isDoneToday {
+                Image(systemName: LorvexSymbol.name(for: habit.icon, fallback: "repeat"))
+                  .font(LorvexDesign.Typography.secondaryText.weight(.semibold))
+                  .foregroundStyle(LorvexDesign.Palette.accent)
+                  .accessibilityHidden(true)
+              }
             }
-          }
+        }
         Text(userContent: habit.name)
           .font(LorvexDesign.Typography.tertiaryText)
           .lineLimit(2)
@@ -72,7 +78,13 @@ struct LorvexWatchHabitsPage: View {
     }
     .buttonStyle(.plain)
     .accessibilityLabel(habit.name)
-    .accessibilityValue(habit.isDoneToday ? LorvexWatchCalmCopy.done : "\(habit.completedToday)/\(habit.target)")
+    .accessibilityValue(accessibilityValue(habit))
     .accessibilityIdentifier("watch.habit.\(habit.id)")
+  }
+
+  private func accessibilityValue(_ habit: WidgetSnapshot.HabitSummary) -> String {
+    if habit.isDoneToday { return LorvexWatchCalmCopy.done }
+    if habit.isSkipped { return LorvexWatchCalmCopy.skippedToday }
+    return "\(habit.completedToday)/\(habit.target)"
   }
 }

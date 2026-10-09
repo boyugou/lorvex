@@ -9,7 +9,9 @@ import SwiftUI
 /// macOS habit card does, and leads with today's count only for a habit that
 /// takes more than one check-in a day ("2/3 today · After meals"). A
 /// one-check-in habit's count would restate the row's completion ring, which
-/// already reads done or not and carries the count for VoiceOver.
+/// already reads done or not and carries the count for VoiceOver. A habit set
+/// aside for today says so in words first ("Skipped today · After meals") in
+/// place of a count, and its name quiets to secondary: nothing is asked of it.
 ///
 /// The name takes up to two lines, like a task title, and the caption and
 /// milestone lines wrap rather than truncate, so at accessibility text sizes
@@ -24,6 +26,7 @@ struct MobileHabitSummary: View {
       VStack(alignment: .leading, spacing: 3) {
         Text(userContent: habit.name)
           .font(.body)
+          .foregroundStyle(habit.isSkipped ? AnyShapeStyle(.secondary) : AnyShapeStyle(.foreground))
           .lineLimit(2)
         if let caption = Self.caption(for: habit) {
           Text(caption)
@@ -39,12 +42,16 @@ struct MobileHabitSummary: View {
     }
   }
 
-  /// The line under the name: today's count for a habit that takes more than
-  /// one check-in a day, then its cue; nil when the habit has neither.
+  /// The line under the name: "Skipped today" for a habit set aside for the
+  /// day, otherwise today's count for a habit that takes more than one
+  /// check-in a day; then its cue. Nil when the habit has none of them.
   nonisolated static func caption(for habit: LorvexHabit) -> String? {
-    let count = habit.targetCount > 1 ? habit.todayProgressText : nil
+    let state =
+      habit.isSkipped
+      ? MobileHabitSkipCopy.skippedToday
+      : (habit.targetCount > 1 ? habit.todayProgressText : nil)
     let cue = habit.cue.flatMap { $0.isEmpty ? nil : $0 }
-    let parts = [count, cue].compactMap { $0 }
+    let parts = [state, cue].compactMap { $0 }
     return parts.isEmpty ? nil : parts.joined(separator: " · ")
   }
 }

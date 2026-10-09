@@ -78,12 +78,7 @@ struct CalendarEventSheet: View {
       }
       Button(cancelLabel, role: .cancel) {}
     } message: {
-      Text(
-        LocalizedStringResource(
-          "calendar.edit_event.scope.message",
-          defaultValue: "Choose which occurrences to update.",
-          table: "Localizable",
-          bundle: LorvexL10n.bundle))
+      Text(saveScopeMessage)
     }
     .confirmationDialog(
       editingEvent.map {
@@ -310,6 +305,31 @@ struct CalendarEventSheet: View {
         bundle: LorvexL10n.bundle)
     }
     return confirmAccessibilityLabel
+  }
+
+  /// The save dialog's message: the prompt, and under it a note on what All
+  /// Events does to single-occurrence changes and cancelled days. The note shows
+  /// only when All Events would reset a single-occurrence change that is loaded
+  /// in the calendar timeline (``CalendarAllEventsNote``).
+  private var saveScopeMessage: String {
+    let prompt = String(
+      localized: "calendar.edit_event.scope.message",
+      defaultValue: "Choose which occurrences to update.",
+      table: "Localizable",
+      bundle: LorvexL10n.bundle)
+    guard let event = editingEvent,
+      CalendarAllEventsNote.isShown(
+        editing: event, draft: store.draftCalendarTiming,
+        recurrence: store.draftCalendarRecurrencePatch,
+        loadedEvents: store.calendarTimeline?.events ?? [])
+    else { return prompt }
+    let note = String(
+      localized: "calendar.edit_event.scope.all_events_note",
+      defaultValue:
+        "All Events also resets changes you made to single occurrences. Cancelled occurrences stay cancelled.",
+      table: "Localizable",
+      bundle: LorvexL10n.bundle)
+    return "\(prompt)\n\n\(note)"
   }
 
   private var cancelLabel: String {

@@ -166,6 +166,27 @@ func scopedEditsSendDatesOnlyWhenTheDayOrTheSpanChanges() {
 }
 
 @Test
+func aWholeSeriesSaveKeepsTheFirstDayOnlyWhileTheDayAndTheSpanStay() {
+  let occurrence = storedEvent(
+    start: "2026-10-02", startTime: "22:00", end: "2026-10-03", endTime: "01:00")
+  var draft = timing(occurrence)
+  #expect(draft.keepsSeriesFirstDay(of: occurrence))
+
+  // A new clock time keeps the day and the span, so no dates are sent.
+  draft.setStartTime(at(2000, 1, 1, 21))
+  #expect(draft.keepsSeriesFirstDay(of: occurrence))
+
+  // Moving the occurrence to another day would re-anchor the series.
+  var moved = timing(occurrence)
+  moved.setStartDay(at(2026, 10, 9))
+  #expect(!moved.keepsSeriesFirstDay(of: occurrence))
+
+  // Ending the same evening changes the span, which sends the dates too.
+  draft.setEndTime(at(2000, 1, 1, 23))
+  #expect(!draft.keepsSeriesFirstDay(of: occurrence))
+}
+
+@Test
 func aNewEventStartsOnTheNextFullHour() {
   let afternoon = CalendarEventTiming.nextHourBlock(
     after: at(2026, 10, 2, 14, 23), calendar: timingCalendar)

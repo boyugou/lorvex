@@ -11107,6 +11107,192 @@
         }
       }
     },
+    "calendar.edit_event.scope.all_events_note": {
+      "comment": "Footnote under the save prompt for a repeating event. It says what the All Events choice does besides applying the edit: it also resets changes made to single occurrences (one date of the series), while occurrences that were cancelled stay cancelled. The name of the choice inside the sentence must read exactly like the button label calendar.recurring_scope.all_events.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يؤدي اختيار \"كل الأحداث\" أيضًا إلى إعادة تعيين التغييرات التي أجريتها على حالات تكرار فردية. تبقى حالات التكرار الملغاة ملغاة."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“সমস্ত ইভেন্ট” নির্বাচন করলে আলাদা আলাদা ইভেন্টে আপনার করা পরিবর্তনগুলিও রিসেট হয়ে যায়। বাতিল করা ইভেন্টগুলি বাতিলই থাকে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit „Alle Ereignisse“ werden auch Änderungen zurückgesetzt, die du an einzelnen Wiederholungen vorgenommen hast. Abgebrochene Wiederholungen bleiben abgebrochen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Η επιλογή «Όλα τα γεγονότα» επαναφέρει επίσης τις αλλαγές που κάνατε σε μεμονωμένες επαναλήψεις. Οι ακυρωμένες επαναλήψεις παραμένουν ακυρωμένες."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Events also resets changes you made to single occurrences. Cancelled occurrences stay cancelled."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con Todos los eventos, también se restablecen los cambios que hiciste en repeticiones individuales. Las repeticiones canceladas siguen canceladas."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "گزینه «همه رویدادها» همچنین تغییراتی را که روی تکرارهای جداگانه اعمال کرده‌اید بازنشانی می‌کند. تکرارهای لغوشده همچنان لغوشده می‌مانند."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avec Tous les événements, les modifications que vous avez apportées à des occurrences individuelles sont aussi réinitialisées. Les occurrences annulées restent annulées."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הבחירה ב\"כל האירועים\" מאפסת גם שינויים שבוצעו במופעים בודדים. מופעים שבוטלו נשארים מבוטלים."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“सभी इवेंट” चुनने पर अलग-अलग इवेंट में आपके द्वारा किए गए बदलाव भी रीसेट हो जाते हैं। रद्द किए गए इवेंट रद्द ही रहते हैं।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semua Acara juga mengatur ulang perubahan yang dibuat pada kejadian tunggal. Kejadian yang dibatalkan tetap dibatalkan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con Tutti gli eventi vengono reimpostate anche le modifiche apportate alle singole occorrenze. Le occorrenze annullate restano annullate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「すべてのイベント」を選ぶと、特定の回だけに加えた変更もリセットされます。キャンセル済みの回はキャンセルされたままです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘모든 이벤트’를 선택하면 개별 반복에 적용한 변경 사항도 초기화됩니다. 취소된 반복은 취소된 상태로 유지됩니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘सर्व इव्हेंट’ निवडल्यास वेगवेगळ्या इव्हेंटमध्ये तुम्ही केलेले बदलही रीसेट होतात. रद्द केलेले इव्हेंट रद्दच राहतात."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semua Peristiwa juga mereset perubahan yang dibuat pada kejadian tunggal. Kejadian yang dibatalkan kekal dibatalkan."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met ‘Alle activiteiten’ worden ook de wijzigingen teruggezet die je in afzonderlijke herhalingen hebt aangebracht. Geannuleerde herhalingen blijven geannuleerd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcja „Wszystkie wydarzenia” resetuje też zmiany wprowadzone w pojedynczych wystąpieniach. Anulowane wystąpienia pozostają anulowane."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Com Todos os eventos, as alterações feitas em ocorrências individuais também são redefinidas. As ocorrências canceladas continuam canceladas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opțiunea „Toate evenimentele” resetează și modificările aduse aparițiilor individuale. Aparițiile anulate rămân anulate."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вариант «Все события» также сбрасывает изменения, внесённые в отдельные повторения. Отменённые повторения остаются отменёнными."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“அனைத்து நிகழ்வுகளும்” என்பதைத் தேர்ந்தெடுத்தால், தனிப்பட்ட நேர்வுகளில் நீங்கள் செய்த மாற்றங்களும் மீட்டமைக்கப்படும். ரத்துசெய்யப்பட்ட நேர்வுகள் ரத்துசெய்யப்பட்டவையாகவே இருக்கும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“అన్ని ఇవెంట్‌లు” ఎంచుకుంటే, ఒక్కొక్క సందర్భంలో మీరు చేసిన మార్పులు కూడా రీసెట్ అవుతాయి. రద్దయిన సందర్భాలు రద్దయినవిగానే ఉంటాయి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเลือก “กิจกรรมทั้งหมด” จะรีเซ็ตการเปลี่ยนแปลงที่ทำกับแต่ละครั้งด้วย ส่วนครั้งที่ยกเลิกแล้วจะยังคงถูกยกเลิก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Tüm etkinlikler” seçeneği, tek tek yinelemelerde yaptığınız değişiklikleri de sıfırlar. İptal edilen yinelemeler iptal edilmiş olarak kalır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Варіант «Усі події» також скидає зміни, внесені в окремі повторення. Скасовані повторення залишаються скасованими."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"تمام ایونٹس\" منتخب کرنے پر وہ تبدیلیاں بھی ری سیٹ ہو جاتی ہیں جو آپ نے انفرادی تکرارات میں کی تھیں۔ منسوخ شدہ تکرارات منسوخ ہی رہتی ہیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chọn Tất cả sự kiện cũng sẽ đặt lại các thay đổi đã thực hiện ở từng lần lặp riêng lẻ. Các lần lặp đã hủy vẫn giữ trạng thái đã hủy."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择“所有事件”还会重置对单个重复项所做的更改。已取消的重复项仍保持取消状态。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇「所有事件」時，也會重置你對個別重複所做的變更。已取消的重複仍會維持取消狀態。"
+          }
+        }
+      }
+    },
     "calendar.edit_event.scope.message": {
       "extractionState": "manual",
       "localizations": {

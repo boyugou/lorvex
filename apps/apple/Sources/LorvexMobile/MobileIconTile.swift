@@ -13,7 +13,15 @@ import SwiftUI
 /// page's header tile, a picker's preview) keeps its size.
 struct MobileIconTile: View {
   /// The largest side a tile grows to with the text.
-  static let largestScaledSize: CGFloat = 48
+  nonisolated static let largestScaledSize: CGFloat = 48
+
+  /// The side of a tile designed at `designSize` when `scaled` is that size
+  /// scaled to the current text size: it grows with the text, never shrinks
+  /// below `designSize`, and stops at ``largestScaledSize`` (a tile designed
+  /// larger keeps its size).
+  nonisolated static func side(designSize: CGFloat, scaled: CGFloat) -> CGFloat {
+    min(max(scaled, designSize), max(designSize, largestScaledSize))
+  }
 
   let symbol: String
   let tint: Color
@@ -38,7 +46,7 @@ struct MobileIconTile: View {
 
   /// The tile's side at the current text size.
   private var side: CGFloat {
-    min(max(scaledSize, size), max(size, Self.largestScaledSize))
+    Self.side(designSize: size, scaled: scaledSize)
   }
 
   var body: some View {
@@ -51,5 +59,42 @@ struct MobileIconTile: View {
           .foregroundStyle(tint)
       }
       .accessibilityHidden(true)
+  }
+}
+
+/// Lays a label out in the columns of a tiled row: the icon centered in a
+/// column as wide as a ``MobileIconTile`` of `tileSize` at the current text
+/// size, then the title at the spacing tiled rows use. An action row among
+/// tiled rows (the "New List" row that closes a card of lists) therefore
+/// starts its title where theirs start, which is also where the card's
+/// separators start, and its icon shares their center line. The icon sits on
+/// the title's first baseline, so a title that wraps keeps it beside the first
+/// line. VoiceOver reads the title alone; the icon is decoration.
+struct MobileTileColumnLabelStyle: LabelStyle {
+  var tileSize: CGFloat = 30
+
+  func makeBody(configuration: Configuration) -> some View {
+    MobileTileColumnLabel(configuration: configuration, tileSize: tileSize)
+  }
+}
+
+private struct MobileTileColumnLabel: View {
+  let configuration: LabelStyleConfiguration
+  let tileSize: CGFloat
+  @ScaledMetric private var scaledSize: CGFloat
+
+  init(configuration: LabelStyleConfiguration, tileSize: CGFloat) {
+    self.configuration = configuration
+    self.tileSize = tileSize
+    _scaledSize = ScaledMetric(wrappedValue: tileSize, relativeTo: .body)
+  }
+
+  var body: some View {
+    HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.m) {
+      configuration.icon
+        .frame(width: MobileIconTile.side(designSize: tileSize, scaled: scaledSize))
+        .accessibilityHidden(true)
+      configuration.title
+    }
   }
 }

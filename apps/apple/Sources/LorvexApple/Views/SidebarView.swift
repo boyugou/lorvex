@@ -71,10 +71,6 @@ struct SidebarView: View {
         return .destination(store.selection)
     }
 
-    func isSelected(_ row: SidebarRowSelection) -> Bool {
-        selectedRow == row
-    }
-
     /// Two-way binding for `List(selection:)`. Reads the derived `selectedRow`;
     /// on user selection (click, arrow-key move, type-select) it navigates so
     /// selecting a row *is* navigating, the Mail/Notes source-list convention. A

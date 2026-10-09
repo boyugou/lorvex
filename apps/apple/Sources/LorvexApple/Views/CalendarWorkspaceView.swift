@@ -225,9 +225,8 @@ struct CalendarWorkspaceView: View {
   }
 
   private var weekRangeTitle: String {
-    let end = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-    return LorvexDateFormatters.range(
-      from: weekStart, to: end, template: "MMMd", timeZone: calendar.timeZone)
+    LorvexDateFormatters.weekRange(
+      startingOn: weekStart, now: logicalTodayAnchor, calendar: calendar)
   }
 
   private var monthRangeTitle: String {

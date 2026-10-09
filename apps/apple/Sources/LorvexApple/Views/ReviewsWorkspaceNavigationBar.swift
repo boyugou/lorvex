@@ -25,7 +25,8 @@ struct ReviewsNavigationState: Equatable {
   /// scope, the viewed week's anchor day (its final day) in Weekly scope.
   let chipDate: Date?
   /// The viewed week's `"YYYY-MM-DD - YYYY-MM-DD"` window rendered as a
-  /// localized month/day range (e.g. "Jun 18 – Jun 24").
+  /// localized day range ("Jun 18 – 24"), with its years when the week is not
+  /// within the current year.
   let weekRangeTitle: String
   /// Whether the viewed day (Daily) or week (Weekly) is the current one.
   let isViewingCurrent: Bool
@@ -36,7 +37,9 @@ struct ReviewsNavigationState: Equatable {
       ? store.selectedReviewDate
       : (store.weeklyReviewAnchor ?? store.logicalTodayDateString)
     chipDate = LorvexDateFormatters.ymd.date(from: key)
-    weekRangeTitle = ReviewsWeekRangeFormatter.format(store.weeklyReview?.windowTitle ?? "")
+    weekRangeTitle = ReviewsWeekRangeFormatter.format(
+      store.weeklyReview?.windowTitle ?? "",
+      now: LorvexDateFormatters.ymd.date(from: store.logicalTodayDateString) ?? Date())
     isViewingCurrent = mode == .daily ? store.isViewingCurrentDay : store.isViewingCurrentWeek
   }
 }
@@ -166,16 +169,18 @@ struct ReviewModePicker: View {
 }
 
 /// Renders the core's `"YYYY-MM-DD - YYYY-MM-DD"` weekly window as a localized
-/// month/day range (e.g. "Jun 18 – Jun 24"), falling back to the raw title when
-/// it can't be parsed.
+/// day range ("Jun 18 – 24"), with its years once the window reaches outside
+/// `now`'s year (``LorvexDateFormatters/dayRange(from:to:now:calendar:locale:)``),
+/// falling back to the raw title when it can't be parsed.
 enum ReviewsWeekRangeFormatter {
-  static func format(_ windowTitle: String) -> String {
+  static func format(_ windowTitle: String, now: Date) -> String {
     let parts = windowTitle.components(separatedBy: " - ")
     guard parts.count == 2,
       let start = LorvexDateFormatters.ymd.date(from: parts[0]),
       let end = LorvexDateFormatters.ymd.date(from: parts[1])
     else { return windowTitle }
-    return LorvexDateFormatters.range(
-      from: start, to: end, template: "MMMd", timeZone: .autoupdatingCurrent)
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = .autoupdatingCurrent
+    return LorvexDateFormatters.dayRange(from: start, to: end, now: now, calendar: calendar)
   }
 }

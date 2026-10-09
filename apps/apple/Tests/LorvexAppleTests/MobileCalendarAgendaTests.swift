@@ -32,28 +32,6 @@ func calendarDayModeShowsThreeDaysOnAPhoneOnItsSide() {
     !MobileCalendarDayView.usesAgendaPanel(for: 900, isRegularWidth: true, isCompactHeight: true))
 }
 
-/// The week header names a week in the current year without the year, gives
-/// the years of a week that reaches past it, and breaks only after its dash.
-@Test
-func calendarWeekRangeLabelOmitsTheCurrentYear() {
-  var calendar = Calendar(identifier: .gregorian)
-  calendar.timeZone = TimeZone(identifier: "UTC")!
-  func day(_ year: Int, _ month: Int, _ day: Int) -> Date {
-    calendar.date(from: DateComponents(year: year, month: month, day: day))!
-  }
-  func label(_ start: Date, _ locale: String) -> String {
-    MobileCalendarDayView.weekRangeLabel(
-      from: start, calendar: calendar, now: day(2026, 9, 30), locale: Locale(identifier: locale))
-  }
-
-  #expect(label(day(2026, 9, 27), "en_US") == "Sep\u{00A0}27\u{202F}–\u{2009}Oct\u{00A0}3")
-  #expect(
-    label(day(2026, 12, 27), "en_US")
-      == "Dec\u{00A0}27,\u{00A0}2026\u{202F}–\u{2009}Jan\u{00A0}2,\u{00A0}2027")
-  #expect(!label(day(2026, 9, 27), "zh_Hans").contains("年"))
-  #expect(label(day(2026, 12, 27), "zh_Hans").contains("2027年"))
-}
-
 /// The calendar opens in Day mode until the user switches, then in the mode
 /// last switched to. Showing a mode directly (as the DEBUG route does) is not
 /// remembered, and a stored value no mode names reads as Day.

@@ -301,6 +301,25 @@ func calendarWeekGridHourLabelsDoNotFallbackToDateNow() throws {
 }
 
 @Test
+func calendarWeekGridAllDayLabelSitsInsideTheGutterWidth() throws {
+  let source = try String(
+    contentsOf: packageRoot()
+      .appending(path: "Sources/LorvexApple/Views/CalendarWeekGridChrome.swift"),
+    encoding: .utf8
+  )
+
+  // The label is framed as the hour labels are, inside a cell as wide as the
+  // gutter, so it ends where they end and the strip's day columns start where
+  // the header's and the grid's do. Padding added after a gutter-wide frame
+  // would push every all-day pill right of the column it belongs to.
+  let label = try #require(
+    source.range(of: ".frame(width: gutterWidth - CalendarWeekGridMetrics.gutterLabelInset, alignment: .trailing)"))
+  #expect(source[label.upperBound...].prefix(40).contains(".frame(width: gutterWidth)"))
+  // The hour gutter and the header spacer use the view's one gutter width.
+  #expect(source.contains("let gutter = gutterWidth"))
+}
+
+@Test
 func calendarWeekGridHintsSheetEditingForNonDraggableEditableBlocks() throws {
   let source = try String(
     contentsOf: packageRoot()
@@ -450,4 +469,16 @@ func calendarWeekGridTaskBlocksResizeFromTheirEdges() throws {
   let gestureAt = try #require(handleBody.range(of: ".gesture(gesture)"))
   let paddingAt = try #require(handleBody.range(of: ".padding(.leading, leadingInset)"))
   #expect(gestureAt.lowerBound < paddingAt.lowerBound)
+}
+
+@Test
+func calendarWeekTitleNamesAnotherYear() throws {
+  let workspace = try String(
+    contentsOf: packageRoot()
+      .appending(path: "Sources/LorvexApple/Views/CalendarWorkspaceView.swift"),
+    encoding: .utf8
+  )
+
+  #expect(workspace.contains("LorvexDateFormatters.weekRange("))
+  #expect(!workspace.contains("template: \"MMMd\""))
 }

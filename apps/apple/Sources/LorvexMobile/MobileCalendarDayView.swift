@@ -252,31 +252,11 @@ public struct MobileCalendarDayView: View {
   /// it already names the days.
   private var headerTitle: String {
     if weekMode {
-      return Self.weekRangeLabel(
-        from: visibleDate, calendar: calendar, now: LorvexPreviewClock.now(in: calendar))
+      return LorvexDateFormatters.weekRange(
+        startingOn: visibleDate, now: LorvexPreviewClock.now(in: calendar), calendar: calendar)
     }
     return LorvexDateFormatters.string(
       visibleDate, template: "yMMMM", timeZone: calendar.timeZone, position: .leading)
-  }
-
-  /// The week that starts on `start` as a locale-aware range: "Sep 27 –
-  /// Oct 3" or "9月27日至10月3日" while the week lies in `now`'s year, and with
-  /// its years ("Dec 27, 2026 – Jan 2, 2027") once it reaches outside it. The
-  /// `MMMd` and `yMMMd` templates rather than the medium date style, which
-  /// writes a Chinese interval in numerals ("2026/6/28 – 2026/7/4"). Where it
-  /// wraps, it breaks only after its dash.
-  nonisolated static func weekRangeLabel(
-    from start: Date, calendar: Calendar, now: Date,
-    locale: Locale = LorvexClockFormat.displayLocale
-  ) -> String {
-    let end = calendar.date(byAdding: .day, value: 6, to: start) ?? start
-    let isThisYear =
-      calendar.isDate(start, equalTo: now, toGranularity: .year)
-      && calendar.isDate(end, equalTo: now, toGranularity: .year)
-    return lorvexUnbreakable(
-      LorvexDateFormatters.range(
-        from: start, to: end, template: isThisYear ? "MMMd" : "yMMMd",
-        timeZone: calendar.timeZone, locale: locale))
   }
 
   /// Regular-width iPad can mean anything from a narrow Stage Manager tile to a

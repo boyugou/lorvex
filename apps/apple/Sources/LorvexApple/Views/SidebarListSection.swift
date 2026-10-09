@@ -19,9 +19,7 @@ extension SidebarView {
                 ) {
                     SidebarListIcon(
                         icon: list.icon,
-                        tint: isSelected(.listScope(list.id))
-                            ? .white
-                            : (Color(lorvexHex: list.color) ?? .accentColor)
+                        tint: Color(lorvexHex: list.color) ?? .accentColor
                     )
                 } title: {
                     Text(list.displayName)
@@ -121,10 +119,7 @@ extension SidebarView {
             Section {
                 ForEach(store.orderedArchivedLists) { list in
                     SidebarListRow {
-                        SidebarListIcon(
-                            icon: list.icon,
-                            tint: isSelected(.listScope(list.id)) ? .white : .secondary
-                        )
+                        SidebarListIcon(icon: list.icon, tint: .secondary)
                     } title: {
                         Text(list.displayName)
                     }

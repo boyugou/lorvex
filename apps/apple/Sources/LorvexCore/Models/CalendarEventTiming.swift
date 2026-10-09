@@ -213,6 +213,15 @@ public struct CalendarEventTiming: Equatable, Sendable {
     daySpan == Self.daySpan(startDate: event.startDate, endDate: event.endDate)
   }
 
+  /// True when saving this timing over the recurring `occurrence` leaves the
+  /// series' own first day alone: the draft keeps the occurrence's day and its
+  /// length in days, so ``scopedDates(for:)`` sends no dates. An all-events save
+  /// that keeps the first day also keeps cancelled occurrences cancelled; one
+  /// that moves it restarts the recurrence and clears every cancelled day.
+  public func keepsSeriesFirstDay(of occurrence: CalendarTimelineEvent) -> Bool {
+    scopedDates(for: occurrence).startDate == nil
+  }
+
   /// Days from the stored `startDate` to the stored `endDate`, both
   /// `yyyy-MM-dd`: 0 for an event with no end date or one that cannot be read.
   public static func daySpan(startDate: String, endDate: String?) -> Int {

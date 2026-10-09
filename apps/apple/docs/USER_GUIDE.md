@@ -3410,6 +3410,17 @@ When you edit one occurrence of a repeating event and change how many days it
 spans, the change applies to this event or to this and the following events;
 **All Events** is not offered for that edit.
 
+An occurrence you cancelled stays cancelled when you later edit the whole
+repeating event. **All Events** gives every other occurrence the repeating
+event's own title, time, and details, which also undoes changes you made to
+single occurrences. Editing this and the following events keeps the cancelled
+days that still belong to the new schedule. If an edit changes the first day or
+how the event repeats, every earlier cancellation and single change is cleared,
+because the days no longer line up. When an edit leaves the first day and how
+the event repeats alone, and the calendar shows a day of this event that you
+changed on its own, the prompt that asks which events to update adds a short
+reminder of what **All Events** does.
+
 ### Importing from System Calendars
 
 In **Settings → Calendar**, choose which Apple Calendar calendars to overlay.

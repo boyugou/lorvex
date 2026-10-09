@@ -27,10 +27,14 @@ struct CalendarWeekGridView: View {
   let createAt: (Date, Int, Int) -> Void
 
   let hourHeight: CGFloat = CalendarWeekGridMetrics.hourHeight
-  /// Wide enough for the display locale's widest hour label on one line.
+  /// The one width the header, the all-day strip and the hour gutter keep for
+  /// their leading column, so every day column starts at the same place in all
+  /// three: wide enough for the display locale's widest hour label and the
+  /// widest word of the all-day label, each on one line.
   var gutterWidth: CGFloat {
     CalendarWeekGridMetrics.gutterWidth(
-      fitting: LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone))
+      fittingHourLabels: LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone),
+      allDayLabel: allDayLabel)
   }
   /// Maximum simultaneous lanes shown per day column before the "+N more" overflow badge appears.
   let maxDisplayedLanes = 3

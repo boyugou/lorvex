@@ -146,6 +146,7 @@ private struct TaskDetailNotesPanel: View {
             String(localized: "task_detail.notes.title", defaultValue: "Notes", table: "Localizable", bundle: LorvexL10n.bundle),
             systemImage: "note.text"
           )
+          .labelStyle(.inspectorPanelTitle)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .accessibilityAddTraits(.isHeader)
 

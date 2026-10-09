@@ -61,9 +61,13 @@ struct TodayView: View {
     }
   }
 
+  /// The day's column. Its date line is Today's title, so the column insets by
+  /// the amount every other workspace's title does
+  /// (``WorkspaceHeaderTitleMetrics/titleInset``) and the title stays on one
+  /// edge when the user switches workspaces.
   private func mainColumn(_ content: TodayColumnContent) -> some View {
     TodayColumn(store: store, content: content)
-      .padding(.horizontal, LorvexDesign.Spacing.xl + 16)
+      .padding(.horizontal, WorkspaceHeaderTitleMetrics.titleInset)
       .padding(.top, LorvexDesign.Spacing.xl)
       .padding(.bottom, LorvexDesign.Spacing.xl)
       .frame(maxWidth: .infinity, alignment: .leading)

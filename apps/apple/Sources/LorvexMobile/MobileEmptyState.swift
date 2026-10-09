@@ -14,6 +14,11 @@ struct MobileEmptyState: View {
   var tint: Color = LorvexDesign.Palette.accent
   let title: String
   var message: String? = nil
+  /// Whether `message` points at the screen's toolbar ＋ button. The tab bar
+  /// holds a second ＋ that opens task capture, so a plain ＋ in the message
+  /// could mean either button. When set, each ＋ in the message is drawn in
+  /// the accent color the toolbar button wears, which marks it as the toolbar's.
+  var pointsAtToolbarAdd = false
   var actionTitle: String? = nil
   var action: (() -> Void)? = nil
 
@@ -29,7 +34,7 @@ struct MobileEmptyState: View {
           .font(LorvexDesign.Typography.primaryEmphasis)
           .fixedSize(horizontal: false, vertical: true)
         if let message {
-          Text(message)
+          messageText(message)
             .font(LorvexDesign.Typography.tertiaryText)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
@@ -45,9 +50,32 @@ struct MobileEmptyState: View {
     }
     .padding(.vertical, LorvexDesign.Spacing.xs)
   }
+
+  private func messageText(_ message: String) -> Text {
+    pointsAtToolbarAdd ? Text(Self.accentingAddSymbol(in: message)) : Text(message)
+  }
 }
 
 extension MobileEmptyState {
+  /// The plus sign (U+FF0B) that every shipped translation of a message
+  /// pointing at an add button writes.
+  private static let addSymbol = "＋"
+
+  /// `message` with each ＋ drawn in the accent color; the rest of the text
+  /// carries no attributes, so it keeps the style the caller gives the `Text`.
+  static func accentingAddSymbol(in message: String) -> AttributedString {
+    var accented = AttributedString()
+    for (position, part) in message.components(separatedBy: addSymbol).enumerated() {
+      if position > 0 {
+        var symbol = AttributedString(addSymbol)
+        symbol.foregroundColor = LorvexDesign.Palette.accent
+        accented.append(symbol)
+      }
+      accented.append(AttributedString(part))
+    }
+    return accented
+  }
+
   /// The no-results row for a `.searchable` list whose query matched nothing.
   /// Bounded like every other `MobileEmptyState`, so it sits in a `List`
   /// `Section` at normal row height where `ContentUnavailableView.search` would

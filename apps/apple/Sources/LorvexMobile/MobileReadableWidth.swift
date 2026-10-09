@@ -3,7 +3,8 @@ import SwiftUI
 extension EnvironmentValues {
   /// The readable-width margin the enclosing ``mobileReadableWidth`` screen
   /// computed, or nil where the system's own margins stand: at compact width,
-  /// and inside a list+detail split's panes.
+  /// inside a list+detail split's panes, and inside a presented sheet
+  /// (``mobileSystemContentMargins``).
   @Entry var mobileReadableMargin: CGFloat? = nil
 }
 
@@ -31,6 +32,23 @@ extension View {
   /// `ScrollView`, which only honors one applied to itself.
   func mobileReadableScrollMargins() -> some View {
     modifier(MobileReadableScrollMargins())
+  }
+
+  /// Returns the lists and forms inside to the system's own horizontal
+  /// margins, undoing the readable-width cap an enclosing screen set through
+  /// ``mobileReadableWidth``.
+  ///
+  /// That cap is a content margin sized from the width of the screen that set
+  /// it (136 pt on each side of the 760 pt column in a 1032 pt window), and
+  /// every view presented from the screen inherits it. A sheet is a card with
+  /// a width of its own, narrower than the screen, so under the inherited
+  /// margin a form sheet 580 pt wide keeps a little over half of its width for
+  /// the form, and the margin grows with the window. A sheet applies this at
+  /// its root, as do the panes of a list+detail split, which are narrower
+  /// than their screen for the same reason.
+  func mobileSystemContentMargins() -> some View {
+    contentMargins(.horizontal, nil, for: .scrollContent)
+      .environment(\.mobileReadableMargin, nil)
   }
 }
 

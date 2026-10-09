@@ -57,6 +57,7 @@ struct MobileDestructiveConfirmationSheet: View {
         }
       }
     }
+    .mobileSystemContentMargins()
     .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.medium])
   }
 }

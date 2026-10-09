@@ -1166,10 +1166,14 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailHeaderSection.swift'), 'LorvexIconButton('),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.accessibilityIdentifier("task.detail.pinSticky")'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.fixedSize(horizontal: true, vertical: false)'),
-    # Start, Defer, and the overflow share one chip face; the overflow's is
-    # its symbol alone, never a prominent button.
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'private func headerChip(systemImage: String, title: String?, isActive: Bool = false)'),
-    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'headerChip(systemImage: "ellipsis", title: nil)'),
+    # Start, Defer, and the overflow share one chip face, InspectorActionChip,
+    # which the habit inspector's overflow wears too; the overflow's is its
+    # symbol alone, never a prominent or bordered button.
+    ('contains', ('file', 'Sources/LorvexApple/Views/InspectorActionChip.swift'), 'struct InspectorActionChip: View'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'InspectorActionChip(systemImage: "ellipsis", title: nil)'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/HabitDetailActions.swift'), 'InspectorActionChip(systemImage: "ellipsis", title: nil)'),
+    ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), 'headerChip'),
+    ('absent', ('file', 'Sources/LorvexApple/Views/HabitDetailActions.swift'), '.buttonStyle(.bordered)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.frame(minWidth: 0, maxWidth: .infinity)'),
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.buttonStyle(.borderedProminent)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/TaskDetailActionsSection.swift'), '.accessibilityIdentifier("task.detail.complete")'),

@@ -77,12 +77,66 @@ struct WorkspacePlanHeaderChrome<Content: View>: View {
   }
 }
 
+/// Horizontal metrics of a workspace header's title, shared by every surface
+/// that sets a workspace's name as its large title, so the titles of all
+/// workspaces start on one edge when the user switches between them.
+enum WorkspaceHeaderTitleMetrics {
+  /// The width of the column the glyph before a header's title is centered in.
+  /// It is at least as wide as the widest SF Symbol a workspace header draws
+  /// in `Typography.sectionHeader`, so a title starts one column and one gap
+  /// after the header's leading edge instead of after its own symbol's width.
+  /// A symbol's width follows the display scale, because it rounds to the
+  /// pixel grid: the widest is the brain, 23 pt on a 2x display and 22 pt on a
+  /// 1x display, where the checklist symbol is as wide.
+  static let glyphColumnWidth: CGFloat = 23
+
+  /// How far a workspace title starts from the leading edge of the detail area
+  /// it heads, while that area is narrower than the reading lane's cap
+  /// (``WorkspaceReviewLaneMetrics/maxWidth``): the header chrome's horizontal
+  /// padding (`Spacing.l`), the glyph column, and the gap between the column
+  /// and the title (`Spacing.s`). A title set without a glyph beside it, such
+  /// as Today's date line, insets by this much to start on the same edge.
+  static let titleInset: CGFloat =
+    LorvexDesign.Spacing.l + glyphColumnWidth + LorvexDesign.Spacing.s
+}
+
+/// The glyph before a workspace header's title: an SF Symbol name, drawn in the
+/// environment tint, or a list's own icon, which may be an emoji and draws as
+/// text.
+///
+/// The glyph is centered in a column at least
+/// ``WorkspaceHeaderTitleMetrics/glyphColumnWidth`` wide. SF Symbols set in one
+/// face still differ in width by several points (a repeat symbol is narrower
+/// than a brain), and a glyph drawn at its own width starts each workspace's
+/// title at a different x. A list's icon wider than the column, such as a wide
+/// symbol the list picker offers, widens its own column rather than being
+/// clipped. The glyph is decoration, so VoiceOver skips it.
+struct WorkspaceHeaderGlyph: View {
+  let icon: String
+
+  var body: some View {
+    Group {
+      if let symbol = LorvexListIconView.symbolName(for: icon) {
+        Image(systemName: symbol)
+          .foregroundStyle(.tint)
+      } else {
+        Text(icon)
+      }
+    }
+    .font(LorvexDesign.Typography.sectionHeader)
+    .frame(minWidth: WorkspaceHeaderTitleMetrics.glyphColumnWidth)
+    .accessibilityHidden(true)
+  }
+}
+
 /// Shared title/subtitle identity block for workspace headers.
 ///
 /// The section name is a prominent large title here, not a small OS titlebar
 /// string — the window's titlebar text
 /// is suppressed so the name shows once, big, in the content. An optional
-/// leading SF Symbol mirrors the sidebar icon.
+/// leading glyph mirrors the sidebar icon; it sits in a column of one fixed
+/// width (``WorkspaceHeaderGlyph``), so every workspace's title starts on the
+/// same edge.
 ///
 /// Plan surfaces should not each tune their own title font, subtitle styling, or
 /// reading width; route the common identity hierarchy through here. Workspace
@@ -90,8 +144,8 @@ struct WorkspacePlanHeaderChrome<Content: View>: View {
 struct WorkspaceHeaderIdentity<Accessory: View>: View {
   let title: String
   let subtitle: String
-  /// The glyph before the title: an SF Symbol name, drawn in the environment
-  /// tint, or a list's own icon, which may be an emoji and draws as text.
+  /// The glyph before the title: an SF Symbol name, or a list's own icon,
+  /// which may be an emoji (see ``WorkspaceHeaderGlyph``).
   let icon: String?
   let accessibilityIdentifier: String
   let subtitleAccessibilityIdentifier: String?
@@ -117,16 +171,7 @@ struct WorkspaceHeaderIdentity<Accessory: View>: View {
     VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xxs) {
       HStack(alignment: .center, spacing: LorvexDesign.Spacing.s) {
         if let icon {
-          Group {
-            if let symbol = LorvexListIconView.symbolName(for: icon) {
-              Image(systemName: symbol)
-                .foregroundStyle(.tint)
-            } else {
-              Text(icon)
-            }
-          }
-          .font(LorvexDesign.Typography.sectionHeader)
-          .accessibilityHidden(true)
+          WorkspaceHeaderGlyph(icon: icon)
         }
 
         Text(title)

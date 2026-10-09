@@ -167,7 +167,8 @@ public struct MobileStoreMemoryView: View {
           message: String(
             localized: "memory.empty.message",
             defaultValue: "Tap ＋ to save something your assistant should remember.",
-            table: "Localizable", bundle: MobileL10n.bundle))
+            table: "Localizable", bundle: MobileL10n.bundle),
+          pointsAtToolbarAdd: true)
       } else if memoryEntries.isEmpty {
         MobileEmptyState.search(text: searchQuery)
       } else {

@@ -45,7 +45,11 @@ enum MobileEditorSheetDetents {
   }
 }
 
-/// Detents and drag indicator shared by every editor sheet.
+/// Detents, drag indicator and margins shared by every editor sheet. A sheet
+/// inherits the readable-width content margin of the screen that presents it,
+/// which is sized from that screen's width rather than the sheet's, so the
+/// sheet's lists and forms go back to the system margins
+/// (``mobileSystemContentMargins``).
 private struct MobileEditorSheetPresentation: ViewModifier {
   let opensFullHeight: Bool
   let cardHeight: CGFloat?
@@ -54,6 +58,7 @@ private struct MobileEditorSheetPresentation: ViewModifier {
 
   func body(content: Content) -> some View {
     content
+      .mobileSystemContentMargins()
       .presentationDetents(
         MobileEditorSheetDetents.detents(
           opensFullHeight: opensFullHeight, isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,

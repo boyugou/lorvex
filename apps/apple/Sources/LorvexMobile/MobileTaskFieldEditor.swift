@@ -24,6 +24,13 @@ struct MobileTaskFieldEditor: View {
   /// A tag typed into the tag field but not yet added with Return.
   @State private var pendingTag = ""
 
+  /// The widest a month grid is drawn, in points. The system's grid stops
+  /// growing at about 390 pt while its view keeps the full width of the row, so
+  /// in a wider row, such as a form sheet on iPad, the months before and after
+  /// the shown one appear in the margins on both sides. A grid held to this
+  /// width fills its view, and the row centers it.
+  private static let monthCalendarMaxWidth: CGFloat = 380
+
   var body: some View {
     NavigationStack {
       Form {
@@ -115,6 +122,8 @@ struct MobileTaskFieldEditor: View {
         }
       }
       monthCalendar(has: has, date: date, calendar: calendar)
+        .frame(maxWidth: Self.monthCalendarMaxWidth)
+        .frame(maxWidth: .infinity)
       if has.wrappedValue {
         Button(MobileTaskFieldCopy.noDate, role: .destructive) { has.wrappedValue = false }
           .mobileDestructiveRowStyle()

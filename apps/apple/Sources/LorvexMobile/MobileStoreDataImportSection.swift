@@ -313,5 +313,6 @@ private struct MobileImportPreviewSheet: View {
         }
       }
     }
+    .mobileSystemContentMargins()
   }
 }

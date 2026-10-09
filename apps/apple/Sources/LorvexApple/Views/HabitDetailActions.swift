@@ -14,7 +14,9 @@ import SwiftUI
 /// The overflow menu holds the rest: the check-in commands the ring and the
 /// buttons also offer (so the keyboard and VoiceOver reach them), Reset Today,
 /// Icon and Color…, Archive Habit, and Delete Habit…, which asks first. A
-/// reset that would clear more than one check-in asks first too.
+/// reset that would clear more than one check-in asks first too. The menu wears
+/// the task inspector's quiet chip (``InspectorActionChip``), as tall as the
+/// row's other control.
 struct HabitDetailActions: View {
   let store: AppStore
   let habit: LorvexHabit
@@ -37,6 +39,8 @@ struct HabitDetailActions: View {
       Spacer(minLength: 0)
       overflowMenu
     }
+    // The overflow chip fills the row's height, which is the tallest control's.
+    .fixedSize(horizontal: false, vertical: true)
     .accessibilityIdentifier("habit.detail.actions")
     .confirmationDialog(
       String(
@@ -174,16 +178,14 @@ struct HabitDetailActions: View {
       }
       .accessibilityIdentifier("habit.detail.delete")
     } label: {
-      // Only the trigger is icon-only; the menu items keep their titles
-      // (setting labelStyle on the Menu itself cascades into the items).
-      Label(String(localized: "common.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle), systemImage: "ellipsis")
-        .labelStyle(.iconOnly)
+      InspectorActionChip(systemImage: "ellipsis", title: nil)
     }
     .menuStyle(.button)
-    .buttonStyle(.bordered)
+    .buttonStyle(.plain)
     .menuIndicator(.hidden)
     .fixedSize(horizontal: true, vertical: false)
     .help(String(localized: "common.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle))
+    .accessibilityLabel(String(localized: "common.more", defaultValue: "More", table: "Localizable", bundle: LorvexL10n.bundle))
     .accessibilityIdentifier("habit.detail.more")
   }
 

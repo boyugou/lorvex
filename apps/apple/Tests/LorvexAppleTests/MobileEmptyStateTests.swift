@@ -1,4 +1,6 @@
 import Foundation
+import LorvexCore
+import SwiftUI
 import Testing
 
 @testable import LorvexMobile
@@ -51,6 +53,51 @@ struct MobileEmptyStateTests {
       #expect(!source.contains("actionTitle:"), "\(file)")
       #expect(source.contains("MobileEmptyState"), "\(file)")
     }
+  }
+
+  @MainActor
+  @Test("a message that points at the toolbar ＋ draws that ＋, and only it, in the accent color")
+  func toolbarAddMessageAccentsOnlyThePlus() {
+    let message = "Tap ＋ to start a habit you want to build."
+    let accented = MobileEmptyState.accentingAddSymbol(in: message)
+    #expect(String(accented.characters) == message)
+    let runs = accented.runs.filter { $0.foregroundColor != nil }
+    #expect(runs.count == 1)
+    #expect(runs.first.map { String(accented[$0.range].characters) } == "＋")
+    #expect(runs.first?.foregroundColor == LorvexDesign.Palette.accent)
+    #expect(MobileEmptyState.accentingAddSymbol(in: "No plus here.").runs.allSatisfy { $0.foregroundColor == nil })
+  }
+
+  @MainActor
+  @Test("every shipped translation of the two toolbar-pointing messages holds exactly one ＋ to accent")
+  func toolbarPointingMessagesHoldOnePlusInEveryLanguage() throws {
+    let keys = ["habits.empty.no_active.message", "memory.empty.message"]
+    for language in AppLanguage.selectable.map(\.rawValue) {
+      let bundle = try #require(
+        MobileL10n.bundle.url(forResource: language, withExtension: "lproj")
+          .flatMap { Bundle(url: $0) },
+        "the Mobile bundle has no \(language).lproj")
+      for key in keys {
+        let message = bundle.localizedString(forKey: key, value: nil, table: "Localizable")
+        #expect(message != key, "\(language) has no \(key)")
+        let accented = MobileEmptyState.accentingAddSymbol(in: message)
+        #expect(String(accented.characters) == message, "\(language) \(key)")
+        let runs = accented.runs.filter { $0.foregroundColor != nil }
+        #expect(runs.count == 1, "\(language) \(key)")
+        #expect(
+          runs.first.map { String(accented[$0.range].characters) } == "＋", "\(language) \(key)")
+      }
+    }
+  }
+
+  @Test("the Habits and Memory rows mark their ＋ as the toolbar's; the Tasks home row, whose ＋ is the tab bar's, does not")
+  func onlyToolbarPointingRowsAreMarked() throws {
+    for file in [
+      "MobileStoreHabitSection.swift", "MobileStoreHabitsView.swift", "MobileStoreMemoryView.swift",
+    ] {
+      #expect(try mobileSource(file).contains("pointsAtToolbarAdd: true"), "\(file)")
+    }
+    #expect(!(try mobileSource("MobileStoreTasksHomeView.swift")).contains("pointsAtToolbarAdd"))
   }
 }
 

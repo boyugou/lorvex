@@ -14,6 +14,7 @@ extension TaskDetailView {
             String(localized: "task_detail.checklist.title", defaultValue: "Checklist", table: "Localizable", bundle: LorvexL10n.bundle),
             systemImage: "checklist"
           )
+          .labelStyle(.inspectorPanelTitle)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .accessibilityAddTraits(.isHeader)
 

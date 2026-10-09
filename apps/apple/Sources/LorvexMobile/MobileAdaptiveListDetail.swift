@@ -127,8 +127,7 @@ struct MobileAdaptiveListDetail<ID: Hashable, List: View, Detail: View, Placehol
     // pane here is already narrower than that cap, so the panes go back to
     // the system margins or the list's rows would be squeezed into a third
     // of their column.
-    .contentMargins(.horizontal, nil, for: .scrollContent)
-    .environment(\.mobileReadableMargin, nil)
+    .mobileSystemContentMargins()
   }
 
   private var narrowBody: some View {

@@ -11,8 +11,8 @@ extension TaskDetailView {
   /// Complete is deliberately absent: the circle beside the title owns it, and
   /// the task's own row sits a few points away with the same affordance.
   ///
-  /// All three wear one face (``headerChip(systemImage:title:isActive:)``), as
-  /// tall as each other, so the row reads as one set of controls.
+  /// All three wear one face (``InspectorActionChip``), as tall as each other,
+  /// so the row reads as one set of controls.
   func headerActions(task: LorvexTask) -> some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
       if store.selectedTaskCanStart || store.selectedTaskCanPause {
@@ -27,47 +27,6 @@ extension TaskDetailView {
     // Each chip fills the row's height, which is the tallest chip's.
     .fixedSize(horizontal: false, vertical: true)
     .accessibilityIdentifier("task.detail.header.actions")
-  }
-
-  /// A header action's face: its symbol and short title (or the symbol alone)
-  /// in the primary color on a quiet fill. `isActive` draws the state a
-  /// started task's toggle shows instead: accent content on an accent tint
-  /// with a hairline edge. Menus wear it through the plain button style,
-  /// since a borderless menu would redraw the label in its own colors and
-  /// drop the fill.
-  private func headerChip(systemImage: String, title: String?, isActive: Bool = false)
-    -> some View
-  {
-    HStack(spacing: LorvexDesign.Spacing.xs) {
-      Image(systemName: systemImage)
-        .font(LorvexDesign.Typography.tertiaryText.weight(.semibold))
-        // Beside a title the symbol is decoration; a menu would expose it as a
-        // stop of its own. Alone it is the control's only content.
-        .accessibilityHidden(title != nil)
-      if let title {
-        Text(title)
-          .font(LorvexDesign.Typography.tertiaryText.weight(.medium))
-          .fixedSize()
-      }
-    }
-    .foregroundStyle(isActive ? AnyShapeStyle(LorvexDesign.Palette.accent) : AnyShapeStyle(.primary))
-    .padding(.horizontal, 10)
-    .padding(.vertical, LorvexDesign.Spacing.xs)
-    .frame(maxHeight: .infinity)
-    .background {
-      RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-        .fill(
-          isActive
-            ? AnyShapeStyle(LorvexDesign.Palette.accent.opacity(0.14))
-            : AnyShapeStyle(.quaternary.opacity(0.5)))
-    }
-    .overlay {
-      if isActive {
-        RoundedRectangle(cornerRadius: LorvexDesign.Radius.s)
-          .stroke(LorvexDesign.Palette.accent.opacity(0.35), lineWidth: 0.5)
-      }
-    }
-    .contentShape(Rectangle())
   }
 
   /// Whether the task is started, as a toggle that states where it stands:
@@ -94,7 +53,7 @@ extension TaskDetailView {
         }
       }
     } label: {
-      headerChip(
+      InspectorActionChip(
         systemImage: isStarted ? "play.fill" : "play",
         title: isStarted
           ? String(localized: "task.row.started", defaultValue: "Started", table: "Localizable", bundle: LorvexL10n.bundle)
@@ -131,7 +90,7 @@ extension TaskDetailView {
       store: store,
       onDefer: { date in Task { await store.deferSelectedTask(until: date) } }
     ) {
-      headerChip(
+      InspectorActionChip(
         systemImage: "clock.arrow.circlepath",
         title: String(localized: "common.defer", defaultValue: "Defer", table: "Localizable", bundle: LorvexL10n.bundle))
     }
@@ -265,7 +224,7 @@ extension TaskDetailView {
       }
       .accessibilityIdentifier("task.detail.permanentDelete")
     } label: {
-      headerChip(systemImage: "ellipsis", title: nil)
+      InspectorActionChip(systemImage: "ellipsis", title: nil)
     }
     .menuStyle(.button)
     .buttonStyle(.plain)

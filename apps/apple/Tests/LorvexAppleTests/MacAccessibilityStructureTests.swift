@@ -96,10 +96,10 @@ struct MacAccessibilityStructureTests {
 
   // MARK: Detail pages
 
-  @Test("a header chip's symbol is hidden beside a title, so a menu does not expose it as a stop")
+  @Test("an inspector action chip's symbol is hidden beside a title, so a menu does not expose it as a stop")
   func headerChipSymbol() throws {
-    let actions = try Self.source("Views/TaskDetailActionsSection.swift")
-    #expect(Self.follows(".accessibilityHidden(title != nil)", "Image(systemName: systemImage)", in: actions, within: 400))
+    let chip = try Self.source("Views/InspectorActionChip.swift")
+    #expect(Self.follows(".accessibilityHidden(title != nil)", "Image(systemName: systemImage)", in: chip, within: 400))
   }
 
   @Test("an inspector property hides its row icon, and an addition its plus")

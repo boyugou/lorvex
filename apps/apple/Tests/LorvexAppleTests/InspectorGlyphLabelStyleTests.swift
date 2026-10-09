@@ -6,15 +6,18 @@
 
   @testable import LorvexApple
 
-  /// The labels of the habit inspector's panel titles and readings start their
+  /// The labels of the inspectors' panel titles and readings start their
   /// titles on one edge, whatever the width of their glyphs.
   @MainActor
   @Suite struct InspectorGlyphLabelStyleTests {
     private static let titleFont = LorvexDesign.Typography.primaryEmphasis
     private static let readingFont = LorvexDesign.Typography.tertiaryText
 
-    /// The glyphs of the Progress, History and By Weekday titles.
-    private static let titleGlyphs = ["chart.line.uptrend.xyaxis", "calendar", "chart.bar.xaxis"]
+    /// The glyphs of the habit inspector's Progress, History and By Weekday
+    /// titles and of the task inspector's Checklist and Notes titles.
+    private static let titleGlyphs = [
+      "chart.line.uptrend.xyaxis", "calendar", "chart.bar.xaxis", "checklist", "note.text",
+    ]
     /// The glyphs of the Progress panel's four readings.
     private static let readingGlyphs = [
       "flame.fill", "trophy.fill", "checkmark.seal.fill", "chart.bar.fill",
@@ -97,20 +100,36 @@
       }
     }
 
-    @Test func theHabitPanelsSetTheirGlyphLabelsInTheColumns() throws {
+    private static func viewSource(_ name: String) throws -> String {
       let views = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent()
         .deletingLastPathComponent()
         .deletingLastPathComponent()
         .appending(path: "Sources/LorvexApple/Views")
-      func source(_ name: String) throws -> String {
-        try String(contentsOf: views.appending(path: "\(name).swift"), encoding: .utf8)
-      }
+      return try String(contentsOf: views.appending(path: "\(name).swift"), encoding: .utf8)
+    }
+
+    @Test func theHabitPanelsSetTheirGlyphLabelsInTheColumns() throws {
       for name in ["HabitProgressPanel", "HabitHistoryPanel", "HabitWeekdayPanel"] {
-        #expect(try source(name).contains(".labelStyle(.inspectorPanelTitle)"), "\(name) title")
+        #expect(try Self.viewSource(name).contains(".labelStyle(.inspectorPanelTitle)"), "\(name) title")
       }
       // The Progress panel's four readings share one reading label.
-      #expect(try source("HabitProgressPanel").contains(".labelStyle(.inspectorReading)"))
+      #expect(try Self.viewSource("HabitProgressPanel").contains(".labelStyle(.inspectorReading)"))
+    }
+
+    /// The task inspector's Checklist and Notes titles are labels set in the
+    /// same column, so they start their titles where the habit panels do.
+    @Test func theTaskPanelsSetTheirTitlesInTheColumn() throws {
+      for (name, titleKey) in [
+        ("TaskDetailChecklistSection", "task_detail.checklist.title"),
+        ("TaskDetailNotesSection", "task_detail.notes.title"),
+      ] {
+        let source = try Self.viewSource(name)
+        let title = try #require(source.range(of: "\"\(titleKey)\""), "\(name) title")
+        #expect(
+          source[title.upperBound...].prefix(300).contains(".labelStyle(.inspectorPanelTitle)"),
+          "\(name) title")
+      }
     }
   }
 #endif

@@ -283,6 +283,11 @@ private struct MobileHabitMomentumDial: View {
   }
 }
 
+/// The recent periods as capsules, the current one ringed. A daily habit's
+/// seven days carry their narrow weekday underneath, today's in the habit's
+/// color and the others in the secondary style (they name the days, so they
+/// stay legible), so the strip reads as "this week" rather than seven
+/// anonymous marks; a weekly or monthly strip stays unlabeled.
 private struct MobileHabitRhythmPanel: View {
   let habit: LorvexHabit
   let stats: HabitStats
@@ -316,7 +321,7 @@ private struct MobileHabitRhythmPanel: View {
             if index < labels.count {
               Text(labels[index])
                 .font(LorvexDesign.Typography.tertiaryText)
-                .foregroundStyle(cell.isCurrent ? AnyShapeStyle(tint) : AnyShapeStyle(.tertiary))
+                .foregroundStyle(cell.isCurrent ? AnyShapeStyle(tint) : AnyShapeStyle(.secondary))
                 .fixedSize()
             }
           }

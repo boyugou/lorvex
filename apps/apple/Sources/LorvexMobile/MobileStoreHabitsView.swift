@@ -215,7 +215,8 @@ public struct MobileStoreHabitsView: View {
           MobileEmptyState(
             icon: "repeat",
             title: String(localized: "habits.empty.no_active", defaultValue: "No Active Habits", table: "Localizable", bundle: MobileL10n.bundle),
-            message: String(localized: "habits.empty.no_active.message", defaultValue: "Tap ＋ to start a habit you want to build.", table: "Localizable", bundle: MobileL10n.bundle))
+            message: String(localized: "habits.empty.no_active.message", defaultValue: "Tap ＋ to start a habit you want to build.", table: "Localizable", bundle: MobileL10n.bundle),
+            pointsAtToolbarAdd: true)
         } else if activeHabits.isEmpty {
           MobileEmptyState.search(text: searchQuery)
         } else {

@@ -169,11 +169,14 @@ public struct MobileStoreTasksHomeView: View {
           }
         }
 
-        // New List closes the user's lists, where a new one will appear.
+        // New List closes the user's lists, where a new one will appear. Its
+        // label stands in the tiles' columns, so the title starts where the
+        // list titles above it start.
         Button {
           isShowingCreateList = true
         } label: {
           Label(String(localized: "lists.new", defaultValue: "New List", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "plus.circle.fill")
+            .labelStyle(MobileTileColumnLabelStyle())
         }
         .accessibilityIdentifier("mobileTasks.newList")
       } header: {

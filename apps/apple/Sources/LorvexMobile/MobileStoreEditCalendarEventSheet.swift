@@ -155,11 +155,7 @@ struct MobileStoreEditCalendarEventSheet: View {
       ) {
         scopeButtons(isDelete: false)
       } message: {
-        Text(
-          String(
-            localized: "calendar.edit_event.scope.message",
-            defaultValue: "Choose which occurrences to update.", table: "Localizable",
-            bundle: MobileL10n.bundle))
+        Text(saveScopeMessage)
       }
       .confirmationDialog(
         String(
@@ -230,6 +226,29 @@ struct MobileStoreEditCalendarEventSheet: View {
         localized: "common.cancel", defaultValue: "Cancel", table: "Localizable",
         bundle: MobileL10n.bundle), role: .cancel
     ) {}
+  }
+
+  /// The save dialog's message: the prompt, and under it a note on what All
+  /// Events does to single-occurrence changes and cancelled days. The note shows
+  /// only when All Events would reset a single-occurrence change that is loaded
+  /// in the calendar timeline (``CalendarAllEventsNote``). This form does not
+  /// edit the repeat rule.
+  private var saveScopeMessage: String {
+    let prompt = String(
+      localized: "calendar.edit_event.scope.message",
+      defaultValue: "Choose which occurrences to update.", table: "Localizable",
+      bundle: MobileL10n.bundle)
+    guard
+      CalendarAllEventsNote.isShown(
+        editing: event, draft: store.calendarDraft.timing,
+        loadedEvents: store.calendarTimeline?.events ?? [])
+    else { return prompt }
+    let note = String(
+      localized: "calendar.edit_event.scope.all_events_note",
+      defaultValue:
+        "All Events also resets changes you made to single occurrences. Cancelled occurrences stay cancelled.",
+      table: "Localizable", bundle: MobileL10n.bundle)
+    return "\(prompt)\n\n\(note)"
   }
 
   private func attemptSave() {

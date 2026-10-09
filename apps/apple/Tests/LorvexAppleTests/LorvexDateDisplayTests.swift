@@ -75,15 +75,45 @@ struct LorvexDateDisplayTests {
     #expect(acrossMonths == "Sep 27\u{2009}\u{2013}\u{2009}Oct 3")
   }
 
-  @Test("The review window reads as a range of local days")
+  /// A week names its year only once it reaches outside the current one, so a
+  /// week of another year never reads as one of this year, and it breaks only
+  /// after its dash.
+  @Test("A week range omits the current year and names any other")
+  func aWeekRangeOmitsTheCurrentYear() throws {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = utc
+    let now = try day("2026-09-30")
+    func label(_ start: String, _ locale: Locale) throws -> String {
+      LorvexDateFormatters.weekRange(
+        startingOn: try day(start), now: now, calendar: calendar, locale: locale)
+    }
+    let chinese = Locale(identifier: "zh_Hans")
+    let thisYear = try label("2026-09-27", english)
+    let acrossNewYear = try label("2026-12-27", english)
+    let lastYear = try label("2025-12-14", english)
+    let chineseThisYear = try label("2026-09-27", chinese)
+    let chineseAcrossNewYear = try label("2026-12-27", chinese)
+
+    #expect(thisYear == "Sep\u{00A0}27\u{202F}–\u{2009}Oct\u{00A0}3")
+    #expect(
+      acrossNewYear == "Dec\u{00A0}27,\u{00A0}2026\u{202F}–\u{2009}Jan\u{00A0}2,\u{00A0}2027")
+    #expect(lastYear.contains("2025"))
+    #expect(!chineseThisYear.contains("年"))
+    #expect(chineseAcrossNewYear.contains("2027年"))
+  }
+
+  @Test("The review window reads as a range of local days, with its years outside this year")
   func theReviewWindowIsARangeOfLocalDays() throws {
     let start = try #require(LorvexDateFormatters.ymd.date(from: "2026-09-22"))
     let end = try #require(LorvexDateFormatters.ymd.date(from: "2026-09-28"))
+    let now = try #require(LorvexDateFormatters.ymd.date(from: "2026-09-30"))
     #expect(
-      ReviewsWeekRangeFormatter.format("2026-09-22 - 2026-09-28")
-        == LorvexDateFormatters.range(
-          from: start, to: end, template: "MMMd", timeZone: .autoupdatingCurrent))
-    #expect(ReviewsWeekRangeFormatter.format("this week") == "this week")
+      ReviewsWeekRangeFormatter.format("2026-09-22 - 2026-09-28", now: now)
+        == lorvexUnbreakable(
+          LorvexDateFormatters.range(
+            from: start, to: end, template: "MMMd", timeZone: .autoupdatingCurrent)))
+    #expect(ReviewsWeekRangeFormatter.format("2025-12-22 - 2025-12-28", now: now).contains("2025"))
+    #expect(ReviewsWeekRangeFormatter.format("this week", now: now) == "this week")
   }
 
   @Test("Relative days use the language's own words")

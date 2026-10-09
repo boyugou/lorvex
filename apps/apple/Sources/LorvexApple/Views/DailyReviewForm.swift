@@ -80,8 +80,11 @@ struct DailyReviewForm: View {
     }
   }
 
+  /// The day and its sentence, set apart by the same `xs` gap the week review's
+  /// header uses, so the sentence keeps its place under the date when the
+  /// workspace switches between Daily and Weekly.
   private var header: some View {
-    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.s) {
+    VStack(alignment: .leading, spacing: LorvexDesign.Spacing.xs) {
       Text(TodayCalmCopy.dateLine(logicalDay: store.selectedReviewDate))
         .font(LorvexDesign.Typography.pageLabel)
         .foregroundStyle(.secondary)
@@ -97,6 +100,7 @@ struct DailyReviewForm: View {
           Text(LocalizedStringResource("reviews.daily.back_to_today", defaultValue: "Back to Today", table: "Localizable", bundle: LorvexL10n.bundle))
         }
         .buttonStyle(.link)
+        .padding(.top, LorvexDesign.Spacing.xs)
         .accessibilityIdentifier("reviews.daily.backToToday")
       }
     }

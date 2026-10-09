@@ -50,7 +50,7 @@ block's right-click menu.
 │           ├─────┼─────┼─────┼─────┼─────┼─────┼─────┤                              │  Divider
 │  ┌ scroll region (24h, hourHeight=56) ─────────────────────────────────────────┐   │
 │  │ 6 AM│     │     │     │     │     │     │     │                              │   │
-│  │     │     │▐────┤     │     │     │     │     │  hour gutter (56pt) +        │   │
+│  │     │     │▐────┤     │     │     │     │     │  hour gutter ≥ 50pt +        │   │
 │  │ 7 AM│     │▐ Evt│     │     │     │     │     │  7 day columns, each up to   │   │
 │  │     │     │▐ 7a │     │┊○Tsk┊     │     │     │  3 overlap lanes             │   │
 │  │ 8 AM│ ─ ─ │▐────┤ ─ ─ │┊    ┊ ─ ─ │ ─ ─ │ ─ ─ │  hour grid lines             │   │

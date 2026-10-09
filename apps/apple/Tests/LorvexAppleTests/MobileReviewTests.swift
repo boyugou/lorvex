@@ -298,6 +298,42 @@ func backgroundFlushWritesAutosaveDraftsBeforeItsSyncPass() throws {
   #expect(drafts.lowerBound < sync.lowerBound)
 }
 
+// Sharing is one action, so every share button on the iPhone surface carries
+// the system share glyph. The daily and the weekly review buttons sit in the
+// same toolbar slot and read as the same action only while they draw the same
+// symbol.
+@Test
+func everyMobileShareLinkCarriesTheSystemShareGlyph() throws {
+  let sources = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .appending(path: "Sources/LorvexMobile")
+  let files = try FileManager.default.contentsOfDirectory(
+    at: sources, includingPropertiesForKeys: nil
+  ).filter { $0.pathExtension == "swift" }
+
+  var shareLinkCount = 0
+  for file in files {
+    let source = try String(contentsOf: file, encoding: .utf8)
+    var rest = source[...]
+    while let link = rest.range(of: "ShareLink(") {
+      shareLinkCount += 1
+      let tail = rest[link.upperBound...]
+      let label = try #require(
+        tail.range(of: "systemImage: \""),
+        "\(file.lastPathComponent) has a ShareLink without a symbol label")
+      #expect(
+        tail[label.upperBound...].prefix { $0 != "\"" } == "square.and.arrow.up",
+        "\(file.lastPathComponent) labels a ShareLink with another symbol")
+      rest = tail
+    }
+  }
+  // The sweep reaches the two review buttons, the two export buttons and the
+  // task detail button.
+  #expect(shareLinkCount >= 5)
+}
+
 // A body-only edit — a mood/energy rating with no summary — has `canSave ==
 // false` (a summary is the manual-Save rule), but it is still a valid review the
 // core accepts. Switching day must persist it via the auto-flush and must NOT be

@@ -87,19 +87,27 @@ extension CalendarWeekGridView {
 
   // MARK: All-day strip
 
+  /// The strip's row label as the display locale words it.
+  var allDayLabel: String {
+    String(
+      localized: "calendar.all_day_strip", defaultValue: "all-day", table: "Localizable",
+      bundle: LorvexL10n.bundle)
+  }
+
   func allDayStrip(_ columns: [CalendarGridDay]) -> some View {
     let hasContent = columns.contains {
       !$0.allDayEvents.isEmpty || !$0.scheduledTasks.isEmpty
     }
     return HStack(alignment: .top, spacing: 0) {
-      Text(LocalizedStringResource("calendar.all_day_strip", defaultValue: "all-day", table: "Localizable", bundle: LorvexL10n.bundle))
+      Text(allDayLabel)
         .font(LorvexDesign.Typography.tertiaryText)
         .foregroundStyle(.secondary)
-        // A label that wraps in the gutter keeps each line against the hour
-        // labels' trailing edge.
+        // Framed as the hour labels are, so the label ends where they end and a
+        // label that wraps keeps each line against that edge. The strip's width
+        // stays the gutter's, so its day columns start where the grid's do.
         .multilineTextAlignment(.trailing)
-        .frame(width: gutterWidth, alignment: .trailing)
-        .padding(.trailing, LorvexDesign.Spacing.sm)
+        .frame(width: gutterWidth - CalendarWeekGridMetrics.gutterLabelInset, alignment: .trailing)
+        .frame(width: gutterWidth)
       ForEach(columns) { day in
         groupedByDay(
           allDayColumn(day), day: day, totalDays: columns.count,
@@ -381,7 +389,7 @@ extension CalendarWeekGridView {
 
   func hourGutter() -> some View {
     let labels = LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)
-    let gutter = CalendarWeekGridMetrics.gutterWidth(fitting: labels)
+    let gutter = gutterWidth
     return VStack(spacing: 0) {
       ForEach(0..<24, id: \.self) { hour in
         Text(labels[hour])

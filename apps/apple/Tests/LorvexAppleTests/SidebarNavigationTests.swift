@@ -84,7 +84,6 @@ func sidebarRowsUseDistinctListSelectionTags() throws {
   #expect(source.contains(".tag(SidebarRowSelection.destination(item))"))
   #expect(source.contains(".tag(SidebarRowSelection.listScope(list.id))"))
   #expect(source.contains("var selectedRow: SidebarRowSelection?"))
-  #expect(source.contains("func isSelected(_ row: SidebarRowSelection) -> Bool"))
   #expect(source.contains("private func navigate(to row: SidebarRowSelection)"))
   // A list row opens its scope through the store route the Lists catalog and
   // the command palette share.
@@ -101,6 +100,27 @@ func sidebarRowsUseDistinctListSelectionTags() throws {
   #expect(!source.contains("SidebarDestinationRow("))
   #expect(!source.contains("SidebarUtilityFooterLabel("))
   #expect(!source.contains("func sidebarRowButton<Row: View>("))
+}
+
+@Test
+func sidebarListIconTurnsWhiteOnlyOnAProminentSelectionFill() throws {
+  let viewsDir = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .appending(path: "Sources/LorvexApple/Views")
+  let components = try String(
+    contentsOf: viewsDir.appending(path: "SidebarComponents.swift"), encoding: .utf8)
+  // The sidebar list draws the accent fill for a selected row only while it holds
+  // keyboard focus, and then reports an increased background prominence to the
+  // row; otherwise the selection is light grey, where a white symbol would
+  // vanish. The icon follows the list's own report, not whether its row is
+  // the selected one.
+  #expect(components.contains("@Environment(\\.backgroundProminence)"))
+  #expect(components.contains("tint: backgroundProminence == .increased ? .white : tint"))
+  let listSection = try String(
+    contentsOf: viewsDir.appending(path: "SidebarListSection.swift"), encoding: .utf8)
+  #expect(!listSection.contains(".white"))
 }
 
 @Test

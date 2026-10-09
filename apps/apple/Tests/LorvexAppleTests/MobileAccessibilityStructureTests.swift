@@ -155,7 +155,11 @@ struct MobileAccessibilityStructureTests {
     let column = try Self.source("Sources/LorvexMobile/MobileCalendarDayColumn.swift")
     #expect(column.components(separatedBy: ".mobileCalendarPageReachability()").count - 1 == 2)
     let chrome = try Self.source("Sources/LorvexMobile/MobileCalendarDayChrome.swift")
-    #expect(Self.follows(".mobileCalendarPageReachability()", ".padding(.trailing, 6)", in: chrome, within: 80))
+    #expect(
+      Self.follows(
+        ".mobileCalendarPageReachability()",
+        ".frame(width: gutterWidth - MobileCalendarHourGutter.labelInset, alignment: .trailing)",
+        in: chrome, within: 120))
   }
 
   @Test("a day's header is one heading: the grid's column header and the agenda's day name")

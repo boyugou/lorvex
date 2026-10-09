@@ -146,20 +146,25 @@ struct MobileCalendarAllDayStrip: View {
     }
   }
 
+  /// The strip's row label as the display locale words it.
+  static var label: String {
+    String(
+      localized: "calendar.all_day_strip", defaultValue: "all-day", table: "Localizable",
+      bundle: MobileL10n.bundle)
+  }
+
   private func rows(hasContent: Bool) -> some View {
     HStack(alignment: .top, spacing: 0) {
-      Text(
-        String(
-          localized: "calendar.all_day_strip", defaultValue: "all-day", table: "Localizable",
-          bundle: MobileL10n.bundle)
-      )
-      .font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
-      // A label that wraps in the narrow gutter ("весь / день") keeps each
-      // line against the hour labels' trailing edge.
-      .multilineTextAlignment(.trailing)
-      .frame(width: gutterWidth, alignment: .trailing)
-      .padding(.trailing, 6)
-      .mobileCalendarPageReachability()
+      Text(Self.label)
+        .font(LorvexDesign.Typography.tertiaryText).foregroundStyle(.secondary)
+        // Framed as the hour labels are, so the label ends where they end and
+        // a label that wraps ("весь / день") keeps each line against that
+        // edge. The strip's width stays the gutter's, so its day columns start
+        // where the grid's do.
+        .multilineTextAlignment(.trailing)
+        .frame(width: gutterWidth - MobileCalendarHourGutter.labelInset, alignment: .trailing)
+        .frame(width: gutterWidth)
+        .mobileCalendarPageReachability()
       ForEach(columns) { day in
         let isFree = day.allDayEvents.isEmpty && day.scheduledTasks.isEmpty
         VStack(spacing: 3) {
@@ -333,17 +338,22 @@ struct MobileCalendarAllDayStrip: View {
 
 @MainActor
 struct MobileCalendarHourGutter: View {
-  /// The space between an hour label and the first day column.
+  /// How much narrower than the gutter a label's frame is. The frame is centred
+  /// in the gutter, so a label ends half of this short of the first day column.
   static let labelInset: CGFloat = 6
 
   /// The gutter's width at the default text size: the widest of `calendar`'s
-  /// hour labels on one line in the footnote font, plus the inset, and never
-  /// narrower than 52pt, which fits English labels ("11 PM"). The 12-hour
-  /// labels of Chinese and Korean ("上午10時", "오전 10시") need more. Callers
-  /// scale it with the footnote style, as the labels scale.
+  /// hour labels and of the all-day label's words on one line in the footnote
+  /// font, plus the inset, and never narrower than 52pt, which fits English
+  /// labels ("11 PM", "all-day"). The 12-hour labels of Chinese and Korean
+  /// ("上午10時", "오전 10시") need more, as does a long all-day word
+  /// ("ganztägig"), which the label's wrapping cannot break. Callers scale it
+  /// with the footnote style, as the labels scale.
   static func baseWidth(calendar: Calendar) -> CGFloat {
     #if os(iOS)
-      let labels = LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)
+      let labels =
+        LorvexDateFormatters.hourLabels(timeZone: calendar.timeZone)
+        + MobileCalendarAllDayStrip.label.split(whereSeparator: \.isWhitespace).map(String.init)
       let key = labels.joined(separator: "\u{1F}")
       if let cached = baseWidths[key] { return cached }
       let font = UIFont.preferredFont(

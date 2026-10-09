@@ -122,7 +122,7 @@ public struct MobileStoreReviewView: View {
               String(
                 localized: "review.share_weekly", defaultValue: "Share Weekly",
                 table: "Localizable", bundle: MobileL10n.bundle),
-              systemImage: "calendar.badge.clock"
+              systemImage: "square.and.arrow.up"
             )
           }
           .accessibilityLabel(

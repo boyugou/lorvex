@@ -52,7 +52,6 @@ enum MobileReviewCalmCopy {
   }
   static var movedLabel: String { String(localized: "review.calm.moved", defaultValue: "What moved forward", table: "Localizable", bundle: MobileL10n.bundle) }
   static var stillOpenLabel: String { String(localized: "review.calm.still_open", defaultValue: "Still open", table: "Localizable", bundle: MobileL10n.bundle) }
-  /// "2 more": the tasks a capped review list leaves out.
   /// The word for one energy level 1–5, named under the scale.
   static func energyWord(_ level: Int) -> String {
     switch level {
@@ -99,6 +98,7 @@ enum MobileReviewCalmCopy {
     style.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
     return date.formatted(style)
   }
+  /// "2 more": the tasks a capped review list leaves out.
   static func moreCount(_ count: Int) -> String {
     String(localized: "review.more_count", defaultValue: "\(count) more", table: "Localizable", bundle: MobileL10n.bundle)
   }

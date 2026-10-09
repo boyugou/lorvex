@@ -65,6 +65,7 @@ struct HabitHistoryPanel: View {
             String(localized: "habit_detail.history.title", defaultValue: "History", table: "Localizable", bundle: LorvexL10n.bundle),
             systemImage: "calendar"
           )
+          .labelStyle(.inspectorPanelTitle)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(1)
           .accessibilityAddTraits(.isHeader)

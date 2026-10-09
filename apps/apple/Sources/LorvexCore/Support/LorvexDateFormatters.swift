@@ -165,6 +165,36 @@ public enum LorvexDateFormatters {
     return String(text.prefix(1)).uppercased(with: locale) + text.dropFirst()
   }
 
+  /// The seven days that start on `start` as a locale-aware range; see
+  /// ``dayRange(from:to:now:calendar:locale:)``.
+  public static func weekRange(
+    startingOn start: Date, now: Date, calendar: Calendar,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    let end = calendar.date(byAdding: .day, value: 6, to: start) ?? start
+    return dayRange(from: start, to: end, now: now, calendar: calendar, locale: locale)
+  }
+
+  /// The days from `start` to `end` as a locale-aware range: "Sep 27 – Oct 3"
+  /// or "9月27日至10月3日" while both lie in `now`'s year, and with their years
+  /// ("Dec 27, 2026 – Jan 2, 2027") once the range reaches outside it, so a
+  /// week of another year never reads as one of this year. The `MMMd` and
+  /// `yMMMd` templates rather than the medium date style, which writes a
+  /// Chinese interval in numerals ("2026/6/28 – 2026/7/4"). Where it wraps, it
+  /// breaks only after its dash (``lorvexUnbreakable(_:)``).
+  public static func dayRange(
+    from start: Date, to end: Date, now: Date, calendar: Calendar,
+    locale: Locale = LorvexClockFormat.displayLocale
+  ) -> String {
+    let isThisYear =
+      calendar.isDate(start, equalTo: now, toGranularity: .year)
+      && calendar.isDate(end, equalTo: now, toGranularity: .year)
+    return lorvexUnbreakable(
+      range(
+        from: start, to: end, template: isThisYear ? "MMMd" : "yMMMd",
+        timeZone: calendar.timeZone, locale: locale))
+  }
+
   /// `date`'s clock time in the locale's standard short time pattern: "9:45 AM"
   /// where the clock is 12-hour, "09:45" where it is 24-hour. This is the
   /// pattern the span format of ``lorvexClockRangeLabel(startMinutes:endMinutes:)``

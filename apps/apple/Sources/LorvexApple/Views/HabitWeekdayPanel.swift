@@ -56,6 +56,7 @@ struct HabitWeekdayPanel: View {
     ViewThatFits(in: .horizontal) {
       HStack(alignment: .firstTextBaseline, spacing: LorvexDesign.Spacing.s) {
         Label(Self.title, systemImage: Self.titleSymbol)
+          .labelStyle(.inspectorPanelTitle)
           .font(LorvexDesign.Typography.primaryEmphasis)
           .lineLimit(1)
           .accessibilityAddTraits(.isHeader)
@@ -71,6 +72,7 @@ struct HabitWeekdayPanel: View {
       } icon: {
         Image(systemName: Self.titleSymbol)
       }
+      .labelStyle(.inspectorPanelTitle)
       .font(LorvexDesign.Typography.primaryEmphasis)
       .accessibilityAddTraits(.isHeader)
     }

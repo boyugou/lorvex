@@ -67,14 +67,23 @@ struct SidebarSectionHeader: View {
     }
 }
 
+/// A list's symbol in a sidebar row, drawn in `tint`: the list's own color for
+/// an active list, a muted one for an archived list. The sidebar list draws its
+/// accent fill behind a selected row while it holds keyboard focus, and tells
+/// the row's content so with an increased background prominence; the symbol is
+/// white there, as the row's title is. On the grey fill the list shows for a
+/// selection while it does not hold focus, the symbol keeps its color, which
+/// stays legible there where white would not.
 struct SidebarListIcon: View {
     let icon: String?
+    /// The symbol's color on a row whose background is not prominent.
     let tint: Color
+    @Environment(\.backgroundProminence) private var backgroundProminence
 
     var body: some View {
         LorvexListIconView(
             icon: icon,
-            tint: tint,
+            tint: backgroundProminence == .increased ? .white : tint,
             size: SidebarMetrics.iconWidth,
             font: LorvexDesign.Typography.primaryText.weight(.medium)
         )
@@ -87,7 +96,8 @@ struct SidebarListIcon: View {
 /// leaves the selection highlight, hover, focus ring, and inactive-window
 /// desaturation to the native `.sidebar` list. Titles and the bare-symbol icon
 /// use hierarchical styles (`.primary` / `.secondary`) so the list inverts them
-/// against the selection fill; a colored `SidebarListIcon` keeps its own tint.
+/// against the selection fill; a colored `SidebarListIcon` keeps its own tint
+/// and turns white itself where the fill is prominent.
 ///
 /// The icon is decoration and is hidden from VoiceOver. A row with a count
 /// passes `spokenLabel`, which makes the whole row one element that reads it

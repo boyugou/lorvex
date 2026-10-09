@@ -12,10 +12,19 @@ enum CalendarWeekGridMetrics {
   static let hourHeight = LorvexDesign.CalendarMetrics.hourHeight
   /// The narrowest hour gutter, which fits English labels ("11 PM").
   static let gutterWidth: CGFloat = 50
-  /// The space between an hour label and the grid's first day column.
+  /// How much narrower than the gutter a label's frame is. The frame is centred
+  /// in the gutter, so a label ends half of this short of the first day column.
   static let gutterLabelInset: CGFloat = 6
 
-  /// The hour gutter's width for `labels`: the widest label on one line in the
+  /// The gutter's width for the hour `labels` and the all-day `allDayLabel`: wide
+  /// enough for the widest hour label and for the widest word of the all-day
+  /// label, each on one line. The all-day label wraps between its words, so a
+  /// word is the least it can be narrowed to without breaking inside it.
+  @MainActor static func gutterWidth(fittingHourLabels labels: [String], allDayLabel: String) -> CGFloat {
+    gutterWidth(fitting: labels + allDayLabel.split(whereSeparator: \.isWhitespace).map(String.init))
+  }
+
+  /// The gutter's width for `labels`: the widest label on one line in the
   /// gutter's font, plus its inset, and never narrower than ``gutterWidth``.
   /// The 12-hour labels of Chinese and Korean ("上午10時", "오전 10시") are wider
   /// than English ones and would otherwise wrap onto a second line.

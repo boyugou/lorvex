@@ -25,6 +25,7 @@ struct HabitProgressPanel: View {
           String(localized: "habit_detail.progress.title", defaultValue: "Progress", table: "Localizable", bundle: LorvexL10n.bundle),
           systemImage: "chart.line.uptrend.xyaxis"
         )
+        .labelStyle(.inspectorPanelTitle)
         .font(LorvexDesign.Typography.primaryEmphasis)
         .accessibilityAddTraits(.isHeader)
 
@@ -77,6 +78,7 @@ struct HabitProgressPanel: View {
         Image(systemName: systemImage)
           .foregroundStyle(iconTint)
       }
+      .labelStyle(.inspectorReading)
       .font(LorvexDesign.Typography.tertiaryText)
       .lineLimit(2)
       .fixedSize(horizontal: false, vertical: true)

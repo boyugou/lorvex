@@ -102,7 +102,10 @@ public struct LorvexWeekShapeStrip: View {
             .foregroundStyle(.secondary)
             .fixedSize()
         }
-        .frame(width: columnWidth)
+        // The columns share the width they are given, up to the scaled column
+        // width, so the strip fits a phone-width page at the accessibility
+        // sizes instead of widening the page past the screen.
+        .frame(minWidth: 0, maxWidth: columnWidth)
       }
     }
     .accessibilityElement(children: .ignore)

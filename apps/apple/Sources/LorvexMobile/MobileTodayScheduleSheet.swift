@@ -269,17 +269,36 @@ struct MobileTodaySuggestedTimesRows: View {
   }
 
   /// Use These Times is the answer the suggestion asks for, so it is the
-  /// prominent button; Dismiss stands beside it, bordered. Styled buttons each
-  /// own their tap target inside the List row, where default-styled ones would
-  /// make the whole row one ambiguous button.
+  /// prominent button; Dismiss stands beside it, bordered, or under it when the
+  /// two do not fit on one line at the text size or in the language, each as
+  /// wide as the row. Beside each other in a narrow row the capsules would wrap
+  /// their words into a blob. Styled buttons each own their tap target inside
+  /// the List row, where default-styled ones would make the whole row one
+  /// ambiguous button.
   private var answers: some View {
-    HStack(spacing: LorvexDesign.Spacing.s) {
-      if !proposal.placements.isEmpty {
-        Button {
-          Task { await store.useSuggestedDayTimes() }
-        } label: {
-          // Text alone: a list tints a `Label`'s icon with the accent, which
-          // would vanish into the prominent button's accent fill.
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        useButton(fillsWidth: false)
+        dismissButton(fillsWidth: false)
+        Spacer(minLength: 0)
+      }
+      VStack(spacing: LorvexDesign.Spacing.s) {
+        useButton(fillsWidth: true)
+        dismissButton(fillsWidth: true)
+      }
+    }
+    .buttonBorderShape(.capsule)
+  }
+
+  @ViewBuilder
+  private func useButton(fillsWidth: Bool) -> some View {
+    if !proposal.placements.isEmpty {
+      Button {
+        Task { await store.useSuggestedDayTimes() }
+      } label: {
+        // Text alone: a list tints a `Label`'s icon with the accent, which
+        // would vanish into the prominent button's accent fill.
+        Group {
           if store.isSavingDayTimes {
             HStack(spacing: LorvexDesign.Spacing.xs) {
               ProgressView()
@@ -290,22 +309,23 @@ struct MobileTodaySuggestedTimesRows: View {
             Text(MobileTodayCalmCopy.useSuggestion)
           }
         }
-        .buttonStyle(.borderedProminent)
-        .disabled(store.isSavingDayTimes)
-        .accessibilityIdentifier("today.suggestion.use")
+        .frame(maxWidth: fillsWidth ? .infinity : nil)
       }
-
-      Button(role: .cancel) {
-        store.dismissSuggestedDayTimes()
-      } label: {
-        Text(MobileTodayCalmCopy.dismissSuggestion)
-      }
-      .buttonStyle(.bordered)
+      .buttonStyle(.borderedProminent)
       .disabled(store.isSavingDayTimes)
-      .accessibilityIdentifier("today.suggestion.dismiss")
-
-      Spacer(minLength: 0)
+      .accessibilityIdentifier("today.suggestion.use")
     }
-    .buttonBorderShape(.capsule)
+  }
+
+  private func dismissButton(fillsWidth: Bool) -> some View {
+    Button(role: .cancel) {
+      store.dismissSuggestedDayTimes()
+    } label: {
+      Text(MobileTodayCalmCopy.dismissSuggestion)
+        .frame(maxWidth: fillsWidth ? .infinity : nil)
+    }
+    .buttonStyle(.bordered)
+    .disabled(store.isSavingDayTimes)
+    .accessibilityIdentifier("today.suggestion.dismiss")
   }
 }

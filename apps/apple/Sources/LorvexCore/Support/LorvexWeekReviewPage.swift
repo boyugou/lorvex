@@ -153,6 +153,8 @@ public struct LorvexWeekReviewPage: View {
   @Environment(\.lorvexProductTimeZone) private var productTimeZone
   /// ``LorvexDesign/TextColumn/reviewDay`` scaled with the text.
   @ScaledMetric(relativeTo: .subheadline) private var dayColumnWidth = LorvexDesign.TextColumn.reviewDay
+  /// 1 at the default text size; the mood dot grows with the day label.
+  @ScaledMetric(relativeTo: .subheadline) private var moodDotScale: CGFloat = 1
 
   public init(
     dateLine: String, review: WeeklyReviewSnapshot, days: [DailyReviewEntry], words: Words,
@@ -298,12 +300,17 @@ public struct LorvexWeekReviewPage: View {
       .foregroundStyle(.secondary)
   }
 
+  /// The dot's size, its column and its drop below the label's center all
+  /// scale with the label, so the dot stays level with the label's lowercase
+  /// letters at every text size.
   private func moodDot(_ entry: DailyReviewEntry) -> some View {
-    Circle()
+    let scale = moodDotScale
+    let size = (4 + CGFloat(entry.mood ?? 0) * 2) * scale
+    return Circle()
       .fill(LorvexDesign.Palette.accent.opacity(entry.mood == nil ? 0 : 1))
-      .frame(width: 4 + CGFloat(entry.mood ?? 0) * 2, height: 4 + CGFloat(entry.mood ?? 0) * 2)
-      .frame(width: 16, height: 12)
-      .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+      .frame(width: size, height: size)
+      .frame(width: 16 * scale, height: 12 * scale)
+      .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 * scale }
       .accessibilityHidden(true)
   }
 

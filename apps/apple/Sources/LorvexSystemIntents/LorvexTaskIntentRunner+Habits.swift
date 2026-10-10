@@ -55,4 +55,32 @@ extension LorvexTaskIntentRunner {
       )
     }
   }
+
+  public static func skipHabit(
+    id: LorvexHabit.ID,
+    date: String? = nil,
+    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
+  ) async throws -> LorvexHabit {
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.skipHabit(
+        id: id,
+        date: date,
+        core: core
+      )
+    }
+  }
+
+  public static func unskipHabit(
+    id: LorvexHabit.ID,
+    date: String? = nil,
+    core: any LorvexCoreServicing = LorvexCoreRuntimeFactory.makeForAppIntent()
+  ) async throws -> LorvexHabit {
+    try await LorvexIntentFailure.rewording(core: core) {
+      try await LorvexSystemIntentRunner.unskipHabit(
+        id: id,
+        date: date,
+        core: core
+      )
+    }
+  }
 }

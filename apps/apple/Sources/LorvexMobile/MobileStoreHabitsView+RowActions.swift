@@ -32,8 +32,8 @@ extension MobileStoreHabitsView {
 
   /// The swipe/context-menu skip action: Skip Today, or Undo Skip once today is
   /// set aside. Absent while today holds a check-in, which a skip cannot share
-  /// the day with. Untinted, so the swipe button takes the system's neutral
-  /// gray: the day is set aside, not lost.
+  /// the day with. Its tint is cleared, so the swipe button takes the system's
+  /// neutral gray: the day is set aside, not lost.
   @ViewBuilder
   func habitSkipAction(_ habit: LorvexHabit) -> some View {
     if let action = LorvexHabitSkip.action(for: habit) {
@@ -46,6 +46,7 @@ extension MobileStoreHabitsView {
       }
       .tint(action == .unskip ? LorvexDesign.Palette.dueSoon : nil)
       .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+      .accessibilityIdentifier("mobileHabits.skip.\(habit.id)")
     }
   }
 
@@ -58,11 +59,12 @@ extension MobileStoreHabitsView {
     }
     .tint(.accentColor)
     .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+    .accessibilityIdentifier("mobileHabits.edit.\(habit.id)")
   }
 
   /// Archives the habit: it leaves the catalog, Today, and reminders but keeps
-  /// its history, and the archived section below the catalog restores it.
-  /// Untinted, so the swipe button takes the system's neutral gray.
+  /// its history, and the archived section below the catalog restores it. The
+  /// swipe draws it in neutral gray (``SwiftUI/View/mobileNeutralSwipeStyle()``).
   func habitArchiveAction(_ habit: LorvexHabit) -> some View {
     Button {
       Task { await store.setHabitArchived(habit, archived: true) }
@@ -70,8 +72,11 @@ extension MobileStoreHabitsView {
       Label(MobileHabitArchiveCopy.archive, systemImage: "archivebox")
     }
     .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+    .accessibilityIdentifier("mobileHabits.archive.\(habit.id)")
   }
 
+  /// The context-menu delete: it asks first, from the row, and the menu's
+  /// `destructive` role draws it red.
   func habitDeleteAction(_ habit: LorvexHabit) -> some View {
     Button(role: .destructive) {
       confirmingDeleteHabit = habit
@@ -79,5 +84,20 @@ extension MobileStoreHabitsView {
       Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
     }
     .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+    .accessibilityIdentifier("mobileHabits.delete.\(habit.id)")
+  }
+
+  /// The swipe delete: the same request as ``habitDeleteAction(_:)``, drawn red
+  /// by a tint rather than by the `destructive` role, which would collapse the
+  /// row and close the confirmation attached to it.
+  func habitDeleteSwipeAction(_ habit: LorvexHabit) -> some View {
+    Button {
+      confirmingDeleteHabit = habit
+    } label: {
+      Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
+    }
+    .mobileDestructiveSwipeStyle()
+    .disabled(store.isMutatingHabit || store.isDeletingHabit || isBatchSelecting)
+    .accessibilityIdentifier("mobileHabits.delete.\(habit.id)")
   }
 }

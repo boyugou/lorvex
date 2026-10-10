@@ -11,8 +11,9 @@ public struct MobileStoreMemoryView: View {
   @State private var searchQuery = ""
   @State private var isBatchSelecting = false
   @State private var batchSelectedMemoryKeys = Set<MemoryEntry.ID>()
+  /// The entry whose row is asking for a delete confirmation. Each row carries
+  /// the dialog and presents it only while this holds that row's entry.
   @State private var entryPendingDeletion: MemoryEntry?
-  @State private var isConfirmingBatchDelete = false
   @State private var editingEntry: MemoryEntry?
   @State private var isComposingMemory = false
 
@@ -78,12 +79,6 @@ public struct MobileStoreMemoryView: View {
         localized: "memory.search.prompt", defaultValue: "Search memory", table: "Localizable",
         bundle: MobileL10n.bundle)
     )
-    .mobileMemoryDeleteDialogs(
-      entryPendingDeletion: $entryPendingDeletion,
-      isConfirmingBatchDelete: $isConfirmingBatchDelete,
-      deleteEntry: deleteMemoryEntry,
-      deleteBatch: { Task { await deleteSelectedMemory() } }
-    )
     .sheet(item: $editingEntry) { entry in
       MobileStoreMemoryEditorSheet(store: store, entry: entry)
     }
@@ -110,11 +105,13 @@ public struct MobileStoreMemoryView: View {
           deleteLabel: String(
             localized: "common.delete", defaultValue: "Delete", table: "Localizable",
             bundle: MobileL10n.bundle),
+          confirmationTitle: MobileMemoryDeleteCopy.batchTitle,
+          confirmationMessage: MobileMemoryDeleteCopy.message,
           canDelete: canDeleteSelectedMemory,
           isBusy: store.isSavingMemory,
           accessibilityID: "mobileMemory.batch.bar",
           clear: { batchSelectedMemoryKeys.removeAll() },
-          delete: { isConfirmingBatchDelete = true }
+          delete: { Task { await deleteSelectedMemory() } }
         )
         .transition(.move(edge: .bottom).combined(with: .opacity))
       }
@@ -180,11 +177,17 @@ public struct MobileStoreMemoryView: View {
             memoryEditAction(entry)
           }
           .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            memoryDeleteAction(entry)
+            memoryDeleteSwipeAction(entry)
           }
           .contextMenu {
             memoryEditAction(entry)
             memoryDeleteAction(entry)
+          }
+          .mobileDeleteConfirmation(
+            of: entry, pending: $entryPendingDeletion,
+            title: MobileMemoryDeleteCopy.title(for: entry), message: MobileMemoryDeleteCopy.message
+          ) { entry in
+            deleteMemoryEntry(entry)
           }
           .tag(entry.id)
         }
@@ -197,7 +200,7 @@ public struct MobileStoreMemoryView: View {
       entry: entry,
       isSaving: store.isSavingMemory,
       edit: { presentEditor(for: entry) },
-      delete: { entryPendingDeletion = entry }
+      delete: { deleteMemoryEntry(entry) }
     )
   }
 
@@ -322,10 +325,7 @@ public struct MobileStoreMemoryView: View {
   }
 
   private func deleteMemoryEntry(_ entry: MemoryEntry) {
-    Task {
-      await store.deleteMemoryEntry(entry)
-      entryPendingDeletion = nil
-    }
+    Task { await store.deleteMemoryEntry(entry) }
   }
 
   private func presentEditor(for entry: MemoryEntry) {
@@ -349,6 +349,8 @@ public struct MobileStoreMemoryView: View {
     .accessibilityIdentifier("mobileMemory.edit.\(entry.key)")
   }
 
+  /// The context-menu delete: it asks first, from the row, and the menu's
+  /// `destructive` role draws it red.
   private func memoryDeleteAction(_ entry: MemoryEntry) -> some View {
     Button(role: .destructive) {
       entryPendingDeletion = entry
@@ -358,6 +360,23 @@ public struct MobileStoreMemoryView: View {
           localized: "common.delete", defaultValue: "Delete", table: "Localizable",
           bundle: MobileL10n.bundle), systemImage: "trash")
     }
+    .disabled(store.isSavingMemory)
+    .accessibilityIdentifier("mobileMemory.delete.\(entry.key)")
+  }
+
+  /// The swipe delete: the same request as ``memoryDeleteAction(_:)``, drawn red
+  /// by a tint rather than by the `destructive` role, which would collapse the
+  /// row and close the confirmation attached to it.
+  private func memoryDeleteSwipeAction(_ entry: MemoryEntry) -> some View {
+    Button {
+      entryPendingDeletion = entry
+    } label: {
+      Label(
+        String(
+          localized: "common.delete", defaultValue: "Delete", table: "Localizable",
+          bundle: MobileL10n.bundle), systemImage: "trash")
+    }
+    .mobileDestructiveSwipeStyle()
     .disabled(store.isSavingMemory)
     .accessibilityIdentifier("mobileMemory.delete.\(entry.key)")
   }

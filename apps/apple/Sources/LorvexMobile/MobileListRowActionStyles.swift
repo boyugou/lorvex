@@ -10,11 +10,37 @@ extension View {
   /// recolors only the row's title, leaving the `Label`'s icon in the accent
   /// color, so the row reads as an ordinary blue action wearing red text.
   ///
-  /// Only for rows the list draws itself. Swipe actions, context menus, and
-  /// `Menu` items already render the role in full; a bordered button takes
-  /// ``SwiftUI/View/mobileDestructiveBorderedStyle()`` instead.
+  /// Only for rows the list draws itself. Context menus and `Menu` items
+  /// already render the role in full; a bordered button takes
+  /// ``SwiftUI/View/mobileDestructiveBorderedStyle()`` instead, and a swipe
+  /// action ``SwiftUI/View/mobileDestructiveSwipeStyle()``.
   func mobileDestructiveRowStyle() -> some View {
     foregroundStyle(LorvexDesign.Palette.destructive)
+  }
+
+  /// Colors a swipe action that deletes red.
+  ///
+  /// A swipe action inherits the root view's accent tint, and that tint
+  /// outranks the `destructive` role, so a Delete would draw as a blue circle.
+  ///
+  /// A button that deletes at once keeps the `destructive` role next to this
+  /// tint: the role collapses the row as the action runs and lets a full swipe
+  /// perform it. A button that only raises a confirmation takes the tint
+  /// alone. A destructive swipe button collapses its row the moment it is
+  /// tapped, and a confirmation dialog attached to that row closes with it
+  /// before it can show.
+  func mobileDestructiveSwipeStyle() -> some View {
+    tint(LorvexDesign.Palette.destructive)
+  }
+
+  /// Draws a swipe action in the system's neutral gray, for an action that is
+  /// neither the row's main action nor a deletion — Archive, Skip Today.
+  ///
+  /// A swipe action inherits the root view's accent tint and draws blue;
+  /// clearing the tint gives the default gray circle, which keeps the accent
+  /// for the actions that are the row's own (Edit, Complete).
+  func mobileNeutralSwipeStyle() -> some View {
+    tint(nil)
   }
 
   /// Tints a destructive `Button` drawn in the bordered style — a detail

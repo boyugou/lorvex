@@ -23,6 +23,7 @@ struct MobileStoreTaskDetailView: View {
   let addReminder: (Date) async -> Bool
   let removeReminder: (TaskReminder) async -> Bool
   let cancel: () async -> Void
+  let cancelRecurring: (RecurringTaskCancelScope) async -> Void
   let tagSuggestions: [String]
   let searchDependencyCandidates: (String, Set<LorvexTask.ID>) async -> [LorvexTask]
   let resolveDependencyTasks: ([LorvexTask.ID]) async -> [LorvexTask]
@@ -51,7 +52,8 @@ struct MobileStoreTaskDetailView: View {
         isHeldUp: isHeldUp,
         actions: actions,
         markSomeday: markSomeday,
-        cancel: cancel
+        cancel: cancel,
+        cancelRecurring: cancelRecurring
       )
     } paneActions: {
       paneStatusButton
@@ -75,7 +77,7 @@ struct MobileStoreTaskDetailView: View {
       }
     }
     .sheet(isPresented: editSheetIsPresented) {
-      if let draft = Binding($editDraft) {
+      if let draft = Binding(unwrapping: $editDraft) {
         MobileTaskEditSheet(
           draft: draft,
           isSaving: isMutating,
@@ -95,7 +97,7 @@ struct MobileStoreTaskDetailView: View {
       }
     }
     .sheet(item: $editingField, onDismiss: { fieldDraft = nil }) { field in
-      if let draft = Binding($fieldDraft) {
+      if let draft = Binding(unwrapping: $fieldDraft) {
         MobileTaskFieldEditor(
           field: field,
           draft: draft,

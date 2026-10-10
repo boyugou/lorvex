@@ -39,7 +39,10 @@ struct MobileStoreRouteView: View {
               removeReminder: { reminder in
                 await store.removeReminder(taskID: task.id, reminder: reminder)
               },
-              cancel: { await store.requestCancelTask(task) },
+              cancel: { await store.cancelTask(task.id) },
+              cancelRecurring: { scope in
+                await store.cancelRecurringTask(id: task.id, scope: scope)
+              },
               tagSuggestions: store.knownTagSuggestions,
               searchDependencyCandidates: { query, excluded in
                 await store.dependencyCandidates(matching: query, excluding: excluded)

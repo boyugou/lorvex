@@ -82,6 +82,8 @@ SYSTEM_INTENT_ACTION_CLASSES = {
     "read_linked_tasks_for_event": "ReadLorvexLinkedTasksForEventIntent",
     "complete_habit": "CompleteLorvexHabitIntent",
     "reset_habit": "ResetLorvexHabitIntent",
+    "skip_habit": "SkipLorvexHabitIntent",
+    "unskip_habit": "UnskipLorvexHabitIntent",
     "read_habit_completions": "ReadLorvexHabitCompletionsIntent",
     "read_habit_stats": "ReadLorvexHabitStatsIntent",
     "batch_complete_habits": "BatchCompleteLorvexHabitsIntent",

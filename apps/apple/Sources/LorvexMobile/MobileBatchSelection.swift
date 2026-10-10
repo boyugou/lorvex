@@ -8,17 +8,25 @@ import SwiftUI
 /// identifiers; the layout is one source of truth.
 
 /// Bottom action bar for multi-select: a selected-count label, Clear, and a
-/// destructive Delete. The count string, delete label, accessibility id, and
-/// delete-enabled / busy flags vary per catalog; the layout is shared.
+/// destructive Delete that asks first, with a confirmation that points at its
+/// button. The count string, delete label, confirmation copy, accessibility id,
+/// and delete-enabled / busy flags vary per catalog; the layout is shared.
 struct MobileBatchActionBar: View {
   let selectedCount: Int
   let countText: String
   let deleteLabel: String
+  /// The question the delete confirmation asks.
+  let confirmationTitle: String
+  /// What a deletion means, under the question.
+  let confirmationMessage: String?
   let canDelete: Bool
   let isBusy: Bool
   let accessibilityID: String
   let clear: () -> Void
+  /// Deletes the selection once the confirmation is accepted.
   let delete: () -> Void
+
+  @State private var isConfirmingDelete = false
 
   var body: some View {
     HStack(spacing: 12) {
@@ -34,10 +42,18 @@ struct MobileBatchActionBar: View {
       )
       .disabled(selectedCount == 0 || isBusy)
 
-      Button(role: .destructive, action: delete) {
+      Button(role: .destructive) {
+        isConfirmingDelete = true
+      } label: {
         Label(deleteLabel, systemImage: "trash")
       }
       .disabled(!canDelete || isBusy)
+      .mobileDeleteConfirmation(
+        isPresented: $isConfirmingDelete,
+        title: confirmationTitle,
+        message: confirmationMessage,
+        delete: delete
+      )
     }
     .padding(.horizontal, 20)
     .padding(.vertical, 12)

@@ -65,9 +65,10 @@ public func taskDependencyAccessibilityValue(_ task: LorvexTask, timeZone: TimeZ
 }
 
 /// The due day as VoiceOver reads it ("due tomorrow", "overdue 2 days ago"),
-/// counted from today in `timeZone`; `nil` for a task without a due day.
+/// counted from today in `timeZone`; `nil` for a task without a due day. The
+/// distance is worded in full, where a row's chip abbreviates it ("2d ago").
 private func taskDueAccessibilityPhrase(_ task: LorvexTask, timeZone: TimeZone) -> String? {
-  guard let day = task.cachedDueRelativeLabel(timeZone: timeZone) else { return nil }
+  guard let day = task.cachedDueRelativeLabel(timeZone: timeZone, unitsStyle: .full) else { return nil }
   return task.isOverdue(timeZone: timeZone)
     ? String(
       localized: "a11y.task.overdue_format", defaultValue: "overdue \(day)", table: "Localizable",

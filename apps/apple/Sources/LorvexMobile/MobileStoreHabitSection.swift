@@ -85,16 +85,20 @@ struct MobileHabitRow: View {
     // `allowsFullSwipe: false` — deleting a habit is irreversible (its streak and
     // completion history go with it), so it shouldn't ride a one-finger flick.
     // Tap-to-reveal then the confirmation dialog makes the destroy deliberate.
+    // The button has no `destructive` role: that role collapses the row when the
+    // button is tapped, and the dialog attached to the row would close with it.
     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-      Button(role: .destructive) {
+      Button {
         isConfirmingDelete = true
       } label: {
         Label(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), systemImage: "trash")
       }
+      .mobileDestructiveSwipeStyle()
       .disabled(isMutating)
       .accessibilityIdentifier("mobileHabits.delete.\(habit.id)")
 
       archiveButton
+        .mobileNeutralSwipeStyle()
         .accessibilityIdentifier("mobileHabits.archive.\(habit.id)")
     }
     .swipeActions(edge: .leading, allowsFullSwipe: false) {
@@ -146,25 +150,19 @@ struct MobileHabitRow: View {
       }
       .disabled(isMutating)
     }
-    .confirmationDialog(
-      String(
-        format: String(localized: "habits.row.delete_confirm.title", defaultValue: "Delete habit “%@”?", table: "Localizable", bundle: MobileL10n.bundle),
-        habit.name),
+    .mobileDeleteConfirmation(
       isPresented: $isConfirmingDelete,
-      titleVisibility: .visible
+      title: MobileHabitDeleteCopy.title(for: habit),
+      message: MobileHabitDeleteCopy.message
     ) {
-      Button(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), role: .destructive) {
-        Task { _ = await deleteHabit() }
-      }
-      Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle), role: .cancel) {}
-    } message: {
-      Text(String(localized: "habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: MobileL10n.bundle))
+      Task { _ = await deleteHabit() }
     }
   }
 
   /// Skip Today, or Undo Skip once today is set aside; absent while today holds
-  /// a check-in, which a skip cannot share the day with. Untinted, so the swipe
-  /// button takes the system's neutral gray: the day is set aside, not lost.
+  /// a check-in, which a skip cannot share the day with. Skip Today's tint is
+  /// cleared, so the swipe button takes the system's neutral gray: the day is
+  /// set aside, not lost. Undo Skip draws in the due-soon orange.
   @ViewBuilder
   private var skipButton: some View {
     if let action = LorvexHabitSkip.action(for: habit) {
@@ -181,8 +179,9 @@ struct MobileHabitRow: View {
   }
 
   /// Archive needs no confirmation: the habit keeps its history and returns
-  /// from the Habits screen's archived section. Untinted, so the swipe button
-  /// takes the system's neutral gray rather than a color that implies loss.
+  /// from the Habits screen's archived section. The swipe draws it in neutral
+  /// gray (``SwiftUI/View/mobileNeutralSwipeStyle()``) rather than a color that
+  /// implies loss.
   private var archiveButton: some View {
     Button {
       Task { _ = await archiveHabit() }

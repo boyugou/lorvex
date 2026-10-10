@@ -277,24 +277,26 @@
       }
 
       // Events spread across the visible week so the week grid is populated, plus
-      // one all-day event to exercise the all-day strip. (dayOffset, title, start, end)
-      let events: [(Int, String, String, String)] = [
-        (-1, "Sprint planning", "10:00", "11:00"),
-        (-1, "Lunch with Sam", "12:30", "13:30"),
-        (0, "Team standup", "09:00", "09:30"),
-        (0, "1:1 with Alex", "14:00", "14:30"),
-        (0, "Design review", "16:30", "17:30"),
-        (1, "Customer call", "11:00", "12:00"),
-        (2, "Dentist", "08:00", "09:00"),
-        (2, "Roadmap sync", "15:00", "16:00"),
-        (3, "Morning gym", "07:00", "08:00"),
-        (4, "Demo day", "13:00", "14:30"),
+      // one all-day event to exercise the all-day strip. The weekly one is an
+      // editable repeating event, the case that asks which occurrences a save or
+      // a delete applies to. (dayOffset, title, start, end, recurrence)
+      let events: [(Int, String, String, String, TaskRecurrenceRule?)] = [
+        (-1, "Sprint planning", "10:00", "11:00", nil),
+        (-1, "Lunch with Sam", "12:30", "13:30", nil),
+        (0, "Team standup", "09:00", "09:30", nil),
+        (0, "1:1 with Alex", "14:00", "14:30", nil),
+        (0, "Design review", "16:30", "17:30", nil),
+        (1, "Customer call", "11:00", "12:00", nil),
+        (2, "Dentist", "08:00", "09:00", nil),
+        (2, "Roadmap sync", "15:00", "16:00", TaskRecurrenceRule(freq: .weekly)),
+        (3, "Morning gym", "07:00", "08:00", nil),
+        (4, "Demo day", "13:00", "14:30", nil),
       ]
-      for (offset, title, start, end) in events {
+      for (offset, title, start, end, recurrence) in events {
         _ = try? await core.createCalendarEvent(
           title: text(title), startDate: ymd.string(from: day(offset)), endDate: nil,
           startTime: start, endTime: end, allDay: false, location: nil, notes: nil,
-          recurrence: nil, timezone: TimeZone.current.identifier, url: nil, color: nil,
+          recurrence: recurrence, timezone: TimeZone.current.identifier, url: nil, color: nil,
           eventType: nil, personName: nil, attendees: nil)
       }
       _ = try? await core.createCalendarEvent(

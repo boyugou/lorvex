@@ -29257,6 +29257,564 @@
         }
       }
     },
+    "system.habit.skip.description": {
+      "comment": "Description for the Skip Lorvex Habit App Intent. A skipped day is an excused day: it counts as neither done nor missed.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخطي عادة في Lorvex ليوم واحد من الاختصارات أو Siri. لا يُحتسب اليوم المتخطى مكتملًا ولا فائتًا."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শর্টকাট বা Siri থেকে একটি Lorvex অভ্যাস একদিনের জন্য এড়িয়ে যান। এড়িয়ে যাওয়া দিন সম্পূর্ণ বা মিস হিসেবে গণ্য হয় না।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringt eine Lorvex-Gewohnheit für einen Tag über Kurzbefehle oder Siri. Ein übersprungener Tag zählt weder als erledigt noch als verpasst."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Παραλείψτε μία ημέρα μιας συνήθειας Lorvex από τις Συντομεύσεις ή το Siri. Μια ημέρα που παραλείπεται δεν υπολογίζεται ούτε ως ολοκληρωμένη ούτε ως χαμένη."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip a Lorvex habit for a day from Shortcuts or Siri. A skipped day counts as neither done nor missed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omite un día de un hábito de Lorvex desde Atajos o Siri. Un día omitido no cuenta como completado ni como perdido."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رد کردن یک عادت Lorvex برای یک روز از طریق میان‌برها یا Siri. روزی که رد کرده‌اید نه تکمیل‌شده حساب می‌شود و نه از دست‌رفته."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saute un jour d’une habitude de Lorvex depuis Raccourcis ou Siri. Un jour sauté ne compte ni comme validé ni comme manqué."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "דילוג על יום אחד בהרגל ב-Lorvex דרך קיצורי דרך או Siri. יום שדולג לא נחשב כיום שהושלם וגם לא כיום שהוחמץ."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शॉर्टकट्स या Siri से Lorvex की किसी आदत का एक दिन छोड़ें। छोड़ा गया दिन न तो पूर्ण गिना जाता है और न ही छूटा हुआ।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melewati satu hari untuk kebiasaan Lorvex dari Pintasan atau Siri. Hari yang dilewati tidak dihitung sebagai selesai maupun terlewat."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salta un giorno di un’abitudine di Lorvex da Comandi rapidi o Siri. Un giorno saltato non conta né come completato né come mancato."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットまたはSiriでLorvexの習慣を1日分スキップします。スキップした日は、完了にも未達成にもカウントされません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축어 또는 Siri에서 Lorvex 습관의 하루를 건너뜁니다. 건너뛴 날은 완료한 날로도, 놓친 날로도 계산되지 않습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शॉर्टकट किंवा Siri द्वारे एका Lorvex सवयीचा एक दिवस वगळा. वगळलेला दिवस पूर्ण किंवा चुकलेला म्हणून मोजला जात नाही."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melangkau satu hari bagi tabiat Lorvex daripada Pintasan atau Siri. Hari yang dilangkau tidak dikira sebagai selesai atau terlepas."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slaat een Lorvex-gewoonte voor één dag over via Opdrachten of Siri. Een overgeslagen dag telt niet als voltooid en ook niet als gemist."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomija jeden dzień nawyku Lorvex ze Skrótów lub Siri. Pominięty dzień nie liczy się ani jako wykonany, ani jako przegapiony."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pula um dia de um hábito do Lorvex pelos Atalhos ou pela Siri. Um dia pulado não conta como concluído nem como perdido."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omite o zi dintr-un obicei Lorvex prin Scurtături sau Siri. O zi omisă nu se numără nici ca finalizată, nici ca ratată."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропускает один день привычки Lorvex из «Быстрых команд» или Siri. Пропущенный день не считается ни выполненным, ни упущенным."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சுருக்கவழிகள் அல்லது Siri மூலம் ஒரு நாளுக்கு Lorvex பழக்கத்தைத் தவிர்க்கவும். தவிர்க்கப்பட்ட நாள் நிறைவுசெய்யப்பட்டதாகவோ தவறவிடப்பட்டதாகவோ கணக்கிடப்படாது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "షార్ట్‌కట్స్ లేదా Siri నుండి Lorvex అలవాటును ఒక రోజు దాటవేయండి. దాటవేసిన రోజు పూర్తయినదిగా గానీ, మిస్ అయినదిగా గానీ లెక్కించబడదు."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้ามนิสัย Lorvex หนึ่งวันจากคำสั่งลัดหรือ Siri วันที่ข้ามจะไม่นับว่าทำเสร็จหรือพลาด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kestirmeler veya Siri ile bir Lorvex alışkanlığının bir gününü atlayın. Atlanan gün ne tamamlanmış ne de kaçırılmış sayılır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропускає один день звички Lorvex зі «Швидких команд» або Siri. Пропущений день не вважається ні виконаним, ні упущеним."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارٹ کٹس یا Siri سے کسی Lorvex عادت کا ایک دن چھوڑیں۔ چھوڑا گیا دن نہ مکمل شمار کیا جاتا ہے اور نہ ہی چھوٹا ہوا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ qua một ngày của một thói quen Lorvex từ Phím tắt hoặc Siri. Ngày đã bỏ qua không được tính là hoàn thành hay bỏ lỡ."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从“快捷指令”或 Siri 跳过一个 Lorvex 习惯的某一天。跳过的这一天既不算完成，也不算错过。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透過捷徑或 Siri 略過 Lorvex 習慣的某一天。略過的這一天既不算完成，也不算錯過。"
+          }
+        }
+      }
+    },
+    "system.habit.skip.dialog": {
+      "comment": "Dialog after skipping a habit for a day; %@ is the habit name",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تخطي %@ في Lorvex."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex-এ অভ্যাস “%@” এড়িয়ে যাওয়া হয়েছে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in Lorvex übersprungen."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Παραλείφθηκε η συνήθεια %@ στο Lorvex."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped %@ in Lorvex."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se omitió “%@” en Lorvex."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت «%@» در Lorvex رد شد."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habitude « %@ » sautée dans Lorvex."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ההרגל \"%@\" דולג ב-Lorvex."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex में आदत “%@” का दिन छोड़ा गया।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dilewati di Lorvex."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abitudine “%@” saltata in Lorvex."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexで「%@」をスキップしました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex에서 “%@” 습관을 건너뛰었습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex मध्ये सवय ‘%@’ वगळली."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dilangkau dalam Lorvex."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ overgeslagen in Lorvex."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pominięto nawyk „%@” w Lorvex."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hábito “%@” pulado no Lorvex."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiceiul %@ a fost omis în Lorvex."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привычка «%@» пропущена в Lorvex."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexஇல் “%@” பழக்கம் தவிர்க்கப்பட்டது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexలో “%@” అలవాటు దాటవేయబడింది."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้าม %@ แล้วใน Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex’te atlandı: %@."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звичку «%@» пропущено в Lorvex."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت \"%@\" کا دن Lorvex میں چھوڑ دیا گیا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã bỏ qua %@ trong Lorvex."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在 Lorvex 中跳过“%@”。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在 Lorvex 中略過「%@」。"
+          }
+        }
+      }
+    },
+    "system.habit.skip.title": {
+      "comment": "Title for the Skip Lorvex Habit App Intent. Skipping sets one day of a habit aside as an excused day.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخطي عادة في Lorvex"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex অভ্যাস এড়িয়ে যান"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex-Gewohnheit überspringen"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Παράλειψη συνήθειας Lorvex"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip Lorvex Habit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir hábito de Lorvex"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رد کردن عادت Lorvex"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sauter une habitude de Lorvex"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "דילוג על הרגל ב-Lorvex"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex आदत का दिन छोड़ें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lewati Kebiasaan Lorvex"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salta abitudine di Lorvex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexの習慣をスキップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 습관 건너뛰기"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex सवय वगळा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langkau Tabiat Lorvex"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sla Lorvex-gewoonte over"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomiń nawyk Lorvex"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pular hábito do Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitere obicei Lorvex"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропустить привычку Lorvex"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex பழக்கத்தைத் தவிர்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex అలవాటును దాటవేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ข้ามนิสัย Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex alışkanlığını atla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропустити звичку Lorvex"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک Lorvex عادت کا دن چھوڑیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bỏ qua thói quen Lorvex"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳过 Lorvex 习惯"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "略過 Lorvex 習慣"
+          }
+        }
+      }
+    },
     "system.habit.stats.read.description": {
       "comment": "Description for the Read Lorvex Habit Stats App Intent",
       "extractionState": "manual",
@@ -34105,6 +34663,564 @@
           "stringUnit": {
             "state": "translated",
             "value": "讀取 Lorvex 習慣統計"
+          }
+        }
+      }
+    },
+    "system.habit.unskip.description": {
+      "comment": "Description for the Undo Lorvex Habit Skip App Intent. Taking back a skip returns the day to an ordinary open day.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التراجع عن تخطي يوم لعادة في Lorvex من الاختصارات أو Siri."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "শর্টকাট বা Siri থেকে একটি Lorvex অভ্যাসে একটি দিন এড়িয়ে যাওয়া বাতিল করুন।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hebt das Überspringen eines Tages für eine Lorvex-Gewohnheit über Kurzbefehle oder Siri auf."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αναιρέστε την παράλειψη μιας ημέρας για μια συνήθεια Lorvex από τις Συντομεύσεις ή το Siri."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take back a skipped day for a Lorvex habit from Shortcuts or Siri."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshace la omisión de un día de un hábito de Lorvex desde Atajos o Siri."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "واگرد رد کردن یک روز برای یک عادت Lorvex از طریق میان‌برها یا Siri."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annule le saut d’un jour pour une habitude de Lorvex depuis Raccourcis ou Siri."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ביטול דילוג על יום בהרגל ב-Lorvex דרך קיצורי דרך או Siri."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शॉर्टकट्स या Siri से Lorvex की किसी आदत का छोड़ा गया दिन वापस लें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membatalkan hari yang dilewati untuk kebiasaan Lorvex dari Pintasan atau Siri."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla il salto di un giorno per un’abitudine di Lorvex da Comandi rapidi o Siri."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットまたはSiriでLorvexの習慣のスキップを1日分取り消します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축어 또는 Siri에서 Lorvex 습관의 하루 건너뛰기를 취소합니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शॉर्टकट किंवा Siri द्वारे एका Lorvex सवयीचा एक दिवस वगळणे रद्द करा."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membatalkan hari yang dilangkau bagi tabiat Lorvex daripada Pintasan atau Siri."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maakt het overslaan van een dag voor een Lorvex-gewoonte ongedaan via Opdrachten of Siri."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cofa pominięcie dnia dla nawyku Lorvex ze Skrótów lub Siri."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desfaz o pulo de um dia de um hábito do Lorvex pelos Atalhos ou pela Siri."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulează omiterea unei zile dintr-un obicei Lorvex prin Scurtături sau Siri."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменяет пропуск дня для привычки Lorvex из «Быстрых команд» или Siri."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "சுருக்கவழிகள் அல்லது Siri மூலம் Lorvex பழக்கத்தின் ஒரு நாள் தவிர்ப்பை ரத்துசெய்யவும்."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "షార్ట్‌కట్స్ లేదా Siri నుండి Lorvex అలవాటులో ఒక రోజు దాటవేతను రద్దు చేయండి."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยกเลิกการข้ามวันของนิสัย Lorvex จากคำสั่งลัดหรือ Siri"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kestirmeler veya Siri ile bir Lorvex alışkanlığı için atlanan günü geri alın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скасовує пропуск дня для звички Lorvex зі «Швидких команд» або Siri."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارٹ کٹس یا Siri سے کسی Lorvex عادت کا چھوڑا گیا دن واپس لیں۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoàn tác việc bỏ qua một ngày của một thói quen Lorvex từ Phím tắt hoặc Siri."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从“快捷指令”或 Siri 撤销对一个 Lorvex 习惯某一天的跳过。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透過捷徑或 Siri 復原 Lorvex 習慣某一天的略過。"
+          }
+        }
+      }
+    },
+    "system.habit.unskip.dialog": {
+      "comment": "Dialog after taking back a habit's skip; %@ is the habit name",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التراجع عن تخطي %@ في Lorvex."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex-এ অভ্যাস “%@” এড়িয়ে যাওয়া বাতিল করা হয়েছে।"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen von %@ in Lorvex aufgehoben."
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αναιρέθηκε η παράλειψη της συνήθειας %@ στο Lorvex."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Took back the skip for %@ in Lorvex."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se deshizo la omisión de “%@” en Lorvex."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رد کردن عادت «%@» در Lorvex لغو شد."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saut annulé pour l’habitude « %@ » dans Lorvex."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הדילוג על ההרגל \"%@\" בוטל ב-Lorvex."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex में आदत “%@” का छोड़ा गया दिन वापस ले लिया गया।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hari yang dilewati untuk %@ dibatalkan di Lorvex."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salto annullato per l’abitudine “%@” in Lorvex."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexで「%@」のスキップを取り消しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex에서 “%@” 습관의 건너뛰기를 취소했습니다."
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex मध्ये सवय ‘%@’ वगळणे रद्द केले."
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hari yang dilangkau untuk %@ dibatalkan dalam Lorvex."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overslaan van %@ ongedaan gemaakt in Lorvex."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cofnięto pominięcie nawyku „%@” w Lorvex."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulo do hábito “%@” desfeito no Lorvex."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omiterea obiceiului %@ a fost anulată în Lorvex."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропуск привычки «%@» отменён в Lorvex."
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexஇல் “%@” பழக்கத்தின் தவிர்ப்பு ரத்துசெய்யப்பட்டது."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexలో “%@” అలవాటు దాటవేత రద్దు చేయబడింది."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยกเลิกการข้าม %@ แล้วใน Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex’te atlama geri alındı: %@."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропуск звички «%@» скасовано в Lorvex."
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادت \"%@\" کا چھوڑا گیا دن Lorvex میں واپس لے لیا گیا۔"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã hoàn tác việc bỏ qua %@ trong Lorvex."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在 Lorvex 中撤销“%@”的跳过。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在 Lorvex 中復原「%@」的略過。"
+          }
+        }
+      }
+    },
+    "system.habit.unskip.title": {
+      "comment": "Title for the Undo Lorvex Habit Skip App Intent. It takes back an earlier skip of a habit's day.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التراجع عن تخطي عادة في Lorvex"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex অভ্যাসের এড়িয়ে যাওয়া বাতিল করুন"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen einer Lorvex-Gewohnheit aufheben"
+          }
+        },
+        "el": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Αναίρεση παράλειψης συνήθειας Lorvex"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo Lorvex Habit Skip"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer omisión de hábito de Lorvex"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "واگرد رد کردن عادت Lorvex"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler le saut d’une habitude de Lorvex"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ביטול דילוג על הרגל ב-Lorvex"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex आदत का छोड़ा गया दिन वापस लें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batalkan Lewati Kebiasaan Lorvex"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla salto di un’abitudine di Lorvex"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvexの習慣のスキップを取り消す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex 습관 건너뛰기 취소"
+          }
+        },
+        "mr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex सवय वगळणे रद्द करा"
+          }
+        },
+        "ms": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Batalkan Langkau Tabiat Lorvex"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overslaan van een Lorvex-gewoonte ongedaan maken"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cofnij pominięcie nawyku Lorvex"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desfazer pulo de hábito do Lorvex"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulare omitere obicei Lorvex"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменить пропуск привычки Lorvex"
+          }
+        },
+        "ta": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex பழக்கத்தின் தவிர்ப்பை ரத்துசெய்"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex అలవాటు దాటవేతను రద్దు చేయండి"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยกเลิกการข้ามนิสัย Lorvex"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lorvex alışkanlığını atlamayı geri al"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скасувати пропуск звички Lorvex"
+          }
+        },
+        "ur": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ایک Lorvex عادت کا چھوڑا گیا دن واپس لیں"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoàn tác bỏ qua thói quen Lorvex"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤销 Lorvex 习惯的跳过"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "復原 Lorvex 習慣的略過"
           }
         }
       }

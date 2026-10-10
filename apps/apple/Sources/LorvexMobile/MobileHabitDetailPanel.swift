@@ -66,20 +66,6 @@ struct MobileHabitDetailPanel: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(LorvexDesign.Palette.groupedBackground)
     .accessibilityIdentifier("mobileHabits.detail.panel")
-    .confirmationDialog(
-      String(
-        format: String(localized: "habits.row.delete_confirm.title", defaultValue: "Delete habit “%@”?", table: "Localizable", bundle: MobileL10n.bundle),
-        habit.name),
-      isPresented: $isConfirmingDelete,
-      titleVisibility: .visible
-    ) {
-      Button(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle), role: .destructive) {
-        Task { _ = await deleteHabit() }
-      }
-      Button(String(localized: "common.cancel", defaultValue: "Cancel", table: "Localizable", bundle: MobileL10n.bundle), role: .cancel) {}
-    } message: {
-      Text(String(localized: "habits.row.delete_confirm.message", defaultValue: "This removes its completion history.", table: "Localizable", bundle: MobileL10n.bundle))
-    }
   }
 
   /// Where the page first rests: its top, except in DEBUG builds launched with
@@ -283,5 +269,12 @@ struct MobileHabitDetailPanel: View {
     .mobileDestructiveBorderedStyle()
     .disabled(isMutating)
     .accessibilityIdentifier("mobileHabits.detail.delete")
+    .mobileDeleteConfirmation(
+      isPresented: $isConfirmingDelete,
+      title: MobileHabitDeleteCopy.title(for: habit),
+      message: MobileHabitDeleteCopy.message
+    ) {
+      Task { _ = await deleteHabit() }
+    }
   }
 }

@@ -3019,12 +3019,14 @@ The Shortcuts app also exposes **Create List**, **Update List**, **Delete List**
 **Create Habit**, **Update Habit**, **Delete Habit**, **Create Event**,
 **Update Event**, **Delete Event**, **Complete Task**, **Cancel Task**,
 **Reopen Task**, **Defer Task**, **Complete Habit**, **Reset Habit**,
-**Daily Review**, **Start Task**, **Pause Task**, **Plan Task for Today**,
-**Read Schedule**, **Suggest Times**, **Save Suggested Times**, **Save Memory**,
-**Read Memory**, and **Delete Memory**. Use them from
+**Skip Habit**, **Undo Habit Skip**, **Daily Review**, **Start Task**,
+**Pause Task**, **Plan Task for Today**, **Read Schedule**, **Suggest Times**,
+**Save Suggested Times**, **Save Memory**, **Read Memory**, and
+**Delete Memory**. Use them from
 iPhone, iPad, Mac, or Siri to create, rename, update, or delete empty lists,
 create/update/delete habits, create/update/delete Lorvex-owned calendar events,
-complete, cancel, reopen, or defer tasks, complete or reset today's habit progress, save a review summary,
+complete, cancel, reopen, or defer tasks, complete or reset today's habit
+progress, skip a habit for a day or take the skip back, save a review summary,
 start or pause a task, plan a task for today, read the day's times, suggest
 times for today's tasks, save the times you accept back to Lorvex, or write,
 read, or delete a memory key, through the same Lorvex-managed storage used by
@@ -3138,7 +3140,7 @@ fires that day. The card draws the ring as dots with a skip mark and says
 "Skipped today". **Undo Skip** takes it back, and checking the habit in on a
 skipped day lifts the skip. A day that already has a check-in cannot be
 skipped. On a weekly habit kept on chosen weekdays, a skipped weekday also
-lowers that week's goal by one day. The assistant can skip and unskip a day too.
+lowers that week's goal by one day. The assistant, Shortcuts, and Siri can skip and unskip a day too.
 
 The inspector edits a habit in place, the way the task inspector edits a task:
 

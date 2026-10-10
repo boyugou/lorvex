@@ -76,7 +76,6 @@ public struct LorvexMobileStoreRootView: View {
         Text(message)
       }
     }
-    .mobileRecurringCancelDialog(store)
     .task {
       // Start the app-lifetime CloudKit observers (push refresh + account
       // change) once. The store outlives this view, so they keep running.

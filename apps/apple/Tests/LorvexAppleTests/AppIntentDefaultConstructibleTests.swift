@@ -122,6 +122,8 @@ func createListHabitAndCalendarEventIntentsAreDefaultConstructible() {
 func completeAndResetHabitIntentsAreDefaultConstructible() {
   _ = CompleteLorvexHabitIntent()
   _ = ResetLorvexHabitIntent()
+  _ = SkipLorvexHabitIntent()
+  _ = UnskipLorvexHabitIntent()
   _ = ReadLorvexHabitCompletionsIntent()
   _ = ReadLorvexHabitStatsIntent()
   _ = BatchCompleteLorvexHabitsIntent()
@@ -131,6 +133,8 @@ func completeAndResetHabitIntentsAreDefaultConstructible() {
   _ = DeleteLorvexHabitReminderIntent()
   #expect(CompleteLorvexHabitIntent.openAppWhenRun == false)
   #expect(ResetLorvexHabitIntent.openAppWhenRun == false)
+  #expect(SkipLorvexHabitIntent.openAppWhenRun == false)
+  #expect(UnskipLorvexHabitIntent.openAppWhenRun == false)
   #expect(ReadLorvexHabitCompletionsIntent.openAppWhenRun == false)
   #expect(ReadLorvexHabitStatsIntent.openAppWhenRun == false)
   #expect(BatchCompleteLorvexHabitsIntent.openAppWhenRun == false)

@@ -57,6 +57,33 @@ extension LorvexSystemIntentRunner {
     return try habit(id: habitID, in: snapshot)
   }
 
+  /// Sets `date` (today when nil) aside for the habit: the day counts as
+  /// neither done nor missed. The core refuses a day that already holds a
+  /// check-in, and skipping an already skipped day changes nothing.
+  public static func skipHabit(
+    id: LorvexHabit.ID,
+    date: String?,
+    core: any LorvexCoreServicing
+  ) async throws -> LorvexHabit {
+    let habitID = try validatedHabitID(id)
+    let skipDate = try await logicalDay(date, core: core)
+    let snapshot = try await core.skipHabit(id: habitID, date: skipDate)
+    return try habit(id: habitID, in: snapshot)
+  }
+
+  /// Takes back the skip of `date` (today when nil), so the day is open again.
+  /// A day that was not skipped is left as it is.
+  public static func unskipHabit(
+    id: LorvexHabit.ID,
+    date: String?,
+    core: any LorvexCoreServicing
+  ) async throws -> LorvexHabit {
+    let habitID = try validatedHabitID(id)
+    let skipDate = try await logicalDay(date, core: core)
+    let snapshot = try await core.unskipHabit(id: habitID, date: skipDate)
+    return try habit(id: habitID, in: snapshot)
+  }
+
   public static func validatedHabitID(_ id: LorvexHabit.ID) throws -> LorvexHabit.ID {
     let trimmed = id.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else {

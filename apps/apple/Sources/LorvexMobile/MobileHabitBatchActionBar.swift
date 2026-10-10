@@ -1,6 +1,9 @@
 import LorvexCore
 import SwiftUI
 
+/// The bar under the Habits list while selecting: the selected count, Clear,
+/// and Complete, Reset and Delete for the selection. Delete asks first, with a
+/// confirmation that points at its button.
 struct MobileHabitBatchActionBar: View {
   let selectedCount: Int
   let canComplete: Bool
@@ -9,8 +12,11 @@ struct MobileHabitBatchActionBar: View {
   let isMutating: Bool
   let complete: () -> Void
   let reset: () -> Void
+  /// Deletes the selection once the confirmation is accepted.
   let delete: () -> Void
   let clear: () -> Void
+
+  @State private var isConfirmingDelete = false
 
   var body: some View {
     VStack(spacing: LorvexDesign.Spacing.s) {
@@ -48,7 +54,9 @@ struct MobileHabitBatchActionBar: View {
         .buttonStyle(.bordered)
         .disabled(!canReset || isMutating)
 
-        Button(role: .destructive, action: delete) {
+        Button(role: .destructive) {
+          isConfirmingDelete = true
+        } label: {
           Label(
             String(localized: "habits.batch.delete", defaultValue: "Delete", table: "Localizable", bundle: MobileL10n.bundle),
             systemImage: "trash"
@@ -58,6 +66,12 @@ struct MobileHabitBatchActionBar: View {
         .buttonStyle(.bordered)
         .mobileDestructiveBorderedStyle()
         .disabled(!canDelete || isMutating)
+        .mobileDeleteConfirmation(
+          isPresented: $isConfirmingDelete,
+          title: MobileHabitDeleteCopy.batchTitle,
+          message: MobileHabitDeleteCopy.message,
+          delete: delete
+        )
       }
     }
     .padding(.horizontal, LorvexDesign.Spacing.m)

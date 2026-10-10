@@ -18,6 +18,7 @@ extension MobileCalendarDayColumn {
     let laneBand = max(
       columnWidth - LorvexDesign.CalendarMetrics.laneTrailingInset(columnWidth: columnWidth), 1)
     let laneWidth = laneBand / CGFloat(block.laneCount)
+    let x = CGFloat(block.lane) * laneWidth
     let y = CGFloat(block.startMin) / 60 * hourHeight
     // The drawn end carries the model's minimum height; see `eventBlock`.
     let height = CGFloat(block.drawnEndMin - block.startMin) / 60 * hourHeight
@@ -58,7 +59,10 @@ extension MobileCalendarDayColumn {
       hidesContentBeneath: true)
     .contentShape(Rectangle())
     .zIndex(1)
-    .offset(x: CGFloat(block.lane) * laneWidth, y: y)
+    // Placed by layout, not by an offset, so its context menu lifts from the
+    // block (see `eventBlock`).
+    .alignmentGuide(.leading) { _ in -x }
+    .alignmentGuide(.top) { _ in -y }
     .onTapGesture { onTapTask(block.task) }
     .contextMenu {
       Button {

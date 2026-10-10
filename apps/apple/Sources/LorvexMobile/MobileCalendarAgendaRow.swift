@@ -49,6 +49,10 @@ struct MobileCalendarAgendaRow: View {
       }
     }
     .padding(.vertical, LorvexDesign.Spacing.s)
+    // The whole row is the button's tap area: a plain button takes touches only
+    // on its label's drawn content and a short way around it, so the empty
+    // middle and right of a row with a short title were dead.
+    .contentShape(Rectangle())
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier("mobileCalendar.agendaRow.\(event.id)")
   }

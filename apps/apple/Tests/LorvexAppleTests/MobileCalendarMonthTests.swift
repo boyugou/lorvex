@@ -99,6 +99,56 @@ struct MobileCalendarMonthTests {
         == .marks)
   }
 
+  @Test("A tap on a titled cell lands on the chip under it, and on no chip anywhere else")
+  func tapResolvesToTheChipUnderIt() {
+    // With a 28-point day number and 17-point chips, the first chip spans 33
+    // to 50 points below the cell's top (3 of inset, the number, 2 of space)
+    // and each next one starts 19 points after the one before.
+    func chip(_ y: CGFloat, count: Int = 3, number: CGFloat = 28, height: CGFloat = 17) -> Int? {
+      MobileCalendarMonthDayCell.chipIndex(
+        atY: y, dayNumberSize: number, chipHeight: height, count: count)
+    }
+    #expect(chip(10) == nil)
+    #expect(chip(32.9) == nil)
+    #expect(chip(33) == 0)
+    #expect(chip(49.9) == 0)
+    #expect(chip(50) == nil)
+    #expect(chip(51.9) == nil)
+    #expect(chip(52) == 1)
+    #expect(chip(71) == 2)
+    #expect(chip(87.9) == 2)
+    // The row after the last chip (the "+N" row), the empty area under the
+    // stack, and a cell without chips choose the day.
+    #expect(chip(90) == nil)
+    #expect(chip(71, count: 2) == nil)
+    #expect(chip(33, count: 0) == nil)
+    // A point above the cell, or one that is not a position, is on nothing.
+    #expect(chip(-4) == nil)
+    #expect(chip(.nan) == nil)
+    #expect(chip(.infinity) == nil)
+    #expect(chip(1e30) == nil)
+    // Larger text scales the number and the chips together.
+    #expect(chip(40.9, number: 36, height: 22) == nil)
+    #expect(chip(41, number: 36, height: 22) == 0)
+    #expect(chip(65, number: 36, height: 22) == 1)
+  }
+
+  @Test("A month cell has one tap, which resolves the chip itself, and no button around a chip")
+  func monthCellResolvesItsOwnTaps() throws {
+    let source = try String(
+      contentsOf: URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        .appending(path: "Sources/LorvexMobile/MobileCalendarMonthDayCell.swift"),
+      encoding: .utf8)
+    // A button around a 17-point chip takes touches well beyond its frame
+    // and swallows the cell's tap, so a day that holds chips could not be
+    // chosen by tapping near them; the cell maps the tap's position instead.
+    #expect(source.contains(".onTapGesture(coordinateSpace: .local) { tap(at: $0) }"))
+    #expect(!source.contains(".buttonStyle("))
+    #expect(source.contains(".padding(.top, Self.titledTopInset)"))
+    #expect(source.contains("VStack(spacing: Self.chipSpacing)"))
+  }
+
   @Test("The chosen day keeps its agenda section while free")
   func pinnedDayStaysListedWhileFree() {
     let free = MobileCalendarAgendaDay(

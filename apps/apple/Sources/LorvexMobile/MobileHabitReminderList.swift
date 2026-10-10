@@ -20,6 +20,9 @@ struct MobileHabitReminderList: View {
   @ScaledMetric(relativeTo: .body) private var bellWidth: CGFloat = 22
   /// The vertical padding that takes Add Reminder's one line to a 44pt tap target.
   private static let addTapPadding: CGFloat = 12
+  /// The time sheet's first detent, in points at the default text size: its
+  /// one row needs far less than the half-height sheet's room.
+  private static let timeSheetHeight: CGFloat = 200
 
   private var isInteractive: Bool { addReminder != nil }
   private var sortedPolicies: [HabitReminderPolicy] {
@@ -82,27 +85,41 @@ struct MobileHabitReminderList: View {
             await addReminder?(newTime)
           }
         }
-        .mobileCompactEditorSheetPresentation()
+        .mobileCompactEditorSheetPresentation(cardHeight: Self.timeSheetHeight)
       }
     }
   }
 
+  /// The bell and the time are one accessibility element that reads the time
+  /// and, for a reminder switched off, "Off" (the bell and the strikethrough
+  /// say so only to the eye). The options menu is a button of its own beside
+  /// it: combining the whole row would fold the menu into the time's element.
   private func reminderRow(_ policy: HabitReminderPolicy) -> some View {
     HStack(spacing: LorvexDesign.Spacing.s) {
-      Image(systemName: policy.enabled ? "bell.fill" : "bell.slash")
-        .foregroundStyle(policy.enabled ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
-        .frame(width: bellWidth)
-      Text(lorvexClockTimeLabel(policy.reminderTime))
-        .font(LorvexDesign.Typography.primaryText.weight(.medium))
-        .strikethrough(!policy.enabled)
-        .foregroundStyle(policy.enabled ? Color.primary : Color.secondary)
+      HStack(spacing: LorvexDesign.Spacing.s) {
+        Image(systemName: policy.enabled ? "bell.fill" : "bell.slash")
+          .foregroundStyle(policy.enabled ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+          .frame(width: bellWidth)
+          .accessibilityHidden(true)
+        Text(lorvexClockTimeLabel(policy.reminderTime))
+          .font(LorvexDesign.Typography.primaryText.weight(.medium))
+          .strikethrough(!policy.enabled)
+          .foregroundStyle(policy.enabled ? Color.primary : Color.secondary)
+      }
+      .accessibilityElement(children: .combine)
+      .accessibilityValue(policy.enabled ? "" : Self.offLabel)
       Spacer(minLength: 8)
       if isInteractive {
         rowMenu(policy)
       }
     }
     .padding(.vertical, 2)
-    .accessibilityElement(children: .combine)
+  }
+
+  private static var offLabel: String {
+    String(
+      localized: "habits.reminders.off", defaultValue: "Off", table: "Localizable",
+      bundle: MobileL10n.bundle)
   }
 
   private func rowMenu(_ policy: HabitReminderPolicy) -> some View {
@@ -174,7 +191,7 @@ struct MobileHabitReminderTimeSheet: View {
         )
         .accessibilityIdentifier("mobileHabits.reminderTime.picker")
       }
-      .navigationTitle(
+      .mobileSheetTitle(
         isNew
           ? String(localized: "habits.reminders.add", defaultValue: "Add Reminder", table: "Localizable", bundle: MobileL10n.bundle)
           : String(localized: "habits.reminders.change_time", defaultValue: "Change Time", table: "Localizable", bundle: MobileL10n.bundle)

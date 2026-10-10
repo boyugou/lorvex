@@ -79,6 +79,7 @@ struct MobileCalendarHeaderRow: View {
         .lineLimit(1)
         .minimumScaleFactor(0.8)
         .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("mobileCalendar.header")
         .contentTransition(.numericText())
       Spacer(minLength: 0)
       Button(
@@ -97,6 +98,5 @@ struct MobileCalendarHeaderRow: View {
     .padding(.horizontal, LorvexDesign.Spacing.l)
     .padding(.top, LorvexDesign.Spacing.xs)
     .reduceMotionAnimation(.snappy(duration: 0.2), value: isOnToday)
-    .accessibilityIdentifier("mobileCalendar.header")
   }
 }

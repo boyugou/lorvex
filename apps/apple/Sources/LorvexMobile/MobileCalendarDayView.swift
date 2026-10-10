@@ -40,9 +40,10 @@ public struct MobileCalendarDayView: View {
   @State var loadedAnchor: Date?
   @State var isShowingCreateEvent = false
   @State var editingEvent: CalendarTimelineEvent?
-  // Not private: the agenda-body extension (a separate file) routes scoped
-  // deletes through this same this/future/all dialog.
-  @State var eventAwaitingDeleteScope: CalendarTimelineEvent?
+  /// The deletion the grid is asking about, shared by every block and pill so
+  /// one question shows at a time. Its ``MobileCalendarEventDeletion/Request/scope``
+  /// is the page that raised it (``pageScope(startingOn:)``).
+  @State private var eventPendingDeletion: MobileCalendarEventDeletion.Request?
   /// The calendar's width, so the mode picker names the day grid ("Day",
   /// "3 Days") even while the week is showing. The day count is derived when
   /// the picker draws rather than stored, because it also depends on the
@@ -199,11 +200,6 @@ public struct MobileCalendarDayView: View {
         )
       )
     }
-    .mobileCalendarDeleteScopeDialog(
-      event: $eventAwaitingDeleteScope,
-      delete: { await store.deleteScopedCalendarEvent($0, scope: $1) }
-    )
-    .accessibilityIdentifier("mobileCalendarDay.root")
     .overlay {
       // No event matches the query AND no scheduled task is present: only then
       // is the grid genuinely empty. The search filters events only, so
@@ -317,13 +313,11 @@ public struct MobileCalendarDayView: View {
         store.prepareCalendarDraft(for: event)
         editingEvent = event
       },
-      onDeleteEvent: { event in
-        if event.supportsScopedMutation {
-          eventAwaitingDeleteScope = event
-          return false
-        }
-        return await store.deleteCalendarEvent(event)
-      },
+      deletion: MobileCalendarEventDeletion(
+        pending: $eventPendingDeletion,
+        deleteEvent: { await store.deleteCalendarEvent($0) },
+        deleteScoped: { await store.deleteScopedCalendarEvent($0, scope: $1) },
+        scope: pageScope(startingOn: startDate)),
       onTapTask: { task in
         store.cacheTasks([task])
         store.openTaskRouteOnCurrentStack(task.id)
@@ -353,6 +347,13 @@ public struct MobileCalendarDayView: View {
     )
   }
 
+  /// Names the pager page whose first day is `startDate`. The pages of a
+  /// multi-day grid overlap by whole days, so a deletion question carries the
+  /// page that raised it and only that page's drawing of the event shows it.
+  private func pageScope(startingOn startDate: Date) -> String {
+    Self.keyFormatter.string(from: startDate)
+  }
+
   /// The page at `offset` of the grid's pager: a column while the page is
   /// near the visible one, an empty placeholder otherwise (``MobileLivePages``).
   private func page(
@@ -362,10 +363,13 @@ public struct MobileCalendarDayView: View {
       return MobileCalendarDayPage()
     }
     let startDate = date(forOffset: offset)
+    let scope = pageScope(startingOn: startDate)
     let inputs = MobileCalendarDayPage.Inputs(
       startDate: startDate, dayCount: dayCount, showsHeaders: true,
       circlesTodayInHeaders: !showsWeekStrip, opensDays: weekMode, events: events, tasks: tasks,
-      pageWidth: pagerWidth, calendar: calendar)
+      pageWidth: pagerWidth,
+      openDeletion: eventPendingDeletion.flatMap { $0.scope == scope ? $0.id : nil },
+      calendar: calendar)
     return MobileCalendarDayPage(inputs: inputs) {
       column(
         startDate: startDate, dayCount: dayCount, showsHeaders: true, events: events, tasks: tasks,

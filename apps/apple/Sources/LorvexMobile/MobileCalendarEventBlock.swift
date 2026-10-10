@@ -12,6 +12,7 @@ extension MobileCalendarDayColumn {
     let laneBand = max(
       columnWidth - LorvexDesign.CalendarMetrics.laneTrailingInset(columnWidth: columnWidth), 1)
     let laneWidth = laneBand / CGFloat(block.laneCount)
+    let x = CGFloat(block.lane) * laneWidth
     let y = CGFloat(block.startMin) / 60 * hourHeight
     // The drawn end carries the model's minimum height; a floor here would
     // only run a short block under the one that starts right after it.
@@ -47,7 +48,13 @@ extension MobileCalendarDayColumn {
     .overlay(RoundedRectangle(cornerRadius: LorvexDesign.Radius.s).stroke(color.opacity(0.35), lineWidth: 0.5))
     .contentShape(Rectangle())
     .zIndex(1)
-    .offset(x: CGFloat(block.lane) * laneWidth + dragOffsetX, y: y + dragOffsetY)
+    // Placed by layout, with the lift's travel as the only offset: a context
+    // menu's lifted preview and a dialog's popover anchor to a view's laid-out
+    // frame, so a block placed by an offset would open them at the column's
+    // top-left corner instead of at the block.
+    .alignmentGuide(.leading) { _ in -x }
+    .alignmentGuide(.top) { _ in -y }
+    .offset(x: dragOffsetX, y: dragOffsetY)
     .opacity(active ? 0.82 : 1)
     .shadow(color: active ? .black.opacity(0.18) : .clear, radius: 6, y: 2)
     .onTapGesture { if block.event.editable { onTapEvent(block.event) } }
@@ -66,7 +73,7 @@ extension MobileCalendarDayColumn {
               bundle: MobileL10n.bundle), systemImage: "pencil")
         }
 
-        deleteButton(for: block.event)
+        deleteButton(for: block.event, on: day.dayKey)
       }
     }
     .lorvexEventLift(
@@ -74,6 +81,7 @@ extension MobileCalendarDayColumn {
         for: block, dayIndex: dayIndex, allDays: allDays, columnWidth: columnWidth,
         isEnabled: isReschedulable)
     )
+    .mobileCalendarEventDeletion(of: block.event, on: day.dayKey, deletion)
     // One VoiceOver element per block, as for a task block: the label on a
     // container with several texts would land on the title and on the time
     // separately and read the block twice. An event that cannot be edited
@@ -85,7 +93,7 @@ extension MobileCalendarDayColumn {
     )
     .accessibilityAction { if block.event.editable { onTapEvent(block.event) } }
     .accessibilityActions {
-      if block.event.editable && isReschedulable { deleteButton(for: block.event) }
+      if block.event.editable && isReschedulable { deleteButton(for: block.event, on: day.dayKey) }
     }
     .accessibilitySortPriority(Self.accessibilitySortPriority(startMin: block.startMin))
     // Haptic pickup when the long-press latches this block for reschedule, via
@@ -139,9 +147,9 @@ extension MobileCalendarDayColumn {
       onCancel: { dragState = nil })
   }
 
-  private func deleteButton(for event: CalendarTimelineEvent) -> some View {
+  private func deleteButton(for event: CalendarTimelineEvent, on dayKey: String) -> some View {
     Button(role: .destructive) {
-      Task { _ = await onDeleteEvent(event) }
+      deletion.request(event, on: dayKey)
     } label: {
       Label(
         String(

@@ -296,11 +296,12 @@ struct MobileCalendarPagerTests {
 
   private static func dayInputs(
     startDate: Date, dayCount: Int = 1, events: [CalendarTimelineEvent] = [],
-    pageWidth: CGFloat = 0, calendar: Calendar
+    pageWidth: CGFloat = 0, openDeletion: String? = nil, calendar: Calendar
   ) -> MobileCalendarDayPage.Inputs {
     MobileCalendarDayPage.Inputs(
       startDate: startDate, dayCount: dayCount, showsHeaders: true, circlesTodayInHeaders: true,
-      opensDays: false, events: events, tasks: [], pageWidth: pageWidth, calendar: calendar)
+      opensDays: false, events: events, tasks: [], pageWidth: pageWidth, openDeletion: openDeletion,
+      calendar: calendar)
   }
 
   private static func dayPage(
@@ -310,7 +311,7 @@ struct MobileCalendarPagerTests {
       MobileCalendarDayColumn(
         startDate: inputs.startDate, dayCount: inputs.dayCount, events: inputs.events,
         tasks: inputs.tasks, calendar: inputs.calendar,
-        onTapEvent: { _ in recorder.calls += 1 }, onDeleteEvent: { _ in true },
+        onTapEvent: { _ in recorder.calls += 1 }, deletion: .inert,
         onTapTask: { _ in recorder.calls += 1 }, onDropTask: { _, _ in recorder.calls += 1 },
         onTapEmpty: { _, _ in recorder.calls += 1 }, onReschedule: nil)
     }
@@ -332,6 +333,16 @@ struct MobileCalendarPagerTests {
     // A page is built for the width its pager measured, so a new width redraws it.
     #expect(
       page != Self.dayPage(Self.dayInputs(startDate: start, pageWidth: 402, calendar: calendar)))
+    // A deletion question opens and closes inside the column's dialogs, which
+    // only a rebuilt column reads.
+    let asking = Self.dayPage(
+      Self.dayInputs(startDate: start, openDeletion: "2026-10-14/2026-10-14/standup", calendar: calendar))
+    #expect(page != asking)
+    #expect(
+      asking
+        == Self.dayPage(
+          Self.dayInputs(
+            startDate: start, openDeletion: "2026-10-14/2026-10-14/standup", calendar: calendar)))
   }
 
   @Test("A day page without a column differs from one with a column and equals another without")

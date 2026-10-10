@@ -31,7 +31,7 @@ struct MobileEditorSheetDetentsTests {
     #expect(card == [.large])
   }
 
-  @Test("a card sheet replaces medium with its height, scaled by the text size")
+  @Test("a sheet that gives a height replaces medium with it, scaled by the text size")
   func cardHeightReplacesMediumAndScalesWithText() {
     let atDefault = MobileEditorSheetDetents.detents(
       opensFullHeight: false, isAccessibilitySize: false, cardHeight: 480, textScale: 1)

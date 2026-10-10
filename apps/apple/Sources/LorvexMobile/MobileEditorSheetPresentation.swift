@@ -5,12 +5,14 @@ extension View {
   /// compact, large gives a denser form room without switching entry-point
   /// behavior. At accessibility text sizes the sheet opens at large only.
   ///
-  /// `cardHeight` replaces the medium detent for a sheet that shows as a card
-  /// in a regular-width window. There medium is a card about 360 pt tall while
-  /// the keyboard is up, which cuts the end of a long form once its text runs
-  /// tall, as Telugu and Tamil do. Pass the height in points the form needs at
-  /// the default text size; the detent grows with Dynamic Type, and the system
-  /// limits it to the room above the keyboard.
+  /// `cardHeight` replaces the medium detent with a fixed first detent: for a
+  /// sheet whose form fills far less than half a screen, so it does not open
+  /// mostly empty, and for a sheet that shows as a card in a regular-width
+  /// window. There medium is a card about 360 pt tall while the keyboard is
+  /// up, which cuts the end of a long form once its text runs tall, as Telugu
+  /// and Tamil do. Pass the height in points the form needs at the default
+  /// text size; the detent grows with Dynamic Type, and the system limits it
+  /// to the room above the keyboard.
   func mobileCompactEditorSheetPresentation(cardHeight: CGFloat? = nil) -> some View {
     mobileEditorSheetPresentation(opensFullHeight: false, cardHeight: cardHeight)
   }
@@ -32,8 +34,8 @@ extension View {
 
 /// The detents an editor sheet offers. A half-height sheet shows too little of
 /// its content once text is at an accessibility size, so those sizes open at
-/// large only, whatever the sheet asked for. Otherwise a sheet that shows as a
-/// card takes `cardHeight` scaled by `textScale` as its first detent, and any
+/// large only, whatever the sheet asked for. Otherwise a sheet that gives a
+/// `cardHeight` takes it, scaled by `textScale`, as its first detent, and any
 /// other sheet takes medium.
 enum MobileEditorSheetDetents {
   nonisolated static func detents(

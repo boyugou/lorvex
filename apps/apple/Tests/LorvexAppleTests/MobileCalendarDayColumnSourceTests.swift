@@ -59,6 +59,69 @@ func mobileCalendarGridLeavesSidewaysSwipesToTheDayPager() throws {
 }
 
 @Test
+func mobileCalendarBlocksAreLaidOutWhereTheyDrawSoTheirMenusAndDialogsAnchorAtThem() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  func source(_ name: String) throws -> String {
+    try String(
+      contentsOf: root.appending(path: "Sources/LorvexMobile/\(name).swift"), encoding: .utf8)
+  }
+  let eventBlock = try source("MobileCalendarEventBlock")
+  let taskBlock = try source("MobileCalendarTaskBlock")
+
+  // The system anchors a context menu's lifted preview and a dialog's popover
+  // at a view's laid-out frame, which an offset does not move: a block placed
+  // by `.offset` opened both at the top-left corner of its day column. A block
+  // takes its place from alignment guides, and the only offset left is the
+  // travel of a lifted event block.
+  for text in [eventBlock, taskBlock] {
+    #expect(text.contains(".alignmentGuide(.leading) { _ in -x }"))
+    #expect(text.contains(".alignmentGuide(.top) { _ in -y }"))
+  }
+  #expect(eventBlock.contains(".offset(x: dragOffsetX, y: dragOffsetY)"))
+  #expect(!eventBlock.contains(".offset(x: CGFloat(block.lane)"))
+  #expect(!taskBlock.contains(".offset("))
+}
+
+@Test
+func mobileCalendarPagerHandsEachPageTheDeletionQuestionOpenOnIt() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  let day = try String(
+    contentsOf: root.appending(path: "Sources/LorvexMobile/MobileCalendarDayView.swift"),
+    encoding: .utf8)
+
+  // A page whose inputs are unchanged is not evaluated again, so a dialog
+  // inside its column learns of a question only through the page's inputs.
+  #expect(
+    day.contains("openDeletion: eventPendingDeletion.flatMap { $0.scope == scope ? $0.id : nil }"))
+  #expect(day.contains("scope: pageScope(startingOn: startDate)"))
+}
+
+@Test
+func mobileCalendarAgendaEventRowTakesATapAcrossItsWholeWidth() throws {
+  let root = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+    .deletingLastPathComponent()
+  let source = try String(
+    contentsOf: root.appending(path: "Sources/LorvexMobile/MobileCalendarAgendaRow.swift"),
+    encoding: .utf8)
+  let start = try #require(source.range(of: "struct MobileCalendarAgendaRow: View"))
+  let end = try #require(source.range(of: "struct MobileCalendarAgendaTaskRow: View"))
+
+  // The row is the label of a plain button, which takes touches only on its
+  // label's drawn content and a short way around it; without a content shape
+  // a tap on the empty middle or right of a row with a short title did
+  // nothing.
+  #expect(source[start.lowerBound..<end.lowerBound].contains(".contentShape(Rectangle())"))
+}
+
+@Test
 func mobileCalendarDayColumnIncludesScheduledTasksInAllDayStrip() throws {
   let root = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()

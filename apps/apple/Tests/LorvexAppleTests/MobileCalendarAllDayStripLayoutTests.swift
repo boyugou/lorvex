@@ -72,7 +72,7 @@
     private func strip(_ columns: [CalendarGridDay], sizeClass: UserInterfaceSizeClass) -> some View {
       MobileCalendarAllDayStrip(
         columns: columns, gutterWidth: 52, isCompact: columns.count > 1,
-        eventColor: { _ in .blue }, onTapEvent: { _ in }, onDeleteEvent: { _ in true },
+        eventColor: { _ in .blue }, onTapEvent: { _ in }, deletion: .inert,
         onTapTask: { _ in }, onToggleTask: { _ in }, onDropTask: { _, _ in }
       )
       .environment(\.horizontalSizeClass, sizeClass)

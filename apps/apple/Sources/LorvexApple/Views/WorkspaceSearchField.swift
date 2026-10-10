@@ -43,8 +43,8 @@ private struct WorkspaceSearchHost: ViewModifier {
 
 extension AppStore {
   /// The search field's placeholder for a workspace that has search, naming
-  /// what it narrows: every task, the scoped list's tasks, or the memory
-  /// notes. Nil for the workspaces without search.
+  /// what it searches: every task, the scoped list's tasks, the memory notes,
+  /// or the calendar's events. Nil for the workspaces without search.
   func workspaceSearchPrompt(for selection: SidebarSelection) -> String? {
     switch selection {
     case .tasks:
@@ -58,7 +58,11 @@ extension AppStore {
       return String(localized: "tasks.search.prompt", defaultValue: "Search All Tasks", table: "Localizable", bundle: LorvexL10n.bundle)
     case .memory:
       return String(localized: "memory.search.prompt", defaultValue: "Search Memory", table: "Localizable", bundle: LorvexL10n.bundle)
-    case .today, .lists, .calendar, .habits, .reviews:
+    case .calendar:
+      return String(
+        localized: "calendar.search.prompt", defaultValue: "Search Events", table: "Localizable",
+        bundle: LorvexL10n.bundle)
+    case .today, .lists, .habits, .reviews:
       return nil
     }
   }

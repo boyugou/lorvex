@@ -3402,6 +3402,19 @@ Calendar permission is required to display EventKit events. If permission is
 denied, Lorvex shows only its own planning blocks with a permission prompt in
 the Settings diagnostics panel.
 
+To find an event, search the Calendar: on the Mac, press ⌘F or click the search
+field in the toolbar; on iPhone and iPad, tap the search button in the
+**Calendar** tab. The search looks through every date, not only the days on
+screen, and matches the start of a word in an event's title, notes, or
+location. The matches list by day over the calendar: today and later days come
+first, earliest first, and earlier days follow, most recent first, faded. A
+repeating event is listed once, on its first day. On the Mac, click a result to
+open its details and move the calendar to that day, or right-click it for
+**Open Details**, **Edit**, and **Delete**; on iPhone and iPad, tap a result to
+edit it, or touch and hold it for **Edit** and **Delete**. Clear the search to
+return to the calendar as you left it. Changing the view or the period with the
+toolbar also ends the search.
+
 ### Creating and Editing Events
 
 On the Mac, click **+** (Create Event) in the Calendar toolbar, or click or
@@ -3794,7 +3807,7 @@ re-index, use **Task → Refresh (⌘R)** on macOS.
 | ⌘N | New task (focuses the quick-add field) |
 | ⌥⌘N | Quick Capture: the small capture window over the current app |
 | ⌘K | Command Palette: find a task, go somewhere, or capture |
-| ⌘F | Find: focus the search field in All Tasks or Memory; from any other workspace, open All Tasks and focus its search field |
+| ⌘F | Find: focus the search field in All Tasks, Memory, or Calendar; from any other workspace, open All Tasks and focus its search field |
 | ⌘1 | Today |
 | ⌘2 | Calendar |
 | ⌘3 | All Tasks |

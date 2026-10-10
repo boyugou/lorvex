@@ -14,13 +14,15 @@
     /// rail hidden.
     @MainActor
     static func emitCalendarStops(store: AppStore) async {
-      enum Opens { case nothing, timedTask, timedEvent }
+      enum Opens { case nothing, timedTask, timedEvent, search, searchOpen }
       let stops: [(mode: CalendarPresentationMode, showsRail: Bool, opens: Opens, name: String)] = [
         (.day, false, .nothing, "calendar-day"),
         (.month, false, .nothing, "calendar-month"),
         (.week, true, .nothing, "calendar-rail"),
         (.week, false, .timedTask, "calendar-task"),
         (.week, false, .timedEvent, "calendar-event"),
+        (.week, false, .search, "calendar-search"),
+        (.week, false, .searchOpen, "calendar-search-open"),
       ]
       for stop in stops {
         store.selection = .today
@@ -50,8 +52,21 @@
             store.toggleCalendarEventSelection(event)
             try? await Task.sleep(for: .seconds(1))
           }
+        case .search:
+          // A search whose matches sit on several days, over the grid.
+          store.searchText = "s"
+          try? await Task.sleep(for: .seconds(3))
+        case .searchOpen:
+          // The first match open in the inspector, its row selected.
+          store.searchText = "s"
+          try? await Task.sleep(for: .seconds(1.5))
+          if let event = await store.searchCalendarDays(matching: "s").first?.events.first {
+            store.selectCalendarEvent(event)
+            try? await Task.sleep(for: .seconds(1))
+          }
         }
         await emitStop(stop.name)
+        store.searchText = ""
         store.selectedTaskID = nil
         store.selectedCalendarEventID = nil
       }

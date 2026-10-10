@@ -132,7 +132,8 @@ struct TodayScheduleSection: View {
   }
 }
 
-/// A calendar event in Today's schedule, laid out like a task row: a bar in
+/// A calendar event in Today's schedule and in the Calendar's search results
+/// (``CalendarSearchResultsView``), laid out like a task row: a bar in
 /// the calendar's color where a task has its circle, the title, and the time
 /// with the location under it. A past event quiets its title and fades its
 /// bar. VoiceOver reads a timed event's title, its whole time (the span
@@ -149,6 +150,8 @@ struct TodayEventRow: View {
   let timeLabel: String
   let isPast: Bool
   var isSelected = false
+  /// The row's accessibility identifier; Today's schedule row by default.
+  var identifier: String?
   var open: () -> Void = {}
 
   var body: some View {
@@ -198,7 +201,7 @@ struct TodayEventRow: View {
     .accessibilityAddTraits(.isButton)
     .accessibilityAddTraits(isSelected ? .isSelected : [])
     .accessibilityAction(.default, open)
-    .accessibilityIdentifier("today.schedule.event.\(event.id)")
+    .accessibilityIdentifier(identifier ?? "today.schedule.event.\(event.id)")
   }
 }
 

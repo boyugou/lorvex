@@ -15,10 +15,11 @@ two-column `NavigationSplitView`.
 Two columns — sidebar + workspace. The workspace owns the full main area; a
 trailing `.inspector` is shown only while it has a subject: a selected task, a
 selected habit, or an event opened from Today's schedule. It shows one subject
-at a time. All Tasks and Memory carry a toolbar search field (`WorkspaceView`
-mounts it through `lorvexWorkspaceSearchField`; ⌘F focuses it, and from any
-other workspace opens All Tasks first); no other workspace has one. The toolbar
-is not customizable.
+at a time. All Tasks, Memory, and Calendar carry a toolbar search field
+(`WorkspaceView` mounts it through `lorvexWorkspaceSearchField`; ⌘F focuses it,
+and from any other workspace opens All Tasks first); no other workspace has
+one. The Calendar's field lists the events it finds on any date by day over the
+grid (`CalendarSearchResultsView`). The toolbar is not customizable.
 
 The sidebar opens with its five fixed destinations in one section without a
 header: `SidebarSelection.sidebarGroups` holds a single group
@@ -81,7 +82,7 @@ pane's own header.
 | Sidebar footer | Memory and Settings, pinned below a divider so they never scroll with the list above; Memory is excluded from `sidebarGroups` on purpose (it is the assistant's context, not a daily workspace) | `store.selection == .memory`; `SettingsLink` | `Views/SidebarView.swift` (`utilitiesFooter`) |
 | Workspace (main) column | Workspace view chosen by selection, filling the full width; the switch is exhaustive over all seven `SidebarSelection` cases | `store.selection` (`switch`) | `Views/WorkspaceView.swift` |
 | Inspector | `TaskDetailView` while a task is selected, else `HabitDetailInspector` while a habit is, else `CalendarEventInspector` for an event opened from Today's schedule | `store.selectedTaskID` / `store.selectedHabitID` / `store.todayInspectorEvent` | `Views/ContentView.swift`; `Views/TaskDetailView.swift`; `Views/HabitDetailInspector.swift`; `Views/CalendarEventInspector.swift` |
-| Toolbar search | A `.searchable` field in the toolbar for All Tasks ("Search All Tasks", or a list-specific prompt while a list is scoped) and Memory ("Search Memory"); the other workspaces mount none | `store.searchText`; `AppStore.searchableSelections` | `Views/WorkspaceView.swift`; `Views/WorkspaceSearchField.swift` |
+| Toolbar search | A `.searchable` field in the toolbar for All Tasks ("Search All Tasks", or a list-specific prompt while a list is scoped), Memory ("Search Memory"), and Calendar ("Search Events"); the other workspaces mount none | `store.searchText`; `AppStore.searchableSelections` | `Views/WorkspaceView.swift`; `Views/WorkspaceSearchField.swift` |
 | Command palette sheet | `CommandPaletteView` (⌘K overlay) | `$store.showCommandPalette` | `Views/CommandPaletteView.swift` |
 | Setup wizard sheet | `SetupWizardSheet` on first run | `showSetupWizard` (gated on `settings.setupCompleted`) | `Onboarding/SetupWizardSheet.swift` |
 
@@ -91,8 +92,8 @@ pane's own header.
   (`Support/SidebarNavigation.swift`; `App/LorvexAppCommands.swift`).
 - ⌘K → toggles `store.showCommandPalette`.
 - ⌘F (the "Find…" item in the Edit menu) → `AppStore.beginSearch()` focuses the
-  toolbar search field of All Tasks or Memory; from any other workspace it
-  opens All Tasks across every list and focuses its field.
+  toolbar search field of All Tasks, Memory, or Calendar; from any other
+  workspace it opens All Tasks across every list and focuses its field.
 - Selecting a task (incl. a Calendar grid tap via `selectTaskFromList`) presents
   the task inspector; selecting a habit card presents the habit inspector;
   opening an event from Today's schedule presents the event inspector. The

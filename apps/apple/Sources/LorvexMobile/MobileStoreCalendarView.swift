@@ -46,8 +46,8 @@ public struct MobileStoreCalendarView: View {
     // choosing a mode leaves the search for that mode instead of changing a grid
     // the results cover.
     .onChange(of: store.calendarPresentationMode) { searchQuery = "" }
-    // Event search finds events by title, location, or notes on any date — the
-    // mobile counterpart to the macOS calendar filter.
+    // Event search finds events by title, location, or notes on any date, as
+    // the macOS Calendar workspace's search does.
     .searchable(
       text: $searchQuery,
       prompt: String(

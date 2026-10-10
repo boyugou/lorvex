@@ -36,7 +36,7 @@ struct CalendarEventInspector: View {
           }
           if event.isRecurring || event.supportsScopedMutation {
             detailRow(icon: "repeat", title: recurrenceTitle) {
-              plainText(event.recurrenceSummary ?? repeatsFallback)
+              plainText(Self.recurrenceLabel(for: event))
             }
           }
           if let notes = event.notes, !notes.isEmpty {
@@ -231,6 +231,21 @@ struct CalendarEventInspector: View {
       position: .leading)
   }
 
+  /// How the event repeats, in the words the repeat editor uses ("Every 2
+  /// weeks · Mon, Wed · 10 times"): the source's own summary for a mirrored
+  /// event, else the stored rule's. A one-off change to a series occurrence
+  /// carries no rule of its own and reads as a generic repeating event.
+  static func recurrenceLabel(for event: CalendarTimelineEvent) -> String {
+    if let summary = event.recurrenceSummary, !summary.isEmpty { return summary }
+    guard let rule = TaskRecurrenceRule.bridgeRule(from: event.recurrenceRule) else {
+      return String(
+        localized: "calendar.event.repeats_generic", defaultValue: "Repeating event",
+        table: "Localizable", bundle: LorvexL10n.bundle)
+    }
+    return rule.localizedDisplaySummary(
+      anchorDay: LorvexDateFormatters.ymd.date(from: event.startDate))
+  }
+
   private var whenTitle: String {
     String(
       localized: "calendar.event.field.when", defaultValue: "When", table: "Localizable",
@@ -245,11 +260,6 @@ struct CalendarEventInspector: View {
     String(
       localized: "calendar.event.field.repeats", defaultValue: "Repeats", table: "Localizable",
       bundle: LorvexL10n.bundle)
-  }
-  private var repeatsFallback: String {
-    String(
-      localized: "calendar.event.repeats_generic", defaultValue: "Repeating event",
-      table: "Localizable", bundle: LorvexL10n.bundle)
   }
   private var notesTitle: String {
     String(

@@ -422,8 +422,8 @@ that hides two items behind an extra hover.
   text is hidden; each workspace names itself with a large in-content title
   (subtitle and digest beneath it) while its date navigation, mode pickers,
   and actions ride in the unified window toolbar.
-  Actions sit at the toolbar's trailing edge, except in All Tasks and Memory:
-  those two show the toolbar search field, which holds the trailing edge, so
+  Actions sit at the toolbar's trailing edge, except in All Tasks, Memory, and
+  Calendar: those three show the toolbar search field, which holds the trailing edge, so
   their actions sit at the leading edge. The window owns that one field and
   only changes its prompt with the workspace; a workspace never attaches a
   toolbar search of its own, because two at once make the toolbar insert a

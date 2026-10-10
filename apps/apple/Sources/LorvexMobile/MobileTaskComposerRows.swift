@@ -1,6 +1,11 @@
 import LorvexCore
 import SwiftUI
 
+/// How far the icon-only Add buttons of the composer rows reach past their
+/// glyph on every side, so the tap target is thumb-sized while the row keeps
+/// its height.
+private let composerAddTapOutset: CGFloat = 11
+
 /// Inline composer for a new checklist item. It replaces the "Add Checklist
 /// Item" row, takes keyboard focus on appear, and stays open after each added
 /// item so several can be typed in a row. It asks the host to dismiss it when
@@ -32,9 +37,12 @@ struct MobileChecklistComposerRow: View {
           String(
             localized: "common.add", defaultValue: "Add", table: "Localizable",
             bundle: MobileL10n.bundle), systemImage: "plus.circle.fill")
+        .padding(composerAddTapOutset)
+        .contentShape(Rectangle())
       }
       .labelStyle(.iconOnly)
       .buttonStyle(.borderless)
+      .padding(-composerAddTapOutset)
       .disabled(trimmedText.isEmpty)
     }
     .padding(.vertical, LorvexDesign.Spacing.xs)
@@ -167,10 +175,13 @@ struct MobileReminderComposerRow: View {
           String(
             localized: "reminder.add", defaultValue: "Add Reminder", table: "Localizable",
             bundle: MobileL10n.bundle), systemImage: "plus.circle.fill")
+        .padding(composerAddTapOutset)
+        .contentShape(Rectangle())
       }
       .labelStyle(.iconOnly)
       .imageScale(.large)
       .buttonStyle(.borderless)
+      .padding(-composerAddTapOutset)
       // A reminder in the past is rejected at arm time (`fireDate > now`) and
       // would otherwise persist as a row that silently never fires. Disable
       // the confirm button until the chosen instant is in the future.

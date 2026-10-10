@@ -2,13 +2,10 @@ import Foundation
 import LorvexCore
 
 extension MobileCalendarAgendaDay {
-  /// The days a calendar search lists for the `events` it found: one day per
-  /// start date holding that date's events, ordered as the agenda orders a
-  /// day (``isListedBefore(_:_:)``). Days from today on come first, earliest
-  /// first, so the next match leads; days before today follow, most recent
-  /// first, and read as past through the faded rows
-  /// (``hasPassed(_:todayKey:nowMinutes:)``). A repeating event is one row on
-  /// its first day.
+  /// The days a calendar search lists for the `events` it found, in the order
+  /// ``CalendarSearchDay/days(for:todayKey:)`` gives: days from today on
+  /// first, then past days, which read as past through the faded rows
+  /// (``hasPassed(_:todayKey:nowMinutes:)``).
   ///
   /// - Parameters:
   ///   - todayKey: the logical today as `yyyy-MM-dd`.
@@ -16,16 +13,11 @@ extension MobileCalendarAgendaDay {
   static func searchResults(
     _ events: [CalendarTimelineEvent], todayKey: String, calendar: Calendar
   ) -> [MobileCalendarAgendaDay] {
-    let eventsByDay = Dictionary(grouping: events, by: \.startDate)
-    let keys = eventsByDay.keys.sorted()
-    let ordered = keys.filter { $0 >= todayKey } + keys.filter { $0 < todayKey }.reversed()
-    return ordered.compactMap { key in
+    CalendarSearchDay.days(for: events, todayKey: todayKey).compactMap { day in
       guard
-        let date = PlannedDayBridge.displayDate(forLogicalDay: key, timeZone: calendar.timeZone)
+        let date = PlannedDayBridge.displayDate(forLogicalDay: day.key, timeZone: calendar.timeZone)
       else { return nil }
-      return MobileCalendarAgendaDay(
-        date: date, key: key, events: (eventsByDay[key] ?? []).sorted(by: isListedBefore),
-        tasks: [])
+      return MobileCalendarAgendaDay(date: date, key: day.key, events: day.events, tasks: [])
     }
   }
 }

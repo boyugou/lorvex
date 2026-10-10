@@ -89,7 +89,7 @@ struct MemoryEntryRow: View {
   private var hoverActions: some View {
     HStack(spacing: LorvexDesign.Spacing.xs) {
       Button(action: edit) {
-        Image(systemName: "pencil").frame(width: 16, height: 16)
+        Image(systemName: "pencil").frame(width: 16, height: 16).contentShape(Rectangle())
       }
       .buttonStyle(.borderless)
       .help(String(localized: "memory.edit", defaultValue: "Edit", table: "Localizable", bundle: LorvexL10n.bundle))
@@ -97,7 +97,7 @@ struct MemoryEntryRow: View {
       .accessibilityIdentifier("memory.row.edit.\(entry.key)")
 
       Button(role: .destructive, action: delete) {
-        Image(systemName: "trash").frame(width: 16, height: 16)
+        Image(systemName: "trash").frame(width: 16, height: 16).contentShape(Rectangle())
       }
       .buttonStyle(.borderless)
       .help(String(localized: "common.delete", defaultValue: "Delete", table: "Localizable", bundle: LorvexL10n.bundle))

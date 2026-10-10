@@ -20,6 +20,10 @@ struct CalendarWorkspaceView: View {
   /// Whether the unplanned-tasks rail stands beside the grid. Persisted like the
   /// mode, so it stays as the person left it.
   @AppStorage("calendar.workspace.planRail") private var showsPlanRail = false
+  /// The day a search result moved the grid to. A step, a mode switch, or the
+  /// Today button changes the period without it, which ends the search; moving
+  /// to this day does not.
+  @State private var revealedDay: Date?
 
   /// The grid (`CalendarWeekGridView`) lays out from `@Environment(\.calendar)`,
   /// so the workspace's week math (step, week range, "is current") reads the same
@@ -88,51 +92,68 @@ struct CalendarWorkspaceView: View {
 
       Divider()
 
-      switch mode {
-      case .day:
-        CalendarWeekGridView(
-          store: store,
-          weekStart: visiblePeriod.start,
-          visibleDayCount: 1,
-          selectEvent: { store.toggleCalendarEventSelection($0) },
-          editEvent: { eventActions.beginEditing($0, store: store) },
-          requestDeleteEvent: { eventActions.requestDelete($0) },
-          openTask: { task in
-            store.selectTaskFromList(task.id)
-          },
-          createAt: { date, minutes, duration in
-            prepareCreateDraft(date: date, minutes: minutes, durationMinutes: duration)
-            eventActions.activeSheet = .create
-          }
-        )
-      case .week:
-        CalendarWeekGridView(
-          store: store,
-          weekStart: weekStart,
-          selectEvent: { store.toggleCalendarEventSelection($0) },
-          editEvent: { eventActions.beginEditing($0, store: store) },
-          requestDeleteEvent: { eventActions.requestDelete($0) },
-          openTask: { task in
-            store.selectTaskFromList(task.id)
-          },
-          createAt: { date, minutes, duration in
-            prepareCreateDraft(date: date, minutes: minutes, durationMinutes: duration)
-            eventActions.activeSheet = .create
-          }
-        )
-      case .month:
-        CalendarMonthGridView(
-          store: store,
-          monthAnchor: monthAnchor,
-          selectEvent: { store.toggleCalendarEventSelection($0) },
-          editEvent: { eventActions.beginEditing($0, store: store) },
-          requestDeleteEvent: { eventActions.requestDelete($0) },
-          openTask: { task in
-            store.selectTaskFromList(task.id)
-          },
-          openDay: { navigateToDay($0) },
-          createEvent: { createEvent(on: $0) }
-        )
+      Group {
+        switch mode {
+        case .day:
+          CalendarWeekGridView(
+            store: store,
+            weekStart: visiblePeriod.start,
+            visibleDayCount: 1,
+            selectEvent: { store.toggleCalendarEventSelection($0) },
+            editEvent: { eventActions.beginEditing($0, store: store) },
+            requestDeleteEvent: { eventActions.requestDelete($0) },
+            openTask: { task in
+              store.selectTaskFromList(task.id)
+            },
+            createAt: { date, minutes, duration in
+              prepareCreateDraft(date: date, minutes: minutes, durationMinutes: duration)
+              eventActions.activeSheet = .create
+            }
+          )
+        case .week:
+          CalendarWeekGridView(
+            store: store,
+            weekStart: weekStart,
+            selectEvent: { store.toggleCalendarEventSelection($0) },
+            editEvent: { eventActions.beginEditing($0, store: store) },
+            requestDeleteEvent: { eventActions.requestDelete($0) },
+            openTask: { task in
+              store.selectTaskFromList(task.id)
+            },
+            createAt: { date, minutes, duration in
+              prepareCreateDraft(date: date, minutes: minutes, durationMinutes: duration)
+              eventActions.activeSheet = .create
+            }
+          )
+        case .month:
+          CalendarMonthGridView(
+            store: store,
+            monthAnchor: monthAnchor,
+            selectEvent: { store.toggleCalendarEventSelection($0) },
+            editEvent: { eventActions.beginEditing($0, store: store) },
+            requestDeleteEvent: { eventActions.requestDelete($0) },
+            openTask: { task in
+              store.selectTaskFromList(task.id)
+            },
+            openDay: { navigateToDay($0) },
+            createEvent: { createEvent(on: $0) }
+          )
+        }
+      }
+      // The grid stays in the hierarchy under the search results, so the period
+      // it shows and its scroll position are still there when the search
+      // clears; it is hidden from VoiceOver while the results cover it.
+      .accessibilityHidden(store.hasActiveSearch)
+      .overlay {
+        if store.hasActiveSearch {
+          CalendarSearchResultsView(
+            store: store, calendar: calendar,
+            reveal: { reveal($0) },
+            edit: { eventActions.beginEditing($0, store: store) },
+            requestDelete: { eventActions.requestDelete($0) }
+          )
+          .contentShape(Rectangle())
+        }
       }
     }
     .navigationTitle(String(localized: SidebarSelection.calendar.macOSLocalizedTitle))
@@ -154,6 +175,16 @@ struct CalendarWorkspaceView: View {
     // change the period on screen; a day picked inside it changes nothing.
     .onChange(of: visiblePeriod) { _, _ in
       fetchVisiblePeriod()
+    }
+    // The toolbar's steps, Today button, and mode picker stay in reach while
+    // the results cover the grid; each acts on the grid, so it ends the search
+    // and shows the result. Moving to the day a result revealed does not.
+    .onChange(of: anchorDate) { _, day in
+      if let revealedDay, calendar.isDate(day, inSameDayAs: revealedDay) { return }
+      store.searchText = ""
+    }
+    .onChange(of: mode) { _, _ in
+      store.searchText = ""
     }
     .onChange(of: store.today) { _, _ in
       // A task mutation (defer / complete / move / batch) updates `today`.
@@ -260,6 +291,19 @@ struct CalendarWorkspaceView: View {
   private func navigateToDay(_ date: Date) {
     anchorDate = date
     mode = .day
+  }
+
+  /// Shows a search result: its detail in the inspector and, behind the
+  /// results, the grid on the day it starts, which loads the window that holds
+  /// it so the inspector can resolve it.
+  private func reveal(_ event: CalendarTimelineEvent) {
+    if let day = PlannedDayBridge.displayDate(
+      forLogicalDay: event.startDate, timeZone: calendar.timeZone)
+    {
+      revealedDay = day
+      anchorDate = day
+    }
+    store.selectCalendarEvent(event)
   }
 
   /// Loads the visible period's timeline. Day and Week load the store's

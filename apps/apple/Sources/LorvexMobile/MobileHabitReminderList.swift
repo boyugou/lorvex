@@ -122,6 +122,10 @@ struct MobileHabitReminderList: View {
       bundle: MobileL10n.bundle)
   }
 
+  /// How far the options menu's tap target reaches past its glyph on every
+  /// side, so it is thumb-sized while the row keeps its height.
+  private static let menuTapOutset: CGFloat = 11
+
   private func rowMenu(_ policy: HabitReminderPolicy) -> some View {
     Menu {
       Button {
@@ -150,8 +154,11 @@ struct MobileHabitReminderList: View {
       // instead of gray.
       Image(systemName: "ellipsis.circle")
         .foregroundStyle(Color.secondary)
+        .padding(Self.menuTapOutset)
+        .contentShape(Rectangle())
         .accessibilityLabel(String(localized: "habits.reminders.options", defaultValue: "Reminder options", table: "Localizable", bundle: MobileL10n.bundle))
     }
+    .padding(-Self.menuTapOutset)
     .disabled(isMutating)
     .accessibilityIdentifier("mobileHabits.detail.reminders.menu")
   }

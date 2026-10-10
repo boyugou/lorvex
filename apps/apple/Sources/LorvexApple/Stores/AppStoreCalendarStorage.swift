@@ -27,6 +27,11 @@ struct AppStoreCalendarStorage {
   /// panel. Nil hides the panel. Cleared when the event leaves the visible
   /// timeline (navigation, deletion, or a filter change).
   var selectedCalendarEventID: String?
+  /// The event ``selectedCalendarEventID`` was chosen from, kept so a selection
+  /// made from a search result can move onto the loaded occurrence it stands
+  /// for (``AppStore/adoptSelectedCalendarOccurrence()``). Meaningful only
+  /// while its id equals ``selectedCalendarEventID``.
+  var selectedCalendarEventReference: CalendarTimelineEvent?
   /// The day the Calendar workspace shows next (``AppStore/calendarPendingDayKey``).
   var calendarPendingDayKey: String?
 
@@ -37,6 +42,7 @@ struct AppStoreCalendarStorage {
     calendarUnplannedRailIsShown = false
     calendarUnplannedTotal = 0
     selectedCalendarEventID = nil
+    selectedCalendarEventReference = nil
     calendarPendingDayKey = nil
   }
 }

@@ -7,6 +7,11 @@ extension AppStore {
     set { calendarStorage.calendarTimeline = newValue }
   }
 
+  /// A count that changes each time the calendar timeline starts a load, which
+  /// follows every event create, edit, and delete. A view that reads events
+  /// from the core outside the loaded window reads again when it changes.
+  var calendarTimelineLoadToken: Int { calendarStorage.timelineLoadToken }
+
   /// The id of the calendar event shown in the detail inspector, or nil when the
   /// panel is closed. Setting it directly is fine; reads of the event itself go
   /// through ``selectedCalendarEvent``.
@@ -25,8 +30,42 @@ extension AppStore {
   }
 
   /// Open the inspector for `event` (any event — imported events show read-only).
+  /// An event read outside the loaded window, as a calendar search does, may
+  /// stand for a recurring series by its master row; the inspector then opens on
+  /// the series' occurrence in the window once it is loaded
+  /// (``adoptSelectedCalendarOccurrence()``).
   func selectCalendarEvent(_ event: CalendarTimelineEvent) {
     calendarStorage.selectedCalendarEventID = event.id
+    calendarStorage.selectedCalendarEventReference = event
+    adoptSelectedCalendarOccurrence()
+  }
+
+  /// Moves the selection from an event the loaded timeline does not list onto
+  /// the loaded event that is the same event
+  /// (``CalendarTimelineEvent/isSameEvent(as:)``): a recurring series chosen from
+  /// a search result carries the series id, and the timeline lists the series
+  /// only as occurrences with ids of their own. It does nothing while the
+  /// selection is in the timeline, and keeps the selection when no loaded event
+  /// matches, so a window that loads later can still adopt it.
+  func adoptSelectedCalendarOccurrence() {
+    guard let id = calendarStorage.selectedCalendarEventID,
+      let reference = calendarStorage.selectedCalendarEventReference, reference.id == id,
+      let events = calendarTimeline?.events,
+      !events.contains(where: { $0.id == id }),
+      let occurrence = events.first(where: { $0.isSameEvent(as: reference) })
+    else { return }
+    calendarStorage.selectedCalendarEventID = occurrence.id
+    calendarStorage.selectedCalendarEventReference = occurrence
+  }
+
+  /// True when `event` is the event open in the inspector, including a search
+  /// result that stands for the open occurrence of its series.
+  func isCalendarEventSelected(_ event: CalendarTimelineEvent) -> Bool {
+    guard let id = calendarStorage.selectedCalendarEventID else { return false }
+    if id == event.id { return true }
+    guard let reference = calendarStorage.selectedCalendarEventReference, reference.id == id
+    else { return false }
+    return reference.isSameEvent(as: event)
   }
 
   /// Toggle the inspector for `event`: re-tapping the open event collapses it,

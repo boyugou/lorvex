@@ -21,6 +21,10 @@ struct MobileTodayScheduleTimelineSection: View {
   var openEvent: (CalendarTimelineEvent) -> Void = { _ in }
   @State private var showsPast = false
 
+  /// How far a task's completion circle reaches past its glyph on every side,
+  /// so the tap target is thumb-sized while the marker column keeps its width.
+  private static let completionTapOutset: CGFloat = 12
+
   /// The rows on screen, in order: the folded rows only once unfolded.
   nonisolated static func visibleItems(
     of items: [LorvexTodayTimelineItem], showsPast: Bool
@@ -68,9 +72,11 @@ struct MobileTodayScheduleTimelineSection: View {
           Image(systemName: isDone ? "checkmark.circle.fill" : "circle")
             .foregroundStyle(
               isDone ? AnyShapeStyle(LorvexDesign.Palette.done) : AnyShapeStyle(.secondary))
-            .contentShape(Circle())
+            .padding(Self.completionTapOutset)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .padding(-Self.completionTapOutset)
         .disabled(store.taskIsMutating(task.id))
         .accessibilityHidden(true)
       }
@@ -174,6 +180,7 @@ struct MobileTodayScheduleTimelineSection: View {
       .foregroundStyle(.secondary)
       .padding(.horizontal, LorvexTimelineMetrics.horizontalPadding)
       .padding(.vertical, LorvexDesign.Spacing.xs)
+      .frame(minHeight: 44, alignment: .leading)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

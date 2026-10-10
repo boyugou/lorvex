@@ -13,6 +13,10 @@ struct MobileHabitMilestoneGoalField: View {
   let frequencyType: String
   let idPrefix: String
 
+  /// How far the clear button's tap target reaches past its glyph on every
+  /// side, so it is thumb-sized while the row keeps its height.
+  private static let clearTapOutset: CGFloat = 12
+
   var body: some View {
     Section {
       HStack(spacing: LorvexDesign.Spacing.s) {
@@ -35,8 +39,11 @@ struct MobileHabitMilestoneGoalField: View {
             // accent tint and draws a faint blue disc instead of gray.
             Image(systemName: "xmark.circle.fill")
               .foregroundStyle(Color.secondary)
+              .padding(Self.clearTapOutset)
+              .contentShape(Rectangle())
           }
           .buttonStyle(.borderless)
+          .padding(-Self.clearTapOutset)
           .accessibilityLabel(
             String(localized: "habits.sheet.field.milestone_goal_clear", defaultValue: "Clear milestone goal", table: "Localizable", bundle: MobileL10n.bundle))
           .accessibilityIdentifier("\(idPrefix).milestoneTarget.clear")

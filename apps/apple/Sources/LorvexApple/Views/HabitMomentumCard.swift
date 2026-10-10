@@ -333,6 +333,7 @@ struct HabitMomentumCard: View {
         Image(systemName: "minus")
           .font(.system(size: 10, weight: .bold))  // lorvex-design-token: allow
           .frame(width: 18, height: 18)
+          .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
       .disabled(habit.completionsToday <= 0)
@@ -351,6 +352,7 @@ struct HabitMomentumCard: View {
         Image(systemName: "plus")
           .font(.system(size: 10, weight: .bold))  // lorvex-design-token: allow
           .frame(width: 18, height: 18)
+          .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
       .disabled(isComplete)

@@ -189,6 +189,20 @@ public struct CalendarTimelineEvent: Identifiable, Equatable, Sendable {
     self.recurrenceRule = recurrenceRule
     self.recurrenceSummary = recurrenceSummary
   }
+
+  /// True when `other` is this same event: the same ``id``, or, for a
+  /// recurring-series event, the same source event (``eventID``) at the same
+  /// recurrence slot (``occurrenceDate``). A search reads a series as its stored
+  /// master row, whose ``id`` is the series id, while a loaded timeline expands
+  /// it into occurrences that each carry their own ``id``; the pair of source
+  /// event and slot names the same occurrence in both shapes.
+  public func isSameEvent(as other: CalendarTimelineEvent) -> Bool {
+    if id == other.id { return true }
+    guard supportsScopedMutation, other.supportsScopedMutation,
+      let slot = occurrenceDate
+    else { return false }
+    return eventID == other.eventID && slot == other.occurrenceDate
+  }
 }
 
 /// Patch fields for a scoped calendar event edit. All fields are optional —

@@ -40,17 +40,19 @@ struct ListCatalogRow: View {
 
   var body: some View {
     rowContent
-    .contentShape(Rectangle())
-    .onTapGesture(perform: select)
-    // Full Keyboard Access: Tab reaches the row and Return or Space opens its
-    // Tasks scope.
-    .lorvexKeyboardActivation(select)
     .padding(.horizontal, ListCatalogRowMetrics.horizontalPadding)
     .padding(.vertical, ListCatalogRowMetrics.verticalPadding)
     .background {
       RoundedRectangle(cornerRadius: ListCatalogRowMetrics.cornerRadius, style: .continuous)
         .fill(rowBackground)
     }
+    // After the padding, so the whole card opens the list, not only the text
+    // inside it.
+    .contentShape(Rectangle())
+    .onTapGesture(perform: select)
+    // Full Keyboard Access: Tab reaches the row and Return or Space opens its
+    // Tasks scope.
+    .lorvexKeyboardActivation(select)
     .overlay(alignment: .trailing) {
       if isShowingActions {
         actions
@@ -202,6 +204,7 @@ struct ListCatalogRow: View {
       Button(action: edit) {
         Image(systemName: "pencil")
           .frame(width: 18, height: 18)
+          .contentShape(Rectangle())
       }
       .buttonStyle(.borderless)
       .help(String(localized: "list_row.edit.help", defaultValue: "Edit list", table: "Localizable", bundle: LorvexL10n.bundle))
@@ -218,6 +221,7 @@ struct ListCatalogRow: View {
         } label: {
           Image(systemName: "trash")
             .frame(width: 18, height: 18)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.borderless)
         .help(String(localized: "list_row.delete.help", defaultValue: "Delete list", table: "Localizable", bundle: LorvexL10n.bundle))

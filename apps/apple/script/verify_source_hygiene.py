@@ -1134,8 +1134,8 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/CalendarWorkspaceView.swift'), '.searchable('),
     ('absent', ('file', 'Sources/LorvexApple/Views/HabitsWorkspaceView.swift'), '.searchable('),
     ('absent', ('file', 'Sources/LorvexApple/Views/ReviewsWorkspaceView.swift'), '.searchable('),
-    # --- macOSSearchLivesInAllTasksAndMemory ---
-    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSearchState.swift'), 'static let searchableSelections: Set<SidebarSelection> = [.tasks, .memory]'),
+    # --- macOSSearchLivesInTasksMemoryAndCalendar ---
+    ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSearchState.swift'), 'static let searchableSelections: Set<SidebarSelection> = [.tasks, .memory, .calendar]'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreSearchState.swift'), 'func beginSearch()'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStore.swift'), 'if selection != oldValue {\n        // A query narrows only the workspace it was typed in.\n        searchText = ""'),
     ('contains', ('file', 'Sources/LorvexApple/Stores/AppStoreTaskWorkspaceActions.swift'), 'if scopeID != taskWorkspaceStorage.listScopeID {\n      // Picking another list shows that list, not the previous scope\'s search.\n      searchText = ""\n      clearTaskWorkspaceBuckets()'),
@@ -1158,7 +1158,7 @@ RULES = [
     ('absent', ('file', 'Sources/LorvexApple/Views/TodayView.swift'), 'hasActiveSearch'),
     ('absent', ('file', 'Sources/LorvexApple/Views/ListsWorkspaceView.swift'), 'hasActiveSearch'),
     ('absent', ('file', 'Sources/LorvexApple/Views/HabitsWorkspaceView.swift'), 'hasActiveSearch'),
-    ('absent', ('file', 'Sources/LorvexApple/Views/CalendarWorkspaceView.swift'), 'hasActiveSearch'),
+    ('contains', ('file', 'Sources/LorvexApple/Views/CalendarWorkspaceView.swift'), '.accessibilityHidden(store.hasActiveSearch)'),
     ('contains', ('file', 'Sources/LorvexApple/Views/ContentView.swift'), '.sheet(isPresented: $store.showCommandPalette)'),
     # --- macOSTaskDetailShareStaysInActionMenu ---
     ('absent', ('file', 'Sources/LorvexApple/Views/TaskDetailView.swift'), '.toolbar {'),

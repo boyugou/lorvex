@@ -332,6 +332,7 @@ extension AppStore {
     guard loadToken == calendarStorage.timelineLoadToken else { return }
     calendarTimeline = timeline
     calendarScheduledTasks = tasks
+    adoptSelectedCalendarOccurrence()
   }
 
   /// Re-loads whatever window is currently on screen (day, week, or month) at
